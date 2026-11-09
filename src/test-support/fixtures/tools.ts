@@ -69,6 +69,7 @@ export function toolFixtures(
   content.sizeBytes = new TextEncoder().encode(content.content).byteLength
   const changes: ChangesResponse = {
     baseBranch: 'main',
+    unpushedCommits: 1,
     files: changed.map((file) =>
       withRealPath({ ...file, uncommitted: file.path === FAKE_FILE_PATH }),
     ),

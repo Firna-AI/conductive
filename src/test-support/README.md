@@ -39,6 +39,8 @@ Each full report is explicitly part 1 of 1. Its tree ends at revision 2.
 `recordedMultipartRunnerFileEvents` supplies eight events for part-joining checks.
 It splits trees and changes into two parts and uses tree delta revisions 2 and 3.
 The small samples exercise joining without large fixtures.
+Current changes fixtures include `unpushedCommits`. The HTTP fixture has
+one commit, and the later recorded report has two, so readers see a change.
 
 `recorded-repairs.ts` records the lost updates without a session: the file tree, the changes list, the start steps, and the workspace name.
 `firstLoss(kind)` gives the marker of a first loss. For the file tree, it is a refused tree delta.

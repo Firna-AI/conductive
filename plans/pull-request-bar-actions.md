@@ -592,6 +592,10 @@ has a pull request. The mockups settled the labels, as
 - Local work is changed files that are not committed, or commits that no
   remote branch holds, in the sandbox. Today the runner marks only the
   changed files. Milestone 3 adds the count of commits.
+- Design call on 9 November 2026: `unpushedCommits` stays absent in reports
+  from older runner images and in their stored reports. The current runner
+  always supplies the count. Reason: existing workspaces keep their original
+  runner software, and an unknown count must not become zero.
 - Design call: the state without a pull request keeps the link that
   creates the pull request on GitHub, beside Create pull request. Reason:
   no current link goes away.
@@ -933,12 +937,14 @@ Depends on: 2
 The runner reports the commits of the current branch that no remote
 branch holds, beside the changed files that it already marks.
 
-- [ ] Add the number of such commits to the runner's changes report and
+- [x] Add the number of such commits to the runner's changes report and
       to `ChangesResponse` in `src/shared/files.ts`.
-- [ ] Store and forward the number in the Worker, and add it to the fake
+- [x] Store and forward the number in the Worker, and add it to the fake
       API and the fixtures.
-- [ ] Test the count in the runner, and its path to the browser.
-- [ ] Update the runner README and the shared README.
+- [x] Test the count in the runner, and its path to the browser.
+- [x] Update the runner README and the shared README.
+
+Evidence: `.context/pull-request-bar-actions/milestone-3/report.md`.
 
 ## Milestone 4: Merge right and merge route
 

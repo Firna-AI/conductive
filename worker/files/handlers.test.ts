@@ -65,6 +65,7 @@ it('serves the last stored file tree and changes while the sandbox sleeps', asyn
   })
   expect(changes.status).toBe(200)
   expect(await changes.json()).toMatchObject({
+    unpushedCommits: 2,
     summary: { files: 7, added: 161, removed: 50 },
   })
   expect(tree.headers.get('Cache-Control')).toBe('no-store')

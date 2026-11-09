@@ -67,6 +67,9 @@ export class FakeRunnerFileReports {
       type: 'changes.updated',
       changes: {
         baseBranch: event.changes.baseBranch,
+        ...(event.changes.unpushedCommits === undefined
+          ? {}
+          : { unpushedCommits: event.changes.unpushedCommits }),
         files: parts.flatMap((part) => part.files),
         summary: event.changes.summary,
       },

@@ -150,6 +150,9 @@ export function parseEvent(value: unknown): RunnerEvent {
         partNumber: integer(update.partNumber),
         partCount: integer(update.partCount),
         baseBranch: string(update.baseBranch),
+        ...(update.unpushedCommits === undefined
+          ? {}
+          : { unpushedCommits: integer(update.unpushedCommits) }),
         ...(typeof update.displayBaseBranch === 'string'
           ? { displayBaseBranch: update.displayBaseBranch }
           : {}),

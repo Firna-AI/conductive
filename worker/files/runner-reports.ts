@@ -52,6 +52,7 @@ function joinReport(
     if (
       part.type !== 'changes.updated' ||
       part.changes.baseBranch !== first.changes.baseBranch ||
+      part.changes.unpushedCommits !== first.changes.unpushedCommits ||
       JSON.stringify(part.changes.summary) !==
         JSON.stringify(first.changes.summary)
     )
@@ -77,6 +78,9 @@ function joinReport(
     type: first.type,
     changes: {
       baseBranch: first.changes.baseBranch,
+      ...(first.changes.unpushedCommits === undefined
+        ? {}
+        : { unpushedCommits: first.changes.unpushedCommits }),
       ...(first.changes.displayBaseBranch === undefined
         ? {}
         : { displayBaseBranch: first.changes.displayBaseBranch }),

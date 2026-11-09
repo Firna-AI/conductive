@@ -52,6 +52,10 @@ Tree and changes revisions have independent sequences within each runner stream.
 A new stream starts with full reports. A reconnect keeps its revisions and parts.
 The workspace joins all parts before it publishes a full browser report.
 Branch changes include committed, staged, unstaged, and untracked work.
+`ChangesResponse.unpushedCommits` counts the current branch's commits that
+no remote branch holds. Each changes part repeats that complete count.
+The current runner always sends it. Reports from older workspace images
+can omit it, and readers preserve that absence instead of assuming zero.
 `runner-files.ts` defines file read and diff commands and their matching results.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.

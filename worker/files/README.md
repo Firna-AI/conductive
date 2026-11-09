@@ -53,6 +53,8 @@ A part stored as one value, without a manifest, stays readable.
 A newer revision, a refusal, and a new stream remove each obsolete part with its chunks.
 After the last part, `accept` joins the entries in part order.
 A complete changes report must have a summary that counts its files and the sum of their added and removed lines.
+It also keeps the current branch's `unpushedCommits` count across parts, storage, and publication.
+Reports from older runner images can omit that count. The stored report and API keep it absent.
 `accept` then applies the complete report to the projection and returns it for the history and the browser tabs.
 It returns `null` while parts are pending and for an identical repeated part.
 It applies a tree delta only when the delta has the next tree revision and no tree report is incomplete.

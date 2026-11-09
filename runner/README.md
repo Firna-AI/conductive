@@ -130,6 +130,13 @@ These facts belong to this implementation, not to the protocol docs.
 - File reads and diffs use the shared UTF-8 decoder and keep a leading byte
   order mark. A valid path can hold a tab, a newline, or a backslash. Each
   path must still resolve inside the repository and pass the `.git` check.
+- Each changes report includes `unpushedCommits`, the current branch's
+  commits that no remote branch holds. A remote ref update can change the
+  count without a file change. The report keeps that count through its
+  numbered parts and saved events.
+- Existing workspaces keep the runner of their original image. Reports
+  from older runners have no commit count. The Worker and browser preserve
+  that absence as unknown, rather than reporting zero.
 - File reads cap bytes at `FILE_READ_MAX_BYTES`, also when a caller asks
   for more. Diffs use the same cap for each file version and for the patch.
   The runner checks file and blob sizes before it loads their bytes.
@@ -277,6 +284,8 @@ tools that time the first agent start after a resume.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of
   one turn.
+- `src/repository-changes.ts`: changed files against the base branch and
+  current-branch commits that no remote branch holds.
 - `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
   indexes and objects for Git comparisons. The real index stays unchanged.
 - `src/git-paths.ts`: shared Git namespace states for paths and parents.

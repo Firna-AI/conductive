@@ -8,6 +8,7 @@ import { runnerHarness } from '../test-support/harness'
 
 const textChanges: ChangesResponse = {
   baseBranch: 'main',
+  unpushedCommits: 0,
   files: [
     {
       path: 'README.md',
@@ -127,6 +128,7 @@ it('reports a second binary edit when tree fields and zero line counts stay equa
       type: 'changes.updated',
       changes: {
         baseBranch: 'main',
+        unpushedCommits: 0,
         files: [
           {
             path: 'committed.txt',
@@ -167,6 +169,7 @@ it('reports a moved default branch when working files and line counts stay equal
       changes: {
         ...textChanges,
         files: [{ ...textChanges.files[0], uncommitted: false }],
+        unpushedCommits: 1,
         revision: 3,
         partNumber: 1,
         partCount: 1,

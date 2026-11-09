@@ -111,6 +111,7 @@ export function parseChanges(value: unknown): ChangesResponse {
   if (
     !isRecord(value) ||
     typeof value.baseBranch !== 'string' ||
+    (value.unpushedCommits !== undefined && !natural(value.unpushedCommits)) ||
     !Array.isArray(value.files) ||
     !isRecord(value.summary) ||
     !natural(value.summary.files) ||
@@ -120,6 +121,9 @@ export function parseChanges(value: unknown): ChangesResponse {
     throw invalidFileResponse()
   return {
     baseBranch: value.baseBranch,
+    ...(value.unpushedCommits === undefined
+      ? {}
+      : { unpushedCommits: value.unpushedCommits }),
     ...(typeof value.displayBaseBranch === 'string'
       ? { displayBaseBranch: value.displayBaseBranch }
       : {}),

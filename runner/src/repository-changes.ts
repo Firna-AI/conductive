@@ -63,7 +63,7 @@ export async function changesFromIndex(
   if (index.unavailable.length)
     warn('Some repository files cannot be stored by Git.')
   await addUntracked(index)
-  const [names, counts, status] = await Promise.all([
+  const [names, counts, status, unpushed] = await Promise.all([
     comparison(index, sha, '--name-status'),
     comparison(index, sha, '--numstat'),
     index.source.run([
@@ -72,6 +72,7 @@ export async function changesFromIndex(
       '-z',
       '--untracked-files=all',
     ]),
+    index.source.run(['rev-list', '--count', 'HEAD', '--not', '--remotes']),
   ])
   const dirty = new Set<string>()
   const statuses = zeroPaths(status)
@@ -105,6 +106,7 @@ export async function changesFromIndex(
   files.sort((a, b) => a.path.localeCompare(b.path, 'en'))
   return {
     baseBranch: branch,
+    unpushedCommits: Number(unpushed.toString().trim()),
     files,
     summary: {
       files: files.length,
