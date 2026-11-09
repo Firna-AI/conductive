@@ -9,10 +9,15 @@ import {
   parseItems,
   readArray,
   readCount,
+  readLabel,
   readString,
 } from './guards'
 import { parseChangeKind } from './parse-changes'
 
+/**
+ * An entry of the tree. `path` stays the real path for each read and key,
+ * and `name` and `displayPath` are the labels that hide a secret value.
+ */
 function parseFileEntry(value: unknown): FileEntry | null {
   if (!isObject(value)) return null
   const path = readString(value, 'path')
@@ -20,7 +25,13 @@ function parseFileEntry(value: unknown): FileEntry | null {
   const kind = value.kind
   if (!path || name === null) return null
   if (kind !== 'file' && kind !== 'directory') return null
-  return { path, name, kind, change: parseChangeKind(value.change) }
+  return {
+    path,
+    ...readLabel(value, 'displayPath'),
+    name,
+    kind,
+    change: parseChangeKind(value.change),
+  }
 }
 
 /**

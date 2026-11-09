@@ -3,15 +3,18 @@ import {
   type OfferedAction,
   type WorkspaceActionId,
 } from '../../app/palette/page-actions'
+import { useStore } from '../../app/store'
 import type { ChatController } from '../../chat/state/controller'
 import type { FileListKind, FilesTarget } from '../../files/navigation'
 import { useOrgAccess } from '../context'
+import { usePanelLayout } from '../layout/panels'
 import { usePaletteOffer } from '../palette/palette-context'
 import type { WorkspaceContext } from './features'
 import { useFilesNavigation } from './files/files-navigation'
 import type { ToolKey } from './tools/tool-address'
 import { useToolSelect } from './tools/tool-navigation'
 import { phoneView } from './WorkspaceColumns'
+import { nameLabel } from '../../shared/name-label'
 
 /**
  * Offers the actions of the open workspace to the command palette while
@@ -28,13 +31,14 @@ export function WorkspacePaletteActions(props: {
   const access = useOrgAccess(context.org)
   const files = useFilesNavigation(context)
   const tool = useToolSelect(context)
+  const rightShown = useStore(usePanelLayout().rightShown)
   const phone = context.viewport === 'phone'
   const archived = context.sandbox === 'archived'
   const ids = workspaceActionIds({
     access,
     workspace: context.workspace,
     viewer: context.viewer,
-    rightColumn: !phone,
+    rightColumn: !phone && rightShown,
     chat: !phone || archived || phoneView(context.view) === 'chat',
   })
   const list = (id: WorkspaceActionId, kind: FileListKind): OfferedAction => {
@@ -72,7 +76,7 @@ export function WorkspacePaletteActions(props: {
     scope: {
       kind: 'workspace',
       workspaceId: context.workspace.id,
-      name: context.workspace.name,
+      name: nameLabel(context.workspace.name),
     },
     actions: ids.map(action),
   })

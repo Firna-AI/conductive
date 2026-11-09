@@ -1,13 +1,18 @@
-import { afterAll, beforeAll, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { sessionsPath } from '../../src/shared/sessions'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import { createFirstMessageFixture } from './first-message.test-support'
+import { sessionRecord } from './retry.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
+})
+beforeEach(async () => {
+  await harness.reset()
 })
 afterAll(async () => {
   await harness.dispose()
@@ -76,4 +81,29 @@ it('refuses an unassigned first-message sender without storing a session or spen
     lastOutputEventNumber: 0,
     working: false,
   })
+})
+
+it('starts the assigned first session untitled and keeps repeated admission unchanged', async () => {
+  const { fixture, first, acceptFirst } =
+    await createFirstMessageFixture(harness)
+  const ownerTab = await fixture.tab()
+  const memberTab = await fixture.tab(0, undefined, fixture.memberCookie)
+  const accepted = await acceptFirst()
+  expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
+  const history = await fixture.history(first.sessionId)
+  expect(history.events.map(({ event }) => event.type)).toEqual([
+    'session.updated',
+    'message.accepted',
+    'session.updated',
+  ])
+  expect(history.events[0].event).toMatchObject({
+    type: 'session.updated',
+    session: { id: first.sessionId, title: null },
+  })
+  expect(memberTab.messages).toEqual(ownerTab.messages)
+  fixture.restart()
+  expect(await acceptFirst()).toEqual(accepted)
+  expect(await fixture.history(first.sessionId)).toEqual(history)
+  ownerTab.close()
+  memberTab.close()
 })

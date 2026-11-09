@@ -47,12 +47,19 @@ what the palette does.
   org. An org without them shows the initials of its name.
 - A suspended org shows its notice, and no action that it refuses, as
   [A suspended org](suspended-org.md) says.
+- Only an operator gets the operator section, from the rail and the org
+  switcher. Anyone else gets the not-found page at its addresses, as
+  [Operator section](../shell/operator/README.md) says.
 - The Cloud computer tab names the software of the base image from the
   settings reply. An older reply without it names no software.
 - A step of a panel, by a key or a drag, starts from the width that the
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
   step that ends at its start width stores nothing.
+- On desktop, the toggle at the end of the workspace header hides the
+  right column and shows it again. The choice holds for every workspace
+  of the tab until the page closes. A hidden column stays mounted, so its
+  file lists keep their connection and the terminal keeps its session.
 - A sheet or a dialog makes the rest of its frame inert through
   `OverlayHost`. It keeps Tab and Shift+Tab inside, also from the layer
   itself and from a text field. When it closes, the frame is active again
@@ -113,7 +120,7 @@ what the palette does.
   files, and the paperclip is off while the create runs. Send and Try
   again read one readiness: the text, the files, the agent login, the
   repository, and the model.
-- A create whose sandbox did not start gets its own New workspace form in
-  the tab that sent it. The address of that workspace shows the form, with
-  "The workspace wasn't created". Try again sends the same message ID, as
-  [Creation recovery](creation-recovery.md#the-returned-form) says.
+- A create request that fails keeps the message in the form, with "The
+  workspace wasn't created". Try again sends the same message ID. A failed
+  first start keeps its workspace instead, as
+  [Creation recovery](creation-recovery.md#a-failed-first-start) says.

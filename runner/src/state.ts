@@ -9,7 +9,7 @@ import {
   type RunnerEvent,
   type RunnerEventEnvelope,
 } from '../../src/shared/runner'
-import { jsonBytes } from './event-limits'
+import { jsonBytes } from '../../src/shared/event-limits'
 import { parseEnvelope, parseEvent } from './stored-events'
 import { array, integer, object, oneOf, string } from './parse'
 import {

@@ -5,7 +5,6 @@ import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
-import { SendWait } from '../../../docs/mockups/src/components/chat/SendWait'
 import {
   SessionLoginLabel,
   type SessionLogin,
@@ -32,11 +31,6 @@ export interface ComposerProps {
   /** A notice says why a message cannot go yet, so Send is off. */
   blocked: boolean
   /**
-   * The first start of the workspace has not succeeded, so Send is off. A
-   * message in the box shows the short reason beside Send.
-   */
-  waits: boolean
-  /**
    * The agent login of another member that the session uses, which a label
    * in the bar names. A message on the reader's own login has no label.
    */
@@ -57,11 +51,11 @@ export interface ComposerProps {
 /**
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
- * steers the turn, and Stop sits beside Send. While Send waits for the
- * first start of the workspace, the box keeps the message, and the reason
- * shows beside Send. When a message spends the agent login of another
- * member, a label after the model picker names that login, so the box keeps
- * its place. On desktop, Enter sends and Shift+Enter starts a new line.
+ * steers the turn, and Stop sits beside Send. While the sandbox is not
+ * ready, Send still sends, and the workspace queues the message. When a
+ * message spends the agent login of another member, a label after the
+ * model picker names that login, so the box keeps its place. On desktop,
+ * Enter sends and Shift+Enter starts a new line.
  * The composer reads Enter before the text field does, so Enter never adds
  * a line to a message that it sends.
  */
@@ -70,8 +64,7 @@ export function Composer(props: ComposerProps) {
   const files = useRef<HTMLInputElement>(null)
   const { draft } = props
   const empty = draft.text.trim() === '' && draft.attachments.length === 0
-  const off =
-    empty || props.blocked || props.waits || props.sending || props.attaching
+  const off = empty || props.blocked || props.sending || props.attaching
   const touch = control.field === 'lg'
   const steers = props.running && props.startsSession !== true
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -139,7 +132,6 @@ export function Composer(props: ComposerProps) {
               Stop
             </ActionButton>
           ) : null}
-          {props.waits && !empty ? <SendWait /> : null}
           <Button
             accessibilityLabel="Send"
             boxSize={control.height}

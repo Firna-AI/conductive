@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { FolderGit2, GitBranch } from 'lucide-react'
+import { nameLabel } from '../../shared/name-label'
 import type { Workspace, WorkspaceState } from '../../shared/workspaces'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import header from '../../../docs/mockups/src/components/workspace/WorkspaceHeader.module.css'
@@ -25,10 +26,12 @@ const stateLabels: Readonly<Record<WorkspaceState, string>> = {
 
 /**
  * A stand-in for the app's workspace header, so the page shows the name and
- * the state that the chat reports, such as the title that the agent writes.
+ * the state that the chat reports, such as Untitled and then the title of a
+ * new workspace.
  */
 function DevHeader(props: { workspace: Workspace; mobile: boolean }) {
   const { workspace } = props
+  const name = nameLabel(workspace.name)
   const state = (
     <span className={header.state}>
       <StatusGlyph status={workspace.state} />
@@ -40,7 +43,7 @@ function DevHeader(props: { workspace: Workspace; mobile: boolean }) {
       <header className={header.mobile}>
         <span className={styles.back} />
         <div className={header.titles}>
-          <h1 className={header.title}>{workspace.name}</h1>
+          <h1 className={header.title}>{name}</h1>
           <span className={header.branch}>
             acme/storefront · {workspace.branch}
           </span>
@@ -51,7 +54,7 @@ function DevHeader(props: { workspace: Workspace; mobile: boolean }) {
   }
   return (
     <header className={header.bar}>
-      <h1 className={header.title}>{workspace.name}</h1>
+      <h1 className={header.title}>{name}</h1>
       <span className={header.meta}>
         <FolderGit2 aria-hidden className={header.icon} size={13} />
         <span className={header.branch}>acme/storefront</span>

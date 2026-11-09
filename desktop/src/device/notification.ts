@@ -1,4 +1,5 @@
 import type { DeviceCommandRecord } from '../../../src/shared/device.ts'
+import { nameLabel } from '../../../src/shared/name-label.ts'
 import { DESKTOP_ORIGIN } from '../../../worker/security/desktop-contract.js'
 
 interface NativeNotice {
@@ -43,7 +44,7 @@ export function notifyCommand(
   try {
     notification = dependencies.create({
       title: 'Run a command on this Mac?',
-      body: `An agent in ${compact(request.workspaceName, 80)} asks to run ${compact(request.command, 160)}.`,
+      body: `An agent in ${compact(nameLabel(request.workspaceName), 80)} asks to run ${compact(request.command, 160)}.`,
     })
     notification?.on('click', () => {
       if (active) dependencies.open(request)

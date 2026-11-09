@@ -11,12 +11,9 @@ import {
   RUNNER_EVENT_MAX_BYTES,
   type RunnerEvent,
 } from '../../src/shared/runner'
+import { jsonBytes } from '../../src/shared/event-limits'
 import { HttpError, isRecord } from '../http'
 import { invalidInput } from './inputs'
-
-export function jsonBytes(value: unknown): number {
-  return new TextEncoder().encode(JSON.stringify(value)).byteLength
-}
 
 function within(value: unknown, limit: number): void {
   if (jsonBytes(value) > limit) tooLarge()

@@ -24,6 +24,7 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
     case 'code':
     case 'markdown':
     case 'diff':
+    case 'unnamed-file':
       return isNew(state) ? workspace.owner : workspaceSessions[0].starter
   }
 }

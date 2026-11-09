@@ -7,7 +7,7 @@ import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
-import { waitsForFirstStart } from '../state/first-start'
+import { failedFirstStart } from '../../app/first-start'
 import { modelLabel } from '../state/format'
 import { loginLabelOf, sessionLoginOf } from '../state/session-login'
 import { ChatPane } from './ChatPane'
@@ -33,13 +33,17 @@ function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
 /**
  * The parts of the chat that the app draws from its own record of the
  * workspace: the start steps at the end of the history while the sandbox
- * starts, and the bar that takes the composer's place while the sandbox is
- * down. Null leaves the place empty. Without a host, the chat draws both
- * from its own record.
+ * starts, and the bar under the chat while the sandbox is down. Null leaves
+ * the place empty. Without a host, the chat draws both from its own record.
  */
 export interface ChatHost {
   starting: ReactNode | null
   sandboxBar: ReactNode | null
+  /**
+   * The composer stays under the bar, as after a failed first start, so that
+   * members can still queue messages. Otherwise the bar takes its place.
+   */
+  keepsComposer: boolean
 }
 
 export interface SessionChatProps {
@@ -60,7 +64,9 @@ export interface SessionChatProps {
 /**
  * The start steps and the sandbox bar: the host's, or the chat's own. A
  * read-only chat without a host shows only the bar of an archived
- * workspace, because it offers no Resume.
+ * workspace, because it offers no Resume. The chat's own bar shows the
+ * message that the workspace saved for a failed start, and after a failed
+ * first start the composer stays under it.
  */
 function sandboxParts(props: SessionChatProps): ChatHost {
   if (props.host) return props.host
@@ -68,6 +74,7 @@ function sandboxParts(props: SessionChatProps): ChatHost {
   const { workspace } = snapshot
   const problem = problemOf(workspace?.state)
   const readOnly = props.readOnly ?? false
+  const firstStart = failedFirstStart(workspace, snapshot.start)
   return {
     starting:
       workspace?.state === 'starting' && !readOnly ? (
@@ -78,17 +85,21 @@ function sandboxParts(props: SessionChatProps): ChatHost {
         <SandboxBar
           archivedAt={workspace.archivedAt}
           busy={snapshot.resuming}
+          firstStart={firstStart}
+          message={snapshot.savedError}
           onResume={() => void controller.resume()}
           problem={problem}
         />
       ) : null,
+    keepsComposer: firstStart && !readOnly,
   }
 }
 
 /**
  * The chat of the open session: its history, with the start steps while the
  * sandbox starts, and under it the notices and the composer, or the bar that
- * takes the composer's place while the sandbox does not run. The status of
+ * takes the composer's place while the sandbox does not run. After a failed
+ * first start, the bar sits above the composer, which stays. The status of
  * the stored history comes from its load alone, so content never hides a
  * failed load. The composer names the login of another member that a
  * message spends. A linked session starts with a link to the session that
@@ -103,10 +114,11 @@ export function SessionChat(props: SessionChatProps) {
   const id = snapshot.activeSessionId
   const session = tabSessions(snapshot).find((item) => item.id === id) ?? null
   const state = sessionState(snapshot, id ?? '')
-  const { starting, sandboxBar } = sandboxParts(props)
+  const { starting, sandboxBar, keepsComposer } = sandboxParts(props)
   const readOnly = (props.readOnly ?? false) || workspace?.state === 'archived'
-  // A bar or a read-only workspace takes the place of the composer.
-  const down = sandboxBar !== null || readOnly
+  // A bar or a read-only workspace takes the place of the composer. The bar
+  // of a failed first start keeps the composer under it.
+  const down = (sandboxBar !== null && !keepsComposer) || readOnly
   const block = sendBlock(snapshot, id)
   const { notice } = snapshot
   const shownNotice =
@@ -171,7 +183,6 @@ export function SessionChat(props: SessionChatProps) {
         <Composer
           attaching={state.draft.uploads > 0}
           blocked={block !== null}
-          waits={waitsForFirstStart(snapshot)}
           choice={session.choice}
           draft={state.draft}
           login={loginLabelOf(login)}
