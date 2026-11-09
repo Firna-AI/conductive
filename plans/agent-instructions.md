@@ -150,7 +150,8 @@ and the wider fix.
 
 Added on 8 November 2026 with decision 1. The options check of 9 November
 2026 added option D, added the cost of a new process at each turn to B, and
-changed the reason of the left-out line.
+changed the reason of the left-out line. On 9 November 2026 the Problem
+line changed: the tool descriptions keep some of the default rules.
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Small.
 - **Source:** Design.
@@ -160,10 +161,13 @@ changed the reason of the left-out line.
   Agent SDK 0.3.318 sends an empty custom prompt, not the preset. Codex
   keeps its default instructions. The runner starts a new agent process for
   each turn, and the process resumes the session.
-- **Problem:** Claude agents do not get Claude Code's default guidance, such
-  as tool use, git safety, and the folder, platform, and date. They still
-  get the tool definitions and the repository's `CLAUDE.md`. No doc, plan,
-  or commit records this as a choice.
+- **Problem:** Claude agents do not get the system prompt part of Claude
+  Code's default guidance: the rules for work with the user and with the
+  tools, and the facts of the environment, such as the folder, the
+  platform, the model, and the date. They still get the tool descriptions,
+  which hold some rules, such as the git rules of the Bash tool, and the
+  repository's `CLAUDE.md`. No doc, plan, or commit records this as a
+  choice.
 - **Impact if no action:** Claude agents can behave differently from the
   Claude Code that users know. The agent instructions would also have no
   base guidance below them.
