@@ -188,11 +188,13 @@ Tags: ui
 
 Depends on: 1, 2
 
-The `ui implementor` builds the approved design in Astro.
+The `external docs implementor` first writes Overview and Get started.
+The `ui implementor` then builds the approved design in Astro with those guides.
 The site stays usable with a complete overview and Get started guide.
 
-- [ ] Add the content collection and complete Overview and Get started Markdown pages.
+- [ ] The `external docs implementor` writes the complete Overview and Get started Markdown pages.
       Follow the current onboarding flow, including the automatic first org-image build.
+- [ ] The `ui implementor` adds the content collection and integrates the two completed guides.
 - [ ] Add `/docs` and `/docs/<page>` through Astro's static page generation.
       Use collection metadata and the documented defaults and sorting for navigation. Add no new metadata-rejection gate.
 - [ ] Add the docs layout with the site's existing header, footer, and tokens.
@@ -200,23 +202,24 @@ The site stays usable with a complete overview and Get started guide.
 - [ ] Add Docs to both site navigation areas and the shared path helpers.
       Preserve existing links, request markers, legal pages, and the unknown-address page.
 - [ ] Add code styles with Prism classes. Check long code, tables, and URLs on a phone.
-- [ ] Update the marketing README's author steps and code entry points.
+- [ ] The `docs implementor` updates the marketing README's author steps and code entry points.
       Check `npm run site:build` and open the pages through the Worker.
 
 ## Milestone 4: Complete the public guides
 
 Depends on: 3
 
-The `external docs implementor` owns the public writing and reviews the first two guides.
+The `external docs implementor` writes the remaining ten guides and checks all 12.
 
-- [ ] Complete all 12 launch guides from the table above.
+- [ ] Write the remaining ten launch guides from the table above.
       Explain the user's actions, prerequisites, results, and relevant recovery steps.
 - [ ] Confirm each claim against the current requirements and implementation.
       Distinguish the Mac app from the hidden live desktop of a sandbox.
       Do not promise a download, capability, or limit that has not shipped.
 - [ ] Check the naming rules and all public page and heading links.
       Keep internal source paths and credentials out of published pages.
-- [ ] Check each guide in the site build. Update the author workflow if writing exposes a missing step.
+- [ ] Check each guide in the site build.
+      The `docs implementor` updates the author workflow if writing exposes a missing step.
 
 ## Milestone 5: Docs behaviour checks
 
