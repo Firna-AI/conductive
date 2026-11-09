@@ -26,9 +26,9 @@ export interface ChatViewProps {
   /** The time source for durations and relative times. */
   clock?: Clock
   /**
-   * Draws a file or diff tab of the saved view at its place in the tab row,
-   * as `RenderTab` says. Without it, the row shows only the session tabs, as
-   * on a phone.
+   * Names and draws a file or diff tab of the saved view at its place in the
+   * tab row, as `RenderTab` says. Without it, the row shows only the session
+   * tabs, as on a phone.
    */
   renderTab?: RenderTab
   /**
@@ -109,12 +109,11 @@ function ChatBody(
         onStartRename={controller.startRename}
         readOnly={readOnly}
         renaming={overlay.kind === 'rename' ? overlay.sessionId : null}
-        renderTab={props.renderTab}
         tabs={rowOf(
           snapshot.view,
           tabSessions(snapshot),
           shownTab(snapshot.view, active, content !== null),
-          props.renderTab !== undefined,
+          props.renderTab,
         )}
       />
       {content ?? (

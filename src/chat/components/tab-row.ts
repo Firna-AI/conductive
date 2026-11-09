@@ -48,8 +48,20 @@ export type TabDraw =
     }
   | { kind: 'lifted' }
 
-/** Draws a file or diff tab of the host, as `TabDraw` asks. */
-export type RenderTab = (tab: HostTab, draw: TabDraw) => ReactNode
+/**
+ * A file or diff tab as the host renders it. `title` is the name of the tab,
+ * as a screen reader reads it from the tab, with each secret value hidden:
+ * the tab menu and the status of the row name the tab by it, and the row
+ * takes no name from a path. `draw` draws the tab by the same name, as
+ * `TabDraw` asks.
+ */
+interface RenderedTab {
+  title: string
+  draw: (draw: TabDraw) => ReactNode
+}
+
+/** Renders a file or diff tab of the host, as `RenderedTab` says. */
+export type RenderTab = (tab: HostTab) => RenderedTab
 
 /** A session tab, which the chat draws. */
 export interface SessionTab {
@@ -60,8 +72,8 @@ export interface SessionTab {
   selected: boolean
 }
 
-/** A file or diff tab, which the host draws. */
-interface HostRowTab {
+/** A file or diff tab, which the host names and draws. */
+interface HostRowTab extends RenderedTab {
   kind: 'host'
   tab: HostTab
   /** The host shows the tab as the current one, in place of the chat. */
@@ -81,13 +93,6 @@ export function viewTabOf(tab: RowTab): WorkspaceTab {
 /** The key of a tab of the row. A file keeps its key in both modes. */
 export function rowKey(tab: RowTab): string {
   return tabKey(viewTabOf(tab))
-}
-
-/** The title of a tab: the title of its session, or the name of its file. */
-export function titleOf(tab: RowTab): string {
-  if (tab.kind === 'session') return tab.title
-  const { path } = tab.tab
-  return path.slice(path.lastIndexOf('/') + 1)
 }
 
 /**
@@ -111,23 +116,27 @@ export function shownTab(
 
 /**
  * The tabs of the row in the saved order. `shown` is the tab that shows as
- * the current one, if any, as `shownTab` gives it. `host` says that the host
- * draws the file and diff tabs. Without it, the row holds only the session
- * tabs.
+ * the current one, if any, as `shownTab` gives it. `renderTab` names and
+ * draws the file and diff tabs of the host. Without it, the row holds only
+ * the session tabs.
  */
 export function rowOf(
   view: WorkspaceView | null,
   sessions: readonly Session[],
   shown: WorkspaceTab | null,
-  host: boolean,
+  renderTab: RenderTab | undefined,
 ): RowTab[] {
   const titles = new Map(sessions.map((item) => [item.id, item.title]))
   const current = shown === null ? null : tabKey(shown)
+  const host = renderTab !== undefined
   return rowTabs(view, sessions, host).flatMap((tab): RowTab[] => {
     const selected = tabKey(tab) === current
-    if (tab.kind !== 'session') return [{ kind: 'host', tab, selected }]
-    const title = titles.get(tab.sessionId)
-    if (title === undefined) return []
-    return [{ kind: 'session', id: tab.sessionId, title, selected }]
+    if (tab.kind === 'session') {
+      const title = titles.get(tab.sessionId)
+      if (title === undefined) return []
+      return [{ kind: 'session', id: tab.sessionId, title, selected }]
+    }
+    // Without a host, `rowTabs` gives no file or diff tab.
+    return renderTab ? [{ kind: 'host', tab, selected, ...renderTab(tab) }] : []
   })
 }

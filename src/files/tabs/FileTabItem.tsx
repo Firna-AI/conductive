@@ -8,6 +8,18 @@ import { IconButton } from '../ui/actions'
 import { FilesLink } from '../ui/FilesLink'
 import { classes } from '../ui/classes'
 
+/**
+ * The name of a file or diff tab, as a screen reader reads it from the tab:
+ * the file name of the label of its path, or "File" when no record names
+ * the file. A diff tab adds "changes", as in "app.ts changes". Other names
+ * of the tab, such as in the tab menu of the row, use it too, so each one
+ * hides each secret value.
+ */
+export function fileTabName(tab: FilesTab, label: string | null): string {
+  const name = labelName(label)
+  return tab.kind === 'diff' ? `${name} changes` : name
+}
+
 /** The icon and the name of a tab. */
 function FileTabLabel(props: { tab: FilesTab; name: string }) {
   const { tab } = props
@@ -49,7 +61,7 @@ export function FileTabItem(props: {
 }) {
   const { tab, item } = props
   const name = labelName(props.label)
-  const diff = tab.kind === 'diff'
+  const title = fileTabName(tab, props.label)
   return (
     <li
       {...item}
@@ -61,7 +73,7 @@ export function FileTabItem(props: {
     >
       <FilesLink
         aria-current={props.selected ? 'page' : undefined}
-        aria-label={diff ? `${name} changes` : undefined}
+        aria-label={tab.kind === 'diff' ? title : undefined}
         className={styles.link}
         navigation={props.navigation}
         ref={props.link?.ref}
@@ -73,7 +85,7 @@ export function FileTabItem(props: {
       <span {...props.close} className={styles.close}>
         <IconButton
           icon={X}
-          label={`Close ${diff ? `${name} changes` : name}`}
+          label={`Close ${title}`}
           onPress={props.onClose}
           quiet
         />

@@ -48,14 +48,17 @@
   color: var(--ui-ink);
 }
 
+/*
+ * The label of a tab: its icon and its title, a touch target on a phone.
+ * The tabs of the row cut it, as `.tabs > .tab` says. The lifted copy of a
+ * drag shows it whole.
+ */
 .link {
   display: flex;
   flex: 1 1 auto;
   align-items: center;
-  overflow: hidden;
   min-width: 0;
   gap: 6px;
-  height: calc(var(--ui-control-height) - 2px);
   min-height: var(--ui-touch-min);
   padding: 0 4px 0 9px;
   border-radius: var(--ui-radius-md);
@@ -63,7 +66,6 @@
   font-size: var(--ui-text-sm);
   font-weight: 500;
   text-decoration: none;
-  white-space: nowrap;
 }
 
 .icon {
@@ -71,7 +73,18 @@
   color: var(--ui-muted);
 }
 
-.title {
+/*
+ * The row owns the limits of its tabs: one line of the height of a control,
+ * and a title of at most 168 px that ends with an ellipsis, so that one long
+ * title cannot fill the row. The lifted copy is not a tab of the row.
+ */
+.tabs > .tab .link {
+  overflow: hidden;
+  height: calc(var(--ui-control-height) - 2px);
+  white-space: nowrap;
+}
+
+.tabs > .tab .title {
   overflow: hidden;
   min-width: 0;
   max-width: 168px;
@@ -83,12 +96,12 @@
  * the current one keeps the start of its title, and the others can shrink
  * to their icon, which stays 44 px wide to touch.
  */
-.phone .tab {
+.phone .tabs > .tab {
   min-width: 44px;
 }
 
 /* The icon, 48 px of the title, and the 44 px Close button. */
-.phone .selected {
+.phone .tabs > .selected {
   flex-shrink: 1;
   min-width: 124px;
 }
@@ -99,16 +112,16 @@
  * the link clips, and the icon takes the height of the link, so it stays in
  * the middle. A tab that renames its session keeps its field on one line.
  */
-.phone .tab:not(.renaming) .link {
+.phone .tabs > .tab:not(.renaming) .link {
   flex-wrap: wrap;
   justify-content: center;
 }
 
-.phone .link .icon {
+.phone .tabs > .tab .link .icon {
   height: 100%;
 }
 
-.phone .title {
+.phone .tabs > .tab .title {
   flex: 1 1 0;
   min-width: 24px;
 }
@@ -242,7 +255,11 @@
   left: -6px;
 }
 
-/* The tab under the pointer: a raised card with a full outline. */
+/*
+ * The tab under the pointer: a raised card with a full outline. It shows the
+ * whole title, and it is at least as tall as a tab of the row. A title wider
+ * than the card can be goes on to more lines, also inside a long file name.
+ */
 .lifted,
 .lifted:hover {
   border: 1px solid var(--ui-border2);
@@ -252,6 +269,14 @@
   cursor: grabbing;
 }
 
+.lifted .link {
+  min-height: max(calc(var(--ui-control-height) - 2px), var(--ui-touch-min));
+}
+
+.lifted .title {
+  overflow-wrap: anywhere;
+}
+
 /* Where the tab was while the drag lasts. */
 .placeholder {
   opacity: 0.35;
@@ -259,13 +284,15 @@
 
 /*
  * A view runs no script, so it draws the lifted tab under the pointer, at
- * the line, where it hangs below the row. The app draws it above the page.
+ * the line, where it hangs below the row, as wide as its whole title. The
+ * app draws it above the page.
  */
 .float {
   position: absolute;
   z-index: 10;
   top: 70%;
   left: 0;
+  width: max-content;
   transform: translateX(-50%) rotate(-1.5deg);
 }
 
@@ -338,7 +365,7 @@
  * narrower than a short title needs, so the field stays usable and the
  * shown tab stays in a row that has room.
  */
-.tab.renaming {
+.tabs > .tab.renaming {
   flex-shrink: 0.01;
   min-width: 120px;
 }

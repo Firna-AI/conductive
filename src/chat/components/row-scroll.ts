@@ -5,6 +5,7 @@ import {
   useState,
   type RefObject,
 } from 'react'
+import { placeOf, revealKeys, samePlace, type Place } from './row-reveal'
 import type { TabNodes } from './tab-nodes'
 
 /** The ends of the row that clip tabs, which show a fade. */
@@ -21,53 +22,6 @@ const edgeStep = 12
 function fadesOf(row: HTMLElement): RowFades {
   const end = row.scrollWidth - row.clientWidth
   return { start: row.scrollLeft > 1, end: row.scrollLeft < end - 1 }
-}
-
-/**
- * Scrolls the row as little as it can, so that the tabs show whole, clear
- * of the scroll padding of the row: the first tab first, then each next tab
- * as far as it still shows with the ones before it. A first tab wider than
- * the row shows its start.
- */
-function reveal(row: HTMLElement, tabs: readonly HTMLElement[]): void {
-  const style = getComputedStyle(row)
-  const padStart = parseFloat(style.scrollPaddingInlineStart) || 0
-  const padEnd = parseFloat(style.scrollPaddingInlineEnd) || 0
-  const max = Math.max(0, row.scrollWidth - row.clientWidth)
-  const clamp = (value: number) => Math.min(Math.max(value, 0), max)
-  // The left side of the content of the row, in CSS px of the window.
-  const origin =
-    row.getBoundingClientRect().left + row.clientLeft - row.scrollLeft
-  let low = 0
-  let high = max
-  for (const [index, tab] of tabs.entries()) {
-    const box = tab.getBoundingClientRect()
-    const start = box.left - origin
-    const to = clamp(start - padStart)
-    let from = clamp(start + box.width + padEnd - row.clientWidth)
-    if (from > to) {
-      if (index > 0) break
-      from = to
-    }
-    if (Math.max(low, from) > Math.min(high, to)) break
-    low = Math.max(low, from)
-    high = Math.min(high, to)
-  }
-  const left = Math.min(Math.max(row.scrollLeft, low), high)
-  if (Math.abs(left - row.scrollLeft) >= 1) row.scrollLeft = left
-}
-
-/** Scrolls the row so that the tabs of the keys show, as `reveal` says. */
-function revealKeys(
-  row: HTMLElement,
-  nodes: TabNodes,
-  keys: readonly (string | null)[],
-): void {
-  const tabs = keys.flatMap((key) => {
-    const item = key === null ? undefined : nodes.item(key)
-    return item ? [item] : []
-  })
-  if (tabs.length > 0) reveal(row, tabs)
 }
 
 /** Watches the size of each tab of the row, and of no tab that left it. */
@@ -87,21 +41,74 @@ function watchTabs(
   }
 }
 
-/** What the row remembers of its last render. */
+/** Whether the row holds the same tabs in the same order. */
+function sameKeys(
+  last: readonly string[] | null,
+  next: readonly string[],
+): boolean {
+  return (
+    last !== null &&
+    last.length === next.length &&
+    last.every((key, index) => key === next[index])
+  )
+}
+
+/** What the row remembers of its last render, and of the kept tab. */
 interface Seen {
   keys: readonly string[] | null
   kept: string | null | undefined
-  moved: object | null
+  moved: { key: string } | null
+  /** The place of the kept tab at the last check. */
+  place: Place | null
+}
+
+/**
+ * The tabs that a render scrolls into view, in the order of `reveal`: the
+ * moved tab and the kept tab after a move, the kept tab when it changed,
+ * and the kept tab and a tab that opened. Null when the render brings none
+ * of these.
+ */
+function shownAfter(
+  before: Seen,
+  keys: readonly string[],
+  kept: string | null,
+  moved: { key: string } | null,
+): (string | null)[] | null {
+  if (moved !== null && moved !== before.moved) return [moved.key, kept]
+  if (kept !== before.kept) return [kept]
+  const opened = keys.filter((key) => before.keys?.includes(key) === false)
+  return opened.length === 1 ? [kept, opened[0]] : null
+}
+
+/**
+ * Scrolls the kept tab back into view when `force` says so, or when it
+ * changed its size or its place in the row since the last check, and notes
+ * its place. A scroll of the user changes neither, so it stays.
+ */
+function keep(
+  row: HTMLElement,
+  nodes: TabNodes,
+  seen: Seen,
+  force: boolean,
+): void {
+  const kept = seen.kept ?? null
+  const place = placeOf(row, nodes, kept)
+  if (force || !samePlace(seen.place, place)) revealKeys(row, nodes, [kept])
+  seen.place = place
 }
 
 /**
  * The scroll of a row of tabs that does not fit. The row keeps `kept`, the
- * tab with the rename field or else the shown tab, in view: at the mount,
- * when it changes, and when the row gets narrower. After a move, the moved
- * tab shows. A tab that opens shows too, as far as the kept tab still shows
- * with it. A tab that scrolls into view stops clear of the fades, at the
- * scroll padding of the row. It returns the ends of the row that clip tabs,
- * which follow the scroll position and the sizes of the row and its tabs.
+ * tab with the rename field or else the shown tab, whole in view: at the
+ * mount, when it changes, when the row gets narrower, and when that tab
+ * changes its size or its place, such as after a rename, a new title, or a
+ * close of a tab before it. A resize of the row or of a tab, and a render
+ * that changes the tabs, check it. A scroll of the user away from the kept
+ * tab stays until one of these. After a move, the moved tab shows. A tab
+ * that opens shows too, as far as the kept tab still shows with it. A tab
+ * that scrolls into view stops clear of the fades, at the scroll padding of
+ * the row. It returns the ends of the row that clip tabs, which follow the
+ * scroll position and the sizes of the row and its tabs.
  */
 export function useRowScroll(props: {
   row: RefObject<HTMLElement | null>
@@ -113,7 +120,12 @@ export function useRowScroll(props: {
 }): RowFades {
   const { row, nodes } = props
   const [fades, setFades] = useState<RowFades>({ start: false, end: false })
-  const seen = useRef<Seen>({ keys: null, kept: undefined, moved: null })
+  const seen = useRef<Seen>({
+    keys: null,
+    kept: undefined,
+    moved: null,
+    place: null,
+  })
   const watcher = useRef<{ observer: ResizeObserver; tabs: Set<Element> }>(null)
 
   useLayoutEffect(() => {
@@ -127,8 +139,7 @@ export function useRowScroll(props: {
     }
     let width = node.clientWidth
     const observer = new ResizeObserver(() => {
-      const kept = seen.current.kept ?? null
-      if (node.clientWidth < width) revealKeys(node, nodes, [kept])
+      keep(node, nodes, seen.current, node.clientWidth < width)
       width = node.clientWidth
       update()
     })
@@ -150,12 +161,16 @@ export function useRowScroll(props: {
     if (watch) watchTabs(node, watch.observer, watch.tabs)
     const before = seen.current
     const { keys, kept, moved } = props
-    seen.current = { keys, kept, moved }
-    const opened = keys.filter((key) => before.keys?.includes(key) === false)
-    if (moved !== null && moved !== before.moved) {
-      revealKeys(node, nodes, [moved.key, kept])
-    } else if (kept !== before.kept) revealKeys(node, nodes, [kept])
-    else if (opened.length === 1) revealKeys(node, nodes, [kept, opened[0]])
+    const next: Seen = { keys, kept, moved, place: before.place }
+    seen.current = next
+    const shows = shownAfter(before, keys, kept, moved)
+    if (shows) {
+      revealKeys(node, nodes, shows)
+      next.place = placeOf(node, nodes, kept)
+    } else if (!sameKeys(before.keys, keys)) {
+      // A tab that closed can move the kept tab.
+      keep(node, nodes, next, false)
+    }
   })
 
   return fades

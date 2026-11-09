@@ -1,13 +1,71 @@
 // @vitest-environment happy-dom
+import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
-import { byRole } from '../../test-support/dom-queries'
+import { testNavigation } from '../../files/files-test-kit'
+import { sessionPath, type Session } from '../../shared/sessions'
+import { byRole, byText, queryByText } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
-import { first, mountChat, second } from './tab-drag-test-kit'
-import { fillRow, tabList, turnWheel } from './tab-row-test-kit'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import {
+  MOUNTED_TEST_TIMEOUT,
+  press,
+  pressKey,
+  typeText,
+  waitFor,
+} from '../../test-support/mount'
+import { RowLayout, widthsByText } from './row-layout-test-kit'
+import {
+  file,
+  fileTabs,
+  first,
+  mountChat,
+  second,
+  settle,
+  shownTab,
+} from './tab-drag-test-kit'
+import { fillRow, rightClick, tabList, turnWheel } from './tab-row-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
+
+/** The record of an open session of the fake workspace. */
+function recordOf(id: string): Session {
+  const records = workspaceFixtures().sessions.sessions
+  const record = records.find((item) => item.id === id)
+  if (!record) throw new Error(`The fake workspace has no session ${id}.`)
+  return record
+}
+
+/** Another member opens or closes a session: the stream brings its record. */
+function streamRecord(server: FakeApiServer, session: Session) {
+  act(() => {
+    server.events.emit({
+      workspaceId: FAKE_IDS.workspace,
+      eventNumber: server.events.history().throughEventNumber + 1,
+      occurredAt: FAKE_TIME,
+      event: { type: 'session.updated', session },
+    })
+  })
+}
+
+/** The Worker renames the shown session: its reply holds the new title. */
+function answerRename(server: FakeApiServer, title: string) {
+  const record = recordOf(FAKE_IDS.session)
+  server.json(
+    'PATCH',
+    sessionPath(FAKE_IDS.org, FAKE_IDS.workspace, record.id),
+    {
+      session: { ...record, title },
+      eventNumber: server.events.history().throughEventNumber,
+    },
+  )
+}
+
+/** Presses Enter in a field: the browser submits the form of the field. */
+function submit(field: HTMLElement) {
+  act(() => field.closest('form')?.requestSubmit())
+}
 
 describe('a full tab row', () => {
   it('scrolls sideways on a vertical wheel turn, leaves a sideways swipe and a turn past its end to the browser, and fades each end that clips tabs', async () => {
@@ -43,5 +101,133 @@ describe('a full tab row', () => {
       { left: 300, free: true, fades: ['start'] },
       { left: 0, free: false, fades: ['end'] },
     ])
+  })
+
+  it('scrolls the shown tab into view at the mount and when another tab shows, the moved tab after a move, and the shown tab again when the row gets narrower', async () => {
+    // Three tabs of 100 px in a row of 200 px: it scrolls up to 100 px.
+    const layout = new RowLayout(
+      200,
+      widthsByText({
+        'Debounce lookups': 100,
+        'app-[redacted].ts': 100,
+        'Address autocomplete': 100,
+      }),
+    )
+    await mountChat({
+      server: new FakeApiServer(),
+      tabs: [second, file, first],
+      viewport: 'desktop',
+      renderTab: fileTabs(testNavigation()),
+    })
+    const list = tabList()
+    const steps: number[] = []
+    const step = async () => {
+      await settle()
+      layout.settle()
+      steps.push(list.scrollLeft)
+    }
+
+    await step()
+    await press(byRole('button', 'Debounce lookups'))
+    await step()
+    rightClick(byText('app-[redacted].ts'), { clientX: 150, clientY: 12 })
+    await press(byRole('menuitem', 'Move right'))
+    await step()
+    layout.width = 150
+    await step()
+
+    expect({ steps, shown: shownTab() }).toEqual({
+      steps: [100, 0, 100, 0],
+      shown: 'Debounce lookups',
+    })
+  })
+
+  it('scrolls a tab that another member opens into view as far as the shown tab still shows, and keeps the shown tab whole when another member closes a tab before it', async () => {
+    const server = new FakeApiServer()
+    const layout = new RowLayout(
+      200,
+      widthsByText({
+        'Debounce lookups': 60,
+        'Address autocomplete': 80,
+        'Postcode rules': 100,
+        'Checkout copy': 150,
+      }),
+    )
+    await mountChat({ server, tabs: [second, first], viewport: 'desktop' })
+    const list = tabList()
+    const steps: number[] = []
+    const open = async (id: string, title: string) => {
+      const record = recordOf(FAKE_IDS.session)
+      streamRecord(server, { ...record, id, title, createdAt: FAKE_TIME })
+      await waitFor(() => queryByText(title), `the tab of ${title}`)
+      layout.settle()
+      steps.push(list.scrollLeft)
+    }
+
+    layout.settle()
+    steps.push(list.scrollLeft)
+    // It fits beside the shown tab, so the row scrolls to it.
+    await open('postcode', 'Postcode rules')
+    // It does not fit beside the shown tab, so the row keeps the shown tab.
+    await open('copy', 'Checkout copy')
+    // The shown tab moves 60 px to the left, past the start of the row.
+    streamRecord(server, { ...recordOf('debounce'), closedAt: FAKE_TIME })
+    await waitFor(() => !queryByText('Debounce lookups'), 'the closed tab')
+    layout.settle()
+    steps.push(list.scrollLeft)
+
+    expect({ steps, shown: shownTab() }).toEqual({
+      steps: [0, 40, 40, 0],
+      shown: 'Address autocomplete',
+    })
+  })
+
+  it('keeps the whole shown tab in view after a rename makes it wider, and leaves the row where the user scrolled it while that tab keeps its size and its place', async () => {
+    const layout = new RowLayout(
+      200,
+      widthsByText({
+        'Debounce lookups': 150,
+        'Address autocomplete': 120,
+        // The tab with the rename field.
+        '': 120,
+        'Address autocomplete for checkout': 200,
+      }),
+    )
+    const server = new FakeApiServer()
+    answerRename(server, 'Address autocomplete for checkout')
+    await mountChat({ server, tabs: [second, first], viewport: 'desktop' })
+    layout.settle()
+    const list = tabList()
+    const atMount = list.scrollLeft
+
+    rightClick(byRole('button', 'Address autocomplete'), {
+      clientX: 150,
+      clientY: 12,
+    })
+    await press(byRole('menuitem', 'Rename session'))
+    layout.settle()
+    const field = byRole('textbox', 'Session name')
+    await typeText(field, 'Address autocomplete for checkout')
+    submit(field)
+    await settle()
+    layout.settle()
+    const renamed = list.scrollLeft
+
+    turnWheel(list, { deltaY: -500 })
+    const scrolled = list.scrollLeft
+    rightClick(byRole('button', 'Debounce lookups'), {
+      clientX: 20,
+      clientY: 12,
+    })
+    await pressKey('Escape')
+    layout.width = 260
+    layout.settle()
+
+    expect({ atMount, renamed, scrolled, after: list.scrollLeft }).toEqual({
+      atMount: 70,
+      renamed: 150,
+      scrolled: 0,
+      after: 0,
+    })
   })
 })

@@ -1,7 +1,11 @@
 import { act } from 'react'
 import { createApiClient } from '../../app/api/client'
 import type { FilesNavigation } from '../../files/navigation'
-import { FileTabItem, LiftedFileTab } from '../../files/tabs/FileTabItem'
+import {
+  FileTabItem,
+  fileTabName,
+  LiftedFileTab,
+} from '../../files/tabs/FileTabItem'
 import {
   workspaceViewPath,
   type WorkspaceTab,
@@ -26,11 +30,23 @@ export const first: WorkspaceTab = {
 }
 /** The session tab of "Debounce lookups". */
 export const second: WorkspaceTab = { kind: 'session', sessionId: 'debounce' }
-/** The file tab of "app.ts". */
+
+/** A fake secret value, which the real path of the file tab holds. */
+const secret = 'acme-7f3k'
+
+/**
+ * The file tab of "app-[redacted].ts". Its real path holds a fake secret
+ * value, which the label of the path hides.
+ */
 export const file: WorkspaceTab = {
   kind: 'file',
-  path: 'src/app.ts',
+  path: `src/app-${secret}.ts`,
   mode: 'source',
+}
+
+/** The label of a real path, as the Worker sends it: each secret hidden. */
+function labelOf(path: string): string {
+  return path.replaceAll(secret, '[redacted]')
 }
 
 /** Mounts the chat of the fake workspace, whose saved view holds `tabs`. */
@@ -62,25 +78,33 @@ export async function mountChat(options: {
 }
 
 /**
- * Draws the file and diff tabs with the real tab of the Files screens. Each
- * tab takes its path as its label, so it shows its file name.
+ * Names and draws the file and diff tabs with the real tab of the Files
+ * screens, as the app does. Each tab takes the label that the Worker sends
+ * for its path: the path with the fake secret value hidden. So a name that
+ * the row takes from a real path shows the secret value.
  */
 export function fileTabs(navigation: FilesNavigation): RenderTab {
-  return (tab, draw) =>
-    draw.kind === 'lifted' ? (
-      <LiftedFileTab label={tab.path} tab={tab} />
-    ) : (
-      <FileTabItem
-        close={draw.close}
-        item={draw.item}
-        label={tab.path}
-        link={draw.link}
-        navigation={navigation}
-        onClose={() => {}}
-        selected={false}
-        tab={tab}
-      />
-    )
+  return (tab) => {
+    const label = labelOf(tab.path)
+    return {
+      title: fileTabName(tab, label),
+      draw: (draw) =>
+        draw.kind === 'lifted' ? (
+          <LiftedFileTab label={label} tab={tab} />
+        ) : (
+          <FileTabItem
+            close={draw.close}
+            item={draw.item}
+            label={label}
+            link={draw.link}
+            navigation={navigation}
+            onClose={() => {}}
+            selected={false}
+            tab={tab}
+          />
+        ),
+    }
+  }
 }
 
 /** Gives the list item of each tab a box 100 px wide, in this order. */

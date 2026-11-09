@@ -2,6 +2,15 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
+import {
+  layOut,
+  pointer,
+  rowStatus,
+} from '../../../chat/components/tab-drag-test-kit'
+import {
+  menuItems,
+  rightClick,
+} from '../../../chat/components/tab-row-test-kit'
 import type { FilesTab } from '../../../files/navigation'
 import { sessionsPath } from '../../../shared/sessions'
 import { workspaceViewPath } from '../../../shared/workspace-view'
@@ -20,6 +29,8 @@ import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
+  press,
+  pressKey,
 } from '../../../test-support/mount'
 import { serveSuspendedAcme } from '../../../test-support/suspended-org'
 import { click, settle } from '../../test-mount'
@@ -92,24 +103,49 @@ describe('the Files screens in the workspace', () => {
     })
   })
 
-  test('name the tab and the page of a file by the label of its path, and keep its address on the real path', async () => {
+  test('name the tab, its tab menu, the status of the row, and the page of a file by the label of its path, and keep its address on the real path', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ paths: 'masked' })
     const tab: FilesTab = { kind: 'diff', path: MASKED_SEED_PATH }
     const href = filesHref(org, id, tab)
     const { view } = await openTab(server, href)
     await settle()
-    const link = linkTo(byLabel('Sessions and files', view), href)
-    expect({
+    const row = byLabel('Sessions and files', view)
+    const link = linkTo(row, href)
+    const shown = {
       tab: link.textContent,
       tooltip: link.getAttribute('title'),
       page: queryByRole('region', 'seed-[redacted].sql', view) !== null,
       address: href.includes(MASKED_SEED_PATH),
-    }).toEqual({
+    }
+
+    rightClick(link, { clientX: 250, clientY: 12 })
+    const menu = menuItems('seed-[redacted].sql changes')
+    await press(byRole('menuitem', 'Move left'))
+    await settle()
+    const moved = rowStatus()
+    layOut(
+      byRole('button', 'Address autocomplete', row),
+      link,
+      byRole('button', 'Debounce lookups', row),
+    )
+    pointer(link, 'pointerdown', { pointerType: 'mouse', clientX: 150 })
+    pointer(window, 'pointermove', { pointerType: 'mouse', clientX: 140 })
+    pointer(window, 'pointermove', { pointerType: 'mouse', clientX: 20 })
+    const dragging = rowStatus()
+    await pressKey('Escape')
+
+    expect({ ...shown, menu, moved, dragging }).toEqual({
       tab: 'seed-[redacted].sql',
       tooltip: 'scripts/seed-[redacted].sql',
       page: true,
       address: true,
+      menu: [
+        { name: 'Move left', off: false },
+        { name: 'Move right', off: true },
+      ],
+      moved: 'seed-[redacted].sql changes moves to place 2 of 3',
+      dragging: 'Moving seed-[redacted].sql changes to place 1 of 3',
     })
   })
 

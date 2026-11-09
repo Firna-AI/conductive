@@ -57,16 +57,21 @@ stops its own controller:
   the titles that the mockups show: the first session of a new workspace
   has the workspace name, and the agent's title renames both. The
   development page does the same.
-- `renderTab(tab, draw)` draws a file or diff tab of the saved view, such
-  as an open file, at its place in the tab row. For `draw.kind` `row`, it
-  spreads `draw.item` on the `<li>` of the tab and `draw.close` on the
-  wrapper of its Close button, and gives `draw.link.ref` to the link of the
-  tab. These hold the handlers, the classes, and the refs of the drag, of
-  the tab menu, and of the scroll of the row. The ref of the link gives the
-  tab the focus back after a move from the tab menu. For `lifted`, it draws
-  the copy that a drag lifts above the page: the icon and the whole title,
-  with no link and no Close. Without `renderTab`, the row shows only the
-  session tabs, as on a phone. `components/tab-row.ts` holds these types.
+- `renderTab(tab)` renders a file or diff tab of the saved view, such as an
+  open file. Its `title` is the name of the tab, as a screen reader reads
+  it from the tab, with each secret value hidden, such as "app.ts changes"
+  for a diff. The tab menu and the status of the row name the tab by it,
+  and the chat takes no name from a path. Its `draw(draw)` draws the tab
+  by the same name. For `draw.kind` `row`, it draws the tab at its place
+  in the row: it spreads `draw.item` on the `<li>` of the tab and
+  `draw.close` on the wrapper of its Close button, and gives
+  `draw.link.ref` to the link of the tab. These hold the handlers, the
+  classes, and the refs of the drag, of the tab menu, and of the scroll of
+  the row. The ref of the link gives the tab the focus back after a move
+  from the tab menu. For `lifted`, it draws the copy that a drag lifts
+  above the page: the icon and the whole title, with no link and no Close.
+  Without `renderTab`, the row shows only the session tabs, as on a phone.
+  `components/tab-row.ts` holds these types.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The
   chip of the file shows the label of its path, `displayPath`, which hides
   each secret value, as [Labels of paths](../files/README.md#labels-of-paths)
@@ -170,10 +175,12 @@ members from the models of the app.
   tab whose middle is right of the pointer, else after the last tab. A line
   that takes no space marks it, so no tab moves during the drag. The tab
   stays at its place as a faint copy, and a lifted copy hangs below the row
-  under the pointer. The status of the row tells a screen reader the title
-  and the place, such as "Moving Debounce lookups to place 2 of 3". The
-  release calls `moveTab`, and a drop at the tab's own place moves nothing.
-  Escape ends a drag with no move.
+  under the pointer. The copy shows the whole title, which the row cuts at
+  168 px, and a title wider than the window goes on to more lines. The
+  status of the row tells a screen reader the title and the place, such as
+  "Moving Debounce lookups to place 2 of 3". The release calls `moveTab`,
+  and a drop at the tab's own place moves nothing. Escape ends a drag with
+  no move.
 - A drag does not change the shown tab: the click at its end selects
   nothing, also the click that a finger sends after it lets go. A press on
   Close starts no drag. A read-only chat binds no drag, and neither does a
@@ -198,15 +205,20 @@ members from the models of the app.
   with its rename field open no tab menu, so the browser shows its own.
 - A row whose tabs do not fit at their minimum width scrolls sideways, with
   no scrollbar. It keeps the tab with the rename field, else the shown tab,
-  in view: at the mount, when that tab changes, and when the row gets
-  narrower. A tab that opens shows too, as far as the kept tab still shows
-  with it, and so does a tab after a move. A tab that scrolls into view
-  stops clear of the fades, at the scroll padding of the row. A vertical
-  wheel turn over the row scrolls it sideways, through `useSidewaysWheel`
-  of the web app. The row sets `.fadeStart` and `.fadeEnd` from its scroll
-  position and the sizes of the row and its tabs. During a drag, the
-  pointer within 32 px of an end of the row, or past it, scrolls the row,
-  and the drag finds its drop place again after each scroll.
+  whole in view: at the mount, when that tab changes, when the row gets
+  narrower, and when that tab changes its size or its place in the row,
+  such as after a rename, Escape in the rename field, a new title from the
+  agent, a new label of a file, or the close of a tab before it. A resize
+  of the row or of any tab, and a render that changes the tabs, check that
+  tab. A scroll of the user away from it stays until such a change. A tab
+  that opens shows too, as far as the kept tab still shows with it, and so
+  does a tab after a move. A tab that scrolls into view stops clear of the
+  fades, at the scroll padding of the row. A vertical wheel turn over the
+  row scrolls it sideways, through `useSidewaysWheel` of the web app. The
+  row sets `.fadeStart` and `.fadeEnd` from its scroll position and the
+  sizes of the row and its tabs. During a drag, the pointer within 32 px of
+  an end of the row, or past it, scrolls the row, and the drag finds its
+  drop place again after each scroll.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
@@ -319,16 +331,27 @@ and checks the saved message on the bar of a failed first start and of a
 failed resume.
 `components/TabDrag.dom.test.tsx` mounts the chat with the real
 `FileTabItem` of the Files screens and drags tabs with pointer events over
-boxes that `components/tab-drag-test-kit.tsx` gives them. A mouse moves a
-file tab before a session tab, and the click at the end selects nothing.
+boxes that `components/tab-drag-test-kit.tsx` gives them. The file tab of
+the kit has a real path with a fake secret value and a label that hides
+it, so a name that the row takes from a path fails the tests. A mouse
+moves a file tab before a session tab, and the click at the end selects
+nothing.
 Escape keeps the order. A finger lifts a session tab after 450 ms, and its
 release with no move opens the tab menu as a sheet, which the late click
 of the finger does not close. `components/TabMenu.dom.test.tsx` opens the
 tab menu with Shift and F10 and with a right click, moves a file tab with
 Move left, and opens the rename field in a tab that does not show.
 `components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
-its fades. `components/tab-row-test-kit.ts` sends their right clicks,
-keys, and wheel turns.
+its fades. It also scrolls a full row over the browser layout of
+`components/row-layout-test-kit.ts`, which gives the row and its tabs
+their boxes and calls back each `ResizeObserver`, as happy-dom does not.
+The row scrolls the shown tab into view at the mount, on a new shown
+tab, and on a narrower row, the moved tab after a move, and a tab that
+opens as far as the shown tab still shows. It keeps the whole shown tab
+in view after the close of a tab before it and after a rename makes it
+wider, and a row that the user scrolled away stays there.
+`components/tab-row-test-kit.ts` sends their right clicks, keys, and
+wheel turns.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -346,7 +369,7 @@ check in the Mac app.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
   `components/SessionTab.tsx` and the tabs of `renderTab`.
   `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
-  the row in the saved order.
+  the row in the saved order with their titles.
 - `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
@@ -355,8 +378,10 @@ check in the Mac app.
   `components/useTabMoves.ts`: the moves of the row, the focus after a move
   from the menu, and the words of the status.
 - `components/row-scroll.ts`: the scroll of a full row, its fades, and the
-  scroll of a drag near an end. `components/tab-nodes.ts`: the elements of
-  the tabs, which the drag, the scroll, and the menu share.
+  scroll of a drag near an end. `components/row-reveal.ts`: the place of a
+  tab in the row, and the scroll that brings tabs into view.
+  `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
+  scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `state/load.ts`: the order of the first reads and the stream start.

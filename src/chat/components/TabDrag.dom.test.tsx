@@ -47,7 +47,10 @@ describe('a drag in the tab row', () => {
       viewport: 'desktop',
       renderTab: fileTabs(navigation),
     })
-    const fileTab = await waitFor(() => queryByText('app.ts'), 'the file tab')
+    const fileTab = await waitFor(
+      () => queryByText('app-[redacted].ts'),
+      'the file tab',
+    )
     layOut(
       byRole('button', 'Address autocomplete'),
       byRole('button', 'Debounce lookups'),
@@ -58,9 +61,9 @@ describe('a drag in the tab row', () => {
     pointer(window, 'pointermove', { ...mouse, clientX: 240 })
     pointer(window, 'pointermove', { ...mouse, clientX: 120 })
     const moving = rowStatus()
-    const lifted = liftedCopy('app.ts')
+    const lifted = liftedCopy('app-[redacted].ts')
     pointer(window, 'pointerup', { ...mouse, clientX: 120, buttons: 0 })
-    act(() => byText('app.ts').click())
+    act(() => byText('app-[redacted].ts').click())
     await settle()
 
     expect({
@@ -71,10 +74,10 @@ describe('a drag in the tab row', () => {
       visited: navigation.visited,
       shown: shownTab(),
     }).toEqual({
-      moving: 'Moving app.ts to place 2 of 3',
+      moving: 'Moving app-[redacted].ts to place 2 of 3',
       lifted: true,
       saved: [[first, file, second]],
-      row: ['Address autocomplete', 'app.ts', 'Debounce lookups'],
+      row: ['Address autocomplete', 'app-[redacted].ts', 'Debounce lookups'],
       visited: [],
       shown: 'Address autocomplete',
     })

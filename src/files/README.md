@@ -163,6 +163,10 @@ The screens:
   chat.
   `LiftedFileTab` is the copy of the tab that a drag lifts above the page:
   its icon and its whole file name, with no link and no Close.
+  `fileTabName(tab, label)` is the name of the tab, as a screen reader
+  reads it: the file name of the label, or "File", with "changes" after
+  the name of a diff. The tab row names the tab by it in its tab menu and
+  its status.
 
 A module worker parses the Markdown of a preview: its blocks, its inline
 content, and its link references. Vite bundles the worker, so the shell
@@ -211,8 +215,9 @@ without one shows its real path.
 the rule.
 
 - The screens show only labels: the rows of All files and Changes, a
-  rename, the tab titles and their tooltips, the page headers, and the
-  names that a screen reader reads.
+  rename, the tab titles and their tooltips, the names of a tab in the tab
+  menu and the status of the tab row, the page headers, and the names that
+  a screen reader reads.
 - The real path stays the key of each row and each tab, the address, the
   read of a file or a diff, Copy, and Download, which saves the file under
   its real name. A label never becomes a path.

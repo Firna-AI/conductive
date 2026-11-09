@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { LiftedSessionTab } from './SessionTab'
-import type { RenderTab, RowTab } from './tab-row'
+import type { RowTab } from './tab-row'
 import local from './tabs.module.css'
 
 /** The lifted tab keeps this gap to the sides of the window, in CSS px. */
@@ -27,14 +27,14 @@ export function DropLine() {
  * The lifted tab under the pointer. It draws above the page, because the
  * row clips what it holds. It hangs below the row with its centre at `x`,
  * and it takes no pointer input. Near a side of the window, it moves in, so
- * that its whole title shows. The host draws the copy of its own tabs.
+ * that its whole title shows. A title wider than the window goes on to
+ * more lines. The host draws the copy of its own tabs.
  */
 export function LiftedTab(props: {
   tab: RowTab
   x: number
   top: number
   mobile: boolean
-  renderTab?: RenderTab
 }) {
   const { tab, x } = props
   const frame = useRef<HTMLDivElement>(null)
@@ -55,7 +55,7 @@ export function LiftedTab(props: {
       {tab.kind === 'session' ? (
         <LiftedSessionTab title={tab.title} />
       ) : (
-        props.renderTab?.(tab.tab, { kind: 'lifted' })
+        tab.draw({ kind: 'lifted' })
       )}
     </div>,
     document.body,

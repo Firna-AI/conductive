@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, Pencil } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import type { MenuEntry, MenuPoint } from '../ui/Menu'
-import { rowKey, titleOf, type RowTab, type TabItemProps } from './tab-row'
+import { rowKey, type RowTab, type TabItemProps } from './tab-row'
 
 /** The open menu of a tab: its title, where it opens, and its items. */
 export interface OpenTabMenu {
@@ -102,7 +102,7 @@ export function useTabMenu(props: {
   const menu: OpenTabMenu | null =
     open && tab && binds(tab)
       ? {
-          title: titleOf(tab),
+          title: tab.title,
           at: open.at,
           entries: entriesOf(tabs, index, act, props),
         }

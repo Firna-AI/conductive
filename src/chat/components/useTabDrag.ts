@@ -3,13 +3,7 @@ import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs
 import { usePointerDrag } from '../../app/pointer-drag'
 import type { TabPlace } from '../state/tab-order'
 import type { TabNodes } from './tab-nodes'
-import {
-  rowKey,
-  titleOf,
-  viewTabOf,
-  type RowTab,
-  type TabItemProps,
-} from './tab-row'
+import { rowKey, viewTabOf, type RowTab, type TabItemProps } from './tab-row'
 import local from './tabs.module.css'
 
 /** What the row draws for a drag of a tab. */
@@ -113,7 +107,7 @@ export function useTabDrag(props: {
     item,
     lineBefore,
     lineAtEnd: lineBefore === null,
-    status: `Moving ${titleOf(dragged.tab)} to place ${place + 1} of ${keys.length}`,
+    status: `Moving ${dragged.tab.title} to place ${place + 1} of ${keys.length}`,
     lifted: { tab: dragged.tab, x, top: box.top + box.height * hang },
   }
 }

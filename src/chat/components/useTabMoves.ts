@@ -2,7 +2,7 @@ import { useCallback, useLayoutEffect, useState } from 'react'
 import type { WorkspaceTab } from '../../shared/workspace-view'
 import type { TabPlace } from '../state/tab-order'
 import type { TabNodes } from './tab-nodes'
-import { rowKey, titleOf, viewTabOf, type RowTab } from './tab-row'
+import { rowKey, viewTabOf, type RowTab } from './tab-row'
 
 /** The last move of a tab of the row. */
 export interface TabMove {
@@ -47,7 +47,7 @@ export function useTabMoves(props: {
     const next = viewTabOf(neighbour)
     onMove(viewTabOf(tab), by < 0 ? { before: next } : { after: next })
     const to = index + by
-    const said = `${titleOf(tab)} moves to place ${to + 1} of ${tabs.length}`
+    const said = `${tab.title} moves to place ${to + 1} of ${tabs.length}`
     setLast({ key, to, said })
   }
   const at = last ? tabs.findIndex((tab) => rowKey(tab) === last.key) : -1

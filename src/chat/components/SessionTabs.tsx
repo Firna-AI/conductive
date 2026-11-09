@@ -15,7 +15,7 @@ import { SessionTabItem } from './SessionTab'
 import { DropLine, LiftedTab } from './TabDragParts'
 import { TabMenu } from './TabMenu'
 import { TabNodes } from './tab-nodes'
-import { rowKey, type RenderTab, type RowTab } from './tab-row'
+import { rowKey, type RowTab } from './tab-row'
 import { useTabDrag } from './useTabDrag'
 import { useTabMenu } from './useTabMenu'
 import { useTabMoves } from './useTabMoves'
@@ -31,8 +31,8 @@ function keptTab(tabs: readonly RowTab[], renaming: string | null) {
 }
 
 /**
- * The tab row: the session tabs and the tabs that the host draws with
- * `renderTab`, such as open files, in the order of the saved view, then +
+ * The tab row: the session tabs and the tabs that the host names and draws,
+ * such as open files, in the order of the saved view, then +
  * for a new session on the same branch and cloud computer, and the clock of
  * the session history. Every tab closes. A tab moves by drag and drop, or
  * by a long press on a phone, as `useTabDrag` says, and its tab menu renames
@@ -49,7 +49,6 @@ export function SessionTabs(props: {
   renaming: string | null
   historyOpen: boolean
   historyEntries: readonly MenuEntry[]
-  renderTab?: RenderTab
   onSelect: (id: string) => void
   onClose: (id: string) => void
   onStartRename: (id: string) => void
@@ -133,7 +132,7 @@ export function SessionTabs(props: {
                 tab={tab}
               />
             ) : (
-              props.renderTab?.(tab.tab, { kind: 'row', ...parts(tab, index) })
+              tab.draw({ kind: 'row', ...parts(tab, index) })
             )}
           </Fragment>
         ))}
@@ -169,7 +168,6 @@ export function SessionTabs(props: {
       {drag.lifted ? (
         <LiftedTab
           mobile={props.mobile}
-          renderTab={props.renderTab}
           tab={drag.lifted.tab}
           top={drag.lifted.top}
           x={drag.lifted.x}

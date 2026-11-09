@@ -100,7 +100,10 @@ describe('the tab menu', () => {
       viewport: 'desktop',
       renderTab: fileTabs(testNavigation()),
     })
-    const fileTab = await waitFor(() => queryByText('app.ts'), 'the file tab')
+    const fileTab = await waitFor(
+      () => queryByText('app-[redacted].ts'),
+      'the file tab',
+    )
     layOut(
       byRole('button', 'Address autocomplete'),
       byRole('button', 'Debounce lookups'),
@@ -110,8 +113,8 @@ describe('the tab menu', () => {
     const browserMenu = rightClick(fileTab, { clientX: 250, clientY: 12 })
     expect({
       browserMenu,
-      items: menuItems('app.ts'),
-      place: menuPlace('app.ts'),
+      items: menuItems('app-[redacted].ts'),
+      place: menuPlace('app-[redacted].ts'),
     }).toEqual({
       browserMenu: false,
       items: [
@@ -129,13 +132,13 @@ describe('the tab menu', () => {
       row: rowTitles(),
       status: rowStatus(),
       focus: focused(),
-      closed: menuItems('app.ts'),
+      closed: menuItems('app-[redacted].ts'),
       shown: shownTab(),
     }).toEqual({
       saved: [[first, file, second]],
-      row: ['Address autocomplete', 'app.ts', 'Debounce lookups'],
-      status: 'app.ts moves to place 2 of 3',
-      focus: 'app.ts',
+      row: ['Address autocomplete', 'app-[redacted].ts', 'Debounce lookups'],
+      status: 'app-[redacted].ts moves to place 2 of 3',
+      focus: 'app-[redacted].ts',
       closed: [],
       shown: 'Address autocomplete',
     })

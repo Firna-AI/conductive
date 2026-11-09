@@ -10,13 +10,15 @@
 
 /*
  * The frame of the lifted tab above the page. Its centre follows the
- * pointer, it keeps the width of the whole title, and it takes no pointer
- * input.
+ * pointer, and it takes no pointer input. It keeps the width of the whole
+ * title, up to the width of the window less the gap of 4 px at each side
+ * that `LiftedTab` keeps, where a longer title goes on to more lines.
  */
 .floating {
   position: fixed;
   z-index: 60;
   width: max-content;
+  max-width: calc(100vw - 8px);
   pointer-events: none;
   transform: translateX(-50%) rotate(-1.5deg);
 }
