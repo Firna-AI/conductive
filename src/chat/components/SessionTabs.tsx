@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { History, Plus } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import tabScroll from '../../../docs/mockups/src/components/workspace/TabScroll.module.css'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { ownPress } from '../../app/pointer-drag'
 import { useSidewaysWheel } from '../../app/sideways-wheel'
@@ -112,9 +113,9 @@ export function SessionTabs(props: {
       <ul
         className={classes(
           styles.tabs,
-          styles.scroll,
-          fades.start && styles.fadeStart,
-          fades.end && styles.fadeEnd,
+          tabScroll.scroll,
+          fades.start && tabScroll.fadeStart,
+          fades.end && tabScroll.fadeEnd,
         )}
         ref={row}
       >

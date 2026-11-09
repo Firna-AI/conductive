@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import tabScroll from '../../../docs/mockups/src/components/workspace/TabScroll.module.css'
 import { testNavigation } from '../../files/files-test-kit'
 import { sessionPath, type Session } from '../../shared/sessions'
 import { byRole, byText, queryByText } from '../../test-support/dom-queries'
@@ -82,8 +82,8 @@ describe('a full tab row', () => {
     const turn = (init: WheelEventInit) => {
       const free = turnWheel(tab, init)
       const fades = [
-        list.classList.contains(styles.fadeStart) ? 'start' : null,
-        list.classList.contains(styles.fadeEnd) ? 'end' : null,
+        list.classList.contains(tabScroll.fadeStart) ? 'start' : null,
+        list.classList.contains(tabScroll.fadeEnd) ? 'end' : null,
       ].filter((fade) => fade !== null)
       steps.push({ left: list.scrollLeft, free, fades })
     }

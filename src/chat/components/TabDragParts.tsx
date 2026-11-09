@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import tabDrag from '../../../docs/mockups/src/components/workspace/TabDrag.module.css'
 import { LiftedSessionTab } from './SessionTab'
 import type { RowTab } from './tab-row'
 import local from './tabs.module.css'
@@ -15,9 +15,9 @@ const edge = 4
  */
 export function DropLine() {
   return (
-    <li aria-hidden className={styles.drop}>
-      <span className={styles.line}>
-        <span className={styles.lineEnd} />
+    <li aria-hidden className={tabDrag.drop}>
+      <span className={tabDrag.line}>
+        <span className={tabDrag.lineEnd} />
       </span>
     </li>
   )

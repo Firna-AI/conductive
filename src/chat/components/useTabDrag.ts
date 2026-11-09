@@ -1,5 +1,5 @@
 import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import tabDrag from '../../../docs/mockups/src/components/workspace/TabDrag.module.css'
 import { usePointerDrag } from '../../app/pointer-drag'
 import type { TabPlace } from '../state/tab-order'
 import type { TabNodes } from './tab-nodes'
@@ -87,7 +87,7 @@ export function useTabDrag(props: {
       ref,
       className: classes(
         local.dragSurface,
-        dragged?.item === key && styles.placeholder,
+        dragged?.item === key && tabDrag.placeholder,
       ),
     }
   }

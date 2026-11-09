@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { MessageSquare } from 'lucide-react'
+import tabRename from '../../../docs/mockups/src/components/workspace/TabRename.module.css'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 
 /**
@@ -35,7 +36,7 @@ export function RenameField(props: {
       <input
         aria-label="Session name"
         autoFocus
-        className={styles.rename}
+        className={tabRename.rename}
         defaultValue={props.title}
         name="title"
         onBlur={(event) => finish(true, event.currentTarget.value)}

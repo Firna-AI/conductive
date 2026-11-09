@@ -1,5 +1,6 @@
 import { MessageSquare } from 'lucide-react'
 import { classes } from '../common/classes'
+import tabRename from './TabRename.module.css'
 import styles from './WorkspaceTabs.module.css'
 
 /**
@@ -14,10 +15,10 @@ export function RenameField(props: { title: string }) {
       <MessageSquare aria-hidden className={styles.icon} size={13} />
       <span
         aria-label="Session name"
-        className={classes(styles.rename, styles.renameFocused)}
+        className={classes(tabRename.rename, tabRename.renameFocused)}
         role="textbox"
       >
-        <span className={styles.renameSelection}>{props.title}</span>
+        <span className={tabRename.renameSelection}>{props.title}</span>
       </span>
     </form>
   )

@@ -10,6 +10,7 @@ import { IconButton } from '../common/actions'
 import { classes } from '../common/classes'
 import { DropPlace, TabItem, type WorkspaceTab } from './TabItem'
 import { tabMenuOf } from './TabMenu'
+import tabScroll from './TabScroll.module.css'
 import styles from './WorkspaceTabs.module.css'
 
 /**
@@ -119,10 +120,10 @@ export function WorkspaceTabs(props: {
       <ul
         className={classes(
           styles.tabs,
-          styles.scroll,
-          endInView && styles.scrolledToEnd,
-          full && (endInView ? styles.fadeStart : styles.fadeEnd),
-          overRow && !full && styles.clipSides,
+          tabScroll.scroll,
+          endInView && tabScroll.scrolledToEnd,
+          full && (endInView ? tabScroll.fadeStart : tabScroll.fadeEnd),
+          overRow && !full && tabScroll.clipSides,
         )}
       >
         {tabs.map((tab, index) => (

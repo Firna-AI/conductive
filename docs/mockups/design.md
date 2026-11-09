@@ -73,7 +73,9 @@ chat, and five tabs at the bottom.
   opens a field in place of the title of that tab, also when the tab does
   not show. The field marks that tab, which takes no fill, so only the shown
   tab is filled. On a phone, a long press that ends without a move opens the
-  menu as a sheet.
+  menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
+  `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
+  `TabRename.module.css` the rename field. The app shares these modules.
 - `CommandPalette` in `src/components/palette/` draws the command palette:
   a dialog near the top of the window over a light dim on desktop, and a
   page in place of the list on a phone. It has the search field, the tabs

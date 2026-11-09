@@ -7,6 +7,7 @@ import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { RenameField } from './RenameField'
+import tabDrag from './TabDrag.module.css'
 import styles from './WorkspaceTabs.module.css'
 
 export type TabKind = 'session' | 'code' | 'markdown' | 'diff'
@@ -89,7 +90,7 @@ export function TabItem(props: {
       className={classes(
         styles.tab,
         tab.selected && styles.selected,
-        props.placeholder && styles.placeholder,
+        props.placeholder && tabDrag.placeholder,
         menu && styles.menuOpen,
       )}
     >
@@ -123,13 +124,13 @@ export function DropPlace(props: {
   count: number
 }) {
   return (
-    <li className={styles.drop}>
-      <span aria-hidden className={styles.line}>
-        <span className={styles.lineEnd} />
+    <li className={tabDrag.drop}>
+      <span aria-hidden className={tabDrag.line}>
+        <span className={tabDrag.lineEnd} />
       </span>
       <div
         aria-hidden
-        className={classes(styles.tab, styles.lifted, styles.float)}
+        className={classes(styles.tab, styles.lifted, tabDrag.float)}
       >
         <span className={styles.link}>
           <TabContent tab={props.tab} />
