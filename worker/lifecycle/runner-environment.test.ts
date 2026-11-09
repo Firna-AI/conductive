@@ -77,6 +77,7 @@ it('supplies each start its repository branch and encrypted org settings without
   expect(boat.starts[0]).toMatchObject({
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'release-main',
+      CONDUCTIVE_WORKSPACE_BRANCH: created.workspace.branch,
       ORG_SECRET: initialSecret,
     },
   })
@@ -109,6 +110,7 @@ it('supplies each start its repository branch and encrypted org settings without
   expect(request).toMatchObject({
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'resume-main',
+      CONDUCTIVE_WORKSPACE_BRANCH: created.workspace.branch,
       ORG_SECRET: resumedSecret,
       PUBLIC_MODE: 'production',
       PUBLIC_FLAG: '1',
@@ -148,6 +150,7 @@ it('supplies each start its repository branch and encrypted org settings without
   expect(retention).toMatchObject({
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'resume-main',
+      CONDUCTIVE_WORKSPACE_BRANCH: created.workspace.branch,
       ORG_SECRET: retentionSecret,
       CONDUCTIVE_DISK_KEEPALIVE: '1',
     },

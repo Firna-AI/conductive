@@ -1,11 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
-import {
-  Archive,
-  ChevronLeft,
-  FolderGit2,
-  GitBranch,
-  PanelRight,
-} from 'lucide-react'
+import { Archive, ChevronLeft, FolderGit2, PanelRight } from 'lucide-react'
 import { people } from '../../fixtures/members'
 import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
@@ -29,11 +23,11 @@ function State(props: { status: ActivityStatus }) {
 }
 
 /**
- * The name, number, repository, branch, owner, and state of the open
+ * The name, number, repository, owner, and state of the open
  * workspace, and Archive. The list groups workspaces by section, so the
  * header names the repository. The label of the number follows the name,
  * and copies the link of the workspace. On a phone it leads the line under
- * the name, before the repository and the branch. For an admin of the org,
+ * the name, before the repository. For an admin of the org,
  * the owner opens the menu that reassigns the workspace. On desktop the
  * header ends with the toggle that hides the right column and shows it
  * again.
@@ -89,9 +83,7 @@ export function WorkspaceHeader(props: {
           <h1 className={styles.title}>{name}</h1>
           <span className={styles.line}>
             {copyLink}
-            <span className={styles.branch}>
-              {repository} · {workspace.branch}
-            </span>
+            <span className={styles.branch}>{repository}</span>
           </span>
         </div>
         {owner}
@@ -108,10 +100,6 @@ export function WorkspaceHeader(props: {
         <span className={styles.meta}>
           <FolderGit2 aria-hidden className={styles.icon} size={13} />
           <span className={styles.branch}>{repository}</span>
-        </span>
-        <span className={styles.meta}>
-          <GitBranch aria-hidden className={styles.icon} size={13} />
-          <span className={styles.branch}>{workspace.branch}</span>
         </span>
       </span>
       {owner}
