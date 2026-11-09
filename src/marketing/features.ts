@@ -1,5 +1,5 @@
 import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList'
-import type { IconName } from './icons'
+import type { IconName } from './icon-shapes'
 
 /**
  * The words of the features of the home page. The site renders them as HTML,

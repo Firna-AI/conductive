@@ -135,20 +135,27 @@ A value in `.dev.vars` replaces either one in local development. When
 `.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
 requests to that address keep that role. The
 [marketing README](src/marketing/README.md#development) uses this to preview
-the site.
+the built site through the Worker. For `npm run preview`, set
+`MARKETING_ORIGIN=http://localhost:5174` and
+`APP_ORIGIN=http://127.0.0.1:5174` in `.dev.vars`. Run `npm run build`
+before `npm run preview`. Open `http://localhost:5174` for the site and
+`http://127.0.0.1:5174` for the app. The Worker fills sign-in links from
+`APP_ORIGIN` and serves Astro's built pages with their security headers.
 
 Worker types come from `wrangler.jsonc`. The type check generates them
 under `.wrangler/`, which Git also ignores.
 
 | Command                     | What it does                                                   |
 | --------------------------- | -------------------------------------------------------------- |
-| `npm run dev`               | Serve the web app and the local Worker                         |
-| `npm run build`             | Check types and build the web app and Worker into `dist/`      |
+| `npm run dev`               | Build the marketing site, then serve the web app and the local Worker |
+| `npm run build`             | Check types, build the marketing site into `public/_site/`, then build the web app and Worker into `dist/` |
 | `npm run preview`           | Serve the built app and local Worker at port 5174              |
-| `npm run typecheck`         | Generate types and check app, tools, Worker production, and Worker tests |
+| `npm run typecheck`         | Generate types and check app, tools, Worker production, Worker tests, and the Astro files of the marketing site |
 | `npm run test`              | Run the Vitest tests                                           |
 | `npm run db:migrate`        | Apply the D1 migrations to local storage                       |
-| `npm run file-length:check` | Check the 300-line limit of JavaScript and TypeScript files     |
+| `npm run file-length:check` | Check the 300-line limit of JavaScript, TypeScript, and Astro files |
+| `npm run site:dev`          | Serve the marketing site from Astro at `http://localhost:4321`, and reload on edits |
+| `npm run site:build`        | Build the marketing site into `public/_site/`, with its file list |
 | `npm run check`             | Run every check, including the app build, the mockup checks, and the runner checks |
 | `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
 | `npm run mockups:check`     | Check mockup types, then build the catalogue in strict mode     |
@@ -192,6 +199,13 @@ complete yet:
 - `mokly.config.json`: the Mokly configuration.
 
 - `worker/app.ts`: the Worker's HTTP entry point.
+- `worker/marketing/`: built marketing pages, the agreement page before
+  GitHub, the file list, request markers, and the site's security headers.
+- `src/marketing/`: Astro pages, layouts, parts, styles, pictures, and
+  shared legal text. Its [README](src/marketing/README.md) gives the build
+  and preview steps.
+- `src/shared/site-build.ts`: names and types shared by the Astro build
+  and the Worker.
 - `worker/security/`: GitHub sign-in, signed sessions, the request gate,
   the app origin of each request, the Mac app's sign-in handoff and origin
   rules, and the shared content security policy of the web app and the Mac
@@ -219,7 +233,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 ## Docs
 
 - [Architecture](docs/architecture.md): the components, the hostnames, the
-  flows, and the terms.
+  [flows](docs/architecture/flows.md), and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
