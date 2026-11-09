@@ -15,7 +15,7 @@ The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. The centre column has a slim header that names the
-workspace and its number, such as `W-395`, the repository, the branch, and
+workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with Archive and the toggle of the
 right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
@@ -132,11 +132,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
     "The link didn't copy. Try again." in the danger colour. The note is
     a status, so screen readers hear it. The name of the button is "Copy
     link to W-395".
-  - On desktop, the repository and the branch share one group in place of
-    the spacer. The group takes only the room that the other parts leave,
-    so the name is cut short only when the group has no room left.
+  - On desktop, the repository takes only the room that the other parts
+    leave. The name is cut short only when the repository has no room left.
   - On a phone the label leads the line under the name, before the
-    repository and the branch, so the name keeps its room. The button
+    repository, so the name keeps its room. The button
     keeps the height of that line, and its touch area of 44 px reaches up
     over the name and down to the bottom edge of the header.
 - `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
