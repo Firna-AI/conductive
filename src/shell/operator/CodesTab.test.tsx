@@ -5,8 +5,6 @@ import { routes } from '../../app/router'
 import {
   operatorCodeDisablePath,
   operatorCodesPath,
-  type OperatorAccessCode,
-  type OperatorCodesResponse,
 } from '../../shared/operator-waitlist'
 import {
   byRole,
@@ -22,26 +20,17 @@ import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { serveOperator } from '../../test-support/operator'
 import { click, settle, typeText } from '../test-mount'
 import { textOf } from '../test-render'
+import {
+  codeOf,
+  codeRows,
+  codesBox,
+  codesHeader,
+  codesPage,
+  madeCode,
+} from './codes-test-kit'
 import { mountShell, operatorRequests } from './operator-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
-
-/** The text of the box of the codes: the box after the Sign-ups box. */
-function codesBox(view: HTMLElement): string {
-  const boxes = view.querySelectorAll('main section')
-  return textOf(boxes[boxes.length - 1]?.innerHTML ?? '')
-}
-
-function page(codes: readonly OperatorAccessCode[]): OperatorCodesResponse {
-  return { codes, total: codes.length, nextCursor: null }
-}
-
-/** The code of the samples with this text. */
-function codeOf(codes: readonly OperatorAccessCode[], text: string) {
-  const code = codes.find((item) => item.code === text)
-  if (!code) throw new Error(`The samples have no code ${text}.`)
-  return code
-}
 
 /** Whether a person can press the button: it is not disabled. */
 function enabled(button: HTMLElement): boolean {
@@ -50,16 +39,6 @@ function enabled(button: HTMLElement): boolean {
     button.getAttribute('aria-disabled') !== 'true'
   )
 }
-
-const header = 'Label Code State Uses'
-const rows = [
-  'Launch week by @calummoore · 6 Jan V7MKC-2QDXH Active 12 of 50',
-  'Meetup Lisbon by @ellie-w · 5 Jan TQ8WN-2HKXP Active 7 of 30',
-  'Design partners by @calummoore · 4 Jan 9PTXC-4WHMN Used up 5 of 5',
-  'Hacker News by @calummoore · 3 Jan HM3PE-7KWQT Disabled 18 of 100',
-  'Friends by @calummoore · 2 Jan 6FJDA-9RCVY Active 3 of 10',
-  'Beta testers by @calummoore · 1 Jan X2NRT-5GJHD Active 24 of 25',
-]
 
 describe('the Invite codes tab of the operator section', () => {
   test('lists the invite codes newest first; Copy copies a code, Copy join link its link on the app host, and only a code that works has them both and Disable', async () => {
@@ -85,9 +64,11 @@ describe('the Invite codes tab of the operator section', () => {
       ],
       active: queryByRole('button', 'Disable Friends') !== null,
     }).toEqual({
-      box: ['Invite codes 6 invite codes, newest first.', header, ...rows].join(
-        ' ',
-      ),
+      box: [
+        'Invite codes 6 invite codes, newest first.',
+        codesHeader,
+        ...codeRows,
+      ].join(' '),
       copied: ['V7MKC-2QDXH', 'https://app.conductive.test/join/V7MKC-2QDXH'],
       toast: true,
       usedUp: [null, null],
@@ -99,8 +80,12 @@ describe('the Invite codes tab of the operator section', () => {
     const server = new FakeApiServer()
     const fixtures = serveOperator(server)
     const mira = codeOf(fixtures.codes, 'M4QTX-7HKWD')
-    server.json('GET', operatorCodesPath({ q: 'm4qtx7hkwd' }), page([mira]))
-    server.json('GET', operatorCodesPath({ q: 'Q9XWP-4MTRA' }), page([]))
+    server.json(
+      'GET',
+      operatorCodesPath({ q: 'm4qtx7hkwd' }),
+      codesPage([mira]),
+    )
+    server.json('GET', operatorCodesPath({ q: 'Q9XWP-4MTRA' }), codesPage([]))
     const found = await mountShell(server, routes.operatorCodes('m4qtx7hkwd'))
     const box = codesBox(found.view)
     click(byText('@mira-s', found.view))
@@ -108,7 +93,7 @@ describe('the Invite codes tab of the operator section', () => {
     const opened = found.view.querySelector('main h1')?.textContent
     const none = await mountShell(server, routes.operatorCodes('Q9XWP-4MTRA'))
     expect({ box, opened, none: codesBox(none.view) }).toEqual({
-      box: `Codes 1 referral code matches. ${header} Referral code of @mira-s M4QTX-7HKWD Active 1 of 5`,
+      box: `Codes 1 referral code matches. ${codesHeader} Referral code of @mira-s M4QTX-7HKWD Active 1 of 5`,
       opened: '@mira-s',
       none: 'Codes Search by a code, the label of an invite code, or the GitHub login of an owner. No code matches “Q9XWP-4MTRA”.',
     })
@@ -137,22 +122,9 @@ describe('the Invite codes tab of the operator section', () => {
     click(make)
     await settle()
     const shown = queryByText(refused.error.message, dialog) !== null
-    const made: OperatorAccessCode = {
-      code: '3VKRD-6PXQA',
-      kind: 'invite',
-      label: 'Meetup Porto',
-      owner: null,
-      createdBy: sampleOperator,
-      createdAt: FAKE_TIME,
-      useLimit: 40,
-      uses: 0,
-      state: 'active',
-      disabledAt: null,
-      disabledBy: null,
-    }
-    server.json('POST', operatorCodesPath(), made, 201)
+    server.json('POST', operatorCodesPath(), madeCode, 201)
     const invites = fixtures.codes.filter((code) => code.kind === 'invite')
-    server.json('GET', operatorCodesPath(), page([made, ...invites]))
+    server.json('GET', operatorCodesPath(), codesPage([madeCode, ...invites]))
     click(make)
     await settle()
     const body = '{"label":"Meetup Porto","useLimit":40}'
@@ -168,7 +140,7 @@ describe('the Invite codes tab of the operator section', () => {
       filled: true,
       shown: true,
       open: null,
-      first: `Invite codes 7 invite codes, newest first. ${header} Meetup Porto by @calummoore · 15 Jan 3VKRD-6PXQA Active 0 of 40`,
+      first: `Invite codes 7 invite codes, newest first. ${codesHeader} Meetup Porto by @calummoore · 15 Jan 3VKRD-6PXQA Active 0 of 40`,
       requests: [
         'GET /api/operator/invite-codes',
         `POST /api/operator/invite-codes ${body}`,

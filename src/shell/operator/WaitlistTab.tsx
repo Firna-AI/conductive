@@ -34,10 +34,13 @@ import { OperatorPage } from './OperatorPage'
 import { SearchField } from './SearchField'
 import { NameCell, ProfileLink, TargetMark } from './TargetParts'
 
-type Person = OperatorWaitlistEntry
-
-/** The state of the approval email of each person approved in this visit. */
-type Approved = ReadonlyMap<number, OperatorApprovalEmail['state']>
+/**
+ * A person who waits. After an approval in this visit, the row also holds
+ * the state of the approval email, and it leaves the count.
+ */
+type Person = OperatorWaitlistEntry & {
+  approved?: OperatorApprovalEmail['state']
+}
 
 /**
  * A phone keeps the person and Approve, and gives the age of the GitHub
@@ -72,14 +75,25 @@ const nobody = (
  * The line above the rows. A person approved in this visit keeps their row
  * until the list loads again, and the count leaves them out.
  */
-function summaryOf(result: DirectoryResult<Person>, approved: Approved) {
-  const shown = result.rows.filter((row) => approved.has(row.githubId))
-  const waiting = result.total - shown.length
+function summaryOf(result: DirectoryResult<Person>) {
+  const waiting = result.remaining
   if (result.search === '') {
     return `${counted(waiting, 'person waits', 'people wait')}, oldest first.`
   }
   const verb = waiting === 1 ? 'matches' : 'match'
   return `${counted(waiting, 'person', 'people')} ${verb} “${result.search}”.`
+}
+
+const waitlist: DirectoryKind<Person> = {
+  title: 'Waitlist',
+  one: 'person',
+  many: 'people',
+  keys: 'Search by GitHub login, name, or GitHub ID.',
+  columns,
+  summary: summaryOf,
+  noMatch: (search) => `Nobody on the waitlist matches “${search}”.`,
+  nothing: nobody,
+  failure: 'waitlist',
 }
 
 /** Approved, and whether the approval email went, in place of Approve. */
@@ -105,9 +119,14 @@ export function WaitlistTab(props: { search: string }) {
   const { now, timeZone } = useServices()
   const phone = useViewport() === 'phone'
   const [directory] = useState(
-    () => new OperatorDirectory(app, operatorWaitlistPath, readWaitlistPage),
+    () =>
+      new OperatorDirectory<Person>(
+        app,
+        operatorWaitlistPath,
+        readWaitlistPage,
+        (row) => String(row.githubId),
+      ),
   )
-  const [approved, setApproved] = useState<Approved>(new Map())
   const [asking, ask] = useState<Person | null>(null)
   const { result } = useStore(directory.state)
   const today = now()
@@ -115,12 +134,13 @@ export function WaitlistTab(props: { search: string }) {
     row.githubCreatedAt === null
       ? 'Unknown'
       : formatAge(row.githubCreatedAt, today)
-  const approve = async (person: Person) => {
-    const reply = await approveUser(app, person.githubId)
-    setApproved((current) =>
-      new Map(current).set(person.githubId, reply.approvalEmail.state),
+  const approve = (person: Person) =>
+    directory.write(
+      person,
+      () => approveUser(app, person.githubId),
+      (reply) => (row) => ({ ...row, approved: reply.approvalEmail.state }),
+      { leavesCount: true },
     )
-  }
   const cell = (row: Person, key: string) => {
     switch (key) {
       case 'person':
@@ -145,9 +165,10 @@ export function WaitlistTab(props: { search: string }) {
             {formatShortDay(row.joinedAt, today, timeZone)}
           </TableCell>
         )
-      default: {
-        const email = approved.get(row.githubId)
-        if (email) return <ApprovedCell email={email} />
+      default:
+        if (row.approved !== undefined) {
+          return <ApprovedCell email={row.approved} />
+        }
         return (
           <ActionButton
             accessibilityLabel={`Approve @${row.login}`}
@@ -156,20 +177,7 @@ export function WaitlistTab(props: { search: string }) {
             Approve
           </ActionButton>
         )
-      }
     }
-  }
-  const kind: DirectoryKind<Person> = {
-    title: 'Waitlist',
-    one: 'person',
-    many: 'people',
-    keys: 'Search by GitHub login, name, or GitHub ID.',
-    columns,
-    rowKey: (row) => String(row.githubId),
-    summary: (found) => summaryOf(found, approved),
-    noMatch: (search) => `Nobody on the waitlist matches “${search}”.`,
-    nothing: nobody,
-    failure: 'waitlist',
   }
   const empty = result?.search === '' && result.total === 0
   return (
@@ -185,7 +193,7 @@ export function WaitlistTab(props: { search: string }) {
       <DirectoryList
         cell={cell}
         directory={directory}
-        kind={kind}
+        kind={waitlist}
         search={props.search}
       />
       {asking ? (

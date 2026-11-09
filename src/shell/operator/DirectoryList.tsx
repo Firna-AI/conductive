@@ -30,7 +30,6 @@ export interface DirectoryKind<Row> {
   /** The line of a search with no match: what the search finds. */
   keys: string
   columns: Readonly<Record<Viewport, TableColumn[]>>
-  rowKey: (row: Row) => string
   /** The line that counts the matches of a search, when it differs. */
   matches?: (result: DirectoryResult<Row>) => string | null
   /** The line that counts the rows, in place of the newest first. */
@@ -87,7 +86,7 @@ export function DirectoryList<Row>(props: {
       cell={props.cell}
       columns={kind.columns[viewport]}
       loading={loading}
-      rowKey={kind.rowKey}
+      rowKey={model.rowKey}
       rows={[...rows]}
       size={tableSize[viewport]}
     />

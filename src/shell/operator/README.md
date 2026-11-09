@@ -70,6 +70,14 @@ with the search of its invite code.
   The list then loads again with no search, so the new code leads it.
 - Disable sends `POST` with `{}` to the disable path of the code. The row
   shows the code of the reply, and the page of a user reads the user again.
+- A row that Approve or Disable changed keeps the change over the answer
+  of each read that started before the reply of the write. Such a read can
+  be Show more, a new search, or the read after New code. The answer of a
+  first read that started after that reply shows the row of the server.
+- Show more adds its rows under the rows that show, and takes the total of
+  its page. While an approved row shows, or an approval runs, Show more
+  keeps the earlier total, because the newer total can already leave the
+  person out. So the count leaves out each approval once.
 - Pause sign-ups sends `POST`, and Resume sign-ups `DELETE`, to the path of
   the pause, each with `{}`. Each page shows the pause of the reply at
   once, and the answer of an older read changes nothing. Resume asks
@@ -129,6 +137,8 @@ year than the last day has its year there.
   `src/test-support/operator.ts`. `operator-test-kit.tsx` mounts the
   shell or the page of a user, and lists the operator requests. It leaves
   out the reads of the pause unless a test asks for them.
+  `waitlist-test-kit.ts` and `codes-test-kit.ts` give the replies and the
+  rows of the samples that the tests of those two tabs share.
 
 ### Key Code
 
@@ -159,8 +169,11 @@ year than the last day has its year there.
 - `../../app/operator-read.ts`: `OperatorRead`, the read of the Overview
   and of a page, and the refusal of a person who is not an operator.
 - `../../app/operator-directory.ts`: `OperatorDirectory`, a search, its
-  pages, Show more, a new read after a write, and a row that a write
-  changed.
+  pages, Show more, a new read after a write, and `write`, a write that
+  changes one row, such as Approve or Disable. It also gives the count
+  that leaves out the approved rows. `DirectoryList` takes the key of a
+  row from it. `../../app/operator-row-changes.ts`: `RowChanges`, the
+  changes that the writes confirmed, by the key of the row.
 - `../../app/operator-target.ts`: `OperatorTarget`, a page with Suspend
   and Lift.
 - `../../app/operator-pause.ts`: `OperatorPause`, the pause with Pause and

@@ -614,6 +614,17 @@ The agent's calls from the protocol docs of Milestone 2, on 9 November
   during the pause then says that the code is wrong, not that the person
   must wait.
 
+The agent's calls from the review, on 9 November 2026:
+
+- One operator list model owns confirmed row changes and the waiting
+  count policy. Reason: an appended page must neither undo a confirmed
+  approval or disable nor subtract an approval twice. The other list
+  tabs retain their newest server totals.
+- Show more also keeps the earlier total while an approval still runs.
+  Reason: the page can answer with a total that already excludes the
+  approved person before the approval reply arrives. The displayed count
+  remains derived from the total and the approved rows still shown.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -913,9 +924,9 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-  - [ ] Apply the shared directory fix for confirmed findings 2 and 3:
+  - [x] Apply the shared directory fix for confirmed findings 2 and 3:
         one owner for confirmed rows, read ordering, and the waiting count.
-  - [ ] Record the deferred approval-email origin and account-age fixes
+  - [x] Record the deferred approval-email origin and account-age fixes
         as follow-up items.
   - [ ] Re-review the combined result, including Mac invite-link origins.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the

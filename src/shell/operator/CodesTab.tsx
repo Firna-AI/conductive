@@ -135,7 +135,13 @@ export function CodesTab(props: { search: string }) {
   const navigation = useNavigation()
   const phone = useViewport() === 'phone'
   const [directory] = useState(
-    () => new OperatorDirectory(app, operatorCodesPath, readCodesPage),
+    () =>
+      new OperatorDirectory(
+        app,
+        operatorCodesPath,
+        readCodesPage,
+        (row) => row.code,
+      ),
   )
   const [making, setMaking] = useState(false)
   const [disabling, setDisabling] = useState<Code | null>(null)
@@ -145,10 +151,12 @@ export function CodesTab(props: { search: string }) {
     if (props.search === '') void directory.reload()
     else navigation.replace(routes.operatorCodes())
   }
-  const disable = async (code: Code) => {
-    const changed = await disableCode(app, code.code)
-    directory.changeRows((row) => (row.code === changed.code ? changed : row))
-  }
+  const disable = (code: Code) =>
+    directory.write(
+      code,
+      () => disableCode(app, code.code),
+      (changed) => () => changed,
+    )
   const cell = (row: Code, key: string) => {
     const uses = `${row.uses} of ${row.useLimit}`
     switch (key) {
@@ -187,7 +195,6 @@ export function CodesTab(props: { search: string }) {
     many: 'invite codes',
     keys: 'Search by a code, the label of an invite code, or the GitHub login of an owner.',
     columns,
-    rowKey: (row) => row.code,
     summary: summaryOf,
     noMatch: (search) => `No code matches “${search}”.`,
   }

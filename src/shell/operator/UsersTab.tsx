@@ -35,7 +35,6 @@ const users: DirectoryKind<OperatorUserSummary> = {
   many: 'users',
   keys: 'Search by GitHub login, name, or GitHub ID.',
   columns,
-  rowKey: (row) => String(row.githubId),
 }
 
 /**
@@ -58,7 +57,10 @@ export function UsersTab(props: { search: string }) {
   const app = useApp()
   const { now, timeZone } = useServices()
   const [directory] = useState(
-    () => new OperatorDirectory(app, operatorUsersPath, readUsersPage),
+    () =>
+      new OperatorDirectory(app, operatorUsersPath, readUsersPage, (row) =>
+        String(row.githubId),
+      ),
   )
   const today = now()
   const cell = (row: OperatorUserSummary, key: string) => {
