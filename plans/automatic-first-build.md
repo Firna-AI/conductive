@@ -371,11 +371,11 @@ Depends on: 1, 2, 3
 
 Depends on: every other milestone
 
-- [ ] Before the pull request, check that decisions 150, 151, and 152 are
+- [x] Before the pull request, check that decisions 150, 151, and 152 are
       still free on origin/main. Renumber them in this plan, its follow-up
       items, the mockups, and the docs when main has taken them.
-- [ ] Run the targeted tests and `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and `npm run check`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
