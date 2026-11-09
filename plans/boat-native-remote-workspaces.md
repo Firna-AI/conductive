@@ -6730,10 +6730,15 @@ Orchestrator calls of 8 November 2026:
 - [x] Run the complete gate. Commit and push the branch. Done on
       8 November 2026. Evidence: `.context/gate-directory-path-length-6.log`.
       Branch: `calummoore/directory-path-length`.
-- [ ] Review the new commits against `origin/main` with the
+- [x] Review the new commits against `origin/main` with the
       `implementation-review` skill. The two fix rounds of the branch are
       used, so a `fix now` finding becomes `fix after merge`, and a
-      critical finding goes to the user. Update pull request #67.
+      critical finding goes to the user. Update pull request #67. Done on
+      9 November 2026: round 4 found one finding, and its check removed
+      it. The merge of the primary branch then renumbered decisions 142 to
+      144 of this branch to 147 to 149, and pull request #67 now targets
+      the primary branch, as decision 143 says.
+      Branch: `calummoore/directory-path-length`.
 
 ## Milestone 12: Terminal, previews, and desktop UI
 
