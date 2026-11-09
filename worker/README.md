@@ -61,6 +61,9 @@ The preview domain forwards each private preview to its workspace object.
 Its authorizer redeems the one-use viewer grant before any sandbox request.
 The object owns preview expiry and revocation beside its other alarm sources.
 A Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
+It also repairs overdue workspace disk alarms and org image refreshes after a 15-minute grace period.
+The repair checks at most 50 workspaces and 50 orgs per run.
+It defers failed calls and logs counts when either limit leaves work pending.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
 
 ## Development
@@ -81,12 +84,13 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
+- [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk and image alarms from the Cron Trigger.
 - [routes.ts](routes.ts) dispatches protected app routes.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
-- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Each message is fixed safe text, never a token, a raw error, a request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
+- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Messages use fixed safe text and numeric repair counts. They hold no token, raw error, request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
 - [features/alarms.ts](features/alarms.ts) keeps separate durable alarm deadlines for lifecycle, devices, previews, and GitHub.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.

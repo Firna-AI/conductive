@@ -57,6 +57,27 @@ it('finds orgs by each exact resource key and literal name text, including close
     )
       .bind(id, `${id}.conductive.test`, TEST_TIME, TEST_TIME, revokedAt)
       .run()
+  await seedWorkspace(harness, {
+    id: 'archived-workspace',
+    orgId: 'target-org',
+    state: 'archived',
+    archivedAt: TEST_TIME,
+  })
+  await harness.env.DB.batch([
+    harness.env.DB.prepare(
+      `INSERT INTO lifecycle_sandbox_cleanup (workspace_id, org_id, sandbox_id)
+       VALUES ('removed-workspace', 'target-org', 'cleanup-computer')`,
+    ),
+    harness.env.DB.prepare(
+      `INSERT INTO preview_hostnames
+       (id, hostname, org_id, workspace_id, port, created_at, expires_at, revoked_at, listener_sandbox_id)
+       VALUES ('old-listener', 'old.conductive.test', 'target-org', 'archived-workspace', 3000, ?, ?, ?, 'listener-computer')`,
+    ).bind(TEST_TIME, TEST_TIME, TEST_TIME),
+    harness.env.DB.prepare(
+      `INSERT INTO terminal_credentials (workspace_id, sandbox_id, ciphertext, updated_at)
+       VALUES ('archived-workspace', 'terminal-computer', 'unread-credential', ?)`,
+    ).bind(TEST_TIME),
+  ])
   const cases: readonly {
     q: string
     id: string | null
@@ -70,6 +91,9 @@ it('finds orgs by each exact resource key and literal name text, including close
     { q: 'workspace-compute', id: null, match: null },
     { q: 'build-computer', id: 'target-org', match: 'cloud-computer-id' },
     { q: 'build-compute', id: null, match: null },
+    { q: 'cleanup-computer', id: 'target-org', match: 'cloud-computer-id' },
+    { q: 'listener-computer', id: 'target-org', match: 'cloud-computer-id' },
+    { q: 'terminal-computer', id: 'target-org', match: 'cloud-computer-id' },
     {
       q: 'https://open.conductive.test',
       id: 'target-org',

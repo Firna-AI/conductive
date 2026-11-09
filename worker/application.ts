@@ -16,7 +16,8 @@ import {
   handleImageSourceCredential,
   IMAGE_SOURCE_CREDENTIAL_PATH,
 } from './lifecycle/image-sources/credential'
-import { workspaceRuntime } from './lifecycle/runtime'
+import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
+import { repairLifecycleAlarms } from './lifecycle/repair'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -31,7 +32,7 @@ import { cleanupDeletedOrgs } from './members/cleanup'
 import { routePreview, routeWorkspaceFeatures } from './features/router'
 import { productionAgentTools } from './tools/composition'
 import { productionGitHubWebhook } from './github/composition'
-import { appFrameSources } from './configuration'
+import { appFrameSources, runnerSoftware } from './configuration'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -167,6 +168,11 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         env,
         dependencies,
         productionMembersHooks(env, dependencies),
+      )
+      await repairLifecycleAlarms(
+        workspaceRuntime(env, dependencies),
+        imageRuntime(env, dependencies),
+        () => runnerSoftware(env),
       )
     },
   }

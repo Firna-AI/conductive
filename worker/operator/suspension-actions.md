@@ -94,4 +94,3 @@ An org suspension prevents every disk retention resume, including deleted-org ma
 It also blocks lifecycle activity and turn deadline extensions inside the workspace queue.
 An activity body that finishes after suspension gets 403 `org_suspended`.
 The refusal keeps the activity time, provider deadline, and pending stop alarm unchanged.
-
