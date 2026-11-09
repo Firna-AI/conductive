@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { onTestFinished } from 'vitest'
 
 import type { Agent } from '../../src/shared/agents'
-import type { RunnerTurn } from '../../src/shared/runner'
+import type { RunnerTurnV1 as RunnerTurn } from '../../src/shared/runner'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
 import { Runner } from '../src/runner'
 import { DiskStorage, EventStore } from '../src/state'

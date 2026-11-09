@@ -600,6 +600,34 @@ more approaches of each call.
   existing runner-auth gate protects delivery of either credential kind.
   Reason: one home for each fact, with the current access rules applied
   to the credential that replaces the login.
+- **D34. Worker-first protocol staging, 9 November 2026.** Agent call:
+  separate the Worker's supported protocol versions from the installed
+  runner version. The Worker accepts versions 1 and 2. The packaged runner
+  and each new full image build still advertise version 1 until Milestone
+  7 changes the provider adapters. The runner uses explicit version 1
+  wire types through erased imports. Reason: a version 1 adapter cannot
+  use a gateway token, so raising the installed version now would break
+  current turns. Version 2 has no real-login fallback.
+- **D35. Native token authentication, 9 November 2026.** Agent call:
+  require the native login kind when deriving a token, and sign its native
+  prefix with the other token fields. The gateway verifies that prefix
+  against the current login kind. Reason: a changed prefix must not move
+  a credential between the subscription and API-key authentication modes.
+  No extra login metadata needs to persist.
+- **D36. Common completion reporting, 9 November 2026.** Agent call:
+  collect ended turn IDs in the chat transaction, then report them after
+  commit and any runner confirmation, before the next dispatch. Existing
+  lifecycle recovery repairs a failed report. The callback skips lifecycle
+  writes while the existing receiver fence is inactive, and still starts
+  device cleanup. Reason: terminal replacements need the same end path,
+  while confirmations and suspension cleanup keep their existing order.
+- **D37. Dispatch credential construction, 9 November 2026.** Agent call:
+  build the exact version 2 command after the stored running state commits,
+  while the dispatch caller holds the chat queue. Save the nonce and login
+  version before deriving the credential. A failed send restores the
+  queued state and keeps those fields. Reason: token issuance requires a
+  real active turn, and redelivery must reuse its credential without
+  storing a login or token in a pending command.
 
 ## Milestone 1: Documentation and protocol
 
@@ -810,30 +838,40 @@ Depends on: 3, 4, 5
 The Worker serves runner protocol versions 1 and 2. Version 2 gets turn
 tokens for the existing Anthropic and OpenAI login kinds.
 
-- [ ] `src/shared/runner.ts`: version 2, as D16 says. Keep the version 1
+- [x] `src/shared/runner.ts`: version 2, as D16 says. Keep the version 1
       types for older runners (decision 2 A).
-- [ ] `worker/chat/runner-input.ts`: accept versions 1 and 2, within the
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] `worker/chat/runner-input.ts`: accept versions 1 and 2, within the
       pin of Milestone 4.
-- [ ] `worker/chat/runner-delivery.ts`: send the real login to version 1,
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] `worker/chat/runner-delivery.ts`: send the real login to version 1,
       as now, and the turn token of Milestone 2 to version 2.
-- [ ] Move the Worker tests that build runner commands with a login.
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] Move the Worker tests that build runner commands with a login.
       Keep every assertion. Add the version 2 cases.
-- [ ] Move `RunnerDelivery.failLogin` to the failure entry of
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] Move `RunnerDelivery.failLogin` to the failure entry of
       `TurnLifecycle`, and make `finish` private. This completes review
       finding 3, which kept the shared runner delivery file unchanged.
-- [ ] Report each turn end to the workspace lifecycle by turn ID from
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] Report each turn end to the workspace lifecycle by turn ID from
       `TurnCompletion.finish`, and drop the type match of turn ends in
       `runnerEventStored` and `worker/chat/runner-receipt.ts`. This is the
       wider fix of review finding 6.
+      Branch: `conductor/model-gateway-worker-protocol-2`.
 - [x] Before any runner gets a turn token, apply the user's answers on
       OpenAI background requests and OpenAI's review. Done on 9 November
       2026: gateway decision 9 A, and OpenAI confirmed the gateway.
-- [ ] Check the Worker's other fetches. Then turn on
+- [x] Check the Worker's other fetches. Then turn on
       `global_fetch_strictly_public` in `wrangler.jsonc` (open check 8).
       Save the check under `.context/model-gateway/`.
-- [ ] Tests: a version 1 runner gets the real login. A version 2 runner
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] Tests: a version 1 runner gets the real login. A version 2 runner
       gets a token. Each existing login kind reaches its provider
       through the gateway with the correct authentication mode.
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+
+Evidence: `.context/model-gateway/report.md`.
 
 ## Milestone 7: Runner on the gateway
 

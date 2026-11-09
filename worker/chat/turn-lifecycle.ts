@@ -58,8 +58,16 @@ export class TurnLifecycle {
     return turn?.state === 'queued' || turn?.state === 'running'
   }
 
-  async finish(turn: StoredTurn, end: TurnEnd): Promise<void> {
-    await new TurnCompletion(this.transaction, this.session).finish(turn, end)
+  private async finish(
+    turn: StoredTurn,
+    end: TurnEnd,
+    occurredAt = this.transaction.now,
+  ): Promise<void> {
+    await new TurnCompletion(this.transaction, this.session).finish(
+      turn,
+      end,
+      occurredAt,
+    )
   }
 
   async runnerEnded(
@@ -83,6 +91,7 @@ export class TurnLifecycle {
             state: 'failed',
             ...(event ? { retryMessageId: event.retryMessageId } : {}),
           },
+      occurredAt,
     )
     if (event && failed) await this.transaction.emit(event, occurredAt, true)
   }

@@ -2,8 +2,8 @@ import type { AgentChoice } from '../../../src/shared/agents'
 import type { ToolCall } from '../../../src/shared/chat-events'
 import type {
   RunnerLogin,
-  RunnerMessageDuringTurn,
-  RunnerTurn,
+  RunnerMessageDuringTurnV1 as RunnerMessageDuringTurn,
+  RunnerTurnV1 as RunnerTurn,
 } from '../../../src/shared/runner'
 import type { ProviderLifetime } from './lifetime'
 import type { WorkspaceToolContext } from './workspace-tools'

@@ -68,6 +68,7 @@ describe('connected runner access', () => {
     if (first?.type !== 'turn')
       throw new Error('Expected the preserved queued turn.')
     expect(first.commandId).toBe(pending[0]?.commandId)
+    if (!first.login) throw new Error('The version 1 turn has no login.')
     expect(first.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     runner.emit({
       type: 'turn.started',

@@ -116,44 +116,30 @@ export function createWorkspaceIntegration(
     },
     turnDispatchFailed: async (_id, turnId, publish) =>
       controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
+    turnEnded: async (_id, turnId, publish, occurredAt) => {
+      try {
+        const fence = await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY)
+        if (fence && fence.mode !== 'active') return
+        await controller.finishLifecycleTurn(
+          turnId,
+          callbackPublisher(publish),
+          occurredAt,
+        )
+      } finally {
+        context.waitUntil(devices.reconcile())
+      }
+    },
     runnerEventStored: async (envelope, publish) => {
       const event = envelope.event
       const lifecyclePublish = callbackPublisher(publish)
-      try {
-        if (event.type === 'runner.event-refused') {
-          if (
-            event.turnId &&
-            (event.runnerEventType === 'turn.completed' ||
-              event.runnerEventType === 'turn.failed')
-          )
-            await controller.finishLifecycleTurn(
-              event.turnId,
-              lifecyclePublish,
-              envelope.occurredAt,
-            )
-        } else if (
-          event.type === 'turn.started' ||
-          event.type === 'turn.completed' ||
-          event.type === 'turn.failed' ||
-          event.type === 'start.updated'
-        ) {
-          await controller.reportRunnerLifecycle(
-            event,
-            lifecyclePublish,
-            envelope.occurredAt,
-          )
-        }
-        await projectWorkspaceTitle(env.DB, envelope, now())
-      } finally {
-        if (
-          event.type === 'turn.completed' ||
-          event.type === 'turn.failed' ||
-          (event.type === 'runner.event-refused' &&
-            (event.runnerEventType === 'turn.completed' ||
-              event.runnerEventType === 'turn.failed'))
+      if (event.type === 'turn.started' || event.type === 'start.updated') {
+        await controller.reportRunnerLifecycle(
+          event,
+          lifecyclePublish,
+          envelope.occurredAt,
         )
-          context.waitUntil(devices.reconcile())
       }
+      await projectWorkspaceTitle(env.DB, envelope, now())
     },
   })
   const devices = new DeviceRuntime(

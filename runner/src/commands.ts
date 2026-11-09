@@ -1,6 +1,9 @@
 import type { AgentChoice } from '../../src/shared/agents'
 import type { Attachment, UserMessage } from '../../src/shared/messages'
-import type { RunnerLogin, WorkspaceToRunner } from '../../src/shared/runner'
+import type {
+  RunnerLogin,
+  WorkspaceToRunnerV1 as WorkspaceToRunner,
+} from '../../src/shared/runner'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { array, integer, nullable, object, oneOf, string } from './parse'
 

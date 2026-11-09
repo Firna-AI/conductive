@@ -4,6 +4,7 @@ import {
   type RunnerEvent,
   type RunnerEventEnvelope,
   type WorkspaceToRunner,
+  type RunnerProtocolVersion,
 } from '../../src/shared/runner'
 import type {
   RunnerConnection,
@@ -16,6 +17,7 @@ export interface FakeRunnerOptions {
   workspaceId: string
   streamId?: string
   now?: () => number
+  protocolVersion?: RunnerProtocolVersion
 }
 
 /**
@@ -51,7 +53,7 @@ export class FakeRunner {
     })
     connection.send({
       type: 'hello',
-      protocolVersion: RUNNER_PROTOCOL_VERSION,
+      protocolVersion: this.options.protocolVersion ?? RUNNER_PROTOCOL_VERSION,
       workspaceId: this.options.workspaceId,
       streamId: this.streamId,
     })

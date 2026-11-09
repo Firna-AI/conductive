@@ -7,8 +7,10 @@ import type {
   RunnerChangeModel,
   RunnerInterrupt,
   RunnerLogin,
-  WorkspaceToRunner,
+  WorkspaceToRunnerV1,
+  WorkspaceToRunnerV2,
   RunnerEventEnvelope,
+  RunnerProtocolVersion,
 } from '../../src/shared/runner'
 import type {
   WorkspaceEvent,
@@ -94,7 +96,7 @@ export type PendingCommand =
   | RunnerChangeModel
 
 export interface RunnerPeer {
-  send(message: WorkspaceToRunner): void
+  send(message: WorkspaceToRunnerV1 | WorkspaceToRunnerV2): void
   close(): void
 }
 
@@ -102,6 +104,7 @@ export interface ActiveRunner {
   peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
+  protocolVersion: RunnerProtocolVersion | null
   ready: boolean
   delivered: Set<string>
 }
@@ -154,6 +157,12 @@ export interface ChatDependencies {
     workspaceId: string,
     turnId: string,
     publish: ChatCallbackPublisher,
+  ): Promise<void>
+  turnEnded(
+    workspaceId: string,
+    turnId: string,
+    publish: ChatCallbackPublisher,
+    occurredAt: number,
   ): Promise<void>
   browserOpened(workspaceId: string, tabId: string): Promise<void>
   browserClosed(workspaceId: string, tabId: string): Promise<void>

@@ -24,41 +24,60 @@ afterEach(async () => {
   fixture = undefined
 })
 
-it('keeps a gateway-failed turn working until the runner end is stored, then becomes ready without reconnect or alarm repair', async () => {
-  const active = (fixture = await recoveryWorkspaceFixture(bundle))
-  const actor = await active.actor()
-  const token = string(await actor.issueTurnToken('first-turn'))
-  await active.env.DB.prepare(
-    `UPDATE agent_logins SET updated_at = updated_at + 1
+it.each(['completed', 'failed', 'refused'] as const)(
+  'keeps a gateway-failed turn working until its %s end is stored, then becomes ready without reconnect or alarm repair',
+  async (end) => {
+    const active = (fixture = await recoveryWorkspaceFixture(bundle))
+    const actor = await active.actor()
+    const token = string(await actor.issueTurnToken('first-turn'))
+    await active.env.DB.prepare(
+      `UPDATE agent_logins SET updated_at = updated_at + 1
      WHERE user_id = 'owner' AND agent = 'claude'`,
-  ).run()
-  expect(await actor.checkTurnToken(token)).toEqual({
-    ok: false,
-    reason: 'agent_login_changed',
-  })
-  expect(await active.runner.inbox.next()).toMatchObject({
-    type: 'interrupt',
-    sessionId: 'first-session',
-    turnId: 'first-turn',
-  })
-  expect(await actor.readLifecycle()).toMatchObject({
-    state: 'working',
-    runningSessions: ['first-session'],
-    runnerConnected: true,
-  })
+    ).run()
+    expect(await actor.checkTurnToken(token)).toEqual({
+      ok: false,
+      reason: 'agent_login_changed',
+    })
+    expect(await active.runner.inbox.next()).toMatchObject({
+      type: 'interrupt',
+      sessionId: 'first-session',
+      turnId: 'first-turn',
+    })
+    expect(await actor.readLifecycle()).toMatchObject({
+      state: 'working',
+      runningSessions: ['first-session'],
+      runnerConnected: true,
+    })
 
-  active.runner.emit({ ...FIRST_TURN_END, state: 'stopped' })
-  expect(await active.runner.inbox.next()).toMatchObject({
-    type: 'confirm',
-    throughEventNumber: 2,
-  })
-  expect(await actor.readLifecycle()).toMatchObject({
-    state: 'ready',
-    runningSessions: [],
-    runnerConnected: true,
-  })
-  expect(await actor.recoveryAdvanceRuns()).toBe(0)
-})
+    active.runner.emit(
+      end === 'failed'
+        ? {
+            type: 'turn.failed',
+            sessionId: 'first-session',
+            turnId: 'first-turn',
+            error: { code: 'agent_unavailable', message: 'The agent stopped.' },
+            retryMessageId: 'first-message',
+            durationMs: 1,
+          }
+        : {
+            ...FIRST_TURN_END,
+            state: 'stopped',
+            userMessageIds:
+              end === 'refused' ? ['unknown-message'] : ['first-message'],
+          },
+    )
+    expect(await active.runner.inbox.next()).toMatchObject({
+      type: 'confirm',
+      throughEventNumber: 2,
+    })
+    expect(await actor.readLifecycle()).toMatchObject({
+      state: 'ready',
+      runningSessions: [],
+      runnerConnected: true,
+    })
+    expect(await actor.recoveryAdvanceRuns()).toBe(0)
+  },
+)
 
 it('repairs a confirmed turn end in the alarm after a deadline update fails', async () => {
   const active = (fixture = await recoveryWorkspaceFixture(bundle))

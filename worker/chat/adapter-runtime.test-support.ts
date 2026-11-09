@@ -44,6 +44,7 @@ export async function createAdapterRuntime(
         config: {
           name: 'chat-adapter-tests',
           compatibilityDate: '2026-11-06',
+          compatibilityFlags: ['global_fetch_strictly_public'],
           exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
           env: {
             DB: { type: 'd1', id: 'chat-db' },
