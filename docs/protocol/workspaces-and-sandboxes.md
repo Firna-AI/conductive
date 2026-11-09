@@ -76,6 +76,8 @@ says.
 
 ## Workspace numbers and links
 
+- The workspace header omits the branch name on desktop and on a phone.
+  Reason: this keeps the header compact.
 - Each workspace has a number in its org (decision 212). The numbers of an
   org count up from 1, in the order in which its workspaces were created.
 - The app never gives a number twice in one org. This holds also after a
