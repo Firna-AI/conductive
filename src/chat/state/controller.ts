@@ -156,7 +156,6 @@ export class ChatController {
       target,
       api,
       store: this.store,
-      logs: new Map(),
       loading: new Map(),
       edits: new Map(),
       workspaceOrder: { through: 0 },
