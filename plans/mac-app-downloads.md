@@ -222,12 +222,12 @@ the code changes.
 
 Depends on: 2
 
-- [ ] Make `desktop/scripts/release.ts` pass the fixed DMG names of the
+- [x] Make `desktop/scripts/release.ts` pass the fixed DMG names of the
       shared module to electron-builder. Keep the names of the ZIP files.
-- [ ] Check that the publish step in `desktop/scripts/publish-assets.ts`
+- [x] Check that the publish step in `desktop/scripts/publish-assets.ts`
       still selects both DMGs, and add the test that the `testing` skill
       asks for.
-- [ ] Update `desktop/RELEASES.md`.
+- [x] Update `desktop/RELEASES.md`.
 
 ## Milestone 4: First pull request and release
 
