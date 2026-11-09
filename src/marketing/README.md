@@ -2,10 +2,11 @@
 
 The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the public docs, the Terms page,
-the Privacy page, and a page for an unknown address. Visitors need no
-sign-in. The pages run no script and set no cookie. Every sign-in link
-leads to the app, on the `app.` host. The main action, Join the waitlist,
-and Sign in lead to the same sign-in. A new person waits there for app access, as the
+and the Privacy page. It also has the Conductor Cloud comparison page and a
+page for an unknown address. Visitors need no sign-in. The pages run no script and set
+no cookie. Every sign-in link leads to the app, on the `app.` host. The
+main action, Join the waitlist, and Sign in lead to the same sign-in. A new
+person waits there for app access, as the
 [waitlist protocol](../../docs/protocol/waitlist.md) says, so the words
 promise a place on the waitlist, not use at once.
 
@@ -19,8 +20,10 @@ The marketing mockups are the visual spec:
 [`LegalScreen.tsx`](../../docs/mockups/src/screens/LegalScreen.tsx),
 [`NotFoundScreen.tsx`](../../docs/mockups/src/screens/NotFoundScreen.tsx),
 [`DocsScreen.tsx`](../../docs/mockups/src/screens/DocsScreen.tsx),
+[`FromConductorScreen.tsx`](../../docs/mockups/src/screens/FromConductorScreen.tsx),
 and the parts in
-[`components/marketing/`](../../docs/mockups/src/components/marketing/).
+[`components/marketing/`](../../docs/mockups/src/components/marketing/) and
+[`components/parity/`](../../docs/mockups/src/components/parity/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
 site uses the lockups and favicons from that folder unchanged. The header
 and the footer show the lockup 30 px high, as the mockups do.
@@ -83,18 +86,9 @@ capture command.
 ## Legal pages
 
 The Terms and Privacy pages show their title, introduction, and sections.
-The operator is Firna Ltd, registered in England and Wales.
-`legalOperator` in `legal-text.ts` holds its company number, registered
-office, and VAT number. Both pages use those details. Each page keeps its
-own effective date. The Terms use the law of England and Wales and preserve
-mandatory consumer protections.
-The facts about the service come from the
-[architecture doc](../../docs/architecture.md) and the
-[protocol docs](../../docs/protocol/). The Privacy page names what the
-waitlist, the invite codes, and each record of app access keep, the
-GitHub token and the verified emails that each sign-in keeps, and Resend,
-which sends the emails, from
-[The record of app access](../../docs/protocol/waitlist.md#the-record-of-app-access).
+[Legal pages](legal-pages.md) gives their operator, the sources of their
+facts, and their shared text. It also gives the sources for their review,
+such as the ICO guidance on the privacy information to give.
 
 When you change a fact in the architecture doc or in a protocol doc, read
 both legal pages in full. The legal pages are the Terms page in
@@ -102,57 +96,6 @@ both legal pages in full. The legal pages are the Terms page in
 In the same change, update each sentence of the legal pages that restates
 the fact. A search for the old words is not enough, because a legal page
 can restate a fact in other words.
-
-The words of the legal pages, of the page for an unknown address, and of
-the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`,
-and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
-`components/RunningText.astro` build their HTML for the site. The mockups and the sign-in screen of the app render the same text
-with React. So every surface shows the same words.
-
-Sources for the review:
-
-- The ICO guidance on the privacy information to give:
-  <https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/individual-rights/the-right-to-be-informed/what-privacy-information-should-we-provide/>.
-  It lists the identity and the contact, the purposes and the lawful
-  basis, the recipients, transfers to other countries, retention, the
-  rights, and complaints. The Privacy page has a section for each.
-- The [ICO guide to lawful bases](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/a-guide-to-lawful-basis/)
-  explains contract, legitimate interests, and legal obligations.
-- [Data protection complaints](https://www.gov.uk/data-protection/make-a-complaint)
-  gives the contact details of the Information Commissioner's Office.
-- [Article 13 of the UK GDPR](https://www.legislation.gov.uk/eur/2016/679/article/13)
-  states the information that a notice must give about international transfers.
-- The [UK-US data bridge guidance](https://www.gov.uk/government/publications/uk-us-data-bridge-supporting-documents/uk-us-data-bridge-factsheet-for-uk-organisations)
-  and [its regulations](https://www.legislation.gov.uk/uksi/2023/1028/contents)
-  cover transfers to US organisations certified under the UK Extension.
-- [Cloudflare's data processing terms](https://www.cloudflare.com/cloudflare-customer-dpa/)
-  and [GitHub's privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
-  describe their published transfer protections.
-- [Anthropic's privacy policy](https://www.anthropic.com/legal/privacy),
-  [its data processing terms](https://www.anthropic.com/legal/data-processing-addendum),
-  and [OpenAI's data processing terms](https://openai.com/policies/data-processing-addendum/)
-  describe protections under the account that an agent session uses.
-- Boat's terms: <https://boat.dev/terms>. They cover the allowed use of
-  the app's Boat organization, and they make the operator answer for what
-  users do in it. The Terms and Privacy pages do not name the cloud computer
-  provider or link to its terms. The Acceptable use section passes on
-  those rules in its own words.
-- [Boat's privacy policy](https://boat.dev/privacy) reports its EU hosting
-  locations and says that an Article 28 agreement is available on request.
-  Its public policy does not prove that Firna has that agreement.
-
-Each sign-in accepts the current revision of the Terms. The agreement sits
-beside Continue with GitHub, as
-[Terms consent](../../worker/security/README.md#terms-consent) says. The
-Terms page also has a Suspension section and a Report abuse section. The
-[operator action](../../worker/operator/README.md) suspends an account.
-The Suspension section explains how to request a review and warns that
-a stopped cloud computer can lose its disk.
-
-The footer and the Report abuse section use `abuseAddress` from
-`legal-text.ts`: `abuse@` and the product domain. Legal and privacy contact
-links use `legalAddress`: `legal@` and the product domain.
-No code or setup in this repository creates those mailboxes.
 
 ## Public docs
 
@@ -192,6 +135,19 @@ change, update each guide sentence that restates the fact. A search for
 the old words is not enough, because a guide can restate a fact in other
 words. This rule is separate from the rule for the legal pages above, and
 both apply.
+
+## The comparison page
+
+The page at `/from-conductor` shows people who move from Conductor Cloud
+the status of each Conductor Cloud feature in Conductive.
+[Conductor Cloud comparison](../../docs/protocol/conductor-cloud-comparison.md)
+states its requirements. The link above the home headline and the "From
+Conductor Cloud" link in the Product column of the footer lead to it. Its
+last call to action keeps the waitlist promise of the site.
+
+[The comparison page](comparison.md) gives the one source of its rows, the
+steps to change a row and keep it true, and its key code.
+[AGENTS.md](../../AGENTS.md) says when a change must update a row.
 
 ## Development
 
@@ -261,7 +217,16 @@ before the Worker serves them.
 - `styles/docs-nav.css`, `docs-contents.css`, `docs-prose.css`, and
   `docs-code.css`: the guide lists, the contents and cards, the body, and
   the code colours.
+- `pages/from-conductor.astro`, `from-conductor/`, `styles/comparison.css`,
+  and `styles/comparison-table.css`: the comparison page, the one source of
+  its rows, and its styles. [Its key code](comparison.md#key-code) names
+  each module and part.
+- `components/StatusMark.astro`, `DueDay.astro`, `CopyText.astro`, and
+  `ClosingCall.astro`: a status as its icon and word, a due day or "No date
+  yet", a sentence of shared copy as markup, and the last call to action of
+  a page.
 - `features.ts`: the home page's feature copy.
+- `access-copy.ts`: the waitlist sentence under the last call to action.
 - `links.ts`: the source repository address, `docsPath` for the docs, site
   paths, the section that the header marks, and `pageHrefs` for links
   from another origin.
@@ -274,8 +239,8 @@ before the Worker serves them.
 - [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,
   icon, marker, and file-list names and types.
 - `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
-- `icon-shapes.ts`: the lucide icons of the home page features and of the
-  docs, as shapes for the Astro pages.
+- `icon-shapes.ts`: the lucide icons of the home page features, the
+  comparison page, and the docs, as shapes for the Astro pages.
 - `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
   queries, frame classes, and picture-size CSS.
 - [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
@@ -289,4 +254,6 @@ before the Worker serves them.
   capture pages, browser control, Chrome connection, and lossless encoding.
 - `picture-capture.test.ts`: capture pages, bounds, and file names.
 - [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
-  real builds served through the Worker, including their policy and files.
+  real builds served through the Worker, including their policy, their
+  files, the public guides, and the comparison page with its two entry
+  links.

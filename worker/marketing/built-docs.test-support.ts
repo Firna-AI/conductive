@@ -1,11 +1,12 @@
-import type { Document, Element } from 'happy-dom'
+import { createHash } from 'node:crypto'
+import { Window, type Document, type Element } from 'happy-dom'
 import { expect } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
 import { docsPath } from '../../src/marketing/links'
-import { links } from './html.test-support'
+import { inlineStyles, links } from './html.test-support'
 
-export function element(root: Document | Element, selector: string) {
+function element(root: Document | Element, selector: string) {
   const matches = root.querySelectorAll(selector)
   expect(matches, selector).toHaveLength(1)
   return matches[0]
@@ -27,7 +28,7 @@ const guideIds = [
 ]
 const guideHrefs = guideIds.map((id) => (id ? `${docsPath}/${id}` : docsPath))
 
-export function checkGuidePage(document: Document, path: string) {
+function checkGuidePage(document: Document, path: string) {
   const title = element(document, 'h1').textContent.trim()
   expect(title.length, path).toBeGreaterThan(0)
   expect(document.title, path).toBe(`${title} – ${productName}`)
@@ -109,4 +110,82 @@ export function checkGuidePage(document: Document, path: string) {
     ).toBeGreaterThan(0)
   }
   return headings.map((heading) => heading.id)
+}
+
+export function expectedPolicy(page: string) {
+  const hashes = inlineStyles(page).map(
+    (css) => `'sha256-${createHash('sha256').update(css).digest('base64')}'`,
+  )
+  return [
+    "default-src 'none'",
+    `style-src ${hashes.join(' ')}`,
+    "img-src 'self'",
+    "font-src 'self'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+  ].join('; ')
+}
+
+export async function checkGuideRoutes(
+  get: (path: string) => Promise<Response>,
+) {
+  const window = new Window()
+  const headingIds: string[][] = []
+  try {
+    for (const [path, neighbours] of [
+      [docsPath, [`${docsPath}/get-started`]],
+      [`${docsPath}/get-started`, [docsPath, `${docsPath}/agent-logins`]],
+    ] as const) {
+      const response = await get(path)
+      expect(response.status, path).toBe(200)
+      const document = new window.DOMParser().parseFromString(
+        await response.text(),
+        'text/html',
+      )
+      headingIds.push(checkGuidePage(document, path))
+      const pager = element(
+        document,
+        'nav[aria-label="Previous and next guides"]',
+      )
+      expect(
+        links(pager.innerHTML).map((link) => link.href),
+        path,
+      ).toEqual(neighbours)
+    }
+    expect(headingIds[0]).not.toEqual(headingIds[1])
+    expect((await get(`${docsPath}/overview`)).status).toBe(404)
+  } finally {
+    await window.happyDOM.close()
+  }
+}
+
+export async function checkScrollRegions(
+  get: (path: string) => Promise<Response>,
+) {
+  const window = new Window()
+  try {
+    const document = new window.DOMParser().parseFromString(
+      await (await get(`${docsPath}/get-started`)).text(),
+      'text/html',
+    )
+    const body = element(document, '.docs-body')
+    expect(body.querySelectorAll('pre code .token').length).toBeGreaterThan(0)
+    for (const tag of ['pre', 'table']) {
+      const regions = body.querySelectorAll(tag)
+      expect(regions.length, tag).toBeGreaterThan(0)
+      for (const region of regions) {
+        expect(region.getAttribute('tabindex'), tag).toBe('0')
+        expect(
+          region.getAttribute('aria-label')?.trim().length ?? 0,
+          tag,
+        ).toBeGreaterThan(0)
+        expect(region.getAttribute('role') ?? tag, tag).toBe(
+          tag === 'pre' ? 'region' : 'table',
+        )
+      }
+    }
+  } finally {
+    await window.happyDOM.close()
+  }
 }

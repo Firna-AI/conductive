@@ -277,15 +277,15 @@ Depends on: 1, 2, 2a, 2b, 2c, 3, 4, 5
 
 The orchestrator owns the combined checks and the pull request.
 
-- [ ] Run format, lint, file-length, and unused-export checks before the complete gate.
-- [ ] Run `npm run test -- worker/marketing src/marketing`.
+- [x] Run format, lint, file-length, and unused-export checks before the complete gate.
+- [x] Run `npm run test -- worker/marketing src/marketing`.
       Check all changed Markdown links.
-- [ ] Open the built site through the Worker with scripts disabled.
+- [x] Open the built site through the Worker with scripts disabled.
       Check desktop and phone navigation, keyboard use, both schemes, heading links, code, and missing pages.
       Save evidence under `.context/website-docs/`.
-- [ ] Install the desktop and runner check dependencies, then run `npm run check`.
+- [x] Install the desktop and runner check dependencies, then run `npm run check`.
       Keep every existing test assertion and security header requirement.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete diff against `origin/main` after the push with `implementation-review`.
       Report findings, apply the fix rule, record follow-ups, and re-review once.
       Wait for the last commit's CI result.

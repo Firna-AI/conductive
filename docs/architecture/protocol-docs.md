@@ -28,6 +28,7 @@ them, and this page lists each protocol doc and what it covers.
   gates, the secrets, and the isolation of sandboxes and previews.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar and its
   events.
+- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
@@ -53,3 +54,5 @@ them, and this page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
+- [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md): the
+  public page with the status of each Conductor Cloud feature.

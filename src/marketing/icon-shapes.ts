@@ -64,6 +64,39 @@ const featureIcons = {
     path('M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8'),
     path('M10 12h4'),
   ],
+  'circle-check': [circle(12, 12, 10), path('m9 12 2 2 4-4')],
+  contrast: [circle(12, 12, 10), path('M12 18a6 6 0 0 0 0-12v12z')],
+  'circle-dashed': [
+    path('M10.1 2.182a10 10 0 0 1 3.8 0'),
+    path('M13.9 21.818a10 10 0 0 1-3.8 0'),
+    path('M17.609 3.721a10 10 0 0 1 2.69 2.7'),
+    path('M2.182 13.9a10 10 0 0 1 0-3.8'),
+    path('M20.279 17.609a10 10 0 0 1-2.7 2.69'),
+    path('M21.818 10.1a10 10 0 0 1 0 3.8'),
+    path('M3.721 6.391a10 10 0 0 1 2.7-2.69'),
+    path('M6.391 20.279a10 10 0 0 1-2.69-2.7'),
+  ],
+  'arrow-right-left': [
+    path('m16 3 4 4-4 4'),
+    path('M20 7H4'),
+    path('m8 21-4-4 4-4'),
+    path('M4 17h16'),
+  ],
+  'circle-ellipsis': [
+    circle(12, 12, 10),
+    path('M17 12h.01'),
+    path('M12 12h.01'),
+    path('M7 12h.01'),
+  ],
+  'circle-minus': [circle(12, 12, 10), path('M8 12h8')],
+  'calendar-check': [
+    path('M8 2v4'),
+    path('M16 2v4'),
+    rect(3, 4, [18, 18], 2),
+    path('M3 10h18'),
+    path('m9 16 2 2 4-4'),
+  ],
+  'arrow-right': [path('M5 12h14'), path('m12 5 7 7-7 7')],
 } as const satisfies Readonly<Record<string, readonly IconShape[]>>
 
 /**

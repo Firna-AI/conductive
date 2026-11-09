@@ -1,23 +1,38 @@
 import { execFile } from 'node:child_process'
-import { createHash } from 'node:crypto'
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import process from 'node:process'
 import { promisify } from 'node:util'
-import { Window } from 'happy-dom'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
-import { docsPath, sitePaths } from '../../src/marketing/links'
+import { parityAreas } from '../../src/marketing/from-conductor/areas'
+import {
+  parityLinkCopy,
+  parityPageCopy,
+} from '../../src/marketing/from-conductor/copy'
+import { parityFeatures } from '../../src/marketing/from-conductor/features'
+import { parityStatuses } from '../../src/marketing/from-conductor/statuses'
+import { docsPath, pageHrefs, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
-import { checkGuidePage, element } from './built-docs.test-support'
+import {
+  checkGuideRoutes,
+  checkScrollRegions,
+  expectedPolicy,
+} from './built-docs.test-support'
 import { termsConsentResponse } from './consent'
-import { decodeHtml, inlineStyles, links } from './html.test-support'
+import {
+  decodeHtml,
+  headings,
+  inlineStyles,
+  links,
+  words,
+} from './html.test-support'
 import { siteResponse } from './site'
 
 const SITE = 'https://conductive.test'
@@ -71,21 +86,6 @@ const get = (path: string) =>
     NOW,
   )
 
-function expectedPolicy(page: string) {
-  const hashes = inlineStyles(page).map(
-    (css) => `'sha256-${createHash('sha256').update(css).digest('base64')}'`,
-  )
-  return [
-    "default-src 'none'",
-    `style-src ${hashes.join(' ')}`,
-    "img-src 'self'",
-    "font-src 'self'",
-    "base-uri 'none'",
-    "form-action 'none'",
-    "frame-ancestors 'none'",
-  ].join('; ')
-}
-
 it('sends every sign-in to the app and shows the request year', async () => {
   const response = await get('/')
   expect(response.status).toBe(200)
@@ -120,13 +120,14 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
   }
 })
 
-it('names no sandbox provider on the home, Terms, and Privacy pages', async () => {
+it('names no sandbox provider on home, legal, docs, and comparison pages', async () => {
   for (const path of [
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
     docsPath,
     `${docsPath}/get-started`,
+    sitePaths.fromConductor,
   ]) {
     const response = await get(path)
     expect(response.status, path).toBe(200)
@@ -143,6 +144,7 @@ it('allows exactly each page inline style hash and serves every file it names', 
     sitePaths.privacy,
     docsPath,
     `${docsPath}/get-started`,
+    sitePaths.fromConductor,
     '/missing',
   ]) {
     const response = await get(path)
@@ -170,62 +172,59 @@ it('allows exactly each page inline style hash and serves every file it names', 
 })
 
 it('serves guide bodies with matching contents and collection navigation', async () => {
-  const window = new Window()
-  const headingIds: string[][] = []
-  try {
-    for (const [path, neighbours] of [
-      [docsPath, [`${docsPath}/get-started`]],
-      [`${docsPath}/get-started`, [docsPath, `${docsPath}/agent-logins`]],
-    ] as const) {
-      const response = await get(path)
-      expect(response.status, path).toBe(200)
-      const document = new window.DOMParser().parseFromString(
-        await response.text(),
-        'text/html',
-      )
-      headingIds.push(checkGuidePage(document, path))
-      const pager = element(
-        document,
-        'nav[aria-label="Previous and next guides"]',
-      )
-      expect(
-        links(pager.innerHTML).map((link) => link.href),
-        path,
-      ).toEqual(neighbours)
-    }
-    expect(headingIds[0]).not.toEqual(headingIds[1])
-    expect((await get(`${docsPath}/overview`)).status).toBe(404)
-  } finally {
-    await window.happyDOM.close()
-  }
+  await checkGuideRoutes(get)
 })
 
 it('renders class-coloured code and named keyboard scroll regions', async () => {
-  const window = new Window()
-  try {
-    const document = new window.DOMParser().parseFromString(
-      await (await get(`${docsPath}/get-started`)).text(),
-      'text/html',
-    )
-    const body = element(document, '.docs-body')
-    expect(body.querySelectorAll('pre code .token').length).toBeGreaterThan(0)
-    for (const tag of ['pre', 'table']) {
-      const regions = body.querySelectorAll(tag)
-      expect(regions.length, tag).toBeGreaterThan(0)
-      for (const region of regions) {
-        expect(region.getAttribute('tabindex'), tag).toBe('0')
-        expect(
-          region.getAttribute('aria-label')?.trim().length ?? 0,
-          tag,
-        ).toBeGreaterThan(0)
-        expect(region.getAttribute('role') ?? tag, tag).toBe(
-          tag === 'pre' ? 'region' : 'table',
-        )
-      }
-    }
-  } finally {
-    await window.happyDOM.close()
+  await checkScrollRegions(get)
+})
+
+it('serves the complete Cloud comparison with its public entry links', async () => {
+  const response = await get(sitePaths.fromConductor)
+  expect(response.status).toBe(200)
+  expect(response.headers.get('Set-Cookie')).toBeNull()
+  const page = await response.text()
+  for (const text of [
+    parityPageCopy.title,
+    ...Object.values(parityPageCopy.scope),
+  ]) {
+    expect(words(page)).toContain(text)
   }
+  const tables = [...page.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/g)]
+  expect(tables).toHaveLength(1)
+  const table = tables[0]?.[1] ?? ''
+  expect(headings(table, 'col')).toEqual(Object.values(parityPageCopy.columns))
+  const groups = [...table.matchAll(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/g)]
+  expect(groups).toHaveLength(parityAreas.length)
+  expect(headings(table, 'rowgroup')).toEqual(
+    parityAreas.map((area) => area.title),
+  )
+  const rows = groups.flatMap(([, body]) =>
+    [...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].map(([, row]) => row),
+  )
+  expect(rows).toHaveLength(parityFeatures.length)
+  for (const id of ['attachments', 'cloud-desktop', 'direct-links']) {
+    const feature = parityFeatures.find((item) => item.id === id)!
+    const row = rows.find((item) =>
+      headings(item, 'row').includes(feature.name),
+    )
+    expect(words(row ?? ''), id).toContain(parityStatuses[feature.status].label)
+    const area = parityAreas.find((item) => item.key === feature.area)!
+    expect(headings(row ?? '', 'row'), id).toEqual([area.title, feature.name])
+  }
+  const home = await (await get(sitePaths.home)).text()
+  const intro = home.slice(0, home.indexOf('<h1'))
+  expect(
+    links(intro).find((link) => link.text === parityLinkCopy.home)?.href,
+  ).toBe(pageHrefs().fromConductor)
+  const footer = home.slice(home.indexOf('<footer'))
+  const product =
+    /<h2\b[^>]*>\s*Product\s*<\/h2>\s*<ul\b[^>]*>([\s\S]*?)<\/ul>/.exec(
+      footer,
+    )?.[1] ?? ''
+  expect(
+    links(product).find((link) => link.text === parityLinkCopy.footer)?.href,
+  ).toBe(pageHrefs().fromConductor)
 })
 
 it('serves the built agreement with Continue and legal links on the given origins', async () => {
