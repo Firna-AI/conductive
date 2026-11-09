@@ -1,10 +1,9 @@
 import { parseRoute } from '../../app/router'
 import type { Workspace } from '../../shared/workspaces'
 
-/** A part of a text: plain text, code in backticks, or a link. */
+/** A part of the text of a message field: plain text, or a link. */
 export type TextPart =
   | { kind: 'text'; text: string }
-  | { kind: 'code'; text: string }
   | {
       kind: 'link'
       /** The web address of the link. */
@@ -30,23 +29,46 @@ export interface LinkTarget {
   to: string
 }
 
-/** A part of a text with chips: plain text, code, or a workspace link. */
-export type LinkedPart =
-  | { kind: 'text'; text: string }
-  | { kind: 'code'; text: string }
-  | { kind: 'chip'; source: string; target: LinkTarget }
+/** The target of a Markdown link: a web address, which can stand in angle brackets. */
+const markdownTarget = /\(<?(https?:\/\/[^\s<>)`]+)>?\)/y
 
 /**
- * A Markdown link to a web address, whose target can stand in angle
- * brackets, or a bare web address. A bare address does not end with
- * punctuation, so a full stop after it stays text. A web address holds no
- * backtick, so a backtick after it ends it.
+ * A bare web address. It does not end with punctuation, so a full stop after
+ * it stays text. A web address holds no backtick, so a backtick after it
+ * ends it.
  */
-const linkPattern =
-  /\[[^\]\n]*\]\(<?(https?:\/\/[^\s<>)`]+)>?\)|https?:\/\/[^\s<>`]*[^\s<>`.,;:!?'")\]]/g
+const bareLink = /https?:\/\/[^\s<>`]*[^\s<>`.,;:!?'")\]]/y
 
-/** Splits a text into plain text and links. It reads no code. */
-function linkParts(text: string): TextPart[] {
+/** A Markdown link with its label on one line, or a bare web address. */
+const linkPattern = new RegExp(
+  `\\[[^\\]\\n]*\\]${markdownTarget.source}|${bareLink.source}`,
+  'g',
+)
+
+/**
+ * The target of a Markdown link that starts at `at`, such as `(<address>)`:
+ * its web address and its length, or null.
+ */
+export function markdownTargetAt(
+  text: string,
+  at: number,
+): { href: string; length: number } | null {
+  markdownTarget.lastIndex = at
+  const match = markdownTarget.exec(text)
+  return match ? { href: match[1] ?? '', length: match[0].length } : null
+}
+
+/** The bare web address that starts at `at`, or null. */
+export function bareLinkAt(text: string, at: number): string | null {
+  bareLink.lastIndex = at
+  return bareLink.exec(text)?.[0] ?? null
+}
+
+/**
+ * Splits the text of a message field into plain text and links. A message
+ * field keeps plain text, so it reads no code: a link in backticks counts.
+ */
+export function textParts(text: string): TextPart[] {
   const parts: TextPart[] = []
   let end = 0
   for (const match of text.matchAll(linkPattern)) {
@@ -58,20 +80,6 @@ function linkParts(text: string): TextPart[] {
   }
   if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
   return parts
-}
-
-/**
- * Splits a text into plain text, code, and links. In a sent message or an
- * answer, `code` is true: each part in backticks is code, and a link in it
- * stays code. A message field keeps plain text, so it reads no code.
- */
-export function textParts(text: string, code: boolean): TextPart[] {
-  if (!code) return linkParts(text)
-  return text
-    .split('`')
-    .flatMap((part, index): TextPart[] =>
-      index % 2 === 1 ? [{ kind: 'code', text: part }] : linkParts(part),
-    )
 }
 
 function originOf(link: string): string | null {
@@ -124,36 +132,4 @@ export function linkTarget(
   )
   if (!workspace || originOf(workspace.link) !== url.origin) return undefined
   return { workspace, to: `${url.pathname}${url.search}${url.hash}` }
-}
-
-/**
- * Splits a text into plain text, code, and chips, as `textParts` reads it.
- * Each workspace link becomes a chip, and a Markdown link to a workspace is
- * the chip alone. Every other link stays the text that the text has.
- */
-export function linkedParts(
-  text: string,
-  links: WorkspaceLinks,
-  code: boolean,
-): LinkedPart[] {
-  const parts: LinkedPart[] = []
-  const pushText = (value: string) => {
-    const last = parts.at(-1)
-    if (last?.kind === 'text') last.text += value
-    else parts.push({ kind: 'text', text: value })
-  }
-  for (const part of textParts(text, code)) {
-    if (part.kind === 'code') {
-      parts.push(part)
-      continue
-    }
-    if (part.kind === 'text') {
-      pushText(part.text)
-      continue
-    }
-    const target = linkTarget(part.href, links)
-    if (target) parts.push({ kind: 'chip', source: part.source, target })
-    else pushText(part.source)
-  }
-  return parts
 }

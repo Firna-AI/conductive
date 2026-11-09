@@ -607,6 +607,10 @@ Depends on: every other milestone
       saved immutable number without a new read. Read D1 only for older
       admissions that have no number. Verify the unchanged early-response
       test, the legacy admission test, and ten repeated admission runs.
+- [x] Fix the checked Markdown-label defect with one chat tokenizer for
+      sent messages and answers. Preserve existing code, bold, and editor
+      text behaviour.
+- [ ] Run the complete gate after the review fix.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

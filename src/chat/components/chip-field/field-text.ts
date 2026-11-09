@@ -18,7 +18,7 @@ function lineFrom(text: string, at: number): string {
 function staysLink(before: string, source: string, after: string): boolean {
   const line = before.slice(before.lastIndexOf('\n') + 1)
   let at = 0
-  for (const part of textParts(line + source + lineFrom(after, 0), false)) {
+  for (const part of textParts(line + source + lineFrom(after, 0))) {
     if (at === line.length) {
       return part.kind === 'link' && part.source === source
     }

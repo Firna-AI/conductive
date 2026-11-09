@@ -268,13 +268,21 @@ members, and the workspace list of the org from the models of the app.
   the mockups, and the composer of a new workspace share it. The chat keeps
   no size formatter of its own.
 - Sent messages and agent answers show each workspace link as a chip, as
-  [Workspace links](../../docs/protocol/workspace-links.md) says.
-  `links/workspace-links.ts` reads each link with the URL parser and
-  `parseRoute`. A link is a chip only when it has the origin of the links
-  of the list, and the router reads a page of a workspace of the org in
-  that list. The chip shows the current name and state, and it opens the
-  page that the router read, with its tab path, query, and hash. Code stays
-  code, and every other link stays as the text has it. A message line of
+  [Workspace links](../../docs/protocol/workspace-links.md) says. One
+  tokenizer, `chatParts` in `links/chat-parts.ts`, reads both, in one pass
+  from left to right. A backtick starts code first, so a link in code
+  stays code. A Markdown link whose brackets stand outside code is one
+  unit, also when its label holds code or bold, so it shows as its chip
+  alone. Then bare links count. In an answer, `**` marks bold around text
+  and chips, and a bare link ends before a mark. Bold ends at code, as
+  before. A Markdown link of no workspace shows its source with its code
+  and bold, as before. `links/workspace-links.ts` reads each link with the
+  URL parser and `parseRoute`. A link is a chip only when it has the
+  origin of the links of the list, and the router reads a page of a
+  workspace of the org in that list. The chip shows the current name and
+  state, and it opens the page that the router read, with its tab path,
+  query, and hash. Every other link stays as the text has it. The message
+  field reads its text with `textParts`, which reads no code. A message line of
   a work fold shows chips too. A click on a chip there stays with the
   chip, so the line does not toggle, and a click with a modifier key opens
   a new tab as on any link.
@@ -329,8 +337,10 @@ copies, follows the list, and checks a field that takes no change.
 DOM tests type, paste, and read the field through
 `src/test-support/message-field.ts`.
 `links/workspace-links.test.ts` reads links with and without a tab path,
-Markdown links, code, `..`, other origins and orgs, unknown workspaces, and
-punctuation. `links/LinkedText.test.tsx` mounts an answer with chips.
+Markdown links, a code label in a sent message, code, `..`, other origins
+and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
+mounts an answer with chips: in bold, in a list, with a bold or a code
+label, and a link in inline code and in a code block.
 `state/workspace-list.test.ts` checks that a chat without sources reads the
 list while it shows, and not while it is hidden. The workspace screen's
 `LinkChips.test.tsx` checks the chips of a kept chat on a phone.
@@ -359,10 +369,11 @@ check in the Mac app.
   rule. `field-plugins.tsx` holds the value, paste, copy, Enter, editable,
   reconcile, and focus plugins.
 - `state/load.ts`: the order of the first reads and the stream start.
-- `links/`: `workspace-links.ts`, the pure reader of the workspace links
-  of a text, `LinksContext.tsx`, the workspaces that chips find and the
-  open of a chip, and `LinkedText.tsx`, text with chips in messages and
-  answers.
+- `links/`: `workspace-links.ts`, the link syntax, the reader of the
+  links of a message field, and `linkTarget`, `chat-parts.ts`, the one
+  tokenizer of sent messages and answers, `LinksContext.tsx`, the
+  workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
+  which draws the parts of a message or an answer.
 - `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat

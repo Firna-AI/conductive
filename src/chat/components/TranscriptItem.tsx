@@ -27,7 +27,7 @@ export function UserBubble(props: { message: UserMessage }) {
   return (
     <div className={styles.user}>
       <div className={classes(styles.bubble, controls.lines)}>
-        <LinkedText code text={message.text} />
+        <LinkedText text={message.text} />
       </div>
       {message.attachments.length > 0 ? (
         <SentFiles attachments={message.attachments} />

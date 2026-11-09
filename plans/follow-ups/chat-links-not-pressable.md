@@ -21,5 +21,6 @@
 - **Left out:** Change nothing, because people then keep copying links by hand.
 - **Wider fix:** None, because this is a missing feature, not a class of defect.
 - **Previous examples:** None found. The workspace link chips change draws chips only for links to workspaces of the same org.
+- **Related:** [chip-leading-slashes-wrong-host.md](chip-leading-slashes-wrong-host.md): a chip address that copies the path of the link text can start with `//` and open another host. When this work adds a second reader of link text, build each app address from the route, as that item recommends.
 - **Recommendation:** A. One press opens each common link, and the Mac app already sends app links to its window and other links to the browser.
 - **Action:** ask the user, because pressable links in agent answers add behaviour that no requirement covers, and agent text comes from untrusted sandbox code.

@@ -1,31 +1,16 @@
 import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
-import inlineStyles from '../../../docs/mockups/src/components/common/InlineText.module.css'
 import markdownStyles from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
 import { LinkedText } from '../links/LinkedText'
-import { inlineParts, textBlocks, type TextBlock } from './agent-text'
+import { textBlocks, type TextBlock } from './agent-text'
 
 /**
- * Text with `code` and **strong** parts. Each workspace link outside code is
- * a chip, and so is a Markdown link to a workspace. An answer and a message
- * line of a work fold both draw their text with it.
+ * Text with `code` and **strong** parts, as `chatParts` reads it. Each
+ * workspace link outside code is a chip, and so is a Markdown link to a
+ * workspace, also with a bold or code label. An answer and a message line
+ * of a work fold both draw their text with it.
  */
 export function InlineMarkdown(props: { text: string }) {
-  return (
-    <>
-      {inlineParts(props.text).map((part, index) => {
-        if (part.kind === 'code') {
-          return (
-            <code className={inlineStyles.code} key={index}>
-              {part.text}
-            </code>
-          )
-        }
-        const text = <LinkedText code={false} key={index} text={part.text} />
-        if (part.kind === 'strong') return <strong key={index}>{text}</strong>
-        return text
-      })}
-    </>
-  )
+  return <LinkedText strong text={props.text} />
 }
 
 function Block(props: { block: TextBlock }) {

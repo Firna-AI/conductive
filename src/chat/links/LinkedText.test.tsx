@@ -14,11 +14,15 @@ const { org } = FAKE_IDS
 const linked = workspaceFixtures().workspaces.workspaces[0] as Workspace
 
 describe('workspace chips in an answer of the agent', () => {
-  test('a Markdown link in a list or in bold text is the chip alone, and a link in a code block stays code', async () => {
+  test('a Markdown link in a list or in bold text is the chip alone, also with a bold or code label, and a link in code stays code', async () => {
     const answer = [
       `Created **[W-${linked.number}](${linked.link})** for the fonts.`,
       '',
       `- Follow [the new workspace](${linked.link}) there.`,
+      '',
+      `Bold [**W-${linked.number}**](${linked.link}) and code [\`W-${linked.number}\`](${linked.link}) labels.`,
+      '',
+      `Run \`open ${linked.link}\` now, then **${linked.link}**.`,
       '',
       '```',
       `open ${linked.link}`,
@@ -44,16 +48,26 @@ describe('workspace chips in an answer of the agent', () => {
         container.querySelectorAll('p, li'),
         (part) => part.textContent,
       ),
+      inlineCode: Array.from(
+        container.querySelectorAll('p code'),
+        (code) => code.textContent,
+      ),
       code: container.querySelector('pre')?.textContent,
     }).toEqual({
       chips: [
         { in: 'STRONG', ...chip },
         { in: 'LI', ...chip },
+        { in: 'P', ...chip },
+        { in: 'P', ...chip },
+        { in: 'STRONG', ...chip },
       ],
       text: [
         `Created ${chip.name} for the fonts.`,
         `Follow ${chip.name} there.`,
+        `Bold ${chip.name} and code ${chip.name} labels.`,
+        `Run open ${linked.link} now, then ${chip.name}.`,
       ],
+      inlineCode: [`open ${linked.link}`],
       code: `open ${linked.link}`,
     })
   })

@@ -50,7 +50,7 @@ export function $fieldNodes(
   text: string,
   links: WorkspaceLinks,
 ): LexicalNode[] {
-  return textParts(text, false).flatMap((part): LexicalNode[] => {
+  return textParts(text).flatMap((part): LexicalNode[] => {
     if (part.kind !== 'link') return $rawNodes(part.text)
     if (linkTarget(part.href, links)) {
       return [$createWorkspaceChipNode(part.source, part.href)]
