@@ -16,7 +16,8 @@ It forwards no browser cookie.
 
 `SandboxProvider.privatePort(sandboxId, port, mode)` calls only the fixed host
 route. It requires explicit localhost or network mode and private access.
-It parses the provider URL into a server-only origin and token.
+It parses the provider URL into a `PrivatePort`: a server-only origin and the
+[port credential](#port-credentials) that the client builds.
 `SandboxProvider.desktop(sandboxId)` calls only the fixed desktop route.
 It returns a typed ready URL or a starting result. Ready URLs require HTTPS
 and a fragment token. The feature layer maps starting into its public response.
@@ -27,6 +28,24 @@ The transport validates sandbox ID segments and centralizes errors and the organ
 `runCommand` waits for the command, with a 600 second Boat timeout and a 610 second request timeout.
 `startCommand` starts a detached command, with a 30 second request timeout.
 `SandboxProvider.getCommandStatus` reads detached output from byte offsets, with the same 30 second timeout.
+
+## Port credentials
+
+A `PortCredential` tells the proxies how to reach one private port:
+
+- `headers`: the trusted request headers that the port needs, ready to send.
+- `stripCookies`: the cookie names that the proxies drop from browser
+  cookies and from upstream `Set-Cookie` headers.
+- `stripHeaders`: the header names that the proxies drop from the upstream
+  request and from the reply.
+- `stripQueryParameters`: the query names that the proxies drop from the
+  upstream URL and from each rewritten redirect.
+
+The Boat client puts the token of the port URL only in the header
+`Cookie: _port_auth=<token>`. It strips the `_port_auth` cookie and the
+`_token` and `_port_auth` query names, and it names no header to strip.
+No credential goes to the browser. The
+[preview backend](../previews/README.md) applies the credential.
 
 ## Provider accounts
 
@@ -201,8 +220,9 @@ The transport tests use counted streams to check exact budgets and early cancell
 
 ### Key Code
 
-- [provider.ts](provider.ts) defines the server's sandbox and file read interface.
-- [boat.ts](boat.ts) forwards provider operations to the Boat helpers.
+- [provider.ts](provider.ts) defines the server's sandbox and file read interface, with `PrivatePort` and `PortCredential`.
+- [boat.ts](boat.ts) forwards provider operations to the Boat helpers. It builds the Boat port credential.
+- [boat-port.test.ts](boat-port.test.ts) checks the Boat port credential that `privatePort` returns.
 - [client.ts](client.ts) gives the client of an account with `providerForAccount`, and after the membership check with `orgProviderForAccount`.
 - [accounts.ts](accounts.ts) defines the provider kind, the account configuration, and `ProviderAccountError`.
 - [account-identity.ts](account-identity.ts) holds `DEFAULT_PROVIDER_ACCOUNT`, the `boat` account.

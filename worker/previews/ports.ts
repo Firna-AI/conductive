@@ -17,7 +17,7 @@ interface CachedPort {
   pending: boolean
 }
 
-/** Plaintext port tokens live only here, keyed by workspace, sandbox, and port. */
+/** Cache plaintext port credentials by workspace, account, sandbox, and port. */
 export class PrivatePorts {
   private readonly cache = new Map<string, CachedPort>()
   private readonly env: AppEnv

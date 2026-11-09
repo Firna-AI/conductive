@@ -58,7 +58,8 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
   )
   const id = created.workspace.id
   const start = fixture.starts.get(id)
-  if (!start) throw new Error('Missing secondary start')
+  const actor = fixture.actors.get(id)
+  if (!start || !actor) throw new Error('Missing secondary start')
   await start.advance()
   expect(await start.job()).toMatchObject({
     providerAccount: 'boat-second',
@@ -67,9 +68,7 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
   start.restart()
   for (let step = 0; step < 20 && (await start.job()); step++) {
     if ((await start.job())?.phase === 'runner')
-      await runtime
-        .workspace(id)
-        .reportRunnerLifecycle({ type: 'runner.ready' })
+      await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
     await start.advance()
   }
   expect(await start.job()).toBeUndefined()

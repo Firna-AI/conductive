@@ -78,7 +78,15 @@ export class BoatClient implements SandboxProvider {
     ) {
       throw new ProviderError('invalid_response', 502)
     }
-    return { origin: url.origin, token }
+    return {
+      origin: url.origin,
+      credential: {
+        headers: { Cookie: `_port_auth=${token}` },
+        stripCookies: ['_port_auth'],
+        stripHeaders: [],
+        stripQueryParameters: ['_token', '_port_auth'],
+      },
+    }
   }
 
   async desktop(sandboxId: string): Promise<SandboxDesktop> {

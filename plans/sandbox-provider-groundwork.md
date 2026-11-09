@@ -604,26 +604,32 @@ Evidence: `.context/sandbox-provider-groundwork/reports/provider-registry.md`,
 `reports/lifecycle-routing.md`, `reports/tool-member-routing.md`, and
 `reports/routing-readmes.md` in that evidence directory.
 
-## Milestone 5: The port credential of the client
+## Milestone 5: The port credential of the client — completed
 
 Depends on: 4
 
 The previews and the terminal take the port credential from the client.
 Boat's credential stays its `_port_auth` cookie.
 
-- [ ] Give `PrivatePort` a credential that the client builds. The
+- [x] Give `PrivatePort` a credential that the client builds. The
       credential says how the Worker sends it to the port, and which
       browser cookies, headers, and query parameters the proxies must drop.
       Boat's names its `_port_auth` cookie and its `_token` and
       `_port_auth` query parameters.
-- [ ] Move the preview proxy, the `privatePort` pass-through, and the
+- [x] Move the preview proxy, the `privatePort` pass-through, and the
       terminal to the credential. Keep the drop of a browser copy of the
       credential.
-- [ ] Delete the Boat cookie and query code of the proxies and the
+- [x] Delete the Boat cookie and query code of the proxies and the
       terminal.
-- [ ] Keep every assertion of the moved tests, such as each check of
+- [x] Keep every assertion of the moved tests, such as each check of
       `_port_auth=server-port-token` on the request to the port.
-- [ ] Update the previews, terminal, and sandbox READMEs.
+- [x] Update the previews, terminal, and sandbox READMEs.
+- [x] Correct the routing test's typed runner-ready call to use its actor
+      fixture. Keep its assertions and timeout.
+
+Evidence: `.context/sandbox-provider-groundwork/reports/provider-credential.md`,
+`reports/port-consumers.md`, `reports/port-readmes.md`, and
+`m5-types-corrected.log` in that evidence directory.
 
 ## Milestone 6: Contract tests for `SandboxProvider`
 

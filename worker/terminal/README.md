@@ -18,6 +18,12 @@ Tests can inject `dependencies.sockets` at that boundary.
 A socket open for a workspace whose owner is suspended gets 403
 `user_suspended`. The status read still answers.
 
+The handler opens the `/ws` path of the private ttyd port with the shared
+`portRequest` of the [preview backend](../previews/README.md). That request
+carries no browser cookie, header, or query. It carries the
+[port credential](../sandbox/README.md#port-credentials) of the client, Basic
+auth with the workspace password, and the `tty` subprotocol.
+
 Run `terminalInstallCommand()` in the software command of each org image
 build. The build runs that command detached and writes its output to the
 build log. The image lifecycle owner must first authorize that org's build
@@ -209,7 +215,7 @@ Terminal status reads remain available.
 - [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message.
 - [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the programs and the install command with fakes.
 - [The tools adapter](../previews/provider.ts) exposes the private port.
-- [The sandbox provider](../sandbox/README.md) owns credentials, fixed routes, and bounded file reads.
+- [The sandbox provider](../sandbox/README.md) owns credentials, the port credential, fixed routes, and bounded file reads.
 - [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build and the start hook after each startup script. Its restore watch calls `markTerminalRestoreEnded`.
 
 See [access and security](../../docs/protocol/access-and-security.md) and

@@ -23,10 +23,12 @@ so it never matches `authorize`.
 
 Each hostname holds 128 random bits. D1 stores its workspace, port, and expiry.
 The server keeps private port descriptors in memory for each workspace,
-provider account, sandbox, and port. It sends each token only in its upstream
-`_port_auth` cookie. D1 stores the listener mode, the listener sandbox ID, and
+provider account, sandbox, and port. Each descriptor holds the private origin
+and the [port credential](../sandbox/README.md#port-credentials) that the
+client built. The proxy sends the credential headers only upstream.
+D1 stores the listener mode, the listener sandbox ID, and
 the provider account of that sandbox. A saved mode applies only while the
-workspace has that sandbox in that account. D1 stores no plaintext port token.
+workspace has that sandbox in that account. D1 stores no port credential.
 
 `Preview.url` is the absolute app address from `previewPath`. It holds no secret.
 Each frame load, reload, and new tab starts there, because a frame under the
@@ -178,9 +180,17 @@ connections do not count.
 
 The header allowlists live in `headers.ts`. The cookie allowlist filters
 request and response cookies. It accepts valid app cookie names. It excludes
-the port cookie, the browser and Mac session cookies, the sign-in cookie, and
+each name in the credential's `stripCookies`, such as Boat's port cookie,
+the browser and Mac session cookies, the sign-in cookie, and
 each name under `__Secure-conductive-preview-`. Responses keep app cookies
 with their domain removed. This makes them specific to the preview hostname.
+`portRequest` removes each name in `stripHeaders` from the upstream request.
+It then adds the credential headers, and it joins a credential `Cookie` to
+the allowed browser cookies. `portResponseHeaders` removes each name in
+`stripHeaders` from the reply. The WebSocket subprotocol of the reply passes
+only when `stripHeaders` does not name `Sec-WebSocket-Protocol`.
+The upstream URL and each rewritten redirect lose each name in
+`stripQueryParameters`.
 The proxy follows no upstream redirect.
 
 An org suspension blocks preview creation and launch with 403 `org_suspended`.
@@ -208,8 +218,9 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
   `readWorkspaceTarget` returns a `WorkspaceAccessTarget` with the `ownerActive` and `sandboxAllowed` flags. It keeps the row of a suspended owner's workspace, so the metadata reads still work.
 - [sandbox-access.ts](../data/sandbox-access.ts) exports `sandboxAccessPredicate`, the shared rule of the preview, terminal, and desktop access.
 - [provider.ts](provider.ts) exports the typed `WorkspaceTools` adapter.
-- [headers.ts](headers.ts) builds private upstream requests and safe responses.
-- [origins.ts](origins.ts) maps request Origins and private redirects.
+- [headers.ts](headers.ts) builds private upstream requests and safe responses with the port credential. The terminal uses its `portRequest` too.
+- [origins.ts](origins.ts) maps request Origins and private redirects, and drops the credential's query names.
+- [port-credentials.test.ts](port-credentials.test.ts) checks that the proxy follows the credential for request headers, cookies, query names, and reply fields.
 - [socket.ts](socket.ts) selects binary frames and drains queued data before forwarding a normal close with its code and reason.
 - [types.ts](types.ts) defines the fetch, activity, and socket boundaries. Its `WorkspaceTarget` holds the sandbox ID with its provider account.
 - [launch-test-support.ts](launch-test-support.ts) runs the real launch GET and authorizer POST in tests.
