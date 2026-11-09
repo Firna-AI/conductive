@@ -56,7 +56,7 @@ export function currents(root: ParentNode, href: string): (string | null)[] {
 }
 
 /** A terminal socket that records what the codec sends, and its close. */
-export class RecordedSocket implements TerminalSocket {
+class RecordedSocket implements TerminalSocket {
   binaryType: BinaryType = 'blob'
   readonly readyState = 0
   readonly sent: string[] = []

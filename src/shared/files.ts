@@ -1,5 +1,4 @@
 import { workspacePath } from './workspaces'
-import type { Attachment, UploadAttachmentResponse } from './messages'
 
 function fileQuery(orgId: string, id: string, route: string, path: string) {
   return `${workspacePath(orgId, id)}/${route}?${new URLSearchParams({ path })}`
@@ -116,12 +115,6 @@ export type RunnerFileEvent =
   | { type: 'files.changed'; delta: FileTreeDelta }
   | { type: 'changes.updated'; changes: RunnerChangesPart }
 
-export interface ReadFileRequest {
-  path: string
-}
-export interface ReadDiffRequest {
-  path: string
-}
 /** Maximum bytes of a file or diff read. */
 export const FILE_READ_MAX_BYTES = 5_242_880
 
@@ -164,8 +157,3 @@ export interface DiffResponse {
   patch: string
   binary: boolean
 }
-
-export interface AttachmentsResponse {
-  attachments: readonly Attachment[]
-}
-export type AttachFileResponse = UploadAttachmentResponse

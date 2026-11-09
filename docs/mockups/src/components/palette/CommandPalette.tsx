@@ -1,7 +1,7 @@
 import type { Viewport } from '@mokly/mokly'
 import { InputFrame } from '@firna/ui/input'
 import { Archive, ChevronDown, FolderGit2, Search } from 'lucide-react'
-import { repositories, repositoryKeys } from '../../fixtures/repositories'
+import { repositories } from '../../fixtures/repositories'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
@@ -53,10 +53,10 @@ function repositoryEntries(selected: string): MenuEntry[] {
       highlighted: true,
     },
     { kind: 'divider' },
-    ...repositoryKeys.map((key): MenuEntry => ({
+    ...Object.values(repositories).map((repository): MenuEntry => ({
       kind: 'item',
-      label: repositories[key].name,
-      checked: selected === repositories[key].name,
+      label: repository.name,
+      checked: selected === repository.name,
     })),
   ]
 }

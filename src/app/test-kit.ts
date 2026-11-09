@@ -147,7 +147,7 @@ export class ManualInput {
 }
 
 /** The key presses of the page, which come only when the test says so. */
-export class ManualKeys {
+class ManualKeys {
   private readonly listeners = new Set<(press: KeyPress) => void>()
 
   readonly onKey = (listener: (press: KeyPress) => void): (() => void) => {

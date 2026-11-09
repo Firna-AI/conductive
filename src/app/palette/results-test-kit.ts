@@ -10,7 +10,7 @@ import type { PaletteQuery, PaletteSource } from './palette-source'
 // The data of the tests of the palette results: Acme of the fake API.
 
 const core = coreFixtures()
-export const orgs = core.orgs.orgs
+const orgs = core.orgs.orgs
 export const [acme, futex, firna] = orgs
 export const sections = core.sectionList.sections
 const repositories = core.repositories.repositories

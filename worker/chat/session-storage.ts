@@ -4,6 +4,7 @@ type OptionalSessionFields =
   | 'startedBy'
   | 'sourceSessionId'
   | 'loginAvailable'
+  | 'loginShared'
   | 'retryMessageId'
   | 'activeTurnStartedAt'
 export type StoredSession = Omit<Session, OptionalSessionFields> &
@@ -23,5 +24,6 @@ export function normalizeSession(session: StoredSession): Session {
     loginAvailable: session.startedBy
       ? (session.loginAvailable ?? false)
       : false,
+    loginShared: session.loginShared ?? true,
   }
 }

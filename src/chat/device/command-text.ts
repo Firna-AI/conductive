@@ -57,7 +57,7 @@ export function macLabel(request: DeviceCommandRecord, onThisMac: boolean) {
  * How long the command ran, from its start on the Mac to its result. The
  * wait for the answer does not count. Null when the record has no start.
  */
-export function runTime(request: DeviceCommandRecord): string | null {
+function runTime(request: DeviceCommandRecord): string | null {
   if (request.startedAt === null) return null
   return formatDuration(request.updatedAt - request.startedAt)
 }

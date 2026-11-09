@@ -13,7 +13,7 @@ import {
 } from './guards'
 import { parseChangeKind } from './parse-changes'
 
-export function parseFileEntry(value: unknown): FileEntry | null {
+function parseFileEntry(value: unknown): FileEntry | null {
   if (!isObject(value)) return null
   const path = readString(value, 'path')
   const name = readString(value, 'name')

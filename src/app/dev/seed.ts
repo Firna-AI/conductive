@@ -103,5 +103,6 @@ export function seedState(options: DevOptions): DevState {
     githubAppInstalled: firstRun !== 'github-app',
     attachments: new Map(),
     stopAfterMs: options.stopAfterMs,
+    shareSaveFails: options.shareSaveFails,
   }
 }

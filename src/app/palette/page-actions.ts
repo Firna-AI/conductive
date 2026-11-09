@@ -15,7 +15,7 @@ export interface OfferedAction {
 }
 
 /** Where the actions of an offer go in the palette. */
-export type OfferScope =
+type OfferScope =
   /** The actions of the open workspace, under its name. */
   | {
       readonly kind: 'workspace'
