@@ -471,27 +471,59 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   branch that holds only those commits.
 - **Impact if no action:** A member can open a second pull request with
   another person's work.
-- **Root question:** How does a pull request run show only its own work,
-  and send that work to the pull request?
+- **Root question:** How does a run show only its own work, and send it
+  to the branch that it started from, whichever branch that is? The
+  options check of 9 November 2026 wrote this question. A merged run
+  starts from the base branch of its pull request, which need not be the
+  default branch.
 - **Options:**
   - **A.** Change nothing. Effort: Small.
   - **B.** Hide "Create pull request" until the branch has commits after
     the head commit. Changes still shows the commits of the pull request.
-    Effort: Medium.
+    The options check found that it fails the goal: after the run's first
+    own commit, the link still opens a pull request into the default
+    branch with the commits of the pull request. Effort: Medium.
   - **C.** Compare Changes with the head commit, and let "Create pull
     request" open a pull request into the head branch of the pull request.
     A fix of a run then goes into the pull request that it reviewed.
     Effort: Medium.
-- **Left out:** Work on the pull request's own branch, option B of decision
-  205. The user chose A, so that no two workspaces share a branch.
-- **Wider fix:** None, because this decision sets a rule for one kind of
-  workspace.
+  - **D.** Added by the options check: every workspace gets a base, the
+    branch that its work targets and the commit where its branch starts.
+    Changes, its diffs, and "Create pull request" use that base. A normal
+    workspace keeps the default branch. An opened or pushed run gets the
+    head branch at the head commit, and a merged run gets the base branch
+    of its pull request. Each start must pass the base, also a resume and
+    the restart near day 14, and the bar must not take GitHub's default
+    branch for such a workspace. Effort: Medium.
+  - **E.** Added by the options check: the run text names the branch that
+    the run's work targets, and the create sets `gh-merge-base` in the Git
+    config of the run branch, so that a pull request that the agent opens
+    targets it. It changes neither Changes nor the bar, so it goes with C
+    or D. Effort: Small.
+  - **F.** Added by the options check: as D, and Changes of a pull request
+    run shows two groups, the run's own work and the changes of the pull
+    request. It needs a second list in the runner's reports and a protocol
+    change. Effort: Large.
+- **Left out:**
+  - Work on the pull request's own branch, option B of decision 205. The
+    user chose A, so that no two workspaces share a branch.
+  - A bar that shows the pull request of the event itself. The run's own
+    work then gets no "Create pull request", and the header already links
+    to that pull request.
+- **Wider fix:** D, from the options check. It sets the base of every
+  workspace, so each later kind of workspace that starts from another
+  branch shows and sends only its own work.
 - **Previous examples:** None found.
-- **Related:** Decision 205 E holds the comparison part of C.
-- **Recommendation:** C. A run then shows and sends only its own work, and
-  Milestone 6 already stores the head commit as `base_sha`.
-- **Action:** ask the user, because C changes what Changes and the pull
-  request bar show for a run workspace, and no requirement covers it.
+- **Related:** Decision 205 E holds the comparison part of C. Changes uses
+  no merge base today (`runner/src/git-index.ts:161`), so a run of a pull
+  request behind the default branch shows newer default-branch work as
+  reverted. D's start commit removes that case too.
+- **Recommendation:** D with E, from the options check of 9 November
+  2026. The first recommendation was C. D gives the result of C also for
+  a merged run on another base branch, and E stops a duplicate pull
+  request that the agent opens itself.
+- **Action:** ask the user, because C and D change what Changes and the
+  pull request bar show, and no requirement covers it.
 
 ### 208. Choose how the org keeps a routine whose owner left
 
@@ -516,14 +548,29 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   - **C.** Let an admin give the routine to a member, who accepts it
     first. It breaks the rule that the owner never changes. Effort:
     Medium.
-- **Left out:** None.
-- **Wider fix:** None, because this decision adds one action.
+  - **D.** Added by the options check: a member who can create a routine
+    takes over a routine whose owner left. It keeps its triggers, its
+    prompt, and its runs, and it stays off until the new owner turns it
+    on. The first member who acts gets it. Effort: Medium.
+  - **E.** Added by the options check: at the leave, the routine moves to
+    the admin who gets the workspaces of the member who left (decisions
+    39 and 123). It stays off, and that admin can turn it on with their
+    own logins or delete it. It replaces the planned trigger that only
+    turns the routine off. Effort: Small.
+- **Left out:**
+  - Runs that go on with the logins of the member who left. They break
+    the rule that the owner must be a member of the org.
+  - An org routine on an org login, decision 202 E. It breaks the user's
+    choice of decision 202 B.
+- **Wider fix:** None, because this decision adds one rule or action.
 - **Previous examples:** Decision 39 moves the workspaces of a member who
   leaves to an admin.
-- **Recommendation:** B. It keeps the owner rule, and recovery takes one
-  action.
-- **Action:** ask the user, because B adds an action that no requirement
-  covers.
+- **Recommendation:** E, from the options check of 9 November 2026. The
+  first recommendation was B. E keeps the routine and its runs in one
+  place at the lowest cost, and it follows the rule that already moves
+  the workspaces. B can come later as a general Duplicate.
+- **Action:** ask the user, because B, D, and E add behaviour that no
+  requirement covers.
 
 ### 209. Choose how the owner runs a failed event again
 
@@ -540,22 +587,36 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   request. A failed start has no recovery action.
 - **Impact if no action:** That pull request gets no run until a new event
   arrives.
-- **Root question:** How does the owner run an event again after a
-  failure?
+- **Root question:** How does an event whose run failed still get a run,
+  after its cause is gone? The options check of 9 November 2026 wrote this
+  question. The first question made the owner the actor, but C needs no
+  person.
 - **Options:**
   - **A.** Change nothing. Effort: Small.
   - **B.** Add Run again to a failed run, for the owner only. It starts a
     new run with the same trigger facts. Effort: Medium.
   - **C.** Retry a failed start once, without a person. It spends another
     start of the shared daily starts. Effort: Medium.
+  - **D.** Added by the options check: Run again, for the owner, on a
+    failed run. A pull request run starts again for the same pull request
+    at its current head, through the start path of decision 210 B, with
+    the fork rule and the author rule of decision 206 C. A schedule run
+    works as Run now. Effort: Small with decision 210 B, Medium alone.
+  - **E.** Added by the options check: after the owner connects the agent
+    login or GitHub again, the app starts the newest failed run of each
+    pull request and each schedule of the last 24 hours. It spends starts
+    that nobody pressed. Effort: Medium.
 - **Left out:** None.
 - **Wider fix:** None, because this decision adds one action.
 - **Previous examples:** Try again retries the newest failed turn of a
-  session (decision 97).
-- **Recommendation:** B. The owner fixes the cause, then runs the same
-  event again.
-- **Action:** ask the user, because B adds an action that no requirement
-  covers.
+  session (decision 97). The follow-up item
+  `failed-first-start-keeps-workspace.md` will keep a failed first start
+  as a workspace with Try again.
+- **Recommendation:** D, from the options check of 9 November 2026. The
+  first recommendation was B. A review needs the pull request as it is
+  now, and D shares one start path with decision 210 B.
+- **Action:** ask the user, because B, C, D, and E add behaviour that no
+  requirement covers.
 
 ### 210. Choose how the owner tests a pull request routine
 
@@ -571,22 +632,33 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   request.
 - **Impact if no action:** An owner cannot test a review routine before a
   real event.
-- **Root question:** How does the owner test a pull request routine on a
-  chosen pull request?
+- **Root question:** How does the owner try a pull request routine on a
+  real pull request, at a time that the owner chooses? The options check
+  of 9 November 2026 wrote this question. The first question named the
+  mechanism of B.
 - **Options:**
   - **A.** Change nothing. The prompt must work without a pull request.
     Effort: Small.
-  - **B.** Run now offers a pull request number when the routine has a
-    pull request trigger. The run then starts from that pull request, as
-    a pull request run does. Effort: Medium.
+  - **B.** Run now offers a pull request number and an event when the
+    routine has a pull request trigger. The run then starts from that pull
+    request, as a pull request run of that event does. It applies the fork
+    rule and the author rule of decision 206 C. Effort: Medium.
   - **C.** Hide Run now on a routine that has only pull request triggers.
-    The owner then cannot test it. Effort: Small.
-- **Left out:** None.
+    The owner then cannot test it. The options check found that it fails
+    the goal. Effort: Small.
+  - **D.** Added by the options check: Run again, for the owner, on any
+    pull request run of the Runs list. It starts a run for that pull
+    request at its current head. A first test then needs one real event,
+    such as a draft pull request. Effort: Small with decision 209 D,
+    Medium alone.
+- **Left out:** A preview of the first message for a chosen pull request.
+  It shows the text, not the work of the agent.
 - **Wider fix:** None, because this decision changes one action.
 - **Previous examples:** None found.
 - **Related:** Decision 209 B would reuse the start of a pull request run
   in the same way.
-- **Recommendation:** B. The owner tests the real case.
+- **Recommendation:** B. The owner tests the real case before the first
+  event. The options check kept B.
 - **Action:** ask the user, because B adds behaviour that no requirement
   covers.
 
@@ -606,13 +678,17 @@ Added on 9 November 2026 from the mockups of Milestone 1.
 - **Root question:** May a routine save, or run, without a prompt?
 - **Options:**
   - **A.** Save and run an empty prompt. Effort: Small.
-  - **B.** Keep Save off until the prompt has text. Effort: Small.
+  - **B.** Keep Save off until the prompt has text. The save route applies
+    the same rule, and a prompt of only spaces counts as empty. Effort:
+    Small.
   - **C.** Save a routine without a prompt as a draft. It stays off, and
     Run now stays off, until the prompt has text. Effort: Small.
 - **Left out:** None.
 - **Wider fix:** None, because this decision sets one rule.
 - **Previous examples:** Send of the composer waits for text or a file.
-- **Recommendation:** B. A run without a prompt has no task.
+- **Recommendation:** B. A run without a prompt has no task. The options
+  check kept B.
+
 - **Action:** ask the user, because B and C add a refusal, and the user's
   rules keep each new refusal for the user.
 

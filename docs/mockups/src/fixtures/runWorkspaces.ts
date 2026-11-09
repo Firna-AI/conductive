@@ -138,7 +138,7 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
         kind: 'tool',
         id: 'diff',
         tool: 'run',
-        target: `gh pr diff ${pullRequest.number}`,
+        target: 'git diff --stat main...HEAD',
         detail: pullRequestStat,
         status: 'done',
       },
@@ -174,8 +174,7 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
         kind: 'tool',
         id: 'list',
         tool: 'run',
-        target:
-          'gh pr list --base main --state merged --search "merged:>=2026-11-06"',
+        target: 'git log --merges --since=2026-11-06 --oneline origin/main',
         status: 'running',
       },
       { kind: 'working', id: 'working', elapsed: '12s' },
