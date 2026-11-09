@@ -7,7 +7,10 @@ import { classes } from '../common/classes'
 import { DrawnChoices } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
 import { SandboxBar } from '../workspace/SandboxNotice'
-import type { SandboxNoticeState } from '../workspace/sandboxNoticeState'
+import {
+  replacesComposer,
+  type SandboxNoticeState,
+} from '../workspace/sandboxNoticeState'
 import { StartingCard } from '../workspace/StartingCard'
 import { ChatItemView } from './ChatItemView'
 import { Composer, type ComposerState } from './Composer'
@@ -31,7 +34,9 @@ export function ChatPane(props: {
   composer: ComposerState
   /**
    * The sandbox is not running: the bar takes the place of the composer. A
-   * failed start carries its saved message, and a refused start its reason.
+   * failed first start keeps the composer under its bar, so members can
+   * still queue messages. A failed start carries its saved message, and a
+   * refused start its reason.
    */
   problem?: SandboxNoticeState
   starting?: StartingLog
@@ -49,6 +54,7 @@ export function ChatPane(props: {
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
+  const composer = !props.problem || !replacesComposer(props.problem)
   const pending = props.items.filter(isPendingCommand)
   const transcript = props.items.filter((item) => !isPendingCommand(item))
   const fold = props.fold ?? 'closed'
@@ -111,11 +117,8 @@ export function ChatPane(props: {
         ) : null}
         {mac?.choicesOpen && pending.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
-        {props.problem ? (
-          <SandboxBar {...props.problem} />
-        ) : (
-          <Composer {...props.composer} />
-        )}
+        {props.problem ? <SandboxBar {...props.problem} /> : null}
+        {composer ? <Composer {...props.composer} /> : null}
       </div>
     </section>
   )

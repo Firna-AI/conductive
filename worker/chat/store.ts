@@ -3,6 +3,10 @@ import type {
   WorkspaceEventEnvelope,
 } from '../../src/shared/events'
 import { HttpError } from '../http'
+import {
+  FIRST_MESSAGE_ADMISSION_KEY,
+  type FirstWorkspaceMessage,
+} from '../lifecycle/workspace-runtime'
 import { chatFilesStorage } from './files-storage'
 import { saveHistoryEvent } from './history-storage'
 import { HistoryPages } from './history-pages'
@@ -75,6 +79,9 @@ export class ChatTransaction extends ChatRecords {
     return records
       .sort((left, right) => left.order - right.order)
       .map((entry) => entry.command)
+  }
+  saveFirstMessageAdmission(first: FirstWorkspaceMessage): Promise<void> {
+    return this.data.put(FIRST_MESSAGE_ADMISSION_KEY, first)
   }
   async cursor(streamId: string): Promise<number> {
     return (await this.data.get<number>(key('cursor', streamId))) ?? 0

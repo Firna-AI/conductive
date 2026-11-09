@@ -9,6 +9,7 @@ import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
+import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
 
@@ -104,6 +105,8 @@ export const conversationKeys = [
   'sandbox-stopped',
   'failed',
   'queued',
+  'queued-follow-up',
+  'queued-retry',
   'first-turn',
   'mac-waiting',
   'mac-waiting-many',
@@ -199,16 +202,6 @@ const e2eRunning: ChatItem = {
   status: 'running',
 }
 
-/** The first message of the workspace that the create flow makes. */
-export const savedCartsMessage =
-  'Let signed-in shoppers save their cart and restore it on another device. Store carts in the existing Postgres database, and add tests.'
-
-const savedCartsAsk = {
-  kind: 'user',
-  id: 'ask',
-  text: savedCartsMessage,
-} as const
-
 const history: readonly ChatItem[] = [
   ...autocompleteStart,
   ...autocompleteTests,
@@ -260,25 +253,7 @@ export const conversations: Readonly<
       text: 'Claude is overloaded right now.',
     },
   ],
-  queued: [{ ...savedCartsAsk, queued: true }],
-  'first-turn': [
-    savedCartsAsk,
-    {
-      kind: 'agent',
-      id: 'plan',
-      paragraphs: ["I'll check how carts and sessions work today."],
-    },
-    tool('read-cart', 'read', 'src/lib/cart.ts'),
-    tool('read-schema', 'read', 'prisma/schema.prisma'),
-    {
-      kind: 'tool',
-      id: 'search-session',
-      tool: 'search',
-      target: 'getServerSession',
-      status: 'running',
-    },
-    { kind: 'working', id: 'working', elapsed: '24s' },
-  ],
+  ...newWorkspaceConversations,
   ...macConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),

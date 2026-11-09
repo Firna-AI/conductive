@@ -131,32 +131,19 @@ says.
   [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
   says. The app accepts that message before the sandbox is ready
   (decision 14).
-- After the first start of a workspace succeeds, the app also accepts a
-  message while the sandbox is not ready, such as during a resume
-  (decision 14).
+- The app also accepts a later message while the sandbox is not ready
+  (decisions 14 and 130). Examples are the first start, a resume, and the
+  error state of a failed first start.
 - The workspace keeps such a message, and gives it to the agent when the
-  sandbox is ready.
+  sandbox is ready. The agent of each session gets these messages in the
+  order that the workspace accepted them (decision 130).
 - A message that waits for the sandbox shows that it waits. A queue in the
   browser was rejected, because a closed tab would lose the message.
-- Until the first start of a new workspace succeeds, the composer of each
-  session keeps a later message as an unsent draft (decision 130).
-- Send waits for such a draft until the first start succeeds. A short
-  reason beside Send says that the user can send the message when the
-  sandbox is ready.
-- After the first start succeeds, the user sends the draft. The app never
-  sends a draft on its own.
-- Until the first start succeeds, the workspace refuses each later message
-  and each Try again of a turn, in every session. It answers with HTTP 409
-  and the error code `workspace_starting` (decision 130).
-- Until then, a repeat of an accepted message, with the same message ID,
-  still succeeds.
-- When a tab gets the `workspace_starting` error, its composer keeps the
-  message as an unsent draft.
-- Reason: a failed first start removes the workspace, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
-  says. Acceptance of later messages during the first start was rejected,
-  because the removal would leave those accepted messages with no way back
-  to their senders.
+- Reason: a failed first start keeps its workspace and its queued messages,
+  as [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  says. So members can add work at once, and an accepted message survives
+  a reload of the tab. A hold of later messages in the composer until the
+  first start succeeds was rejected for these reasons.
 - While the login of the starter can be used, a message that the starter
   sends during a turn joins that turn. A message of another member joins it
   too while the starter shares the login. Such a message goes to the agent

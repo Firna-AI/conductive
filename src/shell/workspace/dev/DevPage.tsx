@@ -66,6 +66,8 @@ function DevFiles(props: {
  * The development page of the notices of a failed repair: the app shell
  * with the open workspace and its Files panel, over the fake API. The
  * address sets the stored failures and the layout, as `DevOptions` says.
+ * A first-start state opens `workspaceId`, the new workspace, with the
+ * app's own Files part, so the panel shows the state of its sandbox.
  */
 export function DevPage(props: {
   app: AppModel
@@ -74,6 +76,8 @@ export function DevPage(props: {
   createFiles: (workspace: WorkspaceIdentity) => WorkspaceFiles
   options: DevOptions
   now: () => number
+  /** The workspace that the page opens. */
+  workspaceId: string
 }) {
   const { app, options, now } = props
   const { store: files } = useWorkspaceStore(devWorkspace, {
@@ -86,24 +90,27 @@ export function DevPage(props: {
     memoryNavigation(
       routes.workspace(
         FAKE_IDS.org,
-        FAKE_IDS.workspace,
+        props.workspaceId,
         ...(options.view === 'chat' ? [] : [options.view]),
       ),
     ),
   )
   const [panels] = useState(() => new PanelLayout(null))
   const features = useMemo<WorkspaceFeatures>(
-    () => ({
-      files: (context) => (
-        <DevFiles
-          context={context}
-          files={files}
-          list={options.list}
-          now={now}
-        />
-      ),
-    }),
-    [files, options.list, now],
+    () =>
+      options.start
+        ? {}
+        : {
+            files: (context) => (
+              <DevFiles
+                context={context}
+                files={files}
+                list={options.list}
+                now={now}
+              />
+            ),
+          },
+    [files, options.start, options.list, now],
   )
   return (
     <ServicesContext.Provider value={app.services}>

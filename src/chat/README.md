@@ -4,9 +4,9 @@ The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded runs
 of tool calls, the folded work of each ended turn above its answer, the
 running turn, steer, Stop, failures with Try again, the start steps of the
-sandbox, the wait of Send during the first start of a new workspace, the
-Mac commands of each turn, and the bar that takes the composer's place
-while the sandbox does not run. The workspace screen
+sandbox, the Mac commands of each turn, and the bar that takes the
+composer's place while the sandbox does not run. After a failed first start
+of a new workspace, that bar sits above the composer, which stays. The workspace screen
 of the app shell mounts it by default, as
 [the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
 says. It builds against the fake API and the recorded chat events of
@@ -75,7 +75,9 @@ stops its own controller:
   browser only, and sends no write.
 - `host` takes the start steps and the sandbox bar that the app draws, as
   `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
-  Without a host, the chat draws both from its own record of the workspace.
+  `keepsComposer` keeps the composer under the bar, as after a failed first
+  start. Without a host, the chat draws both from its own record of the
+  workspace, with the message that the workspace saved for a failed start.
 - `readOnly` says that the workspace takes no write, such as while its org
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar
@@ -178,23 +180,22 @@ members from the models of the app.
   free Resume button, still run when its reply is older. The header of
   [`state/session-records.ts`](state/session-records.ts) gives the pending
   edits of a rename or a model change.
-- Send waits in every session until the records show that the first start
-  of the workspace succeeded. The Worker refuses each new message until
-  then, as [Messages](../../docs/protocol/chat-and-events.md#messages) says.
-  The box keeps each draft, and the reason shows beside Send: "You can send
-  when the sandbox is ready", from the mockups' `SendWait`.
-- A state that the Worker sets only after that start shows the success:
-  ready, working, input, or unread. The record of a resume shows it too. A
-  stop or an error does not, because a first start can stop or fail before
-  it succeeds.
-- The chat remembers the success. So a resume never waits, also when its
-  workspace record comes before its start record, while the record of the
-  first start still shows. A message during a resume goes, and the
-  workspace queues it for the sandbox.
-- No draft sends on its own when the start succeeds. The user sends it.
-- A send that the Worker refuses with `409 workspace_starting` keeps its
-  text, its files, and its message ID. The notice "Your message didn't send"
-  shows the Worker's plain message.
+- Send works while the sandbox is not ready: during the first start of a
+  new workspace, after it failed, and during a resume. The workspace queues
+  each message for the sandbox, as
+  [Messages](../../docs/protocol/chat-and-events.md#messages) says.
+- A failed first start shows the error state and a failed step of the
+  create start, as `failedFirstStart` in
+  [`../app/first-start.ts`](../app/first-start.ts) says. Its bar sits above
+  the composer. A later error after a successful create,
+  and a failed resume, keep the bar in place of the composer.
+- The bar shows the message that the workspace saved for a failed start.
+  The chat takes it from each read and Resume reply, and from each
+  `workspace.updated` event. An event without an error keeps it, and null
+  clears it.
+- A send that the Worker refuses keeps its text, its files, and its message
+  ID. The notice "Your message didn't send" shows the Worker's plain
+  message.
 - The chat loads the session list and the view, then the full history of the
   shown session, then the workspace and the session list again. The stream
   starts after the history's `throughEventNumber`, so no change between the
@@ -244,13 +245,14 @@ of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
 `state/first-start.test.ts` drives Send in two sessions during the first
-start, a stop before its success, and a resume whose workspace record comes
-first. It also checks a send that the Worker refuses during the first start.
-`components/FirstStart.dom.test.tsx` mounts the chat during the first start,
-presses Enter, and then sends after the start succeeds.
-`components/WorkFold.dom.test.tsx` reads the folds of ended turns from the
-rendered chat. `components/OpenFold.dom.test.tsx` opens a fold and a message
-line, and checks that each line keeps its place.
+start, after it failed, and during a resume. It checks the saved message of
+a failed start from a read and the stream, and a send that the Worker
+refuses. `components/FirstStart.dom.test.tsx` mounts the chat without a
+host, sends with Enter and Send during the first start and after it failed,
+and checks the saved message on the bar of a failed first start and of a
+failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
+turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
+fold and a message line, and checks that each line keeps its place.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -291,9 +293,7 @@ check in the Mac app.
   replies, complete current lists, and event merges. `confirmSessions`
   establishes the current records before the shown session starts its history.
 - `state/workspace-records.ts`: the order of the workspace record and its
-  start steps by event number, with the remembered first-start success.
-- `state/first-start.ts`: the success of the first start of the workspace,
-  which the snapshot remembers, and the wait of Send until then.
+  start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
   record and the reader, and the words of the line under the composer.
 - `state/linked-replies.ts`: the message and the focus of a reply that names

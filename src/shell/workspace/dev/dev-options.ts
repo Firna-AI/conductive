@@ -3,6 +3,7 @@ import type { RunnerReportKind } from '../../../shared/runner'
 import type { ColorScheme } from '../../ui/ThemeRoot'
 import type { Viewport } from '../../ui/viewport'
 import type { PhoneView } from '../WorkspaceColumns'
+import { firstStartStates, type FirstStartState } from './dev-first-start'
 
 /**
  * The state of the development page, from its address. Development only.
@@ -15,6 +16,9 @@ import type { PhoneView } from '../WorkspaceColumns'
  * - `view=files|chat|terminal|preview|desktop`: the tab of a phone.
  * - `list=changes|all|checks`: the list of the Files panel.
  * - `controls=off`: hides the controls, as for a picture.
+ * - `start=waiting|failed|time-limit|retrying`: opens the new workspace of
+ *   the create flow in that state of its first start, with its queue.
+ * - `viewer=member`: signs in Priya, a member who is not the owner.
  */
 export interface DevOptions {
   repair: readonly RunnerReportKind[]
@@ -23,6 +27,8 @@ export interface DevOptions {
   view: PhoneView
   list: FileListKind
   controls: boolean
+  start: FirstStartState | null
+  member: boolean
 }
 
 const kinds: Readonly<Record<string, RunnerReportKind>> = {
@@ -61,5 +67,7 @@ export function readDevOptions(search: string): DevOptions {
       pick<FileListKind>(query, 'list', ['changes', 'all', 'checks']) ??
       'changes',
     controls: query.get('controls') !== 'off',
+    start: pick<FirstStartState>(query, 'start', firstStartStates) ?? null,
+    member: query.get('viewer') === 'member',
   }
 }
