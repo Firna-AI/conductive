@@ -365,7 +365,8 @@ Open checks:
    `/responses/compact` request.
 5. Streaming through the deployed Worker, long answers, and deploys. A
    post-merge task.
-6. The Workers plan and the zone plan of the deployment. Milestone 3 asks.
+6. Done on 9 November 2026: Cal confirmed Workers Paid. The API confirmed
+   the Free Website plan of `conductive.build` and its 100 MB upload limit.
 7. What a Workers Logs record holds for a gateway request. A post-merge
    task.
 8. The effect of `global_fetch_strictly_public` on the Worker's other
@@ -643,9 +644,11 @@ them to Anthropic or OpenAI. Milestone 6 adds the own endpoint.
 - [x] Tests: each route, the header removal, the credential swap of each
       login kind, the removal of D29, the refusals, the body limit, and
       the end of an open answer after its turn.
-- [ ] Ask Cal for the Workers plan and the zone plan of the deployment.
-      The gateway needs the CPU time of Workers Paid and the 100 MB cap of
-      the zone (open check 6).
+- [x] Confirm the Workers plan and the zone plan of the deployment.
+      Cal confirmed Workers Paid on 9 November 2026. The API confirmed
+      the Free Website plan of `conductive.build` and its 100 MB upload
+      limit (open check 6).
+      Record: `.context/model-gateway/cloudflare-plan-api-check.json`.
 - [x] Update `worker/README.md`.
 
 ## Milestone 4: Runner version pin
