@@ -10,7 +10,9 @@ export const accountConnectCodex = defineScreen({
   relatedDocs: [],
   propSchema: accountSchema,
   props: {
-    connections: 'connected', form: 'codex', invites: 'left',
+    connections: 'connected',
+    form: 'codex',
+    invites: 'left',
     shareChange: 'none',
   },
   render: (props, context) => (

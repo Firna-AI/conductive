@@ -10,13 +10,14 @@ access, the app shows only a waitlist screen. The approval of an
 operator, an invite code, a referral code, or an org invitation gives app
 access. Each user with app access has a referral code with 5 uses. The
 operator sees the waitlist, approves people, makes and disables invite
-codes, and pauses every way in, from the section of
-[the operator section plan](operator-section.md).
+codes, and pauses every way in, from the
+[operator section](../docs/protocol/operator-section.md).
 
 The change builds on the operator section, as the user asked. This branch
-starts from its branch, `calummoore/admin-section-brainstorm`, and merges
-that branch as it moves. The pull request into `main` opens after the
-operator section merges. The change does not cover limits for each user,
+started from the branch of the operator section. That section merged into
+`main` in pull request #89 on 9 November 2026. This branch then merged the
+last commit of that branch and the latest `main`, and the milestones after
+Milestone 1 start from there. The change does not cover limits for each user,
 billing, a place in line, bulk approval, codes with an end date, a
 self-service Delete account, or a change of who is an operator. The
 brainstorm notes are in `.context/waitlist/brainstorm.md`. The options check of the
@@ -451,6 +452,11 @@ The agent's calls from the mockups of Milestone 1, on 9 November 2026:
   Sign in with GitHub to get started:", then the address of the app. The
   product name comes from the brand module. Reason: an email is not a
   screen, and the invitation email also lives only in the code.
+- The approval email comes from the same sender as the org invitations,
+  on the domain `mail.conductive.build`. Reason: Resend already verifies
+  that domain, so the deployment needs no new setup. This call is from
+  the merge of `main` on 9 November 2026, which moved the invitation
+  sender to that domain.
 - The waitlist screen reads the app access again when the person comes
   back to the tab or the window, and after Use code. It sets no timer.
   Reason: a person usually comes back from the approval email.
@@ -671,7 +677,8 @@ Depends on: 1, 3
       uses the code for a signed-in person who waits.
 - [ ] Add the referral code to the Account page, with Copy and its states.
 - [ ] Change the words of the marketing button and its closing line in
-      `src/marketing/`, and in `src/marketing/routes.test.ts`.
+      the Astro marketing site under `src/marketing/`, and in its test
+      `worker/marketing/built-site.test.ts`.
 - [ ] Update the Privacy draft in `src/marketing/privacy.ts`, as the
       design says. Update the Terms draft when it promises an open
       sign-up.
@@ -683,8 +690,8 @@ Depends on: 1, 3
 
 Tags: ui
 
-Depends on: 1, 4, and Milestone 6 of
-[the operator section plan](operator-section.md)
+Depends on: 1, 4. The operator section screens are on `main` since pull
+request #89.
 
 - [ ] Add the Waitlist tab with its search, and Approve with its question.
 - [ ] Add the Invite codes tab with New code, Disable, the search, and the
@@ -722,11 +729,14 @@ Depends on: 5, 6
 
 Depends on: every other milestone
 
-- [ ] Merge `main` into this branch after the operator section merges.
+- [x] Merge `main` into this branch after the operator section merges.
       `main` adds a fifth Account screen, `share-not-saved`, and a
       `shareChange` prop. Move that screen into its own folder under
       `app/account`, as this branch did for the other Account states, and
-      give each Account entry the prop.
+      give each Account entry the prop. The merge decisions are in
+      `.context/waitlist/merge-justifications.md`.
+- [ ] Merge the latest `main` again before the review and the pull
+      request.
 - [ ] Smoke-test in `npm run dev`: a person who waits, a code, a join
       link, an org invitation, the referral code, the pause, and the
       operator tabs.

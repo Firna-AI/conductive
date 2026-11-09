@@ -49,7 +49,7 @@ export type ReferralCode = {
 }
 
 /** Each user with app access has one referral code with 5 uses. */
-export const referralLimit = 5
+const referralLimit = 5
 
 /** A referral code with its uses, which the grant of app access made. */
 export function referral(
@@ -91,7 +91,7 @@ export const operatorReferral = referral('K7QHM-3XP2R', [
 ])
 
 /** The time of the approval that the screens show. */
-export const approvedAt = '8 Nov 2026 at 15:04'
+const approvedAt = '8 Nov 2026 at 15:04'
 
 /** An approval of the operator, with the state of its email. */
 export function approval(

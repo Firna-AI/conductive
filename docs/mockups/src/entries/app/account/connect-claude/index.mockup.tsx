@@ -10,7 +10,9 @@ export const accountConnectClaude = defineScreen({
   relatedDocs: [],
   propSchema: accountSchema,
   props: {
-    connections: 'connected', form: 'claude', invites: 'left',
+    connections: 'connected',
+    form: 'claude',
+    invites: 'left',
     shareChange: 'none',
   },
   render: (props, context) => (

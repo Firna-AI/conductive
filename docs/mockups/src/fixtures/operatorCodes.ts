@@ -26,7 +26,7 @@ export type InviteCodeRow = CodeBase & {
 }
 
 /** The referral code of a user, which a search of the tab also finds. */
-export type ReferralCodeRow = CodeBase & { kind: 'referral'; owner: string }
+type ReferralCodeRow = CodeBase & { kind: 'referral'; owner: string }
 
 export type CodeRow = InviteCodeRow | ReferralCodeRow
 
@@ -60,7 +60,7 @@ function invite(
 }
 
 /** The code that the screens copy and that let Rhea Okafor in. */
-export const launchWeek = invite('Launch week', 'V7MKC-2QDXH', 12, 50, '6 Nov')
+const launchWeek = invite('Launch week', 'V7MKC-2QDXH', 12, 50, '6 Nov')
 
 /** The code that the screens disable, which another operator made. */
 export const meetupLisbon: InviteCodeRow = {
@@ -82,7 +82,7 @@ export const inviteCodes: readonly InviteCodeRow[] = [
 export const newCode = invite('Meetup Porto', '3VKRD-6PXQA', 0, 40, '8 Nov')
 
 /** The referral code of Dana Kim, as a search of the tab finds it. */
-export const danaReferralRow: ReferralCodeRow = {
+const danaReferralRow: ReferralCodeRow = {
   kind: 'referral',
   owner: 'dana-k',
   code: danaReferral.code,
