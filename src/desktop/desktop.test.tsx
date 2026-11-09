@@ -35,6 +35,7 @@ describe('desktop', () => {
     const html = renderToStaticMarkup(
       <DesktopFrame
         desktop={{ url, expiresAt: 1_800_000_600_000 }}
+        onBlocked={() => undefined}
         onLoad={() => undefined}
       />,
     )

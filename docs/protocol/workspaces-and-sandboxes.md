@@ -386,6 +386,9 @@ says.
 
 - The Desktop tab shows the live desktop of the sandbox, where the agents
   use a browser. The user watches the agents there.
+- When the [content security policy](access-and-security.md#content-security-policy)
+  of the page blocks the stream, the Desktop tab says that the desktop
+  couldn't open, with Try again. It never shows a blocked stream as live.
 
 [Access and security](access-and-security.md) states how the terminal, the
 previews, and the desktop stay safe.
