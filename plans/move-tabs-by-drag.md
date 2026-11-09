@@ -6,14 +6,14 @@ The tab row above the centre column of a workspace holds the session tabs,
 then the file and diff tabs. No tab can move. The saved view of each user
 already keeps one order for all tabs, but the row always draws the sessions
 first. This change lets the user drag any tab to any place in the row
-(decision 142). The order saves in the saved view, so it stays after a
+(decision 186). The order saves in the saved view, so it stays after a
 reload and on the user's other devices. A new tab of any kind opens at the
 end of the row. The mockups already draw a new session after the open file
 tab, so the row then matches them.
 
 When the tabs do not fit, the row scrolls sideways and keeps the shown tab
-in view (decision 143). A right click on a tab opens a tab menu with Rename
-and the moves of the tab, for a user who does not drag (decision 144). The
+in view (decision 187). A right click on a tab opens a tab menu with Rename
+and the moves of the tab, for a user who does not drag (decision 188). The
 change does not cover a drag out of the row into a split view or a new
 window, pinned tabs, a live update of the order in a second window, other
 actions in the tab menu, or new close rules. The
@@ -21,7 +21,7 @@ actions in the tab menu, or new close rules. The
 tab for a file that the user only glances at. That item changes the same
 row. The change that merges second aligns the drag with temporary tabs.
 
-## Decision 142: Where in the row a tab can move
+## Decision 186: Where in the row a tab can move
 
 Added on 8 November 2026 from the brainstorm of this change.
 
@@ -55,7 +55,7 @@ Added on 8 November 2026 from the brainstorm of this change.
   - An automatic order, because the user chooses the order. Decision 77
     already chose the order of creation over an order of activity.
   - Move actions with no drag, because the user asked for drag. Decision
-    144 asks how a user who does not drag moves a tab.
+    188 asks how a user who does not drag moves a tab.
   - An order that only the browser keeps, because `docs/architecture.md`
     keeps all state except the panel widths on the server.
   - A drag out to a split view or a new window, because it is B plus a
@@ -94,12 +94,12 @@ Added on 8 November 2026 from the brainstorm of this change.
   creation of decision 77. A new tab still opens at the end of the row.
 - **Options check, 8 November 2026:** the check kept B and added C. C also
   answers a second question, how the user reaches a tab that a full row
-  hides. Decision 143 asks that question on its own, so the choice of B
+  hides. Decision 187 asks that question on its own, so the choice of B
   stands.
 
-## Decision 143: A full row hides its last tabs
+## Decision 187: A full row hides its last tabs
 
-Added on 8 November 2026 from the options check of decision 142. Open.
+Added on 8 November 2026 from the options check of decision 186. Open.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Review. **Category:** Docs or spec.
@@ -108,7 +108,7 @@ Added on 8 November 2026 from the options check of decision 142. Open.
   44 px on a phone. The shown tab does not shrink on desktop. When the tabs
   still do not fit, the row hides the last ones, because it clips what
   overflows. Today only new file and diff tabs open at the end of the row.
-  With decision 142, a new session opens there too. The Rename button shows
+  With decision 186, a new session opens there too. The Rename button shows
   only on the shown session tab, so it can hide with that tab.
 - **Problem:** In a full row, a new tab opens out of sight. A hidden tab
   cannot take a click or a drag, and no drop can reach a hidden place.
@@ -138,7 +138,7 @@ Added on 8 November 2026 from the options check of decision 142. Open.
     cannot reach a hidden tab, and a new session opens out of sight.
   - Scroll only the shown tab into view, because a pointer still cannot
     reach the other hidden tabs. B and C both need this scroll.
-  - A new tab opens next to the shown tab, because decision 142 keeps the
+  - A new tab opens next to the shown tab, because decision 186 keeps the
     rule that a new tab opens last, and it reaches no other hidden tab.
   - A smaller minimum width, because it only moves the point where tabs
     hide.
@@ -150,11 +150,11 @@ Added on 8 November 2026 from the options check of decision 142. Open.
     only delay a full row. That idea is an open item of the "File Preview
     Tabs Brainstorm" workspace.
   - Vertical tabs in a side list, because it replaces the row that
-    decisions 19 and 142 build on.
+    decisions 19 and 186 build on.
 - **Shared assumptions:**
   - Each tab keeps its minimum width. Source: the mockup CSS. The 44 px of
     a phone is the touch minimum.
-  - A new tab opens at the end. Source: decision 142.
+  - A new tab opens at the end. Source: decision 186.
   - The row keeps one line. Source: the mockups. It is not a requirement,
     because decision 19 asks for one row, not one line. D drops it.
 - **Wider fix:** B, because it keeps the shown tab in view whatever put it
@@ -164,7 +164,7 @@ Added on 8 November 2026 from the options check of decision 142. Open.
   `src/previews/PreviewToolbar.module.css` scroll a row of tabs sideways,
   with a hidden scrollbar. `src/shell/ui/links.tsx` wraps the tabs of the
   org settings into three columns on a phone.
-- **Related:** Decision 142. Its option B opens each new tab at the end,
+- **Related:** Decision 186. Its option B opens each new tab at the end,
   where a full row hides it.
 - **Recommendation:** B. It keeps the shown tab in sight on one line, and a
   pointer can reach every tab and every drop place. C fits best later, as
@@ -176,9 +176,9 @@ Added on 8 November 2026 from the options check of decision 142. Open.
   the fade, and the touch scroll to B.
 - **Chosen:** B, by the user on 9 November 2026.
 
-## Decision 144: How a user who does not drag moves a tab
+## Decision 188: How a user who does not drag moves a tab
 
-Added on 8 November 2026 from the options check of decision 142. Open.
+Added on 8 November 2026 from the options check of decision 186. Open.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Review. **Category:** Docs or spec.
@@ -303,7 +303,7 @@ Added on 8 November 2026 from the options check of decision 142. Open.
 - The row scrolls each new or shown tab into view: a new tab, a tab that
   the Files panel or the session history shows, and a tab after a move.
 - When the row gets narrower, for example when the window shrinks, the row
-  scrolls the shown tab back into view. Decision 143 names this case.
+  scrolls the shown tab back into view. Decision 187 names this case.
 - A vertical turn of the mouse wheel over the row scrolls it sideways. A
   sideways swipe on a trackpad scrolls it as before.
 - A fade marks each end of the row that clips tabs.
@@ -412,7 +412,7 @@ The agent made each call below on 8 November 2026.
   after the open branches merge.
 
 The agent made each call below on 9 November 2026, after the user chose G
-of decision 144.
+of decision 188.
 
 - The move option of the tab menu is the pair "Move left" and "Move
   right". Reason: the pair reaches every place, in the flat menu style of
@@ -522,7 +522,7 @@ Milestone 4:
 - When a tab opens without showing, such as a session that another member
   starts, and it does not fit beside the shown tab, the row keeps the
   shown tab in view. The new tab scrolls in only as far as the shown tab
-  still shows. Reason: decision 143 keeps the shown tab in sight, and a
+  still shows. Reason: decision 187 keeps the shown tab in sight, and a
   session of another member must not move the view of the user. The
   orchestrator made this call, which the agent of this part asked about.
 - During a drag, the pointer within 32 px of an end of the row, or past
@@ -675,14 +675,14 @@ Depends on: 1
 State the rules of the row before the code changes.
 
 - [x] In the Sessions section of `docs/protocol/chat-and-events.md`,
-      replace the order of creation with the rules of decision 142: one
+      replace the order of creation with the rules of decision 186: one
       order for all tabs of the row, and a new tab at the end. Add the
       move of any tab by drag, and by a long press on a phone. Add the
       order kept for each user and workspace, and no move in a read-only
       workspace. Give the rejected group order and its reason.
-- [x] Add the full row of decision 143 to the same section: the row
+- [x] Add the full row of decision 187 to the same section: the row
       scrolls sideways and keeps the shown tab in view.
-- [x] Add the tab menu of decision 144 to the same section: a right
+- [x] Add the tab menu of decision 188 to the same section: a right
       click, Shift and F10, or a long press on a phone opens Rename
       session, Move left, and Move right. Say that the user renames a
       session from the tab menu. A read-only workspace opens no tab
@@ -691,7 +691,7 @@ State the rules of the row before the code changes.
       `docs/protocol/workspaces-and-sandboxes.md`, say that a file or diff
       tab opens at the end of the row. Link to the rules of the row.
 - [x] Add a line to decision 77 in `plans/boat-native-remote-workspaces.md`
-      that says decision 142 changed it on 8 November 2026.
+      that says decision 186 changed it on 8 November 2026.
 - [x] Check the relative links of each changed Markdown file.
 
 ## Milestone 3: Tab order in the chat state
@@ -823,8 +823,8 @@ Depends on: 1, 2, 3, 4, 5
       once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives decisions 142, 143,
-      and 144 and the design calls of this plan with their dates, a
+- [ ] Open the pull request. Its description gives decisions 186, 187,
+      and 188 and the design calls of this plan with their dates, a
       permalink to this plan, and the follow-up items that the change
       adds: `plans/follow-ups/session-click-overwrites-unread-view.md`,
       `plans/follow-ups/read-only-session-click-over-file.md`, and

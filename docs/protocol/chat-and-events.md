@@ -100,7 +100,7 @@ says.
 ### The tab row
 
 - The tab row of the centre column shows the session tabs and the file and
-  diff tabs in one order (decision 142).
+  diff tabs in one order (decision 186).
 - Each member has their own order in each workspace. The order stays after
   a reload. The other devices of that member load the same order.
 - A new tab of any kind opens at the end of the row. This holds also for a
@@ -115,7 +115,7 @@ says.
 - A move on a phone changes only the place of the moved session tab. Each
   file tab keeps its place.
 - When the tabs do not fit at their minimum width, the row scrolls
-  sideways (decision 143).
+  sideways (decision 187).
 - The row scrolls a tab into view when the tab opens, when it becomes the
   shown tab, and after it moves.
 - When the row gets narrower, it scrolls the shown tab back into view.
@@ -129,7 +129,7 @@ says.
 - A menu of the hidden tabs was rejected, because the shown tab and the
   drop places could still hide. A row that wraps onto more lines was
   rejected, because the chat would move down when a tab opens.
-- A right click on a tab opens its tab menu (decision 144).
+- A right click on a tab opens its tab menu (decision 188).
 - On a focused tab, Shift and F10, or the Menu key, also opens the tab
   menu. This holds on every system.
 - On a phone, a long press that ends without a move opens the tab menu as

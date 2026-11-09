@@ -89,7 +89,7 @@ export const workspaceStateSchema = {
       ],
     },
     /**
-     * The tab row, from decisions 142 to 144: each tab where it opened, the
+     * The tab row, from decisions 186 to 188: each tab where it opened, the
      * drag of a tab, the code file after its move between the two
      * sessions, a full row with more tabs than fit, scrolled to the shown
      * tab, or the rename field in the first session tab after Rename

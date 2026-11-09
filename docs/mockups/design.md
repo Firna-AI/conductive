@@ -66,7 +66,7 @@ chat, and five tabs at the bottom.
   lead with a mark, such as an avatar, and end with a muted detail and an
   icon. An item that is off keeps its place, greyed.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
-  centre column, from decisions 142 to 144, as `app/tabs` shows. Any tab
+  centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
   a new tab opens at the end of the row. A drag looks like the drag of a
   workspace row: the tab lifts as a raised card, a faint copy stays at its
