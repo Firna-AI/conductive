@@ -4398,8 +4398,9 @@ otherwise. The user can override any of them.
   for stored copy proof, current access checks, and dispatch. Reason: Stop
   and runner event confirmations must continue while a file transfers.
 - Give each accepted message its own safe file paths. Keep copy proof for
-  the command and sandbox identity. Reason: another message or a
-  redelivery must not overwrite a file that an agent is reading.
+  the message and its destination cloud computer, as the fix round 2
+  entry below says. Reason: another message or a redelivery must not
+  overwrite a file that an agent is reading.
 - Use 25,000,000 bytes for 25 MB, as the existing request body policy uses
   decimal MB. The limit notice gives no formatted file size, because the
   shared size formatter uses units of 1024.
@@ -4439,6 +4440,29 @@ otherwise. The user can override any of them.
 - A draft whose stored file is gone uses the failed file chip and Try
   again. Try again uploads its kept local file. Reason: this keeps the
   approved draft expiry and the existing file recovery in one flow.
+- Fix round 2 of PR #71, finding 5, option B, chosen by the user on
+  9 November 2026: give each accepted message and destination cloud
+  computer one shared copy owner and one stored copy proof. The copy
+  writes each file only to the computer that its owner selected. A
+  continuation gets a new command ID but keeps the message and its file
+  paths. So it uses the owner and the proof of that message, and starts
+  no second copy. A reconnect to the same computer joins the owner too.
+  A finished copy saves its proof also when its first command or
+  connection is gone. A failed copy fails the turn of the current pending
+  command of that message, only while the newest connection of the owner
+  is live. A failure for an old computer fails no command on the new
+  computer. The fix keeps the file paths and rules for command IDs. The copy
+  stays outside the serial chat queue. Stop, the access checks, the
+  failed-turn path, Try again, and restarts keep their behaviour. This
+  replaces the copy proof for each command of the first design. Reason:
+  with an owner and a proof for each command, a continuation started a
+  second copy to the same paths, also while the first copy still ran. A
+  late copy could then overwrite the changes of the agent. One owner for
+  each message and computer protects the files at their actual
+  destination, so a command change can create no second writer. The
+  other options were A, which delays the copy of a continuation until
+  the earlier copy ends, and C, which gives each command its own paths
+  and keeps extra copies.
 
 **Components.**
 

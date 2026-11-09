@@ -4,19 +4,21 @@ import type {
   RunnerMessageDuringTurn,
 } from '../../src/shared/runner'
 import { HttpError } from '../http'
-import type { DispatchState } from './ordered-dispatch'
+import { attachmentCopyKey } from './attachment-record'
+import { commandDispatchState, type DispatchState } from './ordered-dispatch'
 import type { ChatStore } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
-import type { ActiveRunner, ChatDependencies } from './types'
+import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
 
 type MessageCommand = RunnerTurn | RunnerMessageDuringTurn
 interface Preparation {
   runner: ActiveRunner
+  isCurrent: () => boolean
   ready: boolean
   sandboxId: string | null
 }
 
-/** Provider work runs outside the queue. Its completion rechecks command ownership inside it. */
+/** Each message and destination owns one copy, independently of its commands and connections. */
 export class AttachmentPreparation {
   private readonly pending = new Map<string, Preparation>()
   private readonly store: ChatStore
@@ -41,28 +43,31 @@ export class AttachmentPreparation {
     isCurrent: () => boolean,
   ): Promise<DispatchState> {
     if (command.attachments.length === 0) return 'send'
-    const previous = this.pending.get(command.commandId)
-    if (previous && !previous.ready) return 'wait'
+    const sandboxId = await this.dependencies.attachmentSandboxId(
+      active.workspace.id,
+      command.message.sender.id,
+    )
+    const key = await attachmentCopyKey(command.message.id, sandboxId)
+    const previous = this.pending.get(key)
+    if (previous) {
+      previous.runner = active
+      previous.isCurrent = isCurrent
+      return previous.ready ? 'send' : 'wait'
+    }
     if (
-      previous?.runner === active &&
-      previous.ready &&
-      (previous.sandboxId === null ||
-        previous.sandboxId ===
-          (await this.dependencies.attachmentSandboxId(
-            active.workspace.id,
-            command.message.sender.id,
-          )))
+      sandboxId !== null &&
+      (await this.store.read(active.workspace.id, (view) =>
+        view.attachmentCopy(command.message.id, sandboxId),
+      ))
     )
       return 'send'
     const preparation: Preparation = {
       runner: active,
+      isCurrent,
       ready: false,
-      sandboxId: null,
+      sandboxId,
     }
-    this.pending.set(command.commandId, preparation)
-    const copied = await this.store.read(active.workspace.id, (view) =>
-      view.attachmentCopy(command.commandId),
-    )
+    this.pending.set(key, preparation)
     const work = Promise.resolve()
       .then(() =>
         this.dependencies.prepareAttachments(
@@ -70,47 +75,38 @@ export class AttachmentPreparation {
           command.message.sender.id,
           command.message.id,
           command.attachments,
-          copied,
+          sandboxId,
         ),
       )
       .then(
-        (sandboxId) =>
+        () =>
           this.store.run(async () => {
-            if (this.pending.get(command.commandId) !== preparation) return
-            const pending = await this.store.read(active.workspace.id, (view) =>
-              view.command(command.commandId),
-            )
-            if (isCurrent() && pending) {
-              if (sandboxId !== null)
-                await this.store.change(
-                  active.workspace.id,
-                  (view) =>
-                    view.saveAttachmentCopy(command.commandId, sandboxId),
-                  this.publish,
-                )
-              preparation.sandboxId = sandboxId
-              preparation.ready = true
-            } else this.pending.delete(command.commandId)
+            if (this.pending.get(key) !== preparation) return
+            if (sandboxId !== null)
+              await this.store.change(
+                active.workspace.id,
+                (view) =>
+                  view.saveAttachmentCopy(command.message.id, sandboxId),
+                this.publish,
+              )
+            preparation.ready = true
             await this.resume()
           }),
         (error: unknown) =>
           this.store.run(async () => {
-            if (this.pending.get(command.commandId) !== preparation) return
-            this.pending.delete(command.commandId)
-            if (!isCurrent()) {
-              await this.resume()
-              return
-            }
-            if (await this.failTurn(active.workspace.id, command, error))
-              await this.resume()
+            if (this.pending.get(key) !== preparation) return
+            this.pending.delete(key)
+            const current = await this.currentCommand(preparation, command)
+            if (current)
+              await this.failTurn(active.workspace.id, current, error)
+            await this.resume()
           }),
       )
     this.dependencies.waitUntil(
       work.catch((error: unknown) => {
-        if (this.pending.get(command.commandId) === preparation)
-          this.pending.delete(command.commandId)
+        if (this.pending.get(key) === preparation) this.pending.delete(key)
         try {
-          active.peer.close()
+          preparation.runner.peer.close()
         } catch {
           /* The connection already closed. */
         }
@@ -120,9 +116,36 @@ export class AttachmentPreparation {
     return 'wait'
   }
 
+  private async currentCommand(
+    preparation: Preparation,
+    original: MessageCommand,
+  ): Promise<Extract<PendingCommand, { messageId: string }> | undefined> {
+    const { runner, isCurrent, sandboxId } = preparation
+    if (
+      !isCurrent() ||
+      sandboxId !==
+        (await this.dependencies.attachmentSandboxId(
+          runner.workspace.id,
+          original.message.sender.id,
+        ))
+    )
+      return undefined
+    return this.store.read(runner.workspace.id, async (view) => {
+      for (const command of await view.pending())
+        if (
+          (command.type === 'turn' || command.type === 'message') &&
+          command.messageId === original.message.id &&
+          !runner.delivered.has(command.commandId) &&
+          (await commandDispatchState(view, command)) === 'send'
+        )
+          return command
+      return undefined
+    })
+  }
+
   private async failTurn(
     workspaceId: string,
-    outbound: MessageCommand,
+    outbound: Extract<PendingCommand, { messageId: string }>,
     error: unknown,
   ): Promise<boolean> {
     const failed = await this.store.change(
@@ -146,7 +169,7 @@ export class AttachmentPreparation {
                   message:
                     'The attached files could not reach the cloud computer. Try again.',
                 },
-          retryMessageId: outbound.message.id,
+          retryMessageId: outbound.messageId,
           durationMs:
             turn.startedAt === undefined
               ? 0
@@ -154,7 +177,7 @@ export class AttachmentPreparation {
         })
         await new TurnLifecycle(view, session).finish(turn, {
           state: 'failed',
-          retryMessageId: outbound.message.id,
+          retryMessageId: outbound.messageId,
         })
         if (running)
           await view.saveCommand({

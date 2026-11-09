@@ -56,14 +56,14 @@ export function chatDependencies(
         usedIds,
         (overrides.now ?? Date.now)(),
       ),
-    prepareAttachments: (id, userId, messageId, attachments, copiedSandboxId) =>
+    prepareAttachments: (id, userId, messageId, attachments, sandboxId) =>
       prepareMessageAttachments(
         env,
         id,
         userId,
         messageId,
         attachments,
-        copiedSandboxId,
+        sandboxId,
       ),
     attachmentSandboxId: async (id, userId) =>
       (await attachmentWorkspace(env.DB, id, userId))?.sandboxId ?? null,

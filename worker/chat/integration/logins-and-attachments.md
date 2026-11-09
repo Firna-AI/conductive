@@ -25,7 +25,10 @@ This page belongs to the [chat backend integration](README.md) guide.
 - `resolveAttachments(userId, workspaceId, ids, messageId, usedIds)` checks the sender's files and target.
   The chat transaction supplies the IDs whose accepted-use evidence it already holds.
 - `prepareAttachments` copies through the provider outside the chat queue.
-  Its completion returns to the queue for command and connection checks.
+  It gets the sandbox ID that the copy owner of the message selected, and
+  it writes only there. A finished copy returns to the queue and saves the
+  copy proof of its message and sandbox. A failed copy returns to the queue
+  for the connection, sandbox, and current-command checks.
 - A fixture that resolves fake paths injects its preparation seam too.
-- [Chat attachments](../attachments.md) gives the storage and cleanup boundaries.
+- [Chat attachments](../attachments.md) gives the storage, copy, and cleanup boundaries.
 

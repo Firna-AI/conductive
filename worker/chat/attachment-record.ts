@@ -61,6 +61,13 @@ export function publicAttachment(record: AttachmentRecord): Attachment {
   }
 }
 
+export function attachmentCopyKey(
+  messageId: string,
+  sandboxId: string | null,
+): Promise<string> {
+  return hash(JSON.stringify([messageId, sandboxId]))
+}
+
 export async function attachmentPath(
   record: AttachmentRecord,
   messageId: string,

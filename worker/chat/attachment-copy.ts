@@ -16,7 +16,7 @@ export async function prepareMessageAttachments(
   userId: string,
   messageId: string,
   attachments: readonly RunnerAttachment[],
-  copiedSandboxId?: string,
+  sandboxId: string | null,
   httpFetch: HttpFetch = (request) => fetch(request),
 ): Promise<string | null> {
   if (attachments.length === 0) return null
@@ -27,7 +27,7 @@ export async function prepareMessageAttachments(
       'attachment_copy_failed',
       'The attached files could not reach the cloud computer. Try again.',
     )
-  if (workspace.sandboxId === copiedSandboxId) return workspace.sandboxId
+  if (workspace.sandboxId !== sandboxId) throw attachmentNotFound()
   const bucket = attachmentBucket(env)
   const provider = sandboxProvider(env, httpFetch)
   for (const attachment of attachments) {

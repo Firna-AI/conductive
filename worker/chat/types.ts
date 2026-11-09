@@ -181,7 +181,7 @@ export interface ChatDependencies {
     userId: string,
     messageId: string,
     attachments: readonly RunnerAttachment[],
-    copiedSandboxId?: string,
+    sandboxId: string | null,
   ) => Promise<string | null>
   attachmentSandboxId: (
     workspaceId: string,
