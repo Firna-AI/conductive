@@ -529,8 +529,11 @@ The agent's calls from the mockups of Milestone 1, on 9 November 2026:
   of the web app.
 - The sign-in line "If you are new, this also creates your account" stays.
   Reason: a new sign-in still creates the account, which then waits.
-- The invite code section sits at the end of the Account page. Reason: on
-  a phone, the forms that connect Claude and Codex then stay near the top.
+- The invite code section sits at the end of the General tab of the
+  Account page. Reason: on a phone, the forms that connect Claude and
+  Codex then stay near the top, and the code is not a preference. The
+  merge of `main` on 9 November 2026 split the Account page into General
+  and Preferences.
 - The retries of an approval email stop after 24 hours. The page of the
   user then shows that the email was not sent, with the reason. A person
   with no verified email gets no email, and the page says so. Reason:
