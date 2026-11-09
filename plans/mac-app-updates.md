@@ -35,7 +35,8 @@ website, release notes in the app, or staged rollouts.
 Contract owners:
 
 - [Mac app protocol](../docs/protocol/desktop-app.md#packages-and-updates).
-- The [desktop README](../desktop/README.md).
+- The [desktop README](../desktop/README.md), and its
+  [release part](../desktop/RELEASES.md).
 
 ## Design
 
@@ -127,6 +128,18 @@ and 3. The options check of the decisions added the calls that say so:
   draw native dialogs.
 - The first public release waits for the merge. Reason: a release reaches
   every installed copy, so it comes from reviewed code on `main`.
+
+Calls of the docs implementor in Milestone 1, accepted on 9 November 2026:
+
+- The new protocol rules carry no decision numbers, because the protocol's
+  decision numbers point to the main plan.
+- The protocol doc names no tool and no workflow file. The desktop README
+  names them.
+- The rule that the publishing job installs nothing and the signing job
+  cannot write releases is a protocol requirement, because it protects the
+  release credentials.
+- The rule for failures covers a failed check, download, or install. Only a
+  failed manual check shows an error, as decision 5 says.
 
 ## Decisions
 
@@ -304,6 +317,59 @@ reviewers on the environments of a public repository.
 - **Action:** ask the user, because B, C, and D change the protocol rule that a failed update check shows no error, or add new user-visible behaviour.
 - **Chosen:** B, by the user on 9 November 2026: "5 = B".
 
+### 6. Answer a failed download after a manual check
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation. The docs implementor found it in Milestone 1.
+- **Category:** Docs or spec.
+- **Location:** "Updates in the app" in `docs/protocol/desktop-app.md`, and the manual check in `desktop/src/updates.ts`.
+- **Background:**
+  - Decision 5 chose a dialog for each manual check. When a check finds a new version, the app says "Downloading the new version. Conductive tells you when it is ready."
+  - The download takes about a minute. It can fail, for example when the network drops.
+  - The protocol says that a failed check, download, or install shows no error. Only a failed manual check shows one.
+- **Problem:** When the download fails after that message, the app says nothing more. It breaks its promise to tell the person.
+- **Impact if no action:** The person waits for a message that never comes. They learn of the failure only when they check again.
+- **Root question:** How does a person who asked for a check learn that the new version did not download?
+- **Options:**
+  - **A.** Change nothing. The person can choose Check for updates again. Effort: Small.
+  - **B.** When a download that a manual check started fails, show "Conductive could not download the update. Try again later." Automatic downloads stay silent. Effort: Small.
+  - **C.** Change the text for a found version so that it promises nothing, such as "Downloading the new version.". A failure then stays silent. This changes the text that the user chose. Effort: Small.
+- **Left out:** The text of a failed check: it names the wrong failure, and the copy rules say that an error names what failed. B is better on every point.
+- **Wider fix:** None. This is a design question.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/read-only-copies-never-update.md` covers an install that macOS refuses on a read-only copy. This item covers a failed download only.
+- **Recommendation:** B. The person asked and got a promise, so a failure needs an answer too.
+- **Action:** ask the user, because B adds an error dialog that no requirement covers, and C changes text that the user chose.
+
+### 7. Give the release pull request a green check
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Process.
+- **Location:** The release-please job of `.github/workflows/release.yml`, the triggers of `.github/workflows/ci.yml`, and the section "CI" of `AGENTS.md`.
+- **Terms:**
+  - **`Complete gate`:** the job of `.github/workflows/ci.yml` that runs `npm run check`.
+  - **Fine-grained token:** a personal access token that reaches only the repositories and permissions that its owner picks.
+- **Background:**
+  - `AGENTS.md` says that a commit reaches `main` only through a pull request with a green `Complete gate` check. An admin can bypass the rule, and no ruleset enforces it yet.
+  - release-please opens the release pull request. With the built-in token, GitHub starts no workflow for that pull request, so it never gets a `Complete gate` check.
+  - The built-in token can still start a workflow by hand, with `workflow_dispatch`. A check from such a run belongs to its commit, so the pull request of that commit shows it.
+  - Mokly's release workflow reads `secrets.RELEASE_PLEASE_TOKEN || github.token`. With a stored token, the release pull request has a person as its author, and CI runs.
+  - The release pull request changes only versions, lockfile version fields, and the changelog. After its merge, CI runs on `main`, and the release workflow runs the Mac checks before it signs.
+- **Problem:** The release pull request cannot get a green `Complete gate` check, so each release breaks the rule of `AGENTS.md`.
+- **Impact if no action:** Each release needs the admin bypass. A future ruleset on `main` would stop every release.
+- **Root question:** How does the release pull request meet the rule that a pull request reaches `main` only with a green check?
+- **Options:**
+  - **A.** A fine-grained token, owned by the user, for `Firna-AI/remote-code` only, with read and write access to contents, issues, and pull requests. The user stores it as the repository secret `RELEASE_PLEASE_TOKEN`. CI then runs on each release pull request. The token expires at least once a year. Effort: Small.
+  - **B.** A GitHub App for releases, installed only on this repository. The job makes a one-hour token with `actions/create-github-app-token`. No person owns it, and it does not expire. Effort: Medium.
+  - **C.** Exempt the release pull request from the rule in `AGENTS.md`. Effort: Small.
+  - **D.** After release-please updates its pull request, the release workflow starts `ci.yml` and `desktop-ci.yml` on the release branch with `workflow_dispatch`. Their checks then show on the release pull request. It needs no stored token. `ci.yml` gets a `workflow_dispatch` trigger. Effort: Small.
+- **Left out:** Close and reopen the release pull request by hand, which also starts CI: each release needs a manual step, and D does the same without it. D is better on every point.
+- **Wider fix:** None. This is a design question.
+- **Previous examples:** `.github/workflows/release.yml` of `mokly-ai/mokly` reads `RELEASE_PLEASE_TOKEN`.
+- **Recommendation:** D. It runs CI on every release pull request with no stored token and no expiry. A is the way Mokly works, and it is the simplest if you prefer a token.
+- **Action:** ask the user, because A and B need a credential that only the user can create, C changes a rule of `AGENTS.md`, and D changes how CI starts.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
@@ -311,21 +377,23 @@ Depends on: none
 Update the docs so that they state the requirements and the decisions for
 the work below.
 
-- [ ] Update "Packages and updates" in `docs/protocol/desktop-app.md`.
-  - [ ] Replace the rule that each build keeps the updater off. Builds that
+- [x] Update "Packages and updates" in `docs/protocol/desktop-app.md`.
+  - [x] Replace the rule that each build keeps the updater off. Builds that
         may publish turn it on. Other builds keep it off.
-  - [ ] State that the feed is the GitHub releases of this repository,
+  - [x] State that the feed is the GitHub releases of this repository,
         that each release carries the Mac app, and that the updater sees a
         release only after all its files upload.
-  - [ ] State the release flow: the release pull request on `main` sets the
+  - [x] State the release flow: the release pull request on `main` sets the
         version, and its merge creates the release. State which runs sign.
-  - [ ] State that the update dialog shows only after macOS accepts the
+  - [x] State that the update dialog shows only after macOS accepts the
         update.
-  - [ ] Add the outcomes of decisions 1 to 5.
-- [ ] Update `desktop/README.md` and the root `README.md`: the release pull
+  - [x] Add the outcomes of decisions 1 to 5.
+- [x] Update `desktop/README.md` and the root `README.md`: the release pull
       request, the release files, CI on the release pull request, and the
       one-time manual install for `0.1.0-alpha.1`.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
+- [x] Move the release part of `desktop/README.md` into
+      `desktop/RELEASES.md`, because the README passed 300 lines.
 
 ## Milestone 2: Release environment
 

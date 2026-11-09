@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, a new problem of the check of finding 10 of PR #45, branch `conductor/boat-native-remote-workspaces-milestone-15m`, round 1.
-- **Location:** `docs/protocol/access-and-security.md` (384 lines on the primary branch), `docs/protocol/desktop-app.md` (323), `docs/protocol/workspaces-and-sandboxes.md` (316), `docs/protocol/chat-and-events.md` (266), and `docs/architecture.md` (256).
+- **Location:** `docs/protocol/access-and-security.md` (384 lines on the primary branch), `docs/protocol/desktop-app.md` (409 after the Mac app update change), `docs/protocol/workspaces-and-sandboxes.md` (316), `docs/protocol/chat-and-events.md` (266), and `docs/architecture.md` (256).
 - **Reason:** the open branches of Milestones 5c, 7w, 8i, and 15m change the same docs, so one split after they merge avoids conflicts.
 
 - **Terms:**
