@@ -6,8 +6,8 @@ how a screen is built, and links to the other pages.
 | Path                | What it shows                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, and sign-up                 |
-| `marketing/terms`   | The Terms of use, a draft for lawyer review, with suspension and abuse reports |
-| `marketing/privacy` | The Privacy notice, a draft for lawyer review                                 |
+| `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
+| `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |

@@ -31,7 +31,6 @@ function BlockView(props: { block: Block }) {
 /**
  * A legal page of the site from the same document that the site serves:
  * the title, the introduction, and the sections.
- * Each fact that waits for the operator or the lawyer is marked.
  */
 export function LegalDocumentView(props: {
   document: LegalDocument

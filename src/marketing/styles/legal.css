@@ -72,19 +72,6 @@
   padding-left: 20px;
 }
 
-/* A fact that waits for the operator or the lawyer. */
-.draft-field {
-  padding: 1px 5px;
-  border: 1px solid var(--ui-warning-border);
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-amber-soft);
-  color: var(--ui-ink);
-  font-family: var(--ui-font-mono);
-  font-size: 0.86em;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-
 @media (max-width: 759.98px) {
   .text-page {
     padding: 40px 20px 72px;

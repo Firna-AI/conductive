@@ -10,17 +10,14 @@ import type { sitePaths } from './links'
 /** A page of the site that running text links to. */
 export type SitePage = keyof typeof sitePaths
 
-/** A fact that the operator or the lawyer still confirms or writes. */
-export type DraftField = { readonly draft: string }
-
 /** Where a link of running text leads: a page of the site, or an email address. */
 export type LinkTarget = { readonly page: SitePage } | { readonly mail: string }
 
 /** A link of running text, with its words. */
 export type TextLink = LinkTarget & { readonly text: string }
 
-/** A part of a sentence: plain words, a draft field, or a link. */
-export type Inline = string | DraftField | TextLink
+/** A part of a sentence: plain words or a link. */
+export type Inline = string | TextLink
 
 /** Running text, such as a paragraph or one item of a list. */
 export type Text = readonly Inline[]
@@ -42,11 +39,6 @@ export type LegalDocument = {
   readonly description: string
   readonly lead: Text
   readonly sections: readonly LegalSection[]
-}
-
-/** A draft field: a fact that waits for the operator or the lawyer. */
-export function draft(text: string): DraftField {
-  return { draft: text }
 }
 
 /** A link to a page of the site. */
@@ -114,8 +106,24 @@ export const legalTitles = {
 /** The label above the title of each legal page. */
 export const legalLabel = 'Legal'
 
+/** The operator details shared by the Terms and Privacy pages. */
+export const legalOperator = {
+  name: 'Firna Ltd',
+  registration: 'England and Wales',
+  companyNumber: '09018453',
+  registeredOffice:
+    '26 John Hogan V C Road, Manchester, M40 7QU, United Kingdom',
+  vatNumber: 'GB191373695',
+} as const
+
+/** The effective date shared by the Terms and Privacy pages. */
+export const legalEffectiveDate = '9 November 2026'
+
 /** The address for reports of abuse, in the footer and the terms. */
 export const abuseAddress = `abuse@${productDomain}`
+
+/** The address for legal questions and privacy requests. */
+export const legalAddress = `legal@${productDomain}`
 
 /** The page for an address that the site does not have. */
 export const notFoundText = {

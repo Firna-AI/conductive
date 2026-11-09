@@ -127,9 +127,12 @@ failure, or interruption.
 ## Legal pages
 
 The Terms and Privacy pages show their title, introduction, and sections.
-Each fact that the operator must still give is a marked draft field, such
-as the legal name, the address, the contact, the law, the lawful basis,
-and how long data stays. The other facts come from the
+The operator is Firna Ltd, registered in England and Wales.
+`legalOperator` in `legal-text.ts` holds its company number, registered
+office, and VAT number. Both pages use those details and the same effective
+date. The Terms use the law of England and Wales and preserve mandatory
+consumer protections.
+The facts about the service come from the
 [architecture doc](../../docs/architecture.md) and the
 [protocol docs](../../docs/protocol/).
 
@@ -153,25 +156,28 @@ Sources for the review:
   It lists the identity and the contact, the purposes and the lawful
   basis, the recipients, transfers to other countries, retention, the
   rights, and complaints. The Privacy page has a section for each.
+- The [ICO guide to lawful bases](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/a-guide-to-lawful-basis/)
+  explains contract, legitimate interests, and legal obligations.
+- [Data protection complaints](https://www.gov.uk/data-protection/make-a-complaint)
+  gives the contact details of the Information Commissioner's Office.
 - Boat's terms: <https://boat.dev/terms>. They cover the allowed use of
   the app's Boat organization, and they make the operator answer for what
   users do in it. The Terms and Privacy pages name no provider and link to
   no provider terms. The Acceptable use section of the Terms page passes
-  on those rules in its own words. A draft field asks the operator to
-  confirm that the section protects the providers at least as much as
-  their own rules do.
+  on those rules in its own words.
 
 Each sign-in accepts the current revision of the Terms. The agreement sits
 beside Continue with GitHub, as
 [Terms consent](../../worker/security/README.md#terms-consent) says. The
 Terms page also has a Suspension section and a Report abuse section. The
 [operator action](../../worker/operator/README.md) suspends an account.
-Draft fields still wait for the notice of a suspension, its review, and
-what happens to the data.
+The Suspension section explains how to request a review and warns that
+a stopped cloud computer can lose its disk.
 
-The footer of the site and the Report abuse section give `abuseAddress`
-from `legal-text.ts`: `abuse@` and the product domain. No code or setup in
-this repository creates that mailbox.
+The footer and the Report abuse section use `abuseAddress` from
+`legal-text.ts`: `abuse@` and the product domain. Legal and privacy contact
+links use `legalAddress`: `legal@` and the product domain.
+No code or setup in this repository creates those mailboxes.
 
 ## Development
 
@@ -221,7 +227,7 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - `links.ts`: the source repository address, site paths, and `pageHrefs`
   for links from another origin.
 - `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
-  text model, titles, abuse address, and sign-in agreement.
+  text model, titles, contact addresses, and sign-in agreement.
 - `request-values.ts`: built-page markers and local Astro preview values.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
   CSS for the font, tokens and picture sizes, and the file list writer.
