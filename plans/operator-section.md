@@ -492,19 +492,22 @@ Evidence: `.context/operator-section/m2-docs-report.md`.
 
 Depends on: 2
 
-- [ ] Add `GET /api/operator/overview` behind the gate and the operator
+- [x] Add `GET /api/operator/overview` behind the gate and the operator
       check. It reads the counts of the design from D1 in one batch: the
       unfinished builds, and the new workspaces and new users of each UTC
       day as dates. The type `OperatorOverview` lives in
       `src/shared/operator.ts`.
-- [ ] Add `operator: boolean` to the account reply. One shared reader of
+- [x] Add `operator: boolean` to the account reply. One shared reader of
       `OPERATOR_GITHUB_IDS` serves it and the route check.
-- [ ] Test the route with local D1: each state, the running builds, the
+- [x] Test the route with local D1: each state, the running builds, the
       7-day windows, the 30 days, the largest orgs with an archived
       workspace and a tie, a deleted org, and 403 `operator_required` for
       another user.
-- [ ] Update `worker/operator/README.md`, `worker/README.md`, and the
+- [x] Update `worker/operator/README.md`, `worker/README.md`, and the
       `OPERATOR_GITHUB_IDS` row of `docs/deployment.md`.
+
+Evidence: `.context/operator-section/m3-report.md` and
+`.context/operator-section/milestone-3/verification.md`.
 
 ## Milestone 4: Org and user pages in the Worker
 

@@ -1,10 +1,51 @@
 # Operator actions
 
 The operator is the person who runs the app, as opposed to the admin of an
-org inside the app. This folder holds the operator's API in the Worker. It
-can suspend a user or an org after an abuse report. A user
+org inside the app. This folder holds the operator's API in the Worker.
+It reads app-wide numbers.
+It can suspend a user or an org after an abuse report. A user
 suspension signs the user out, stops every cloud computer that the user
 owns, and blocks each new start.
+
+## Overview
+
+Send `GET /api/operator/overview` to the app hostname.
+`operatorOverviewPath` in [`src/shared/operator.ts`](../../src/shared/operator.ts)
+builds the path. The normal app request gate runs first.
+The route then checks the signed-in user's numeric GitHub ID with
+`isOperator` in [`access.ts`](access.ts).
+It answers 403 `operator_required` when the ID is not in `OPERATOR_GITHUB_IDS`.
+Without that setting, nobody is an operator.
+The account reply uses the same reader for its `operator` boolean.
+The reader ignores spaces around each ID in the comma list.
+
+The reply is an `OperatorOverview` from
+[`src/shared/operator.ts`](../../src/shared/operator.ts):
+
+- `readAt` gives the read time in Unix milliseconds.
+- `users`, `orgs`, and `workspaces` each give `total` and `lastWeek`.
+  The week covers the last 7 times 24 hours through `readAt`.
+- `running` gives separate counts for `workspaces` and unfinished image `builds`.
+  Builds include both builds and refreshes whose job phase is not `done`.
+- `workspaceStates` gives `running`, `stopped`, `failed`, and `archived`.
+  Running includes starting, ready, working, unread, and input.
+  An archived workspace contributes only to Archived.
+  Failed counts the error state.
+  The four counts add up to the workspace total.
+- `newWorkspacesByDay` and `newUsersByDay` each give 30 `{ date, count }` entries.
+  Dates use `YYYY-MM-DD` in UTC, from oldest to newest.
+  The last entry covers the current UTC day through `readAt`.
+  A day without a record has a zero count.
+- `largestOrgs` gives up to five orgs with `id`, `name`, `initials`, `members`, `workspaces`, and `running`.
+  Initials are null when the org has no custom initials.
+  The workspace count includes archived workspaces.
+  The order is workspace count first, largest first, then org name.
+  This list leaves out deleted orgs.
+
+[`overview.ts`](overview.ts) reads every count from D1 in one batch.
+The counts include all records that still exist, also those of deleted orgs.
+Only `largestOrgs` leaves deleted orgs out.
+The route keeps no history and calls no sandbox provider.
 
 ## Suspend a user
 
@@ -250,7 +291,7 @@ without the operator, also after the workspace gets another owner.
 
 | Name | Value |
 | --- | --- |
-| `OPERATOR_GITHUB_IDS` | Optional. The numeric GitHub user IDs of the operators, separated by commas, such as `1234,5678`. The action ignores spaces around each ID. It is not a secret. |
+| `OPERATOR_GITHUB_IDS` | Optional. The numeric GitHub user IDs of the operators, separated by commas, such as `1234,5678`. The shared reader ignores spaces around each ID. It is not a secret. |
 
 Put it in `.dev.vars` for local development. A deployment sets it as a
 Worker variable.
@@ -259,6 +300,8 @@ Worker variable.
 
 Run `npm run test -- worker/operator` from the repository root, with Node
 24. The tests use local D1 and the fake GitHub and Boat servers.
+They check overview access, state counts, time windows, daily counts, and org order.
+Run `npm run test -- worker/app-api/account-operator.test.ts` to check the account's operator flag.
 
 The tests of sandbox access and of the automatic refreshes live beside
 their code. After a change to them, run:
@@ -272,6 +315,8 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 - [`route.ts`](route.ts): `handleOperatorRequest`, the route and the
   operator check. `route` in [`worker/routes.ts`](../routes.ts) calls it
   first, after the gate.
+- [`access.ts`](access.ts): `isOperator`, the shared operator reader for routes and account replies.
+- [`overview.ts`](overview.ts): `readOperatorOverview`, the app-wide counts in one D1 batch.
 - [`suspend-org.ts`](suspend-org.ts) and [`org-data.ts`](org-data.ts): the org action, stored suspension, revocations, and pending resources.
 - [`org-access.ts`](../data/org-access.ts): the active-org SQL predicate and the org error.
 - [`suspend-user.ts`](suspend-user.ts): `suspendUser`, the steps and the
@@ -295,6 +340,7 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 
 ### Related Docs
 
+- [Operator section](../../docs/protocol/operator-section.md): access and the overview numbers.
 - [Operator actions](../../docs/protocol/operator-actions.md): the
   requirements of the operator, the suspension, and abuse reports.
 - [Access and security](../../docs/protocol/access-and-security.md#sign-in)

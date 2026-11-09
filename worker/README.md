@@ -13,7 +13,7 @@ The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the a
 The Worker reads that key from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
-The [operator area](operator/README.md) owns the operator's suspension of users and orgs.
+The [operator area](operator/README.md) owns the operator's app-wide numbers and suspension of users and orgs.
 
 ## Routes
 
@@ -27,6 +27,7 @@ On the app hostname, the Worker serves these API routes:
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
 - The Mac device routes.
+- `GET /api/operator/overview`, the app-wide numbers for operators.
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 
@@ -66,7 +67,7 @@ Run `npm run test -- worker/chat/integration` to check the forwarding, the shell
 It also checks the runner start script.
 Run `node worker/chat/integration/run-browser-harness.mjs` to serve a production app build through the local Worker, with fake Boat and GitHub.
 [Outer Worker tests](chat/integration/outer-worker-tests.md#browser-harness) gives its settings.
-Run `npm run test -- worker/operator` to check the suspension of users and orgs.
+Run `npm run test -- worker/operator` to check the overview and the suspension of users and orgs.
 The [test support area](test-support/README.md) supplies local D1 and fake providers.
 [Deployment inputs](../docs/deployment.md) lists the bindings, variables, and secrets of a deployment.
 

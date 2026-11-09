@@ -67,6 +67,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
         updatedAt: FAKE_TIME,
       },
     ],
+    operator: false,
   }
   const models: ModelsResponse = {
     models: Object.values(agents).flatMap((agent) =>
