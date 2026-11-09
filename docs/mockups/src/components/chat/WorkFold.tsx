@@ -1,9 +1,7 @@
-import { MessageSquareText } from 'lucide-react'
-import type { ChatItem } from '../../fixtures/conversations'
-import { InlineText } from '../common/InlineText'
 import type { WorkItem } from './groupItems'
 import { LostLine } from './LostLine'
 import { MacCommand } from './MacCommand'
+import { MessageLine } from './MessageLine'
 import { CallLine, FoldLine } from './ToolGroup'
 import styles from './ToolGroup.module.css'
 
@@ -14,40 +12,6 @@ import styles from './ToolGroup.module.css'
 export const foldStates = ['closed', 'open', 'open-message'] as const
 
 export type FoldState = (typeof foldStates)[number]
-
-type AgentItem = Extract<ChatItem, { kind: 'agent' }>
-
-/**
- * A message of the agent in an open fold: an icon and the first words of
- * the message on one line, cut with an ellipsis. A click opens the line to
- * the full text, with its paragraphs and bullets.
- */
-function MessageLine(props: { message: AgentItem; open: boolean }) {
-  const { paragraphs, bullets } = props.message
-  return (
-    <details className={styles.message} open={props.open}>
-      <summary className={styles.messageLine}>
-        <MessageSquareText aria-hidden className={styles.icon} size={13} />
-        <span className={styles.messageText}>
-          {paragraphs.map((paragraph) => (
-            <span className={styles.paragraph} key={paragraph}>
-              <InlineText text={paragraph} />{' '}
-            </span>
-          ))}
-          {bullets ? (
-            <span className={styles.bullets}>
-              {bullets.map((bullet) => (
-                <span className={styles.bullet} key={bullet}>
-                  <InlineText text={bullet} />{' '}
-                </span>
-              ))}
-            </span>
-          ) : null}
-        </span>
-      </summary>
-    </details>
-  )
-}
 
 /** One step of an open fold, in the list style of an open run of tool calls. */
 function Step(props: { step: WorkItem; open: boolean }) {

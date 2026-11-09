@@ -1,3 +1,4 @@
+import { tableStarts, type TableCells } from '../../markdown/table-rows'
 import {
   closesFence,
   expandTabs,
@@ -7,11 +8,10 @@ import {
   openingFence,
 } from './markdown-lines'
 import { listMarker, parseList } from './markdown-lists'
-import { parseTable, TableBudget, tableStarts } from './markdown-tables'
+import { parseTable, TableBudget } from './markdown-tables'
 import { takeDefinitions } from './markdown-text'
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
-export type CellAlign = 'left' | 'center' | 'right' | null
 
 /**
  * One block of a Markdown file. `Inline` is the inline text of a block:
@@ -30,7 +30,7 @@ export type MdBlock<Inline = string> =
       items: MdListItem<Inline>[]
     }
   | { kind: 'rule' }
-  | { kind: 'table'; align: CellAlign[]; head: Inline[]; rows: Inline[][] }
+  | ({ kind: 'table' } & TableCells<Inline>)
   /** The rest of the file as typed, after a row passed the table budget. */
   | { kind: 'literal'; text: string }
 

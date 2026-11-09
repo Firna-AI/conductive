@@ -222,6 +222,29 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The mockups, chat, and composer of a new workspace share it.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
+- `MarkdownTable` in `src/components/common/` draws each Markdown table of
+  a reply and of the Markdown preview of a file as a native table. It
+  imports no fixture, so the app can use it too. Each caller draws the
+  content of the cells, such as inline code.
+  - The header row has the raised fill and the strong weight. One 1 px line
+    in the border colour stands between two cells and around the table.
+    The text of the table has the small size, one step under the text of a
+    reply.
+  - Each column takes the alignment of its separator cell, also in the
+    header row. A table wider than its place scrolls sideways inside its
+    box, so the text around it keeps its width, as
+    `app/chat/tables/wide` shows.
+  - A short row of a reply keeps only the cells that the agent wrote. Its
+    last cell spans the missing columns, up to 1,000, the most that HTML
+    allows, and any columns after that stay empty. The user chose the span
+    on 9 November 2026. The cell that spans keeps its text at its start,
+    so the text never stands under a column that it does not belong to,
+    as `app/chat/tables/short-row` shows. The file preview fills a short
+    row of a file with empty cells instead.
+  - While the agent writes, a header row shows as its text, with its
+    pipes, until a separator row with as many cells follows it. Then the
+    table shows the rows that have arrived, as `app/chat/tables/header`
+    and `app/chat/tables/rows` show.
 - When a turn ends, the work before its answer folds into one line, from
   decision 150. The work is the agent messages and the tool calls, with
   the Mac command cards and the lost lines among them. The answer is the
@@ -245,6 +268,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
     message as its first words on one line, the Mac command card, and the
     lost line, which starts at the left edge. A click on a message line
     grows it to the full text, with its paragraphs and bullets.
+  - A message line holds no table, because a summary holds only phrasing
+    content. Closed, the line shows a table as its cells, row by row, with
+    a dot between two cells. Open, the line keeps the paragraphs before
+    the first table, and the table and the rest of the message show under
+    the line, at the left edge of its text, as `app/chat/work/table`
+    shows.
   - The `fold` state of the workspace opens the folds, and `open-message`
     also opens the last message line of each. A view runs no script, so a
     chat with open folds starts at its top.

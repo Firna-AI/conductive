@@ -40,6 +40,10 @@
   margin: 0;
 }
 
+.agent table {
+  overflow-wrap: normal;
+}
+
 .agent pre {
   margin: 0;
 }
