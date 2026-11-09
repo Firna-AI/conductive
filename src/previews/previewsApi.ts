@@ -14,7 +14,7 @@ import {
 import type { ToolRequests } from '../terminal/tool-parts/workspace'
 
 /** Narrows one preview, or gives null when a field is missing or wrong. */
-export function parsePreview(value: unknown): Preview | null {
+function parsePreview(value: unknown): Preview | null {
   if (!isRecord(value)) return null
   const { id, port, expiresAt } = value
   const url = webUrl(value.url)

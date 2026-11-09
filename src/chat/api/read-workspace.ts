@@ -58,7 +58,7 @@ const readState = oneOf<WorkspaceState>({
   archived: true,
 })
 
-export function readWorkspace(value: unknown): Workspace {
+function readWorkspace(value: unknown): Workspace {
   const source = record(value, 'workspace')
   return {
     id: text(source.id),
@@ -91,7 +91,7 @@ function readStep(value: unknown): StartStep {
   }
 }
 
-export function readStart(value: unknown): WorkspaceStart {
+function readStart(value: unknown): WorkspaceStart {
   const source = record(value, 'start')
   return {
     kind: oneOf<WorkspaceStart['kind']>({ create: true, resume: true })(

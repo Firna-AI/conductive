@@ -14,7 +14,10 @@ export const sandboxStarting = defineScreen({
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, sandbox: 'starting' },
-  useCasePaths: ['user-flows/reopen-stopped-workspace'],
+  useCasePaths: [
+    'user-flows/reopen-stopped-workspace',
+    'user-flows/open-workspace-from-palette',
+  ],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),

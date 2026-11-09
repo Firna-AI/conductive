@@ -1,0 +1,16 @@
+---
+import SiteFooter from '../components/SiteFooter.astro'
+import SiteHeader from '../components/SiteHeader.astro'
+import Document from './Document.astro'
+
+/** A page of the site: the header, the main content, and the footer. */
+type Props = { title: string; description: string }
+
+const { title, description } = Astro.props
+---
+
+<Document title={title} description={description}>
+  <SiteHeader />
+  <slot />
+  <SiteFooter />
+</Document>

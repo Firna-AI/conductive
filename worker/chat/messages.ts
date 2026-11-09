@@ -40,7 +40,7 @@ export async function existingMessage(
   return responseFor(transaction, existing)
 }
 
-export async function responseFor(
+async function responseFor(
   transaction: ChatTransaction,
   message: UserMessage,
 ): Promise<SendMessageResponse> {

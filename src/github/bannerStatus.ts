@@ -21,7 +21,7 @@ export type PullRequestBanner = Extract<
 >
 
 /** A state tints the whole bar. Its edges stay neutral. */
-export type BannerTone = 'neutral' | 'success' | 'warning' | 'danger'
+type BannerTone = 'neutral' | 'success' | 'warning' | 'danger'
 
 export interface BannerStatus {
   /** A spinner stands in place of the icon while checks run. */

@@ -64,11 +64,12 @@ export const workspaceSessions: readonly StartedSession[] = [
 export const newSession: Session = { key: 'new', title: null }
 
 /**
- * The session that a message of Priya opened from the first session, after
- * the Claude login of Cal, its starter, became unavailable. It starts empty,
- * runs on the own login of Priya, and links to the first session, which
- * stays as it was. It opens as the last tab. That message, the draft of
- * Priya, is its first message and gives its title.
+ * The session that a message of Priya opened from the first session,
+ * because the Claude login of Cal, its starter, was not available, or Cal
+ * did not let other members use it. It starts empty, runs on the own login
+ * of Priya, and links to the first session, which stays as it was. It
+ * opens as the last tab. That message, the draft of Priya, is its first
+ * message and gives its title.
  */
 export const linkedSession: StartedSession & {
   firstMessage: string

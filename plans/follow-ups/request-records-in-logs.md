@@ -22,4 +22,4 @@
 - **Wider fix:** C. It removes every request record, whatever the shape of a credential in it. D is the Large form of C that keeps the app's own records.
 - **Previous examples:** finding 2 of that review.
 - **Recommendation:** A. The records show the status and the path of each failed request, which helps to answer a user's report, and the privacy draft then tells users.
-- **Action:** ask the user, because C gives up the request records, and the privacy words depend on the answer.
+- **Action:** ask the user later, because the user deferred this choice on 8 November 2026. A and C have real trade-offs, and the privacy words depend on the answer.

@@ -1,0 +1,13 @@
+---
+/** A column of the footer: a heading over a list of links. */
+type Props = { title: string }
+
+const { title } = Astro.props
+---
+
+<div class="footer-column">
+  <h2 class="footer-heading">{title}</h2>
+  <ul class="footer-links">
+    <slot />
+  </ul>
+</div>

@@ -1,14 +1,14 @@
 import type { DiffResponse, FileResponse } from './files'
 
 /** File requests are commands. Their results do not enter the chat event log. */
-export interface RunnerReadFile {
+interface RunnerReadFile {
   type: 'file.read'
   requestId: string
   path: string
   /** The backend sets this limit before it asks the runner to read bytes. */
   maxBytes: number
 }
-export interface RunnerReadDiff {
+interface RunnerReadDiff {
   type: 'file.diff'
   requestId: string
   path: string
@@ -24,13 +24,13 @@ export type RunnerFileError =
       limitBytes: number
     }
 
-export interface RunnerFileResult {
+interface RunnerFileResult {
   type: 'file.read.result'
   requestId: string
   result:
     { ok: true; file: FileResponse } | { ok: false; error: RunnerFileError }
 }
-export interface RunnerDiffResult {
+interface RunnerDiffResult {
   type: 'file.diff.result'
   requestId: string
   result:

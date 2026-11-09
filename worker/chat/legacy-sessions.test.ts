@@ -34,6 +34,7 @@ it('preserves legacy history with an unknown starter and sends retries and new m
     startedBy: null,
     sourceSessionId: null,
     loginAvailable: false,
+    loginShared: true,
     retryMessageId: 'legacy-message',
   })
   const history = await fixture.history(source.id)
@@ -54,15 +55,33 @@ it('preserves legacy history with an unknown starter and sends retries and new m
     event.type === 'session.updated' ? [event.session] : [],
   )
   expect(
-    records.map(({ startedBy, sourceSessionId, loginAvailable }) => ({
-      startedBy,
-      sourceSessionId,
-      loginAvailable,
-    })),
+    records.map(
+      ({ startedBy, sourceSessionId, loginAvailable, loginShared }) => ({
+        startedBy,
+        sourceSessionId,
+        loginAvailable,
+        loginShared,
+      }),
+    ),
   ).toEqual([
-    { startedBy: null, sourceSessionId: null, loginAvailable: false },
-    { startedBy: null, sourceSessionId: null, loginAvailable: false },
-    { startedBy: null, sourceSessionId: null, loginAvailable: false },
+    {
+      startedBy: null,
+      sourceSessionId: null,
+      loginAvailable: false,
+      loginShared: true,
+    },
+    {
+      startedBy: null,
+      sourceSessionId: null,
+      loginAvailable: false,
+      loginShared: true,
+    },
+    {
+      startedBy: null,
+      sourceSessionId: null,
+      loginAvailable: false,
+      loginShared: true,
+    },
   ])
   const ownerTab = await fixture.tab()
   const memberTab = await fixture.tab(0, undefined, fixture.memberCookie)
@@ -79,6 +98,7 @@ it('preserves legacy history with an unknown starter and sends retries and new m
     startedBy: { id: fixture.member.id },
     sourceSessionId: source.id,
     loginAvailable: true,
+    loginShared: true,
   })
   const sent = await fixture.send(source.id, 'new-legacy-message')
   expect(sent.session.id).not.toBe(linked.session.id)
@@ -99,6 +119,7 @@ it('preserves legacy history with an unknown starter and sends retries and new m
     startedBy: null,
     sourceSessionId: null,
     loginAvailable: false,
+    loginShared: true,
   })
   const emptyHistory = await fixture.history(empty.id)
   expect(emptyHistory.events.map(({ eventNumber }) => eventNumber)).toEqual(
@@ -121,6 +142,7 @@ async function removeMetadata(
     delete result.startedBy
     delete result.sourceSessionId
     delete result.loginAvailable
+    delete result.loginShared
     if (omitRetry) delete result.retryMessageId
     return result
   }

@@ -12,7 +12,7 @@ export const suspendedDeletedOrg = defineScreen({
     'A suspended org refuses a restore, as it refuses each change but a leave. The deletion still goes on, so the page keeps its date and its facts. The same notice as on the other pages of a suspended org says why Restore is missing, and gives the address for questions.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
-  props: { list: 'deleted-suspended', menu: 'none' },
+  props: { list: 'deleted-suspended', menu: 'none', palette: 'closed' },
   render: (props, context) => (
     <WorkspaceListScreen state={props} viewport={context.viewport} />
   ),

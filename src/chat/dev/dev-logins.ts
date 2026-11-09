@@ -1,5 +1,5 @@
 import { followUpDraft } from '../../../docs/mockups/src/fixtures/conversations'
-import { ACCOUNT_PATHS } from '../../shared/account'
+import { ACCOUNT_PATHS, type AgentLoginStatus } from '../../shared/account'
 import type { UserMessage } from '../../shared/messages'
 import type { Session, SessionsResponse } from '../../shared/sessions'
 import {
@@ -13,20 +13,30 @@ import type { DevBackend } from './dev-backend'
 import type { DevOptions } from './dev-options'
 import { setActiveTurn, targetOf, titleFromMessage } from './dev-sessions'
 
+/** A session record as the `starter` option draws it. */
+function starterRecord(
+  session: Session,
+  starter: Exclude<DevOptions['starter'], 'on'>,
+): Session {
+  if (starter === 'none') {
+    return { ...session, startedBy: null, loginAvailable: false }
+  }
+  if (starter === 'private') return { ...session, loginShared: false }
+  return { ...session, loginAvailable: false }
+}
+
 /**
  * The session records of the `starter` option. With `off` and `linked`, the
- * login of each starter is not available. With `none`, the records are older
- * ones that name no starter, as the Worker reads them.
+ * login of each starter is not available. With `private`, each starter keeps
+ * a login that works for their own messages only. With `none`, the records
+ * are older ones that name no starter, as the Worker reads them.
  */
 export function withStarter(
   list: SessionsResponse,
   starter: DevOptions['starter'],
 ): SessionsResponse {
   if (starter === 'on') return list
-  const change = (session: Session): Session =>
-    starter === 'none'
-      ? { ...session, startedBy: null, loginAvailable: false }
-      : { ...session, loginAvailable: false }
+  const change = (session: Session) => starterRecord(session, starter)
   return {
     ...list,
     sessions: list.sessions.map(change),
@@ -35,27 +45,24 @@ export function withStarter(
 }
 
 /**
- * Says whether the reader has a Claude login, and without one writes an
- * account that names none. The admin started the sessions, so a starter login
- * that is not available is also the admin's own missing login.
+ * The agent logins of the reader, as the account of the page names them.
+ * Without a Claude login, it writes an account that names none. The admin
+ * started the sessions, so a starter login that is not available is also
+ * the admin's own missing login.
  */
-export function writeReaderLogin(
+export function writeReaderLogins(
   server: FakeApiServer,
   options: DevOptions,
-): boolean {
+): readonly AgentLoginStatus[] {
+  const { account } = coreFixtures(options.role)
   const ownGone = options.role === 'admin' && options.starter === 'off'
-  const claudeLogin = options.login && !ownGone
-  if (!claudeLogin) {
-    const { account } = coreFixtures(options.role)
-    server.json('GET', ACCOUNT_PATHS.account, {
-      ...account,
-      agentLogins: [
-        { agent: 'claude', connected: false },
-        account.agentLogins[1],
-      ],
-    })
-  }
-  return claudeLogin
+  if (options.login && !ownGone) return account.agentLogins
+  const agentLogins: readonly AgentLoginStatus[] = [
+    { agent: 'claude', connected: false },
+    account.agentLogins[1],
+  ]
+  server.json('GET', ACCOUNT_PATHS.account, { ...account, agentLogins })
+  return agentLogins
 }
 
 /**

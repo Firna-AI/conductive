@@ -181,20 +181,20 @@ export class RunnerChannel {
         'runner_stream_mismatch',
         'The connection is not available.',
       )
-    let stored: WorkspaceEventEnvelope | undefined
+    let stored: WorkspaceEventEnvelope[] = []
     let becameReady = false
     const cursor = await this.store.change(
       active.workspace.id,
       async (transaction) => {
-        stored = undefined
+        stored = []
         becameReady = false
         const through = await transaction.cursor(message.streamId)
         if (message.eventNumber !== through + 1) return through
         const receipt = await storeRunnerReceipt(
           transaction,
+          active.workspace,
           message,
-          this.dependencies.randomId,
-          this.dependencies.readAutomaticTitleWorkspace,
+          this.dependencies,
         )
         becameReady = receipt.ready
         stored = receipt.stored
@@ -223,7 +223,8 @@ export class RunnerChannel {
       this.attachFiles(active)
       await this.dependencies.runnerReady(active.workspace.id, publish)
     }
-    if (stored) await this.dependencies.runnerEventStored(stored, publish)
+    for (const envelope of stored)
+      await this.dependencies.runnerEventStored(envelope, publish)
     await this.flush()
   }
 

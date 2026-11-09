@@ -165,10 +165,12 @@ it('shows no line of the old path after the tab moves to another file, also befo
 
   show('src/b.ts')
 
-  // The first commit of the new tab comes before its read starts.
+  // The first commit of the new tab comes before its read starts. No list
+  // names src/b.ts, and the reply of src/a.ts is not for it, so the page
+  // shows "File" until its own reply names it.
   expect(commits).toEqual([[]])
   const page = view.container.querySelector('section')
-  expect(page?.getAttribute('aria-label')).toBe('b.ts')
+  expect(page?.getAttribute('aria-label')).toBe('File')
   expect(view.container.textContent).toContain('Opening the file')
   expect(shownRows(view.container)).toEqual([])
 

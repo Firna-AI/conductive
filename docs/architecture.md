@@ -55,8 +55,14 @@ requirements of each feature.
 
 - A few static pages at the root of `conductive.build`, with the Terms and
   Privacy pages. Visitors see them without a sign-in.
+- Astro builds these pages ahead of time. The Worker serves the built files
+  on `conductive.build`. It fills in the values of each request, such as
+  the app address in the sign-in links and the year in the footer.
 - [The marketing site README](../src/marketing/README.md) describes how the
   Worker serves them.
+- The same build also makes the page that asks for the
+  [agreement to the Terms](protocol/access-and-security.md#sign-in) before
+  the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
 - The main action is "Start free with GitHub". The site does not name
   Boat, and users need no Boat account (decision 80).
 
@@ -164,50 +170,9 @@ the app (decision 6).
 
 ## Flows
 
-### Create a workspace
-
-1. The user sends the first message of a new workspace. The Worker records
-   the workspace, and its Durable Object keeps the message.
-2. With the Boat key, the Worker asks Boat for a sandbox from the newest
-   good org image of the org. The sandbox gets the workspace token and the
-   org's env vars, but no agent login.
-3. The Durable Object pushes each start step to the open tabs.
-4. The agent runner starts and connects to the Durable Object. The Durable
-   Object sends it the waiting message.
-
-### Chat
-
-1. A tab sends a message to the Worker. The Durable Object forwards it to
-   the agent runner, with the agent login of the starter of its session.
-2. The runner gives it to the agent through the SDK. It numbers each agent
-   event and sends it to the Durable Object.
-3. The Durable Object stores each event, confirms it to the runner, and
-   pushes it to every open tab of the workspace.
-
-### Terminal, previews, and desktop
-
-- The terminal socket goes from the browser to the Worker on
-  `app.conductive.build`. The Worker connects it to the private terminal
-  port.
-- A preview frame loads its preview hostname. The Worker proxies the
-  request to the private port of the sandbox.
-- The Worker asks Boat for a short-lived desktop URL, and the browser
-  shows Boat's desktop stream.
-
-### GitHub events
-
-- GitHub sends pull request, check, status, and push webhooks. The Worker
-  routes each event to the workspace of its branch.
-- A push to the default branch of a chosen repository can also start a
-  refresh of the org image.
-
-### Stops
-
-- The Durable Object stops a sandbox when the stop rule of
-  [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md#stop-and-resume)
-  says so.
-- Near day 14 of a stop, the app starts the sandbox briefly and stops it
-  again, so that Boat keeps its disk (decision 43).
+The [flows page](architecture/flows.md) describes how the components work
+together for a new workspace, chat, the terminal, previews, the desktop,
+GitHub events, and stops.
 
 ## Where data lives
 
@@ -265,3 +230,5 @@ the merge.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
 - [Operator actions](protocol/operator-actions.md): the operator, the
   suspension of a user, and abuse reports.
+- [Command palette](protocol/command-palette.md): the key and the search
+  that finds the workspaces, the actions, and the settings.

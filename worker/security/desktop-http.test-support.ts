@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 
 import { API_PATHS } from '../../src/shared/api'
+import { fakeSite } from '../test-support/fake-site'
 import { responseCookie, type TestHarness } from '../test-support/harness'
 import { OAUTH_COOKIE } from './cookies'
 import { DESKTOP_EXCHANGE_PATH, DESKTOP_ORIGIN } from './desktop-contract'
@@ -24,6 +25,7 @@ export async function desktopHandoff(
   verifier: string,
 ): Promise<Response> {
   const challenge = createHash('sha256').update(verifier).digest('base64url')
+  harness.env.ASSETS ??= fakeSite()
   const consent = await harness.fetch(
     `${API_PATHS.githubSignIn}?desktop_challenge=${challenge}`,
   )

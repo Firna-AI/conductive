@@ -22,7 +22,7 @@ import { IconButton } from '../common/actions'
 import { classes } from '../common/classes'
 import styles from './WorkspaceTabs.module.css'
 
-export type TabKind = 'session' | 'code' | 'markdown' | 'diff'
+type TabKind = 'session' | 'code' | 'markdown' | 'diff'
 
 export type WorkspaceTab = {
   key: string

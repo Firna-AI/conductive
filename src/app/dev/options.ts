@@ -32,6 +32,8 @@ const BANNERS = [
   'blocked',
 ] as const satisfies readonly BannerState[]
 
+const PATHS = ['plain', 'masked'] as const
+
 /**
  * The preview state of the dev fake, from the query string of the page,
  * such as `/?role=member&workspace=stopped`. An unknown value is ignored,
@@ -41,6 +43,8 @@ const BANNERS = [
  * - `workspace=<state>`: the state of `checkout-autocomplete`.
  * - `conversation=<scenario>`: its recorded chat, such as `running`.
  * - `banner=<state>`: its GitHub banner, such as `merged`.
+ * - `paths=masked`: two files whose real paths hold a fake secret value,
+ *   with their labels, in the file lists and at the end of each turn.
  * - `firstRun=github-app|org|agent-login`: Get started is not done from
  *   that step on. With `github-app` or `org`, the user has no org until
  *   Create org runs. In each first run, no agent login is connected.
@@ -51,6 +55,8 @@ const BANNERS = [
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
  * - `stop=<seconds>`: an open workspace stops that many seconds after it
  *   opens, as a sandbox does that stops while its workspace is open.
+ * - `shareSave=fail`: each change of the share setting of an agent login
+ *   fails, so the account shows that the change was not saved.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -63,6 +69,7 @@ export interface DevOptions {
   signedOut: boolean
   /** The wait before an open workspace stops, or `null` for no stop. */
   stopAfterMs: number | null
+  shareSaveFails: boolean
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -83,6 +90,7 @@ export function readDevOptions(search: string): DevOptions {
       workspaceState: pick(params, 'workspace', WORKSPACE_STATES),
       conversation: pick(params, 'conversation', CONVERSATIONS),
       banner: pick(params, 'banner', BANNERS),
+      paths: pick(params, 'paths', PATHS),
     },
     firstRun: pick(params, 'firstRun', getStartedOrder) ?? null,
     noAgentLogin: params.get('login') === 'none',
@@ -90,6 +98,7 @@ export function readDevOptions(search: string): DevOptions {
     suspended: params.get('suspended') === '1',
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
+    shareSaveFails: params.get('shareSave') === 'fail',
   }
 }
 

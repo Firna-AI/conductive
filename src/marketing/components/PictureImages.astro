@@ -1,0 +1,54 @@
+---
+import {
+  marketingPictures,
+  type MarketingPictureKey,
+} from '../../../docs/mockups/src/screens/marketingPictureList'
+import { lightMedia, phoneMedia } from '../picture-styles'
+import { pictureUrl } from '../picture-urls'
+import PictureImage from './PictureImage.astro'
+
+/**
+ * The still image of a picture. The browser picks the file for the layout
+ * and the colour scheme. When the two layouts show different things, each
+ * layout gets its own image with its own text, and the other one hides.
+ */
+type Props = {
+  picture: MarketingPictureKey
+  loading: HTMLImageElement['loading']
+}
+
+const { picture, loading } = Astro.props
+const { desktop, mobile } = marketingPictures[picture]
+---
+
+{desktop.label !== mobile.label ? (
+  <>
+    <picture class="for-desktop">
+      <source
+        media={lightMedia}
+        srcset={pictureUrl(picture, 'desktop', 'light')}
+      />
+      <PictureImage picture={picture} layout="desktop" loading={loading} />
+    </picture>
+    <picture class="for-mobile">
+      <source
+        media={lightMedia}
+        srcset={pictureUrl(picture, 'mobile', 'light')}
+      />
+      <PictureImage picture={picture} layout="mobile" loading={loading} />
+    </picture>
+  </>
+) : (
+  <picture>
+    <source
+      media={`${phoneMedia} and ${lightMedia}`}
+      srcset={pictureUrl(picture, 'mobile', 'light')}
+    />
+    <source media={phoneMedia} srcset={pictureUrl(picture, 'mobile', 'dark')} />
+    <source
+      media={lightMedia}
+      srcset={pictureUrl(picture, 'desktop', 'light')}
+    />
+    <PictureImage picture={picture} layout="desktop" loading={loading} />
+  </picture>
+)}

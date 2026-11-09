@@ -111,6 +111,11 @@ place. An archived workspace has no tools.
   the `socketPath` of the terminal state through `openSocket` of the app's
   event source, so the Mac app reaches its own Worker.
 - The Desktop tool mounts at each show, so it reads a new desktop URL.
+- The tools part marks the element of the terminal for the command
+  palette. So Ctrl+K in the terminal goes to its shell on Windows and
+  Linux, as the
+  [command palette protocol](../../../docs/protocol/command-palette.md#where-the-key-goes)
+  says.
 - Each tool reads its routes with the `fetch` of the org's `ApiClient`,
   and the events of the kept `ToolEvents`.
 

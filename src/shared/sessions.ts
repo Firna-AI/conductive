@@ -50,6 +50,7 @@ export interface Session {
   startedBy: MessageSender | null
   sourceSessionId: string | null
   loginAvailable: boolean
+  loginShared: boolean
 }
 export interface SessionsResponse {
   eventNumber: number

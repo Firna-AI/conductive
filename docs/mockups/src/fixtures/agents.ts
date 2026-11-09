@@ -7,16 +7,7 @@ export const agentKeys = ['claude', 'codex'] as const
 
 export type AgentKey = (typeof agentKeys)[number]
 
-export const effortKeys = [
-  'none',
-  'low',
-  'medium',
-  'high',
-  'xhigh',
-  'max',
-] as const
-
-export type EffortKey = (typeof effortKeys)[number]
+export type EffortKey = 'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
 
 export const effortLabels: Readonly<Record<EffortKey, string>> = {
   none: 'None',
@@ -27,7 +18,7 @@ export const effortLabels: Readonly<Record<EffortKey, string>> = {
   max: 'Max',
 }
 
-export type Model = {
+type Model = {
   name: string
   /** The effort levels that the model accepts, from the lowest. */
   efforts: readonly EffortKey[]

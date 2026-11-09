@@ -1,4 +1,5 @@
 import type { BranchChangedFile, ChangesResponse } from '../../shared/files'
+import { pathLabel } from '../model/file-labels'
 import { splitPath, type FilesNavigation } from '../navigation'
 import { ChangeIcon, changeLabels } from '../ui/ChangeIcon'
 import { DiffStat } from '../ui/DiffStat'
@@ -12,9 +13,10 @@ function Row(props: {
   navigation: FilesNavigation
 }) {
   const { file } = props
-  const { folder, name } = splitPath(file.path)
-  const label = file.previousPath
-    ? `${changeLabels[file.change]} from ${file.previousPath}`
+  const { folder, name } = splitPath(pathLabel(file))
+  const previous = file.previousDisplayPath ?? file.previousPath
+  const label = previous
+    ? `${changeLabels[file.change]} from ${previous}`
     : undefined
   return (
     <FilesLink
@@ -36,7 +38,8 @@ function Row(props: {
 /**
  * The files that the branch changes against the default branch, under the
  * totals of the whole change. A row is a link to the diff of its file, and
- * the row of the open diff is marked.
+ * the row of the open diff is marked. A row shows the label of its path,
+ * and its real path stays its key and its target.
  */
 export function ChangeList(props: {
   changes: ChangesResponse

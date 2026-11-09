@@ -91,13 +91,16 @@ export function titleFromMessage(
 /**
  * A new session that the reader of the page starts, as its starter. `id` is
  * the ID that the chat chose, and `source` the session that a linked session
- * points to.
+ * points to. Its record takes the reader's login of its agent, as the Worker
+ * records it: available while connected, and shared unless the reader keeps
+ * it private. Without a connected login, it is neither.
  */
 export function newSession(
   backend: DevBackend,
   choice: Session['choice'],
   options: { id?: string; source?: string } = {},
 ): Session {
+  const login = backend.logins.find((item) => item.agent === choice.agent)
   backend.count += 1
   const { orgId, workspaceId } = backend.target
   const session: Session = {
@@ -112,7 +115,8 @@ export function newSession(
     retryMessageId: null,
     startedBy: backend.viewer,
     sourceSessionId: options.source ?? null,
-    loginAvailable: choice.agent !== 'claude' || backend.claudeLogin,
+    loginAvailable: login?.connected ?? false,
+    loginShared: login?.connected === true && !login.noReuse,
   }
   backend.server.json('GET', chatHistoryPath(orgId, workspaceId, session.id), {
     events: [],
@@ -124,14 +128,16 @@ export function newSession(
 
 /**
  * The session where a message of the reader goes, as the Worker chooses it.
- * The session itself takes it while the login of its starter works, or when
- * the reader started it. Otherwise a new linked session on the reader's own
- * login takes it, and the first session names no retry any more.
+ * The session itself takes it while its starter shares a login that works,
+ * or when the reader started it. Otherwise a new linked session on the
+ * reader's own login takes it, and the first session names no retry any
+ * more.
  */
 export function targetOf(backend: DevBackend, session: Session): Session {
   const { startedBy } = session
   const own = startedBy !== null && startedBy.id === backend.viewer.id
-  if (own || (startedBy !== null && session.loginAvailable)) return session
+  const shared = session.loginAvailable && session.loginShared
+  if (own || (startedBy !== null && shared)) return session
   const linked = newSession(backend, session.choice, { source: session.id })
   clearRetry(backend, session.id)
   return linked

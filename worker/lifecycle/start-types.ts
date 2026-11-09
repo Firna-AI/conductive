@@ -59,7 +59,7 @@ export type WorkspaceStartJob =
       admission?: never
     })
 
-export interface WorkspaceCreation {
+interface WorkspaceCreation {
   user: User
   sender: User
   repositoryId: string

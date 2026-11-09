@@ -99,6 +99,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
       startedBy: senderSnapshot(personNamed(session.starter)),
       sourceSessionId: null,
       loginAvailable: true,
+      loginShared: true,
     })),
     history: closedSessions.map((session, index) => ({
       id: session.key,
@@ -117,6 +118,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
       startedBy: senderSnapshot(workspace.owner),
       sourceSessionId: null,
       loginAvailable: true,
+      loginShared: true,
     })),
   }
   const message: UserMessage = {
