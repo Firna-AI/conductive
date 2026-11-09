@@ -178,6 +178,40 @@
   margin-top: 2px;
 }
 
+/*
+ * A message with a table. A summary holds no table, so the closed line shows
+ * the table, and the rest of the message, as text. Open, the line keeps the
+ * paragraphs before the table, and this body shows the table and the rest
+ * under the line. The body starts at the text of the line, 6px under it.
+ */
+.message[open] .preview {
+  display: none;
+}
+
+.messageBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 3px;
+  padding-left: 20px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+.messageBody p,
+.messageBody ul {
+  margin: 0;
+}
+
+.messageBody ul {
+  padding-left: 20px;
+}
+
+.messageBody li + li {
+  margin-top: 2px;
+}
+
 /* A Mac command card among the steps of an open fold. */
 .card {
   margin: 4px 0;

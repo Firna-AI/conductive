@@ -253,6 +253,8 @@ the merge.
   their logins, the sessions, and the names of workspaces and sessions.
 - [Workspace links](protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
+- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
+  messages in the chat, with their tables.
 - [Agent runner](protocol/agent-runner.md): the connection of the runner,
   its events and their limits, its turns, and the repair of lost workspace
   updates.
