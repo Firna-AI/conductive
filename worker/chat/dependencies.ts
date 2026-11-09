@@ -8,7 +8,7 @@ import {
 } from '../security/connection-access'
 import { loginResolver } from './login-access'
 import { readLoginAvailability } from './login-availability'
-import { firstStartIncomplete } from './queries'
+import { firstStartIncomplete, readAutomaticTitleWorkspace } from './queries'
 import { titleModelBinding } from './title-model'
 import type { ChatDependencies } from './types'
 
@@ -23,6 +23,8 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    readAutomaticTitleWorkspace: (id) =>
+      readAutomaticTitleWorkspace(env.DB, id),
     runTitleModel: titleModelBinding(env),
     now: Date.now,
     scheduleBrowserCheck: scheduleConnectionCheck,

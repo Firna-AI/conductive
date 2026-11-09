@@ -32,9 +32,19 @@ it('names the workspace and first session from the first message and sends the t
   const before = (await actor.readChatWorkspaceSummary()).throughEventNumber
   const ownerTab = await active.browser(before)
   const memberTab = await active.browser(before, active.cookies.memberCookie)
-  expect((await active.session(active.first.sessionId)).title).toBe(
-    OUTER_WORKSPACE,
-  )
+  expect((await active.session(active.first.sessionId)).title).toBeNull()
+  expect(
+    await (
+      await active.request(workspacePath(OUTER_ORG, OUTER_WORKSPACE))
+    ).json(),
+  ).toMatchObject({ workspace: { name: null } })
+  expect(
+    await (await active.request(workspacesPath(OUTER_ORG))).json(),
+  ).toMatchObject({
+    workspaces: expect.arrayContaining([
+      expect.objectContaining({ id: OUTER_WORKSPACE, name: null }),
+    ]),
+  })
   await actor.completeTitle('**Title: "Fix chat titles."**')
   await actor.drainTitleWork()
   expect((await active.session(active.first.sessionId)).title).toBe(
@@ -84,9 +94,7 @@ it('retries an empty title after a native restart with the saved first message t
   )
   await actor.completeTitle('Title: ""')
   await actor.drainTitleWork()
-  expect((await active.session(active.first.sessionId)).title).toBe(
-    OUTER_WORKSPACE,
-  )
+  expect((await active.session(active.first.sessionId)).title).toBeNull()
   await active.restart()
   const restartedBindings = await active.runtime.getBindings<{
     WORKSPACES: DurableObjectNamespace<Workspace>

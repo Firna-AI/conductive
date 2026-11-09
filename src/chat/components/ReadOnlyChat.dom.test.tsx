@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
+import { nameLabel } from '../../shared/name-label'
 import { createApiClient } from '../../app/api/client'
 import { ServicesContext } from '../../app/services'
 import { testServices } from '../../app/test-kit'
@@ -50,7 +51,7 @@ describe('a read-only chat', () => {
       server.events.subscribe(after, (message) => listener.message(message))
     const fixtures = workspaceFixtures('ready')
     const { workspace } = fixtures.detail
-    const second = fixtures.sessions.sessions[1].title
+    const second = nameLabel(fixtures.sessions.sessions[1].title)
     await mount(
       <ServicesContext.Provider value={testServices(server)}>
         <WorkspaceChat

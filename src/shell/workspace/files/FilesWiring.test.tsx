@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { nameLabel } from '../../../shared/name-label'
 import { routes } from '../../../app/router'
 import type { FilesTab } from '../../../files/navigation'
 import { sessionsPath } from '../../../shared/sessions'
@@ -68,17 +69,21 @@ describe('the Files screens in the workspace', () => {
     expect(queryByRole('region', 'Chat', view)).toBeNull()
     expect(currents(tabs, fileHref)).toEqual(['page'])
     expect(
-      byRole('button', session.title, tabs).getAttribute('aria-current'),
+      byRole('button', nameLabel(session.title), tabs).getAttribute(
+        'aria-current',
+      ),
     ).toBeNull()
 
-    click(byRole('button', session.title, tabs))
+    click(byRole('button', nameLabel(session.title), tabs))
     await settle()
 
     expect(navigation.href()).toBe(routes.workspace(org, id))
     expect(queryByRole('region', 'Chat', view)).not.toBeNull()
     expect(queryByRole('region', fileName, view)).toBeNull()
     expect(
-      byRole('button', session.title, tabs).getAttribute('aria-current'),
+      byRole('button', nameLabel(session.title), tabs).getAttribute(
+        'aria-current',
+      ),
     ).toBe('page')
     expect(currents(tabs, fileHref)).toEqual([null])
     // The last save is the chat's own, when it showed the session again.

@@ -5,6 +5,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { Agent } from '../shared/agents'
+import { nameLabel } from '../shared/name-label'
 import type { WorkspaceView } from '../shared/workspace-view'
 import type { Workspace } from '../shared/workspaces'
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
@@ -106,7 +107,7 @@ function ChatBody(
         renaming={overlay.kind === 'rename' ? overlay.sessionId : null}
         tabs={tabSessions(snapshot).map((session) => ({
           id: session.id,
-          title: session.title,
+          title: nameLabel(session.title),
           selected: content === null && session.id === active,
         }))}
       />

@@ -6,11 +6,9 @@ import type { ChatData, ModelSessionCreation, StoredTurn } from './types'
 
 const FIRST_SESSION_KEY = `${CHAT_ROOT}first-session`
 
-interface FirstSessionName {
+interface FirstSession {
   id: string
   messageId?: string
-  workspaceName: string
-  titleReceived: boolean
 }
 
 export class ChatRecords {
@@ -20,10 +18,10 @@ export class ChatRecords {
     this.data = data
   }
 
-  firstSession(): Promise<FirstSessionName | undefined> {
+  firstSession(): Promise<FirstSession | undefined> {
     return this.data.get(FIRST_SESSION_KEY)
   }
-  saveFirstSession(session: FirstSessionName): Promise<void> {
+  saveFirstSession(session: FirstSession): Promise<void> {
     return this.data.put(FIRST_SESSION_KEY, session)
   }
 

@@ -11,6 +11,7 @@ import {
   type Workspace,
 } from '../../shared/workspaces'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { nameLabel } from '../../shared/name-label'
 import { choice, maybeText, nested, record, text, texts } from '../api/parse'
 import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
@@ -21,7 +22,7 @@ import { slugify, type OrgState } from './state'
 
 /** The cities that name new workspaces: the recorded one, Lisbon, first. */
 const CITIES = [
-  workspaceFixtures().created.workspace.name,
+  nameLabel(workspaceFixtures().created.workspace.name),
   'Porto',
   'Kyoto',
   'Oslo',

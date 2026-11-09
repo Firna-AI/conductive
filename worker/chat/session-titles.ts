@@ -1,4 +1,33 @@
+import type { Session } from '../../src/shared/sessions'
+import { sessionTitleFrom } from '../../src/shared/session-title'
 import type { ChatTransaction } from './store'
+import type { ChatDependencies } from './types'
+
+async function fillSessionTitle(
+  session: Session,
+  title: string | null,
+  writable: () => Promise<boolean>,
+): Promise<boolean> {
+  if (session.title !== null || title === null || !(await writable()))
+    return false
+  session.title = title
+  return true
+}
+
+export async function applyMessageSessionTitle(
+  transaction: ChatTransaction,
+  session: Session,
+  text: string,
+  readWorkspace: ChatDependencies['readAutomaticTitleWorkspace'],
+): Promise<void> {
+  await fillSessionTitle(
+    session,
+    sessionTitleFrom(text),
+    async () =>
+      (await transaction.firstSession())?.id !== session.id &&
+      (await readWorkspace(transaction.workspaceId)) !== null,
+  )
+}
 
 export async function applyWorkspaceSessionTitle(
   transaction: ChatTransaction,
@@ -6,11 +35,10 @@ export async function applyWorkspaceSessionTitle(
   occurredAt: number,
 ): Promise<void> {
   const first = await transaction.firstSession()
-  if (!first || first.titleReceived) return
-  await transaction.saveFirstSession({ ...first, titleReceived: true })
+  if (!first) return
   const session = await transaction.session(first.id)
-  if (!session || session.title !== first.workspaceName) return
-  session.title = title
+  if (!session || !(await fillSessionTitle(session, title, async () => true)))
+    return
   await transaction.saveSession(session)
   await transaction.emit({ type: 'session.updated', session }, occurredAt)
 }

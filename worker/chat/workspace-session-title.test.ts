@@ -23,7 +23,7 @@ it('keeps a member name given to the first session before the workspace title', 
   await acceptFirst()
   const renamed = await fixture.fetch(
     sessionPath(fixture.org.id, WORKSPACE_ID, first.sessionId),
-    { title: 'Member session name' },
+    { title: 'delft' },
     fixture.memberCookie,
     'PATCH',
   )
@@ -32,9 +32,7 @@ it('keeps a member name given to the first session before the workspace title', 
   const runner = await fixture.connect()
   runner.emit({ type: 'workspace.title', name: 'Fix chat titles' })
   await fixture.drain()
-  expect((await sessionRecord(fixture, first.sessionId)).title).toBe(
-    'Member session name',
-  )
+  expect((await sessionRecord(fixture, first.sessionId)).title).toBe('delft')
   expect(
     tab.messages
       .filter((message) => message.type === 'event')

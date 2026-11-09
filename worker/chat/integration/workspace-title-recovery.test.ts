@@ -119,7 +119,7 @@ it('renames only the first session on the first workspace title and publishes or
   expect((await active.session(active.first.sessionId)).title).toBe(
     'Fix chat titles',
   )
-  expect((await active.session(string(later.id))).title).toBe('New session')
+  expect((await active.session(string(later.id))).title).toBeNull()
   await ownerTab.inbox.next()
   await ownerTab.inbox.next()
   await memberTab.inbox.next()
@@ -169,4 +169,9 @@ it('renames only the first session on the first workspace title and publishes or
   expect((await active.session(active.first.sessionId)).title).toBe(
     OUTER_WORKSPACE,
   )
+  expect(
+    await active.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')
+      .bind(OUTER_WORKSPACE)
+      .first('name'),
+  ).toBe('Fix chat titles')
 })

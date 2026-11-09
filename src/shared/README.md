@@ -4,6 +4,8 @@ These modules define the browser API and the runner protocol.
 They use JSON values and plain TypeScript types.
 They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
+`Workspace.name` and `Session.title` are null until a name is set.
+`nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
 `api.ts` keeps the existing sign-in and org paths and common records.

@@ -66,6 +66,8 @@ same-agent change ignores this field.
 [Workspace and session names](workspace-titles.md) gives the background
 model request, the shared title writer, the first session name, and the
 names of later sessions. It also gives the local development setup.
+New workspaces and sessions have null names. The shared `nameLabel` helper
+in `src/shared/name-label.ts` gives their display label, "Untitled".
 
 ## Message admission
 
@@ -210,10 +212,12 @@ tests through the production Worker entry.
   lifecycle events.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
-- `session-titles.ts`: the first session rename in the transaction that
-  stores the workspace title.
+- `session-titles.ts`: the empty-name rule for the first session's workspace
+  title and each later session's first message with text.
 - `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
   background model request and the shared title storage and D1 projection.
+  The shared writer checks the empty name and workspace access before it
+  stores either a Worker title or a runner title.
 - `workspace-summary.ts`: `WorkspaceSummaryProjection`, the summary that
   `readChatWorkspaceSummary` returns.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched

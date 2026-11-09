@@ -1,4 +1,5 @@
 import { activeOrgIdPredicate } from '../data/org-access'
+import { workspaceName } from '../data/workspace-name'
 import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
@@ -72,7 +73,7 @@ export function workspaceView(row: WorkspaceRow): Workspace {
       displayName: row.displayName,
       avatarUrl: row.avatarUrl,
     },
-    name: row.name,
+    name: workspaceName(row.name),
     branch: row.branch,
     choice: { agent: row.agent, model: row.model, effort: row.effort },
     state: row.state,
@@ -134,7 +135,7 @@ export async function insertWorkspace(
         input.repositoryId,
         input.user.id,
         section.id,
-        input.city,
+        '',
         input.branch,
         input.now,
         input.now,

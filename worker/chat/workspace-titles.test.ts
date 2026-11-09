@@ -29,7 +29,7 @@ afterAll(async () => {
 })
 
 it.each(['failed', 'empty'] as const)(
-  'keeps the city name after a %s answer and asks again on the next accepted text',
+  'keeps names empty after a %s answer and asks again on the next accepted text',
   async (failure) => {
     const run = vi.fn<TitleModelCall>()
     if (failure === 'failed')
@@ -45,12 +45,12 @@ it.each(['failed', 'empty'] as const)(
     )
     await acceptFirst()
     await drain()
-    expect((await sessionRecord(fixture, first.sessionId)).title).toBe('delft')
+    expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
     expect(
       await fixture.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')
         .bind(WORKSPACE_ID)
         .first('name'),
-    ).toBe('delft')
+    ).toBe('')
     expect(warning).toHaveBeenCalledTimes(1)
     fixture.restart()
     await fixture.send(
@@ -106,7 +106,7 @@ it('asks nothing for an attachment-only first message and titles from the next a
   await drain()
   expect(run).not.toHaveBeenCalled()
   expect(warning).not.toHaveBeenCalled()
-  expect((await sessionRecord(fixture, first.sessionId)).title).toBe('delft')
+  expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
   await fixture.send(
     first.sessionId,
     'first-text',

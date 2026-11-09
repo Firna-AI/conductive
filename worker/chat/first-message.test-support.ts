@@ -28,7 +28,7 @@ export async function createFirstMessageFixture(
   }
   await harness.env.DB.batch([
     harness.env.DB.prepare('UPDATE workspaces SET name = ? WHERE id = ?').bind(
-      'delft',
+      '',
       WORKSPACE_ID,
     ),
     harness.env.DB.prepare(

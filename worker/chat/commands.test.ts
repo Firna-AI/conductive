@@ -92,7 +92,7 @@ describe('workspace chat commands', () => {
       'claude',
       'codex',
     ])
-    expect(changed.session.title).toBe('New session')
+    expect(changed.session.title).toBeNull()
     const accepted = await fixture.send(
       changed.session.id,
       'other-agent-message',

@@ -4,7 +4,11 @@ import { errorSummary, warnWorker } from '../warnings'
 import type { ChatStore } from './store'
 import { requestWorkspaceTitle } from './title-model'
 import type { ChatDependencies } from './types'
-import { projectWorkspaceTitle, storeWorkspaceTitle } from './workspace-title'
+import {
+  projectWorkspaceTitle,
+  storeWorkspaceTitle,
+  workspaceTitleAvailable,
+} from './workspace-title'
 
 export class WorkspaceTitles {
   private pending = false
@@ -48,7 +52,13 @@ export class WorkspaceTitles {
       const source = await this.store.run(() =>
         this.store.read(workspaceId, async (view) => {
           const first = await view.firstSession()
-          if (!first?.messageId || (await view.lifecycleRecovery()).title)
+          if (
+            !first?.messageId ||
+            !(await workspaceTitleAvailable(
+              view,
+              this.dependencies.readAutomaticTitleWorkspace,
+            ))
+          )
             return null
           const message = await view.message(first.messageId)
           if (!message) return null
@@ -73,11 +83,14 @@ export class WorkspaceTitles {
         const envelope = await this.store.change(
           workspaceId,
           async (transaction) => {
-            if ((await transaction.lifecycleRecovery()).title) return null
-            return storeWorkspaceTitle(transaction, {
-              type: 'workspace.title',
-              name,
-            })
+            return storeWorkspaceTitle(
+              transaction,
+              {
+                type: 'workspace.title',
+                name,
+              },
+              this.dependencies.readAutomaticTitleWorkspace,
+            )
           },
           this.publish,
         )

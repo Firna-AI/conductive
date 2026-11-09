@@ -11,12 +11,14 @@ import type { ChatTransaction } from './store'
 import { prepareAgentEvent } from './turn-events'
 import { observeRepairPart } from './repair-refusal'
 import { storeWorkspaceTitle } from './workspace-title'
+import type { ChatDependencies } from './types'
 
 /** Only validation errors become permanent refusals. Storage and sends must retry. */
 export async function storeRunnerReceipt(
   transaction: ChatTransaction,
   message: IncomingRunnerEnvelope,
   randomId: () => string,
+  readWorkspace: ChatDependencies['readAutomaticTitleWorkspace'],
 ): Promise<{ ready: boolean; stored?: WorkspaceEventEnvelope }> {
   let parsed: RunnerEventEnvelope
   try {
@@ -97,7 +99,12 @@ export async function storeRunnerReceipt(
     await apply()
   } else if (!('sessionId' in event)) {
     if (event.type === 'workspace.title')
-      await storeWorkspaceTitle(transaction, event, parsed.occurredAt)
+      await storeWorkspaceTitle(
+        transaction,
+        event,
+        readWorkspace,
+        parsed.occurredAt,
+      )
     else await transaction.emit(event, parsed.occurredAt)
     if (event.type === 'start.updated')
       await transaction.repairs.remove(event.type)

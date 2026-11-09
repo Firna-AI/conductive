@@ -29,7 +29,7 @@ afterAll(async () => {
 })
 
 it.each(['model', 'binding'] as const)(
-  'warns once per workspace object and keeps the city name when the %s is missing',
+  'warns once per workspace object and keeps names empty when the %s is missing',
   async (missing) => {
     const run = vi.fn<TitleModelCall>()
     const warning = vi
@@ -46,11 +46,11 @@ it.each(['model', 'binding'] as const)(
     await drain()
     expect(warning).toHaveBeenCalledTimes(1)
     expect(run).not.toHaveBeenCalled()
-    expect((await sessionRecord(fixture, first.sessionId)).title).toBe('delft')
+    expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
     expect(
       await fixture.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')
         .bind(WORKSPACE_ID)
         .first('name'),
-    ).toBe('delft')
+    ).toBe('')
   },
 )

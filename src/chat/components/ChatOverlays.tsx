@@ -1,5 +1,6 @@
 import { RotateCcw, Square } from 'lucide-react'
 import type { Session } from '../../shared/sessions'
+import { nameLabel } from '../../shared/name-label'
 import type { Overlay } from '../state/chat-snapshot'
 import { formatAgo } from '../state/format'
 import { ActionButton } from '../ui/actions'
@@ -27,7 +28,7 @@ export function historyEntries(
     .map((session) => ({
       kind: 'item',
       key: session.id,
-      label: session.title,
+      label: nameLabel(session.title),
       mark: <AgentMark agent={session.choice.agent} />,
       detail: formatAgo(ended(session), now),
       trailingIcon: RotateCcw,

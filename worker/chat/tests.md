@@ -14,7 +14,7 @@ npm run typecheck
 - Its helpers send messages, open tabs, connect a `FakeRunner`, and
   restart `WorkspaceChat` on the same storage.
 - `createFirstMessageFixture` in `first-message.test-support.ts` assigns
-  the first session and message of a workspace with a city name.
+  the first session and message of an untitled workspace.
   `first-message.test.ts`, `workspace-session-title.test.ts`, and
   `session-titles.test.ts` share this fixture.
 - `createTitleFixture` in `workspace-title.test-support.ts` supplies a fake
@@ -80,10 +80,20 @@ npm run typecheck
   duplicate receipts, and a member name after another restart.
 - `integration/workspace-title-request.test.ts` uses
   `workspace-title-entry.test-support.ts` to capture model inputs. It checks
-  the title source after a native restart, the D1 name, and the first session.
+  the title source after a native restart, null API names, the D1 name, and
+  the first session.
+- `workspace-title.test.ts` checks the empty-name rule, including member
+  names that match old defaults.
+- `workspace-title-policy.test.ts` checks the name before the first model
+  call and each retry. It also checks that a skipped runner title ends its
+  repair without a title event.
+- `integration/workspace-title-guards.test.ts` checks a workspace route name,
+  a confirmed runner title that changes nothing, and detail and repair
+  reads after a restart. It also checks a pending model title after Archive,
+  org suspension, and org deletion.
 - `first-message.test.ts` checks that a sender who is not the assigned
   sender of a first message gets a refusal, and that no session is stored.
-  It also checks the initial city name and unchanged repeated admission.
+  It also checks the initial null title and unchanged repeated admission.
 - `workspace-summary.test.ts` checks the stored summary: the event cursor,
   the visible output, and the dispatched work. Queued input and metadata
   are not output.

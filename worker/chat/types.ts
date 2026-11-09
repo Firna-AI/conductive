@@ -114,6 +114,9 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  readAutomaticTitleWorkspace: (
+    workspaceId: string,
+  ) => Promise<{ name: string | null } | null>
   runTitleModel?: TitleModelCall
   runnerAttached(
     workspaceId: string,

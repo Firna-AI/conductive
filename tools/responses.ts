@@ -51,7 +51,7 @@ function workspace(value: unknown): Workspace {
     repositoryId: text(fields.repositoryId),
     sectionId: text(fields.sectionId),
     owner: messageSender(fields.owner),
-    name: text(fields.name),
+    name: nullableText(fields.name),
     branch: text(fields.branch),
     choice: choice(fields.choice),
     state: workspaceState(fields.state),
@@ -80,7 +80,7 @@ export function listedWorkspaces(value: unknown): AgentListWorkspacesResponse {
       const item = record(value)
       return {
         id: text(item.id),
-        name: text(item.name),
+        name: nullableText(item.name),
         branch: text(item.branch),
         state: workspaceState(item.state),
       }

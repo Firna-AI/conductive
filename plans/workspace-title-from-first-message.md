@@ -931,7 +931,7 @@ Evidence: `.context/workspace-title-from-first-message/reports/m13-docs.md`.
 - [x] In [Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates),
       give the rule that a later full report replaces the workspace name
       the same exception.
-- [ ] Delete the follow-up items that this change fixes:
+- [x] Delete the follow-up items that this change fixes:
       `city-name-in-lower-case.md`, `session-name-source.md`, and
       `late-title-after-archive.md`.
 
@@ -939,22 +939,24 @@ Evidence: `.context/workspace-title-from-first-message/reports/m13-docs.md`.
 
 Depends on: 13
 
-- [ ] Change `Workspace.name` and `Session.title` to `string | null`, with
+Evidence: `.context/workspace-title-from-first-message/reports/m14-worker-full.md`.
+
+- [x] Change `Workspace.name` and `Session.title` to `string | null`, with
       one shared helper that gives the label "Untitled". Make each reader
       in `src/` compile through that helper.
-- [ ] Store an empty name at the create, and start each new session with no
+- [x] Store an empty name at the create, and start each new session with no
       title. Map the empty D1 name to `null` in one place.
-- [ ] Apply the one rule to every automatic name, with the archive check,
+- [x] Apply the one rule to every automatic name, with the archive check,
       before the Worker stores the event. Remove the text comparisons with
       the city name and "New session".
-- [ ] Make the repair write and the detail read use the rule.
-- [ ] Keep a name from the workspace route for good.
-- [ ] Make the agent tools list a workspace with no name.
-- [ ] Add Worker tests: an empty workspace and session take their first
+- [x] Make the repair write and the detail read use the rule.
+- [x] Keep a name from the workspace route for good.
+- [x] Make the agent tools list a workspace with no name.
+- [x] Add Worker tests: an empty workspace and session take their first
       automatic name; a set name never changes, also one that equals an old
       default; a name from the route stays after a title; a title after
       Archive changes nothing.
-- [ ] Update the Worker chat README and the guides that name the defaults.
+- [x] Update the Worker chat README and the guides that name the defaults.
 
 ## Milestone 15: The web app for untitled names
 

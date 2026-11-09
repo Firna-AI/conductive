@@ -20,11 +20,10 @@ export async function createSession(
     startedBy.id,
     choice.agent,
   )
-  const first = await transaction.firstSession()
   const session: Session = {
     id,
     workspaceId: transaction.workspaceId,
-    title: first?.id === id ? first.workspaceName : 'New session',
+    title: null,
     choice,
     createdAt: transaction.now,
     closedAt: null,

@@ -194,6 +194,7 @@ export class RunnerChannel {
           transaction,
           message,
           this.dependencies.randomId,
+          this.dependencies.readAutomaticTitleWorkspace,
         )
         becameReady = receipt.ready
         stored = receipt.stored

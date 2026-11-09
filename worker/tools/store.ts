@@ -6,6 +6,7 @@ import { messageSender, workspaceState } from '../../tools/responses'
 import { HttpError } from '../http'
 import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { hash } from '../security/crypto'
+import { workspaceName } from '../data/workspace-name'
 
 export interface CallingWorkspace {
   workspaceId: string
@@ -48,12 +49,12 @@ export async function orgWorkspaces(
        WHERE org_id = ? ORDER BY created_at, id`,
     )
     .bind(orgId)
-    .all<unknown>()
+    .all<{ id: string; name: string; branch: string; state: string }>()
   return results.map((row) => {
     const fields = record(row)
     return {
       id: text(fields.id),
-      name: text(fields.name),
+      name: workspaceName(row.name),
       branch: text(fields.branch),
       state: workspaceState(fields.state),
     }

@@ -23,7 +23,7 @@ it('titles a later session from its first text message and publishes ordered upd
     await createFirstMessageFixture(harness)
   await acceptFirst()
   const later = await fixture.createSession()
-  expect(later.title).toBe('New session')
+  expect(later.title).toBeNull()
   const ownerTab = await fixture.tab()
   const memberTab = await fixture.tab(0, undefined, fixture.memberCookie)
   const text = 'Name this session.\nKeep this second line out'
@@ -38,7 +38,7 @@ it('titles a later session from its first text message and publishes ordered upd
   expect((await sessionRecord(fixture, later.id)).title).toBe(
     'Name this session',
   )
-  expect((await sessionRecord(fixture, first.sessionId)).title).toBe('delft')
+  expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
   const events = ownerTab.messages.filter((message) => message.type === 'event')
   expect(
     events.map(({ envelope }) => [envelope.eventNumber, envelope.event.type]),
@@ -77,16 +77,14 @@ it('keeps a member name given to a later session before its first message', asyn
   const later = await fixture.createSession()
   const renamed = await fixture.fetch(
     sessionPath(fixture.org.id, WORKSPACE_ID, later.id),
-    { title: 'Member session name' },
+    { title: 'New session' },
     fixture.memberCookie,
     'PATCH',
   )
   expect(renamed.status).toBe(200)
   const accepted = await fixture.send(later.id)
-  expect(accepted.session.title).toBe('Member session name')
-  expect((await sessionRecord(fixture, later.id)).title).toBe(
-    'Member session name',
-  )
+  expect(accepted.session.title).toBe('New session')
+  expect((await sessionRecord(fixture, later.id)).title).toBe('New session')
 })
 
 it('keeps an attachment-only session untitled until it accepts text', async () => {
@@ -115,7 +113,7 @@ it('keeps an attachment-only session untitled until it accepts text', async () =
   )
   expect(response.status).toBe(202)
   const accepted: SendMessageResponse = await response.json()
-  expect(accepted.session.title).toBe('New session')
+  expect(accepted.session.title).toBeNull()
   fixture.restart()
   const next = await fixture.send(
     later.id,

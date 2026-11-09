@@ -76,6 +76,7 @@ export async function send(
       context.user,
       attachments,
       dependencies.randomId,
+      dependencies.readAutomaticTitleWorkspace,
     )
     if (target.id !== source.id) {
       await transaction.saveMessageSource(input.id, source.id)

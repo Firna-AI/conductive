@@ -83,13 +83,13 @@ it('refuses an unassigned first-message sender without storing a session or spen
   })
 })
 
-it('starts the assigned first session with the workspace city name and keeps repeated admission unchanged', async () => {
+it('starts the assigned first session untitled and keeps repeated admission unchanged', async () => {
   const { fixture, first, acceptFirst } =
     await createFirstMessageFixture(harness)
   const ownerTab = await fixture.tab()
   const memberTab = await fixture.tab(0, undefined, fixture.memberCookie)
   const accepted = await acceptFirst()
-  expect((await sessionRecord(fixture, first.sessionId)).title).toBe('delft')
+  expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
   const history = await fixture.history(first.sessionId)
   expect(history.events.map(({ event }) => event.type)).toEqual([
     'session.updated',
@@ -98,7 +98,7 @@ it('starts the assigned first session with the workspace city name and keeps rep
   ])
   expect(history.events[0].event).toMatchObject({
     type: 'session.updated',
-    session: { id: first.sessionId, title: 'delft' },
+    session: { id: first.sessionId, title: null },
   })
   expect(memberTab.messages).toEqual(ownerTab.messages)
   fixture.restart()
