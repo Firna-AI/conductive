@@ -129,20 +129,28 @@ it('admits concurrent pending creates once and publishes their later failure wit
     await runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspaces',
     ).first('count'),
-  ).toBe(0)
-  expect((await fixture.failedCreation(id))?.request).toEqual(FIRST_MESSAGE)
+  ).toBe(1)
+  expect(await runtime.workspace(id).waitCreationAdmission()).toMatchObject({
+    ok: true,
+    created: { first: { request: FIRST_MESSAGE } },
+  })
   boat.commandExitCode = 0
   const retried = await fixture.run(() =>
-    createCompletedWorkspace(runtime, org.id, user, input),
+    createWorkspace(runtime, org.id, user, input),
   )
-  expect(retried.workspace.id).not.toBe(id)
-  expect(boat.starts).toHaveLength(2)
+  expect(retried.workspace.id).toBe(id)
+  expect(retried.workspace.state).toBe('error')
+  expect(boat.starts).toHaveLength(1)
 })
 
 it('repairs a claim with no queued job and keeps successful retries independent of a later resume', async () => {
   const fixture = await fixtureForTest()
   const { runtime, org, user, repositoryId, boat } = fixture
-  const input = { repositoryId, firstMessage: FIRST_MESSAGE }
+  const input = {
+    repositoryId,
+    firstMessage: FIRST_MESSAGE,
+    name: 'Keep the stored name',
+  }
   const original = runtime.workspace
   runtime.workspace = () => {
     throw new Error('handoff unavailable')
@@ -154,11 +162,13 @@ it('repairs a claim with no queued job and keeps successful retries independent 
     "SELECT workspace_id AS id FROM workspace_creation_attempts WHERE state = 'pending'",
   ).first<{ id: string }>()
   if (!claim) throw new Error('Missing durable claim')
+  input.name = 'A duplicate cannot replace the stored name'
   runtime.workspace = original
   const created = await fixture.run(() =>
     createCompletedWorkspace(runtime, org.id, user, input),
   )
   expect(created.workspace.id).toBe(claim.id)
+  expect(created.workspace.name).toBe('Keep the stored name')
   const actor = fixture.actors.get(claim.id)?.endpoint()
   const control = fixture.starts.get(claim.id)
   if (!actor || !control) throw new Error('Missing repaired actor')

@@ -6,7 +6,8 @@ and the chat history of that workspace. It gives each message to the agent
 runner in the sandbox. It stores the events of the runner and pushes them
 to each open tab. A tab is one browser connection to the events socket.
 
-[Chat and events](../../docs/protocol/chat-and-events.md) and
+[Chat and events](../../docs/protocol/chat-and-events.md),
+[Agent runner](../../docs/protocol/agent-runner.md), and
 [Access and security](../../docs/protocol/access-and-security.md) state the
 requirements. This README names the code, its guarantees, and the seams
 for other milestones.
@@ -50,7 +51,7 @@ gives their rules.
   a create. A repeat returns the same message and adds no history.
 - `readChatWorkspaceSummary()` returns the last event number, the last
   event number with visible output, and whether a dispatched turn runs.
-- `readChatWorkspaceResponse(orgId, workspaceId)` returns the reply of a
+- `readChatWorkspaceResponse(orgId, workspaceId, appOrigin)` returns the reply of a
   workspace read or Resume and that summary, as
   [Browser routes](../lifecycle/README.md#browser-routes) says.
 
@@ -61,20 +62,22 @@ A cross-agent model change uses the client's `newSessionId`. A repeated
 request gets the same session. An unrelated occupied ID is refused. A
 same-agent change ignores this field.
 
+## Session names
+
+[Workspace and session names](workspace-titles.md) gives the background
+model request, the shared title writer, the first session name, and the
+names of later sessions. It also gives the local development setup.
+New workspaces and sessions have null names. The shared `nameLabel` helper
+in `src/shared/name-label.ts` gives their display label, "Untitled".
+
 ## Message admission
 
-The public Send and Retry routes check the workspace creation attempt
-before login checks or message writes. A pending or failed attempt gets
-`409 workspace_starting` in every session. A repeat of an accepted
-message request returns its stored acceptance before this check.
-
-The creation attempt stays successful during later stops and resumes.
-Messages on a resume still enter the stored queue. A workspace without
-a creation attempt keeps its existing send behaviour.
-
-The check reads the creation result published in D1. A delayed success
-publication can keep new sends waiting after the native start succeeds.
-The separate trusted first-message path does not use this public route.
+Send and Retry use the normal login and session checks during a first start.
+Accepted messages enter the durable queue while the computer starts or its first start is failed.
+Repeats return the stored acceptance and add no message or history.
+The same queue also serves later resumes.
+Lifecycle readiness controls delivery to the runner.
+Try again replaces the failed first computer without accepting the stored messages again.
 
 ## Access
 
@@ -177,6 +180,14 @@ retry route for `Session.retryMessageId`.
 runner for one fresh full report after it refuses an update. It describes
 the stored records, the refusal checks, and the sends before each confirm.
 
+`workspace-events.ts` defines the private saved event shape and presents browser events.
+Each authorized connection captures its app origin and immutable workspace number.
+Replay and live events get the same fields before they reach the browser.
+Older saved workspace updates can omit number and link.
+Presentation fills both fields while it keeps each saved name, state, time, and event number.
+The HTTP history route uses the same presentation.
+No origin is saved in the workspace object.
+
 ## Tests
 
 ```sh
@@ -213,12 +224,20 @@ tests through the production Worker entry.
   lifecycle events.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
+- `session-titles.ts`: the empty-name rule for the first session's workspace
+  title and each later session's first message with text.
+- `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
+  background model request and the shared title storage and D1 projection.
+  The shared writer checks the empty name and workspace access before it
+  stores either a Worker title or a runner title.
 - `workspace-summary.ts`: `WorkspaceSummaryProjection`, the summary that
   `readChatWorkspaceSummary` returns.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
   turns as stopped when the lifecycle state becomes stopped or error.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object.
+- `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
+  token checks before the runner connection opens.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
   a browser tab: the login refresh, the tab registration, the close after
   a failed start, and the grant check before the history.
@@ -228,10 +247,23 @@ tests through the production Worker entry.
   requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
-  chunks of large file reports.
+  chunks of large file reports and tree deltas.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event.
+- `runner-output.ts` and `runner-output-state.ts`: the filter from the
+  actual start capture, and its encrypted state. Each runner stream keeps
+  its held answer text. One workspace record keeps each shown answer end
+  that can still start a secret, so a new stream cannot complete such a
+  secret. That state, the filtered events, and the raw cursor of the
+  stream commit in one transaction. The shared field policy keeps
+  operational paths and masks display labels.
+- `runner-output.ts` also moves the answer ends of older stream records
+  into the workspace record, at the first accepted receipt without that
+  record. Held text stays with its own stream, because the held text of
+  two streams has no order. A workspace record with no answer ends still
+  marks the move as done, so later receipts do not scan older stream
+  records again.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
   runner connection before each message and while it is idle.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
@@ -244,6 +276,10 @@ tests through the production Worker entry.
 - `delivery-state.ts`: dispatch state before sending and queued-state restoration.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
+  `parseRunnerEnvelope` applies the byte limits to the raw message.
+  `parseRunnerOutputEnvelope` checks each filtered event again. It skips
+  the byte limits only for file events, because masked labels can make
+  them larger.
 - `turn-lifecycle.ts`, `turn-events.ts`, `turn-context.ts`, and
   `continuation.ts`: active and waiting turns, the dispatch rule of each
   command, the retry message of a turn end, safe turn context, late data,
@@ -271,7 +307,7 @@ tests through the production Worker entry.
 
 - [Chat and events: Messages](../../docs/protocol/chat-and-events.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
-- [Chat and events: Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+- [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)

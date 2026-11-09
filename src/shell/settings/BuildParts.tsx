@@ -7,7 +7,7 @@ import { ActionButton, type ActionTone } from '../ui/actions'
 import type { Action } from '../ui/useAction'
 
 /** The length of a build that ended. */
-function buildLength(build: ImageBuild): number {
+export function buildLength(build: ImageBuild): number {
   if (build.durationMs !== null) return build.durationMs
   return build.completedAt === null ? 0 : build.completedAt - build.startedAt
 }

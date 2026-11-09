@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { AgentChoice } from '../../shared/agents'
 import { filePaths } from '../../shared/files'
 import { sessionPaths } from '../../shared/sessions'
+import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { chatFor, newSessionRecord, opensSession } from './test-kit'
 
@@ -15,6 +16,17 @@ const codex: AgentChoice = {
 }
 /** The ID of the new session: the first client ID that the chat takes. */
 const created = 'client-1'
+
+/**
+ * The view that the user chose, with the place of the new session at the
+ * end of the saved order, as every open session gets one. The selection
+ * stays.
+ */
+const withCreatedPlace = (view: WorkspaceView | null) =>
+  view && {
+    ...view,
+    tabs: [...view.tabs, { kind: 'session', sessionId: created }],
+  }
 const shortly = { timeout: 10_000 }
 const isModel = (request: Request) =>
   request.method === 'PUT' && request.url.endsWith('/model')
@@ -86,6 +98,64 @@ async function pickThatWaits() {
 }
 
 describe('a model change that opens a session', () => {
+  it('keeps a file tab selected when a model reply moves the last shown session draft', async () => {
+    const { chat, reply } = await pickThatWaits()
+    const file: WorkspaceTab = {
+      kind: 'file',
+      path: 'src/checkout.ts',
+      mode: 'source',
+    }
+    chat.controller.updateView((view) => ({
+      ...view,
+      tabs: [...view.tabs, file],
+      activeTab: file,
+    }))
+    const selectedView = chat.controller.getSnapshot().view
+    await reply()
+    const snapshot = chat.controller.getSnapshot()
+    expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
+    expect(snapshot.activeSessionId).toBe(id)
+    expect(chat.draftOf(created)?.text).toBe('Check the postcode rules.')
+    expect(chat.draftOf(id)?.text).toBe('')
+    expect(chat.histories(created)).toBe(0)
+  })
+
+  it.each(['reply', 'stream'] as const)(
+    'keeps a newer tab selection when the %s first shows the new session',
+    async (first) => {
+      const { chat, firstShown, reply } = await pickThatWaits()
+      const draftId = chat.draftOf(id)?.id
+      await chat.controller.select('debounce')
+      chat.controller.setDraft('debounce', 'Finish the lookup tests.')
+      const selectedView = chat.controller.getSnapshot().view
+      const showRecord = () =>
+        chat.emit({
+          type: 'session.updated',
+          session: newSessionRecord(created, codex),
+        })
+      if (first === 'stream') {
+        showRecord()
+      } else {
+        await reply()
+      }
+      expect(chat.controller.getSnapshot().activeSessionId).toBe('debounce')
+      if (first === 'stream') await reply()
+      else showRecord()
+      const snapshot = chat.controller.getSnapshot()
+      expect(snapshot.activeSessionId).toBe('debounce')
+      expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
+      expect(chat.draftOf('debounce')?.text).toBe('Finish the lookup tests.')
+      expect(chat.draftOf(created)).toMatchObject({
+        id: draftId,
+        text: 'Check the postcode rules.',
+      })
+      expect(files(chat, created)).toEqual(['kept-file'])
+      expect(chat.draftOf(id)?.text).toBe('')
+      expect(firstShown).toEqual(['Check the postcode rules.'])
+      expect(chat.histories(created)).toBe(0)
+    },
+  )
+
   it('keeps both drafts when the stream shows the new session before the reply', async () => {
     const { chat, firstShown, reply } = await pickThatWaits()
     chat.emit({

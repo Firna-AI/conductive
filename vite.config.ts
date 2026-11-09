@@ -52,5 +52,10 @@ export function developmentScripts() {
 }
 
 export default defineConfig({
-  plugins: [react(), cloudflare(), developmentScripts()],
+  // Workers AI is remote only. Local development leaves new workspaces Untitled and needs no Cloudflare login.
+  plugins: [
+    react(),
+    cloudflare({ remoteBindings: false }),
+    developmentScripts(),
+  ],
 })

@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import { CommandPalette } from '../components/palette/CommandPalette'
+import {
+  paletteViews,
+  type PaletteView,
+} from '../components/palette/paletteViews'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
 import { SuspendedOrgPanel } from '../components/orgs/SuspendedOrgNotice'
@@ -23,6 +28,7 @@ import {
 import { anotherOrg, newOrg } from '../fixtures/repositories'
 import { menuSection } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
+import { paths } from '../paths'
 import {
   ChooseWorkspace,
   DeletedOrg,
@@ -37,12 +43,13 @@ import styles from './WorkspaceListScreen.module.css'
 export const workspaceListSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['list', 'menu'],
+  required: ['list', 'menu', 'palette'],
   properties: {
     /**
      * The workspaces of Acme, the first org of a new user or another new
      * org, both without workspaces, a deleted org, Acme after the operator
-     * suspended it, or a deleted org that the operator suspended.
+     * suspended it, a deleted org that the operator suspended, or Acme
+     * after its list did not load.
      */
     list: {
       enum: [
@@ -52,10 +59,16 @@ export const workspaceListSchema = {
         'deleted',
         'suspended',
         'deleted-suspended',
+        'failed',
       ],
     },
-    /** The menu of a section, a workspace dragged, or the org switcher. */
-    menu: { enum: ['none', 'section', 'drag', 'orgs'] },
+    /**
+     * The menu of a section, a workspace dragged, the org switcher, or
+     * the org switcher of an operator, which adds Operator.
+     */
+    menu: { enum: ['none', 'section', 'drag', 'orgs', 'operator'] },
+    /** The command palette, closed or open on one of its views. */
+    palette: { enum: paletteViews },
   },
 } as const
 
@@ -69,31 +82,77 @@ function listDrag(menu: WorkspaceListState['menu']): ListDrag | undefined {
   return menu === 'drag' ? workspaceDrag : undefined
 }
 
+/**
+ * The command palette over the list of Acme, or nothing while it is
+ * closed. The list has no open workspace, so the palette offers no actions
+ * of a workspace.
+ */
+function listPalette(view: PaletteView, viewport: Viewport): ReactNode {
+  if (view === 'closed') return null
+  return (
+    <CommandPalette
+      context={{ archivable: false }}
+      view={view}
+      viewport={viewport}
+    />
+  )
+}
+
 const sheets: Readonly<Record<WorkspaceListState['menu'], ReactNode>> = {
   none: null,
   section: <SectionSheet />,
   drag: null,
   orgs: <OrgSwitcherSheet current="acme" />,
+  operator: <OrgSwitcherSheet current="acme" operator />,
+}
+
+/**
+ * The rail of the list: the name of Futex beside the open org switcher,
+ * and Operator with its name for an operator.
+ */
+const rails: Readonly<Partial<Record<WorkspaceListState['menu'], RailState>>> =
+  {
+    orgs: { ...acmeRail, hint: 'futex' },
+    operator: { ...acmeRail, operator: true, hint: 'operator' },
+  }
+
+/**
+ * A new org before its first workspace, and its New workspace page. The
+ * mockups draw the first build of Firna on its own New workspace page.
+ */
+type FreshOrg = {
+  org: Org
+  rail: readonly Org[]
+  form: NewOrg
+  newWorkspaceTo: string
 }
 
 /**
  * The new orgs before their first workspace: the first org of the sign-up,
  * and another org that Create org made beside the user's orgs.
  */
-const newOrgs: Readonly<
-  Partial<
-    Record<
-      WorkspaceListState['list'],
-      { org: Org; rail: readonly Org[]; form: NewOrg }
-    >
-  >
-> = {
-  'new-org': { org: orgs.firna, rail: orgList, form: newOrg },
-  'another-org': { org: orgs.labs, rail: orgListWithLabs, form: anotherOrg },
-}
+const newOrgs: Readonly<Partial<Record<WorkspaceListState['list'], FreshOrg>>> =
+  {
+    'new-org': {
+      org: orgs.firna,
+      rail: orgList,
+      form: newOrg,
+      newWorkspaceTo: paths.firstBuildWorkspace,
+    },
+    'another-org': {
+      org: orgs.labs,
+      rail: orgListWithLabs,
+      form: anotherOrg,
+      newWorkspaceTo: paths.newWorkspace,
+    },
+  }
 
 function MobileList(props: { state: WorkspaceListState }) {
-  const { list, menu } = props.state
+  const { list, menu, palette } = props.state
+  // On a phone the palette is a page in place of the list.
+  if (palette !== 'closed') {
+    return <MobileFrame>{listPalette(palette, 'mobile')}</MobileFrame>
+  }
   if (list === 'deleted' || list === 'deleted-suspended') {
     return (
       <MobileFrame>
@@ -121,8 +180,10 @@ function MobileList(props: { state: WorkspaceListState }) {
     <MobileFrame>
       <HomeList
         drag={listDrag(menu)}
+        failed={list === 'failed'}
         menu={listMenu(menu)}
         menuStyle="sheet"
+        newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
         sections={fresh ? newOrgSections() : workspaceSections()}
       />
@@ -149,6 +210,7 @@ function SuspendedList() {
       </div>
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
+          keys
           menuStyle="anchored"
           org={org}
           sections={sections}
@@ -168,7 +230,7 @@ export function WorkspaceListScreen(props: {
   state: WorkspaceListState
   viewport: Viewport
 }) {
-  const { list, menu } = props.state
+  const { list, menu, palette } = props.state
   if (props.viewport === 'mobile') return <MobileList state={props.state} />
   if (list === 'suspended') return <SuspendedList />
   if (list === 'deleted' || list === 'deleted-suspended') {
@@ -189,22 +251,34 @@ export function WorkspaceListScreen(props: {
     return (
       <AppFrame
         rail={rail}
-        sidebar={<Sidebar org={fresh.org} sections={newOrgSections()} />}
+        sidebar={
+          <Sidebar
+            newWorkspaceTo={fresh.newWorkspaceTo}
+            org={fresh.org}
+            sections={newOrgSections()}
+          />
+        }
       >
-        <NewOrgEmpty org={fresh.form} />
+        <NewOrgEmpty newWorkspaceTo={fresh.newWorkspaceTo} org={fresh.form} />
       </AppFrame>
     )
   }
   const sections = workspaceSections()
   const open = listMenu(menu)
   const drag = listDrag(menu)
-  const rail: RailState =
-    menu === 'orgs' ? { ...acmeRail, hint: 'futex' } : acmeRail
+  const rail = rails[menu] ?? acmeRail
   return (
     <AppFrame
+      overlay={listPalette(palette, props.viewport)}
       rail={rail}
       sidebar={
-        <Sidebar drag={drag} menu={open} org={orgs.acme} sections={sections} />
+        <Sidebar
+          drag={drag}
+          failed={list === 'failed'}
+          menu={open}
+          org={orgs.acme}
+          sections={sections}
+        />
       }
     >
       <div className={`${responsive.wideOnly} ${styles.choose}`}>
@@ -213,6 +287,8 @@ export function WorkspaceListScreen(props: {
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
           drag={drag}
+          failed={list === 'failed'}
+          keys
           menu={open}
           menuStyle="anchored"
           org={orgs.acme}

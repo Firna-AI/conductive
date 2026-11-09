@@ -32,6 +32,8 @@ const BANNERS = [
   'blocked',
 ] as const satisfies readonly BannerState[]
 
+const PATHS = ['plain', 'masked'] as const
+
 /**
  * The preview state of the dev fake, from the query string of the page,
  * such as `/?role=member&workspace=stopped`. An unknown value is ignored,
@@ -41,6 +43,8 @@ const BANNERS = [
  * - `workspace=<state>`: the state of `checkout-autocomplete`.
  * - `conversation=<scenario>`: its recorded chat, such as `running`.
  * - `banner=<state>`: its GitHub banner, such as `merged`.
+ * - `paths=masked`: two files whose real paths hold a fake secret value,
+ *   with their labels, in the file lists and at the end of each turn.
  * - `firstRun=github-app|org|agent-login`: Get started is not done from
  *   that step on. With `github-app` or `org`, the user has no org until
  *   Create org runs. In each first run, no agent login is connected.
@@ -48,6 +52,10 @@ const BANNERS = [
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.
+ * - `operator=1`: the user is an operator. The rail and the org switcher
+ *   show Operator, and the operator section shows the sample orgs and
+ *   users of the mockups. Without it, each operator request gets
+ *   `operator_required`, as the Worker does.
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
  * - `stop=<seconds>`: an open workspace stops that many seconds after it
  *   opens, as a sandbox does that stops while its workspace is open.
@@ -62,6 +70,7 @@ export interface DevOptions {
   noAgentLogin: boolean
   deleted: boolean
   suspended: boolean
+  operator: boolean
   signedOut: boolean
   /** The wait before an open workspace stops, or `null` for no stop. */
   stopAfterMs: number | null
@@ -86,11 +95,13 @@ export function readDevOptions(search: string): DevOptions {
       workspaceState: pick(params, 'workspace', WORKSPACE_STATES),
       conversation: pick(params, 'conversation', CONVERSATIONS),
       banner: pick(params, 'banner', BANNERS),
+      paths: pick(params, 'paths', PATHS),
     },
     firstRun: pick(params, 'firstRun', getStartedOrder) ?? null,
     noAgentLogin: params.get('login') === 'none',
     deleted: params.get('deleted') === '1',
     suspended: params.get('suspended') === '1',
+    operator: params.get('operator') === '1',
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
     shareSaveFails: params.get('shareSave') === 'fail',

@@ -10,11 +10,16 @@ it('installs a runner-only artifact and starts it with the private runtime after
   expect(installed.exitCode, installed.stderr).toBe(0)
   expect(await fixture.calls()).toEqual([
     'private Node',
+    'apt-get update',
+    'apt-get install -y gh',
     `git config --system --replace-all credential.helper ${fixture.credentialHelper}`,
     'git config --system credential.useHttpPath true',
     'systemctl daemon-reload',
     'systemctl enable conductive-runner.service',
   ])
+  const github = await fixture.githubCli(['--version'])
+  expect(github.exitCode, github.stderr).toBe(0)
+  expect(github.stdout).toBe('gh-ready\n')
   const started = await fixture.start({
     WORKSPACE_TOKEN: 'workspace-token',
     CONDUCTIVE_WORKSPACE_ID: 'workspace-one',

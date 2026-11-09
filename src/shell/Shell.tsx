@@ -13,34 +13,25 @@ import { AccountScreen } from './account/AccountScreen'
 import { SignInScreen } from './auth/SignInScreen'
 import { useApp } from './context'
 import { InvitationsScreen } from './invitations/InvitationsScreen'
-import { PhoneFrame } from './layout/frames'
-import layout from './layout/layout.module.css'
+import { PhoneFrame, StandaloneFrame } from './layout/frames'
 import { Sidebar } from './list/Sidebar'
 import { useKeptOrg } from './mac/mac-app'
-import { WindowStrip } from './mac/WindowControls'
 import { GetStartedScreen } from './onboarding/GetStartedScreen'
+import { OperatorRoutes } from './operator/OperatorRoutes'
 import { CreateOrgScreen } from './orgs/CreateOrgScreen'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
 import { ActionButton } from './ui/actions'
-import { OverlayHost } from './ui/Overlay'
 import { useViewport } from './ui/viewport'
 import ui from './ui/ui.module.css'
 
 /**
  * A page alone in the window: a phone frame, or a desktop page without the
- * rail. In the Mac app a strip with the window controls tops it.
+ * rail.
  */
 function Alone(props: { children: ReactNode }) {
   if (useViewport() === 'phone')
     return <PhoneFrame>{props.children}</PhoneFrame>
-  return (
-    <div className={layout.standalone}>
-      <OverlayHost>
-        <WindowStrip />
-        {props.children}
-      </OverlayHost>
-    </div>
-  )
+  return <StandaloneFrame>{props.children}</StandaloneFrame>
 }
 
 /** The wait of the first load, as the app shows it. */
@@ -108,7 +99,13 @@ type AccountRoute = Extract<Route, { screen: 'account' }>
 function Account(props: { route: AccountRoute; user: User }) {
   const phone = useViewport() === 'phone'
   const org = useKeptOrg(useStore(useApp().orgs))
-  const page = <AccountScreen connect={props.route.connect} user={props.user} />
+  const page = (
+    <AccountScreen
+      connect={props.route.connect}
+      tab={props.route.tab}
+      user={props.user}
+    />
+  )
   if (phone) return <PhoneFrame>{page}</PhoneFrame>
   return (
     <RailFrame
@@ -145,6 +142,8 @@ function Signed(props: { route: Route; user: User }) {
           <CreateOrgScreen first={route.first} />
         </Alone>
       )
+    case 'operator':
+      return <OperatorRoutes user={user} view={route.view} />
     case 'not-found':
       return inRail(<NotAvailable title="This page is not available" />, null)
     default:

@@ -6,6 +6,11 @@ import {
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
+import {
+  sampleOperator,
+  sampleRecords,
+  type OperatorRecords,
+} from '../../test-support/fixtures/operator'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
@@ -54,15 +59,42 @@ function acme(
     },
     sections: core.sectionList.sections,
     workspaces: workspaces.workspaces,
+    workspaceNumberCount: Math.max(
+      0,
+      ...workspaces.workspaces.map(({ number }) => number),
+    ),
     starts: new Map(workspaces.workspaces.map(startOf)),
     created: new Set(),
     running: new Map(),
     repositories: core.repositories.repositories,
     settings: core.settings.settings,
     builds: [core.build],
+    settingsRevision: core.settings.settings.needsBuild ? 2 : 1,
+    buildRevisions: new Map([[core.build.build.id, 1]]),
     currentImageBuildId: core.builds.currentImageBuildId,
     members: core.members,
   }
+}
+
+/**
+ * The records of the operator samples. Acme of the options is deleted or
+ * suspended there too, so the operator sees it as its members do.
+ */
+function operatorRecords(options: DevOptions): OperatorRecords {
+  const records = sampleRecords(FAKE_TIME)
+  if (options.deleted) {
+    records.orgDeletions.set(FAKE_IDS.org, {
+      deletedAt: FAKE_TIME,
+      purgeAt: FAKE_TIME + DELETE_AFTER,
+    })
+  }
+  if (options.suspended) {
+    records.orgSuspensions.set(FAKE_IDS.org, {
+      suspendedAt: FAKE_TIME,
+      operator: sampleOperator,
+    })
+  }
+  return records
 }
 
 /**
@@ -88,6 +120,7 @@ export function seedState(options: DevOptions): DevState {
   return {
     account: {
       ...core.account,
+      operator: options.operator,
       agentLogins: noLogin
         ? AGENTS.map((agent): AgentLoginStatus => ({ agent, connected: false }))
         : core.account.agentLogins,
@@ -103,6 +136,7 @@ export function seedState(options: DevOptions): DevState {
     githubAppInstalled: firstRun !== 'github-app',
     attachments: new Map(),
     stopAfterMs: options.stopAfterMs,
+    operator: operatorRecords(options),
     shareSaveFails: options.shareSaveFails,
   }
 }

@@ -98,6 +98,12 @@ with the message of the API.
   with more room, and it gets shorter to fit. It follows its button when the
   page scrolls or the window changes size. In a long menu, only the choices
   scroll. The heading, an error, and the note stay in view.
+- The menus and the questions note themselves in the open layers of the
+  app shell, from `../shell/ui/layers.ts`. So the key of the command
+  palette asks an open desktop menu to close, as Escape does. While its
+  change runs, the menu refuses, and the key does nothing, as it does
+  while a question or a sheet is open. Outside the app, nothing notes
+  them.
 - While a removal, owner change, org deletion, or restore runs, its question
   or menu stays open. Cancel, Escape, Tab,
   a press outside, on the dimmed page, or on the menu's button, and a close
@@ -121,7 +127,10 @@ The card counts the runs of the install script, as the tab of an admin
 does: a refresh is neither the newest build nor a row of the history. The
 line about where new workspaces start uses the current image, also when a
 refresh made it. The view names the software of the base image from
-`settings.baseImage`. An older reply without it names no software.
+`settings.baseImage`. An older reply without it names no software. The
+notice of a changed install script takes its words from the builds through
+`changedScriptNotice` in `../app/first-build.ts`, as the tab of an admin
+does. The view shows no Build computer.
 
 ### Scope
 
@@ -216,7 +225,8 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 
 - `api/client.ts`: `createMembersApi`, the calls, and `ApiRequestError`.
 - `api/parseCore.ts` and `api/parseSettings.ts`: the parsers of the replies.
-  The settings parser keeps only the names of the env vars.
+  The settings parser keeps only the names and the Secret marks of the env
+  vars.
 - `membersStore.ts`: the state of the Members tab and each change.
 - `actionOwners.ts`: the owner of each action, and `keepExistingOwners`,
   the owner rule that the store applies after each state change.

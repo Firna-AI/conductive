@@ -6,6 +6,8 @@ import type { MaskedStartLog } from '../lifecycle/masked-start-log'
 import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
 import type { ChatStore } from './store'
 import type { ChatWorkspaceSummary } from './workspace-summary'
+import { canFillWorkspaceTitle } from './workspace-title'
+import { readAutomaticTitleWorkspace } from './queries'
 
 export interface OrderedChatWorkspaceResponse {
   response: OrderedWorkspaceResponse
@@ -18,6 +20,7 @@ export async function readChatWorkspaceResponse(
   store: ChatStore,
   orgId: string,
   workspaceId: string,
+  origin: string,
   readLifecycle: () => Promise<DurableLifecycleState | undefined>,
   readLog: () => Promise<MaskedStartLog>,
 ): Promise<OrderedChatWorkspaceResponse> {
@@ -40,8 +43,13 @@ export async function readChatWorkspaceResponse(
   return {
     response: {
       workspace: {
-        ...workspaceView(row),
-        ...(title ? { name: title.name } : {}),
+        ...workspaceView(row, origin),
+        ...(title &&
+        canFillWorkspaceTitle(
+          await readAutomaticTitleWorkspace(env.DB, workspaceId),
+        )
+          ? { name: title.name }
+          : {}),
       },
       start: state?.start ?? null,
       error: state?.error

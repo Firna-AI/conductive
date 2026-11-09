@@ -4,6 +4,8 @@ Use these modules only in development and tests.
 The production Worker does not import them.
 They use the same contracts as the real API.
 The fixtures reuse the mockup data and keep all dates deterministic.
+Workspace records include their number and canonical link on `FAKE_ORIGIN`.
+A fixture that changes a workspace ID or org must rebuild its link.
 Use `FAKE_TIME` as the screen's clock when it shows relative times.
 
 ```ts
@@ -49,6 +51,11 @@ The name and the changes get the ages that the mockups draw.
 The failed-repair tests of the Files store, the Files panel, and the workspace screen use these helpers.
 The development pages of the Files screens and of the workspace screen use them too.
 
+`paths: 'masked'` adds the two files of the masked mockups. Their real
+paths hold a fake secret value, and their records carry the labels of the
+mockups as display paths, in the file lists, the reads of the seed script,
+and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
+
 Writes return recorded replies. They do not change backend state.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
@@ -64,6 +71,9 @@ Options select the org role, workspace state, conversation, and GitHub banner st
 Replace a reply to draw a missing login, a first run, or a deleted org.
 The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
 `serveSuspendedAcme(server, role)` in `suspended-org.ts` serves Acme as a suspended org in the org list, and `orgSuspendedBody` is the error body of the API for a write that a suspended org refuses.
+`serveOperator(server)` in `operator.ts` makes the person signed in an operator, and serves the operator replies of the samples: the Overview, the newest orgs and users, and the page of each sample org and user. It returns the replies, so a test can change one. `operatorRequiredBody` is the error body of the API for an operator request of anyone else.
+The operator samples in `fixtures/operator-samples.ts` have the names and the counts of the operator mockups, with an ID for each org and user, and the people of the other fixtures. Each time counts back from the time of the samples. Hexwave is suspended, Pinecrest is deleted, and Dana Kim is suspended. `SAMPLE_IDS` names them.
+`fixtures/operator.ts` builds the replies from the samples and their records: the page of an org or a user, its row in a list, and the Overview with the 30 UTC days up to the day of the read. The dev fake changes the records with Suspend and Lift.
 `macCommands` chooses the Mac commands of the fake workspace, and `onMac` makes the window the Mac app on the Mac of the fake user.
 Without `onMac`, the window is a browser: it has no pairing, and the Mac settings refuse it as the Worker does.
 Each fake record has a `requestKey` from `fakeRequestKey`, which differs from its `requestId` and is safe in an address.
@@ -97,7 +107,8 @@ await view.rerender(<OwnerPicker {...props} workspace={next} />)
 
 - `mount(element)` renders the element inside `act` into a new container on `document.body`.
   It returns `container`, `rerender(element)`, and `unmount()`. Each mounted tree unmounts after its test.
-- `press(element)` clicks the element. `typeText(field, text)` types into an input or a text area, so React sees the change.
+- `press(element)` clicks the element. `typeText(field, text)` types into an input or a text area, so React sees the change. A message field takes the text as `typeMessage` types it.
+- `message-field.ts` acts on the message field of a composer, the chip text field: `focusMessage(field)` moves the focus into the field as Tab does, with no press of the pointer, `typeMessage(field, text)` selects all and types the text, `pasteMessage(field, text)` pastes plain text at the caret through a paste event, `pressInField(field, key)` presses a key, `clearMessage(field)` deletes all the text as Ctrl+A and Backspace do, and `messageText(field)` gives the plain draft with the link of each chip. Each one commits the change of the field, as a browser does before the next input. `asMessageField(element)` checks that an element is such a field, also while it takes no change.
   `pressKey(key)` sends a keydown and a keyup to the focused element. Each runs inside `act`.
   Each fails with a named error when a person cannot use the target. `pressKey` checks the focused element.
 - `byRole(role, name)` gives the one element with the role and exactly the accessible name.
@@ -131,6 +142,7 @@ Replies, timers, and `waitFor` go on.
 - `fake-api.ts` handles requests and records them.
 - `mount.ts` mounts React components in DOM tests, acts as a person does, and waits for a state.
 - `dom-queries.ts` finds shown elements in DOM tests, and says whether a person can use them.
+- `message-field.ts` focuses, types into, pastes into, presses keys in, clears, and reads the message field of a composer.
 - `fake-core-routes.ts` records account, org, settings, section, and member replies.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies.
@@ -142,6 +154,8 @@ Replies, timers, and `waitFor` go on.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `suspended-org.ts` serves Acme as a suspended org, and gives the body of an `org_suspended` refusal.
+- `operator.ts` serves the operator section of the samples, and gives the body of an `operator_required` refusal.
+- `fixtures/operator-samples.ts` and `fixtures/operator.ts` give the sample orgs and users of the operator section, and build its replies.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.

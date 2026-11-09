@@ -16,6 +16,7 @@ import type { OrgSummary } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
 import type { Workspace, WorkspaceResponse } from '../../shared/workspaces'
 import { coreFixtures } from '../../test-support/fixtures/core'
+import type { OperatorRecords } from '../../test-support/fixtures/operator'
 
 /** The start steps and the start error of one workspace. */
 export type StartRecord = Pick<WorkspaceResponse, 'start' | 'error'>
@@ -27,6 +28,7 @@ export interface OrgState {
   sections: readonly Section[]
   /** In the order of the workspace list. */
   workspaces: readonly Workspace[]
+  workspaceNumberCount: number
   starts: Map<string, StartRecord>
   /** The workspaces that the fake made. The recorded server has no replies for them. */
   created: Set<string>
@@ -34,6 +36,8 @@ export interface OrgState {
   running: Map<string, () => void>
   repositories: readonly Repository[]
   settings: OrgSettings
+  settingsRevision: number
+  buildRevisions: Map<string, number>
   /** Each build with its log, the newest first. */
   builds: readonly BuildResponse[]
   currentImageBuildId: string | null
@@ -52,6 +56,11 @@ export interface DevState {
   attachments: Map<string, Attachment>
   /** The wait before an open workspace stops, from `stop=<seconds>`. */
   stopAfterMs: number | null
+  /**
+   * The suspensions and deletions of the sample orgs and users of the
+   * operator section, which Suspend and Lift change.
+   */
+  operator: OperatorRecords
   /** Each change of a share setting fails, from `shareSave=fail`. */
   shareSaveFails: boolean
 }
@@ -97,6 +106,7 @@ export function freshOrg(
     org,
     sections: [{ ...general, orgId: org.id, position: 0, collapsed: false }],
     workspaces: [],
+    workspaceNumberCount: 0,
     starts: new Map(),
     created: new Set(),
     running: new Map(),
@@ -110,11 +120,25 @@ export function freshOrg(
       needsBuild: false,
     },
     builds: [],
+    settingsRevision: 1,
+    buildRevisions: new Map(),
     currentImageBuildId: null,
     members: {
       members: [{ user, role: org.role, joinedAt: now }],
       invites: [],
     },
+  }
+}
+
+export function updateNeedsBuild(org: OrgState): void {
+  const baseline =
+    org.currentImageBuildId ??
+    org.builds.find((item) => item.build.kind === 'build')?.build.id
+  const revision =
+    baseline === undefined ? undefined : org.buildRevisions.get(baseline)
+  org.settings = {
+    ...org.settings,
+    needsBuild: revision !== undefined && revision !== org.settingsRevision,
   }
 }
 

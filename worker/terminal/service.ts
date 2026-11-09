@@ -6,13 +6,14 @@ import { ProviderError } from '../sandbox/errors'
 import { warnWorker } from '../warnings'
 import type { SandboxProvider } from '../sandbox/provider'
 import { cacheTerminalPassword } from './credentials'
-import { privilegedCommand } from './privileged'
+import { privilegedCommand, shellArgument } from './privileged'
 import {
   credentialScript,
   launcherScript,
   sessionServerScript,
   TERMINAL_RUNTIME,
   TERMINAL_RUNTIME_VIEW,
+  TERMINAL_RESTORE_MARKER,
 } from './scripts'
 
 export const TERMINAL_PORT = 7681
@@ -90,6 +91,18 @@ export async function installTerminalService(
   sandboxId: string,
 ): Promise<void> {
   const result = await provider.runCommand(sandboxId, terminalInstallCommand())
+  if (result.exitCode !== 0 || result.timedOut)
+    throw new ProviderError('unavailable', 502)
+}
+
+export async function markTerminalRestoreEnded(
+  provider: Pick<SandboxProvider, 'runCommand'>,
+  sandboxId: string,
+): Promise<void> {
+  const result = await provider.runCommand(
+    sandboxId,
+    privilegedCommand(`touch ${shellArgument(TERMINAL_RESTORE_MARKER)}`),
+  )
   if (result.exitCode !== 0 || result.timedOut)
     throw new ProviderError('unavailable', 502)
 }

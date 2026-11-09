@@ -3,7 +3,7 @@ import {
   FILE_TREE_DELTA_MAX_CHANGES,
   type RunnerFileEvent,
 } from '../../src/shared/files'
-import { jsonBytes } from './event-limits'
+import { jsonBytes } from '../../src/shared/event-limits'
 
 /** Reserve the complete empty event, then add whole serialized entries. */
 function groups<T>(

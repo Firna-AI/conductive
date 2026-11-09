@@ -3,13 +3,9 @@ import { FileBox, FileDiff } from 'lucide-react'
 import type { FilesClient } from '../api/files-client'
 import { DiffView } from '../diff/DiffView'
 import { parsePatch } from '../diff/parse-patch'
+import { labelName, pageLabel } from '../model/file-labels'
 import type { WorkspaceFiles } from '../model/files-store'
-import {
-  splitPath,
-  type DiffTab,
-  type FilesLayout,
-  type FilesNavigation,
-} from '../navigation'
+import type { DiffTab, FilesLayout, FilesNavigation } from '../navigation'
 import { useFilesSnapshot } from '../panel/FilesPanel'
 import { ActionLink } from '../ui/actions'
 import { DiffStat } from '../ui/DiffStat'
@@ -48,6 +44,7 @@ export function DiffPage(props: {
   const { state, retry } = useFollowed(files, readDiff, tab.path)
   const actions = useFileActions(files.client, tab.path, props.targets)
   const diff = state?.status === 'ready' ? state.value : null
+  const label = pageLabel(snapshot, tab.path, 'diff', diff)
   const rows = useMemo(() => (diff ? parsePatch(diff.patch) : []), [diff])
   const failed = state?.status === 'failed' ? state.error.kind : null
   const deleted =
@@ -86,7 +83,7 @@ export function DiffPage(props: {
   return (
     <LayoutRoot
       className={styles.page}
-      label={splitPath(tab.path).name}
+      label={labelName(label)}
       layout={props.layout}
     >
       <PageHeader
@@ -104,6 +101,7 @@ export function DiffPage(props: {
         }
         navigation={props.navigation}
         onCopy={newText === null ? undefined : () => actions.copy(newText)}
+        label={label}
         onDownload={download}
         path={tab.path}
         status={actions.status}

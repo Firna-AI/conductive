@@ -3,6 +3,7 @@ import { Check, FolderGit2, Plus, Search, X } from 'lucide-react'
 import type { ReachableRepository } from '../../fixtures/repositories'
 import { noop } from '../../noop'
 import { ActionButton, IconButton } from '../common/actions'
+import { EmptyState } from '../common/EmptyState'
 import { ExternalLink } from '../common/ExternalLink'
 import { useControlSizes } from '../common/touch'
 import styles from './RepositoryList.module.css'
@@ -42,13 +43,26 @@ function Row(props: { repository: ReachableRepository; readOnly?: boolean }) {
 
 /**
  * The repositories that the shared GitHub App can reach, with the ones that
- * the org uses marked as added. A search narrows the list.
+ * the org uses marked as added. A search narrows the list. When the app
+ * reaches no repository, the list asks for access, with Manage access.
  */
 export function RepositoryList(props: {
   repositories: readonly ReachableRepository[]
   search: string
 }) {
   const { field } = useControlSizes()
+  if (props.repositories.length === 0) {
+    return (
+      <EmptyState
+        action={
+          <ExternalLink href={githubAccessUrl}>Manage access</ExternalLink>
+        }
+        body="The repositories that the GitHub App can reach show here."
+        icon={FolderGit2}
+        title="Give the GitHub App access to a repository"
+      />
+    )
+  }
   return (
     <div className={styles.picker}>
       <InputFrame

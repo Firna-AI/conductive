@@ -5,7 +5,7 @@ import {
   type OrgSettings,
   type UpdateOrgSettingsRequest,
 } from '../shared/org-settings'
-import { readBuildResponse, readSettings } from './api/read-settings'
+import { readSettings } from './api/read-settings'
 import { BuildLogFollower, type BuildLog } from './build-log-follower'
 import type { Delay } from './events'
 import { latestBuild, type OrgModel } from './org-model'
@@ -41,9 +41,9 @@ interface Following {
 }
 
 /**
- * The Cloud computer tab: the scripts, the env var names, the builds, and
- * the log of the newest build. Env var values are write-only: a write
- * carries a value, and no answer brings one back.
+ * The Cloud computer tab: the scripts, the env var names with their Secret
+ * marks, the builds, and the log of the newest build. Env var values are
+ * write-only: a write carries a value, and no answer brings one back.
  */
 export class ComputerModel {
   readonly settings: Readable<Loadable<OrgSettings>>
@@ -171,9 +171,27 @@ export class ComputerModel {
     )
   }
 
-  /** Sets the value of a variable. The value goes out and never comes back. */
-  setEnvVar(name: string, value: string): Promise<void> {
+  /**
+   * Sets the value and the Secret mark of a variable, as Add variable
+   * does. The value goes out and never comes back.
+   */
+  setEnvVar(name: string, value: string, secret: boolean): Promise<void> {
+    return this.write({ envVars: [{ operation: 'set', name, value, secret }] })
+  }
+
+  /**
+   * Replaces only the value of a variable. The write sends no mark, so the
+   * Worker keeps the mark that it stores when it applies the write, and a
+   * name that it does not know starts secret. The value goes out and never
+   * comes back.
+   */
+  replaceEnvVar(name: string, value: string): Promise<void> {
     return this.write({ envVars: [{ operation: 'set', name, value }] })
+  }
+
+  /** Sets only the Secret mark of a variable. No value goes out or back. */
+  classifyEnvVar(name: string, secret: boolean): Promise<void> {
+    return this.write({ envVars: [{ operation: 'classify', name, secret }] })
   }
 
   removeEnvVar(name: string): Promise<void> {
@@ -181,22 +199,14 @@ export class ComputerModel {
   }
 
   /**
-   * Build computer, and Try again after a failed build. The new build goes
-   * to the builds, so a tab that shows follows its log. A build that ended
-   * already reads the builds again while the tab shows.
+   * Build computer, and Try again after a failed build, as
+   * `OrgModel.startBuild` sends them. A tab that shows follows the log of
+   * the new build. A build that ended already reads the builds again only
+   * while the tab shows.
    */
-  async startBuild(): Promise<void> {
+  startBuild(): Promise<void> {
     const run = this.generation
-    const started = await this.api.send(
-      'POST',
-      orgSettingsPaths.builds(this.org.orgId),
-      {},
-      readBuildResponse,
-    )
-    this.org.putBuild(started.build)
-    if (run === this.generation && started.build.state !== 'running') {
-      void this.org.reload('builds')
-    }
+    return this.org.startBuild(() => run === this.generation)
   }
 
   /**

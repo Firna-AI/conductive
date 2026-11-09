@@ -5,10 +5,14 @@ import type {
 } from '../../src/shared/runner-transport'
 import { checkpoint, changedSince } from './checkpoint'
 import { AgentEngine } from './engine'
-import { boundChatEvent } from './event-limits'
+import { boundChatEvent } from '../../src/shared/event-limits'
+import {
+  filterDiffResponse,
+  filterFileResponse,
+} from '../../src/shared/output-fields'
 import { FileReporter } from './files'
 import { RunnerLink } from './link'
-import { OutputSanitizer } from './output-sanitizer'
+import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 import { Repository } from './repository'
 import { SerialQueue } from './serial-queue'
 import { workspaceToolRuntime } from './providers/workspace-tools'
@@ -91,7 +95,32 @@ export class Runner {
         const action =
           command.type === 'file.read' || command.type === 'file.diff'
             ? this.files.request(command).then((response) => {
-                this.link.reply(response)
+                const text = (value: string) => this.sanitizer.text(value)
+                if (response.result.ok)
+                  this.link.reply(
+                    response.type === 'file.read.result'
+                      ? {
+                          ...response,
+                          result: {
+                            ok: true,
+                            file: filterFileResponse(
+                              response.result.file,
+                              text,
+                            ),
+                          },
+                        }
+                      : {
+                          ...response,
+                          result: {
+                            ok: true,
+                            diff: filterDiffResponse(
+                              response.result.diff,
+                              text,
+                            ),
+                          },
+                        },
+                  )
+                else this.link.reply(response)
               })
             : command.type === 'report.refresh'
               ? this.refresh(command)

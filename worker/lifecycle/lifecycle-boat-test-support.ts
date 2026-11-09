@@ -32,6 +32,7 @@ export class LifecycleBoat {
   failStop = false
   stopReplyState: SandboxState = 'archived'
   failDeadline = false
+  hydrated: boolean | undefined
   lostCreateReplies = 0
   afterLostCreate?: () => Promise<void>
   beforeSandboxRead?: (sandboxId: string) => Promise<void>
@@ -243,7 +244,11 @@ export class LifecycleBoat {
     return Response.json({
       ok: true,
       type: 'sandbox.info',
-      sandbox: { id, state: this.states.get(id) ?? 'ready' },
+      sandbox: {
+        id,
+        state: this.states.get(id) ?? 'ready',
+        hydrated: this.hydrated,
+      },
     })
   }
 }

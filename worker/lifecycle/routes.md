@@ -52,15 +52,17 @@ readiness, and the stop cleanup of a failed resume.
 - A create needs a published org image and a repository that its build
   loaded. A change to the chosen repositories takes effect after the next
   successful build. A repeat of the same first message ID from the same
-  sender returns the same workspace, until that create fails.
-- A failed create keeps the full first message, with its attachment IDs,
-  as a hidden draft, and records the sandbox cleanup. It then releases the
-  creation claim and publishes the failed `start.updated` and the error
-  `workspace.updated`. After that, it removes the workspace and its token
-  records. `failedLifecycleCreation` finds the draft for the event replay
-  and the org purge. Lifecycle cleanup leaves the attachments to their owner.
-- A retry gets a fresh workspace ID with the same first message ID. Its
-  start waits until the records of the failed attempt are gone.
+  sender returns the same admitted workspace, including after a failed start.
+- A failed admitted create keeps its workspace, chat, first message, and
+  queued messages. Each current member can read the saved cause and history.
+  Failure revokes the token and detaches the failed sandbox after saving cleanup ownership.
+  Lifecycle cleanup leaves the attachments to their owner.
+- Try again uses the Resume route. It queues a replacement create in the
+  same workspace, with the same branch and first-message identities.
+  The replacement pins the current published image for its repository.
+  It gets a fresh allocation key, token, command journal, and start deadline.
+  Known and uncertain cleanup finish before the replacement allocates.
+  A failure before first-message acceptance can remove provisional records.
 - The [member checkpoint adapter](../members/creation-checkpoint.ts) retains a create that Delete interrupted, before or after allocation.
   The production resume route continues that create when the workspace opens after Restore.
   It keeps the allocation attempt, the first message, and the sender. It renews a revoked workspace token.
@@ -129,13 +131,19 @@ in the chat queue, as
 [The git credential sender](workspace-object.md#the-git-credential-sender)
 says, with its tests.
 
+For the GitHub CLI outside an agent turn, the helper omits the turn header.
+The handler then selects the workspace owner in its authorized D1 read.
+A present but invalid turn header still fails, without an owner fallback.
+
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
 It stores no token. A user without a stored GitHub token must sign in again.
 One response helper runs the same authorization before token resolution and after its last wait.
-Each authorization reads the trusted sender through `credentialSender`.
+Each authorization reads the trusted turn sender through `credentialSender`,
+or the workspace owner for a request without a turn header.
 Its final D1 read in [`machine-credential-data.ts`](machine-credential-data.ts) checks the shared workspace token rule, sender membership, and sender suspension together.
 The handler does no asynchronous work between that final read and the reply.
+It also checks that both authorizations selected the same person.
 
 `createApp` in [`worker/application.ts`](../application.ts) routes
 `MACHINE_PATHS.gitCredential` to this handler, and

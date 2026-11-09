@@ -58,6 +58,26 @@ export function parseRunnerEnvelope(
   input: IncomingRunnerEnvelope,
 ): RunnerEventEnvelope {
   checkRunnerEnvelopeBytes(input.raw)
+  return parseRunnerPayload(input)
+}
+
+/** File display labels can grow after the raw transport checks have passed. */
+export function parseRunnerOutputEnvelope(
+  input: RunnerEventEnvelope,
+): RunnerEventEnvelope {
+  const parsed = parseRunnerPayload(input)
+  if (
+    parsed.event.type !== 'files.snapshot' &&
+    parsed.event.type !== 'files.changed' &&
+    parsed.event.type !== 'changes.updated'
+  )
+    checkRunnerEnvelopeBytes(input)
+  return parsed
+}
+
+function parseRunnerPayload(
+  input: Omit<IncomingRunnerEnvelope, 'raw'>,
+): RunnerEventEnvelope {
   const event = parseOtherEvent(input.event) ?? parseAgentEvent(input.event)
   checkRunnerEventLimits(event)
   return {

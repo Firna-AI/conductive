@@ -61,24 +61,3 @@ export function textBlocks(text: string): TextBlock[] {
   if (code) blocks.push({ kind: 'code', text: code.join('\n') })
   return blocks
 }
-
-export type InlinePart =
-  | { kind: 'text'; text: string }
-  | { kind: 'code'; text: string }
-  | { kind: 'strong'; text: string }
-
-/** Splits a line into plain text, `code`, and **strong** parts. */
-export function inlineParts(text: string): InlinePart[] {
-  const parts: InlinePart[] = []
-  text.split('`').forEach((piece, index) => {
-    if (index % 2 === 1) {
-      parts.push({ kind: 'code', text: piece })
-      return
-    }
-    piece.split('**').forEach((run, inner) => {
-      if (run !== '')
-        parts.push({ kind: inner % 2 === 1 ? 'strong' : 'text', text: run })
-    })
-  })
-  return parts
-}

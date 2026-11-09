@@ -47,6 +47,9 @@ command start. For a workspace object, it:
 - extends the Boat auto-stop deadline while a turn runs, and applies the
   state in that reply even when the saved runner flag says connected
 - reads the sandbox state from Boat while the runner is not connected
+- watches the restore after each create and resume until Boat reports its
+  end, or until a stop, an error, an archive, or a new start, as
+  [Creates and resumes](#creates-and-resumes) says
 - runs the disk retention restart 13 days after each confirmed stop
 - retries the sandbox delete of a failed create
 - recovers and deletes an unresolved allocation after a start reaches its limit
@@ -74,15 +77,11 @@ The `fetch` of the class opens the workspace event socket at
 upgrade request without changes, because the object runs the browser gate
 itself. The socket sends the stored history first, then each new event.
 
-After a failed create removes its records, `failedCreationEvents` in
-[`failed-creation-events.ts`](failed-creation-events.ts) serves that path
-only to the sender of the first message, after the browser gate. It sends
-each page of the stored public history once, with the `message.accepted`
-event of the first message, and then closes. All pages share one cutoff,
-and they go out in one task of the chat queue. The browser does not
-restore the composer from this replay. The tab that sent the create keeps
-its first message in memory, as
-[Creation recovery](../../src/app/creation-recovery.md) says.
+An admitted failed create keeps its workspace and normal event socket.
+Every current member can read its chat, queued messages, and saved cause.
+There is no sender-only replay or returned first-message draft.
+The first-message transaction stores its admission marker beside the chat.
+That marker preserves accepted work if the later lifecycle checkpoint fails.
 
 `WorkspaceEventJournal` in [`durable-journal.ts`](durable-journal.ts) keeps
 ordered lifecycle publication and suppresses unchanged updates. The
@@ -117,6 +116,19 @@ create and resume. The workspace object runs that start:
 - Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
+- After a failed first start, Resume instead queues a replacement create.
+  It keeps the workspace, branch, repository, creation date, and first-message IDs.
+  It uses the current image and settings, with a fresh token and allocation key.
+  It keeps the original preparation sender and the current retry requester separate.
+  Previous cleanup finishes before new allocation, including after a restart.
+  Archive preserves a pending failed-computer cleanup alarm.
+- A failed first start keeps its alarm while a start, outcome publication,
+  or failed-computer cleanup is pending. Later lifecycle writes preserve that work.
+  After cleanup and publication finish, it schedules no normal lifecycle alarm.
+- An active create failure always leaves a failed start step.
+  Its running steps become failed before the workspace error event is published.
+  If no step is running or failed, the controller records the failed start itself.
+  A later sandbox error after successful creation adds no such step.
 - Each start gives the sandbox the default branch of its repository. It
   gives no setting for the computer tools, because Boat writes the entry
   of the `computer` server into the sandbox, as
@@ -132,6 +144,33 @@ create and resume. The workspace object runs that start:
   The shared success path prepares the lifecycle only after its final
   access, cancellation, and deadline checks. That lifecycle write restores
   the alarm before the job saves success, also after a runner-phase restart.
+- The first lifecycle prepare of each create and resume also starts the
+  restore watch. After a start from a saved snapshot, Boat downloads the
+  file content in the background. The
+  [terminal backend](../terminal/README.md) moves an early shell only after
+  that restore ends. The alarm reads the sandbox with
+  `checkWorkspaceRestore` 5 seconds after the prepare, and then every
+  5 seconds. `restoreWatchAt` in the lifecycle state keeps the time of the
+  next read. When the watch is due, its read takes the place of the Boat
+  state read of that alarm.
+  - A reply with `hydrated: false` keeps the watch.
+  - A reply with `hydrated: true`, or without `hydrated`, ends the watch.
+    The watch then writes the restore marker of the terminal with
+    `markTerminalRestoreEnded`. Boat's schema makes the field optional,
+    and Boat says that a sandbox that restored nothing is hydrated from
+    the start.
+  - A stopped or error state ends the watch, and the alarm applies that
+    state as the Boat state read does. A stopping state, such as
+    `archiving`, also ends the watch. Neither writes the marker.
+  - A Boat error or a failed marker command keeps the watch. The alarm
+    error handling tries again in 30 seconds.
+  - A stop, an error, an archive, or a new start ends the watch. An access
+    stop, such as at an org suspension, also ends it when Boat still runs
+    the sandbox and the stop waits for a retry. The watch has no deadline
+    of its own, so it can last until a stop, such as the idle stop after 30
+    minutes without activity.
+  - A disk retention restart starts no watch, because it starts no
+    terminal.
 - A failed or cancelled resume records its result separately from its
   stop cleanup. Native lifecycle state keeps the pending stop across
   restarts. The lifecycle retries the existing stop operation every 30

@@ -130,6 +130,14 @@ Later screens add the frame and connection sources that they need.
   this section do.
 - A request reaches an org, its workspaces, and their sandboxes only for a
   member of that org.
+- An operator is the one exception. An operator can suspend or lift any
+  user or org, as [Operator actions](operator-actions.md) says. In the
+  [operator section](operator-section.md#what-the-section-shows), an
+  operator also reads counts, names, IDs, dates, roles, and states across
+  every org (decisions 142, 144, and 147).
+- The operator section shows no chat, file, env value, agent login, or
+  email address. Its org search takes the ID of a cloud computer or a
+  preview address only to find its org.
 - An open tab loses its workspace connection within 30 seconds after its
   user loses access: a removal from the org, a sign-out, or a deleted
   org (decision 70). The workspace checks the access of its open tabs
@@ -273,10 +281,12 @@ Later screens add the frame and connection sources that they need.
 ## The workspace token
 
 - Each workspace has its own workspace token.
-- With the token, the sandbox of the workspace can do four things:
+- With the token, the sandbox of the workspace can do five things:
   - connect its agent runner to the Durable Object of its own workspace
   - get a GitHub token for its own workspace
   - create and list workspaces through the agent tools
+  - list the repositories of its org image, the sections of its org, and
+    the models of the app, through the agent tools
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
 - The token allows nothing else. It can never answer a request for a Mac
@@ -293,54 +303,58 @@ Later screens add the frame and connection sources that they need.
 
 ## GitHub tokens
 
-- The git credential helper asks the Worker for a fresh GitHub token for
-  each git operation, at `/v1/git/credential` on `api.conductive.build`.
-  It proves itself with the workspace token.
-- Reason: a GitHub App user token expires after 8 hours, and the secrets
-  of a sandbox change only at a resume.
-- The token is a GitHub App user token of the person who sent the current
-  turn, so pushes and pull requests show as that person (decision 50).
-  The helper gets it fresh for each call, and the sandbox never stores
-  it.
-- A user token reaches every repository where that person installed the
-  GitHub App and has access.
-- A build or a refresh copies each repository of the image with Git in the
-  build sandbox (decision 90). Each copy uses its own GitHub App
-  installation token, which can only read the contents of that one
-  repository.
-- The Worker gives the token only to the Git command of that copy. The
-  Worker and Git do not write it to command text, command history, a
-  remote URL, a Git config, a file, or a saved snapshot.
-- The Git command gets the token with a one-use build grant. The grant
-  works once, and only for its own build and repository.
-- The Worker revokes the token as soon as the Git command ends, also when
-  the command fails. The build goes on only after GitHub confirms the
-  revocation. The build starts no checkout, software step, install script,
-  snapshot, or other repository code before that.
-- Risk: a build sandbox starts from the last org image. A program with root
-  access that an earlier install left in that image can read the clone
-  token of a later copy. That token can only read its own repository, which
-  the image already holds. The Worker revokes it when the copy ends.
-- Reason: Git in the build sandbox copies a repository of any size, and the
-  Git data does not pass through the Worker. Larger uploads and stored
-  progress were rejected, because one repository or one Git response must
-  still fit in one Worker job. A Git proxy in the Worker and a Workflow
-  were rejected, because each puts a new service in the path of the Git
-  data.
-- A workspace sandbox never gets an installation token. Its Git gets
-  GitHub tokens only from the git credential helper.
+[GitHub tokens](github-tokens.md) states the rules for Git, the GitHub CLI,
+and repository copies in image builds and refreshes.
+The GitHub CLI works outside an agent turn with the workspace owner's account.
 
 ## Secrets that users enter
 
 - The app stores the env var values and the agent logins encrypted.
-- The values of env vars are write-only. The browser never gets a stored
-  value back.
-- Agent output can show an env var value. The output filter of the runner
-  hides only the workspace token and the agent logins. So a value that an
-  agent repeats stays in the chat history, and each reader of the chat
-  sees it (decision 133).
-- A start log hides each env var value of the org, also a short value,
-  before the app shows the log (decision 133).
+- The values of env vars are write-only. The settings never return a
+  stored value to the browser, whatever the mark of the env var.
+- An admin marks each env var of the org as secret or not secret
+  (decision 133). Each env var is secret until an admin clears its mark.
+  The value of a secret env var is a secret value.
+- An admin can change the mark of an env var without a new value.
+- A changed mark applies at the next start of each sandbox, as a changed
+  value does. The chat history and the start logs from before that start
+  keep their text.
+- The Durable Object of the workspace hides each exact copy of a secret
+  value in the text that screens show from each runner event. It does
+  this before it checks, stores, or sends the event. It uses the values
+  and the marks of the last start of the sandbox.
+- The Durable Object does this for each runner, also for an older runner
+  from an org image or a saved disk. It also hides a copy that consecutive
+  text events of one answer split.
+- Reason: an org image or a saved disk can hold an older runner. A filter
+  of secret values in the runner was rejected, because an older runner
+  does not have it.
+- The app keeps the real path of each file and the real name of the
+  default branch. Reads, diffs, and the file lists use them. The browser
+  gets these real values, so a secret value can show in the data that the
+  browser gets and sends (decision 145).
+- Screens show a separate label of each path and branch name. The label
+  hides each exact copy of a secret value.
+- Reason: a hidden path or branch name names nothing real, and two hidden
+  paths can become equal. File IDs in place of real paths were rejected,
+  because they change the file API.
+- The runner hides the workspace token and the agent logins in the text
+  that screens show, before it saves or sends an event.
+- A start log hides each exact copy of a secret value and of the workspace
+  token before a browser gets it.
+- The app does not hide the value of an env var that is not secret. So
+  each reader of the chat or of a start log can see such a value.
+- Reason: the admin knows which values are secrets. A length rule, where
+  only values of 8 or more characters count, was rejected, because it
+  guesses. A mask of every value was rejected, because it also hides
+  short, common values, such as `1`, in ordinary text.
+- Risk: the app hides only exact copies of a value. A changed or encoded
+  value still shows. File content, diff content, and the terminal hide no
+  value.
+  The mark does not keep a value from the agent or from a member with a
+  terminal, because each sandbox gets every env var.
+- Risk: the runner does not hide secret values. So its saved events on the
+  disk of the sandbox can hold them, as the agent sessions there do.
 
 ## Agent logins
 

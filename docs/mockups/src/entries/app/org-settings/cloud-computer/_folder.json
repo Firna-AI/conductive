@@ -1,1 +1,11 @@
-{ "order": ["building", "build-failed", "script-changed", "member"] }
+{
+  "order": [
+    "building",
+    "build-failed",
+    "first-build",
+    "script-changed",
+    "add-variable",
+    "change-value",
+    "member"
+  ]
+}

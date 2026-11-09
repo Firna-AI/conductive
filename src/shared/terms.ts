@@ -1,6 +1,6 @@
 import { API_PATHS } from './api'
 
-export const TERMS_VERSION = '2026-11-08-login-sharing'
+export const TERMS_VERSION = '2026-11-09-legal-github-cli'
 export const TERMS_VERSION_PARAMETER = 'terms_version'
 
 export function acceptedTermsSignInPath(): string {

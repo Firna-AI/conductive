@@ -8,6 +8,7 @@
       "entry": [
         "src/**/dev/main.tsx",
         "src/files/markdown/markdown-worker.ts",
+        "src/marketing/pages/**/*.astro",
         "tools/main.ts",
         "image/*.mjs",
         "image/live-main.ts",
@@ -21,7 +22,7 @@
         "docs/mockups/src/render.tsx",
       ],
       "project": [
-        "src/**/*.{ts,tsx}",
+        "src/**/*.{ts,tsx,astro}",
         "worker/**/*.{ts,mjs}",
         "tools/**/*.ts",
         "image/*.{ts,mjs}",

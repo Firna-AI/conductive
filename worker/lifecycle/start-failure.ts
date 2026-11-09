@@ -19,6 +19,9 @@ import { markCreationFailed } from './creation-attempt-data'
 import { startTimeLimitReached } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { WorkspaceStartError } from './workspace-start'
+import { revokeWorkspaceToken } from './tokens'
+import { creationAdmissionResponse } from './creation-admission-response'
+import { detachFailedSandbox } from './failed-workspace-data'
 
 export type ResumeStartFailure = (
   error: { code: string; message: string; log: null },
@@ -89,19 +92,16 @@ export async function finishFailedStart(
       error: { code: failure.code, message: failure.message, log: null },
     }
   }
-  await endpoint.retainLifecycleFailedCreation(
-    { code: failure.code, message: failure.message, log: null },
-    job.creation
-      ? {
-          workspaceId: job.workspaceId,
-          orgId: job.orgId,
-          senderUserId: job.creation.sender.id,
-          sessionId: job.creation.sessionId,
-          turnId: job.turnId,
-          request: job.creation.request,
-        }
-      : undefined,
-  )
+  const first = await storage.firstMessage()
+  const accepted =
+    job.phase !== 'records' ||
+    Boolean(first || (await endpoint.readLifecycle()))
+  if (accepted && job.phase === 'records')
+    await storage.update({
+      ...job,
+      phase: 'machine',
+      admission: await creationAdmissionResponse(env, endpoint, job, first),
+    })
   const row = await env.DB.prepare(
     'SELECT sandbox_id AS sandboxId FROM workspaces WHERE id = ? AND org_id = ?',
   )
@@ -109,7 +109,6 @@ export async function finishFailedStart(
     .first<{ sandboxId: string | null }>()
   let sandboxId = job.allocatedSandboxId ?? row?.sandboxId
   let cleanupPending = false
-  let allocationDeferred = false
   if (!sandboxId && job.createPayloadCiphertext) {
     const canDefer = () =>
       job.failure?.timeLimit || startTimeLimitReached(job, now())
@@ -129,7 +128,6 @@ export async function finishFailedStart(
       if (!canDefer()) return null
       await storage.deferAllocationCleanup(job)
       cleanupPending = true
-      allocationDeferred = true
     }
   }
   if (sandboxId)
@@ -138,34 +136,39 @@ export async function finishFailedStart(
       orgId: job.orgId,
       sandboxId,
     })
+  await revokeWorkspaceToken(env.DB, job.workspaceId, now())
+  await detachFailedSandbox(
+    env.DB,
+    job.orgId,
+    job.workspaceId,
+    sandboxId ?? null,
+  )
   await markCreationFailed(env.DB, job.workspaceId)
-  if (await endpoint.readLifecycle())
+  if (accepted)
     await endpoint.lifecycleFailed({
       code: failure.code,
       message: failure.message,
       log: null,
     })
-  await endpoint.clearLifecycle()
-  await deleteProvisionalWorkspace(env.DB, job.orgId, job.workspaceId)
+  else {
+    await endpoint.clearLifecycle()
+    await deleteProvisionalWorkspace(env.DB, job.orgId, job.workspaceId)
+  }
   if (sandboxId) {
     try {
       if (!provider) throw new Error('Provider unavailable')
       await deleteSandboxIfPresent(provider, sandboxId)
-      await clearSandboxCleanup(env.DB, job.workspaceId)
+      await clearSandboxCleanup(env.DB, job.workspaceId, sandboxId)
     } catch {
       cleanupPending = true
     }
   }
   if (cleanupPending) await endpoint.retryFailedCreateCleanup(job.workspaceId)
-  const reportCleanup =
-    cleanupPending && !allocationDeferred && !job.failure?.timeLimit
   return {
     ok: false,
     error: {
-      code: reportCleanup ? 'workspace_cleanup_pending' : failure.code,
-      message: reportCleanup
-        ? 'The cloud computer could not start. Its cleanup will retry. Try again later.'
-        : failure.message,
+      code: failure.code,
+      message: failure.message,
       log: null,
     },
   }

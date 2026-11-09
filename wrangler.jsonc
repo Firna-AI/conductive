@@ -10,6 +10,7 @@
   // The other public variables of docs/deployment.md are set on the Worker
   // itself, so that each deploy keeps them.
   "keep_vars": true,
+  "ai": { "binding": "AI" },
   // Workers Logs keeps each log line, also of the workspace objects.
   "observability": {
     "enabled": true,
@@ -26,6 +27,7 @@
   "vars": {
     "MACHINE_ORIGIN": "https://api.conductive.build",
     "PREVIEW_DOMAIN": "conductive.page",
+    "CONDUCTIVE_TITLE_MODEL": "@cf/ibm-granite/granite-4.0-h-micro",
   },
   "assets": {
     "binding": "ASSETS",

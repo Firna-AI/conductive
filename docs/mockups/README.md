@@ -2,9 +2,8 @@
 
 The mockups are the visual spec of the app, in the browser and in a Mac app.
 Each workspace is a cloud sandbox with its own branch. It has a chat with
-coding agents, files, a terminal, port previews, a live desktop, and a pull
-request bar. The mockups also draw the marketing site, which shows the app to
-visitors.
+coding agents, files, a terminal, port previews, and a pull request bar.
+The mockups also draw the marketing site, which shows the app to visitors.
 [Mokly](https://www.npmjs.com/package/@mokly/mokly) renders every screen at
 mobile and desktop sizes, in light and dark, from React components that use
 [`@firna/ui`](https://www.npmjs.com/package/@firna/ui).
@@ -17,14 +16,19 @@ build reads Git and `origin/main` to find what changed. The root `.npmrc`
 sets `legacy-peer-deps`, because npm cannot meet the optional React Native
 peer range of `@firna/ui`.
 
-| Command                     | What it does                                                    |
-| --------------------------- | --------------------------------------------------------------- |
-| `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
-| `npm run mockups:build`     | Validate every view in strict mode, and write `mokly-static/`   |
-| `npm run mockups:typecheck` | Type-check the catalogue sources                                |
-| `npm run mockups:check`     | Run the type check, then the strict build                       |
-| `npm run lint`              | Run ESLint                                                      |
-| `npm run format:check`      | Check the formatting with Prettier                              |
+| Command                      | What it does                                                    |
+| ---------------------------- | --------------------------------------------------------------- |
+| `npm run mockups:serve`      | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
+| `npm run mockups:build`      | Validate every view in strict mode, and write `mokly-static/`   |
+| `npm run mockups:typecheck`  | Type-check the catalogue sources                                |
+| `npm run mockups:check`      | Run the type check, then the strict build                       |
+| `npm run marketing:pictures` | Capture the pictures of the marketing site again                |
+| `npm run lint`               | Run ESLint                                                      |
+| `npm run format:check`       | Check the formatting with Prettier                              |
+
+A change to a screen that a picture of the marketing site shows needs a
+new capture with `npm run marketing:pictures`.
+[Pictures](../../src/marketing/README.md#pictures) gives the steps.
 
 Git ignores the build output, `mokly-static/` and
 `.mokly-export-reservations/`. Each built view is at
@@ -48,7 +52,8 @@ share.
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages, the entries that moved,
-and the child pages of `app/banner` and `app/chat`.
+the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
+`app/chat`, and `app/workspace-links`, and the New workspace dialog.
 
 ## Folder layout
 
@@ -92,6 +97,21 @@ and the child pages of `app/banner` and `app/chat`.
 screens show of orgs and members: the roles, the logins of the sessions,
 the owners of the workspaces, Archive, and Delete org.
 
+No screen shows the value of an env var. Each env var of an org has a
+Secret mark: an admin switches it in the row, and a new variable starts
+secret. A member sees the mark as a word, without a control.
+`src/components/settings/EnvVarParts.tsx` gives the switch and the mark,
+and `envVarCopy.ts` beside it gives the note under the list. The app shares
+both.
+`app/org-settings/cloud-computer`, its `add-variable` and `change-value`
+pages, and its `member` page show them.
+
+A file path can hold a secret value. The lists, the tabs, the page
+headers, and the files of a finished turn then show "[redacted]" in place
+of the value, and each file still opens by its real path. A tab whose file
+name the app does not know shows "File". The `paths` state of the
+workspace screen draws them, as `app/chat/masked-paths` shows.
+
 ## Logins
 
 [Logins](orgs-and-logins.md#logins) gives the agent logins of the account,
@@ -107,4 +127,7 @@ commands that an agent runs on the Mac, and This Mac.
 
 [The marketing site](marketing-site.md) gives the home page and its
 pictures, the Terms, Privacy, and not-found pages, and the page before
-GitHub.
+GitHub. The pictures are captures of real screens, such as the workspace
+screen with its chat and composer. A change to a screen or a shared part
+that a picture shows needs a new capture, with the
+[capture steps](../../src/marketing/README.md#pictures).
