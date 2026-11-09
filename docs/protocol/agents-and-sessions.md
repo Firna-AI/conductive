@@ -99,6 +99,8 @@ says.
 - The history lists the closed sessions, the last closed first. Each entry
   shows the agent of its last message, the title, and the time since it
   closed.
+- The history button shows at the far right of the tab row only while it
+  lists at least one closed session.
 - An entry of the history reopens its session as a tab, with its chat.
 
 ### The tab row

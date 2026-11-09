@@ -5,6 +5,7 @@ export const sitePaths = {
   home: '/',
   terms: '/terms',
   privacy: '/privacy',
+  fromConductor: '/from-conductor',
 } as const
 
 /**
@@ -19,5 +20,6 @@ export function pageHrefs(
     home: href(sitePaths.home),
     terms: href(sitePaths.terms),
     privacy: href(sitePaths.privacy),
+    fromConductor: href(sitePaths.fromConductor),
   }
 }

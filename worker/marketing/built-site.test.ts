@@ -8,14 +8,27 @@ import { promisify } from 'node:util'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
-import { sitePaths } from '../../src/marketing/links'
+import { parityAreas } from '../../src/marketing/from-conductor/areas'
+import {
+  parityLinkCopy,
+  parityPageCopy,
+} from '../../src/marketing/from-conductor/copy'
+import { parityFeatures } from '../../src/marketing/from-conductor/features'
+import { parityStatuses } from '../../src/marketing/from-conductor/statuses'
+import { pageHrefs, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
 import { termsConsentResponse } from './consent'
-import { decodeHtml, inlineStyles, links } from './html.test-support'
+import {
+  decodeHtml,
+  headings,
+  inlineStyles,
+  links,
+  words,
+} from './html.test-support'
 import { siteResponse } from './site'
 
 const SITE = 'https://conductive.test'
@@ -118,8 +131,13 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
   }
 })
 
-it('names no sandbox provider on the home, Terms, and Privacy pages', async () => {
-  for (const path of [sitePaths.home, sitePaths.terms, sitePaths.privacy]) {
+it('names no sandbox provider on the home, legal, and comparison pages', async () => {
+  for (const path of [
+    sitePaths.home,
+    sitePaths.terms,
+    sitePaths.privacy,
+    sitePaths.fromConductor,
+  ]) {
     const response = await get(path)
     expect(response.status, path).toBe(200)
     const page = await response.text()
@@ -133,6 +151,7 @@ it('allows exactly each page inline style hash and serves every file it names', 
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
+    sitePaths.fromConductor,
     '/missing',
   ]) {
     const response = await get(path)
@@ -157,6 +176,54 @@ it('allows exactly each page inline style hash and serves every file it names', 
   expect(new Uint8Array(await icon.arrayBuffer())).toEqual(
     new Uint8Array(await expected.arrayBuffer()),
   )
+})
+
+it('serves the complete Cloud comparison with its public entry links', async () => {
+  const response = await get(sitePaths.fromConductor)
+  expect(response.status).toBe(200)
+  expect(response.headers.get('Set-Cookie')).toBeNull()
+  const page = await response.text()
+  for (const text of [
+    parityPageCopy.title,
+    ...Object.values(parityPageCopy.scope),
+  ]) {
+    expect(words(page)).toContain(text)
+  }
+  const tables = [...page.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/g)]
+  expect(tables).toHaveLength(1)
+  const table = tables[0]?.[1] ?? ''
+  expect(headings(table, 'col')).toEqual(Object.values(parityPageCopy.columns))
+  const groups = [...table.matchAll(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/g)]
+  expect(groups).toHaveLength(parityAreas.length)
+  expect(headings(table, 'rowgroup')).toEqual(
+    parityAreas.map((area) => area.title),
+  )
+  const rows = groups.flatMap(([, body]) =>
+    [...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].map(([, row]) => row),
+  )
+  expect(rows).toHaveLength(parityFeatures.length)
+  for (const id of ['attachments', 'cloud-desktop', 'direct-links']) {
+    const feature = parityFeatures.find((item) => item.id === id)!
+    const row = rows.find((item) =>
+      headings(item, 'row').includes(feature.name),
+    )
+    expect(words(row ?? ''), id).toContain(parityStatuses[feature.status].label)
+    const area = parityAreas.find((item) => item.key === feature.area)!
+    expect(headings(row ?? '', 'row'), id).toEqual([area.title, feature.name])
+  }
+  const home = await (await get(sitePaths.home)).text()
+  const intro = home.slice(0, home.indexOf('<h1'))
+  expect(
+    links(intro).find((link) => link.text === parityLinkCopy.home)?.href,
+  ).toBe(pageHrefs().fromConductor)
+  const footer = home.slice(home.indexOf('<footer'))
+  const product =
+    /<h2\b[^>]*>\s*Product\s*<\/h2>\s*<ul\b[^>]*>([\s\S]*?)<\/ul>/.exec(
+      footer,
+    )?.[1] ?? ''
+  expect(
+    links(product).find((link) => link.text === parityLinkCopy.footer)?.href,
+  ).toBe(pageHrefs().fromConductor)
 })
 
 it('serves the built agreement with Continue and legal links on the given origins', async () => {
