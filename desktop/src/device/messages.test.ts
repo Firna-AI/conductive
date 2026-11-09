@@ -41,3 +41,17 @@ it('rejects malformed or missing command fields before accepting a command recor
   }).replace('"startedAt":null', '"startedAt":1e400')
   expect(workerMessage(nonFinite)).toBeUndefined()
 })
+
+it('accepts a command request whose workspace name is null', () => {
+  expect(
+    workerMessage(
+      JSON.stringify({
+        type: 'command.request',
+        request: command({ workspaceName: null }),
+      }),
+    ),
+  ).toMatchObject({
+    type: 'command.request',
+    request: { workspaceName: null },
+  })
+})

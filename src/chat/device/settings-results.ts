@@ -5,6 +5,7 @@ import type {
 } from '../../shared/device'
 import type { SettingsChange } from './device-api'
 import { equalPairing } from './device-snapshot'
+import { nameLabel } from '../../shared/name-label'
 
 /**
  * The end of one change of the Mac's settings: what the user asked for,
@@ -42,7 +43,9 @@ export function subjectOf(
   const grant = settings.workspaceWindows.find(
     (window) => window.workspaceId === change.workspaceId,
   )
-  return grant?.workspaceName ?? last?.subject ?? change.workspaceId
+  return grant
+    ? nameLabel(grant.workspaceName)
+    : (last?.subject ?? change.workspaceId)
 }
 
 /**
