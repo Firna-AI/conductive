@@ -1,23 +1,30 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs'
 
-if (process.argv[2] !== 'get') process.exit(0)
-const fields = new Map(
-  readFileSync(0, 'utf8')
-    .split('\n')
-    .filter(Boolean)
-    .map((line) => {
-      const split = line.indexOf('=')
-      return [line.slice(0, split), line.slice(split + 1)]
-    }),
-)
-if (fields.get('protocol') !== 'https' || fields.get('host') !== 'github.com')
-  process.exit(0)
+const mode = process.argv[2]
+if (mode !== 'get' && mode !== 'token') process.exit(0)
+if (mode === 'get') {
+  const fields = new Map(
+    readFileSync(0, 'utf8')
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => {
+        const split = line.indexOf('=')
+        return [line.slice(0, split), line.slice(split + 1)]
+      }),
+  )
+  if (fields.get('protocol') !== 'https' || fields.get('host') !== 'github.com')
+    process.exit(0)
+}
 const { CONDUCTIVE_MACHINE_ORIGIN, CONDUCTIVE_TURN_ID, WORKSPACE_TOKEN } =
   process.env
 try {
-  if (!CONDUCTIVE_MACHINE_ORIGIN || !CONDUCTIVE_TURN_ID || !WORKSPACE_TOKEN)
-    throw new Error('Missing current turn')
+  if (
+    !CONDUCTIVE_MACHINE_ORIGIN ||
+    !WORKSPACE_TOKEN ||
+    (mode === 'get' && !CONDUCTIVE_TURN_ID)
+  )
+    throw new Error('Missing credential context')
   const origin = new URL(CONDUCTIVE_MACHINE_ORIGIN)
   if (
     origin.protocol !== 'https:' ||
@@ -34,7 +41,9 @@ try {
     signal: AbortSignal.timeout(30_000),
     headers: {
       Authorization: `Bearer ${WORKSPACE_TOKEN}`,
-      'X-Conductive-Turn-Id': CONDUCTIVE_TURN_ID,
+      ...(CONDUCTIVE_TURN_ID
+        ? { 'X-Conductive-Turn-Id': CONDUCTIVE_TURN_ID }
+        : {}),
     },
   })
   if (!response.ok) throw new Error('Credential request failed')
@@ -47,7 +56,11 @@ try {
     /[\r\n]/.test(value.token)
   )
     throw new Error('Invalid credential')
-  process.stdout.write(`username=x-access-token\npassword=${value.token}\n\n`)
+  process.stdout.write(
+    mode === 'token'
+      ? `${value.token}\n`
+      : `username=x-access-token\npassword=${value.token}\n\n`,
+  )
 } catch {
   process.stderr.write(
     'GitHub access failed. Check the current turn and sign in again.\n',
