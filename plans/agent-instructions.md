@@ -430,8 +430,8 @@ Prove the combined change, review it, and open the pull request.
       instruction work without conflicts. Evidence:
       `.context/agent-instructions/final-main-merge-review.txt`.
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up
       items under `plans/follow-ups/` for the rest, re-review once, and
@@ -444,6 +444,9 @@ Prove the combined change, review it, and open the pull request.
 
 Evidence: `.context/agent-instructions/complete-gate.log`. The combined
 tree includes main `7e23773`.
+
+Implementation commit: `2f368af`, pushed and reviewed with no findings.
+Review: `.context/reviews/conductor/conductor-prompts/round-2-review.md`.
 
 ## Post-merge follow-up (non-blocking)
 
