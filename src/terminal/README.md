@@ -160,5 +160,5 @@ focus reports. These two buttons leave the keyboard on the terminal.
   echo terminal and its held reads.
 
 See [the previews](../previews/README.md), [the desktop](../desktop/README.md),
-[Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md#terminal),
-and [Access and security](../../docs/protocol/access-and-security.md#terminal).
+[Workspaces and sandboxes](../../docs/protocol/workspace-tools.md#terminal),
+and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#terminal).

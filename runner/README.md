@@ -8,7 +8,7 @@ repository.
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It sends numbered events. It gets turns, messages, interrupts, model
 changes, file requests, and report requests.
-[Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner)
+[Chat and events](../docs/protocol/agent-runner.md#the-agent-runner)
 states its requirements, and the
 [shared contracts](../src/shared/README.md) define its messages.
 
@@ -118,7 +118,7 @@ These facts belong to this implementation, not to the protocol docs.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no login and starts no agent.
 - The runner protocol carries no GitHub token.
-  [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
+  [GitHub tokens](../docs/protocol/tokens-and-secrets.md#github-tokens)
   states how a sandbox gets GitHub access.
 
 ## Event limits
@@ -131,7 +131,7 @@ the outbox size check.
 
 The workspace sends a `report.refresh` command when it needs a fresh full
 report of one kind.
-[Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the requirements.
 
 - The runner takes a request without a session or a login. The agents never
@@ -265,11 +265,11 @@ tools that time the first agent start after a resume.
 
 ## Related docs
 
-- [Architecture: sandbox software](../docs/architecture.md#sandbox-software)
-- [Chat and events: the agent runner](../docs/protocol/chat-and-events.md#the-agent-runner)
-- [Chat and events: lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
-- [Access and security: agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
-- [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+- [Architecture: sandbox software](../docs/architecture/components.md#sandbox-software)
+- [Chat and events: the agent runner](../docs/protocol/agent-runner.md#the-agent-runner)
+- [Chat and events: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
+- [Workspaces and sandboxes: files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)
 - [Agent tools: workspace tools](../docs/protocol/agent-tools.md#workspace-tools)
 - [Shared contracts](../src/shared/README.md)

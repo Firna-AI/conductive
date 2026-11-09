@@ -5,7 +5,7 @@ D1 keeps the owner, target, upload deadline, claim revision, and deletion journa
 The browser posts one raw file through the shared upload URL builder.
 The route registry gives the entry and gate the same method, matcher, and byte limit.
 The storage API also accepts decoded bytes independently of the browser transport.
-[Attachments](../../docs/protocol/chat-and-events.md#attachments) gives the requirements.
+[Attachments](../../docs/protocol/messages-and-attachments.md#attachments) gives the requirements.
 
 ## Storage boundary
 

@@ -41,7 +41,7 @@ the lost lines, the turns, and Try again.
   Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
   A marker of an ended turn, of a turn that never started, or without a turn ends nothing.
 - Try again shows only on the failed item that names the retry message of the newest session record, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says. The order of the transcript items gives no permission.
+  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says. The order of the transcript items gives no permission.
   A read-only chat offers no Try again.
 - Each session log takes the `session.updated` records of its session with its other events.
   It keeps the `retryMessageId` of the record with the highest event number as `Transcript.retryMessageId`.

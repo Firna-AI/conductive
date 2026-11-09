@@ -7272,7 +7272,7 @@ requirements in force, so they add no numbered decision.
 - Give production file reads a fixed limit of 5 MiB, or 5,242,880 bytes.
   Reason: the protocol requires a size limit for a file read. Boat's file
   read stops at 5 MiB, so the fallback to it cannot read more.
-  [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
   states the value and its reason.
 - This milestone also owns a minimal public seam in `src/chat` for file
   tabs. The chat takes content that replaces the session chat but keeps
@@ -7283,7 +7283,7 @@ requirements in force, so they add no numbered decision.
 - This milestone also owns a `will-download` policy that lets a trusted
   Download in the Mac app save its file. It also owns the desktop tests
   and `desktop/README.md` of that policy. Other downloads stay cancelled.
-  Reason: [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  Reason: [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
   lets the header of a file tab download the file. The Mac app cancelled
   every download.
 - Add the new forward migration `202611071600_org_initials.sql` in the
@@ -7300,7 +7300,7 @@ requirements in force, so they add no numbered decision.
   workspaces. Reason: a recoverable API failure stays visible, and the
   other routes stay usable. The mockup `app/sign-in/invitations` draws it.
 - The stopped and error workspace mockups keep the saved All files and
-  Changes lists, as [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  Changes lists, as [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
   requires. The tools panel and the composer keep their sandbox notices.
 - The Worker and the Mac build get the same trusted HTTPS desktop stream
   origins in `CONDUCTIVE_FRAME_SOURCES`, with no token and no wildcard
@@ -7971,12 +7971,35 @@ Apply option F of finding 10 of PR #52. Added on 8 November 2026.
 Depends on: 8o, 8p, 15q, 15r. They change the protocol docs that this
 milestone splits.
 
+Status: Complete on `conductor/boat-native-remote-workspaces-milestone-2c`.
+
 Apply the `fix after merge` items of the docs. Added on 8 November 2026.
 
-- [ ] Apply option A of `plans/follow-ups/protocol-docs-split.md`, and
-      delete that item.
-- [ ] Apply option A of `plans/follow-ups/readme-feature-list.md`, and
-      delete that item.
+Design calls by the agents on 9 November 2026:
+
+- Move whole sections in their original order into topic pages. Keep
+  position-dependent sections together, so their words keep their meaning.
+- Move Components out of the architecture doc. Keep Terms, the original
+  introductions, and the existing Flows split, so existing context stays.
+- Promote the headings of Components, Tools of a workspace, and The agent
+  runner to page titles. This follows the Flows page and keeps each anchor.
+- List the topic pages under their entry docs in both doc lists. Include
+  Repository folders, so the lists show every protocol doc.
+- Keep whole-doc links on an entry doc unless their sentence names one
+  moved topic. Change only link targets and keep line breaks, to preserve
+  each sentence and make its change clear.
+- Keep four navigation headings for five links outside the owned paths.
+  This keeps those links valid without an edit outside the scope.
+- Mark the incomplete Mac app with plain text. Add attachments and Mac
+  commands as current key features. Leave the operator pages out of the
+  feature list because only the operator uses them.
+
+- [x] Apply option A of `plans/follow-ups/protocol-docs-split.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-2c`.
+- [x] Apply option A of `plans/follow-ups/readme-feature-list.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-2c`.
+
+Evidence: `.context/milestone-2c/reports/` and `.context/milestone-2c/checks/`.
 
 ## Milestone 15d: Marketing site
 

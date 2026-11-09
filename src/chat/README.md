@@ -179,7 +179,7 @@ members from the models of the app.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says.
+  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says.
 - A failed first start shows the error state and a failed step of the
   create start, as `failedFirstStart` in
   [`../app/first-start.ts`](../app/first-start.ts) says. Its bar sits above
@@ -322,7 +322,7 @@ check in the Mac app.
 ### Related docs
 
 - [Chat and events](../../docs/protocol/chat-and-events.md)
-- [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):
+- [Workspaces and sandboxes](../../docs/protocol/workspace-life.md):
   start steps, stop and resume, and archive.
 - [Architecture](../../docs/architecture.md)
 - [Mockups](../../docs/mockups/README.md): the visual spec.

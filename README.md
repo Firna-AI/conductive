@@ -26,7 +26,8 @@ deployment needs.
 
 ## Features
 
-These features are planned. The protocol docs state each one.
+Conductive has these features. The protocol docs state each one. A
+feature that is not complete yet says so.
 
 - Sign in with GitHub. The product is free.
 - Every cloud computer runs in the app's own Boat account, so users need no
@@ -36,6 +37,7 @@ These features are planned. The protocol docs state each one.
 - Chat with agents powered by Claude and Codex. A workspace holds several
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
+- Attach files of up to 25 MB each to a message.
 - Each user connects their own Claude subscription token or API keys.
 - Files and Changes, a terminal, port previews, and a live desktop.
 - A pull request bar with the GitHub state of the branch and its checks.
@@ -47,6 +49,9 @@ These features are planned. The protocol docs state each one.
   runs the actions of the page, and opens the settings.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
+  An agent can ask to run a command on the Mac of the person who sent its
+  turn. The Mac app is not complete yet. No release is published, so it
+  does not update itself.
 
 ## What a user needs
 
@@ -131,7 +136,7 @@ computers in local development. In a deployment, `BOAT_API_KEY` is a
 Worker secret, and `BOAT_ORG_ID` is a variable in the settings of the
 Worker, as [Deployment inputs](docs/deployment.md#how-to-set-the-inputs)
 says.
-[Access and security](docs/protocol/access-and-security.md#the-apps-boat-key)
+[Access and security](docs/protocol/isolation.md#the-apps-boat-key)
 states how the Worker keeps them away from the browser and the sandboxes.
 
 `wrangler.jsonc` also sets two production values: `MACHINE_ORIGIN` is
@@ -239,16 +244,27 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 
 ## Docs
 
-- [Architecture](docs/architecture.md): the components, the hostnames, the
+- [Architecture](docs/architecture.md): the
+  [components](docs/architecture/components.md), the hostnames, the
   [flows](docs/architecture/flows.md), and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
+    - [Repository folders](docs/protocol/repository-folders.md)
+    - [Life of a workspace](docs/protocol/workspace-life.md)
+    - [Tools of a workspace](docs/protocol/workspace-tools.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
+    - [Messages and attachments](docs/protocol/messages-and-attachments.md)
+    - [The agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
+    - [Isolation of orgs and sandboxes](docs/protocol/isolation.md)
+    - [Tokens and secrets](docs/protocol/tokens-and-secrets.md)
+    - [Terminal, previews, and desktop](docs/protocol/terminal-previews-and-desktop.md)
   - [GitHub banner](docs/protocol/github-banner.md)
   - [Agent tools](docs/protocol/agent-tools.md)
   - [Orgs and members](docs/protocol/orgs-and-members.md)
   - [Mac app](docs/protocol/desktop-app.md)
+    - [Mac app sign-in](docs/protocol/desktop-sign-in.md)
+    - [Permissions and Mac commands](docs/protocol/desktop-commands.md)
   - [Operator actions](docs/protocol/operator-actions.md)
   - [Operator section](docs/protocol/operator-section.md)
   - [Command palette](docs/protocol/command-palette.md)

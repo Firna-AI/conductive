@@ -214,6 +214,6 @@ The transport tests use counted streams to check exact budgets and early cancell
 - [file-write-body.ts](file-write-body.ts) counts streamed bytes without buffering the file.
 - [file-write.test.ts](file-write.test.ts), [file-write-failure.test.ts](file-write-failure.test.ts), and [file-write-response.test.ts](file-write-response.test.ts) check bytes, path binding, credential separation, safe failures, and response budgets.
 
-See the [access requirements](../../docs/protocol/access-and-security.md#orgs-and-workspaces),
-the [rules of the app's Boat key](../../docs/protocol/access-and-security.md#the-apps-boat-key),
-and the [file requirements](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).
+See the [access requirements](../../docs/protocol/isolation.md#orgs-and-workspaces),
+the [rules of the app's Boat key](../../docs/protocol/isolation.md#the-apps-boat-key),
+and the [file requirements](../../docs/protocol/workspace-tools.md#files-and-changes).

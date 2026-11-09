@@ -284,16 +284,16 @@ tests through the production Worker entry.
 
 ## Related docs
 
-- [Chat and events: Messages](../../docs/protocol/chat-and-events.md#messages)
+- [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
-- [Chat and events: Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+- [Chat and events: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)
-- [Access and security: Agent logins in a sandbox](../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
-- [Access and security: The workspace token](../../docs/protocol/access-and-security.md#the-workspace-token)
+- [Access and security: Agent logins in a sandbox](../../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
+- [Access and security: The workspace token](../../docs/protocol/tokens-and-secrets.md#the-workspace-token)
 - [Operator actions: Workspace tokens and runners](../../docs/protocol/operator-actions.md#workspace-tokens-and-runners)
-- [Architecture: Workspace Durable Object](../../docs/architecture.md#workspace-durable-object)
+- [Architecture: Workspace Durable Object](../../docs/architecture/components.md#workspace-durable-object)
 - [Shared contracts](../../src/shared/README.md)
 - [Backend and runner fakes](../test-support/README.md)
 - [Browser fakes](../../src/test-support/README.md)
