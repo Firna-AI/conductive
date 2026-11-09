@@ -36,7 +36,7 @@ Contract owners:
 
 ### 1. How visitors learn about the Mac app and get it
 
-- **Chosen by the user on 8 November 2026:** C.
+- **Chosen by the user on 8 November 2026:** C. **Chosen again on 9 November 2026:** C, not E.
 - **Changed on 9 November 2026:** the release part of C is done in
   `Firna-AI/remote-code`, not in a separate repository, by the plan for the
   Mac app updates. That plan's protocol text rejects a separate feed
@@ -72,7 +72,7 @@ Contract owners:
 - **Wider fix:** E. In this class of problem, a decision adds or changes a feature, and a public text keeps the old claim. The class came back four times: the Boat account claim, two legal page findings, and this rule.
 - **Previous examples:** Milestone 4f of the earlier plan removed the Boat account claim from the site after decision 80. Finding 6 of pull request #46 and finding 8 of pull request #45 found stale legal pages. Mokly's site does not link its desktop releases.
 - **Recommendation:** E, from the options check on 8 November 2026. It keeps all of C and adds less than an hour against a class that keeps coming back. The first recommendation was A, and the second was C.
-- **Action:** the user chose C on 8 November 2026. The options check then recommended E, which waits for the user, because it deletes named rules of the site spec.
+- **Action:** the user chose C on 8 November 2026. The options check then recommended E. On 9 November 2026 the user kept C, so the claim rule keeps its named list, without the desktop app.
 
 The second decision of this plan, "How a copy that cannot install updates
 gets new versions", closed on 9 November 2026. The plan for the Mac app
@@ -166,8 +166,7 @@ footer, and the Mac app in the hero and the footer.
       footer tagline.
 - [ ] Remove the desktop app from the claims that the page leaves out, in
       `docs/mockups/marketing-site.md` and in the rationale of
-      `docs/mockups/src/entries/marketing/index.mockup.tsx`. With option E,
-      reword the whole claim rule there instead.
+      `docs/mockups/src/entries/marketing/index.mockup.tsx`.
 - [ ] Update the description of that entry, which names six features and a
       header without the Mac app.
 - [ ] Run `npm run mockups:check`. Smoke-test the home page at desktop and
@@ -190,8 +189,6 @@ the code changes.
       release `v0.2.0`.
 - [ ] In `docs/architecture.md`, say that the marketing site links the
       Mac app downloads.
-- [ ] With option E, extend the rule of `AGENTS.md` about the legal pages
-      to the claims of the home page.
 - [ ] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: Fixed DMG names
