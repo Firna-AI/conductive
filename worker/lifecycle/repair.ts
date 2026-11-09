@@ -49,14 +49,20 @@ export async function repairLifecycleAlarms(
   for (const kind of ['workspace', 'org'] as const) {
     const rows = kind === 'workspace' ? due.workspaces : due.orgs
     if (rows.length > REPAIR_LIMIT)
-      warnWorker(`Lifecycle repair limited ${kind} checks to ${REPAIR_LIMIT}.`)
+      warnWorker({
+        kind: 'lifecycle_repair_limited',
+        resource: kind,
+        limit: REPAIR_LIMIT,
+      })
     const selected = rows.slice(0, REPAIR_LIMIT)
     for (const { id } of selected) await repair(kind, id)
   }
   await settleLifecycleRepairs(env.DB, attempted, dependencies.now(), cutoff)
   if (result.pendingWorkspaces || result.pendingOrgs)
-    warnWorker(
-      `Lifecycle repair left ${result.pendingWorkspaces} workspace checks and ${result.pendingOrgs} org checks pending.`,
-    )
+    warnWorker({
+      kind: 'lifecycle_repair_pending',
+      workspaces: result.pendingWorkspaces,
+      orgs: result.pendingOrgs,
+    })
   return result
 }

@@ -35,7 +35,7 @@ export async function cleanupDeletedOrgs(
   try {
     await cleanupDraftAttachments(env, dependencies.now())
   } catch {
-    warnWorker('An attachment cleanup will retry.')
+    warnWorker({ kind: 'attachment_cleanup_retry' })
   }
   const result: { purged: string[]; pending: string[] } = {
     purged: [],

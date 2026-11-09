@@ -1,6 +1,7 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { AppEnv } from '../env'
-import { errorSummary, warnWorker } from '../warnings'
+import { warnWorker } from '../warnings'
+import { errorSummary } from '../warning-values'
 import type { ChatStore } from './store'
 import { requestWorkspaceTitle } from './title-model'
 import type { ChatDependencies } from './types'
@@ -102,9 +103,10 @@ export class WorkspaceTitles {
           )
       })
     } catch (error) {
-      warnWorker(
-        `The workspace title could not be saved: ${errorSummary(error)}`,
-      )
+      warnWorker({
+        kind: 'workspace_title_save_failed',
+        error: errorSummary(error),
+      })
     }
   }
 }

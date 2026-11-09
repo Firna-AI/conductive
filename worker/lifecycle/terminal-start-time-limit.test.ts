@@ -59,6 +59,7 @@ it('names only the exit code and time-out when detached terminal setup fails', a
   await start.advance()
   fixture.boat.commandExitCode = 1
   fixture.boat.commandOutput = 'password=private-marker'
+  fixture.boat.commandStderr = 'token=private-stderr-marker'
   const job = await start.job()
   if (!job) throw new Error('Missing terminal start')
   const controls = fixture.actors.get(job.workspaceId)?.native.api.controls
@@ -72,11 +73,16 @@ it('names only the exit code and time-out when detached terminal setup fails', a
     })
     const warnings = await controls.warningCalls()
     expect(warnings).toContainEqual([
-      expect.stringMatching(
-        /^The terminal of workspace .* did not start: exit code 1, timed out false$/,
-      ),
+      {
+        kind: 'terminal_start_failed',
+        message: 'The terminal of a workspace did not start.',
+        workspaceId: 'unknown',
+        exitCode: 1,
+        timedOut: false,
+      },
     ])
     expect(JSON.stringify(warnings)).not.toContain('private-marker')
+    expect(JSON.stringify(warnings)).not.toContain('private-stderr-marker')
     expect(fixture.boat.fileReads).toEqual([])
   } finally {
     await controls.captureWarnings(false)

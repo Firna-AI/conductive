@@ -1,7 +1,8 @@
 import { HttpError } from '../http'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
-import { errorSummary, warnWorker } from '../warnings'
+import { warnWorker } from '../warnings'
+import { errorSummary, WarningId } from '../warning-values'
 import {
   failBuild,
   jobSoftware,
@@ -73,9 +74,12 @@ export async function handleImageBuildFailure(
       error instanceof ProviderError &&
       !transientProviderError(error)
     )
-  warnWorker(
-    `Image build ${buildId} failed in phase ${job.phase}: ${errorSummary(failure)}`,
-  )
+  warnWorker({
+    kind: 'image_build_failed',
+    buildId: WarningId.checked(buildId),
+    phase: job.phase,
+    error: errorSummary(failure),
+  })
   await failBuild(env.DB, buildId, message, dependencies.now())
   if (!unresolvedAllocation) await updateBuildJob(env.DB, buildId, 'cleanup')
   if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
