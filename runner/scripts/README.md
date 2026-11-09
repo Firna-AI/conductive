@@ -14,6 +14,11 @@ inside or outside the home folder.
 - With `CONDUCTIVE_MEASURE_MODE=agent`, `measure.mjs` sends one prompt to
   a real agent. It prints the time from its own start to the first agent
   text. Run it once after each real resume.
+- The agent mode starts one agent adapter directly, not a session of the
+  runner. The agent gets empty agent instructions, and the tool saves no
+  session state. So the time leaves out the build of the instructions, the
+  model's work on their text, and their save in the state file. Do not read
+  it as the full start time of the runner.
 - Each agent sample has a placement. `home` is an install folder inside
   the home folder. `system` is an install folder outside it.
 - `compare.mjs <file>...` reads the JSON lines of the agent samples. It
