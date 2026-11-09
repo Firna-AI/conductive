@@ -11,10 +11,12 @@ reload and on the user's other devices. A new tab of any kind opens at the
 end of the row. The mockups already draw a new session after the open file
 tab, so the row then matches them.
 
-Two decisions are open: how a full row shows its last tabs (decision 143),
-and how a user who does not drag moves a tab (decision 144). The change does
-not cover a drag out of the row into a split view or a new window, pinned
-tabs, a live update of the order in a second window, or new close rules. The
+When the tabs do not fit, the row scrolls sideways and keeps the shown tab
+in view (decision 143). A right click on a tab opens a tab menu with Rename
+and the moves of the tab, for a user who does not drag (decision 144). The
+change does not cover a drag out of the row into a split view or a new
+window, pinned tabs, a live update of the order in a second window, other
+actions in the tab menu, or new close rules. The
 "File Preview Tabs Brainstorm" workspace has an open item about a temporary
 tab for a file that the user only glances at. That item changes the same
 row. The change that merges second aligns the drag with temporary tabs.
@@ -172,6 +174,7 @@ Added on 8 November 2026 from the options check of decision 142. Open.
 - **Options check, 8 November 2026:** the second check kept B and added D.
   It moved A under Left out, because A fails the goal. It added the wheel,
   the fade, and the touch scroll to B.
+- **Chosen:** B, by the user on 9 November 2026.
 
 ## Decision 144: How a user who does not drag moves a tab
 
@@ -223,6 +226,9 @@ Added on 8 November 2026 from the options check of decision 142. Open.
     announcement. The keys and any menu call the same step, and the
     workspace list moves its own key move into the hook. It goes with any
     of A to E. Effort: Medium.
+  - **G.** Added by the user on 9 November 2026: a right click on a tab
+    opens a menu, as the tab menu of Conductor does. For now, the menu holds
+    a move option and a rename option. Effort: Medium.
 - **Left out:**
   - No way to move a tab without a drag, because it fails keyboard users.
     Close and reopen moves a tab only to the end, and the close of a
@@ -249,6 +255,12 @@ Added on 8 November 2026 from the options check of decision 142. Open.
 - **Options check, 8 November 2026:** the second check added D, E, and F,
   and recommended E. The agent kept B, for the reason in the
   recommendation.
+- **Chosen:** G, by the user on 9 November 2026, in these words: "right
+  clicking should open up a menu (for now we can just have a move option
+  and rename option)". The user sent a screenshot of the tab menu of
+  Conductor: Mark as unread, Rename chat, three copy actions, Close tab,
+  and Close others, in groups with lines between them. The keys of B are
+  not part of the choice.
 
 ## Design
 
@@ -281,6 +293,41 @@ Added on 8 November 2026 from the options check of decision 142. Open.
 - After a move, the open sessions sort by the new order. So Close picks
   its neighbour from the order that the row shows.
 
+### Full row
+
+- The tabs first shrink to their minimum width, as today. When they still
+  do not fit, the row scrolls sideways. It shows no scrollbar.
+- The row scrolls each new or shown tab into view: a new tab, a tab that
+  the Files panel or the session history shows, and a tab after a move.
+- A vertical turn of the mouse wheel over the row scrolls it sideways. A
+  sideways swipe on a trackpad scrolls it as before.
+- A fade marks each end of the row that clips tabs.
+- During a drag, the pointer near an end of the row scrolls the row, so a
+  drop can reach every place.
+- A finger scrolls the row, also on a phone.
+
+### Tab menu
+
+- A right click on a tab opens the tab menu at the pointer. The Menu key,
+  or Shift and F10, on a focused tab opens it at the tab, where the
+  browser and the system send the same event.
+- The menu of a session tab holds "Rename session", a line, then "Move
+  left" and "Move right". The menu of a file or diff tab holds "Move left"
+  and "Move right".
+- On the first tab, "Move left" is off. On the last tab, "Move right" is
+  off. An item that is off keeps its place.
+- "Move left" and "Move right" move the tab one place in the row, and save
+  the order as a drag does. A screen reader hears "<title> moves to place
+  2 of 4." The focus goes back to the moved tab.
+- "Rename session" opens the rename field in that tab, also when the tab
+  does not show. The Rename button of the shown session tab stays.
+- Escape or a click outside the menu closes it.
+- A read-only workspace opens no tab menu, so the browser shows its own
+  menu. A tab with its rename field open opens no tab menu, so the field
+  keeps the text menu of the browser.
+- A phone opens no tab menu. A long press lifts the tab, and the press
+  opens no menu.
+
 ### Parts
 
 - `src/chat/state/tab-order.ts`: the row order, the places of the
@@ -299,6 +346,10 @@ Added on 8 November 2026 from the options check of decision 142. Open.
   place. A lifted copy follows the pointer along the row. The tab keeps
   its place as a faint copy, and a line marks the drop place. The line
   takes no space, so no tab moves during the drag.
+- The `Menu` part of the chat gets an item that is off, and a placement
+  at a point, for the tab menu. The CSS of the off item goes in the menu
+  CSS of the mockups, which the app shares.
+- A small helper turns a vertical wheel turn into a sideways scroll.
 
 ### Design calls
 
@@ -316,9 +367,9 @@ The agent made each call below on 8 November 2026.
   Reason: a long press lifts a workspace row, as
   `docs/protocol/orgs-and-members.md` says.
 - The tabs take the touch CSS of the drag surface of the workspace list,
-  so a long press opens no link menu and selects no text. A row that
-  scrolls sideways under decision 143 uses `touch-action: pan-x`, not the
-  `pan-y` of the list. Reason: a finger must still scroll the row.
+  so a long press opens no link menu and selects no text. The row uses
+  `touch-action: pan-x`, not the `pan-y` of the list. Reason: a finger
+  must still scroll the row sideways.
 - A drag does not change the shown tab. The click at the end of a drag
   selects nothing. Reason: a drag in the workspace list opens no
   workspace.
@@ -327,9 +378,9 @@ The agent made each call below on 8 November 2026.
   every drag in the app. The mockup milestone draws it first.
 - A drag starts only on the tab itself, not on its Close or Rename button.
   Reason: those controls keep their own press.
-- While a tab shows its rename field, no drag and no move key acts on it.
-  Reason: in the field, the arrow keys with Option, or with Option and
-  Shift, move the caret or select by word on macOS.
+- While a tab shows its rename field, no drag and no tab menu acts on it.
+  Reason: the field keeps its own pointer and text actions, such as the
+  text menu of the browser.
 - A read-only workspace moves no tab. Reason: a read-only workspace list
   moves no row, and a move there would last only until the next reload.
 - Close keeps its current rules: a closed session shows the next session,
@@ -343,6 +394,27 @@ The agent made each call below on 8 November 2026.
 - This change does not split the protocol docs that it touches. Reason:
   `plans/follow-ups/protocol-docs-split.md` splits them in one change
   after the open branches merge.
+
+The agent made each call below on 9 November 2026, after the user chose G
+of decision 144.
+
+- The move option of the tab menu is the pair "Move left" and "Move
+  right". Reason: the pair reaches every place, in the flat menu style of
+  the Conductor screenshot. The mockup shows it before any code.
+- An item that is off stays in the menu, greyed. Reason: each item keeps
+  its place, as "Close others" does in the Conductor screenshot.
+- "Rename session" shows only on session tabs. Reason: a file tab has no
+  title of its own. The product calls a chat a session, as "New session"
+  and "Session history" do.
+- No tab menu in a read-only workspace or on a phone. Reasons: a read-only
+  workspace moves no tab and renames no session, and a long press on a
+  phone lifts the tab.
+- No key moves a tab. Reason: the user chose the menu, not the keys of B.
+  A Mac keyboard has no Menu key, so a check on a Mac after the merge
+  records how a Mac keyboard opens the menu.
+- The wheel helper is shared. Reason:
+  `plans/follow-ups/sideways-tab-rows-ignore-vertical-wheel.md` can then
+  use it for the other rows that scroll sideways.
 
 Contract owners:
 
@@ -369,13 +441,18 @@ Tags: mockup
 
 Depends on: none
 
-Draw the drag of a tab and the row after a move, on desktop and on a phone.
-The full row waits for decision 143, and a tab menu waits for decision 144.
+Draw the drag of a tab, the row after a move, the full row, and the tab
+menu, on desktop and on a phone.
 
 - [ ] Add the drag states to
       `docs/mockups/src/components/workspace/WorkspaceTabs.tsx` and its
       CSS module: a lifted tab, a faint copy, and a drop line. Take the
       look from the drag of the workspace list.
+- [ ] Make the row of the mockups scroll sideways when its tabs do not
+      fit, with a fade at each end that clips tabs. Update the comment of
+      the row in `WorkspaceTabs.module.css`.
+- [ ] Add an item that is off to the menu CSS of the mockups, in
+      `docs/mockups/src/components/common/Menu.module.css`.
 - [ ] Add a "Move tabs" page under `docs/mockups/src/entries/app/tabs/`,
       beside the Sessions and Files pages, with at most five screens. Each
       screen shows a phone and desktop.
@@ -383,10 +460,11 @@ The full row waits for decision 143, and a tab menu waits for decision 144.
         sessions. On a phone, a long press lifts the second session.
   - [ ] After the move: the file tab sits between the two sessions, and a
         new session opens at the end of the row.
-  - [ ] A full row, in the form that decision 143 chooses. Waits for
-        decision 143.
-  - [ ] The menu of a tab or of the row, when decision 144 chooses C, D,
-        or E. Waits for decision 144.
+  - [ ] A full row: the row scrolls, the shown tab is in view, and a fade
+        marks the end that clips tabs.
+  - [ ] The tab menu: a right click on the first session tab shows "Rename
+        session", a line, "Move left" off, and "Move right". A phone shows
+        no tab menu.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages at
       `http://127.0.0.1:4173`.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -404,7 +482,11 @@ State the rules of the row before the code changes.
       move of any tab by drag, and by a long press on a phone. Add the
       order kept for each user and workspace, and no move in a read-only
       workspace. Give the rejected group order and its reason.
-- [ ] Add the rules of decisions 143 and 144 to the same section.
+- [ ] Add the full row of decision 143 to the same section: the row
+      scrolls sideways and keeps the shown tab in view.
+- [ ] Add the tab menu of decision 144 to the same section: a right click
+      opens Rename session, Move left, and Move right. A read-only
+      workspace and a phone open no tab menu.
 - [ ] In the Files and changes section of
       `docs/protocol/workspaces-and-sandboxes.md`, say that a file or diff
       tab opens at the end of the row. Link to the rules of the row.
@@ -440,14 +522,14 @@ state, with no UI.
         write.
 - [ ] Update `src/chat/README.md`.
 
-## Milestone 4: Drag and keys in the tab row
+## Milestone 4: Drag, tab menu, and full row
 
 Tags: ui
 
 Depends on: 1, 3
 
-Draw the row in the saved order, and add the drag and the way to move a tab
-that decision 144 chooses.
+Draw the row in the saved order, and add the drag, the tab menu, and the
+full row.
 
 - [ ] Add the shared pointer drag hook of the design, with its tests.
 - [ ] Make `SessionTabs` draw the row order. Replace `extraTabs` with
@@ -458,16 +540,28 @@ that decision 144 chooses.
       lifted tab, the faint copy, the drop line, and the touch CSS, as the
       mockup draws them. Bind no drag in a read-only workspace or on a tab
       that shows its rename field.
-- [ ] Add the move without a drag that decision 144 chooses, with the kept
-      focus and the announcement. Waits for decision 144.
-- [ ] Add the full row that decision 143 chooses. Waits for decision 143.
+- [ ] Add the full row: the sideways scroll, the scroll of each new or
+      shown tab into view, the shared wheel helper, the fades, and the
+      scroll of a drag near an end.
+- [ ] Add the item that is off and the placement at a point to the `Menu`
+      part of the chat.
+- [ ] Add the tab menu of the design, with the focus back to the tab after
+      a move and the announcement of the new place.
 - [ ] Test the mounted chat:
   - [ ] A pointer drag of a file tab before a session tab saves the new
         order, and the click at its end selects nothing.
   - [ ] Escape during a drag keeps the order.
-  - [ ] The move without a drag moves the focused tab left and right,
-        keeps the focus in both directions, and announces the new place.
-  - [ ] A long press of a touch pointer lifts a session tab.
+  - [ ] A long press of a touch pointer lifts a session tab and opens no
+        menu.
+  - [ ] A right click on a tab opens the tab menu. "Move left" moves the
+        tab one place, saves the order, announces the new place, and gives
+        the focus back to the tab.
+  - [ ] "Move left" is off on the first tab, and "Rename session" shows
+        only on a session tab.
+  - [ ] "Rename session" on a tab that does not show opens its rename
+        field.
+  - [ ] A read-only workspace opens no tab menu.
+  - [ ] A vertical wheel turn over the row scrolls it sideways.
 - [ ] Update `src/chat/README.md`, `src/files/README.md`, and
       `src/shell/workspace/README.md`.
 
@@ -489,10 +583,14 @@ Depends on: 1, 2, 3, 4, 5
 
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
       the targeted tests and `npm run check`.
-- [ ] Smoke-test `npm run dev` on desktop and at a phone size. Drag a file
-      tab before a session tab, and check that the view write holds the
-      new order. Move a tab without a drag. Cancel a drag with Escape.
-      Save the screenshots under `.context/move-tabs-by-drag/`.
+- [ ] Smoke-test `npm run dev` on desktop and at a phone size:
+  - [ ] Drag a file tab before a session tab, and check that the view
+        write holds the new order. Cancel a drag with Escape.
+  - [ ] Open the tab menu with a right click, and with Shift and F10 in
+        Chrome on Linux. Move a tab and rename a session with the menu.
+  - [ ] Fill the row until it scrolls. Check the wheel, the fades, a new
+        tab in view, and a drag near an end.
+  - [ ] Save the screenshots under `.context/move-tabs-by-drag/`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -513,3 +611,6 @@ Depends on: 1, 2, 3, 4, 5
 - [ ] On `conductive.build`, drag a file tab before a session tab, then
       reload. Open the same workspace on a phone. The order stays, and the
       phone shows the sessions in the new order.
+- [ ] On a Mac, in Chrome, Safari, and the Mac app, try to open the tab
+      menu from the keyboard, with and without VoiceOver. Record the keys
+      that open it.
