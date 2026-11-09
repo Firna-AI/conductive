@@ -23,6 +23,12 @@ export const APP_HOST_PAGES = 'app-host'
 /** The agreement page before GitHub, as a path inside the site folder. */
 export const TERMS_CONSENT_PAGE = `${APP_HOST_PAGES}/terms-consent.html`
 
+/** The GitHub install return pages for the Mac app, inside the site folder. */
+export const GITHUB_SETUP_PAGES = {
+  installed: `${APP_HOST_PAGES}/github-setup/installed.html`,
+  requested: `${APP_HOST_PAGES}/github-setup/requested.html`,
+} as const
+
 /**
  * The fixed addresses of the brand icons. The build copies them from the
  * brand folder unchanged. A browser asks for `/favicon.ico` when a page
