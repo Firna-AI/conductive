@@ -40,6 +40,11 @@ started from, also after a resume. So the pull request of each change to
 these files says that an existing workspace needs a new workspace to get
 the change.
 
+For an existing shell, `tmux set-option -g mouse on` enables scrolling
+immediately. Run it inside that workspace's Terminal tab. The setting lasts
+until the sandbox stops. A rebuilt image gives new workspaces the setting
+at each start.
+
 One quoted privileged-command helper owns the root commands.
 Both units require a nonsecret enable marker under `/run`.
 An image build or refresh has no marker, so it starts no terminal and no
@@ -52,9 +57,10 @@ The shell server loads the workspace variables from
 `/run/ascii-secrets/env.sh`, and moves to `CONDUCTIVE_REPOSITORY_DIR`, the
 repository folder. Then it starts one tmux server on the socket
 `/run/conductive-terminal/tmux.sock`. The server reads no tmux
-configuration file. It changes one default option: it keeps running when
-no session exists. So the screen shows the default tmux status line, and
-Ctrl-b is the tmux prefix key. Each new shell gets the workspace variables
+configuration file. It keeps running when no session exists, and it enables
+mouse support so wheel and trackpad scrolling reach the output history.
+The screen shows the default tmux status line, and Ctrl-b is the tmux prefix
+key. Each new shell gets the workspace variables
 from this server. The server also sets `PROMPT_COMMAND` in the global tmux
 environment to the folder hook below.
 

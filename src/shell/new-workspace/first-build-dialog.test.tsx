@@ -4,6 +4,7 @@ import { expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import { byRole, queryByText } from '../../test-support/dom-queries'
+import { messageText } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { click, settle, typeText } from '../test-mount'
 import { isOff, org } from '../workspace/kept-test-kit'
@@ -42,7 +43,7 @@ test('before the first good build, Create and Enter keep the draft, and Open Clo
   click(create)
   keyDown(field, { key: 'Enter' })
   await settle()
-  expect({ creates: createCount(server), text: field.value }).toEqual({
+  expect({ creates: createCount(server), text: messageText(field) }).toEqual({
     creates: 0,
     text: task,
   })

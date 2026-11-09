@@ -7,7 +7,7 @@ import {
 export const sections = defineScreen({
   title: 'Sections',
   description:
-    'The menu of a section, open from its button with three dots: Rename, New workspace, New section, and Delete section. New workspace creates the workspace in this section. On a phone the menu opens as a sheet.',
+    'The menu of a section, open from its button with three dots: New workspace, Rename section, New section, and Delete section. New workspace creates the workspace in this section. On a phone the menu opens as a sheet.',
   rationale:
     'A section collapses from its header, and a collapsed section shows how many workspaces it holds. New workspaces from the top of the list join General, the default section. Deleting a section moves its workspaces to General, so no workspace gets lost.',
   relatedDocs: [],

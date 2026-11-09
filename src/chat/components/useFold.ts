@@ -30,7 +30,9 @@ export interface Fold {
  *
  * The line takes the click in the capture phase. So it measures the line
  * and cancels the default toggle before any handler that runs while the
- * click bubbles, and the state alone opens or closes the fold.
+ * click bubbles, and the state alone opens or closes the fold. A click on a
+ * link in the line, such as a workspace chip in a message, stays with the
+ * link, so a click with a modifier key opens a new tab as on any link.
  */
 export function useFold(open: boolean, setOpen: (open: boolean) => void): Fold {
   const keeper = useContext(ChatKeeper)
@@ -53,6 +55,11 @@ export function useFold(open: boolean, setOpen: (open: boolean) => void): Fold {
     line: {
       ref: line,
       onClickCapture: (event) => {
+        const link =
+          event.target instanceof Element
+            ? event.target.closest('a[href]')
+            : null
+        if (link && event.currentTarget.contains(link)) return
         event.preventDefault()
         if (line.current) keeper.keep(line.current)
         clicked.current = true

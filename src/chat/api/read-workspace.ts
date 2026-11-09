@@ -62,6 +62,8 @@ function readWorkspace(value: unknown): Workspace {
   const source = record(value, 'workspace')
   return {
     id: text(source.id),
+    number: count(source.number),
+    link: text(source.link),
     orgId: text(source.orgId),
     repositoryId: text(source.repositoryId),
     sectionId: text(source.sectionId),

@@ -14,7 +14,11 @@ export function productionAgentTools(
   dependencies: AppDependencies,
 ): Promise<Response> {
   return createAgentToolsHandler(
-    { DB: env.DB, MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '' },
+    {
+      DB: env.DB,
+      MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
+      APP_ORIGIN: env.APP_ORIGIN,
+    },
     {
       models: async () => configuredModels(env),
       callingTurn: (id, turnId) =>
@@ -56,6 +60,7 @@ export function productionAgentTools(
         if (!result.ok) throw workspaceStartFailure(result.error)
         const workspace = workspaceView(
           await readWorkspace(env.DB, input.orgId, created.workspace.id),
+          env.APP_ORIGIN,
         )
         return { workspace, sessionId: created.first.sessionId }
       },

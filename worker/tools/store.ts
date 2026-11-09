@@ -10,6 +10,7 @@ import { HttpError } from '../http'
 import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { hash } from '../security/crypto'
 import { workspaceNameColumn } from '../data/workspace-name'
+import { workspaceLink } from '../data/workspace-link'
 
 export interface CallingWorkspace {
   workspaceId: string
@@ -65,18 +66,27 @@ export async function orgSections(
 export async function orgWorkspaces(
   db: D1Database,
   orgId: string,
+  origin: string,
 ): Promise<AgentWorkspaceSummary[]> {
   const { results } = await db
     .prepare(
-      `SELECT id, ${workspaceNameColumn('workspaces')}, branch, state FROM workspaces
+      `SELECT id, number, ${workspaceNameColumn('workspaces')}, branch, state FROM workspaces
        WHERE org_id = ? ORDER BY created_at, id`,
     )
     .bind(orgId)
-    .all<{ id: string; name: string | null; branch: string; state: string }>()
+    .all<{
+      id: string
+      number: number
+      name: string | null
+      branch: string
+      state: string
+    }>()
   return results.map((row) => {
     const fields = record(row)
     return {
       id: text(fields.id),
+      number: row.number,
+      link: workspaceLink(origin, orgId, row.id),
       name: row.name,
       branch: text(fields.branch),
       state: workspaceState(fields.state),

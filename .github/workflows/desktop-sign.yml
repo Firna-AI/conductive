@@ -48,6 +48,7 @@ jobs:
       - run: npm --prefix desktop ci
       - run: npm --prefix desktop run build
         env:
+          CONDUCTIVE_FRAME_SOURCES: https://*.conductive.page https://*.on.boat.dev
           CONDUCTIVE_DESKTOP_UPDATES: ${{ inputs.updates && 'enabled' || 'unpublished' }}
       - name: Sign and notarize both Mac architectures
         run: npm --prefix desktop run package:release

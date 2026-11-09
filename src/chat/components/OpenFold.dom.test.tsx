@@ -2,7 +2,9 @@
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { createApiClient } from '../../app/api/client'
+import { routes } from '../../app/router'
 import type { WorkspaceEvent } from '../../shared/events'
+import type { Workspace } from '../../shared/workspaces'
 import { byLabel, byText, queryByText } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -42,9 +44,13 @@ const planLine = blocks.join(' ')
 /**
  * Mounts the chat of the recorded turn, which goes on with a message of
  * four blocks, a call, and its answer, then a call after the answer, and
- * finishes. `emit` sends a later event of the workspace.
+ * finishes. `emit` sends a later event of the workspace. `message` takes
+ * the place of the message of four blocks, and `onOpenPage` gets each page
+ * that a workspace chip opens.
  */
-async function mountFinishedTurn() {
+async function mountFinishedTurn(
+  options: { message?: string; onOpenPage?: (to: string) => void } = {},
+) {
   holdAnimationFrames()
   const server = new FakeApiServer({ conversation: 'running' })
   const emit = (event: WorkspaceEvent) =>
@@ -54,7 +60,7 @@ async function mountFinishedTurn() {
       occurredAt: FAKE_TIME,
       event,
     })
-  emit(said('plan-2', plan))
+  emit(said('plan-2', options.message ?? plan))
   emit(update('lint', 'npm run lint', 0))
   emit(said('answer-3', answer))
   emit(update('unit', 'npm test', 0))
@@ -64,6 +70,7 @@ async function mountFinishedTurn() {
   await mount(
     <WorkspaceChat
       client={createApiClient(server.fetch)}
+      onOpenPage={options.onOpenPage}
       orgId={FAKE_IDS.org}
       subscribe={subscribe}
       viewport="desktop"
@@ -178,5 +185,38 @@ describe('an open fold', () => {
       { open: true, top: 602 },
       { open: false, top: 602 },
     ])
+  })
+  it('lets a workspace chip in a message line open its page, and leaves a click with a modifier key to the browser', async () => {
+    const linked = workspaceFixtures().workspaces.workspaces[0] as Workspace
+    const opened: string[] = []
+    await mountFinishedTurn({
+      message: `Next, compare ${linked.link} too.`,
+      onOpenPage: (to) => opened.push(to),
+    })
+    await press(byText('2 tool calls, 2 messages'))
+    const to = routes.workspace(FAKE_IDS.org, linked.id)
+    const chip = await waitFor(
+      () => document.querySelector<HTMLAnchorElement>(`a[href="${to}"]`),
+      'the chip in the message line',
+    )
+    await press(chip)
+    const plain = [...opened]
+    // A browser opens the page of a click with a modifier key itself, and
+    // toggles no fold for a click on a link in its line.
+    const newTab = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      ctrlKey: true,
+    })
+    act(() => {
+      chip.dispatchEvent(newTab)
+    })
+    expect({
+      plain,
+      modified: { kept: newTab.defaultPrevented, opened },
+    }).toEqual({
+      plain: [to],
+      modified: { kept: false, opened: [to] },
+    })
   })
 })

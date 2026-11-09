@@ -1,3 +1,4 @@
+import { routes } from '../../src/app/router'
 import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
@@ -151,6 +152,8 @@ it('uses the active stored sender and inherited owner when a machine tool create
   ).toBe(expectedName)
   expect(record(created.workspace)).toMatchObject({
     id: newId,
+    number: 3,
+    link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, newId)}`,
     owner: { id: 'owner' },
     choice: CLAUDE,
   })
@@ -194,6 +197,12 @@ it('uses the active stored sender and inherited owner when a machine tool create
   )
   expect(list.status).toBe(200)
   expect(record(await list.json()).workspaces).toEqual(
-    expect.arrayContaining([expect.objectContaining({ id: newId })]),
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: newId,
+        number: 3,
+        link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, newId)}`,
+      }),
+    ]),
   )
 })

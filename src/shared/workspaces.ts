@@ -31,6 +31,8 @@ export type WorkspaceState =
 
 export interface Workspace {
   id: string
+  number: number
+  link: string
   orgId: string
   repositoryId: string
   sectionId: string
