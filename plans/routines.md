@@ -11,16 +11,13 @@ Conductor's routine form. Conductor Cloud turns read-only on 13 November
 stop then. The brainstorm notes and sources are in
 `.context/routines/notes.md`.
 
-This change does not cover a webhook trigger, filters for pull request
-triggers, notifications, or routines across several repositories. The
+This change does not cover a webhook trigger, filters for labels or base
+branches, notifications, or routines across several repositories. The
 design calls below give the reasons.
 
-Open decisions: 203, 204, and 206. The options check of 9 November 2026
-changed the recommendations of 203 and 204 after the user's choice, so
-the user's choices stay in force until the user answers again. Decision
-203 blocks only a start limit that Milestone 5 would add. Decision 204
-blocks only a retention rule that a new milestone would add. Decision 206
-blocks the pull request dispatch of Milestone 6.
+The user answered every decision of this plan. On 9 November 2026, the
+user kept 203 B and 204 A after the options check changed their
+recommendations, and chose 206 C.
 
 The decisions of this plan take the numbers from 201. The decisions of
 `plans/boat-native-remote-workspaces.md` reached 146 on 9 November 2026,
@@ -221,8 +218,8 @@ Added on 8 November 2026 from the routines brainstorm.
 - **Action:** asked the user, because B and C add a new refusal, and
   decision 81 chose no limits. Asked again on 9 November 2026, because
   the options check changed the recommendation, and E adds a refusal.
-- **Chosen:** B, by the user on 8 November 2026. B stays in force until
-  the user answers the question of 9 November 2026.
+- **Chosen:** B, by the user on 8 November 2026. The user kept B on
+  9 November 2026, after the options check recommended E.
 
 ### 204. Choose where run workspaces show and how long they stay
 
@@ -294,8 +291,9 @@ Added on 8 November 2026 from the routines brainstorm.
   because the options check changed the recommendation, and E changes
   the same rules.
 - **Chosen:** A, by the user on 8 November 2026. Run workspaces stay
-  normal workspaces. A stays in force until the user answers the
-  question of 9 November 2026.
+  normal workspaces. The user kept A on 9 November 2026, after the
+  options check recommended E. The restarts of kept run workspaces stay a
+  known cost.
 
 ### 205. Choose the branch of a pull request run
 
@@ -450,9 +448,11 @@ Added on 9 November 2026 from a new problem of the options check.
   121 already draw around the members of one org, at a small cost. C, E, or
   F can widen it later. G best protects the codebase. The options check
   kept B.
-- **Action:** ask the user, because the options trade the runs for bots
-  and collaborators against the exposure of the owner's logins, and no
-  requirement covers this.
+- **Action:** asked the user, because the options trade the runs for
+  bots and collaborators against the exposure of the owner's logins, and
+  no requirement covered this.
+- **Chosen:** C, by the user on 9 November 2026. The design section "Pull
+  request runs" gives the rule and the filter.
 
 ## Design
 
@@ -472,6 +472,8 @@ number names the user's choice. The user can override any part of it.
   prompt with the model picker, Save, Run now, and Delete.
 - Add trigger offers Hourly, Daily, Weekdays, Weekly, and Custom under
   "Scheduled", and PR opened, PR pushed, and PR merged under "GitHub".
+- A pull request trigger can have an author filter with an "is" list and
+  an "is not" list of GitHub accounts (decision 206).
 - Hourly asks for a minute. Daily and Weekdays ask for a time. Weekly asks
   for a day and a time. Custom asks for a cron expression. Each routine
   has one time zone, which the page shows and the owner can change.
@@ -491,13 +493,16 @@ number names the user's choice. The user can override any part of it.
   - The owner references `users`, not `org_members`. Reason: a routine
     stays, turned off, after its owner leaves. A key to `org_members`
     would either block the leave or delete the routine.
-  - `triggers_json` holds the trigger list. Reason: the app always reads
-    and writes the triggers with their routine. The pull request dispatch
+  - `triggers_json` holds the trigger list, with the author filter of
+    each pull request trigger. Reason: the app always reads and writes the
+    triggers with their routine. The pull request dispatch
     filters the list in code after a query by repository.
 - Migration `routine_runs`: one row for each run. Columns: `id`,
   `routine_id` with a cascade from `routines`, `org_id`, `run_key` with a
   unique index, `message_id`, `trigger_json`, `state`, `workspace_id`,
   `error_code`, `error_message`, `created_at`, and `updated_at`.
+  - A skipped run has the state `skipped`, and its reason in
+    `error_code` and `error_message`.
   - `workspace_id` has no foreign key. Reason: a failed start removes its
     workspace row, and the run keeps the ID to read the failure. A key
     with `ON DELETE SET NULL` would lose it.
@@ -551,8 +556,8 @@ number names the user's choice. The user can override any part of it.
   address, its head branch with the head commit, and its base branch. The
   text copies no title or body of a pull request.
 - The state of a run comes from three places, in this order:
-  - The run row: `queued` before a workspace exists, or `failed` with its
-    cause.
+  - The run row: `queued` before a workspace exists, `failed` with its
+    cause, or `skipped` with its reason.
   - The workspace row: its state, such as starting, working, input,
     unread, ready, stopped, error, or archived.
   - The creation attempt: a failed start that removed its workspace gives
@@ -633,8 +638,26 @@ number names the user's choice. The user can override any part of it.
 - The run row in the Runs list and the header of a pull request run link
   to the pull request, from the facts of the run. This adds option D of
   decision 205 to the chosen A.
-- Decision 206 decides whose pull request events start a run. It is open,
-  so the dispatch TODOs of Milestone 6 wait for its answer.
+- The author rule of decision 206 C decides which events start a run.
+  - Each pull request trigger can have an author filter with an "is"
+    list, an "is not" list, or both. Each list holds GitHub accounts.
+  - An event starts a run only when the author of its pull request passes
+    the filter. An author passes "is" when the list names the author, and
+    passes "is not" when the list does not name the author.
+  - The author and the sender of the event must each be a member of the
+    org, or an account that the "is" list names. The sender is the
+    account that caused the event, such as the pusher of new commits or
+    the account that merged. So a bot, such as Dependabot, starts runs
+    only when the owner names it in "is".
+  - The app matches accounts by their GitHub account ID, not by their
+    login. The form takes logins, and the Worker resolves each login to
+    its account ID when it saves the routine. Reason: a GitHub login can
+    be renamed and then taken by another account. Decision 78 matches
+    invitations by email for the same reason.
+  - The Runs list shows a skipped run, with its reason, for an event
+    whose author or sender is neither a member nor named. It shows
+    nothing for an author that the owner's filter leaves out. Reason: the
+    owner chose that exclusion, and a row for each such event is noise.
 - The run of a merged pull request creates its branch from the base
   branch of the pull request.
 - The start step label says "Fetching the pull request" or "Fetching the
@@ -669,6 +692,8 @@ number names the user's choice. The user can override any part of it.
   same choice.
 - Times use selects for the hour and the minute. Reason: `@firna/ui` has
   no time input. The mockups confirm the control.
+- The author filter takes GitHub logins, and it offers the org's members
+  as suggestions. The mockups confirm the control.
 - The Runs list reads the runs again every 10 seconds while the routine
   page shows, and when the page gets the focus. Reason: the app has no
   event stream for an org list.
@@ -685,8 +710,9 @@ answered the decisions of that report and changed none of the calls.
   Reason: the owner can test a routine at once.
 - This change adds no webhook trigger. Reason: the screenshots do not show
   one, and it needs a secret address.
-- The first version has no filters for label, author, or base branch.
-  Reason: Conductor added them nine days after its first routines.
+- The first version has no filters for label or base branch. Reason:
+  Conductor added them nine days after its first routines. The author
+  filter came in with the user's choice of decision 206 C.
 - Pull requests from forks never start a run. Reason: their code is
   untrusted, and a run holds the owner's GitHub access and the org's env
   vars.
@@ -737,6 +763,10 @@ These calls of 9 November 2026 come from the code searches of this plan:
   205, and its parts add to the chosen A without a change to it.
 - A pull request run fetches the head into a remote-tracking ref, so that
   the archive check counts no commit of the pull request as unpushed.
+- An author filter matches GitHub account IDs, which the Worker resolves
+  from the logins at each save. Reason: a login can change owner.
+- The Runs list shows a skipped run for an author or a sender outside the
+  org, and nothing for an author that the owner's filter leaves out.
 
 ## Milestone 1: Mockups
 
@@ -760,12 +790,13 @@ variant, and one flow. Each page holds five screens or fewer.
       because its owner left.
 - [ ] Draw the triggers under `app/routines/triggers`: the open Add
       trigger menu with its two groups, the Hourly, Daily, and Weekly
-      editors with the time zone, and a custom cron that the form refuses
-      because it runs more than once an hour.
+      editors with the time zone, a custom cron that the form refuses
+      because it runs more than once an hour, and the author filter of a
+      pull request trigger with its "is" and "is not" lists.
 - [ ] Draw the Runs list under `app/routines/runs`: queued, starting,
-      working, needs input, finished, and archived runs, and a failed run
-      for each cause: no agent login, expired GitHub access, and a failed
-      start.
+      working, needs input, finished, and archived runs, a failed run for
+      each cause: no agent login, expired GitHub access, and a failed
+      start, and a skipped run whose author is outside the org.
 - [ ] Draw the run workspace under `app/routines/run-workspace`: the
       header with the links to its routine and to its pull request, and
       the first message with the trigger facts of a pull request.
@@ -787,8 +818,8 @@ the code milestones can follow them.
 - [ ] Write `docs/protocol/routines.md`: routines, triggers, runs, the run
       text, access, the schedule limit, a member who leaves, suspensions,
       and decisions 201 to 206 with their rejected options. Keep it near
-      250 lines. The rule for the authors of pull requests waits for the
-      answer to decision 206.
+      250 lines. State the author rule and the author filter of
+      decision 206 C.
 - [ ] Record the risks that stay open in `docs/protocol/routines.md`, as
       `access-and-security.md` does for decisions 105 and 121. Comments,
       reviews, and description edits by other accounts reach the agent of
@@ -827,6 +858,9 @@ yet.
         change of summer time.
   - [ ] Test the refusal of a cron with two minutes, of a six-field cron,
         and of an unknown time zone.
+- [ ] Resolve the logins of each author filter to GitHub account IDs when
+      a routine saves. Refuse a login that names no GitHub account.
+  - [ ] Test a save with a member, a bot, and an unknown login.
 - [ ] Serve the list, read, create, update, and delete routes behind the
       app gate. Check the repository, the section, and the model as New
       workspace does. Apply the access rules of decision 202.
@@ -895,18 +929,21 @@ Start runs from pull request events, on a branch from the pull request.
   - [ ] Test a create from the head of a pull request, and a create from
         the base branch after a merge, with the fake Git server.
 - [ ] Read the action, the number, `merged`, the head commit, the base
-      branch, and the address in `webhookRoute`.
+      branch, the address, the author, and the sender in `webhookRoute`.
 - [ ] Add the `pullRequest` callback with its own error boundary. Find the
       matching routines, skip a routine with a run workspace on the head
-      branch, apply the author rule of decision 206, store each run with
-      its delivery key, and start the runs in the background. This TODO
-      waits for the answer to decision 206.
+      branch, apply the author rule and the author filter of decision
+      206 C, store each run or skipped run with its delivery key, and
+      start the runs in the background.
   - [ ] Test with signed recorded payloads, in a new test file, that each
         of the three events starts a run.
   - [ ] Test that another action, a fork, a repeated delivery, a run's
         own branch, and the owner's push during a run for the same pull
         request start no run.
   - [ ] Test that a failed banner refresh still starts the run.
+  - [ ] Test that an author or a sender outside the org gives a skipped
+        run with its reason, that a bot in "is" starts a run, and that an
+        author in "is not" starts no run and adds no row.
 - [ ] Update the GitHub README and the Worker README.
 
 ## Milestone 7: Routines list and sidebar link
@@ -938,7 +975,8 @@ Let the owner create and change a routine.
       switch, the repository, the section, the owner, the prompt with the
       model picker, Save, and Delete.
 - [ ] Build the Triggers list with the Add trigger menu, the schedule
-      editors, the time zone, and the refusal of a cron.
+      editors, the time zone, the refusal of a cron, and the author filter
+      of each pull request trigger with the refusal of an unknown login.
 - [ ] Show the read-only view to a member, and Turn off and Delete to an
       admin.
   - [ ] Test a save of each trigger kind, the refusal of a cron, and the
@@ -954,7 +992,8 @@ Depends on: 4, 8
 Show the runs, and let the owner start one.
 
 - [ ] Build the Runs list from the mockup, with each state, each cause of
-      a failure, and the links to the run workspaces.
+      a failure, each skipped run with its reason, and the links to the
+      run workspaces.
 - [ ] Add Run now for the owner. Read the runs again every 10 seconds
       while the page shows, and when the page gets the focus.
 - [ ] Show the routine link in the header of a run workspace, and the
