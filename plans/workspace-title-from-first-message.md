@@ -141,8 +141,19 @@ These calls are agent calls of 9 November 2026.
 - Existing workspaces and sessions keep the names that they have, because
   those names are set. Reason: the project is not in production, and the
   rule never replaces a set name.
-- The agent tools list a workspace with no name as `null`, and their text
-  output shows "Untitled". Reason: one label everywhere.
+- The agent tools list a workspace with no name as `"name": null` in their
+  JSON, with no label. Reason: the CLI and the MCP server print only JSON,
+  and an agent then gets the same value as the API. The docs milestone of
+  9 November 2026 raised this.
+- The Worker asks Workers AI only while the workspace has no name, and
+  stops when a client names it. Reason: a title can no longer apply to a
+  named workspace, under decision 144 G.
+- A runner report of the workspace name that comes when the workspace
+  already has a name ends an open repair of that kind. Reason: the report
+  can change nothing, so the repair has nothing left to do.
+- The rule refuses an automatic name in an archived workspace and in a
+  workspace of a deleted org. Reason: the D1 name write on `origin/main`
+  already skips a deleted org, and the protocol now says both.
 
 ### The title request in the runner (decision 142 B, replaced)
 

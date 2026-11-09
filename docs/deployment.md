@@ -58,7 +58,7 @@ examples.
 | `BOAT_ORG_ID` | Each call to Boat | The ID of the app's Boat organization, as [The app's Boat account](#the-apps-boat-account) says. It is not a secret. |
 | `CONDUCTIVE_MODELS` | `GET /api/models` | The JSON model list, as [Models](#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, for a user with no saved default | The JSON default choice, as [Models](#models) says. |
-| `CONDUCTIVE_TITLE_MODEL` | The title of each new workspace | Optional. The Workers AI model ID of the title model, as [The title model](#the-title-model) says. Without it, a new workspace keeps its city name. It is not a secret. |
+| `CONDUCTIVE_TITLE_MODEL` | The title of each new workspace | Optional. The Workers AI model ID of the title model, as [The title model](#the-title-model) says. Without it, a new workspace keeps no name and shows "Untitled". It is not a secret. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
@@ -137,12 +137,12 @@ operator data. The Worker has no built-in title model.
 - The Worker calls the model through the `AI` binding, on the Cloudflare
   account of the Worker. Each request counts toward the Workers AI use of
   that account.
-- Without the binding or the variable, a new workspace keeps its city
-  name, and the Worker logs a warning. The Worker also logs a warning for
+- Without the binding or the variable, a new workspace keeps no name and
+  shows "Untitled", and the Worker logs a warning. The Worker also logs a warning for
   a failed request. No route fails for a missing title.
 - Workers AI runs only on the network of Cloudflare. `npm run dev` and
   `npm run preview` do not reach it. So they need no Cloudflare login, and
-  a new workspace keeps its city name there.
+  a new workspace keeps no name there.
 
 ## The runner archive
 

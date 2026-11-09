@@ -126,12 +126,15 @@ says.
 - The branch name starts with the GitHub login that the workspace owner has
   at the create (decision 53).
 - A city name and four random characters follow, such as
-  `calummoore/lisbon-7k2q`.
+  `calummoore/lisbon-7k2q`. The branch keeps the city name when the
+  workspace gets a name.
 - Reason: a GitHub login is unique, so the branches of each person stay
   together. A first name was rejected, because two people can share one.
-- The workspace name starts as the city name.
-  [Chat and events](chat-and-events.md#messages) says how a title from the
-  first message then renames it.
+- A new workspace has no name, and the app shows "Untitled" in its place,
+  as [Workspace and session names](chat-and-events.md#workspace-and-session-names)
+  says (decision 144).
+- [Messages](chat-and-events.md#messages) says how a title from the first
+  message then names the workspace.
 - When the sandbox of a new workspace does not start, the workspace does
   not stay. The events of the workspace first show the failed start and
   the error state. The app then removes the workspace and its token.
