@@ -14,12 +14,12 @@ import {
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
-import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import { unpushedWork } from '../fixtures/archive'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
+import { historyFor } from './workspaceTabs'
 
 /**
  * The question before the tab of a running session closes. Closing stops
@@ -90,7 +90,7 @@ export function workspaceOverlay(
       return mobile ? (
         <Sheet title="Session history">
           <Menu
-            entries={historyEntries}
+            entries={historyFor(state)}
             label="Session history"
             placement="sheet"
           />

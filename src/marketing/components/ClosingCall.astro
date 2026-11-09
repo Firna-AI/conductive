@@ -1,0 +1,14 @@
+---
+import SiteActions from './SiteActions.astro'
+
+/** The last call to action of a page: a headline, one sentence, the actions. */
+type Props = { title: string; text: string }
+
+const { title, text } = Astro.props
+---
+
+<section class="closing">
+  <h2 class="closing-title">{title}</h2>
+  <p class="closing-text">{text}</p>
+  <SiteActions />
+</section>
