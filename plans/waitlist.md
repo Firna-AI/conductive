@@ -18,9 +18,8 @@ starts from its branch, `calummoore/admin-section-brainstorm`, and merges
 that branch as it moves. The pull request into `main` opens after the
 operator section merges. The change does not cover limits for each user,
 billing, a place in line, bulk approval, codes with an end date, a
-self-service Delete account, or a change of who is an operator. Decision
-163, the count of org invitations, waits for the user. The brainstorm
-notes are in `.context/waitlist/brainstorm.md`. The options check of the
+self-service Delete account, or a change of who is an operator. The
+brainstorm notes are in `.context/waitlist/brainstorm.md`. The options check of the
 decisions is in `.context/waitlist/options-check.md`.
 
 The decision numbers start at 160. Open branches already use the numbers
@@ -295,12 +294,13 @@ Added on 9 November 2026. The options check moved it from a design call.
   defect.
 - **Previous examples:** None found.
 - **Related:** Decision 160 asked for org invitations and the referral
-  code. Milestones 1 and 3 build the count that this decision chooses.
+  code. Milestone 3 builds the app access of an accepted invitation.
 - **Recommendation:** A. Teams join at once, and the page of each user
   traces each invited person to one admin and one org, which the operator
   can suspend together. B protects the cost best.
-- **Action:** ask the user, because the options trade quick team sign-up
+- **Action:** asked the user, because the options trade quick team sign-up
   against a firm limit on new people, and no option is clearly best.
+- **Chosen:** A, by the user on 9 November 2026: "163 = A".
 
 ## Design
 
@@ -313,8 +313,8 @@ The agent's calls from the brainstorm, on 9 November 2026:
   with the source "existing account". The project is not in production,
   and these accounts belong to the team and the testers.
 - Only org admins send org invitations, as today. Reason: the user's
-  message names the org invitations of today. Decision 163 decides how
-  many people they let in.
+  message names the org invitations of today. They let in any number of
+  people, as decision 163 chose.
 - The pause blocks every way in except the approval of an operator: invite
   codes, referral codes, and the org invitations of people who wait.
   Reason: the user wants to stop all sign-ups, and an approval is one
@@ -547,8 +547,8 @@ approval. A new account still gets app access at once, until Milestone 7.
       sign-in state. The sign-in uses it for an account without app
       access.
 - [ ] Give app access to a person without app access who accepts an org
-      invitation, in the same batch as the membership. Count it as
-      decision 163 chooses. This TODO waits for decision 163.
+      invitation, in the same batch as the membership. Invitations have no
+      count, as decision 163 chose.
 - [ ] Apply the pause to codes and org invitations. A code is not used up
       while the pause is on.
 - [ ] Add the app access state to the session reply.
