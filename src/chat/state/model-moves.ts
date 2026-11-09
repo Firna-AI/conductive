@@ -1,9 +1,8 @@
 import type { AgentChoice } from '../../shared/agents'
 import type { ChangeModelRequest, Session } from '../../shared/sessions'
 import { sessionState, type ChatSnapshot } from './chat-snapshot'
-import { logOf, type ChatContext } from './context'
+import type { ChatContext } from './context'
 import { moveDraft } from './drafts'
-import { confirmRecord, withRecord } from './session-records'
 import { viewShowing } from './sessions'
 
 /**
@@ -82,7 +81,7 @@ export function claimMoves(
   return moves
 }
 
-/** The snapshot with each draft in its new session, and an open one shown. */
+/** Moves each draft and selects its open target while its source stays selected. */
 export function applyMoves(
   snapshot: ChatSnapshot,
   moves: readonly DraftMove[],
@@ -90,7 +89,9 @@ export function applyMoves(
   let next = snapshot
   for (const move of moves) {
     next = moveDraft(next, move)
-    if (!move.open) continue
+    const activeTab = next.view?.activeTab
+    const showsFile = activeTab?.kind === 'file' || activeTab?.kind === 'diff'
+    if (!move.open || next.activeSessionId !== move.from || showsFile) continue
     next = {
       ...next,
       activeSessionId: move.to,
@@ -106,33 +107,7 @@ export function saveMovedView(
   context: ChatContext,
   moves: readonly DraftMove[],
 ): void {
-  if (!moves.some((move) => move.open)) return
-  const { view } = context.store.get()
+  const { view, activeSessionId } = context.store.get()
+  if (!moves.some((move) => move.open && move.to === activeSessionId)) return
   if (view) context.saveView(view)
-}
-
-/**
- * Shows the session that the reply of a model change opened, when the stream
- * has not shown it yet, and moves its draft in the same snapshot. A record
- * that the stream showed first keeps its order. Says whether the focus moved
- * to the session.
- */
-export function showOpened(
-  context: ChatContext,
-  record: Session,
-  eventNumber: number,
-): boolean {
-  if (!context.live()) return false
-  const log = logOf(context, record.id)
-  if (log.record !== null) {
-    confirmRecord(context, record, eventNumber)
-    return false
-  }
-  log.offer(record, eventNumber)
-  const moves = claimMoves(context, [record])
-  context.store.update((snapshot) =>
-    applyMoves(withRecord(context, snapshot, record.id), moves),
-  )
-  saveMovedView(context, moves)
-  return moves.some((move) => move.open)
 }
