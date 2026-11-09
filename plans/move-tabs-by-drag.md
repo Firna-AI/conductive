@@ -261,6 +261,9 @@ Added on 8 November 2026 from the options check of decision 142. Open.
   Conductor: Mark as unread, Rename chat, three copy actions, Close tab,
   and Close others, in groups with lines between them. The keys of B are
   not part of the choice.
+- **Also chosen:** the user removed the Rename button of the shown session
+  tab on 9 November 2026, in these words: "we can remove". So the tab menu
+  is the one way to rename a session.
 
 ## Design
 
@@ -309,8 +312,8 @@ Added on 8 November 2026 from the options check of decision 142. Open.
 ### Tab menu
 
 - A right click on a tab opens the tab menu at the pointer. The Menu key,
-  or Shift and F10, on a focused tab opens it at the tab, where the
-  browser and the system send the same event.
+  or Shift and F10, on a focused tab opens it at the tab, on every
+  system.
 - The menu of a session tab holds "Rename session", a line, then "Move
   left" and "Move right". The menu of a file or diff tab holds "Move left"
   and "Move right".
@@ -320,13 +323,15 @@ Added on 8 November 2026 from the options check of decision 142. Open.
   the order as a drag does. A screen reader hears "<title> moves to place
   2 of 4." The focus goes back to the moved tab.
 - "Rename session" opens the rename field in that tab, also when the tab
-  does not show. The Rename button of the shown session tab stays.
+  does not show. The Rename button of the shown session tab goes, so the
+  menu is the one way to rename a session.
 - Escape or a click outside the menu closes it.
 - A read-only workspace opens no tab menu, so the browser shows its own
   menu. A tab with its rename field open opens no tab menu, so the field
   keeps the text menu of the browser.
-- A phone opens no tab menu. A long press lifts the tab, and the press
-  opens no menu.
+- On a phone, a long press lifts the tab. When the finger lets go without
+  a move, the tab menu opens as a sheet. When the finger moves, the tab
+  drags.
 
 ### Parts
 
@@ -376,8 +381,8 @@ The agent made each call below on 8 November 2026.
 - The look follows the workspace list: a raised lifted tab, a faint copy
   at 0.35 opacity, and a line in the primary colour. Reason: one look for
   every drag in the app. The mockup milestone draws it first.
-- A drag starts only on the tab itself, not on its Close or Rename button.
-  Reason: those controls keep their own press.
+- A drag starts only on the tab itself, not on its Close button. Reason:
+  that button keeps its own press.
 - While a tab shows its rename field, no drag and no tab menu acts on it.
   Reason: the field keeps its own pointer and text actions, such as the
   text menu of the browser.
@@ -406,12 +411,24 @@ of decision 144.
 - "Rename session" shows only on session tabs. Reason: a file tab has no
   title of its own. The product calls a chat a session, as "New session"
   and "Session history" do.
-- No tab menu in a read-only workspace or on a phone. Reasons: a read-only
-  workspace moves no tab and renames no session, and a long press on a
-  phone lifts the tab.
+- No tab menu in a read-only workspace. Reason: a read-only workspace
+  moves no tab and renames no session.
 - No key moves a tab. Reason: the user chose the menu, not the keys of B.
-  A Mac keyboard has no Menu key, so a check on a Mac after the merge
-  records how a Mac keyboard opens the menu.
+
+After the user removed the Rename button on 9 November 2026, the agent
+made these calls the same day:
+
+- On a phone, a long press that ends without a move opens the tab menu as
+  a sheet. A long press that moves drags the tab. Reason: a phone has no
+  right click, and the menu is now the one way to rename a session.
+  Android also sends a right click on a long press.
+- The tab opens its menu on Shift and F10, and on the Menu key, through
+  its own key handler. Reason: a Mac keyboard has no Menu key, and a
+  browser on a Mac may send no right click for Shift and F10. Without the
+  Rename button, a keyboard needs this way to rename a session.
+- The selected tab gets narrower, because it loses the 44 px of the Rename
+  button. The minimum width of the selected tab on a phone changes with
+  it. Reason: the CSS of the mockups gives that width for the button.
 - The wheel helper is shared. Reason:
   `plans/follow-ups/sideways-tab-rows-ignore-vertical-wheel.md` can then
   use it for the other rows that scroll sideways.
@@ -434,6 +451,15 @@ Replaced ways:
 - The private pointer mechanics of `useRowDrag` → the shared pointer drag
   hook. Consumer: `src/shell/list/useRowDrag.ts`. Moved and deleted in
   Milestone 5.
+- The Rename button of the shown session tab → "Rename session" in the tab
+  menu. The user approved the removal on 9 November 2026. Consumers: `Tab`
+  in `src/chat/components/SessionTabs.tsx`, `Tab` in
+  `docs/mockups/src/components/workspace/WorkspaceTabs.tsx`, the width of
+  the selected phone tab in `WorkspaceTabs.module.css`, the rationale of
+  `docs/mockups/src/entries/app/sessions/index.mockup.tsx`, the read-only
+  case of `src/chat/components/ReadOnlyChat.dom.test.tsx`, and the
+  read-only rule of `src/chat/README.md`. Moved in Milestones 1 and 4.
+  Deleted in Milestones 1 and 4.
 
 ## Milestone 1: Mockups
 
@@ -453,6 +479,9 @@ menu, on desktop and on a phone.
       the row in `WorkspaceTabs.module.css`.
 - [ ] Add an item that is off to the menu CSS of the mockups, in
       `docs/mockups/src/components/common/Menu.module.css`.
+- [ ] Remove the Rename button from the shown session tab of the mockups.
+      Narrow the selected phone tab to match. Update the rationale of the
+      Sessions page, which names the pencil.
 - [ ] Add a "Move tabs" page under `docs/mockups/src/entries/app/tabs/`,
       beside the Sessions and Files pages, with at most five screens. Each
       screen shows a phone and desktop.
@@ -463,8 +492,8 @@ menu, on desktop and on a phone.
   - [ ] A full row: the row scrolls, the shown tab is in view, and a fade
         marks the end that clips tabs.
   - [ ] The tab menu: a right click on the first session tab shows "Rename
-        session", a line, "Move left" off, and "Move right". A phone shows
-        no tab menu.
+        session", a line, "Move left" off, and "Move right". On a phone,
+        the same menu shows as a sheet after a long press.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages at
       `http://127.0.0.1:4173`.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -484,9 +513,11 @@ State the rules of the row before the code changes.
       workspace. Give the rejected group order and its reason.
 - [ ] Add the full row of decision 143 to the same section: the row
       scrolls sideways and keeps the shown tab in view.
-- [ ] Add the tab menu of decision 144 to the same section: a right click
-      opens Rename session, Move left, and Move right. A read-only
-      workspace and a phone open no tab menu.
+- [ ] Add the tab menu of decision 144 to the same section: a right
+      click, Shift and F10, or a long press on a phone opens Rename
+      session, Move left, and Move right. Say that the user renames a
+      session from the tab menu. A read-only workspace opens no tab
+      menu.
 - [ ] In the Files and changes section of
       `docs/protocol/workspaces-and-sandboxes.md`, say that a file or diff
       tab opens at the end of the row. Link to the rules of the row.
@@ -545,14 +576,19 @@ full row.
       scroll of a drag near an end.
 - [ ] Add the item that is off and the placement at a point to the `Menu`
       part of the chat.
-- [ ] Add the tab menu of the design, with the focus back to the tab after
-      a move and the announcement of the new place.
+- [ ] Remove the Rename button from `Tab` in
+      `src/chat/components/SessionTabs.tsx`.
+- [ ] Add the tab menu of the design: its own handler for Shift and F10
+      and the Menu key, the sheet after a long press on a phone, the focus
+      back to the tab after a move, and the announcement of the new
+      place.
 - [ ] Test the mounted chat:
   - [ ] A pointer drag of a file tab before a session tab saves the new
         order, and the click at its end selects nothing.
   - [ ] Escape during a drag keeps the order.
-  - [ ] A long press of a touch pointer lifts a session tab and opens no
-        menu.
+  - [ ] A long press of a touch pointer lifts a session tab. A release
+        without a move opens the tab menu as a sheet.
+  - [ ] Shift and F10 on a focused tab opens the tab menu.
   - [ ] A right click on a tab opens the tab menu. "Move left" moves the
         tab one place, saves the order, announces the new place, and gives
         the focus back to the tab.
@@ -560,7 +596,9 @@ full row.
         only on a session tab.
   - [ ] "Rename session" on a tab that does not show opens its rename
         field.
-  - [ ] A read-only workspace opens no tab menu.
+  - [ ] A read-only workspace opens no tab menu. Move the read-only case
+        of `src/chat/components/ReadOnlyChat.dom.test.tsx` from the Rename
+        button to the tab menu.
   - [ ] A vertical wheel turn over the row scrolls it sideways.
 - [ ] Update `src/chat/README.md`, `src/files/README.md`, and
       `src/shell/workspace/README.md`.
@@ -588,6 +626,8 @@ Depends on: 1, 2, 3, 4, 5
         write holds the new order. Cancel a drag with Escape.
   - [ ] Open the tab menu with a right click, and with Shift and F10 in
         Chrome on Linux. Move a tab and rename a session with the menu.
+  - [ ] At a phone size with touch emulation, open the menu with a long
+        press, and rename a session.
   - [ ] Fill the row until it scrolls. Check the wheel, the fades, a new
         tab in view, and a drag near an end.
   - [ ] Save the screenshots under `.context/move-tabs-by-drag/`.
@@ -611,6 +651,6 @@ Depends on: 1, 2, 3, 4, 5
 - [ ] On `conductive.build`, drag a file tab before a session tab, then
       reload. Open the same workspace on a phone. The order stays, and the
       phone shows the sessions in the new order.
-- [ ] On a Mac, in Chrome, Safari, and the Mac app, try to open the tab
-      menu from the keyboard, with and without VoiceOver. Record the keys
-      that open it.
+- [ ] On a Mac, in Chrome, Safari, and the Mac app, check that Shift and
+      F10, with Fn on a laptop keyboard, opens the tab menu, also with
+      VoiceOver on.
