@@ -88,6 +88,14 @@ export const lucideIcons = {
     path('M7 12h.01'),
   ],
   'circle-minus': [circle(12, 12, 10), path('M8 12h8')],
+  'calendar-check': [
+    path('M8 2v4'),
+    path('M16 2v4'),
+    rect(3, 4, [18, 18], 2),
+    path('M3 10h18'),
+    path('m9 16 2 2 4-4'),
+  ],
+  'arrow-right': [path('M5 12h14'), path('m12 5 7 7-7 7')],
 } as const satisfies Readonly<Record<string, readonly IconShape[]>>
 
 export type IconName = keyof typeof lucideIcons

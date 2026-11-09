@@ -8,7 +8,14 @@ import { promisify } from 'node:util'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
-import { sitePaths } from '../../src/marketing/links'
+import { parityAreas } from '../../src/marketing/from-conductor/areas'
+import {
+  parityLinkCopy,
+  parityPageCopy,
+} from '../../src/marketing/from-conductor/copy'
+import { parityFeatures } from '../../src/marketing/from-conductor/features'
+import { parityStatuses } from '../../src/marketing/from-conductor/statuses'
+import { pageHrefs, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
@@ -118,8 +125,13 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
   }
 })
 
-it('names no sandbox provider on the home, Terms, and Privacy pages', async () => {
-  for (const path of [sitePaths.home, sitePaths.terms, sitePaths.privacy]) {
+it('names no sandbox provider on the home, legal, and comparison pages', async () => {
+  for (const path of [
+    sitePaths.home,
+    sitePaths.terms,
+    sitePaths.privacy,
+    sitePaths.fromConductor,
+  ]) {
     const response = await get(path)
     expect(response.status, path).toBe(200)
     const page = await response.text()
@@ -133,6 +145,7 @@ it('allows exactly each page inline style hash and serves every file it names', 
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
+    sitePaths.fromConductor,
     '/missing',
   ]) {
     const response = await get(path)
@@ -157,6 +170,63 @@ it('allows exactly each page inline style hash and serves every file it names', 
   expect(new Uint8Array(await icon.arrayBuffer())).toEqual(
     new Uint8Array(await expected.arrayBuffer()),
   )
+})
+
+function words(markup: string): string {
+  const text = decodeHtml(markup.replace(/<[^>]*>/g, ' '))
+  return text.replace(/\s+/g, ' ').trim()
+}
+
+function headings(markup: string, scope: string): string[] {
+  const pattern = new RegExp(
+    `<th\\b[^>]*scope="${scope}"[^>]*>([\\s\\S]*?)</th>`,
+    'g',
+  )
+  return [...markup.matchAll(pattern)].map(([, text]) => words(text))
+}
+
+it('serves the complete Cloud comparison with its public entry links', async () => {
+  const response = await get(sitePaths.fromConductor)
+  expect(response.status).toBe(200)
+  expect(response.headers.get('Set-Cookie')).toBeNull()
+  const page = await response.text()
+  for (const text of [
+    parityPageCopy.title,
+    ...Object.values(parityPageCopy.scope),
+  ]) {
+    expect(words(page)).toContain(text)
+  }
+  const tables = [...page.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/g)]
+  expect(tables).toHaveLength(1)
+  const table = tables[0]?.[1] ?? ''
+  expect(headings(table, 'col')).toEqual(Object.values(parityPageCopy.columns))
+  const groups = [...table.matchAll(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/g)]
+  expect(groups).toHaveLength(parityAreas.length)
+  expect(headings(table, 'rowgroup')).toEqual(
+    parityAreas.map((area) => area.title),
+  )
+  const rows = groups.flatMap(([, body]) =>
+    [...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].map(([, row]) => row),
+  )
+  expect(rows).toHaveLength(parityFeatures.length)
+  for (const id of ['attachments', 'cloud-desktop', 'direct-links']) {
+    const feature = parityFeatures.find((item) => item.id === id)!
+    const row = rows.find((item) => headings(item, 'row')[0] === feature.name)
+    expect(words(row ?? ''), id).toContain(parityStatuses[feature.status].label)
+  }
+  const home = await (await get(sitePaths.home)).text()
+  const intro = home.slice(0, home.indexOf('<h1'))
+  expect(
+    links(intro).find((link) => link.text === parityLinkCopy.home)?.href,
+  ).toBe(pageHrefs().fromConductor)
+  const footer = home.slice(home.indexOf('<footer'))
+  const product =
+    /<h2\b[^>]*>\s*Product\s*<\/h2>\s*<ul\b[^>]*>([\s\S]*?)<\/ul>/.exec(
+      footer,
+    )?.[1] ?? ''
+  expect(
+    links(product).find((link) => link.text === parityLinkCopy.footer)?.href,
+  ).toBe(pageHrefs().fromConductor)
 })
 
 it('serves the built agreement with Continue and legal links on the given origins', async () => {

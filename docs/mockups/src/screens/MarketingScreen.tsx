@@ -1,4 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
+import { waitlistText } from '../../../../src/marketing/access-copy'
 import { features, smallerFeatures } from '../../../../src/marketing/features'
 import { parityLinkCopy } from '../../../../src/marketing/from-conductor/copy'
 import { classes } from '../components/common/classes'
@@ -54,7 +55,7 @@ export function MarketingScreen(props: { viewport: Viewport }) {
         />
         <ClosingCall
           signIn={paths.signIn}
-          text="Sign up with GitHub, connect your repositories, and send the first task."
+          text={waitlistText}
           title="Give your next task its own cloud computer."
           viewport={viewport}
         />

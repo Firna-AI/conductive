@@ -136,7 +136,11 @@ pictures, the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
 [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)
-states its requirements. The pictures are captures of real screens, such
-as the workspace screen with its chat and composer. A change to a screen or
-a shared part that a picture shows needs a new capture, with the
+states its requirements. It draws the real rows: its rows, statuses, dates,
+and words come from `src/marketing/from-conductor/`, the modules that the
+site also reads, as
+[the marketing site README](../../src/marketing/README.md#the-comparison-page)
+says. The pictures are captures of real screens, such as the workspace
+screen with its chat and composer. A change to a screen or a shared part
+that a picture shows needs a new capture, with the
 [capture steps](../../src/marketing/README.md#pictures).

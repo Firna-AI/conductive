@@ -1,0 +1,24 @@
+---
+import type { CopyText } from '../from-conductor/copy'
+import { dayWords } from '../from-conductor/dates'
+
+/**
+ * A sentence of shared copy as markup: its words, its links to pages of
+ * other sites, and its days as `time` elements with their full words.
+ */
+type Props = { text: CopyText }
+
+const { text } = Astro.props
+---
+
+{text.map((part) => {
+  if (typeof part === 'string') return part
+  if ('day' in part) {
+    return <time datetime={part.day}>{dayWords(part.day, 'long')}</time>
+  }
+  return (
+    <a class="text-link" href={part.href}>
+      {part.text}
+    </a>
+  )
+})}

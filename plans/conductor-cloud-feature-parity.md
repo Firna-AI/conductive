@@ -2,13 +2,9 @@
 
 Status: Active. On branch `calummoore/conductor-feature-parity-list`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
-Conductor is a Mac app for parallel coding agents at `conductor.build`.
-Conductor Cloud, its set of cloud workspaces, turns read-only on
-13 November 2026 and shuts down on 20 November 2026. Its users need to see
-which of its features they keep in Conductive. This change adds a public
-page at `conductive.build/from-conductor`. One table lists each Conductor
-Cloud feature with its status, a real due date when one exists, and a short
-note. The home page and the site footer link to the page.
+The public page at `conductive.build/from-conductor` compares Conductor
+Cloud features with Conductive. One table shows each status, a real due
+date when one exists, and a short note. The home page and footer link to it.
 
 The change does not build missing features, cover local Conductor
 workspaces, or add an import tool. The 320 px overflow of the site header
@@ -24,18 +20,12 @@ Contract owners:
 
 Replaced ways:
 
-- The sample fixture `docs/mockups/src/fixtures/conductorParity.ts`, with
-  its 24 rows, example dates, and `parityStudyNote` → the dataset in
-  `src/marketing/from-conductor/`. Consumers: `parityStatus.ts`,
-  `ParityIntro.tsx`, `ParityMarks.tsx`, `FeatureCells.tsx`, and
-  `ParityOneTable.tsx` in `docs/mockups/src/components/parity/`, the
-  one-table entry, the `index.md` of its folder, and
-  `docs/mockups/marketing-site.md`. Moved and deleted in Milestone 3.
-- The status words, order, due rule, and day words of `parityStatus.ts` →
-  a status module beside the dataset. The page copy of the mockup → a copy
-  module there. Consumers: `ParityIntro.tsx`, `FromConductorScreen.tsx`,
-  `MarketingScreen.tsx`, `SiteFooter.tsx`, `ParityMarks.tsx`, and
-  `ParityLegend.tsx`. Moved and deleted in Milestone 3.
+- The 24-row sample fixture and its example dates move to the canonical
+  dataset in `src/marketing/from-conductor/`. Migrate every parity component,
+  the chosen entry, and its notes. Delete the fixture in Milestone 3a.
+- Mockup status metadata, date helpers, column headings, page copy, and
+  home/footer labels move to canonical modules. Update all consumers and
+  remove duplicates in Milestone 3a. Keep no compatibility adapter.
 
 ## Decisions
 
@@ -138,32 +128,34 @@ Depends on: 1
 The docs state the requirements and the decisions in force before the code
 changes. The `docs implementor` does this work.
 
-- [ ] Write `docs/protocol/conductor-cloud-comparison.md` in 150 lines or
+- [x] Write `docs/protocol/conductor-cloud-comparison.md` in 150 lines or
       fewer. Put each decision in force beside its requirement, with its
       rejected alternatives and reason. State these requirements:
-  - [ ] The address, no sign-in, the site header and footer, no script, no
+  - [x] The address, no sign-in, the site header and footer, no script, no
         cookie, the two entry points, and the table. The mockup is the
         visual spec.
-  - [ ] Conductor Cloud features only, with the scope note. A feature that
+  - [x] Conductor Cloud features only, with the scope note. A feature that
         controls only local Mac workspaces is out, also on another device,
         such as remote control. A cloud feature with a Mac client stays.
-  - [ ] The six statuses with the meaning, claim rule, and colour of each.
+  - [x] The six statuses with the meaning, claim rule, and colour of each.
         Only a recorded commitment gives a due date. Without one, an In
         progress or Planned row shows "No date yet".
-  - [ ] The notes, the check date, the Cloud dates, and the line about
+  - [x] The notes, the check date, the Cloud dates, and the line about
         Conductor.
-- [ ] Keep the root architecture near its length target after the latest
+- [x] Keep the root architecture near its length target after the latest
       main integration. Move its marketing component and data/trust detail
       into linked area pages without losing new waitlist responsibilities.
       Name the comparison page and link the new protocol.
-- [ ] Link the new doc and the new architecture page from `README.md`. Name
+- [x] Link the new doc and the new architecture page from `README.md`. Name
       the page in "The marketing site" of `docs/mockups/README.md`.
-- [ ] Add the upkeep rule to `## Repository rules` in `AGENTS.md`.
+- [x] Add the upkeep rule to `## Repository rules` in `AGENTS.md`.
       `CLAUDE.md` links to that file.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
       Change only a sentence that restates a changed fact. Use the merged privacy text, including
       waitlist records. The new static page adds no processing or cookie.
-- [ ] Check each relative link of each changed Markdown file. Commit.
+- [x] Check each relative link of each changed Markdown file. Commit.
+
+Checkpoint: `f8e29583`. Latest main is integrated through `3ce7b65a`.
 
 ## Milestone 3: Shared content
 
@@ -172,24 +164,24 @@ Depends on: 2
 The `non-ui implementor` writes the host-neutral typed dataset. It lands
 with its first importer in Milestone 3a, so no checkpoint has unused data.
 
-- [ ] Use the current research in `.context/conductor-parity/full-data/`.
+- [x] Use the current research in `.context/conductor-parity/full-data/`.
       Its audit accounts for all 200 source rows. Preserve all current
       source functionality during main integration.
-- [ ] Refresh statuses after main changes. Workspace numbers and links
+- [x] Refresh statuses after main changes. Workspace numbers and links
       from pull request #118 are now implemented. Pull request #116 adds
       controlled access and waitlist behavior. Preserve those limits in
       public notes and the current Mac v0.2.0 workaround.
-- [ ] Keep approved future scope for the paused Desktop. Recheck the
+- [x] Keep approved future scope for the paused Desktop. Recheck the
       still-unconnected attachment resolver and current PR #90 status.
-- [ ] Write readonly typed rows, areas, status metadata, and date helpers
+- [x] Write readonly typed rows, areas, status metadata, and date helpers
       under `src/marketing/from-conductor/`. Split by area, under 300 lines.
       A discriminated feature union permits dates only on coming rows.
-- [ ] Leave every due date null. Keep private evidence and source-row
+- [x] Leave every due date null. Keep private evidence and source-row
       audit fields out of production data. Set the real check date.
-- [ ] Match the corrected research exactly and run targeted data checks.
+- [x] Match the corrected research exactly and run targeted data checks.
       Global unused-export verification waits for the first importer.
 
-Evidence: `.context/conductor-parity/shared-data-report.md` and the refreshed
+Checkpoint: `0f65e84a`. Evidence: the shared-data report and refreshed
 research and audit under `.context/conductor-parity/full-data/`.
 
 ## Milestone 3a: Full-content mockup integration
@@ -202,25 +194,25 @@ The `ui implementor` migrates the chosen mockup to the shared content. The
 full inventory needs a visual pass before the public page. This also owns
 the shared copy and exhaustive map updates identified by the plan check.
 
-- [ ] Create shared page and link copy. Use timeless Cloud date wording,
+- [x] Create shared page and link copy. Use timeless Cloud date wording,
       the official announcement link, and the current waitlist actions.
       Move all column headers and closing copy from `ParityOneTable.tsx`
       and `FromConductorScreen.tsx`, as well as the other listed consumers.
-- [ ] Migrate every consumer under Replaced ways to the canonical modules.
+- [x] Migrate every consumer under Replaced ways to the canonical modules.
       Delete the sample fixture, its example dates, parityStudyNote, and
       duplicate mockup status/copy/date definitions. Keep no adapter.
-- [ ] Add the six status SVG shapes and notice entries needed by the site.
+- [x] Add the six status SVG shapes and notice entries needed by the site.
       Update the exhaustive icon map in `FeatureGrid.tsx` in the same step.
-- [ ] Add the public route key to sitePaths, pageHrefs, and siteOriginHrefs.
+- [x] Add the public route key to sitePaths, pageHrefs, and siteOriginHrefs.
       Update `CatalogueText.tsx` and every other exhaustive SitePage map.
       The actual public page and links remain for Milestone 4.
-- [ ] Update the chosen entry, index document, catalogue notes, and marketing
+- [x] Update the chosen entry, index document, catalogue notes, and marketing
       README for real shared content. Remove all sample caveats.
-- [ ] Run typecheck, mockup checks, formatting, lint, file length, and unused
+- [x] Run typecheck, mockup checks, formatting, lint, file length, and unused
       exports. Inspect the full table in both schemes and layouts.
-- [ ] Verify one table, one header, complete row groups, requested colours,
+- [x] Verify one table, one header, complete row groups, requested colours,
       merged Area boundaries, no example dates, and accessible phone rows.
-- [ ] Commit the shared content and its importer together. Record the
+- [x] Commit the shared content and its importer together. Record the
       sample deletion. Evidence stays under `.context/`.
 
 ## Milestone 4: Public page
@@ -229,60 +221,45 @@ Tags: ui
 
 Depends on: 3a
 
-Astro builds the page from the dataset, as the mockup draws it. The home
-page and the footer link to it. The `ui implementor` does this work.
+- [x] Before the page or links exist, the non-ui implementor extends
+      `worker/marketing/built-site.test.ts` with one focused case.
+  - [x] Follow home and footer links to the public route. Check status 200,
+        Cloud scope, one table, four headers, groups, complete row count,
+        and representative fields. Restate no per-feature status.
+  - [x] Add the path to existing script, style-hash, asset, and naming checks.
+  - [x] See the focused case fail on its expected 404 assertion.
+- [x] The ui implementor adds `src/marketing/pages/from-conductor.astro`
+      on SiteLayout, using the shared copy, data, status metadata, and icons.
+  - [x] Keep row-group Area headers, feature row headers, and time elements.
+        Use one responsive static table with phone-only Area cells.
+        Verify actual header associations and roles in both layouts.
+  - [x] Use the Document cascade and existing tokens. Keep the requested
+        colours. Add no inline style, script, or accent edge.
+  - [x] Add production home and Product-footer links. Keep the current
+        waitlist promise. Reuse a closing part when both pages share it.
+- [x] Run the marketing tests. Repeat the new async case 10 times without
+      adding retries or timeouts. Record its runtime and pass count.
+- [x] Run mockup and early checks, including unused exports. Keep every
+      exhaustive site-page and icon map complete. Add no new gate.
+- [x] Smoke-test the built page through the Worker with build and preview.
+      Compare it with the mockup in both schemes at 320, 390, 430, 760,
+      1024, and 1440 px. Check links, keyboard order, and Chromium table roles.
+      The comparison table adds no horizontal scroll.
+- [x] Update the marketing README's pages, mockups, and Key code.
+- [ ] Commit the public-page checkpoint with the completed test and docs.
 
-- [ ] Extend `worker/marketing/built-site.test.ts`. Read each label and the
-      path from the shared modules.
-  - [ ] Add the new path to the checks of scripts, style hashes, named
-        files, and the sandbox provider name.
-  - [ ] Add one focused case. It follows the home and footer links to the
-        public route, and it checks status 200 and the cloud scope note. It
-        checks one table with four columns, a row group for each area, a
-        row for each feature, and the fields of a few rows. It does not
-        restate each status.
-  - [ ] See the focused case fail before the page exists. Run
-        `npm run test -- worker/marketing src/marketing`. Then run the case
-        10 times, and record the pass count.
-- [ ] Add `src/marketing/pages/from-conductor.astro` on `SiteLayout`, with
-      the title and the description of the copy. Share each part that the
-      home page also draws, such as the closing call.
-  - [ ] Give each area a `tbody` and a merged `th` with `rowspan` and
-        `scope="rowgroup"`. Give each feature a row `th`, and each due date
-        a `time` element.
-  - [ ] Use the responsive static table design call: desktop merged headers
-        and phone-only Area cells, with CSS-only visibility. Check table
-        roles and header associations in both layouts. Do not render two tables.
-- [ ] Add the styles in the cascade order of `Document.astro`, with the
-      `--ui-*` tokens. Add no inline `style` attribute and no accent edge.
-- [ ] Keep the icon shapes and mockup maps green after any UI refinement.
-      Run the mockup check and early checks before this milestone commits.
-- [ ] Add the home link to `src/marketing/pages/index.astro` and the footer
-      link to `src/marketing/components/SiteFooter.astro`.
-- [ ] Smoke-test with `npm run build` and `npm run preview`, as the
-      marketing README says. `npm run dev` cannot serve built pages yet,
-      as `plans/follow-ups/development-built-site-unavailable.md` says.
-      Open both links. Compare the page with the mockup in both schemes at
-      320, 390, 430, 760, 1024, and 1440 px. Check the keyboard order and
-      the accessibility tree of the table.
-- [ ] Update `src/marketing/README.md`: the pages, the mockups, and
-      `### Key code`. Run mockup and early checks before the checkpoint.
-      Commit the milestone.
-
-Evidence: the test runs, the screenshots, and the smoke-test notes go in
-`.context/conductor-parity/checks/`.
+Evidence: `.context/conductor-parity/checks/` holds tests and smoke notes.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-The branch takes the latest `main`, checks the statuses again, and opens
-its pull request. Agent merges are off. Only the user merges and deploys.
+The branch checks the latest main and opens its PR. Only the user merges.
 
-- [ ] Merge `origin/main` with the `git-merge` skill. Keep the merged
+- [x] Merge `origin/main` with the `git-merge` skill. Keep the merged
       waitlist/access flow and workspace link functionality. No agent other
       than the orchestrator fetches or merges shared Git refs.
-- [ ] Check each status again against the merged `main`. Update each row
+- [x] Check each status again against the merged `main`. Update each row
       whose evidence changed, and the check date.
 - [ ] Run `npm --prefix desktop ci`, `npm ci --prefix runner`, the targeted
       tests, and the complete gate, `npm run check`.
@@ -312,10 +289,10 @@ the reviews in `.context/reviews/calummoore/conductor-feature-parity-list/`.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy, open `https://conductive.build/from-conductor` and
-      the two links to it. Check status 200, no script, and the headers
-      that `plans/follow-ups/marketing-site-deployed-smoke-test.md` lists.
+- [ ] After deploy, check the public comparison page and both entry links.
+      Extend `plans/follow-ups/marketing-site-deployed-smoke-test.md` with
+      the route, status, static policy, and header checks before plan removal.
 
-Plan-check evidence: `.context/conductor-parity/plan-check-report.md`.
-The 3ce7b65a main integration is recorded in
-`.context/conductor-parity/access-sync.json`.
+Evidence: `.context/conductor-parity/plan-check-report.md` and
+`.context/conductor-parity/access-sync.json` record the plan check and
+main integration. Check logs stay under `.context/`.

@@ -1,4 +1,5 @@
 import { productName } from '../../../docs/mockups/src/brand'
+import { waitlistText } from '../access-copy'
 import { conductorAnnouncementHref, conductorCloudDays } from './dates'
 import { parityCheckedOn } from './features'
 
@@ -36,6 +37,8 @@ const checked: CopyText = ['List checked on ', { day: parityCheckedOn }, '.']
  * and the mockup draw the same words, each in its own markup.
  */
 export const parityPageCopy = {
+  documentTitle: `From Conductor Cloud – ${productName}`,
+  description: `Which Conductor Cloud features work in ${productName} today, which are on the way, and which work differently.`,
   label: 'From Conductor Cloud',
   title: 'Coming from Conductor Cloud?',
   lead: `See which Conductor Cloud features work in ${productName} today, which are on the way, and which work differently.`,
@@ -57,7 +60,7 @@ export const parityPageCopy = {
   affiliation: `${productName} is not affiliated with Conductor.`,
   closing: {
     title: 'Plan your move from Conductor Cloud.',
-    text: 'Join the waitlist with GitHub. The app opens for you when your account gets access.',
+    text: waitlistText,
   },
 } as const
 

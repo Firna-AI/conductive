@@ -223,8 +223,9 @@ complete yet:
 - `worker/app.ts`: the Worker's HTTP entry point.
 - `worker/marketing/`: built marketing pages, the agreement page before
   GitHub, the file list, request markers, and the site's security headers.
-- `src/marketing/`: Astro pages, layouts, parts, styles, pictures, and
-  shared legal text. Its [README](src/marketing/README.md) gives the build
+- `src/marketing/`: Astro pages, layouts, parts, styles, pictures, shared
+  legal text, and the shared rows and words of the Conductor Cloud
+  comparison page. Its [README](src/marketing/README.md) gives the build
   and preview steps.
 - `src/shared/site-build.ts`: names and types shared by the Astro build
   and the Worker.

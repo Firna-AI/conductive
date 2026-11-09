@@ -1,6 +1,8 @@
 import {
   Archive,
+  ArrowRight,
   ArrowRightLeft,
+  CalendarCheck,
   CircleCheck,
   CircleDashed,
   CircleEllipsis,
@@ -32,4 +34,6 @@ export const siteIcons: Readonly<Record<IconName, LucideIcon>> = {
   'arrow-right-left': ArrowRightLeft,
   'circle-ellipsis': CircleEllipsis,
   'circle-minus': CircleMinus,
+  'calendar-check': CalendarCheck,
+  'arrow-right': ArrowRight,
 }

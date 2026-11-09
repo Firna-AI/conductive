@@ -184,11 +184,15 @@ The [flows page](architecture/flows.md) describes how the components work
 together for a new workspace, chat, the terminal, previews, the desktop,
 GitHub events, and stops.
 
-## Data and trust boundaries
+## Where data lives
 
-The [data and trust page](architecture/data-and-trust.md) gives where
-each kind of data lives, and the trust boundaries between the orgs, the
-Boat key, and the sandboxes.
+The [data locations](architecture/data-and-trust.md#where-data-lives) give
+where each kind of data lives.
+
+## Trust boundaries
+
+The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
+separate the orgs, the Boat key, and the sandboxes.
 
 ## Decision numbers
 
