@@ -85,6 +85,10 @@ approved.
   workspace of a failed first start keeps its number used. A restored org
   keeps its count. Reason: a person who said `W-12` must not find another
   workspace there later.
+- Agent call, from implementation on 9 November 2026: an insert trigger
+  owns allocation from the persistent org counter. It runs in the
+  workspace insert transaction. Reason: every current D1 writer then
+  gets the same atomic allocation, including direct test seeds.
 - Agent call: the label is `W-` and the number, in every org. It is only
   a label. Links, stored messages, and the agent tools name a workspace by
   its ID (decision 151). Reason: the user asked that the label can change
@@ -207,6 +211,14 @@ approved.
   box shows the chips again when a draft comes back, such as after a
   failed send or a draft move to a new session. Reason: the drafts, the
   sends, and the stored history then need no change.
+- Agent call, from editor preparation on 9 November 2026: plain-text
+  serialization adds a separator only where adjacent text would join a
+  chip's URL. Reason: sending, copying, and restoring must keep each exact
+  workspace link, including when a person types beside the chip.
+- Agent call: when a chip's workspace leaves the visible list, the editor
+  reconciles it to ordinary text. A pasted or restored link can become a
+  chip when its list becomes available. Reason: the same visibility and
+  draft rules apply while the list changes, without changing typed URLs.
 - Agent call, from the documentation check on 9 November 2026: normal
   typed text keeps its existing behaviour. Paste and restored drafts
   create chips. Reason: automatic conversion of manually typed URLs is
@@ -235,6 +247,9 @@ approved.
   Chrome with a phone screen. When Lexical fails, the proof tries Tiptap.
   When both fail, the milestone stops, and the editor becomes a decision
   for the user, with option E of decision 150 as the fallback.
+- Agent call, from editor preparation: use the supported React composer
+  and plugin APIs in `lexical` and `@lexical/react`. Reason: they meet the
+  field's needs with the two planned direct packages.
 
 ### The agent
 
@@ -429,34 +444,34 @@ Depends on: 2
 The Worker gives each workspace its number and its link, in the replies
 of the app and of the agent tools.
 
-- [ ] Reserve the prefix range `202611091200`–`202611091259` for this
+- [x] Reserve the prefix range `202611091200`–`202611091259` for this
       milestone in `migrations/README.md`.
-- [ ] Read the `databases` skill. Add a D1 migration in that range, with
+- [x] Read the `databases` skill. Add a D1 migration in that range, with
       a count for each org and a number for each workspace, unique in its
       org. Give the existing workspaces numbers in the order of their
       creation.
-- [ ] Give each new workspace the next number of its org, in the same
+- [x] Give each new workspace the next number of its org, in the same
       batch as its insert. A failed first start does not give its number
       back.
-- [ ] Add `number` and `link` to the shared workspace record in
+- [x] Add `number` and `link` to the shared workspace record in
       `src/shared/workspaces.ts`, the Worker replies, the readers of the
       web app, the fake API, and the fixtures of `src/test-support/`.
-- [ ] Build `link` from `APP_ORIGIN`, the app origin of the Worker, also
+- [x] Build `link` from `APP_ORIGIN`, the app origin of the Worker, also
       for the routes of the agent tools.
-- [ ] Present links for each browser connection and explicit response.
+- [x] Present links for each browser connection and explicit response.
       Keep local request origins distinct from the Durable Object's bound
       environment. Fill number and link in older saved workspace events
       and create results while preserving their saved fields and order.
-- [ ] Add `number` and `link` to `AgentWorkspaceSummary` and to the reply
+- [x] Add `number` and `link` to `AgentWorkspaceSummary` and to the reply
       of a create. Describe the link in the CLI help and in the MCP tool
       descriptions in `tools/`.
-- [ ] Test the numbers of two creates, of a failed create, of the
+- [x] Test the numbers of two creates, of a failed create, of the
       existing workspaces after the migration, and of a restored org. Test
       the link in the replies of the app and of the tools.
-- [ ] Test old-event replay and an asynchronous update through two local
+- [x] Test old-event replay and an asynchronous update through two local
       app origins. Each connection gets its own link and the same saved
       name, state, time, and event order.
-- [ ] Update `tools/README.md`, `worker/tools/README.md`, and
+- [x] Update `tools/README.md`, `worker/tools/README.md`, and
       `worker/lifecycle/README.md`.
 
 ## Milestone 4: Copy link in the header

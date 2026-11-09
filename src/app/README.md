@@ -47,6 +47,10 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The production build uses `live-services.ts`: the Worker on the origin of
   the page, and its event socket.
 
+The development fake keeps each org's workspace number counter.
+A create gets the next number and a web link on the fake API origin.
+Workspace readers keep the number and link that the Worker supplies.
+
 ## Composition
 
 `App` in `src/App.tsx` takes three props:

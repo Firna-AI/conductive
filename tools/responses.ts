@@ -47,6 +47,8 @@ function workspace(value: unknown): Workspace {
   const fields = record(value)
   return {
     id: text(fields.id),
+    number: timestamp(fields.number),
+    link: text(fields.link),
     orgId: text(fields.orgId),
     repositoryId: text(fields.repositoryId),
     sectionId: text(fields.sectionId),
@@ -80,6 +82,8 @@ export function listedWorkspaces(value: unknown): AgentListWorkspacesResponse {
       const item = record(value)
       return {
         id: text(item.id),
+        number: timestamp(item.number),
+        link: text(item.link),
         name: nullableText(item.name),
         branch: text(item.branch),
         state: workspaceState(item.state),

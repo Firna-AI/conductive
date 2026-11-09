@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { ChatStore } from './store'
 import type { ActiveRunner } from './types'
 

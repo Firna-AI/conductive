@@ -15,6 +15,8 @@ import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
 import { requireOrg, type DevBackend } from './backend'
 import { ID, json, requiredText, RouteError, type Route } from './router'
+import { routes } from '../router'
+import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { createPlan, runStart } from './start-steps'
 import { slugify, type OrgState } from './state'
 
@@ -126,6 +128,8 @@ function createWorkspace(
   const at = backend.now()
   const workspace: Workspace = {
     id,
+    number: ++org.workspaceNumberCount,
+    link: new URL(routes.workspace(org.org.id, id), FAKE_ORIGIN).href,
     orgId: org.org.id,
     repositoryId,
     sectionId: section?.id ?? '',

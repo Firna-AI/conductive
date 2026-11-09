@@ -25,6 +25,11 @@ An omitted model or effort uses the owner's default.
 An omitted section uses the org's default section.
 The first message runs as the sender of the calling turn.
 List returns every workspace in the org, including archived workspaces.
+Each list item gives its number and canonical web link.
+Create gives both fields in the complete workspace record.
+A workspace link in a message names that workspace.
+A workspace link in an answer shows as a chip.
+The number is a display label. Links keep the workspace ID.
 
 The CLI writes one JSON response to stdout.
 It writes a failure message to stderr and returns exit status 1.

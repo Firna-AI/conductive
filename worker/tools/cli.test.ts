@@ -1,9 +1,14 @@
+import { routes } from '../../src/app/router'
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
 import { runToolProcess } from '../../tools/main'
-import { createHarness, type TestHarness } from '../test-support/harness'
+import {
+  createHarness,
+  TEST_ORIGIN,
+  type TestHarness,
+} from '../test-support/harness'
 import {
   inputLines,
   toolFixture,
@@ -79,18 +84,24 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
     workspaces: [
       {
         id: 'calling-workspace',
+        number: 1,
+        link: `${TEST_ORIGIN}${routes.workspace('org-a', 'calling-workspace')}`,
         name: 'Lisbon',
         branch: 'owner-login/lisbon-ab12',
         state: 'working',
       },
       {
         id: 'teammate-workspace',
+        number: 2,
+        link: `${TEST_ORIGIN}${routes.workspace('org-a', 'teammate-workspace')}`,
         name: null,
         branch: 'teammate-login/paris-cd34',
         state: 'ready',
       },
       {
         id: 'archived-workspace',
+        number: 3,
+        link: `${TEST_ORIGIN}${routes.workspace('org-a', 'archived-workspace')}`,
         name: 'Rome',
         branch: 'owner-login/rome-ef56',
         state: 'archived',

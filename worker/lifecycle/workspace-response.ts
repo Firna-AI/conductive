@@ -5,9 +5,37 @@ import type {
   FirstWorkspaceMessage,
 } from './workspace-runtime'
 import { WorkspaceStartError } from './workspace-start'
+import {
+  presentWorkspace,
+  type WorkspaceSnapshot,
+} from '../data/workspace-link'
 
 export interface ProvisionedWorkspace extends WorkspaceResponse {
   first: FirstWorkspaceMessage
+}
+
+export interface SavedProvisionedWorkspace extends Omit<
+  ProvisionedWorkspace,
+  'workspace'
+> {
+  workspace: WorkspaceSnapshot
+}
+
+export async function presentProvisionedWorkspace(
+  runtime: WorkspaceRuntime,
+  saved: SavedProvisionedWorkspace,
+): Promise<ProvisionedWorkspace> {
+  const { orgId, id } = saved.workspace
+  const row = await readWorkspace(runtime.env.DB, orgId, id)
+  return {
+    ...saved,
+    workspace: presentWorkspace(saved.workspace, {
+      origin: runtime.env.APP_ORIGIN,
+      orgId,
+      workspaceId: id,
+      number: row.number,
+    }),
+  }
 }
 
 export async function workspaceResponse(
@@ -18,7 +46,7 @@ export async function workspaceResponse(
   const row = await readWorkspace(runtime.env.DB, orgId, workspaceId)
   const state = await runtime.workspace(workspaceId).readLifecycle()
   return {
-    workspace: workspaceView(row),
+    workspace: workspaceView(row, runtime.env.APP_ORIGIN),
     start: state?.start ?? null,
     error: state?.error
       ? {

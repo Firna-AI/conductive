@@ -15,6 +15,7 @@ import { callingWorkspace, orgWorkspaces } from './store'
 export interface AgentToolsEnvironment {
   DB: D1Database
   MACHINE_ORIGIN: string
+  APP_ORIGIN: string
 }
 
 /** Mount only on the machine surface. This handler authorizes no other route. */
@@ -60,7 +61,11 @@ export function createAgentToolsHandler(
       if (request.method === 'GET') {
         return privateResponse(
           Response.json({
-            workspaces: await orgWorkspaces(env.DB, caller.orgId),
+            workspaces: await orgWorkspaces(
+              env.DB,
+              caller.orgId,
+              env.APP_ORIGIN,
+            ),
           } satisfies AgentListWorkspacesResponse),
         )
       }

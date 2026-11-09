@@ -16,6 +16,7 @@ import { workspaceStartFailure } from './workspace-start'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import {
   provisionedResponse,
+  presentProvisionedWorkspace,
   type ProvisionedWorkspace,
 } from './workspace-response'
 
@@ -96,5 +97,5 @@ async function joinCreation(
   await endpoint.queueLifecycleStart(job)
   const result = await endpoint.waitCreationAdmission()
   if (!result.ok) throw workspaceStartFailure(result.error)
-  return result.created
+  return presentProvisionedWorkspace(runtime, result.created)
 }

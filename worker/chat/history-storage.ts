@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
 import { parseFileEvent } from '../files/parsers'
 import { jsonBytes } from '../../src/shared/event-limits'

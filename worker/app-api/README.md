@@ -71,6 +71,11 @@ Org suspension keeps shell reads available.
 The common browser gate refuses every org write except Leave.
 The view, read-mark, shared-shell, settings, repository, and archive SQL writes also check stored org state, so an earlier permission read cannot admit a later write.
 
+The workspace responses give an org-local number and a canonical web link.
+The request's effective app origin reaches each response constructor explicitly.
+Durable Object reads and Archive receive that origin through their RPC arguments.
+The machine tools use the configured app origin instead.
+
 ### List order
 
 - The list read orders the sections by `position`, then ID. In each

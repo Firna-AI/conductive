@@ -10,10 +10,7 @@ import type {
   WorkspaceToRunner,
   RunnerEventEnvelope,
 } from '../../src/shared/runner'
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
   ConnectionGrant,
   ConnectionIdentity,

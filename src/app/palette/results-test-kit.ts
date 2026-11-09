@@ -1,5 +1,5 @@
 import type { Workspace } from '../../shared/workspaces'
-import { coreFixtures } from '../../test-support/fixtures/core'
+import { coreFixtures, FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { routes } from '../router'
 import { ready } from '../store'
@@ -61,5 +61,13 @@ export function shown(results: PaletteResults): [string, string[]][] {
 export function extra(
   fields: Partial<Workspace> & Pick<Workspace, 'id' | 'name'>,
 ): Workspace {
-  return { ...workspaces[0], branch: `calummoore/${fields.id}`, ...fields }
+  return {
+    ...workspaces[0],
+    branch: `calummoore/${fields.id}`,
+    ...fields,
+    link: new URL(
+      routes.workspace(fields.orgId ?? workspaces[0].orgId, fields.id),
+      FAKE_ORIGIN,
+    ).href,
+  }
 }

@@ -112,10 +112,16 @@ object holds the lifecycle state, the turn records, and the events.
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
-  workspace record. In the `records` phase of a create, `insertWorkspace`
+  workspace record. `workspaceRecord` gives an origin-free saved snapshot.
+  `workspaceView` adds the canonical web link for an explicit app origin.
+  In the `records` phase of a create, `insertWorkspace`
   writes the new row and its runtime record in one D1 batch. The new row
   lists first in its section, as
   [List order](../app-api/README.md#list-order) says.
+  The D1 allocation trigger assigns the next org number inside that insert transaction.
+  Cleanup keeps the org counter. A read after the insert gets the assigned number.
+- [`archive-workspace.ts`](archive-workspace.ts): `archiveWorkspace`, the guarded archive, cleanup, event, and response with an explicit app origin.
+- [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):
