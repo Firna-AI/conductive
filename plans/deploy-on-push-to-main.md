@@ -182,12 +182,15 @@ so.
   A new push never cancels a running deploy. Reason: a cancel could stop a
   deploy between the migrations and the Worker upload. GitHub keeps only
   the newest waiting run, so a burst of merges deploys the newest commit.
-- A re-run deploys nothing when `main` already has a newer commit. A first
-  run always deploys. A failed lookup warns and deploys. Reason: the
-  concurrency group starts first runs in push order, so only a re-run can
-  put old code live. A newer commit with `[skip ci]` starts no run, so a
-  first run must not wait for one. Changed by the options check, which
-  found that a check of push runs only missed manual re-runs.
+- Each run first checks, in a job with no environment, that its commit is
+  still the head of `main`. A run of an older commit deploys nothing. A
+  second job, with only `actions: write`, starts a new run of `Deploy` on
+  `main`, and that run deploys the head with the head's own steps. A
+  failed lookup warns and deploys the run's own commit. Reason: GitHub
+  does not keep runs in one concurrency group in push order, and a new
+  waiting run replaces the older waiting run. Changed on 9 November 2026
+  by review finding 1, after the options check had already changed it
+  once.
 - `ci.yml` does not change. Reason: decision 1 B does not wait for the
   gate.
 
@@ -285,9 +288,11 @@ so.
   key pair to the one bucket with no second secret, as option C of
   decision 2 wanted. Corrected during Milestone 1, which found that the
   template already holds the account group.
-- An S3 HEAD request checks whether the archive exists. After an upload, a
-  HEAD request to the public URL checks the size. Reason: the S3 check
-  does not put a 404 answer into the cache of the public domain.
+- An S3 HEAD request checks whether the archive exists. After the upload
+  or the reuse, a HEAD request to the public URL checks the size. Reason:
+  the S3 check does not put a 404 answer into the cache of the public
+  domain, and a run that reuses an archive must not skip the public check.
+  Changed on 9 November 2026 by review finding 2.
 - Old archives stay in the bucket. Reason: each is about 320 MB, and a new
   one comes only when the runner or its packages change. A build that
   started before a deploy also reads the URL that its job stored.

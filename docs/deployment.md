@@ -173,7 +173,9 @@ steps for the archive:
    `<sha256>` is the SHA-256 digest of the archive.
 2. It asks R2's S3 API whether the bucket holds an archive of that name. It
    uploads the archive only when the name is new.
-3. After an upload, it checks the size of the file at the public URL.
+3. It checks the size of the file at the public URL, also when the
+   archive already existed. A missing file or a wrong size stops the run
+   before the migrations.
 4. It deploys the Worker with both variables set to that archive.
 
 - The same source and packages give the same digest. So an unchanged

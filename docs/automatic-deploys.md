@@ -18,10 +18,12 @@ fails. [CI](../AGENTS.md#ci) says how a commit reaches `main`.
 - Deploys run one at a time. A new push never cancels a running deploy.
 - GitHub keeps only the newest waiting run. So a burst of merges deploys
   the newest commit.
-- A re-run deploys nothing when `main` already has a newer commit. A first
-  run always deploys.
-- When a re-run cannot look up the newest commit of `main`, it warns and
-  deploys.
+- Each run first checks that its commit is still the head of `main`.
+  GitHub does not keep runs in push order. So a run of an older commit,
+  also a re-run, deploys nothing. It starts a new run on `main` instead,
+  and that run deploys the head with the head's own steps.
+- When a run cannot look up the head of `main`, it warns and deploys its
+  own commit.
 
 ## GitHub settings
 

@@ -15,11 +15,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # An older commit deploys nothing and starts a new run on main.
+  # GitHub does not keep runs in push order.
+  check:
+    name: Check the commit
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      stale: ${{ steps.commit.outputs.stale }}
+    steps:
+      - name: Check the head of main
+        id: commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if head=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha) &&
+            [[ "$head" =~ ^[[:xdigit:]]{40}$ ]]; then
+            if [[ "$head" != "$GITHUB_SHA" ]]; then
+              echo '::notice::This run starts a new deploy of the head of main.'
+              echo 'stale=true' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          else
+            echo '::warning::Could not read a valid head of main. This run deploys its own commit.'
+          fi
+          echo 'stale=false' >> "$GITHUB_OUTPUT"
+
   deploy:
     name: Deploy
+    needs: check
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.ref == 'refs/heads/main'
+    if: needs.check.outputs.stale == 'false'
     environment:
       name: production
       url: https://app.conductive.build
@@ -34,7 +63,6 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           TOKEN_SET: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [[ -z "$CLOUDFLARE_ACCOUNT_ID" && "$TOKEN_SET" != true ]]; then
@@ -51,18 +79,6 @@ jobs:
             echo '::error::Environment production is missing secret CLOUDFLARE_API_TOKEN.'
             echo 'deploy=false' >> "$GITHUB_OUTPUT"
             exit 1
-          fi
-          if [[ "$GITHUB_RUN_ATTEMPT" != 1 ]]; then
-            if head=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha) &&
-              [[ "$head" =~ ^[[:xdigit:]]{40}$ ]]; then
-              if [[ "$head" != "$GITHUB_SHA" ]]; then
-                echo '::notice::A newer commit exists on main. This re-run will not deploy.'
-                echo 'deploy=false' >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-            else
-              echo '::warning::Could not read a valid head of main. This re-run will deploy.'
-            fi
           fi
           echo 'deploy=true' >> "$GITHUB_OUTPUT"
 
@@ -153,23 +169,24 @@ jobs:
           if aws s3api head-object --bucket "$RUNNER_BUCKET" --key "$ARCHIVE_KEY" \
             --endpoint-url "$endpoint" > /dev/null 2>&1; then
             echo 'Runner archive already exists.'
-            echo 'result=reused' >> "$GITHUB_OUTPUT"
+            result=reused
           else
             aws s3 cp "$archive" "s3://$RUNNER_BUCKET/$ARCHIVE_KEY" \
               --endpoint-url "$endpoint" --content-type application/gzip --only-show-errors
-            if ! headers=$(curl -fsSI --retry 3 "$ARCHIVE_URL"); then
-              echo "::error::Could not read the public runner archive at $ARCHIVE_URL."
-              exit 1
-            fi
-            remote_size=$(printf '%s\n' "$headers" |
-              awk 'tolower($1) == "content-length:" {gsub("\r", "", $2); size=$2} END {print size}')
-            local_size=$(stat -c %s "$archive")
-            if [[ "$remote_size" != "$local_size" ]]; then
-              echo "::error::Public runner archive size does not match the local archive at $ARCHIVE_URL."
-              exit 1
-            fi
-            echo 'result=uploaded' >> "$GITHUB_OUTPUT"
+            result=uploaded
           fi
+          if ! headers=$(curl -fsSI --retry 3 "$ARCHIVE_URL"); then
+            echo "::error::Could not read the public runner archive at $ARCHIVE_URL."
+            exit 1
+          fi
+          remote_size=$(printf '%s\n' "$headers" |
+            awk 'tolower($1) == "content-length:" {gsub("\r", "", $2); size=$2} END {print size}')
+          local_size=$(stat -c %s "$archive")
+          if [[ "$remote_size" != "$local_size" ]]; then
+            echo "::error::Public runner archive size does not match the local archive at $ARCHIVE_URL."
+            exit 1
+          fi
+          echo "result=$result" >> "$GITHUB_OUTPUT"
 
       # Use the source config so migrations do not follow the build redirect.
       - name: Apply migrations
@@ -224,3 +241,24 @@ jobs:
             printf 'Runner archive: %s\n\n' "$ARCHIVE_URL"
             printf 'Archive publish result: %s\n' "$PUBLISH_RESULT"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  redeploy:
+    name: Start a deploy of the head
+    needs: check
+    if: needs.check.outputs.stale == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Start a deploy of main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh api --method POST \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/deploy.yml/dispatches" \
+            -f ref=main > /dev/null; then
+            echo '::error::Could not start a new deploy of the head of main.'
+            exit 1
+          fi
