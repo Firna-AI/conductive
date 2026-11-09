@@ -19,8 +19,10 @@ import { Sidebar } from './list/Sidebar'
 import { useKeptOrg } from './mac/mac-app'
 import { WindowStrip } from './mac/WindowControls'
 import { GetStartedScreen } from './onboarding/GetStartedScreen'
+import { OperatorRoutes } from './operator/OperatorRoutes'
 import { CreateOrgScreen } from './orgs/CreateOrgScreen'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
+import { PaletteLayer } from './palette/PaletteLayer'
 import { ActionButton } from './ui/actions'
 import { OverlayHost } from './ui/Overlay'
 import { useViewport } from './ui/viewport'
@@ -38,6 +40,7 @@ function Alone(props: { children: ReactNode }) {
       <OverlayHost>
         <WindowStrip />
         {props.children}
+        <PaletteLayer />
       </OverlayHost>
     </div>
   )
@@ -145,6 +148,8 @@ function Signed(props: { route: Route; user: User }) {
           <CreateOrgScreen first={route.first} />
         </Alone>
       )
+    case 'operator':
+      return <OperatorRoutes user={user} view={route.view} />
     case 'not-found':
       return inRail(<NotAvailable title="This page is not available" />, null)
     default:

@@ -5,25 +5,22 @@ import { CheckOption } from '../common/CheckOption'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
-import { targetName, type Target } from './targets'
-
-/** What a suspension stops, and what the members keep, for each kind. */
-function stops(target: Target): string {
-  const name = targetName(target)
-  return target.kind === 'user'
-    ? `${name} is signed out everywhere and cannot sign in. Their workspaces stop, and no member can start them until an admin moves them to another member.`
-    : `Every cloud computer and build of ${name} stops now. Members can still open and read it, but they cannot change it or start a workspace.`
-}
+import {
+  selfSuspendWarning,
+  suspendQuestion,
+  type QuestionTarget,
+} from './operatorCopy'
 
 /**
  * The operator confirms a suspension. The dialog says what stops, what
- * the members keep, and that the files of a stopped workspace can be
- * deleted. For the operator's own account it warns first. For a user with
- * a referral code that still works, it offers to disable that code too,
- * on by default.
+ * the members keep, what a lift does not bring back, and that the files of
+ * a stopped workspace can be deleted. For a deleted org it says that no
+ * admin can restore the org while it is suspended. For the operator's own
+ * account it warns first. For a user with a referral code that still
+ * works, it offers to disable that code too, on by default.
  */
 export function SuspendDialog(props: {
-  target: Target
+  target: QuestionTarget
   /** The operator suspends their own account. */
   self?: boolean
   /** The referral code of the user, when it still lets people in. */
@@ -48,21 +45,15 @@ export function SuspendDialog(props: {
           </ScreenLink>
         </>
       }
-      title={`Suspend ${targetName(props.target)}?`}
+      title={`Suspend ${props.target.name}?`}
       viewport={props.viewport}
     >
       {props.self ? (
-        <Notice
-          icon={TriangleAlert}
-          title="This is your own account. You will be signed out, and another operator must lift the suspension."
-          tone="danger"
-        />
+        <Notice icon={TriangleAlert} title={selfSuspendWarning} tone="danger" />
       ) : null}
-      <DialogText>{stops(props.target)}</DialogText>
-      <DialogText>
-        A stopped workspace gets no restart near day 14, so its files can be
-        deleted. Lift gives the access back.
-      </DialogText>
+      {suspendQuestion(props.target).map((text) => (
+        <DialogText key={text}>{text}</DialogText>
+      ))}
       {props.referral ? (
         <CheckOption
           checked

@@ -12,7 +12,7 @@ export const operatorMenu = defineScreen({
     'The operator page belongs to no org, as the account does, so it opens from the same places as the account. The Worker setting that lists the operators also decides who sees the link.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
-  props: { list: 'workspaces', menu: 'operator' },
+  props: { list: 'workspaces', menu: 'operator', palette: 'closed' },
   render: (props, context) => (
     <WorkspaceListScreen state={props} viewport={context.viewport} />
   ),

@@ -6,36 +6,44 @@ import { Notice } from '../common/Notice'
 import { DetailList } from '../settings/DetailList'
 import { Section } from '../settings/Section'
 import { TargetState } from './directory'
+import {
+  deletedOrgBody,
+  suspendedOrgBody,
+  suspendedTitle,
+} from './operatorCopy'
 import { TargetList, TargetRow } from './targets'
 import { WorkspaceStates } from './WorkspaceStates'
 
-/** The notice of a suspended or a deleted org, at the top of its page. */
-function OrgNotice(props: { org: OrgPage }) {
+/**
+ * The notices of a suspended or a deleted org, at the top of its page. An
+ * org can be both, so the page can show both.
+ */
+function OrgNotices(props: { org: OrgPage }) {
   const { org } = props
-  if (org.suspension) {
-    const { since, by, stopping } = org.suspension
-    const pending =
-      stopping > 0
-        ? ` ${stopping} cloud computers are still stopping, and each keeps trying on its own.`
-        : ''
-    return (
-      <Notice
-        body={`Members can open and read ${org.name}, but cannot change it or start a workspace.${pending}`}
-        icon={Ban}
-        title={`Suspended on ${since} by @${by}`}
-      />
-    )
-  }
-  if (org.deleted) {
-    return (
-      <Notice
-        body={`Everything of ${org.name} is deleted on ${org.deleted.purge}, unless an admin restores it.`}
-        icon={Trash2}
-        title={`Deleted on ${org.deleted.on}`}
-      />
-    )
-  }
-  return null
+  const { suspension, deleted } = org
+  const deletion = deleted ? { purge: deleted.purge } : null
+  return (
+    <>
+      {suspension ? (
+        <Notice
+          body={suspendedOrgBody(org.name, suspension.stopping, deletion)}
+          icon={Ban}
+          title={suspendedTitle(suspension.since, suspension.by)}
+        />
+      ) : null}
+      {deleted ? (
+        <Notice
+          body={deletedOrgBody(
+            org.name,
+            { purge: deleted.purge },
+            suspension !== undefined,
+          )}
+          icon={Trash2}
+          title={`Deleted on ${deleted.on}`}
+        />
+      ) : null}
+    </>
+  )
 }
 
 /**
@@ -89,7 +97,7 @@ export function OrgDetails(props: { org: OrgPage }) {
   const members = org.members.length
   return (
     <>
-      <OrgNotice org={org} />
+      <OrgNotices org={org} />
       <Section title="Details">
         <DetailList
           rows={[
@@ -99,7 +107,7 @@ export function OrgDetails(props: { org: OrgPage }) {
           ]}
         />
       </Section>
-      <WorkspaceStates builds={org.builds} counts={org.states} />
+      <WorkspaceStates builds={org.builds} counts={org.states} page="org" />
       <Section
         description={`${members} ${members === 1 ? 'member' : 'members'}`}
         title="Members"

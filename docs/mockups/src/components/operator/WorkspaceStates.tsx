@@ -29,14 +29,28 @@ function share(count: number, total: number): string {
 }
 
 /**
+ * The line under the list that names the builds that run now. Running now,
+ * the tile of the overview, counts them too. The page of an org has no
+ * such tile.
+ */
+function buildsLine(builds: number, page: 'overview' | 'org'): string {
+  const named = `${builds.toLocaleString('en')} cloud computer ${builds === 1 ? 'build' : 'builds'}`
+  return page === 'overview'
+    ? `Running now also counts ${named}.`
+    : `${named} also ${builds === 1 ? 'runs' : 'run'} now.`
+}
+
+/**
  * The workspaces of every org, or of one org, in each state, with the
  * glyph of the workspace list, so that a state never depends on colour
- * alone. A line under the list names the running builds, which Running
- * now also counts.
+ * alone. A line under the list names the running builds. It imports no
+ * fixture value, so the app uses it too.
  */
 export function WorkspaceStates(props: {
   counts: StateCounts
   builds: number
+  /** The overview of every org, or the page of one org. */
+  page: 'overview' | 'org'
 }) {
   const total = order.reduce((sum, key) => sum + props.counts[key], 0)
   return (
@@ -56,9 +70,7 @@ export function WorkspaceStates(props: {
         ))}
       </ul>
       {props.builds > 0 ? (
-        <SectionText muted>
-          Running now also counts {props.builds} cloud computer builds.
-        </SectionText>
+        <SectionText muted>{buildsLine(props.builds, props.page)}</SectionText>
       ) : null}
     </Section>
   )

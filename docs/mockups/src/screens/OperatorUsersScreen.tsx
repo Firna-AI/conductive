@@ -31,7 +31,7 @@ export type OperatorUsersState = SchemaProps<typeof operatorUsersSchema>
 const columns: Readonly<Record<Viewport, TableColumn[]>> = {
   desktop: [
     { key: 'user', label: 'User', flex: 1 },
-    { key: 'joined', label: 'Joined', width: 76 },
+    { key: 'joined', label: 'Joined', width: 100 },
     { key: 'orgs', label: 'Orgs', align: 'right', width: 56 },
     { key: 'workspaces', label: 'Workspaces', align: 'right', width: 92 },
   ],

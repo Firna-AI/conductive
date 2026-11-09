@@ -56,8 +56,9 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   serves: `termsDocument`, `privacyDocument`, and `notFoundText` from the
   code of the [marketing site](../../src/marketing/README.md#legal-drafts).
   Their words are text without markup, in the model of
-  [`legal-text.ts`](../../src/marketing/legal-text.ts). The site renders
-  that text as HTML. The mockups render it with `LegalDocumentView` and
+  [`legal-text.ts`](../../src/marketing/legal-text.ts). Astro builds
+  that text as HTML. The Worker serves the built pages and fills their
+  request values. The mockups render the text with `LegalDocumentView` and
   `CatalogueText`, through `RunningText`, which the app also uses. So the
   site, the app, and the mockups show the same words. Each legal page keeps
   the notice of the draft and its marked draft fields.
@@ -75,3 +76,5 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   `src/screens/signInCopy.ts`, and the agreement with its links. It runs
   no script, so it has the look of the site, with only the wordmark in its
   header and no footer.
+  Astro builds the agreement page with the same layouts and styles as the
+  site. The Worker fills its Continue address and its links to the site.

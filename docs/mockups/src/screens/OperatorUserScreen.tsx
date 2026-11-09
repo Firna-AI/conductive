@@ -6,8 +6,8 @@ import { ApproveDialog } from '../components/operator/ApproveDialog'
 import { DisableCodeDialog } from '../components/operator/codeDialogs'
 import { LiftDialog } from '../components/operator/LiftDialog'
 import { OperatorPage } from '../components/operator/OperatorPage'
+import type { QuestionTarget } from '../components/operator/operatorCopy'
 import { SuspendDialog } from '../components/operator/SuspendDialog'
-import type { Target } from '../components/operator/targets'
 import { UserDetails } from '../components/operator/UserDetails'
 import { accessPages } from '../fixtures/operatorAccessPages'
 import { userPages, type UserPage } from '../fixtures/operatorUserPages'
@@ -111,11 +111,7 @@ function UserDialog(props: {
   viewport: Viewport
 }) {
   const { user, viewport } = props
-  const target: Target = {
-    kind: 'user',
-    name: user.login,
-    initials: user.initials,
-  }
+  const target: QuestionTarget = { kind: 'user', name: `@${user.login}` }
   const referral =
     user.referral && !user.referral.disabled ? user.referral : undefined
   switch (props.state.dialog) {

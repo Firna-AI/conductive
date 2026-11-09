@@ -9,7 +9,10 @@ export const accountSetup = defineScreen({
     'Get started opens only after app access, and app access comes with an invite code. So a new user can share the link before the first run ends.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { connections: 'not-connected', form: 'none', invites: 'left' },
+  props: {
+    connections: 'not-connected', form: 'none', invites: 'left',
+    shareChange: 'none',
+  },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

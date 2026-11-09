@@ -24,6 +24,6 @@
 - **Left out:** A saved snapshot of each suspended disk, because the user chose against snapshots for suspended owners on 8 November 2026.
 - **Wider fix:** C. It brings the restart back however a suspension ends.
 - **Previous examples:** None found.
-- **Related:** On 8 November 2026 the user chose a Lift action on the operator page. A lift sets the disk restart again for each stopped workspace, but a disk that the provider already deleted stays lost. Option C of this item would also cover a suspension that ends in another way.
+- **Related:** On 8 November 2026 the user chose a Lift action on the operator page. A lift sets the disk restart again for each stopped workspace, but a disk that the provider already deleted stays lost. Since 9 November 2026 the 15-minute Cron Trigger also runs the owner-change check of each overdue workspace that nothing blocks, so option C is in force for a suspension that ends in any way. The root question of this item stays open.
 - **Recommendation:** A. The org rule then rests on a real decision, at the lowest cost. C protects the codebase best.
 - **Action:** ask the user, because the rule can delete the work of every member, and no user decision covers it.

@@ -74,7 +74,7 @@ export const newestUsers: readonly UserRow[] = [
   waiting(samOkafor),
   {
     login: 'vex-ops',
-    initials: 'VO',
+    initials: 'V',
     joined: '28 Oct',
     orgs: 1,
     workspaces: 6,

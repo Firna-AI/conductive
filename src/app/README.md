@@ -18,10 +18,19 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, or `?suspended=1`. `dev/options.ts` lists
-  them. A new org
+  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`, or
+  `?paths=masked`. `dev/options.ts` lists them. A new org
   of the dev fake gets every repository of the account's list, and keeps
   its custom initials through rename, delete, and restore.
+- `?operator=1` makes the dev user an operator, so the rail and the org
+  switcher show Operator. The [operator section](../shell/operator/README.md)
+  then shows the sample orgs and users of the mockups, and Suspend and Lift
+  change them. A suspension of Acme, Futex, or Firna also suspends that org
+  in the state of the fake, so the fake refuses each write of that org with
+  `org_suspended`. The open app does not read its orgs again, so its pages
+  of that org show the suspension only after such a refusal. Without the
+  option, each operator request gets `operator_required`, as the Worker
+  does.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -100,7 +109,7 @@ the workspace stores, and the raw event streams of feature stores.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the focus, saved drafts, and New workspace.
+layers, the command palette, the focus, saved drafts, and New workspace.
 
 ## Rules for this code
 
@@ -124,12 +133,15 @@ layers, the focus, saved drafts, and New workspace.
   open, it can schedule the next mark of the new visit.
 - One follower owns the requests and the timer of a build log. After it
   stops, an answer changes nothing and schedules nothing.
-- Timers, the focus, the visibility, and the input of the page come from
-  `AppServices` (`delay`, `onFocus`, `visible`, and `onInput`), so that no
-  unit test runs a real timer or needs a browser page. The browser hears
-  the input in the capture phase, before a field can stop it. An open
-  workspace counts the input anywhere on the page as activity, at most
-  once a minute.
+- Timers, the focus, the visibility, the input, and the keys of the page
+  come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
+  `onKey`), so that no unit test runs a real timer or needs a browser
+  page. The browser hears the input and the keys in the capture phase,
+  before a field can stop them. An open workspace counts the input
+  anywhere on the page as activity, at most once a minute. `onKey` is not
+  passive, so the palette key stops the browser's own action.
+  `AppServices.platform` says whether the keyboard is a Mac, which
+  chooses the palette key and its hint.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
@@ -142,7 +154,7 @@ layers, the focus, saved drafts, and New workspace.
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
 fake API, requests or answers that wait for the test (also two at one
 path), a manual timer with the wait of each pending timer, a manual page
-focus, visibility, and input, and a recording event source.
+focus, visibility, input, and keys, and a recording event source.
 `../shell/test-render.tsx` draws a screen with every provider through
 server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
@@ -169,10 +181,11 @@ clicks, types, and lets the answers of the fake API settle.
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   and computer settings of one org, with `watch` and the wait of each part.
-- `account-model.ts`: the agent logins, the default model, the GitHub App
-  installations, and the repositories that Create org offers.
-- `panels.ts`: `PanelWidths`, the widths of the panels, and `next`, the
-  one rule of their steps.
+- `account-model.ts`: the agent logins with their share setting, the
+  default model, the GitHub App installations, and the repositories that
+  Create org offers.
+- `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
+  column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
   its waiting writes. `refresh.ts`: `Refresher`, the shared reads of a part
   while screens show it.
@@ -186,9 +199,20 @@ clicks, types, and lets the answers of the fake API settle.
 - `workspace-read-marks.ts`: `WorkspaceReadMarks`, the read marks of one
   kept workspace model, with its shown and confirmed numbers.
 - `new-workspace-model.ts`: the first message that creates a workspace.
-  `creations.ts`: `Creations`, the admitted creates of an org in this tab,
-  and `failedCreate`, which tells a create whose start failed.
-- `computer-model.ts`: the scripts, the env vars, the builds, and the log.
+  `creations.ts`: `Creations`, the life of the create requests of an org in
+  this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
+  which tells a failed first start, and `resumesAtOpen`.
+- `computer-model.ts`: the scripts, the env vars with their Secret marks,
+  the builds, and the log. `classifyEnvVar` changes only the mark of a
+  variable, and sends no value. `replaceEnvVar` changes only the value,
+  and sends no mark, so the Worker keeps the stored mark. `setEnvVar`
+  sends a value and a mark, for Add variable.
+- `../shell/settings/EnvVarsSection.tsx`, `EnvVarForms.tsx`, and
+  `EnvVarMark.tsx`: the env var editor of an admin. The Secret switch of a
+  row saves its mark at once, and Add variable starts secret. A new value
+  sends no mark, so it keeps the stored mark, also a mark that a save of
+  the switch changed after its form opened. The switch, Change, and Delete
+  of a row wait while one of them saves.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.
 - `events.ts`: the ordered event stream, the event socket, and
@@ -201,7 +225,32 @@ clicks, types, and lets the answers of the fake API settle.
   unmount. It checks that a switch stops the old store before the new one
   connects, and shows only the new store. It also checks when the hook keeps
   a store, connects it again, or makes a new one.
+- `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
+  the Overview and the pages of the operator section, its searches, and
+  Suspend and Lift. A refusal with `operator_required` marks the account
+  as not an operator. `api/read-operator.ts` and
+  `api/read-operator-pages.ts`: their readers. The
+  [operator section](../shell/operator/README.md) gives the screens.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
+- `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
+  the tab opened last, from `AppModel.lastOrg`, or else the first org that
+  is not deleted.
+- `palette/`: the command palette without React. `palette-results.ts`
+  gives the groups and the empty state of each tab for a query, from
+  `palette-groups.ts` and the rows of `palette-rows.ts`. `matcher.ts`
+  ranks the matches. `commands.ts` holds the labels and the search words.
+  `page-actions.ts` gives the offers of the parts of the page and
+  `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
+  `palette-keys.ts` the palette key and what it does, and `controller.ts`
+  the open state and the offers of one tab, with `show`, the one way to
+  open the palette.
+- `../shell/palette/`: the layer of the palette. `PaletteProvider.tsx`
+  hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
+  frame, `palette-context.ts` gives `usePaletteOffer` and
+  `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
+- `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
+  which say whether they closed, and the modal layers with their owners.
+  The palette reads them before it opens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs.

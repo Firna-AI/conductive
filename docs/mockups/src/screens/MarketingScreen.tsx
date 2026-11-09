@@ -1,4 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
+import { features, smallerFeatures } from '../../../../src/marketing/features'
 import { classes } from '../components/common/classes'
 import { ClosingCall } from '../components/marketing/ClosingCall'
 import { FeatureGrid } from '../components/marketing/FeatureGrid'
@@ -6,7 +7,6 @@ import { FeatureSection } from '../components/marketing/FeatureSection'
 import { Hero } from '../components/marketing/Hero'
 import { SitePage } from '../components/marketing/SitePage'
 import { paths } from '../paths'
-import { features, smallerFeatures } from './marketingFeatures'
 import { marketingPicture } from './marketingPictures'
 import styles from './MarketingScreen.module.css'
 
@@ -14,7 +14,9 @@ import styles from './MarketingScreen.module.css'
  * The home page of the marketing site, public at the root of the product
  * domain: the hero with the app, the features with real screens, the
  * smaller features, and a last call to action. Every picture is
- * a real screen of the catalogue, and none of it links into the app.
+ * a real screen of the catalogue, and none of it links into the app. The
+ * features are the site's records in `src/marketing/features.ts`, so the
+ * mockup and the site show the same words.
  */
 export function MarketingScreen(props: { viewport: Viewport }) {
   const { viewport } = props
@@ -34,10 +36,10 @@ export function MarketingScreen(props: { viewport: Viewport }) {
         className={classes(styles.sections, mobile && styles.mobile)}
         id="features"
       >
-        {features(viewport).map((feature) => (
+        {features.map((feature) => (
           <FeatureSection
             feature={feature}
-            key={feature.key}
+            key={feature.picture}
             viewport={viewport}
           />
         ))}

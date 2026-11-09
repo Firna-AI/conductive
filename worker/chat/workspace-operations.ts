@@ -52,14 +52,17 @@ export class WorkspaceOperations {
     const sender = requireFirstMessage(identity, first)
     return store.change(
       first.workspaceId,
-      (transaction) =>
-        admitFirstMessage(
+      async (transaction) => {
+        const message = await admitFirstMessage(
           transaction,
           first,
           sender,
           dependencies,
           identity?.archivedAt !== null,
-        ),
+        )
+        await transaction.saveFirstMessageAdmission(first)
+        return message
+      },
       publish,
     )
   }

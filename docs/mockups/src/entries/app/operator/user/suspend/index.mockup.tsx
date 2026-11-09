@@ -7,7 +7,7 @@ import {
 export const operatorUserSuspend = defineScreen({
   title: 'Suspend a user',
   description:
-    'Suspend user asks first. The user is signed out everywhere and cannot sign in, and no member can start their workspaces until an admin moves them to another member. The question also offers to disable the referral code of the user, on by default.',
+    'Suspend user asks first. The user is signed out everywhere and cannot sign in, and no member can start their workspaces until an admin moves them to another member. Each unfinished build that runs for the user stops and fails, and a lift does not bring it back. The question also offers to disable the referral code of the user, on by default.',
   rationale:
     'The referral code of an abuser must not keep letting people in, so the offer is on by default. It stays an offer, because a disable is final and a suspension can be lifted. Moved here from the user page, which now shows only its canonical screen beside its child pages.',
   relatedDocs: [],

@@ -31,14 +31,15 @@ says.
   - with a message that starts a new session, as [Messages](#messages) says
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
-- The messages of the other members run on the login of the starter too.
-  So the other members spend the login of the starter.
+- While the starter shares the login, the messages of the other members
+  run on it too. So the other members spend the login of the starter
+  (decision 116).
 - Reason: each change of login rewrites the prompt cache of the
   conversation. A login for each sender was rejected for that reason.
 - The login of the workspace owner for all sessions was rejected. Reason:
   each member who starts a session spends their own login.
 - [Access and security](access-and-security.md#agent-logins-in-a-sandbox)
-  states how a login reaches the sandbox, and its risk.
+  states how a login reaches the sandbox, its share setting, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
 
 ## Names in the product
@@ -61,6 +62,8 @@ says.
   opens as the last tab (decision 77).
 - The user can rename a session.
 - Each session has its own model picker.
+- When one tab sends two edits of the same field of a session, the edit
+  that the server commits last wins (decision 142).
 - Closing the tab of a session without a running turn moves the session to
   the session history (decision 31).
 - Closing the tab of a session whose turn runs asks first. After the
@@ -86,9 +89,10 @@ says.
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
 - When the login of the starter cannot be used, a message of another member
-  starts a new session on that member's own login (decision 115). A Try
-  again of another member does the same. This happens, for example, after
-  the starter leaves the org or removes the login.
+  starts a new session on that member's own login (decision 115). The same
+  happens when the starter does not share the login (decision 116). A Try
+  again of another member does the same. A login cannot be used, for
+  example, after the starter leaves the org or removes the login.
 - The workspace checks the login of the starter again when it accepts each
   message. When the member has no login for the agent either, the workspace
   refuses the message and starts no session.
@@ -102,10 +106,20 @@ says.
 - The session record shows the result of the last login check in
   `loginAvailable`. Each tab gets a changed result. The check does not ask
   the provider whether it accepts the login.
-- The workspace does not watch the logins for changes. So a tab can show an
-  old result until the next check.
-- When the record already shows a login that cannot be used, the composer
-  says before the send that the message starts a new session.
+- The same check shows in `loginShared` whether the starter shares the
+  login with the other members. Every member reads the same value. Each tab
+  gets a changed value. `loginAvailable` stays true for a login that only
+  the starter can use.
+- The workspace does not watch the logins or their share settings for
+  changes. So a tab can show an old result until the next check.
+- When the record already shows that the login of the starter cannot be
+  used, or that the starter does not share it, the composer of another
+  member says before the send that the message starts a new session. When
+  that member has no login for the agent, the composer shows the notice of
+  a missing login instead.
+- Reason: the composer names the login of each message before the send. A
+  record without the share setting was rejected, because the composer then
+  names the login of the starter until the send.
 - The composer names the member whose login its message runs on, such as
   "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
 - The composer attaches files to a message.
@@ -116,40 +130,30 @@ says.
   [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
   says. The app accepts that message before the sandbox is ready
   (decision 14).
-- After the first start of a workspace succeeds, the app also accepts a
-  message while the sandbox is not ready, such as during a resume
-  (decision 14).
+- The app also accepts a later message while the sandbox is not ready
+  (decisions 14 and 130). Examples are the first start, a resume, and the
+  error state of a failed first start.
 - The workspace keeps such a message, and gives it to the agent when the
-  sandbox is ready.
+  sandbox is ready. The agent of each session gets these messages in the
+  order that the workspace accepted them (decision 130).
 - A message that waits for the sandbox shows that it waits. A queue in the
   browser was rejected, because a closed tab would lose the message.
-- Until the first start of a new workspace succeeds, the composer of each
-  session keeps a later message as an unsent draft (decision 130).
-- Send waits for such a draft until the first start succeeds. A short
-  reason beside Send says that the user can send the message when the
-  sandbox is ready.
-- After the first start succeeds, the user sends the draft. The app never
-  sends a draft on its own.
-- Until the first start succeeds, the workspace refuses each later message
-  and each Try again of a turn, in every session. It answers with HTTP 409
-  and the error code `workspace_starting` (decision 130).
-- Until then, a repeat of an accepted message, with the same message ID,
-  still succeeds.
-- When a tab gets the `workspace_starting` error, its composer keeps the
-  message as an unsent draft.
-- Reason: a failed first start removes the workspace, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
-  says. Acceptance of later messages during the first start was rejected,
-  because the removal would leave those accepted messages with no way back
-  to their senders.
-- While the login of the starter can be used, a message that any member
-  sends during a turn joins that turn. It goes to the agent at once, and the
-  agent reads it at its next tool call.
+- Reason: a failed first start keeps its workspace and its queued messages,
+  as [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  says. So members can add work at once, and an accepted message survives
+  a reload of the tab. A hold of later messages in the composer until the
+  first start succeeds was rejected for these reasons.
+- While the login of the starter can be used, a message that the starter
+  sends during a turn joins that turn. A message of another member joins it
+  too while the starter shares the login. Such a message goes to the agent
+  at once, and the agent reads it at its next tool call.
 - In a turn without tool calls, the agent reads such a message when the
   turn ends.
 - A message that the workspace accepted stays in its session, also when the
-  login of the starter is gone later. A turn that needs that login then
-  fails and names the cause. Try again can then start a new session.
+  login of the starter is gone later. The same holds for a message of
+  another member when the starter stops sharing the login later. A turn
+  that needs that login then fails and names the cause. Try again can then
+  start a new session.
 - Stop interrupts the running turn. The chat shows an interrupted turn as
   stopped, not as an error.
 - The chat names the member who pressed Stop: "Priya stopped the agent",
@@ -158,8 +162,9 @@ says.
   set it, because agent code runs on the same cloud computer.
 - A turn that stops with no Stop request, such as when the cloud
   computer stops, shows "The agent stopped".
-- While the login of the starter can be used, the next message after a stop
-  continues the same session.
+- While the login of the starter can be used, the next message of the
+  starter after a stop continues the same session. The next message of
+  another member does the same while the starter shares the login.
 - A turn that fails names the cause, and Try again retries the turn.
 - Try again can retry only the newest turn of a session, and only when that
   turn failed (decision 97). It sends the retry message that the failure

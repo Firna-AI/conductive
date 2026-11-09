@@ -15,23 +15,7 @@ export async function recordUserSuspension(
   )
   if (recorded.suspendedAt === null)
     throw new Error('Missing recorded user suspension')
-  const user = { userId: recorded.id, suspendedAt: recorded.suspendedAt }
-  await db.batch([
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.userId),
-    db
-      .prepare(
-        `UPDATE workspace_tokens SET revoked_at = ? WHERE revoked_at IS NULL
-       AND workspace_id IN (SELECT id FROM workspaces WHERE owner_user_id = ?)`,
-      )
-      .bind(now, user.userId),
-    db
-      .prepare(
-        `UPDATE preview_hostnames SET revoked_at = ? WHERE revoked_at IS NULL
-       AND workspace_id IN (SELECT id FROM workspaces WHERE owner_user_id = ?)`,
-      )
-      .bind(now, user.userId),
-  ])
-  return user
+  return { userId: recorded.id, suspendedAt: recorded.suspendedAt }
 }
 
 export async function ownedWorkspaces(db: D1Database, userId: string) {

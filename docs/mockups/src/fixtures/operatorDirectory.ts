@@ -114,7 +114,7 @@ export const orgSearches = {
   },
   preview: {
     query: 'https://k7q2m9fz.conductive.page',
-    rows: [{ ...newestOrgs[3], match: 'Preview address of a workspace' }],
+    rows: [{ ...newestOrgs[3], match: 'Preview address' }],
   },
   none: { query: 'acme-old', rows: [] },
 } as const satisfies Record<string, { query: string; rows: readonly OrgRow[] }>

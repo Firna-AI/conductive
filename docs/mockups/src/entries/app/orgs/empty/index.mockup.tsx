@@ -10,7 +10,7 @@ export const newOrg = defineScreen({
     'Firna, the org that the first run made, before its first workspace. The rail selects it, its sidebar shows the default section, and New workspace starts the first workspace.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
-  props: { list: 'new-org', menu: 'none' },
+  props: { list: 'new-org', menu: 'none', palette: 'closed' },
   useCasePaths: ['user-flows/join'],
   render: (props, context) => (
     <WorkspaceListScreen state={props} viewport={context.viewport} />

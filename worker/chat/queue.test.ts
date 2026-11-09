@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
+import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionPaths } from '../../src/shared/sessions'
 import {
   completeCreationAttempt,
@@ -43,7 +44,8 @@ describe('workspace chat queue', () => {
         attachmentIds: [],
       },
     )
-    expect(waiting.status).toBe(409)
+    expect(waiting.status).toBe(202)
+    const first: SendMessageResponse = await waiting.json()
     await completeCreationAttempt(harness.env.DB, WORKSPACE_ID)
     await harness.env.DB.prepare(
       "UPDATE workspaces SET state = 'stopped' WHERE id = ?",
@@ -51,6 +53,7 @@ describe('workspace chat queue', () => {
       .bind(WORKSPACE_ID)
       .run()
     const accepted = await fixture.send(session.id, '__proto__')
+    expect(accepted).toEqual(first)
     expect(accepted.message.state).toBe('queued')
     expect(accepted.turnId).toBeNull()
     const beforeRetry = await fixture.history(session.id)

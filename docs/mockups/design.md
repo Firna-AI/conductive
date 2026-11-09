@@ -16,7 +16,9 @@ the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. The centre column has a slim header that names the
 repository, the branch, and the owner of the workspace, and ends with
-Archive. Then come a tab for each agent session and each open file or diff,
+Archive and the toggle of the right column. The toggle hides the right
+column, so the centre column takes its width, and shows it again. Then
+come a tab for each agent session and each open file or diff,
 + for a new session, and a clock that opens the session history. The right
 column has the pull request bar on top, the All files, Changes, and Checks
 lists below it, and the Terminal, Preview, and Desktop tabs at the bottom.
@@ -44,13 +46,12 @@ chat, and five tabs at the bottom.
   in every composer, such as "Opus 5.5 High". It names no agent brand. In a
   session with messages, each model of the other agent says "New session",
   because it opens a new session with the draft, from decision 51.
-- While the sandbox of a new workspace starts for the first time, Send
-  waits in each session, and each box keeps its message.
-  `SendWait` in `src/components/chat/` gives the short reason beside Send,
-  "You can send when the sandbox is ready", in two lines on a phone. The
-  user sends the message when the sandbox is ready, as
-  `app/new-workspace/waiting` shows. A resume of a stopped workspace still
-  takes messages, which wait for the sandbox.
+- While a sandbox starts, also for the first time, Send queues each
+  message in the workspace. Each queued message shows "Sends when the
+  sandbox is ready", as `app/new-workspace/waiting` shows. After a failed
+  first start, the bar of the error sits above the composer, so members
+  can still queue messages, as `app/new-workspace/error` shows. Every
+  other bar of the sandbox takes the place of the composer.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button, or in a `Sheet` on a phone.
   Firna's own menu rows are taller than the dense design. A row can lead with
@@ -62,6 +63,13 @@ chat, and five tabs at the bottom.
   the wider card, for its invitations and its code field. In the Mac app
   its header is the top bar of the window, as [the Mac app](mac-app.md)
   gives.
+- `CommandPalette` in `src/components/palette/` draws the command palette:
+  a dialog near the top of the window over a light dim on desktop, and a
+  page in place of the list on a phone. It has the search field, the tabs
+  All, Workspaces, Actions, and Settings, the filters of the Workspaces
+  tab, the groups of results, and the empty state. The list and the
+  workspace screens own it as their `palette` state. The Search row under
+  New workspace opens it, and on desktop that row shows ⌘K.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
@@ -150,10 +158,12 @@ chat, and five tabs at the bottom.
   under the users tile counts the people on the waitlist and opens the
   Waitlist tab.
 - A table of the operator keeps fewer columns on a phone, so that each
-  name keeps one line. The line under a name gives the state of a
-  suspended or deleted target, or Waiting for a person on the waitlist. A
-  phone can add a second line for a column that it leaves out, such as the
-  age of a GitHub account. A person shows on a disc and an org on a
+  name keeps one line. The line under a name gives what a search found,
+  when it is not the name, and the state of a suspended or deleted target,
+  or Waiting for a person on the waitlist, with a dot between them. A phone
+  can add a second line for a column that it leaves out, such as the age
+  of a GitHub account. A column of days fits a day of another year, such
+  as 30 Sept 2026, on one line. A person shows on a disc and an org on a
   square, with `PersonAvatar` and `InitialsTile` from
   `src/components/orgs/`.
 - The Waitlist tab shows no picture. Each login opens the GitHub profile in
@@ -169,10 +179,21 @@ chat, and five tabs at the bottom.
   reason. No state has an action, because the person keeps app access.
 - Suspend and Lift sit in the header of the page of an org or a user, and
   in its footer on a phone. A person who waits also has Approve there. Each
-  asks first, with `ConfirmDialog`. The Suspend question of a user offers
-  to disable their referral code with `CheckOption` from
+  asks first, with `ConfirmDialog`. The words of the questions and the
+  notices live in `operatorCopy.ts`, which imports no fixture, so the app
+  uses them too. So do `WorkspaceStates` and `DailyChart`. Each text of an
+  org takes its deletion, so the questions and the notices of a deleted
+  org promise nothing that its members cannot open, and nothing that a
+  lift does not give back. The Suspend question of a user offers to
+  disable their referral code with `CheckOption` from
   `src/components/common/`, the checkbox of the browser in the accent
   colour, because `@firna/ui` has no checkbox.
+- `DailyChart` names each point and each label of its axis with the UTC
+  day, such as "10 Oct", in British English, so that no time zone and no
+  locale of a browser or of the build machine changes a date. Its axis has
+  one slot for each day and shows every few labels, so the labels leave
+  out the year. Its own table lists the UTC days, because the table of the
+  Firna chart cannot name its first column.
 - While sign-ups are paused, `PauseNotice` tops each tab of the section,
   with Resume sign-ups. On the Invite codes tab it takes the place of the
   Sign-ups box, which holds Pause sign-ups while sign-ups are open.

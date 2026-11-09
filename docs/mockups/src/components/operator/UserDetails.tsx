@@ -5,6 +5,7 @@ import { Notice } from '../common/Notice'
 import { DetailList } from '../settings/DetailList'
 import { Section } from '../settings/Section'
 import { AppAccessSection, ReferralSection } from './AccessSections'
+import { suspendedTitle, suspendedUserBody } from './operatorCopy'
 import { TargetList, TargetRow } from './targets'
 
 /**
@@ -15,12 +16,12 @@ function UserNotice(props: { user: UserPage }) {
   const { user } = props
   const name = `@${user.login}`
   if (user.suspension) {
-    const { since, by } = user.suspension
+    const { since, by, stopping } = user.suspension
     return (
       <Notice
-        body={`${name} cannot sign in, and no member can start the workspaces that ${name} owns. An admin can move them to another member.`}
+        body={suspendedUserBody(name, stopping)}
         icon={Ban}
-        title={`Suspended on ${since} by @${by}`}
+        title={suspendedTitle(since, by)}
       />
     )
   }

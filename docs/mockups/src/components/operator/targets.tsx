@@ -8,7 +8,7 @@ import styles from './targets.module.css'
 export type Target = { kind: 'user' | 'org'; name: string; initials: string }
 
 /** The name of a target as the pages write it: a login, or an org name. */
-export function targetName(target: Target): string {
+function targetName(target: Target): string {
   return target.kind === 'user' ? `@${target.name}` : target.name
 }
 

@@ -14,7 +14,7 @@ import {
  * The reducer of a tool. It takes the tool's own actions and the events of
  * its workspace, so each event reaches the state as it is.
  */
-export type ToolReducer<S, A> = (state: S, action: A | WorkspaceEvent) => S
+type ToolReducer<S, A> = (state: S, action: A | WorkspaceEvent) => S
 
 /**
  * What a tool store takes from the workspace screen while it runs: the app's
@@ -26,7 +26,7 @@ export type ToolSource = Pick<ToolWorkspace, 'fetch' | 'subscribe'>
  * The read of a tool's data. The state gives the number of the read that it
  * needs, so an action or an event that changes the number starts a new read.
  */
-export interface ToolRead<S, A> {
+interface ToolRead<S, A> {
   /** The number of the read that the state needs. */
   key: (state: S) => number
   /**

@@ -8,7 +8,7 @@ import type { MdInline } from './markdown-inline'
  * shows its Markdown as typed. So a crafted file cannot overflow the stack
  * of the renderer, of `plainText`, or of the parse of nested link texts.
  */
-export const maxDepth = 12
+const maxDepth = 12
 
 /** One part of an inline text, in text order. */
 export type InlinePart =

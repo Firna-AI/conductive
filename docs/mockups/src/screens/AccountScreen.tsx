@@ -27,7 +27,7 @@ import { paths } from '../paths'
 export const accountSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['connections', 'form', 'invites'],
+  required: ['connections', 'form', 'invites', 'shareChange'],
   properties: {
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
@@ -41,6 +41,11 @@ export const accountSchema = {
      * invite used, or turned off by an operator.
      */
     invites: { enum: inviteStates },
+    /**
+     * The last change of a share setting: none, or a change of the Claude
+     * login that the app did not save.
+     */
+    shareChange: { enum: ['none', 'not-saved'] },
   },
 } as const
 
@@ -64,11 +69,11 @@ function loginsFor(state: AccountState): AgentLogins {
 
 /**
  * The account: the GitHub sign-in, what every org shares, and at the end
- * the invite code of the user. The GitHub App, the agents, and the model
- * of new workspaces come first, so a phone shows the form of an agent near
- * the top. The product is free, so the page shows no plan and no billing,
- * and the sandbox provider stays out of sight. The Mac app adds the This
- * Mac section.
+ * the invite code of the user. The GitHub App, the agents with the share
+ * setting of each login, and the model of new workspaces come first, so a
+ * phone shows the form of an agent near the top. The product is free, so
+ * the page shows no plan and no billing, and the sandbox provider stays
+ * out of sight. The Mac app adds the This Mac section.
  */
 export function AccountScreen(props: {
   state: AccountState
@@ -95,7 +100,13 @@ export function AccountScreen(props: {
       <SignInSection />
       {mac ? <ThisMacSection /> : null}
       <GitHubSection connected={connected} />
-      <AgentsSection form={openForm} logins={loginsFor(props.state)} />
+      <AgentsSection
+        form={openForm}
+        logins={loginsFor(props.state)}
+        shares={{
+          notSaved: props.state.shareChange === 'not-saved' ? 'claude' : null,
+        }}
+      />
       <DefaultsSection />
       <InviteCodeSection fresh={!connected} state={props.state.invites} />
     </Page>

@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import { CommandPalette } from '../components/palette/CommandPalette'
+import {
+  paletteViews,
+  type PaletteView,
+} from '../components/palette/paletteViews'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
 import { SuspendedOrgPanel } from '../components/orgs/SuspendedOrgNotice'
@@ -37,7 +42,7 @@ import styles from './WorkspaceListScreen.module.css'
 export const workspaceListSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['list', 'menu'],
+  required: ['list', 'menu', 'palette'],
   properties: {
     /**
      * The workspaces of Acme, the first org of a new user or another new
@@ -59,6 +64,8 @@ export const workspaceListSchema = {
      * the org switcher of an operator, which adds Operator.
      */
     menu: { enum: ['none', 'section', 'drag', 'orgs', 'operator'] },
+    /** The command palette, closed or open on one of its views. */
+    palette: { enum: paletteViews },
   },
 } as const
 
@@ -70,6 +77,22 @@ function listMenu(menu: WorkspaceListState['menu']): ListMenu | undefined {
 
 function listDrag(menu: WorkspaceListState['menu']): ListDrag | undefined {
   return menu === 'drag' ? workspaceDrag : undefined
+}
+
+/**
+ * The command palette over the list of Acme, or nothing while it is
+ * closed. The list has no open workspace, so the palette offers no actions
+ * of a workspace.
+ */
+function listPalette(view: PaletteView, viewport: Viewport): ReactNode {
+  if (view === 'closed') return null
+  return (
+    <CommandPalette
+      context={{ archivable: false }}
+      view={view}
+      viewport={viewport}
+    />
+  )
 }
 
 const sheets: Readonly<Record<WorkspaceListState['menu'], ReactNode>> = {
@@ -107,7 +130,11 @@ const newOrgs: Readonly<
 }
 
 function MobileList(props: { state: WorkspaceListState }) {
-  const { list, menu } = props.state
+  const { list, menu, palette } = props.state
+  // On a phone the palette is a page in place of the list.
+  if (palette !== 'closed') {
+    return <MobileFrame>{listPalette(palette, 'mobile')}</MobileFrame>
+  }
   if (list === 'deleted' || list === 'deleted-suspended') {
     return (
       <MobileFrame>
@@ -163,6 +190,7 @@ function SuspendedList() {
       </div>
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
+          keys
           menuStyle="anchored"
           org={org}
           sections={sections}
@@ -182,7 +210,7 @@ export function WorkspaceListScreen(props: {
   state: WorkspaceListState
   viewport: Viewport
 }) {
-  const { list, menu } = props.state
+  const { list, menu, palette } = props.state
   if (props.viewport === 'mobile') return <MobileList state={props.state} />
   if (list === 'suspended') return <SuspendedList />
   if (list === 'deleted' || list === 'deleted-suspended') {
@@ -215,6 +243,7 @@ export function WorkspaceListScreen(props: {
   const rail = rails[menu] ?? acmeRail
   return (
     <AppFrame
+      overlay={listPalette(palette, props.viewport)}
       rail={rail}
       sidebar={
         <Sidebar drag={drag} menu={open} org={orgs.acme} sections={sections} />
@@ -226,6 +255,7 @@ export function WorkspaceListScreen(props: {
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
           drag={drag}
+          keys
           menu={open}
           menuStyle="anchored"
           org={orgs.acme}

@@ -15,21 +15,7 @@ export async function recordOrgSuspension(
   )
   if (recorded.suspendedAt === null)
     throw new Error('Missing recorded org suspension')
-  const org = { orgId: recorded.id, suspendedAt: recorded.suspendedAt }
-  await db.batch([
-    db
-      .prepare(
-        `UPDATE workspace_tokens SET revoked_at = ? WHERE revoked_at IS NULL
-         AND workspace_id IN (SELECT id FROM workspaces WHERE org_id = ?)`,
-      )
-      .bind(now, orgId),
-    db
-      .prepare(
-        'UPDATE preview_hostnames SET revoked_at = ? WHERE org_id = ? AND revoked_at IS NULL',
-      )
-      .bind(now, orgId),
-  ])
-  return org
+  return { orgId: recorded.id, suspendedAt: recorded.suspendedAt }
 }
 
 export async function orgWorkspaces(db: D1Database, orgId: string) {

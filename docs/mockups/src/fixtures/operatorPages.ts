@@ -27,7 +27,7 @@ export type OrgPage = {
 }
 
 const hexwaveMembers: readonly OrgMember[] = [
-  { login: 'vex-ops', initials: 'VO', role: 'Admin' },
+  { login: 'vex-ops', initials: 'V', role: 'Admin' },
   { login: 'kt-null', name: 'Kai Tanaka', initials: 'KT', role: 'Member' },
   {
     login: 'dana-k',
@@ -73,4 +73,10 @@ export const orgPages: Readonly<Record<TargetStatus, OrgPage>> = {
     ],
     deleted: { on: '5 Nov', purge: '12 Nov' },
   },
+}
+
+/** Pinecrest after an admin deleted it and the operator suspended it. */
+export const suspendedDeletedOrg: OrgPage = {
+  ...orgPages.deleted,
+  suspension: { since: '8 Nov at 14:35', by: account.login, stopping: 0 },
 }

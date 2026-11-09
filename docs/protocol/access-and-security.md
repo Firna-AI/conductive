@@ -211,10 +211,30 @@ Later screens add the frame and connection sources that they need.
   starter is a member of the org.
   [Messages](chat-and-events.md#messages) says what a message of another
   member does when the login of the starter cannot be used.
+- Each agent login has a share setting (decision 116). It says whether the
+  messages of other members can run on that login.
+- The kind of a login sets the default of its share setting. A new Claude
+  subscription login does not let other members use it. A new API key lets
+  them use it.
+- Reason: Anthropic's consumer terms forbid making a Claude account
+  available to anyone else. The owner of an API key may let a team use it.
+  Sharing every login by default was rejected for that reason.
+- A replaced login keeps its share setting while its kind stays the same. A
+  login whose kind changes gets the default of its new kind. Reason: a key
+  rotation keeps the choice of its owner.
+- The account page shows the share setting of each connected login. Its
+  owner can change the setting there at any time.
+- When the starter does not share the login, a message of another member
+  starts a new session on that member's own login. A Try again of another
+  member does the same. [Messages](chat-and-events.md#messages) states the
+  rules of such a new session.
+- The workspace checks the share setting when it accepts each message, and
+  again before it gives the login to the runner. So a waiting message of
+  another member never runs on a login that its owner stopped sharing.
 - A message of a sender who left the org never reaches the agent, also
   while the login of the starter works.
-- The session record shows whether the login of its starter can be used. It
-  holds no part of the login.
+- The session record shows whether the login of its starter can be used,
+  and whether the starter shares it. It holds no part of the login.
 - The runner never writes a login to disk.
 - No process that the agent starts inherits the login of its turn. The
   login is not in the environment, the arguments, or an inherited open file
@@ -226,11 +246,10 @@ Later screens add the frame and connection sources that they need.
   because it also stops the servers behind port previews. The Claude
   program's setting that removes the login from tool processes was rejected,
   because it runs each tool command in isolation.
-- Risk: the other members of a session spend the login of its starter.
-  Anthropic's rules for hosted products ask each end user to sign in with
-  their own credentials. So the shared use of a Claude subscription stays a
-  risk (decision 105).
-- The starter cannot refuse this use of their login (decision 116).
+- Risk: while the starter shares the login, the other members of a session
+  spend it. Anthropic's rules for hosted products ask each end user to sign
+  in with their own credentials. So a shared Claude subscription stays a
+  risk (decisions 105 and 116).
 - Risk: a member with a terminal in the same sandbox can read the login of
   the turn that runs now. Every other process of the same sandbox user can
   read it too, such as a tool of the agent or a server that the startup
@@ -239,8 +258,9 @@ Later screens add the frame and connection sources that they need.
   copy after the turn. The rule against inheritance stops only the
   automatic copy into new processes.
 - So the members of one org trust each other with their logins, also after
-  a turn ends. A proxy that keeps every login out of the sandbox was
-  rejected, because it is a much larger build.
+  a turn ends. The share setting does not keep a login away from them. A
+  proxy that keeps every login out of the sandbox was rejected, because it
+  is a much larger build.
 - Risk: while a turn runs, each process in the sandbox can get the
   sender's GitHub App user token. Each member with a terminal there can
   get it too, for example with `git credential fill`. A copied token keeps
@@ -321,14 +341,51 @@ Later screens add the frame and connection sources that they need.
 ## Secrets that users enter
 
 - The app stores the env var values and the agent logins encrypted.
-- The values of env vars are write-only. The browser never gets a stored
-  value back.
-- Agent output can show an env var value. The output filter of the runner
-  hides only the workspace token and the agent logins. So a value that an
-  agent repeats stays in the chat history, and each reader of the chat
-  sees it (decision 133).
-- A start log hides each env var value of the org, also a short value,
-  before the app shows the log (decision 133).
+- The values of env vars are write-only. The settings never return a
+  stored value to the browser, whatever the mark of the env var.
+- An admin marks each env var of the org as secret or not secret
+  (decision 133). Each env var is secret until an admin clears its mark.
+  The value of a secret env var is a secret value.
+- An admin can change the mark of an env var without a new value.
+- A changed mark applies at the next start of each sandbox, as a changed
+  value does. The chat history and the start logs from before that start
+  keep their text.
+- The Durable Object of the workspace hides each exact copy of a secret
+  value in the text that screens show from each runner event. It does
+  this before it checks, stores, or sends the event. It uses the values
+  and the marks of the last start of the sandbox.
+- The Durable Object does this for each runner, also for an older runner
+  from an org image or a saved disk. It also hides a copy that consecutive
+  text events of one answer split.
+- Reason: an org image or a saved disk can hold an older runner. A filter
+  of secret values in the runner was rejected, because an older runner
+  does not have it.
+- The app keeps the real path of each file and the real name of the
+  default branch. Reads, diffs, and the file lists use them. The browser
+  gets these real values, so a secret value can show in the data that the
+  browser gets and sends (decision 145).
+- Screens show a separate label of each path and branch name. The label
+  hides each exact copy of a secret value.
+- Reason: a hidden path or branch name names nothing real, and two hidden
+  paths can become equal. File IDs in place of real paths were rejected,
+  because they change the file API.
+- The runner hides the workspace token and the agent logins in the text
+  that screens show, before it saves or sends an event.
+- A start log hides each exact copy of a secret value and of the workspace
+  token before a browser gets it.
+- The app does not hide the value of an env var that is not secret. So
+  each reader of the chat or of a start log can see such a value.
+- Reason: the admin knows which values are secrets. A length rule, where
+  only values of 8 or more characters count, was rejected, because it
+  guesses. A mask of every value was rejected, because it also hides
+  short, common values, such as `1`, in ordinary text.
+- Risk: the app hides only exact copies of a value. A changed or encoded
+  value still shows. File content, diff content, and the terminal hide no
+  value.
+  The mark does not keep a value from the agent or from a member with a
+  terminal, because each sandbox gets every env var.
+- Risk: the runner does not hide secret values. So its saved events on the
+  disk of the sandbox can hold them, as the agent sessions there do.
 
 ## Agent logins
 

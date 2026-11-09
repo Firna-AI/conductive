@@ -48,6 +48,12 @@ export class AppModel {
    * sent it.
    */
   readonly refusedOrgs = new Store<ReadonlySet<string>>(new Set())
+  /**
+   * The org that the person opened last in this tab, also a deleted one.
+   * A page without an org works on it, as `keptOrg` says. The tab keeps it
+   * in memory only.
+   */
+  readonly lastOrg = new Store<string | null>(null)
   readonly models = new Store<readonly AgentModel[]>([])
   /**
    * The steps of Get started as every screen shows them. Only the step of
@@ -80,8 +86,8 @@ export class AppModel {
   }
 
   /**
-   * A sign-out, or a sign-in of another person, forgets the admitted
-   * creates of every org, with the messages that they keep.
+   * A sign-out, or a sign-in of another person, ends the create requests
+   * of every org that still run, so that their answers change nothing.
    */
   private followPerson(): void {
     const boot = this.boot.get()
@@ -165,6 +171,11 @@ export class AppModel {
         }
       },
     }
+  }
+
+  /** The person opens a page of an org. */
+  openOrg(orgId: string): void {
+    this.lastOrg.set(orgId)
   }
 
   async refreshGetStarted(): Promise<void> {

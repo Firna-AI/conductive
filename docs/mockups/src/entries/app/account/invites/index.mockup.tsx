@@ -9,7 +9,10 @@ export const accountInvites = defineScreen({
     'The pause stops invite codes, invite links, and the org invitations of people who wait. A code that the pause stopped stays unused, so the count does not drop. A person who opens the link during the pause joins the waitlist, and can open it again after the pause. The user can still share the link, so Copy stays.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { connections: 'connected', form: 'none', invites: 'paused' },
+  props: {
+    connections: 'connected', form: 'none', invites: 'paused',
+    shareChange: 'none',
+  },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

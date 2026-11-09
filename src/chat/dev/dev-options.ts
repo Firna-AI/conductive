@@ -13,10 +13,11 @@ export interface DevOptions {
   login: boolean
   /**
    * The login of the member who started each session: it works, it is not
-   * available, older records name no starter, or the reader's message has
-   * opened a linked session from the first session.
+   * available, the starter keeps it for their own messages, older records
+   * name no starter, or the reader's message has opened a linked session
+   * from the first session.
    */
-  starter: 'on' | 'off' | 'none' | 'linked'
+  starter: 'on' | 'off' | 'private' | 'none' | 'linked'
   replay: 'stored' | 'live'
   viewport: 'desktop' | 'mobile'
   scheme: 'dark' | 'light'
@@ -63,7 +64,7 @@ export const choices = {
   ],
   role: ['admin', 'member'],
   login: ['on', 'off'],
-  starter: ['on', 'off', 'none', 'linked'],
+  starter: ['on', 'off', 'private', 'none', 'linked'],
   replay: ['stored', 'live'],
   viewport: ['desktop', 'mobile'],
   scheme: ['dark', 'light'],

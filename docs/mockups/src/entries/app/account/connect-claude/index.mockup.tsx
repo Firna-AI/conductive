@@ -9,7 +9,10 @@ export const accountConnectClaude = defineScreen({
     'Decisions 24 and 37 allow a Claude subscription token or an Anthropic API key. The app tests the login once when the user connects it, as decision 33 notes.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { connections: 'connected', form: 'claude', invites: 'left' },
+  props: {
+    connections: 'connected', form: 'claude', invites: 'left',
+    shareChange: 'none',
+  },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

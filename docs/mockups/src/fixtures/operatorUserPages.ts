@@ -18,7 +18,7 @@ import { samOkafor } from './operatorWaitlist'
 import { account } from './orgs'
 
 /** An org of a user, with the role of the user in it. */
-export type UserOrg = {
+type UserOrg = {
   name: string
   initials: string
   role: 'Admin' | 'Member'

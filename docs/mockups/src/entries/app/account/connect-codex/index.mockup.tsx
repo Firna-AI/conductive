@@ -9,7 +9,10 @@ export const accountConnectCodex = defineScreen({
     'The app offers no ChatGPT plan sign-in for Codex, because OpenAI allows it for hosted apps only after a waitlist.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { connections: 'connected', form: 'codex', invites: 'left' },
+  props: {
+    connections: 'connected', form: 'codex', invites: 'left',
+    shareChange: 'none',
+  },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

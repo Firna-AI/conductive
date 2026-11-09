@@ -72,7 +72,8 @@ Use the same `q` with the returned cursor to read the next page.
 Without `q`, the list includes every record, also suspended users and deleted orgs.
 
 Org search matches part of a name without case sensitivity.
-It also matches an exact org ID or a stored workspace or build computer ID.
+It also matches an exact org ID or a stored computer ID.
+Computer IDs include workspaces, builds, cleanup records, preview listeners, and terminal credentials.
 A preview search accepts a full URL or a bare hostname.
 The URL path does not affect the search.
 Open and closed previews both count while their records exist.
@@ -163,6 +164,27 @@ A lift brings back no session, workspace token, preview, or build.
 A deleted org keeps its deletion and its restore window.
 The org and user pages show only the current suspension, never its event history.
 
+## Repair after a lift
+
+The lift keeps its direct workspace calls as the fast path.
+The 15-minute Cron Trigger also repairs overdue disk restarts and image refreshes.
+Suspension removes a workspace alarm but keeps its restart time in D1.
+The repair uses that saved time with a 15-minute grace period.
+
+It checks stopped and failed workspaces that still have a computer.
+It uses the shared archive, owner, and org eligibility rules.
+It leaves suspended owners and suspended or deleted orgs alone.
+It also wakes an org image coordinator when its saved refresh time is overdue.
+That org needs an image and an active admin.
+The wake uses the existing idle coordinator scheduler.
+
+Each run checks at most 50 workspaces and 50 orgs.
+The warning log gives the count when either limit leaves work pending.
+An attempt advances the overdue D1 signal to its attempt time.
+This defers a failed call until the next Cron run.
+The workspace object keeps its real alarm deadline and decides whether to restart.
+The repair never repeats a target in the same run.
+
 ## Suspension events
 
 `suspension_events` keeps an append-only record of each suspension and lift.
@@ -170,9 +192,13 @@ Each row has an ID, target kind, target ID, action, time, and operator account I
 Target kinds are `user` and `org`.
 Actions are `suspend` and `lift`.
 Target IDs are the stored user and org IDs.
-The state change and its event commit in the same D1 batch.
+The suspension, its event, and every access revocation commit in one D1 batch.
+For users, this includes deleting sign-in sessions.
+For both target kinds, it includes revoking workspace tokens and preview hostnames.
+Any failed write rolls the whole batch back.
 
 A repeat suspension keeps the first time and operator and writes no event.
+It still runs every access revocation in its batch.
 After a lift, a new suspension gets its own time, operator, and event.
 The app never removes an event when its target is deleted.
 Deleting an operator sets the event's operator reference to null.
@@ -233,7 +259,8 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
 - [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview and org page.
 - [`lift.ts`](lift.ts): the lifts and the checks of affected workspaces.
-- [`events-data.ts`](events-data.ts): atomic event writes and current suspension changes.
+- [`repair.ts`](../lifecycle/repair.ts): bounded Cron repair of overdue disk and image alarms.
+- [`events-data.ts`](events-data.ts): the shared atomic writer for suspension state, events, and access revocations.
 - [`suspend-org.ts`](suspend-org.ts) and [`org-data.ts`](org-data.ts): the org action, stored suspension, revocations, and pending resources.
 - [`org-access.ts`](../data/org-access.ts): the active-org SQL predicate and the org error.
 - [`suspend-user.ts`](suspend-user.ts): `suspendUser`, the steps and the

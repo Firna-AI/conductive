@@ -149,4 +149,3 @@ without the operator, also after the workspace gets another owner.
   stop for the former owner finishes before it reads the new owner. When
   nothing must stop, no start waits, and a stopped workspace has an owner
   who is not suspended, it rearms the lifecycle alarm of that workspace.
-

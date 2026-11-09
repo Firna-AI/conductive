@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { MonitorX } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
@@ -19,6 +19,12 @@ type DesktopView =
   | { state: 'loading' }
   | { state: 'error'; error: ToolError }
   | { state: 'ready'; desktop: DesktopResponse }
+
+/** The page policy of the app blocked the frame of the stream. */
+const frameBlocked: ToolError = {
+  code: 'desktop_blocked',
+  message: "The app's settings block this desktop.",
+}
 
 export interface DesktopToolProps {
   workspace: ToolWorkspace
@@ -77,6 +83,10 @@ function DesktopToolBody(props: DesktopToolProps) {
     return () => controller.abort()
   }, [fetch, orgId, workspaceId, attempt])
 
+  const block = useCallback(() => {
+    setView({ state: 'error', error: frameBlocked })
+  }, [])
+
   const retry = () => {
     setView({ state: 'loading' })
     setLive(false)
@@ -102,6 +112,7 @@ function DesktopToolBody(props: DesktopToolProps) {
             {view.state === 'ready' ? (
               <DesktopFrame
                 desktop={view.desktop}
+                onBlocked={block}
                 onLoad={() => setLive(true)}
               />
             ) : null}
