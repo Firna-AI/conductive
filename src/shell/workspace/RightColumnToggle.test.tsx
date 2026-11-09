@@ -7,6 +7,7 @@ import {
   accessibleName,
   byRole,
   queryByLabel,
+  queryByRole,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
@@ -14,7 +15,7 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
-import { click, settle } from '../test-mount'
+import { click, press, settle } from '../test-mount'
 import { openTab, socketsOf } from './wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -32,6 +33,14 @@ function layout(view: HTMLElement) {
     column: queryByLabel('Files and tools', view) !== null,
     lastButton: accessibleName(last),
   }
+}
+
+function offersTerminal(view: HTMLElement): boolean {
+  click(byRole('button', 'Search', view))
+  click(byRole('tab', 'Actions', view))
+  const offered = queryByRole('option', 'Go to Terminal', view) !== null
+  press(byRole('combobox', 'Search', view), 'Escape')
+  return offered
 }
 
 describe('the toggle of the right column', () => {
@@ -52,6 +61,7 @@ describe('the toggle of the right column', () => {
       lastButton: 'Show the right column',
     })
     expect(opened.map(({ socket }) => socket.closed)).toEqual([false])
+    expect(offersTerminal(view)).toBe(false)
 
     // The choice holds when the workspace opens again in the same tab.
     act(() => navigation.push(routes.org(org)))
@@ -68,5 +78,6 @@ describe('the toggle of the right column', () => {
       column: true,
       lastButton: 'Hide the right column',
     })
+    expect(offersTerminal(view)).toBe(true)
   })
 })

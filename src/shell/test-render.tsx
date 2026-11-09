@@ -1,13 +1,18 @@
 import type { ReactElement, ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AppModel } from '../app/app-model'
-import { memoryNavigation, NavigationContext } from '../app/navigation'
+import {
+  memoryNavigation,
+  NavigationContext,
+  type Navigation,
+} from '../app/navigation'
 import { PanelLayout } from '../app/panels'
 import { ServicesContext } from '../app/services'
 import { testServices } from '../app/test-kit'
 import type { FakeApiServer } from '../test-support/fake-api'
 import { AppModelContext } from './context'
 import { PanelContext } from './layout/panels'
+import { PaletteProvider } from './palette/PaletteProvider'
 import { ThemeRoot } from './ui/ThemeRoot'
 import { ViewportProvider, type Viewport } from './ui/viewport'
 
@@ -27,6 +32,8 @@ export async function startedApp(
 export interface ScreenOptions {
   viewport?: Viewport
   href?: string
+  /** The address bar of the test, in place of a new one at `href`. */
+  navigation?: Navigation
 }
 
 /** Every provider of the app, around a screen of a test. */
@@ -37,10 +44,14 @@ export function AppProviders(
   return (
     <ServicesContext.Provider value={app.services}>
       <AppModelContext.Provider value={app}>
-        <NavigationContext.Provider value={memoryNavigation(props.href ?? '/')}>
+        <NavigationContext.Provider
+          value={props.navigation ?? memoryNavigation(props.href ?? '/')}
+        >
           <PanelContext.Provider value={new PanelLayout(app.services.storage)}>
             <ViewportProvider viewport={props.viewport ?? 'desktop'}>
-              <ThemeRoot scheme="dark">{props.children}</ThemeRoot>
+              <ThemeRoot scheme="dark">
+                <PaletteProvider>{props.children}</PaletteProvider>
+              </ThemeRoot>
             </ViewportProvider>
           </PanelContext.Provider>
         </NavigationContext.Provider>

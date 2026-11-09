@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
+import { listLabel } from '../../../files/model/file-labels'
 import type { FilesNavigation, FilesTab } from '../../../files/navigation'
+import { useFilesSnapshot } from '../../../files/panel/FilesPanel'
 import { FileTabItem } from '../../../files/tabs/FileTabItem'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
 import type { WorkspaceContext } from '../features'
@@ -9,11 +11,13 @@ import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
 import { useFilesNavigation, useLeaveForSession } from './files-navigation'
 import { filesTabsOf, sameFilesTab, withoutTab } from './view-tabs'
+import { useKeptFiles } from './workspace-files'
 
 /**
- * The file and diff tabs of the saved view, after the session tabs. Close
- * of the shown tab shows the next file tab, else the one before, else the
- * chat with its session.
+ * The file and diff tabs of the saved view, after the session tabs. Each
+ * tab shows the label of its path from the kept files. Close of the shown
+ * tab shows the next file tab, else the one before, else the chat with its
+ * session.
  */
 function FileTabs(props: {
   context: WorkspaceContext
@@ -22,6 +26,7 @@ function FileTabs(props: {
 }) {
   const { context, navigation, shown } = props
   const go = useNavigation()
+  const snapshot = useFilesSnapshot(useKeptFiles(context))
   const tabs = filesTabsOf(useSavedView(context.savedView))
   const isShown = (tab: FilesTab) => shown !== null && sameFilesTab(shown, tab)
   const close = (tab: FilesTab) => {
@@ -49,6 +54,7 @@ function FileTabs(props: {
       {tabs.map((tab) => (
         <FileTabItem
           key={`${tab.kind}:${tab.path}`}
+          label={listLabel(snapshot, tab.path, tab.kind)}
           navigation={navigation}
           onClose={() => close(tab)}
           selected={isShown(tab)}

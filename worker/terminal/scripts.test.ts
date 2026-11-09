@@ -1,9 +1,25 @@
-import { chmod, readdir, readFile, writeFile, unlink } from 'node:fs/promises'
+import {
+  chmod,
+  mkdir,
+  readdir,
+  readFile,
+  writeFile,
+  unlink,
+} from 'node:fs/promises'
 
 import { expect, it } from 'vitest'
 
-import { credentialScript, launcherScript } from './scripts'
-import { runScript, scriptFixture } from './scripts.test-support'
+import { shellArgument } from './privileged'
+import {
+  credentialScript,
+  launcherScript,
+  terminalPromptCommand,
+} from './scripts'
+import {
+  runInteractiveBash,
+  runScript,
+  scriptFixture,
+} from './scripts.test-support'
 
 it('creates and reuses a local runtime credential without new entropy and keeps separate runtime storage', async () => {
   const first = await scriptFixture()
@@ -79,7 +95,7 @@ printf '%s\\n' "$PWD" "$CONDUCTIVE_LAUNCH_TEST"
   })
 })
 
-it('attaches each terminal connection to the workspace shell without starting its own server', async () => {
+it('attaches each terminal connection to the workspace shell at the repository path without starting its own server', async () => {
   const fixture = await scriptFixture()
   await writeFile(
     fixture.terminal,
@@ -99,7 +115,44 @@ printf '%s\\0' "$@"
     '-A',
     '-s',
     'workspace',
+    '-c',
+    fixture.repository,
     '/bin/bash',
     '-l',
   ])
+})
+
+it('waits for the restore marker before moving a running shell once and keeps OLDPWD', async () => {
+  const fixture = await scriptFixture()
+  const folder = `${fixture.repository}/src`
+  const oldView = `${fixture.root}/old view`
+  const laterView = `${fixture.root}/later view`
+  await mkdir(folder)
+  await mkdir(fixture.options.runtimeDirectory)
+  await writeFile(`${folder}/old file`, '')
+  const result = await runInteractiveBash(
+    [
+      `cd ${shellArgument(folder)}`,
+      `mv ${shellArgument(fixture.repository)} ${shellArgument(oldView)} && mkdir -p ${shellArgument(folder)} && : > ${shellArgument(`${folder}/live file`)}`,
+      'ls',
+      `: > ${shellArgument(fixture.options.restoreMarker)}`,
+      'ls',
+      'printf "%s\\n" "$OLDPWD"',
+      `mv ${shellArgument(fixture.repository)} ${shellArgument(laterView)} && mkdir -p ${shellArgument(folder)} && : > ${shellArgument(`${folder}/later file`)}`,
+      'ls',
+      'printf "%s\\n" "$OLDPWD"',
+      'env | cut -d= -f1 | grep "^__conductive_" || :',
+      'exit',
+    ],
+    {
+      folder: fixture.repository,
+      home: fixture.root,
+      promptCommand: terminalPromptCommand(fixture.options.restoreMarker),
+    },
+  )
+  expect(result.code).toBe(0)
+  expect(result.stdout).toBe(
+    `old file\nlive file\n${fixture.repository}\nlive file\n${fixture.repository}\n`,
+  )
+  expect(result.stderr).not.toContain('PROMPT_COMMAND')
 })

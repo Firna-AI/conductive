@@ -5,6 +5,7 @@ import { useStore } from '../../app/store'
 import { useMacApp, useNarrowWindow, type MacChrome } from '../mac/mac-app'
 import mac from '../mac/mac.module.css'
 import { WindowControls, WindowStrip } from '../mac/WindowControls'
+import { PaletteLayer } from '../palette/PaletteLayer'
 import { OverlayHost } from '../ui/Overlay'
 import { usePanelLayout } from './panels'
 import { ResizeHandle } from './ResizeHandle'
@@ -50,6 +51,7 @@ function BrowserFrame(props: FrameProps) {
         {props.rail}
         {props.sidebar ? <SidebarPanel>{props.sidebar}</SidebarPanel> : null}
         <main className={frame.main}>{props.children}</main>
+        <PaletteLayer />
       </OverlayHost>
     </div>
   )
@@ -90,6 +92,7 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
           </div>
         </div>
         <main className={frame.main}>{props.children}</main>
+        <PaletteLayer />
       </OverlayHost>
     </div>
   )
@@ -99,7 +102,7 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
  * The desktop app: the org rail, the sidebar of the org, and the main area.
  * Below 900 px the sidebar hides, and the org in the rail leads to its
  * list. A page can leave out the sidebar.
- * Dialogs open over the whole frame.
+ * Dialogs and the command palette open over the whole frame.
  */
 export function AppFrame(props: FrameProps) {
   const chrome = useMacApp()
@@ -118,6 +121,7 @@ export function PhoneFrame(props: { children: ReactNode }) {
       <OverlayHost>
         <WindowStrip />
         {props.children}
+        <PaletteLayer />
       </OverlayHost>
     </main>
   )

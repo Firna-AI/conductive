@@ -47,6 +47,9 @@ command start. For a workspace object, it:
 - extends the Boat auto-stop deadline while a turn runs, and applies the
   state in that reply even when the saved runner flag says connected
 - reads the sandbox state from Boat while the runner is not connected
+- watches the restore after each create and resume until Boat reports its
+  end, or until a stop, an error, an archive, or a new start, as
+  [Creates and resumes](#creates-and-resumes) says
 - runs the disk retention restart 13 days after each confirmed stop
 - retries the sandbox delete of a failed create
 - recovers and deletes an unresolved allocation after a start reaches its limit
@@ -132,6 +135,33 @@ create and resume. The workspace object runs that start:
   The shared success path prepares the lifecycle only after its final
   access, cancellation, and deadline checks. That lifecycle write restores
   the alarm before the job saves success, also after a runner-phase restart.
+- The first lifecycle prepare of each create and resume also starts the
+  restore watch. After a start from a saved snapshot, Boat downloads the
+  file content in the background. The
+  [terminal backend](../terminal/README.md) moves an early shell only after
+  that restore ends. The alarm reads the sandbox with
+  `checkWorkspaceRestore` 5 seconds after the prepare, and then every
+  5 seconds. `restoreWatchAt` in the lifecycle state keeps the time of the
+  next read. When the watch is due, its read takes the place of the Boat
+  state read of that alarm.
+  - A reply with `hydrated: false` keeps the watch.
+  - A reply with `hydrated: true`, or without `hydrated`, ends the watch.
+    The watch then writes the restore marker of the terminal with
+    `markTerminalRestoreEnded`. Boat's schema makes the field optional,
+    and Boat says that a sandbox that restored nothing is hydrated from
+    the start.
+  - A stopped or error state ends the watch, and the alarm applies that
+    state as the Boat state read does. A stopping state, such as
+    `archiving`, also ends the watch. Neither writes the marker.
+  - A Boat error or a failed marker command keeps the watch. The alarm
+    error handling tries again in 30 seconds.
+  - A stop, an error, an archive, or a new start ends the watch. An access
+    stop, such as at an org suspension, also ends it when Boat still runs
+    the sandbox and the stop waits for a retry. The watch has no deadline
+    of its own, so it can last until a stop, such as the idle stop after 30
+    minutes without activity.
+  - A disk retention restart starts no watch, because it starts no
+    terminal.
 - A failed or cancelled resume records its result separately from its
   stop cleanup. Native lifecycle state keeps the pending stop across
   restarts. The lifecycle retries the existing stop operation every 30

@@ -12,6 +12,7 @@ import type { GitHubStateTransaction } from '../github/contracts'
 import { ReportRepairs } from './report-repairs'
 import { WorkspaceSummaryProjection } from './workspace-summary'
 import { PreviewRevocations } from '../previews/revocation-events'
+import { RunnerOutputState } from './runner-output-state'
 import {
   CHAT_ROOT as ROOT,
   CHAT_META as META,
@@ -34,6 +35,7 @@ export class ChatTransaction extends ChatRecords {
   readonly github: GitHubStateTransaction
   readonly repairs: ReportRepairs
   readonly previews: PreviewRevocations
+  readonly output: RunnerOutputState
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages: HistoryPages
   private through: number
@@ -41,6 +43,7 @@ export class ChatTransaction extends ChatRecords {
 
   constructor(data: ChatData, metadata: ChatMetadata, now: number) {
     super(data)
+    this.output = new RunnerOutputState(data)
     this.pages = new HistoryPages(data)
     this.files = chatFilesStorage(data)
     this.github = {

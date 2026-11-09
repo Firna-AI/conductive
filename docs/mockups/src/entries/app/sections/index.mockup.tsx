@@ -12,7 +12,7 @@ export const sections = defineScreen({
     'A section collapses from its header, and a collapsed section shows how many workspaces it holds. New workspaces from the top of the list join General, the default section. Deleting a section moves its workspaces to General, so no workspace gets lost.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
-  props: { list: 'workspaces', menu: 'section' },
+  props: { list: 'workspaces', menu: 'section', palette: 'closed' },
   render: (props, context) => (
     <WorkspaceListScreen state={props} viewport={context.viewport} />
   ),

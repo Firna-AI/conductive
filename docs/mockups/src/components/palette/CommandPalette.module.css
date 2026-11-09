@@ -1,0 +1,278 @@
+/*
+ * The palette lies over the whole app frame, the rail and the sidebar too,
+ * near the top of the window, as in Conductor.
+ */
+.layer {
+  display: flex;
+  position: absolute;
+  z-index: 40;
+  inset: 0;
+  align-items: flex-start;
+  justify-content: center;
+  padding: calc(var(--ui-screen-height) * 0.12) 24px 24px;
+  box-sizing: border-box;
+}
+
+/* A lighter dim than a dialog that asks a question. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 8, 0.3);
+}
+
+/*
+ * A card with a full hairline outline, as every card of the app. The card
+ * does not clip, so the menu of a filter can reach below a short card. The
+ * results scroll and clip inside it.
+ */
+.dialog {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  width: 100%;
+  max-width: 640px;
+  max-height: min(540px, 100%);
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-composer);
+  box-shadow: 0 24px 60px -24px var(--ui-shadow);
+}
+
+.field {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 8px 0;
+}
+
+.filters {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+/* The menu of a filter opens from its button. */
+.anchor {
+  display: flex;
+  position: relative;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.results {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 6px 8px;
+}
+
+/* The results clip to the rounded corners at the foot of the card. */
+.dialog .results {
+  border-radius: 0 0 calc(var(--ui-radius-xl) - 1px)
+    calc(var(--ui-radius-xl) - 1px);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupLabel {
+  margin: 0;
+  padding: 10px 8px 4px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: var(--ui-label-case);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  min-height: var(--ui-touch-min);
+  padding: 0 8px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+a.row:hover {
+  background: var(--ui-soft);
+}
+
+/* The row that Enter runs: the first one, until the arrows move it. */
+.highlighted,
+a.highlighted:hover {
+  background: var(--ui-selected);
+}
+
+/* The marks and icons share one column, so the labels line up. */
+.lead {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  width: 16px;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.label {
+  flex: 0 1 auto;
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The repository gives up its room before the name. */
+.repository {
+  flex: 0 100 auto;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The age of a workspace, at the end of its row, as in the list. */
+.end {
+  flex-shrink: 0;
+  min-width: 22px;
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* The page that holds a setting, in a list of several kinds. */
+.detail {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}
+
+/* The state of a workspace shows in its name, as in the list. */
+.strong .label {
+  font-weight: var(--ui-weight-strong);
+}
+
+.dim .label {
+  color: var(--ui-muted);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 36px 24px 44px;
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: 500;
+}
+
+.emptyBody {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+/* On a phone the palette is a page that fills the screen. */
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ui-surface);
+}
+
+.pageHeader {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  min-height: 52px;
+  padding: 6px 6px 6px 12px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+.pageField {
+  flex: 1;
+  min-width: 0;
+}
+
+.pageFilters {
+  display: flex;
+  flex-shrink: 0;
+  padding: 2px 8px 0;
+}
+
+.pageFilters .filters {
+  margin-left: 0;
+}
+
+.page .results {
+  padding: 0 8px 24px;
+}
+
+.page .groupLabel {
+  padding: 14px 12px 4px;
+}
+
+.page .row {
+  gap: 11px;
+  height: 44px;
+  padding: 0 12px;
+  font-size: var(--ui-text-lg);
+}
+
+/* A phone has no room for the repository beside the name. */
+.page .repository {
+  display: none;
+}
