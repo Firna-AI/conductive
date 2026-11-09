@@ -20,9 +20,14 @@ public repository `mokly-ai/mokly-desktop`.
 On 9 November 2026, the user made `Firna-AI/remote-code` public and asked:
 "can we make the desktop app part of releases now?". Decision 1 records the
 choice: the feed is the GitHub releases of this repository. The release job
-publishes the signed files to a prerelease of this repository, and the
-builds that publish turn the updater on. Decisions 2 and 3 choose which runs
-publish and where the version comes from.
+publishes the signed files to a release of this repository, and the
+builds that publish turn the updater on.
+
+On the same day, the user chose the release flow in decision 3: "a PR that
+updates on every push to main, and handles the release, merging that PR
+creates a release". A release-please pull request on `main` sets each
+version, and its merge creates the release. Decision 2 chooses which runs
+get the signing secrets.
 
 The change does not cover Linux or Windows apps, a download link on the
 website, release notes in the app, or staged rollouts.
@@ -34,37 +39,56 @@ Contract owners:
 
 ## Design
 
-Agent calls on 8 November 2026, updated on 9 November 2026 after decision 1.
-The options check of the decisions added the calls that say so:
+Agent calls on 8 November 2026, updated on 9 November 2026 after decisions 1
+and 3. The options check of the decisions added the calls that say so:
 
-- Only runs that may publish turn the updater on. Decision 2 chooses those
-  runs. Pull request and local builds keep it off. Reason: macOS installs an
-  update only into a Developer ID build, and a test build with the updater
-  on could install a published version over itself.
+- A new workflow, `.github/workflows/release.yml`, runs
+  `googleapis/release-please-action` v5.0.0, pinned by commit, on each push
+  to `main`. It keeps one release pull request, and its merge creates the
+  release. Reason: decision 3, and the release workflow of `mokly-ai/mokly`.
+  Added on 9 November 2026.
+- One root release-please component covers the whole product, with the
+  `node` release type. Its version updates `package.json`,
+  `desktop/package.json`, their lockfiles, and the root `CHANGELOG.md`. Tags
+  are `vX.Y.Z`, and `bump-minor-pre-major` keeps breaking changes on the
+  minor number before 1.0. Reason: the Mac app bundles the web app, so each
+  product change is a Mac app change. Mokly also uses one root component.
+  Added on 9 November 2026.
+- When release-please creates a release, the same workflow runs the Mac
+  checks, the signing job in `desktop-release`, and the publish job. Manual
+  runs from `main` still sign without publishing. Added on 9 November 2026.
+- release-please uses `secrets.RELEASE_PLEASE_TOKEN || github.token`, as in
+  Mokly. With the built-in token, CI does not run on the release pull
+  request, because GitHub starts no workflow for a pull request that the
+  built-in token opens. A stored token turns that CI on later, with no code
+  change. Added on 9 November 2026.
+- Only the signing job of a release turns the updater on. Manual, pull
+  request, and local builds keep it off. Reason: macOS installs an update
+  only into a Developer ID build, and a test build with the updater on could
+  install a published version over itself.
 - The release job publishes only after `test:packaged` passes.
-- The publish step uploads every file to a draft prerelease first. It
-  publishes the draft only after GitHub lists every file with its full
-  size. Reason: the updater reads only published releases, so a failed run
-  never shows users a partial release.
-- A failed run leaves its draft. The next run for the same version deletes
-  that draft and starts again.
+- release-please creates each GitHub release as a draft with its tag, with
+  `draft: true` and `force-tag-creation: true`. The publish job uploads every
+  file to the draft. It publishes the draft only after GitHub lists every
+  file with its full size. Reason: the updater reads only published
+  releases, so users never see a partial release. Updated on 9 November 2026.
+- When a run fails, the draft stays. A re-run of the failed jobs replaces the
+  files of the draft. Updated on 9 November 2026.
 - The publish step never changes or deletes a published release. When the
   feed already has a published release for the version, the step warns and
   publishes nothing.
-- The tag of each release points to the released commit of this
-  repository. GitHub gives a release the date of that commit, and the
-  updater takes the first matching release in GitHub's list. So each release
-  comes from a newer commit than the release before it. From the options
-  check, updated on 9 November 2026.
+- The tag of each release points to the merge commit of its release pull
+  request. GitHub gives a release the date of that commit, so each release is
+  newer than the release before it. From the options check, updated on 9
+  November 2026.
 - Every published release of this repository carries the Mac app files and
   `latest-mac.yml`. Reason: electron-updater reads the newest release of the
   whole repository, so a release without them stops all updates. Added on 9
   November 2026.
-- The publish step marks each release as a prerelease. Reason:
-  `releaseType` in `desktop/electron-builder.yml` controls only
-  electron-builder's own publisher, and `desktop/src/updates.ts` reads
-  prereleases. electron-updater then takes the newest alpha, beta, or stable
-  release. From the options check.
+- Releases are full GitHub releases, as in Mokly. The updater reads GitHub's
+  latest release, so `allowPrerelease` goes off in `desktop/src/updates.ts`,
+  and `releaseType` in `desktop/electron-builder.yml` becomes `release`.
+  Replaces the call of 8 November 2026 that kept prereleases.
 - A release holds the two ZIP files, their block maps, the two stapled DMG
   files, and `latest-mac.yml`. Reason: the updater reads the update file and
   the ZIP files, and people install from the DMG files. From the second
@@ -89,8 +113,9 @@ The options check of the decisions added the calls that say so:
 - The publish step runs the `gh` command through the existing release
   command runner. GitHub's macOS runners have `gh`, so the change adds no
   dependency.
-- The first published version is `0.1.0-alpha.2`. People with the
-  `0.1.0-alpha.1` build install it by hand once.
+- The first release is `0.1.0`, through a `Release-As: 0.1.0` commit. People
+  with the `0.1.0-alpha.1` build install it by hand once. Replaces the call
+  of 8 November 2026 for `0.1.0-alpha.2`.
 - The change has no mockup work. It adds no screen, and the mockups do not
   draw native dialogs.
 - The first public release waits for the merge. Reason: a release reaches
@@ -103,7 +128,8 @@ The options check ran on 8 November 2026. Its report is
 items, and it changed the recommendations of items 1 to 4.
 
 On 9 November 2026, the user made this repository public and answered
-decision 1 with a new option, H. The feed is now the releases of this
+decision 1 with a new option, H. The user also chose option D of decision 3,
+a release pull request. The feed is now the releases of this
 repository. Decision 2 got a new option, H, because GitHub allows required
 reviewers on the environments of a public repository.
 
@@ -151,36 +177,36 @@ reviewers on the environments of a public repository.
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Security.
-- **Location:** `.github/workflows/desktop-ci.yml`, the `release` job.
+- **Location:** `.github/workflows/desktop-ci.yml`, the `release` job, and the deployment rules of `desktop-release`.
 - **Background:**
-  - The release job runs for every tag that starts with `v`, on any commit. It runs the workflow and the scripts of that commit.
+  - Decision 3 chose a release pull request. Releases then start only on `main`, when the user merges that pull request. A tag that release-please creates with the built-in token starts no workflow.
+  - The old release job still runs for every tag that starts with `v`, on any commit. It runs the workflow and the scripts of that commit.
   - The `desktop-release` environment holds the signing secrets. It admits `main` and every `v*` tag. It cannot check that the commit of a tag is on `main`.
   - The tag `v0.1.0-alpha.1` points to a commit of the notarization branch. It was pushed before that branch merged.
   - Agents push and tag with the user's account. `main` has no branch protection and no rules. "Agent merges: off" is a rule of `CLAUDE.md`, not a GitHub setting.
   - This repository is public since 9 November 2026. GitHub's Team plan allows required reviewers on the environments of a public repository.
   - Approving a waiting run needs the GitHub permission "Deployments: write". The Conductor app has only read access to deployments, so agents cannot approve a run.
   - With the feed in this repository, any run can create a release with its built-in token. So the signing secrets are the real guard: only a Developer ID build can install as an update.
-- **Problem:** When tags publish, a tag on an unmerged branch sends unreviewed code to every installed copy. A check inside the job does not stop it, because the branch can change the check.
+- **Problem:** `desktop-release` still gives the signing secrets to every `v*` tag. So a tag on an unmerged branch can sign unreviewed code and publish it with its built-in token. A check inside the job does not stop it, because the branch can change the check.
 - **Impact if no action:** One tag from a person or an agent can sign and ship unreviewed code to every user.
 - **Root question:** Which commits may become a release that installed copies receive?
 - **Options:**
-  - **A.** Any `v*` tag publishes, as the release job runs now. People and agents must tag only commits on `main`. Effort: Small.
-  - **B.** The release job publishes only when the commit of the tag is on `main`. Other tags still sign, with the updater off. A branch can change this check, because the job runs the workflow of the tagged commit. Effort: Small.
-  - **C.** A GitHub tag rule lets only the user create `v*` tags. Agents push with the user's account, so the rule may not stop them. Effort: Small.
-  - **D.** Sign and publish only from runs on `main`. The `desktop-release` environment admits only `main`, so no tag or branch run gets the signing secrets, also when it edits the workflow. A run on `main` publishes when the feed lacks its version. The release trigger moves from a tag to `main`, so the best option of item 3 changes. Updated on 9 November 2026, because the built-in token of any run can now publish. Effort: Medium.
+  - **A.** Keep `desktop-release` and the old tag-triggered release job as they are. Releases come from the release pull request, but a branch tag can still sign and publish. Effort: Small.
+  - **D.** Sign only in runs on `main`. `desktop-release` admits only `main`, and the tag trigger and the old tag release job go away. Manual runs from `main` still test signing. GitHub keeps the secrets from every other run, also when a branch edits the workflow. Updated on 9 November 2026 for the release pull request. Effort: Small.
   - **E.** Add a rule on `main` that blocks direct pushes and force pushes. Code then reaches `main` only through a pull request. Agents act as the user, so the rule stops a mistaken push, but not a merge through the API. It works together with B, D, or H. Effort: Small.
-  - **H.** Require the user's approval for each run that uses `desktop-release`, and turn off the administrator bypass of that environment. GitHub then pauses each run that signs, shows its branch or tag, and waits for the user. The Conductor app cannot approve. Tags stay the release trigger. A branch tag signs only when the user approves it. Cost: one click for each release and each signing test. Effort: Small.
+  - **H.** Require the user's approval for each run that uses `desktop-release`, and turn off the administrator bypass of that environment. GitHub then pauses each run that signs, shows its branch or tag, and waits for the user. The Conductor app cannot approve. Cost: one click for each release, after the merge of the release pull request, and one for each signing test. Effort: Small.
 - **Left out:**
+  - B, a check in the job that the tag is on `main`, and C, a tag rule for the user only: both guard a tag trigger. With the release pull request, D removes that trigger, so D is better on every point.
   - F, a second workflow from `main` that checks the tag and publishes: with the feed in this repository, a tag run can sign and publish by itself with its built-in token. So the check does not stop it, and F fails the goal.
   - G, a publish workflow in a separate feed repository behind an approval: decision 1 chose this repository as the feed. H gives the same approval here, without a second repository or credential, so H is better on every point.
 - **Wider fix:** H. GitHub's settings keep the signing secrets from every run that the user did not approve, whoever pushes and whatever the branch changes.
 - **Previous examples:** The tag `v0.1.0-alpha.1` on the notarization branch, Actions run 42519666993.
 - **Related:**
   - Item 1: its chosen H puts the feed in this repository, so the signing secrets guard the release.
-  - Item 3: D of this item moves releases to `main`, so E of item 3 fits. H keeps tags, so C of item 3 fits.
-  - `plans/follow-ups/branch-tags-get-signing-secrets.md`: the same tag path gives branch code the signing secrets. H of this item fixes that item too.
-- **Recommendation:** H. One setting keeps unreviewed code from the Developer ID signature, and tags stay the release trigger. The first recommendation was B, and the options check recommended D. E can join H at small cost. D best avoids a manual step for each release.
-- **Action:** ask the user, because each option except A adds a rule or a gate to the release path, and the options trade safety against the steps of a release.
+  - Item 3: its chosen release pull request starts each release on `main`.
+  - `plans/follow-ups/branch-tags-get-signing-secrets.md`: the same tag path gives branch code the signing secrets. D or H of this item fixes that item too.
+- **Recommendation:** D. Releases then come only from the release pull request on `main`, and GitHub enforces it. The merge of that pull request stays the user's single step. The first recommendation was B, the options check recommended D, and H was recommended while tags were the trigger. H best protects the codebase, because it also stops a release that an agent merges. E can join D or H at small cost.
+- **Action:** ask the user, because D removes the tag trigger and changes the environment rules that the user approved on 8 November 2026, and H adds a gate.
 
 ### 3. Choose where the release version comes from
 
@@ -210,6 +236,7 @@ reviewers on the environments of a public repository.
 - **Related:** Item 2: its D removes the tag trigger, and then E fits. Its H keeps tags, and then C fits.
 - **Recommendation:** C, with item 2's H. A release needs only a tag, and the tag and the app cannot disagree. The options check recommended E, which fits when item 2 takes D.
 - **Action:** ask the user, because the best option depends on the open answer to item 2.
+- **Chosen:** D, by the user on 9 November 2026: "I was thinking we would have a PR that updates on every push to main, and handles the release, merging that PR creates a release - like we have done in other repos like mokly/mokly-cloud". The agent had recommended C. The precedent is `.github/workflows/release.yml` of `mokly-ai/mokly`, with `googleapis/release-please-action`. `mokly-ai/mokly-cloud` only skips release pull requests in its site workflow.
 
 ### 4. Reach copies that run from a read-only volume
 
@@ -278,13 +305,15 @@ the work below.
   - [ ] Replace the rule that each build keeps the updater off. Builds that
         may publish turn it on. Other builds keep it off.
   - [ ] State that the feed is the GitHub releases of this repository,
-        that each release carries the Mac app, which runs publish, and that
-        the updater sees a release only after all its files upload.
+        that each release carries the Mac app, and that the updater sees a
+        release only after all its files upload.
+  - [ ] State the release flow: the release pull request on `main` sets the
+        version, and its merge creates the release. State which runs sign.
   - [ ] State that the update dialog shows only after macOS accepts the
         update.
   - [ ] Add the outcomes of decisions 1 to 5.
-- [ ] Update `desktop/README.md`: the steps of a release, the feed
-      repository, the publish credential, the release files, and the
+- [ ] Update `desktop/README.md` and the root `README.md`: the release pull
+      request, the release files, CI on the release pull request, and the
       one-time manual install for `0.1.0-alpha.1`.
 - [ ] Check each relative link of the changed Markdown files.
 
@@ -306,21 +335,25 @@ Publish each signed release to the feed, and turn the updater on in the
 builds that publish.
 
 - [ ] Point the feed at `Firna-AI/remote-code` in `desktop/src/updates.ts`
-      and `desktop/electron-builder.yml`.
+      and `desktop/electron-builder.yml`. Turn `allowPrerelease` off, and set
+      `releaseType: release`.
 - [ ] Set `dmg.writeUpdateInfo: false` in `desktop/electron-builder.yml`.
-- [ ] Apply decision 3 for the release version.
-- [ ] Add the publish script: draft, upload, check, and publish as a
-      prerelease.
+- [ ] Add `release-please-config.json` and `.release-please-manifest.json`:
+      one root `node` component, extra files for `desktop/package.json` and
+      the lockfiles, `draft`, `force-tag-creation`, and a bootstrap commit
+      at the current `main`.
+- [ ] Move the signing steps into a reusable workflow for the release
+      workflow and for manual runs.
+- [ ] Add `.github/workflows/release.yml`: release-please, the Mac checks,
+      signing with the updater on, and the publish job.
+- [ ] Add the publish script: upload to the draft, check, and publish.
   - [ ] Add unit tests with a fake command runner: a new release, a
         leftover draft, a published release for the version, a missing
         file, and a failed upload.
 - [ ] Update `.github/workflows/desktop-ci.yml`.
-  - [ ] Apply decision 2 for the runs that publish.
-  - [ ] Turn the updater on only in runs that may publish.
-  - [ ] Add the publish job. It needs the signing job, gets
-        `contents: write`, and runs no `npm ci` and no build.
-  - [ ] Keep `latest-mac.yml` and the ZIP block maps in the
-        `desktop-signed-packages` artifact.
+  - [ ] Apply decision 2 to the old tag-triggered release job.
+  - [ ] Keep `latest-mac.yml` and the ZIP block maps in the signed
+        artifacts.
 - [ ] Run the desktop typecheck, lint, format check, and unit tests.
 
 ## Milestone 4: Update dialog, install location, and manual checks
@@ -357,11 +390,11 @@ Check the whole change, review it, and open the pull request.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Publish `0.1.0-alpha.2` in the way that decisions 2 and 3 choose.
-      Check that the feed gets a prerelease with the expected files.
-- [ ] On a Mac, install `0.1.0-alpha.2` from its DMG into Applications.
-      Publish `0.1.0-alpha.3`. Check that the app downloads it, offers
-      Restart now, and restarts into the new version. Check that Later
+- [ ] Merge the first release pull request. Check that `v0.1.0` becomes a
+      published release with the expected files.
+- [ ] On a Mac, install `0.1.0` from its DMG into Applications. Merge the
+      next release pull request. Check that the app downloads the new
+      version, offers Restart now, and restarts into it. Check that Later
       installs it at the next quit.
 - [ ] Tell the people with `0.1.0-alpha.1` to install a new version by hand
       once.
