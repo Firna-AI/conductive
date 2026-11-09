@@ -40,10 +40,14 @@ export function createClaudeFactory(
     options.signal?.throwIfAborted()
     const input = new ClaudeInputWindow()
     let resultReceived = false
-    const mapper = new ClaudeEvents(input.ids, (event) => {
-      if (event.type === 'result') resultReceived = true
-      options.event(event)
-    })
+    const mapper = new ClaudeEvents(
+      input.ids,
+      (event) => {
+        if (event.type === 'result') resultReceived = true
+        options.event(event)
+      },
+      (uuid) => input.hasOutstanding(uuid),
+    )
     let closed = false
     let stream: ClaudeQuery
     try {
