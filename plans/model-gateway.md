@@ -80,8 +80,9 @@ Decisions 1 to 5 come from the brainstorm of 8 November 2026. Cal
 answered each one on 9 November 2026. The options check of 9 November 2026
 added options to decisions 2 and 5, and moved three design calls to Cal as
 decisions 6, 7, and 8. Its report is
-`.context/model-gateway/reports/options-check.md`. Decisions 6 to 8, and
-the new options of decisions 2 and 5, wait for Cal.
+`.context/model-gateway/reports/options-check.md`. Decisions 6 to 8 wait
+for Cal. Cal's answers to decisions 2 and 5 stand, and their new options
+are a record, not a question.
 
 ### 1. Subscription tokens wait for Cal's check
 
@@ -141,7 +142,7 @@ the new options of decisions 2 and 5, wait for Cal.
 - **Recommendation:** B. The project is not in production, so B met the goal at once.
 - **Action:** ask the user, because B removes functionality on `origin/main` and changes a requirement of the chat protocol.
 - **Chosen by Cal on 9 November 2026:** A. A runner of protocol version 1 keeps getting the real login, and the access doc states that risk. The chat protocol rule to serve each live runner version stays, within the pin of decision 5. `plans/follow-ups/agent-login-in-tool-processes.md` stays for older runners.
-- **Options check of 9 November 2026:** the check brought back the runner update, because "outside this scope" is not a valid reason to leave out an approach. It added E. The recommendation stays B, and the wider fix becomes D. Cal's choice A stands until he answers D and E.
+- **Options check of 9 November 2026:** the check brought back the runner update, because "outside this scope" is not a valid reason to leave out an approach. It added E. The recommendation stays B, and the wider fix becomes D. Cal's choice A stands.
   - **D.** Update the runner at each start. The start command already runs with `sudo -n` at each create and each resume (`worker/lifecycle/image-software.ts`). It checks the digest of the current runner archive, installs it, and restarts the runner service. The Worker then refuses version 1 in each workspace whose last start installed a newer runner. Cost: each first start after a runner release downloads the archive, and a newer runner must read the saved state of an older one. Effort: Large.
   - **E.** A, plus each refresh installs the newest runner when the org image holds an older one. Each new workspace then gets a newer runner within one day, with no build by an admin. Cost: such a refresh takes longer, and existing workspaces keep the risk of A. Effort: Medium.
 
