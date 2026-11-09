@@ -6,6 +6,9 @@ This doc states how a cloud computer gets GitHub access.
 ## Git and the GitHub CLI
 
 - Each workspace provides an authenticated GitHub CLI, `gh`.
+- The GitHub App requests Issues read and write so CLI commands can list,
+  create, and change issues. Read-only access was rejected because it
+  prevents issue changes.
 - Each `gh` command gets a fresh GitHub App user token through the git
   credential helper, unless the caller supplies `GH_TOKEN` or `GITHUB_TOKEN`.
 - The token stays in the command's environment. The sandbox saves no login

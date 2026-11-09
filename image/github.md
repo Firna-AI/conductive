@@ -48,6 +48,7 @@ Create a new workspace from the rebuilt image to get the change.
 ### GitHub App permissions
 
 Automatic authentication uses the permissions of the Conductive Build GitHub App.
+The App requests Issues read and write for issue commands.
 Private issue listing needs the Issues repository permission with read access.
 Creating or changing issues needs write access.
 The app owner must change this setting on GitHub.
