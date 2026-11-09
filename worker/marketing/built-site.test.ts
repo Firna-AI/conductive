@@ -1,10 +1,3 @@
-import { execFile } from 'node:child_process'
-import { createHash } from 'node:crypto'
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, relative } from 'node:path'
-import process from 'node:process'
-import { promisify } from 'node:util'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import { macDmgNames, productName } from '../../docs/mockups/src/brand'
@@ -24,8 +17,8 @@ import {
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
-import { isolatedProcessEnvironment } from '../test-support/process-environment'
-import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
+import type { SiteBinding } from '../test-support/site-binding'
+import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
 import { termsConsentResponse } from './consent'
 import {
   decodeHtml,
@@ -39,45 +32,17 @@ import { siteResponse } from './site'
 const SITE = 'https://conductive.test'
 const APP_ORIGIN = 'https://app.conductive.test'
 const NOW = Date.UTC(2027, 0, 15)
-let folder: string | undefined
 let assets: SiteBinding
+let removeSite: (() => Promise<void>) | undefined
 
 beforeAll(async () => {
-  folder = await mkdtemp(join(tmpdir(), 'conductive-site-'))
-  await promisify(execFile)(
-    'node_modules/.bin/astro',
-    ['build', '--outDir', folder],
-    {
-      env: isolatedProcessEnvironment({ PATH: process.env.PATH, CI: 'true' }),
-    },
-  )
-  const files = new Map<string, SiteAssetFile>()
-  const types: Readonly<Record<string, string>> = {
-    html: 'text/html',
-    json: 'application/json',
-    webp: 'image/webp',
-    svg: 'image/svg+xml',
-    ico: 'image/x-icon',
-    png: 'image/png',
-    woff2: 'font/woff2',
-  }
-  for (const entry of await readdir(folder, {
-    recursive: true,
-    withFileTypes: true,
-  })) {
-    if (!entry.isFile()) continue
-    const path = join(entry.parentPath, entry.name)
-    files.set(`/${SITE_FOLDER}/${relative(folder, path)}`, {
-      body: new Uint8Array(await readFile(path)),
-      contentType:
-        types[entry.name.split('.').at(-1) ?? ''] ?? 'application/octet-stream',
-    })
-  }
-  assets = new SiteBinding(files)
+  const site = await buildSiteAssets()
+  assets = site.assets
+  removeSite = site.remove
 }, 30_000)
 
 afterAll(async () => {
-  if (folder) await rm(folder, { recursive: true, force: true })
+  await removeSite?.()
 })
 
 const get = (path: string) =>
@@ -86,21 +51,6 @@ const get = (path: string) =>
     { appOrigin: APP_ORIGIN, assets },
     NOW,
   )
-
-function expectedPolicy(page: string) {
-  const hashes = inlineStyles(page).map(
-    (css) => `'sha256-${createHash('sha256').update(css).digest('base64')}'`,
-  )
-  return [
-    "default-src 'none'",
-    `style-src ${hashes.join(' ')}`,
-    "img-src 'self'",
-    "font-src 'self'",
-    "base-uri 'none'",
-    "form-action 'none'",
-    "frame-ancestors 'none'",
-  ].join('; ')
-}
 
 it('sends every sign-in to the app and shows the request year', async () => {
   const response = await get('/')
