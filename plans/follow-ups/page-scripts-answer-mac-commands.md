@@ -1,0 +1,31 @@
+# Page scripts can answer Mac command requests
+
+- **Severity:** High. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-09, from branch `calummoore/conductor-terminal-sync-brainstorm`, the options check of the plan decision about the Mac terminal channel.
+- **Location:** `docs/protocol/desktop-app.md:186`, `worker/devices/workspace-browser.ts:41`, `desktop/src/device/session.ts:131`, `src/shared/device.ts:124`.
+- **Reason:** The fix changes the Mac command answers that the user chose, so it needs its own decision and branch.
+
+- **Terms:**
+  - **Mac command:** a command that an agent in a cloud computer asks to run on the Mac of the person who sent its turn. The Mac app runs it only after an answer.
+  - **Answer:** one of four actions in `src/shared/device.ts`: `deny`, `allow`, `always-allow`, and `allow-workspace-15-minutes`.
+  - **Page:** the bundled web app that the Mac app shows in its window. It renders content from cloud computers, such as agent output, files, and diffs.
+  - **Bridge:** a channel from the page to the Electron main process. The Mac app has none.
+- **Background:**
+  - The Permissions section of `docs/protocol/desktop-app.md` says that the page has no preload script and no bridge. Its reason says: "a script in the page then has no more power than in a browser tab."
+  - The same section says that the page can answer a request that waits, and that the answer goes through the Worker to the Mac app.
+  - `worker/devices/workspace-browser.ts` accepts an answer as a `POST` from the desktop origin, with the desktop session of the sender and the pairing of the device.
+  - `desktop/src/device/session.ts` acts on each `command.approval` message from the Worker. It does not check for a click on the Mac.
+  - The compact message in the chat draws the answer buttons inside the page. The user chose that message on 6 November 2026, and rejected a dialog over the app.
+- **Problem:** Any script that runs in the page of the Mac app can answer a waiting Mac command, also with Always allow. So the page has a power that a browser tab does not have. The reason sentence in the protocol doc is not true.
+- **Impact if no action:** A script bug in the page, such as a cross-site scripting bug in agent output, could allow a Mac command that sandbox code asked for. Always allow would also keep that command allowed on the Mac.
+- **Root question:** How does the Mac app make sure that only the person at the Mac answers a Mac command?
+- **Options:**
+  - **A.** Keep the answer path. Change the reason sentence of the protocol doc to name the power of the page, and record the risk. Effort: Small.
+  - **B.** Keep Allow and Deny in the page. Ask in a native macOS dialog of the main process before Always allow and Allow all commands for 15 minutes take effect. Cost: a dialog for the two lasting answers, against the user's choice of a compact message. Effort: Medium.
+  - **C.** Move the answer buttons into a bundled view that no script of the page or its frames can reach. The compact message stays at its place in the chat, and the native view draws its buttons over it. The page can no longer answer. Cost: the same layout work as a native view over a panel, a mockup check, and a protocol change. Effort: Large.
+- **Left out:** A native dialog for every answer, because the user rejected a dialog over the app for Mac commands, and C keeps the compact message.
+- **Wider fix:** C. It makes one rule for every power over the Mac: only a view that no page or frame script can reach takes input that runs code on the Mac.
+- **Previous examples:** None found on `origin/main`. A built-in Mac terminal would meet the same class, because it also runs code on the Mac.
+- **Recommendation:** C. It removes the power from every page script, and it can share the native view of the Mac terminal tab.
+- **Action:** ask the user, because B and C change the Mac command answers that the user chose, and A keeps a known risk.

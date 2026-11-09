@@ -11,9 +11,11 @@ on 20 November 2026.
 
 The agent runner feeds the copy through the Worker (decision 150). An org
 setting lists the ignored folders that also reach the Mac, with
-`.context/` as the default (decision 151). Two decisions are open: where
-the shell on the Mac opens (decision 152), and whether agents run Mac
-commands in the copy (decision 153). This change does not cover two-way
+`.context/` as the default (decision 151). A built-in Mac terminal tab
+opens a shell in the copy, next to the cloud Terminal tab (decision 152).
+Two decisions are open: whether agents run Mac commands in the copy
+(decision 153), and how the Mac terminal tab reaches its shell (decision
+154). This change does not cover two-way
 sync, a command-line tool, a copy in a browser, or other desktop systems.
 The brainstorm notes are in `.context/local-terminal-sync/notes.md`.
 
@@ -82,10 +84,13 @@ observations, not requirements.
   to the workspace connection of the Mac app, as it does to a tab.
 - **Mac app main process:** the sync engine. It keeps the clones and the
   worktrees, writes the files, and reports the state of each copy through
-  the device connection.
-- **Web app:** the switch, the state of the copy, This Mac, and the org
-  setting. A browser shows no switch. The page has no bridge, so it
+  the device connection. It also runs the shell of each Mac terminal tab,
+  on the channel that decision 154 chooses.
+- **Web app:** the switch, the state of the copy, the Mac terminal tab,
+  This Mac, and the org setting. A browser shows no switch. The page
   controls the copy only through the Worker, as Mac command approvals do.
+  Decision 154 sets the only channel between the page and the Mac
+  terminal.
 
 ### Design calls
 
@@ -178,11 +183,32 @@ user can change any of them.
 23. The feed keys its changes to the runner stream and the tree revision.
     Reason: a new runner stream starts again at revision 1.
     (9 November 2026, from the options check)
+24. The Mac terminal tab shows only in the Mac app, next to the cloud
+    Terminal tab. It opens a shell in the copy of its workspace. Without
+    a copy, it shows the switch of the copy. (9 November 2026)
+25. Each workspace has one Mac shell, as it has one cloud shell. The
+    shell runs as the user, with the user's login shell, in the folder
+    of the copy. (9 November 2026)
+26. The Mac shell keeps running while the Mac app runs, also when the
+    user changes tabs or workspaces. It ends when the app quits. Reason:
+    a tab change must not end a dev server, as decision 118 says for the
+    cloud shell. (9 November 2026)
+27. Input in the Mac terminal is not activity of the cloud computer.
+    Reason: the Mac shell does not use the cloud computer.
+    (9 November 2026)
+28. The output of the Mac terminal cannot type into its shell. The
+    terminal answers no query of a program with text that the output
+    chose. A link in the output opens only after a click, and only for a
+    web address. A paste of several lines asks first. Reason: synced files
+    and command output come from the cloud. (9 November 2026, from the
+    options check)
 
 ## Decisions
 
 The options check of 9 November 2026 ran over decisions 150 to 153. Its
-report is in `.context/mac-local-copy/options-check.md`.
+report is in `.context/mac-local-copy/options-check.md`. A second check
+ran over decision 154. Its report is in
+`.context/mac-local-copy/options-check-154.md`.
 
 ### 150. Choose how files reach the Mac
 
@@ -378,10 +404,9 @@ report is in `.context/mac-local-copy/options-check.md`.
   or a device message, so no message from the server can open a shell
   on the Mac. The first recommendation was A. The options check moved it
   to D.
-- **Action:** ask the user, because the user asked for Conductor's
-  feature, which has a built-in terminal, and D, B, and E each change a
-  rule of the Mac app.
-- **Status:** Open. It blocks the TODOs that name it.
+- **Chosen:** B, by the user on 9 November 2026. The agent recommended
+  D. Decision 154 chooses how the tab reaches its shell, because B names
+  two ways.
 
 ### 153. Let agents run Mac commands in the copy
 
@@ -434,6 +459,98 @@ report is in `.context/mac-local-copy/options-check.md`.
   that no requirement covers.
 - **Status:** Open. It blocks the TODOs that name it.
 
+### 154. Choose how the Mac terminal reaches its shell
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Design. It follows from decision 152, option B, on
+  9 November 2026.
+- **Category:** Security.
+- **Location:** `docs/protocol/desktop-app.md`, section Permissions, and
+  `desktop/src/window.ts:63`, the settings of the page.
+- **Terms:**
+  - **Preload script:** code that Electron runs in a page before the
+    page's own scripts. It is the only way to give a page a bridge.
+  - **WebContentsView:** a second web view that Electron draws on top of
+    the window. It has its own page and its own settings.
+  - **Port preview frame:** a frame in the page that shows a web server
+    of the cloud computer. Sandbox code controls its content.
+- **Background:**
+  - The page shows content from cloud computers: agent output, files,
+    diffs, and port previews in frames.
+  - So the Mac app treats every script in the page as a browser tab
+    (decision 62). The page has no preload script, and its frames get no
+    Node access.
+  - The web app already draws the cloud terminal with xterm.js.
+  - The user chose a built-in Mac terminal tab next to the cloud Terminal
+    tab (decision 152). Its option text named two ways: a bridge for the
+    terminal, or a native view over the panel.
+- **Problem:** The Mac terminal tab needs a channel to a shell on the
+  Mac. If a script in the page or in a frame can reach that channel, one
+  script bug becomes a shell on the Mac. An example is a cross-site
+  scripting bug in a chat message.
+- **Impact if no action:** The Mac terminal tab of decision 152 cannot be
+  built safely.
+- **Root question:** Where does the channel between the Mac terminal tab
+  and its shell live, so that no script from the cloud can type into the
+  shell or read its output? The options check added the output, because
+  the output can show secrets of the Mac.
+- **Options:**
+  - **A.** A terminal bridge in the page. A preload script gives the page
+    a small API: open the shell of a copy, send keys, resize, and read
+    output. The tab is a normal part of the page. Risk: any script bug in
+    the page reaches a shell on the Mac. Effort: Medium.
+  - **B.** A separate native view. A WebContentsView with its own bundled
+    terminal page and its own preload sits over the tools panel. It runs
+    in its own renderer process. The page sends it no keys and no
+    commands. The main process learns only the place and the visibility
+    of the panel from the page, through a channel that carries nothing
+    else. The view takes the keyboard only from a click in it, and gives
+    it up when it hides or moves. Risk: menus and dialogs of the page
+    cannot cover the view, so the view hides while one is open. App
+    shortcuts need care while the view has focus. Effort: Large.
+  - **C.** A terminal frame from the app bundle. The page shows a frame
+    with a bundled terminal page from its own origin. Electron 44.10 can
+    limit a session preload to the address of that page, so only that
+    frame gets the terminal bridge. The main process checks the sender
+    frame and its parent on each call. The page refuses any other parent.
+    Layout and menus work as for any frame. Risk: the page can hide or
+    cover the frame, so that the user's keys go into the Mac shell. A
+    renderer bug in the page may reach the frame. Effort: Large.
+  - **D.** Added by the options check: B, plus one rule for every way to
+    run code on the Mac. Only a bundled view that no script of the page
+    or its frames can reach takes such input. So the answer controls of
+    Mac commands also move into such a view, and the page can no longer
+    answer a request. Cost: it changes the Mac command answers of
+    decision 62 on `origin/main`. It needs a mockup, a protocol change,
+    and its own security review. Effort: Large.
+- **Left out:**
+  - A terminal that the Worker relays: the server could then type into a
+    shell on the Mac.
+  - A terminal in its own window: the user chose a tab next to the cloud
+    Terminal tab in decision 152.
+  - A `<webview>` tag in the page: the page's scripts can send it keys
+    and run code in it.
+  - A preload that runs the terminal in an isolated world of the page:
+    that world shares the page, so page scripts can read the screen and
+    send it keys.
+  - A native terminal widget without web content: B is as safe, costs
+    less, and keeps the look of the cloud terminal.
+  - A with Trusted Types: a logic bug, a bad package, or a renderer bug
+    in the page still reaches the shell.
+- **Wider fix:** D. B covers only the terminal. Only one rule for every
+  power over the Mac still holds when the next power comes.
+- **Previous examples:** The Mac app doc rejected a preload script for the
+  window buttons, because it is a bridge. Mac commands ask for each
+  command, so that the server cannot run code on the Mac.
+- **Recommendation:** B. Only B gives no script of the page, its
+  packages, or its frames a handle on the shell, and its one page channel
+  carries no keys. D best protects the codebase. Its change to Mac
+  commands can follow in its own branch, as
+  `plans/follow-ups/page-scripts-answer-mac-commands.md` says.
+- **Action:** ask the user, because the options trade safety against how
+  well the tab fits the page, and no recorded decision settles that.
+- **Status:** Open. It blocks the TODOs that name it.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -456,12 +573,13 @@ screens use `MacScreen`. The org setting has phone and desktop variants.
       for an admin and for a member, with the warning of an entry that
       cannot sync.
 - [ ] Show that the workspace screen in a browser has no switch.
-- [ ] Draw the shell entry that decision 152 chooses. Waits for decision
-      152.
+- [ ] Draw the Mac terminal tab next to the cloud Terminal tab: with a
+      copy, without a copy, and after its shell ends. A browser shows no
+      Mac terminal tab.
 - [ ] Draw a Mac command card that runs in the copy, as decision 153
       chooses. Waits for decision 153. Skip it when decision 153 chooses A.
 - [ ] Add a user flow: turn on the sync, see the copy catch up, and open
-      the shell. The shell step waits for decision 152.
+      the Mac terminal tab.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
@@ -477,8 +595,10 @@ Write the requirements and the decisions in force for the work below.
       skipped files, a loss of access, an archive, a stop, This Mac, and
       Remove. Give decisions 150 and 151 with their rejected options.
 - [ ] Update the Scope and Permissions sections of
-      `docs/protocol/desktop-app.md`. The page still has no bridge. It
-      controls the copy through the Worker.
+      `docs/protocol/desktop-app.md`. The page controls the copy through
+      the Worker.
+- [ ] State what the output of the Mac terminal may send back to its
+      shell, as design call 28 says.
 - [ ] In `docs/protocol/workspaces-and-sandboxes.md`, add the folder
       list to the org settings that only an admin changes. State its
       default and the warning of an entry that cannot sync. State that
@@ -489,7 +609,11 @@ Write the requirements and the decisions in force for the work below.
 - [ ] Add the local copy to `docs/architecture.md` and to
       `docs/architecture/flows.md`: the components, the flow, and a row
       in Where data lives.
-- [ ] State the shell entry of decision 152. Waits for decision 152.
+- [ ] State the Mac terminal tab in `docs/protocol/desktop-app.md`: its
+      place, its shell, its life, and that it is not activity. Give
+      decision 152 with its rejected options.
+- [ ] Change the Permissions rule of decision 62 for the channel that
+      decision 154 chooses. Waits for decision 154.
 - [ ] Update `docs/protocol/agent-tools.md` for the option of decision
       153. Waits for decision 153. Skip it when decision 153 chooses A.
 - [ ] Check each relative link of each changed Markdown file.
@@ -571,14 +695,22 @@ Depends on: 4
       stays, and a local `node_modules` that stays.
 - [ ] Update `desktop/README.md`: a Local copy section and its key code.
 
-## Milestone 6: Shell entry on the Mac
+## Milestone 6: Mac terminal in the main process
 
-Depends on: 5, and decision 152
+Depends on: 5, and decision 154
 
-- [ ] Build the main process side of the shell entry that decision 152
-      chooses. Waits for decision 152.
-- [ ] Test it at the level that decision 152 needs. Waits for decision
-      152.
+- [ ] Add node-pty. Build and sign it for arm64 and x64, in the ad-hoc
+      and the release packages. Read the `typescript` skill before you
+      add the dependency.
+- [ ] Run one shell for each workspace in the folder of its copy, as the
+      user, with the user's login shell. End each shell when the app
+      quits.
+- [ ] Build the channel that decision 154 chooses. Waits for decision
+      154.
+- [ ] Test in the real Electron window that a script in the page and a
+      port preview frame cannot reach a shell. Waits for decision 154.
+- [ ] Run the `security-review` skill on the channel before Milestone 8
+      starts. Waits for decision 154.
 
 ## Milestone 7: Mac commands in the copy
 
@@ -608,7 +740,11 @@ Depends on: 1, 5, 6, 7
       of the Mac app, as the mockups draw them.
 - [ ] Build the local copies in This Mac, with Stop syncing and Remove.
 - [ ] Build the folder list on the Repositories tab of the org settings.
-- [ ] Build the shell entry of decision 152. Waits for decision 152.
+- [ ] Build the Mac terminal tab with xterm.js, as the mockups draw it,
+      on the channel of decision 154. Waits for decision 154.
+- [ ] Apply design call 28 in the terminal page. Test that a program's
+      query in the output sends no text to the shell. Waits for decision
+      154.
 - [ ] Show the folder of the copy on a Mac command card. Waits for
       decision 153. Skip it when decision 153 chooses A.
 - [ ] Test the screens with the rendered components and one Electron
