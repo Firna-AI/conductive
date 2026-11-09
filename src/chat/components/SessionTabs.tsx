@@ -95,7 +95,7 @@ export function SessionTabs(props: {
     kept: keptTab(tabs, renaming),
     moved: moves.last,
   })
-  useEdgeScroll(row, drag.lifted?.x ?? null)
+  useEdgeScroll(row, drag.lifted)
   useSidewaysWheel(row)
   const parts = (tab: RowTab, index: number) => {
     const key = rowKey(tab)

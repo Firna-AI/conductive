@@ -16,8 +16,12 @@ export interface TabRowDrag {
   lineAtEnd: boolean
   /** What the status of the row tells a screen reader. */
   status: string
-  /** The lifted tab, its centre, and its top, in CSS px of the window. */
-  lifted: { tab: RowTab; x: number; top: number } | null
+  /**
+   * The lifted tab, its centre, and its top, in CSS px of the window, and
+   * whether the pointer moved after the lift. A long press that holds still
+   * has not moved.
+   */
+  lifted: { tab: RowTab; x: number; top: number; moved: boolean } | null
 }
 
 /** The lifted tab hangs below the row: its top is 70% down the tab. */
@@ -100,7 +104,7 @@ export function useTabDrag(props: {
       lifted: null,
     }
   }
-  const { place, x, box } = dragged
+  const { place, x, box, moved } = dragged
   const others = keys.filter((key) => key !== dragged.item)
   const lineBefore = place === own ? dragged.item : (others[place] ?? null)
   return {
@@ -108,6 +112,6 @@ export function useTabDrag(props: {
     lineBefore,
     lineAtEnd: lineBefore === null,
     status: `Moving ${dragged.tab.title} to place ${place + 1} of ${keys.length}`,
-    lifted: { tab: dragged.tab, x, top: box.top + box.height * hang },
+    lifted: { tab: dragged.tab, x, top: box.top + box.height * hang, moved },
   }
 }

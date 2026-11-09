@@ -177,21 +177,26 @@ export function useRowScroll(props: {
 }
 
 /**
- * During a drag, the pointer at `x` near an end of the row, or past it,
- * scrolls the row at each frame, faster nearer the end, so that a drop can
- * reach every place. The drag finds its drop place again after each scroll.
+ * During a drag, the pointer near an end of the row, or past it, scrolls
+ * the row at each frame, faster nearer the end, so that a drop can reach
+ * every place. `drag` gives the pointer `x`, in CSS px of the window, and
+ * whether it moved after the lift, or null when no drag runs. The scroll
+ * starts once the pointer has moved, so a long press that holds still,
+ * whose release opens the tab menu, scrolls nothing. The drag finds its
+ * drop place again after each scroll.
  */
 export function useEdgeScroll(
   row: RefObject<HTMLElement | null>,
-  x: number | null,
+  drag: { x: number; moved: boolean } | null,
 ): void {
+  const x = drag?.moved ? drag.x : null
   const pointer = useRef(x)
   useLayoutEffect(() => {
     pointer.current = x
   })
-  const dragging = x !== null
+  const scrolling = x !== null
   useEffect(() => {
-    if (!dragging) return
+    if (!scrolling) return
     let frame = requestAnimationFrame(step)
     function step() {
       const node = row.current
@@ -207,5 +212,5 @@ export function useEdgeScroll(
       frame = requestAnimationFrame(step)
     }
     return () => cancelAnimationFrame(frame)
-  }, [dragging, row])
+  }, [scrolling, row])
 }

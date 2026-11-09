@@ -572,6 +572,26 @@ The agent made these calls on 9 November 2026, in Milestone 5:
   these rules now live in the list, and the tests of the hook do not cover
   them.
 
+The agent made these calls on 9 November 2026, in the fix rounds of the
+review:
+
+- Each row tab gets one title from the host: the masked label of a file,
+  "File" when no list names it, and "<name> changes" for a diff. The tab,
+  its menu, and the statuses all use it. Reason: a name from the real path
+  could speak a secret value that the tab masks.
+- The row keeps the place of the kept tab after any change of its size or
+  place, and keeps a scroll of the user on an unrelated render. Reason: a
+  rename, Escape, or a new title could push the shown tab past the edge.
+- The row owns its limits: the cap, the ellipsis, one line, and the phone
+  rules apply to the tabs of the row only. Reason: the lifted copy then
+  shows its whole title.
+- The styles of the row live in four modules: the base, the full row, the
+  drag, and the rename field. Reason: one file had passed 300 lines.
+- The edge scroll of a drag starts only after the pointer moves, with the
+  same flag that decides between the menu and the drop at the release.
+  Reason: a still long press on a phone scrolled the row before its menu
+  opened.
+
 Contract owners:
 
 - [Chat and events](../docs/protocol/chat-and-events.md#sessions).

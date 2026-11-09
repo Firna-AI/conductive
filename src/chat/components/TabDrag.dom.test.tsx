@@ -14,6 +14,7 @@ import {
   pressKey,
   waitFor,
 } from '../../test-support/mount'
+import { RowLayout, widthsByText } from './row-layout-test-kit'
 import {
   file,
   fileTabs,
@@ -30,12 +31,35 @@ import {
   shownTab,
   viewSaves,
 } from './tab-drag-test-kit'
-import { allowed, menuItems } from './tab-row-test-kit'
+import { allowed, menuItems, tabList } from './tab-row-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const mouse = { pointerType: 'mouse' }
 const fingerClick = { bubbles: true, cancelable: true, detail: 1 }
+
+/**
+ * A mouse presses the tab at 150 px, the middle of the second place of a
+ * row of 100 px tabs, lifts it, and holds the pointer at `x`.
+ */
+function dragTo(title: string, x: number) {
+  pointer(byRole('button', title), 'pointerdown', { ...mouse, clientX: 150 })
+  pointer(window, 'pointermove', { ...mouse, clientX: 160 })
+  pointer(window, 'pointermove', { ...mouse, clientX: x })
+}
+
+/**
+ * Runs `count` animation frames while the pointer holds still, and says
+ * how far the row has scrolled and what its status says then.
+ */
+function holdFrames(count: number) {
+  for (let frame = 0; frame < count; frame += 1) {
+    act(() => {
+      vi.advanceTimersToNextFrame()
+    })
+  }
+  return { left: tabList().scrollLeft, status: rowStatus() }
+}
 
 describe('a drag in the tab row', () => {
   it('saves the order after a mouse drags a file tab before a session tab, and the click at the end of the drag shows nothing', async () => {
@@ -114,12 +138,18 @@ describe('a drag in the tab row', () => {
     })
   })
 
-  it('lifts a session tab on a phone after a finger holds it 450 ms, and opens its tab menu as a sheet when the finger lets go without a move', async () => {
+  it('lifts a session tab on a phone after a finger holds it 450 ms, scrolls nothing while the finger holds still near the clipped end of a full row, and opens its tab menu as a sheet when the finger lets go without a move', async () => {
+    // Two tabs of 150 px in a row of 200 px: the row clips the second tab.
+    const rowLayout = new RowLayout(
+      200,
+      widthsByText({ 'Address autocomplete': 150, 'Debounce lookups': 150 }),
+    )
     const server = new FakeApiServer()
     await mountChat({ server, tabs: [first, second], viewport: 'mobile' })
+    rowLayout.settle()
     const tab = byRole('button', 'Debounce lookups')
-    layOut(byRole('button', 'Address autocomplete'), tab)
-    const finger = { pointerType: 'touch', pointerId: 2, clientX: 150 }
+    // 10 px from the clipped end: inside the zone where a drag scrolls the row.
+    const finger = { pointerType: 'touch', pointerId: 2, clientX: 190 }
 
     vi.useFakeTimers()
     try {
@@ -129,8 +159,12 @@ describe('a drag in the tab row', () => {
       act(() => vi.advanceTimersByTime(1))
       const held = rowStatus()
       const lifted = liftedCopy('Debounce lookups')
-      pointer(window, 'pointermove', { ...finger, clientX: 156 })
-      pointer(window, 'pointerup', { ...finger, clientX: 156, buttons: 0 })
+      // A finger that stays within 8 px of its press has not moved. The
+      // frames of 300 ms run while it holds still.
+      pointer(window, 'pointermove', { ...finger, clientX: 196 })
+      act(() => vi.advanceTimersByTime(300))
+      const scrolled = tabList().scrollLeft
+      pointer(window, 'pointerup', { ...finger, clientX: 196, buttons: 0 })
       // A finger sends its click after the release, on what is under it then:
       // the dimmed page behind the sheet.
       act(() => vi.advanceTimersByTime(20))
@@ -144,6 +178,7 @@ describe('a drag in the tab row', () => {
         early,
         held,
         lifted,
+        scrolled,
         afterRelease: rowStatus(),
         sheet: queryByRole('dialog', 'Debounce lookups') !== null,
         menu: menuItems('Debounce lookups'),
@@ -151,6 +186,7 @@ describe('a drag in the tab row', () => {
         early: '',
         held: 'Moving Debounce lookups to place 2 of 2',
         lifted: true,
+        scrolled: 0,
         afterRelease: '',
         sheet: true,
         menu: [
@@ -158,6 +194,70 @@ describe('a drag in the tab row', () => {
           { name: 'Move left', off: false },
           { name: 'Move right', off: true },
         ],
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('scrolls a full row while the pointer of a drag stays near either end, drops the tab at a place that the scroll showed, and scrolls the next drag by the same step', async () => {
+    // Three tabs of 100 px in a row of 200 px: it scrolls up to 100 px.
+    const rowLayout = new RowLayout(
+      200,
+      widthsByText({
+        'Address autocomplete': 100,
+        'Debounce lookups': 100,
+        'app-[redacted].ts': 100,
+      }),
+    )
+    const server = new FakeApiServer()
+    await mountChat({
+      server,
+      tabs: [first, second, file],
+      viewport: 'desktop',
+      renderTab: fileTabs(testNavigation()),
+    })
+    await waitFor(() => queryByText('app-[redacted].ts'), 'the file tab')
+    rowLayout.settle()
+
+    // The frames of the page run only when the test steps them.
+    vi.useFakeTimers({
+      toFake: ['requestAnimationFrame', 'cancelAnimationFrame'],
+    })
+    try {
+      // 5 px from an end, the pointer is 27 px into the 32 px zone of the
+      // edge scroll: the row scrolls 11 of the 12 px of a full step a frame.
+      dragTo('Debounce lookups', 195)
+      const firstFrame = holdFrames(1)
+      const rightEnd = holdFrames(11)
+      pointer(window, 'pointermove', { ...mouse, clientX: 5 })
+      const leftEnd = holdFrames(12)
+      pointer(window, 'pointerup', { ...mouse, clientX: 5, buttons: 0 })
+      await settle()
+      const saved = await savedOrders(server)
+      // A frame loop that the first drag left running doubles this step.
+      dragTo('Address autocomplete', 195)
+      const nextDrag = holdFrames(1)
+      pointer(window, 'pointerup', { ...mouse, clientX: 195, buttons: 0 })
+
+      expect({ firstFrame, rightEnd, leftEnd, saved, nextDrag }).toEqual({
+        firstFrame: {
+          left: 11,
+          status: 'Moving Debounce lookups to place 2 of 3',
+        },
+        rightEnd: {
+          left: 100,
+          status: 'Moving Debounce lookups to place 3 of 3',
+        },
+        leftEnd: {
+          left: 0,
+          status: 'Moving Debounce lookups to place 1 of 3',
+        },
+        saved: [[second, first, file]],
+        nextDrag: {
+          left: 11,
+          status: 'Moving Address autocomplete to place 2 of 3',
+        },
       })
     } finally {
       vi.useRealTimers()

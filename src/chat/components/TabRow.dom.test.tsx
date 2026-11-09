@@ -4,7 +4,12 @@ import { describe, expect, it, vi } from 'vitest'
 import tabScroll from '../../../docs/mockups/src/components/workspace/TabScroll.module.css'
 import { testNavigation } from '../../files/files-test-kit'
 import { sessionPath, type Session } from '../../shared/sessions'
-import { byRole, byText, queryByText } from '../../test-support/dom-queries'
+import {
+  byRole,
+  byText,
+  queryByRole,
+  queryByText,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -21,6 +26,9 @@ import {
   fileTabs,
   first,
   mountChat,
+  pointer,
+  rowStatus,
+  savedOrders,
   second,
   settle,
   shownTab,
@@ -229,5 +237,60 @@ describe('a full tab row', () => {
       scrolled: 0,
       after: 0,
     })
+  })
+
+  it('scrolls near its clipped end while a finger that moved after its long press drags a phone tab, and the release drops the tab at the place that the status says, with no tab menu', async () => {
+    // Two tabs of 150 px in a row of 200 px: the row clips the second tab.
+    const layout = new RowLayout(
+      200,
+      widthsByText({ 'Address autocomplete': 150, 'Debounce lookups': 150 }),
+    )
+    const server = new FakeApiServer()
+    await mountChat({ server, tabs: [first, second], viewport: 'mobile' })
+    layout.settle()
+    const finger = { pointerType: 'touch', pointerId: 2, clientX: 75 }
+    const frames = (count: number) => {
+      for (let frame = 0; frame < count; frame += 1) {
+        act(() => {
+          vi.advanceTimersToNextFrame()
+        })
+      }
+      return { left: tabList().scrollLeft, status: rowStatus() }
+    }
+
+    vi.useFakeTimers()
+    try {
+      pointer(byRole('button', 'Address autocomplete'), 'pointerdown', finger)
+      act(() => vi.advanceTimersByTime(450))
+      // A move of 115 px toward the clipped end, more than the 8 px of a
+      // move. 10 px from the end, the pointer is 22 px into the 32 px zone
+      // of the edge scroll: the row scrolls 9 of the 12 px of a full step.
+      pointer(window, 'pointermove', { ...finger, clientX: 190 })
+      const firstFrame = frames(1)
+      const atEnd = frames(11)
+      pointer(window, 'pointerup', { ...finger, clientX: 190, buttons: 0 })
+      vi.useRealTimers()
+      await settle()
+
+      expect({
+        firstFrame,
+        atEnd,
+        sheet: queryByRole('dialog', 'Address autocomplete') !== null,
+        saved: await savedOrders(server),
+      }).toEqual({
+        firstFrame: {
+          left: 9,
+          status: 'Moving Address autocomplete to place 1 of 2',
+        },
+        atEnd: {
+          left: 100,
+          status: 'Moving Address autocomplete to place 2 of 2',
+        },
+        sheet: false,
+        saved: [[second, first]],
+      })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

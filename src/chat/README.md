@@ -218,7 +218,9 @@ members from the models of the app.
   row sets `.fadeStart` and `.fadeEnd` from its scroll position and the
   sizes of the row and its tabs. During a drag, the pointer within 32 px of
   an end of the row, or past it, scrolls the row, and the drag finds its
-  drop place again after each scroll.
+  drop place again after each scroll. This scroll starts only after the
+  pointer moves, so a long press that holds still scrolls nothing, and its
+  release opens the tab menu.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
@@ -336,11 +338,18 @@ the kit has a real path with a fake secret value and a label that hides
 it, so a name that the row takes from a path fails the tests. A mouse
 moves a file tab before a session tab, and the click at the end selects
 nothing.
-Escape keeps the order. A finger lifts a session tab after 450 ms, and its
-release with no move opens the tab menu as a sheet, which the late click
-of the finger does not close. `components/TabMenu.dom.test.tsx` opens the
-tab menu with Shift and F10 and with a right click, moves a file tab with
-Move left, and opens the rename field in a tab that does not show.
+Escape keeps the order. A finger lifts a session tab after 450 ms, near
+the clipped end of a full row, which takes the browser layout of
+`components/row-layout-test-kit.ts`. While the finger holds still, the row
+does not scroll. Its release with no move opens the tab menu as a sheet,
+which the late click of the finger does not close. In a full row, a mouse
+holds a dragged tab near each end. The drag kit holds the animation
+frames, so this test fakes them and steps them one at a time. The row
+scrolls toward each end, and the drop goes to a place that the scroll
+showed. A second drag scrolls by the same step, so the first drag left no
+frame loop running. `components/TabMenu.dom.test.tsx` opens the tab menu
+with Shift and F10 and with a right click, moves a file tab with Move
+left, and opens the rename field in a tab that does not show.
 `components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
 its fades. It also scrolls a full row over the browser layout of
 `components/row-layout-test-kit.ts`, which gives the row and its tabs
@@ -349,7 +358,10 @@ The row scrolls the shown tab into view at the mount, on a new shown
 tab, and on a narrower row, the moved tab after a move, and a tab that
 opens as far as the shown tab still shows. It keeps the whole shown tab
 in view after the close of a tab before it and after a rename makes it
-wider, and a row that the user scrolled away stays there.
+wider, and a row that the user scrolled away stays there. On a phone, a
+finger that moves after its long press drags a tab toward the clipped
+end. The row scrolls, the release drops the tab at the place that the
+status says, and no tab menu opens.
 `components/tab-row-test-kit.ts` sends their right clicks, keys, and
 wheel turns.
 
