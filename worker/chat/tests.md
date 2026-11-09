@@ -82,6 +82,9 @@ npm run typecheck
   It checks the retained interrupt, one failure with its cause after duplicate runner ends, late changed files, and the Retry message.
   `integration/gateway-entry.test-support.ts` adds test-only token issuance and a fetch wrapper for the production workspace RPC.
   The fetch wrapper releases each RPC before eviction.
+- `integration/workspace-lifecycle-recovery.test.ts` checks a gateway login change with the production lifecycle fixture.
+  The workspace stays `working` until the runner end is stored, then becomes `ready` on the same connection without an alarm repair.
+  `integration/workspace-recovery-entry.test-support.ts` adds test-only turn token issuance to that fixture.
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,

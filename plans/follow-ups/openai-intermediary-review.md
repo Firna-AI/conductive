@@ -1,0 +1,32 @@
+# OpenAI may require review of the model gateway
+
+- **Severity:** High. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-09, from the OpenAI research of Milestone 1 of the Worker model gateway, branch `conductor/model-gateway-worker-model-proxy-decision-120`.
+- **Location:** the Codex route of the model gateway in `worker/model-gateway/route.ts`, the section "Agent logins" of `docs/protocol/access-and-security.md`, and the OpenAI login of the account page.
+- **Reason:** the question is about OpenAI's terms, and only the user can ask OpenAI or accept the risk.
+
+- **Terms:**
+  - **Model gateway:** the Worker routes that add a member's real agent login to each model request of the agents in a cloud computer, and forward the request to the provider.
+  - **Starter:** the member who started a session. Each turn of the session uses the starter's login.
+- **Background:**
+  - Codex runs on each member's own OpenAI API key. Once the runner moves to the gateway, each Codex model request passes through the Worker, which adds that key.
+  - The user confirmed with Anthropic on 9 November 2026 that the gateway may carry Claude subscription tokens. That confirmation covers Anthropic only.
+  - OpenAI's Services Agreement, section 3.3 (g), says that the customer will not "buy, sell, or transfer API keys from, to, or with a third party".
+  - OpenAI's Help Center says: "Your API key is intended to be used by you. The sharing of API keys is against the Terms of Use."
+  - OpenAI's Usage Policies, effective 20 November 2026, say: "If you operate a model-access intermediary platform or other service that enables third parties to directly access OpenAI models, you must obtain our prior review and approval. This requirement does not apply solely because an application integrates OpenAI models".
+  - These quotes come from Internet Archive copies of 29 October to 8 November 2026, because the live OpenAI pages refused automated reads. They are unverified against the live pages. This item gives no legal reading.
+  - Today, before the gateway, the app already stores each key and sends it into the cloud computer. The other members of a session also spend the starter's key.
+- **Problem:** Nobody has checked whether OpenAI sees Conductive, with the gateway or without it, as a model-access intermediary that needs its review, or the shared use of a starter's key as key sharing.
+- **Impact if no action:** OpenAI can block the keys or the accounts of members if it treats the app as an unapproved intermediary.
+- **Root question:** Which OpenAI logins can the app carry through the gateway, within OpenAI's rules?
+- **Options:**
+  - **A.** Send OpenAI keys through the gateway as planned. The user treats the app as an application that integrates OpenAI models. Effort: Small.
+  - **B.** Ask OpenAI for its review before the runner sends OpenAI keys through the gateway, as the user did with Anthropic. Until the answer, Codex turns keep the current route. Effort: Small.
+  - **C.** As B, and ask OpenAI also about the use of a starter's key by the other members of a session. Effort: Small.
+- **Left out:** Removing Codex, because it breaks the user's choice of two agents.
+- **Wider fix:** None. The answer is a one-time rule about provider terms.
+- **Previous examples:** The check with Anthropic, recorded on 9 November 2026 for Claude subscription tokens.
+- **Related:** `plans/follow-ups/gateway-background-requests.md` covers OpenAI background requests on the same route.
+- **Recommendation:** C. The new policy takes effect on 20 November 2026, and one question can also cover the shared use of a key that the app already has today.
+- **Action:** ask the user, because only the user can ask OpenAI, and the options trade schedule against provider risk.

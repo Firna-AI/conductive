@@ -1,0 +1,38 @@
+# OpenAI background requests outlive the turn
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-09, finding 5 of review round 2 of branch `conductor/model-gateway-worker-model-proxy-decision-120`, with its check.
+- **Location:** the Codex route of the model gateway in `worker/model-gateway/route.ts`, the upload reader `worker/model-gateway/upload.ts`, the request owner `worker/model-gateway/request-lifetime.ts`, the header rule `worker/model-gateway/headers.ts`, and the section "Streams" of `docs/protocol/model-gateway.md`.
+- **Reason:** each option adds a new refusal at the gateway, and the user decides each new rejection.
+
+- **Terms:**
+  - **Model gateway:** the Worker routes on `api.conductive.build` under `/v1/model/`. They take the model requests of the agent programs with a turn token, add the real agent login, and forward the requests to Anthropic, OpenAI, or a user's own endpoint.
+  - **Turn token:** a secret that authorizes model requests only while one agent turn runs.
+  - **Background mode:** an option of OpenAI's Responses API. A request with `background: true` keeps running at OpenAI after its connection closes.
+- **Background:**
+  - `docs/protocol/model-gateway.md` requires that a model request that still runs when its turn ends stops within 30 seconds. The user chose this on 9 November 2026. Its reason: a copied turn token must not spend the login for minutes after the turn.
+  - The gateway enforces the bound with a lease: it cancels the upload, the upstream fetch, and the answer when the turn ends.
+  - The gateway forwards the request body unchanged. So a body with `background: true` reaches OpenAI.
+  - OpenAI's background guide, read on 9 November 2026, says that a background response "continues running" when its connection drops. `POST /v1/responses/{id}/cancel` cancels it, and `GET /v1/responses/{id}` reads it. The gateway forwards neither route.
+  - The pinned Codex 0.167.0 sends no `background` field for model requests. So only other sandbox code with a copied turn token can send one.
+  - The gateway passes `content-encoding` to the upstream, and Codex 0.167.0 has an `enable_request_compression` flag. A check of the raw body bytes misses a compressed body. It is unverified whether OpenAI accepts encoded request bodies.
+  - The same Codex route will also serve a user's own endpoint, which can copy the Responses API.
+  - No runner sends turn tokens yet. The exposure starts when the runner moves to the gateway, so the fix must land before that.
+- **Problem:** Sandbox code with a copied turn token can start OpenAI work that keeps running, and keeps billing the starter's login, after the turn ends.
+- **Impact if no action:** The 30-second bound fails for background requests, so a copied token can spend the starter's login after the turn.
+- **Root question:** How does the gateway prevent provider work from continuing beyond its authorized turn?
+- **Options:**
+  - **A.** Refuse a background request before the gateway forwards it. Read only the top-level keys of the body, after JSON unescaping. Refuse every top-level `background` value except `false`, a body that is not one JSON object, and an encoded body, with a stable error code. The check runs in the upload reader, inside the request owner, and stops the upload before its last byte reaches the upstream. Memory stays bounded. State the exception in the protocol doc, and add a regression test. Effort: Medium.
+  - **B.** Always send `background: false`, through a shared provider adapter that rewrites the value in the streamed body. Change the rule that bodies pass unchanged, and add a regression test. Cost: a rewrite of a streamed JSON value, and a body that does not fit in memory cannot be buffered. Effort: Medium.
+  - **C.** Accept on the Codex route only the top-level body fields that the pinned Codex programs send, with `background` absent or `false`. Refuse each other field and each encoded body. Update the list with each Codex update of the runner. Cost: an unlisted field makes every Codex turn fail until the list changes, and the full field list must come from the program's source. Effort: Medium.
+- **Left out:**
+  - Cancellation by response ID: a Worker cannot stay alive for a job that runs many minutes after its answer ends, and a job whose ID never arrives still runs.
+  - Forcing `store: false`: OpenAI's guide says that background requests can use `store=false`.
+  - A plain byte search for `background`: an escaped key gets through it, and a nested key, such as the background setting of an image tool, refuses a valid request.
+  - Change nothing: it breaks the 30-second bound that the user chose.
+- **Wider fix:** C. It refuses each field that is not on the list, so a new provider mode with another name is also refused.
+- **Previous examples:** None found for provider work that outlives its connection.
+- **Related:** `plans/follow-ups/openai-intermediary-review.md` also concerns the OpenAI keys that the gateway carries.
+- **Recommendation:** A. It closes the only known path with one top-level check, and each request of the pinned programs still passes byte for byte. C best protects the codebase, at the cost of a list that each Codex update must keep.
+- **Action:** ask the user, because each option adds a new rejection that no recorded decision covers.

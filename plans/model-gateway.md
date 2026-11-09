@@ -552,7 +552,7 @@ and the runner version pin. The login sections wait for Milestone 5 (D25).
 - [x] Add the new page to the protocol doc lists of `docs/architecture.md`
       and `README.md`.
 - [x] Check each relative link of the changed Markdown files.
-- [ ] Read OpenAI's published terms about a user's own API key behind a
+- [x] Read OpenAI's published terms about a user's own API key behind a
       proxy, and its request size limit. Save the text and the address
       under `.context/model-gateway/`. Report the result to Cal before
       Milestone 6 (open check 2).
@@ -718,6 +718,13 @@ tokens. The own endpoint goes through the gateway.
 - [ ] Move `RunnerDelivery.failLogin` to the failure entry of
       `TurnLifecycle`, and make `finish` private. This completes review
       finding 3, which kept the shared runner delivery file unchanged.
+- [ ] Report each turn end to the workspace lifecycle by turn ID from
+      `TurnCompletion.finish`, and drop the type match of turn ends in
+      `runnerEventStored` and `worker/chat/runner-receipt.ts`. This is the
+      wider fix of review finding 6.
+- [ ] Before any runner gets a turn token, apply the user's answer to
+      `plans/follow-ups/gateway-background-requests.md` (review finding 5)
+      and to `plans/follow-ups/openai-intermediary-review.md`.
 - [ ] Check the Worker's other fetches. Then turn on
       `global_fetch_strictly_public` in `wrangler.jsonc` (open check 8).
       Save the check under `.context/model-gateway/`.
