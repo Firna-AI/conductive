@@ -9,7 +9,7 @@ Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
 push to `main` deploys the test deployment.
 
 Each input names the routes that read it. A route that does not read an
-input works without it. Keep real values out of the repository and out of
+input works without it. Keep secrets out of the repository and out of
 examples.
 
 ## How to set the inputs
@@ -19,8 +19,10 @@ examples.
 - Set each public variable in the `vars` of `wrangler.jsonc`, or in the
   settings of the Worker in the Cloudflare dashboard.
 - `wrangler.jsonc` sets `keep_vars`. So each deploy keeps the variables
-  that the settings of the Worker hold. Set a variable of one deployment
-  there, or with `--var` on its first deploy.
+  that the settings of the Worker hold and this file does not set.
+  Values in `wrangler.jsonc` replace the corresponding dashboard values.
+  Set a variable of one deployment in the dashboard, or with `--var` on
+  its first deploy.
 - `wrangler.jsonc` routes the hostnames of
   [Architecture](architecture.md#hostnames) and each hostname of the
   preview domain. A proxied wildcard DNS record of the preview domain must
@@ -114,8 +116,15 @@ above.
 
 ## Models
 
-`CONDUCTIVE_MODELS` holds the models that the app offers. It is operator
-data. The Worker has no built-in list and no fallback model.
+`CONDUCTIVE_MODELS` holds the models that the app offers.
+The `vars` of [`wrangler.jsonc`](../wrangler.jsonc) hold this list and
+`CONDUCTIVE_DEFAULT_CHOICE`, the app default. Edit them in the repository.
+Each deploy publishes these values through the existing deploy workflow.
+The Worker has no built-in list and no fallback model.
+
+Keep both settings as JSON encoded in strings, because the model readers
+expect text bindings. A `.dev.vars` value replaces its repository value
+for local development.
 
 - The value is a non-empty JSON array. Each entry is an object with these
   fields:
