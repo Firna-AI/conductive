@@ -19,17 +19,83 @@ function fixture() {
   }
 }
 
-it('keeps a pending preview alarm when lifecycle work fails before the preview handler', async () => {
+it('defers a pending preview alarm when lifecycle work fails before the preview handler', async () => {
   const { storage, alarms, tasks } = fixture()
   const failure = new Error('The lifecycle write failed')
   await alarms.set('lifecycle', 100)
   await alarms.set('previews', 100)
   tasks.lifecycle.mockRejectedValueOnce(failure)
   await storage.deleteAlarm()
-  await expect(runWorkspaceAlarms(alarms, 100, tasks)).rejects.toBe(failure)
+  await expect(runWorkspaceAlarms(alarms, () => 100, tasks)).rejects.toBe(
+    failure,
+  )
   expect(tasks.previews).toHaveBeenCalledTimes(0)
-  expect(await storage.get('number', 'alarm:previews')).toBe(100)
+  expect(await storage.get('number', 'alarm:previews')).toBe(30_100)
   expect(storage.alarmAt).toBe(100)
+})
+
+it('moves only unchanged due markers owned by each run to the next future time or fallback', async () => {
+  const { storage, alarms } = fixture()
+  for (const source of [
+    'lifecycle',
+    'lifecycle:access',
+    'lifecycle:changed',
+    'devices',
+    'previews',
+    'github',
+  ] as const)
+    await alarms.set(source, 100)
+  await alarms.set('lifecycle:cleanup', 120)
+  await alarms.set('lifecycle:image', 200)
+  const outer = await alarms.begin(
+    100,
+    (source) => !source.startsWith('lifecycle'),
+  )
+  const nested = await alarms.begin(100, (source) =>
+    source.startsWith('lifecycle'),
+  )
+  await alarms.set('github', 90)
+  await alarms.set('lifecycle:changed', null)
+  await alarms.set('lifecycle:publication', 100)
+  await alarms.set('lifecycle:start', 150)
+  await nested.finish(125)
+  expect(await storage.list('number', { prefix: 'alarm:' })).toEqual(
+    new Map([
+      ['alarm:lifecycle', 150],
+      ['alarm:lifecycle:access', 150],
+      ['alarm:lifecycle:cleanup', 120],
+      ['alarm:lifecycle:image', 200],
+      ['alarm:lifecycle:publication', 100],
+      ['alarm:lifecycle:start', 150],
+      ['alarm:devices', 100],
+      ['alarm:previews', 100],
+      ['alarm:github', 90],
+    ]),
+  )
+  const gate = storage.holdTransaction()
+  const finishing = outer.finish(125)
+  await gate.entered
+  await alarms.set('previews', 100)
+  gate.release()
+  await finishing
+  expect(await storage.get('number', 'alarm:devices')).toBe(150)
+  expect(await storage.get('number', 'alarm:previews')).toBe(100)
+  expect(await storage.get('number', 'alarm:github')).toBe(90)
+  expect(await storage.get('number', 'alarm:lifecycle:cleanup')).toBe(120)
+  expect(await storage.get('number', 'alarm:lifecycle:publication')).toBe(100)
+  expect(storage.alarmAt).toBe(90)
+
+  const fallback = fixture()
+  let now = 100
+  await fallback.alarms.set('previews', 100)
+  await fallback.alarms.set('github', 120)
+  fallback.tasks.previews.mockImplementationOnce(async () => {
+    now = 125
+  })
+  await runWorkspaceAlarms(fallback.alarms, () => now, fallback.tasks)
+  expect(await fallback.storage.get('number', 'alarm:previews')).toBe(30_125)
+  expect(await fallback.storage.get('number', 'alarm:github')).toBe(120)
+  expect(fallback.storage.alarmAt).toBe(120)
 })
 
 it('clears an expired device alarm but preserves a replacement lease at the same time', async () => {
@@ -47,7 +113,7 @@ it('clears an expired device alarm but preserves a replacement lease at the same
     acknowledge(storage.holdTransaction()),
   )
   await storage.deleteAlarm()
-  const running = runWorkspaceAlarms(alarms, 100, tasks)
+  const running = runWorkspaceAlarms(alarms, () => 100, tasks)
   const gate = await acknowledging
   await gate.entered
   await alarms.set('devices', 100)
@@ -55,7 +121,7 @@ it('clears an expired device alarm but preserves a replacement lease at the same
   await running
   expect(storage.alarmAt).toBe(100)
   await storage.deleteAlarm()
-  await runWorkspaceAlarms(alarms, 100, tasks)
+  await runWorkspaceAlarms(alarms, () => 100, tasks)
   expect(tasks.devices).toHaveBeenCalledTimes(2)
   expect(storage.alarmAt).toBeNull()
 })

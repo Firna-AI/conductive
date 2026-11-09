@@ -68,14 +68,32 @@ times there too.
 
 - Each write that changes a due time sets the object alarm to the earliest
   stored due time.
-- A due time stays stored until its owner clears or replaces it. So a run
-  that fails or ends early still leaves the next alarm, also after a
-  restart of the object.
+- A due time stays stored until its owner clears it. So a run that fails
+  or ends early still leaves the next alarm, also after a restart of the
+  object.
 - The scheduler clears a due time of the Mac devices after their run
   succeeds, unless that run stored a new one.
+- `runWorkspaceAlarms` in [`workspace-alarms.ts`](../workspace-alarms.ts)
+  is the outer run of the object alarm. It runs the Mac devices, the
+  previews, and GitHub. It also starts the lifecycle run,
+  `runWorkspaceAlarm` in [`workspace-alarm.ts`](workspace-alarm.ts). The
+  lifecycle run runs the lifecycle owners.
 - Each run reads the due times that have come, and it runs their owners.
-  At its end, it sets the object alarm to the earliest stored due time
-  again.
+- At the end of each run, also when the run fails or ends early, the run
+  does these steps:
+  1. It finds each of its due times that had come when the run started
+     and that did not change during the run. The lifecycle run looks only
+     at due times of the lifecycle owners. The outer run looks only at due
+     times of the Mac devices, the previews, and GitHub.
+  2. It moves each due time that it found to the earliest stored due time
+     in the future. When no stored due time is in the future, it moves the
+     due time 30 seconds into the future.
+  3. It sets the object alarm to the earliest stored due time again.
+- A due time that a run cleared, replaced, or added stays as that run
+  left it.
+- The steps prevent an immediate new alarm for a task that a run skipped.
+  For example, the lifecycle run skips some tasks while the access stop or
+  a start is pending.
 
 The deadline and stop actions use the sandbox state in each Boat reply.
 When Boat refuses an action, they read the sandbox state once. The

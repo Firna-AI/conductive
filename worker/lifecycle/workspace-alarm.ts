@@ -26,7 +26,10 @@ export async function runWorkspaceAlarm(input: {
   accessStop: WorkspaceAccessStop
 }): Promise<void> {
   const { storage, env, dependencies, alarms, lifecycle } = input
-  const due = await alarms.take(dependencies.now())
+  const run = await alarms.begin(dependencies.now(), (source) =>
+    source.startsWith('lifecycle'),
+  )
+  const { due } = run
   const requested = (source: string) => !due.size || due.has(source)
   let completedStart = false
   try {
@@ -129,6 +132,6 @@ export async function runWorkspaceAlarm(input: {
       }
     }
   } finally {
-    await alarms.schedule()
+    await run.finish(dependencies.now())
   }
 }

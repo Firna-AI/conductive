@@ -14,7 +14,7 @@ export async function expireWorkspacePreviews(
 
 export async function runWorkspaceAlarms(
   alarms: WorkspaceAlarms,
-  now: number,
+  now: () => number,
   tasks: {
     lifecycle(): Promise<void>
     github(): Promise<void>
@@ -23,15 +23,20 @@ export async function runWorkspaceAlarms(
     publishRevocations(): Promise<void>
   },
 ): Promise<void> {
-  const due = await alarms.take(now)
+  const startedAt = now()
+  const run = await alarms.begin(
+    startedAt,
+    (source) => !source.startsWith('lifecycle'),
+  )
+  const { due } = run
   try {
     if (!due.size || [...due].some((source) => source.startsWith('lifecycle')))
       await tasks.lifecycle()
     if (due.has('github')) await tasks.github()
     if (due.has('previews')) await tasks.previews()
-    await alarms.run('devices', now, tasks.devices)
+    await alarms.run('devices', startedAt, tasks.devices)
     await tasks.publishRevocations()
   } finally {
-    await alarms.schedule()
+    await run.finish(now())
   }
 }

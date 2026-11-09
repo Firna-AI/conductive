@@ -178,7 +178,7 @@ export class Workspace extends WorkspaceLifecycle {
       await this.integration.alarms.set('lifecycle:access', this.now() + 30_000)
       return
     }
-    await runWorkspaceAlarms(this.integration.alarms, this.now(), {
+    await runWorkspaceAlarms(this.integration.alarms, this.now, {
       lifecycle: () => this.alarmLifecycle(),
       github: () => this.github.alarm(),
       previews: () =>

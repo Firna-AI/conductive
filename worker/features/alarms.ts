@@ -63,7 +63,7 @@ export async function writeWorkspaceAlarm(
 
 export class WorkspaceAlarms {
   private readonly storage: AlarmStorage
-  private readonly revisions = new Map<AlarmSource, number>()
+  private readonly revisions = new Map<string, number>()
   constructor(storage: AlarmStorage) {
     this.storage = storage
   }
@@ -80,11 +80,36 @@ export class WorkspaceAlarms {
   }
 
   async take(now: number): Promise<ReadonlySet<string>> {
-    return this.storage.transaction(async (transaction) => {
-      const alarms = await transaction.read()
-      const due = [...alarms].filter(([, at]) => at <= now)
-      return new Set(due.map(([key]) => key.slice('alarm:'.length)))
-    })
+    return (await this.begin(now, () => false)).due
+  }
+
+  async begin(now: number, owns: (source: string) => boolean) {
+    const revisions = new Map(this.revisions)
+    const alarms = await this.storage.transaction((transaction) =>
+      transaction.read(),
+    )
+    const due = [...alarms].filter(([, at]) => at <= now)
+    const owned = due.filter(([key]) => owns(key.slice('alarm:'.length)))
+    return {
+      due: new Set(due.map(([key]) => key.slice('alarm:'.length))),
+      finish: (finishedAt = now) =>
+        this.storage.transaction(async (transaction) => {
+          const current = await transaction.read()
+          const future = Math.min(
+            ...[...current.values()].filter((at) => at > finishedAt),
+          )
+          const next = future === Infinity ? finishedAt + 30_000 : future
+          for (const [key, at] of owned) {
+            const source = key.slice('alarm:'.length)
+            if (
+              current.get(key) === at &&
+              this.revisions.get(source) === revisions.get(source)
+            )
+              await transaction.put(key, next)
+          }
+          await scheduleWorkspaceAlarm(transaction)
+        }),
+    }
   }
 
   has(source: AlarmSource): Promise<boolean> {
