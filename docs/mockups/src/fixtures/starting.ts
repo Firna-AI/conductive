@@ -26,6 +26,16 @@ export const creatingLog: StartingLog = {
   elapsed: '6s',
 }
 
+/**
+ * The first second of the start of a new workspace, before its title comes:
+ * only the first step shows.
+ */
+export const firstSecondLog: StartingLog = {
+  ...creatingLog,
+  steps: creatingLog.steps.slice(0, 1),
+  elapsed: '1s',
+}
+
 /** A stopped workspace resumes with its files as they were. */
 export const resumingLog: StartingLog = {
   title: 'Resuming the sandbox',

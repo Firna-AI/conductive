@@ -41,6 +41,7 @@ import {
   org,
   recordingSocket,
 } from './kept-test-kit'
+import { nameLabel } from '../../shared/name-label'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -115,13 +116,13 @@ describe('a new workspace whose first start fails', () => {
     typeText(messageField(view), 'Let shoppers save their cart.')
     click(byLabel('Send', view))
     await settle()
-    expect(headerName(view)).toBe(created.workspace.name)
+    expect(headerName(view)).toBe(nameLabel(created.workspace.name))
 
     failFirstStart(server)
     await settle()
 
-    expect(headerName(view)).toBe(created.workspace.name)
-    expect(sidebar(view)).toContain(created.workspace.name)
+    expect(headerName(view)).toBe(nameLabel(created.workspace.name))
+    expect(sidebar(view)).toContain(nameLabel(created.workspace.name))
     expect(view.textContent).toContain("The sandbox couldn't start")
     expect(view.textContent).toContain(`${saved} Your chat is saved.`)
     expect(view.textContent).toContain(queuedLabel)
@@ -135,10 +136,10 @@ describe('a new workspace whose first start fails', () => {
 
     go(away)
     await settle()
-    expect(sidebar(view)).toContain(created.workspace.name)
+    expect(sidebar(view)).toContain(nameLabel(created.workspace.name))
     go(routes.workspace(org, createdId))
     await settle()
-    expect(headerName(view)).toBe(created.workspace.name)
+    expect(headerName(view)).toBe(nameLabel(created.workspace.name))
     expect(view.textContent).toContain(`${saved} Your chat is saved.`)
     expect(queryByLabel('Message', view)).not.toBeNull()
     expect(requestLines(server)).not.toContain(resumeLine)
@@ -174,8 +175,8 @@ describe('a new workspace whose first start fails', () => {
     go(routes.workspace(org, createdId))
     await settle()
 
-    expect(headerName(view)).toBe(created.workspace.name)
-    expect(sidebar(view)).toContain(created.workspace.name)
+    expect(headerName(view)).toBe(nameLabel(created.workspace.name))
+    expect(sidebar(view)).toContain(nameLabel(created.workspace.name))
     expect(view.textContent).toContain(`${saved} Your chat is saved.`)
     expect(view.textContent).toContain(queuedLabel)
     expect(queryByRole('button', 'Try again', view)).not.toBeNull()

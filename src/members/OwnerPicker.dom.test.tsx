@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import { nameLabel } from '../shared/name-label'
 import type { User } from '../shared/api'
 import {
   membersPath,
@@ -73,7 +74,7 @@ describe('OwnerPicker on a phone', () => {
     }).toEqual({ method: 'PUT', path: ownerPath, body: '{"userId":"priya"}' })
     await waitFor(() => reports.length > 0, 'the report of the new owner')
     expect(reports.map((next) => next.owner.id)).toEqual(['priya'])
-    expect(queryByRole('dialog', workspace.name)).toBeNull()
+    expect(queryByRole('dialog', nameLabel(workspace.name))).toBeNull()
   })
 
   it('starts_again_for_another_workspace_and_drops_the_old_members_answer', async () => {
@@ -168,7 +169,7 @@ describe('OwnerPicker on a phone', () => {
         'the choice of Priya Raman',
       ),
     )
-    const sheet = byDialog(workspace.name)
+    const sheet = byDialog(nameLabel(workspace.name))
     const choice = byRole('menuitemradio', 'Priya Raman', sheet)
     expect(choice.getAttribute('aria-busy')).toBe('true')
     byRole('progressbar', 'Loading', choice)

@@ -38,7 +38,7 @@ export async function seedChatFixture(
       org.id,
       'repo',
       owner.id,
-      'Test',
+      '',
       'octocat/test',
       TEST_TIME,
       TEST_TIME,

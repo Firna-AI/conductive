@@ -10,12 +10,25 @@ import {
 } from '../../test-support/fixtures/devices'
 import { renderChat, textOf } from '../components/render-kit'
 import { CommandCard } from './CommandCard'
+import { RequestDetails } from './CommandParts'
 
 const commands = deviceCommandsPath(FAKE_IDS.org, FAKE_IDS.workspace)
 const ask = '$ npm run test:safari -- checkout'
 const count = (text: string, part: string) => text.split(part).length - 1
 
 describe('Mac commands in the chat', () => {
+  it('labels an untitled workspace in command details', () => {
+    const shown = textOf(
+      renderToStaticMarkup(
+        <RequestDetails
+          mac="This Mac"
+          readers={{ viewerId: null, orgName: 'Acme' }}
+          request={fakeMacRequest({ workspaceName: null })}
+        />,
+      ),
+    )
+    expect(shown).toContain('Workspace Untitled, in Acme')
+  })
   it('gives each waiting request Deny and Allow only in the Mac app on the Mac that got it', async () => {
     const mac = await renderChat({
       conversation: 'running',

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { nameLabel } from '../../shared/name-label'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Workspace } from '../../shared/workspaces'
 import { coreFixtures, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -162,7 +163,7 @@ export function DevHost() {
     return (
       <DevWorkspaceFrame
         branch={header.workspace.branch}
-        name={header.workspace.name}
+        name={nameLabel(header.workspace.name)}
         options={options}
         owner={
           <OwnerPicker
