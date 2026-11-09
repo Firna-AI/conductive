@@ -19,7 +19,7 @@ function beforeSend(markup: string): string {
 }
 
 /**
- * The words of the whole composer: the box, its bar, and the hint under it.
+ * The words of the whole composer: the box and its bar.
  * It fails when the chat shows no composer, so no check of it can pass on a
  * chat without one.
  */
@@ -116,7 +116,9 @@ describe('the login of a session', () => {
         label: text.includes(loginLabel),
         composerLogin: anyLogin.test(composerText(member.markup())),
         stop: text.includes('Stop'),
-        steer: text.includes('The agent reads this at its next step.'),
+        steer: member
+          .markup()
+          .includes('placeholder="Steer the agent while it works"'),
         placeholder: member
           .markup()
           .includes('placeholder="Message the agent"'),

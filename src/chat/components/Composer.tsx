@@ -145,11 +145,6 @@ export function Composer(props: ComposerProps) {
           />
         </div>
       </div>
-      {steers && draft.text !== '' ? (
-        <span className={styles.hint}>
-          The agent reads this at its next step.
-        </span>
-      ) : null}
     </div>
   )
 }

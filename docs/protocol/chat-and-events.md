@@ -198,6 +198,9 @@ says.
   sends during a turn joins that turn. A message of another member joins it
   too while the starter shares the login. Such a message goes to the agent
   at once, and the agent reads it at its next tool call.
+- The composer uses its placeholder to show that a message steers the
+  running turn. It shows no steer hint under the message box.
+  Reason: a hint under the box moves it when the user starts to type.
 - In a turn without tool calls, the agent reads such a message when the
   turn ends.
 - A message that the workspace accepted stays in its session, also when the

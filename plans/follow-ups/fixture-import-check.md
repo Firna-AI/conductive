@@ -3,8 +3,8 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-09, from branch `calummoore/claude-login-notice-removal`, pull request #75, review round 3, the wider fix of finding 5.
-- **Location:** `src/chat/README.md:200-202` and `src/app/README.md:136` (the rule). The gate is the `check` script of `package.json`.
-- **Reason:** The fix adds a gate step, and the user decides each new gate step.
+- **Location:** `src/chat/README.md:220-225` and `src/app/README.md:145-147`, which state the rule. The gate is the `check` script of `package.json`.
+- **Reason:** The user deferred this check on 2026-11-09, and a new gate step still needs approval before work starts.
 
 - **Source:** Review.
 - **Category:** Repository rule.
@@ -12,6 +12,7 @@
   - **Fixture:** sample data for the mockups, under `docs/mockups/src/fixtures/`, such as the model list in `agents.ts`.
   - **Pure mockup module:** a module under `docs/mockups/src/` that imports no fixture, so that the app can reuse it.
 - **Background:**
+  - On 2026-11-09 the user asked to keep this work as a follow-up. The user did not choose a check option.
   - The app reuses mockup parts and CSS modules, so that the app and the mockups look the same.
   - `src/chat/README.md` says: "Reusable code imports no fixture data and no fake." It also says that the app reuses only the mockup parts that are pure.
   - Review round 3 of pull request #75 found a break of this rule. The app's two model pickers imported a style helper from the mockup picker module. That module imports `fixtures/agents.ts` and a menu built from the fixtures. So the chat page loaded the fixtures in development. The production build kept none of the fixture model names.
@@ -30,4 +31,4 @@
 - **Wider fix:** B. It prevents the whole class, whatever module brings the fixture in.
 - **Previous examples:** Finding 5 of review round 3 of pull request #75: `pickerButtonStyle` in `docs/mockups/src/components/chat/ModelPicker.tsx`, imported by `src/chat/components/ModelPicker.tsx` and `src/shell/ui/ModelPicker.tsx`.
 - **Recommendation:** B. The README rule did not stop the break, and the walk is fast.
-- **Action:** ask the user, because B adds a gate step.
+- **Action:** ask the user before adding B in a later branch, because B adds a gate step. The user deferred this work.

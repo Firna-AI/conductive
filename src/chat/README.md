@@ -278,6 +278,9 @@ check in the Mac app.
   state and its actions, with `show` and `hide` for a kept chat.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
+- `components/Composer.tsx`: the message box and its controls, with the
+  steering prompt that [Messages](../../docs/protocol/chat-and-events.md#messages)
+  states.
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
