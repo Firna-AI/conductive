@@ -11,8 +11,10 @@ features of the product it can use.
 This change adds the agent instructions. The runner builds one Conductive
 text and sends it through the system field of each agent, as Cal chose for
 decision 1 on 9 November 2026. Each message to the agent also starts with a
-sender line. The change does not cover new agent tools, such as agent
-questions, diff comments, or terminal output. It also does not cover custom
+sender line. Claude gets a short custom base prompt with the seven rules
+that Cal requested for decision 2 on 9 November 2026. The change does not
+cover new agent tools, such as agent questions, diff comments, or terminal
+output. It also does not cover custom
 instructions for orgs and members, a personality setting, a `conductive`
 skill, the OpenCode agent, or the model gateway of decision 120 in
 `plans/boat-native-remote-workspaces.md`. The brainstorm notes are in
@@ -83,7 +85,7 @@ and the wider fix.
     for any agent without an adapter. Its token use is about the same as B.
     Effort: Medium.
   - **B.** The runner builds the text once. It sends the text through the
-    system field of each agent: the preset's `append` for Claude,
+    system field of each agent: `systemPrompt` for Claude,
     `developerInstructions` for Codex, and `system` for OpenCode. An agent
     without a system field gets the text in its first message, as in A.
     Each message also gets a sender line. The runner must send the same
@@ -138,8 +140,8 @@ and the wider fix.
   choose a channel.
 - **Previous examples:** None in Conductive. Conductor puts its text in the
   first message of a session.
-- **Related:** Decision 2, which this decision waits on for Claude. Option B
-  uses the preset's `append` if decision 2 chooses B.
+- **Related:** Decision 2, same code. Its chosen option C puts the workspace
+  instructions after Claude's short custom base prompt.
 - **Recommendation:** B. The text stays in force for the whole session, and
   the required option covers each new agent. E can replace B when the
   gateway carries every model request, and F becomes the better builder
@@ -152,6 +154,10 @@ Added on 8 November 2026 with decision 1. The options check of 9 November
 2026 added option D, added the cost of a new process at each turn to B, and
 changed the reason of the left-out line. On 9 November 2026 the Problem
 line changed: the tool descriptions keep some of the default rules.
+Later on 9 November, Cal asked to copy the seven rules from the explanation.
+This selects the short form of C, without a requirement to reproduce the
+whole preset. Its effort is Small. The earlier Large estimate covered a
+full replacement of the preset's guidance.
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Small.
 - **Source:** Design.
@@ -182,8 +188,12 @@ line changed: the tool descriptions keep some of the default rules.
     that change, such as the git status. Where recording is off, each new
     process can then change the prompt and rewrite the prompt cache at each
     turn. This is not measured yet. Effort: Small.
-  - **C.** Write our own full prompt. We would have to match and maintain
-    the guidance of the preset. Effort: Large.
+  - **C.** Use a short custom prompt with the seven rules from the
+    explanation: complete the task, keep changes focused, write secure
+    code, protect the user's work, use tools efficiently, verify results,
+    and communicate clearly. Add the workspace instructions after these
+    rules. We maintain this text ourselves. It does not reproduce the
+    whole preset. Effort: Small.
   - **D.** Each org chooses A or B in its settings, with B as the default.
     Cost: a setting, a mockup, storage, a runner protocol field, and tests,
     for a choice that no user asked for. Effort: Large.
@@ -194,17 +204,13 @@ line changed: the tool descriptions keep some of the default rules.
 - **Wider fix:** None, because the fix is one option in one file.
 - **Previous examples:** None found. `git log -S systemPrompt` finds no
   commit under `runner/`.
-- **Related:** Decision 1, same code. Its option B puts the agent
-  instructions in this preset's `append`.
-- **Recommendation:** B, when the second turn of a session reads the prompt
-  cache. Milestone 4 checks this first. If the check fails, use B with
-  `excludeDynamicSections`, then A. B gives agents the guidance that
-  Anthropic maintains, at a small cost. The preset adds its own
-  instructions to every request, so it costs more tokens than the empty
-  prompt.
-- **Action:** ask the user, because the change alters every Claude turn and
-  no requirement covers the system prompt.
-- **Open:** It waits for Cal. It blocks Milestone 4.
+- **Related:** Decision 1, same code. Its chosen option B carries the
+  workspace instructions after these base rules in Claude's `systemPrompt`.
+- **Recommendation:** C for the seven rules that Cal requested. The earlier
+  recommendation was B. The smaller scope lets us keep a short, fixed
+  prompt without recreating all of the preset's guidance.
+- **Chosen:** C, the short form, from Cal's request on 9 November 2026:
+  "2 = can we just copy those rules?"
 
 ## Design
 
@@ -224,6 +230,23 @@ The protocol doc states these facts as requirements:
   a command on the Mac of the member whose message started the turn.
 - Several members can write in one session, and each message starts with
   its sender line.
+
+### Claude's base rules
+
+Use the seven rules above in Conductive's own wording. Keep this base text
+fixed across turns. It precedes the workspace instructions in one custom
+system prompt. Codex keeps its own default base instructions.
+
+The rules let an agent act within the user's authorization. They require
+confirmation before a destructive action or a change to a shared system
+that the user has not authorized. They require accurate reports of failed
+or unavailable checks, including a browser check for an interface change.
+The prompt names tools by their purpose, because the available tools vary.
+
+The workspace instructions supply the repository folder and branch facts.
+The agent uses tools for changing facts, such as the date and Git state.
+Those values stay out of the fixed base text. We do not promise that these
+rules reproduce every instruction or behaviour of the preset.
 
 ### Design calls
 
@@ -342,28 +365,26 @@ Codex.
 
 ## Milestone 4: Claude instructions
 
-Depends on: 3, and the answer to decision 2
+Depends on: 3
 
-Send the instructions to Claude with the base prompt that decision 2
-chooses.
+Send the instructions to Claude after the short custom base prompt of
+decision 2 C.
 
 - [ ] Merge `origin/main` first. The own endpoint logins change on the
       branch `calummoore/cli-proxy-setup` edits the same `query` options in
       `runner/src/providers/claude.ts`. Keep its options when it has merged.
-- [ ] With option B of decision 2, check the prompt cache first. Run two
-      turns of one Claude session, and check that the second turn reads the
-      cache in the usage of its result. Save the output under
-      `.context/agent-instructions/`. If the check fails, try B with
-      `excludeDynamicSections`, and report the result to Cal.
-- [ ] Apply the chosen option of decision 2 in
-      `runner/src/providers/claude.ts`. With B, pass
-      `{ type: 'preset', preset: 'claude_code', append: instructions }`. With
-      A, pass the instructions as the whole prompt. With C, pass our own full
-      prompt with the instructions.
+- [ ] Write the seven base rules in Conductive's own wording. Keep the
+      text short and fixed. Follow it with the workspace instructions.
+- [ ] Pass the combined text as the custom `systemPrompt` string in
+      `runner/src/providers/claude.ts` on each start and resume.
+- [ ] Run two turns of one real Claude session. Check the cache reads in
+      the second result's usage. Save the output under
+      `.context/agent-instructions/` and report any failure or limit. A
+      fixed custom prompt does not by itself prove a cache hit.
 - [ ] State the base prompt of Claude agents in
       `docs/protocol/agent-instructions.md`.
-- [ ] Test that a Claude session start and resume pass the instructions in
-      the system prompt option.
+- [ ] Test that a Claude session start and resume pass the same base rules
+      and workspace instructions as the custom system prompt.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
