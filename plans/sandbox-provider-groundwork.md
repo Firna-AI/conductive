@@ -631,23 +631,33 @@ Evidence: `.context/sandbox-provider-groundwork/reports/provider-credential.md`,
 `reports/port-consumers.md`, `reports/port-readmes.md`, and
 `m5-types-corrected.log` in that evidence directory.
 
-## Milestone 6: Contract tests for `SandboxProvider`
+## Milestone 6: Contract tests for `SandboxProvider` — completed
 
 Depends on: 4, 5
 
 One shared suite states what the callers rely on from each provider
 method. It runs against the fake Boat server.
 
-- [ ] Read the `testing` skill.
-- [ ] Add the suite with moved assertions only: lifecycle states, a safe
+Merge record: `.context/sandbox-provider-groundwork/reports/architecture-main-merge.md`
+and `main-merge-audit.txt` record the architecture split from `origin/main`.
+
+- [x] Read the `testing` skill.
+- [x] Add the suite with moved assertions only: lifecycle states, a safe
       retry of a create, saved snapshots, commands that wait and detached
       commands with their offsets, file reads with the 5 MiB limit, the port
       credential, and the typed errors. Leave `fork` out, as the design
       says.
-- [ ] Move each assertion of the Boat adapter tests that every provider
+- [x] Move each assertion of the Boat adapter tests that every provider
       must meet into the suite, with no assertion lost. Keep Boat's route,
       header, and response budget tests beside the Boat adapter.
-- [ ] Update the test support and sandbox READMEs.
+- [x] Keep the original detached-command reply metadata in the Boat
+      contract driver, so the moved result assertion still checks that
+      the client returns only `processId`, without the extra metadata.
+- [x] Update the test support and sandbox READMEs.
+
+Evidence: `.context/sandbox-provider-groundwork/reports/shared-contracts.md`,
+`reports/command-error-contracts.md`, `reports/contract-assertion-audit.md`,
+and `reports/contract-readmes.md` in that evidence directory.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
@@ -655,7 +665,11 @@ Depends on: 1, 2, 3, 4, 5, 6
 
 The complete change passes the gate and the review.
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Run the targeted tests and the complete gate, `npm run check`.
+
+Evidence: `.context/sandbox-provider-groundwork/complete-gate.log` records
+the complete gate on the finished independent groundwork. The live check
+and the org image migration still wait for their required inputs.
 - [ ] Run the live check of `image/` on Boat: create a workspace, run a
       chat turn, open the terminal and a preview, then stop, resume, and
       archive. Save the output under `.context/sandbox-provider-groundwork/`.

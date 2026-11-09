@@ -37,6 +37,10 @@ To test a second provider account, add its organization to the fake. Then
 configure the matching account in the trusted `SANDBOX_PROVIDER_ACCOUNTS`
 map of the Worker environment, as the
 [sandbox area](../sandbox/README.md#provider-accounts) says.
+The Boat driver of the
+[provider contract suite](../sandbox/README.md#provider-contract-suite)
+makes a new `FakeBoat` for each case, and sets its replies from each
+normalized scenario.
 
 `memberFixture` prepares three users, signed sessions, an org, memberships, and settings in one D1 batch.
 It then grants each user app access. The waitlist fixture omits those

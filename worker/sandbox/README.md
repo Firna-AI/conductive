@@ -218,11 +218,47 @@ Tests use [FakeBoat and local storage](../test-support/README.md).
 `FakeBoat.addAccount` gives the fake server a second organization with its own key, for a second account.
 The transport tests use counted streams to check exact budgets and early cancellation.
 
+### Provider contract suite
+
+[provider-contract.test.ts](provider-contract.test.ts) runs one shared set of
+`SandboxProvider` assertions against the Boat adapter. The shared modules
+call only the public provider methods. They compare the values and the
+typed errors that callers use:
+
+- `registerLifecycleContract` and `registerSnapshotContract` in
+  [contract-lifecycle.test-support.ts](contract-lifecycle.test-support.ts).
+- `registerCommandContract` in [contract-commands.test-support.ts](contract-commands.test-support.ts).
+- `registerFileContract` in [contract-files.test-support.ts](contract-files.test-support.ts).
+- `registerPortContract` in [contract-ports.test-support.ts](contract-ports.test-support.ts).
+- `registerErrorContract` in [contract-errors.test-support.ts](contract-errors.test-support.ts).
+
+Each function takes a `ProviderContractFactory` from
+[contract-fixture.test-support.ts](contract-fixture.test-support.ts). Each
+call of the factory gives a new `ProviderContractFixture`: the provider, a
+secret that no error may show, the expected `PrivatePort`, `given(reply)`
+for the normalized `ContractReply` of the next calls, and
+`createIdentities()` for the idempotency keys that the creates sent.
+
+`createBoatContractFixture` in [boat-contract.test-support.ts](boat-contract.test-support.ts)
+is the Boat driver. With [boat-contract-replies.test-support.ts](boat-contract-replies.test-support.ts),
+it turns each `ContractReply` into `FakeBoat` replies. A failure without its
+own provider code or retry wait gets `provider_code` and 3 seconds.
+
+Boat routes, headers, bodies, byte budgets, input checks, `fork`, and
+`hydrated` stay in the Boat tests beside the adapter. The suite leaves out
+`fork`, because no production code calls it. The lifecycle tests keep the
+replay of a lost create, and the Files tests keep the production 5 MiB limit.
+
+A new adapter needs a factory and a driver that turn the same `ContractReply`
+values into replies of its own fake server, with the same failure defaults.
+Its entry calls each `register…Contract` function with that factory. Its wire
+tests stay beside the adapter.
+
 ### Key Code
 
 - [provider.ts](provider.ts) defines the server's sandbox and file read interface, with `PrivatePort` and `PortCredential`.
 - [boat.ts](boat.ts) forwards provider operations to the Boat helpers. It builds the Boat port credential.
-- [boat-port.test.ts](boat-port.test.ts) checks the Boat port credential that `privatePort` returns.
+- [provider-contract.test.ts](provider-contract.test.ts) runs the [provider contract suite](#provider-contract-suite) with the Boat driver, `createBoatContractFixture` in [boat-contract.test-support.ts](boat-contract.test-support.ts). Its port case checks the Boat port credential that `privatePort` returns.
 - [client.ts](client.ts) gives the client of an account with `providerForAccount`, and after the membership check with `orgProviderForAccount`.
 - [accounts.ts](accounts.ts) defines the provider kind, the account configuration, and `ProviderAccountError`.
 - [account-identity.ts](account-identity.ts) holds `DEFAULT_PROVIDER_ACCOUNT`, the `boat` account.
