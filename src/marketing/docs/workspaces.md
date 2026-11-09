@@ -143,7 +143,8 @@ Your GitHub account needs permission to push that commit.
 ## Archive a workspace
 
 Only the workspace owner and org admins can archive it.
-Select **Archive workspace** in the header when you finish the task.
+On a computer, point to the workspace's row in the org's workspace list.
+Select **Archive workspace** when its icon appears over the time.
 
 Conductive checks for uncommitted files and unpushed commits.
 If it finds work, the question lists it.
