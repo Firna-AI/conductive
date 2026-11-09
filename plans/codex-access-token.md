@@ -10,13 +10,12 @@ console and pastes it on the account page, as a Claude member pastes a
 subscription token. The runner gives the token to the Codex app server for
 each turn.
 
-The user chose this approach on 9 November 2026, as option B of decision
-170. The user had already applied to OpenAI for Sign in with ChatGPT, which
-can reach Plus and Pro plans. That sign-in is not part of this change,
-because it waits for OpenAI to admit Conductive.
-`plans/follow-ups/sign-in-with-chatgpt.md` holds it. The options check then
-added option D, which also asks OpenAI whether a hosted product may run
-these tokens. The user's answer to D is open.
+The user chose option A of decision 170 on 9 November 2026, after the
+options check: the access token only. No plan covers Sign in with ChatGPT,
+which can reach Plus and Pro plans. The user has applied to OpenAI for it.
+A new Codex access token is not shared with other members, and one typed
+function gives the share default of each login kind, as the user chose for
+decision 171 on the same day.
 
 Related work: the plan `plans/own-endpoint-logins.md` on branch
 `calummoore/cli-proxy-setup` adds an own endpoint login to the same connect
@@ -95,6 +94,7 @@ reasons and the previous examples.
 - **Recommendation:** D. It keeps the user's choice B, and at small extra cost it closes the gap between "within OpenAI's rules" and what OpenAI's pages say, as Anthropic's permission did for Claude. The plan first recommended B. E is safer, but it waits for a large proxy.
 - **Action:** ask the user, because B changes decision 37 and the protocol rule for Codex logins, and no recorded decision covers that change.
 - **Chosen by the user on 9 November 2026:** B. The user had already applied through OpenAI's interest form. The options check ran after this answer. The user's answer to D and E is open.
+- **Changed by the user on 9 November 2026, after the options check:** A. The change adds the access token only. No plan covers Sign in with ChatGPT, and nobody asks OpenAI about hosted use of the tokens.
 - **Note of 9 November 2026:** the merge of PR #72 added the share setting of decision 116 to `main` after the brainstorm. So the risk of option A applies only while the owner shares the token. Decision 171 sets the default of that setting for this kind.
 
 ### 171. Who may use a Codex access token by default
@@ -129,6 +129,7 @@ wider fix.
 - **Previous examples:** Decision 116 B of 7 November 2026 set the defaults of a Claude subscription token and an API key.
 - **Recommendation:** C. It gives the default of A, which OpenAI's agreement and the personal nature of a token support, and its type makes each new kind state its default. The plan and the options check first recommended A.
 - **Action:** ask the user, because it adds a share default that no requirement covers.
+- **Chosen by the user on 9 November 2026:** C.
 
 ## Design
 
@@ -174,8 +175,8 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
 - The protocol doc passes its length target of about 250 lines. This
   change does not split it, because `plans/follow-ups/protocol-docs-split.md`
   splits it after the open branches merge.
-- Sign in with ChatGPT gets a follow-up item, not a milestone, because it
-  waits for OpenAI's answer.
+- No follow-up item records Sign in with ChatGPT, because option A of
+  decision 170 leaves it out.
 
 Risks:
 
@@ -202,8 +203,8 @@ Depends on: none
 The account page shows the Codex form with its switch, the access token
 field with its help text and link, and a Codex login connected with an
 access token. The account page already renders five screens, so its connect
-forms move to a child page. The screen of a connected token waits for the
-answer to decision 171.
+forms move to a child page. A new access token starts not shared, as
+decision 171 says.
 
 - [ ] Add the per-agent kind labels and the page
       `https://chatgpt.com/admin/access-tokens` to
@@ -238,17 +239,15 @@ ChatGPT, the share default, and the risks of the token.
       `docs/protocol/access-and-security.md`, state that a member connects
       Codex with a Codex access token from a ChatGPT Business or Enterprise
       workspace, or with an OpenAI API key (decision 170).
-- [ ] State that the app offers no Sign in with ChatGPT yet, because OpenAI
+- [ ] State that the app offers no Sign in with ChatGPT, because OpenAI
       offers it only to the partners that it admits. Replace the old
       waitlist sentence.
 - [ ] State the rejected login file of `codex login`, and its reason.
 - [ ] Add the risks: a token expires, OpenAI meant tokens for trusted
       runners, turns on a personal token show as its owner in the owner's
       ChatGPT workspace, and a workspace admin can enforce Codex settings.
-      Under option D of decision 170, add that OpenAI has not answered
-      whether a hosted product may run these tokens.
-- [ ] State the share default of a new Codex access token (decision 171) in
-      the share setting rules. Its reason line names Section 3.1 of the
+- [ ] State in the share setting rules that a new Codex access token is not
+      shared (decision 171). Its reason line names Section 3.1 of the
       OpenAI Services Agreement.
 - [ ] Update "Features" and "What a user needs" in the root `README.md`.
 - [ ] Add the Codex access token to the live check of
@@ -282,13 +281,17 @@ kind `token`. The database stores it.
 - [ ] Accept the Codex token in `worker/chat/login-kind.ts`, in the login
       save of `worker/app-api/boot.ts`, and in `accountLogins` of
       `worker/app-api/account-data.ts`.
-- [ ] Set the share default of a Codex token as decision 171 says, in the
-      Worker and in the dev backend.
+- [ ] Add one typed function that gives the share default of each agent
+      and login kind, as option C of decision 171 says. A Codex token
+      starts not shared. The Worker save in
+      `worker/app-api/account-data.ts` and the dev backend in
+      `src/app/dev/account-routes.ts` both call it, so a new kind fails the
+      typecheck until it has a default.
 - [ ] Accept the Codex token in `readLogin` of `src/app/api/read-core.ts`
       and in the dev backend `src/app/dev/account-routes.ts`.
 - [ ] Add Worker tests: a saved Codex token reads back with its kind and
-      its share default, a change of kind sets the new default, and a turn
-      command carries the kind `token` for Codex.
+      starts not shared, a change of kind sets the default of the new kind,
+      and a turn command carries the kind `token` for Codex.
 - [ ] Add a test of the migration: a row that the old rule refused now
       saves, and an existing row keeps its values.
 - [ ] Add a test of `readLogin` for a Codex token.
