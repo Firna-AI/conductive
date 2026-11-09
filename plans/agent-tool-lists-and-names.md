@@ -85,7 +85,9 @@ The answers:
   why no create can work.
 - The section list returns every section of the org in sidebar order.
   `default` marks the section that a create uses when it names none.
-- The model list returns the models of the model picker, in its order.
+- The model list returns the models that the app offers, in the order of
+  the app's model setting, as `GET /api/models` does. Reason: the agent
+  sees no picker, and the picker only groups the same list by agent.
   `defaultChoice` is the choice that a create uses when it names no model:
   the owner's saved choice, or the app default. It is `null` when neither
   exists. When the app has no model list, the call fails with HTTP 503
@@ -207,19 +209,21 @@ Depends on: none
 
 State the new requirements before the code changes.
 
-- [ ] In `docs/protocol/agent-tools.md`, add the three lists with their
+- [x] In `docs/protocol/agent-tools.md`, add the three lists with their
       contents, their order, and their errors. Add the optional name with
       the name rule of decision 1, D. Change "only these three calls" to
       the six calls, and give the new routes.
-- [ ] In `docs/protocol/access-and-security.md`, add the three lists to
+- [x] In `docs/protocol/access-and-security.md`, add the three lists to
       what the workspace token can do.
-- [ ] In `docs/protocol/workspaces-and-sandboxes.md`, say that the name
+- [x] In `docs/protocol/workspaces-and-sandboxes.md`, say that the name
       starts as the name of the create call, or else as the city name.
       Branch `calummoore/chat-title-rename` changes the next sentence of
       the same passage, so the later merge joins both.
-- [ ] In `docs/deployment.md`, name every route that reads the two model
+- [x] In `docs/deployment.md`, name every route that reads the two model
       settings: the app routes, the tool create route, and the new tool
       model list.
+
+Report: `.context/agent-tool-lists-and-names/m1-docs-report.md`.
 
 ## Milestone 2: Lists in the Worker
 
@@ -236,7 +240,9 @@ Depends on: 1
       `default` marks, the order, `defaultChoice`, and the
       `image_required` and `models_unavailable` errors.
 - [ ] Add the new routes to the existing token and method scope tests.
-- [ ] Update `worker/tools/README.md`.
+- [ ] Update `worker/tools/README.md`. Also say that production answers
+      `503 default_model_unavailable` when no default choice exists: only
+      a test service gives `owner_defaults_unavailable`.
 
 ## Milestone 3: Lists in the CLI and the MCP server
 

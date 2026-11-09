@@ -55,8 +55,8 @@ examples.
 | `GITHUB_CLIENT_ID` | GitHub sign-in, each refresh of a stored GitHub user token, the GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds that copy a repository | The client ID of the GitHub App. |
 | `GITHUB_APP_SLUG` | The links to the GitHub App: Install in Get started, Manage on GitHub in the account, and Manage access of the repository lists | Optional. The slug of the GitHub App, as in `https://github.com/apps/<slug>`. Without it, or with a value that is not a slug, the links use `conductive`, and the Worker logs a warning for a wrong value. It is not a secret. |
 | `BOAT_ORG_ID` | Each call to Boat | The ID of the app's Boat organization, as [The app's Boat account](#the-apps-boat-account) says. It is not a secret. |
-| `CONDUCTIVE_MODELS` | `GET /api/models` | The JSON model list, as [Models](#models) says. |
-| `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, for a user with no saved default | The JSON default choice, as [Models](#models) says. |
+| `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](#models) says. |
+| `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](#models) says. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
@@ -102,15 +102,26 @@ data. The Worker has no built-in list and no fallback model.
     `high`, `xhigh`, or `max`.
 - `CONDUCTIVE_DEFAULT_CHOICE` is one JSON object with `agent`, `model`, and
   `effort`. The saved default of a user comes before it.
-- A missing or invalid `CONDUCTIVE_MODELS` gives
-  `503 models_unavailable` on `GET /api/models` only.
-- For a user with no saved default, a missing or invalid
-  `CONDUCTIVE_DEFAULT_CHOICE` gives `503 default_model_unavailable` on
-  `GET /api/account` only.
+- These routes read the two variables:
+  - `GET /api/models` of the app reads `CONDUCTIVE_MODELS`. A missing or
+    invalid value gives `503 models_unavailable`.
+  - `GET /api/account` of the app reads `CONDUCTIVE_DEFAULT_CHOICE` for a
+    user with no saved default. A missing or invalid value then gives
+    `503 default_model_unavailable`.
+  - The tool create route `POST /v1/tools/workspaces` reads
+    `CONDUCTIVE_DEFAULT_CHOICE` when the call names no model or no effort
+    and the owner of the calling workspace has no saved default. A missing
+    or invalid value then gives `503 default_model_unavailable`.
+  - The tool model list `GET /v1/tools/models` reads both variables. A
+    missing or invalid `CONDUCTIVE_MODELS` gives `503 models_unavailable`.
+    When the owner of the calling workspace has no saved default, a
+    missing or invalid `CONDUCTIVE_DEFAULT_CHOICE` gives an empty default
+    choice, not an error.
+    [Agent tools](protocol/agent-tools.md#models) states the list.
 - No other route reads these two variables.
-- The web app reads both routes when it starts. So it does not start
-  without a valid model list. A user with no saved default also needs a
-  valid default choice.
+- The web app reads `GET /api/models` and `GET /api/account` when it
+  starts. So it does not start without a valid model list. A user with no
+  saved default also needs a valid default choice.
 
 The shape of the two values, with placeholders in place of real values:
 

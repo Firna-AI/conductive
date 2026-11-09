@@ -129,7 +129,9 @@ says.
   `calummoore/lisbon-7k2q`.
 - Reason: a GitHub login is unique, so the branches of each person stay
   together. A first name was rejected, because two people can share one.
-- The workspace name starts as the city name.
+- The workspace name starts as the name that the create call of an agent
+  gives, as [Create and list calls](agent-tools.md#create-and-list-calls)
+  says. Without such a name, it starts as the city name.
   [Chat and events](chat-and-events.md#messages) says how the agent's title
   then renames it.
 - When the sandbox of a new workspace does not start, the workspace does
