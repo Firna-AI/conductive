@@ -55,11 +55,19 @@ export const privacyDocument: LegalDocument = {
             every account, also while you wait for app access. It uses the
             token to read GitHub for you, and for the git calls of your
             turns.`,
-          text`The waitlist: a new account waits for app access, and sees only
-            the waitlist until then. ${productName} records when and how you
-            got app access. The record names the operator who approved you,
+          text`The waitlist: a new account without app access waits while the
+            waitlist is on or sign-ups are paused. It sees only the waitlist.
+            When the waitlist is off and sign-ups are not paused, open sign-up
+            gives you app access at sign-in. If you already wait, you get
+            access at your next request. You keep that access when the
+            waitlist turns on again.`,
+          text`App access records: ${productName} records when and how you got
+            app access. The record names the operator who approved you,
             the invite code that you used, or the org invitation that you
-            accepted, with its org and the admin who sent it. It lets the
+            accepted, with its org and the admin who sent it. For open
+            sign-up, it names that method and the operator who turned the
+            waitlist off. ${productName} also keeps the time and operator of
+            the last change to the waitlist setting. These records let the
             operator trace misuse back to a code or a person.`,
           text`Invite codes: each account with app access has an invite code
             with 5 invites. ${productName} keeps who used each code, and when.
@@ -69,7 +77,9 @@ export const privacyDocument: LegalDocument = {
             ${productName} sends one email to the primary verified email of
             your GitHub account, and keeps whether it went. A failed send
             goes again for up to 24 hours. An account without a verified
-            email gets no email.`,
+            email gets no email. ${productName} sends no email when the
+            waitlist turns off or when you get app access through open
+            sign-up.`,
           text`Your agreement: you accept the current version of the terms at
             each sign-in. ${productName} keeps the latest version that you
             accepted, and the time when you first accepted it. They show that

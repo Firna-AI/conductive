@@ -28,7 +28,7 @@ peer range of `@firna/ui`.
 
 A change to a screen that a picture of the marketing site shows needs a
 new capture with `npm run marketing:pictures`.
-[Pictures](../../src/marketing/README.md#pictures) gives the steps.
+[Pictures](../../src/marketing/pictures/README.md#capture-the-pictures) gives the steps.
 
 Git ignores the build output, `mokly-static/` and
 `.mokly-export-reservations/`. Each built view is at
@@ -121,8 +121,8 @@ connected.
 ## The waitlist
 
 [The waitlist](orgs-and-logins.md#the-waitlist) gives the screen of a
-person without app access, the invite codes and invite links, and the
-invite code on the Account page.
+person without app access, the invite codes and invite links, the invite
+code on the Account page, and open sign-up.
 
 ## The Mac app
 
@@ -136,4 +136,4 @@ pictures, the Terms, Privacy, and not-found pages, and the page before
 GitHub. The pictures are captures of real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the
-[capture steps](../../src/marketing/README.md#pictures).
+[capture steps](../../src/marketing/pictures/README.md#capture-the-pictures).

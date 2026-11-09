@@ -31,6 +31,8 @@ These features are planned. The protocol docs state each one.
 - Sign in with GitHub. The product is free.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
+  An operator can turn the waitlist off. Each new person then gets in at
+  once, unless sign-ups are paused.
 - Every cloud computer runs in the app's own Boat account, so users need no
   Boat account.
 - A new workspace starts as an empty chat. The first message creates it,
@@ -277,6 +279,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Operator section](docs/protocol/operator-section.md)
   - [Waitlist](docs/protocol/waitlist.md)
   - [Invite and referral codes](docs/protocol/waitlist-codes.md)
+  - [Sign-ups](docs/protocol/sign-ups.md)
   - [Command palette](docs/protocol/command-palette.md)
   - [Command palette: empty and unavailable states](docs/protocol/command-palette-states.md)
 - [Mockups](docs/mockups/README.md): the design and the catalogue.

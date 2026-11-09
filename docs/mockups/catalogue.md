@@ -5,7 +5,7 @@ how a screen is built, and links to the other pages.
 
 | Path                | What it shows                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |
-| `marketing`         | The home page of the site: the app, its features, and Join the waitlist                 |
+| `marketing`         | The home page of the site: the app, its features, and Join the waitlist, then Start free with GitHub during open sign-up |
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
@@ -17,7 +17,7 @@ how a screen is built, and links to the other pages.
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
-| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
+| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
@@ -33,18 +33,18 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
-`app/account`, `app/sign-in/waitlist`, `app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
+`app/account`, `app/sign-in/waitlist`, `app/new-workspace`, `app/org-settings/cloud-computer`, and `app/operator/user/access` moved into their own
 folders and kept their paths, so that each of those pages shows only its
 canonical screen. `app/sign-in/get-started` moved into its own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
@@ -111,9 +111,10 @@ the same state. `user-flows/create-workspace-dialog` goes from Preferences
 through the dialog to the new workspace. The `first-build` variant shows
 Firna before its first good build, with the notice and Create off.
 
-The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
-an account without app access, and the person waits until an operator
-approves them, or a code or an org invitation lets them in. Its pages:
+The waitlist comes from decisions 160 to 163 and 230. Outside open sign-up,
+a new GitHub sign-in creates an account without app access. The person
+waits until an operator, a code, an org invitation, or open sign-up lets
+them in. Its pages:
 
 - `app/sign-in/waitlist` has the only screen of a person who waits, Sam
   Okafor, with the address that gets the approval email. Its child pages
@@ -133,11 +134,16 @@ approves them, or a code or an org invitation lets them in. Its pages:
   variant has the pause.
 - `app/account` shows the invite code of the user at the end of the
   General tab, with 3 of 5 invites left. Its child page `app/account/invites` has the
-  pause, and its variants have every invite used and a code that an
-  operator turned off.
+  pause, and its variants have every invite used, a code that an
+  operator turned off, and `open-sign-up`, whose notice says that anyone
+  can sign up now and that the invites stay for later.
 - The Sign up flow ends on the waitlist. The Join with an invite link flow
   goes from the link through Get started, so the people of each flow stay
   the same.
+- Open sign-up comes from decision 230: the waitlist is off and sign-ups
+  are not paused. `marketing/open-sign-up`, a child page of the home page,
+  has the main action Start free with GitHub. The Open sign-up flow goes
+  from it through the sign-in to Get started.
 
 `app/orgs/suspended` shows Acme after the operator suspended it, from
 decision 129. Its notice is at the top of the list, and every workspace
@@ -186,8 +192,9 @@ Invite codes tabs come from decision 160. Its child pages:
 - `app/operator/waitlist` has the Waitlist tab: the people who wait, oldest
   first, a search, the question before Approve, the list after two
   approvals, one with its email not sent yet, and an empty waitlist.
-- `app/operator/codes` has the Invite codes tab: Sign-ups with Pause
-  sign-ups, the search, and the invite codes with their uses and states.
+- `app/operator/codes` has the Invite codes tab: Sign-ups with the state
+  of the waitlist, Turn off the waitlist, and Pause sign-ups, the search,
+  and the invite codes with their uses and states.
   Each code has Copy, and a code that works also has Copy join link. Its
   child pages are below.
 - `app/operator/error` has the numbers that could not load, with Try
@@ -211,10 +218,13 @@ of `app/operator/user` and kept their paths:
   GitHub account has no verified email: no email goes out, and the person
   sees the app access at their next visit.
 - `app/operator/user/access` has a user who came in with an invite code.
-  Its variants have a user who came in with a referral code, with an org
-  invitation, which names the org and the admin who sent it, and as an
-  operator. Its `email-not-sent` variant has an approval whose email never
-  went, because the GitHub account has no verified email.
+  Its child pages were its variants and kept their paths. They have a user
+  who came in with a referral code, with an org invitation, which names
+  the org and the admin who sent it, and as an operator. `email-not-sent`
+  has an approval whose email never went, because the GitHub account has
+  no verified email. `open-sign-up` has a user who came in by open
+  sign-up, with the operator who turned off the waitlist. Its `waited`
+  variant has a person who waited and got app access at their next visit.
 - `app/operator/user/referral` has the question before the disable of a
   referral code. Its `disabled` variant has the disabled code.
 
@@ -231,6 +241,14 @@ The child pages of `app/operator/codes`:
 - `app/operator/codes/pause` has the question before Pause sign-ups. Its
   variants have the Invite codes tab while sign-ups are paused, with
   Resume sign-ups, and the same notice on the Waitlist and the Overview.
+  The question and the notice say that new people wait, also while the
+  waitlist is off.
+- `app/operator/codes/waitlist-off` has the question before Turn off the
+  waitlist, with the number of people who wait. Its `turned-off` variant
+  has the Invite codes tab while the waitlist is off: the notice with Turn
+  on the waitlist, above a Sign-ups box that says Open. Its `waitlist` and
+  `overview` variants have the same notice on those tabs. Its `paused`
+  variant has both notices while sign-ups are paused, the pause first.
 
 `app/command-palette` shows the All tab of the command palette over the
 list of Acme. Its child pages:

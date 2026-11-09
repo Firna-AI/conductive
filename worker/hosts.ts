@@ -34,18 +34,16 @@ export function hostStub(surface: HostSurface): Response {
   return Response.json({ surface, status: 'not-implemented' }, { status: 501 })
 }
 
-/**
- * The marketing site at the root domain. It reads only the origin of the
- * app, where its sign-in links lead, and the static assets.
- */
+/** Serve the marketing site with the current app origin and page labels. */
 export function marketingResponse(
   request: Request,
   env: Pick<AppEnv, 'APP_ORIGIN' | 'ASSETS'>,
   now: number,
+  readStartLabel?: () => Promise<string>,
 ): Promise<Response> {
   return siteResponse(
     request,
-    { appOrigin: env.APP_ORIGIN, assets: env.ASSETS },
+    { appOrigin: env.APP_ORIGIN, assets: env.ASSETS, readStartLabel },
     now,
   )
 }

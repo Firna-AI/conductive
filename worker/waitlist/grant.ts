@@ -1,7 +1,8 @@
 import { randomAccessCode } from './codes'
+import { openSignupPredicate } from './data'
 
 export type AppAccessGrant =
-  | { source: 'existing' | 'operator' }
+  | { source: 'existing' | 'operator' | 'open_signup' }
   | { source: 'approval'; operatorUserId: string }
   | { source: 'code'; code: string }
   | { source: 'org_invitation'; orgId: string; invitationId: string }
@@ -20,13 +21,15 @@ export function appAccessGrantStatements(
   condition: GrantCondition = { sql: '1', bindings: [] },
 ): D1PreparedStatement[] {
   const record = grantRecord(userId, grant, now)
+  const openSignup =
+    grant.source === 'open_signup' ? ` AND ${openSignupPredicate}` : ''
   return [
     db
       .prepare(
         `INSERT INTO user_app_access
          (user_id, granted_at, source, operator_user_id, code, org_id,
           invitation_id, invited_by_user_id)
-         ${record.sql} AND (${condition.sql})
+         ${record.sql} AND (${condition.sql})${openSignup}
          ON CONFLICT (user_id) DO NOTHING`,
       )
       .bind(...record.bindings, ...condition.bindings),
@@ -57,6 +60,12 @@ export async function grantAppAccess(
 
 function grantRecord(userId: string, grant: AppAccessGrant, now: number) {
   switch (grant.source) {
+    case 'open_signup':
+      return {
+        sql: `SELECT ?, ?, 'open_signup', waitlist_updated_by_user_id, NULL, NULL, NULL, NULL
+          FROM signup_settings WHERE id = 1`,
+        bindings: [userId, now],
+      }
     case 'code':
       return {
         sql: `SELECT u.user_id, u.used_at,

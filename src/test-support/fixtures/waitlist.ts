@@ -40,6 +40,7 @@ export function ownInviteCode(uses: number = ownInvite.used) {
 export const accessState: WaitlistStateResponse = {
   appAccess: true,
   signupsPaused: false,
+  waitlistOn: true,
   approvalEmail: null,
   referralCode: ownInviteCode(),
 }
@@ -48,6 +49,7 @@ export const accessState: WaitlistStateResponse = {
 export const waitingState: WaitlistStateResponse = {
   appAccess: false,
   signupsPaused: false,
+  waitlistOn: true,
   approvalEmail: waitingEmail,
   referralCode: null,
 }

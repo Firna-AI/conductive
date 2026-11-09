@@ -11,7 +11,9 @@ import { fillMarkers } from './markers'
 export async function pageResponse(
   assets: SiteAssets,
   file: SiteFile | undefined,
-  values: Partial<SiteRequestValues>,
+  values:
+    | Partial<SiteRequestValues>
+    | ((page: string) => Promise<Partial<SiteRequestValues>>),
   options: {
     status: number
     cacheControl: 'no-cache' | 'no-store'
@@ -47,7 +49,9 @@ export async function pageResponse(
     !response.headers.get('Content-Type')?.toLowerCase().startsWith('text/html')
   )
     throw new Error('Invalid site page.')
-  const html = fillMarkers(await response.text(), values)
+  const page = await response.text()
+  const resolved = typeof values === 'function' ? await values(page) : values
+  const html = fillMarkers(page, resolved)
   return new Response(options.head ? null : html, {
     status: options.status,
     headers,

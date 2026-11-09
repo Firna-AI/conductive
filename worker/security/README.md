@@ -107,16 +107,25 @@ After that, each entry of this area refuses that user:
 
 Each sign-in saves the GitHub account creation time and its primary verified
 email. A missing primary verified email saves no address.
-`signInAppAccess` grants access to operators through the shared
-[grant step](../waitlist/README.md). It uses a signed join code only for a
-user without app access. A failed code still creates a sign-in session.
+`signInAppAccess` runs the shared [grant step](../waitlist/README.md) in
+this order:
+
+1. The `operator` source, for an operator.
+2. The `open_signup` source during open sign-up, for a user still without
+   app access.
+3. A signed join code, only for a user still without app access.
+
+So an operator keeps the `operator` source, and open sign-up takes no use
+of a join code. A failed code still creates a sign-in session.
 Its browser redirect keeps the code and the reason on the join path.
 The Mac handoff follows the same access grant before its session exchange.
 
-Each new account starts without app access unless its operator identity or
-signed join code grants access. A repeat sign-in preserves existing access.
-Accounts migrated from before the waitlist keep the `existing` source.
-[Waitlist](../../docs/protocol/waitlist.md) states the complete access rules.
+Each new account starts without app access unless its operator identity,
+open sign-up, or a signed join code grants access. A repeat sign-in
+preserves existing access. Accounts migrated from before the waitlist
+keep the `existing` source. [Waitlist](../../docs/protocol/waitlist.md) and
+[Open sign-up](../../docs/protocol/sign-ups.md#open-sign-up) state the
+complete access rules.
 
 ## App access gate
 
@@ -137,6 +146,16 @@ upgrade of an allowed read. Public sign-in, its callback and Mac exchange,
 health, and desktop preflights keep their own entry rules.
 An upgrade outside the API also runs the session gate before asset dispatch.
 
+During open sign-up, the check first grants the `open_signup` source to a
+user without app access. It then reads app access again, so the request
+passes also when another request saved a grant first. When no grant
+happens, for example after a pause that commits first, the allow list
+applies. While the waitlist is on or sign-ups are paused, the check writes
+nothing. Each check reads D1, and it keeps no copy of app access, the
+switch, or the pause. The grant records the request time that the caller
+passes to the gate. The Mac device routes pass the clock of the Worker
+dependencies, as the other app routes do.
+
 The check follows the active session read. It precedes membership checks,
 operator checks, route dispatch, and JSON reads. `gate` accepts the original
 request separately when a caller changes the request for its later checks.
@@ -156,19 +175,20 @@ The tests of its callers check it.
 After a change to the reader, run `npm run test -- worker/chat/tab-access.test.ts worker/chat/tab-deadlines.test.ts worker/chat/security.test.ts worker/terminal/access.test.ts`.
 
 After a change to the terms consent or to the suspension checks of sign-in, run `npm run test -- worker/security/terms.test.ts worker/security/auth.test.ts worker/operator/route.test.ts`.
-Run `npm run test -- worker/security/waitlist-auth.test.ts worker/security/waitlist-join.test.ts` for the access grants, primary email, and signed join codes.
-Run `npm run test -- worker/security/waitlist-gate.test.ts worker/security/waitlist-desktop.test.ts worker/devices/waitlist.test.ts` for the waiting-session gate and Mac access transitions.
+Run `npm run test -- worker/security/waitlist-auth.test.ts worker/security/waitlist-join.test.ts` for the access grants and their order, primary email, and signed join codes.
+Run `npm run test -- worker/security/waitlist-gate.test.ts worker/security/waitlist-open-signup.test.ts worker/security/waitlist-desktop.test.ts worker/devices/waitlist.test.ts` for the waiting-session gate, its open sign-up grant, and Mac access transitions.
 
 ### Key Code
 
 - [gate.ts](gate.ts) checks the host, origin, session, membership, and JSON body.
-- [app-access.ts](app-access.ts) checks the original request against the waiting-session allow list.
-- [waitlist-gate.test.ts](waitlist-gate.test.ts) checks waiting sessions, allowed requests, default refusals, and suspensions.
+- [app-access.ts](app-access.ts) grants open sign-up access, then checks the original request against the waiting-session allow list.
+- [waitlist-gate.test.ts](waitlist-gate.test.ts) checks waiting sessions, the open sign-up grant at the next request, allowed requests, default refusals, and suspensions.
+- [waitlist-open-signup.test.ts](waitlist-open-signup.test.ts) checks the gate grant when another grant wins or a pause wins first, and the operator that the record names.
 - [connection-access.ts](connection-access.ts) exports `readConnectionAccess`, the identity and grant types, `CONNECTION_CHECK_MS`, and `scheduleConnectionCheck`.
 - [gate-body.test.ts](gate-body.test.ts) checks the exact body limit and early cancellation through HTTP routes.
 - [gate.test.ts](gate.test.ts) checks access, dispatch order, and JSON errors.
 - [auth.ts](auth.ts) starts and finishes GitHub sign-in, with the terms consent and the suspension check.
-- [sign-in-access.ts](sign-in-access.ts) applies operator and join-code grants before either session flow.
+- [sign-in-access.ts](sign-in-access.ts) applies the operator, open sign-up, and join-code grants, in that order, before either session flow.
 - [github.ts](github.ts) reads the GitHub identity, creation time, and verified emails with their primary flag.
 - [terms.test.ts](terms.test.ts) checks the consent at the start of sign-in and the consent record of new and existing accounts.
 - [cookies.ts](cookies.ts) builds and reads the session cookies.
@@ -178,5 +198,6 @@ Run `npm run test -- worker/security/waitlist-gate.test.ts worker/security/waitl
 
 - [Access requirements](../../docs/protocol/access-and-security.md#hostnames-and-gates)
 - [Access of open tabs](../../docs/protocol/access-and-security.md#orgs-and-workspaces)
+- [Open sign-up](../../docs/protocol/sign-ups.md#open-sign-up)
 - [Worker backend](../README.md)
 - [Operator actions](../operator/README.md)

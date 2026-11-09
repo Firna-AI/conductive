@@ -74,6 +74,18 @@ and body for stable delivery retries. A missing verified email saves the
 disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
 owns email delivery and code management.
 
+`202611092050_waitlist_switch.sql` adds the waitlist switch to the one row
+of `signup_settings`. `waitlist_on` starts on, also on the existing row.
+`waitlist_updated_at` and `waitlist_updated_by_user_id` keep the last
+change, and both start empty. The deletion of that operator clears the
+reference. The migration rebuilds `user_app_access` with the new source
+`open_signup`. It keeps every existing row and value, and the same keys,
+references, and checks. No table refers to `user_app_access`, so the
+rebuild drops no reference.
+[The operator backend](../worker/operator/README.md#waitlist-codes-and-sign-ups)
+owns the switch, and [the waitlist backend](../worker/waitlist/README.md#integration)
+owns open sign-up grants.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

@@ -22,10 +22,15 @@ requirements of each feature.
   user owns, or of every workspace of the org, and blocks new starts. A
   user suspension also ends the sign-in sessions of the user.
 - **App access:** the right of a user to use the app: to create or join an
-  org, and to start cloud computers. A new account starts without it.
+  org, and to start cloud computers. A new account starts without it,
+  except during open sign-up.
 - **Waitlist:** the users without app access. Each of them sees only the
-  waitlist screen until an approval, a code, or an org invitation gives
-  app access.
+  waitlist screen until an approval, a code, an org invitation, or open
+  sign-up gives app access. The waitlist switch of the operator section
+  turns the waitlist off and on.
+- **Open sign-up:** the state while the waitlist is off and sign-ups are
+  not paused. Each user without app access then gets it at their next
+  sign-in or request.
 - **Invite code:** a code that an operator makes, with a use limit. Each
   use gives app access to one person who waits.
 - **Referral code:** the personal code of each user with app access. It
@@ -69,14 +74,17 @@ requirements of each feature.
   Privacy pages. Visitors see them without a sign-in.
 - Astro builds these pages ahead of time. The Worker serves the built files
   on `conductive.build`. It fills in the values of each request, such as
-  the app address in the sign-in links and the year in the footer.
+  the app address in the sign-in links, the words of the main action, and
+  the year in the footer.
 - [The marketing site README](../src/marketing/README.md) describes how the
   Worker serves them.
 - The same build also makes the page that asks for the
   [agreement to the Terms](protocol/access-and-security.md#sign-in) before
   the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
-- The main action is "Join the waitlist", because a new account waits for
-  app access. The site does not name Boat, and users need no Boat account
+- The main action is "Start free with GitHub" during open sign-up, and
+  "Join the waitlist" at other times, as
+  [The main action of the site](protocol/sign-ups.md#the-main-action-of-the-site)
+  says. The site does not name Boat, and users need no Boat account
   (decision 80).
 
 ### Web app
@@ -89,7 +97,7 @@ requirements of each feature.
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
   suspends or lifts it. It also approves people who wait, makes and
-  disables codes, and pauses sign-ups.
+  disables codes, pauses sign-ups, and turns the waitlist off and on.
   [Operator section](protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
@@ -118,7 +126,7 @@ requirements of each feature.
 - D1 holds the records of the app: users, orgs, members, sections,
   repositories, workspaces, settings, and the active preview hostnames. It
   also holds the app access of each user, the codes and their uses, the
-  pause, and the state of each approval email.
+  pause, the waitlist switch, and the state of each approval email.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -199,7 +207,8 @@ GitHub events, and stops.
 | Data                                                                         | Home                                     |
 | ---------------------------------------------------------------------------- | ---------------------------------------- |
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
-| App access, the codes and their uses, the pause, and approval email states   | D1                                       |
+| App access, the codes and their uses, and approval email states              | D1                                       |
+| The pause and the waitlist switch                                            | D1                                       |
 | The org of each sandbox and each saved snapshot                              | D1                                       |
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
@@ -276,9 +285,11 @@ the merge.
 - [Operator section](protocol/operator-section.md): the pages of the
   operator in the web app, their counts, and their searches.
 - [Waitlist](protocol/waitlist.md): app access, the waitlist screen, the
-  ways in, the pause, and the approval email.
+  ways in, the approval email, and the record of app access.
 - [Invite and referral codes](protocol/waitlist-codes.md): the codes of
   the waitlist, the join link, and the use of a code.
+- [Sign-ups](protocol/sign-ups.md): the pause, the waitlist switch, open
+  sign-up, and the main action of the marketing site.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](protocol/command-palette-states.md):

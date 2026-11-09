@@ -14,12 +14,15 @@ The Worker reads that key from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
 The [operator area](operator/README.md) owns the operator's app-wide numbers,
-suspensions, waitlist approvals, invite codes, and sign-up pause.
-New accounts wait for app access unless an operator identity or a valid join
-code grants it at sign-in. The [app access gate](security/README.md#app-access-gate)
-admits only session, waitlist, sign-out, and personal invitation requests
-while the user waits. It refuses other API requests and upgrades with
-403 `access_required`, including operator and org requests.
+suspensions, waitlist approvals, invite codes, sign-up pause, and waitlist switch.
+New accounts wait for app access unless an operator identity, open sign-up,
+or a valid join code grants it at sign-in. Open sign-up is on while the
+waitlist switch is off and sign-ups are not paused. During open sign-up, the
+[app access gate](security/README.md#app-access-gate) also grants access to a
+waiting user at their next request. Otherwise the gate admits only session,
+waitlist, sign-out, and personal invitation requests while the user waits.
+It refuses other API requests and upgrades with 403 `access_required`,
+including operator and org requests.
 
 ## Routes
 
@@ -27,8 +30,11 @@ On the root domain, the Worker serves Astro's built site through the assets
 binding. Listed pages use paths such as `/terms`. Listed files other than
 HTML and the file list load under `/_site/`. `/favicon.ico` also serves the
 brand favicon. Other paths get the built unknown-address page with `404`.
+A page with the start-label marker also gets the label of the main action
+from the sign-up settings. The Worker keeps that label for up to 60 seconds.
 The [marketing README](../src/marketing/README.md#how-the-worker-serves-it)
-gives the methods, markers, headers, policy, and unavailable-build response.
+gives the methods, markers, label, headers, policy, and unavailable-build
+response.
 
 The app host serves the built agreement page through GitHub sign-in.
 It also serves listed site files under `/_site/`. Other site paths get the
@@ -51,7 +57,7 @@ On the app hostname, the Worker serves these API routes:
 - `GET /api/operator/orgs/<orgId>`, the org page for operators.
 - `GET /api/operator/users/<githubId>`, the user page for operators.
 - The operator's waitlist list and approval, invite code list, creation and
-  disable, and sign-up pause, as the [operator area](operator/README.md#waitlist-codes-and-sign-ups) says.
+  disable, sign-up pause, and waitlist switch, as the [operator area](operator/README.md#waitlist-codes-and-sign-ups) says.
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
 - `DELETE /api/operator/users/<githubId>/suspension`, the operator's lift of a user suspension.
 - `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
@@ -116,6 +122,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
 - [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk and image alarms from the Cron Trigger.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
+- [marketing/start-label.ts](marketing/start-label.ts) reads the label of the main action of the site, with a 60-second copy for each D1 binding.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
@@ -142,6 +149,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [Deployment inputs](../docs/deployment.md)
 - [Access and security](../docs/protocol/access-and-security.md)
 - [Waitlist](../docs/protocol/waitlist.md)
+- [Sign-ups](../docs/protocol/sign-ups.md)
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)

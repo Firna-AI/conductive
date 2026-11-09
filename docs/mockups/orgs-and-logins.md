@@ -144,9 +144,12 @@ plan limits.
 
 ## The waitlist
 
-The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
-an account without app access. The approval of an operator, an invite
-code, an invite link, or an org invitation gives app access.
+The waitlist comes from decisions 160 to 163 and 230. Outside open sign-up,
+a new GitHub sign-in creates an account without app access. The approval
+of an operator, an invite code, an invite link, or an org invitation gives
+app access. While an
+operator has turned the waitlist off and sign-ups are not paused, each
+sign-in gives app access, from decision 230. This is open sign-up.
 
 - A person without app access sees only the waitlist screen, as
   `app/sign-in/waitlist` shows. It stands alone, as the sign-in does, and
@@ -183,10 +186,18 @@ code, an invite link, or an org invitation gives app access.
   During the pause, the link stays under a notice. A code that is used up
   or turned off shows no link, as `app/account/invites` shows. The page
   names nobody who used an invite.
+- During open sign-up, a person who waits gets app access at their next
+  request, and the app opens. So the waitlist screen needs no state of its
+  own. The invite code on the Account page says that anyone can sign up
+  now, and that the invites stay for later, as
+  `app/account/invites/open-sign-up` shows. The pause wins, so the notice
+  of the pause shows while both are on.
 - The words say "waitlist" as one word, "invite code" and "invite link"
-  for every code, and "Sign-ups are paused" for the pause. They never say
-  "referral". The mockups take them from `src/screens/waitlistCopy.ts`
+  for every code, "Sign-ups are paused" for the pause, and "Anyone can
+  sign up now" for open sign-up. They never say "referral", and they never
+  name the waitlist switch. The mockups take them from `src/screens/waitlistCopy.ts`
   and `src/components/settings/inviteCodeCopy.ts`.
 - The waitlist, the sign-in, and the sign-in of an invite link share one
   frame, as [the design](design.md) gives. The home page asks a visitor
-  to join the waitlist, as [the marketing site](marketing-site.md) gives.
+  to join the waitlist, or to start free with GitHub during open sign-up,
+  as [the marketing site](marketing-site.md) gives.

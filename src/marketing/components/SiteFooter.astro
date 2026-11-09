@@ -7,8 +7,10 @@ import FooterColumn from './FooterColumn.astro'
 import Wordmark from './Wordmark.astro'
 
 /*
- * The foot of each page: the lockup, the sections, the sign-in, the address
- * for abuse reports, and the legal pages beside the copyright.
+ * The foot of each page: the lockup, the sections, the main action and the
+ * sign-in, the address for abuse reports, and the legal pages beside the
+ * copyright. The main action has the words of the request, as each main
+ * action of the site does.
  */
 ---
 
@@ -30,7 +32,7 @@ import Wordmark from './Wordmark.astro'
     <FooterColumn title="Account">
       <li>
         <a class="footer-link" href={signInHref}>
-          Join the waitlist
+          {requestValues.startLabel}
         </a>
       </li>
       <li>

@@ -93,6 +93,8 @@ export const paths = {
   operatorCodesSearch: 'app/operator/codes/search',
   operatorCodesPause: 'app/operator/codes/pause',
   operatorCodesPaused: 'app/operator/codes/pause/paused',
+  operatorCodesWaitlistOff: 'app/operator/codes/waitlist-off',
+  operatorCodesWaitlistTurnedOff: 'app/operator/codes/waitlist-off/turned-off',
   newWorkspace: 'app/new-workspace',
   firstBuildWorkspace: 'app/new-workspace/first-build',
   creating: 'app/new-workspace/creating',

@@ -6,7 +6,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { MailLink } from './CatalogueText'
 import { LegalLinks } from './LegalLinks'
-import { startLabel } from './SiteActions'
+import { useStartLabel } from './SiteActions'
 import type { SiteLinks } from './SiteHeader'
 import { Wordmark } from './Wordmark'
 import styles from './SiteFooter.module.css'
@@ -21,8 +21,9 @@ function Column(props: { title: string; children: ReactNode }) {
 }
 
 /**
- * The foot of the site: the wordmark, the sections, the sign-in, the
- * address for abuse reports, and the legal pages beside the copyright.
+ * The foot of the site: the wordmark, the sections, the main action and the
+ * sign-in, the address for abuse reports, and the legal pages beside the
+ * copyright. The main action has the words of the state of sign-up.
  */
 export function SiteFooter(props: {
   links: SiteLinks
@@ -31,6 +32,7 @@ export function SiteFooter(props: {
   viewport: Viewport
 }) {
   const mobile = props.viewport === 'mobile'
+  const startLabel = useStartLabel()
   return (
     <footer className={classes(styles.footer, mobile && styles.mobile)}>
       <div className={styles.inner}>

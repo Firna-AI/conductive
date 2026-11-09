@@ -1,0 +1,38 @@
+# Two mockup catalogue pages pass 300 lines
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-09, from the mockup milestone of branch `calummoore/waitlist-global-toggle-brainstorm`, which adds the pages of open sign-up.
+- **Location:** `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
+- **Reason:** Both pages passed 300 lines on `origin/main` before the waitlist switch, and their split covers the notes of the whole mockup catalogue, far beyond that change.
+
+- **Source:** Implementation. **Category:** Code structure.
+- **Terms:**
+  - **Mockup catalogue:** the Mokly pages under `docs/mockups/src/entries/` that draw each screen. `docs/mockups/catalogue.md` lists its pages, and `docs/mockups/design.md` describes the design.
+  - **Area page:** a Markdown page beside the catalogue for one product area, such as `docs/mockups/mac-app.md`, which `docs/mockups/README.md` links.
+  - **Line rule:** an always-on rule of the shared agent rules from `futex-ai/skills`, which `AGENTS.md` names. It says: "Keep files short. Target about 200 lines and split a file that passes 300. Do not remove blank lines or compact code to stay under a limit."
+- **Background:**
+  - On `origin/main` at commit `c02744f0` of 9 November 2026, `docs/mockups/catalogue.md` has 326 lines and `docs/mockups/design.md` has 360. `design.md` had 358 lines before that commit.
+  - The waitlist switch adds the pages of open sign-up. After its merge, `catalogue.md` has 344 lines and `design.md` has 368.
+  - Each page has one heading only, its title. So no link points to a part of either page.
+  - These live files link to the pages: `docs/mockups/README.md`, `docs/mockups/orgs-and-logins.md`, `docs/protocol/chat-markdown.md`, `docs/protocol/command-palette.md`, `docs/protocol/command-palette-states.md`, `docs/protocol/sign-ups.md`, `docs/protocol/waitlist.md`, `docs/protocol/workspace-links.md`, `docs/protocol/workspace-tools.md`, and `src/shell/operator/README.md`. The active plan `plans/boat-native-remote-workspaces.md` also names both pages in its text.
+  - `npm run file-length:check` checks only JavaScript, TypeScript, and Astro files, and Prettier ignores Markdown. So no command reports a long Markdown page.
+  - `plans/follow-ups/protocol-docs-split.md` covers six long protocol and architecture docs. It does not cover these mockup pages.
+  - `docs/mockups/README.md` already links three area pages: `mac-app.md` with 57 lines, `marketing-site.md` with 85, and `orgs-and-logins.md` with 203.
+  - The operator section is the largest area. In `catalogue.md`, the pages of `app/operator` and their child pages take about 85 lines. In `design.md`, the notes from "The operator section has the tabs" to the notice of the pause take about 60 lines. The command palette, the pull request bar, the chat, and the workspace links take most of the rest of `catalogue.md`.
+- **Problem:** Two pages of the mockup catalogue pass the line rule, so a reader must scan a long page with one heading to find the notes of one area.
+- **Impact if no action:** Each branch that adds a screen adds lines to both pages. The notes of one area get harder to find and to keep in line with the screens.
+- **Root question:** How do the notes of the mockup catalogue stay short enough to read one area at a time?
+- **Options:**
+  - **A.** Move the notes of the operator section from both pages into one new area page, `docs/mockups/operator-section.md`, in the style of `mac-app.md`. `catalogue.md` then has about 260 lines, but `design.md` keeps about 310, so it still passes 300. Keep each fact and each link. Effort: Medium.
+  - **B.** Split both pages by product area. Keep the page table and the folder rules in `catalogue.md`, and the visual language and the shared layout in `design.md`. Move the notes of each large area, such as the operator section, the command palette, and the chat, to an area page beside them, and link each one from `docs/mockups/README.md`. Keep each fact and each link. Where a sentence of a linking file names a moved area, point its link at the area page. Both pages then stay under 250 lines. Effort: Medium.
+- **Left out:**
+  - Change nothing, because both pages stay past the line rule and grow with each new screen.
+  - A table of the pages generated from the Mokly entries, because the table is only about 30 lines and the long part is the notes.
+  - Shorter sentences or fewer blank lines, because the line rule forbids compacting to stay under a limit, and every fact must stay.
+  - A length check for Markdown, because it adds a gate, which the user decides.
+- **Wider fix:** None. The line rule already applies to every file, and a check for the class would add a gate.
+- **Previous examples:** `docs/mockups/mac-app.md`, `docs/mockups/marketing-site.md`, and `docs/mockups/orgs-and-logins.md` already hold the notes of their areas beside the catalogue. `plans/follow-ups/protocol-docs-split.md` records the same class for the protocol docs. `src/marketing/README.md` keeps a short Pictures section that links to `src/marketing/pictures/README.md`, which holds its picture guide.
+- **Related:** `plans/follow-ups/protocol-docs-split.md` and `plans/follow-ups/app-readme-split.md` record the same class for other docs. Each split can merge on its own.
+- **Recommendation:** B. It brings both pages under the line rule, and it follows the area pages that the mockups README already lists. A alone leaves `design.md` past 300 lines.
+- **Action:** fix after merge, apply B, because the pages describe the whole mockup catalogue, far beyond the change that found them, and other branches change them too.

@@ -19,7 +19,7 @@ pull request bar, and the owner picker. A host can give its own parts, as
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
-  `?waiting=1`, `?paused=1`, or
+  `?waiting=1`, `?paused=1`, `?waitlist=off`, or
   `?paths=masked`. `dev/options.ts` lists them. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
@@ -48,22 +48,31 @@ pull request bar, and the owner picker. A host can give its own parts, as
   sign-ups: each use of a code, and the Accept of a person who waits, get
   `signups_paused`. The Account page shows the pause, and the operator
   section shows its notice.
+  `?waitlist=off` starts with the waitlist off, by the operator of the
+  samples. Unless sign-ups are paused, a person who waits gets app access
+  at the next request, with a new referral code and no use of a code, so
+  Get started opens. The fake does this before each request, as the gate
+  of the Worker does. The operator section shows the switch off, and Zed
+  K, who came back and got in by open sign-up. The Account page names
+  open sign-up.
   `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
   invite code of a user with app access, also on the page of that user in
   the operator section.
-- The waitlist and the operator section share one pause and one set of
-  codes, as they share the database of the Worker. The codes are those of
-  the operator mockups, with a referral code for each sample user with
-  app access. For example, `V7MKC-2QDXH` works, `M4QTX-7HKWD` is the
-  referral code of Mira Santos, `9PTXC-4WHMN` is used up, `HM3PE-7KWQT`
-  is disabled, and a code that the mockups do not list is not found. A
-  code that works counts its use, and gives app access and a new invite
-  code, so Get started opens. With `?operator=1`, a pause or a Disable in
-  the operator section shows on the Account page of the operator.
+- The waitlist and the operator section share one pause, one waitlist
+  switch, and one set of codes, as they share the database of the Worker.
+  The codes are those of the operator mockups, with a referral code for
+  each sample user with app access. For example, `V7MKC-2QDXH` works,
+  `M4QTX-7HKWD` is the referral code of Mira Santos, `9PTXC-4WHMN` is used
+  up, `HM3PE-7KWQT` is disabled, and a code that the mockups do not list is
+  not found. A code that works counts its use, and gives app access and a
+  new invite code, so Get started opens. With `?operator=1`, a pause, a
+  turn-off of the waitlist, or a Disable in the operator section shows on
+  the Account page of the operator.
 - The fake keeps its state in the page. A reload starts again from the
-  options, so Sam waits again, and the codes and the pause are those of
-  the options. An operator never waits, so a pause or a new code of the
-  operator section cannot reach the waitlist screen.
+  options, so Sam waits again, and the codes, the pause, and the switch
+  are those of the options. An operator never waits, so a pause, a change
+  of the switch, or a new code of the operator section cannot reach the
+  waitlist screen.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -210,6 +219,11 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.
   `dev/settings-routes.ts` saves settings and repository choices.
+- `dev/waitlist-routes.ts`: the waitlist of the person signed in, and
+  `admitOpenSignup`, which gives app access during open sign-up before each
+  request. `dev/signup-routes.ts`: the pause and the waitlist switch of
+  the operator section. `dev/seed.ts` turns the waitlist off for
+  `?waitlist=off`.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. `api/read-*.ts`: the readers.
@@ -225,7 +239,7 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   Accept, and the read of the app access at each return to the page.
   `waitlist-state.ts`: what the screen shows, and the reason of each
   refused code. `api/read-waitlist.ts`: the readers of the session and the
-  waitlist state.
+  waitlist state, which requires `waitlistOn`.
 - `../shell/waitlist/`: `Waiting`, which runs a join link and the read at
   each return, `WaitlistScreen`, the code field, and the invitations.
   `../shell/auth/SignInFrame.tsx`: the frame that the sign-in, the sign-in
@@ -258,7 +272,8 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
   waitlist state for the invite code of the account.
-  `../shell/account/InviteCodeSection.tsx`: that invite code.
+  `../shell/account/InviteCodeSection.tsx`: that invite code, in each
+  state of the code, of the pause, and of open sign-up.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
@@ -321,8 +336,9 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   chat uses it, and any row that scrolls sideways can.
 - `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
   the Overview and the pages of the operator section, its searches, and
-  Suspend and Lift. `operator-pause.ts` and `operator-access.ts`: the
-  pause of sign-ups, Approve, New code, and Disable. A refusal with
+  Suspend and Lift. `operator-pause.ts`, `operator-switch.ts`, and
+  `operator-access.ts`: the pause of sign-ups, the waitlist switch,
+  Approve, New code, and Disable. A refusal with
   `operator_required` marks the account as not an operator.
   `api/read-operator.ts`, `api/read-operator-pages.ts`, and
   `api/read-operator-waitlist.ts`: their readers. The

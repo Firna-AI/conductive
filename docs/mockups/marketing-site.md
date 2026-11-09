@@ -10,15 +10,18 @@ call to action, and a footer. Both actions, "Join the waitlist" and "Sign
 in", lead to `app/sign-in`. A new person waits for app access, so the
 main action promises a place on the waitlist, not use at once. The title
 of the last call to action, "Give your next task its own cloud computer.",
-promises no use at once either.
-`startLabel` in `src/components/marketing/SiteActions.tsx` holds its words
-for the header, the hero, the last call to action, and the footer. The
-parts live in `src/components/marketing/`.
+promises no use at once either. During open sign-up, each sign-in gets app
+access at once, so the main action reads "Start free with GitHub", as
+`marketing/open-sign-up` shows. `startLabel` and the label of open sign-up
+beside it in `src/components/marketing/SiteActions.tsx` hold its words for
+the header, the hero, the last call to action, and the footer. `SitePage`
+takes the state of sign-up of the page, and each main action reads it.
+The parts live in `src/components/marketing/`.
 
 The header links to the public source repository on GitHub in both layouts.
 
 The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
-Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
+Changes to those screens require recapture with the [capture steps](../../src/marketing/pictures/README.md#capture-the-pictures).
 
 - Every picture is a real screen of the catalogue, not a drawing of one.
   `ScreenFrame` lays the screen out at its own size, 1440 × 900 on desktop
@@ -33,7 +36,7 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   `PictureCapture` in `src/screens/marketingPictures.tsx` draws the part of
   the screen of one layout at its own size, at scale 1 and without a frame,
   from the top left corner of the page. The
-  [capture command](../../src/marketing/README.md#pictures) opens each page
+  [capture command](../../src/marketing/pictures/README.md#capture-the-pictures) opens each page
   at the size of the screen, and saves that part as the file of the
   picture.
 - A picture is `inert`, so a visitor cannot focus or press anything in it.

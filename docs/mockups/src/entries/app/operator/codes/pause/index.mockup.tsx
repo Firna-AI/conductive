@@ -20,9 +20,9 @@ const pauseSchema = {
 export const operatorCodesPause = defineScreen({
   title: 'Pause sign-ups',
   description:
-    'Pause sign-ups asks first. The question says that invite codes, referral codes, and org invitations let nobody in until sign-ups resume, that each code keeps its uses, and that the waitlist stays open and Approve still works.',
+    'Pause sign-ups asks first. The question says that invite codes, referral codes, and org invitations let nobody in until sign-ups resume, and that each code keeps its uses. It also says that new people wait, also while the waitlist is off, and that Approve still works. The waitlist is on here, as the Sign-ups box behind the question says.',
   rationale:
-    'The user asked on 8 November 2026 for a way to block all invite codes, to stop all sign-ups for a time, in decision 160. The pause stops every way in except the approval of an operator, which is one deliberate act. A code that the pause stopped stays unused, so nobody loses a code.',
+    'The user asked on 8 November 2026 for a way to block all invite codes, to stop all sign-ups for a time, in decision 160. The pause stops every way in except the approval of an operator, which is one deliberate act. A code that the pause stopped stays unused, so nobody loses a code. The pause also wins over the waitlist switch of decision 230, so the question says that it stops open sign-up too. The screen of a person who waits never names the switch.',
   relatedDocs: [],
   propSchema: pauseSchema,
   props: { tab: 'codes', dialog: 'pause', signUps: 'open' },
@@ -32,21 +32,21 @@ export const operatorCodesPause = defineScreen({
       case 'codes':
         return (
           <OperatorCodesScreen
-            state={{ list: 'newest', dialog, signUps }}
+            state={{ list: 'newest', dialog, signUps, waitlist: 'on' }}
             viewport={context.viewport}
           />
         )
       case 'waitlist':
         return (
           <OperatorWaitlistScreen
-            state={{ list: 'oldest', dialog: 'none', signUps }}
+            state={{ list: 'oldest', dialog: 'none', signUps, waitlist: 'on' }}
             viewport={context.viewport}
           />
         )
       case 'overview':
         return (
           <OperatorScreen
-            state={{ numbers: 'ready', signUps }}
+            state={{ numbers: 'ready', signUps, waitlist: 'on' }}
             viewport={context.viewport}
           />
         )
@@ -57,9 +57,9 @@ export const operatorCodesPause = defineScreen({
       slug: 'paused',
       title: 'Sign-ups paused',
       description:
-        'While the pause is on, the notice at the top of the tab names the operator and the time, says what lets nobody in, and has Resume sign-ups. It takes the place of the Sign-ups box, and New code still works.',
+        'While the pause is on, the notice at the top of the tab names the operator and the time, says what lets nobody in, says that new people wait also while the waitlist is off, and has Resume sign-ups. It takes the place of the whole Sign-ups box, so Turn off the waitlist does not show until sign-ups resume. New code still works.',
       rationale:
-        'Resume sign-ups needs no question, because it brings back the usual state, and Pause sign-ups can turn the pause on again at once.',
+        'Resume sign-ups needs no question, because it brings back the usual state, and Pause sign-ups can turn the pause on again at once. Resume returns to the state of the waitlist switch.',
       props: { dialog: 'none', signUps: 'paused' },
     },
     {

@@ -6,9 +6,10 @@ It reads app-wide numbers.
 It can suspend a user or an org after an abuse report. A user
 suspension signs the user out, stops every cloud computer that the user
 owns, and blocks each new start.
-It also lists and approves people who wait, manages invite codes, and
-pauses sign-ups. [Waitlist routes](#waitlist-codes-and-sign-ups) describes
-these entry points.
+It also lists and approves people who wait, manages invite codes, pauses
+sign-ups, and turns the waitlist off and on.
+[Waitlist routes](#waitlist-codes-and-sign-ups) describes these entry
+points.
 
 ## Overview
 
@@ -102,6 +103,8 @@ Both user entries and user pages also include `OperatorUserAccess` from
 `appAccess` is a waiting record with `waitingSince`, or a granted record
 with `grantedAt` and its source. The source identifies the approving
 operator, invite label, referral owner, or org and inviting admin.
+An `open_signup` source identifies the operator who last turned the
+waitlist off before the grant.
 It also represents operator and existing-account grants.
 `githubCreatedAt` gives the GitHub account creation time, or null.
 `hasVerifiedEmail` is a boolean. It reveals no address.
@@ -155,6 +158,9 @@ The path helpers and reply types live in
 | `GET /api/operator/signup-pause` | none | `OperatorSignupPause` |
 | `POST /api/operator/signup-pause` | `EmptyRequest` | `OperatorSignupPause` |
 | `DELETE /api/operator/signup-pause` | `EmptyRequest` | `OperatorSignupPause` |
+| `GET /api/operator/waitlist-switch` | none | `OperatorWaitlistSwitch` |
+| `POST /api/operator/waitlist-switch` | `EmptyRequest` | `OperatorWaitlistSwitch` |
+| `DELETE /api/operator/waitlist-switch` | `EmptyRequest` | `OperatorWaitlistSwitch` |
 
 `EmptyRequest` comes from [`api.ts`](../../src/shared/api.ts).
 The waitlist search uses the same login, name, and numeric ID matching as
@@ -189,6 +195,17 @@ An email failure keeps app access and the pending message.
 POST to the pause turns it on. DELETE turns it off.
 The reply records `paused`, `updatedAt`, and the operator.
 A repeat preserves the first time and operator and returns 200.
+
+`operatorWaitlistSwitchPath` builds the path of the waitlist switch.
+POST turns the waitlist on. DELETE turns it off.
+The reply gives `waitlistOn`, `updatedAt`, and the operator of the last change.
+It also gives `waiting`, the count of the Waitlist tab: accounts without
+app access and without a suspension.
+A repeat keeps the time and operator of the last change and returns 200.
+A change grants nobody access in bulk, and it saves or sends no email.
+During open sign-up, [sign-in](../security/README.md#app-access-at-sign-in)
+and the [app access gate](../security/README.md#app-access-gate) grant
+access to one user at a time.
 
 ### Approval email delivery
 
@@ -328,7 +345,8 @@ The directory tests check search keys, cursor pages, status, names, and operator
 The lift tests check events, access, retained revocations, Restore, and native disk alarms.
 The waitlist tests check approvals, atomic rollback, parallel approval,
 pending email retries, the 24-hour boundary, code search, pause changes,
-and user access details. They use the harness clock and fake Resend replies.
+switch changes, and user access details. They use the harness clock and
+fake Resend replies.
 Run `npm run test -- worker/app-api/account-operator.test.ts` to check the account's operator flag.
 
 The tests of sandbox access and of the automatic refreshes live beside
@@ -346,12 +364,13 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 - [`access.ts`](access.ts): `isOperator`, the shared operator reader for routes and account replies.
 - [`overview.ts`](overview.ts): `readOperatorOverview`, the app-wide counts in one D1 batch.
 - [`directory-route.ts`](directory-route.ts): the org and user read dispatch.
-- [`waitlist-route.ts`](waitlist-route.ts): the waitlist, approval, code, and pause dispatch.
-- [`waitlist-directory.ts`](waitlist-directory.ts): waiting account search and cursor pages.
+- [`waitlist-route.ts`](waitlist-route.ts): the waitlist, approval, code, pause, and switch dispatch.
+- [`waitlist-directory.ts`](waitlist-directory.ts): waiting account search and cursor pages, and `waitingUserPredicate`, which the switch count shares.
 - [`approval-data.ts`](approval-data.ts): the atomic approval batch and email state queries.
 - [`approval-email.ts`](approval-email.ts): the approval message, immediate send, and scheduled retries.
 - [`code-data.ts`](code-data.ts): code search, creation, disable, and public mapping.
 - [`signup-pause.ts`](signup-pause.ts): the pause read and conditional changes.
+- [`waitlist-switch.ts`](waitlist-switch.ts): the switch read with its waiting count, and conditional changes.
 - [`user-access-data.ts`](user-access-data.ts): user grant sources, email state, and referral recipients.
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
@@ -381,11 +400,14 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
   the columns of the suspension and of the terms consent.
 - [`202611090030_suspension_events.sql`](../../migrations/202611090030_suspension_events.sql):
   the event table and the current suspension records.
+- [`202611092050_waitlist_switch.sql`](../../migrations/202611092050_waitlist_switch.sql):
+  the switch columns of `signup_settings` and the `open_signup` access source.
 
 ### Related Docs
 
 - [Operator section](../../docs/protocol/operator-section.md): access, overview numbers, and directory pages.
 - [Waitlist](../../docs/protocol/waitlist.md) and [codes](../../docs/protocol/waitlist-codes.md): app access and email rules.
+- [Sign-ups](../../docs/protocol/sign-ups.md): the pause of sign-ups and the waitlist switch.
 - [Operator actions](../../docs/protocol/operator-actions.md): the
   requirements of the operator, the suspension, and abuse reports.
 - [Access and security](../../docs/protocol/access-and-security.md#sign-in)

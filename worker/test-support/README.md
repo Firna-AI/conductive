@@ -18,8 +18,9 @@ The splitter keeps each trigger body in one statement.
 Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
 Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
 The reset also restores the clock, token sequence, and fake services.
-It deletes code uses, approval emails, app access, and codes before users. It resets the
-sign-up pause and its change record. Tests can make waiting users through
+It deletes code uses, approval emails, app access, and codes before users.
+It resets the sign-up pause and the waitlist switch, each with its change
+record, so the waitlist is on again. Tests can make waiting users through
 sign-in or directly in D1.
 The [operator waitlist fixture](../operator/waitlist.test-support.ts) adds
 fake Resend replies and a scheduled-entry client. Its clock controls
@@ -106,7 +107,7 @@ So a plain object does not type-check as the environment of a child process.
 - `migrations.ts` applies migrations for every test harness.
 - `fake-boat.ts` supplies provider replies and fresh streaming response factories.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
-- `fake-site.ts` supplies built site files, the sign-in agreement, and the GitHub install return pages.
+- `fake-site.ts` supplies built site files, the sign-in agreement, and the GitHub install return pages. Its home, Terms, and unknown-address pages hold the start-label marker after Sign in and in the footer.
 - `fake-runner.ts` supplies the runner without an agent SDK.
 - `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.

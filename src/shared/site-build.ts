@@ -50,10 +50,17 @@ export const SITE_MARKERS = {
   appOrigin: '__CONDUCTIVE_SITE_APP_ORIGIN__',
   /** The year of the copyright line in the footer. */
   year: '__CONDUCTIVE_SITE_YEAR__',
+  /** The label of each main action that starts sign-in. */
+  startLabel: '__CONDUCTIVE_SITE_START_LABEL__',
   /** The origin of the site, for the links of the agreement page. */
   siteOrigin: '__CONDUCTIVE_SITE_ORIGIN__',
   /** The address of Continue with GitHub on the agreement page. */
   continueAddress: '__CONDUCTIVE_SITE_CONTINUE_ADDRESS__',
+} as const
+
+export const SITE_START_LABELS = {
+  waitlist: 'Join the waitlist',
+  openSignup: 'Start free with GitHub',
 } as const
 
 /** A value for each marker, such as the values of one request. */

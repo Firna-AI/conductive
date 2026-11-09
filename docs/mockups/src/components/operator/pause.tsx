@@ -8,18 +8,24 @@ import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { StatusText } from '../common/StatusText'
 import { Section } from '../settings/Section'
-import { pausedTitle, pauseWords } from './codeCopy'
+import { pausedTitle, pauseWords, waitlistWords } from './codeCopy'
+import { TurnOffWaitlistButton, type WaitlistState } from './waitlistSwitch'
 
 /**
  * The notice at the top of each tab while sign-ups are paused: who paused
  * them and when, what waits, and Resume sign-ups, which needs no question
- * because it brings back the usual state.
+ * because it brings back the usual state. Resume returns to the state of
+ * the waitlist switch.
  */
-export function PauseNotice() {
+export function PauseNotice(props: { waitlist: WaitlistState }) {
+  const resumed =
+    props.waitlist === 'off'
+      ? paths.operatorCodesWaitlistTurnedOff
+      : paths.operatorCodes
   return (
     <Notice
       action={
-        <ScreenLink asChild to={paths.operatorCodes}>
+        <ScreenLink asChild to={resumed}>
           <ActionButton icon={Play}>{pauseWords.resume}</ActionButton>
         </ScreenLink>
       }
@@ -31,20 +37,38 @@ export function PauseNotice() {
 }
 
 /**
- * The state of sign-ups at the top of the Invite codes tab, while they are
- * open, with Pause sign-ups. While they are paused, the notice of the
- * pause takes its place.
+ * The Sign-ups box at the top of the Invite codes tab while sign-ups are
+ * not paused. While the waitlist is on, it says so, and Turn off the
+ * waitlist stands beside Pause sign-ups. While the waitlist is off, the
+ * notice of the switch holds Turn on the waitlist, and the box says Open
+ * with Pause sign-ups. So Open shows only during open sign-up. While the
+ * pause is on, its notice takes the place of the box.
  */
-export function SignUpsSection() {
+export function SignUpsSection(props: { waitlist: WaitlistState }) {
+  const pause = (
+    <ScreenLink asChild to={paths.operatorCodesPause}>
+      <ActionButton icon={Pause}>{pauseWords.pause}</ActionButton>
+    </ScreenLink>
+  )
+  if (props.waitlist === 'off') {
+    return (
+      <Section
+        actions={pause}
+        status={<StatusText label={pauseWords.open} tone="success" />}
+        title={pauseWords.box}
+      />
+    )
+  }
   return (
     <Section
       actions={
-        <ScreenLink asChild to={paths.operatorCodesPause}>
-          <ActionButton icon={Pause}>{pauseWords.pause}</ActionButton>
-        </ScreenLink>
+        <>
+          <TurnOffWaitlistButton />
+          {pause}
+        </>
       }
       description={pauseWords.openLine}
-      status={<StatusText label={pauseWords.open} tone="success" />}
+      status={<StatusText label={waitlistWords.on} tone="neutral" />}
       title={pauseWords.box}
     />
   )
@@ -52,7 +76,8 @@ export function SignUpsSection() {
 
 /**
  * The operator confirms the pause. The question says what lets nobody in,
- * that each code keeps its uses, and what still works.
+ * that each code keeps its uses, that new people wait also while the
+ * waitlist is off, and what still works.
  */
 export function PauseDialog(props: { viewport: Viewport }) {
   return (

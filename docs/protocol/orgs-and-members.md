@@ -49,8 +49,9 @@ says.
   members.
 - Limits for each user and billing were rejected for now. Billing can come
   later (decision 81).
-- A waitlist stands in front of the app (decision 160). A new account
-  waits for app access, as [Waitlist](waitlist.md) says.
+- A waitlist stands in front of the app (decision 160). Except during
+  [open sign-up](sign-ups.md#open-sign-up), a new account waits for app
+  access, as [Waitlist](waitlist.md) says (decision 230).
 
 ## Get started
 

@@ -263,4 +263,6 @@ the requirements. The mockups `app/sign-in/waitlist`, `app/sign-in/join`,
 - The Account page ends with the invite code of the user, after the model
   of new workspaces: the invite link with Copy, the code, and the invites
   left. It has the states of the pause, of every invite used, and of a code
-  that an operator turned off. Its words come from `inviteCodeCopy.ts`.
+  that an operator turned off. During [open sign-up](../../docs/protocol/sign-ups.md#open-sign-up),
+  it shows the open sign-up notice while invites remain. The pause wins.
+  Its words come from `inviteCodeCopy.ts`.

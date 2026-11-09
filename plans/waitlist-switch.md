@@ -2,6 +2,9 @@
 
 Status: Active. On branch `calummoore/waitlist-global-toggle-brainstorm`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
+The user approved all milestones on 9 November 2026 with "impl all plan
+milestones and tasks".
+
 Since pull request #116, a waitlist stands in front of the app (decision
 160). A new GitHub sign-in creates an account without app access. An
 approval, an invite code, a referral code, or an org invitation lets the
@@ -267,6 +270,55 @@ day listed most of them as design calls.
   [protocol-docs-split.md](follow-ups/protocol-docs-split.md). Reason: open
   branches change those pages, as that item says.
 
+The mockups of Milestone 1 showed the problems below. Each call is my call
+of 9 November 2026.
+
+- **The Sign-ups box names the state of sign-ups.** While the waitlist is
+  on, the box says "Waitlist on", with Turn off the waitlist beside Pause
+  sign-ups. While the waitlist is off, the box says "Open" with Pause
+  sign-ups, and the notice of the switch holds Turn on the waitlist.
+  Reason: "Open" then shows only during open sign-up, as the call "The
+  words of the pause change" asks.
+- **The pause hides the switch.** While sign-ups are paused, the notice of
+  the pause takes the place of the whole Sign-ups box, as it does today.
+  So Turn off the waitlist shows only while sign-ups are not paused.
+  Reason: the pause is an emergency stop, and a turn-off during it would
+  need a second form of the question.
+- **The notice of the switch follows the pause.** While both notices show,
+  the notice of the switch says that each new sign-in gets app access when
+  sign-ups resume. Resume sign-ups returns to open sign-up. Reason: the
+  notice must not promise app access while the pause stops it.
+- **The question says what stays.** It also says that no email goes out,
+  and that nobody loses app access when the waitlist turns on again.
+  Reason: each grant is final, so the operator decides with these facts.
+- **The button of the question says "Turn off".** The title keeps the full
+  words. Reason: "Turn off the waitlist" does not fit beside Cancel in the
+  sheet of a phone.
+- **The Account page shows open sign-up only for a code with invites
+  left.** The pause wins, so its notice shows while both are on. A code
+  that is used up or turned off keeps its own state. Reason: the invites
+  stay for later only while some are left.
+- **Two mockup pages have child pages.** The state of open sign-up of the
+  home page is the child page `marketing/open-sign-up`, not a variant. The
+  four variants of `app/operator/user/access` moved into child pages with
+  the same paths, beside `open-sign-up`. Reason: a page with child pages
+  shows only its canonical screen.
+
+The web app work adds these calls on 9 November 2026. Each is an agent
+call within the approved design.
+
+- **Keep Pause sign-ups available while the switch loads or fails.** The
+  switch has its own placeholder, failure, and Try again in the box.
+  Reason: the pause stays an emergency stop.
+- **Wait for the pause read before the switch notice.** Reason: the
+  notice must not promise app access while the pause state is unknown.
+- **Use the pause's failure-word pattern and operator fallback.** A failed
+  change names the action. A record with no operator says "by an operator".
+  Reason: the two controls and access sources use consistent words.
+- **Seed one existing sample user with open sign-up in the dev option.**
+  Reason: the user page then shows the new source without changing the
+  default user counts.
+
 ### Mechanics
 
 - **Data.** A migration adds `waitlist_on` (default on),
@@ -313,39 +365,41 @@ page of a user gets the source "open sign-up". The Account page gets its
 state during open sign-up. The marketing site gets its main action during
 open sign-up, and a user flow shows the open sign-up.
 
-- [ ] Add the state of the waitlist with Turn off the waitlist to the
+- [x] Add the state of the waitlist with Turn off the waitlist to the
       Sign-ups box of `app/operator/codes`, beside Pause sign-ups. Put
       the words beside `pauseWords` in
       `docs/mockups/src/components/operator/codeCopy.ts`.
-- [ ] Change the words of the pause in `codeCopy.ts`, as the design call
+- [x] Change the words of the pause in `codeCopy.ts`, as the design call
       "The words of the pause change" says. Update the screens of
       `app/operator/codes/pause` that show them.
-- [ ] Add the page `app/operator/codes/waitlist-off` with at most five
+- [x] Add the page `app/operator/codes/waitlist-off` with at most five
       screens:
-  - [ ] the question before Turn off the waitlist, with the number of
+  - [x] the question before Turn off the waitlist, with the number of
         people who wait
-  - [ ] the notice while the waitlist is off, on the Invite codes tab,
+  - [x] the notice while the waitlist is off, on the Invite codes tab,
         with Turn on the waitlist
-  - [ ] the same notice on the Waitlist tab and on the Overview
-  - [ ] the waitlist off while sign-ups are paused, with both notices
-- [ ] Add the source "open sign-up" with its operator to the page of a
+  - [x] the same notice on the Waitlist tab and on the Overview
+  - [x] the waitlist off while sign-ups are paused, with both notices
+- [x] Add the source "open sign-up" with its operator to the page of a
       user, in a new sub-page of `app/operator/user/access`, because
       Ways in already shows five screens. Put the words in
       `docs/mockups/src/components/operator/accessCopy.ts`.
-- [ ] Add the state of open sign-up to `app/account/invites`. Put the
+- [x] Add the state of open sign-up to `app/account/invites`. Put the
       words in `docs/mockups/src/components/settings/inviteCodeCopy.ts`.
-- [ ] Add a variant of `marketing` whose main action and footer read
+- [x] Add a variant of `marketing` whose main action and footer read
       "Start free with GitHub". Put the label in
       `docs/mockups/src/components/marketing/SiteActions.tsx`, beside
       `startLabel`.
-- [ ] Add the user flow `user-flows/open-sign-up`: the site with Start
+- [x] Add the user flow `user-flows/open-sign-up`: the site with Start
       free with GitHub, Continue with GitHub, and Get started. Reuse the
       screens of the sign-up flow.
-- [ ] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`, on desktop and on a phone.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/waitlist-switch/reports/m1-mockups.md`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -354,34 +408,39 @@ Depends on: 1
 The new page "Sign-ups" states the pause and the switch. The other docs
 link to it, and the Privacy page follows the changed facts.
 
-- [ ] Create `docs/protocol/sign-ups.md`. Move "The pause" of
+- [x] Create `docs/protocol/sign-ups.md`. Move "The pause" of
       `docs/protocol/waitlist.md` and "The pause" of
       `docs/protocol/operator-section.md` into it. Add the requirements of
       "What the switch does" and the design calls that the operator
       section and the site show. Leave a short "The pause" section with a
       link in each old page, so that its anchor still works.
-- [ ] Update `docs/protocol/waitlist.md`: who waits while the waitlist is
+- [x] Update `docs/protocol/waitlist.md`: who waits while the waitlist is
       on, open sign-up as a fifth way in, the source "open sign-up" in the
       record of app access, and the words of the switch.
-- [ ] Update `docs/protocol/waitlist-codes.md`: the Account page during
+- [x] Update `docs/protocol/waitlist-codes.md`: the Account page during
       open sign-up, and the link to the pause.
-- [ ] Update `docs/protocol/operator-section.md`: three settings of the app
+- [x] Update `docs/protocol/operator-section.md`: three settings of the app
       (decision 230), and the notice of the switch on each tab.
-- [ ] Change the one sentence about a new sign-in in
+- [x] Change the one sentence about a new sign-in in
       `docs/protocol/access-and-security.md` and in
       `docs/protocol/orgs-and-members.md`.
-- [ ] Update `docs/architecture.md`: the term Waitlist, the main action of
+- [x] Update `docs/architecture.md`: the term Waitlist, the main action of
       the site, the operator section, the storage table, and the list of
       protocol docs.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact. The Privacy page must say that a new account
       waits only while the waitlist is on, and that the record can name an
       open sign-up with its operator.
-- [ ] Point each link to `waitlist.md#the-pause` and
+- [x] Point each link to `waitlist.md#the-pause` and
       `operator-section.md#the-pause` in docs, READMEs, mockups, and code
       comments at the new page.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+- [x] Align the mockup catalogue, waitlist summary, and sign-in entry
+      descriptions with open sign-up.
+
+Evidence: `.context/waitlist-switch/reports/m2-docs.md` and
+`.context/waitlist-switch/reports/m2-legal.md`.
 
 ## Milestone 3: Worker: the switch and open sign-up
 
@@ -390,39 +449,45 @@ Depends on: 2
 The Worker keeps the switch, gives app access during open sign-up, and
 records its source.
 
-- [ ] Add the migration `<YYYYMMDDHHMM>_waitlist_switch.sql`, as
-      "Mechanics" says. Describe it in `migrations/README.md`.
-- [ ] Add the grant of open sign-up to `worker/waitlist/grant.ts`, with the
+- [x] Add the migration `202611092050_waitlist_switch.sql`, as
+      "Mechanics" says.
+- [x] Describe the migration in `migrations/README.md`.
+- [x] Add the grant of open sign-up to `worker/waitlist/grant.ts`, with the
       condition on the switch and the pause.
-- [ ] Run the grant in the sign-in, before the join code, and in the gate,
+- [x] Run the grant in the sign-in, before the join code, and in the gate,
       before the allow list, during open sign-up only.
-- [ ] Add `waitlistOn` to the waitlist state reply.
-- [ ] Add the operator routes of the switch: read, turn on, and turn off.
-- [ ] Add the source `open_signup` with its operator to the reply of the
+- [x] Add `waitlistOn` to the waitlist state reply.
+- [x] Add the operator routes of the switch: read, turn on, and turn off.
+- [x] Add the source `open_signup` with its operator to the reply of the
       operator user page.
-- [ ] Add each test case to the existing test of its requirement, such as
+- [x] Add each test case to the existing test of its requirement, such as
       `worker/security/waitlist-gate.test.ts`,
       `worker/security/waitlist-auth.test.ts`,
       `worker/security/waitlist-join.test.ts`, and
       `worker/operator/waitlist-access.test.ts`. The break that each case
       catches is in parentheses:
-  - [ ] A sign-in during open sign-up gets app access with the source and
+  - [x] A sign-in during open sign-up gets app access with the source and
         the operator. (The sign-in skips the grant.)
-  - [ ] A person who waits gets app access at the next request during open
+  - [x] A person who waits gets app access at the next request during open
         sign-up. (The gate skips the grant.)
-  - [ ] With the waitlist off and the pause on, a sign-in and a request
+  - [x] With the waitlist off and the pause on, a sign-in and a request
         give no app access. (The condition leaves out the pause.)
-  - [ ] A join code stays unused during open sign-up. (The sign-in uses
+  - [x] A join code stays unused during open sign-up. (The sign-in uses
         the code first.)
-  - [ ] After the waitlist turns on again, the user keeps app access, and
+  - [x] After the waitlist turns on again, the user keeps app access, and
         a new sign-in waits. (The grant ignores the switch.)
-  - [ ] The switch routes refuse a user who is not an operator with HTTP
+  - [x] The switch routes refuse a user who is not an operator with HTTP
         403 `operator_required`. A repeat keeps the time and the operator
         of the last change. (The route skips the operator check, or a
         repeat writes.)
-- [ ] Update `worker/waitlist/README.md`, `worker/operator/README.md`, and
+- [x] Update `worker/waitlist/README.md`, `worker/operator/README.md`, and
       `worker/security/README.md`.
-- [ ] Run `npm run test -- worker/waitlist worker/security worker/operator`.
+- [x] Align the Worker overview, shared contracts, and Worker test-support
+      READMEs with the new switch and marker.
+- [x] Run `npm run test -- worker/waitlist worker/security worker/operator`.
+
+Evidence: `.context/waitlist-switch/reports/m3-m4-worker.md`.
+README evidence: `.context/waitlist-switch/reports/m3-m4-readmes.md`.
 
 ## Milestone 4: Worker: the main action of the site
 
@@ -431,16 +496,21 @@ Depends on: 3
 The Worker fills the label of the main action of the marketing site from
 the switch.
 
-- [ ] Add a site marker for the label of the main action to
+- [x] Add a site marker for the label of the main action to
       `src/shared/site-build.ts`, with "Join the waitlist" for the Astro
       development server.
-- [ ] Fill the marker in each page of the marketing site, as the design
+- [x] Fill the marker in each page of the marketing site, as the design
       call says. Keep the copy of the switch for up to 60 seconds. When
       the read fails, fill "Join the waitlist" and write a warning.
-- [ ] Test both labels, the failed read, and a change after the copy ends,
+- [x] Test both labels, the failed read, and a change after the copy ends,
       on a page that holds the marker. Control the time through the
       clock of the Worker dependencies.
-- [ ] Update `src/marketing/README.md`.
+- [x] Update `src/marketing/README.md`.
+
+Evidence: `.context/waitlist-switch/reports/m3-m4-worker.md` and
+`.context/waitlist-switch/reports/m3-m4-readmes.md`.
+
+Evidence: `.context/waitlist-switch/reports/m3-m4-worker.md`.
 
 ## Milestone 5: Web app: the switch in the operator section
 
@@ -448,20 +518,22 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Add the model and the context of the switch, beside those of the
+- [x] Add the model and the context of the switch, beside those of the
       pause.
-- [ ] Add the switch to the Sign-ups box, with the question before Turn
+- [x] Add the switch to the Sign-ups box, with the question before Turn
       off the waitlist. Turn on the waitlist acts at once.
-- [ ] Add the notice of the switch to each page of the section, after the
+- [x] Add the notice of the switch to each page of the section, after the
       notice of the pause.
-- [ ] Show the source "open sign-up" with its operator on the page of a
+- [x] Show the source "open sign-up" with its operator on the page of a
       user.
-- [ ] Add `waitlist=off` to the dev fake, for the operator section and for
+- [x] Add `waitlist=off` to the dev fake, for the operator section and for
       a person who waits.
-- [ ] Test the question and the turn-off, the notice and Turn on the
+- [x] Test the question and the turn-off, the notice and Turn on the
       waitlist, the order of the two notices, and the source line. Name the
       break that each test catches.
-- [ ] Update `src/shell/operator/README.md` and `src/app/README.md`.
+- [x] Update `src/shell/operator/README.md` and `src/app/README.md`.
+
+Evidence: `.context/waitlist-switch/reports/m5-m6-ui.md`.
 
 ## Milestone 6: Web app and site: the Account page and the main action
 
@@ -469,22 +541,26 @@ Tags: ui
 
 Depends on: 1, 3, 4
 
-- [ ] Add the state of open sign-up to the invite code section of the
+- [x] Add the state of open sign-up to the invite code section of the
       Account page.
-- [ ] Put the marker of the label in
+- [x] Put the marker of the label in
       `src/marketing/components/StartButton.astro` and
       `src/marketing/components/SiteFooter.astro`.
-- [ ] Test the Account page state, and check the built site with
+- [x] Test the Account page state, and check the built site with
       `npm run site:build`.
-- [ ] Update `src/marketing/README.md` and `src/app/README.md`.
+- [x] Update `src/marketing/README.md` and `src/app/README.md`.
+- [x] Move the picture capture guide into its own README to keep the
+      marketing README under 300 lines. Keep the old Pictures anchor.
+
+Evidence: `.context/waitlist-switch/reports/m5-m6-ui.md`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and `npm run check`.
-- [ ] Smoke-test the operator section and the Account page in
+- [x] Smoke-test the operator section and the Account page in
       `npm run dev` with `?waitlist=off`, on desktop and on a phone. Save
       the screenshots under `.context/waitlist-switch/`.
 - [ ] Commit with Conventional Commits and push the branch.
@@ -498,6 +574,9 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives decision 230 and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Evidence: `.context/waitlist-switch/full-gate.log` and
+`.context/waitlist-switch/root-visual-check.md`.
 
 ## Post-merge follow-up (non-blocking)
 

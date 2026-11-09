@@ -4,10 +4,18 @@ The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the Terms page, the Privacy page,
 and a page for an unknown address. Visitors need no sign-in. The pages run
 no script and set no cookie. Every sign-in link leads to the app, on the
-`app.` host. The main action, Join the waitlist, and Sign in lead to the
-same sign-in. A new person waits there for app access, as the
-[waitlist protocol](../../docs/protocol/waitlist.md) says, so the words
-promise a place on the waitlist, not use at once.
+`app.` host.
+
+The main action and Sign in lead to the same sign-in. The words of the
+main action promise only what that sign-in gives, as
+[The main action of the site](../../docs/protocol/sign-ups.md#the-main-action-of-the-site)
+says. The Worker fills the start-label marker of a page with "Join the
+waitlist" while a new person waits for app access, as the
+[waitlist protocol](../../docs/protocol/waitlist.md) says. During open
+sign-up, it fills the marker with "Start free with GitHub". Each main
+action writes `requestValues.startLabel`: `components/StartButton.astro`,
+which the header and the page actions use, and the main action of
+`components/SiteFooter.astro`. In a build, that value is the marker.
 
 The shared header links to the public source repository on GitHub.
 The link appears on phones and desktops.
@@ -45,6 +53,21 @@ assets binding.
 - The Worker replaces the exact app-origin and year markers with escaped
   HTML text. Sign-in links use `APP_ORIGIN`. The footer uses the UTC year
   of the request.
+- A page that holds the start-label marker also gets the label of the
+  main action, as escaped text in each place of the marker. Each page of
+  the site holds it, in the main actions of its header and its footer.
+  `SITE_START_LABELS` in [`site-build.ts`](../shared/site-build.ts) holds
+  both labels. The Worker does not require the marker. A page without it
+  keeps its built words and reads no sign-up settings.
+- The label comes from the switch and the pause in D1. Each Worker app
+  keeps the label of each D1 binding for 60 seconds from the start of its
+  read, on the clock of the Worker dependencies, with no timer. So the
+  site can show a change up to 60 seconds late. Only the label uses this
+  copy. The sign-in and the request gate always read D1.
+- When the read fails, the page gets "Join the waitlist" and keeps its
+  status and headers. The Worker logs a fixed warning. It keeps no copy of
+  a failed read, so the next page reads again. Site files other than
+  pages never read D1.
 - Pages keep `Cache-Control: no-cache`, `Content-Type: text/html; charset=utf-8`,
   `Referrer-Policy: no-referrer`, and `X-Content-Type-Options: nosniff`.
   Their content security policy allows each inline style by its build hash.
@@ -68,64 +91,11 @@ assets binding.
 
 ## Pictures
 
-Each product picture is a still image of a real screen of the mockups.
-One list defines every picture:
-[`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts),
-beside the marketing mockup. The marketing mockup, the site, and the
-capture command all read it, so no copy of a picture can go stale. The
-list imports nothing, so the browser, the Worker, and Node can all import
-it. For each picture, it gives:
-
-- the key, such as `hero`, in the order of the home page
-- the label in each layout, which is the alt text on the site and the
-  label in the mockups
-- the screen of each layout: 1440 × 900 on desktop, or 390 × 800 on a
-  phone
-- the crop of each layout: the part of the screen that the picture shows,
-  in CSS px of the screen
-- the scale at which the page shows the crop in each layout
-- the frame: a window that becomes a phone in the phone layout, a quiet
-  excerpt, or a phone
-- the files: one file for each layout, or one file that both layouts share
-- the capture page and the file name of each capture
-
-`components/PictureFrame.astro` reads each picture from the list by its
-key and layout. `picture-urls.ts` reads the files with one glob keyed by
-the list. So the site keeps no label, size, or scale of its own.
-[`marketingPictures.tsx`](../../docs/mockups/src/screens/marketingPictures.tsx)
-chooses the screen and the state that each picture shows.
-
-Each picture has a file for each layout and each colour scheme, in
-`pictures/`, as `<picture>-<layout>-<scheme>.webp`. The phone picture
-shows the same phone screen in both layouts. So it has one file for each
-scheme, `phone-<scheme>.webp`, which both layouts share. That gives 13
-captures and 26 files, and each file keeps its name on each run.
-
-When a screen of the app or a picture of the list changes, capture the
-pictures again with `npm run marketing:pictures` from the repository root.
-The command needs Node 24, the packages from `npm install`, and Chrome
-available as `google-chrome`. It builds the current mockups and serves
-them on a free local port.
-
-Each picture has a capture page in the catalogue, at
-`marketing/pictures/<picture>`. Its desktop and mobile views show the
-crop of each layout at its own size, at scale 1 and without a frame, from
-the top left corner of the page. For each capture and each colour scheme,
-the command opens that view with the browser viewport at the size of the
-screen that the picture shows, from the list. So a size that follows the
-viewport, such as the height of a menu, is the same as in the app. The
-command then captures a rectangle of the size of the crop from the top
-left corner, and names the file from the list. So the command reads no
-markup of the mockups, changes no style, and does not depend on the order
-of the pictures on the page.
-
-The command captures at two device pixels for each CSS pixel of the
-screen. The site then shows each file at the scale of the list. The
-command freezes animations at the same phase on each run. It uses the
-direct development dependency `sharp` to write lossless WebP files in
-`pictures/`, so each pixel stays as the mockup draws it. The command stops
-its server and browser and removes its temporary files on success,
-failure, or interruption.
+The product pictures of the home page are still images of real screens
+of the mockups. When a screen that a picture shows changes, capture the
+pictures again with `npm run marketing:pictures`.
+[Marketing pictures](pictures/README.md) gives the picture list, the
+files, and the capture steps.
 
 ## Legal pages
 
@@ -207,11 +177,16 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 `components/`. Astro builds them before the Worker serves them.
 
 - Run the site tests with `npm run test -- worker/marketing src/marketing`.
-  The built-site test builds Astro once in a temporary folder. The capture
-  test uses fake pages and needs no browser.
+  The built-site test builds Astro once in a temporary folder. It checks
+  both labels in the four main actions of the home page. The capture
+  test uses fake pages and needs no browser. The label test uses fake
+  pages with the start-label marker. It moves the Worker clock past the
+  60 seconds, and it makes the settings read fail.
 - Work on the pages with `npm run site:dev`. It serves them at
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.
+  `requestValues.startLabel` gives "Join the waitlist" there, because the
+  Astro server reads no sign-up settings.
   The agreement preview is at `/app-host/terms-consent`.
   The GitHub return previews are at `/app-host/github-setup/installed`
   and `/app-host/github-setup/requested`.
@@ -231,11 +206,16 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 ### Key code
 
 - [`worker/marketing/site.ts`](../../worker/marketing/site.ts): public
-  page paths, site files, the favicon, and the unknown-address page.
+  page paths, site files, the favicon, the unknown-address page, and the
+  values of each page.
+- [`worker/marketing/start-label.ts`](../../worker/marketing/start-label.ts):
+  the label of the main action from the sign-up settings, with its
+  60-second copy and its safe fallback.
 - [`worker/marketing/files.ts`](../../worker/marketing/files.ts): the
   file-list parser and cache for each assets binding.
 - [`worker/marketing/page.ts`](../../worker/marketing/page.ts): built-page
-  reads, headers, content security policy, and the safe `503` warning.
+  reads, headers, content security policy, the safe `503` warning, and
+  values that depend on the text of the page.
 - [`worker/marketing/markers.ts`](../../worker/marketing/markers.ts): exact
   marker replacement with HTML escaping.
 - [`worker/marketing/consent.ts`](../../worker/marketing/consent.ts): the
@@ -250,11 +230,12 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   for links from another origin.
 - `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
   text model, titles, contact addresses, and sign-in agreement.
-- `request-values.ts`: built-page markers and local Astro preview values.
+- `request-values.ts`: built-page markers and local Astro preview values,
+  with the start label.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
   CSS for the font, tokens and picture sizes, and the file list writer.
 - [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,
-  icon, marker, and file-list names and types.
+  icon, marker, and file-list names and types, and the two start labels.
 - `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
 - `icon-shapes.ts`: lucide icons as shapes for the Astro pages.
 - `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
@@ -271,3 +252,6 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - `picture-capture.test.ts`: capture pages, bounds, and file names.
 - [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
   real builds served through the Worker, including their policy and files.
+- [`worker/marketing/start-label.test.ts`](../../worker/marketing/start-label.test.ts):
+  both labels, the 60-second copy, the pause, a failed read, and site files
+  without D1.

@@ -5,6 +5,7 @@ import { ClosingCall } from '../components/marketing/ClosingCall'
 import { FeatureGrid } from '../components/marketing/FeatureGrid'
 import { FeatureSection } from '../components/marketing/FeatureSection'
 import { Hero } from '../components/marketing/Hero'
+import type { SiteSignUp } from '../components/marketing/SiteActions'
 import { SitePage } from '../components/marketing/SitePage'
 import { paths } from '../paths'
 import { marketingPicture } from './marketingPictures'
@@ -16,14 +17,18 @@ import styles from './MarketingScreen.module.css'
  * smaller features, and a last call to action. Every picture is
  * a real screen of the catalogue, and none of it links into the app. The
  * features are the site's records in `src/marketing/features.ts`, so the
- * mockup and the site show the same words.
+ * mockup and the site show the same words. The main action names the
+ * waitlist, or open sign-up while it is on.
  */
-export function MarketingScreen(props: { viewport: Viewport }) {
+export function MarketingScreen(props: {
+  viewport: Viewport
+  signUp?: SiteSignUp
+}) {
   const { viewport } = props
   const mobile = viewport === 'mobile'
   const hero = marketingPicture('hero', viewport)
   return (
-    <SitePage viewport={viewport}>
+    <SitePage signUp={props.signUp} viewport={viewport}>
       <Hero
         device={hero.device}
         picture={hero.picture}

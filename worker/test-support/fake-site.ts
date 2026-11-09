@@ -34,8 +34,9 @@ export function fakeSite(styles: readonly string[] = [css]) {
   }
   const document = (body: string) =>
     `<!doctype html><html><head>${styles.map((style) => `<style>${style}</style>`).join('')}</head><body>${body}</body></html>`
-  const footer = `<footer>© ${SITE_MARKERS.year} Conductive</footer>`
-  const link = `<a href="${SITE_MARKERS.appOrigin}/">Sign in</a>`
+  const start = `<a href="${SITE_MARKERS.appOrigin}/">${SITE_MARKERS.startLabel}</a>`
+  const footer = `<footer>© ${SITE_MARKERS.year} Conductive${start}</footer>`
+  const link = `<a href="${SITE_MARKERS.appOrigin}/">Sign in</a>${start}`
   add(
     'index.html',
     document(

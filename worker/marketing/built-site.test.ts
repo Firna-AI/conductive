@@ -10,7 +10,11 @@ import { afterAll, beforeAll, expect, it } from 'vitest'
 import { productName } from '../../docs/mockups/src/brand'
 import { sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
-import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
+import {
+  SITE_FOLDER,
+  SITE_ICONS,
+  SITE_START_LABELS,
+} from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
@@ -84,7 +88,7 @@ function expectedPolicy(page: string) {
   ].join('; ')
 }
 
-it('sends every sign-in to the app and shows the request year', async () => {
+it('sends every sign-in to the app with the words of the state of sign-up, and shows the request year', async () => {
   const response = await get('/')
   expect(response.status).toBe(200)
   expect(response.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
@@ -97,6 +101,21 @@ it('sends every sign-in to the app and shows the request year', async () => {
   expect(signIns).toHaveLength(8)
   for (const link of signIns) expect(link.href).toBe(`${APP_ORIGIN}/`)
   expect(html).toContain(`© 2027 ${productName}`)
+  const open = await siteResponse(
+    new Request(new URL('/', SITE)),
+    {
+      appOrigin: APP_ORIGIN,
+      assets,
+      readStartLabel: async () => SITE_START_LABELS.openSignup,
+    },
+    NOW,
+  )
+  const actions = links(await open.text())
+    .filter((link) => link.href === `${APP_ORIGIN}/`)
+    .map((link) => link.text)
+  expect(actions.filter((text) => text !== 'Sign in')).toEqual(
+    Array.from({ length: 4 }, () => 'Start free with GitHub'),
+  )
 })
 
 it('opens the Terms and Privacy footer links without draft text', async () => {

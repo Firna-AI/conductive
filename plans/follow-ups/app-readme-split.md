@@ -1,0 +1,40 @@
+# The web app README passes 300 lines
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-09, from the README work of branch `calummoore/waitlist-global-toggle-brainstorm`, which adds the waitlist switch.
+- **Location:** `src/app/README.md`.
+- **Reason:** The README covers the whole web app and passed 300 lines on `origin/main` before the waitlist switch, so its split reaches far beyond that change.
+
+- **Source:** Implementation. **Category:** Code structure.
+- **Terms:**
+  - **Web app README:** `src/app/README.md`, the guide to the data of the web app in `src/app/` and the screens of the app shell in `src/shell/`.
+  - **Dev fake:** the in-memory API that `npm run dev` serves from `src/app/dev/`, with query options such as `?operator=1` and `?waitlist=off`.
+  - **Line rule:** an always-on rule of the shared agent rules from `futex-ai/skills`, which `AGENTS.md` names. It says: "Keep files short. Target about 200 lines and split a file that passes 300. Do not remove blank lines or compact code to stay under a limit."
+- **Background:**
+  - On `origin/main` at commit `c02744f0` of 9 November 2026, the README has 387 lines. After the waitlist switch, it has 403.
+  - Its sections on `origin/main`: "Run it" 76 lines, "Composition" 51, "Data lifecycle" 7, "Screens" 7, "Rules for this code" 42, "Tests" 14, and "Key code" 180. The waitlist switch adds 9 lines to "Run it" and 7 to "Key code".
+  - "Run it" describes the dev fake and each of its query options. The dev wiring lives in `src/app/dev/`, which has no README.
+  - After the waitlist switch, "Key code" lists 44 entry points, and 22 of its lines name files under `src/shell/`. `src/shell/` has no README of its own. `src/shell/operator/README.md` and `src/shell/workspace/README.md` cover two parts of the shell.
+  - Four topics already sit on pages beside the README: `src/app/data-lifecycle.md`, `src/app/screens.md`, `src/app/creation-recovery.md`, and `src/app/suspended-org.md`. "Data lifecycle" and "Screens" are short sections with a link.
+  - Other files link to three anchors of the README. `#run-it`: `README.md`, `src/chat/README.md`, `src/chat/dev/README.md`, and `src/shell/operator/README.md`. `#composition`: `src/members/README.md` and `src/shell/workspace/README.md`. `#data-lifecycle`: `src/files/README.md`, `src/shell/workspace/README.md`, and `src/terminal/README.md`.
+  - The root `README.md` says that the web app README gives the rules and the key code of `src/app/`, and also those of `src/shell/`.
+  - `plans/follow-ups/fixture-import-check.md` gives `src/app/README.md:145-147` as the place of the rule that the shell never imports a mockup screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly. On `origin/main`, that rule is at lines 187 to 189, in "Rules for this code".
+  - `npm run file-length:check` checks only JavaScript, TypeScript, and Astro files, and Prettier ignores Markdown. So no command reports the long README.
+- **Problem:** The web app README passes the line rule, so a reader must scan about 400 lines to find the rule or the entry point of one part.
+- **Impact if no action:** Each feature of the web app adds lines to the README. It gets harder to read and to keep in line with the code.
+- **Root question:** How does the guide to the web app stay short enough to read one part at a time?
+- **Options:**
+  - **A.** Move "Run it" into `src/app/dev/README.md`, beside the dev wiring, and "Composition" into `src/app/composition.md`, beside `data-lifecycle.md`. Keep a short "Run it" section and a short "Composition" section, each with its link, so the anchors `#run-it` and `#composition` still work. The README then has about 280 lines, near the line rule again. Effort: Medium.
+  - **B.** A, and also move the entry points of the screens, the "Key code" items that name files under `src/shell/`, into a new `src/shell/README.md`. Keep a "Key code" line in the web app README that links to it. Point the `src/shell/` line of the root `README.md` at the new README. The web app README then has about 230 lines. Effort: Medium.
+  - In both options, keep each fact, each command, each old anchor, and each link. Check each relative link of each changed Markdown file, with its anchor. Update the line numbers in the **Location** of `plans/follow-ups/fixture-import-check.md`.
+- **Left out:**
+  - Change nothing, because the README stays past the line rule and grows with each feature.
+  - Move only "Key code" to a page of its own, because the `documentation` skill keeps the entry points of an area in its README, under Key Code.
+  - Shorter sentences or fewer blank lines, because the line rule forbids compacting to stay under a limit, and every fact must stay.
+  - A length check for Markdown, because it adds a gate, which the user decides.
+- **Wider fix:** None. The line rule already applies to every file, and a check for the class would add a gate.
+- **Previous examples:** `src/app/data-lifecycle.md` and `src/app/screens.md` hold topics of this README behind short sections. `src/marketing/README.md` keeps a short Pictures section that links to `src/marketing/pictures/README.md`, which holds its picture guide.
+- **Related:** `plans/follow-ups/mockup-docs-split.md` and `plans/follow-ups/protocol-docs-split.md` record the same class for other docs. Each split can merge on its own. `plans/follow-ups/fixture-import-check.md` names lines of this README, so the split updates its **Location**.
+- **Recommendation:** B. It reaches the 200-line target more closely, and it gives the screens of the shell a README of their own, as the root README already treats `src/shell/` as an area. A alone leaves the README near 300 lines, so the next feature passes the rule again.
+- **Action:** fix after merge, apply B, because the README covers the whole web app, far beyond the change that found it, and other branches change it too.

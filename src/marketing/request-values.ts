@@ -1,4 +1,8 @@
-import { SITE_MARKERS, type SiteRequestValues } from '../shared/site-build'
+import {
+  SITE_MARKERS,
+  SITE_START_LABELS,
+  type SiteRequestValues,
+} from '../shared/site-build'
 import type { SitePage } from './legal-text'
 import { sitePaths } from './links'
 
@@ -14,6 +18,7 @@ export const requestValues: SiteRequestValues = import.meta.env.DEV
       year: String(new Date().getFullYear()),
       siteOrigin: 'http://localhost:4321',
       continueAddress: '#',
+      startLabel: SITE_START_LABELS.waitlist,
     }
   : SITE_MARKERS
 
