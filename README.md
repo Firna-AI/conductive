@@ -42,6 +42,8 @@ These features are planned. The protocol docs state each one.
   script, with a startup script and env vars.
 - Agents can create and list workspaces.
 - Orgs with members, sections, reassignment, Archive, and Delete org.
+- A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
+  runs the actions of the page, and opens the settings.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
 
@@ -229,6 +231,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Orgs and members](docs/protocol/orgs-and-members.md)
   - [Mac app](docs/protocol/desktop-app.md)
   - [Operator actions](docs/protocol/operator-actions.md)
+  - [Command palette](docs/protocol/command-palette.md)
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): licenses for copied icons
   and the bundled font.

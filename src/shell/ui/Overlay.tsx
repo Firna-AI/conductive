@@ -10,6 +10,7 @@ import {
   type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { useModalLayer as useOpenModalLayer, type LayerOwner } from './layers'
 import { requestScreenFocus } from './screen-focus'
 import styles from './ui.module.css'
 
@@ -73,6 +74,31 @@ export function Overlay(props: { children: ReactNode }) {
 /** The open layers that Escape can close, the newest last. */
 const escapeLayers: object[] = []
 
+/** Closes an open layer on a press outside `inside`. */
+export function usePressOutside(
+  open: boolean,
+  inside: RefObject<HTMLElement | null>,
+  close: () => void,
+  options: { modal?: boolean } = {},
+): void {
+  const modal = options.modal ?? false
+  const closeRef = useRef(close)
+  useEffect(() => {
+    closeRef.current = close
+  })
+  useEffect(() => {
+    if (!open) return
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target
+      if (target instanceof Node && inside.current?.contains(target)) return
+      if (modal) event.preventDefault()
+      closeRef.current()
+    }
+    document.addEventListener('pointerdown', onPointer)
+    return () => document.removeEventListener('pointerdown', onPointer)
+  }, [open, inside, modal])
+}
+
 /**
  * Closes an open layer on Escape and on a press outside `inside`. Escape
  * counts in the capture phase, because a text field stops its key events.
@@ -91,6 +117,7 @@ export function useDismiss(
   useEffect(() => {
     closeRef.current = close
   })
+  usePressOutside(open, inside, close, { modal })
   useEffect(() => {
     if (!open) return
     const layer = {}
@@ -100,20 +127,12 @@ export function useDismiss(
       event.stopPropagation()
       closeRef.current()
     }
-    const onPointer = (event: PointerEvent) => {
-      const target = event.target
-      if (target instanceof Node && inside.current?.contains(target)) return
-      if (modal) event.preventDefault()
-      closeRef.current()
-    }
     document.addEventListener('keydown', onKey, true)
-    document.addEventListener('pointerdown', onPointer)
     return () => {
       escapeLayers.splice(escapeLayers.indexOf(layer), 1)
       document.removeEventListener('keydown', onKey, true)
-      document.removeEventListener('pointerdown', onPointer)
     }
-  }, [open, inside, modal])
+  }, [open])
 }
 
 /** Something that takes the focus, such as the handle of a Firna field. */
@@ -131,12 +150,15 @@ export interface Focusable {
  * content of the frame inert while it shows, and active again before the
  * focus goes back. A layer inside another, such as a menu in a sheet,
  * leaves the focus to the outer layer with `enabled: false`.
+ * A modal layer counts as an open dialog for the command palette. `owner`
+ * names who holds it, such as the palette for its own dialog.
  */
 export function useLayerFocus(
   layer: RefObject<HTMLElement | null>,
   options: {
     modal: boolean
     enabled?: boolean
+    owner?: LayerOwner
     /** The part that takes the focus as the layer opens. */
     initial?: RefObject<Focusable | null>
     /**
@@ -149,6 +171,7 @@ export function useLayerFocus(
   const { holdModal } = useContext(OverlayContext)
   const enabled = options.enabled ?? true
   const { modal, initial } = options
+  useOpenModalLayer(enabled && modal, options.owner)
   const moved = useRef(options.moved)
   useEffect(() => {
     moved.current = options.moved

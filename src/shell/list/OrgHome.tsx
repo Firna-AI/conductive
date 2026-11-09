@@ -13,6 +13,7 @@ import { DeletedOrgPage } from '../../members/DeletedOrgPage'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
+import { useNarrowWindow } from '../mac/mac-app'
 import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import { repositoriesFirst } from '../new-workspace/notices'
 import { useMembersApi, useMembersViewport } from '../settings/members-api'
@@ -116,6 +117,7 @@ export function DeletedOrg(props: { org: OrgSummary }) {
  */
 export function OrgHome(props: { org: OrgSummary; user: User }) {
   const { suspended } = useOrgAccess(props.org)
+  const narrow = useNarrowWindow()
   return (
     <>
       <div className={`${responsive.wideOnly} ${list.choose}`}>
@@ -126,7 +128,7 @@ export function OrgHome(props: { org: OrgSummary; user: User }) {
         )}
       </div>
       <div className={`${responsive.narrowOnly} ${list.narrowList}`}>
-        <HomeList org={props.org} user={props.user} />
+        <HomeList org={props.org} shown={narrow} user={props.user} />
       </div>
     </>
   )

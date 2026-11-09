@@ -17,6 +17,7 @@ export const app = defineScreen({
   useCasePaths: [
     'user-flows/reopen-stopped-workspace',
     'user-flows/create-workspace-dialog',
+    'user-flows/open-workspace-from-palette',
   ],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />

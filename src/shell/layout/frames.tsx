@@ -6,6 +6,7 @@ import { useMacApp, useNarrowWindow, type MacChrome } from '../mac/mac-app'
 import mac from '../mac/mac.module.css'
 import { WindowControls, WindowStrip } from '../mac/WindowControls'
 import { NewWorkspaceHost } from '../new-workspace/NewWorkspaceHost'
+import { PaletteLayer } from '../palette/PaletteLayer'
 import { OverlayHost } from '../ui/Overlay'
 import { useScreenFocus } from '../ui/screen-focus'
 import layout from './layout.module.css'
@@ -72,6 +73,7 @@ function BrowserFrame(props: FrameProps) {
           {props.rail}
           {props.sidebar ? <SidebarPanel>{props.sidebar}</SidebarPanel> : null}
           <MainArea>{props.children}</MainArea>
+          <PaletteLayer />
         </NewWorkspaceHost>
       </OverlayHost>
     </div>
@@ -114,6 +116,7 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
             </div>
           </div>
           <MainArea>{props.children}</MainArea>
+          <PaletteLayer />
         </NewWorkspaceHost>
       </OverlayHost>
     </div>
@@ -124,7 +127,7 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
  * The desktop app: the org rail, the sidebar of the org, and the main area.
  * Below 900 px the sidebar hides, and the org in the rail leads to its
  * list. A page can leave out the sidebar.
- * Dialogs open over the whole frame, also the New workspace dialog. A phone
+ * Dialogs and the command palette open over the whole frame. A phone
  * has no such dialog: New workspace opens the page there.
  */
 export function AppFrame(props: FrameProps) {
@@ -144,6 +147,7 @@ export function PhoneFrame(props: { children: ReactNode }) {
       <OverlayHost>
         <WindowStrip />
         {props.children}
+        <PaletteLayer />
       </OverlayHost>
     </main>
   )

@@ -2,8 +2,10 @@
 
 This guide belongs to [Web app: data and composition](README.md). It
 gives the rules of the screens of the app shell: the account and Get
-started, sign-in, invitations, orgs, panels and layers, the focus, saved
-drafts, and New workspace as a page or a dialog.
+started, sign-in, invitations, orgs, panels and layers, the command
+palette, the focus, saved drafts, and New workspace as a page or a dialog. The
+[command palette protocol](../../docs/protocol/command-palette.md) states
+what the palette does.
 
 - The app runs every cloud computer in its own Boat account, so no org has
   a Boat key. The app has no key screen, tab, notice, or Get started step,
@@ -67,6 +69,41 @@ drafts, and New workspace as a page or a dialog.
   trigger also after a press outside.
 - Escape closes only the newest open layer, such as a menu in a dialog.
   A press outside closes each layer that it misses.
+- The command palette is a layer of each frame: `PaletteLayer` sits in
+  the `OverlayHost` of the frame, and the open palette holds the frame
+  inert, as a sheet or a dialog does. Its search field takes the focus,
+  and `trapTab` keeps Tab inside. When a control that has the focus goes
+  away, such as a filter after a change of the tab, the field takes the
+  lost focus back. When the palette closes, the frame is active again
+  before the focus goes back.
+- Escape closes the palette from its own element, in the capture phase
+  of React. An open menu of a filter hears Escape first, on the document,
+  and stops it, so Escape closes only that menu. A press outside closes
+  the desktop dialog, and Cancel closes the phone page. A change of the
+  address and a sign-out close the palette too.
+- The palette key comes from `AppServices.onKey`, which hears each key in
+  the capture phase and not as a passive listener, so the palette can
+  stop the browser's own action. Every UI kit of the app notes its open
+  menus and modal layers through `useMenuLayer` and `useModalLayer` of
+  `../shell/ui/layers.ts`: the shell, the chat, and the members UI. A
+  menu says whether it closed, and a menu whose change runs refuses. A
+  modal layer has an owner: the dialog of the palette has the palette.
+  The owner of the terminal marks its element with `usePaletteTerminal`,
+  where Ctrl+K stays with the terminal.
+- `PaletteController.show` is the one way to open the palette, for the
+  key and for the Search row. It opens only when no dialog or sheet of
+  another owner holds the input, and when every open menu closed. The
+  key closes an open palette, and does nothing while a dialog or a sheet
+  of another owner is open over it, such as the sheet of a filter.
+- A part of the page offers its actions to the palette while it shows,
+  through `usePaletteOffer`: the workspace screen, the workspace list
+  that the page shows, and the sidebar toggle of the Mac app. A row
+  closes the palette first. Its action runs once the palette has left
+  the page, so a field that the action opens can take the focus, and a
+  question shows alone.
+- `AppModel.lastOrg` keeps the org that the tab opened last, in memory
+  only. The Account sidebar of the Mac app and the palette on a page
+  without an org read it through `keptOrg`.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row link out of the page and the focus falls to the page, the

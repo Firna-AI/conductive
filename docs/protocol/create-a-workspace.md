@@ -60,7 +60,8 @@ decision number names a dated record, as
   a failed start then keep working.
 - On a computer, with the dialog chosen, New workspace opens the dialog
   from each of its places: the row at the top of the list, the button of
-  an org without workspaces, and the item in the menu of a section.
+  an org without workspaces, the item in the menu of a section, and the
+  command palette.
 - A click with a modifier key on the row at the top of the list opens the
   page in a new tab, as a click on a link does.
 - While the screen shows a New workspace form, New workspace opens the
