@@ -10,7 +10,7 @@ import StatusMark from './StatusMark.astro'
  * The comparison as one table: one header, then a row group for each area,
  * with a row for each Conductor Cloud feature. The first row of a group
  * holds the area as one header cell that spans the rows of the group. Each
- * row also holds the area in a cell of its own. On a computer, CSS shows
+ * row also holds the area in a row header of its own. On a computer, CSS shows
  * the merged cell, and on a phone the cell of each row, so one table serves
  * both layouts with no script. A hidden cell is out of the accessibility
  * tree too.
@@ -48,7 +48,9 @@ const columns = parityPageCopy.columns
                 {area.title}
               </th>
             )}
-            <td class="parity-area parity-row-area">{area.title}</td>
+            <th class="parity-area parity-row-area" scope="row">
+              {area.title}
+            </th>
             <th class="parity-name" scope="row">
               {feature.name}
             </th>

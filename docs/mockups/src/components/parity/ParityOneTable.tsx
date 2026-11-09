@@ -14,7 +14,7 @@ import styles from './ParityOneTable.module.css'
 /**
  * The rows of one area: a row group with a row for each feature. The first
  * row holds the area as one header cell that spans the rows of the group,
- * and each row also holds the area in a cell of its own. A computer shows
+ * and each row also holds the area in a row header of its own. A computer shows
  * the merged cell, so no line crosses it until the darker hairline at the
  * end of the area. A phone stacks each row and shows its own area cell.
  * CSS alone chooses, so one table serves both layouts without a script.
@@ -42,7 +42,9 @@ function AreaRows(props: { area: ParityArea }) {
               {area.title}
             </th>
           ) : null}
-          <td className={classes(styles.area, styles.rowArea)}>{area.title}</td>
+          <th className={classes(styles.area, styles.rowArea)} scope="row">
+            {area.title}
+          </th>
           <FeatureCells feature={feature} />
         </tr>
       ))}

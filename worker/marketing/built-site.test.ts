@@ -22,7 +22,13 @@ import { githubSetupResponse } from '../github-setup'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
 import { termsConsentResponse } from './consent'
-import { decodeHtml, inlineStyles, links } from './html.test-support'
+import {
+  decodeHtml,
+  headings,
+  inlineStyles,
+  links,
+  words,
+} from './html.test-support'
 import { siteResponse } from './site'
 
 const SITE = 'https://conductive.test'
@@ -172,19 +178,6 @@ it('allows exactly each page inline style hash and serves every file it names', 
   )
 })
 
-function words(markup: string): string {
-  const text = decodeHtml(markup.replace(/<[^>]*>/g, ' '))
-  return text.replace(/\s+/g, ' ').trim()
-}
-
-function headings(markup: string, scope: string): string[] {
-  const pattern = new RegExp(
-    `<th\\b[^>]*scope="${scope}"[^>]*>([\\s\\S]*?)</th>`,
-    'g',
-  )
-  return [...markup.matchAll(pattern)].map(([, text]) => words(text))
-}
-
 it('serves the complete Cloud comparison with its public entry links', async () => {
   const response = await get(sitePaths.fromConductor)
   expect(response.status).toBe(200)
@@ -211,8 +204,12 @@ it('serves the complete Cloud comparison with its public entry links', async () 
   expect(rows).toHaveLength(parityFeatures.length)
   for (const id of ['attachments', 'cloud-desktop', 'direct-links']) {
     const feature = parityFeatures.find((item) => item.id === id)!
-    const row = rows.find((item) => headings(item, 'row')[0] === feature.name)
+    const row = rows.find((item) =>
+      headings(item, 'row').includes(feature.name),
+    )
     expect(words(row ?? ''), id).toContain(parityStatuses[feature.status].label)
+    const area = parityAreas.find((item) => item.key === feature.area)!
+    expect(headings(row ?? '', 'row'), id).toEqual([area.title, feature.name])
   }
   const home = await (await get(sitePaths.home)).text()
   const intro = home.slice(0, home.indexOf('<h1'))
