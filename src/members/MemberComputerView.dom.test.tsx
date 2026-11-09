@@ -15,7 +15,7 @@ const now = Date.UTC(2026, 10, 5, 18)
 const settings: OrgSettings = {
   installScript: 'npm ci',
   startupScript: '',
-  envVars: [{ name: 'DATABASE_URL' }],
+  envVars: [{ name: 'DATABASE_URL', secret: true }],
   updatedAt: 0,
   needsBuild: false,
 }

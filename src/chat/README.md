@@ -58,6 +58,10 @@ stops its own controller:
   has the workspace name, and the agent's title renames both. The
   development page does the same.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
+- `onOpenDiff` gets the real path of a changed file of a finished turn. The
+  chip of the file shows the label of its path, `displayPath`, which hides
+  each secret value, as [Labels of paths](../files/README.md#labels-of-paths)
+  says.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.

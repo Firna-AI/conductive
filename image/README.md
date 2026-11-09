@@ -193,8 +193,14 @@ The Worker serves that route on the machine hostname, as the
   says. The software step and the install script run only after that.
 - The workspace object keeps the env values and output chunks of a start
   only in encrypted form. Before it returns a start log, it masks the
-  complete joined stdout and stderr with the saved env values. This hides
-  a value across chunks and across the stdout and stderr boundary.
+  complete joined stdout and stderr with the marked env values and workspace
+  token. This hides a value across chunks and across the stdout and stderr boundary.
+- The workspace object filters runner events with the marked env values
+  from the actual start capture before it checks their meaning, stores
+  them, or sends them. This applies to older installed runners too.
+  The runner masks workspace tokens and logins. It receives no separate
+  org-value list, so its local state can keep raw org values. Real paths
+  and base refs stay available for operations. Separate labels are masked.
 - The terminal password stays in `/run/conductive-terminal/password`, with
   mode 600. The terminal backend checks that it has 64 lowercase
   hexadecimal characters.

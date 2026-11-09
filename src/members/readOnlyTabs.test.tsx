@@ -134,7 +134,7 @@ describe('the read-only settings of a member', () => {
     const settings: OrgSettings = {
       installScript: 'npm ci',
       startupScript: '',
-      envVars: [{ name: 'DATABASE_URL' }],
+      envVars: [{ name: 'DATABASE_URL', secret: true }],
       updatedAt: 0,
       needsBuild: true,
     }
