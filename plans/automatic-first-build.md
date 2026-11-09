@@ -223,6 +223,8 @@ this milestone.
       `docs/mockups/orgs-and-logins.md`.
 - [x] Run `npm run mockups:check`, then smoke-test the changed pages at
       both sizes. Screenshots and logs: `.context/automatic-first-build/`.
+      Merge decisions of the merge of origin/main on 9 November 2026:
+      `.context/automatic-first-build/merge-decisions.md`.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 - [ ] The user reviews the mockups.
