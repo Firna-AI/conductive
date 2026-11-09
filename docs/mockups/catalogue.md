@@ -14,6 +14,7 @@ how a screen is built, and links to the other pages.
 | `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, the invitations that wait after it, and Get started, the only first run, in three steps |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
+| `app/command-palette` | The command palette over the list: the All tab, then the other tabs and a search |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
@@ -29,11 +30,11 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |
 | `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
-| `user-flows`        | Sign up, create a workspace, reopen it, create an org, run a Mac command      |
+| `user-flows`        | Sign up, create a workspace, reopen it, open one from the palette, create an org, run a Mac command |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
-`app/sign-in`, `app/shell`, `app/orgs`, `app/orgs/suspended`,
+`app/sign-in`, `app/shell`, `app/command-palette`, `app/orgs`, `app/orgs/suspended`,
 `app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
 `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
@@ -72,6 +73,21 @@ shows stopped. Its child pages:
 - `app/orgs/suspended/deleted` has a deleted org that is also suspended:
   the notice of the org above the page of the deleted org, with its date,
   and no Restore.
+
+`app/command-palette` shows the All tab of the command palette over the
+list of Acme. Its child pages:
+
+- `app/command-palette/workspaces` has the Workspaces tab. Its
+  `repository` variant has the menu of the repository filter, and its
+  `archived` variant has the archived workspaces. Its `empty` variant has
+  the Archived filter of `acme/marketing-site`, which holds no archived
+  workspace, and the line that says where they show.
+- `app/command-palette/actions` has the Actions tab over the list. Its
+  `workspace` variant has the tab over an open workspace, whose actions
+  come first.
+- `app/command-palette/settings` has the Settings tab.
+- `app/command-palette/search` has a search that finds a workspace and an
+  archived one. Its `no-results` variant has a search without results.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the

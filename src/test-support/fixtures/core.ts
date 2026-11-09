@@ -59,14 +59,22 @@ export function coreFixtures(role: OrgRole = 'admin') {
     user: role === 'member' ? fakeUsers[1] : fakeUser,
     defaultChoice,
     agentLogins: [
-      { agent: 'claude', connected: true, kind: 'token', updatedAt: FAKE_TIME },
+      {
+        agent: 'claude',
+        connected: true,
+        kind: 'token',
+        noReuse: true,
+        updatedAt: FAKE_TIME,
+      },
       {
         agent: 'codex',
         connected: true,
         kind: 'api-key',
+        noReuse: false,
         updatedAt: FAKE_TIME,
       },
     ],
+    githubAppUrl: 'https://github.com/apps/conductive/installations/new',
   }
   const models: ModelsResponse = {
     models: Object.values(agents).flatMap((agent) =>

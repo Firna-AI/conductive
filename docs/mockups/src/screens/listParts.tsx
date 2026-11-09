@@ -17,6 +17,7 @@ import type {
 } from '../components/workspaces/sections'
 import {
   NewWorkspaceLink,
+  SearchLink,
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
 import { deletedOrg, orgs, type Org } from '../fixtures/orgs'
@@ -59,7 +60,8 @@ export function ListHeader(props: {
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
  * suspended org shows its notice first, and no New workspace and no
- * section menus, because nothing in it can change.
+ * section menus, because nothing in it can change. Search opens the
+ * command palette. Its key shows only in a desktop window.
  */
 export function HomeList(props: {
   org: Org
@@ -68,6 +70,8 @@ export function HomeList(props: {
   menuStyle: MenuStyle
   drag?: ListDrag
   suspended?: boolean
+  /** Show ⌘K, the key of the palette, beside Search. */
+  keys?: boolean
 }) {
   const suspended = props.suspended ?? false
   return (
@@ -77,11 +81,11 @@ export function HomeList(props: {
         settingsTo={suspended ? paths.suspendedSettings : undefined}
       />
       <div className={styles.scroll} data-mokly-scroll="workspace-page">
-        {suspended ? (
-          <SuspendedOrgNotice org={props.org} />
-        ) : (
-          <NewWorkspaceLink variant="page" />
-        )}
+        {suspended ? <SuspendedOrgNotice org={props.org} /> : null}
+        <div className={styles.links}>
+          {suspended ? null : <NewWorkspaceLink variant="page" />}
+          <SearchLink keys={props.keys ?? false} variant="page" />
+        </div>
         <SectionList
           drag={props.drag}
           menu={props.menu}

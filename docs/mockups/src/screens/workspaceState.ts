@@ -1,5 +1,6 @@
 import type { SchemaProps } from '@mokly/mokly'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
+import { paletteViews } from '../components/palette/paletteViews'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversations'
 import { bannerStates } from '../fixtures/pullRequests'
@@ -31,6 +32,7 @@ export const workspaceStateSchema = {
     'lostUpdate',
     'tree',
     'org',
+    'palette',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -75,8 +77,9 @@ export const workspaceStateSchema = {
     /**
      * The composer: empty, with a message that is not sent yet, with
      * attached files, with its picker open, or with a message for an agent
-     * that is not connected, or in a session whose starter's login is not
-     * available.
+     * that is not connected. Or with a message in a session whose starter's
+     * login is not available, or whose starter keeps that login for their
+     * own messages.
      */
     composer: {
       enum: [
@@ -86,6 +89,7 @@ export const workspaceStateSchema = {
         'picker',
         'no-agent',
         'no-starter-login',
+        'not-shared',
       ],
     },
     /** The user drags the handle of the right column to widen it. */
@@ -129,6 +133,12 @@ export const workspaceStateSchema = {
      * refusal, and nothing in the workspace can change.
      */
     org: { enum: ['active', 'suspended'] },
+    /**
+     * The command palette, closed or open on one of its views. Over an
+     * open workspace it offers the actions of the workspace first. A phone
+     * opens it from the list, so a phone shows the palette of the list.
+     */
+    palette: { enum: paletteViews },
   },
 } as const
 
@@ -153,6 +163,7 @@ export const readyWorkspace: WorkspaceState = {
   lostUpdate: 'none',
   tree: 'latest',
   org: 'active',
+  palette: 'closed',
 }
 
 /**

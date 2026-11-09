@@ -165,7 +165,12 @@ fake API, with its address options, its controls, and the test command.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
   takes the place of the tools inside the tabs, the tool and preview of the
-  address or the saved view, and their addresses.
+  address or the saved view, and their addresses. `useToolSelect` is the
+  select of a tool tab, which the Go to rows of the command palette share.
+- `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
+  command palette, as `workspaceActionIds` chooses them. Each one runs the
+  control of the screen: +, the clock of the history, a tab of the right
+  column, or Archive.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream, with the kept revokes of previews.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one

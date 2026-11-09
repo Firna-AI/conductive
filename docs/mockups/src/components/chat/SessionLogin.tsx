@@ -6,7 +6,7 @@ import styles from './SessionLogin.module.css'
  * is the viewer, or another member, with the name that the app shows for
  * that member.
  */
-export type LoginOwner = { kind: 'viewer' } | { kind: 'member'; name: string }
+type LoginOwner = { kind: 'viewer' } | { kind: 'member'; name: string }
 
 export type SessionLogin = {
   owner: LoginOwner

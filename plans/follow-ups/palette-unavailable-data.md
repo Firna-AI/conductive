@@ -1,0 +1,35 @@
+# The palette hides data that did not load
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-08, from branch `calummoore/command-palette-mockups`, review round 1, finding 3. Review round 2 found its fourth case again, as finding 5.
+- **Location:** `src/app/palette/palette-results.ts:46` and `:51` (`needsList` and the failure branch), `src/shell/palette/use-palette-source.ts:75`, `src/shell/palette/PaletteEmpty.tsx:31`, and the section "Empty states" of `docs/protocol/command-palette.md`.
+- **Reason:** every option changes what the palette shows beyond its contract, and the recommended option adds a requirement, so the user decides.
+
+- **Terms:**
+  - **Command palette:** the search box that ⌘K or Ctrl+K opens over the app. It has the tabs All, Workspaces, Actions, and Settings.
+  - **Workspace list:** the list of the workspaces of an org, which the app reads from the Worker. `Resource.read` in `src/app/resource.ts` keeps a list that once loaded, also after a later read fails.
+- **Background:**
+  - The palette searches the workspaces of the org, its actions, and its settings.
+  - While the workspace list loads, the Workspaces tab shows a spinner. When the first read fails, the tab shows "The workspaces didn't load" with Try again, as the list page does.
+  - `docs/protocol/command-palette.md` says, under "Empty states": when a query matches no row of the current tab, the palette says `Nothing matches “<query>”`. It names no loading or failure state.
+  - The `product-ui` skill asks for an explicit unavailable, loading, or error state, and one recovery action.
+- **Problem:** Only the Workspaces tab knows that the list did not load. Four cases give a partial answer as a complete one:
+  - With a failed first read (a reply of HTTP 503) and the query "cart", the All tab says "Nothing matches". The Workspaces tab shows the failure.
+  - Beside matches of actions or settings, the workspace rows are missing without a notice.
+  - With an empty field, the All tab drops Recent workspaces without a notice.
+  - The source turns repositories that load or did not load into an empty list. So a search by a repository name, such as "billing", says "Nothing matches" while the workspace list is ready.
+- **Impact if no action:** After a failed first read of the list, the person gets a false empty result and no recovery action on the default tab. A search by a repository name also says "Nothing matches" in normal use, while the repository names still load.
+- **Root question:** How does the palette show that its workspace data did not load, so that no tab gives a partial answer as a complete one?
+- **Options:**
+  - **A.** Apply the existing `needsList` condition to a failure as well as to the load. A search without a row then shows the failure with Try again on the All tab too. Add a regression case for the All tab. Effort: Small.
+  - **B.** Add an incomplete-search state. Show the failure beside the valid action and setting matches. It needs a mockup. Effort: Medium.
+  - **C.** A, plus one requirement under "Empty states": while the workspaces did not load, a search without a row shows the failure with Try again, not "Nothing matches". The other three cases stay. Effort: Small.
+  - **D.** Keep the load state of the list and of the repositories in the source and in the results. While that data loads, each tab that shows workspaces shows the spinner in place of its workspace groups. When it did not load, the tab shows the failure with Try again there. The tab keeps its action and setting rows, with or without a query. "Nothing matches" shows only after a search over loaded data. Add a mockup variant of a search, a line under "Empty states", Node cases for each state, and a happy-dom case for Try again. Effort: Medium.
+  - **E.** Send the repository names with the workspace list. The list reply holds one list of the names, from D1, of the repositories that the org selected or that hold a workspace. The palette builds its search and its repository filter from that list, and stops its own read of the repositories through GitHub. That read calls GitHub for the person at least twice in a row (`worker/app-api/feature-repositories.ts` and `worker/app-api/feature-github.ts`), while D1 already holds the name of each repository. E removes the fourth case with no new visible state, mockup, or requirement. It changes the list route of the Worker, the shared reply type, its reader, the fakes, and their tests. A workspace in a repository that an admin selects after the last list read shows no repository until the next list read. The other three cases stay. Effort: Medium.
+  - **F.** D for the list alone, with E for the names. Effort: Large.
+- **Left out:** A silent retry, because a read that fails again still says "Nothing matches". A switch to the Workspaces tab, because the person loses the search of actions and settings. The failure in place of every row of the All tab, because the All tab keeps its Actions and Settings groups, as the protocol doc says. A copy of the list in the browser, because the browser keeps only the panel widths, as `docs/architecture.md` says. A warning mark on the Workspaces tab alone, because the All tab still says "Nothing matches".
+- **Wider fix:** D. It keeps the load state in the results, so no tab can turn data that did not load into "Nothing matches" or a missing group.
+- **Previous examples:** None found.
+- **Recommendation:** D. It answers all four cases with one change. F best protects the codebase, because names that come with the list can not be missing beside it.
+- **Action:** ask the user, because D adds a notice, a mockup state, and a requirement to the protocol doc.

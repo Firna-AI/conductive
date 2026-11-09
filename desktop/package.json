@@ -17,6 +17,7 @@
     "test:logic": "node ../node_modules/vitest/vitest.mjs run --config vitest.config.ts",
     "test:electron": "node scripts/smoke.ts",
     "package": "node scripts/package.ts",
+    "package:release": "node scripts/package.ts --release",
     "test:packaged": "node scripts/packaged-smoke.ts"
   },
   "dependencies": {

@@ -43,7 +43,7 @@ import {
   type RepositoryLocation,
 } from './repository-locations'
 
-export interface ImageScheduler {
+interface ImageScheduler {
   schedule(
     orgId: string,
     software: ImageSoftwareArtifact,
