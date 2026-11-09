@@ -1,0 +1,178 @@
+import type { Workspace } from '../../shared/workspaces'
+import { routes } from '../router'
+import { groupWorkspaces } from '../sections'
+import { offeredActionIds, type OfferedActionId } from './commands'
+import type { OfferedAction, PaletteOffer } from './page-actions'
+import {
+  accountLabel,
+  accountRows,
+  linkRow,
+  offeredRow,
+  orgSettingRows,
+  orgSettingsLabel,
+  switchRow,
+  workspaceRow,
+  type PaletteGroup,
+  type PaletteRow,
+} from './palette-rows'
+import type { PaletteQuery, PaletteSource } from './palette-source'
+
+const recentLimit = 5
+
+/** The workspaces of the org: by section in the order of the list, and archived. */
+interface OrgWorkspaces {
+  sections: readonly { label: string; workspaces: readonly Workspace[] }[]
+  archived: readonly Workspace[]
+}
+
+function orgWorkspaces(source: PaletteSource): OrgWorkspaces {
+  if (source.org === null || source.list.state !== 'ready') {
+    return { sections: [], archived: [] }
+  }
+  const { sections, workspaces } = source.list.value
+  const groups = groupWorkspaces(sections, workspaces)
+  return {
+    sections: groups.sections.map((group) => ({
+      label: group.section.name,
+      workspaces: group.workspaces,
+    })),
+    archived: groups.archived,
+  }
+}
+
+/** Up to five active workspaces, the latest activity first, without the open one. */
+function recent(workspaces: OrgWorkspaces, openId: string | null): Workspace[] {
+  return workspaces.sections
+    .flatMap((section) => section.workspaces)
+    .filter((workspace) => workspace.id !== openId)
+    .sort((left, right) => right.updatedAt - left.updatedAt)
+    .slice(0, recentLimit)
+}
+
+/** The rows of offered actions, in the order of the palette, each action once. */
+function offeredRows(offers: readonly PaletteOffer[]): PaletteRow[] {
+  const byId = new Map<OfferedActionId, OfferedAction>()
+  for (const offer of offers) {
+    for (const action of offer.actions) byId.set(action.id, action)
+  }
+  return offeredActionIds.flatMap((id) => {
+    const action = byId.get(id)
+    return action ? [offeredRow(action)] : []
+  })
+}
+
+/**
+ * The actions in their four parts: the open workspace, the org, the orgs,
+ * and the window. New workspace opens a page, so it shows wherever the org
+ * takes changes. A deleted org has no Switch to row.
+ */
+function actionGroups(source: PaletteSource): PaletteGroup[] {
+  const { org, offers } = source
+  const workspace = offers.find(
+    (offer) =>
+      offer.scope.kind === 'workspace' &&
+      offer.scope.workspaceId === source.openWorkspaceId,
+  )
+  const orgRows: PaletteRow[] = []
+  if (org && !source.suspended) {
+    orgRows.push(linkRow('new-workspace', routes.newWorkspace(org.id)))
+  }
+  if (org) {
+    const list = offers.filter(
+      (offer) => offer.scope.kind === 'org' && offer.scope.orgId === org.id,
+    )
+    orgRows.push(...offeredRows(list))
+  }
+  const others = source.orgs.filter(
+    (other) => !other.deletion && other.id !== org?.id,
+  )
+  const window = offers.filter((offer) => offer.scope.kind === 'window')
+  return [
+    {
+      label: workspace?.scope.kind === 'workspace' ? workspace.scope.name : '',
+      rows: workspace ? offeredRows([workspace]) : [],
+    },
+    { label: org?.name ?? '', rows: orgRows },
+    {
+      label: 'Orgs',
+      rows: [
+        linkRow('create-org', source.createOrgHref),
+        ...others.map(switchRow),
+      ],
+    },
+    { label: 'Window', rows: offeredRows(window) },
+  ]
+}
+
+/** The settings of the org, then the Account page, each in its group. */
+function settingGroups(
+  source: PaletteSource,
+  withDetail: boolean,
+): PaletteGroup[] {
+  const account = {
+    label: accountLabel,
+    rows: accountRows(source.mac, withDetail),
+  }
+  if (source.org === null) return [account]
+  const org = {
+    label: orgSettingsLabel(source.org),
+    rows: orgSettingRows(source.org, withDetail),
+  }
+  return [org, account]
+}
+
+/** The groups of a tab before the search, in the order that they show. */
+export function tabGroups(
+  query: PaletteQuery,
+  source: PaletteSource,
+  searching: boolean,
+): PaletteGroup[] {
+  const workspaces = orgWorkspaces(source)
+  const names = new Map(source.repositories.map((it) => [it.id, it.fullName]))
+  const rows = (list: readonly Workspace[]) =>
+    list.map((workspace) => workspaceRow(workspace, names))
+  switch (query.tab) {
+    case 'all': {
+      const actions = actionGroups(source).flatMap((group) => group.rows)
+      const settings = settingGroups(source, true).flatMap(
+        (group) => group.rows,
+      )
+      const middle = [
+        { label: 'Actions', rows: actions },
+        { label: 'Settings', rows: settings },
+      ]
+      if (!searching) {
+        const latest = recent(workspaces, source.openWorkspaceId)
+        return [{ label: 'Recent workspaces', rows: rows(latest) }, ...middle]
+      }
+      const active = workspaces.sections.flatMap(
+        (section) => section.workspaces,
+      )
+      return [
+        { label: 'Workspaces', rows: rows(active) },
+        ...middle,
+        { label: 'Archived', rows: rows(workspaces.archived) },
+      ]
+    }
+    case 'workspaces': {
+      const { repositoryId } = query
+      const shown = (list: readonly Workspace[]) =>
+        rows(
+          list.filter(
+            (it) => repositoryId === null || it.repositoryId === repositoryId,
+          ),
+        )
+      if (query.archived) {
+        return [{ label: 'Archived', rows: shown(workspaces.archived) }]
+      }
+      return workspaces.sections.map((section) => ({
+        label: section.label,
+        rows: shown(section.workspaces),
+      }))
+    }
+    case 'actions':
+      return actionGroups(source)
+    case 'settings':
+      return settingGroups(source, searching)
+  }
+}
