@@ -4,24 +4,31 @@ import { ActionButton } from '../components/common/actions'
 import a11y from '../components/common/a11y.module.css'
 import { EmptyState } from '../components/common/EmptyState'
 import { LoadFailure } from '../components/common/LoadFailure'
+import { AppFrame } from '../components/layout/AppFrame'
+import { acmeRail } from '../components/layout/OrgRail'
+import responsive from '../components/layout/responsive.module.css'
 import { OrgTile } from '../components/orgs/OrgTile'
 import {
   SuspendedOrgAbove,
   SuspendedOrgNotice,
+  SuspendedOrgPanel,
 } from '../components/orgs/SuspendedOrgNotice'
 import type { MenuStyle } from '../components/workspaces/SectionList'
 import { SectionList } from '../components/workspaces/SectionList'
-import type {
-  ListDrag,
-  ListMenu,
-  SidebarSection,
+import {
+  suspendedSections,
+  type ListDrag,
+  type ListMenu,
+  type SidebarSection,
 } from '../components/workspaces/sections'
+import { Sidebar } from '../components/workspaces/Sidebar'
 import {
   NewWorkspaceLink,
   SearchLink,
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
-import { deletedOrg, orgs, type Org } from '../fixtures/orgs'
+import { deletedOrg, orgs, suspendedOrg, type Org } from '../fixtures/orgs'
+import type { Membership } from '../fixtures/members'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
@@ -75,6 +82,7 @@ export function ListHeader(props: {
 export function HomeList(props: {
   org: Org
   sections: readonly SidebarSection[]
+  viewer: Membership
   menu?: ListMenu
   menuStyle: MenuStyle
   drag?: ListDrag
@@ -110,10 +118,48 @@ export function HomeList(props: {
             readOnly={suspended}
             sections={props.sections}
             variant="page"
+            viewer={props.viewer}
           />
         )}
       </div>
     </>
+  )
+}
+
+/**
+ * The list of a suspended org on desktop. The main area shows the notice
+ * of the org in place of New workspace. A narrow window shows the list as
+ * a page, with the notice at its top.
+ */
+export function SuspendedList(props: { viewer: Membership }) {
+  const org = orgs[suspendedOrg]
+  const sections = suspendedSections()
+  return (
+    <AppFrame
+      rail={{ ...acmeRail, suspended: suspendedOrg }}
+      sidebar={
+        <Sidebar
+          org={org}
+          sections={sections}
+          suspended
+          viewer={props.viewer}
+        />
+      }
+    >
+      <div className={`${responsive.wideOnly} ${styles.choose}`}>
+        <SuspendedOrgPanel org={org} />
+      </div>
+      <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
+        <HomeList
+          keys
+          menuStyle="anchored"
+          org={org}
+          sections={sections}
+          suspended
+          viewer={props.viewer}
+        />
+      </div>
+    </AppFrame>
   )
 }
 

@@ -39,6 +39,9 @@ of the data that the screens read and write.
   Archive, or a cleared unread state carries no number. Each shows at once
   and stays over the reply of a pending Resume. A reply after close
   changes no workspace state.
+- An open workspace follows confirmed archived records in the org list,
+  so Archive does not wait for the event stream. It also checks the list
+  when it opens. A known archive stays over an older open or Resume reply.
 - A workspace event applies its saved public error with the workspace
   state. An older event without the error keeps the current error. An
   explicit null clears it. Event errors carry no log, so the model keeps
