@@ -30,6 +30,15 @@
   white-space: nowrap;
 }
 
+/*
+ * The Secret mark. Its place has one width in every row, so the values
+ * stay in line.
+ */
+.mark {
+  flex-shrink: 0;
+  min-width: 64px;
+}
+
 .value {
   color: var(--ui-faint);
   font-size: var(--ui-text-sm);

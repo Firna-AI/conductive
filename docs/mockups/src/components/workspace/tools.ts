@@ -1,14 +1,12 @@
 import type { LucideIcon } from 'lucide-react'
-import {
-  Files,
-  Globe,
-  MessageSquare,
-  Monitor,
-  SquareTerminal,
-} from 'lucide-react'
+import { Files, Globe, MessageSquare, SquareTerminal } from 'lucide-react'
 import { paths } from '../../paths'
 
-/** The tools of the tools panel. */
+/**
+ * The tools that the tools panel can show. The app hides Desktop and keeps
+ * its view for its return. No tab offers Desktop, and only the catalogue
+ * page `app/tools/desktop` draws it.
+ */
 export const toolKeys = ['terminal', 'preview', 'desktop'] as const
 
 export type ToolKey = (typeof toolKeys)[number]
@@ -30,6 +28,7 @@ export type MobileTab = {
   to: string
 }
 
+/** The tabs of the tools that the app offers: Terminal and Preview. */
 export const toolTabs: readonly ToolTab[] = [
   {
     key: 'terminal',
@@ -38,7 +37,6 @@ export const toolTabs: readonly ToolTab[] = [
     to: paths.terminal,
   },
   { key: 'preview', label: 'Preview', icon: Globe, to: paths.preview },
-  { key: 'desktop', label: 'Desktop', icon: Monitor, to: paths.desktop },
 ]
 
 export const mobileTabs: readonly MobileTab[] = [

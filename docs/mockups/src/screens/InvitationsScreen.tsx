@@ -1,6 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { CircleAlert, RotateCw, TriangleAlert } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
+import { LoadFailure, offlineMessage } from '../components/common/LoadFailure'
 import { Notice } from '../components/common/Notice'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
@@ -32,10 +33,6 @@ export type InvitationsState = SchemaProps<typeof invitationsSchema>
 
 /** The org whose invitation the failed accept could not accept. */
 const failedOrg = orgs.acme
-
-/** The message of the server when the app cannot reach it. */
-const offlineMessage =
-  "The app can't reach the server. Check the connection, then try again."
 
 /** Accept invitation of one org. It opens the org when the mockups draw it. */
 function Accept(props: { org: Org }) {
@@ -82,26 +79,6 @@ function AcceptFailure() {
 }
 
 /**
- * The list that did not load, as the other lists of the app show it: what
- * failed, the message of the server, and Try again, which loads it again.
- */
-function LoadFailure() {
-  return (
-    <Notice
-      action={
-        <ScreenLink asChild to={paths.invitations}>
-          <ActionButton icon={RotateCw}>Try again</ActionButton>
-        </ScreenLink>
-      }
-      body={offlineMessage}
-      icon={TriangleAlert}
-      title="The invitations didn't load"
-      tone="danger"
-    />
-  )
-}
-
-/**
  * Continue to workspaces accepts nothing. The app then opens as the
  * sign-in would: a person without an org goes on to Get started.
  */
@@ -127,7 +104,11 @@ function inviteRows(): PendingInviteRow[] {
 
 /** The invitations with their intro, or the notice of a list that did not load. */
 function Body(props: { state: InvitationsState; mobile: boolean }) {
-  if (props.state.result === 'load-failed') return <LoadFailure />
+  if (props.state.result === 'load-failed') {
+    return (
+      <LoadFailure title="The invitations didn't load" to={paths.invitations} />
+    )
+  }
   return (
     <>
       <p className={styles.intro}>Accept an invitation to join its org.</p>

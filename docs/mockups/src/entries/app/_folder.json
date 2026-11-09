@@ -6,6 +6,7 @@
     "command-palette",
     "orgs",
     "account",
+    "operator",
     "banner",
     "new-workspace",
     "org-settings",
@@ -16,6 +17,7 @@
     "archive",
     "composer",
     "files",
+    "tabs",
     "tools",
     "panels"
   ]

@@ -11,7 +11,7 @@ import type { FakeApiServer } from '../../test-support/fake-api'
 import { coreFixtures } from '../../test-support/fixtures/core'
 import type { DevBackend } from './dev-backend'
 import type { DevOptions } from './dev-options'
-import { place, targetOf } from './dev-sessions'
+import { setActiveTurn, targetOf, titleFromMessage } from './dev-sessions'
 
 /** A session record as the `starter` option draws it. */
 function starterRecord(
@@ -89,8 +89,9 @@ export function withReaderLogin(
 /**
  * The linked session of `starter=linked`. The reader's message in the first
  * session opened it, as the Worker does when the login of the starter is not
- * available. Its turn has started, and no scripted agent answers, so the page
- * stays still for a capture. It shows as the last tab.
+ * available. That message gives its title. Its turn has started, and no
+ * scripted agent answers, so the page stays still for a capture. It shows as
+ * the last tab.
  */
 export function seedLinked(
   backend: DevBackend,
@@ -114,6 +115,7 @@ export function seedLinked(
   const turnId = 'dev-linked-turn'
   backend.messages.set(message.id, message)
   backend.stream.emit({ type: 'message.accepted', message })
+  titleFromMessage(backend, linked.id, message.text)
   backend.stream.emit({
     type: 'turn.started',
     sessionId: linked.id,
@@ -124,7 +126,7 @@ export function seedLinked(
     messageIds: [message.id],
   })
   backend.recordedTurns.set(linked.id, turnId)
-  place(backend, { ...linked, activeTurnId: turnId, activeTurnStartedAt: now })
+  setActiveTurn(backend, linked.id, turnId, now)
   const tab: WorkspaceTab = { kind: 'session', sessionId: linked.id }
   const { orgId, workspaceId } = backend.target
   backend.server.json('GET', workspaceViewPath(orgId, workspaceId), {

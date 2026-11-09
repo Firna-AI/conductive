@@ -86,11 +86,6 @@
   flex-shrink: 0;
 }
 
-/* The sidebar that the user hid with the toggle. */
-.sidebar[hidden] {
-  display: none;
-}
-
 /* The top of a page without the rail: a strip that holds the window controls. */
 .strip {
   display: flex;

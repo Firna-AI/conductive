@@ -4,6 +4,7 @@ import {
   Globe,
   MessageSquare,
   Monitor,
+  PanelRight,
   SquareTerminal,
   type LucideIcon,
 } from 'lucide-react'
@@ -14,27 +15,52 @@ import column from '../../../docs/mockups/src/components/workspace/RightColumn.m
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import { ResizeHandle } from '../layout/ResizeHandle'
-import { usePanelWidths } from '../layout/panels'
+import { usePanelLayout } from '../layout/panels'
+import { IconButton } from '../ui/actions'
 import { AppLink } from '../ui/AppLink'
 import type { WorkspaceContext } from './features'
+import { shownTool, toolOffered } from './tools/tool-address'
 import workspace from './workspace.module.css'
+
+/**
+ * The toggle at the end of the workspace header on desktop. It hides the
+ * right column, and shows it again.
+ */
+export function RightColumnToggle() {
+  const panels = usePanelLayout()
+  const shown = useStore(panels.rightShown)
+  return (
+    <IconButton
+      icon={PanelRight}
+      label={shown ? 'Hide the right column' : 'Show the right column'}
+      onPress={panels.toggleRight}
+    />
+  )
+}
 
 /**
  * The column beside the chat: the pull request bar, the file lists, and the
  * tools panel below them. A handle on its inner edge resizes it. Without
  * `tools`, the files part fills the column, as for an archived workspace.
+ *
+ * A column that the user hid stays mounted. So the file lists keep the
+ * connection that the file tabs of the centre use, and the terminal keeps
+ * its session.
  */
 export function RightColumn(props: {
   pullRequest: ReactNode
   files: ReactNode
   tools?: ReactNode
 }) {
-  const width = useStore(usePanelWidths().widths).right
+  const panels = usePanelLayout()
+  const width = useStore(panels.widths).right
+  const shown = useStore(panels.rightShown)
   const aside = useRef<HTMLElement>(null)
   return (
     <aside
       aria-label="Files and tools"
       className={classes(column.column, workspace.right)}
+      hidden={!shown}
       ref={aside}
       style={width === null ? undefined : { width }}
     >
@@ -66,18 +92,27 @@ const phoneTabs: readonly {
   { view: 'desktop', label: 'Desktop', icon: Monitor },
 ]
 
-/** The view of a phone from the address after the workspace. */
+/** The tabs that a phone shows: the chat, the files, and each offered tool. */
+const shownPhoneTabs = phoneTabs.filter(
+  (tab) => tab.view === 'chat' || tab.view === 'files' || toolOffered(tab.view),
+)
+
+/**
+ * The view of a phone from the address after the workspace. The address of
+ * a hidden tool shows Terminal, with its tab.
+ */
 export function phoneView(view: readonly string[]): PhoneView {
-  return phoneTabs.find((tab) => tab.view === view[0])?.view ?? 'chat'
+  const named = phoneTabs.find((tab) => tab.view === view[0])?.view ?? 'chat'
+  return named === 'chat' || named === 'files' ? named : shownTool(named)
 }
 
-/** The five tabs at the bottom of a phone. Each tab is a link. */
+/** The tabs at the bottom of a phone. Each tab is a link. */
 export function PhoneTabBar(props: { context: WorkspaceContext }) {
   const { org, workspace: open, view } = props.context
   const current = phoneView(view)
   return (
     <nav aria-label="Workspace" className={tabs.bar}>
-      {phoneTabs.map((tab) => {
+      {shownPhoneTabs.map((tab) => {
         const selected = tab.view === current
         const Icon = tab.icon
         const path =

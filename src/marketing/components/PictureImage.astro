@@ -1,0 +1,31 @@
+---
+import {
+  marketingPictures,
+  type MarketingPictureKey,
+  type PictureLayout,
+} from '../../../docs/mockups/src/screens/marketingPictureList'
+import { pictureUrl } from '../picture-urls'
+
+/**
+ * The image of a picture in one layout: its dark file, its text, and the
+ * size of its part of the screen, from the shared list of the pictures.
+ */
+type Props = {
+  picture: MarketingPictureKey
+  layout: PictureLayout
+  loading: HTMLImageElement['loading']
+}
+
+const { picture, layout, loading } = Astro.props
+const { label, crop } = marketingPictures[picture][layout]
+---
+
+<img
+  src={pictureUrl(picture, layout, 'dark')}
+  alt={label}
+  width={crop.width}
+  height={crop.height}
+  loading={loading}
+  decoding="async"
+  fetchpriority={loading === 'eager' ? 'high' : 'auto'}
+/>

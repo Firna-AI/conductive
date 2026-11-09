@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import { stepTarget, type SectionGroup } from '../../app/sections'
 import type { Workspace } from '../../shared/workspaces'
+import { nameLabel } from '../../shared/name-label'
 import ui from '../ui/ui.module.css'
 import { ArchivedGroup } from './ArchivedGroup'
 import type { DropTarget } from './drop-target'
@@ -39,7 +40,7 @@ function LiftedRow(props: {
       style={{
         left: drag.x - drag.offsetX,
         top: drag.y - drag.offsetY,
-        width: drag.width,
+        width: drag.box.width,
       }}
     >
       <WorkspaceRow
@@ -47,7 +48,7 @@ function LiftedRow(props: {
         now={props.now}
         selected={false}
         variant={props.variant}
-        workspace={drag.workspace}
+        workspace={drag.item}
       />
     </div>,
     document.body,
@@ -91,7 +92,7 @@ export function SectionList(props: {
       (group) => group.section.id === target.sectionId,
     )
     setAnnouncement(
-      `${workspace.name} moves to ${section?.section.name ?? 'another section'}, place ${target.index + 1}.`,
+      `${nameLabel(workspace.name)} moves to ${section?.section.name ?? 'another section'}, place ${target.index + 1}.`,
     )
     props.move(workspace.id, target)
   }
@@ -101,11 +102,10 @@ export function SectionList(props: {
         {announcement}
       </span>
       {props.groups.map(({ section, workspaces }) => {
-        const target =
-          drag?.target.sectionId === section.id ? drag.target : null
-        const rest = workspaces.filter((item) => item.id !== drag?.workspace.id)
+        const target = drag?.place.sectionId === section.id ? drag.place : null
+        const rest = workspaces.filter((item) => item.id !== drag?.item.id)
         const line = drag ? (
-          <DropLine name={drag.workspace.name} section={section.name} />
+          <DropLine name={nameLabel(drag.item.name)} section={section.name} />
         ) : null
         return (
           <section
@@ -136,7 +136,7 @@ export function SectionList(props: {
                             : bind(workspace, { sectionId: section.id, index })
                         }
                         drag={
-                          drag?.workspace.id === workspace.id
+                          drag?.item.id === workspace.id
                             ? 'placeholder'
                             : undefined
                         }

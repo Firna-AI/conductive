@@ -1,0 +1,22 @@
+---
+import type { SitePage, Text } from '../legal-text'
+import { sitePaths } from '../links'
+
+/**
+ * Running text as markup: its words and its links. Each link to a page
+ * of the site leads to its address in `hrefs`.
+ */
+type Props = { text: Text; hrefs?: Readonly<Record<SitePage, string>> }
+
+const { text, hrefs = sitePaths } = Astro.props
+---
+
+{text.map((part) => {
+  if (typeof part === 'string') return part
+  const href = 'page' in part ? hrefs[part.page] : `mailto:${part.mail}`
+  return (
+    <a class="text-link" href={href}>
+      {part.text}
+    </a>
+  )
+})}

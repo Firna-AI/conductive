@@ -21,6 +21,7 @@ gives the create, read, resume, and activity routes of a workspace to
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
   starts a stopped sandbox briefly, so that Boat keeps its disk.
+- Repair overdue disk alarms and image refreshes from the 15-minute Cron Trigger.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
@@ -72,6 +73,7 @@ The [operator backend](../operator/README.md#suspend-an-org) can suspend an org.
 Every start and build phase checks this with user suspension.
 Guarded admission, publication, token replacement, source grants, and refresh claims also check stored org state.
 Cleanup can still recover uncertain allocations and remove resources.
+A pending start, outcome publication, or failed-computer cleanup keeps suspension pending and its native alarm armed.
 Suspended orgs get no disk retention restart, including after an owner change.
 
 ## Settings
@@ -81,6 +83,12 @@ The lifecycle code reads `LifecycleEnvironment` from
 gives each binding, variable, and secret that it reads, such as
 `WORKSPACES`, `MACHINE_ORIGIN`, `BOAT_API_KEY`, `BOAT_ORG_ID`,
 `GITHUB_APP_PRIVATE_KEY`, and the runner archive variables.
+
+Each provider start captures the encrypted org env values and their secret
+marks. The start-log masker and the workspace object output filter use
+that capture. No private org-value list goes into the runner environment.
+A running sandbox keeps its capture after later org setting changes.
+Disk retention resumes also replace the saved capture.
 
 ## Development
 
@@ -139,10 +147,18 @@ object holds the lifecycle state, the turn records, and the events.
   `readStartJob`, which convert the start job for storage and internal RPC.
 - [`start-logs.ts`](start-logs.ts): `releasedStartLog`, which masks the
   decrypted log as a [`MaskedStartLog`](masked-start-log.ts).
+- [`org-environment.ts`](org-environment.ts): parses stored env values and
+  secret marks. It treats older plain values as secret. `environmentSecrets`
+  selects marked values without a length rule.
+- [`output-secrets.ts`](output-secrets.ts): reads the actual start capture
+  for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
-- [`failed-creations.ts`](failed-creations.ts): the hidden drafts of failed
-  creates, and `failedCreationForSender`.
+- [`retry-creation.ts`](retry-creation.ts): `retryFailedCreation` reuses the
+  first-message admission and workspace identity after a failed first start.
+  [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.
+- [`start-admission.ts`](start-admission.ts): `enqueueWorkspaceStart` admits
+  initial starts, replacements, and resumes in the coordinator's serial task.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
 - [`durable-turns.ts`](durable-turns.ts): `recoverLifecycleTurns`, which
@@ -208,6 +224,8 @@ object holds the lifecycle state, the turn records, and the events.
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
+- [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
+  which starts changed settings after the first good build finishes cleanup.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
 - [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
   replays a saved allocation request and saves the recovered sandbox ID.
@@ -235,6 +253,7 @@ object holds the lifecycle state, the turn records, and the events.
   `authenticateWorkspaceToken`.
 - [`runtime.ts`](runtime.ts): `LifecycleEnvironment`, `workspaceRuntime`,
   and `imageRuntime`.
+- [`repair.ts`](repair.ts) and [`repair-data.ts`](repair-data.ts): bounded Cron repair with shared eligibility rules and persisted retry signals.
 - [`worker/workspace.ts`](../workspace.ts): the composed `Workspace` class.
   [`worker/workspace-lifecycle.ts`](../workspace-lifecycle.ts) exposes its lifecycle methods.
 - [Member receivers](../members/workspace-receiver.ts) install durable generations, drain active phases, and restore maintenance timers.

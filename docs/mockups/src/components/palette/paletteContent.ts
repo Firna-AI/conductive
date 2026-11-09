@@ -18,9 +18,11 @@ import {
 import {
   palettePlaceholders,
   paletteQueries,
+  paletteStatuses,
   phonePlaceholders,
   viewTabs,
   type OpenPaletteView,
+  type PaletteStatus,
   type PaletteTab,
 } from './paletteViews'
 
@@ -29,7 +31,7 @@ export type PaletteRow =
   /** `detail` names the page of a setting in a mixed list. */
   | { kind: 'command'; command: Command; detail?: string }
 
-export type PaletteGroup = { label: string; rows: readonly PaletteRow[] }
+type PaletteGroup = { label: string; rows: readonly PaletteRow[] }
 
 /** The two filters of the Workspaces tab. */
 export type PaletteFilters = {
@@ -46,6 +48,11 @@ export type PaletteContent = {
   placeholder: { desktop: string; mobile: string }
   filters?: PaletteFilters
   groups: readonly PaletteGroup[]
+  /**
+   * The workspace data that did not load. The spinner or the notice stands
+   * first, in place of the workspace groups, and the other groups follow.
+   */
+  status?: PaletteStatus
   /** The line of a tab that has no row to show while the field is empty. */
   empty?: string
 }
@@ -55,7 +62,11 @@ export type PaletteContent = {
  * first, or over a page without one. Only the owner of the workspace and
  * the admins of the org can archive it.
  */
-export type PaletteContext = { open?: OpenWorkspace; archivable: boolean }
+export type PaletteContext = {
+  open?: OpenWorkspace
+  archivable: boolean
+  rightColumn?: boolean
+}
 
 /**
  * The workspaces with the latest activity, the latest first, as decision
@@ -88,7 +99,9 @@ function commandRows(
 }
 
 function actionsOf(context: PaletteContext): Command[] {
-  const own = context.open ? workspaceActions(context.archivable) : []
+  const own = context.open
+    ? workspaceActions(context.archivable, context.rightColumn)
+    : []
   return [...own, ...orgActions, ...appActions]
 }
 
@@ -126,18 +139,20 @@ function rowTexts(row: PaletteRow): readonly string[] {
 
 /**
  * The results of a query on the All tab: the workspaces, the actions, and
- * the settings that match, then the archived workspaces that match.
+ * the settings that match, then the archived workspaces that match. Without
+ * the workspace data, only the actions and the settings can match.
  */
 function searchGroups(
   query: string,
   active: readonly WorkspaceRow[],
   context: PaletteContext,
+  loaded: boolean,
 ): PaletteGroup[] {
   const groups: PaletteGroup[] = [
-    { label: 'Workspaces', rows: workspaceRows(active) },
+    { label: 'Workspaces', rows: loaded ? workspaceRows(active) : [] },
     { label: 'Actions', rows: commandRows(actionsOf(context)) },
     { label: 'Settings', rows: settingRows() },
-    { label: 'Archived', rows: workspaceRows(archivedRows) },
+    { label: 'Archived', rows: loaded ? workspaceRows(archivedRows) : [] },
   ]
   return groups
     .map((group) => ({
@@ -212,13 +227,17 @@ function groupsOf(
       return archivedGroups()
     case 'workspaces-empty':
       return archivedGroups(emptyRepository)
+    case 'workspaces-unavailable':
+      return []
     case 'actions': {
       const open = context.open
       const own: PaletteGroup[] = open
         ? [
             {
               label: open.workspace.name,
-              rows: commandRows(workspaceActions(context.archivable)),
+              rows: commandRows(
+                workspaceActions(context.archivable, context.rightColumn),
+              ),
             },
           ]
         : []
@@ -235,7 +254,15 @@ function groupsOf(
       ]
     case 'search':
     case 'no-results':
-      return searchGroups(paletteQueries[view] ?? '', active, context)
+    case 'search-loading':
+    case 'search-unavailable':
+    case 'search-repositories-unavailable':
+      return searchGroups(
+        paletteQueries[view] ?? '',
+        active,
+        context,
+        paletteStatuses[view] === undefined,
+      )
   }
 }
 
@@ -248,6 +275,7 @@ export function paletteContent(
   const query = paletteQueries[view] ?? ''
   const tabFilters = tab === 'workspaces' ? filters(view) : undefined
   const groups = groupsOf(view, context)
+  const status = paletteStatuses[view]
   return {
     tab,
     query,
@@ -257,8 +285,9 @@ export function paletteContent(
     },
     filters: tabFilters,
     groups,
+    status,
     empty:
-      tabFilters && query === '' && groups.length === 0
+      tabFilters && query === '' && groups.length === 0 && !status
         ? emptyLine(tabFilters)
         : undefined,
   }

@@ -21,7 +21,7 @@ export type SettingsTab = 'general' | 'repositories' | 'computer' | 'members'
 export type ReadOnlyCause = 'member' | 'suspended'
 
 /** The page of each tab of the org settings. */
-const settingsLinks: Readonly<Record<SettingsTab, string>> = {
+export const settingsLinks: Readonly<Record<SettingsTab, string>> = {
   general: paths.orgSettings,
   repositories: paths.repositories,
   computer: paths.cloudComputer,

@@ -18,10 +18,22 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, or `?suspended=1`. `dev/options.ts` lists
-  them. A new org
-  of the dev fake gets every repository of the account's list, and keeps
-  its custom initials through rename, delete, and restore.
+  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`, or
+  `?paths=masked`. `dev/options.ts` lists them. Create org of the dev fake
+  requires at least one repository and starts a simulated build. Its
+  repository catalogue keeps the saved choices, and its custom initials
+  stay through rename, delete, and restore. Settings changes during the
+  first good build start one added build. The fake compares settings
+  revisions with builds as the Worker does.
+- `?operator=1` makes the dev user an operator, so the rail and the org
+  switcher show Operator. The [operator section](../shell/operator/README.md)
+  then shows the sample orgs and users of the mockups, and Suspend and Lift
+  change them. A suspension of Acme, Futex, or Firna also suspends that org
+  in the state of the fake, so the fake refuses each write of that org with
+  `org_suspended`. The open app does not read its orgs again, so its pages
+  of that org show the suspension only after such a refusal. Without the
+  option, each operator request gets `operator_required`, as the Worker
+  does.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -73,7 +85,7 @@ feature leaves its place empty.
 | `composer`    | The composer of that column while the sandbox runs or starts |
 | `center`      | A part in place of the whole chat. Without it, the chat shows the file or diff tab of the address |
 | `files`       | All files, Changes, and Checks. The shell gives its own |
-| `tools`       | Terminal, Preview, and Desktop. The shell gives its own |
+| `tools`       | Terminal and Preview. The shell gives its own |
 | `pullRequest` | The pull request bar, or the row on a phone. The shell gives its own |
 | `owner`       | The owner picker that reassigns a workspace. The shell gives its own |
 
@@ -100,7 +112,8 @@ the workspace stores, and the raw event streams of feature stores.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the command palette, the focus, saved drafts, and New workspace.
+layers, the command palette, the focus, saved drafts, and New workspace as a page or a dialog,
+with the send key that every composer shares.
 
 ## Rules for this code
 
@@ -151,9 +164,14 @@ server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
 mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
 clicks, types, and lets the answers of the fake API settle.
+`../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
+for the tests of New workspace as a page or a dialog, and of its send key.
 
 ## Key code
 
+- `dev/org-routes.ts` creates orgs and starts their first simulated build.
+  `dev/build-routes.ts` runs builds and the added build after the first image.
+  `dev/settings-routes.ts` saves settings and repository choices.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. `api/read-*.ts`: the readers.
@@ -172,11 +190,20 @@ clicks, types, and lets the answers of the fake API settle.
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   and computer settings of one org, with `watch` and the wait of each part.
+  `OrgModel.startBuild` sends Build computer and Try again for each screen
+  that offers them.
+- `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
+  first build of an org from its builds, which Get started and New
+  workspace show until the org has a good image. `changedScriptNotice`
+  gives the words of the notice of a changed install script, which the
+  Cloud computer tab of an admin and of a member show.
 - `account-model.ts`: the agent logins with their share setting, the
-  default model, the GitHub App installations, and the repositories that
-  Create org offers.
-- `panels.ts`: `PanelWidths`, the widths of the panels, and `next`, the
-  one rule of their steps.
+  default model, the New workspace view, the GitHub App installations,
+  and the repositories that Create org offers. A screen watches the
+  installations: they read at once, and again with the steps of Get started
+  each time that the user comes back to the page.
+- `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
+  column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
   its waiting writes. `refresh.ts`: `Refresher`, the shared reads of a part
   while screens show it.
@@ -190,9 +217,20 @@ clicks, types, and lets the answers of the fake API settle.
 - `workspace-read-marks.ts`: `WorkspaceReadMarks`, the read marks of one
   kept workspace model, with its shown and confirmed numbers.
 - `new-workspace-model.ts`: the first message that creates a workspace.
-  `creations.ts`: `Creations`, the admitted creates of an org in this tab,
-  and `failedCreate`, which tells a create whose start failed.
-- `computer-model.ts`: the scripts, the env vars, the builds, and the log.
+  `creations.ts`: `Creations`, the life of the create requests of an org in
+  this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
+  which tells a failed first start, and `resumesAtOpen`.
+- `computer-model.ts`: the scripts, the env vars with their Secret marks,
+  the builds, and the log. `classifyEnvVar` changes only the mark of a
+  variable, and sends no value. `replaceEnvVar` changes only the value,
+  and sends no mark, so the Worker keeps the stored mark. `setEnvVar`
+  sends a value and a mark, for Add variable.
+- `../shell/settings/EnvVarsSection.tsx`, `EnvVarForms.tsx`, and
+  `EnvVarMark.tsx`: the env var editor of an admin. The Secret switch of a
+  row saves its mark at once, and Add variable starts secret. A new value
+  sends no mark, so it keeps the stored mark, also a mark that a save of
+  the switch changed after its form opened. The switch, Change, and Delete
+  of a row wait while one of them saves.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.
 - `events.ts`: the ordered event stream, the event socket, and
@@ -205,13 +243,38 @@ clicks, types, and lets the answers of the fake API settle.
   unmount. It checks that a switch stops the old store before the new one
   connects, and shows only the new store. It also checks when the hook keeps
   a store, connects it again, or makes a new one.
+- `pointer-drag.ts`: `usePointerDrag`, the drag and drop of any pointer
+  that the tab row of the chat and the workspace list use: the press, the
+  start after a move of a mouse or a long press of a finger, Escape, the
+  click after a drag, the scroll lock of touch, and a new drop place after a
+  scroll under a still pointer. `ownPress` keeps a press on a control
+  inside a dragged element, such as Close, for that control.
+  `next-click.ts`: `stopNextClick`, which stops the click that ends a drag
+  wherever it lands, also the late click of a finger.
+  `pointer-drag.test.tsx` mounts the hook in happy-dom.
+  `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
+  a section, on `usePointerDrag`.
+- `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
+  vertical wheel turn over a row that scrolls sideways into a sideways
+  scroll of the row. A sideways swipe and a turn with Ctrl stay with the
+  browser, and so does a turn past an end of the row. The tab row of the
+  chat uses it, and any row that scrolls sideways can.
+- `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
+  the Overview and the pages of the operator section, its searches, and
+  Suspend and Lift. A refusal with `operator_required` marks the account
+  as not an operator. `api/read-operator.ts` and
+  `api/read-operator-pages.ts`: their readers. The
+  [operator section](../shell/operator/README.md) gives the screens.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
   the tab opened last, from `AppModel.lastOrg`, or else the first org that
   is not deleted.
 - `palette/`: the command palette without React. `palette-results.ts`
   gives the groups and the empty state of each tab for a query, from
-  `palette-groups.ts` and the rows of `palette-rows.ts`. `matcher.ts`
+  `palette-groups.ts` and the rows of `palette-rows.ts`. `palette-status.ts`
+  gives the status part, which stands in place of the workspace groups
+  while the list or the repository names load or after a read failed,
+  and the reads that its Try again does again. `matcher.ts`
   ranks the matches. `commands.ts` holds the labels and the search words.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
@@ -222,12 +285,35 @@ clicks, types, and lets the answers of the fake API settle.
   hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
   frame, `palette-context.ts` gives `usePaletteOffer` and
   `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
+  `use-palette-source.ts` gives the list and the repositories of the org
+  with their load states, and `PaletteStatus.tsx` draws the status part.
 - `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
   which say whether they closed, and the modal layers with their owners.
   The palette reads them before it opens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
+- `../shell/layout/frames.tsx`: the frames: the desktop frame with the
+  rail, a desktop page alone, such as Create org, and the phone frame.
+  `../shell/layout/DesktopLayers.tsx`: `DesktopLayers`, the layers and the
+  main area that every desktop frame shares: sheets and dialogs, the New
+  workspace dialog, and the command palette.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
-  `useDismiss`, the layer of sheets and dialogs.
+  `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
+  every sheet and dialog uses. Escape closes only the newest layer.
+  `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
+  screen after a layer closes with a move, which the main area of a
+  desktop frame takes through `useScreenFocus`.
+- `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the
+  New workspace dialog of a desktop frame, and `useNewWorkspace`, the one
+  way that each place opens New workspace as the dialog or the page.
+  `NewWorkspaceDialog.tsx`: the dialog.
+- `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
+  and the dialog share: the repository, the notices, the readiness, and
+  the send. `parts.tsx`: their repository menu and files.
+  `useCursorAtEnd.ts`: `useCursorAtEnd`, the handle of their message
+  field. It puts the cursor at the end of a kept message once, as the
+  field mounts.
+- `../chat/components/send-key.ts`: `useSendKey`, the send key of every
+  composer.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.
   `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
 - `../shell/orgs/`: Create org and the name and initials fields.

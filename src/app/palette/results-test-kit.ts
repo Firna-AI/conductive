@@ -6,6 +6,7 @@ import { ready } from '../store'
 import type { PaletteResults } from './palette-results'
 import type { PaletteRow } from './palette-rows'
 import type { PaletteQuery, PaletteSource } from './palette-source'
+import { nameLabel } from '../../shared/name-label'
 
 // The data of the tests of the palette results: Acme of the fake API.
 
@@ -26,7 +27,7 @@ export function source(overrides: Partial<PaletteSource> = {}): PaletteSource {
     org: acme,
     suspended: false,
     list: ready({ sections, workspaces }),
-    repositories,
+    repositories: ready(repositories),
     openWorkspaceId: null,
     createOrgHref: routes.createOrg(),
     offers: [],
@@ -47,7 +48,7 @@ export function query(overrides: Partial<PaletteQuery> = {}): PaletteQuery {
 }
 
 function label(row: PaletteRow): string {
-  if (row.kind === 'workspace') return row.workspace.name
+  if (row.kind === 'workspace') return nameLabel(row.workspace.name)
   return row.detail ? `${row.label} · ${row.detail}` : row.label
 }
 

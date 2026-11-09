@@ -1,5 +1,8 @@
 import { useMemo, type ReactNode } from 'react'
-import type { SandboxNoticeState } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+import {
+  replacesComposer,
+  type SandboxNoticeState,
+} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import type { ChatHost } from '../../chat/components/SessionChat'
@@ -17,8 +20,8 @@ import { ChatColumn } from './WorkspaceColumns'
 
 /**
  * The kept chat of the workspace, with the parts that the shell draws, and
- * the open files: their tabs after the session tabs, and `content`, a file
- * or diff tab in place of the chat of the session.
+ * the open files: their tabs at their places in the tab row, and `content`,
+ * a file or diff tab in place of the chat of the session.
  */
 function KeptChat(props: {
   context: WorkspaceContext
@@ -36,11 +39,11 @@ function KeptChat(props: {
       clock={clock}
       content={props.content}
       controller={props.chat}
-      extraTabs={files.extraTabs}
       host={props.host}
       onConnectAgent={(agent) => go(routes.account(agent))}
       onOpenDiff={files.onOpenDiff}
       readOnly={context.readOnly}
+      renderTab={files.renderTab}
       viewport={context.viewport === 'phone' ? 'mobile' : 'desktop'}
     />
   )
@@ -52,7 +55,9 @@ function KeptChat(props: {
  * bar of a sandbox that is down, from its own record of the workspace, and
  * the chat places them. `notice` is that bar's state: a start that the app
  * refused, with its reason, such as in a suspended org, or a start that
- * failed, with the message that the workspace saved for it. `orgNotice` is
+ * failed, with the message that the workspace saved for it. The bar takes
+ * the place of the composer, except after a failed first start, whose
+ * composer stays under it. `orgNotice` is
  * the notice of a suspended org above the bar of an archived workspace. A
  * read-only workspace shows its chat read-only. The chat shows the open
  * file tabs, and on desktop the file or diff tab of the address in place of
@@ -82,14 +87,25 @@ export function ChatArea(props: {
       <SandboxBar notice={notice} resume={props.resume} workspace={workspace} />
     </>
   ) : null
+  const keepsComposer = notice !== null && !replacesComposer(notice)
   const center = features.center?.(context) ?? null
   if (features.tabs || features.transcript || features.composer) {
+    const composer = features.composer?.(context)
     return (
       <>
         {features.tabs?.(context)}
         {center ?? (
           <ChatColumn
-            footer={sandboxBar ?? features.composer?.(context)}
+            footer={
+              keepsComposer ? (
+                <>
+                  {sandboxBar}
+                  {composer}
+                </>
+              ) : (
+                (sandboxBar ?? composer)
+              )
+            }
             phone={phone}
             starting={starting}
             transcript={features.transcript?.(context)}
@@ -104,7 +120,7 @@ export function ChatArea(props: {
         chat={props.chat}
         content={features.center ? null : filesCenter(context)}
         context={context}
-        host={{ starting, sandboxBar }}
+        host={{ starting, sandboxBar, keepsComposer }}
       />
     )
   )

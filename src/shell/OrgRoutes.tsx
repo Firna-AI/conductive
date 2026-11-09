@@ -6,7 +6,7 @@ import { routes } from '../app/router'
 import { useStore } from '../app/store'
 import type { User } from '../shared/api'
 import type { OrgSummary } from '../shared/orgs'
-import { useApp, useOrgModel } from './context'
+import { useApp } from './context'
 import { AppFrame, PhoneFrame } from './layout/frames'
 import { OrgRail, type RailCurrent } from './layout/OrgRail'
 import { DeletedOrg, OrgHome } from './list/OrgHome'
@@ -20,7 +20,10 @@ import { useViewport } from './ui/viewport'
 import { WorkspaceScreen } from './workspace/WorkspaceScreen'
 import { inFirstRun } from '../app/get-started'
 
-/** The desktop frame with the rail of the user's orgs. */
+/**
+ * The desktop frame with the rail of the user's orgs. The rail of an
+ * operator also leads to the operator section.
+ */
 export function RailFrame(props: {
   user: User
   current: RailCurrent
@@ -30,12 +33,14 @@ export function RailFrame(props: {
   const app = useApp()
   const orgs = useStore(app.orgs)
   const getStarted = useStore(app.getStarted)
+  const operator = useStore(app.account.account)?.operator === true
   return (
     <AppFrame
       rail={
         <OrgRail
           current={props.current}
           firstRun={inFirstRun(getStarted)}
+          operator={operator}
           orgs={orgs}
           user={props.user}
         />
@@ -65,38 +70,6 @@ export function NotAvailable(props: { title: string }) {
 
 type OrgRoute = Extract<Route, { orgId: string }>
 
-/**
- * A workspace, or, when this tab created it and its sandbox did not start,
- * the form that gives its first message back. Each failed create keeps its
- * own form, so the form of the section and its newer draft stay apart.
- */
-function WorkspaceRoute(props: {
-  org: OrgSummary
-  workspaceId: string
-  view: readonly string[]
-  viewer: User
-}) {
-  const creations = useOrgModel(props.org.id).creations
-  const creation = useStore(creations.of(props.workspaceId))
-  if (creation?.state === 'failed') {
-    return (
-      <NewWorkspaceScreen
-        form={creation.form}
-        org={props.org}
-        sectionId={creation.submission.sectionId}
-      />
-    )
-  }
-  return (
-    <WorkspaceScreen
-      org={props.org}
-      view={props.view}
-      viewer={props.viewer}
-      workspaceId={props.workspaceId}
-    />
-  )
-}
-
 function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
   switch (route.screen) {
     case 'org':
@@ -111,7 +84,7 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
       )
     case 'workspace':
       return (
-        <WorkspaceRoute
+        <WorkspaceScreen
           key={`${org.id}:${route.workspaceId}`}
           org={org}
           view={route.view}

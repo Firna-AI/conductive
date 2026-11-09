@@ -58,6 +58,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
   const account: AccountResponse = {
     user: role === 'member' ? fakeUsers[1] : fakeUser,
     defaultChoice,
+    newWorkspaceView: 'page',
     agentLogins: [
       {
         agent: 'claude',
@@ -74,6 +75,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
         updatedAt: FAKE_TIME,
       },
     ],
+    operator: false,
     githubAppUrl: 'https://github.com/apps/conductive/installations/new',
   }
   const models: ModelsResponse = {

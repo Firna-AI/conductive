@@ -1,11 +1,7 @@
 import { InputFrame } from '@firna/ui/input'
 import { Mail, UserPlus } from 'lucide-react'
-import {
-  acmeInvites,
-  acmeMembers,
-  type PersonKey,
-} from '../../fixtures/members'
-import { workspaceList } from '../../fixtures/workspaces'
+import type { Invite, Membership, PersonKey } from '../../fixtures/members'
+import type { Workspace } from '../../fixtures/workspaces'
 import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
@@ -44,9 +40,16 @@ function InviteSection() {
  * The members of an org: an invite by email, then each member with
  * their role. Admins manage the members and who owns each workspace. A
  * member who is not an admin sees the members and their roles, without
- * the invite and without actions.
+ * the invite and without actions. `workspaces` are those of the org, with
+ * their owners.
  */
-export function MembersTab(props: { viewer: PersonKey; canManage: boolean }) {
+export function MembersTab(props: {
+  viewer: PersonKey
+  canManage: boolean
+  members: readonly Membership[]
+  invites: readonly Invite[]
+  workspaces: readonly Workspace[]
+}) {
   return (
     <>
       {props.canManage ? <InviteSection /> : null}
@@ -56,10 +59,10 @@ export function MembersTab(props: { viewer: PersonKey; canManage: boolean }) {
       >
         <MemberList
           canManage={props.canManage}
-          invites={props.canManage ? acmeInvites : []}
-          members={acmeMembers}
+          invites={props.canManage ? props.invites : []}
+          members={props.members}
           viewer={props.viewer}
-          workspaces={workspaceList}
+          workspaces={props.workspaces}
         />
       </Section>
     </>

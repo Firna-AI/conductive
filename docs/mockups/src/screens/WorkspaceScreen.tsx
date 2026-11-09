@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
@@ -17,6 +18,7 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { conversations } from '../fixtures/conversations'
+import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { suspendedOwner } from '../fixtures/startRefusals'
@@ -36,6 +38,7 @@ import {
 import { workspaceOverlay } from './workspaceOverlays'
 import { activityOf, drawnState, sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
+import { tabRowOf } from './workspaceTabRow'
 import { tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
@@ -47,11 +50,14 @@ const widenedRight = 560
  * request, the file lists, and the tools. Desktop shows them side by side; a
  * phone shows one at a time, with tabs to switch. In a suspended org the
  * chat history stays, and nothing in the workspace can change: no message,
- * no new session, no rename, no owner change, and no Archive.
+ * no new session, no rename, no owner change, and no Archive. `overlay`
+ * lies over the workspace in place of the overlay of its state, such as a
+ * dialog that another screen opens over it.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
   viewport: Viewport
+  overlay?: ReactNode
 }) {
   const { viewport } = props
   const state = drawnState(props.state)
@@ -71,6 +77,7 @@ export function WorkspaceScreen(props: {
   const archivable = !readOnly && (admin || workspace.owner === viewer)
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
+  const rightHidden = state.rightColumn === 'hidden'
   const chat = (
     <ChatPane
       composer={composerFor(state, workspace)}
@@ -81,7 +88,12 @@ export function WorkspaceScreen(props: {
           title="New session"
         />
       }
-      items={fresh ? [] : conversations[state.conversation]}
+      fold={state.fold}
+      items={
+        fresh
+          ? []
+          : chatItemsFor(conversations[state.conversation], state.paths)
+      }
       notice={
         // An archived workspace keeps its archived bar, so the notice of a
         // suspended org shows above it.
@@ -104,15 +116,34 @@ export function WorkspaceScreen(props: {
       canReassign={admin && !readOnly}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
+      rightHidden={rightHidden}
       status={status}
       viewport={viewport}
       workspace={workspace}
     />
   )
-  const overlay = workspaceOverlay(state, workspace, viewport)
-  const historyOpen = state.overlay === 'history'
+  // A phone and an archived workspace show only the session tabs.
   const tabs = tabsFor(state, workspace).filter(
-    (tab) => !archived || tab.kind === 'session',
+    (tab) => tab.kind === 'session' || (!archived && viewport === 'desktop'),
+  )
+  const row = tabRowOf(state, tabs, viewport, readOnly)
+  const overlay =
+    props.overlay ??
+    workspaceOverlay(state, workspace, viewport, {
+      tabs,
+      menuTab: row.menuTab,
+    })
+  const tabRow = (
+    <WorkspaceTabs
+      drag={row.drag}
+      full={row.full}
+      historyOpen={state.overlay === 'history'}
+      menuTab={row.menuTab}
+      readOnly={readOnly}
+      renaming={row.renaming}
+      tabs={tabs}
+      viewport={viewport}
+    />
   )
   const { header, files } = placeLostUpdate(state, {
     header: workspaceHeader,
@@ -133,16 +164,10 @@ export function WorkspaceScreen(props: {
         </MobileFrame>
       )
     }
-    const sessions = tabs.filter((tab) => tab.kind === 'session')
     const body = {
       chat: (
         <>
-          <WorkspaceTabs
-            historyOpen={historyOpen}
-            readOnly={readOnly}
-            tabs={sessions}
-            viewport={viewport}
-          />
+          {tabRow}
           {chat}
         </>
       ),
@@ -171,7 +196,11 @@ export function WorkspaceScreen(props: {
   const palette =
     state.palette === 'closed' ? null : (
       <CommandPalette
-        context={{ open: { workspace, status }, archivable }}
+        context={{
+          open: { workspace, status },
+          archivable,
+          rightColumn: !rightHidden,
+        }}
         view={state.palette}
         viewport={viewport}
       />
@@ -197,15 +226,9 @@ export function WorkspaceScreen(props: {
             workspace={workspace}
           />
         }
+        rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
-        tabs={
-          <WorkspaceTabs
-            historyOpen={historyOpen}
-            readOnly={readOnly}
-            tabs={tabs}
-            viewport={viewport}
-          />
-        }
+        tabs={tabRow}
         tools={
           archived ? undefined : (
             <ToolsPanel tool={state.tool}>{tool}</ToolsPanel>

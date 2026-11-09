@@ -1,6 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
 import {
-  draftNotice,
   legalLabel,
   type Block,
   type LegalDocument,
@@ -31,8 +30,7 @@ function BlockView(props: { block: Block }) {
 
 /**
  * A legal page of the site from the same document that the site serves:
- * the title, the notice that a lawyer reviews the draft, and the sections.
- * Each fact that waits for the operator or the lawyer is marked.
+ * the title, the introduction, and the sections.
  */
 export function LegalDocumentView(props: {
   document: LegalDocument
@@ -46,10 +44,6 @@ export function LegalDocumentView(props: {
       title={document.title}
       viewport={viewport}
     >
-      <div className={styles.notice} role="note">
-        <p className={styles.noticeTitle}>{draftNotice.title}</p>
-        <p className={styles.noticeText}>{draftNotice.text}</p>
-      </div>
       {document.sections.map((section) => (
         <section className={styles.section} key={section.title}>
           <h2 className={styles.heading}>{section.title}</h2>

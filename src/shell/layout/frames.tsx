@@ -7,7 +7,9 @@ import mac from '../mac/mac.module.css'
 import { WindowControls, WindowStrip } from '../mac/WindowControls'
 import { PaletteLayer } from '../palette/PaletteLayer'
 import { OverlayHost } from '../ui/Overlay'
-import { usePanelWidths } from './panels'
+import { DesktopLayers } from './DesktopLayers'
+import layout from './layout.module.css'
+import { usePanelLayout } from './panels'
 import { ResizeHandle } from './ResizeHandle'
 
 interface FrameProps {
@@ -22,15 +24,12 @@ function SidebarPanel(props: {
   /** The Mac app marks the sidebar that the user hid. */
   hidden?: boolean
 }) {
-  const widths = useStore(usePanelWidths().widths)
+  const widths = useStore(usePanelLayout().widths)
   const sidebar = useRef<HTMLElement>(null)
   return (
     <aside
       aria-label="Workspaces"
-      className={classes(
-        frame.sidebar,
-        props.hidden !== undefined && mac.sidebar,
-      )}
+      className={frame.sidebar}
       hidden={props.hidden}
       ref={sidebar}
       style={widths.sidebar === null ? undefined : { width: widths.sidebar }}
@@ -50,12 +49,18 @@ function SidebarPanel(props: {
 function BrowserFrame(props: FrameProps) {
   return (
     <div className={frame.frame}>
-      <OverlayHost>
-        {props.rail}
-        {props.sidebar ? <SidebarPanel>{props.sidebar}</SidebarPanel> : null}
-        <main className={frame.main}>{props.children}</main>
-        <PaletteLayer />
-      </OverlayHost>
+      <DesktopLayers
+        leading={
+          <>
+            {props.rail}
+            {props.sidebar ? (
+              <SidebarPanel>{props.sidebar}</SidebarPanel>
+            ) : null}
+          </>
+        }
+      >
+        {props.children}
+      </DesktopLayers>
     </div>
   )
 }
@@ -80,23 +85,25 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
         !shown && mac.cornerFrame,
       )}
     >
-      <OverlayHost>
-        <div className={classes(frame.left, !shown && mac.cornerLeft)}>
-          <WindowControls
-            chrome={props.chrome}
-            placement={shown ? 'panel' : 'corner'}
-            toggle={!sidebar ? 'off' : hidden ? 'show' : 'hide'}
-          />
-          <div className={frame.leftBody}>
-            {props.rail}
-            {props.sidebar ? (
-              <SidebarPanel hidden={hidden}>{props.sidebar}</SidebarPanel>
-            ) : null}
+      <DesktopLayers
+        leading={
+          <div className={classes(frame.left, !shown && mac.cornerLeft)}>
+            <WindowControls
+              chrome={props.chrome}
+              placement={shown ? 'panel' : 'corner'}
+              toggle={!sidebar ? 'off' : hidden ? 'show' : 'hide'}
+            />
+            <div className={frame.leftBody}>
+              {props.rail}
+              {props.sidebar ? (
+                <SidebarPanel hidden={hidden}>{props.sidebar}</SidebarPanel>
+              ) : null}
+            </div>
           </div>
-        </div>
-        <main className={frame.main}>{props.children}</main>
-        <PaletteLayer />
-      </OverlayHost>
+        }
+      >
+        {props.children}
+      </DesktopLayers>
     </div>
   )
 }
@@ -104,13 +111,26 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
 /**
  * The desktop app: the org rail, the sidebar of the org, and the main area.
  * Below 900 px the sidebar hides, and the org in the rail leads to its
- * list. A page can leave out the sidebar.
- * Dialogs and the command palette open over the whole frame.
+ * list. A page can leave out the sidebar. Its layers come from
+ * `DesktopLayers`, as for a page alone.
  */
 export function AppFrame(props: FrameProps) {
   const chrome = useMacApp()
   if (chrome) return <MacFrame chrome={chrome} {...props} />
   return <BrowserFrame {...props} />
+}
+
+/**
+ * A desktop page alone in the window, without the rail and the sidebar,
+ * such as Create org or the sign-in. In the Mac app a strip with the
+ * window controls tops it. It has the layers of every desktop frame.
+ */
+export function StandaloneFrame(props: { children: ReactNode }) {
+  return (
+    <div className={layout.standalone}>
+      <DesktopLayers leading={<WindowStrip />}>{props.children}</DesktopLayers>
+    </div>
+  )
 }
 
 /**

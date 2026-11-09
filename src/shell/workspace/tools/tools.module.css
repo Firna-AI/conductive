@@ -9,7 +9,3 @@
   min-width: 0;
   min-height: 0;
 }
-
-.tool[hidden] {
-  display: none;
-}

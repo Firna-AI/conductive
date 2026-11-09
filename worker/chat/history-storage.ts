@@ -1,7 +1,7 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
 import { parseFileEvent } from '../files/parsers'
-import { jsonBytes } from './runner-event-limits'
+import { jsonBytes } from '../../src/shared/event-limits'
 import { normalizeSession } from './session-storage'
 import type { ChatData } from './types'
 
@@ -17,7 +17,7 @@ const CHUNK_CHARACTERS = RUNNER_EVENT_MAX_BYTES / 16
 const chunkKey = (eventNumber: number, part: number) =>
   `chat:v1:history-chunk:${eventNumber}:${part}`
 
-/** A joined complete file report can exceed the limit of one storage value. */
+/** Joined reports and sanitized tree deltas can exceed one storage value. */
 export async function saveHistoryEvent(
   data: ChatData,
   key: string,
@@ -25,6 +25,7 @@ export async function saveHistoryEvent(
 ): Promise<void> {
   if (
     (envelope.event.type !== 'files.snapshot' &&
+      envelope.event.type !== 'files.changed' &&
       envelope.event.type !== 'changes.updated') ||
     jsonBytes(envelope) <= RUNNER_EVENT_MAX_BYTES
   )

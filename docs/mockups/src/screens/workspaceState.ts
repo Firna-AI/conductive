@@ -1,8 +1,10 @@
 import type { SchemaProps } from '@mokly/mokly'
+import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversations'
+import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
@@ -16,26 +18,38 @@ export const workspaceStateSchema = {
   additionalProperties: false,
   required: [
     'workspace',
+    'name',
     'sandbox',
     'startError',
     'conversation',
+    'fold',
     'banner',
     'files',
     'tool',
     'ports',
     'focus',
     'tab',
+    'tabRow',
     'composer',
     'resize',
+    'rightColumn',
     'overlay',
     'viewer',
     'lostUpdate',
     'tree',
+    'paths',
     'org',
     'palette',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
+    /**
+     * The name of a new workspace: its title, or no name yet, which shows
+     * as Untitled. A new workspace has no name from the send until the
+     * title comes, about a second later. So a start that shows Untitled
+     * shows only its first step. Any other workspace shows its own name.
+     */
+    name: { enum: ['title', 'untitled'] },
     /**
      * The cloud computer. An archived workspace has none. `refused` is a
      * stopped cloud computer whose start the app refuses, such as while the
@@ -50,6 +64,12 @@ export const workspaceStateSchema = {
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
+    /**
+     * The fold of the work of each ended turn: closed, as it starts, open,
+     * or open with its last message line open too. A view runs no script,
+     * so a chat with open folds starts at its top.
+     */
+    fold: { enum: foldStates },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
     files: { enum: fileLists },
@@ -61,7 +81,8 @@ export const workspaceStateSchema = {
     /**
      * The tab of the centre column: the first session, a new session, the
      * linked session that a member's message opened from the first session,
-     * or a file, a Markdown preview, or a diff. A phone shows a file in
+     * or a file, a Markdown preview, a diff, or a file whose name the app
+     * does not know, such as a file that moved. A phone shows a file in
      * Files.
      */
     tab: {
@@ -72,8 +93,19 @@ export const workspaceStateSchema = {
         'code',
         'markdown',
         'diff',
+        'unnamed-file',
       ],
     },
+    /**
+     * The tab row, from decisions 186 to 188: each tab where it opened, the
+     * drag of a tab, the code file after its move between the two
+     * sessions, a full row with more tabs than fit, scrolled to the shown
+     * tab, or the rename field in the first session tab after Rename
+     * session in its tab menu. The drag lifts the code file on desktop,
+     * and on a phone the second session, because a phone shows only the
+     * sessions.
+     */
+    tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
     /**
      * The composer: empty, with a message that is not sent yet, with
      * attached files, with its picker open, or with a message for an agent
@@ -95,9 +127,15 @@ export const workspaceStateSchema = {
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**
+     * The right column of the desktop: shown, or hidden with the toggle at
+     * the end of the header. A phone has no right column.
+     */
+    rightColumn: { enum: ['shown', 'hidden'] },
+    /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, or the
-     * question of Archive, with work that is not pushed or with none.
+     * before a running session closes, the owner of the workspace, the
+     * question of Archive, with work that is not pushed or with none, or
+     * the tab menu of the first session.
      */
     overlay: {
       enum: [
@@ -107,6 +145,7 @@ export const workspaceStateSchema = {
         'reassign',
         'archive-unpushed',
         'archive-pushed',
+        'tab-menu',
       ],
     },
     /** The person signed in: an admin of the org, or a member who is not. */
@@ -126,6 +165,12 @@ export const workspaceStateSchema = {
      * none. The next complete list returns to `latest`.
      */
     tree: { enum: treeStates },
+    /**
+     * The paths of the files: plain, or two paths that hold the secret value
+     * of an org env var. Each list, tab, and page then shows "[redacted]" in
+     * place of the value, and a diff opens the masked seed script.
+     */
+    paths: { enum: pathStates },
     /**
      * The org of the workspace: in use, or suspended by the operator. In a
      * suspended org every start is refused, so the screen draws a sandbox
@@ -147,21 +192,26 @@ export type WorkspaceState = SchemaProps<typeof workspaceStateSchema>
 /** The ready workspace of the canonical screen. Entries change from here. */
 export const readyWorkspace: WorkspaceState = {
   workspace: 'checkout-autocomplete',
+  name: 'title',
   sandbox: 'ready',
   startError: 'failed',
   conversation: 'history',
+  fold: 'closed',
   banner: 'ready-to-merge',
   files: 'changes',
   tool: 'terminal',
   ports: 'open',
   focus: 'chat',
   tab: 'session',
+  tabRow: 'opened',
   composer: 'empty',
   resize: 'none',
+  rightColumn: 'shown',
   overlay: 'none',
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
+  paths: 'plain',
   org: 'active',
   palette: 'closed',
 }

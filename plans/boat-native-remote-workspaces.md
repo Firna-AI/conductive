@@ -2962,6 +2962,9 @@ review.
 - **Recommendation:** A.
 - **Chosen:** A, by the user on 6 November 2026. The chat protocol states
   it.
+- **Changed by decision 186 on 8 November 2026:** the user can move any
+  tab, a session or a file, to any place in the row. A new tab still opens
+  at the end of the row. [The plan of that change](https://github.com/Firna-AI/remote-code/blob/21a796ccd2ac7e378f18bea73f72c69b874c079d/plans/move-tabs-by-drag.md) records the decision.
 
 ### 78. Bind each invitation to the person it names
 
@@ -6329,15 +6332,72 @@ Tags: ui
 
 Depends on: 15i, 15o. Both change the failed-start path.
 
+Status: Complete on `conductor/boat-native-remote-workspaces-milestone-8o`.
+
 Apply decision 130 D, which the user chose as a later follow-up on 8
 November 2026. Added on 8 November 2026.
 
-- [ ] Draw the kept workspace in the mockups: its start error, its chat,
+Scope approvals, 8 November 2026: the user chose A for scope items 1 and 2.
+The scope includes only the replay imports, draft methods, and replay
+fallback in `worker/workspace-lifecycle.ts`, with their tests. It also
+includes only the stale first-start paragraph in `docs/mockups/design.md`,
+the `app/new-workspace` row in `docs/mockups/catalogue.md`, and the
+failed-create draft sentence in `worker/members/README.md`.
+
+Implementation calls of the orchestrator, 8 November 2026:
+
+- Put the failed first-start notice above the enabled composer. Show its
+  saved cause and "Your chat is saved." A failed first start has no saved
+  files. Other sandbox notices keep their existing layout.
+- Keep the `error` and `time-limit` mockup paths. Add `not-created` for a
+  failed create request and `retrying` for the restart. A flow links the
+  states, so every new state stays reachable.
+- Keep accepted messages in the existing chat queue and event history.
+  Repeated create requests return the kept workspace. This preserves
+  message order and deduplication without a second replay queue.
+- Store first-message admission in the chat transaction. This keeps
+  accepted chat when the first lifecycle checkpoint fails.
+- Use the existing Resume route for Try again. Preserve the workspace,
+  branch, repository, message, session, turn, and creation date. Use the
+  newest good image and current start settings, so configuration repair
+  can take effect.
+- Keep the original preparation sender. Read the current workspace owner
+  and retain the retry requester separately. This preserves the access,
+  login, and reassignment rules.
+- Revoke the failed token at failure. Give the replacement a fresh token,
+  allocation identity, command journal, and 20-minute budget. Finish old
+  cleanup before replacement allocation, because each workspace has one
+  cleanup owner.
+- Keep pending cleanup and publication alarms. Stop the normal alarm of
+  an idle failed first start after that work ends. This preserves cleanup
+  without polling a workspace that has no computer.
+- Mark every active create failure with a failed step, including failures
+  before the first step and after the last step. The UI uses those
+  existing fields. Publish the failed step before the error state, so the
+  composer stays mounted. Later errors keep their completed create steps
+  and their existing layout.
+- Wait for Try again when a failed first start opens or returns. The app
+  previously resumed every error workspace at open. The exception keeps
+  the saved cause visible and preserves the other open rules.
+- Share the composer rule through the mockup view type and the Resume
+  action through the feature context. This keeps the shell, standalone
+  chat, Files, and tools consistent without a new browser API field.
+- Keep only the lifetime of create requests in the client. Remove the
+  admitted-draft tracking, returned forms, and first-start success memory.
+  This keeps sign-out protection without a second owner of accepted work.
+- Move the new-workspace transcripts into their own fixture file. This
+  keeps the existing conversation fixture below the file-length limit.
+
+- [x] Draw the kept workspace in the mockups: its start error, its chat,
       its queued messages, and Try again. Then build it, and compare it
       with its mockup.
-- [ ] Apply option D of `plans/follow-ups/failed-first-start-keeps-workspace.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8o`.
+- [x] Apply option D of `plans/follow-ups/failed-first-start-keeps-workspace.md`,
       with the changes to `docs/protocol/chat-and-events.md` and
       `docs/protocol/workspaces-and-sandboxes.md`. Delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8o`.
+
+Evidence: `.context/boat-native-remote-workspaces/8o/verification.md`.
 
 ## Milestone 8p: Chat attachments
 
@@ -7516,11 +7576,197 @@ org settings.
 Apply decision 133 C, which the user chose as a later follow-up on 8
 November 2026. Added on 8 November 2026.
 
-- [ ] Draw the "secret" mark of an org env var in the mockups of the org
+Design calls by the agent on 8 November 2026:
+
+- Keep every stored env value write-only, whatever its mark. Reason: the
+  existing browser boundary already protects every value.
+- Start new variables as secret, and read old values without a mark as
+  secret. Reason: an absent mark must not remove existing protection.
+- Save a changed mark without a new value. Reason: an admin cannot read
+  a stored value from the settings to send it again.
+- Use the Firna Secret switch in each admin row and the add form. Show
+  a lock mark without a control to members. Reason: the switch saves
+  the mark directly, while the member view stays read-only.
+- Keep dots for both kinds of value, and share one note about the mark.
+  Reason: every value stays write-only, and the timing needs to show once.
+- Give narrow rows one line for the name and one for the controls. Give
+  an open value field its own line. Keep the 40 px desktop and 44 px phone
+  control targets. Reason: names and touch targets must fit the list.
+- Let the mark save without a question. While a row saves, disable its
+  other writes. Restore its saved mark and show a toast after a failure.
+  Reason: the mark is reversible, and two writes must not use an old mark.
+- Use the env settings captured at each actual start for both filters.
+  Pass the marked values through the runner's start environment before
+  its first scan. Reason: later settings can differ from the values in
+  the running computer, and the first report must hide secrets too.
+- Store marks beside values in the existing encrypted settings. Keep old
+  clients and accepted names working. Reason: this needs no migration,
+  new name validation, or change to the runner handshake.
+- Filter displayed text and keep event types and IDs. Keep redaction
+  markers stable. Reason: a marked value can be one character long.
+- Move the runner configuration reference to its own page and keep its
+  old heading as a link. Reason: the README stays short, and links work.
+
+- [x] Draw the "secret" mark of an org env var in the mockups of the org
       settings. Then build it, and compare it with its mockup.
-- [ ] Apply option C of `plans/follow-ups/org-env-values-in-output.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply option C of `plans/follow-ups/org-env-values-in-output.md`,
       with the changes to `docs/protocol/access-and-security.md` and the
       privacy page. Delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+
+Evidence: `.context/milestone-15r/ui-report.md`,
+`.context/milestone-15r/non-ui-report.md`,
+`.context/milestone-15r/docs-report.md`, and
+`.context/milestone-15r/check.log`.
+
+Review round 1 fixes, selected by the user on 8 November 2026:
+
+- [x] Apply C of finding 1: make the workspace object filter marked env
+      values from the current start capture. Share the field policy,
+      sanitizer, and event bounds with the runner. Keep held text through
+      confirmed receipts. Remove the runner's private org-value list.
+      Update the access protocol and Privacy page for central filtering
+      and the possible raw copy on a computer's disk. Prove the fix with
+      an older runner that has no list.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply D of finding 2: make a value-only replacement preserve the
+      stored mark inside the settings compare-and-swap loop. Let Change
+      send `set` without a mark. Let Add keep its explicit mark. Keep
+      browser pending state as it is. Prove the atomic setting and the
+      Cancel/reopen request sequence.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply A of finding 3, selected as decision 145 on 8 November 2026:
+      keep real paths for reads, diffs, keys, joins, and provider fallback.
+      Mask separate screen labels through the one shared field policy.
+      State path exposure in the access protocol and Privacy page with
+      `(decision 145)`. Prove a reported file opens when its path holds a
+      marked value, and two formerly colliding paths stay distinct.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+
+Design calls for this fix round:
+
+- Use `set` without a mark for a value-only replacement. Reason: Add
+  already supplies a mark, and old clients can keep the stored mark too.
+- Keep pending output encrypted beside the raw receipt cursor. Reason:
+  a confirmed prefix must survive a reconnect without storing raw secrets.
+- Keep transport and shape checks before typed filtering. Filter before
+  semantic checks and storage, then apply the existing byte bounds again.
+  Reason: input needs a known shape, and redaction can increase its size.
+- Keep operational paths and references separate from optional display
+  labels. Reason: old records remain readable, and masks cannot change
+  file identity or the arguments of operations.
+- Keep earlier omission counts when applying the existing bounds again.
+  Reason: an older runner has already removed those bytes and files.
+- Show "File" while no display label is known. Reason: a raw route path
+  can hold a marked value, and the browser has no list to mask it.
+- Keep existing server labels during a folder move until entry updates
+  supply new labels. Reason: joining safe pieces can form a secret value.
+- Treat an empty optional label as absent in the shared filter. Reason:
+  browser readers drop it, so it must not bypass label masking.
+- Do not guess paths that old records already replaced with a marker.
+  Reason: that change lost information. Fresh reports can supply real
+  paths when an updated source is available.
+
+Fix evidence: `.context/milestone-15r/fix-round-1/` and
+`.context/reviews/conductor/boat-native-remote-workspaces-milestone-15r/findings.md`.
+
+Review round 2 fixes, selected by the user on 8 November 2026:
+
+- [x] Apply E of finding 4: keep answer context after a completion or a
+      turn end, with no cap on the number of contexts. Keep released held
+      text as context. After a completion, also keep the end of its text
+      that can start a secret, because the completion replaces the shown
+      answer. Mask only the part of later text that completes a secret
+      from a context. Apply the contexts to each runner stream of the
+      workspace, also to a new stream. Keep the one shared filter in the
+      runner and the Worker, and keep old encrypted snapshots readable.
+      Prove it after a refused completion, an accepted completion, a turn
+      end, and late text from a new stream. Describe the context in the
+      shared, runner, and chat READMEs and in the chat test guide.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply A of finding 5, with chunked deltas: keep the raw transport
+      byte limits. Parse each filtered file event on a separate path
+      without them. Store each report part as a manifest and chunks of at
+      most 65,536 characters, in the commit of the report state. Read old
+      direct parts. Remove the chunks at a newer revision, a refusal, and a
+      new stream. Also chunk a grown `files.changed` event in the history.
+      Prove that grown tree and changes parts and a grown tree delta store
+      and reload. Describe the chunks in the files and chat READMEs.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply C of finding 6: add one native case with `createAdapterRuntime`
+      and a small test entry that extends the production `Workspace`. Seed
+      an encrypted env capture in D1. Confirm held text, read the actual
+      native records, close the sockets, evict the object, and check that
+      the hidden continuation shows once. Add no native commit fault. Keep
+      the fast failed-commit, replay, and gap case with all its assertions.
+      Retry its failed receipt on the same live chat before the restart.
+      Describe the native case in the chat test guide. Add the remaining
+      native fault gap to `plans/follow-ups/chat-tests-on-real-object.md`,
+      which Milestone 5f applies.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+
+Design calls for fix round 2, by the agent on 8 November 2026:
+
+- Do not cap the number of answer contexts. A completion or a turn end
+  keeps each context that can still start a secret. An entry goes only
+  when neither held text nor a possible prefix remains. Reason: a cap lets
+  a crafted runner complete a secret in an older answer.
+- Keep only an answer end that can still start a known secret, with the
+  secret values that apply to it. Reason: each context stays shorter than
+  the longest secret, and a restored snapshot needs no current secret list.
+- After a completion, keep the context of the earlier text and of the
+  completion text. Reason: the filter runs before the receipt checks the
+  completion, so either text can stay on the screen.
+- Let a context match only at the start of later text. Complete secret
+  values still match at every position. Reason: the screen joins later
+  text to the end of the answer, so only its start can complete a context.
+  The same text at another position completes no secret.
+- Make the contexts of a snapshot optional. Reason: the encrypted snapshots
+  of fix round 1 stay valid.
+- Store each new report part as a manifest and chunks, whatever its size.
+  Reason: one writer avoids a second stored format that depends on size.
+- Use chunks of at most 65,536 characters, as the files projection and the
+  history do. Reason: a chunk stays below the storage value limit, also
+  after UTF-8 expansion.
+- Keep the reader of direct report parts. Reason: an incomplete report
+  that an earlier version stored must stay readable after an update.
+- After the filter, apply the byte limits again to each event except a
+  file report or a tree delta. This narrows the fix round 1 call that
+  applied the existing byte bounds again after the filter. Reason: masked
+  labels can make a valid file event larger, and only file events got the
+  chunked storage.
+- Check the storage growth with a stand-in limit of 2,097,152 JSON bytes on
+  `MemoryChatStorage`. Reason: it shows the growth without a native runtime
+  for each new case.
+- Read the native records through a test-only `/inspect` fetch path of the
+  test entry, and forward each other request to the production object. Add
+  no production route and no fault control. Reason: a direct RPC read kept
+  the eviction waiting, and the GitHub SQLite harness already uses this
+  fetch pattern.
+
+Design calls for fix round 2, by the agent on 9 November 2026:
+
+- Keep the answer contexts in one encrypted workspace record, and apply
+  them to each runner stream. Keep the held text in the encrypted record
+  of its own stream. This replaces the contexts per stream of the first
+  implementation. Reason: a new runner stream can add late text to an
+  answer of an older stream. A receipt regression with contexts per stream
+  showed `private-value` in the browser. Held text is not on the screen,
+  and the held text of two streams has no order.
+- Commit the held text, the workspace record, the emitted events, and the
+  raw cursor of the current stream together. The raw cursors stay separate
+  for each stream. Reason: a failed receipt must change neither the filter
+  state nor the cursor.
+- At the first accepted receipt without a workspace record, move the
+  contexts of each older stream record into it. Leave their held text in
+  place. Save the workspace record also when it holds no context.
+  Reason: an older context must keep its answer safe on every stream. The
+  saved record shows that the move is done, so later receipts do not scan
+  the older stream records again.
+
+Fix evidence: `.context/milestone-15r/fix-round-2/` and the same findings
+file.
 
 ## Milestone 8r: Chat write follow-ups
 

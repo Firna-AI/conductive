@@ -3,6 +3,8 @@ import type { Workspace } from '../../src/shared/workspaces'
 import type { AppDependencies } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import type { InvitationEmail } from '../invitation-mailer'
+import { saveGitHubTokens } from '../security/github-tokens'
+import { workspaceNameColumn } from '../data/workspace-name'
 import {
   TEST_ORIGIN,
   TEST_TIME,
@@ -105,6 +107,22 @@ export async function signIn(
 export async function memberFixture(harness: TestHarness) {
   const seed = await membersSeed(harness)
   await harness.env.DB.batch(seed.statements)
+  await Promise.all(
+    [seed.fixture.admin, seed.fixture.member, seed.fixture.other].map(
+      ({ user }) =>
+        saveGitHubTokens(
+          harness.env,
+          user.id,
+          {
+            accessToken: `github-test-token-${user.id}`,
+            refreshToken: null,
+            expiresAt: null,
+            refreshExpiresAt: null,
+          },
+          TEST_TIME,
+        ),
+    ),
+  )
   harness.github.profile = seed.profile
   return seed.fixture
 }
@@ -158,7 +176,7 @@ async function readWorkspace(
 ): Promise<Workspace> {
   const row = await harness.env.DB.prepare(
     `SELECT w.id, w.org_id AS orgId, w.repository_id AS repositoryId, w.section_id AS sectionId,
-     w.name, w.branch, w.state, w.created_at AS createdAt, w.updated_at AS updatedAt,
+     ${workspaceNameColumn('w')}, w.branch, w.state, w.created_at AS createdAt, w.updated_at AS updatedAt,
      w.archived_at AS archivedAt, u.id AS userId, u.github_login AS githubLogin,
      u.display_name AS displayName, u.avatar_url AS avatarUrl
      FROM workspaces w JOIN users u ON u.id = w.owner_user_id WHERE w.org_id = ? AND w.id = ?`,

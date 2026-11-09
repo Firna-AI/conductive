@@ -164,7 +164,7 @@ describe('a reply that names a linked session', () => {
         snapshot={snapshot(other)}
       />,
     )
-    expect(textOf(markup)).toContain("Uses Priya Raman's Claude login")
+    expect(textOf(markup)).toContain("Priya Raman's login")
   })
 })
 

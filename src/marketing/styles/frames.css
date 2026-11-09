@@ -1,6 +1,6 @@
 /*
  * A still picture of a real screen of the app. The frame clips the picture
- * to its corners. pictures.ts sets the size of each picture, and the scale
+ * to its corners. picture-styles.ts sets the size of each picture, and the scale
  * of each phone.
  */
 .frame {

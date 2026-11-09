@@ -13,9 +13,12 @@ import {
 import type { WorkspaceIdentity } from '../../../app/workspace-store'
 import { createFilesClient } from '../../../files/api/files-client'
 import { WorkspaceFiles } from '../../../files/model/files-store'
+import type { WorkspaceSocketMessage } from '../../../shared/events'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_TIME } from '../../../test-support/fixtures/core'
+import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { storeFailedRepairs } from '../../../test-support/recorded-repairs'
+import { seedFirstStart } from './dev-first-start'
 import { readDevOptions } from './dev-options'
 import { DevPage } from './DevPage'
 
@@ -29,11 +32,39 @@ const options = readDevOptions(location.search)
 const now = () => FAKE_TIME
 const server = new FakeApiServer()
 storeFailedRepairs(server.events, options.repair, now())
+// A first-start state opens the new workspace of the create flow instead.
+const workspaceId = options.start
+  ? seedFirstStart(server, options.start, options.member)
+  : FAKE_IDS.workspace
+/**
+ * The messages of one workspace, as its own socket gives them. The fake
+ * keeps one log for every workspace, and a first-start state opens a second
+ * workspace.
+ */
+function ofWorkspace(
+  workspaceId: string,
+  listener: (message: WorkspaceSocketMessage) => void,
+) {
+  return (message: WorkspaceSocketMessage) => {
+    if (message.type === 'event') {
+      if (message.envelope.workspaceId === workspaceId) listener(message)
+      return
+    }
+    const events = message.history.events.filter(
+      (envelope) => envelope.workspaceId === workspaceId,
+    )
+    listener({ type: 'history', history: { ...message.history, events } })
+  }
+}
+
 const app = new AppModel({
   api: createApiClient(server.fetch),
   events: {
     open: (target, handlers) =>
-      server.events.subscribe(target.afterEventNumber, handlers.message),
+      server.events.subscribe(
+        target.afterEventNumber,
+        ofWorkspace(target.workspaceId, handlers.message),
+      ),
   },
   now,
   delay: browserDelay,
@@ -69,6 +100,7 @@ if (root) {
         now={now}
         options={options}
         server={server}
+        workspaceId={workspaceId}
       />
     </StrictMode>,
   )

@@ -63,6 +63,8 @@ export class DevBackend {
   count = 0
   /** The first session of a new workspace, which follows its title. */
   titled: string | null = null
+  /** The new workspace asked for its title, which then comes on its own. */
+  titleAsked = false
 
   private constructor(parts: {
     target: WorkspaceTarget

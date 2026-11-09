@@ -1,18 +1,22 @@
 import { useMemo } from 'react'
-import { routes } from '../../app/router'
+import { routes, type AccountTab } from '../../app/router'
 import { useServices } from '../../app/services'
 import { ThisMacSection } from '../../chat/device/ThisMacSection'
 import type { Agent } from '../../shared/agents'
 import type { User } from '../../shared/api'
 import { Page } from '../layout/Page'
 import { useMacApp } from '../mac/mac-app'
+import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
-import {
-  AgentsSection,
-  DefaultsSection,
-  SignInSection,
-} from './AccountSections'
+import { AgentsSection, SignInSection } from './AccountSections'
 import { GitHubSection } from './GitHubSection'
+import { DefaultsSection } from './PreferencesSections'
+
+/** The tabs of the account, in their order. */
+const tabs = [
+  { tab: 'general', label: 'General' },
+  { tab: 'preferences', label: 'Preferences' },
+] as const satisfies readonly { tab: AccountTab; label: string }[]
 
 /**
  * This Mac, in the account of the Mac app only: the Mac that the app
@@ -35,24 +39,54 @@ function ThisMac() {
 }
 
 /**
- * The account: the GitHub sign-in, and what every org shares. The GitHub
- * App, the agents, and the model of new workspaces. The Mac app adds This
- * Mac. The product is free, so the page shows no plan and no billing.
- * `connect` opens the Connect form of an agent at first, as the link of a
- * missing login does.
+ * The General tab: the GitHub sign-in, and what every org shares, the
+ * GitHub App and the agents. The Mac app adds This Mac. `connect` opens
+ * the Connect form of an agent at first, as the link of a missing login
+ * does.
  */
-export function AccountScreen(props: { user: User; connect: Agent | null }) {
+function GeneralTab(props: { user: User; connect: Agent | null }) {
   return (
-    <Page
-      back={{ label: 'Workspaces', to: routes.home() }}
-      subtitle={`@${props.user.githubLogin}`}
-      title="Account"
-    >
+    <>
       <SignInSection user={props.user} />
       <ThisMac />
       <GitHubSection />
       <AgentsSection connect={props.connect} />
-      <DefaultsSection />
+    </>
+  )
+}
+
+/**
+ * The account, in two tabs. Each tab is a link with its own address.
+ * General holds the GitHub sign-in and what every org shares. Preferences
+ * holds how new workspaces start: their model, and how New workspace
+ * opens. The product is free, so the page shows no plan and no billing.
+ */
+export function AccountScreen(props: {
+  user: User
+  tab: AccountTab
+  connect: Agent | null
+}) {
+  return (
+    <Page
+      back={{ label: 'Workspaces', to: routes.home() }}
+      subtitle={`@${props.user.githubLogin}`}
+      tabs={
+        <LinkTabs
+          label="Account"
+          tabs={tabs.map((item) => ({
+            label: item.label,
+            to: routes.accountTab(item.tab),
+            selected: item.tab === props.tab,
+          }))}
+        />
+      }
+      title="Account"
+    >
+      {props.tab === 'general' ? (
+        <GeneralTab connect={props.connect} user={props.user} />
+      ) : (
+        <DefaultsSection />
+      )}
     </Page>
   )
 }

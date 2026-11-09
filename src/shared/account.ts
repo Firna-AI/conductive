@@ -4,11 +4,15 @@ import type { Timestamp, User } from './api'
 export const ACCOUNT_PATHS = {
   account: '/api/account',
   defaultModel: '/api/account/default-model',
+  newWorkspaceView: '/api/account/new-workspace-view',
   agentLogins: '/api/account/agent-logins',
   githubInstallations: '/api/account/github-installations',
   githubRepositories: '/api/account/github-repositories',
   deleteAccount: '/api/account/delete',
 } as const
+
+export const NEW_WORKSPACE_VIEWS = ['page', 'dialog'] as const
+export type NewWorkspaceView = (typeof NEW_WORKSPACE_VIEWS)[number]
 
 export function agentLoginPath(agent: Agent): string {
   return `${ACCOUNT_PATHS.agentLogins}/${agent}`
@@ -55,7 +59,9 @@ export interface GitHubRepository {
 
 export interface AccountResponse {
   user: User
+  operator: boolean
   defaultChoice: AgentChoice
+  newWorkspaceView: NewWorkspaceView
   agentLogins: readonly AgentLoginStatus[]
   /**
    * The page of the shared GitHub App on GitHub. It lists the GitHub
@@ -75,6 +81,10 @@ export interface SetDefaultModelRequest {
   choice: AgentChoice
 }
 export type SetDefaultModelResponse = SetDefaultModelRequest
+export interface SetNewWorkspaceViewRequest {
+  view: NewWorkspaceView
+}
+export type SetNewWorkspaceViewResponse = SetNewWorkspaceViewRequest
 export interface GitHubInstallationsResponse {
   installations: readonly GitHubInstallation[]
   installUrl: string
