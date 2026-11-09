@@ -51,7 +51,7 @@ describe('This Mac in the account', () => {
     const view = mountScreen(
       app,
       <MacApp window={window}>
-        <AccountScreen connect={null} user={fakeUser} />
+        <AccountScreen connect={null} tab="general" user={fakeUser} />
       </MacApp>,
     )
     await waitFor(
@@ -63,7 +63,7 @@ describe('This Mac in the account', () => {
       state: queryByText('Available', view)?.textContent,
       requests: macRequests(server),
     }).toEqual({
-      sections: ['This Mac', 'GitHub', 'Agents', 'New workspaces'],
+      sections: ['This Mac', 'GitHub', 'Agents'],
       state: 'Available',
       requests: [`GET ${DEVICE_CURRENT_PATH}`, `GET ${DEVICE_SETTINGS_PATH}`],
     })
@@ -75,14 +75,14 @@ describe('This Mac in the account', () => {
     const app = await startedApp(server)
     const view = mountScreen(
       app,
-      <AccountScreen connect={null} user={fakeUser} />,
+      <AccountScreen connect={null} tab="general" user={fakeUser} />,
     )
     await settle()
     expect({
       sections: sections(view),
       requests: macRequests(server),
     }).toEqual({
-      sections: ['GitHub', 'Agents', 'New workspaces'],
+      sections: ['GitHub', 'Agents'],
       requests: [],
     })
   })

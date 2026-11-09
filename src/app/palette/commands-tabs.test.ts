@@ -81,11 +81,15 @@ describe('the Actions and Settings tabs of the palette', () => {
     const tab = (overrides: Partial<PaletteSource>, text = '') =>
       paletteResults(query({ tab: 'settings', text }), source(overrides))
     const general = tab({}).groups[0]?.rows[0]
+    const preferences = tab({}).groups[1]?.rows.find(
+      (row) => row.key === 'account:new-workspaces',
+    )
     expect({
       browser: shown(tab({})),
       mac: shown(tab({ mac: true }))[1],
       search: shown(tab({}, 'env')),
       generalOpens: general?.kind === 'command' ? general.href : null,
+      preferencesOpens: preferences?.href,
     }).toEqual({
       browser: [
         [
@@ -97,6 +101,7 @@ describe('the Actions and Settings tabs of the palette', () => {
       mac: ['Account', [...accountRows, 'This Mac']],
       search: [['Acme settings', ['Cloud computer · Acme settings']]],
       generalOpens: routes.settings(acme.id, 'general'),
+      preferencesOpens: routes.accountTab('preferences'),
     })
   })
 })

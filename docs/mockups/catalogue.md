@@ -16,10 +16,10 @@ how a screen is built, and links to the other pages.
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs and a search |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
-| `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, and the agent logins, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, and Users tabs, the page of an org and of a user with Suspend and Lift, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, the first build of a new org, its error, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -31,18 +31,18 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
-| `user-flows`        | Sign up, create a workspace, reopen it, open one from the palette, create an org, run a Mac command |
+| `user-flows`        | Sign up, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/shell`, `app/command-palette`, `app/orgs`,
-`app/orgs/suspended`, `app/new-workspace`, `app/org-settings`,
+`app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
-`app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
+`app/account`, `app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
 folders and kept their paths, so that each of those pages shows only its
 canonical screen. `app/sign-in/get-started` moved into its own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
@@ -87,6 +87,26 @@ decision 151. The mockups draw it for Firna, the first org of the sign-up:
   shows once a build has ended. Its `script-changed` variant has an install
   script that Cal saved during the first build. One more build runs it
   when the first build succeeds, so its notice has no Build computer.
+
+`app/account` shows the General tab of the account. Its tabs are links, as
+the tabs of the org settings are. `app/account/preferences` shows the
+Preferences tab, from decision 142: the New workspaces section with Model
+and effort, and the choice of how New workspace opens on a computer, the
+page or a dialog. Its `not-saved` variant shows a save that failed, which
+keeps the saved choice. `app/account/setup`, `app/account/connect-claude`,
+and `app/account/connect-codex` show General before the first connections,
+and with the Connect form of each agent open.
+`app/account/share-not-saved` shows General after a login share setting
+failed to save, with its saved value and the cause beside the switch.
+
+`app/new-workspace/dialog` draws New workspace as a dialog over the ready
+workspace of `app`, for a user who chose the dialog. Its variants show a
+draft with an attached file and the notice of a missing agent login, a
+create request that failed, and an org without chosen repositories. A phone
+always opens the page, so each phone view shows the New workspace page in
+the same state. `user-flows/create-workspace-dialog` goes from Preferences
+through the dialog to the new workspace. The `first-build` variant shows
+Firna before its first good build, with the notice and Create off.
 
 `app/orgs/suspended` shows Acme after the operator suspended it, from
 decision 129. Its notice is at the top of the list, and every workspace
