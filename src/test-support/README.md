@@ -59,6 +59,11 @@ mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
 Writes return recorded replies. They do not change backend state.
+The GitHub action routes answer as a member with write access and the
+`squash` method. A merge returns HTTP 202 with a pending job named
+`merge-<workspace ID>`, and the poll of that job returns a completed merge.
+Each banner with a pull request carries `FAKE_GITHUB_HEAD_SHA` as the head
+that the bar shows, which the action client sends back.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
 Set the next reply with `server.json(method, path, body, status)`.
@@ -153,7 +158,7 @@ Replies, timers, and `waitFor` go on.
 - `message-field.ts` focuses, types into, pastes into, presses keys in, clears, and reads the message field of a composer.
 - `fake-core-routes.ts` records account, org, settings, section, and member replies.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
-- `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies.
+- `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies, also the member action routes of GitHub.
 - `fake-api-routes.ts` defines the reply registration interface.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
@@ -168,7 +173,7 @@ Replies, timers, and `waitFor` go on.
 - `fixtures/operator-access-samples.ts` and `fixtures/operator-access.ts` give the waitlist, the codes, and the app access of the samples, and `disabledCode`, the reply of a disable.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
-- `fixtures/tools.ts` maps file, GitHub, and tool samples.
+- `fixtures/tools.ts` maps file, GitHub, and tool samples. `FAKE_GITHUB_HEAD_SHA` is the head commit of each fake pull request.
 - `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.
 - `fake-device-routes.ts` records the Mac command, pairing, answer, and Mac settings replies.
 

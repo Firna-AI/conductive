@@ -71,6 +71,40 @@ The app shell provides the rest of the design:
 - `--ui-touch-min: 44px` on a phone, as the mockups set it. The phone row is
   at least 44 px high also without it.
 
+## The action client
+
+`createGitHubActions` in [githubActions.ts](githubActions.ts) gives the
+member requests of Merge. It takes the same `fetch` and workspace target as
+the store. No view calls it yet, so the views still link to GitHub.
+
+```ts
+const actions = createGitHubActions(fetch, { orgId, workspaceId })
+const { canWrite, mergeMethod } = await actions.capabilities(signal)
+if (canWrite && mergeMethod && banner.pullRequest) {
+  // The head of the pull request that the bar shows.
+  const { headSha } = banner.pullRequest
+  const reply = await actions.merge({ headSha, method: mergeMethod }, signal)
+  // Read a pending job again after a wait, until it is merged.
+  if (reply.state === 'pending') await actions.mergeResult(reply.mergeId, signal)
+}
+```
+
+- `capabilities` reads whether the signed-in member may merge, and the
+  merge method of that member, or null. The reply belongs to that member,
+  so it stays out of the shared GitHub store and its events.
+- `merge` starts a merge of the head that the member saw. It returns a
+  pending app job with its `mergeId`, or a completed merge.
+- `mergeResult` reads that job once. The caller repeats it until the merge
+  completes. Only the member who started the job can read it.
+- A refusal throws `GitHubActionError` with the app's error `code` and its
+  safe `message`, such as `github_head_changed`. A reply outside the
+  contract throws it with a null code. `githubActionParse.ts` checks each
+  reply.
+- After a merge, the new GitHub state reaches the store as a
+  `github.updated` event, as each other change does.
+- [Member merges](../../worker/github/merges.md) gives the routes and the
+  error codes of the Worker.
+
 ## Order of updates
 
 The store compares no times. It rests on these requirements of the protocol:
@@ -162,7 +196,10 @@ mounts it, and the production build leaves it out.
   The other view tests keep their static markup checks in Node.
 - [Shared state comparison](../shared/github-state.ts) compares two GitHub states, without the banner time.
 - `githubClient.ts` and `githubParse.ts`: read the two API replies, and check
-  them against the contract.
+  them against the contract, with the head commit of the pull request.
+- `githubActions.ts` and `githubActionParse.ts`: the action client and the
+  checks of its replies. `githubActions.test.ts` checks the requests, the
+  replies, the refusal codes, and replies outside the contract.
 - `PullRequestBar.tsx`, `PullRequestRow.tsx`, and `ChecksList.tsx`: the views.
 - `bannerStatus.ts` and `checkStatus.ts`: the words, the icons, and the tints
   of each state.

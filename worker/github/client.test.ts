@@ -61,6 +61,7 @@ it('maps pull request blockers and terminal states into the shared banner', asyn
       baseBranch: 'main',
       state: sample.state,
       updatedAt: TEST_TIME,
+      pullRequest: { headSha: HEAD_SHA },
     })
     expect(snapshot.checks.state).toBe('available')
     expect(snapshot.headSha).toBe(HEAD_SHA)

@@ -688,6 +688,17 @@ has a pull request. The mockups settled the labels, as
 
 ### Merge
 
+- Design call on 9 November 2026: the member capability route returns
+  `canWrite` and `mergeMethod`, outside the shared workspace stream. Merge
+  jobs keep an opaque app ID bound to their workspace and requesting member.
+  Reason: another member or workspace must not read that job through its ID.
+- Design call on 9 November 2026: when GitHub's member default is disabled,
+  choose the first allowed method in the order merge, squash, then rebase.
+  Return no method when the repository allows none. Reason: the contract
+  permits any allowed fallback and the bar has no method picker.
+- Design call on 9 November 2026: merge-triggered state refreshes repeat the
+  writable access check inside the existing chat queue before publication.
+  Reason: an archive or suspension can occur while the upstream read waits.
 - Design call: the Worker reads, for each member, whether GitHub lets the
   member merge, and which merge method GitHub gives the member. It reads
   with the member's own GitHub token. The answer goes only to that
@@ -953,25 +964,28 @@ Depends on: 2
 The Worker reads each member's merge right and method, and merges as the
 member.
 
-- [ ] Add the head commit to the pull request of the banner contract in
+- [x] Add the head commit to the pull request of the banner contract in
       `src/shared/github.ts`.
-- [ ] Add a read route that returns, for the signed-in member, the merge
+- [x] Add a read route that returns, for the signed-in member, the merge
       right and the merge method. It reads with the member's own token,
       behind the app gate and the org check.
-- [ ] Add a write route that starts the merge with GitHub's asynchronous
+- [x] Add a write route that starts the merge with GitHub's asynchronous
       merge API, with the member's own token, the head commit, the method,
       and a direct merge. It refuses a non-member, a suspended org, and an
       archived workspace.
-- [ ] Add a read route that returns the result of that merge, read with
+- [x] Add a read route that returns the result of that merge, read with
       the same member's token. Read the GitHub state again when the merge
       is done.
-- [ ] Map the refusals of GitHub to the app's own error codes. No text
+- [x] Map the refusals of GitHub to the app's own error codes. No text
       from GitHub reaches the browser.
-- [ ] Extend the fake GitHub server in `worker/github/fake-repository.ts`
+- [x] Extend the fake GitHub server in `worker/github/fake-repository.ts`
       with the member's right, the method, and the asynchronous merge.
-- [ ] Test each right, a moved head, a refused method, a merge that fails
+- [x] Test each right, a moved head, a refused method, a merge that fails
       at its run, a missing token, a non-member, and a suspended org.
-- [ ] Update `worker/github/README.md`.
+- [x] Update `worker/github/README.md`.
+
+Code and test evidence: `.context/pull-request-bar-actions/milestone-4/report.md`.
+Documentation handoff: `.context/pull-request-bar-actions/milestone-4/docs-handoff.md`.
 
 ## Milestone 5: Merge in the bar
 

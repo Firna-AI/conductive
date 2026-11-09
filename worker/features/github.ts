@@ -10,6 +10,7 @@ import { installationTokenProvider } from '../github/credentials'
 import { refreshWorkspace } from '../github/refresh'
 import { WorkspaceGitHubState } from '../github/workspace-state'
 import { HttpError } from '../http'
+import { handleGitHubMerge } from '../github/merge-handler'
 import type { WorkspaceAlarms } from './alarms'
 import type { ReceiverStorage } from '../members/receiver-storage'
 
@@ -76,6 +77,14 @@ export class WorkspaceGitHub {
         this.dependencies.fetch,
         this.dependencies.now,
       ),
+    })
+  }
+
+  fetch(request: Request): Promise<Response> {
+    return handleGitHubMerge(request, this.env, {
+      ...this.dependencies,
+      storage: this.storage,
+      refresh: (workspace, signal) => this.refresh(workspace, signal),
     })
   }
 

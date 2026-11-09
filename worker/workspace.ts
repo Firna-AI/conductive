@@ -207,6 +207,8 @@ export class Workspace extends WorkspaceLifecycle {
         now: this.now,
         refresh: (workspace, signal) => this.github.refresh(workspace, signal),
       })
+    if (/\/github\/.*$/.test(new URL(request.url).pathname))
+      return this.github.fetch(request)
     return this.fetchChat(request)
   }
 

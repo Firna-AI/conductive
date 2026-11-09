@@ -30,6 +30,7 @@ import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './core'
 import { withRealPath } from './masked-paths'
 
 export const FAKE_FILE_PATH = 'src/app/checkout/AddressForm.tsx'
+export const FAKE_GITHUB_HEAD_SHA = 'a'.repeat(40)
 export const fakeTerminalOutput =
   'storefront (calummoore/checkout-autocomplete) $ npm run dev\r\nLocal: http://localhost:3000\r\nReady\r\n'
 
@@ -104,7 +105,7 @@ export function toolFixtures(
           }
         : {
             state: bannerState,
-            pullRequest,
+            pullRequest: { ...pullRequest, headSha: FAKE_GITHUB_HEAD_SHA },
             // A missing approval is the common reason that GitHub blocks a merge.
             review:
               bannerState === 'changes-requested'

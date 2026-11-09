@@ -1,9 +1,10 @@
 # GitHub banner backend
 
 This module reads GitHub branch state for the shared banner and checks API.
+It also reads each member's merge access and runs direct merges as that member.
 It also verifies GitHub App webhooks and finds their workspace targets.
 It stores its state and events in the [chat store](../chat/README.md) of the workspace Durable Object.
-The production Worker mounts both browser reads and the signed webhook route.
+The production Worker mounts the browser reads, the member merge routes, and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
 
@@ -15,9 +16,16 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 - [handleGitHubWebhook](webhook.ts) accepts `POST /v1/github/webhooks` on `MACHINE_ORIGIN`.
   It verifies `X-Hub-Signature-256` against the raw body before parsing or D1 access.
   It authenticates machines with `GITHUB_WEBHOOK_SECRET`, without the app gate.
-- [handleGitHubRead](app-handler.ts) accepts GET and HEAD for both `githubPaths` routes.
+- [handleGitHubRead](app-handler.ts) accepts GET and HEAD for the banner and checks routes of `githubPaths`.
   It runs the existing app gate and checks the workspace's org before a read.
   It returns the shared banner or checks response, with private response headers.
+- [handleGitHubMerge](merge-handler.ts) serves the member capability, merge start, and merge result routes of `githubPaths`.
+  It uses the existing app gate and keeps member capabilities out of workspace events.
+  [GitHubMerge](merge.ts) derives the repository and pull request from the authorized workspace.
+  It merges with the member's fresh GitHub token and rechecks access around each GitHub request.
+  Its stored job binds an opaque app ID to the member and the workspace binding, without a token or error text.
+  A completed merge refreshes the shared state through the existing queue and publisher.
+  [Member merges](merges.md) gives the routes, replies, error codes, jobs, polling, and tests.
 - [refreshWorkspace](refresh.ts) runs inside the target workspace Durable Object.
   It checks active org, installation, repository, branch, and optional user access before reading.
   It repeats the access check before storage and publication.
@@ -41,7 +49,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   The caller implements only `scheduleRefresh`.
 - [installationTokenProvider](credentials.ts) signs the app JWT and gets an installation token for one repository.
   Its permissions allow repository content, pull request, check, and commit status reads only.
-  The token stays on the server.
+  The token stays on the server. A merge never uses it.
   This module has no sandbox credential endpoint.
 - [appSigningKey](private-key.ts) imports `GITHUB_APP_PRIVATE_KEY` for each GitHub App feature: these reads and the repository copies of image builds.
   It accepts each key text that the deployment guide allows.
@@ -77,6 +85,9 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 7. On tab open, read the banner and checks through the shared app routes.
    Read the stored workspace stream before subscribing after its common event number.
    Reconnect with that number, so a repeated publication shows only once.
+8. Forward the member merge routes to the workspace Durable Object.
+   Call `handleGitHubMerge` there with the object's storage and its internal refresh operation.
+   [Mounting](merges.md#mounting) names the production entry points.
 
 Example refresh operation inside the workspace Durable Object:
 
@@ -92,6 +103,7 @@ Neither public HTTP handler accepts a caller-supplied workspace token or install
 
 The production workspace object persists each scheduled workspace binding and refresh signal.
 The signal keeps the delivery ID, pushed branch, retry attempt, and user ID when present.
+The refresh after a merge also keeps its `requireWritable` flag.
 The consumer can schedule Durable Object alarm retries for failed reads or publication.
 A retry must keep these inputs so delivery receipts and access checks still apply.
 A failed refresh must remain a failure until the current read and publication succeed.
@@ -160,7 +172,8 @@ All links point to GitHub.
 The reader maps BEHIND and BLOCKED to the shared `blocked` banner.
 Terminal, draft, conflict, review, and check states take priority over `blocked`.
 The banner keeps the pull request's GitHub link and the existing shared fields.
-It adds no blocker reasons or GitHub write action.
+Its `pullRequest.headSha` is the head commit that the reader captured, which a merge sends back.
+The banner read adds no blocker reasons. The separate member routes own merge writes.
 An unresolved merge condition still returns `github_pending` with HTTP 503.
 UNKNOWN mergeability or merge state remains retryable when no earlier state applies.
 UNSTABLE remains retryable if the read checks show no failed, running, or queued check.
@@ -244,5 +257,15 @@ API references:
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination.
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
+- [merge-handler.ts](merge-handler.ts) gates and parses the member merge routes.
+- [merge.ts](merge.ts) selects the capability, starts and polls merges, and diagnoses refusals.
+- [merge-capabilities.ts](merge-capabilities.ts) reads member permissions, allowed methods, and the member's default method with their fresh token.
+- [merge-client.ts](merge-client.ts) sends direct asynchronous merges with the displayed head and reads their result.
+- [merge-jobs.ts](merge-jobs.ts) reads and stores member jobs in the workspace object.
+- [merge-access.ts](merge-access.ts) and [merge-data.ts](merge-data.ts) check active member access for merge operations and their shared-state publication.
+- [merge-errors.ts](merge-errors.ts) defines the safe merge error codes and messages.
+- [transport.ts](transport.ts) owns each request's 30-second deadline through its complete body read, then clears the timer.
 - [Shared state comparison](../../src/shared/github-state.ts) compares the backend and browser displays without banner time.
 - [credentials.ts](credentials.ts) gets server-only installation read tokens.
+
+[Tests](merges.md#tests) in the merge guide gives the merge tests, their fakes, and their primary schemas.
