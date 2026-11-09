@@ -23,17 +23,17 @@ Access:
 
 The action takes these steps, in this order:
 
-1. It records the suspension on the user: the time, and the operator who
-   sent the request.
-2. In one D1 batch, it deletes every sign-in session of the user, also
+1. In one D1 batch, it records the suspension, its event, and all access revocations.
+   The suspension records its time and the operator who sent the request.
+   The batch deletes every sign-in session of the user, also
    the sign-in sessions of the Mac app. In the same batch, it revokes the
    workspace token and the preview hostnames of each workspace that the
    user owns. This happens before any stop request. A workspace whose
    token is revoked gets a new token at its next start.
-3. It asks the Durable Object of each workspace that the user owns to
+2. It asks the Durable Object of each workspace that the user owns to
    cancel the active start and stop the sandbox, as
    [The stop of one workspace](suspension-access.md#the-stop-of-one-workspace) says.
-4. It wakes the image coordinator of each unfinished image build that the
+3. It wakes the image coordinator of each unfinished image build that the
    user started. The coordinator stops the build and marks it failed. It
    retries the cleanup until no build sandbox of that build is left.
 
@@ -48,6 +48,8 @@ alarm, without the operator.
 The action is idempotent. A repeat keeps the first time and the first
 operator, and runs the other steps again. Repeat it to see what is still
 pending.
+Each repeat runs the access revocations in the same batch as its state read.
+Any failed revocation rolls back the whole batch.
 
 To send the request from a terminal, sign in to the app in a browser as an
 operator. Copy the value of the `__Host-conductive-session` cookie from the
@@ -72,7 +74,8 @@ An unknown org gets 404 `org_not_found`.
 A repeat keeps the first suspension time and operator.
 Only internal storage holds the operator ID.
 
-The action revokes every workspace token and preview hostname of the org before it asks for stops.
+One D1 batch records the org suspension, its event, and every workspace token and preview hostname revocation.
+This batch completes before the action asks for stops.
 It stops every workspace and unfinished build of the org, whoever owns or started it.
 The native workspace and image alarms retry incomplete cleanup after runtime restarts.
 Failed creates stay in `pendingWorkspaceIds` while their sandbox cleanup records remain, including after their workspace rows are removed.

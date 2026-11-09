@@ -192,9 +192,13 @@ Each row has an ID, target kind, target ID, action, time, and operator account I
 Target kinds are `user` and `org`.
 Actions are `suspend` and `lift`.
 Target IDs are the stored user and org IDs.
-The state change and its event commit in the same D1 batch.
+The suspension, its event, and every access revocation commit in one D1 batch.
+For users, this includes deleting sign-in sessions.
+For both target kinds, it includes revoking workspace tokens and preview hostnames.
+Any failed write rolls the whole batch back.
 
 A repeat suspension keeps the first time and operator and writes no event.
+It still runs every access revocation in its batch.
 After a lift, a new suspension gets its own time, operator, and event.
 The app never removes an event when its target is deleted.
 Deleting an operator sets the event's operator reference to null.
@@ -256,7 +260,7 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 - [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview and org page.
 - [`lift.ts`](lift.ts): the lifts and the checks of affected workspaces.
 - [`repair.ts`](../lifecycle/repair.ts): bounded Cron repair of overdue disk and image alarms.
-- [`events-data.ts`](events-data.ts): atomic event writes and current suspension changes.
+- [`events-data.ts`](events-data.ts): the shared atomic writer for suspension state, events, and access revocations.
 - [`suspend-org.ts`](suspend-org.ts) and [`org-data.ts`](org-data.ts): the org action, stored suspension, revocations, and pending resources.
 - [`org-access.ts`](../data/org-access.ts): the active-org SQL predicate and the org error.
 - [`suspend-user.ts`](suspend-user.ts): `suspendUser`, the steps and the

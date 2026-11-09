@@ -8,6 +8,42 @@ interface SuspensionState {
   suspendedAt: number | null
 }
 
+function suspensionRevocations(
+  db: D1Database,
+  target: SuspensionTarget,
+  now: number,
+): D1PreparedStatement[] {
+  const value = target.kind === 'user' ? target.githubId : target.orgId
+  const workspaces =
+    target.kind === 'user'
+      ? 'SELECT id FROM workspaces WHERE owner_user_id IN (SELECT id FROM users WHERE github_id = ?)'
+      : 'SELECT id FROM workspaces WHERE org_id = ?'
+  const previews =
+    target.kind === 'user' ? `workspace_id IN (${workspaces})` : 'org_id = ?'
+  return [
+    ...(target.kind === 'user'
+      ? [
+          db
+            .prepare(
+              'DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE github_id = ?)',
+            )
+            .bind(value),
+        ]
+      : []),
+    db
+      .prepare(
+        `UPDATE workspace_tokens SET revoked_at = ? WHERE revoked_at IS NULL
+       AND workspace_id IN (${workspaces})`,
+      )
+      .bind(now, value),
+    db
+      .prepare(
+        `UPDATE preview_hostnames SET revoked_at = ? WHERE revoked_at IS NULL AND ${previews}`,
+      )
+      .bind(now, value),
+  ]
+}
+
 export async function recordSuspensionChange(
   db: D1Database,
   target: SuspensionTarget,
@@ -38,13 +74,14 @@ export async function recordSuspensionChange(
         action === 'suspend' ? operatorId : null,
         value,
       ),
+    ...(action === 'suspend' ? suspensionRevocations(db, target, now) : []),
     db
       .prepare(
         `SELECT id, suspended_at AS suspendedAt FROM ${table} WHERE ${key} = ?`,
       )
       .bind(value),
   ])
-  const row = results[2].results[0]
+  const row = results.at(-1)?.results[0]
   if (!row)
     throw new HttpError(
       404,
