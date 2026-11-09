@@ -4,7 +4,13 @@ import type { PreviewRoute } from '../../../previews/PreviewTool'
 import type { WorkspaceView } from '../../../shared/workspace-view'
 import type { WorkspaceContext } from '../features'
 import { saveView, useSavedView, useViewKnown } from '../saved-view'
-import { toolHref, toolPlace, type ToolKey } from './tool-address'
+import {
+  shownTool,
+  toolHref,
+  toolOffered,
+  toolPlace,
+  type ToolKey,
+} from './tool-address'
 
 /** The view with this tool in the tools panel. */
 function withTool(tool: ToolKey): (view: WorkspaceView) => WorkspaceView {
@@ -52,11 +58,12 @@ export function useToolSelect(
 /**
  * The tool of the open workspace and its navigation. An address that names
  * a tool shows it, and saves it in the view. Without one, the saved view
- * names the tool. A click saves the tool. On a phone each tool is a page
- * with its own address. On desktop the tools belong to the right column,
- * so the address keeps the tab of the centre: only a tool address follows
- * the new tool, and a preview tab changes the address only from a preview
- * address.
+ * names the tool. An address or a saved view that names a hidden tool shows
+ * Terminal, and saves nothing, so the saved view keeps the hidden tool. A
+ * click saves the tool. On a phone each tool is a page with its own
+ * address. On desktop the tools belong to the right column, so the address
+ * keeps the tab of the centre: only a tool address follows the new tool,
+ * and a preview tab changes the address only from a preview address.
  */
 export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
   const navigation = useNavigation()
@@ -69,7 +76,10 @@ export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
   const [chosenPreview, setChosenPreview] = useState<string | null>(null)
   const phone = viewport === 'phone'
   useEffect(() => {
-    if (known && placeTool) savedView.updateView(withTool(placeTool))
+    // The address of a hidden tool must not replace the saved tool.
+    if (known && placeTool && toolOffered(placeTool)) {
+      savedView.updateView(withTool(placeTool))
+    }
   }, [savedView, known, placeTool])
   const { href, select } = useToolSelect(context)
   const preview = useMemo<PreviewRoute>(() => {
@@ -93,7 +103,7 @@ export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
     navigation,
   ])
   return {
-    tool: placeTool ?? saved?.tool ?? 'terminal',
+    tool: shownTool(placeTool ?? saved?.tool ?? 'terminal'),
     href,
     select,
     preview,

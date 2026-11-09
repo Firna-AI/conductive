@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, a new problem of the check of finding 10 of PR #45, branch `conductor/boat-native-remote-workspaces-milestone-15m`, round 1.
-- **Location:** `docs/protocol/access-and-security.md` (526 lines on 9 November 2026), `docs/protocol/desktop-app.md` (332), and `docs/protocol/chat-and-events.md` (466).
+- **Location:** `docs/protocol/access-and-security.md`, `docs/protocol/desktop-app.md`, and `docs/protocol/chat-and-events.md`.
 - **Reason:** these remaining pages cover protocols outside the Desktop interface pause, so their split stays in a separate change.
 
 - **Terms:**

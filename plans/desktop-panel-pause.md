@@ -104,14 +104,16 @@ Depends on: 2
 
 The shared app hides Desktop for every user. Retained Desktop implementation and test coverage stay in the repository.
 
-- [ ] Add one named interface availability constant. Link its comment to the protocol's retention requirement. Pass its value to the palette through `WorkspacePage`. Add no configurable flag system or app-to-shell import.
-- [ ] Apply it to panel tabs, phone tabs, and palette actions. Keep the Desktop identities, renderer, styles, fixtures, and tests.
-- [ ] Apply it when resolving direct links and saved selections. Show Terminal without mounting Desktop or changing the hidden saved selection.
-- [ ] Keep the shared view contract and server parser compatible with existing Desktop selections. Change no Desktop backend behavior.
-- [ ] Update user-facing marketing text to describe the available tools.
-- [ ] Update navigation and integration tests for hidden Desktop. Keep independent Desktop component and backend tests.
-- [ ] Cover an existing saved Desktop selection and a direct Desktop link at the lowest existing test level. Cover both screen sizes where their navigation differs. Verify that neither requests a Desktop stream URL.
-- [ ] Verify that Terminal and Preview still open. Use existing tests and regression cases rather than tests that mirror a constant.
+- [x] Add one named interface availability constant. Link its comment to the protocol's retention requirement. Pass its value to the palette through `WorkspacePage`. Add no configurable flag system or app-to-shell import.
+- [x] Apply it to panel tabs, phone tabs, and palette actions. Keep the Desktop identities, renderer, styles, fixtures, and tests.
+- [x] Apply it when resolving direct links and saved selections. Show Terminal without mounting Desktop or changing the hidden saved selection.
+- [x] Keep the shared view contract and server parser compatible with existing Desktop selections. Change no Desktop backend behavior.
+- [x] Update user-facing marketing text to describe the available tools.
+- [x] Update navigation and integration tests for hidden Desktop. Keep independent Desktop component and backend tests.
+- [x] Cover an existing saved Desktop selection and a direct Desktop link at the lowest existing test level. Cover both screen sizes where their navigation differs. Verify that neither requests a Desktop stream URL.
+- [x] Verify that Terminal and Preview still open. Use existing tests and regression cases rather than tests that mirror a constant.
+
+Completed on 9 November 2026. The parent reviewed the code and strengthened the saved-Preview regression. All three final cases passed ten times. Real Chrome passed all four account/layout cases. Evidence: `.context/desktop-panel/m3-report.md` and `.context/desktop-panel/smoke/results.json`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

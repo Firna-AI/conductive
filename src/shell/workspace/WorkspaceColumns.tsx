@@ -19,6 +19,7 @@ import { usePanelLayout } from '../layout/panels'
 import { IconButton } from '../ui/actions'
 import { AppLink } from '../ui/AppLink'
 import type { WorkspaceContext } from './features'
+import { shownTool, toolOffered } from './tools/tool-address'
 import workspace from './workspace.module.css'
 
 /**
@@ -91,18 +92,27 @@ const phoneTabs: readonly {
   { view: 'desktop', label: 'Desktop', icon: Monitor },
 ]
 
-/** The view of a phone from the address after the workspace. */
+/** The tabs that a phone shows: the chat, the files, and each offered tool. */
+const shownPhoneTabs = phoneTabs.filter(
+  (tab) => tab.view === 'chat' || tab.view === 'files' || toolOffered(tab.view),
+)
+
+/**
+ * The view of a phone from the address after the workspace. The address of
+ * a hidden tool shows Terminal, with its tab.
+ */
 export function phoneView(view: readonly string[]): PhoneView {
-  return phoneTabs.find((tab) => tab.view === view[0])?.view ?? 'chat'
+  const named = phoneTabs.find((tab) => tab.view === view[0])?.view ?? 'chat'
+  return named === 'chat' || named === 'files' ? named : shownTool(named)
 }
 
-/** The five tabs at the bottom of a phone. Each tab is a link. */
+/** The tabs at the bottom of a phone. Each tab is a link. */
 export function PhoneTabBar(props: { context: WorkspaceContext }) {
   const { org, workspace: open, view } = props.context
   const current = phoneView(view)
   return (
     <nav aria-label="Workspace" className={tabs.bar}>
-      {phoneTabs.map((tab) => {
+      {shownPhoneTabs.map((tab) => {
         const selected = tab.view === current
         const Icon = tab.icon
         const path =
