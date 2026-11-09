@@ -1,6 +1,7 @@
 /**
  * The page of one user, as the operator opens it, in each state of the
- * page: in use, suspended, waiting, approved, and after each way in.
+ * page: in use, suspended, waiting, and approved. The pages of each way in
+ * are in `operatorAccessPages.ts`.
  */
 import {
   approval,
@@ -29,6 +30,8 @@ export type UserPage = {
   name: string
   initials: string
   githubId: number
+  /** How long the GitHub account has existed, as the Waitlist tab shows it. */
+  githubAge: string
   joined: string
   owned: number
   running: number
@@ -44,6 +47,7 @@ const dana = {
   name: 'Dana Kim',
   initials: 'DK',
   githubId: 58201734,
+  githubAge: '6 years',
   joined: '21 Oct 2026',
   owned: 14,
   orgs: [
@@ -58,6 +62,7 @@ const sam = {
   name: 'Sam Okafor',
   initials: samOkafor.initials,
   githubId: 91827364,
+  githubAge: samOkafor.githubAge,
   joined: '1 Nov 2026',
   owned: 0,
   running: 0,
@@ -90,6 +95,7 @@ export const userPages = {
     name: account.name,
     initials: account.initials,
     githubId: 4412907,
+    githubAge: '12 years',
     joined: '2 Sep 2026',
     owned: 41,
     running: 2,
@@ -115,79 +121,5 @@ export const userPages = {
     ...sam,
     access: approval({ state: 'sent', at: '8 Nov 2026 at 15:21' }),
     referral: samReferral,
-  },
-} as const satisfies Record<string, UserPage>
-
-/**
- * The pages of users who came in after the waitlist started: by an invite
- * code, by the referral code of another user, by an org invitation, and
- * as an operator.
- */
-export const accessPages = {
-  inviteCode: {
-    login: 'rho-9',
-    name: 'Rhea Okafor',
-    initials: 'RO',
-    githubId: 60318842,
-    joined: '8 Nov 2026',
-    owned: 2,
-    running: 1,
-    orgs: [{ name: 'Rhino Data', initials: 'RD', role: 'Admin' }],
-    access: {
-      state: 'granted',
-      since: '8 Nov 2026 at 11:20',
-      way: { kind: 'invite-code', label: 'Launch week' },
-    },
-    referral: referral('J3PQA-6NWRT'),
-  },
-  referralCode: {
-    login: 'tide-sam',
-    name: 'Sam Ortiz',
-    initials: 'SO',
-    githubId: 73650219,
-    joined: '7 Nov 2026',
-    owned: 3,
-    running: 0,
-    orgs: [{ name: 'Tidepool', initials: 'TP', role: 'Admin' }],
-    access: {
-      state: 'granted',
-      since: '7 Nov 2026 at 09:05',
-      way: { kind: 'referral-code', owner: 'dana-k' },
-    },
-    referral: referral('F8MWK-2XRHD', [
-      { login: 'ivy-r', name: 'Ivy Rossi', initials: 'IR', day: '8 Nov' },
-    ]),
-  },
-  orgInvitation: {
-    login: 'kt-null',
-    name: 'Kai Tanaka',
-    initials: 'KT',
-    githubId: 81122907,
-    joined: '6 Nov 2026',
-    owned: 2,
-    running: 1,
-    orgs: [{ name: 'Hexwave', initials: 'HW', role: 'Member' }],
-    access: {
-      state: 'granted',
-      since: '6 Nov 2026 at 16:22',
-      way: { kind: 'org-invitation', org: 'Hexwave' },
-    },
-    referral: referral('P7DYC-3KMVA'),
-  },
-  operator: {
-    login: 'ellie-w',
-    name: 'Ellie Wong',
-    initials: 'EW',
-    githubId: 90476315,
-    joined: '4 Nov 2026',
-    owned: 1,
-    running: 0,
-    orgs: [{ name: 'Futex', initials: 'FX', role: 'Member' }],
-    access: {
-      state: 'granted',
-      since: '4 Nov 2026 at 08:47',
-      way: { kind: 'operator' },
-    },
-    referral: referral('Y5GQN-8TWCE'),
   },
 } as const satisfies Record<string, UserPage>

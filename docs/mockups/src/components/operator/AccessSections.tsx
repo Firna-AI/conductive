@@ -12,8 +12,9 @@ import { ActionButton } from '../common/actions'
 import { ScreenLink } from '../common/ScreenLink'
 import { DetailList, type Detail } from '../settings/DetailList'
 import { Section, SectionText } from '../settings/Section'
-import { CodeStateText } from './codes'
+import { CodeStateText, CopyableCode } from './codes'
 import { InlineLink, TargetList, TargetRow } from './targets'
+import styles from './AccessSections.module.css'
 
 /** How the user got app access, with a link to the code, the owner, or the org. */
 function WayInText(props: { way: WayIn }) {
@@ -49,10 +50,45 @@ function WayInText(props: { way: WayIn }) {
   }
 }
 
-/** Whether the approval email went. A late one goes again on its own. */
-function emailText(email: ApprovalEmailNote): string {
-  if (email.state === 'sent') return `Sent on ${email.at}`
-  return `Not sent yet. ${productName} tries again on its own.`
+/** A state, with a short muted line under it that says why. */
+function StateWithReason(props: { state: string; reason: string }) {
+  return (
+    <span className={styles.lines}>
+      {props.state}
+      <span className={styles.reason}>{props.reason}</span>
+    </span>
+  )
+}
+
+/**
+ * Whether the approval email went. A late one goes again on its own for 24
+ * hours. One that never went says why. The person keeps app access and sees
+ * it at their next visit, so no state asks for an action.
+ */
+function EmailState(props: { email: ApprovalEmailNote }) {
+  const { email } = props
+  switch (email.state) {
+    case 'sent':
+      return <>Sent on {email.at}</>
+    case 'pending':
+      return (
+        <StateWithReason
+          reason={`${productName} tries again on its own.`}
+          state="Not sent yet"
+        />
+      )
+    case 'not-sent':
+      return (
+        <StateWithReason
+          reason={
+            email.reason === 'no-verified-email'
+              ? 'This GitHub account has no verified email.'
+              : `${productName} stopped trying on ${email.on}.`
+          }
+          state="Not sent"
+        />
+      )
+  }
 }
 
 /**
@@ -68,7 +104,10 @@ export function AppAccessSection(props: {
     { term: 'Since', value: since },
   ]
   if (way.kind === 'approval') {
-    rows.push({ term: 'Approval email', value: emailText(way.email) })
+    rows.push({
+      term: 'Approval email',
+      value: <EmailState email={way.email} />,
+    })
   }
   return (
     <Section title="App access">
@@ -85,9 +124,10 @@ function pageOf(login: string): string {
 }
 
 /**
- * The referral code of the user: the code, its uses, the people who used
- * it with the day each came in, and Disable while it still works. The
- * user sees only the uses left, and the operator also sees who used them.
+ * The referral code of the user: the code with Copy and Copy join link,
+ * its uses, the people who used it with the day each came in, and Disable
+ * while it still works. The user sees only the uses left, and the
+ * operator also sees who used them.
  */
 export function ReferralSection(props: {
   code: ReferralCode
@@ -102,7 +142,10 @@ export function ReferralSection(props: {
     disabled: code.disabled !== undefined,
   })
   const rows: Detail[] = [
-    { term: 'Code', value: code.code, mono: true },
+    {
+      term: 'Code',
+      value: <CopyableCode code={code.code} works={state === 'active'} />,
+    },
     { term: 'Uses', value: `${code.usedBy.length} of ${code.limit} used` },
   ]
   if (code.disabled) {

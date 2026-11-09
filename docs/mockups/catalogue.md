@@ -92,15 +92,17 @@ Invite codes tabs come from decision 160. Its child pages:
   from decision 145, and a deleted org.
 - `app/operator/users` has the Users tab: the newest users, with Waiting
   under a person on the waitlist, a search, and a search with no match.
-- `app/operator/user` has the page of a user, with the name, how and when
-  they got app access, their referral code with who used it, and Suspend
-  user. Its child pages are below.
+- `app/operator/user` has the page of a user, with the name, the age of
+  the GitHub account, how and when they got app access, their referral
+  code with Copy, Copy join link, and who used it, and Suspend user. Its
+  child pages are below.
 - `app/operator/waitlist` has the Waitlist tab: the people who wait, oldest
   first, a search, the question before Approve, the list after two
   approvals, one with its email not sent yet, and an empty waitlist.
 - `app/operator/codes` has the Invite codes tab: Sign-ups with Pause
   sign-ups, the search, and the invite codes with their uses and states.
-  Its child pages are below.
+  Each code has Copy, and a code that works also has Copy join link. Its
+  child pages are below.
 - `app/operator/error` has the numbers that could not load, with Try
   again. Its `loading` variant has the page while it reads the numbers.
 
@@ -121,7 +123,9 @@ of `app/operator/user` and kept their paths:
   sent.
 - `app/operator/user/access` has a user who came in with an invite code.
   Its variants have a user who came in with a referral code, with an org
-  invitation, and as an operator.
+  invitation, and as an operator. Its `email-not-sent` variant has an
+  approval whose email never went, because the GitHub account has no
+  verified email.
 - `app/operator/user/referral` has the question before the disable of a
   referral code. Its `disabled` variant has the disabled code.
 
@@ -132,8 +136,9 @@ The child pages of `app/operator/codes`:
 - `app/operator/codes/disable` has the question before the disable of an
   invite code. Its `disabled` variant has the disabled code in the list.
 - `app/operator/codes/search` has a search that finds an invite code by
-  its text. Its variants have a search that finds the referral code of a
-  user, and a search with no match.
+  its text. The search also takes the label of an invite code and the
+  GitHub login of the owner of a referral code. Its variants have a search
+  that finds the referral code of a user, and a search with no match.
 - `app/operator/codes/pause` has the question before Pause sign-ups. Its
   variants have the Invite codes tab while sign-ups are paused, with
   Resume sign-ups, and the same notice on the Waitlist and the Overview.

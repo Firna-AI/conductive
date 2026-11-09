@@ -36,9 +36,9 @@ const operatorRail: RailState = {
  * A page of the operator section: the header, the tabs Overview, Orgs,
  * Users, Waitlist, and Invite codes, and a dialog over the page. While
  * sign-ups are paused, each tab starts with the notice of the pause. On a
- * phone the five tabs take two lines, so that each shows also on a phone
- * narrower than 390 px. The header leads back to the workspaces, unless
- * the page gives its own way back.
+ * phone the five tabs keep one line while they fit, and the last ones move
+ * to a second line on a narrower phone, so that each tab shows. The header
+ * leads back to the workspaces, unless the page gives its own way back.
  */
 export function OperatorPage(props: {
   viewport: Viewport
@@ -66,7 +66,7 @@ export function OperatorPage(props: {
             to: tab.to,
             selected: tab.key === props.tab,
           }))}
-          wrap={mobile}
+          flow={mobile}
         />
       }
       title={props.title}

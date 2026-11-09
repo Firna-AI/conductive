@@ -89,7 +89,8 @@ function results(list: OperatorCodesState['list']): Results {
       return {
         ...codeSearches.none,
         title: 'Codes',
-        summary: 'Search by the text of an invite code or a referral code.',
+        summary:
+          'Search by a code, the label of an invite code, or the GitHub login of an owner.',
       }
   }
 }
@@ -122,8 +123,10 @@ function CodesDialog(props: {
 
 /**
  * The Invite codes tab of the operator: the state of sign-ups with Pause,
- * a search by the text of any code, and the invite codes, newest first,
- * with their uses and states. New code in the header makes a code.
+ * a search, and the invite codes, newest first, with their uses and
+ * states. The search finds a code by its text, an invite code by its
+ * label, and a referral code by the GitHub login of its owner. New code in
+ * the header makes a code.
  */
 export function OperatorCodesScreen(props: {
   state: OperatorCodesState
@@ -149,7 +152,7 @@ export function OperatorCodesScreen(props: {
       {signUps === 'open' ? <SignUpsSection /> : null}
       <DirectorySearch
         label="Search codes"
-        placeholder="Invite code or referral code"
+        placeholder="Code, label, or GitHub login"
         query={found.query}
       />
       <DirectoryTable

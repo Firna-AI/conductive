@@ -1,4 +1,5 @@
 import { defineScreen } from '@mokly/mokly'
+import { joinLink, newCode } from '../../../../../fixtures/operatorCodes'
 import {
   OperatorCodesScreen,
   operatorCodesSchema,
@@ -20,8 +21,7 @@ export const operatorCodesNew = defineScreen({
     {
       slug: 'made',
       title: 'Code made',
-      description:
-        'The new code leads the list, newest first, with no uses yet. Copy beside the code copies it to share.',
+      description: `The new code leads the list, newest first, with no uses yet. Copy beside the code copies the code. Copy join link copies its join link, ${joinLink(newCode.code)}, which carries the code through the sign-in.`,
       props: { list: 'made', dialog: 'none' },
     },
   ],

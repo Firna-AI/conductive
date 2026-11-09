@@ -134,8 +134,9 @@ chat, and five tabs at the bottom.
   frame of a picture on the marketing site.
 - The operator section has the tabs Overview, Orgs, Users, Waitlist, and
   Invite codes, from `OperatorPage` in `src/components/operator/`. On a
-  phone the five tabs take three columns, as the org settings do, so that
-  every tab shows also on a phone narrower than 390 px. The overview uses
+  phone the five tabs keep one line while they fit, with the `flow` mode
+  of `LinkTabs`. On a narrower phone the last tabs move to a second line,
+  so that every tab shows. The overview uses
   the stat tiles, the line chart, the table, and the skeletons of
   `@firna/ui`. A view runs no script, so the chart keeps the width that the
   page column gives it. The workspaces by state reuse `StatusGlyph`. A line
@@ -151,9 +152,14 @@ chat, and five tabs at the bottom.
 - The Waitlist tab shows no picture. Each login opens the GitHub profile in
   a new tab, with a small mark for it. After Approve, the row keeps its
   place with Approved and the state of its email, in plain words.
-- A code shows in the monospace font, with Copy beside it. Disable on a row
-  is a quiet icon, as in the member list of an org. A code that no longer
-  works keeps the place of Disable empty.
+- A code shows in the monospace font, with Copy beside it. A code that
+  still works also has Copy join link, for a link such as
+  `https://app.conductive.build/join/<code>` on the domain of the app.
+  Disable on a row is a quiet icon, as in the member list of an org. A
+  code that no longer works keeps the place of Disable empty.
+- The Approval email row of a user page gives the state of the email. A
+  state of an email that did not go has a short muted line with the
+  reason. No state has an action, because the person keeps app access.
 - Suspend and Lift sit in the header of the page of an org or a user, and
   in its footer on a phone. A person who waits also has Approve there. Each
   asks first, with `ConfirmDialog`. The Suspend question of a user offers

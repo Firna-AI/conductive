@@ -9,11 +9,8 @@ import { OperatorPage } from '../components/operator/OperatorPage'
 import { SuspendDialog } from '../components/operator/SuspendDialog'
 import type { Target } from '../components/operator/targets'
 import { UserDetails } from '../components/operator/UserDetails'
-import {
-  accessPages,
-  userPages,
-  type UserPage,
-} from '../fixtures/operatorUserPages'
+import { accessPages } from '../fixtures/operatorAccessPages'
+import { userPages, type UserPage } from '../fixtures/operatorUserPages'
 import { paths } from '../paths'
 
 export const operatorUserSchema = {
@@ -24,9 +21,9 @@ export const operatorUserSchema = {
     /**
      * Whose page, in which state: Dana Kim in use, after the disable of
      * her referral code, or suspended; the operator's own; Sam Okafor on
-     * the waitlist, approved with the email not sent yet, or sent; and a
-     * user who came in by an invite code, a referral code, an org
-     * invitation, or as an operator.
+     * the waitlist, approved with the email not sent yet, or sent; a user
+     * who came in by an invite code, a referral code, an org invitation,
+     * or as an operator; and an approval whose email never went.
      */
     page: {
       enum: [
@@ -41,6 +38,7 @@ export const operatorUserSchema = {
         'referralCode',
         'orgInvitation',
         'operator',
+        'emailNotSent',
       ],
     },
     /**

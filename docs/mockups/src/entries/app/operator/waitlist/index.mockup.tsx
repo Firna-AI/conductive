@@ -7,7 +7,7 @@ import {
 export const operatorWaitlist = defineScreen({
   title: 'Waitlist',
   description:
-    'The Waitlist tab lists the people who wait for app access, oldest first, 20 at a time with Show more. Each row gives an initials disc, the GitHub login as a link to the GitHub profile, the name, the age of the GitHub account, the join day, and Approve. A phone gives the age under the name, and leaves out the join day, as the Users tab leaves out its columns. The search finds a person who waits by GitHub login, name, or numeric GitHub ID.',
+    'The Waitlist tab lists the people who wait for app access, oldest first, 20 at a time with Show more. Each row gives an initials disc, the GitHub login as a link to the GitHub profile, the name, the age of the GitHub account, the join day, and Approve. A phone gives the age under the name, and leaves out the join day, as the Users tab leaves out its columns. The search finds a person who waits by GitHub login, name, or numeric GitHub ID. The list leaves out a suspended person, whose page shows Lift.',
   rationale:
     'The user asked on 8 November 2026 that the operator sees the people on the waitlist and approves specific users, in decision 160. The row shows no picture and no email address, because the operator section shows only counts, names, IDs, dates, roles, and states. The GitHub profile and the age of the account let the operator judge a person.',
   relatedDocs: [],

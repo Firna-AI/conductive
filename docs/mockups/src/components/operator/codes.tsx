@@ -1,5 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
-import { Ban, Copy } from 'lucide-react'
+import { Ban, Copy, Link } from 'lucide-react'
 import { TableCell, type TableColumn } from '@firna/ui/table'
 import {
   codeState,
@@ -15,22 +15,22 @@ import { InlineLink } from './targets'
 import styles from './codes.module.css'
 
 /**
- * A phone keeps the label, the uses, and the actions. It puts the code
- * under the label, and the state under the uses. It leaves out who made an
- * invite code and the day.
+ * A phone keeps the label, the uses, and Disable. It puts the code with
+ * its copy buttons under the label, and the state under the uses. It
+ * leaves out who made an invite code and the day.
  */
 export const codeColumns: Readonly<Record<Viewport, TableColumn[]>> = {
   desktop: [
     { key: 'label', label: 'Label', flex: 1 },
-    { key: 'code', label: 'Code', width: 136 },
+    { key: 'code', label: 'Code', width: 148 },
     { key: 'state', label: 'State', width: 92 },
     { key: 'uses', label: 'Uses', align: 'right', width: 72 },
     { key: 'disable', align: 'right', width: 44 },
   ],
   mobile: [
     { key: 'label', label: 'Label', flex: 1 },
-    { key: 'uses', label: 'Uses', align: 'right', width: 76 },
-    { key: 'actions', align: 'right', width: 92 },
+    { key: 'uses', label: 'Uses', align: 'right', width: 72 },
+    { key: 'disable', align: 'right', width: 44 },
   ],
 }
 
@@ -44,6 +44,27 @@ export function CodeStateText(props: { state: CodeState }) {
     case 'disabled':
       return <StatusText icon={Ban} label="Disabled" tone="muted" />
   }
+}
+
+/**
+ * A code in the monospace font with Copy, and Copy join link while the
+ * code still lets people in. The join link carries the code through the
+ * sign-in, so a person does not type it.
+ */
+export function CopyableCode(props: { code: string; works: boolean }) {
+  return (
+    <span className={styles.codeCell}>
+      <span className={styles.code}>{props.code}</span>
+      <IconButton icon={Copy} label={`Copy the code ${props.code}`} quiet />
+      {props.works ? (
+        <IconButton
+          icon={Link}
+          label={`Copy the join link of ${props.code}`}
+          quiet
+        />
+      ) : null}
+    </span>
+  )
 }
 
 /** The name of a code in a question or a button: its label, or its owner. */
@@ -74,8 +95,8 @@ function Origin(props: { row: CodeRow }) {
 
 /**
  * The label of a code, or Referral code, and the line of its origin. A
- * phone gives the code under the label, and keeps the origin only for a
- * referral code, whose owner it names.
+ * phone gives the code with its copy buttons under the label, and keeps
+ * the origin only for a referral code, whose owner it names.
  */
 function LabelCell(props: { row: CodeRow; viewport: Viewport }) {
   const { row } = props
@@ -85,7 +106,9 @@ function LabelCell(props: { row: CodeRow; viewport: Viewport }) {
       <span className={styles.label}>
         {row.kind === 'invite' ? row.label : 'Referral code'}
       </span>
-      {mobile ? <span className={styles.code}>{row.code}</span> : null}
+      {mobile ? (
+        <CopyableCode code={row.code} works={codeState(row) === 'active'} />
+      ) : null}
       {mobile && row.kind === 'invite' ? null : (
         <span className={styles.origin}>
           <Origin row={row} />
@@ -93,10 +116,6 @@ function LabelCell(props: { row: CodeRow; viewport: Viewport }) {
       )}
     </span>
   )
-}
-
-function CopyButton(props: { row: CodeRow }) {
-  return <IconButton icon={Copy} label={`Copy ${props.row.code}`} quiet />
 }
 
 /**
@@ -128,10 +147,7 @@ export function codeCell(viewport: Viewport) {
         return <LabelCell row={row} viewport={viewport} />
       case 'code':
         return (
-          <span className={styles.codeCell}>
-            <span className={styles.code}>{row.code}</span>
-            <CopyButton row={row} />
-          </span>
+          <CopyableCode code={row.code} works={codeState(row) === 'active'} />
         )
       case 'uses':
         if (viewport === 'desktop') return <TableCell numeric>{uses}</TableCell>
@@ -143,15 +159,8 @@ export function codeCell(viewport: Viewport) {
         )
       case 'state':
         return <CodeStateText state={codeState(row)} />
-      case 'disable':
-        return <DisableButton row={row} />
       default:
-        return (
-          <span className={styles.actions}>
-            <CopyButton row={row} />
-            <DisableButton row={row} />
-          </span>
-        )
+        return <DisableButton row={row} />
     }
   }
 }

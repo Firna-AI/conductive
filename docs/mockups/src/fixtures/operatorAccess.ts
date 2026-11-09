@@ -4,9 +4,16 @@
  */
 import { account } from './orgs'
 
-/** Whether the approval email went, and when. */
+/**
+ * Whether the approval email went, and when. The app sends a failed email
+ * again for 24 hours. An email that never went says why: the GitHub
+ * account has no verified email, or the app stopped trying.
+ */
 export type ApprovalEmailNote =
-  { state: 'pending' } | { state: 'sent'; at: string }
+  | { state: 'pending' }
+  | { state: 'sent'; at: string }
+  | { state: 'not-sent'; reason: 'no-verified-email' }
+  | { state: 'not-sent'; reason: 'stopped'; on: string }
 
 /** How a user got app access: the way in, and who or what let them in. */
 export type WayIn =
@@ -74,8 +81,11 @@ export function disabledReferral(code: ReferralCode, on: string): ReferralCode {
   return { ...code, disabled: { on, by: account.login } }
 }
 
-/** The referral code of the operator who reads the pages. */
-export const operatorReferral = referral('C9HXE-4TMPW', [
+/**
+ * The referral code of the operator who reads the pages, Cal, with 2 of
+ * its 5 uses taken, as his Account page shows it.
+ */
+export const operatorReferral = referral('K7QHM-3XP2R', [
   { login: 'noa-b', name: 'Noa Ben-Ami', initials: 'NB', day: '4 Nov' },
   { login: 'femi-o', name: 'Femi Ola', initials: 'FO', day: '2 Nov' },
 ])
@@ -83,11 +93,14 @@ export const operatorReferral = referral('C9HXE-4TMPW', [
 /** The time of the approval that the screens show. */
 export const approvedAt = '8 Nov 2026 at 15:04'
 
-/** An approval of the operator, with its email sent or not yet. */
-export function approval(email: ApprovalEmailNote): AppAccess {
+/** An approval of the operator, with the state of its email. */
+export function approval(
+  email: ApprovalEmailNote,
+  since: string = approvedAt,
+): AppAccess {
   return {
     state: 'granted',
-    since: approvedAt,
+    since,
     way: { kind: 'approval', by: account.login, email },
   }
 }

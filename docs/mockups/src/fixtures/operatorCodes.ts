@@ -4,6 +4,7 @@
  * them. Each code has 10 characters without look-alike characters, in two
  * groups of five.
  */
+import { appDomain } from '../brand'
 import { danaReferral } from './operatorAccess'
 import { account } from './orgs'
 
@@ -29,6 +30,11 @@ export type InviteCodeRow = CodeBase & {
 export type ReferralCodeRow = CodeBase & { kind: 'referral'; owner: string }
 
 export type CodeRow = InviteCodeRow | ReferralCodeRow
+
+/** The join link of a code, which carries the code through the sign-in. */
+export function joinLink(code: string): string {
+  return `https://${appDomain}/join/${code}`
+}
 
 /** A disabled code stays disabled. Otherwise its uses decide its state. */
 export function codeState(row: CodeBase): CodeState {
@@ -60,7 +66,7 @@ function invite(
 }
 
 /** The code that the screens copy and that let Rhea Okafor in. */
-export const launchWeek = invite('Launch week', 'K7QHM-3XP2R', 12, 50, '6 Nov')
+export const launchWeek = invite('Launch week', 'V7MKC-2QDXH', 12, 50, '6 Nov')
 
 /** The code that the screens disable, which another operator made. */
 export const meetupLisbon: InviteCodeRow = {

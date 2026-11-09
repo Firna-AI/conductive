@@ -55,11 +55,6 @@
   white-space: nowrap;
 }
 
-.actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 /* A code that does not work keeps the place of Disable. */
 .noAction {
   flex-shrink: 0;
