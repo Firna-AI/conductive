@@ -254,22 +254,22 @@ The `external docs implementor` writes the remaining ten guides and checks all 1
 - [x] Check each guide in the site build.
       The `docs implementor` updates the author workflow if writing exposes a missing step. Evidence: `.context/website-docs/implementation/m4-link-and-content-results.json`.
 
-## Milestone 5: Docs behaviour checks
+## Milestone 5: Docs behaviour checks completed
 
 Depends on: 3, 4
 
 The `non-ui implementor` extends the existing marketing integration tests.
 
-- [ ] Cover the overview and a nested guide through the real built site and Worker route.
+- [x] Cover the overview and a nested guide through the real built site and Worker route.
       Check that a guide body reaches the page, contents links reach headings, and navigation uses the sorted collection.
       Test site integration, not Astro's parser or guide prose.
-- [ ] Add the overview and a representative nested guide to the existing built-page checks.
+- [x] Add the overview and a representative nested guide to the existing built-page checks.
       Keep the no-script, no-`style`-attribute, provider-name, asset, and style-hash checks.
       Existing route tests cover GET, HEAD, headers, cookie absence, method handling, and missing pages.
       Review every guide's naming manually. Add no new test of all guide prose.
-- [ ] Prove each new test fails on its intended defect. Run each new asynchronous test 10 times.
+- [x] Prove each new test fails on its intended defect. Run each new asynchronous test 10 times.
       Record the failures, pass counts, and test cost under `.context/website-docs/`.
-      Do not add tests of guide prose or third-party parser internals.
+      Do not add tests of guide prose or third-party parser internals. Evidence: `.context/website-docs/implementation/test-evidence/report.md`.
 
 ## Milestone 6: Verification, review, and pull request
 

@@ -5,15 +5,17 @@ import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import process from 'node:process'
 import { promisify } from 'node:util'
+import { Window } from 'happy-dom'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
-import { sitePaths } from '../../src/marketing/links'
+import { docsPath, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
+import { checkGuidePage, element } from './built-docs.test-support'
 import { termsConsentResponse } from './consent'
 import { decodeHtml, inlineStyles, links } from './html.test-support'
 import { siteResponse } from './site'
@@ -28,7 +30,7 @@ beforeAll(async () => {
   folder = await mkdtemp(join(tmpdir(), 'conductive-site-'))
   await promisify(execFile)(
     'node_modules/.bin/astro',
-    ['build', '--outDir', folder],
+    ['build', '--force', '--outDir', folder],
     {
       env: isolatedProcessEnvironment({ PATH: process.env.PATH, CI: 'true' }),
     },
@@ -119,7 +121,13 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
 })
 
 it('names no sandbox provider on the home, Terms, and Privacy pages', async () => {
-  for (const path of [sitePaths.home, sitePaths.terms, sitePaths.privacy]) {
+  for (const path of [
+    sitePaths.home,
+    sitePaths.terms,
+    sitePaths.privacy,
+    docsPath,
+    `${docsPath}/get-started`,
+  ]) {
     const response = await get(path)
     expect(response.status, path).toBe(200)
     const page = await response.text()
@@ -133,6 +141,8 @@ it('allows exactly each page inline style hash and serves every file it names', 
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
+    docsPath,
+    `${docsPath}/get-started`,
     '/missing',
   ]) {
     const response = await get(path)
@@ -157,6 +167,65 @@ it('allows exactly each page inline style hash and serves every file it names', 
   expect(new Uint8Array(await icon.arrayBuffer())).toEqual(
     new Uint8Array(await expected.arrayBuffer()),
   )
+})
+
+it('serves guide bodies with matching contents and collection navigation', async () => {
+  const window = new Window()
+  const headingIds: string[][] = []
+  try {
+    for (const [path, neighbours] of [
+      [docsPath, [`${docsPath}/get-started`]],
+      [`${docsPath}/get-started`, [docsPath, `${docsPath}/agent-logins`]],
+    ] as const) {
+      const response = await get(path)
+      expect(response.status, path).toBe(200)
+      const document = new window.DOMParser().parseFromString(
+        await response.text(),
+        'text/html',
+      )
+      headingIds.push(checkGuidePage(document, path))
+      const pager = element(
+        document,
+        'nav[aria-label="Previous and next guides"]',
+      )
+      expect(
+        links(pager.innerHTML).map((link) => link.href),
+        path,
+      ).toEqual(neighbours)
+    }
+    expect(headingIds[0]).not.toEqual(headingIds[1])
+    expect((await get(`${docsPath}/overview`)).status).toBe(404)
+  } finally {
+    await window.happyDOM.close()
+  }
+})
+
+it('renders class-coloured code and named keyboard scroll regions', async () => {
+  const window = new Window()
+  try {
+    const document = new window.DOMParser().parseFromString(
+      await (await get(`${docsPath}/get-started`)).text(),
+      'text/html',
+    )
+    const body = element(document, '.docs-body')
+    expect(body.querySelectorAll('pre code .token').length).toBeGreaterThan(0)
+    for (const tag of ['pre', 'table']) {
+      const regions = body.querySelectorAll(tag)
+      expect(regions.length, tag).toBeGreaterThan(0)
+      for (const region of regions) {
+        expect(region.getAttribute('tabindex'), tag).toBe('0')
+        expect(
+          region.getAttribute('aria-label')?.trim().length ?? 0,
+          tag,
+        ).toBeGreaterThan(0)
+        expect(region.getAttribute('role') ?? tag, tag).toBe(
+          tag === 'pre' ? 'region' : 'table',
+        )
+      }
+    }
+  } finally {
+    await window.happyDOM.close()
+  }
 })
 
 it('serves the built agreement with Continue and legal links on the given origins', async () => {
