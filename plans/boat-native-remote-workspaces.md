@@ -2964,7 +2964,7 @@ review.
   it.
 - **Changed by decision 186 on 8 November 2026:** the user can move any
   tab, a session or a file, to any place in the row. A new tab still opens
-  at the end of the row. `plans/move-tabs-by-drag.md` records the decision.
+  at the end of the row. [The plan of that change](https://github.com/Firna-AI/remote-code/blob/21a796ccd2ac7e378f18bea73f72c69b874c079d/plans/move-tabs-by-drag.md) records the decision.
 
 ### 78. Bind each invitation to the person it names
 
