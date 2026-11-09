@@ -878,22 +878,55 @@ Added on 9 November 2026 from the docs of Milestone 2.
   command, it runs without a question, in a folder that the request names.
 - **Impact if no action:** A GitHub account outside the org can run an
   always-allowed command on the owner's Mac.
-- **Root question:** How does a run that no person watches stay away from
-  the Macs of the members?
+- **Root question:** When no person sent a turn, how does a member's Mac
+  run only the commands that the member allowed for such a turn? The
+  options check of 9 November 2026 wrote this question. A workspace that
+  a run's agent creates also sends its first turn as the owner
+  (`worker/tools/create.ts:34`).
 - **Options:**
   - **A.** Record it as an open risk in `docs/protocol/routines.md`, and
     change nothing else. Effort: Small.
-  - **B.** The first turn of a run gets the answer that the Mac is not
-    available. Later messages that members send in the run workspace keep
-    the normal rule. Effort: Medium.
+  - **B.** The first turn of a run gets a refusal that says that runs
+    cannot use a Mac. Later messages that members send in the run
+    workspace keep the normal rule. A workspace that the run's agent
+    creates still reaches the owner's Mac. Effort: Medium.
   - **C.** Each request from the first turn of a run asks, also for an
-    always-allowed command. Effort: Medium.
-- **Left out:** No Mac requests in any run workspace. It blocks the members
-  who later work there, and B is better on every point.
-- **Wider fix:** B. It removes the case for every turn that no person sent.
+    always-allowed command. An older Mac app ignores the new field and
+    still runs an always-allowed command, and a waiting request has no
+    time limit of its own. Effort: Medium.
+  - **D.** Added by the options check: each message records whether a
+    person started it. A message that a member sends counts. The first
+    message of a workspace that the agent tools create copies the record
+    of the calling turn. The Mac route serves a turn only when a person
+    started its first message, and refuses every other turn with its
+    reason. It needs a field on stored messages and a change to the
+    create path of the agent tools. Effort: Medium.
+  - **E.** Added by the options check: the Mac route refuses each request
+    from a run workspace, and from each workspace that its agent created,
+    whoever sends the turn. No member can use a Mac there. Effort: Medium.
+  - **F.** Added by the options check: Always allow covers the command
+    text in one workspace only. A run workspace then has no saved
+    command, so each request asks. It changes the Mac app, This Mac, a
+    mockup, and protocol text, and an older Mac app keeps the old scope.
+    Effort: Medium.
+  - **G.** Added by the options check: as D, and the routine page gets a
+    switch, "Runs can ask for commands on my Mac", off by default. Effort:
+    Large.
+- **Left out:**
+  - Refuse the create call of the agent tools in a turn that no person
+    started. D closes the same path to the Mac and keeps the create call.
+  - The rule for pull request runs only. A scheduled run can read pull
+    requests too, and no person watches it.
+  - An instruction in the run text not to use a Mac. Pull request text can
+    override it.
+- **Wider fix:** D, from the options check. It gives a Mac only to a turn
+  that a person started, so a later path without a person gets no Mac.
 - **Previous examples:** None found.
-- **Recommendation:** B. No person watches the first turn of a run, so no
-  Mac should get its requests.
+- **Recommendation:** D, from the options check of 9 November 2026. The
+  first recommendation was B. D refuses what B refuses at about the same
+  cost, and it also closes the path through a workspace that the run's
+  agent creates.
+
 - **Action:** ask the user, because B adds a new refusal, and the user's
   rules keep each new refusal for the user.
 
