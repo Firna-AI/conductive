@@ -8,22 +8,20 @@ import styles from './SessionLogin.module.css'
 export type SessionLogin = {
   /** The name of the starter, such as "Cal". */
   starter: string
-  /** The name of the agent of the login, such as "Claude". */
-  agent: string
 }
 
 /**
- * The line under the composer box that names the login of another member,
- * such as "Uses Cal's Claude login", so that a member sees that a message
- * spends the login of the starter. A message on the own login of the
- * viewer gets no line.
+ * The label in the bar of the composer, after the model picker, that names
+ * the login of another member, such as "Cal's login". So a member sees that
+ * a message spends the login of the starter. The label sits inside the box,
+ * so the box keeps its place and its height. A message on the own login of
+ * the viewer gets no label.
  */
-export function SessionLoginLine(props: SessionLogin) {
-  const words = `Uses ${props.starter}'s ${props.agent} login`
+export function SessionLoginLabel(props: SessionLogin) {
   return (
-    <p className={styles.line}>
+    <span className={styles.label}>
       <Plug aria-hidden className={styles.icon} size={12} />
-      <span className={styles.text}>{words}</span>
-    </p>
+      <span className={styles.text}>{`${props.starter}'s login`}</span>
+    </span>
   )
 }

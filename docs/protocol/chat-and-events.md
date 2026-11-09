@@ -107,9 +107,10 @@ says.
 - When the record already shows a login that cannot be used, the composer
   says before the send that the message starts a new session.
 - When a message runs on the login of another member, the composer names
-  that member, such as "Uses Priya's Claude login".
+  that member inside the message box, such as "Priya's login". A line under
+  the box was rejected, because the box then moved between sessions.
 - The composer names no login when a message runs on the user's own login.
-  A line for the own login was rejected, because it tells the user nothing
+  A name for the own login was rejected, because it tells the user nothing
   new.
 - The composer attaches files to a message.
 - The composer shows a notice when the user has no login for the agent of

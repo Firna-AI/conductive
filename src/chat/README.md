@@ -227,7 +227,7 @@ It checks the plain message of a refused retry in a tab that missed newer events
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
 on one fake stream. `components/SessionLogin.test.tsx` renders the login
-line and its notices. `components/SourceLink.dom.test.tsx` presses the link
+label and its notices. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
@@ -276,7 +276,7 @@ check in the Mac app.
 - `state/first-start.ts`: the success of the first start of the workspace,
   which the snapshot remembers, and the wait of Send until then.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, and the words of the line under the composer.
+  record and the reader, and the login label in the composer.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its

@@ -8,7 +8,7 @@ import {
 export const sessions = defineScreen({
   title: 'Sessions',
   description:
-    'A new session, after + at the end of the tabs: an empty chat with its own model picker. It works on the same branch and the same cloud computer as the two other sessions. The user started it, so no line under its composer names a login.',
+    'A new session, after + at the end of the tabs: an empty chat with its own model picker. It works on the same branch and the same cloud computer as the two other sessions. The user started it, so its composer names no login.',
   rationale:
     'Each agent session is a tab in the centre column, beside the open files and diffs. The current session shows a pencil to rename it, and every tab closes. The user chose several sessions per workspace, each with its own model picker, in decision 19. On a phone the sessions are tabs at the top of the Chat tab. The clock after + opens the session history, as the user chose in decision 31.',
   relatedDocs: [],
@@ -52,7 +52,7 @@ export const sessions = defineScreen({
       description:
         'The message of Priya opened a new session as the last tab. The session starts empty. It holds a line that links back to Address autocomplete, then the message, and the agent works on it. It runs on the Claude login of Priya, its starter.',
       rationale:
-        'The user chose option A of decision 115 on 7 November 2026: a new, empty session with a link to the first session, not a copy of its chat. The link line uses the style of the other event lines of the chat: centred, muted, and with an icon. Other members see "Uses Priya Raman\'s Claude login" under the composer of this session.',
+        'The user chose option A of decision 115 on 7 November 2026: a new, empty session with a link to the first session, not a copy of its chat. The link line uses the style of the other event lines of the chat: centred, muted, and with an icon. Other members see "Priya Raman\'s login" in the composer of this session.',
       props: {
         viewer: 'member',
         tab: 'linked-session',

@@ -1,5 +1,4 @@
 import type { SessionLogin } from '../components/chat/SessionLogin'
-import { agents } from '../fixtures/agents'
 import { memberViewer, people, you, type PersonKey } from '../fixtures/members'
 import { linkedSession, workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
@@ -43,16 +42,14 @@ export function otherStarter(
 }
 
 /**
- * The display props of the login line under the composer. `member` is the
+ * The display props of the login label in the composer. `member` is the
  * starter when that starter is another member. Without it, the composer has
- * no login line, because a message uses the own login of the viewer: in a
+ * no login label, because a message uses the own login of the viewer: in a
  * session of the viewer, or when a message opens a linked session.
  */
 export function sessionLoginFor(
-  workspace: Workspace,
   member: PersonKey | undefined,
 ): SessionLogin | undefined {
   if (member === undefined) return undefined
-  const agent = agents[workspace.choice.agent].name
-  return { starter: people[member].name, agent }
+  return { starter: people[member].name }
 }

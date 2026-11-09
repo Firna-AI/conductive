@@ -31,10 +31,10 @@ export function isRunning(state: WorkspaceState): boolean {
  * A message for an agent that is not connected waits, and Send is off.
  *
  * A session runs on the login of its starter. When the starter is another
- * member, a line under the box names that login, and the own login of the
+ * member, a label in the bar names that login, and the own login of the
  * viewer does not matter. When the login of that starter is not available,
  * Send opens a new linked session on the own login of the viewer, and the
- * box has no login line.
+ * bar has no login label.
  *
  * While the sandbox of a new workspace starts for the first time, Send
  * waits in every session, and the box keeps the message. A resume of a
@@ -70,6 +70,6 @@ export function composerFor(
     sendTo: opensLinked ? paths.linkedSession : undefined,
     blocked: needsLogin,
     waits: isNew(state) && state.sandbox === 'starting',
-    sessionLogin: sessionLoginFor(workspace, opensLinked ? undefined : starter),
+    sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),
   }
 }

@@ -10,7 +10,7 @@ import { useControlSizes } from '../common/touch'
 import { AttachmentChips } from './AttachmentChips'
 import { ModelPicker } from './ModelPicker'
 import { SendWait } from './SendWait'
-import { SessionLoginLine, type SessionLogin } from './SessionLogin'
+import { SessionLoginLabel, type SessionLogin } from './SessionLogin'
 import styles from './Composer.module.css'
 
 export type ComposerState = {
@@ -41,8 +41,8 @@ export type ComposerState = {
   waits?: boolean
   /**
    * The agent login of another member that the session uses: the login of
-   * its starter. The line under the box names it. A message on the own
-   * login of the viewer has no line.
+   * its starter. A label in the bar names it. A message on the own login of
+   * the viewer has no label.
    */
   sessionLogin?: SessionLogin
 }
@@ -69,8 +69,8 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
  * attach button, the model picker, and Send. While a turn runs, a message
  * steers the turn, and Stop ends it. While Send waits for the first start
  * of a new workspace, a message in the box shows the reason beside Send.
- * When a message spends the agent login of another member, a line under
- * the box names that login.
+ * When a message spends the agent login of another member, a label after
+ * the model picker names that login, so the box keeps its place.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()
@@ -104,6 +104,9 @@ export function Composer(props: ComposerState & { lines?: number }) {
             open={props.picker}
             sessionAgent={props.sessionAgent}
           />
+          {props.sessionLogin ? (
+            <SessionLoginLabel {...props.sessionLogin} />
+          ) : null}
           <span className={styles.spacer} />
           {props.running ? (
             <ActionButton icon={Square}>Stop</ActionButton>
@@ -118,7 +121,6 @@ export function Composer(props: ComposerState & { lines?: number }) {
           )}
         </div>
       </div>
-      {props.sessionLogin ? <SessionLoginLine {...props.sessionLogin} /> : null}
       {props.running && props.draft !== '' ? (
         <span className={styles.hint}>
           The agent reads this at its next step.

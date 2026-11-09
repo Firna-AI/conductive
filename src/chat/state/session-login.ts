@@ -46,14 +46,13 @@ export function sessionLoginOf(
 }
 
 /**
- * What the line under the composer says: the login of another member, which
+ * What the label in the composer names: the login of another member, which
  * a message of the reader spends. A message on the reader's own login, also
- * one that starts a linked session, gets no line.
+ * one that starts a linked session, gets no label.
  */
-export function loginLineOf(
+export function loginLabelOf(
   view: SessionLoginView | null,
-  agent: string,
 ): SessionLogin | undefined {
   if (view?.kind !== 'member') return undefined
-  return { starter: view.name, agent }
+  return { starter: view.name }
 }

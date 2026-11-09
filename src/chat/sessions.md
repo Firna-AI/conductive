@@ -13,11 +13,11 @@ draft moves, the login of each session, and the linked sessions.
   that the backend did not keep from the draft that moved, wherever it is.
 - Each session runs on the agent login of its starter, the member who
   started it, as [Messages](../../docs/protocol/chat-and-events.md#messages)
-  says. When a message spends the login of another member, the line under
-  the composer names that login, such as "Uses Cal's Claude login". The
-  name comes from the session record, so a starter who left the org keeps a
+  says. When a message spends the login of another member, a label in the
+  bar of the composer names that login, such as "Cal's login". The name
+  comes from the session record, so a starter who left the org keeps a
   name. A message on the reader's own login, also one that starts a linked
-  session, shows no line.
+  session, shows no label.
 - A message in the reader's own session needs that session's login. The
   record's `loginAvailable` decides, because the account that the chat read
   can be older. A message in the session of another member, whose login

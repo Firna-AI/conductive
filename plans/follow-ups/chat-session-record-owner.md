@@ -14,7 +14,7 @@
   - **SessionLog:** the browser class in `src/chat/state/session-log.ts` that keeps the events and the newest record of one session.
   - **Record owner:** `SessionLog.record` with the functions of `src/chat/state/session-records.ts`, which together give the shown record of each session.
 - **Background:**
-  - Conductive shows each agent conversation of a workspace as a chat tab. The shown record of a session sets the tab name, the composer model, the login line, and the Send block.
+  - Conductive shows each agent conversation of a workspace as a chat tab. The shown record of a session sets the tab name, the composer model, the login label, and the Send block.
   - The decision in force orders the records by event number: the newest number wins, whatever arrives first. A pending edit shows at once over the newest record. The decision was recorded on 2026-11-06, and this branch applied it in `cf2e41a`.
   - The record owner takes four inputs. They are the replies of rename, model change, close, reopen, and Send, the first-load session list, the history pages, and the socket batches.
   - Five places write a session log today. Only `confirmRecord` in the owner offers reply records.

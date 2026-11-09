@@ -7,7 +7,7 @@ import { useControlSizes } from '../../../docs/mockups/src/components/common/tou
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { SendWait } from '../../../docs/mockups/src/components/chat/SendWait'
 import {
-  SessionLoginLine,
+  SessionLoginLabel,
   type SessionLogin,
 } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import type { Draft } from '../state/chat-snapshot'
@@ -37,8 +37,8 @@ export interface ComposerProps {
    */
   waits: boolean
   /**
-   * The agent login of another member that the session uses, which a line
-   * under the box names. A message on the reader's own login has no line.
+   * The agent login of another member that the session uses, which a label
+   * in the bar names. A message on the reader's own login has no label.
    */
   login?: SessionLogin
   /**
@@ -60,8 +60,8 @@ export interface ComposerProps {
  * steers the turn, and Stop sits beside Send. While Send waits for the
  * first start of the workspace, the box keeps the message, and the reason
  * shows beside Send. When a message spends the agent login of another
- * member, a line under the box names that login. On desktop, Enter sends
- * and Shift+Enter starts a new line.
+ * member, a label after the model picker names that login, so the box keeps
+ * its place. On desktop, Enter sends and Shift+Enter starts a new line.
  * The composer reads Enter before the text field does, so Enter never adds
  * a line to a message that it sends.
  */
@@ -128,6 +128,7 @@ export function Composer(props: ComposerProps) {
             onChoose={props.onChooseModel}
             sessionAgent={props.sessionAgent}
           />
+          {props.login ? <SessionLoginLabel {...props.login} /> : null}
           <span className={styles.spacer} />
           {props.running ? (
             <ActionButton
@@ -152,7 +153,6 @@ export function Composer(props: ComposerProps) {
           />
         </div>
       </div>
-      {props.login ? <SessionLoginLine {...props.login} /> : null}
       {steers && draft.text !== '' ? (
         <span className={styles.hint}>
           The agent reads this at its next step.

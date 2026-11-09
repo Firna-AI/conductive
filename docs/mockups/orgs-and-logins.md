@@ -29,16 +29,16 @@ plan limits.
 - Each session runs on the agent login of the member who started it, also
   for the messages of other members. So a reassign changes no login, and
   the cloud computer keeps running.
-- When a message uses the login of another member, the line under the
-  composer names that login, such as "Uses Cal's Claude login" in
-  `app/composer/login`. A message on the own login of the viewer shows no
-  line. When the login of the member who started a session is not
-  available, a message of another member starts a new session. The notice
-  over the composer of the first session says so, and its chat stays as it
-  was, as `app/sessions/no-starter-login` shows. The new session starts
-  with a line that links back to the first session, then the new message,
-  as `app/sessions/linked` shows. The parts live in
-  `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
+- When a message uses the login of another member, the bar of the
+  composer names that login after the model picker, such as "Cal's login"
+  in `app/composer/login`. So the box keeps its place. A message on the own
+  login of the viewer shows no name. When the login of the member who
+  started a session is not available, a message of another member starts
+  a new session. The notice over the composer of the first session says
+  so, and its chat stays as it was, as `app/sessions/no-starter-login`
+  shows. The new session starts with a line that links back to the first
+  session, then the new message, as `app/sessions/linked` shows. The parts
+  live in `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
 - A stopped turn names the member who pressed Stop, from decision 72,
   because all members of an org see the same chat. That member sees "You
   stopped the agent", as `app/chat/turns/interrupted` shows. The other members
