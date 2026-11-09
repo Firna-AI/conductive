@@ -65,26 +65,9 @@ requirements of each feature.
 
 ### Marketing site
 
-- A few static pages at the root of `conductive.build`, with the Terms and
-  Privacy pages. Visitors see them without a sign-in.
-- Astro builds these pages ahead of time. The Worker serves the built files
-  on `conductive.build`. It fills in the values of each request, such as
-  the app address in the sign-in links and the year in the footer.
-- [The marketing site README](../src/marketing/README.md) describes how the
-  Worker serves them.
-- The same build also makes the page that asks for the
-  [agreement to the Terms](protocol/access-and-security.md#sign-in) before
-  the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
-- The main action is "Join the waitlist", because a new account waits for
-  app access. The site does not name Boat, and users need no Boat account
-  (decision 80).
-- The home page has a Mac app section. It links the DMG for Apple silicon
-  first, then the DMG for Intel, from the latest release of the public
-  source repository on GitHub. It names the oldest macOS version that the
-  app runs on. The footer links the section. In the desktop layout, the
-  header links it too.
-- The DMGs come from GitHub, not from the Worker.
-  [Releases](protocol/desktop-app.md#releases) states their addresses.
+- The static public pages at the root of `conductive.build`. The
+  [marketing site page](architecture/marketing-site.md) gives their
+  responsibilities and boundaries.
 
 ### Web app
 
@@ -189,7 +172,7 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
 
 | Hostname                | What it serves                                                              |
 | ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms and Privacy pages                        |
+| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages           |
 | `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
 | `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
 | `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
@@ -207,38 +190,13 @@ GitHub events, and stops.
 
 ## Where data lives
 
-| Data                                                                         | Home                                     |
-| ---------------------------------------------------------------------------- | ---------------------------------------- |
-| Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
-| App access, the codes and their uses, the pause, and approval email states   | D1                                       |
-| The org of each sandbox and each saved snapshot                              | D1                                       |
-| Env var values and agent logins                                              | The Worker's storage, encrypted          |
-| The Boat key and the other keys of the Worker                                | Worker secrets                           |
-| Chat history and banner state                                                | The workspace Durable Object             |
-| The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
-| The prepared repositories and the installed software                         | The org image, in the app's Boat account |
-| Panel widths                                                                 | The browser, or the Mac app              |
+The [data locations](architecture/data-and-trust.md#where-data-lives) give
+where each kind of data lives.
 
 ## Trust boundaries
 
-- The org is the boundary between tenants. A request reaches an org only
-  for a member of that org. An operator is the one exception, as
-  [Orgs and workspaces](protocol/access-and-security.md#orgs-and-workspaces)
-  says.
-- The one Boat key reaches the sandboxes and the saved snapshots of every
-  org (decision 80). So the Worker's own records keep the orgs apart, as
-  [Access and security](protocol/access-and-security.md#orgs-and-workspaces)
-  says.
-- The Boat key never goes to the browser, into a sandbox, into a log, or
-  into a saved snapshot.
-- Sandbox code is untrusted. Agents write and run it, and previews show it
-  only on the preview domain.
-- A sandbox gets none of the secrets of the app's Boat account. At a
-  start, it gets only the secrets of its workspace and its org.
-- During a turn, the sandbox also holds the agent login of the starter of
-  its session. The members of one org can reach that login, as
-  [Access and security](protocol/access-and-security.md#agent-logins-in-a-sandbox)
-  says.
+The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
+separate the orgs, the Boat key, and the sandboxes.
 
 ## Decision numbers
 
@@ -264,6 +222,8 @@ the merge.
   their logins, the sessions, and the names of workspaces and sessions.
 - [Workspace links](protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
+- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
+  messages in the chat, with their tables.
 - [Agent runner](protocol/agent-runner.md): the connection of the runner,
   its events and their limits, its turns, and the repair of lost workspace
   updates.
@@ -271,6 +231,7 @@ the merge.
   gates, the secrets, and the isolation of sandboxes and previews.
 - [GitHub banner](protocol/github-banner.md): the pull request bar and its
   events.
+- [GitHub tokens](protocol/github-tokens.md): git and CLI account scope.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a
   sandbox.
 - [Agent instructions](protocol/agent-instructions.md): the text that each
@@ -293,3 +254,5 @@ the merge.
 - [Command palette: empty and unavailable states](protocol/command-palette-states.md):
   what the palette shows while its workspace data loads or did not load,
   and when a tab or a search has no row.
+- [Conductor Cloud comparison](protocol/conductor-cloud-comparison.md): the
+  public page with the status of each Conductor Cloud feature.

@@ -156,7 +156,11 @@ describe('the command palette', () => {
     press(searchField(), 'Escape')
     act(() => navigation.push(routes.workspace(org, workspace)))
     await settle()
-    click(byRole('button', 'Archive workspace', view))
+    const row = byLabel('Workspaces', view)
+      .querySelector(`a[href="${routes.workspace(org, workspace)}"]`)
+      ?.closest('li')
+    if (!row) throw new Error('The workspace has no list row.')
+    click(byRole('button', 'Archive workspace', row))
     await settle()
     const question = 'Archive with work that is not pushed?'
     const key = pressPaletteKey('other')

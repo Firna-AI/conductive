@@ -17,7 +17,7 @@ function steeredTurn(chats: {
     {
       kind: 'agent',
       id: 'suggestions',
-      paragraphs: [
+      blocks: [
         "Suggestions now show under the first address line, and choosing one fills the other fields. Next I'll add the tests.",
       ],
     },
@@ -25,9 +25,7 @@ function steeredTurn(chats: {
     {
       kind: 'agent',
       id: 'plan-debounce',
-      paragraphs: [
-        "I'll debounce the lookups in `useAddressAutocomplete` first.",
-      ],
+      blocks: ["I'll debounce the lookups in `useAddressAutocomplete` first."],
     },
     {
       kind: 'tool',
@@ -65,7 +63,7 @@ function steeredTurn(chats: {
     {
       kind: 'agent',
       id: 'done',
-      paragraphs: [
+      blocks: [
         'Done. Checkout suggests addresses as you type, and each lookup waits 250 ms after the last key press.',
       ],
       bullets: [
@@ -96,7 +94,7 @@ const macAndLostTurn: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'plan-safari',
-    paragraphs: [
+    blocks: [
       'The cloud computer has no Safari, so I asked to run the checkout test on your Mac.',
     ],
   },
@@ -104,7 +102,7 @@ const macAndLostTurn: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'plan-webkit',
-    paragraphs: [
+    blocks: [
       "It passes in Safari. I'll also run the WebKit project of the end-to-end tests on the cloud computer, which covers the other checkout pages.",
     ],
   },
@@ -120,7 +118,7 @@ const macAndLostTurn: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'safari-done',
-    paragraphs: [
+    blocks: [
       'The address suggestions work in Safari. The checkout test passes on your Mac, and the WebKit tests pass on the cloud computer.',
     ],
   },
