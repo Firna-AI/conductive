@@ -2,7 +2,7 @@
 
 This area checks browser sign-in, request origins, and org membership.
 Protected app requests pass through `gate` before route dispatch.
-The gate checks access before it reads a write body.
+The gate runs its [access checks](#access-checks) before it reads a write body.
 Open chat tabs and terminal sockets check their access again through the [shared connection reader](#open-connections).
 Sign-in also asks for the [terms consent](#terms-consent) and refuses [suspended users](#suspended-users).
 
@@ -10,6 +10,19 @@ Org writes also check the current suspension before the gate reads their body.
 The exact POST Leave route keeps its existing membership guards.
 Org reads and chat-tab grants remain available.
 `org-writes.ts` shares this rule with the members and Mac browser gates.
+
+## Access checks
+
+`gateAccess(request, env, now)` holds the access checks of `gate`, and reads no body.
+It checks the host, the `Origin` header, the signed session cookie, and the stored session.
+It also checks the user, the org membership, and the org write rule of `org-writes.ts`.
+`gate` calls it first.
+Then `gate` reads the JSON body of a write, or the headers of a raw upload route.
+
+The chat Durable Object runs `gateAccess` again in its queue for each browser chat write, through `authorizeChatBrowser`.
+That call reuses the body that `gate` already parsed, because `gateAccess` takes no body argument.
+So a write that waited gets the refusal that a new request would get.
+The [chat backend](../chat/README.md#access) says which requests take this second check.
 
 ## JSON request bodies
 
@@ -115,6 +128,9 @@ The body tests use streams with deterministic pull and cancellation counts.
 They send multibyte text to check byte counts.
 They also send incorrect `Content-Length` values in both directions.
 
+After a change to `gateAccess`, also run `npm run test -- worker/chat/write-access.test.ts`.
+That test ends the access of a chat write that waits, and expects its refusal.
+
 The connection reader has no test file in this folder.
 The tests of its callers check it.
 After a change to the reader, run `npm run test -- worker/chat/tab-access.test.ts worker/chat/tab-deadlines.test.ts worker/chat/security.test.ts worker/terminal/access.test.ts`.
@@ -124,6 +140,7 @@ After a change to the terms consent or to the suspension checks of sign-in, run 
 ### Key Code
 
 - [gate.ts](gate.ts) checks the host, origin, session, membership, and JSON body, or the headers of a raw upload route (decision 144).
+  Its `gateAccess` holds the access checks without the body read, and the chat Durable Object calls it again for queued chat writes.
 - [connection-access.ts](connection-access.ts) exports `readConnectionAccess`, the identity and grant types, `CONNECTION_CHECK_MS`, and `scheduleConnectionCheck`.
 - [gate-body.test.ts](gate-body.test.ts) checks the exact body limit and early cancellation through HTTP routes.
 - [gate.test.ts](gate.test.ts) checks access, dispatch order, and JSON errors.
@@ -137,6 +154,6 @@ After a change to the terms consent or to the suspension checks of sign-in, run 
 
 - [Access requirements](../../docs/protocol/access-and-security.md#hostnames-and-gates)
 - [Attachment uploads](../../docs/protocol/access-and-security.md#attachment-uploads)
-- [Access of open tabs](../../docs/protocol/access-and-security.md#orgs-and-workspaces)
+- [Access of open tabs](../../docs/protocol/isolation.md#orgs-and-workspaces)
 - [Worker backend](../README.md)
 - [Operator actions](../operator/README.md)

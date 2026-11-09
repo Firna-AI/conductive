@@ -65,7 +65,7 @@ turn repair from the committed chat and the one writer of the shown state.
   image can read the clone token of a later copy. That token can only read
   its own repository, which the image already holds. The Worker revokes it
   when the copy ends, as
-  [GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens)
+  [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens)
   says.
 - Repository copies use the [shared GitHub App credential flow](../github/app-credentials.ts).
   The [source loader](repository-layout.md#the-source-loader) gives the token and revocation steps.
@@ -304,7 +304,7 @@ object holds the lifecycle state, the turn records, and the events.
   the org image, the start steps, and stop and resume.
 - [Access and security](../../docs/protocol/access-and-security.md): what a
   sandbox holds, the workspace token, and GitHub tokens.
-- [Architecture](../../docs/architecture.md): the Worker, the workspace
+- [Architecture](../../docs/architecture/components.md): the Worker, the workspace
   Durable Object, and Boat.
 - [Sandbox software](../../image/README.md): the software that each build
   installs.

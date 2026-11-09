@@ -6,7 +6,7 @@ into a workspace sandbox. The org image is the saved snapshot that every
 new sandbox of an org starts from.
 [Repository folders](../../docs/protocol/repository-folders.md) gives the
 folder names and the variable names that the code must make.
-[GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens)
+[GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens)
 gives the rules for the read token of each copy.
 
 ## The folder map

@@ -46,7 +46,7 @@ says.
   2. Create the first org.
   3. Connect Claude or Codex.
 - Get started asks for no Boat account and no Boat key.
-- [Chat and events](chat-and-events.md#messages) states the notice for a
+- [Chat and events](messages-and-attachments.md#messages) states the notice for a
   missing agent login.
 
 ## Sections
@@ -150,6 +150,6 @@ says.
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - An unfinished create continues when its workspace opens after Restore.
   It then gets a new start limit of 20 minutes, the limit of each start in
-  [Time limits of builds and starts](workspaces-and-sandboxes.md#time-limits-of-builds-and-starts).
+  [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts).
   The workspace keeps its original creation date.
 - Reason: the create makes no progress while its org is deleted.

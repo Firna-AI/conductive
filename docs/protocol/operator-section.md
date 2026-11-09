@@ -56,7 +56,7 @@ says.
     days, each with its total for the 30 days.
   - The five orgs with the most workspaces, archived workspaces included.
 - Running holds the
-  [workspace states](workspaces-and-sandboxes.md#workspace-states)
+  [workspace states](workspace-life.md#workspace-states)
   starting, ready, working, needs input, and finished with unread output.
   Failed holds the error state.
 - The 7 days are the 7 times 24 hours before the read.

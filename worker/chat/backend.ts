@@ -8,7 +8,6 @@ import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
-import { requireWritableOrgRequest } from '../security/org-writes'
 import { chatDependencies } from './dependencies'
 import {
   authorizeChatBrowser,
@@ -109,13 +108,15 @@ export class WorkspaceChat {
         return await browserUpgrade(this, request, access)
       return await this.store.run(async () => {
         const write = request.method !== 'GET' && request.method !== 'HEAD'
-        if (write)
-          await requireWritableOrgRequest(
-            request,
-            this.env.DB,
-            access.workspace.orgId,
-          )
-        if (write && access.workspace.archivedAt !== null) {
+        const current = write
+          ? await authorizeChatBrowser(
+              request,
+              this.env,
+              this.dependencies.now(),
+              access.context.body,
+            )
+          : access
+        if (write && current.workspace.archivedAt !== null) {
           throw new HttpError(
             409,
             'workspace_archived',
@@ -124,9 +125,9 @@ export class WorkspaceChat {
         }
         const response = await chatRoute(
           request,
-          access.suffix,
-          access.context,
-          this.operation(access.workspace.id),
+          current.suffix,
+          current.context,
+          this.operation(current.workspace.id),
           this.dependencies,
         )
         if (write) await this.runner.flush()

@@ -100,7 +100,7 @@ Wake or a cookie change can connect it again.
 Background requests show a native notification.
 A click restores the window and opens the request's workspace.
 It does not approve the request.
-See the [Mac app protocol](../docs/protocol/desktop-app.md) for the device requirements.
+See the [Mac app protocol](../docs/protocol/desktop-commands.md) for the device requirements.
 
 Focused device checks use these commands:
 

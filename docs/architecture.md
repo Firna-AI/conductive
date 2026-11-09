@@ -53,126 +53,9 @@ requirements of each feature.
 
 ## Components
 
-### Marketing site
-
-- A few static pages at the root of `conductive.build`, with the Terms and
-  Privacy pages. Visitors see them without a sign-in.
-- Astro builds these pages ahead of time. The Worker serves the built files
-  on `conductive.build`. It fills in the values of each request, such as
-  the app address in the sign-in links and the year in the footer.
-- [The marketing site README](../src/marketing/README.md) describes how the
-  Worker serves them.
-- The same build also makes the page that asks for the
-  [agreement to the Terms](protocol/access-and-security.md#sign-in) before
-  the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
-- The main action is "Start free with GitHub". The site does not name
-  Boat, and users need no Boat account (decision 80).
-
-### Web app
-
-- A React app, built with Vite, that uses the `@firna/ui` components.
-- It lives on `app.conductive.build`, behind the GitHub sign-in.
-- It shows the orgs, the workspaces, the chat, the files, the tools, and
-  the org settings. It follows the phone and the desktop layouts of the
-  [mockups](mockups/README.md) (decision 15).
-- For an operator, it also shows the operator section at `/operator`. The
-  section gives counts across every org. It finds any org or user, and it
-  suspends or lifts it.
-  [Operator section](protocol/operator-section.md) states its rules.
-- Tabs are links, so each tool and each file view has its own address.
-- The browser stores only the panel widths. All other state comes from
-  the Worker. A tab keeps the chats that it showed in memory, as
-  [Chat and events](protocol/chat-and-events.md#events) says.
-
-### Mac app
-
-- An Electron shell for macOS, as [Mac app](protocol/desktop-app.md) says.
-
-### Worker
-
-- One Cloudflare Worker serves the web app, the marketing site, the API,
-  the proxies to sandboxes, and the GitHub webhook endpoint.
-- It holds the GitHub App key, the Boat key, the key that signs the session
-  cookies, and the key that encrypts the stored secrets. The browser never
-  holds them.
-- It reaches Boat through one provider adapter, so that a later change can
-  add another provider. It calls only a fixed list of Boat routes.
-- It runs one gate for each hostname before every route and every
-  WebSocket upgrade. [Access and security](protocol/access-and-security.md)
-  states the gates.
-
-### D1
-
-- D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, the active preview hostnames, and the
-  records of attached files.
-- Boat labels alone cannot hold these records, because a label is fixed
-  after a create or a fork.
-
-### Workspace Durable Object
-
-- One Durable Object for each workspace. It runs in Western Europe, near
-  Boat's machines.
-- It holds the open tabs, the connection of the agent runner, and the
-  messages that wait for the sandbox.
-- It also holds the start steps, the stop timer, and the banner state.
-- Its storage keeps the chat history, so a stopped or archived workspace
-  still shows its chat.
-- It revokes the preview hostnames of its workspace.
-
-### Attachment storage
-
-- One R2 bucket holds the bytes of the files that users attach to chat
-  messages, and D1 holds their records (decision 132). The bucket holds the
-  files of every org, so the Worker's own records keep the orgs apart, as
-  [Access and security](protocol/access-and-security.md#orgs-and-workspaces)
-  says.
-- Only the Worker reads and writes the bucket. The browser sends each file
-  as raw bytes in one request, and the Worker streams it into the bucket
-  (decision 144).
-- Before the agent runner gets a message, the Worker copies the files of
-  the message into the sandbox, through an upload address that Boat gives
-  for each file.
-- [Chat and events](protocol/chat-and-events.md#attachments) states how
-  long a file stays.
-
-### Boat
-
-- Boat runs the sandboxes and keeps the saved snapshots (decision 2).
-  Sprites on Fly.io was the other option. Boat costs less, and it already
-  has forks, saved snapshots, port URLs, desktop streams, and environments.
-- Every org runs in the app's Boat account (decision 80). That account
-  holds every org image and every sandbox of every org. Its plan limits
-  apply to all orgs together.
-- The app does not depend on Boat webhooks. The agent runner reports when
-  a sandbox is ready. The Worker reads the state of a sandbox from Boat's
-  API when it needs it.
-- A stop ends every process. Boat keeps the disk and the enabled system
-  services, and restarts those services after each resume and fork.
-
-### Sandbox software
-
-Every org image holds the app's own sandbox software:
-
-- the agent runner, a Node program that runs as an always-on service
-- the terminal service, on a private port
-- the agent tools: an MCP server and a CLI that create and list workspaces
-- a git credential helper that gets a fresh GitHub token for each git
-  operation
-
-The agent runner runs Claude through the Claude Agent SDK, with the agent
-program that the SDK bundles at its own version. A pinned version guards
-against a change in how the agent program reads logins. The runner runs
-Codex through the Codex SDK or the Codex App Server (decision 36).
-
-### External services
-
-- **GitHub App:** one app gives the sign-in, the repository access, and the
-  webhooks of every org.
-- **Anthropic and OpenAI:** the model use of each turn bills to the own
-  Claude or OpenAI account of the starter of its session.
-- **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. The app is free, with no limits (decision 81).
+The [components page](architecture/components.md) describes each
+component and its responsibilities. It covers the apps, the Worker and
+its storage, Boat, the sandbox software, and the external services.
 
 ## Hostnames
 
@@ -213,11 +96,11 @@ GitHub events, and stops.
 
 - The org is the boundary between tenants. A request reaches an org only
   for a member of that org. An operator is the one exception, as
-  [Orgs and workspaces](protocol/access-and-security.md#orgs-and-workspaces)
+  [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
   says.
 - The one Boat key reaches the sandboxes and the saved snapshots of every
   org (decision 80). So the Worker's own records keep the orgs apart, as
-  [Access and security](protocol/access-and-security.md#orgs-and-workspaces)
+  [Access and security](protocol/isolation.md#orgs-and-workspaces)
   says.
 - The Boat key never goes to the browser, into a sandbox, into a log, or
   into a saved snapshot.
@@ -227,7 +110,7 @@ GitHub events, and stops.
   start, it gets only the secrets of its workspace and its org.
 - During a turn, the sandbox also holds the agent login of the starter of
   its session. The members of one org can reach that login, as
-  [Access and security](protocol/access-and-security.md#agent-logins-in-a-sandbox)
+  [Access and security](protocol/isolation.md#agent-logins-in-a-sandbox)
   says.
 
 ## Decision numbers
@@ -241,17 +124,28 @@ the merge.
 
 - [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
   image, the life of a workspace, and the tools of a workspace.
+  - [Repository folders](protocol/repository-folders.md)
+  - [Life of a workspace](protocol/workspace-life.md)
+  - [Tools of a workspace](protocol/workspace-tools.md)
 - [Chat and events](protocol/chat-and-events.md): sessions, messages, the
   agent runner, and the events.
+  - [Messages and attachments](protocol/messages-and-attachments.md)
+  - [The agent runner](protocol/agent-runner.md)
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
+  - [Isolation of orgs and sandboxes](protocol/isolation.md)
+  - [Tokens and secrets](protocol/tokens-and-secrets.md)
+  - [Terminal, previews, and desktop](protocol/terminal-previews-and-desktop.md)
 - [GitHub banner](protocol/github-banner.md): the pull request bar and its
   events.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a
   sandbox.
 - [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
-- [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
+- [Mac app](protocol/desktop-app.md): the shell for macOS, its sign-in, and
+  Mac commands.
+  - [Mac app sign-in](protocol/desktop-sign-in.md)
+  - [Permissions and Mac commands](protocol/desktop-commands.md)
 - [Operator actions](protocol/operator-actions.md): the operator, the
   suspension of a user or an org, the lift of a suspension, and abuse
   reports.
