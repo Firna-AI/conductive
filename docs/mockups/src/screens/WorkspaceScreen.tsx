@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
+import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
 import { EmptyState } from '../components/common/EmptyState'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
@@ -17,6 +18,7 @@ import { ToolsPanel } from '../components/workspace/ToolsPanel'
 import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
+import { mayArchiveWorkspace } from '../components/workspaces/permissions'
 import { conversations } from '../fixtures/conversations'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
@@ -27,6 +29,7 @@ import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
+import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import {
   FilesContent,
@@ -39,7 +42,7 @@ import { workspaceOverlay } from './workspaceOverlays'
 import { activityOf, drawnState, sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { tabsFor, workspaceName } from './workspaceTabs'
+import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
@@ -52,7 +55,8 @@ const widenedRight = 560
  * chat history stays, and nothing in the workspace can change: no message,
  * no new session, no rename, no owner change, and no Archive. `overlay`
  * lies over the workspace in place of the overlay of its state, such as a
- * dialog that another screen opens over it.
+ * dialog that another screen opens over it. The chat and the overlay find
+ * the workspaces of their chips in the list of the screen.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
@@ -73,47 +77,52 @@ export function WorkspaceScreen(props: {
   const readOnly = archived || suspended
   const admin = state.viewer === 'admin'
   const viewer = viewerOf(state)
+  const membership = { person: viewer, role: state.viewer }
   // Decision 42: the workspace's owner and the org's admins archive it.
-  const archivable = !readOnly && (admin || workspace.owner === viewer)
+  const archivable =
+    !readOnly && mayArchiveWorkspace(membership, workspace.owner)
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
+  const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
-    <ChatPane
-      composer={composerFor(state, workspace)}
-      empty={
-        <EmptyState
-          body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-          icon={MessageSquarePlus}
-          title="New session"
-        />
-      }
-      fold={state.fold}
-      items={
-        fresh
-          ? []
-          : chatItemsFor(conversations[state.conversation], state.paths)
-      }
-      notice={
-        // An archived workspace keeps its archived bar, so the notice of a
-        // suspended org shows above it.
-        archived && suspended ? (
-          <SuspendedOrgNotice org={orgs[suspendedOrg]} />
-        ) : (
-          composerNotice(state, workspace)
-        )
-      }
-      problem={problem}
-      starting={startingLogFor(state)}
-      viewer={viewer}
-      viewport={viewport}
-    />
+    <ChatWorkspaces rows={rows}>
+      <ChatPane
+        composer={composerFor(state, workspace)}
+        empty={
+          <EmptyState
+            body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
+            icon={MessageSquarePlus}
+            title="New session"
+          />
+        }
+        fold={state.fold}
+        items={
+          fresh
+            ? []
+            : chatItemsFor(conversations[state.conversation], state.paths)
+        }
+        notice={
+          // An archived workspace keeps its archived bar, so the notice of a
+          // suspended org shows above it.
+          archived && suspended ? (
+            <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+          ) : (
+            composerNotice(state, workspace)
+          )
+        }
+        problem={problem}
+        starting={startingLogFor(state)}
+        viewer={viewer}
+        viewport={viewport}
+      />
+    </ChatWorkspaces>
   )
   const workspaceHeader = (
     <WorkspaceHeader
-      archivable={archivable}
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
+      copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       rightHidden={rightHidden}
@@ -127,16 +136,20 @@ export function WorkspaceScreen(props: {
     (tab) => tab.kind === 'session' || (!archived && viewport === 'desktop'),
   )
   const row = tabRowOf(state, tabs, viewport, readOnly)
-  const overlay =
-    props.overlay ??
-    workspaceOverlay(state, workspace, viewport, {
-      tabs,
-      menuTab: row.menuTab,
-    })
+  const overlay = (
+    <ChatWorkspaces rows={rows}>
+      {props.overlay ??
+        workspaceOverlay(state, workspace, viewport, {
+          tabs,
+          menuTab: row.menuTab,
+        })}
+    </ChatWorkspaces>
+  )
   const tabRow = (
     <WorkspaceTabs
       drag={row.drag}
       full={row.full}
+      historyEntries={historyFor(state)}
       historyOpen={state.overlay === 'history'}
       menuTab={row.menuTab}
       readOnly={readOnly}
@@ -213,7 +226,13 @@ export function WorkspaceScreen(props: {
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
-      sidebar={workspaceSidebar(workspace, status, suspended)}
+      sidebar={workspaceSidebar(
+        workspace,
+        status,
+        suspended,
+        membership,
+        createdWorkspaces(state),
+      )}
     >
       <WorkspaceBody
         center={file ? <FilePage view={file} /> : chat}

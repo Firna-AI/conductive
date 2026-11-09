@@ -5,8 +5,10 @@ import type {
 import { HttpError } from '../http'
 import { suspensionNote, type SuspensionRow } from './suspension-note'
 import { runningWorkspacePredicate } from './workspace-counts'
+import { readOperatorUserAccess } from './user-access-data'
 
 interface UserHeader extends SuspensionRow {
+  userId: string
   githubId: number
   login: string
   name: string | null
@@ -22,7 +24,7 @@ export async function readOperatorUser(
   const [header, orgs] = await db.batch<UserHeader | OperatorUserOrg>([
     db
       .prepare(
-        `SELECT u.github_id AS githubId, u.github_login AS login,
+        `SELECT u.id AS userId, u.github_id AS githubId, u.github_login AS login,
            u.display_name AS name, u.created_at AS joinedAt,
            (SELECT COUNT(*) FROM workspaces w WHERE w.owner_user_id = u.id) AS owned,
            (SELECT COUNT(*) FROM workspaces w WHERE w.owner_user_id = u.id
@@ -44,7 +46,12 @@ export async function readOperatorUser(
   const user = header.results[0]
   if (!user || !('githubId' in user))
     throw new HttpError(404, 'user_not_found', 'The account is not available.')
+  const access = (await readOperatorUserAccess(db, [user.userId])).get(
+    user.userId,
+  )
+  if (!access) throw new Error('The user app access is not available')
   return {
+    ...access,
     githubId: user.githubId,
     login: user.login,
     name: user.name,

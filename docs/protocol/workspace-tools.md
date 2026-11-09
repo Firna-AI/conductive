@@ -27,7 +27,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   they add and remove.
 - A changed file opens its diff against the default branch as a tab.
 - Each new file or diff tab opens at the end of the tab row of the centre
-  column, as [The tab row](chat-and-events.md#the-tab-row) says.
+  column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
@@ -102,6 +102,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 
 - The Terminal tab opens a shell in the sandbox, in the folder of the
   workspace's repository (decision 94).
+- The default shell prompt shows only the current folder name, such as
+  `mokly`, in place of the full path.
 - The Terminal shell of a workspace keeps running when its connection
   drops. Each new connection attaches to that shell, with its running
   commands and its current screen (decision 118).

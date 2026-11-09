@@ -1,4 +1,5 @@
 import type { OrgRole } from './api'
+import type { OperatorUserAccess } from './operator-waitlist'
 
 export function operatorOverviewPath(): string {
   return '/api/operator/overview'
@@ -7,6 +8,7 @@ export function operatorOverviewPath(): string {
 export interface OperatorOverview {
   readAt: number
   users: { total: number; lastWeek: number }
+  waiting: number
   orgs: { total: number; lastWeek: number }
   workspaces: { total: number; lastWeek: number }
   running: { workspaces: number; builds: number }
@@ -76,7 +78,7 @@ export interface OperatorOrgSummary {
   match: OperatorOrgMatch | null
 }
 
-export interface OperatorUserSummary {
+export interface OperatorUserSummary extends OperatorUserAccess {
   githubId: number
   login: string
   name: string | null
@@ -131,7 +133,7 @@ export interface OperatorUserOrg {
   role: OrgRole
 }
 
-export interface OperatorUserDetail {
+export interface OperatorUserDetail extends OperatorUserAccess {
   githubId: number
   login: string
   name: string | null

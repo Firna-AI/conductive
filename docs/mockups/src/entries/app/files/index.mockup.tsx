@@ -34,7 +34,7 @@ export const files = defineScreen({
       slug: 'markdown',
       title: 'Markdown preview',
       description:
-        'README.md opened from All files: a tab in the centre column with the rendered Markdown. A switch shows the source instead, and the header can copy and download the file.',
+        'README.md opened from All files: a tab in the centre column with the rendered Markdown. Its table of environment variables has the look of a table in a reply of the chat. A switch shows the source instead, and the header can copy and download the file.',
       props: { tab: 'markdown' },
     },
     {

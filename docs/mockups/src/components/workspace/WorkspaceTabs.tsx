@@ -35,7 +35,12 @@ export const historyEntries: readonly MenuEntry[] = closedSessions.map(
 )
 
 /** The clock that opens the session history, with its menu when open. */
-function HistoryButton(props: { open: boolean; anchored: boolean }) {
+function HistoryButton(props: {
+  open: boolean
+  anchored: boolean
+  entries: readonly MenuEntry[]
+}) {
+  const hasHistory = props.entries.some((entry) => entry.kind === 'item')
   const button = (
     <IconButton
       expanded={props.open}
@@ -46,16 +51,18 @@ function HistoryButton(props: { open: boolean; anchored: boolean }) {
   )
   return (
     <span className={styles.anchor}>
-      {props.open ? (
-        button
-      ) : (
-        <ScreenLink asChild to={paths.sessionHistory}>
-          {button}
-        </ScreenLink>
-      )}
+      {hasHistory ? (
+        props.open ? (
+          button
+        ) : (
+          <ScreenLink asChild to={paths.sessionHistory}>
+            {button}
+          </ScreenLink>
+        )
+      ) : null}
       {props.open && props.anchored ? (
         <Menu
-          entries={historyEntries}
+          entries={props.entries}
           label="Session history"
           placement="below-end"
           wide
@@ -87,6 +94,7 @@ function placeAfterDrop(from: number, index: number): number {
 export function WorkspaceTabs(props: {
   tabs: readonly WorkspaceTab[]
   viewport: Viewport
+  historyEntries?: readonly MenuEntry[]
   historyOpen?: boolean
   /** An archived workspace: no new session. */
   readOnly?: boolean
@@ -149,7 +157,11 @@ export function WorkspaceTabs(props: {
           <IconButton icon={Plus} label="New session" />
         </ScreenLink>
       )}
-      <HistoryButton anchored={!phone} open={props.historyOpen ?? false} />
+      <HistoryButton
+        anchored={!phone}
+        entries={props.historyEntries ?? historyEntries}
+        open={props.historyOpen ?? false}
+      />
     </nav>
   )
 }

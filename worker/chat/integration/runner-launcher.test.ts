@@ -90,6 +90,7 @@ process.stdout.write(JSON.stringify({
   repository: config.cwd,
   cwd: process.cwd(),
   defaultBranch: config.defaultBranch,
+  workspaceBranch: config.workspaceBranch,
 }))
 `,
     )
@@ -142,6 +143,7 @@ it('maps sandbox settings into the runner configuration through its staged priva
       CONDUCTIVE_REPOSITORY: '/stale-repository',
       CONDUCTIVE_RUNNER_URL: 'https://stale.conductive.test/v1/runner',
       CONDUCTIVE_DEFAULT_BRANCH: 'main',
+      CONDUCTIVE_WORKSPACE_BRANCH: 'alice/tracked-task',
     })
     expect(result.exitCode, String(result.stderr)).toBe(0)
     expect(result.stderr).toBe('')
@@ -153,6 +155,7 @@ it('maps sandbox settings into the runner configuration through its staged priva
       repository: launcher.repository,
       cwd: launcher.repository,
       defaultBranch: 'main',
+      workspaceBranch: 'alice/tracked-task',
     })
   } finally {
     await launcher.dispose()

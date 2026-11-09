@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Ban, CircleAlert, LockOpen, TriangleAlert } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { disableCodeOffer } from '../../../docs/mockups/src/components/operator/accessCopy'
 import {
   liftQuestion,
   selfSuspendWarning,
@@ -8,45 +10,31 @@ import {
 } from '../../../docs/mockups/src/components/operator/operatorCopy'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
-import { useAction } from '../ui/useAction'
-
-/**
- * The write of a question, and the dismissal of the question. While the
- * write runs, nothing closes the question, as the Archive question does:
- * Cancel is off, and Escape and a press outside do nothing, on desktop and
- * in the sheet of a phone. A dismissal cannot stop the write, and a failure
- * shows in the question. The rest of the page is inert while the question
- * shows, so no newer question opens before the write ends, and the close
- * after the write closes only its own question.
- */
-function useQuestion(write: () => Promise<void>, close: () => void) {
-  const action = useAction(async () => {
-    await write()
-    close()
-  })
-  const dismiss = () => {
-    if (!action.pending) close()
-  }
-  return { ...action, dismiss }
-}
+import { CheckOption } from './CheckOption'
+import { useQuestion } from './useQuestion'
 
 /**
  * The operator confirms a suspension. The question says what stops, what the
  * members keep, what a lift does not bring back, and that the files of a
  * stopped workspace can be deleted. An org gives its deletion, so the
  * question of a deleted org says that no admin can restore it while it is
- * suspended. On the operator's own page it warns first. A failed suspension
- * shows its error, and the question stays open.
+ * suspended. On the operator's own page it warns first. A user whose referral
+ * code still lets people in gets the offer to disable it too, on by default,
+ * and `suspend` gets the choice. A failed suspension shows its error, and the
+ * question stays open.
  */
 export function SuspendDialog(props: {
   target: QuestionTarget
   /** The target is the account of the operator. */
   self: boolean
-  suspend: () => Promise<void>
+  /** The referral code of a user, while it still lets people in. */
+  referralCode?: string
+  suspend: (disableCode: boolean) => Promise<void>
   close: () => void
 }) {
-  const { target } = props
+  const { target, referralCode } = props
   const { name } = target
+  const [disable, setDisable] = useState(true)
   const suspend = useQuestion(props.suspend, props.close)
   return (
     <Dialog
@@ -58,7 +46,7 @@ export function SuspendDialog(props: {
           <ActionButton
             busy={suspend.pending}
             icon={Ban}
-            onPress={() => suspend.run()}
+            onPress={() => suspend.run(referralCode !== undefined && disable)}
             tone="danger"
           >
             {target.kind === 'user' ? 'Suspend user' : 'Suspend org'}
@@ -74,6 +62,15 @@ export function SuspendDialog(props: {
       {suspendQuestion(target).map((text) => (
         <DialogText key={text}>{text}</DialogText>
       ))}
+      {referralCode !== undefined ? (
+        <CheckOption
+          change={setDisable}
+          checked={disable}
+          disabled={suspend.pending}
+          hint={disableCodeOffer.hint(referralCode)}
+          label={disableCodeOffer.label}
+        />
+      ) : null}
       {suspend.error ? (
         <Notice
           body={suspend.error.message}

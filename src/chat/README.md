@@ -12,6 +12,9 @@ of the app shell mounts it by default, as
 says. It builds against the fake API and the recorded chat events of
 `src/test-support/`.
 
+The history button follows the available closed sessions, as
+[Sessions](../../docs/protocol/agents-and-sessions.md#sessions) says.
+
 ## Use it in the app
 
 The tab keeps one `ChatController` for each workspace that it showed. The
@@ -30,213 +33,26 @@ stops its own controller:
   onWorkspaceChange={(workspace) => showInHeader(workspace)}
   onViewChange={(view) => keepTabs(view)}
   onOpenDiff={(path) => openDiffTab(path)}
+  onOpenPage={(to) => navigate(to)}
   onConnectAgent={(agent) => openAccount(agent)}
 />
 ```
 
-- `client` and `subscribe` must be stable. A new one starts a new chat.
-  `client` is an `ApiClient`: `AppServices.api` in the app, or one from
-  `createApiClient` over a fake.
-- Each call of the chat goes through that client. A failure shows the
-  message of its `ApiError`, such as the message of the Worker. A reply that
-  a reader of the chat refuses shows "The request failed. Try again."
-- `subscribe(target, afterEventNumber, listener)` opens the stream of
-  `workspaceEventsPath` after the event number. In the app, it opens
-  `AppServices.events`. It gives each message to `listener.message`, the
-  stored history first, and calls `listener.closed()` when the connection
-  drops. The chat checks each message as `unknown`.
-- The chat reads the signed-in user from the account route and the members
-  of the org from the members route, or it takes both from its `sources`,
-  as [A chat that the app keeps](#a-chat-that-the-app-keeps) says. A
-  stopped turn then says "You stopped the agent" to the member who pressed
-  Stop, and names that member to the others. When the members do not load,
-  it names nobody but the reader.
-- `onWorkspaceChange` gets the workspace record after each change: its state,
-  and the title that the backend gives it through `workspace.title` and
-  `workspace.updated` events. The header and the list of the app show it.
-- A new workspace and each new session have no name: the `name` of the
-  workspace record and the `title` of the session record are null. The
-  tabs, the session history, the line of a linked session, and the header
-  and the list of the app then show "Untitled", from `nameLabel` in
-  `src/shared/name-label.ts`, as
-  [Workspace and session names](../../docs/protocol/chat-and-events.md#workspace-and-session-names)
-  says. "New session" names only the action of +: its label, the heading
-  of the empty chat, and the detail in the model picker.
-- Each tab shows the `title` of its session record. The backend provides
-  the titles that the mockups show. The title from the first message names
-  the workspace and its first session, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says. Each
-  other session takes the first line of its first message with text as its
-  title, as [Sessions](../../docs/protocol/chat-and-events.md#sessions)
-  says. A name that a member set never changes. The development page does
-  the same.
-- The rename field of a session with no title starts empty, with
-  "Untitled" as its hint, so the label never becomes the name of the
-  session. An empty field keeps the old name.
-- `renderTab(tab)` renders a file or diff tab of the saved view, such as an
-  open file. Its `title` is the name of the tab, as a screen reader reads
-  it from the tab, with each secret value hidden, such as "app.ts changes"
-  for a diff. The tab menu and the status of the row name the tab by it,
-  and the chat takes no name from a path. Its `draw(draw)` draws the tab
-  by the same name. For `draw.kind` `row`, it draws the tab at its place
-  in the row: it spreads `draw.item` on the `<li>` of the tab and
-  `draw.close` on the wrapper of its Close button, and gives
-  `draw.link.ref` to the link of the tab. These hold the handlers, the
-  classes, and the refs of the drag, of the tab menu, and of the scroll of
-  the row. The ref of the link gives the tab the focus back after a move
-  from the tab menu. For `lifted`, it draws the copy that a drag lifts
-  above the page: the icon and the whole title, with no link and no Close.
-  Without `renderTab`, the row shows only the session tabs, as on a phone.
-  `components/tab-row.ts` holds these types.
-- `onOpenDiff` gets the real path of a changed file of a finished turn. The
-  chip of the file shows the label of its path, `displayPath`, which hides
-  each secret value, as [Labels of paths](../files/README.md#labels-of-paths)
-  says.
-- `content` takes a page that the app shows in place of the chat of the
-  open session, such as an open file. The session tabs and the overlays
-  stay, and no session tab is the current one.
-- The controller's `updateView(change)` changes the saved view with a
-  change of the app, such as an open file tab or the list of the Files
-  panel. It saves through the same writer as the session tabs, so a later
-  write of the chat keeps the change. Until the load reads the view, it
-  changes nothing, so the saved tabs stay. In a read-only workspace,
-  archived or shown read-only by the app, it changes the view in the
-  browser only, and sends no write.
-- `host` takes the start steps and the sandbox bar that the app draws, as
-  `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
-  `keepsComposer` keeps the composer under the bar, as after a failed first
-  start. Without a host, the chat draws both from its own record of the
-  workspace, with the message that the workspace saved for a failed start.
-- `readOnly` says that the workspace takes no write, such as while its org
-  is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
-  shows its history, as an archived workspace does, and the host's bar
-  takes the place of the composer.
-- Render the chat inside the Firna theme provider and the Graphite token CSS
-  of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
-- The chat sets no CSS position. A dialog or a sheet covers the nearest
-  positioned frame: the app frame. The lifted tab of a drag, and the tab
-  menu on desktop, draw on `document.body` with a fixed position, because
-  the row clips what it holds.
-- The menus, the dialogs, and the sheets of the chat note themselves in
-  the open layers of the app shell, from `../shell/ui/layers.ts`. So the
-  key of the command palette closes an open menu, and does nothing while
-  a dialog or a sheet is open. Outside the app, nothing notes them.
-- The Mac app shows two more parts of Mac commands outside the chat:
-  `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
-  say how to mount them.
-- `useChatController` gives the controller and its snapshot to an app that
-  composes `SessionTabs` and `SessionChat` in its own layout. Such an app
-  takes the tabs from `rowOf` with the sessions of `tabSessions` and the
-  shown tab of `shownTab`, and the session history from `historySessions`
-  with the times of `endedAt`, so an archived workspace navigates without a
-  write.
-- `useChatController` makes the controller through the shared
-  `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
-  starts the controller after the render. It stops the controller at
-  unmount. When a new controller replaces it, the hook stops the old
-  controller before the new controller starts.
+[Chat integration](integration.md) gives the rules of each prop and
+callback of `WorkspaceChat`, its theme and its layers, the parts that
+the Mac app shows outside the chat, and `useChatController`.
 
 ### A chat that the app keeps
 
-`WorkspaceChatView` draws a `ChatController` that the app keeps, such as
-across the pages of a tab. It takes the props of `WorkspaceChat` other than
-the connection. The app makes the controller with a stable `client` and
-`subscribe`, and calls `show` and `hide` itself:
-
-- The first `show` loads the chat, as `start` does. A `show` after a failed
-  load loads it again.
-- A later `show` opens the stream again after its cursor. So the chat shows
-  at once, and it reads no history, no session list, and no view again.
-- `hide` closes the stream while the app shows another page. The chat keeps
-  its sessions, drafts, transcripts, and cursor. Actions and loads that run
-  still finish.
-- A load that ends while the chat is hidden opens no stream until the next
-  `show`.
-- `stop` ends the controller, as at a sign-out. Late replies then change
-  nothing.
-
-The app can also give the controller `sources`, a `ChatSources` from
-`state/sources.ts`. It gives the account, the org, the models, and the
-members from the models of the app.
-
-- With sources, the load sends none of these four reads and writes none of
-  these values. So no reply of an old read replaces a newer value of the
-  app. The view read stays.
-- Each change of a source shows at once, also while the chat is hidden. So
-  a login that the account screen saves shows in a kept chat on a return.
-- `start` copies the sources into the snapshot and follows them. `stop`
-  ends the subscriptions. `hide` and `show` keep them.
-- A chat without sources reads the four values at each load.
+[A chat that the app keeps](integration.md#a-chat-that-the-app-keeps)
+says how `WorkspaceChatView` draws a controller that the app keeps: its
+`show`, `hide`, and `stop`, its `sources`, and the workspace list of its
+chips.
 
 ## Rules for this code
 
-- The state keeps one saved order for session, file, and diff tabs. The row
-  order includes each tab once. A host with no file or diff tabs leaves
-  their saved places in the view. In a read-only workspace, the row uses
-  the session tabs that the browser keeps.
-- The load gives each open session a place and removes the places of
-  sessions that are not open. When an open session first arrives, the
-  state adds its missing place at the end. It drops no other place.
-  At the load, missing places go at the end, in the order of creation.
-  These changes send no write of their own. The next view save carries
-  them, and a read-only workspace keeps them in the browser only.
-- `moveTab(tab, place)` puts a tab before or after its neighbour in the
-  row. It saves through the shared view writer, then sorts the open
-  sessions for Close. A new or reopened session opens at the end. A
-  read-only workspace moves no tab.
-- The tab row draws the tabs in the row order and moves them by drag and
-  drop, on the shared `usePointerDrag` of [the web app](../app/README.md).
-  A mouse drags a tab after a move of more than 4 px. A finger lifts a tab
-  after a long press of 450 ms. The drop place is before the first other
-  tab whose middle is right of the pointer, else after the last tab. A line
-  that takes no space marks it, so no tab moves during the drag. The tab
-  stays at its place as a faint copy, and a lifted copy hangs below the row
-  under the pointer. The copy shows the whole title, which the row cuts at
-  168 px, and a title wider than the window goes on to more lines. The
-  status of the row tells a screen reader the title and the place, such as
-  "Moving Debounce lookups to place 2 of 3". The release calls `moveTab`,
-  and a drop at the tab's own place moves nothing. Escape ends a drag with
-  no move.
-- A drag does not change the shown tab: the click at its end selects
-  nothing, also the click that a finger sends after it lets go. A press on
-  Close starts no drag. A read-only chat binds no drag, and neither does a
-  tab that shows its rename field. The tabs take the touch CSS of a drag: a
-  long press opens no link menu and selects no text, and a finger still
-  scrolls the row sideways.
-- The tab menu opens on a right click of a tab, at the pointer, and on
-  Shift and F10 or the Menu key of a focused tab, below the tab. The key
-  handler of the tab opens it on every system and stops the key, so the
-  browser opens no menu of its own. On a phone, a long press that ends with
-  no move opens it as a sheet. A session tab has Rename session, a line,
-  Move left, and Move right. A file or diff tab has Move left and Move
-  right. A move that the place of the tab rules out is off: it keeps its
-  place at half opacity, and the arrow keys skip it. Escape or a press
-  outside closes the menu.
-- Move left and Move right call `moveTab` with the neighbour of the tab.
-  The focus goes back to the link of the tab, and the status of the row
-  says the new place, such as "app.ts moves to place 2 of 3". Rename
-  session opens the rename field in that tab, also when the tab does not
-  show, and the shown tab does not change. The tab with the field has no
-  fill of its own unless it is the shown tab. A read-only chat and a tab
-  with its rename field open no tab menu, so the browser shows its own.
-- A row whose tabs do not fit at their minimum width scrolls sideways, with
-  no scrollbar. It keeps the tab with the rename field, else the shown tab,
-  whole in view: at the mount, when that tab changes, when the row gets
-  narrower, and when that tab changes its size or its place in the row,
-  such as after a rename, Escape in the rename field, a new title from the
-  agent, a new label of a file, or the close of a tab before it. A resize
-  of the row or of any tab, and a render that changes the tabs, check that
-  tab. A scroll of the user away from it stays until such a change. A tab
-  that opens shows too, as far as the kept tab still shows with it, and so
-  does a tab after a move. A tab that scrolls into view stops clear of the
-  fades, at the scroll padding of the row. A vertical wheel turn over the
-  row scrolls it sideways, through `useSidewaysWheel` of the web app. The
-  row sets `.fadeStart` and `.fadeEnd` from its scroll position and the
-  sizes of the row and its tabs. During a drag, the pointer within 32 px of
-  an end of the row, or past it, scrolls the row, and the drag finds its
-  drop place again after each scroll. This scroll starts only after the
-  pointer moves, so a long press that holds still scrolls nothing, and its
-  release opens the tab menu.
+- [The tab row](tab-row.md) gives the rules of the one order of the
+  tabs, the drag, the tab menu, and the scroll of the row.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
@@ -244,71 +60,17 @@ members from the models of the app.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
   stays in place when the user opens or closes it, also for a run of calls.
-- The chat loads the history of each session that becomes the shown session,
-  whatever changed the selection: a click, an action, or a record from the
-  stream. One load runs at a time for each session, and a failed load waits
-  for Try again or for the next selection.
-- The status of the stored history comes from its load alone. A chat with
-  content, such as live messages, a sent message, a running turn, or the
-  start steps, keeps it and shows a failed load as a notice by the composer,
-  with Try again. An empty chat shows the failure in place of the chat.
-- A read-only workspace keeps its chat as it is, and the backend refuses
-  its writes: an archived workspace, and one that the app shows read-only,
-  such as in a suspended org. So its tabs change in the browser only. The
-  session history opens the stored history of any session as a tab, and a
-  tab closes with no write. A closed tab shows in the session history
-  again, also the tab of a session that was open at the archive. The
-  session records do not change, so a closed session stays closed. The
-  controller's `select`, `requestClose`, and `reopen` take this path while
-  the workspace is read-only, and the server path otherwise. The controller
-  reads `readOnly` at each action, because a suspension can start during a
-  visit, and it sends no other write then.
-- A read-only chat shows no composer, no +, no tab menu, no Try again, no
-  drag of a tab, and no answer to a Mac command. Its empty state names only
-  the session history.
+- [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
+  formatting and the tables of agent messages.
+  [Workspace links](../../docs/protocol/workspace-links.md) states the
+  chips of sent messages and answers. [Agent text](agent-text.md) gives the
+  rules of the code that formats them: the chips, and the table parts that
+  the chat shares with the file preview and the mockups.
+- [Loads, records, and sends](loads-and-sends.md) gives the rules of
+  the history loads, the read-only chats, the order of the records, the
+  sends, the message field of each composer, and Stop.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
-- A Stop request records the member who pressed Stop, and ends nothing. The
-  turn ends when its end says stopped. A stop with no request names nobody:
-  "The agent stopped".
-- Each reply, read, and event with a session record, or with the workspace
-  record and its start steps, carries the event number of its state. The
-  newest number wins, whatever arrives first. So a Resume reply never
-  hides a newer state from the stream, such as a failed start with its Try
-  again. The steps after an action, such as a view save, the focus, or a
-  free Resume button, still run when its reply is older. The header of
-  [`state/session-records.ts`](state/session-records.ts) gives the pending
-  edits of a rename or a model change.
-- The composer reads Enter through `useSendKey` of
-  `components/send-key.ts`, the one send key of every composer: the chat,
-  and the page and the dialog of New workspace. On a computer, Enter sends
-  and Shift+Enter adds a line, as
-  [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)
-  says. In the phone layout, Enter adds a line.
-- Send works while the sandbox is not ready: during the first start of a
-  new workspace, after it failed, and during a resume. The workspace queues
-  each message for the sandbox, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says.
-- A failed first start shows the error state and a failed step of the
-  create start, as `failedFirstStart` in
-  [`../app/first-start.ts`](../app/first-start.ts) says. Its bar sits above
-  the composer. A later error after a successful create,
-  and a failed resume, keep the bar in place of the composer.
-- The bar shows the message that the workspace saved for a failed start.
-  The chat takes it from each read and Resume reply, and from each
-  `workspace.updated` event. An event without an error keeps it, and null
-  clears it.
-- A send that the Worker refuses keeps its text, its files, and its message
-  ID. The notice "Your message didn't send" shows the Worker's plain
-  message.
-- The chat loads the session list and the view, then the full history of the
-  shown session, then the workspace and the session list again. The stream
-  starts after the history's `throughEventNumber`, so no change between the
-  reads and the stream gets lost.
-- The chat writes no browser storage. The drafts stay in memory, and the
-  server keeps the open tabs through the view route. A kept controller
-  lives only in the memory of its tab, so a reload or a new tab starts
-  empty.
 - [The Mac commands](device/README.md) hold the rules of the requests,
   their answers, and the settings of the Mac.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
@@ -322,7 +84,7 @@ members from the models of the app.
   the mockups, and the composer of a new workspace share it. The chat keeps
   no size formatter of its own.
 - User-facing text follows the
-  [names in the product](../../docs/protocol/chat-and-events.md#names-in-the-product):
+  [names in the product](../../docs/protocol/agents-and-sessions.md#names-in-the-product):
   no "Claude Code", and no provider name.
 
 ## Development page
@@ -340,62 +102,7 @@ on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers. The
 [workspace screen](../shell/workspace/README.md#key-code) tests the kept
 chat in the whole app.
-`components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
-It checks the plain message of a refused retry in a tab that missed newer events.
-`state/linked-replies.test.tsx` drives replies of Send and Try again that
-name a linked session, in both orders, and two chats with different readers
-on one fake stream. `components/SessionLogin.test.tsx` renders the login
-label and its notices. `components/SourceLink.dom.test.tsx` presses the link
-of a linked session to its open and its closed source. In an archived
-workspace, it opens a linked session that closed before the archive from the
-session history. Its source link writes nothing.
-`state/first-start.test.ts` drives Send in two sessions during the first
-start, after it failed, and during a resume. It checks the saved message of
-a failed start from a read and the stream, and a send that the Worker
-refuses. `components/FirstStart.dom.test.tsx` mounts the chat without a
-host, sends with Enter and Send during the first start and after it failed,
-and checks the saved message on the bar of a failed first start and of a
-failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
-turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
-fold and a message line, and checks that each line keeps its place.
-`components/ReadingPlace.dom.test.tsx` lays the chat out as a browser lays
-out its reversed scroll box. It ends a long turn while the reader reads
-higher up, and checks the read row and the newest message at the bottom.
-`components/TabDrag.dom.test.tsx` mounts the chat with the real
-`FileTabItem` of the Files screens and drags tabs with pointer events over
-boxes that `components/tab-drag-test-kit.tsx` gives them. The file tab of
-the kit has a real path with a fake secret value and a label that hides
-it, so a name that the row takes from a path fails the tests. A mouse
-moves a file tab before a session tab, and the click at the end selects
-nothing.
-Escape keeps the order. A finger lifts a session tab after 450 ms, near
-the clipped end of a full row, which takes the browser layout of
-`components/row-layout-test-kit.ts`. While the finger holds still, the row
-does not scroll. Its release with no move opens the tab menu as a sheet,
-which the late click of the finger does not close. In a full row, a mouse
-holds a dragged tab near each end. The drag kit holds the animation
-frames, so this test fakes them and steps them one at a time. The row
-scrolls toward each end, and the drop goes to a place that the scroll
-showed. A second drag scrolls by the same step, so the first drag left no
-frame loop running. `components/TabMenu.dom.test.tsx` opens the tab menu
-with Shift and F10 and with a right click, moves a file tab with Move
-left, and opens the rename field in a tab that does not show.
-`components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
-its fades. It also scrolls a full row over the browser layout of
-`components/row-layout-test-kit.ts`, which gives the row and its tabs
-their boxes and calls back each `ResizeObserver`, as happy-dom does not.
-The row scrolls the shown tab into view at the mount, on a new shown
-tab, and on a narrower row, the moved tab after a move, and a tab that
-opens as far as the shown tab still shows. It keeps the whole shown tab
-in view after the close of a tab before it and after a rename makes it
-wider, and a row that the user scrolled away stays there. On a phone, a
-finger that moves after its long press drags a tab toward the clipped
-end. The row scrolls, the release drops the tab at the place that the
-status says, and no tab menu opens.
-`components/tab-row-test-kit.ts` sends their right clicks, keys, and
-wheel turns.
-`components/SessionTabs.test.tsx` renders the tab of a session with no
-title and its rename field.
+[Chat tests](tests.md) says what each test file checks.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -431,7 +138,17 @@ check in the Mac app.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/chat-and-events.md#messages)
   states.
+- `components/chip-field/`: `ChipTextField`, the message field of every
+  composer. [The message field](loads-and-sends.md#the-message-field)
+  gives its rules and its files.
 - `state/load.ts`: the order of the first reads and the stream start.
+- `links/`: `workspace-links.ts`, the link syntax, the reader of the
+  links of a message field, and `linkTarget`, `chat-parts.ts`, the one
+  tokenizer of sent messages and answers, `LinksContext.tsx`, the
+  workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
+  which draws the parts of a message or an answer.
+- `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
+  read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
@@ -473,7 +190,12 @@ check in the Mac app.
   that the chat draws, and puts each insert at its place, also in a fold.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
-  full text.
+  full text. A message line with a table opens the table under the line.
+- `components/agent-text.ts`: `textBlocks`, the paragraphs, lists, code
+  blocks, and tables of an agent message, with `TextTable`.
+  `components/AgentText.tsx`: `AgentText`, which draws them, and
+  `AgentBlocks`, which the message line shares. Their text draws through
+  `LinkedText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which
@@ -499,12 +221,15 @@ check in the Mac app.
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
-  in `dev/dev-logins.ts`.
+  in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the answers of the
+  scripted agent, which the `answer` option chooses.
 
 
 ### Related docs
 
 - [Chat and events](../../docs/protocol/chat-and-events.md)
+- [Chat Markdown](../../docs/protocol/chat-markdown.md): the formatting of
+  agent messages, with their tables.
 - [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
   runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):

@@ -1,7 +1,4 @@
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type { AppEnv } from '../env'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import {

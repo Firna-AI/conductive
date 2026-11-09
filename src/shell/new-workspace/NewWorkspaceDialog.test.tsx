@@ -5,8 +5,9 @@ import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import type { OrgRole } from '../../shared/api'
 import { orgSettingsPaths } from '../../shared/org-settings'
-import { workspacesPath } from '../../shared/workspaces'
+import { workspacesPath, type Workspace } from '../../shared/workspaces'
 import {
+  accessibleName,
   byLabel,
   byRole,
   queryByLabel,
@@ -14,6 +15,8 @@ import {
   queryByText,
 } from '../../test-support/dom-queries'
 import { repositoryFixtures } from '../../test-support/fixtures/repositories'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { messageText, pasteMessage } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { orgSuspendedBody } from '../../test-support/suspended-org'
 import { click, press, settle, typeText } from '../test-mount'
@@ -35,6 +38,14 @@ import {
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const task = 'Let shoppers save their cart.'
+const linked = workspaceFixtures().workspaces.workspaces[0] as Workspace
+const chipName = `W-${linked.number} ${linked.name}, Starting`
+
+/** The names of the chips in a message field. */
+const chipsIn = (field: HTMLElement) =>
+  Array.from(field.querySelectorAll('[contenteditable="false"]'), (chip) =>
+    accessibleName(chip),
+  )
 const chooseFirst = 'Choose the repositories of Acme first'
 const adminChooses = 'An admin of Acme chooses its repositories first'
 
@@ -61,6 +72,7 @@ describe('the New workspace dialog', () => {
     const message = messageIn(openDialog(tab.view))
     const focused = document.activeElement === message
     typeText(message, task)
+    pasteMessage(message, ` Like ${linked.link}.`)
     const draft = tab.app.org(org).newWorkspace(null)
     await act(() => draft.attach([new File(['Cart notes'], 'notes.txt')]))
     const [file] = draft.draft.get().attachments
@@ -74,7 +86,8 @@ describe('the New workspace dialog', () => {
     await settle()
     const reopened = openDialog(tab.view)
     const kept = {
-      text: messageIn(reopened).value,
+      text: messageText(messageIn(reopened)),
+      chips: chipsIn(messageIn(reopened)),
       file: queryByLabel(`Remove ${file.name}`, reopened) !== null,
     }
     const outside = new PointerEvent('pointerdown', {
@@ -103,15 +116,22 @@ describe('the New workspace dialog', () => {
       pressedOutside,
       generalMenu: {
         place: placeOf(fromMenu),
-        text: messageIn(fromMenu).value,
+        text: messageText(messageIn(fromMenu)),
       },
       address: tab.address(),
     }).toEqual({
       focused: true,
       escaped: { dialog: null, rowFocused: true },
-      kept: { text: task, file: true },
+      kept: {
+        text: `${task} Like ${linked.link}.`,
+        chips: [chipName],
+        file: true,
+      },
       pressedOutside: { dialog: null, pressKept: true, rowFocused: true },
-      generalMenu: { place: 'Acme · General', text: task },
+      generalMenu: {
+        place: 'Acme · General',
+        text: `${task} Like ${linked.link}.`,
+      },
       address: here,
     })
   })
@@ -167,7 +187,7 @@ describe('the New workspace dialog', () => {
     expect({
       createOff,
       connect,
-      kept: messageIn(openDialog(tab.view)).value,
+      kept: messageText(messageIn(openDialog(tab.view))),
     }).toEqual({
       createOff: true,
       connect: {

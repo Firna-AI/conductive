@@ -14,6 +14,7 @@ export async function deviceBrowserGate(
     new Request(request.url, { headers: request.headers }),
     env,
     now,
+    request,
   )
   if (context.org)
     await requireWritableOrgRequest(request, env.DB, context.org.id)

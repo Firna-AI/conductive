@@ -1,14 +1,19 @@
 ---
 import { productName } from '../../../docs/mockups/src/brand'
+import { waitlistText } from '../access-copy'
+import ClosingCall from '../components/ClosingCall.astro'
 import Icon from '../components/Icon.astro'
 import PictureFrame from '../components/PictureFrame.astro'
 import SectionIntro from '../components/SectionIntro.astro'
 import SiteActions from '../components/SiteActions.astro'
 import { features, smallerFeatures } from '../features'
+import { parityLinkCopy } from '../from-conductor/copy'
 import SiteLayout from '../layouts/SiteLayout.astro'
+import { sitePaths } from '../links'
 
 /*
- * The home page: the hero with the app, the features with real screens,
+ * The home page: the hero with a short link to the page for people who
+ * move from Conductor Cloud and the app, the features with real screens,
  * the smaller features, and a last call to action.
  */
 ---
@@ -20,6 +25,10 @@ import SiteLayout from '../layouts/SiteLayout.astro'
   <main class="main">
     <section class="hero">
       <div class="hero-copy">
+        <a class="hero-notice" href={sitePaths.fromConductor}>
+          {parityLinkCopy.home}
+          <Icon name="arrow-right" size={14} class="hero-notice-icon" />
+        </a>
         <h1 class="hero-title">
           Give every coding task its own cloud computer.
         </h1>
@@ -63,14 +72,10 @@ import SiteLayout from '../layouts/SiteLayout.astro'
           ))}
         </ul>
       </section>
-      <section class="closing">
-        <h2 class="closing-title">Try it on your next task.</h2>
-        <p class="closing-text">
-          Sign up with GitHub, connect your repositories, and send the first
-          task.
-        </p>
-        <SiteActions />
-      </section>
+      <ClosingCall
+        title="Give your next task its own cloud computer."
+        text={waitlistText}
+      />
     </div>
   </main>
 </SiteLayout>

@@ -9,7 +9,7 @@ Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
 push to `main` deploys the test deployment.
 
 Each input names the routes that read it. A route that does not read an
-input works without it. Keep real values out of the repository and out of
+input works without it. Keep secrets out of the repository and out of
 examples.
 
 ## How to set the inputs
@@ -19,8 +19,10 @@ examples.
 - Set each public variable in the `vars` of `wrangler.jsonc`, or in the
   settings of the Worker in the Cloudflare dashboard.
 - `wrangler.jsonc` sets `keep_vars`. So each deploy keeps the variables
-  that the settings of the Worker hold. Set a variable of one deployment
-  there, or with `--var` on its first deploy.
+  that the settings of the Worker hold and this file does not set.
+  Values in `wrangler.jsonc` replace the corresponding dashboard values.
+  Set a variable of one deployment in the dashboard, or with `--var` on
+  its first deploy.
 - `wrangler.jsonc` routes the hostnames of
   [Architecture](architecture.md#hostnames) and each hostname of the
   preview domain. A proxied wildcard DNS record of the preview domain must
@@ -83,7 +85,7 @@ examples.
 | `BOAT_KEY_ENCRYPTION_KEY` | Every route that stores or reads a stored secret | A separate 32 random bytes, encoded as Base64. |
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. A PKCS#8 PEM works too. |
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhooks on the machine hostname | The webhook secret of the GitHub App. The Worker checks each delivery with it. Without it, each delivery gets `503 github_unavailable`. |
-| `RESEND_API_KEY` | The invitation emails of the member routes | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. |
+| `RESEND_API_KEY` | The invitation emails of the member routes, and the approval emails of the operator section | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. The approval emails come from the same sender. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. An approval still gives app access, and the app tries its email again for 24 hours, as [The approval email](protocol/waitlist.md#the-approval-email) says. |
 
 - `BOAT_KEY_ENCRYPTION_KEY` encrypts the agent logins, the GitHub user
   tokens, the env vars of each org, and the workspace tokens. It also
@@ -114,8 +116,15 @@ above.
 
 ## Models
 
-`CONDUCTIVE_MODELS` holds the models that the app offers. It is operator
-data. The Worker has no built-in list and no fallback model.
+`CONDUCTIVE_MODELS` holds the models that the app offers.
+The `vars` of [`wrangler.jsonc`](../wrangler.jsonc) hold this list and
+`CONDUCTIVE_DEFAULT_CHOICE`, the app default. Edit them in the repository.
+Each deploy publishes these values through the existing deploy workflow.
+The Worker has no built-in list and no fallback model.
+
+Keep both settings as JSON encoded in strings, because the model readers
+expect text bindings. A `.dev.vars` value replaces its repository value
+for local development.
 
 - The value is a non-empty JSON array. Each entry is an object with these
   fields:
@@ -295,6 +304,11 @@ with no URL and no credential, and the runner reads it, as
 gives the default branch of the repository of the workspace, from its
 queued start. A disk retention restart gives the current default branch of
 that repository.
+
+`CONDUCTIVE_WORKSPACE_BRANCH` needs no deployment input either. A create, a
+resume, and a disk retention restart give the workspace branch that the
+Worker's record of the workspace names. The runner names that branch in
+the [agent instructions](protocol/agent-instructions.md#the-branches).
 
 ## The app's Boat account
 

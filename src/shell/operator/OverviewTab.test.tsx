@@ -54,7 +54,7 @@ describe('the Overview of the operator section', () => {
     }).toEqual({
       header: 'Operator Updated at 08:00 Refresh',
       totals:
-        'Users 1,284 +46 in 7 days Orgs 312 +9 in 7 days Workspaces 2,481 +188 in 7 days Running now 39',
+        'Users 1,284 +46 in 7 days 10 on the waitlist Orgs 312 +9 in 7 days Workspaces 2,481 +188 in 7 days Running now 39',
       states: 'Running 37 1% Stopped 1,604 65% Failed 12 0.5% Archived 828 33%',
       lines,
       opened: 'Kestrel Labs',
@@ -63,6 +63,24 @@ describe('the Overview of the operator section', () => {
       `GET ${overviewPath}`,
       'GET /api/operator/orgs/org_k3str3l',
     ])
+  })
+
+  test('the line under the users counts the people who wait, and opens the Waitlist tab', async () => {
+    const server = new FakeApiServer()
+    const fixtures = serveOperator(server)
+    server.json('GET', overviewPath, { ...fixtures.overview, waiting: 1284 })
+    const { view } = await mountShell(server, '/operator')
+    click(byText('1,284 on the waitlist'))
+    await settle()
+    expect({
+      tab: view.querySelector(
+        'nav[aria-label="Operator"] [aria-current="page"]',
+      )?.textContent,
+      requests: await operatorRequests(server),
+    }).toEqual({
+      tab: 'Waitlist',
+      requests: [`GET ${overviewPath}`, 'GET /api/operator/waitlist'],
+    })
   })
 
   test('lists the largest orgs with their counts, and their table of days names each UTC day', async () => {
@@ -150,9 +168,9 @@ describe('the Overview of the operator section', () => {
       retried: queryByRole('region', 'Totals') !== null,
     }).toEqual({
       loading:
-        'AC Acme FX Futex FI Firna Operator C Operator Overview Orgs Users Workspaces New workspaces New users Largest orgs Org Members Workspaces Running',
+        'AC Acme FX Futex FI Firna Operator C Operator Overview Orgs Users Waitlist Invite codes Workspaces New workspaces New users Largest orgs Org Members Workspaces Running',
       failed:
-        'AC Acme FX Futex FI Firna Operator C Operator Overview Orgs Users The numbers could not load Try again',
+        'AC Acme FX Futex FI Firna Operator C Operator Overview Orgs Users Waitlist Invite codes The numbers could not load Try again',
       retried: true,
     })
     expect(await operatorRequests(server)).toEqual([

@@ -24,7 +24,7 @@ export const createOrg = defineScreen({
       description:
         'The first org of a new user, from the second step of Get started. Create org and Cancel both return to Get started, because the user has no org to go back to. The next step connects Claude or Codex.',
       props: { kind: 'first' },
-      useCasePaths: ['user-flows/sign-up'],
+      useCasePaths: ['user-flows/join'],
     },
     {
       slug: 'no-repository',

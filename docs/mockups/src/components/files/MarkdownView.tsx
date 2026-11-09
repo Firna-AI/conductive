@@ -1,6 +1,12 @@
 import type { MarkdownBlock } from '../../fixtures/fileContents'
 import { InlineText } from '../common/InlineText'
+import { MarkdownTable } from '../common/MarkdownTable'
 import styles from './MarkdownView.module.css'
+
+/** A cell of a table, with its inline code. */
+function fileCell(text: string) {
+  return <InlineText text={text} />
+}
 
 function Block(props: { block: MarkdownBlock }) {
   const { block } = props
@@ -30,6 +36,16 @@ function Block(props: { block: MarkdownBlock }) {
     }
     case 'code':
       return <pre className={styles.block}>{block.text}</pre>
+    case 'table':
+      return (
+        <MarkdownTable
+          align={block.align}
+          className={styles.table}
+          head={block.head}
+          renderCell={fileCell}
+          rows={block.rows}
+        />
+      )
   }
 }
 

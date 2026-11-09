@@ -1,3 +1,5 @@
+import { routes } from '../../src/app/router'
+import { TEST_ORIGIN } from '../test-support/harness'
 import { expect, it } from 'vitest'
 
 import { createWorkspaceToolClient } from '../../tools/client'
@@ -15,6 +17,8 @@ it('drops unknown response fields and rejects malformed workspace data', async (
       workspaces: [
         {
           id: 'one',
+          number: 1,
+          link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
           name: 'Lisbon',
           branch: 'user/lisbon-ab12',
           state: 'input',
@@ -25,13 +29,27 @@ it('drops unknown response fields and rejects malformed workspace data', async (
   )
   await expect(client.list()).resolves.toEqual({
     workspaces: [
-      { id: 'one', name: 'Lisbon', branch: 'user/lisbon-ab12', state: 'input' },
+      {
+        id: 'one',
+        number: 1,
+        link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
+        name: 'Lisbon',
+        branch: 'user/lisbon-ab12',
+        state: 'input',
+      },
     ],
   })
   const malformed = createWorkspaceToolClient(configuration, async () =>
     Response.json({
       workspaces: [
-        { id: 'one', name: 'Lisbon', branch: 'branch', state: 'unknown' },
+        {
+          id: 'one',
+          number: 1,
+          link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
+          name: 'Lisbon',
+          branch: 'branch',
+          state: 'unknown',
+        },
       ],
     }),
   )

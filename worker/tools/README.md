@@ -18,7 +18,7 @@ Direct handler tests also use the shared entry policy before dispatch.
 
 ## Handler
 
-`createAgentToolsHandler` takes the database, the machine origin, and `AgentToolServices`.
+`createAgentToolsHandler` takes the database, the machine origin, the app origin, and `AgentToolServices`.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
 It uses workspace bearer authentication instead of browser sessions.
@@ -30,7 +30,8 @@ Its current owner must still belong to that org.
 The token must not be revoked.
 The handler grants no access to other routes, methods, hosts, or sockets.
 
-GET returns the name, branch, and state of every workspace in the calling org.
+GET returns the number, web link, name, branch, and state of every workspace in the calling org.
+The link uses the configured app origin, not the machine request origin.
 It includes other owners' workspaces and archived workspaces.
 The repository list reads the calling org's newest good image, in GitHub name order.
 `current` marks the calling workspace's repository.
@@ -69,7 +70,8 @@ The value keeps the inherited owner separate from the first message sender.
 The lifecycle service must keep the first message durably and start it at once.
 It must use the latest good org image.
 It must use the sender's agent login.
-It must not leave a new workspace when the sandbox cannot start.
+A failed first start keeps the accepted workspace and its number.
+The create call reports that failure.
 
 An org suspension refuses the shared workspace token rule before agent tool calls.
 The same rule prevents Mac commands and their later approvals and results.
@@ -137,7 +139,7 @@ The real-object route tests live in [worker/features](../features/).
 - [handler.ts](handler.ts) owns the public machine handler and token gate.
 - [create.ts](create.ts) resolves the owner, sender, section, and model choice.
 - [lists.ts](lists.ts) reads the four lists and resolves the listed default choice.
-- [store.ts](store.ts) queries scoped D1 records.
+- [store.ts](store.ts) queries scoped D1 records and builds list links from the app origin.
 - [services.ts](services.ts) defines the lifecycle and active-turn integration boundary.
 - [image.ts](image.ts) installs the CLI and MCP source into the image.
 - [image-assets.ts](image-assets.ts) embeds the allowed sources as Worker-safe text assets.

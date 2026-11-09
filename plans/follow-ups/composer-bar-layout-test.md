@@ -18,6 +18,7 @@
   - The fix lets the button shrink. Its text then gives way with an ellipsis: the effort first, then the model. A one-time measurement from 320 to 430 pixels showed no overlap after the fix.
   - The chat tests render markup with `react-dom/server`, which has no layout. So no test of the repository can see an overlap.
   - The web app has no browser test harness, and `npm run check` runs no browser test. The desktop package has `playwright-core` for its own checks.
+  - A later review of the Conductor Cloud comparison mockups found another phone overlap. Two legend columns let "Under consideration" cover the next icon at 366 pixels, the catalogue's phone frame width. A single phone column and shared status wrapping fix that layout. One-time measurements check it from 320 to 430 pixels. This is another case that a future layout harness could protect.
 - **Problem:** No test fails when one control of the composer bar covers another. A later change, such as a new item in the bar or a longer text, can bring an overlap back unseen.
 - **Impact if no action:** An overlap can reach phone users again. Only a person who looks at a phone screen sees it.
 - **Root question:** How does the project notice that one control of the composer bar covers another?

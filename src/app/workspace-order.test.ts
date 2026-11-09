@@ -23,6 +23,7 @@ const workspaceId = FAKE_IDS.workspace
 const resumePath = workspacePaths.resume(orgId, workspaceId)
 const readPath = workspacePaths.read(orgId, workspaceId)
 const starting = workspaceFixtures('starting').detail
+const archived = workspaceFixtures('archived').detail.workspace
 
 const output: WorkspaceEvent = {
   type: 'assistant.delta',
@@ -104,6 +105,54 @@ describe('the order of the open workspace', () => {
     held.release('POST', resumePath)
     await resuming
     expect(state()).toBe('archived')
+    workspace.close()
+  })
+
+  test('shows a list Archive without an event and keeps it over a pending Resume', async () => {
+    const { server, held, org, workspace } = await opened('error')
+    server.json('POST', resumePath, { ...starting, eventNumber: 1 })
+    const resuming = workspace.resume()
+    await flushMicrotasks()
+    org.putWorkspace(archived)
+    const expected = {
+      state: 'ready',
+      value: { workspace: archived, start: null, error: null },
+    }
+    expect(workspace.detail.get()).toEqual(expected)
+    held.release('POST', resumePath)
+    await resuming
+    expect(workspace.detail.get()).toEqual(expected)
+    expect(org.workspace(workspaceId)?.state).toBe('archived')
+    workspace.close()
+  })
+
+  test('shows a list Archive before an older open answers and never resumes it', async () => {
+    const server = new FakeApiServer({ workspaceState: 'stopped' })
+    const held = new HeldRequests(server)
+    const org = new OrgModel(testServices(server, { fetch: held.fetch }), orgId)
+    await org.reload('list')
+    const workspace = new WorkspaceModel(org, workspaceId)
+    const path = workspacePath(orgId, workspaceId)
+    held.holdAnswer('GET', path)
+    const opening = workspace.open()
+    await flushMicrotasks()
+    org.putWorkspace(archived)
+    const expected = {
+      state: 'ready',
+      value: { workspace: archived, start: null, error: null },
+    }
+    expect(workspace.detail.get()).toEqual(expected)
+    held.release('GET', path)
+    await opening
+    expect(workspace.detail.get()).toEqual(expected)
+    expect(org.workspace(workspaceId)?.state).toBe('archived')
+    expect(
+      server.requests.filter(
+        (request) =>
+          request.method === 'POST' &&
+          new URL(request.url).pathname === resumePath,
+      ),
+    ).toHaveLength(0)
     workspace.close()
   })
 

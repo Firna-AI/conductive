@@ -27,3 +27,16 @@ export function decodeHtml(text: string) {
   }
   return text.replace(/&(?:amp|lt|gt|quot|#39);/g, (entity) => entities[entity])
 }
+
+export function words(markup: string): string {
+  const text = decodeHtml(markup.replace(/<[^>]*>/g, ' '))
+  return text.replace(/\s+/g, ' ').trim()
+}
+
+export function headings(markup: string, scope: string): string[] {
+  const pattern = new RegExp(
+    `<th\\b[^>]*scope="${scope}"[^>]*>([\\s\\S]*?)</th>`,
+    'g',
+  )
+  return [...markup.matchAll(pattern)].map(([, text]) => words(text))
+}
