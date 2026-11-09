@@ -7995,10 +7995,28 @@ Depends on: 5e. Its one alarm scheduler changes the GitHub alarms.
 Apply the `fix after merge` items of the GitHub code. Added on 8 November
 2026.
 
-- [ ] Apply option B of `plans/follow-ups/github-push-refresh-isolation.md`,
+- [x] Apply option B of `plans/follow-ups/github-push-refresh-isolation.md`,
       and delete that item.
-- [ ] Apply option E of `plans/follow-ups/shared-github-app-credentials.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13c`.
+- [x] Apply option E of `plans/follow-ups/shared-github-app-credentials.md`,
       and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13c`.
+
+Design calls by the implementor, checked by the orchestrator on 9 November
+2026:
+
+- Limit refresh isolation to push deliveries. Other events keep their
+  existing failure responses and delivery retries.
+- Accept `github_pending` for a push after its workspace stores a fresh
+  read. Push refreshes start at attempt zero, so the retry bound permits
+  that read.
+- Keep one current PEM key in the shared credential module. Both callers
+  reuse its import, and a failed token request clears that cache entry.
+- Accept PEM text or an imported `CryptoKey` in the shared flow. Production
+  image copies pass PEM text and their injected clock. The existing native
+  test caller keeps its imported key, without a change to shared fixtures.
+
+Evidence: `.context/boat-native-remote-workspaces/13c/orchestrator-checks.md`.
 
 ## Milestone 15t: Typed Worker warnings
 
