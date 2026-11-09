@@ -6,6 +6,11 @@ They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
 
 Each area owns its paths and payloads. Import from that area directly.
+`OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
+Its `set` change carries a value and an optional mark. An omitted mark
+keeps the stored mark inside each compare-and-swap attempt. A missing or
+deleted name starts secret. An explicit mark changes it with the value.
+Its `classify` change carries only a name and a mark, so it keeps the value.
 `api.ts` keeps the existing sign-in and org paths and common records.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
@@ -32,7 +37,13 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 The browser posts one raw file as `application/octet-stream` with its known byte length.
 
 `files.ts` defines full trees, tree updates, and branch changes.
-A full tree contains paths relative to the repository root.
+A full tree contains real paths relative to the repository root.
+Real `path`, `previousPath`, and `baseBranch` fields stay unchanged for
+keys, joins, reads, and diffs. Their optional `displayPath`,
+`previousDisplayPath`, and `displayBaseBranch` fields carry masked labels
+when those labels differ. `FileEntry.name` stays the basename label.
+Content and diff replies carry the same optional labels for direct opens.
+The field policy in `output-fields.ts` fills these labels on both runtimes.
 A move names its old path and its new entry.
 A directory move includes updates for its descendants.
 `FileEvent` contains complete browser reports and unavailable-tree marks.
@@ -46,6 +57,23 @@ Branch changes include committed, staged, unstaged, and untracked work.
 `runner-files.ts` defines file read and diff commands and their matching results.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.
+
+`output-sanitizer.ts` holds possible secret suffixes across answer events.
+A completion or a turn end releases the held text of its answer.
+The filter then keeps an answer context: the shown answer end that can still start a secret.
+After a completion, it keeps the context of the earlier text and of the completion text.
+A refused completion leaves the earlier text on the screen.
+Later text of the same answer masks the part that completes a secret from a context.
+
+The filter does not cap the number of answer contexts.
+Its snapshot holds the held text, the answer contexts, and the secret values that still apply to them.
+A snapshot without answer contexts also stays valid.
+The Worker keeps the held text in the encrypted state of its runner stream.
+It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
+It saves both before it confirms the corresponding raw event.
+
+`event-limits.ts` applies the same excerpt caps after either filter.
+Its UTF-8 byte count works in the Worker and Node.
 
 `chat-events.ts` caps serialized tool detail at 64 KiB.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.

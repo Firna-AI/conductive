@@ -15,6 +15,7 @@ import type { ChatDependencies } from './types'
 import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
 import { attachmentWorkspace } from './attachment-claim-data'
+import { filterRunnerOutput } from './runner-output'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -27,6 +28,8 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    filterRunnerOutput: (transaction, workspace, input) =>
+      filterRunnerOutput(env, transaction, workspace, input),
     now: Date.now,
     scheduleBrowserCheck: scheduleConnectionCheck,
     scheduleRunnerCheck: scheduleConnectionCheck,

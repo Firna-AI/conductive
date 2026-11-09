@@ -49,6 +49,11 @@ The name and the changes get the ages that the mockups draw.
 The failed-repair tests of the Files store, the Files panel, and the workspace screen use these helpers.
 The development pages of the Files screens and of the workspace screen use them too.
 
+`paths: 'masked'` adds the two files of the masked mockups. Their real
+paths hold a fake secret value, and their records carry the labels of the
+mockups as display paths, in the file lists, the reads of the seed script,
+and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
+
 Writes return recorded replies. They do not change backend state.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
