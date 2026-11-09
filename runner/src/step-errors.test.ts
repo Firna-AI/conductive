@@ -9,6 +9,16 @@ it.each(['acceptance save', 'session save', 'start save', 'checkpoint'])(
   'ends a turn after its %s fails and accepts the next turn',
   async (step) => {
     const h = await engineFixture()
+    const open = h.options.providers.claude
+    const savedBeforeStart: (string | undefined)[] = []
+    h.options.providers.claude = async (options) => {
+      savedBeforeStart.push(
+        h.store.snapshot.sessions.find(
+          (session) => session.sessionId === 'failing',
+        )?.instructions,
+      )
+      return open(options)
+    }
     const error = new Error(`The ${step} failed.`)
     if (step === 'session save')
       vi.spyOn(h.store, 'remember').mockRejectedValueOnce(error)
@@ -46,6 +56,7 @@ it.each(['acceptance save', 'session save', 'start save', 'checkpoint'])(
     expect(h.providers.processes).toHaveLength(0)
     await h.engine.command(sessionTurn('failing', 'next'))
     expect(h.providers.processes).toHaveLength(1)
+    expect(savedBeforeStart).toEqual([h.providers.latest.options.instructions])
   },
 )
 

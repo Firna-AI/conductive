@@ -7,6 +7,7 @@ import { onTestFinished } from 'vitest'
 import type { AgentChatEvent } from '../../src/shared/chat-events'
 import { AgentEngine } from '../src/engine'
 import type { EngineOptions } from '../src/engine-session'
+import { agentInstructions } from '../src/instructions'
 import { DiskStorage, EventStore } from '../src/state'
 import { FakeProviders } from './providers'
 
@@ -20,6 +21,7 @@ export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
   const options: EngineOptions = {
     cwd: '/repo',
     home: '/home/agent',
+    instructions: agentInstructions({ cwd: '/repo', defaultBranch: 'main' }),
     tools: {
       machineOrigin: 'https://machines.conductive.test',
       workspaceToken: 'workspace-secret',

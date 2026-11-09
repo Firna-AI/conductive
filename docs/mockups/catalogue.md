@@ -22,7 +22,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, open work, lost data, lost updates, and unread files |
+| `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -290,11 +290,17 @@ failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
 `failed` and declare `movedFrom`. `app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with
 one message open, a turn with a message that the user sent during it, whose
-two parts each fold their own work, and a turn whose open work holds a Mac
-command card and a lost line at their place. The `fold` state opens the
-folds. `app/chat/lost-data` draws the data that the chat does not
-have, from decision 76: tool output and turn files that the runner left out,
-and the lines of runner events that the workspace refused.
+two parts each fold their own work, a turn whose open work holds a Mac
+command card and a lost line at their place, and a turn whose open work
+holds two messages with tables, one closed and one open. The `fold` state
+opens the folds. `app/chat/tables` draws tables in replies: the resources
+of the cloud computer, a short row whose last cell spans the missing
+columns, a wide table that scrolls sideways inside the reply, and the
+reply while the agent writes it, before its separator row arrives and
+after its table appears. `app/chat/lost-data` draws the data that the
+chat does not have, from decision 76: tool output and turn files that the
+runner left out, and the lines of runner events that the workspace
+refused.
 `app/chat/lost-updates` draws a failed repair, from decision 96. After a
 refused update that belongs to no session, such as a file update, the
 workspace asks for a fresh full report, and nothing shows. Only when that
