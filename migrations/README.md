@@ -36,6 +36,11 @@ as a Worker secret.
 Both fields start empty. The operator API keeps their first values.
 Members receive only the suspension time.
 
+`202611080100_agent_login_reuse.sql` adds the `agent_logins.no_reuse` preference.
+Existing Claude subscription tokens refuse re-use by default.
+Existing API keys allow re-use by default.
+The migration keeps the encrypted secret and its timestamps.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

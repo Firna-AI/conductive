@@ -8,7 +8,7 @@ import {
 import type { ToolRequests } from '../terminal/tool-parts/workspace'
 
 /** Narrows the desktop response. The URL stays as sent, with its fragment. */
-export function parseDesktopResponse(body: unknown): DesktopResponse | null {
+function parseDesktopResponse(body: unknown): DesktopResponse | null {
   if (!isRecord(body)) return null
   const url = webUrl(body.url)
   const { expiresAt } = body

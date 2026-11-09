@@ -12,7 +12,7 @@ import type {
 } from '../../shared/agents'
 import { MenuButton, type MenuEntry } from './Menu'
 
-export const effortLabels: Readonly<Record<Effort, string>> = {
+const effortLabels: Readonly<Record<Effort, string>> = {
   none: 'None',
   low: 'Low',
   medium: 'Medium',

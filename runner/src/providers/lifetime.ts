@@ -1,6 +1,6 @@
 import type { ChildProcess } from 'node:child_process'
 
-export const PROCESS_KILL_DELAY_MS = 5_000
+const PROCESS_KILL_DELAY_MS = 5_000
 
 type Child = Pick<
   ChildProcess,

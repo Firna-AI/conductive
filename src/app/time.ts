@@ -101,16 +101,6 @@ export function formatDay(time: number, timeZone?: string): string {
   }).format(time)
 }
 
-/** A full date: 2 October 2026. */
-export function formatDate(time: number, timeZone?: string): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone,
-  }).format(time)
-}
-
 /** The time now, which moves on at each interval while a screen shows it. */
 export function useNow(intervalMs: number): number {
   const { now } = useServices()

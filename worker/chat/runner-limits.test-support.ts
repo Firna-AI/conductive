@@ -1,12 +1,14 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { MemoryChatStorage } from './memory-storage.test-support'
+import type { SessionLoginMetadata } from './login-availability'
 import { RunnerChannel } from './runner-channel'
 import { parseRunnerTransport } from './runner-input'
 import { ChatStore, type ChatTransaction } from './store'
 import type { ChatDependencies, RunnerPeer } from './types'
 
 export const context = { sessionId: 'session', turnId: 'turn' }
+/** @public Shared by the history compaction and ordering fixtures. */
 export const choice = {
   agent: 'claude',
   model: 'test',
@@ -64,7 +66,7 @@ export async function createRunnerLimitsFixture() {
     firstStartIncomplete: async () => false,
     randomId: () => `command-${++commandSequence}`,
     randomConnectionId: () => `connection-${++connectionSequence}`,
-    readLoginAvailability: async () => new Set<string>(),
+    readLoginMetadata: async () => new Map<string, SessionLoginMetadata>(),
     resolveLogin: async () => null,
     resolveAttachments: async () => ({ attachments: [], paths: [] }),
     receiveFileResult: async () => undefined,
@@ -130,6 +132,7 @@ export async function createRunnerLimitsFixture() {
         },
         sourceSessionId: null,
         loginAvailable: false,
+        loginShared: false,
       })
       await transaction.saveTurn({
         id: context.turnId,

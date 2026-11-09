@@ -10,8 +10,6 @@ import { Store, useStore, type Readable } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'
 import mac from './mac.module.css'
 
-export type { WindowMode }
-
 /** What the page of the Mac app knows about its window. */
 export interface MacWindowState {
   /** Full screen hides the window buttons of macOS, so the page gets their space back. */

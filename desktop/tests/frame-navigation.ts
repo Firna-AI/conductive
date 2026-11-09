@@ -1,7 +1,20 @@
 import { expect } from '@playwright/test'
-import type { ElectronApplication, Page } from '@playwright/test'
+import type { ElectronApplication, Locator, Page } from '@playwright/test'
 
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
+
+/**
+ * A frame document can load before the browser routes pointer input to it.
+ * Playwright can report a missed click as complete. Only routed input sets :hover.
+ */
+async function waitForPointer(link: Locator): Promise<void> {
+  await expect
+    .poll(async () => {
+      await link.hover()
+      return link.evaluate((element) => element.matches(':hover'))
+    })
+    .toBe(true)
+}
 
 /** Arrange real link and frame navigation to test the desktop boundaries. */
 export async function expectFrameIsolation(
@@ -32,7 +45,12 @@ export async function expectFrameIsolation(
     document.body.append(child)
   }, DESKTOP_ORIGIN)
   const child = page.getByTitle('Untrusted preview').contentFrame()
-  await child.getByRole('link', { name: 'Open app popup', exact: true }).click()
+  const appPopup = child.getByRole('link', {
+    name: 'Open app popup',
+    exact: true,
+  })
+  await waitForPointer(appPopup)
+  await appPopup.click()
   await child.getByRole('link', { name: 'Start sign-in', exact: true }).click()
   await child
     .getByRole('link', { name: 'Open external link', exact: true })
@@ -60,11 +78,12 @@ export async function expectFrameIsolation(
     frame.srcdoc = `<a target="_top" href="${origin}/child-top">Replace top page</a>`
     document.body.append(frame)
   }, DESKTOP_ORIGIN)
-  await page
+  const topLink = page
     .getByTitle('Top navigation preview')
     .contentFrame()
     .getByRole('link', { name: 'Replace top page', exact: true })
-    .click()
+  await waitForPointer(topLink)
+  await topLink.click()
   await expect
     .poll(() =>
       electron.evaluate(() => process.env.CONDUCTIVE_TEST_TOP_NAVIGATION),

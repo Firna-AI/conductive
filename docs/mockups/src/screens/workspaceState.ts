@@ -76,8 +76,9 @@ export const workspaceStateSchema = {
     /**
      * The composer: empty, with a message that is not sent yet, with
      * attached files, with its picker open, or with a message for an agent
-     * that is not connected, or in a session whose starter's login is not
-     * available.
+     * that is not connected. Or with a message in a session whose starter's
+     * login is not available, or whose starter keeps that login for their
+     * own messages.
      */
     composer: {
       enum: [
@@ -87,6 +88,7 @@ export const workspaceStateSchema = {
         'picker',
         'no-agent',
         'no-starter-login',
+        'not-shared',
       ],
     },
     /** The user drags the handle of the right column to widen it. */

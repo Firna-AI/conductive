@@ -72,7 +72,7 @@ const passed: DeviceCommandResult = {
  * base64url, so it differs from the ID and is safe in an address, as the
  * real key is. Addresses name a request by its key alone.
  */
-export function fakeRequestKey(requestId: string): string {
+function fakeRequestKey(requestId: string): string {
   const bytes = new TextEncoder().encode(requestId)
   return btoa(String.fromCharCode(...bytes))
     .replaceAll('+', '-')
