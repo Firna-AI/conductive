@@ -12,6 +12,10 @@ interface Turn {
   startedAt: number
 }
 
+/** When the answer of a turn starts, and the time between two of its parts. */
+const answerAt = 7_200
+const partGap = 400
+
 const tool = (
   id: string,
   kind: ToolCall['kind'],
@@ -27,12 +31,14 @@ const tool = (
 
 /**
  * A scripted agent for the development page. Each turn thinks, writes, runs
- * three tool calls, answers every message that it read, and ends. A message
- * during a turn steers it, and Stop ends it as stopped.
+ * three tool calls, answers every message that it read, and ends. Each part
+ * of `answer` comes as its own update, and the whole answer with the last
+ * part. A message during a turn steers it, and Stop ends it as stopped.
  */
 export class DevAgent {
   private readonly stream: DevStream
   private readonly clock: Clock
+  private readonly answer: readonly string[]
   private readonly turns = new Map<string, Turn>()
   private count = 0
   /**
@@ -45,9 +51,10 @@ export class DevAgent {
     at: number | null,
   ) => void = () => {}
 
-  constructor(stream: DevStream, clock: Clock) {
+  constructor(stream: DevStream, clock: Clock, answer: readonly string[]) {
     this.stream = stream
     this.clock = clock
+    this.answer = answer
   }
 
   running(sessionId: string): string | null {
@@ -74,6 +81,8 @@ export class DevAgent {
     this.onTurn(sessionId, turnId, turn.startedAt)
     const context = { sessionId, turnId }
     const answer = `dev-answer-${this.count}`
+    const parts = this.answer
+    const done = answerAt + (parts.length - 1) * partGap
     const steps: [number, () => ChatEvent][] = [
       [
         0,
@@ -124,27 +133,27 @@ export class DevAgent {
         '+12 −3',
       ),
       [6_400, () => ({ ...context, type: 'turn.thinking' })],
-      [
-        7_200,
+      ...parts.slice(0, -1).map((text, index): [number, () => ChatEvent] => [
+        answerAt + index * partGap,
         () => ({
           ...context,
           type: 'assistant.delta',
           messageId: answer,
-          text: 'Done. The form now ',
+          text,
         }),
-      ],
+      ]),
       [
-        7_600,
+        done,
         () => ({
           ...context,
           type: 'assistant.completed',
           messageId: answer,
-          text: 'Done. The form now does what you asked, and its tests pass.',
+          text: parts.join(''),
           userMessageIds: turn.answers,
         }),
       ],
       [
-        7_900,
+        done + 300,
         () => ({
           ...context,
           type: 'turn.completed',
@@ -174,7 +183,7 @@ export class DevAgent {
       )
     }
     turn.timers.push(
-      window.setTimeout(() => this.turns.delete(sessionId), 8_000),
+      window.setTimeout(() => this.turns.delete(sessionId), done + 400),
     )
     return turnId
   }

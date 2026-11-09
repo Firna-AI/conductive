@@ -48,3 +48,17 @@
   margin-bottom: 0;
   white-space: pre;
 }
+
+/*
+ * The body of an open message line with a table, beside the mockups'
+ * `.messageBody`. The mockups' body draws paragraphs, bullets, and tables.
+ * These rules add a numbered list and a code block after the table.
+ */
+.messageBody ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.messageBody pre {
+  margin: 0;
+}

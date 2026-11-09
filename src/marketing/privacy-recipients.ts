@@ -28,7 +28,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         your files, and your agent sessions are in them. ${productName}
         sends the provider the requests that start, stop, and use them.`,
       text`Anthropic and OpenAI get your messages, your files, and your
-        code when an agent works on them. From a newer cloud computer, the
+        code when an agent works on them. With each message, they also get
+        the GitHub login and the display name of its sender. They also get
+        the name of the workspace branch, which starts with the GitHub
+        login of the first owner of the workspace. From a newer cloud computer, the
         agents send them through ${productName}, which adds the agent
         login. With the older software in an older cloud computer, the agents
         send them directly, with the agent login. Each session uses the login of

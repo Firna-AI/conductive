@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
-import { Archive, ChevronLeft, FolderGit2, GitBranch } from 'lucide-react'
+import { Archive, ChevronLeft, FolderGit2 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
@@ -44,11 +44,11 @@ function State(props: { workspace: Workspace }) {
 }
 
 /**
- * The name, number, repository, branch, owner, and state of the open
+ * The name, number, repository, owner, and state of the open
  * workspace, and Archive for its owner and the org's admins. A workspace
  * with no name yet shows Untitled. The label of the number copies the link
- * of the workspace. On desktop it follows the name, and the repository and
- * the branch share the room that the other parts leave. On a phone it leads
+ * of the workspace. On desktop it follows the name, and the repository
+ * takes the room that the other parts leave. On a phone it leads
  * the line under the name. The list groups workspaces by section, so the
  * header names the repository. On desktop the header ends with the toggle
  * of the right column.
@@ -90,9 +90,7 @@ export function WorkspaceHeader(props: {
           <h1 className={styles.title}>{name}</h1>
           <span className={styles.line}>
             {copyLink}
-            <span className={styles.branch}>
-              {repository} · {workspace.branch}
-            </span>
+            <span className={styles.branch}>{repository}</span>
           </span>
         </div>
         {ownerView}
@@ -109,10 +107,6 @@ export function WorkspaceHeader(props: {
         <span className={styles.meta}>
           <FolderGit2 aria-hidden className={styles.icon} size={13} />
           <span className={styles.branch}>{repository}</span>
-        </span>
-        <span className={styles.meta}>
-          <GitBranch aria-hidden className={styles.icon} size={13} />
-          <span className={styles.branch}>{workspace.branch}</span>
         </span>
       </span>
       {ownerView}

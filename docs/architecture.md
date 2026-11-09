@@ -284,6 +284,8 @@ as gateway decision 6. The doc that cites it defines the name.
   their logins, the sessions, and the names of workspaces and sessions.
 - [Workspace links](protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
+- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
+  messages in the chat, with their tables.
 - [Agent runner](protocol/agent-runner.md): the connection of the runner,
   its events and their limits, its turns, and the repair of lost workspace
   updates.
@@ -295,6 +297,9 @@ as gateway decision 6. The doc that cites it defines the name.
   events.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a
   sandbox.
+- [Agent instructions](protocol/agent-instructions.md): the text that each
+  agent session gets, the sender line of each message, and the base
+  prompt of Claude agents.
 - [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.

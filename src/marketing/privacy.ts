@@ -46,7 +46,8 @@ export const privacyDocument: LegalDocument = {
             avatar, and the date when you created the account. They sign you
             in, and they show who owns and who sends each piece of work. The
             operator sees the age of the account when you wait for app
-            access.`,
+            access. Your login and display name also tell the agents who sent
+            each message.`,
           text`Your GitHub emails: at each sign-in, ${productName} keeps the
             verified email addresses of your GitHub account, and which one is
             primary. An org invitation reaches you through one of them. The
