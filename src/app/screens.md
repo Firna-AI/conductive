@@ -18,6 +18,15 @@ what the palette does.
   the last org offers Create org again, and a connect on Account completes
   its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
   screen reads them through `AppModel.getStarted`.
+- Once the org exists, the org step shows its cloud computer from the
+  builds of the org, as
+  [Get started](../../docs/protocol/orgs-and-members.md#get-started) says:
+  preparing with its time, ready, the failure with its saved message, or no
+  build yet. A failed load of the builds shows Try again in its place. Only
+  a person who may change the settings of the org gets Try again and Open
+  the log, or Build computer. The finish takes its words from the same
+  state. Until the builds load, it shows Open without words. Open is a
+  secondary button after a failed build or with no build.
 - The sign-in screen shows the agreement to the Terms and the Privacy
   notice above Continue with GitHub. Its words come from `termsAgreement`
   in `src/marketing/legal-text.ts`, and its links lead to the marketing
@@ -42,13 +51,21 @@ what the palette does.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the
-  GitHub IDs of the chosen ones.
+  GitHub IDs of the chosen ones. Create org stays off until the person
+  chooses at least one, also while the list is empty or did not load.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
 - A suspended org shows its notice, and no action that it refuses, as
   [A suspended org](suspended-org.md) says.
 - The Cloud computer tab names the software of the base image from the
   settings reply. An older reply without it names no software.
+- The notice of a changed install script has the same words for an admin
+  and a member, from `changedScriptNotice`. Until the org has a good build,
+  it says that one more build runs the script while the first build runs,
+  and else that the next build runs it. Until the builds load, it says
+  only that the next build runs it. An admin gets Build computer in the
+  notice only once the org has a good build, because before that the head
+  of the builds offers Try again or Build computer. A member never gets it.
 - A step of a panel, by a key or a drag, starts from the width that the
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
@@ -112,7 +129,14 @@ what the palette does.
 - New workspace sends and uploads one at a time: the create waits for the
   files, and the paperclip is off while the create runs. Send and Try
   again read one readiness: the text, the files, the agent login, the
-  repository, and the model.
+  image of the org, the repository, and the model.
+- While the builds of the org show no good image, New workspace shows the
+  notice of the first build over the composer, as
+  [Create a workspace](../../docs/protocol/workspaces-and-sandboxes.md#create-a-workspace)
+  says, and Send and Try again stay off. Its words come from
+  `firstBuildCopy.ts` of the mockups. While the builds load or after a
+  failed load, no notice shows, and the Worker refuses a create of an org
+  with no good image.
 - A create whose sandbox did not start gets its own New workspace form in
   the tab that sent it. The address of that workspace shows the form, with
   "The workspace wasn't created". Try again sends the same message ID, as

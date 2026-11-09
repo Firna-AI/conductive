@@ -21,7 +21,7 @@ import { MenuButton } from '../ui/Menu'
 import { useViewport } from '../ui/viewport'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
 import { Composer } from './Composer'
-import { CreateFailed, useBlockingNotice } from './notices'
+import { CreateFailed, useBlockingNotice, useFirstBuildNotice } from './notices'
 
 /** "built 8 hours ago", "built yesterday", or "built on 3 Nov". */
 function builtWhen(when: When): string {
@@ -102,9 +102,11 @@ function Start(props: {
  * its files and its model. The first message creates the workspace, and the
  * app names it and its branch. A failed create keeps the message. `form`
  * is the form of a message that came back after its sandbox did not start.
- * Without it, the screen shows the form of the section. A suspended org
- * refuses each create, so its page shows the refused bar in place of the
- * composer, and the empty chat invites no first message.
+ * Without it, the screen shows the form of the section. While the org has
+ * no good image, the notice of its first build keeps the draft and turns
+ * Send and Try again off. A suspended org refuses each create, so its page
+ * shows the refused bar in place of the composer, and the empty chat
+ * invites no first message.
  */
 export function NewWorkspaceScreen(props: {
   org: OrgSummary
@@ -131,10 +133,13 @@ export function NewWorkspaceScreen(props: {
   const repositoryId = draft.repositoryId ?? chosen[0]?.id
   const choice = draft.choice ?? account?.defaultChoice
   const notice = useBlockingNotice(choice, models)
+  const buildNotice = useFirstBuildNotice(org)
   // One readiness for Send and Try again: the text and the files of the
-  // draft, the agent login of the notice, the repository, and the model.
+  // draft, the agent login of the notice, the image of the org, which the
+  // notice of the first build waits for, the repository, and the model.
   const ready =
     notice === null &&
+    buildNotice === null &&
     repositoryId !== undefined &&
     choice !== undefined &&
     draftReady(draft)
@@ -184,6 +189,7 @@ export function NewWorkspaceScreen(props: {
                   retry={() => void send()}
                 />
               ) : null}
+              {buildNotice}
               {notice}
               <Composer
                 choice={choice}

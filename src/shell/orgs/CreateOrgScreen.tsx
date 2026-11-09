@@ -22,9 +22,10 @@ import {
 /**
  * Creates an org: its name, its initials, and the repositories that its
  * workspaces use. Before the org exists, the list holds the repositories
- * that the person and the shared GitHub App both reach. The first org of
- * Get started goes back to Get started, and another org opens. On a phone
- * the actions sit in the footer.
+ * that the person and the shared GitHub App both reach. Create org stays
+ * off until the person chooses at least one, also when the list is empty.
+ * The first org of Get started goes back to Get started, and another org
+ * opens. On a phone the actions sit in the footer.
  */
 export function CreateOrgScreen(props: { first: boolean }) {
   const app = useApp()
@@ -57,9 +58,11 @@ export function CreateOrgScreen(props: { first: boolean }) {
     })
     go(routes.getStarted())
   })
-  const named = draft.name.trim() !== ''
+  // An org needs a name and at least one repository, because Create org
+  // starts the first build of its cloud computer.
+  const complete = draft.name.trim() !== '' && chosen.length > 0
   const submit = () => {
-    if (named && !create.pending) create.run()
+    if (complete && !create.pending) create.run()
   }
   const choose = (githubId: number, selected: boolean) =>
     setChosen((current) =>
@@ -74,7 +77,7 @@ export function CreateOrgScreen(props: { first: boolean }) {
       </ActionButton>
       <ActionButton
         busy={create.pending}
-        disabled={!named}
+        disabled={!complete}
         onPress={submit}
         tone="primary"
       >
@@ -102,7 +105,7 @@ export function CreateOrgScreen(props: { first: boolean }) {
           <span className={styles.fieldLabel}>Repositories</span>
           <span className={styles.fieldHint}>
             The cloud computer of the org holds these repositories, and its
-            workspaces start in them.
+            workspaces start in them. Add at least one.
           </span>
           <Loaded
             failure="The repositories didn't load"

@@ -215,6 +215,26 @@ Calls of the `ui implementor` in the mockups, 9 November 2026:
   only a good first build.
 - The settings mockup keeps the state of the script apart from the state
   of the build, as the app keeps `needsBuild` apart from the builds.
+
+Calls of the implementors in Milestones 3 and 4, 9 November 2026:
+
+- The added build is decided at publication, in a `cleanup-build` phase,
+  and starts after the cleanup of the first good build. Reason: the image
+  coordinator runs one job at a time, and the phase survives a restart.
+- The dev fake keeps settings revisions, as the Worker does. Reason: the
+  script text alone cannot show a change of the repositories.
+- While the builds load or fail to load, New workspace shows no notice.
+  The Worker still refuses a create with no good image, and the composer
+  keeps the message.
+- Until the builds load, the finish of Get started shows Open with no
+  words, so that it never says "ready" before the state is known.
+- A failed read of the builds shows "The cloud computer didn't load" with
+  Try again. A failed start in Get started shows the toast "The build
+  didn't start.".
+- The first-build notice shows after "The workspace wasn't created" and
+  before the notice of a missing agent login.
+- The admin tab and the member view choose the words of a changed script
+  with one function. Reason: both views then follow the protocol doc.
 - The notice of New workspace shows only while the org has no good image.
   Reason: after the first good image, a later build or a failed later
   build leaves the last good image in use, as decision 9 says.
@@ -326,25 +346,25 @@ Tags: ui
 
 Depends on: 1, 2, 3
 
-- [ ] The org step of Get started shows the first build, as the mockups
+- [x] The org step of Get started shows the first build, as the mockups
       draw it, with Try again and Open the log for an admin.
-- [ ] The finish of Get started takes its words from the state of the
+- [x] The finish of Get started takes its words from the state of the
       first build. Open ‹org› is a secondary button after a failed build
       or with no build.
-- [ ] New workspace shows the notice of the first build and keeps Send off
+- [x] New workspace shows the notice of the first build and keeps Send off
       while the org has no good image. The notice takes its words from
       `docs/mockups/src/screens/firstBuildCopy.ts`, and the running notice
       shows the spinner of `Notice` with `busy`.
-- [ ] The Cloud computer tab matches the first-build mockups. The History
+- [x] The Cloud computer tab matches the first-build mockups. The History
       list waits for the follow-up
       [The app and the mockups list different builds](follow-ups/build-history-running-build.md).
-- [ ] Create org stays off until a repository is chosen, and its hint ends
+- [x] Create org stays off until a repository is chosen, and its hint ends
       with "Add at least one.", as the mockups draw it.
-- [ ] The notice of a changed install script follows the mockups: during
+- [x] The notice of a changed install script follows the mockups: during
       the first build it says "One more build runs it when this build
       succeeds." with no button. With no good build and no build that
       runs, it says "It runs at the next build." with no button.
-- [ ] Tests for each state of the org step, the finish, the notice, and
+- [x] Tests for each state of the org step, the finish, the notice, and
       Create org.
 
 ## Milestone 5: Verification, commit, review, and pull request

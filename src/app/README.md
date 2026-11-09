@@ -177,6 +177,13 @@ clicks, types, and lets the answers of the fake API settle.
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   and computer settings of one org, with `watch` and the wait of each part.
+  `OrgModel.startBuild` sends Build computer and Try again for each screen
+  that offers them.
+- `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
+  first build of an org from its builds, which Get started and New
+  workspace show until the org has a good image. `changedScriptNotice`
+  gives the words of the notice of a changed install script, which the
+  Cloud computer tab of an admin and of a member show.
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the GitHub App installations, and the repositories that
   Create org offers.
