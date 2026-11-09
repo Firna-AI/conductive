@@ -2,6 +2,7 @@ import type { ComposerState } from '../components/chat/Composer'
 import { attachmentDraft, draftAttachments } from '../fixtures/attachments'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
+import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { otherStarter, sessionLoginFor } from './sessionStarter'
@@ -14,6 +15,7 @@ const runningConversations = new Set([
   'first-turn',
   'output-left-out-running',
   'linked',
+  'link-sent',
 ])
 
 /** An agent turn runs on a ready sandbox. */
@@ -41,6 +43,9 @@ export function isRunning(state: WorkspaceState): boolean {
  * While the sandbox is not ready, Send queues the message in the
  * workspace, also during the first start and after a failed first start of
  * a new workspace. The message waits for the sandbox.
+ *
+ * A message with a pasted link to another workspace shows the link as a
+ * chip, and the draft keeps the plain link.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -60,7 +65,9 @@ export function composerFor(
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (withFiles) draft = attachmentDraft
   else if (!fresh && (noLogin || linkedState)) draft = followUpDraft
-  else if (!fresh && state.composer === 'draft') {
+  else if (!fresh && state.composer === 'workspace-link') {
+    draft = workspaceLinkDraft
+  } else if (!fresh && state.composer === 'draft') {
     draft = isNew(state) ? savedCartsDraft : followUpDraft
   }
   return {

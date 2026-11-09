@@ -1,7 +1,7 @@
 import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+} from '../chat/workspace-events'
 import type {
   GitHubBanner,
   GitHubChecksResponse,

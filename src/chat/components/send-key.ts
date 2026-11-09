@@ -1,4 +1,3 @@
-import type { KeyboardEvent } from 'react'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 
 /**
@@ -8,20 +7,20 @@ import { useControlSizes } from '../../../docs/mockups/src/components/common/tou
  * input method composes a word, Enter belongs to the input method. In the
  * phone layout, which has the touch sizes, Enter adds a line.
  *
- * A composer gives the result to `onKeyDownCapture` of the box around its
- * text field. It reads Enter before the text field does, so Enter never
- * adds a line to a message that it sends.
+ * A composer gives the result to `onEnter` of its chip text field, which
+ * calls it before it adds a line. The result says whether the send key took
+ * Enter, so that Enter never adds a line to a message that it sends.
  */
 export function useSendKey(
   ready: boolean,
   send: () => void,
-): (event: KeyboardEvent<HTMLElement>) => void {
+): (event: KeyboardEvent) => boolean {
   const touch = useControlSizes().field === 'lg'
   return (event) => {
-    if (touch || event.key !== 'Enter' || event.shiftKey) return
-    if (event.nativeEvent.isComposing) return
-    if (!(event.target instanceof HTMLTextAreaElement)) return
+    if (touch || event.key !== 'Enter' || event.shiftKey) return false
+    if (event.isComposing) return false
     event.preventDefault()
     if (ready) send()
+    return true
   }
 }

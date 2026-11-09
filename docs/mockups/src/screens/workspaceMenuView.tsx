@@ -16,10 +16,11 @@ import {
   type SidebarSection,
   type WorkspaceRow,
 } from '../components/workspaces/sections'
+import { archivedWorkspaceList } from '../fixtures/archivedWorkspaces'
 import { memberViewer, people, you } from '../fixtures/members'
 import { suspendedOrg } from '../fixtures/orgs'
 import { defaultSection, sections } from '../fixtures/sections'
-import { archivedWorkspaceList, workspaceList } from '../fixtures/workspaces'
+import { workspaceList } from '../fixtures/workspaces'
 import {
   checkRefused,
   menuTarget,

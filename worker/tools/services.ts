@@ -30,7 +30,7 @@ export interface AgentToolServices {
   /**
    * Create through the normal lifecycle, using the latest good image. Keep the
    * first message durably and start it immediately as sender, not as owner.
-   * Do not leave a workspace behind when its sandbox cannot start.
+   * Keep an accepted workspace and its first message when its sandbox cannot start.
    */
   createWorkspace(
     input: ToolWorkspaceCreation,

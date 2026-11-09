@@ -57,7 +57,7 @@ export async function shellWorkspaces(
 ): Promise<ListedWorkspaceRow[]> {
   const { results } = await db
     .prepare(
-      `SELECT w.id, w.org_id AS orgId, w.repository_id AS repositoryId,
+      `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
      w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
      u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
      ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId, w.state,

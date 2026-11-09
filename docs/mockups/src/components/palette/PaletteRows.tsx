@@ -42,8 +42,10 @@ function RowLink(props: {
 
 /**
  * One result. A workspace shows its state mark, its name, its repository,
- * and the age of its last activity, as the list does. A command shows its
- * icon, its label, and the page of a setting in a mixed list.
+ * and the age of its last activity, as the list does. When the query
+ * matches the label of its number, the label leads the name, as in a chip.
+ * A command shows its icon, its label, and the page of a setting in a
+ * mixed list.
  */
 function Row(props: { row: PaletteRow; highlighted: boolean }) {
   const { row, highlighted } = props
@@ -62,6 +64,9 @@ function Row(props: { row: PaletteRow; highlighted: boolean }) {
         <span className={styles.lead}>
           <StatusGlyph status={status} />
         </span>
+        {row.number ? (
+          <span className={styles.number}>{row.number}</span>
+        ) : null}
         <span className={styles.label}>{workspace.name}</span>
         <span className={styles.repository}>
           {repositories[workspace.repository].name}

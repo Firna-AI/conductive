@@ -1,6 +1,6 @@
+import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
-import { archivedWorkspaceList } from '../../fixtures/workspaces'
 import {
   workspaceSections,
   type OpenWorkspace,
@@ -15,6 +15,7 @@ import {
   workspaceActions,
   type Command,
 } from './paletteCommands'
+import { matchingRows } from './paletteSearch'
 import {
   palettePlaceholders,
   paletteQueries,
@@ -27,7 +28,8 @@ import {
 } from './paletteViews'
 
 export type PaletteRow =
-  | { kind: 'workspace'; row: WorkspaceRow }
+  /** `number` is the label of the number, when the query matches it. */
+  | { kind: 'workspace'; row: WorkspaceRow; number?: string }
   /** `detail` names the page of a setting in a mixed list. */
   | { kind: 'command'; command: Command; detail?: string }
 
@@ -113,30 +115,6 @@ function settingRows(): PaletteRow[] {
   ]
 }
 
-/** Whether each word of the query is in one of the texts, in any case. */
-function matches(query: string, texts: readonly string[]): boolean {
-  const haystack = texts.join(' ').toLowerCase()
-  return query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((word) => word !== '')
-    .every((word) => haystack.includes(word))
-}
-
-function workspaceTexts(row: WorkspaceRow): string[] {
-  const { workspace } = row
-  return [
-    workspace.name,
-    workspace.branch,
-    repositories[workspace.repository].name,
-  ]
-}
-
-function rowTexts(row: PaletteRow): readonly string[] {
-  if (row.kind === 'workspace') return workspaceTexts(row.row)
-  return [row.command.label, ...(row.command.words ?? [])]
-}
-
 /**
  * The results of a query on the All tab: the workspaces, the actions, and
  * the settings that match, then the archived workspaces that match. Without
@@ -157,7 +135,7 @@ function searchGroups(
   return groups
     .map((group) => ({
       label: group.label,
-      rows: group.rows.filter((row) => matches(query, rowTexts(row))),
+      rows: matchingRows(query, group.rows),
     }))
     .filter((group) => group.rows.length > 0)
 }
@@ -253,6 +231,8 @@ function groupsOf(
         { label: 'Account', rows: commandRows(accountSettings) },
       ]
     case 'search':
+    case 'number':
+    case 'number-part':
     case 'no-results':
     case 'search-loading':
     case 'search-unavailable':

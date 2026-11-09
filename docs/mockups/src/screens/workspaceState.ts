@@ -40,6 +40,7 @@ export const workspaceStateSchema = {
     'paths',
     'org',
     'palette',
+    'copyLink',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -111,7 +112,8 @@ export const workspaceStateSchema = {
      * attached files, with its picker open, or with a message for an agent
      * that is not connected. Or with a message in a session whose starter's
      * login is not available, or whose starter keeps that login for their
-     * own messages.
+     * own messages. `workspace-link` holds a message with a pasted link to
+     * another workspace of the org, which shows as a chip.
      */
     composer: {
       enum: [
@@ -122,6 +124,7 @@ export const workspaceStateSchema = {
         'no-agent',
         'no-starter-login',
         'not-shared',
+        'workspace-link',
       ],
     },
     /** The user drags the handle of the right column to widen it. */
@@ -184,6 +187,12 @@ export const workspaceStateSchema = {
      * opens it from the list, so a phone shows the palette of the list.
      */
     palette: { enum: paletteViews },
+    /**
+     * The label of the workspace number in the header, which copies the
+     * link of the workspace: as it is, or just after a press, while it
+     * shows for a moment that the copy worked or failed.
+     */
+    copyLink: { enum: ['none', 'copied', 'failed'] },
   },
 } as const
 
@@ -214,6 +223,7 @@ export const readyWorkspace: WorkspaceState = {
   paths: 'plain',
   org: 'active',
   palette: 'closed',
+  copyLink: 'none',
 }
 
 /**

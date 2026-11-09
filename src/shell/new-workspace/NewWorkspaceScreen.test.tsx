@@ -79,7 +79,7 @@ describe('NewWorkspaceScreen', () => {
         "The sandbox can't start This org is suspended. For questions, write to abuse@conductive.build.",
       ),
       start: textOf(html).includes('Start a workspace'),
-      composer: html.includes('<textarea'),
+      composer: html.includes('aria-label="Message"'),
     }).toEqual({ refused: true, start: false, composer: false })
   })
 

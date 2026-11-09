@@ -36,7 +36,7 @@ export async function previewHost(
   }
   await writeFile(
     resolve(web, 'index.html'),
-    `<!doctype html><h1>Preview fixture</h1><p role="status">Starting.</p><a href="${input.launcher}" target="_blank">Open in new tab</a><iframe title="Port preview" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" src="${input.launcher}"></iframe><script type="module" src="/ready.js"></script>`,
+    `<!doctype html><h1>Preview fixture</h1><p role="status">Starting.</p><a href="${input.launcher}" target="_blank" referrerpolicy="no-referrer" rel="noopener noreferrer">Open in new tab</a><iframe title="Port preview" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" src="${input.launcher}"></iframe><script type="module" src="/ready.js"></script>`,
   )
   await writeFile(
     resolve(web, 'ready.js'),

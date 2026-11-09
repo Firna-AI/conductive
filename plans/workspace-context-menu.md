@@ -2,7 +2,7 @@
 
 Status: Active. On branch `calummoore/workspace-context-menu`, no pull request yet. The pull request that completes the work deletes this plan.
 
-The user chose the menu scope on 9 November 2026. The user approved implementation of Milestone 1 on 9 November 2026. Milestone 1 is complete. Milestones 2 to 5 wait for a further instruction.
+The user chose the menu scope on 9 November 2026. The user approved implementation of Milestone 1 on 9 November 2026. Milestone 1 is complete. The user approved all remaining milestones and tasks on 9 November 2026.
 
 Conductive lists each task as a workspace in the desktop sidebar and the
 phone list. A workspace already moves between sections, gets a new owner,
@@ -56,8 +56,8 @@ This number refers to item 1 of the workspace menu discussion.
   uses `src/chat/components/useTabMenu.ts` and `src/chat/ui/Menu.tsx`.
 - **Recommendation:** D. The user chose D on 9 November 2026. The first
   recommendation was B.
-- **Action:** Apply D in Milestone 1, as the user instructed on 9 November
-  2026. The remaining implementation milestones wait for a further instruction.
+- **Action:** Apply D in every milestone, as the user instructed on
+  9 November 2026.
 - **Chosen:** D, by the user on 9 November 2026: "1 = A + rename".
 
 All options assume a menu on a workspace row. The task message requires it.
@@ -173,9 +173,24 @@ variants. A screen-spec page holds at most five screens.
 Evidence: `.context/workspace-context-menu/milestone1/ui-report.md`,
 with screenshots, check logs, and the parent browser measurements beside it.
 
-## Milestone 2: Document the chosen behavior
+## Milestone 1a: Integrate current workspace mockups
+
+Tags: mockup
 
 Depends on: 1
+
+Action: `ui implementor`.
+
+- [x] Preserve the workspace menu beside the workspace numbers and links
+      now on `main`. Resolve the catalogue merge and refresh affected pictures.
+- [x] Check the combined mockups and record the merge resolutions under
+      `.context/workspace-context-menu/integration/`.
+
+Evidence: `.context/workspace-context-menu/integration/report.md`.
+
+## Milestone 2: Document the chosen behavior
+
+Depends on: 1, 1a
 
 Action: `docs implementor`.
 

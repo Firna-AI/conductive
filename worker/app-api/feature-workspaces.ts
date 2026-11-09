@@ -61,7 +61,10 @@ export async function featureWorkspaceWrite(
     workspace: await workspaceForViewer(
       env,
       userId,
-      workspaceView(await readWorkspace(env.DB, orgId, workspaceId)),
+      workspaceView(
+        await readWorkspace(env.DB, orgId, workspaceId),
+        env.APP_ORIGIN,
+      ),
     ),
     start: lifecycle?.start ?? null,
     error: lifecycle?.error ?? null,
