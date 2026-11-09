@@ -1,8 +1,10 @@
 import { API_PATHS } from '../src/shared/api'
 import { MACHINE_PATHS } from '../src/shared/agent-tools'
+import { GITHUB_SETUP_PATH } from '../src/shared/github-setup'
 import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
 import { SITE_FOLDER } from '../src/shared/site-build'
 import type { AppDependencies, AppEnv } from './env'
+import { githubSetupResponse } from './github-setup'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
 import { requestBodyEntry } from './http/request-body'
@@ -81,6 +83,13 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           if (appApi && !upgrade) {
             const preflight = desktopPreflight(request)
             if (preflight) return privateResponse(preflight)
+          }
+          if (
+            path === GITHUB_SETUP_PATH &&
+            (request.method === 'GET' || request.method === 'HEAD') &&
+            !upgrade
+          ) {
+            return respond(await githubSetupResponse(request, env))
           }
           if (!path.startsWith('/api/') && env.ASSETS) {
             const asset = path.startsWith(`/${SITE_FOLDER}/`)
