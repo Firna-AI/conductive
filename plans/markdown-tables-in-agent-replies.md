@@ -309,12 +309,17 @@ Evidence: `.context/markdown-table-support/merge-links-ui-report.md`, `merge-lin
 
 ## Milestone 6: Verify and finish the integrated change
 
+Design call, 9 November 2026: agent tables use normal word wrapping. Main's anywhere wrapping stays on prose. This preserves the selected wide-table scrolling and file-preview behavior.
+
 Depends on: 5
 
-- [ ] Verify the merged main additions and all conflict resolutions path by path.
-- [ ] Check current table layouts, workspace-link cells, folded previews, and accessibility.
-- [ ] Run the complete gate on the integrated tree.
-- [ ] Commit and push the merge and compatibility work.
-- [ ] Run a fresh implementation review against origin/main. Apply the fix rule.
+- [x] Verify the merged main additions and all conflict resolutions path by path.
+- [x] Check current table layouts, workspace-link cells, folded previews, and accessibility.
+- [x] Run the complete gate on the integrated tree.
+- [x] Commit and push the merge and compatibility work.
+- [x] Run a fresh implementation review against origin/main. Apply the fix rule.
 - [ ] Delete this restored plan after its required work and review complete.
 - [ ] Update PR #119 with the new plan permalink, decisions, checks, and follow-ups. Watch CI to completion.
+
+
+Integrated review: `.context/reviews/calummoore/markdown-table-failure/round-3-review.md` found no issues. CI run `42677662206` passed the integrated table source. The later main sync preserves all table, formatter, and test files byte for byte. Final-head CI remains part of the pull request completion task.
