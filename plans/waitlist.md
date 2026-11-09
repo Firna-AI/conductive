@@ -418,6 +418,18 @@ The agent's calls from the plan, on 9 November 2026:
 - The search of the Invite codes tab finds any code by its text, also a
   referral code, and opens the page of its owner. Reason: a report of
   misuse often names only a code.
+- The invite link that the web app shows uses the origin of the page,
+  which is `https://app.conductive.build` in production. Reason: a test
+  deployment then shares links to itself. This call is from Milestone 5.
+- A join link first changes the address to `/` and shows the loading
+  state while its code runs, so a reload uses no code twice. Reason: a
+  reload must not repeat a use. This call is from Milestone 5.
+- The waitlist screen reads the org invitations again at each return to
+  the page, as it reads the app access. Reason: an invitation can arrive
+  while the person is away. This call is from Milestone 5.
+- The sign-in frame scrolls when its card is taller than the window, also
+  on the sign-in page. Reason: the foot of a tall card was cut off. This
+  call is from Milestone 5.
 - The scheduled handler retries the approval emails after its other
   repairs, and a failed retry only warns. Reason: a slow or failed email
   must not hold back the cleanup of deleted orgs or the alarm repairs.
@@ -762,24 +774,27 @@ Tags: ui
 
 Depends on: 1, 1a, 3
 
-- [ ] Add the waitlist screen, in the browser and in the Mac app, with its
+- [x] Add the waitlist screen, in the browser and in the Mac app, with its
       states from the mockups.
-- [ ] Open the waitlist screen when the session reply says that the user
+- [x] Open the waitlist screen when the session reply says that the user
       waits. Open Get started only after app access. Read the app access
       again when the person comes back to the tab or the window, and after
       Use code.
-- [ ] Add the join link. It keeps the code through the sign-in, and it
+- [x] Add the join link. It keeps the code through the sign-in, and it
       uses the code for a signed-in person who waits.
-- [ ] Add the referral code to the Account page, with Copy and its states.
-- [ ] Change the words of the marketing button and its closing line in
+- [x] Add the referral code to the Account page, with Copy and its states.
+- [x] Change the words of the marketing button and its closing line in
       the Astro marketing site under `src/marketing/`, and in its test
       `worker/marketing/built-site.test.ts`.
-- [ ] Update the Privacy draft in `src/marketing/privacy.ts`, as the
+- [x] Update the Privacy draft in `src/marketing/privacy.ts`, as the
       design says. Update the Terms draft when it promises an open
       sign-up.
-- [ ] Add dev fake options for a person who waits and for the pause.
-- [ ] Test the screens, the join link, and the referral code.
-- [ ] Update `src/app/README.md` and `src/marketing/README.md`.
+- [x] Add dev fake options for a person who waits and for the pause.
+- [x] Test the screens, the join link, and the referral code.
+- [x] Update `src/app/README.md` and `src/marketing/README.md`.
+
+Evidence: the report, the logs, and the screenshots in `.context/waitlist/m5/`,
+and the complete gate of the merged tree in `.context/waitlist/m5/gate-merged.log`.
 
 ## Milestone 6: The operator tabs in the web app
 
@@ -812,6 +827,10 @@ Depends on: 5, 6
       upgrade gets 403 `access_required`.
 - [ ] Make the Mac app connect its device socket again when app access
       arrives.
+- [ ] Pass the code of a join link through the sign-in of the Mac app, and
+      load the join address after it, so that the window uses the code or
+      shows its reason. Say in `desktop/README.md` that the waitlist page
+      has no controls strip.
 - [ ] Test with local D1: a new account waits, an existing account keeps
       app access, a new operator account gets app access, each allowed
       request, a refused request of each kind with an org read and an org
