@@ -30,7 +30,7 @@ export const sandboxRefused = defineScreen({
       slug: 'files',
       title: 'Files on a phone',
       description:
-        "The Files tab of the workspace on a phone, while Jonas, the owner, is suspended. The panel says that the sandbox can't start, with the words of the refusal: the owner is suspended, and an admin can assign another member. The Terminal, Preview, and Desktop tabs show the same panel.",
+        "The Files tab of the workspace on a phone, while Jonas, the owner, is suspended. The panel says that the sandbox can't start, with the words of the refusal: the owner is suspended, and an admin can assign another member. The Terminal and Preview tabs show the same panel.",
       rationale:
         'A phone shows the bar of the chat only on the Chat tab. So each panel of a phone shows the whole refusal with its words, as the bar does.',
       props: { focus: 'files' },

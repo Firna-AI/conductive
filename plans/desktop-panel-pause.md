@@ -1,6 +1,6 @@
 # Hide the Desktop panel
 
-Status: Active. On branch `calummoore/desktop-panel-disable`, no pull request yet. This plan records the chosen approach. Implementation starts after the user approves this plan. The completing pull request deletes this plan.
+Status: Active. On branch `calummoore/desktop-panel-disable`, no pull request yet. The user approved this plan on 9 November 2026. Implementation is in progress. The completing pull request deletes this plan.
 
 Conductive shows the live screen of a workspace's cloud computer through its Desktop tool. The user reported unreliable operation and chose a temporary pause on 9 November 2026. The user then clarified: "don't remove everything, just hide from the user - as we will bring it back later".
 
@@ -61,6 +61,8 @@ These calls were made by the agent on 9 November 2026 under the user's clarified
 - Update current feature promises, rather than deleting Desktop's developer documentation. State that the tool is retained and hidden where that fact helps the reader.
 - Keep both deferred transport follow-ups. Hiding the panel does not resolve their problems or require deployment changes.
 - An installed Mac build gets the hidden interface only when that build updates. Record this release limit in the pull request. The server adds no restriction to an old client.
+- Let the phone tab bar size its columns from the tab count. The old fixed five-column layout leaves a gap with four tabs. Keep the five-tab layout equivalent so Desktop can return without another layout change.
+- Use a shared tools picture label that describes both crops. The phone crop excludes the tab bar, so its label names the terminal rather than tabs outside the picture.
 
 ## Milestone 1: Mockups and marketing pictures
 
@@ -70,11 +72,14 @@ Depends on: none
 
 The visual spec shows Terminal and Preview as the available tools. It preserves the Desktop design for later work.
 
-- [ ] Update the tools and phone navigation in `docs/mockups/src/components/workspace/tools.ts` and the palette fixtures that offer Go to Desktop.
-- [ ] Keep the Desktop screen variant and component. Mark its retained status outside the rendered product screen.
-- [ ] Update the marketing picture labels that promise Desktop. Capture affected marketing pictures with `npm run marketing:pictures`.
-- [ ] Run `npm run mockups:check` and visually inspect the tools, phone navigation, palette, and affected marketing pictures.
-- [ ] Update this plan's design and TODOs for any problem that the mockups reveal.
+- [x] Update the tools and phone navigation in `docs/mockups/src/components/workspace/tools.ts` and the palette fixtures that offer Go to Desktop.
+- [x] Let the shared phone tab bar fill its width at either four or five tabs. Check the five-tab layout once for equivalence.
+- [x] Keep the Desktop screen variant and component. Mark its retained status outside the rendered product screen.
+- [x] Update the marketing picture labels that promise Desktop. Capture affected marketing pictures with `npm run marketing:pictures`.
+- [x] Run `npm run mockups:check` and visually inspect the tools, phone navigation, palette, and affected marketing pictures.
+- [x] Update this plan's design and TODOs for any problem that the mockups reveal.
+
+Completed on 9 November 2026. The parent checked the source diff, screenshots, retained variant, grid proof, and check logs. Evidence: `.context/desktop-panel/m1-report.md` and `.context/desktop-panel/m1/parent-mockups-check.log`.
 
 ## Milestone 2: Requirements and documentation
 

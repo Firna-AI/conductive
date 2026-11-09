@@ -3,7 +3,10 @@ import { classes } from '../common/classes'
 import { mobileTabs, type MobileTabKey } from './tools'
 import styles from './MobileTabBar.module.css'
 
-/** The workspace tabs of a phone: the chat, the files, and each tool. */
+/**
+ * The workspace tabs of a phone: the chat, the files, and each tool that
+ * the app offers.
+ */
 export function MobileTabBar(props: { selected: MobileTabKey }) {
   return (
     <nav aria-label="Workspace" className={styles.bar}>
