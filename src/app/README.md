@@ -296,6 +296,9 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
   and the dialog share: the repository, the notices, the readiness, and
   the send. `parts.tsx`: their repository menu and files.
+  `useCursorAtEnd.ts`: `useCursorAtEnd`, the handle of their message
+  field. It puts the cursor at the end of a kept message once, as the
+  field mounts.
 - `../chat/components/send-key.ts`: `useSendKey`, the send key of every
   composer.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.

@@ -91,6 +91,9 @@ decision number names a dated record, as
 - The dialog and the page of the same org and section share one draft.
 - A close of the dialog keeps the draft, with its message and its files,
   as a move away from the page does. So no close loses a message.
+- When the page or the dialog shows a kept message again, the cursor
+  starts at the end of the message. After that, each click and key moves
+  the cursor as usual.
 - When the server accepts the create, the dialog closes, and the app opens
   the new workspace, as after a create from the page. This holds also
   when the dialog closed while the create ran.

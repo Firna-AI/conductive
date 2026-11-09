@@ -9,6 +9,7 @@ import { useSendKey } from '../../chat/components/send-key'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import { ModelPicker } from '../ui/ModelPicker'
 import { AttachButton, AttachmentList, UploadError } from './parts'
+import { useCursorAtEnd } from './useCursorAtEnd'
 
 /**
  * The composer of a new workspace: attached files above the text, then the
@@ -16,7 +17,7 @@ import { AttachButton, AttachmentList, UploadError } from './parts'
  * the message can go, as the screen decides for Send and Try again. Enter
  * sends as in every composer: on a computer, Enter sends and Shift+Enter
  * adds a line. While the create runs, the text and the attach button are
- * off.
+ * off. A kept message shows with the cursor at its end.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
@@ -31,6 +32,7 @@ export function Composer(props: {
   const create = useStore(props.model.create)
   const sending = create.state === 'sending'
   const sendKey = useSendKey(props.ready, props.send)
+  const message = useCursorAtEnd(draft.text)
   return (
     <div className={styles.wrap}>
       <div className={styles.composer} onKeyDownCapture={sendKey}>
@@ -44,6 +46,7 @@ export function Composer(props: {
           accessibilityLabel="Message"
           editable={!sending}
           focusIndicator="none"
+          inputRef={message}
           maxLines={8}
           multiline
           numberOfLines={2}

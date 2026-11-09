@@ -193,11 +193,15 @@ complete yet:
   space of the window buttons.
 - The Worker routes the browser-to-app GitHub sign-in handoff. The Mac
   workflow builds and tests desktop changes on Apple silicon and Intel.
-- Builds have an ad-hoc signature, because no Apple Developer ID exists
-  yet. No release is published, so the updater stays off.
+- Pull request and local builds have an ad-hoc signature. Release builds
+  have a Developer ID signature, and Apple notarizes them.
+- Each merge of the release pull request publishes a GitHub release of
+  this repository with the signed Mac app. The published builds update
+  themselves from later releases.
 
 [Mac app](docs/protocol/desktop-app.md) states the requirements.
-[desktop/README.md](desktop/README.md) gives the commands.
+[desktop/README.md](desktop/README.md) gives the commands, and
+[desktop/RELEASES.md](desktop/RELEASES.md#releases) gives the release steps.
 
 ## Key code
 
