@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { AgentChoice } from '../../src/shared/agents'
+import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import { createWorkspaceToolClient } from '../../tools/client'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
 import { requestBodyEntry } from '../http/request-body'
@@ -143,6 +143,7 @@ export async function toolFixture(harness: TestHarness) {
   const ownerDefaultChoice = vi.fn(
     async (): Promise<AgentChoice | null> => null,
   )
+  const models = vi.fn(async (): Promise<readonly AgentModel[]> => [])
   const createWorkspace = vi.fn(async (input: ToolWorkspaceCreation) => ({
     workspace: {
       id: 'created-workspace',
@@ -160,7 +161,7 @@ export async function toolFixture(harness: TestHarness) {
     },
     sessionId: 'created-session',
   }))
-  const services = { callingTurn, ownerDefaultChoice, createWorkspace }
+  const services = { callingTurn, ownerDefaultChoice, createWorkspace, models }
   const env = { ...harness.env, MACHINE_ORIGIN: TOOL_TEST_ORIGIN }
   const entry = requestBodyEntry(createAgentToolsHandler(env, services))
   const handler = (request: Request) => entry(request, env)
