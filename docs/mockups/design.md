@@ -59,9 +59,14 @@ chat, and five tabs at the bottom.
   a dialog near the top of the window over a light dim on desktop, and a
   page in place of the list on a phone. It has the search field, the tabs
   All, Workspaces, Actions, and Settings, the filters of the Workspaces
-  tab, the groups of results, and the empty state. The list and the
-  workspace screens own it as their `palette` state. The Search row under
-  New workspace opens it, and on desktop that row shows ⌘K.
+  tab, the groups of results, and the empty state. While the workspace
+  data loads, or after its read failed, a status part stands first in
+  place of the workspace groups: a spinner, or `LoadFailure`. The list and
+  the workspace screens own it as their `palette` state. The Search row
+  under New workspace opens it, and on desktop that row shows ⌘K.
+- `LoadFailure` in `src/components/common/` draws data that did not load,
+  as the lists of the app show it: what failed, the message of the server,
+  and Try again.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.

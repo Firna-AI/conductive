@@ -81,13 +81,27 @@ list of Acme. Its child pages:
   `repository` variant has the menu of the repository filter, and its
   `archived` variant has the archived workspaces. Its `empty` variant has
   the Archived filter of `acme/marketing-site`, which holds no archived
-  workspace, and the line that says where they show.
+  workspace, and the line that says where they show. Its `unavailable`
+  variant has a workspace list that did not load: the notice with Try
+  again fills the tab.
 - `app/command-palette/actions` has the Actions tab over the list. Its
   `workspace` variant has the tab over an open workspace, whose actions
   come first.
 - `app/command-palette/settings` has the Settings tab.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its `no-results` variant has a search without results.
+  Its `loading`, `unavailable`, and `repositories-unavailable` variants
+  have a search for "new" while the repository names load, after the
+  workspace list did not load, and after the repository names did not
+  load. A spinner, or a notice with Try again, stands first in place of
+  the workspace groups, and the actions and the setting that match follow.
+  With an empty field, the All tab needs only the list. While the list
+  loads, or after it did not load, the status part stands before Actions,
+  in place of Recent workspaces.
+
+In `search/unavailable` and `workspaces/unavailable`, the list behind the
+palette on desktop shows the same failure, because it reads the same
+workspace list.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the
