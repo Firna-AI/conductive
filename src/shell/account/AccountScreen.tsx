@@ -13,6 +13,7 @@ import {
   SignInSection,
 } from './AccountSections'
 import { GitHubSection } from './GitHubSection'
+import { InviteCodeSection } from './InviteCodeSection'
 
 /**
  * This Mac, in the account of the Mac app only: the Mac that the app
@@ -36,10 +37,11 @@ function ThisMac() {
 
 /**
  * The account: the GitHub sign-in, and what every org shares. The GitHub
- * App, the agents, and the model of new workspaces. The Mac app adds This
- * Mac. The product is free, so the page shows no plan and no billing.
- * `connect` opens the Connect form of an agent at first, as the link of a
- * missing login does.
+ * App, the agents, and the model of new workspaces. The invite code of the
+ * user comes last, so that a phone shows the form of an agent near the
+ * top. The Mac app adds This Mac. The product is free, so the page shows
+ * no plan and no billing. `connect` opens the Connect form of an agent at
+ * first, as the link of a missing login does.
  */
 export function AccountScreen(props: { user: User; connect: Agent | null }) {
   return (
@@ -53,6 +55,7 @@ export function AccountScreen(props: { user: User; connect: Agent | null }) {
       <GitHubSection />
       <AgentsSection connect={props.connect} />
       <DefaultsSection />
+      <InviteCodeSection />
     </Page>
   )
 }

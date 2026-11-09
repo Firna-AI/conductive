@@ -1,3 +1,4 @@
+import { waitingEmail } from '../../../docs/mockups/src/fixtures/waitlist'
 import type { AgentLoginStatus } from '../../shared/account'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Workspace } from '../../shared/workspaces'
@@ -11,6 +12,7 @@ import {
   sampleRecords,
   type OperatorRecords,
 } from '../../test-support/fixtures/operator'
+import { waitingUser } from '../../test-support/fixtures/waitlist'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
@@ -18,9 +20,11 @@ import type { DevOptions } from './options'
 import {
   freshOrg,
   type DevState,
+  type DevWaitlist,
   type OrgState,
   type StartRecord,
 } from './state'
+import { seedWaitlist } from './waitlist-routes'
 
 type CoreFixtures = ReturnType<typeof coreFixtures>
 
@@ -92,13 +96,48 @@ function operatorRecords(options: DevOptions): OperatorRecords {
 }
 
 /**
+ * The invitation of Acme that waits for Sam, and Acme as Sam joins it: as a
+ * member, beside the people of Acme.
+ */
+function acmeInvitation(
+  core: CoreFixtures,
+  options: DevOptions,
+): DevWaitlist['invitations'][number] {
+  const summary: OrgSummary = {
+    ...(core.orgs.orgs.find((org) => org.id === FAKE_IDS.org) ??
+      core.orgs.orgs[0]),
+    role: 'member',
+  }
+  const org = acme(summary, core, options)
+  org.members = {
+    ...org.members,
+    members: [
+      ...org.members.members,
+      { user: waitingUser, role: 'member', joinedAt: FAKE_TIME },
+    ],
+  }
+  return {
+    invite: {
+      id: 'invite-acme',
+      email: waitingEmail,
+      createdAt: FAKE_TIME - 3_600_000,
+      orgId: summary.id,
+      orgName: summary.name,
+    },
+    org,
+  }
+}
+
+/**
  * The state when the app opens. Get started is done before `firstRun`, and
  * not done from it on. The other recorded orgs start as new orgs, because
- * the recorded server has no replies for them.
+ * the recorded server has no replies for them. With `waiting`, the user is
+ * Sam, who waits for app access.
  */
 export function seedState(options: DevOptions): DevState {
   const core = coreFixtures(options.server.role)
-  const { user } = core.account
+  const waits = options.waiting !== null
+  const user = waits ? waitingUser : core.account.user
   const { firstRun } = options
   const noOrg = firstRun === 'github-app' || firstRun === 'org'
   const noLogin = options.noAgentLogin || firstRun !== null
@@ -114,6 +153,7 @@ export function seedState(options: DevOptions): DevState {
   return {
     account: {
       ...core.account,
+      user,
       operator: options.operator,
       agentLogins: noLogin
         ? AGENTS.map((agent): AgentLoginStatus => ({ agent, connected: false }))
@@ -132,5 +172,14 @@ export function seedState(options: DevOptions): DevState {
     stopAfterMs: options.stopAfterMs,
     operator: operatorRecords(options),
     shareSaveFails: options.shareSaveFails,
+    waitlist: seedWaitlist({
+      appAccess: !waits,
+      approvalEmail:
+        waits && options.waiting === 'verified' ? waitingEmail : null,
+      paused: options.paused,
+      inviteCode: options.inviteCode,
+      invitations:
+        waits && options.invited ? [acmeInvitation(core, options)] : [],
+    }),
   }
 }
