@@ -2,7 +2,7 @@ import type { ReceiverStorage } from '../members/receiver-storage'
 
 export type AlarmSource =
   | 'lifecycle'
-  | `lifecycle:${'start' | 'publication' | 'changed' | 'cleanup' | 'access' | 'image'}`
+  | `lifecycle:${'start' | 'publication' | 'changed' | 'cleanup' | 'access' | 'image' | 'run'}`
   | 'devices'
   | 'previews'
   | 'github'
@@ -85,15 +85,21 @@ export class WorkspaceAlarms {
 
   async begin(now: number, owns: (source: string) => boolean) {
     const revisions = new Map(this.revisions)
-    const alarms = await this.storage.transaction((transaction) =>
-      transaction.read(),
-    )
+    const lifecycleRun = owns('lifecycle:run')
+    const alarms = await this.storage.transaction(async (transaction) => {
+      const current = await transaction.read()
+      if (lifecycleRun)
+        await writeWorkspaceAlarm(transaction, 'lifecycle:run', now + 30_000)
+      return current
+    })
     const due = [...alarms].filter(([, at]) => at <= now)
     const owned = due.filter(([key]) => owns(key.slice('alarm:'.length)))
     return {
       due: new Set(due.map(([key]) => key.slice('alarm:'.length))),
+      recovering: lifecycleRun && alarms.has('alarm:lifecycle:run'),
       finish: (finishedAt = now) =>
         this.storage.transaction(async (transaction) => {
+          if (lifecycleRun) await transaction.delete('alarm:lifecycle:run')
           const current = await transaction.read()
           const future = Math.min(
             ...[...current.values()].filter((at) => at > finishedAt),

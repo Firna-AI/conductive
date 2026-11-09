@@ -29,8 +29,9 @@ export async function runWorkspaceAlarm(input: {
   const run = await alarms.begin(dependencies.now(), (source) =>
     source.startsWith('lifecycle'),
   )
-  const { due } = run
-  const requested = (source: string) => !due.size || due.has(source)
+  const { due, recovering: recoveringRun } = run
+  const requested = (source: string) =>
+    !due.size || recoveringRun || due.has(source)
   let completedStart = false
   try {
     if (!(await lifecycle.read())) await alarms.set('lifecycle:access', null)
@@ -42,7 +43,7 @@ export async function runWorkspaceAlarm(input: {
       }
       return
     }
-    if (due.has('lifecycle:changed')) {
+    if (due.has('lifecycle:changed') || recoveringRun) {
       try {
         await lifecycle.retryChanged()
       } catch {
@@ -53,7 +54,7 @@ export async function runWorkspaceAlarm(input: {
       due.has('lifecycle') &&
       !(await alarms.has('lifecycle:publication')) &&
       Boolean(await input.startJobs.publication())
-    if (due.has('lifecycle:publication') || legacyPublication)
+    if (due.has('lifecycle:publication') || legacyPublication || recoveringRun)
       await publishCreationResult(env, input.startJobs)
     if (await input.starts.pending()) {
       if (requested('lifecycle:start') || due.has('lifecycle')) {

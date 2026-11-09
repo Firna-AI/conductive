@@ -51,9 +51,13 @@ it('moves only unchanged due markers owned by each run to the next future time o
     100,
     (source) => !source.startsWith('lifecycle'),
   )
+  expect(await storage.get('number', 'alarm:lifecycle:run')).toBeUndefined()
+  expect(await alarms.take(100)).toEqual(outer.due)
+  expect(await storage.get('number', 'alarm:lifecycle:run')).toBeUndefined()
   const nested = await alarms.begin(100, (source) =>
     source.startsWith('lifecycle'),
   )
+  expect(await storage.get('number', 'alarm:lifecycle:run')).toBe(30_100)
   await alarms.set('github', 90)
   await alarms.set('lifecycle:changed', null)
   await alarms.set('lifecycle:publication', 100)
@@ -96,6 +100,18 @@ it('moves only unchanged due markers owned by each run to the next future time o
   expect(await fallback.storage.get('number', 'alarm:previews')).toBe(30_125)
   expect(await fallback.storage.get('number', 'alarm:github')).toBe(120)
   expect(fallback.storage.alarmAt).toBe(120)
+
+  const lifecycle = fixture()
+  await lifecycle.alarms.set('lifecycle', 100)
+  const run = await lifecycle.alarms.begin(100, (source) =>
+    source.startsWith('lifecycle'),
+  )
+  await run.finish(125)
+  expect(await lifecycle.storage.get('number', 'alarm:lifecycle')).toBe(30_125)
+  expect(
+    await lifecycle.storage.get('number', 'alarm:lifecycle:run'),
+  ).toBeUndefined()
+  expect(lifecycle.storage.alarmAt).toBe(30_125)
 })
 
 it('clears an expired device alarm but preserves a replacement lease at the same time', async () => {

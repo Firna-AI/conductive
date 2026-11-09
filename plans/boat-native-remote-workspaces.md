@@ -5518,6 +5518,15 @@ Completed on 8 November 2026. Agent calls of that date:
 
 Verification evidence: `.context/boat-native-remote-workspaces/5e/summary.md`.
 
+Fix round 2, 9 November 2026. Agent call:
+
+- Treat any existing lifecycle run lease as recovery at the next lifecycle
+  run. Runs execute one at a time. This keeps an earlier task wake from
+  consuming the lease before recovery. The query of due times stays based
+  on timestamps.
+
+Fix-round evidence: `.context/boat-native-remote-workspaces/5e/fix-round-2/summary.md`.
+
 ## Milestone 5f: Tests on the real workspace object
 
 Depends on: 5e, 8m. Both change the lifecycle and chat tests that this
