@@ -6,6 +6,9 @@ and a page for an unknown address. Visitors need no sign-in. The pages run
 no script and set no cookie. Every sign-in link leads to the app, on the
 `app.` host.
 
+The shared header links to the public source repository on GitHub.
+The link appears on phones and desktops.
+
 The marketing mockups are the visual spec:
 [`MarketingScreen.tsx`](../../docs/mockups/src/screens/MarketingScreen.tsx),
 [`LegalScreen.tsx`](../../docs/mockups/src/screens/LegalScreen.tsx),
@@ -209,7 +212,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   asset reads and the app host's handling of other site paths.
 - `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
 - `features.ts`: the home page's feature copy.
-- `links.ts`: site paths and `pageHrefs` for links from another origin.
+- `links.ts`: the source repository address, site paths, and `pageHrefs`
+  for links from another origin.
 - `terms.ts`, `privacy.ts`, `legal-text.ts`: legal drafts and the shared
   text model, titles, draft notice, abuse address, and sign-in agreement.
 - `request-values.ts`: built-page markers and local Astro preview values.
