@@ -39,7 +39,8 @@ system permissions. The installed runner service runs as `user`.
    It writes the version of the private Node to the build log.
 3. It replaces `/opt/conductive/software` with the new folder, so no file
    of an older archive stays.
-4. It installs the runner start script, the git credential helper, and the
+4. It installs the GitHub CLI package when needed. It installs the runner
+   start script, the git credential helper, the GitHub CLI wrapper, and the
    runner's systemd unit.
 5. It makes `conductive-git-credential` the system credential helper of
    git, and sets `credential.useHttpPath`.
