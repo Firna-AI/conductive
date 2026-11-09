@@ -7,78 +7,76 @@ import {
   Contrast,
   type LucideIcon,
 } from 'lucide-react'
+import { productName } from '../../brand'
 import {
-  parityAreas,
   parityFeatures,
   type ComingFeature,
   type ParityAreaKey,
   type ParityFeature,
   type ParityStatus,
 } from '../../fixtures/conductorParity'
-import { productName } from '../../brand'
 
-/** The colour of a status mark. Its word always names the status too. */
-type MarkTone = 'success' | 'active' | 'neutral' | 'muted'
+/**
+ * The colour of the icon of a status mark. The colour only supports the
+ * status: its word and the shape of its icon always name it too.
+ */
+type MarkTone = 'success' | 'warning' | 'active' | 'danger' | 'muted'
 
 type StatusWords = {
   /** The word of the status, such as "Available". */
   label: string
-  /** The status in a count, such as "3 available", by its number. */
-  counted: (count: number) => string
   /** What the status means, in a few words. */
   meaning: string
   icon: LucideIcon
   tone: MarkTone
 }
 
-/** The words, the icon, and the colour of each status. */
+/**
+ * The words, the icon, and the colour of each status. Green marks a need
+ * that the product meets today, in its own way or in Conductor's. Amber
+ * marks work that is being built, blue a plan, red a feature that the
+ * product leaves out, and grey a feature without a decision.
+ */
 export const parityStatuses: Readonly<Record<ParityStatus, StatusWords>> = {
   available: {
     label: 'Available',
-    counted: (count) => `${count} available`,
     meaning: `Works in ${productName} today.`,
     icon: CircleCheck,
     tone: 'success',
   },
   'in-progress': {
     label: 'In progress',
-    counted: (count) => `${count} in progress`,
     meaning: 'Being built now.',
     icon: Contrast,
-    tone: 'active',
+    tone: 'warning',
   },
   planned: {
     label: 'Planned',
-    counted: (count) => `${count} planned`,
     meaning: 'On the plan. Work has not started.',
     icon: CircleDashed,
     tone: 'active',
   },
   different: {
     label: 'Works differently',
-    counted: (count) =>
-      `${count} ${count === 1 ? 'works' : 'work'} differently`,
     meaning: `${productName} meets the same need in another way.`,
     icon: ArrowRightLeft,
-    tone: 'neutral',
+    tone: 'success',
   },
   considering: {
     label: 'Under consideration',
-    counted: (count) => `${count} under consideration`,
     meaning: 'No decision yet.',
     icon: CircleEllipsis,
     tone: 'muted',
   },
   'not-planned': {
     label: 'Not planned',
-    counted: (count) => `${count} not planned`,
     meaning: 'Left out by design. The note says what to do instead.',
     icon: CircleMinus,
-    tone: 'muted',
+    tone: 'danger',
   },
 }
 
-/** The statuses in the order of the legend and of each count. */
+/** The statuses in the order of the legend. */
 export const statusOrder: readonly ParityStatus[] = [
   'available',
   'in-progress',
@@ -88,7 +86,7 @@ export const statusOrder: readonly ParityStatus[] = [
   'not-planned',
 ]
 
-/** The rule of the due days, as the legend and the lists state it. */
+/** The rule of the due days, as the legend states it. */
 export const dueRule =
   'A due date is a commitment. A feature without a date has no date yet.'
 
@@ -97,45 +95,9 @@ export function isComing(feature: ParityFeature): feature is ComingFeature {
   return feature.status === 'in-progress' || feature.status === 'planned'
 }
 
-/** The title of an area, such as "Agents and chat". */
-export function areaTitle(key: ParityAreaKey): string {
-  return parityAreas.find((area) => area.key === key)?.title ?? key
-}
-
 /** The features of one area, in the order of the list. */
 export function featuresOf(area: ParityAreaKey): readonly ParityFeature[] {
   return parityFeatures.filter((feature) => feature.area === area)
-}
-
-/** The features of the given statuses, in the order of the list. */
-export function featuresWith(
-  statuses: readonly ParityStatus[],
-): readonly ParityFeature[] {
-  return parityFeatures.filter((feature) => statuses.includes(feature.status))
-}
-
-/**
- * The features that are on the way: those with a due day first, the
- * soonest first, then those without one, in the order of the list.
- */
-export function comingFeatures(): readonly ComingFeature[] {
-  const coming = parityFeatures.filter(isComing)
-  const dated = coming
-    .filter((feature) => feature.due !== null)
-    .sort((a, b) => (a.due ?? '').localeCompare(b.due ?? ''))
-  return [...dated, ...coming.filter((feature) => feature.due === null)]
-}
-
-/** The counts of the statuses that the features have, in legend order. */
-export function statusCounts(
-  features: readonly ParityFeature[],
-): readonly { status: ParityStatus; count: number }[] {
-  return statusOrder
-    .map((status) => ({
-      status,
-      count: features.filter((feature) => feature.status === status).length,
-    }))
-    .filter((entry) => entry.count > 0)
 }
 
 const longDay = new Intl.DateTimeFormat('en-GB', {

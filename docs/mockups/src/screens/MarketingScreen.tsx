@@ -26,6 +26,10 @@ export function MarketingScreen(props: { viewport: Viewport }) {
     <SitePage viewport={viewport}>
       <Hero
         device={hero.device}
+        notice={{
+          text: 'From Conductor Cloud? Compare the features',
+          to: paths.fromConductor,
+        }}
         picture={hero.picture}
         signIn={paths.signIn}
         text="Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser."

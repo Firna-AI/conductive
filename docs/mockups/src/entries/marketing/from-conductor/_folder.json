@@ -1,4 +1,4 @@
 {
   "title": "From Conductor",
-  "order": ["by-area", "one-table", "by-status", "by-task"]
+  "order": ["one-table"]
 }

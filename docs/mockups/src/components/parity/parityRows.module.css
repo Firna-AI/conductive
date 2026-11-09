@@ -1,7 +1,6 @@
 /*
- * The tables of Conductor Cloud features, which the area layout and the
- * one-table layout share: the header, the rows, and their cells. A layout
- * sets `.mobile` on an ancestor of its table for a phone.
+ * The table of Conductor Cloud features: the header, the rows, and their
+ * cells. The table sets `.mobile` on an ancestor for a phone.
  */
 .table {
   width: 100%;

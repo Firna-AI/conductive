@@ -3,9 +3,8 @@ import { DueDay, StatusMark } from './ParityMarks'
 import rows from './parityRows.module.css'
 
 /**
- * The cells of one feature in a table of features: its name as the header
- * of the row, its status with its due day, and its note. The area layout
- * and the one-table layout share them.
+ * The cells of one feature in the table of features: its name as the header
+ * of the row, its status with its due day, and its note.
  */
 export function FeatureCells(props: { feature: ParityFeature }) {
   const { feature } = props

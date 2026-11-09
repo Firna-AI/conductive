@@ -1,23 +1,16 @@
-/* One column of the width of a table, centred on the page. */
+/*
+ * One column centred on the page. The table has four columns, so the
+ * column takes the width of the site header.
+ */
 .page {
   display: flex;
   flex-direction: column;
   gap: 56px;
   width: 100%;
-  max-width: 960px;
+  max-width: 1184px;
   margin: 0 auto;
   padding: 72px 32px 112px;
   box-sizing: border-box;
-}
-
-/* The one table has four columns, so it takes the width of the site header. */
-.wide {
-  max-width: 1184px;
-}
-
-/* The task layout has no table, so its column keeps the width of its cards. */
-.narrow {
-  max-width: 824px;
 }
 
 .footnote {

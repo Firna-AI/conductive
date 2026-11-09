@@ -1,47 +1,56 @@
 ---
 title: From Conductor
-description: Four layouts of one page for people who move from Conductor Cloud, for a design comparison. The rows are a sample, and the due dates are examples.
+description: The page for people who move from Conductor Cloud, at conductive.build/from-conductor. Its rows are a sample, and its due dates are examples.
 ---
 
 # From Conductor
 
 The page at `conductive.build/from-conductor` shows people who move from
 Conductor Cloud which of its features work in Conductive today, which are
-on the way, and which work differently. Four layouts show the same sample
-data, so that you can compare them before the team chooses one.
+on the way, and which work differently.
+[The comparison page](mock:marketing/from-conductor/one-table) draws it at
+phone and desktop sizes, in light and dark.
 
-## The four layouts
+## The page
 
-| Layout | Reading order | Density | It suits |
-| --- | --- | --- | --- |
-| [By area](mock:marketing/from-conductor/by-area) | Area, then feature | High: a table row for each feature | A visitor who looks for one feature |
-| [One table](mock:marketing/from-conductor/one-table) | Area, then feature, in one run | Highest: one table, with an Area column and no headings | A visitor who reads every feature, or compares the statuses down one column |
-| [By status](mock:marketing/from-conductor/by-status) | Status, then feature | Medium: four sections with counts | A visitor who asks what works today and what comes when |
-| [By task](mock:marketing/from-conductor/by-task) | Job, then a summary, then the features on request | Low until a card opens | A visitor who skims |
+- The top says that the list covers Conductor Cloud features only, and
+  leaves out the features of local Conductor workspaces. It also gives the
+  days of Conductor Cloud: read-only on 13 November 2026, and shut down on
+  20 November 2026, from its release 0.93.0.
+- The legend comes next. Then one table with one header lists the features
+  in the order of their areas, with the columns Area, Conductor Cloud
+  feature, In Conductive, and Notes.
+- On a computer, each area is one merged cell, with its name at the top.
+  Only the darker hairline at the end of the area crosses that cell. The
+  other columns keep a hairline under each feature.
+- A phone stacks the cells of each row, with the area on top.
+- A line under the table says that Conductive is not affiliated with
+  Conductor.
+- The home page links to the page from a short link above its headline.
+  The footer of the site links to it from its Product column.
 
-Each layout has a phone view and a desktop view, in light and dark. All
-four share the site header and footer, the top of the page, and the last
-call to action.
+## Statuses
 
-## What all four show
+| Status | Icon colour | Meaning |
+| --- | --- | --- |
+| Available | Green | Works in Conductive today. |
+| In progress | Amber | Being built now. |
+| Planned | Blue | On the plan. Work has not started. |
+| Works differently | Green | Conductive meets the same need in another way. |
+| Under consideration | Grey | No decision yet. |
+| Not planned | Red | Left out by design. The note says what to do instead. |
 
-- The page covers Conductor Cloud features only. A note at the top says so,
-  and the list leaves out the features of local Conductor workspaces.
-- Six statuses: Available, In progress, Planned, Works differently, Under
-  consideration, and Not planned. Each status has an icon and a word.
-- A due date is separate from the status. A feature on the way shows its
-  due date, or "No date yet". A feature that is not on the way has no date.
-- The days of Conductor Cloud: read-only on 13 November 2026, and shut down
-  on 20 November 2026, from its release 0.93.0.
-- A line that says that Conductive is not affiliated with Conductor.
+Each status has a word and an icon, so its colour only supports it. A due
+date is separate from the status. A feature on the way shows its due date,
+or "No date yet". A feature that is not on the way has no date.
 
 ## Limits of the sample
 
 - The data is a sample of 24 Conductor Cloud features in six areas, not the
-  full list. Every count on a screen comes from this sample.
-- The due dates are examples for this study: Attachments on 16 November
-  2026, and Start from a branch or pull request on 30 November 2026. The
-  team has not chosen a delivery date for any feature.
+  full list.
+- The due dates are examples: Attachments on 16 November 2026, and Start
+  from a branch or pull request on 30 November 2026. The team has not
+  chosen a delivery date for any feature.
 - Each other claim holds on `main` on 9 November 2026. Desktop is hidden
   for every user, so the sample leaves out the cloud desktop.
 - The sample keeps each status that a recorded decision gives. For example,

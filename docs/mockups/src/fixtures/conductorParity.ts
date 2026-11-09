@@ -3,7 +3,7 @@
  * `from-conductor` on the site. It is a small part of the real list: a few
  * Conductor Cloud features of each area, chosen so that every status
  * shows. Each claim holds on `main` on 9 November 2026. The due days are
- * examples for the design study. The team has not chosen them.
+ * examples. The team has not chosen them.
  */
 
 /**
@@ -18,26 +18,14 @@ export type ParityStatus =
   | 'considering'
   | 'not-planned'
 
-/** The keys of the areas of the list, in the order of the page. */
-export const parityAreaKeys = [
-  'workspaces',
-  'agents',
-  'review',
-  'computer',
-  'teams',
-  'automation',
-] as const
+/** The areas of the list. */
+export type ParityAreaKey =
+  'workspaces' | 'agents' | 'review' | 'computer' | 'teams' | 'automation'
 
-export type ParityAreaKey = (typeof parityAreaKeys)[number]
-
-/** An area of the list: its name, the job that it covers, and one sentence. */
+/** An area of the list and its name. */
 export type ParityArea = {
   readonly key: ParityAreaKey
   readonly title: string
-  /** The job of the area, which the task layout uses as its heading. */
-  readonly task: string
-  /** What the area means for a person who moves, in one sentence. */
-  readonly summary: string
 }
 
 type FeatureBase = {
@@ -78,50 +66,16 @@ export const parityCheckedOn = '2026-11-09'
  * outside the screen.
  */
 export const parityStudyNote =
-  'The screen shows a sample of 24 Conductor Cloud features in six areas, not the full list. Its counts come from that sample. The due days of Attachments, 16 November 2026, and of Start from a branch or pull request, 30 November 2026, are examples for the design study, not delivery dates that the team chose. The page leaves out the features of local Conductor workspaces, as the user chose.'
+  'The screen shows a sample of 24 Conductor Cloud features in six areas, not the full list. The due days of Attachments, 16 November 2026, and of Start from a branch or pull request, 30 November 2026, are examples, not delivery dates that the team chose. The page leaves out the features of local Conductor workspaces, as the user chose.'
 
+/** The areas of the list, in the order of the page. */
 export const parityAreas: readonly ParityArea[] = [
-  {
-    key: 'workspaces',
-    title: 'Workspaces',
-    task: 'Start a task',
-    summary: 'Each task still gets its own branch and its own cloud computer.',
-  },
-  {
-    key: 'agents',
-    title: 'Agents and chat',
-    task: 'Work with agents',
-    summary:
-      'Agents powered by Claude and Codex work in the chat, and you can steer them while they work.',
-  },
-  {
-    key: 'review',
-    title: 'Review and merge',
-    task: 'Review and merge',
-    summary:
-      'Read the diff and follow the checks in the app, then merge on GitHub.',
-  },
-  {
-    key: 'computer',
-    title: 'Cloud computer',
-    task: 'Set up the cloud computer',
-    summary:
-      'One image for the org, and a cloud computer for each workspace that stops when it is idle.',
-  },
-  {
-    key: 'teams',
-    title: 'Teams',
-    task: 'Work as a team',
-    summary:
-      'Every member of an org sees each workspace and can continue the work.',
-  },
-  {
-    key: 'automation',
-    title: 'Automation and apps',
-    task: 'Automate and check in',
-    summary:
-      'Routines are planned, and the app works in the browser of your phone.',
-  },
+  { key: 'workspaces', title: 'Workspaces' },
+  { key: 'agents', title: 'Agents and chat' },
+  { key: 'review', title: 'Review and merge' },
+  { key: 'computer', title: 'Cloud computer' },
+  { key: 'teams', title: 'Teams' },
+  { key: 'automation', title: 'Automation and apps' },
 ]
 
 export const parityFeatures: readonly ParityFeature[] = [

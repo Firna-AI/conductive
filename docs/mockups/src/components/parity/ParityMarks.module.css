@@ -17,16 +17,24 @@
   margin-top: calc((1lh - 15px) / 2);
 }
 
+/*
+ * The icon of each status takes the colour of its tone: green, amber, blue,
+ * red, or grey. The tokens keep a readable contrast in both schemes.
+ */
 .success .icon {
   color: var(--ui-success);
+}
+
+.warning .icon {
+  color: var(--ui-amber);
 }
 
 .active .icon {
   color: var(--ui-primary);
 }
 
-.neutral .icon {
-  color: var(--ui-ink2);
+.danger .icon {
+  color: var(--ui-rose);
 }
 
 .muted .icon {

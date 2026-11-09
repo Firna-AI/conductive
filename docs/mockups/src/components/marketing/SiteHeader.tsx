@@ -7,8 +7,11 @@ import { StartButton } from './SiteActions'
 import { Wordmark } from './Wordmark'
 import styles from './SiteHeader.module.css'
 
-/** Where the header leads: the home page, and the GitHub sign-in. */
-export type SiteLinks = { home: string; signIn: string }
+/**
+ * Where the header and the footer lead: the home page, the page for people
+ * who move from Conductor Cloud, and the GitHub sign-in.
+ */
+export type SiteLinks = { home: string; fromConductor: string; signIn: string }
 
 /**
  * The top of the site: the wordmark, Features, GitHub, Sign in, and the

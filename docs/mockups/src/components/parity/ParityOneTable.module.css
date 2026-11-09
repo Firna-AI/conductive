@@ -17,11 +17,15 @@
   width: 21%;
 }
 
-/* The area reads as a label of the app, on the first line of its row. */
+/*
+ * The area reads as a label of the app, on the first line of its group. A
+ * header cell keeps the normal weight of the label.
+ */
 .area {
   color: var(--ui-muted);
   font-family: var(--ui-font-label);
   font-size: var(--ui-text-xs);
+  font-weight: 400;
   letter-spacing: 0.08em;
   line-height: 22px;
   text-transform: var(--ui-label-case);
@@ -37,6 +41,14 @@ tr.groupStart > * {
 }
 
 tr.groupEnd > * {
+  border-bottom-color: var(--ui-border2);
+}
+
+/*
+ * The merged area cell spans every row of its area, so its own bottom edge
+ * is the end of the area. No feature line crosses it.
+ */
+th.area {
   border-bottom-color: var(--ui-border2);
 }
 
