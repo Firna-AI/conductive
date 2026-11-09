@@ -49,12 +49,12 @@
   - **F.** Send the pending commands again only after the replay. Effort: Medium.
     - The `hello` of the runner reports its last stored event number. The Worker sends pending commands only when the stored cursor reaches that number.
     - The replayed `turn.started` then removes the command. So the runner gets no second command for a turn that it already has.
-    - Cost: a runner protocol change in `src/shared/runner.ts`, the runner link, the parser, and `docs/protocol/chat-and-events.md`. It needs a new runner build, and it delays new commands after each reconnect.
+    - Cost: a runner protocol change in `src/shared/runner.ts`, the runner link, the parser, and `docs/protocol/agent-runner.md`. It needs a new runner build, and it delays new commands after each reconnect.
     - It does not stop another caller from passing the current time.
 - **Left out:**
   - A reconnect alone repeats the same update, so it fails the goal.
   - Ignoring the stored end times breaks the rule that keeps the original idle time.
-  - Never sending a begun turn again breaks a requirement that stays. A send that the disconnect lost would never reach the runner, against the forward rule at `docs/protocol/chat-and-events.md:298-299`.
+  - Never sending a begun turn again breaks a requirement that stays. A send that the disconnect lost would never reach the runner, against the forward rule at `docs/protocol/agent-runner.md:77-78`.
   - A fixed wait before the resend fails the goal. A slow replay still loses the race.
   - A runner reply to a repeated command. D is better on every point, because it covers the same paths with no protocol message.
   - A fix in the browser fails the goal, because the idle stop is server state.

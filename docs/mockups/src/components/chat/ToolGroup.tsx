@@ -25,7 +25,8 @@ const tools: Readonly<
   run: { icon: SquareTerminal, done: 'Ran', running: 'Running' },
 }
 
-function CallLine(props: { call: ToolCallItem }) {
+/** One tool call in an open list: its icon, its verb, its target, and its result. */
+export function CallLine(props: { call: ToolCallItem }) {
   const theme = useSharedUiTheme()
   const { call } = props
   const tool = tools[call.tool]
@@ -53,6 +54,49 @@ function CallLine(props: { call: ToolCallItem }) {
   )
 }
 
+/** A count for the line of a fold, such as "1 tool call": none for zero. */
+function counted(count: number, noun: string): string[] {
+  return count === 0 ? [] : [`${count} ${noun}${count === 1 ? '' : 's'}`]
+}
+
+/**
+ * The line of a fold: a chevron, the count of its tool calls and of its
+ * messages, such as "8 tool calls, 7 messages", the icons of the kinds of
+ * its tool calls, and the total output that the runner left out of them.
+ * It leaves out a zero count. A run of tool calls and the work of an ended
+ * turn share it.
+ */
+export function FoldLine(props: {
+  calls: readonly ToolCallItem[]
+  messages?: number
+}) {
+  const { calls } = props
+  const kinds = [...new Set(calls.map((call) => call.tool))]
+  const leftOut = calls.reduce(
+    (total, call) => total + (call.omittedDetailBytes ?? 0),
+    0,
+  )
+  const label = [
+    ...counted(calls.length, 'tool call'),
+    ...counted(props.messages ?? 0, 'message'),
+  ].join(', ')
+  return (
+    <summary className={classes(styles.summary, leftOut > 0 && styles.wraps)}>
+      <ChevronRight className={styles.chevron} size={14} />
+      {label}
+      {kinds.length > 0 ? (
+        <span aria-hidden className={styles.kinds}>
+          {kinds.map((kind) => {
+            const Icon = tools[kind].icon
+            return <Icon key={kind} size={13} />
+          })}
+        </span>
+      ) : null}
+      {leftOut > 0 ? <LeftOut text={leftOutOfRun(leftOut)} /> : null}
+    </summary>
+  )
+}
+
 /**
  * A run of tool calls as one line that folds them. A finished run stays
  * folded; a run with a call in progress or stopped shows each call. When the
@@ -62,25 +106,9 @@ function CallLine(props: { call: ToolCallItem }) {
 export function ToolGroup(props: { calls: readonly ToolCallItem[] }) {
   const { calls } = props
   const live = calls.some((call) => call.status !== 'done')
-  const kinds = [...new Set(calls.map((call) => call.tool))]
-  const count = `${calls.length} tool ${calls.length === 1 ? 'call' : 'calls'}`
-  const leftOut = calls.reduce(
-    (total, call) => total + (call.omittedDetailBytes ?? 0),
-    0,
-  )
   return (
     <details className={styles.group} open={live}>
-      <summary className={classes(styles.summary, leftOut > 0 && styles.wraps)}>
-        <ChevronRight className={styles.chevron} size={14} />
-        {count}
-        <span aria-hidden className={styles.kinds}>
-          {kinds.map((kind) => {
-            const Icon = tools[kind].icon
-            return <Icon key={kind} size={13} />
-          })}
-        </span>
-        {leftOut > 0 ? <LeftOut text={leftOutOfRun(leftOut)} /> : null}
-      </summary>
+      <FoldLine calls={calls} />
       <ul className={styles.calls}>
         {calls.map((call) => (
           <li className={styles.call} key={call.id}>

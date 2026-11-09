@@ -27,7 +27,7 @@ export function source(overrides: Partial<PaletteSource> = {}): PaletteSource {
     org: acme,
     suspended: false,
     list: ready({ sections, workspaces }),
-    repositories,
+    repositories: ready(repositories),
     openWorkspaceId: null,
     createOrgHref: routes.createOrg(),
     offers: [],

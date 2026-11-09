@@ -138,10 +138,12 @@ says.
 [Access and security](docs/protocol/access-and-security.md#the-apps-boat-key)
 states how the Worker keeps them away from the browser and the sandboxes.
 
-`wrangler.jsonc` also sets two production values: `MACHINE_ORIGIN` is
+`wrangler.jsonc` also sets the production values: `MACHINE_ORIGIN` is
 `https://api.conductive.build`, and `PREVIEW_DOMAIN` is `conductive.page`.
-A value in `.dev.vars` replaces either one in local development. When
-`.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
+It sets `CONDUCTIVE_TITLE_MODEL` for automatic workspace names, as
+[The title model](docs/deployment.md#the-title-model) says.
+A value in `.dev.vars` replaces the corresponding production value locally.
+When `.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
 requests to that address keep that role. The
 [marketing README](src/marketing/README.md#development) uses this to preview
 the built site through the Worker. For `npm run preview`, set
@@ -193,11 +195,15 @@ complete yet:
   space of the window buttons.
 - The Worker routes the browser-to-app GitHub sign-in handoff. The Mac
   workflow builds and tests desktop changes on Apple silicon and Intel.
-- Builds have an ad-hoc signature, because no Apple Developer ID exists
-  yet. No release is published, so the updater stays off.
+- Pull request and local builds have an ad-hoc signature. Release builds
+  have a Developer ID signature, and Apple notarizes them.
+- Each merge of the release pull request publishes a GitHub release of
+  this repository with the signed Mac app. The published builds update
+  themselves from later releases.
 
 [Mac app](docs/protocol/desktop-app.md) states the requirements.
-[desktop/README.md](desktop/README.md) gives the commands.
+[desktop/README.md](desktop/README.md) gives the commands, and
+[desktop/RELEASES.md](desktop/RELEASES.md#releases) gives the release steps.
 
 ## Key code
 
@@ -251,6 +257,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Create a workspace](docs/protocol/create-a-workspace.md)
   - [Repository folders](docs/protocol/repository-folders.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
+  - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
   - [GitHub banner](docs/protocol/github-banner.md)
   - [Agent tools](docs/protocol/agent-tools.md)
@@ -259,6 +266,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Operator actions](docs/protocol/operator-actions.md)
   - [Operator section](docs/protocol/operator-section.md)
   - [Command palette](docs/protocol/command-palette.md)
+  - [Command palette: empty and unavailable states](docs/protocol/command-palette-states.md)
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): licenses for copied icons
   and the bundled font.

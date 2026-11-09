@@ -21,7 +21,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its error, the dialog, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
-| `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
+| `app/chat`          | A finished turn with its work folded, then running turns, open work, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -126,13 +126,27 @@ list of Acme. Its child pages:
   `repository` variant has the menu of the repository filter, and its
   `archived` variant has the archived workspaces. Its `empty` variant has
   the Archived filter of `acme/marketing-site`, which holds no archived
-  workspace, and the line that says where they show.
+  workspace, and the line that says where they show. Its `unavailable`
+  variant has a workspace list that did not load: the notice with Try
+  again fills the tab.
 - `app/command-palette/actions` has the Actions tab over the list. Its
   `workspace` variant has the tab over an open workspace, whose actions
   come first.
 - `app/command-palette/settings` has the Settings tab.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its `no-results` variant has a search without results.
+  Its `loading`, `unavailable`, and `repositories-unavailable` variants
+  have a search for "new" while the repository names load, after the
+  workspace list did not load, and after the repository names did not
+  load. A spinner, or a notice with Try again, stands first in place of
+  the workspace groups, and the actions and the setting that match follow.
+  With an empty field, the All tab needs only the list. While the list
+  loads, or after it did not load, the status part stands before Actions,
+  in place of Recent workspaces.
+
+In `search/unavailable` and `workspaces/unavailable`, the list behind the
+palette on desktop shows the same failure, because it reads the same
+workspace list.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the
@@ -144,10 +158,15 @@ requested changes tint the bar amber. `app/banner/no-commits` has a branch
 without commits, whose bar offers no Create pull request, as in
 `app/new-workspace/creating` and `first-turn`.
 
-`app/chat` shows a finished turn. Its child pages: `app/chat/turns` has the
-running turn, steer, interrupt, and a failure, which moved from
-`app/chat/running`, `steer`, `interrupted`, and `failed` and declare
-`movedFrom`. `app/chat/lost-data` draws the data that the chat does not
+`app/chat` shows a finished turn, whose work folds into one line. Its child
+pages: `app/chat/turns` has the running turn, steer, interrupt, and a
+failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
+`failed` and declare `movedFrom`. `app/chat/work` draws the work of ended
+turns, from decisions 150 and 151: the open work of the finished turn with
+one message open, a turn with a message that the user sent during it, whose
+two parts each fold their own work, and a turn whose open work holds a Mac
+command card and a lost line at their place. The `fold` state opens the
+folds. `app/chat/lost-data` draws the data that the chat does not
 have, from decision 76: tool output and turn files that the runner left out,
 and the lines of runner events that the workspace refused.
 `app/chat/lost-updates` draws a failed repair, from decision 96. After a
