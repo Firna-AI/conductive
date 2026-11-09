@@ -1,25 +1,29 @@
 # Marketing site
 
 The marketing site is the public site at the root of the product domain,
-`conductive.build`. It has the home page, the Terms page, the Privacy page,
-and a page for an unknown address. Visitors need no sign-in. The pages run
-no script and set no cookie. Every sign-in link leads to the app, on the
-`app.` host. The main action, Join the waitlist, and Sign in lead to the
-same sign-in. A new person waits there for app access, as the
+`conductive.build`. It has the home page, the public docs, the Terms page,
+the Privacy page, and a page for an unknown address. Visitors need no
+sign-in. The pages run no script and set no cookie. Every sign-in link
+leads to the app, on the `app.` host. The main action, Join the waitlist,
+and Sign in lead to the same sign-in. A new person waits there for app access, as the
 [waitlist protocol](../../docs/protocol/waitlist.md) says, so the words
 promise a place on the waitlist, not use at once.
 
 The shared header links to the public source repository on GitHub.
-The link appears on phones and desktops.
+The link appears on phones and desktops. The header and the footer also
+link to the public docs. A phone header keeps the lockup, Docs, the
+GitHub mark alone, and Sign in.
 
 The marketing mockups are the visual spec:
 [`MarketingScreen.tsx`](../../docs/mockups/src/screens/MarketingScreen.tsx),
 [`LegalScreen.tsx`](../../docs/mockups/src/screens/LegalScreen.tsx),
 [`NotFoundScreen.tsx`](../../docs/mockups/src/screens/NotFoundScreen.tsx),
+[`DocsScreen.tsx`](../../docs/mockups/src/screens/DocsScreen.tsx),
 and the parts in
 [`components/marketing/`](../../docs/mockups/src/components/marketing/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
-site uses the lockups and favicons from that folder unchanged.
+site uses the lockups and favicons from that folder unchanged. The header
+and the footer show the lockup 30 px high, as the mockups do.
 
 ## How the Worker serves it
 
@@ -35,8 +39,10 @@ assets binding.
   hash of each inline style element. The Worker reads it once for each
   assets binding. A failed read is not cached.
 - A listed page uses its public path, such as `/terms` for `terms.html`.
-  The home page uses `/`. The Worker requests each page without `.html`
-  to avoid the binding's redirects. Every other address gets `404.html`
+  A page in a folder keeps the folder in its path, such as
+  `/docs/get-started` for `docs/get-started.html`. The home page uses
+  `/`. The Worker requests each page without `.html` to avoid the
+  binding's redirects. Every other address gets `404.html`
   with status `404`. Neither `404.html` nor the agreement folder has a
   public page path.
 - Listed files other than HTML and the list load under `/_site/`.
@@ -153,10 +159,32 @@ No code or setup in this repository creates those mailboxes.
 The public docs are guides to the product at `/docs`.
 [Website docs](../../docs/protocol/website-docs.md) states their
 requirements, and [The docs](../../docs/mockups/marketing-site.md#the-docs)
-of the marketing mockups is their visual spec. The first two guide files
-are ready. The routes and docs layout do not serve them yet.
+of the marketing mockups is their visual spec.
 [Writing the public guides](docs-authoring.md) gives the rules and the
 steps for their authors.
+
+Each Markdown file in `docs/` is one guide, and the site builds one page
+from each file. The site has two guides at this time: the overview at
+`/docs`, from `overview.md`, and Get started at `/docs/get-started`. The
+other ten launch guides in
+[Source references](docs-authoring.md#source-references) have no file
+yet, so the site has no page for them.
+
+- Astro reads the files as the `docs` content collection, without a
+  schema. Only the file name gives the ID of a guide. Each missing or
+  invalid front-matter field takes its default, so a field never stops
+  the build.
+- One page route builds every guide. The overview has only the address
+  `/docs`, and each other guide has `/docs/<id>`.
+- Prism gives each token of a code block a class, which `docs-code.css`
+  colours. Hooks of the Markdown processor then give each code block and
+  each table keyboard focus and a name. They also mark each link that is
+  alone in its list item as a guide action. So a guide needs no HTML of
+  its own, no `style` attribute, and no script.
+- The hooks run in `@astrojs/markdown-satteri`, the Markdown processor of
+  Astro. The root package declares it so that `astro.config.ts` can pass
+  the hooks. Keep its version equal to the version that Astro depends on,
+  so the site keeps one copy of the processor.
 
 The guides are docs too. A change that makes a guide wrong updates that
 guide in the same change. When you change a fact in the architecture doc
@@ -169,7 +197,8 @@ both apply.
 ## Development
 
 The pages are in `pages/`, with layouts in `layouts/` and parts in
-`components/`. Astro builds them before the Worker serves them.
+`components/`. The guides are Markdown files in `docs/`. Astro builds them
+before the Worker serves them.
 
 - Run the site tests with `npm run test -- worker/marketing src/marketing`.
   The built-site test builds Astro once in a temporary folder. The capture
@@ -177,6 +206,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - Work on the pages with `npm run site:dev`. It serves them at
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.
+  The docs overview is at `/docs`. This server adds scripts of its own,
+  so check the policy and the absence of scripts on a build.
   The agreement preview is at `/app-host/terms-consent`.
   The GitHub return previews are at `/app-host/github-setup/installed`
   and `/app-host/github-setup/requested`.
@@ -210,18 +241,41 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - [`worker/marketing/assets.ts`](../../worker/marketing/assets.ts): site
   asset reads and the app host's handling of other site paths.
 - `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
+- `content.config.ts`: the `docs` content collection, which reads each
+  guide in `docs/` without a schema and takes its ID from its file name.
+- `docs-guides.ts`: the front-matter defaults, the order of the menu, the
+  address of each guide, and its previous and next guides.
+- `pages/docs/[...guide].astro`: the page of each guide, with its
+  level-two headings for "On this page".
+- `layouts/DocsLayout.astro`: a guide in the site layout, with Docs marked
+  as the current section of the header.
+- `components/DocsNav.astro`, `DocsMenu.astro`, `DocsContents.astro`, and
+  `DocsPager.astro`: the guide list, the Docs menu of a phone, "On this
+  page", and the previous and next cards.
+- `scroll-regions.ts`: the Markdown hook that gives each code block and
+  each table keyboard focus and a name.
+- `guide-actions.ts`: the Markdown hook that gives the `guide-action`
+  class to a link that is the only content of its list item.
+- `styles/docs-layout.css`: the columns of a guide, with the 1120 px and
+  760 px breakpoints of the mockups.
+- `styles/docs-nav.css`, `docs-contents.css`, `docs-prose.css`, and
+  `docs-code.css`: the guide lists, the contents and cards, the body, and
+  the code colours.
 - `features.ts`: the home page's feature copy.
-- `links.ts`: the source repository address, site paths, and `pageHrefs`
-  for links from another origin.
+- `links.ts`: the source repository address, `docsPath` for the docs, site
+  paths, the section that the header marks, and `pageHrefs` for links
+  from another origin.
 - `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
   text model, titles, contact addresses, and sign-in agreement.
 - `request-values.ts`: built-page markers and local Astro preview values.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
-  CSS for the font, tokens and picture sizes, and the file list writer.
+  CSS for the font, tokens and picture sizes, the Markdown processor with
+  Prism and the hooks, and the file list writer.
 - [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,
   icon, marker, and file-list names and types.
 - `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
-- `icon-shapes.ts`: lucide icons as shapes for the Astro pages.
+- `icon-shapes.ts`: the lucide icons of the home page features and of the
+  docs, as shapes for the Astro pages.
 - `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
   queries, frame classes, and picture-size CSS.
 - [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):

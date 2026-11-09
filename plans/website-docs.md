@@ -12,15 +12,7 @@ Starlight was the alternative. It offers search, but its scripts need a
 different content security policy. The selected approach keeps one design
 and the current policy. The decision below records the choice.
 
-Contract owners:
-
-- [Architecture](../docs/architecture.md#marketing-site).
-- [Access and security](../docs/protocol/access-and-security.md#hostnames-and-gates).
-- [Product names](../docs/protocol/chat-and-events.md#names-in-the-product).
-- [The provider](../docs/protocol/workspaces-and-sandboxes.md#the-provider).
-- The [marketing README](../src/marketing/README.md).
-- The [marketing mockups](../docs/mockups/marketing-site.md).
-- [Website docs](../docs/protocol/website-docs.md) owns the public guide requirements.
+[Requirement sources](../src/marketing/docs-authoring.md#requirement-sources) in the author page lists the contract owners.
 
 ## Decision 1: Choose how the website builds its docs
 
@@ -213,30 +205,38 @@ The `external docs implementor` writes the first two guides, in parallel with Mi
       Follow the current onboarding flow, including the automatic first org-image build.
       Also follow the current app access flow, with the waitlist and invite codes, as [Waitlist](../docs/protocol/waitlist.md) says.
 
-## Milestone 3: Markdown collection and docs layout
+## Milestone 2c: Brand clear space and guide styles in the mockups completed
+
+Tags: mockup
+
+Depends on: 2a
+
+- [x] Keep the brand clear space of the 30 px lockup in the mockup footer and phone header. In the mockup docs, match the site's styles for long words, `###` headings, and guide actions. Run the mockup check. Agent call dated 2026-11-09: the 60 px phone header keeps the 30 px lockup and required clear space within a 360 px phone.
+
+## Milestone 3: Markdown collection and docs layout completed
 
 Tags: ui
 
-Depends on: 1, 2, 2a, 2b
+Depends on: 1, 2, 2a, 2b, 2c
 
 The `ui implementor` builds the approved design in Astro, with the mockups of Milestone 2a and the guides of Milestone 2b.
 The site stays usable with a complete overview and Get started guide.
 
-- [ ] The `ui implementor` adds the content collection and integrates the two completed guides.
-- [ ] Add `/docs` and `/docs/<page>` through Astro's static page generation.
+- [x] The `ui implementor` adds the content collection and integrates the two completed guides.
+- [x] Add `/docs` and `/docs/<page>` through Astro's static page generation.
       Use collection metadata and the documented defaults and sorting for navigation. Add no new metadata-rejection gate.
-- [ ] Add the docs layout with the site's existing header, footer, and tokens.
+- [x] Add the docs layout with the site's existing header, footer, and tokens.
       Match the mockups, including heading links and the native phone menu.
-- [ ] Add Docs to both site navigation areas and the shared path helpers.
+- [x] Add Docs to both site navigation areas and the shared path helpers.
       Preserve existing links, request markers, legal pages, and the unknown-address page.
-      Match the phone header of the mockups. In the mockups, it has 33 px to spare at 390 px.
+      Match the phone header of the mockups. In the mockups, it has about 30 px to spare at 390 px.
       If the Mac downloads header is on `main`, first check the combined phone header in the mockups.
-- [ ] Add code styles with Prism classes. Check long code, tables, and URLs on a phone.
+- [x] Add code styles with Prism classes. Check long code, tables, and URLs on a phone.
       Let a keyboard focus and scroll each code block or table that scrolls.
       Give it a visible ring and a name, as the mockup's install script has.
-- [ ] The `docs implementor` updates the marketing README's author steps and code entry points.
+- [x] The `docs implementor` updates the marketing README's author steps and code entry points.
       Describe the guide-action list item from the design calls.
-      Check `npm run site:build` and open the pages through the Worker.
+      Check `npm run site:build` and open the pages through the Worker. Evidence: `.context/website-docs/implementation/astro-ui/results.md`.
 
 ## Milestone 4: Complete the public guides
 
@@ -273,7 +273,7 @@ The `non-ui implementor` extends the existing marketing integration tests.
 
 ## Milestone 6: Verification, review, and pull request
 
-Depends on: 1, 2, 2a, 2b, 3, 4, 5
+Depends on: 1, 2, 2a, 2b, 2c, 3, 4, 5
 
 The orchestrator owns the combined checks and the pull request.
 

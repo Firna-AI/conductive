@@ -19,7 +19,11 @@ The header of a desktop has Features, Docs, GitHub, Sign in, and Join the
 waitlist. A phone keeps the wordmark, Docs, GitHub, and Sign in.
 Each link of the phone header is a 44 px target. There GitHub shows only
 its mark, in a square named "GitHub", so that the links fit on a 360 px
-phone. GitHub leads to the public source repository in both layouts. The
+phone. GitHub leads to the public source repository in both layouts.
+The wordmark is the lockup of the brand, 30 px high. It keeps the clear
+space of the [brand rules](../brand/README.md#rules): 15 px, half its
+tile. So the phone header is 60 px high, with a gap of 15 px after the
+wordmark, and the footer keeps 15 px under it. The
 Product column of the footer lists Docs after Features. The Docs links of
 the header and the footer lead to the docs overview, `marketing/docs`.
 [The docs](#the-docs) gives its layout.
@@ -91,10 +95,11 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
 ## The docs
 
 The docs pages draw the layout of the public guides of the site, at
-`/docs` and `/docs/<page>`. The site does not serve these pages yet. The
-mockups draw two pages: the overview and the Get started guide. Their
-words are an example, not the final guides. [The catalogue](catalogue.md)
-gives their paths and their views.
+`/docs` and `/docs/<page>`. The mockups draw two pages: the overview and
+the Get started guide. Their words are an example, not the final guides.
+The site builds each guide from its own Markdown file, not from these
+pages, as [Public docs](../../src/marketing/README.md#public-docs) says.
+[The catalogue](catalogue.md) gives their paths and their views.
 [Website docs](../protocol/website-docs.md) states the requirements of the
 guides.
 
@@ -130,13 +135,17 @@ guides.
   scrolls by itself. Code in a table cell keeps one line. A long code block
   scrolls inside itself, so the page never scrolls sideways.
 - The long install script of Get started takes keyboard focus, as a region
-  named "Example install script". A keyboard can then scroll it.
+  named "Example install script". A keyboard can then scroll it. On the
+  site, every code block and every table takes keyboard focus and has a
+  name, as [Public docs](../../src/marketing/README.md#public-docs) says.
 - The same CSS gives each colour of code a class with the name of a Prism
   token class, such as `comment` or `operator`. The code of the pages uses
   fixed spans with these classes.
 - A list item that holds only a link is a guide action, such as a page to
   open next. On a phone, its link is a 44 px target that covers no other
-  text. The two guide actions of Get started use this pattern.
+  text. The two guide actions of Get started use this pattern. A class
+  marks each one, as the Markdown build of the site marks its guide
+  actions. A link beside other words stays an ordinary link of the text.
 - Each link and each disclosure bar shows a 2 px focus ring, as the links
   of the site do. The menu rows and the phone bars draw the ring inside
   the item.

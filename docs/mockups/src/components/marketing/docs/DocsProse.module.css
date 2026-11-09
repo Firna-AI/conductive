@@ -28,6 +28,15 @@
   margin-top: 0;
 }
 
+.prose h3 {
+  margin: 12px 0 -6px;
+  color: var(--ui-ink);
+  font-size: 17px;
+  font-weight: var(--ui-weight-heading);
+  line-height: 1.35;
+  scroll-margin-top: 24px;
+}
+
 .prose p {
   margin: 0;
 }
@@ -74,11 +83,13 @@
 }
 
 /*
- * A list item that holds only a link is a guide action, such as a page to
- * open next. On a phone its link is a touch target of 44px on a line of its
- * own, so it covers no other text.
+ * A guide action is a link that is the only content of its list item, such
+ * as a page to open next. The site's Markdown build gives it a class, and
+ * the samples give it this one. On a phone its link is a touch target of
+ * 44px on a line of its own, so it covers no other text. A link beside other
+ * words stays an ordinary link of the text.
  */
-.prose li > a:only-child {
+.prose .guideAction {
   display: inline-flex;
   align-items: center;
   min-height: var(--ui-touch-min);

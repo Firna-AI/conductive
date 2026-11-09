@@ -66,10 +66,14 @@ function GetStartedBody() {
       </p>
       <ul>
         <li>
-          <ScreenLink to={paths.signIn}>Open the sign-in page</ScreenLink>
+          <ScreenLink className={code.guideAction} to={paths.signIn}>
+            Open the sign-in page
+          </ScreenLink>
         </li>
         <li>
-          <ScreenLink to={paths.terms}>Read the Terms of use</ScreenLink>
+          <ScreenLink className={code.guideAction} to={paths.terms}>
+            Read the Terms of use
+          </ScreenLink>
         </li>
       </ul>
       <h2 id={sections.access.id}>{sections.access.title}</h2>

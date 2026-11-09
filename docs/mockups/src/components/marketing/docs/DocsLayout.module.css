@@ -17,6 +17,12 @@
   margin: 0 auto;
   padding: 48px 32px 96px;
   box-sizing: border-box;
+  /*
+   * A word longer than its line, such as a long address, breaks, so the
+   * page never scrolls sideways. A table keeps the width of its longest
+   * word and scrolls by itself, and code keeps its lines.
+   */
+  overflow-wrap: break-word;
 }
 
 .side {

@@ -1,5 +1,14 @@
 export const sourceRepositoryHref = 'https://github.com/Firna-AI/remote-code'
 
+/**
+ * The address of the public docs: the overview is there, and each other
+ * guide is under it, as `/docs/<id>`. The header and the footer link to it.
+ */
+export const docsPath = '/docs'
+
+/** A section of the site that the header marks as the current one. */
+export type SiteSection = 'docs'
+
 /** The paths of the pages of the site, on the root domain of the product. */
 export const sitePaths = {
   home: '/',

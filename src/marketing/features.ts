@@ -1,5 +1,5 @@
 import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList'
-import type { IconName } from './icon-shapes'
+import type { FeatureIconName } from './icon-shapes'
 
 /**
  * The words of the features of the home page. The site renders them as HTML,
@@ -67,7 +67,7 @@ export const features: readonly Feature[] = [
  * the name of a lucide icon, which each surface draws in its own way.
  */
 export type FeatureItem = {
-  readonly icon: IconName
+  readonly icon: FeatureIconName
   readonly title: string
   readonly text: string
 }

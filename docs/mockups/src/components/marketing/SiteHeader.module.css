@@ -54,10 +54,14 @@
   margin-left: 8px;
 }
 
+/*
+ * The lockup keeps 15px of clear space above, below, and beside it, half
+ * of its 30px tile, as the brand asks.
+ */
 .mobile .inner {
-  gap: 8px;
-  height: 56px;
-  padding: 0 12px 0 20px;
+  gap: 15px;
+  height: 60px;
+  padding: 0 8px 0 20px;
 }
 
 .mobile .nav {

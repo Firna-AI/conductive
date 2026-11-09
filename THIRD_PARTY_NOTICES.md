@@ -9,7 +9,8 @@ Some paths exist only in one layout.
 The marketing site includes SVG shapes from
 [Lucide 0.577.0](https://github.com/lucide-icons/lucide/blob/0.577.0/LICENSE).
 The copied icons are `cloud`, `users`, `list-tree`, `square-plus`,
-`panels-top-left`, and `archive`.
+`panels-top-left`, `archive`, `menu`, `chevron-down`, `arrow-left`, and
+`arrow-right`.
 
 Files:
 
