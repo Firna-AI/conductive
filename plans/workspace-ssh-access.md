@@ -13,7 +13,7 @@ access check as for the Terminal tab (decision 213).
 
 The change does not cover SSH from a browser without the Mac app, a helper
 for Linux or Windows, short-lived SSH certificates, or the sync of a
-workspace to a local folder. Decisions 214, 215, 216, and 217 are open.
+workspace to a local folder. Decision 214 is open.
 
 Contract owners:
 
@@ -29,9 +29,10 @@ Contract owners:
 
 ## Decisions
 
-The two options checks of 9 November 2026 are in
-`.context/workspace-ssh-access/options-check-1.md` and
-`.context/workspace-ssh-access/options-check-2.md`.
+The three options checks of 9 November 2026 are in
+`.context/workspace-ssh-access/options-check-1.md`,
+`.context/workspace-ssh-access/options-check-2.md`, and
+`.context/workspace-ssh-access/options-check-3.md`.
 
 ### Decision 213. How members reach the sandbox over SSH
 
@@ -82,8 +83,12 @@ The user chose D on 9 November 2026, in the brainstorm of this branch.
 ### Decision 214. Idle stop ends SSH work after 30 minutes
 
 Open. Item 2 of the brainstorm. Milestone 7 waits for the answer. The
-options check of 9 November 2026 changed the root question, added E and
-F, graded B and C Large, and changed the recommendation from C to E.
+first options check of 9 November 2026 changed the root question, added E
+and F, graded B and C Large, and changed the recommendation from C to E.
+On 9 November 2026 the user asked whether the app can track all activity
+on the Mac, or only the activity in the app. G and H answer that
+question. The third options check added I, corrected E, G, and H, and kept
+E.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
@@ -128,16 +133,53 @@ F, graded B and C Large, and changed the recommendation from C to E.
     forgets the sandbox, it runs for the full 8 hours. Effort: Medium.
   - **E.** Input on the Mac counts while the Mac has an open SSH
     connection to the workspace. The Mac app reads the time since the last
-    key, click, or scroll on the Mac. When that time is under one minute
-    and the screen is not locked, it sends one activity frame a minute
-    through the relay. An open connection and the editor's traffic do not
-    count. Input in other apps on the Mac also counts, so a forgotten
-    editor keeps its sandbox running while the member uses the Mac. A
-    break of more than 30 minutes stops the sandbox, as for an open tab
-    today. Effort: Medium.
+    key press, click, scroll, or mouse move on the Mac. It reads no keys,
+    no content, and no app names, and macOS asks for no permission. When
+    that time is under one minute and the screen is not locked, the Mac
+    app sends one activity frame a minute through each relay of the Mac.
+    An open connection and the editor's traffic do not count. Input in
+    other apps on the Mac also counts. So while the member uses the Mac,
+    each workspace with an open SSH connection from that Mac keeps
+    running, also a forgotten one. A break of more than 30 minutes stops
+    the sandbox, as for an open tab today. A connection never resumes a
+    stopped sandbox, so a forgotten editor then stays stopped. Effort:
+    Medium.
   - **F.** B, plus a warning 5 minutes before the stop. A macOS
     notification offers Keep running, and a click counts as input. Work
     with no save and no command gets one notification every 25 minutes.
+    Effort: Large.
+  - **G.** Input on the Mac counts only while the app that holds the SSH
+    connection is in front, such as Cursor or Terminal. The Mac app finds
+    the program behind each local connection, and asks macOS which app is
+    in front, with no permission prompt. Electron does not name the front
+    app, so G needs a native module or a macOS tool such as `lsappinfo`.
+    A connection whose app the Mac app cannot find counts as in E, such as
+    `ssh` in a local tmux session or a shared `ControlMaster` connection.
+    A forgotten editor stops 30 minutes after the member last used that
+    editor. One editor with windows of several workspaces counts for all
+    of them. Time in other apps does not count. So 30 minutes of tests in
+    the browser, on a forwarded port of a running dev server, stop the
+    sandbox. Effort: Large.
+  - **H.** Input on the Mac counts only while the window of that workspace
+    is in front. The Mac app reads the title of the front window. This
+    needs a native module and the macOS Accessibility permission, which
+    also lets the Mac app read and control other apps. Editors and
+    terminal apps do not always show the SSH alias in the title, and the
+    member's title setting can remove it. Without the permission or the
+    alias, a connection counts as in E. Time in other apps does not count,
+    as in G. Effort: Large.
+  - **I.** Each SSH client reports its own input, and E counts for the
+    other clients. The sandbox adds a small extension to the VS Code and
+    Cursor servers. It reports whether the member uses that window, with
+    `WindowState.active` of the VS Code extension API. Each SSH shell in
+    the tmux server of decision 215 reports its last key time. Mac input
+    counts as in E only for a connection that no report covers, such as a
+    Zed connection. A forgotten window then stops 30 minutes after its
+    last use, also while the member uses that editor for another
+    workspace. The Mac app reads nothing more than in E, and macOS asks
+    for no permission. An editor update can break the extension, and its
+    connections then count as in E. Time in other apps does not count for
+    a reported window, as in G. I builds on E, so E can come first.
     Effort: Large.
 - **Left out:**
   - Change nothing. The sandbox then stops while the member works in the
@@ -148,6 +190,12 @@ F, graded B and C Large, and changed the recommendation from C to E.
     plain `ssh` terminal, so alone it fails the goal.
   - A longer idle time for every workspace. It breaks the 30-minute rule
     of decisions 11 and 29 for every tab, and that rule stays.
+  - Input only in the window of the Mac app. The member types in the
+    editor, not in the app, so this misses the SSH work, as today's rule
+    does.
+  - Requests through an SSH port forward, as a sign of browser tests.
+    Typing in the editor makes no such request, so alone this fails the
+    goal. It can join G, H, or I later.
 - **Wider fix:** E. It measures input where the member works, so it stays
   correct when an editor or a sandbox program changes what it sends.
 - **Previous examples:** Decisions 11 and 29 set the 30-minute rule. They
@@ -155,20 +203,27 @@ F, graded B and C Large, and changed the recommendation from C to E.
   `plans/follow-ups/preview-polling-activity.md` and
   `plans/follow-ups/terminal-replies-count-as-activity.md` record traffic
   that is not the member's input and counts as activity. Boat's editor
-  guide says that an open editor does not delay its auto-stop.
-- **Related:** Decision 213. The Mac app holds the local end of each SSH
-  connection, so option E can measure input there.
-- **Recommendation:** E. It counts only the member's own input, as the
-  tabs do, so no editor traffic or sandbox program can keep a sandbox
-  running. The first recommendation was C.
+  guide says that an open editor does not delay its auto-stop. Outside
+  practice: Coder counts each open SSH connection and adds a forced stop.
+  VS Code gives extensions `WindowState.active`, so that tools can stop
+  idle remote machines.
+- **Related:** Decision 213: the Mac app holds the local end of each SSH
+  connection, so E can measure input there. Decision 215 D gives a key
+  time for each SSH shell, which I uses. Decision 216 B keeps the relay
+  bytes encrypted, so the relay cannot read input from them.
+- **Recommendation:** E. It counts only the member's own input on the Mac,
+  needs no permission and no native code, and works for every client. If
+  the user wants a forgotten window to stop sooner, I is better than G and
+  H, because it needs no permission and builds on E. The first
+  recommendation was C.
 - **Action:** ask the user, because each option changes the activity rule
   that decisions 11 and 29 set.
 
 ### Decision 215. A dropped connection ends plain SSH shells
 
-Open. Found by the first options check of 9 November 2026. The second
-options check changed the root question, added D, and changed the
-recommendation from A to D. Milestone 3 waits for the answer.
+The user chose D on 9 November 2026. The first options check of that day
+found the problem. The second options check changed the root question,
+added D, and changed the recommendation from A to D.
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Design.
@@ -237,10 +292,10 @@ recommendation from A to D. Milestone 3 waits for the answer.
 
 ### Decision 216. Check the host key of the sandbox
 
-Open. The first options check found that this design call adds a
-rejection, which the always-on rules leave to the user. The second options
-check added C, D, and E, and raised the severity to High. Milestone 3
-waits for the answer.
+The user chose B on 9 November 2026. The first options check found that
+this design call adds a rejection, which the always-on rules leave to the
+user. The second options check added C, D, and E, and raised the severity
+to High.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Design.
@@ -316,8 +371,8 @@ waits for the answer.
 
 ### Decision 217. SSH programs can start during a disk restore
 
-Open. Found by the second options check of 9 November 2026. Milestone 3
-waits for the answer.
+The user chose B on 9 November 2026. The second options check of that
+day found the problem.
 
 - **Severity:** High. **Likelihood:** Common. **Effort:** Small.
 - **Source:** Design.
@@ -429,11 +484,17 @@ the docs. They also led to the call on workspace variables.
   reconnect by themselves, so a resume on connect would undo each idle
   stop. The relay refuses, and the Mac app shows one notification for each
   workspace and cause, which opens the workspace. The menu items resume a
-  stopped workspace first and wait until it is ready. Decision 217 says
-  whether they also wait for the end of the restore.
+  stopped workspace first. They wait until it is ready and its restore
+  has ended, as decision 217 chose.
 - **Variables:** SSH shells and editor servers get the workspace
   variables, as the Terminal shell does. Each member with the Terminal tab
   already reads every env var of the org, so SSH adds no new reader.
+- **Login program:** each Mac key line runs a small login program of the
+  app, with the key option `command=`. For an interactive login with no
+  command, it opens or attaches a session in the tmux server of the
+  workspace, as decision 215 chose. It runs every other request as the
+  client asked, such as an editor command or a file copy. It loads the
+  workspace variables first.
 - **Sandbox end:** the relay reaches a small bridge on a private port of
   the sandbox, as the terminal does. The bridge passes the bytes to the
   SSH server of the sandbox on `127.0.0.1:22`. The Worker adds each Mac
@@ -473,10 +534,12 @@ the docs. They also led to the call on workspace variables.
 4. The relay checks the member, the workspace, and the sandbox with the
    shared connection reader, as the terminal does. It refuses a stopped,
    starting, or archived workspace, and a suspended owner or org. It
-   starts the bridge when it does not run. It adds the Mac key once for
-   each sandbox and key, and connects to the bridge, which sends the host
-   key first. Decision 217 says whether the relay waits for the end of the
-   restore.
+   refuses a connection until the restore of the sandbox has ended
+   (decision 217). It starts the bridge when it does not run. It adds the
+   Mac key once for each sandbox and key, and connects to the bridge,
+   which sends the host key first. The Mac app writes that key to its
+   known-hosts file before the first SSH byte reaches the client (decision
+   216).
 5. The relay checks access again every 15 seconds. It closes within 30
    seconds after a loss of access, a sign-out, or a stop.
 6. Each refusal and each close has a typed close code. The Mac app shows
@@ -497,12 +560,13 @@ Read the `mockups` and `product-ui` skills first.
         Open in Zed, and Copy SSH command.
   - [ ] The right-click menu of a sidebar row, with the same items.
   - [ ] A Mac with no supported editor: only Copy SSH command.
-  - [ ] A stopped workspace: a menu item resumes it, and the workspace
-        shows its start steps before the editor opens.
+  - [ ] A stopped workspace: a menu item resumes it. The workspace shows
+        its start steps, and the editor opens after the restore ends.
   - [ ] SSH could not start on the cloud computer, with Try again.
   - [ ] The Mac app could not change `~/.ssh/config`, with the line to add.
 - [ ] Add the notifications of the Mac app for a refused or closed SSH
-      connection: stopped, no access, and could not start. Split the page
+      connection: stopped, files still getting ready, no access, could not
+      start, and a wrong host key. Split the page
       into sub-pages when it passes five screens.
 - [ ] Confirm that the browser and phone screens show no SSH items. Change
       no browser screen.
@@ -516,14 +580,15 @@ Read the `mockups` and `product-ui` skills first.
 Depends on: 1
 
 The docs state the requirements of SSH before the code. Read the
-`documentation` skill first. The rules of decisions 214, 215, 216, and
-217 go into the docs in the milestones that build them.
+`documentation` skill first. The rule of decision 214 goes into the docs
+in Milestone 7, which builds it.
 
 - [ ] Write `docs/protocol/ssh-access.md`: who can use SSH, the entry
       points and items, the aliases and entries, the local port, the
-      relay and its access checks, the refusals, never resume, the key
+      relay and its access checks, the refusals, never resume, the wait
+      for the restore, the host key check, the kept shells, the key
       options, forwarding with its risk, and the stored data. Cite
-      decision 213 and each rejected alternative.
+      decisions 213, 215, 216, and 217, with each rejected alternative.
 - [ ] Add an SSH section with a link to the new doc in
       `docs/protocol/workspace-tools.md`, and under "Tools of a workspace"
       in `docs/protocol/workspaces-and-sandboxes.md`.
@@ -543,7 +608,7 @@ The docs state the requirements of SSH before the code. Read the
 
 ## Milestone 3: Sandbox bridge
 
-Depends on: 2, decisions 215, 216, and 217
+Depends on: 2
 
 A small program in each workspace sandbox passes the bytes of the relay to
 the SSH server. The terminal backend is the model for its private port and
@@ -552,9 +617,8 @@ its local password.
 - [ ] Create `worker/ssh/` with a README. Write the bridge program and the
       command that writes it to `/run` and starts it. The bridge accepts
       one WebSocket for each connection on a private port, checks a local
-      password, and pipes the bytes to `127.0.0.1:22`. When decision 216
-      needs it, it sends the host key of
-      `/etc/ssh/ssh_host_ed25519_key.pub` in its first frame.
+      password, sends the host key of `/etc/ssh/ssh_host_ed25519_key.pub`
+      in its first frame, and pipes the bytes to `127.0.0.1:22`.
 - [ ] Start the bridge after each startup script, beside
       `startWorkspaceTerminal` in
       `worker/lifecycle/start-command-execution.ts`. A failed bridge start
@@ -567,9 +631,16 @@ its local password.
       from `127.0.0.1`, stop and raise a decision for a second SSH server
       of the app on a private loopback port. Save the output under
       `.context/workspace-ssh-access/`.
-- [ ] Confirm whether an SSH login and an editor's server get the
-      workspace variables of `/run/ascii-secrets/env.sh`. When they do not,
-      give them the variables, as the terminal launcher does.
+- [ ] Write the login program of decision 215 to `/run` with the bridge.
+      An interactive login with no command attaches a detached SSH session
+      in the tmux server of the workspace, or opens a new one in the
+      repository folder. Every other request runs as the client asked. The
+      program loads the variables of `/run/ascii-secrets/env.sh` first, as
+      the terminal launcher does.
+- [ ] Test the login program with a fake tmux: an interactive login, a
+      second login after a drop, an editor command, and a file copy over
+      SFTP. Confirm on a real sandbox that Cursor, VS Code, and Zed start
+      their servers through it.
 - [ ] Test the bridge program with a local TCP server in place of the SSH
       server, as `worker/terminal/scripts.test.ts` tests the terminal
       programs. Test the start command with fake commands.
@@ -601,17 +672,18 @@ and relays each SSH connection.
       `worker/terminal/connections.ts` does.
 - [ ] Add each Mac key once for each sandbox and key, to
       `/home/user/.ssh/authorized_keys`, with
-      `from="127.0.0.1,::1",no-agent-forwarding,no-X11-forwarding`. Start
-      the bridge when it does not run. Never touch a build sandbox.
-- [ ] Apply decision 217 in the relay and in the menu items. Write its
-      rule into `docs/protocol/ssh-access.md`.
+      `from="127.0.0.1,::1",no-agent-forwarding,no-X11-forwarding` and the
+      `command=` option of the login program. Start the bridge when it does
+      not run. Never touch a build sandbox.
+- [ ] Refuse a connection until the Worker sees the end of the restore of
+      the sandbox, with its own close code (decision 217).
 - [ ] Test the relay with the fake Boat server: each refusal, the close
-      after a loss of access, the key line, the bridge start, and the host
-      key frame. Test the menu request with a fake control socket.
+      after a loss of access, the refusal during a restore, the key line,
+      the bridge start, and the host key frame. Test the menu request with a fake control socket.
 
 ## Milestone 5: Mac app SSH service
 
-Depends on: 4, decision 216
+Depends on: 4
 
 The main process of the Mac app holds the key, the entries, the local
 ports, the control socket, and the relay sockets. Read `desktop/README.md`
@@ -622,8 +694,10 @@ first.
 - [ ] Write the entries file and the `Include` line. Never change another
       line of `~/.ssh/config`. Show the line to add when the file is not
       writable.
-- [ ] Apply decision 216 to the entries and to the host key frame. Write
-      its rule into `docs/protocol/ssh-access.md`.
+- [ ] Check the host key, as decision 216 chose. Each entry sets
+      `StrictHostKeyChecking yes` and a `HostKeyAlias`. Write the key of the
+      first frame to the known-hosts file of the Mac app before the first
+      SSH byte goes to the client.
 - [ ] Keep one fixed local port for each workspace, saved in the
       user-data folder. Choose a new port when another program holds it,
       and rewrite the entry.
@@ -655,7 +729,8 @@ The Mac app shows the SSH menu of the mockups.
       only in the Mac app. Reuse `docs/mockups/src/components/common/Menu.tsx`
       and the pattern of `src/chat/components/useTabMenu.ts`.
 - [ ] Send each choice through the Worker, and copy the alias for Copy
-      SSH command. Show the states of the mockups.
+      SSH command. Wait for the end of the restore before an editor opens.
+      Show the states of the mockups.
 - [ ] Test that the browser shows no SSH items, and that each item sends
       its choice.
 
@@ -669,21 +744,12 @@ The idle stop follows the answer to decision 214.
       of the workspace object, as `worker/lifecycle/routes.md` says under
       "Input activity".
 - [ ] Write the rule into "Stop and resume" in
-      `docs/protocol/workspaces-and-sandboxes.md`.
+      `docs/protocol/workspaces-and-sandboxes.md`. Read both legal pages in
+      full, and update each sentence that restates the activity rule.
 - [ ] Test the chosen rule, with each signal that it counts and one that
       it does not count.
 
-## Milestone 8: Relay drops
-
-Depends on: 4, 5, decision 215
-
-A dropped relay follows the answer to decision 215.
-
-- [ ] Build the chosen option, and write its rule into
-      `docs/protocol/ssh-access.md`.
-- [ ] Test the chosen behaviour with a relay that closes during a session.
-
-## Milestone 9: Verification, commit, review, and pull request
+## Milestone 8: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
