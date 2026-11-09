@@ -21,6 +21,7 @@ export async function workspaceOrg(
 
 export interface WorkspaceRow {
   id: string
+  number: number
   orgId: string
   repositoryId: string
   sectionId: string
@@ -39,7 +40,7 @@ export interface WorkspaceRow {
 export function readDeviceWorkspace(db: D1Database, workspaceId: string) {
   return db
     .prepare(
-      `SELECT w.id, w.org_id AS orgId, w.repository_id AS repositoryId,
+      `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
     COALESCE(w.section_id, s.id) AS sectionId, ${workspaceNameColumn('w')}, w.branch, w.state,
     w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
     u.id AS ownerId, u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl

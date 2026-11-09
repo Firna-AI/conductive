@@ -71,6 +71,16 @@ export function useMacApp(): MacChrome | null {
   return useContext(MacContext)
 }
 
+const noWindow: Readable<MacWindowState | null> = {
+  get: () => null,
+  subscribe: () => () => undefined,
+}
+
+/** The window of the Mac app as it is now, or `null` in a browser. */
+export function useMacWindow(): MacWindowState | null {
+  return useStore(useMacApp()?.window.state ?? noWindow)
+}
+
 /**
  * The class of a top bar of the main area. In the Mac app the bar moves the
  * window, and its controls do not. When the window controls sit in the top

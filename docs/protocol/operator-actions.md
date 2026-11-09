@@ -27,7 +27,10 @@ number names a dated record, as
   write. [Hostnames and gates](access-and-security.md#hostnames-and-gates)
   states that gate.
 - A request from a user who is not an operator gets HTTP 403 with the code
-  `operator_required`.
+  `operator_required`. A person who waits gets HTTP 403 with the code
+  `access_required` instead, as
+  [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
+  says.
 
 ## Suspend a user
 

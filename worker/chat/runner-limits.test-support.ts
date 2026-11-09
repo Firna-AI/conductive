@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { MemoryChatStorage } from './memory-storage.test-support'
 import type { SessionLoginMetadata } from './login-availability'
@@ -63,6 +63,7 @@ export async function createRunnerLimitsFixture(
     runnerDisconnected: async () => undefined,
     turnDispatching: async () => true,
     turnDispatchFailed: async () => undefined,
+    turnEnded: async () => undefined,
     browserOpened: async () => undefined,
     browserClosed: async () => undefined,
     now: () => 25,
@@ -88,14 +89,24 @@ export async function createRunnerLimitsFixture(
   const publish = (events: readonly WorkspaceEventEnvelope[]) => {
     published.push(...structuredClone(events))
   }
-  let channel = new RunnerChannel(store, dependencies, publish)
+  let channel = new RunnerChannel(
+    store,
+    dependencies,
+    publish,
+    async () => null,
+  )
   let peer: RunnerPeer
   let streamId = 'stream'
   const connect = async (stream = streamId, restart = false) => {
     streamId = stream
     if (restart) {
       store = new ChatStore(storage, () => 25)
-      channel = new RunnerChannel(store, dependencies, publish)
+      channel = new RunnerChannel(
+        store,
+        dependencies,
+        publish,
+        async () => null,
+      )
     }
     peer = {
       send: (message) => {

@@ -1,8 +1,9 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import {
+  presentWorkspaceMessage,
+  type WorkspaceEvent,
+  type WorkspaceEventEnvelope,
+} from './workspace-events'
 import type { UserMessage } from '../../src/shared/messages'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
@@ -26,6 +27,7 @@ import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
+import { reportTurnEnd } from './turn-end-reports'
 import {
   runWorkspaceOperation,
   type WorkspaceOperation,
@@ -92,7 +94,9 @@ export class WorkspaceChat {
       overrides.matchesObject ?? (() => true),
     )
     this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
-    this.store = new ChatStore(storage, this.dependencies.now)
+    this.store = new ChatStore(storage, this.dependencies.now, (report) =>
+      reportTurnEnd(this.store, this.dependencies, this.publish, report),
+    )
     this.titles = new WorkspaceTitles(
       env,
       this.store,
@@ -100,14 +104,17 @@ export class WorkspaceChat {
       (events) => this.publish(events),
     )
     this.browsers = new BrowserTabs(this.dependencies)
-    this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
-      this.publish(events),
-    )
     this.turnTokens = new WorkspaceTurnTokens(
       this,
       env,
       (id) => this.operation(id),
       this.dependencies.randomId,
+    )
+    this.runner = new RunnerChannel(
+      this.store,
+      this.dependencies,
+      (events) => this.publish(events),
+      (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
     )
     this.operations = new WorkspaceOperations({
       env,
@@ -148,6 +155,7 @@ export class WorkspaceChat {
           access.context,
           this.operation(access.workspace.id),
           this.dependencies,
+          access.presentation,
         )
         if (write) await this.runner.flush()
         return privateResponse(response)
@@ -262,7 +270,11 @@ export class WorkspaceChat {
       operation: this.operation(access.workspace.id),
       access,
       after,
-      peer,
+      peer: {
+        send: (message) =>
+          peer.send(presentWorkspaceMessage(message, access.presentation)),
+        close: () => peer.close(),
+      },
     })
   }
 

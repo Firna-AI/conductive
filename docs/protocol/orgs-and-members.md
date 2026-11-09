@@ -26,7 +26,7 @@ says.
   The app refuses a create of an org with no repository.
 - Reason: every new org then starts its first build at create, with the
   whole choice of repositories, as
-  [The first build](workspaces-and-sandboxes.md#the-first-build) says. A
+  [The first build](org-image.md#the-first-build) says. A
   first build at the first save on the Repositories tab was rejected,
   because that tab saves each repository on its own. That build could
   start with only part of the choice.
@@ -47,12 +47,17 @@ says.
 - The product is free, with no limits (decisions 45 and 81). It has no
   plans, no billing, and no limits of its own on workspaces, minutes, or
   members.
-- Limits for each user, billing, and an invite-only sign-up were rejected
-  for now. Billing can come later (decision 81).
+- Limits for each user and billing were rejected for now. Billing can come
+  later (decision 81).
+- A waitlist stands in front of the app (decision 160). A new account
+  waits for app access, as [Waitlist](waitlist.md) says.
 
 ## Get started
 
 - Get started is the only first run.
+- Get started opens only after app access. A person who waits sees the
+  [waitlist screen](waitlist.md#the-waitlist-screen) instead. Reason: the
+  steps of Get started need app access.
 - It has three steps, in this order (decisions 33 and 80):
   1. Install the GitHub App.
   2. Create the first org.
@@ -62,7 +67,7 @@ says.
   missing agent login.
 - The second step, the org step, shows the cloud computer of the org once
   the org exists (decision 150). Create org starts its first build, as
-  [The first build](workspaces-and-sandboxes.md#the-first-build) says.
+  [The first build](org-image.md#the-first-build) says.
 - While the org has no good image, the org step shows the state of the
   newest build of the org:
   - While a build runs, the step says that the cloud computer is being
@@ -95,8 +100,8 @@ says.
 
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
-- Each section collapses, and has a menu with Rename, New workspace, New
-  section, and Delete section.
+- Each section collapses, and has a menu with New workspace, Rename section,
+  New section, and Delete section, in that order.
 - New workspace at the top of the list puts the workspace in General, the
   default section. New workspace in the menu of a section puts it in that
   section.
@@ -122,6 +127,9 @@ says.
   person accepts each matching invitation.
 - Reason: a GitHub login can be renamed and taken by another account. A
   verified email proves the inbox.
+- An accepted invitation also gives app access to a person who waits, with
+  no count (decision 163).
+  [Org invitations](waitlist.md#org-invitations) states the rule.
 - Only an admin invites and removes members, changes a role, reassigns a
   workspace, and deletes the org.
 - Only an admin changes the repositories, the install script, the startup
@@ -134,7 +142,7 @@ says.
 - Every member of the org sees all of its workspaces (decision 39).
 - Every member can send messages in every workspace of the org. Each
   session runs on the agent login of its starter, as
-  [Chat and events](chat-and-events.md#agents) says.
+  [Agents and sessions](agents-and-sessions.md#agents) says.
 - A member who is not an admin sees the Members tab and the owner of each
   workspace, without the actions of an admin.
 - Only the workspace owner and the admins can archive a workspace

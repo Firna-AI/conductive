@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-07, option C of `shared-session-check-for-connections`, which Milestone 11b applies with option B and deletes. The user sees it as item 117.
-- **Location:** `worker/desktop/README.md:14`, and the sections "Orgs and workspaces" and "Desktop" of `docs/protocol/access-and-security.md`.
+- **Location:** `worker/desktop/README.md:14`, the section "Orgs and workspaces" of `docs/protocol/access-and-security.md`, and the section "Desktop" of `docs/protocol/terminal-and-previews.md`.
 - **Reason:** The user deferred the replacement desktop transport on 8 November 2026. It needs a gateway, a viewer, startup wiring, and new dependencies.
 
 - **Terms:**

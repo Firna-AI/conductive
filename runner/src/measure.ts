@@ -2,7 +2,10 @@ import { randomUUID } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
 import { homedir } from 'node:os'
 
-import type { RunnerLogin, RunnerTurn } from '../../src/shared/runner'
+import type {
+  RunnerLogin,
+  RunnerTurnV1 as RunnerTurn,
+} from '../../src/shared/runner'
 import { oneOf } from './parse'
 import { warmClaude } from './providers/binaries'
 import { createClaudeFactory } from './providers/claude'
@@ -74,6 +77,7 @@ async function measure(): Promise<void> {
       login,
       choice,
       conversationId: null,
+      instructions: '',
       tools: {
         machineOrigin: process.env.CONDUCTIVE_MACHINE_ORIGIN ?? '',
         workspaceToken: process.env.CONDUCTIVE_WORKSPACE_TOKEN ?? '',

@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
-import { Archive, ChevronLeft, FolderGit2, GitBranch } from 'lucide-react'
+import { Archive, ChevronLeft, FolderGit2 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
@@ -16,6 +16,7 @@ import { IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
+import { CopyLink } from './CopyLink'
 import type { WorkspaceContext } from './features'
 import { RightColumnToggle } from './WorkspaceColumns'
 
@@ -43,11 +44,14 @@ function State(props: { workspace: Workspace }) {
 }
 
 /**
- * The name, repository, branch, owner, and state of the open workspace,
- * and Archive for its owner and the org's admins (decision 42). A workspace
- * with no name yet shows Untitled. The list groups workspaces by section,
- * so the header names the repository. On desktop the header ends with the
- * toggle of the right column.
+ * The name, number, repository, owner, and state of the open
+ * workspace, and Archive for its owner and the org's admins. A workspace
+ * with no name yet shows Untitled. The label of the number copies the link
+ * of the workspace. On desktop it follows the name, and the repository
+ * takes the room that the other parts leave. On a phone it leads
+ * the line under the name. The list groups workspaces by section, so the
+ * header names the repository. On desktop the header ends with the toggle
+ * of the right column.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -68,6 +72,9 @@ export function WorkspaceHeader(props: {
   const ownerView = props.ownerControl ?? (
     <Owner compact={phone} workspace={workspace} />
   )
+  const copyLink = (
+    <CopyLink inline={phone} key={workspace.link} workspace={workspace} />
+  )
   const archiveButton = archive ? (
     <IconButton icon={Archive} label="Archive workspace" onPress={archive} />
   ) : null
@@ -81,8 +88,9 @@ export function WorkspaceHeader(props: {
         />
         <div className={styles.titles}>
           <h1 className={styles.title}>{name}</h1>
-          <span className={styles.branch}>
-            {repository} · {workspace.branch}
+          <span className={styles.line}>
+            {copyLink}
+            <span className={styles.branch}>{repository}</span>
           </span>
         </div>
         {ownerView}
@@ -94,15 +102,13 @@ export function WorkspaceHeader(props: {
   return (
     <header className={classes(styles.bar, bar)}>
       <h1 className={styles.title}>{name}</h1>
-      <span className={styles.meta}>
-        <FolderGit2 aria-hidden className={styles.icon} size={13} />
-        <span className={styles.branch}>{repository}</span>
+      {copyLink}
+      <span className={styles.metas}>
+        <span className={styles.meta}>
+          <FolderGit2 aria-hidden className={styles.icon} size={13} />
+          <span className={styles.branch}>{repository}</span>
+        </span>
       </span>
-      <span className={styles.meta}>
-        <GitBranch aria-hidden className={styles.icon} size={13} />
-        <span className={styles.branch}>{workspace.branch}</span>
-      </span>
-      <span className={styles.spacer} />
       {ownerView}
       <State workspace={workspace} />
       {archiveButton}

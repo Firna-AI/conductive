@@ -2,10 +2,10 @@
 
 This doc holds the requirements and the decisions in force for the
 messages of a chat and what the chat shows of each turn. It is a page of
-[Chat and events](chat-and-events.md), which holds the agents, the
-sessions, their names, and the events that reach the browser.
-[Agent runner](agent-runner.md) states the requirements of the agent
-runner in the sandbox. The terms are those of the
+[Chat and events](chat-and-events.md), which holds the events that reach
+the browser. [Agents and sessions](agents-and-sessions.md) holds the
+agents, the sessions, and their names. [Agent runner](agent-runner.md)
+states the requirements of the agent runner in the sandbox. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -133,7 +133,7 @@ says.
   member. The chat does not show it.
 - The reply to the message does not wait for the title. The workspace
   then takes the title as its name, as
-  [Workspace and session names](chat-and-events.md#workspace-and-session-names)
+  [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says.
 - When the request fails, the name of the workspace does not change. The
   app then asks again when it accepts the next message with text in the

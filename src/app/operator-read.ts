@@ -44,6 +44,8 @@ export class OperatorRead<T> {
   private readonly read: (body: unknown) => T
   /** Each open and close counts one up, so an older answer is obsolete. */
   private generation = 0
+  /** Each value of a write counts one up, so a read that started before is obsolete. */
+  private writes = 0
   private open = false
   private running: Promise<void> | null = null
 
@@ -74,17 +76,18 @@ export class OperatorRead<T> {
     if (!this.open) return Promise.resolve()
     if (this.running) return this.running
     const run = this.generation
+    const writes = this.writes
+    const current = () => run === this.generation && writes === this.writes
     this.busy.set(true)
     const reading = this.app.services.api
       .get(this.path, this.read)
       .then(
         (value) => {
-          if (run === this.generation) this.shown.set(ready(value))
+          if (current()) this.shown.set(ready(value))
         },
         (error: unknown) => {
           const failure = operatorFailure(this.app, error)
-          if (run !== this.generation) return
-          this.shown.set({ state: 'failed', error: failure })
+          if (current()) this.shown.set({ state: 'failed', error: failure })
         },
       )
       .finally(() => {
@@ -94,5 +97,15 @@ export class OperatorRead<T> {
       })
     this.running = reading
     return reading
+  }
+
+  /**
+   * Shows the value that the reply of a write gave, such as the pause
+   * after Pause sign-ups. The answer of a read that started before it
+   * changes nothing.
+   */
+  put(value: T): void {
+    this.writes += 1
+    this.shown.set(ready(value))
   }
 }

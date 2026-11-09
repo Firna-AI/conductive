@@ -18,7 +18,8 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`, or
+  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
+  `?waiting=1`, `?paused=1`, or
   `?paths=masked`. `dev/options.ts` lists them. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
@@ -27,13 +28,42 @@ pull request bar, and the owner picker. A host can give its own parts, as
   revisions with builds as the Worker does.
 - `?operator=1` makes the dev user an operator, so the rail and the org
   switcher show Operator. The [operator section](../shell/operator/README.md)
-  then shows the sample orgs and users of the mockups, and Suspend and Lift
-  change them. A suspension of Acme, Futex, or Firna also suspends that org
-  in the state of the fake, so the fake refuses each write of that org with
-  `org_suspended`. The open app does not read its orgs again, so its pages
+  then shows the sample orgs, users, people who wait, and codes of the
+  mockups. Suspend, Lift, Approve, New code, Disable, and the pause of
+  sign-ups change them. A suspension of Acme, Futex, or Firna also
+  suspends that org in the state of the fake, so the fake refuses each
+  write of that org with `org_suspended`. The open app does not read its orgs again, so its pages
   of that org show the suspension only after such a refusal. Without the
   option, each operator request gets `operator_required`, as the Worker
   does.
+- `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
+  app access with a verified email, so the app shows only the
+  [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
+  account without a verified email. Sam starts as a new account, as
+  `?firstRun=github-app` does. With `?operator=1` nobody waits, because
+  an operator gets app access. With `?waiting`, `?invited=1` adds an
+  invitation of Acme, whose Accept makes Sam a member with app access. A
+  join link, such as `/join/V7MKC-2QDXH?waiting=1`, uses its code at once.
+  `?paused=1` pauses
+  sign-ups: each use of a code, and the Accept of a person who waits, get
+  `signups_paused`. The Account page shows the pause, and the operator
+  section shows its notice.
+  `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
+  invite code of a user with app access, also on the page of that user in
+  the operator section.
+- The waitlist and the operator section share one pause and one set of
+  codes, as they share the database of the Worker. The codes are those of
+  the operator mockups, with a referral code for each sample user with
+  app access. For example, `V7MKC-2QDXH` works, `M4QTX-7HKWD` is the
+  referral code of Mira Santos, `9PTXC-4WHMN` is used up, `HM3PE-7KWQT`
+  is disabled, and a code that the mockups do not list is not found. A
+  code that works counts its use, and gives app access and a new invite
+  code, so Get started opens. With `?operator=1`, a pause or a Disable in
+  the operator section shows on the Account page of the operator.
+- The fake keeps its state in the page. A reload starts again from the
+  options, so Sam waits again, and the codes and the pause are those of
+  the options. An operator never waits, so a pause or a new code of the
+  operator section cannot reach the waitlist screen.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -49,6 +79,10 @@ pull request bar, and the owner picker. A host can give its own parts, as
   live events and writes.
 - The production build uses `live-services.ts`: the Worker on the origin of
   the page, and its event socket.
+
+The development fake keeps each org's workspace number counter.
+A create gets the next number and a web link on the fake API origin.
+Workspace readers keep the number and link that the Worker supplies.
 
 ## Composition
 
@@ -112,8 +146,8 @@ the workspace stores, and the raw event streams of feature stores.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the command palette, the focus, saved drafts, and New workspace as a page or a dialog,
-with the send key that every composer shares.
+layers, the command palette, the focus, saved drafts, New workspace as a page or a dialog,
+with the send key that every composer shares, and the waitlist.
 
 ## Rules for this code
 
@@ -146,6 +180,10 @@ with the send key that every composer shares.
   passive, so the palette key stops the browser's own action.
   `AppServices.platform` says whether the keyboard is a Mac, which
   chooses the palette key and its hint.
+- An address that people share, such as the invite link, starts with
+  `AppServices.appOrigin`: the origin of the page in a browser. The Mac
+  app loads the page from its own origin, so it names the app host of the
+  brand.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
@@ -178,8 +216,25 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
   store over the event source of the app, with the reconnect rules of
   [Data lifecycle](data-lifecycle.md).
-- `app-model.ts`: the session, the orgs, the models list, Get started, and
-  `putOrg`, which takes a confirmed org record.
+- `app-model.ts`: the session, the orgs, the models list, Get started,
+  `putOrg`, which takes a confirmed org record, and `admit`, which opens
+  the app when app access arrives. `boot.ts`: `Boot`, the states of the
+  first load, and `readShared`, what every screen of the app shares.
+- `waitlist-model.ts`: `WaitlistModel`, the screen of a person who waits:
+  the use of a code from the field or a join link, the invitations with
+  Accept, and the read of the app access at each return to the page.
+  `waitlist-state.ts`: what the screen shows, and the reason of each
+  refused code. `api/read-waitlist.ts`: the readers of the session and the
+  waitlist state.
+- `../shell/waitlist/`: `Waiting`, which runs a join link and the read at
+  each return, `WaitlistScreen`, the code field, and the invitations.
+  `../shell/auth/SignInFrame.tsx`: the frame that the sign-in, the sign-in
+  of a join link, and the waitlist share. `../shell/layout/Alone.tsx`: a
+  page without the rail, and the wait of the first load.
+- [waitlistCopy.ts](../../docs/mockups/src/screens/waitlistCopy.ts) and
+  [inviteCodeCopy.ts](../../docs/mockups/src/components/settings/inviteCodeCopy.ts):
+  the words of the waitlist and of the invite code that the app and the
+  mockups share.
 - `invitations-model.ts`: `InvitationsModel`, the pending invitations,
   Continue to workspaces, and Accept invitation.
   `api/read-invitations.ts`: their readers.
@@ -201,7 +256,9 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   default model, the New workspace view, the GitHub App installations,
   and the repositories that Create org offers. A screen watches the
   installations: they read at once, and again with the steps of Get started
-  each time that the user comes back to the page.
+  each time that the user comes back to the page. It also reads the
+  waitlist state for the invite code of the account.
+  `../shell/account/InviteCodeSection.tsx`: that invite code.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
@@ -261,9 +318,11 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   chat uses it, and any row that scrolls sideways can.
 - `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
   the Overview and the pages of the operator section, its searches, and
-  Suspend and Lift. A refusal with `operator_required` marks the account
-  as not an operator. `api/read-operator.ts` and
-  `api/read-operator-pages.ts`: their readers. The
+  Suspend and Lift. `operator-pause.ts` and `operator-access.ts`: the
+  pause of sign-ups, Approve, New code, and Disable. A refusal with
+  `operator_required` marks the account as not an operator.
+  `api/read-operator.ts`, `api/read-operator-pages.ts`, and
+  `api/read-operator-waitlist.ts`: their readers. The
   [operator section](../shell/operator/README.md) gives the screens.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
@@ -275,7 +334,10 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   gives the status part, which stands in place of the workspace groups
   while the list or the repository names load or after a read failed,
   and the reads that its Try again does again. `matcher.ts`
-  ranks the matches. `commands.ts` holds the labels and the search words.
+  ranks the matches. `rowTexts` includes the workspace number label, such
+  as `W-395`, in the search texts. `withNumberLabel` adds that label when
+  a query word matches it. `../shell/palette/PaletteList.tsx` draws it
+  before the name. `commands.ts` holds the labels and the search words.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
   `palette-keys.ts` the palette key and what it does, and `controller.ts`
@@ -309,9 +371,11 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
   and the dialog share: the repository, the notices, the readiness, and
   the send. `parts.tsx`: their repository menu and files.
-  `useCursorAtEnd.ts`: `useCursorAtEnd`, the handle of their message
-  field. It puts the cursor at the end of a kept message once, as the
-  field mounts.
+  The model of each form is the `owner` of its chip field. The shared chip
+  field supplies their focus handle. `CaretAtEndPlugin`
+  restores the saved caret position when keyboard focus enters. Without a
+  saved position, it puts the caret at the end. It lives in
+  `../chat/components/chip-field/focus-plugins.tsx`.
 - `../chat/components/send-key.ts`: `useSendKey`, the send key of every
   composer.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.

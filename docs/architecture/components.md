@@ -19,8 +19,9 @@ says.
 - The same build also makes the page that asks for the
   [agreement to the Terms](../protocol/access-and-security.md#sign-in) before
   the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
-- The main action is "Start free with GitHub". The site does not name
-  Boat, and users need no Boat account (decision 80).
+- The main action is "Join the waitlist", because a new account waits for
+  app access. The site does not name Boat, and users need no Boat account
+  (decision 80).
 
 ## Web app
 
@@ -31,7 +32,8 @@ says.
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
-  suspends or lifts it.
+  suspends or lifts it. It also approves people who wait, makes and
+  disables codes, and pauses sign-ups.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
@@ -63,7 +65,9 @@ says.
 ## D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, and the active preview hostnames.
+  repositories, workspaces, settings, and the active preview hostnames. It
+  also holds the app access of each user, the codes and their uses, the
+  pause, and the state of each approval email.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 

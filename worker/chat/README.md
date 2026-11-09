@@ -51,7 +51,7 @@ gives their rules.
   a create. A repeat returns the same message and adds no history.
 - `readChatWorkspaceSummary()` returns the last event number, the last
   event number with visible output, and whether a dispatched turn runs.
-- `readChatWorkspaceResponse(orgId, workspaceId)` returns the reply of a
+- `readChatWorkspaceResponse(orgId, workspaceId, appOrigin)` returns the reply of a
   workspace read or Resume and that summary, as
   [Browser routes](../lifecycle/README.md#browser-routes) says.
 
@@ -101,6 +101,14 @@ retry route for `Session.retryMessageId`.
 runner for one fresh full report after it refuses an update. It describes
 the stored records, the refusal checks, and the sends before each confirm.
 
+`workspace-events.ts` defines the private saved event shape and presents browser events.
+Each authorized connection captures its app origin and immutable workspace number.
+Replay and live events get the same fields before they reach the browser.
+Older saved workspace updates can omit number and link.
+Presentation fills both fields while it keeps each saved name, state, time, and event number.
+The HTTP history route uses the same presentation.
+No origin is saved in the workspace object.
+
 ## Tests
 
 ```sh
@@ -118,7 +126,9 @@ features. It covers the hooks, the trusted workspace calls, the workspace
 events, the outer Worker, and the lifecycle. It also covers the files, the
 GitHub state, the agent runner, the logins and attachments, the session
 logins, and the test fixtures. Its
-[Outer Worker tests](integration/outer-worker-tests.md) guide gives the
+[Agent runner integration](integration/runner/README.md) page gives the
+runner events, the runner commands, the agent logins, and the attachments.
+Its [Outer Worker tests](integration/outer-worker-tests.md) guide gives the
 tests through the production Worker entry.
 
 ## Key code
@@ -128,6 +138,7 @@ tests through the production Worker entry.
 - `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
 - [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
   It derives a running turn's token and checks the starter's current login in the chat queue.
+  Runner delivery gets the token of each version 2 `turn` command from `forRunningTurn`.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
 - `operation.ts`: `ChatOperation`, the reads and changes of one route, tab
@@ -166,7 +177,8 @@ tests through the production Worker entry.
   chunks of large file reports and tree deltas.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
-  or refusal marker of each runner event.
+  or refusal marker of each runner event. A connection keeps the protocol
+  version of its `hello`, 1 or 2, and its `welcome` repeats that version.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. One workspace record keeps each shown answer end
@@ -183,10 +195,18 @@ tests through the production Worker entry.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
   runner connection before each message and while it is idle.
 - [`runner-version-data.ts`](runner-version-data.ts): `readRunnerProtocolVersion`, the workspace pin read before a runner's welcome or commands.
+  [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes a runner below that pin, and starts the stream before the `welcome`.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
-  check.
+  check. Each command takes the shape of the connection's protocol
+  version. Version 1 gets the real login in each `turn` and `message`
+  command. Version 2 gets a turn token in each `turn` command, after the
+  running state commits, and no credential in a `message` command.
+  `gatewayRunnerCommand` in `runner-gateway-command.ts` builds that
+  version 2 command.
+  [The agent runner](integration/runner/README.md#the-agent-runner) gives
+  the rules of both versions.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.
@@ -202,9 +222,16 @@ tests through the production Worker entry.
   command, the retry message of a turn end, safe turn context, late data,
   terminal events, and unanswered messages.
   `TurnLifecycle.runnerEnded`, `workspaceStopped`, and `fail` handle each source of a turn end.
-  A failure keeps its Stop and cause until a runner end or workspace stop.
-  `turn-completion.ts` commits the end, updates the session, and advances waiting work.
-  `finish` remains available for queued login failures in runner delivery.
+  `fail` ends a queued turn at once. The login check of runner delivery calls it only for a queued turn.
+  A failed token or gateway check calls it for a running turn.
+  Then `fail` keeps its Stop and cause until a runner end or workspace stop.
+  `TurnCompletion.finish` in `turn-completion.ts` commits each end, updates the session, and advances waiting work.
+  It also records the turn ID of the end in `ChatTransaction.endedTurns`.
+- `turn-end-reports.ts`: `TurnEndReports` keeps the recorded ends of each
+  committed transaction. `ChatStore.reportTurnEnds` gives each end to the
+  `turnEnded` hook. It runs after the runner confirm, before each dispatch,
+  and at the end of each queued task. So the workspace lifecycle gets each
+  end by its turn ID, from one path, whatever ended the turn.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts`: open tabs, their grants, the refresh and expiry
   timers, and the grant check before each send. By default,
@@ -226,16 +253,16 @@ tests through the production Worker entry.
 
 ## Related docs
 
-- [Chat and events: Messages](../../docs/protocol/chat-and-events.md#messages)
+- [Messages and turns: Messages](../../docs/protocol/messages-and-turns.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)
-- [Access and security: Agent logins in a sandbox](../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
-- [Access and security: The workspace token](../../docs/protocol/access-and-security.md#the-workspace-token)
+- [Sandbox credentials: Agent logins in a sandbox](../../docs/protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
+- [Sandbox credentials: The workspace token](../../docs/protocol/sandbox-credentials.md#the-workspace-token)
 - [Operator actions: Workspace tokens and runners](../../docs/protocol/operator-actions.md#workspace-tokens-and-runners)
-- [Architecture: Workspace Durable Object](../../docs/architecture.md#workspace-durable-object)
+- [Architecture: Workspace Durable Object](../../docs/architecture/components.md#workspace-durable-object)
 - [Shared contracts](../../src/shared/README.md)
 - [Backend and runner fakes](../test-support/README.md)
 - [Browser fakes](../../src/test-support/README.md)

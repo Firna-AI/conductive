@@ -7,7 +7,9 @@ Before it obtains a workspace endpoint, the gateway checks in D1 that the worksp
 An unknown or unavailable workspace gets `turn_token_invalid` without a Durable Object call.
 The gateway calls `checkTurnToken` through the trusted workspace runtime before each upstream request.
 It replaces the token with the starter's real login.
-Production runner delivery does not request or send these tokens yet.
+Runner delivery gives a token in each `turn` command to a runner of protocol version 2.
+A runner of protocol version 1 still gets the real login.
+The packaged runner and new image builds still use version 1.
 The [model gateway protocol](../../docs/protocol/model-gateway.md) states the requirements.
 
 ## Model requests
@@ -19,8 +21,18 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 
 The gateway preserves the query and the request body.
 It refuses every other suffix and method locally, including the connection probe and model discovery.
-An API-key Claude turn sends its token in `x-api-key`.
-A subscription Claude turn and a Codex turn use Bearer authorization.
+
+A turn token starts with the prefix of a real login of its kind.
+So the agent program uses its normal login mode, and sends the token in the header of that mode.
+
+| Login kind | Token prefix | Request header |
+| --- | --- | --- |
+| Claude API key | `sk-ant-api-` | `x-api-key` |
+| Claude subscription token | `sk-ant-oat01-` | `Authorization: Bearer` |
+| OpenAI API key | `sk-` | `Authorization: Bearer` |
+
+The signature covers the prefix.
+A token with the prefix or the header of another login kind gets `turn_token_invalid`.
 The real login replaces the token in the header for that login kind.
 The gateway passes `anthropic-beta` unchanged.
 
@@ -84,10 +96,16 @@ Production uses the shared connection scheduler.
 - [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
 - [errors.ts](errors.ts): stable gateway refusals in each provider's API shape.
 - [workspace.ts](workspace.ts): `WorkspaceTurnTokens.forRunningTurn` derives a stable token from the turn record.
+  Runner delivery calls it for each version 2 `turn` command, after the running state commits.
   Its caller holds the chat queue, as runner dispatch does.
+  It fails the turn and gives no token when the login is missing or changed since the first token.
+  It does the same for a login of another kind than the dispatch read.
   `check` enters that queue and returns the current starter login or a stable refusal reason.
+  It refuses a token whose prefix does not match the login kind.
 - [token.ts](token.ts): `turnTokenRoute` reads the workspace and turn route.
+  `deriveTurnToken` puts the prefix of the login kind before each token, and `turnTokenMatchesKind` checks that prefix.
   HMAC derives the credential with a dedicated context and the Worker encryption key.
+  The signed input includes the prefix.
   Web Crypto verifies the signature in constant time.
   The turn keeps only a random nonce and the login version for this derivation.
 - [login.ts](login.ts): `gatewayLogin` checks starter access and reads the login row with its `updated_at` version.
@@ -100,6 +118,9 @@ Production uses the shared connection scheduler.
   The common publisher sends one failed end before its session update.
   The runner's own end then stays as late data, with its changed files.
 - [fixture.test-support.ts](fixture.test-support.ts): a running turn whose session starter differs from its message sender.
+- [delivery.test.ts](delivery.test.ts): version 2 `turn` and `message` commands for each login kind, the real login at the upstream, no token in storage, a changed prefix, and Stop.
+- [delivery-runtime.test.ts](delivery-runtime.test.ts): the same version 2 `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
+- [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed version 2 send keeps the token state, so the resend carries the same token before the waiting message.
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.

@@ -7,6 +7,7 @@ import {
 import { findMembership } from '../data/orgs'
 import { record } from '../chat/inputs'
 import { SESSION_COOKIE } from '../security/cookies'
+import { seedAppAccess } from '../test-support/app-access'
 import { sign } from '../security/crypto'
 import { handleLifecycleRequest } from './browser'
 import { FIRST_MESSAGE } from './durable-test-support'
@@ -187,6 +188,7 @@ it('keeps the accepted first message and failed start readable to every member a
         "INSERT INTO sessions (id, user_id, expires_at) VALUES ('other-session', 'other-member', 4000000000000)",
       ),
     ])
+    await seedAppAccess(fixture.env.DB, ['other-member'], 0)
     const token = await sign(
       { sessionId: 'other-session', expiresAt: 4_000_000_000_000 },
       'session',

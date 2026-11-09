@@ -12,6 +12,7 @@ import {
 } from '../shared/account'
 import type { Agent, AgentChoice } from '../shared/agents'
 import { API_PATHS } from '../shared/api'
+import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
 import { ignore, nested, record } from './api/parse'
 import {
   readChoice,
@@ -20,6 +21,7 @@ import {
   readLogin,
   readNewWorkspaceView,
 } from './api/read-core'
+import { readWaitlistState } from './api/read-waitlist'
 import type { AppModel } from './app-model'
 import { Refresher } from './refresh'
 import { Resource } from './resource'
@@ -40,6 +42,11 @@ export class AccountModel {
   readonly repositories = new Store<Loadable<GitHubRepositoriesResponse>>(
     loading,
   )
+  /**
+   * The waitlist state of the user, for the invite code of the account:
+   * the code with its uses, and whether sign-ups are paused.
+   */
+  readonly waitlist = new Store<Loadable<WaitlistStateResponse>>(loading)
   /**
    * The number of the last change of each agent login. A share reply shows
    * only while no later change of its login came first, so a removed login
@@ -96,6 +103,13 @@ export class AccountModel {
   /** Reads the installs now, such as for Try again after a failed read. */
   loadInstallations(): Promise<void> {
     return this.installationReads.refresh()
+  }
+
+  /** Reads the invite code each time that the account opens, as its uses change. */
+  loadWaitlist(): Promise<void> {
+    return load(this.waitlist, () =>
+      this.services.api.get(WAITLIST_PATHS.state, readWaitlistState),
+    )
   }
 
   loadRepositories(): Promise<void> {

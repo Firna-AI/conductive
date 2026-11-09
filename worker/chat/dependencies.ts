@@ -67,6 +67,7 @@ export function chatDependencies(
     runnerDisconnected: async () => undefined,
     turnDispatching: async () => true,
     turnDispatchFailed: async () => undefined,
+    turnEnded: async () => undefined,
     browserOpened: async () => undefined,
     browserClosed: async () => undefined,
     waitUntil: (promise) => {

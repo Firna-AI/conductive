@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-07, from PR #30, branch `conductor/boat-native-remote-workspaces-milestone-7u`, a problem outside the scope that the check of round 1 finding 2 found. The user sees it as item 114. Updated on 2026-11-08 by branch `conductor/boat-native-remote-workspaces-milestone-7x`, which implements option C.
-- **Location:** `spawnClaudeProcess` in `runner/src/providers/claude-process.ts:12`, the login request in `runner/src/providers/codex.ts:117`, `providerEnvironment` in `runner/src/providers/environment.ts:13`, `runner/agent-logins.md`, and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
+- **Location:** `spawnClaudeProcess` in `runner/src/providers/claude-process.ts:12`, the login request in `runner/src/providers/codex.ts:117`, `providerEnvironment` in `runner/src/providers/environment.ts:13`, `runner/agent-logins.md`, and the section "Agent logins in a sandbox" of `docs/protocol/sandbox-credentials.md`.
 - **Reason:** the code of option C is complete, but its proof needs real logins of three kinds in a real sandbox, and only the primary workspace holds those logins and the real-sandbox settings.
 
 - **Terms:**

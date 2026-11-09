@@ -9,6 +9,7 @@ import type { LifecycleEnvironment } from './runtime'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
 import type { WorkspaceRuntimeFixture } from './workspace-runtime-test-worker'
 import { SESSION_COOKIE } from '../security/cookies'
+import { seedAppAccess } from '../test-support/app-access'
 import { encrypt, sign } from '../security/crypto'
 import { agentLoginContext } from '../chat/queries'
 import { applyMigrations } from '../test-support/migrations'
@@ -61,6 +62,7 @@ export async function realRuntimeFixture(bundle: string) {
           config: {
             name: 'workspace-runtime-test',
             compatibilityDate: '2026-11-06',
+            compatibilityFlags: ['global_fetch_strictly_public'],
             exports: {
               WorkspaceRuntimeFixture: {
                 type: 'durable-object',
@@ -155,6 +157,7 @@ export async function realRuntimeFixture(bundle: string) {
       "INSERT INTO settings (org_id, org_image_name, updated_at) VALUES ('runtime-org', 'base-runtime-image', 0)",
     ),
   ])
+  await seedAppAccess(database, ['runtime-user'], 0)
   await database
     .prepare(
       `INSERT INTO agent_logins

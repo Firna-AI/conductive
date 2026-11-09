@@ -21,6 +21,16 @@ requirements of each feature.
   an operator lifts it. It stops the sandboxes of the workspaces that the
   user owns, or of every workspace of the org, and blocks new starts. A
   user suspension also ends the sign-in sessions of the user.
+- **App access:** the right of a user to use the app: to create or join an
+  org, and to start cloud computers. A new account starts without it.
+- **Waitlist:** the users without app access. Each of them sees only the
+  waitlist screen until an approval, a code, or an org invitation gives
+  app access.
+- **Invite code:** a code that an operator makes, with a use limit. Each
+  use gives app access to one person who waits.
+- **Referral code:** the personal code of each user with app access. It
+  gives app access to up to 5 people who wait. The screens of users call
+  it an invite code.
 - **Workspace:** one task in an org. It has one repository, one branch,
   one sandbox, and one or more sessions.
 - **Workspace owner:** the person who is responsible for a workspace. It is
@@ -91,6 +101,7 @@ GitHub events, and stops.
 | Data                                                                         | Home                                     |
 | ---------------------------------------------------------------------------- | ---------------------------------------- |
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
+| App access, the codes and their uses, the pause, and approval email states   | D1                                       |
 | The org of each sandbox and each saved snapshot                              | D1                                       |
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
@@ -145,17 +156,25 @@ as gateway decision 6. The doc that cites it defines the name.
 
 ## Protocol docs
 
-- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
-  image and the life of a workspace.
+- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the
+  life of a workspace, and the number and the link of each workspace.
+- [Org image](protocol/org-image.md): the org image, its builds and its
+  refreshes, and the first build of a new org.
 - [Workspace tools](protocol/workspace-tools.md): the tools of a workspace.
 - [Create a workspace](protocol/create-a-workspace.md): New workspace as a
   page or as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox.
-- [Chat and events](protocol/chat-and-events.md): the agents, the sessions,
-  the tab row, their names, and the events.
+- [Chat and events](protocol/chat-and-events.md): the events, and the
+  links to the other chat pages.
+- [Agents and sessions](protocol/agents-and-sessions.md): the agents and
+  their logins, the sessions, and the names of workspaces and sessions.
 - [Messages and turns](protocol/messages-and-turns.md): the messages, what
   the chat shows, and the work of a turn.
+- [Workspace links](protocol/workspace-links.md): Copy link, and the chips
+  that show workspace links in chat.
+- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
+  messages in the chat, with their tables.
 - [Agent runner](protocol/agent-runner.md): the connection of the runner,
   its events and their limits, its turns, and the repair of lost workspace
   updates.
@@ -174,6 +193,9 @@ as gateway decision 6. The doc that cites it defines the name.
   events.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a
   sandbox.
+- [Agent instructions](protocol/agent-instructions.md): the text that each
+  agent session gets, the sender line of each message, and the base
+  prompt of Claude agents.
 - [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
@@ -182,6 +204,10 @@ as gateway decision 6. The doc that cites it defines the name.
   reports.
 - [Operator section](protocol/operator-section.md): the pages of the
   operator in the web app, their counts, and their searches.
+- [Waitlist](protocol/waitlist.md): app access, the waitlist screen, the
+  ways in, the pause, and the approval email.
+- [Invite and referral codes](protocol/waitlist-codes.md): the codes of
+  the waitlist, the join link, and the use of a code.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](protocol/command-palette-states.md):

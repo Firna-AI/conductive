@@ -58,4 +58,4 @@ as the Preview page, as
 - `previewsApi.ts`: list, open, and close requests.
 
 See [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md#port-previews)
-and [Access and security](../../docs/protocol/access-and-security.md#port-previews).
+and [Terminal and previews](../../docs/protocol/terminal-and-previews.md#port-previews).

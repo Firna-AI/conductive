@@ -1,5 +1,5 @@
 import type { RunnerEventEnvelope } from '../../src/shared/runner'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { HttpError } from '../http'
 import { InvalidRunnerReport, RunnerFileReports } from '../files/runner-reports'
 import {
@@ -75,8 +75,6 @@ export async function storeRunnerReceipt(
       .find(
         (envelope) =>
           envelope.event.type === output.event.type ||
-          (output.event.type === 'turn.completed' &&
-            envelope.event.type === 'turn.failed') ||
           envelope.event.type === 'runner.event-refused',
       )
     if (emitted) stored.push(emitted)

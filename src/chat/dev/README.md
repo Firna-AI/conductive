@@ -41,6 +41,7 @@ The address chooses the state. The first value of each option is the default:
 | `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
 | `page` | `chat`, `this-mac` (the This Mac section of the account) |
 | `files` | `listed`, `unread` (each end of a turn of the chat says that the cloud computer could not read its changed files) |
+| `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs) |
 
 ## What the page does
 
@@ -65,6 +66,12 @@ page's Mac acts on each answer: Deny ends the request, and the other choices
 run the command and keep the choice. The bar of the 15 minutes shows above
 the header while they run. The Mac refuses a change of an older pairing, as
 the Worker does.
+
+Each turn of the page's scripted agent writes its answer in parts, about
+0.4 seconds apart, and sends the whole answer with the last part. With
+`answer=tables`, each part is one line of the answer, and one row comes in
+two parts. So each header row shows as text until its separator row comes,
+and the table then grows one row at a time.
 
 The names follow the backend. A new workspace and each new session have no
 name, and show "Untitled". The page fills a name only while it is empty,

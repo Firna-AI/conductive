@@ -6423,7 +6423,7 @@ Apply decision 132 A. Added on 8 November 2026.
 - [ ] Delete the files of a workspace with the workspace, also in the
       purge of a deleted org, and an unsent draft file after 7 days.
 - [ ] Add the bucket to `docs/deployment.md` and to the Worker
-      configuration. State the rules in `docs/protocol/chat-and-events.md`
+      configuration. State the rules in `docs/protocol/messages-and-turns.md`
       and `docs/protocol/access-and-security.md`, and the stored files on
       the privacy page, with "(decision 132)".
 
@@ -7161,7 +7161,7 @@ requirements in force, so they add no numbered decision.
   tabs. The chat takes content that replaces the session chat but keeps
   the tab row. While that content shows, no session tab is selected. File
   tabs change the saved view through the chat's existing writer, so no
-  write is lost. Reason: [Sessions](../docs/protocol/chat-and-events.md#sessions)
+  write is lost. Reason: [Sessions](https://github.com/Firna-AI/remote-code/blob/b1d03858bccdc1fdfcd506a986c6230b6a292cb2/docs/protocol/chat-and-events.md?plain=1#L55)
   puts the session tabs beside the open files and diffs.
 - This milestone also owns a `will-download` policy that lets a trusted
   Download in the Mac app save its file. It also owns the desktop tests

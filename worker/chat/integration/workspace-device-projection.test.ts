@@ -103,7 +103,7 @@ it('keeps current Mac input across lifecycle activity, heartbeat, retained retur
   await active.actor().advanceStartAlarm()
   expect(active.boat.deadlineIds.length).toBeGreaterThan(deadlines)
   expect(
-    (await orgWorkspaces(active.env.DB, OUTER_ORG)).find(
+    (await orgWorkspaces(active.env.DB, OUTER_ORG, active.env.APP_ORIGIN)).find(
       (workspace) => workspace.id === OUTER_WORKSPACE,
     )?.state,
   ).toBe('input')

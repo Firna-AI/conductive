@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react'
-import { InputFrame } from '@firna/ui/input'
 import { CornerDownLeft } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import layer from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/new-workspace/NewWorkspaceDialog.module.css'
 import { useNavigation } from '../../app/navigation'
 import { defaultSection } from '../../app/sections'
 import { useStore, valueOf } from '../../app/store'
+import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
+import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useSendKey } from '../../chat/components/send-key'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
@@ -25,7 +25,7 @@ import {
   UploadError,
 } from './parts'
 import local from './new-workspace.module.css'
-import { useCursorAtEnd } from './useCursorAtEnd'
+import { OrgLinks } from './OrgLinks'
 import { useNewWorkspaceForm } from './useNewWorkspaceForm'
 
 /** The org and the section that the new workspace joins, such as General. */
@@ -83,7 +83,6 @@ function DialogCard(props: {
   const { org } = props
   const go = useGo()
   const navigation = useNavigation()
-  const { field } = useControlSizes()
   const orgModel = useOrgModel(org.id)
   const [model] = useState(() => orgModel.newWorkspace(props.sectionId))
   const [openedAt] = useState(() => navigation.href())
@@ -96,7 +95,7 @@ function DialogCard(props: {
   const place = usePlace(org, props.sectionId)
   const sending = form.create.state === 'sending'
   const card = useRef<HTMLElement>(null)
-  const message = useCursorAtEnd(form.draft.text)
+  const message = useRef<FieldHandle>(null)
   useModalLayer(
     card,
     () => {
@@ -140,27 +139,28 @@ function DialogCard(props: {
         </div>
       ) : (
         <>
-          <div className={styles.body} onKeyDownCapture={sendKey}>
+          <div className={styles.body}>
             {form.draft.attachments.length > 0 ? (
               <AttachmentList
                 attachments={form.draft.attachments}
                 remove={(id) => model.detach(id)}
               />
             ) : null}
-            <InputFrame
-              accessibilityLabel="Message"
-              editable={!sending}
-              focusIndicator="none"
-              inputRef={message}
-              maxLines={14}
-              multiline
-              numberOfLines={7}
-              onChangeText={(text) => model.setText(text)}
-              placeholder="Describe the task"
-              size={field}
-              value={form.draft.text}
-              variant="seamless"
-            />
+            <OrgLinks orgId={org.id}>
+              <ChipTextField
+                caretAtEnd
+                editable={!sending}
+                handle={message}
+                label="Message"
+                lines={7}
+                maxLines={14}
+                onChangeText={(text) => model.setText(text)}
+                onEnter={sendKey}
+                owner={model}
+                placeholder="Describe the task"
+                value={form.draft.text}
+              />
+            </OrgLinks>
             <UploadError error={form.draft.upload.error} />
           </div>
           {notices ? (

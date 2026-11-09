@@ -30,7 +30,8 @@ export interface StreamTimers {
   clear(handle: TimerHandle): void
 }
 
-const browserTimers: StreamTimers = {
+/** The timers of the browser, which a chat uses without timers of its own. */
+export const browserTimers: StreamTimers = {
   set: (callback, delayMs) => globalThis.setTimeout(callback, delayMs),
   clear: (handle) => globalThis.clearTimeout(handle),
 }

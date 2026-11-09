@@ -4,7 +4,6 @@ import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
-import { API_PATHS } from '../../shared/api'
 import type { WorkspaceEvent } from '../../shared/events'
 import { sessionPaths } from '../../shared/sessions'
 import {
@@ -157,7 +156,7 @@ describe('a new workspace whose first start fails', () => {
     const server = new FakeApiServer({ conversation: 'queued' })
     const failed = { ...created.workspace, state: 'error' } as const
     fakeGitHub(server, createdId, 'no-commits')
-    server.json('GET', API_PATHS.session, { user: fakeUsers[1] })
+    server.signIn(fakeUsers[1])
     server.json('GET', workspacesPath(org), {
       workspaces: [failed, ...workspaces.workspaces],
     })

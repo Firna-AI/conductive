@@ -39,6 +39,7 @@ export interface SessionRuntime {
   agent: Agent
   choice: AgentChoice
   conversationId: string | null
+  instructions: string
   generation: number
   active: ActiveTurn | null
 }
@@ -46,6 +47,7 @@ export interface SessionRuntime {
 export interface EngineOptions {
   cwd: string
   home: string
+  instructions: Record<Agent, string>
   tools: WorkspaceToolRuntime
   providers: Record<Agent, ProviderFactory>
   store: EventStore
@@ -67,6 +69,7 @@ export function rememberSession(
     sessionId: session.id,
     agent: session.agent,
     providerSessionId: session.conversationId,
+    instructions: session.instructions,
   })
 }
 
@@ -80,6 +83,14 @@ export async function startProvider(
   if (!turn) return
   const signal = turn.controller.signal
   signal.throwIfAborted()
+  if (
+    !options.store.snapshot.sessions.some(
+      (saved) =>
+        saved.sessionId === session.id &&
+        saved.instructions === session.instructions,
+    )
+  )
+    await cancelable(signal, () => rememberSession(options.store, session))
   session.choice = command.message.choice
   const lifetime = new ProviderLifetime()
   turn.lifetime = lifetime
@@ -97,6 +108,7 @@ export async function startProvider(
         login: turn.first.login,
         choice: session.choice,
         conversationId: session.conversationId,
+        instructions: session.instructions,
         tools: { ...options.tools, turnId: turn.first.turnId },
         event,
         warn: options.warn,

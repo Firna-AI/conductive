@@ -4,7 +4,10 @@ The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the Terms page, the Privacy page,
 and a page for an unknown address. Visitors need no sign-in. The pages run
 no script and set no cookie. Every sign-in link leads to the app, on the
-`app.` host.
+`app.` host. The main action, Join the waitlist, and Sign in lead to the
+same sign-in. A new person waits there for app access, as the
+[waitlist protocol](../../docs/protocol/waitlist.md) says, so the words
+promise a place on the waitlist, not use at once.
 
 The shared header links to the public source repository on GitHub.
 The link appears on phones and desktops.
@@ -134,7 +137,11 @@ own effective date. The Terms use the law of England and Wales and preserve
 mandatory consumer protections.
 The facts about the service come from the
 [architecture doc](../../docs/architecture.md) and the
-[protocol docs](../../docs/protocol/).
+[protocol docs](../../docs/protocol/). The Privacy page names what the
+waitlist, the invite codes, and each record of app access keep, the
+GitHub token and the verified emails that each sign-in keeps, and Resend,
+which sends the emails, from
+[The record of app access](../../docs/protocol/waitlist.md#the-record-of-app-access).
 
 When you change a fact in the architecture doc or in a protocol doc, read
 both legal pages in full. The legal pages are the Terms page in
@@ -145,7 +152,9 @@ can restate a fact in other words.
 
 The words of the legal pages, of the page for an unknown address, and of
 the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`,
-and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
+and `legal-text.ts` hold them. `terms.ts` takes its "Working in an org"
+section from `terms-org.ts`, and `privacy.ts` takes its "Who gets your
+data" section from `privacy-recipients.ts`. `layouts/LegalPage.astro` and
 `components/RunningText.astro` build their HTML for the site. The mockups and the sign-in screen of the app render the same text
 with React. So every surface shows the same words.
 
@@ -243,6 +252,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   for links from another origin.
 - `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
   text model, titles, contact addresses, and sign-in agreement.
+- `terms-org.ts`, `privacy-recipients.ts`: the "Working in an org" section
+  of the Terms and the "Who gets your data" section of the Privacy page.
 - `request-values.ts`: built-page markers and local Astro preview values.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
   CSS for the font, tokens and picture sizes, and the file list writer.

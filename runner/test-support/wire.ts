@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { onTestFinished, vi } from 'vitest'
 
 import type { ChangedFile } from '../../src/shared/files'
-import type { RunnerConnection } from '../../src/shared/runner-transport'
+import type { RunnerConnectionV1 as RunnerConnection } from '../../src/shared/runner-transport'
 import {
   FakeDurableObjectEndpoint,
   type FakeDurableObjectOptions,

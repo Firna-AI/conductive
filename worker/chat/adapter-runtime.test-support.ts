@@ -5,6 +5,7 @@ import { encrypt, hash, sign } from '../security/crypto'
 import { SESSION_COOKIE } from '../security/cookies'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { applyMigrations } from '../test-support/migrations'
+import { seedAppAccess } from '../test-support/app-access'
 import {
   MACHINE_ORIGIN,
   WORKSPACE_ID,
@@ -44,6 +45,7 @@ export async function createAdapterRuntime(
         config: {
           name: 'chat-adapter-tests',
           compatibilityDate: '2026-11-06',
+          compatibilityFlags: ['global_fetch_strictly_public'],
           exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
           env: {
             DB: { type: 'd1', id: 'chat-db' },
@@ -126,6 +128,7 @@ export async function createAdapterRuntime(
       )
       .bind(workspaceId, await hash(WORKSPACE_TOKEN), 'unused', 1),
   ])
+  await seedAppAccess(db, ['owner'], 1)
   await db
     .prepare(
       'INSERT INTO agent_logins (user_id, agent, kind, ciphertext, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',

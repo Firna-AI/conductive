@@ -1,11 +1,13 @@
 # Workspaces and sandboxes
 
 This doc holds the requirements and the decisions in force for workspaces
-and their sandboxes, and for the org image that every sandbox starts from.
-[Workspace tools](workspace-tools.md) covers the tools of a workspace. The
-terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+and their sandboxes. It also covers the number and the link of each
+workspace. [Org image](org-image.md) covers the org image that every
+sandbox starts from, and [Workspace tools](workspace-tools.md) covers the
+tools of a workspace. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says.
 
 ## The provider
 
@@ -32,92 +34,13 @@ decision number names a dated record, as
 
 ## The org image
 
-- Each org has one org image that holds a prepared copy of every
-  repository that the org chose (decision 13).
-- One image for each repository was rejected, because each image costs
-  its own saved snapshot and starts.
-- The Repositories tab of the org settings chooses the repositories
-  (decision 10). A change of the repositories takes effect at the next
-  build.
-- The install script prepares the image. It is a script, not a terminal
-  session, and it runs only in a build.
-- Bash runs the install script.
-- The Cloud computer tab lists the operating system and software that the
-  base image includes before the install script runs.
-- "Build computer" starts a build. A build runs the install script on a
-  copy of the image, with every chosen repository cloned (decision 12).
-- The app also starts some builds of a new org by itself, as
-  [The first build](#the-first-build) says.
-- A build replaces the org image only when it succeeds. A failed build
-  keeps the last good image (decision 9).
-- While a build runs, its log streams on the Cloud computer tab. New
-  workspaces keep starting from the last good image.
-- A failed build shows the end of its log and Try again. The Settings link
-  of the sidebar then shows a mark.
-- After a failed build, the app starts no new build by itself
-  (decision 12). This also holds for the first build of an org. Reason: a
-  broken install script fails again.
-- After the user saves a changed install script, the tab asks for a build,
-  because the script runs only in a build. While the org has no good image
-  and a build runs, the tab asks for no build. It says that one more build
-  runs the script when that build succeeds, as
-  [The first build](#the-first-build) says.
-- The Cloud computer tab lists the builds, each with its time, its result,
-  and its length.
-- A push to the default branch of a chosen repository refreshes the org
-  image, at most once in 30 minutes. A daily timer refreshes it too. Each
-  automatic refresh needs an admin who is not suspended, as
-  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
-- A refresh fetches the new commits of every chosen repository. It does
-  not run the install script.
-- Reason: a new workspace then needs only a small fetch. The limit of one
-  refresh in 30 minutes saves starts, because each refresh is a start.
+- [The org image](org-image.md#the-org-image) holds the requirements of
+  the org image of an org, its builds, and its refreshes.
 
 ### The first build
 
-- Create org starts the first build of the org by itself (decision 150).
-  Create org requires at least one repository, as
-  [Orgs](orgs-and-members.md#orgs) says, so every new org starts its first
-  build at create (decision 151).
-- Reason: a new org then gets its org image with no manual step.
-- Create org starts the build before it answers. A build that the browser
-  starts after the create was rejected, because a closed tab could then
-  lose the build.
-- The first build is a normal build. The person who creates the org, its
-  first admin, is the starter of that build. Its log and its result show
-  on the Cloud computer tab, as for every build.
-- When the first build cannot start, Create org still creates the org. An
-  admin can then start a build on the Cloud computer tab, with Build
-  computer or Try again. Reason: the org is valid without a build.
-- An org has no org image until its first good build. The first good build
-  is the earliest build of the org that succeeds. It can be the first
-  build, or a build after a failure.
-- Until the first good build, no workspace of the org can start.
-  [Create a workspace](create-a-workspace.md#before-the-first-good-build) and
-  [Get started](orgs-and-members.md#get-started) say what the app shows in
-  that time.
-- The repositories or the install script can change during the first good
-  build. In that case, the app starts one more build by itself, the added
-  build, when that build ends (decision 151).
-- Reason: a build holds the repositories and the install script that were
-  saved when it began. The added build takes in each change from any
-  screen during the first good build. So such a change needs no Build
-  computer.
-- Only the first good build can get an added build. A failed build gets
-  none. Reason: Try again then builds the current settings.
-- The added build runs for an admin who is not suspended, as an automatic
-  refresh does. An org without such an admin gets no added build. Reason:
-  one rule then covers each build that the app starts by itself.
-- [Starts, stops, and builds](operator-actions.md#starts-stops-and-builds)
-  states what a suspension does to each build.
-- When the added build cannot start, the org keeps its first good image.
-  The change then waits for Build computer.
-- After the first good build, each change of the repositories or of the
-  install script waits for Build computer (decision 12). This also holds
-  for a change during the added build.
-- A build at each save was rejected, because the Repositories tab saves
-  each repository on its own. Such a build could start with only part of
-  the choice.
+- [The first build](org-image.md#the-first-build) holds the requirements
+  of the first build of a new org and of its added build.
 
 ## Repository folders
 
@@ -151,6 +74,38 @@ decision number names a dated record, as
   New workspace, as a page or as a dialog, and of the create, the branch,
   and a failed first start of a new workspace.
 
+## Workspace numbers and links
+
+- The workspace header omits the branch name on desktop and on a phone.
+  Reason: this keeps the header compact.
+- Each workspace has a number in its org (decision 212). The numbers of an
+  org count up from 1, in the order in which its workspaces were created.
+- The app never gives a number twice in one org. This holds also after a
+  failed first start and after a Restore of the org.
+- Reason: a person who said `W-12` must not find another workspace there
+  later.
+- The label of a number is `W-` and the number, such as `W-395`, in every
+  org. Org initials before the number, such as `AC-395`, were rejected,
+  because the label then changes when an admin changes the initials.
+- A part of the workspace ID or of the branch name in place of a number
+  was rejected, because people cannot easily say it.
+- The label shows on the [Copy link](workspace-links.md#copy-link) button
+  of the workspace header and in each [chip](workspace-links.md#chips). A
+  [search of the command palette](command-palette.md#search) that matches
+  the label shows it too.
+- The rows of the workspace list show no label. A label in each row was
+  rejected, because the names then lose room in the sidebar and on a
+  phone.
+- Each workspace has a link: the web address of its page at the app
+  origin, such as
+  `https://app.conductive.build/orgs/<org ID>/workspaces/<workspace ID>`.
+- The link names the org and the workspace by their IDs, never by a number
+  or a name. So the label and the name can change later (decision 212).
+- The workspace record gives the number in `number` and the link in
+  `link`. Copy link, the chips, and the agent tools use this link.
+- Reason: the page of the Mac app runs on its own origin, and a sandbox
+  does not know the app origin.
+
 ## Start steps
 
 - While a sandbox starts, the workspace shows each start step with its
@@ -179,7 +134,7 @@ decision number names a dated record, as
   start steps show the time limit of the start.
 - A build or a refresh that passes its time limit fails in the same way as
   after any other error. So the last good image stays, as
-  [The org image](#the-org-image) says.
+  [The org image](org-image.md#the-org-image) says.
 - A start that passes its time limit fails in the same way as after any
   other error. So a failed create keeps its workspace in the error state,
   as [Create a workspace](create-a-workspace.md#a-failed-first-start) says.

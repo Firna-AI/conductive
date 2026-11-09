@@ -89,7 +89,7 @@ node image/live-check.mjs
 - A repository of that org that the image holds.
 
 Build computer on the Cloud computer tab of the org starts that build, as
-[The org image](../docs/protocol/workspaces-and-sandboxes.md#the-org-image)
+[The org image](../docs/protocol/org-image.md#the-org-image)
 says. [The runner archive](README.md#the-runner-archive) gives the steps
 that supply the archive to the build.
 

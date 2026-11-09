@@ -76,6 +76,7 @@ const app = new AppModel({
   storage: null,
   newId: () => crypto.randomUUID(),
   leave: () => undefined,
+  appOrigin: window.location.origin,
   copy: (text) => navigator.clipboard.writeText(text),
 })
 

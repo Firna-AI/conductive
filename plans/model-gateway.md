@@ -96,7 +96,7 @@ are a record, not a question.
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Security.
-- **Location:** `runner/src/providers/claude-process.ts`, `readAgentLogin` in `worker/chat/queries.ts`, and the sections "Agent logins in a sandbox" and "Agent logins" of `docs/protocol/access-and-security.md`.
+- **Location:** `runner/src/providers/claude-process.ts`, `readAgentLogin` in `worker/chat/queries.ts`, and the sections "Agent logins in a sandbox" and "Agent logins" of `docs/protocol/sandbox-credentials.md`.
 - **Terms:**
   - **Provider check:** Cal's record that Anthropic's permission of decision 37 of the main plan covers a Worker that holds a subscription token and adds it to each model request.
 - **Background:**
@@ -216,7 +216,7 @@ are a record, not a question.
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Security.
-- **Location:** `open` in `worker/chat/runner-channel.ts`, `worker/chat/runner-input.ts`, and the risk of decision 124 in `docs/protocol/access-and-security.md`.
+- **Location:** `open` in `worker/chat/runner-channel.ts`, `worker/chat/runner-input.ts`, and the risk of decision 124 in `docs/protocol/sandbox-credentials.md`.
 - **Terms:**
   - **Workspace token:** the secret that a cloud computer uses to call the Worker. Each process there can read it.
 - **Background:**
@@ -273,7 +273,7 @@ are a record, not a question.
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Security.
-- **Location:** `readAgentLogin` and `senderLoginAccess` in `worker/chat/queries.ts`, and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
+- **Location:** `readAgentLogin` and `senderLoginAccess` in `worker/chat/queries.ts`, and the section "Agent logins in a sandbox" of `docs/protocol/sandbox-credentials.md`.
 - **Background:**
   - Today the runner gets the login once, with the `turn` command, and keeps it for the whole turn. A change of the saved login applies at the next turn.
   - The gateway adds the login to each model request, so it can read the saved login at each request.
@@ -600,6 +600,34 @@ more approaches of each call.
   existing runner-auth gate protects delivery of either credential kind.
   Reason: one home for each fact, with the current access rules applied
   to the credential that replaces the login.
+- **D34. Worker-first protocol staging, 9 November 2026.** Agent call:
+  separate the Worker's supported protocol versions from the installed
+  runner version. The Worker accepts versions 1 and 2. The packaged runner
+  and each new full image build still advertise version 1 until Milestone
+  7 changes the provider adapters. The runner uses explicit version 1
+  wire types through erased imports. Reason: a version 1 adapter cannot
+  use a gateway token, so raising the installed version now would break
+  current turns. Version 2 has no real-login fallback.
+- **D35. Native token authentication, 9 November 2026.** Agent call:
+  require the native login kind when deriving a token, and sign its native
+  prefix with the other token fields. The gateway verifies that prefix
+  against the current login kind. Reason: a changed prefix must not move
+  a credential between the subscription and API-key authentication modes.
+  No extra login metadata needs to persist.
+- **D36. Common completion reporting, 9 November 2026.** Agent call:
+  collect ended turn IDs in the chat transaction, then report them after
+  commit and any runner confirmation, before the next dispatch. Existing
+  lifecycle recovery repairs a failed report. The callback skips lifecycle
+  writes while the existing receiver fence is inactive, and still starts
+  device cleanup. Reason: terminal replacements need the same end path,
+  while confirmations and suspension cleanup keep their existing order.
+- **D37. Dispatch credential construction, 9 November 2026.** Agent call:
+  build the exact version 2 command after the stored running state commits,
+  while the dispatch caller holds the chat queue. Save the nonce and login
+  version before deriving the credential. A failed send restores the
+  queued state and keeps those fields. Reason: token issuance requires a
+  real active turn, and redelivery must reuse its credential without
+  storing a login or token in a pending command.
 
 ## Milestone 1: Documentation and protocol
 
@@ -810,30 +838,40 @@ Depends on: 3, 4, 5
 The Worker serves runner protocol versions 1 and 2. Version 2 gets turn
 tokens for the existing Anthropic and OpenAI login kinds.
 
-- [ ] `src/shared/runner.ts`: version 2, as D16 says. Keep the version 1
+- [x] `src/shared/runner.ts`: version 2, as D16 says. Keep the version 1
       types for older runners (decision 2 A).
-- [ ] `worker/chat/runner-input.ts`: accept versions 1 and 2, within the
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] `worker/chat/runner-input.ts`: accept versions 1 and 2, within the
       pin of Milestone 4.
-- [ ] `worker/chat/runner-delivery.ts`: send the real login to version 1,
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] `worker/chat/runner-delivery.ts`: send the real login to version 1,
       as now, and the turn token of Milestone 2 to version 2.
-- [ ] Move the Worker tests that build runner commands with a login.
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] Move the Worker tests that build runner commands with a login.
       Keep every assertion. Add the version 2 cases.
-- [ ] Move `RunnerDelivery.failLogin` to the failure entry of
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] Move `RunnerDelivery.failLogin` to the failure entry of
       `TurnLifecycle`, and make `finish` private. This completes review
       finding 3, which kept the shared runner delivery file unchanged.
-- [ ] Report each turn end to the workspace lifecycle by turn ID from
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] Report each turn end to the workspace lifecycle by turn ID from
       `TurnCompletion.finish`, and drop the type match of turn ends in
       `runnerEventStored` and `worker/chat/runner-receipt.ts`. This is the
       wider fix of review finding 6.
+      Branch: `conductor/model-gateway-worker-protocol-2`.
 - [x] Before any runner gets a turn token, apply the user's answers on
       OpenAI background requests and OpenAI's review. Done on 9 November
       2026: gateway decision 9 A, and OpenAI confirmed the gateway.
-- [ ] Check the Worker's other fetches. Then turn on
+- [x] Check the Worker's other fetches. Then turn on
       `global_fetch_strictly_public` in `wrangler.jsonc` (open check 8).
       Save the check under `.context/model-gateway/`.
-- [ ] Tests: a version 1 runner gets the real login. A version 2 runner
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+- [x] Tests: a version 1 runner gets the real login. A version 2 runner
       gets a token. Each existing login kind reaches its provider
       through the gateway with the correct authentication mode.
+      Branch: `conductor/model-gateway-worker-protocol-2`.
+
+Evidence: `.context/model-gateway/report.md`.
 
 ## Milestone 7: Runner on the gateway
 
@@ -878,16 +916,16 @@ Depends on: 5
 The privacy draft states the new facts. The legal mockup renders the same
 file (D24).
 
-- [ ] `src/marketing/privacy.ts`: model requests pass through Conductive
+- [x] `src/marketing/privacy.ts`: model requests pass through Conductive
       on Cloudflare, and Conductive keeps no copy. A cloud computer from a
       newer image holds no agent login, and its processes can use the
       turn token of a running turn. Keep the login and tool-server
       sentences for cloud computers with an older runner. Keep the GitHub
-      token risk.
-- [ ] Read `src/marketing/terms.ts` in full, and update each sentence that
-      restates a changed fact.
-- [ ] Run `npm run mockups:check`. Open the privacy page in the mockup
-      preview.
+      token risk. Branch: `conductor/model-gateway-legal-copy`.
+- [x] Read `src/marketing/terms.ts` in full, and update each sentence that
+      restates a changed fact. Branch: `conductor/model-gateway-legal-copy`.
+- [x] Run `npm run mockups:check`. Open the privacy page in the mockup
+      preview. Branch: `conductor/model-gateway-legal-copy`.
 
 ## Milestone 9: Split the long docs
 
@@ -900,10 +938,13 @@ documentation skill (D27).
       `docs/protocol/chat-and-events.md`, and `docs/architecture.md` into
       linked pages by topic.
       Branch: `conductor/model-gateway-protocol-doc-split`.
-- [ ] Update every relative link, and the doc lists of
+- [x] Update every relative link, and the doc lists of
       `docs/architecture.md` and `README.md`.
+      Branch: `conductor/model-gateway-protocol-doc-split`.
 - [x] Update `plans/follow-ups/protocol-docs-split.md` to the docs that
       remain. Branch: `conductor/model-gateway-protocol-doc-split`.
+
+Evidence: `.context/model-gateway/final-m9/report.md`.
 
 ## Milestone 10: Verification, commit, review, and pull request
 

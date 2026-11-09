@@ -55,7 +55,7 @@ export async function shellRoute(
             workspaceForViewer(
               env,
               userId,
-              workspaceView(row),
+              workspaceView(row, env.APP_ORIGIN),
               row.readThroughEventNumber,
             ),
           ),

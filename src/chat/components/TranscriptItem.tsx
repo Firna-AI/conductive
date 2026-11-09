@@ -1,7 +1,6 @@
 import { CircleAlert, CircleStop, Clock } from 'lucide-react'
 import type { UserMessage } from '../../shared/messages'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import {
   turnFilesUnavailable,
@@ -9,6 +8,7 @@ import {
 } from '../../../docs/mockups/src/components/chat/lostCopy'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import type { MemberSummary } from '../api/read-responses'
+import { LinkedText } from '../links/LinkedText'
 import type { Transcript, TranscriptItem } from '../state/transcript'
 import { ActionButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
@@ -18,13 +18,16 @@ import { LostEventLine } from './LostEventLine'
 import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
 
-/** A message that a person sent, and whether it waits for the sandbox. */
+/**
+ * A message that a person sent, and whether it waits for the sandbox. Each
+ * part in backticks is code, and each workspace link is a chip.
+ */
 export function UserBubble(props: { message: UserMessage }) {
   const { message } = props
   return (
     <div className={styles.user}>
       <div className={classes(styles.bubble, controls.lines)}>
-        <InlineText text={message.text} />
+        <LinkedText text={message.text} />
       </div>
       {message.attachments.length > 0 ? (
         <SentFiles attachments={message.attachments} />

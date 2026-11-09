@@ -5,6 +5,8 @@ import { record, string } from '../inputs'
 export class Workspace extends ProductionWorkspace {
   override async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
+    if (url.pathname === '/inspect')
+      return Response.json([...(await this.ctx.storage.list())])
     if (url.pathname === '/check') {
       const workspaceId = await this.chat.store.workspaceId()
       if (!workspaceId) throw new Error('The workspace is missing.')
