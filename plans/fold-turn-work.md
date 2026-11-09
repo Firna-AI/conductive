@@ -20,7 +20,7 @@ Contract owners:
 - [Chat and events](../docs/protocol/chat-and-events.md), under "What the
   chat shows".
 - [Agent tools](../docs/protocol/agent-tools.md), under "What the chat
-  shows" of the Mac commands, when decision 151 changes it.
+  shows" of the Mac commands.
 - The [chat README](../src/chat/README.md) and the
   [transcript rules](../src/chat/transcript.md).
 - The mockup [design](../docs/mockups/design.md) and
@@ -68,8 +68,8 @@ of Conductor.
 
 ### 151. Mac command results and lost lines in a fold
 
-Added on 8 November 2026 by the options check of this plan. Open: it
-waits for the user.
+Added on 8 November 2026 by the options check of this plan. The user
+answered it on 9 November 2026.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -122,14 +122,16 @@ waits for the user.
 - **Action:** ask the user, because D changes two requirements in force,
   and no user decision covers rows that are neither thinking nor tool
   calls.
+- **Chosen:** A, by the user on 9 November 2026. Both rows fold with the
+  work at their place, and the line of the fold gets no mark for them.
 
 ## Design
 
 Terms:
 
-- **Work** of a turn: its agent messages and its tool calls. Decision 151
-  says whether the Mac command cards and the lost lines among them fold
-  too.
+- **Work** of a turn: its agent messages and its tool calls, with the
+  Mac command cards and the lost lines of the turn among them
+  (decision 151).
 - **Part** of a turn: its items between two member messages. A member
   can send a message during a turn. The message joins that turn, and the
   agent can answer it in the same turn.
@@ -147,11 +149,14 @@ Rules:
 - A part without an agent message gets no fold. Its runs of tool calls
   fold as they do today.
 - A member's message always stays in view.
+- A Mac command card and a lost line of the turn fold with the work, at
+  their place. A lost line of another turn, or of no turn, ends a run.
 - A run folds only when it holds a tool call or a message.
 - The line of a fold reads "8 tool calls, 7 messages". It leaves out a
   zero count, and it says "1 tool call" and "1 message". It shows the
   icons of the tool kinds and the total of the left-out output, as the
-  line of a run of tool calls does today.
+  line of a run of tool calls does today. Cards and lost lines add no
+  count and no mark.
 - A fold starts closed. A click opens it, and it keeps that choice while
   the chat shows it.
 - An open fold lists its steps in order, one line each. A tool call shows
@@ -166,9 +171,9 @@ Code of the web app:
 
 - `src/chat/components/transcript-entries.ts` adds a fold entry. It reads
   the ended state of each turn from `Transcript.turns`.
-- An insert, such as a Mac command card, follows decision 151. When
-  cards fold, a card that follows a folded item joins its fold, and a
-  card never starts a fold.
+- An insert, such as a Mac command card, that follows a folded item
+  joins its fold. An insert never starts a fold.
+- A lost item folds when its marker names the turn of the fold.
 - A new component draws the fold. It shares the call line and the tool
   icons with `ToolGroup`. `TranscriptView` draws the new entry.
 
@@ -230,7 +235,7 @@ override it:
 
 Tags: mockup
 
-Depends on: none. The cards and the lost lines wait for decision 151.
+Depends on: none
 
 The mockup chat folds the work of each ended turn. `app/chat` shows the
 folded work of its finished turn. A new child page shows the open fold,
@@ -250,7 +255,7 @@ a turn with parts, and the answer of decision 151.
   - [ ] A finished turn with a member message during the turn: a fold
         and an answer for each part.
   - [ ] A finished turn with a Mac command card and a lost line among
-        its work, as decision 151 says.
+        its work, folded at their place, as decision 151 says.
 - [ ] Update each description and rationale that the change makes stale:
       `app/chat`, the stopped and failed variants of `app/chat/turns`, and
       the pages of lost data. Check the hero picture of the marketing
@@ -277,8 +282,11 @@ and 151. The chat docs give its rules for the code.
 - [ ] Add the fold to "What the chat shows" in `chat-and-events.md`, with
       decision 150, the rejected alternative, and the reason. State what
       folds, when, the words of its line, and what stays in view.
-- [ ] Apply decision 151 to "What the chat shows" in `chat-and-events.md`
-      and in `docs/protocol/agent-tools.md`.
+- [ ] Apply decision 151. Say in "What the chat shows" of
+      `chat-and-events.md` that a lost line among the work of a turn folds
+      with that work. Say in "What the chat shows" of
+      `docs/protocol/agent-tools.md` that the result of a command folds
+      with the work of its turn when the turn ends.
 - [ ] Update `src/chat/README.md` and `src/chat/transcript.md` with the
       fold: the summary of the chat, the rules for this code, and the key
       code.
@@ -294,7 +302,7 @@ The chat of the web app folds the work of each ended turn, as the
 mockups show.
 
 - [ ] Add the fold entry to `src/chat/components/transcript-entries.ts`,
-      with the rules of the design and decision 151.
+      with the rules of the design.
 - [ ] Add the fold component. Share the call line and the icons of
       `ToolGroup`, and use the mockup styles.
 - [ ] Draw the fold entry in `TranscriptView.tsx`.
@@ -308,8 +316,8 @@ mockups show.
   - [ ] A member's message during the turn starts a new part, and each
         part keeps its answer in view.
   - [ ] Two agent messages at the end of a turn both stay in view.
-  - [ ] The cards and the lost lines among the work follow decision 151.
-        A run of lost lines alone does not fold.
+  - [ ] A card and a lost line of the turn fold at their place. A run
+        of lost lines alone does not fold.
   - [ ] The open fold lists its steps in order, and a message line opens
         to its full text.
 - [ ] Update the tests whose expected text changes on purpose, such as
