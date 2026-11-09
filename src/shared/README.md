@@ -5,6 +5,9 @@ They use JSON values and plain TypeScript types.
 They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.name` and `Session.title` are null until a name is set.
+`Workspace.number` is the immutable number in its org.
+`Workspace.link` is its absolute web link, with org and workspace IDs.
+`AgentWorkspaceSummary` gives the same number and link.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.

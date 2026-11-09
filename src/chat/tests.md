@@ -22,12 +22,17 @@ and checks the saved message on the bar of a failed first start and of a
 failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
 turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
 fold and a message line, and checks that each line keeps its place. It
-also opens a message line with a table: the closed line shows the cells,
-the table opens under the line, and a line that starts with a table keeps
-a name.
+also presses a workspace chip in a message line, with and without a
+modifier key. It also opens a message line with a table: the closed line
+shows the cells, the table opens under the line, and a line that starts
+with a table keeps a name. An open table-first line has no hidden link
+that the keyboard can reach. The chip stays active in its table.
+`components/open-fold-test-kit.tsx` holds the mount and layout helpers.
 `components/AgentText.dom.test.tsx` renders `AgentText`. It checks where a
 table starts and ends, the alignment, the content of a cell, HTML as text,
 code blocks, the cells of each row, and the span of at most 1,000 columns.
+It also checks workspace chips in cells and links that stay code inside
+a code span.
 `components/TableReply.dom.test.tsx` drives chat events. It checks a header
 row before its separator row, the rows and a partial row that arrive, and
 the same reply from the saved history.
@@ -69,3 +74,26 @@ status says, and no tab menu opens.
 wheel turns.
 `components/SessionTabs.test.tsx` renders the tab of a session with no
 title and its rename field.
+`components/chip-field/ChipTextField.test.tsx` pastes workspace links,
+steps over a chip, removes it with Backspace and Delete, restores a draft,
+copies, follows the list, and checks a field that takes no change. It
+also checks that a focus puts the caret at the end of a kept draft, and
+later back where the user put it. It checks that undo stays with its
+draft after a switch to another draft with equal text, with the focus as
+it was, and moves with a draft that moves.
+`components/chip-field/chip-field-test-kit.tsx` mounts the field with an
+owner that keeps the draft of each session, as the chat does.
+`components/ComposerDrafts.dom.test.tsx` switches the sessions of the
+chat after a delete, and moves the draft of a composer with its identity.
+Undo stays with its draft in both.
+`components/chip-field/field-text.test.ts` checks the separator rule. The
+DOM tests focus, type, paste, clear, and read the field through
+`src/test-support/message-field.ts`.
+`links/workspace-links.test.ts` reads links with and without a tab path,
+Markdown links, a code label in a sent message, code, `..`, other origins
+and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
+mounts an answer with chips: in bold, in a list, with a bold or a code
+label, and a link in inline code and in a code block.
+`state/workspace-list.test.ts` checks that a chat without sources reads the
+list while it shows, and not while it is hidden. The workspace screen's
+`LinkChips.test.tsx` checks the chips of a kept chat on a phone.

@@ -2,8 +2,9 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the code
 that formats the text of agent messages: in the chat, and in a message line
-of an open work fold.
-[Chat Markdown](../../docs/protocol/chat-markdown.md) states the
+of an open work fold. It also gives the workspace chips of sent messages
+and answers. [Chat Markdown](../../docs/protocol/chat-markdown.md) and
+[Workspace links](../../docs/protocol/workspace-links.md) state the
 requirements.
 
 - `textBlocks` reads the whole text of a message at each update. So a live
@@ -13,8 +14,10 @@ requirements.
   directly after a line of a paragraph or a list.
 - `AgentBlocks` draws the blocks of a message in order. `AgentText` and the
   open body of `MessageLine` share it. A table draws through
-  `MarkdownTable`, and each cell through `InlineMarkdown`.
-- `AgentText`, `InlineMarkdown`, and `MessageLine` draw React text and
+  `MarkdownTable`. A paragraph, a list item, and a table cell draw their
+  text through `LinkedText`, with bold, so a workspace link in a cell shows
+  as a chip.
+- `AgentText`, `LinkedText`, and `MessageLine` draw React text and
   elements only. So HTML in a message shows as text.
 - A `<summary>` holds only phrasing content. So `MessageLine` draws each
   block as a span, which CSS shows as a block while the line is open. A
@@ -24,7 +27,30 @@ requirements.
   table and the blocks after it draw under the summary, only while the line
   is open, so a closed line lays out no hidden table.
 - A line that starts with a table keeps its closed text in a visually
-  hidden span. So the open line keeps a name for a screen reader.
+  hidden span. So the open line keeps a name for a screen reader. That
+  hidden copy shows no chips, so the keyboard cannot reach a link in it.
+
+## Workspace chips
+
+- Sent messages and agent answers show each workspace link as a chip, as
+  [Workspace links](../../docs/protocol/workspace-links.md) says. One
+  tokenizer, `chatParts` in `links/chat-parts.ts`, reads both, in one pass
+  from left to right. A backtick starts code first, so a link in code
+  stays code. A Markdown link whose brackets stand outside code is one
+  unit, also when its label holds code or bold, so it shows as its chip
+  alone. Then bare links count. In an answer, `**` marks bold around text
+  and chips, and a bare link ends before a mark. Bold ends at code, as
+  before. A Markdown link of no workspace shows its source with its code
+  and bold, as before. `links/workspace-links.ts` reads each link with the
+  URL parser and `parseRoute`. A link is a chip only when it has the
+  origin of the links of the list, and the router reads a page of a
+  workspace of the org in that list. The chip shows the current name and
+  state, and it opens the page that the router read, with its tab path,
+  query, and hash. Every other link stays as the text has it. The message
+  field reads its text with `textParts`, which reads no code. A message line of
+  a work fold shows chips too. A click on a chip there stays with the
+  chip, so the line does not toggle, and a click with a modifier key opens
+  a new tab as on any link.
 
 ## Table parts
 

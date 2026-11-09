@@ -2,6 +2,7 @@ import { act, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach } from 'vitest'
 import { accessibleName, whyInoperable } from './dom-queries'
+import { isMessageField, typeMessage } from './message-field'
 
 // React runs `act` without warnings only when this flag is set.
 Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true)
@@ -118,8 +119,16 @@ export async function press(element: Element): Promise<void> {
   await act(async () => element.click())
 }
 
-/** Types text into a field as a user does, so React sees the change. */
+/**
+ * Types text into a field as a user does, so React sees the change. A
+ * message field takes the text as `typeMessage` types it.
+ */
 export async function typeText(field: Element, text: string): Promise<void> {
+  if (isMessageField(field)) {
+    mustOperate(field, 'type into')
+    typeMessage(field, text)
+    return
+  }
   const prototype =
     field instanceof HTMLInputElement
       ? HTMLInputElement.prototype

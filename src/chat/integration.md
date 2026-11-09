@@ -30,7 +30,7 @@ mount the chat.
   tabs, the session history, the line of a linked session, and the header
   and the list of the app then show "Untitled", from `nameLabel` in
   `src/shared/name-label.ts`, as
-  [Workspace and session names](../../docs/protocol/chat-and-events.md#workspace-and-session-names)
+  [Workspace and session names](../../docs/protocol/agents-and-sessions.md#workspace-and-session-names)
   says. "New session" names only the action of +: its label, the heading
   of the empty chat, and the detail in the model picker.
 - Each tab shows the `title` of its session record. The backend provides
@@ -38,7 +38,7 @@ mount the chat.
   the workspace and its first session, as
   [Messages](../../docs/protocol/chat-and-events.md#messages) says. Each
   other session takes the first line of its first message with text as its
-  title, as [Sessions](../../docs/protocol/chat-and-events.md#sessions)
+  title, as [Sessions](../../docs/protocol/agents-and-sessions.md#sessions)
   says. A name that a member set never changes. The development page does
   the same.
 - The rename field of a session with no title starts empty, with
@@ -63,6 +63,11 @@ mount the chat.
   chip of the file shows the label of its path, `displayPath`, which hides
   each secret value, as [Labels of paths](../files/labels.md)
   says.
+- `onOpenPage` gets the page of a workspace chip in a sent message or an
+  answer, such as `/orgs/acme/workspaces/<id>/files`, after a plain click.
+  The app opens it in the same window. A click with a modifier key stays
+  with the browser, as for each link of the app. Without `onOpenPage`, a
+  chip is a plain link.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.
@@ -127,8 +132,8 @@ the connection. The app makes the controller with a stable `client` and
   nothing.
 
 The app can also give the controller `sources`, a `ChatSources` from
-`state/sources.ts`. It gives the account, the org, the models, and the
-members from the models of the app.
+`state/sources.ts`. It gives the account, the org, the models, the
+members, and the workspace list of the org from the models of the app.
 
 - With sources, the load sends none of these four reads and writes none of
   these values. So no reply of an old read replaces a newer value of the
@@ -138,3 +143,10 @@ members from the models of the app.
 - `start` copies the sources into the snapshot and follows them. `stop`
   ends the subscriptions. `hide` and `show` keep them.
 - A chat without sources reads the four values at each load.
+- The workspace list gives the chips their workspaces, with the archived
+  ones. The chat watches it from `start` or `show` until `hide` or `stop`,
+  through `watchWorkspaces`, which the app connects to
+  `OrgModel.watch('list')`. So the chips stay current on a phone, where no
+  list is on the screen, and a hidden chat reads nothing. A chat without
+  sources reads the list itself while it shows, with the wait of a shown
+  list of the app, in `state/workspace-list.ts`.

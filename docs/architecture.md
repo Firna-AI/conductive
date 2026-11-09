@@ -223,15 +223,21 @@ the merge.
 
 ## Protocol docs
 
-- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
-  image and the life of a workspace.
+- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the
+  life of a workspace, and the number and the link of each workspace.
+- [Org image](protocol/org-image.md): the org image, its builds and its
+  refreshes, and the first build of a new org.
 - [Workspace tools](protocol/workspace-tools.md): the tools of a workspace.
 - [Create a workspace](protocol/create-a-workspace.md): New workspace as a
   page or as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox.
-- [Chat and events](protocol/chat-and-events.md): sessions, messages, what
-  the chat shows, and the events.
+- [Chat and events](protocol/chat-and-events.md): messages, what the chat
+  shows, and the events.
+- [Agents and sessions](protocol/agents-and-sessions.md): the agents and
+  their logins, the sessions, and the names of workspaces and sessions.
+- [Workspace links](protocol/workspace-links.md): Copy link, and the chips
+  that show workspace links in chat.
 - [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
   messages in the chat, with their tables.
 - [Agent runner](protocol/agent-runner.md): the connection of the runner,

@@ -53,6 +53,14 @@ The three default model columns can be all set or all unset.
 The nullable `new_workspace_view` column holds `page` or `dialog`.
 An unset view uses the page. An unset model uses the configured app default.
 
+`202611091200_workspace_numbers.sql` gives each workspace its number in its org.
+It backfills by creation time, then workspace ID, before it installs the allocation trigger.
+The `workspaces_allocate_number` trigger owns allocation.
+It increments `orgs.workspace_number_count` and assigns that number inside the workspace insert transaction.
+A unique index protects each org and number pair.
+Cleanup never lowers the counter. Restore keeps the same org row and counter.
+Read the inserted row again to get its number. SQLite `RETURNING` runs before the AFTER trigger.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -85,6 +93,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
 | 15o Org suspension | `202611080000`–`202611080059` |
 | Agent tool lists and names | `202611081300`–`202611081359` |
+| Workspace link chips | `202611091200`–`202611091259` |
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |

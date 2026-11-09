@@ -21,10 +21,12 @@ at `app/chat/tables`, and in the open work of a turn at
   - tables, as [Tables](#tables) says
 - The lines of one paragraph show as one paragraph.
 - A heading shows as the text of a paragraph, without its `#` marks.
-- Other Markdown shows as the text that the agent wrote, such as a link, a
-  quote, or emphasis with one `*`.
-- Inline code and strong text also show in list items and table cells. A
-  code block shows its text with no formatting.
+- A workspace link outside code shows as a chip, as
+  [Messages and answers](workspace-links.md#messages-and-answers) says.
+- Other Markdown shows as the text that the agent wrote, such as a link
+  that is not a workspace link, a quote, or emphasis with one `*`.
+- Inline code, strong text, and workspace chips also show in list items
+  and table cells. A code block shows its text with no formatting.
 - HTML in an agent message shows as text, also in a table.
 - Reason: sandbox code is untrusted, as
   [Trust boundaries](../architecture.md#trust-boundaries) says, and it can
@@ -70,8 +72,8 @@ at `app/chat/tables`, and in the open work of a turn at
   it.
 - With no colon, the column keeps its text at the start.
 - The header cell of a column takes the alignment of its column too.
-- The text of a cell shows its inline code and its strong text, as in a
-  paragraph.
+- The text of a cell shows its inline code, its strong text, and its
+  workspace chips, as in a paragraph.
 - A row with more cells than the header row shows only the cells under
   the columns. The other cells do not show.
 

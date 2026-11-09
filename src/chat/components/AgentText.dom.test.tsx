@@ -1,6 +1,12 @@
 // @vitest-environment happy-dom
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
+import { routes } from '../../app/router'
+import type { Workspace } from '../../shared/workspaces'
+import { accessibleName } from '../../test-support/dom-queries'
+import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { LinksProvider } from '../links/LinksContext'
 import { AgentText } from './AgentText'
 
 /** An answer as the chat draws it, in a page that the test can read. */
@@ -119,6 +125,43 @@ it('shows an escaped pipe, inline code, and strong text in a cell, and its HTML 
     strong: '2',
     html: 0,
   })
+})
+
+it('shows a workspace link in a table cell as its chip, and a link in code as code', () => {
+  const linked = workspaceFixtures().workspaces.workspaces[0] as Workspace
+  const page = document.createElement('div')
+  page.innerHTML = renderToStaticMarkup(
+    <LinksProvider
+      value={{ links: { orgId: FAKE_IDS.org, workspaces: [linked] } }}
+    >
+      <AgentText
+        text={[
+          '| Workspace | Command |',
+          '| --- | --- |',
+          `| [W-${linked.number}](${linked.link}) | \`open ${linked.link}\` |`,
+          `| ${linked.link} | Run it there. |`,
+        ].join('\n')}
+      />
+    </LinksProvider>,
+  )
+  const chip = `${routes.workspace(FAKE_IDS.org, linked.id)} W-${linked.number} ${linked.name}, Starting`
+  expect(
+    Array.from(page.querySelectorAll('td'), (cell) => ({
+      chips: Array.from(
+        cell.querySelectorAll('a'),
+        (link) => `${link.getAttribute('href')} ${accessibleName(link)}`,
+      ),
+      code: Array.from(
+        cell.querySelectorAll('code'),
+        (code) => code.textContent,
+      ),
+    })),
+  ).toEqual([
+    { chips: [chip], code: [] },
+    { chips: [], code: [`open ${linked.link}`] },
+    { chips: [chip], code: [] },
+    { chips: [], code: [] },
+  ])
 })
 
 it('starts a table directly after a line of a paragraph or a list, and ends it at a line without a pipe', () => {

@@ -15,6 +15,7 @@ import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
+import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
@@ -133,6 +134,9 @@ export const conversationKeys = [
   'files-unavailable',
   'stopped-files-unavailable',
   'linked',
+  'link-sent',
+  'link-answer',
+  'other-org-link',
   'steered',
   'mac-in-work',
   'table-resources',
@@ -275,6 +279,7 @@ export const conversations: Readonly<
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations,
+  ...workspaceLinkConversations(history),
   ...workConversations({
     start: autocompleteStart,
     tests: autocompleteTests,

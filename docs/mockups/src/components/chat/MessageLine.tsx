@@ -5,8 +5,8 @@ import type {
   ChatItem,
   MessageTable,
 } from '../../fixtures/conversations'
-import { InlineText } from '../common/InlineText'
 import { AgentBlocks } from './AgentBlocks'
+import { MessageText } from './MessageText'
 import styles from './ToolGroup.module.css'
 
 type AgentItem = Extract<ChatItem, { kind: 'agent' }>
@@ -30,7 +30,7 @@ function TableText(props: { table: MessageTable }) {
   return cells.map((cell, index) => (
     <Fragment key={index}>
       {index > 0 ? ' · ' : null}
-      <InlineText text={cell} />
+      <MessageText text={cell} />
     </Fragment>
   ))
 }
@@ -47,7 +47,7 @@ function RestText(props: {
   return parts.map((part, index) => (
     <Fragment key={index}>
       {typeof part === 'string' ? (
-        <InlineText text={part} />
+        <MessageText text={part} />
       ) : (
         <TableText table={part} />
       )}{' '}
@@ -76,7 +76,7 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
         <span className={styles.messageText}>
           {lead.map((paragraph) => (
             <span className={styles.paragraph} key={paragraph}>
-              <InlineText text={paragraph} />{' '}
+              <MessageText text={paragraph} />{' '}
             </span>
           ))}
           {table ? (
@@ -88,7 +88,7 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
             <span className={styles.bullets}>
               {bullets.map((bullet) => (
                 <span className={styles.bullet} key={bullet}>
-                  <InlineText text={bullet} />{' '}
+                  <MessageText text={bullet} />{' '}
                 </span>
               ))}
             </span>

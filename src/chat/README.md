@@ -30,6 +30,7 @@ stops its own controller:
   onWorkspaceChange={(workspace) => showInHeader(workspace)}
   onViewChange={(view) => keepTabs(view)}
   onOpenDiff={(path) => openDiffTab(path)}
+  onOpenPage={(to) => navigate(to)}
   onConnectAgent={(agent) => openAccount(agent)}
 />
 ```
@@ -42,7 +43,8 @@ the Mac app shows outside the chat, and `useChatController`.
 
 [A chat that the app keeps](integration.md#a-chat-that-the-app-keeps)
 says how `WorkspaceChatView` draws a controller that the app keeps: its
-`show`, `hide`, and `stop`, and its `sources`.
+`show`, `hide`, and `stop`, its `sources`, and the workspace list of its
+chips.
 
 ## Rules for this code
 
@@ -56,12 +58,14 @@ says how `WorkspaceChatView` draws a controller that the app keeps: its
   says what folds when a turn ends. It also says that the line of each fold
   stays in place when the user opens or closes it, also for a run of calls.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
-  formatting and the tables of agent messages. [Agent text](agent-text.md)
-  gives the rules of the code that formats them, and the table parts that
+  formatting and the tables of agent messages.
+  [Workspace links](../../docs/protocol/workspace-links.md) states the
+  chips of sent messages and answers. [Agent text](agent-text.md) gives the
+  rules of the code that formats them: the chips, and the table parts that
   the chat shares with the file preview and the mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, and Stop.
+  sends, the message field of each composer, and Stop.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,
@@ -77,7 +81,7 @@ says how `WorkspaceChatView` draws a controller that the app keeps: its
   the mockups, and the composer of a new workspace share it. The chat keeps
   no size formatter of its own.
 - User-facing text follows the
-  [names in the product](../../docs/protocol/chat-and-events.md#names-in-the-product):
+  [names in the product](../../docs/protocol/agents-and-sessions.md#names-in-the-product):
   no "Claude Code", and no provider name.
 
 ## Development page
@@ -131,7 +135,17 @@ check in the Mac app.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/chat-and-events.md#messages)
   states.
+- `components/chip-field/`: `ChipTextField`, the message field of every
+  composer. [The message field](loads-and-sends.md#the-message-field)
+  gives its rules and its files.
 - `state/load.ts`: the order of the first reads and the stream start.
+- `links/`: `workspace-links.ts`, the link syntax, the reader of the
+  links of a message field, and `linkTarget`, `chat-parts.ts`, the one
+  tokenizer of sent messages and answers, `LinksContext.tsx`, the
+  workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
+  which draws the parts of a message or an answer.
+- `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
+  read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
@@ -175,10 +189,10 @@ check in the Mac app.
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.
 - `components/agent-text.ts`: `textBlocks`, the paragraphs, lists, code
-  blocks, and tables of an agent message, with `TextTable`, and
-  `inlineParts`, its inline code and strong text.
+  blocks, and tables of an agent message, with `TextTable`.
   `components/AgentText.tsx`: `AgentText`, which draws them, and
-  `AgentBlocks` and `InlineMarkdown`, which the message line shares.
+  `AgentBlocks`, which the message line shares. Their text draws through
+  `LinkedText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which

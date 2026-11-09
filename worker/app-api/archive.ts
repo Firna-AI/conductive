@@ -1,5 +1,7 @@
-import type { ArchiveCheckResponse } from '../../src/shared/workspaces'
-import { workspacePaths } from '../../src/shared/workspaces'
+import {
+  workspacePaths,
+  type ArchiveCheckResponse,
+} from '../../src/shared/workspaces'
 import { workspaceBinding } from './workspace-state'
 import { workspaceChildId } from './workspace-path'
 import type { RequestContext } from '../security/gate'
@@ -86,6 +88,7 @@ export async function archiveRoute(
             id,
             context.user.id,
             context.body?.discardUnpushedWork === true,
+            env.APP_ORIGIN,
           ),
         ),
   )

@@ -1,16 +1,17 @@
 import type { AgentBlock } from '../../fixtures/conversations'
-import { InlineText } from '../common/InlineText'
 import { MarkdownTable } from '../common/MarkdownTable'
+import { MessageText } from './MessageText'
 
-/** A cell of a table in a message, with its inline code. */
+/** A cell of a table in a message, with the text of a paragraph. */
 function messageCell(text: string) {
-  return <InlineText text={text} />
+  return <MessageText text={text} />
 }
 
 /**
  * The blocks of a message of the agent, in order: its paragraphs and its
- * tables, then its list. The element around them sets the type and the
- * space between them.
+ * tables, then its list. Their text keeps its inline code, and each link to
+ * a workspace of the org is a chip. The element around them sets the type
+ * and the space between them.
  */
 export function AgentBlocks(props: {
   blocks: readonly AgentBlock[]
@@ -21,7 +22,7 @@ export function AgentBlocks(props: {
       {props.blocks.map((block, index) =>
         typeof block === 'string' ? (
           <p key={index}>
-            <InlineText text={block} />
+            <MessageText text={block} />
           </p>
         ) : (
           <MarkdownTable
@@ -37,7 +38,7 @@ export function AgentBlocks(props: {
         <ul>
           {props.bullets.map((bullet) => (
             <li key={bullet}>
-              <InlineText text={bullet} />
+              <MessageText text={bullet} />
             </li>
           ))}
         </ul>

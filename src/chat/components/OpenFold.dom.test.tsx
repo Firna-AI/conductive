@@ -1,40 +1,28 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { createApiClient } from '../../app/api/client'
-import type { WorkspaceEvent } from '../../shared/events'
+import { routes } from '../../app/router'
+import type { Workspace } from '../../shared/workspaces'
 import {
   accessibleName,
-  byLabel,
   byText,
   queryByText,
 } from '../../test-support/dom-queries'
-import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { MOUNTED_TEST_TIMEOUT, press, waitFor } from '../../test-support/mount'
 import {
-  holdAnimationFrames,
-  mount,
-  MOUNTED_TEST_TIMEOUT,
-  press,
-  waitFor,
-} from '../../test-support/mount'
-import type { SubscribeToWorkspace } from '../stream/workspace-stream'
-import { WorkspaceChat } from '../WorkspaceChat'
-import { ended, said, update } from './event-kit'
-import { textOf } from './render-kit'
+  bodyOf,
+  foldOf,
+  lineOf,
+  mountFinishedTurn,
+  place,
+  pressed,
+  textIn,
+} from './open-fold-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-const answer = 'The form now suggests addresses.'
-const plan = [
-  'The proxy already returns predictions, so the work is in the form:',
-  '- Add a `useAddressAutocomplete` hook',
-  '',
-  'Then, in this order:',
-  '1. Fill the other fields',
-  '2. Run the tests',
-].join('\n')
 const blocks = [
   'The proxy already returns predictions, so the work is in the form:',
   'Add a useAddressAutocomplete hook',
@@ -60,95 +48,6 @@ const timings = [
   '| 4 | 3m 10s |',
 ].join('\n')
 const timingsLine = 'Workers · Time · 4 · 3m 10s'
-
-/**
- * Mounts the chat of the recorded turn, which goes on with `work`, by
- * default a message of four blocks, then a call and its answer, then a call
- * after the answer, and finishes. `emit` sends a later event of the
- * workspace.
- */
-async function mountFinishedTurn(work: readonly string[] = [plan]) {
-  holdAnimationFrames()
-  const server = new FakeApiServer({ conversation: 'running' })
-  const emit = (event: WorkspaceEvent) =>
-    server.events.emit({
-      workspaceId: FAKE_IDS.workspace,
-      eventNumber: server.events.history().throughEventNumber + 1,
-      occurredAt: FAKE_TIME,
-      event,
-    })
-  work.forEach((text, index) => emit(said(`plan-${index + 2}`, text)))
-  emit(update('lint', 'npm run lint', 0))
-  emit(said('answer-3', answer))
-  emit(update('unit', 'npm test', 0))
-  emit(ended('finished'))
-  const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
-    server.events.subscribe(after, (message) => listener.message(message))
-  await mount(
-    <WorkspaceChat
-      client={createApiClient(server.fetch)}
-      orgId={FAKE_IDS.org}
-      subscribe={subscribe}
-      viewport="desktop"
-      workspaceId={FAKE_IDS.workspace}
-    />,
-  )
-  await waitFor(() => queryByText(answer), 'the answer of the turn')
-  return { emit }
-}
-
-/** The `<details>` of a fold or a message line, from an element of its line. */
-function foldOf(element: Element): HTMLDetailsElement {
-  const details = element.closest('details')
-  if (!details) throw new Error('The element is in no fold')
-  return details
-}
-
-/** The line of the fold or the message line that holds the element. */
-function lineOf(element: Element): HTMLElement {
-  const line = foldOf(element).querySelector<HTMLElement>(':scope > summary')
-  if (!line) throw new Error('The fold has no line')
-  return line
-}
-
-/** The text of an element, with each tag as a space. */
-const textIn = (element: Element) => textOf(element.innerHTML).trim()
-
-/**
- * Lays the line out at `top` in the chat. The chat keeps its bottom in
- * place, so a fold that opens pushes its line up by the height that it
- * adds, unless the chat scrolls.
- */
-function place(line: HTMLElement, top: number, adds: number) {
-  const scroller = byLabel('Chat').firstElementChild
-  if (!(scroller instanceof HTMLElement)) throw new Error('No chat scrolls')
-  vi.spyOn(line, 'getBoundingClientRect').mockImplementation(() =>
-    DOMRect.fromRect({
-      y: top - (foldOf(line).open ? adds : 0) - scroller.scrollTop,
-      height: 24,
-    }),
-  )
-}
-
-/**
- * The blocks of a message line in its fold, outside its line: a paragraph
- * as its text, and a table as the text of its cells, row by row.
- */
-function bodyOf(line: HTMLElement): (string | string[][])[] {
-  return Array.from(foldOf(line).querySelectorAll('p, table'), (block) =>
-    block.tagName === 'TABLE'
-      ? Array.from(block.querySelectorAll('tr'), (row) =>
-          Array.from(row.children, textIn),
-        )
-      : textIn(block),
-  )
-}
-
-/** Presses the line, then reads whether its fold is open, and its top. */
-async function pressed(line: HTMLElement) {
-  await press(line)
-  return { open: foldOf(line).open, top: line.getBoundingClientRect().top }
-}
 
 describe('an open fold', () => {
   it('lists its steps in order, opens a message line to its full text, and keeps both choices', async () => {
@@ -221,7 +120,7 @@ describe('an open fold', () => {
   })
 
   it('shows a message with a table as one line, opens the table and the rest under the line, keeps the line in place, and keeps a name for a line that starts with a table', async () => {
-    await mountFinishedTurn([sizes, timings])
+    await mountFinishedTurn({ work: [sizes, timings] })
     const work = byText('2 tool calls, 3 messages')
     await press(work)
     // The message lines of the work, after the recorded message.
@@ -264,6 +163,64 @@ describe('an open fold', () => {
           ['4', '3m 10s'],
         ],
       ],
+    })
+  })
+
+  it('shows a workspace chip in the table of a message line, and keeps no hidden link in the open line of a message that starts with the table', async () => {
+    const linked = workspaceFixtures().workspaces.workspaces[0] as Workspace
+    await mountFinishedTurn({
+      work: [`| Workspace |\n| --- |\n| ${linked.link} |`],
+    })
+    const work = byText('2 tool calls, 2 messages')
+    await press(work)
+    const [, line] = foldOf(work).querySelectorAll<HTMLElement>(
+      ':scope > ul > li > details > summary',
+    )
+    const links = (root: Element) =>
+      Array.from(root.querySelectorAll('a'), (link) =>
+        link.getAttribute('href'),
+      )
+    const closed = links(line)
+    await press(line)
+    const to = routes.workspace(FAKE_IDS.org, linked.id)
+    expect({ closed, open: links(line), fold: links(foldOf(line)) }).toEqual({
+      closed: [to],
+      open: [],
+      fold: [to],
+    })
+  })
+
+  it('lets a workspace chip in a message line open its page, and leaves a click with a modifier key to the browser', async () => {
+    const linked = workspaceFixtures().workspaces.workspaces[0] as Workspace
+    const opened: string[] = []
+    await mountFinishedTurn({
+      work: [`Next, compare ${linked.link} too.`],
+      onOpenPage: (to) => opened.push(to),
+    })
+    await press(byText('2 tool calls, 2 messages'))
+    const to = routes.workspace(FAKE_IDS.org, linked.id)
+    const chip = await waitFor(
+      () => document.querySelector<HTMLAnchorElement>(`a[href="${to}"]`),
+      'the chip in the message line',
+    )
+    await press(chip)
+    const plain = [...opened]
+    // A browser opens the page of a click with a modifier key itself, and
+    // toggles no fold for a click on a link in its line.
+    const newTab = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      ctrlKey: true,
+    })
+    act(() => {
+      chip.dispatchEvent(newTab)
+    })
+    expect({
+      plain,
+      modified: { kept: newTab.defaultPrevented, opened },
+    }).toEqual({
+      plain: [to],
+      modified: { kept: false, opened: [to] },
     })
   })
 })

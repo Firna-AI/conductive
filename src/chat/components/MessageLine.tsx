@@ -4,10 +4,15 @@ import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.c
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import markdown from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
-import { AgentBlocks, InlineMarkdown } from './AgentText'
+import { LinkedText } from '../links/LinkedText'
+import { LinksProvider, type ChatLinks } from '../links/LinksContext'
+import { AgentBlocks } from './AgentText'
 import { textBlocks, type TextBlock, type TextTable } from './agent-text'
 import local from './chat.module.css'
 import { useFold } from './useFold'
+
+/** No link is a chip here, as outside a chat, so the text holds no link. */
+const plainLinks: ChatLinks = { links: { orgId: '', workspaces: null } }
 
 /** The cells of a table as text, row by row, with a dot between two cells. */
 function TableText(props: { table: TextTable }) {
@@ -15,19 +20,20 @@ function TableText(props: { table: TextTable }) {
   return [head, ...rows].flat().map((cell, index) => (
     <Fragment key={index}>
       {index > 0 ? ' · ' : null}
-      <InlineMarkdown text={cell} />
+      <LinkedText strong text={cell} />
     </Fragment>
   ))
 }
 
 /**
- * A block of a message line, as `AgentText` draws it. A `<summary>` holds
- * only phrasing content, so each block is a span, which CSS shows as a block
- * while the line is open. A code block takes the look of an answer's code
- * block only then, so the closed line shows its text in the line. Each item
- * of a numbered list writes its number, because a browser numbers a list
- * item of spans by the items of the list of the fold. A table shows as its
- * cells, so the closed line stays one line.
+ * A block of a message line, as `AgentText` draws it, with the same text
+ * and workspace chips. A `<summary>` holds only phrasing content, so each
+ * block is a span, which CSS shows as a block while the line is open. A
+ * code block takes the look of an answer's code block only then, so the
+ * closed line shows its text in the line. Each item of a numbered list
+ * writes its number, because a browser numbers a list item of spans by the
+ * items of the list of the fold. A table shows as its cells, so the closed
+ * line stays one line.
  */
 function LineBlock(props: { block: TextBlock; open: boolean }) {
   const { block } = props
@@ -35,7 +41,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
     case 'p':
       return (
         <span className={classes(styles.paragraph, local.lineBlock)}>
-          <InlineMarkdown text={block.text} />{' '}
+          <LinkedText strong text={block.text} />{' '}
         </span>
       )
     case 'ul':
@@ -43,7 +49,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
         <span className={classes(styles.bullets, local.lineBlock)}>
           {block.items.map((item, index) => (
             <span className={styles.bullet} key={index}>
-              <InlineMarkdown text={item} />{' '}
+              <LinkedText strong text={item} />{' '}
             </span>
           ))}
         </span>
@@ -56,7 +62,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
           {block.items.map((item, index) => (
             <span className={styles.bullet} key={index}>
               <span className={local.number}>{index + 1}.</span>{' '}
-              <InlineMarkdown text={item} />{' '}
+              <LinkedText strong text={item} />{' '}
             </span>
           ))}
         </span>
@@ -100,7 +106,8 @@ function LineBlocks(props: { blocks: readonly TextBlock[]; open: boolean }) {
  * A `<summary>` holds no table. So the open line keeps the blocks before
  * the first table, and the table and the blocks after it open under the
  * line. A line that starts with a table keeps its closed text as its name
- * for a screen reader.
+ * for a screen reader. That hidden copy shows no chips, so it holds no link
+ * that the keyboard can reach while nobody sees it.
  */
 export function MessageLine(props: { text: string }) {
   const [open, setOpen] = useState(false)
@@ -121,7 +128,9 @@ export function MessageLine(props: { text: string }) {
           <LineBlocks blocks={lead} open={open} />
           {split && lead.length === 0 ? (
             <span className={a11y.hidden}>
-              <LineBlocks blocks={body} open={false} />
+              <LinksProvider value={plainLinks}>
+                <LineBlocks blocks={body} open={false} />
+              </LinksProvider>
             </span>
           ) : null}
         </span>

@@ -3,7 +3,7 @@
 This guide belongs to [the chat](README.md). It gives the rules of the one
 order of the session, file, and diff tabs, the drag, the tab menu, and the
 scroll of the row.
-[The tab row](../../docs/protocol/chat-and-events.md#the-tab-row) states
+[The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) states
 the requirements.
 
 - The state keeps one saved order for session, file, and diff tabs. The row
