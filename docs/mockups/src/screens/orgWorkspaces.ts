@@ -30,7 +30,9 @@ export function createdWorkspaces(
   state: WorkspaceState,
 ): readonly OpenWorkspace[] {
   const later =
-    state.composer === 'workspace-link' || linkChats.has(state.conversation)
+    state.composer === 'workspace-link' ||
+    state.composer === 'workspace-link-pointer' ||
+    linkChats.has(state.conversation)
   return later && !isNew(state)
     ? [{ workspace: savedCarts, status: 'working' }]
     : []

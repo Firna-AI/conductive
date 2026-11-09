@@ -13,6 +13,7 @@ import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
+import { fileMentionConversations } from './fileMentions'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -129,6 +130,7 @@ export const conversationKeys = [
   'other-org-link',
   'steered',
   'mac-in-work',
+  'mention-answer',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -264,6 +266,7 @@ export const conversations: Readonly<
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations,
   ...workspaceLinkConversations(history),
+  ...fileMentionConversations(history),
   ...workConversations({
     start: autocompleteStart,
     tests: autocompleteTests,

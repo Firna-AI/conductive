@@ -1,21 +1,51 @@
 import { FileText, ImageIcon, X } from 'lucide-react'
 import type { Attachment } from '../../fixtures/attachments'
 import { IconButton } from '../common/actions'
+import { classes } from '../common/classes'
+import { ChipIconCell, useNoHover } from './ChipRemove'
 import { formatSize } from './sizes'
 import styles from './AttachmentChips.module.css'
 
-/** The files attached to the next message, each with a way to remove it. */
-export function AttachmentChips(props: { attachments: readonly Attachment[] }) {
+/**
+ * The files attached to the next message. Each file shows its icon in a
+ * cell at its start, which a pointer or the keyboard focus turns into a ×
+ * that removes the file (decision 215). Where no pointer hovers, the icon
+ * stays, and the × button of touch size follows the size, as before
+ * (decision 217). A view has no pointer, so `pointer` names the file that
+ * it draws with the pointer over its icon.
+ */
+export function AttachmentChips(props: {
+  attachments: readonly Attachment[]
+  pointer?: string
+}) {
+  const noHover = useNoHover()
   return (
     <ul aria-label="Attached files" className={styles.chips}>
       {props.attachments.map((file) => {
         const Icon = file.kind === 'image' ? ImageIcon : FileText
+        const removal = {
+          name: file.name,
+          pointer: props.pointer === file.name,
+        }
         return (
-          <li className={styles.chip} key={file.name}>
-            <Icon aria-hidden className={styles.icon} size={13} />
+          <li
+            className={classes(
+              styles.chip,
+              styles.removable,
+              noHover && styles.withEnd,
+            )}
+            key={file.name}
+          >
+            <ChipIconCell
+              focusable
+              icon={<Icon aria-hidden size={13} />}
+              removal={removal}
+            />
             <span className={styles.name}>{file.name}</span>
             <span className={styles.size}>{formatSize(file.sizeBytes)}</span>
-            <IconButton icon={X} label={`Remove ${file.name}`} quiet />
+            {noHover ? (
+              <IconButton icon={X} label={`Remove ${file.name}`} quiet />
+            ) : null}
           </li>
         )
       })}

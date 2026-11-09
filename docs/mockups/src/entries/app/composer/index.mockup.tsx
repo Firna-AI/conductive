@@ -8,7 +8,7 @@ import {
 export const composer = defineScreen({
   title: 'Composer',
   description:
-    'A message with two attached files. The paperclip uploads files, which show as chips above the text. One picker sets the model and the effort of the next message, such as "Opus 5.5 High". The user started the session, so the bar names no login.',
+    'A message with two attached files. The paperclip uploads files, which show as chips above the text. Each file shows its icon in a cell at its start, which a pointer turns into a × that removes the file, as `app/file-mentions/chips/attached-file` shows. One picker sets the model and the effort of the next message, such as "Opus 5.5 High". The user started the session, so the bar names no login.',
   rationale:
     'The picker names the model and shows the effort in a muted colour, without the names of the agents, so it stays short. The app offers the Claude and Codex models only for now. Each session has its own picker, as the user chose in decision 19. The sandbox keeps each file, and an image also goes to the model. Every composer uses the same controls, also the one of a new workspace.',
   relatedDocs: [],

@@ -10,6 +10,7 @@
     "open-workspace-from-palette",
     "create-org",
     "mac-command",
-    "link-a-workspace"
+    "link-a-workspace",
+    "mention-a-file"
   ]
 }

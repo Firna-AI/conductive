@@ -243,9 +243,8 @@ was asked.
 - The up and down arrows move the highlight, and the first row starts
   highlighted. Enter or Tab picks the row. While the list is open, Enter
   picks and never sends. A press on a row picks it.
-- Texts: "Loading files…" while the tree loads, "The file list is
-  unavailable" when it is unavailable, and "Nothing matches “<query>”".
-  Milestone 1 sets the final words.
+- Texts: "Loading files…" while the tree loads, "The list of all files is
+  unavailable" when no tree is available, and "Nothing matches “<query>”".
 - The list notes itself in the open layers of the app shell, as a menu of
   the chat does.
 - The list builds on `@lexical/react/LexicalTypeaheadMenuPlugin`, which
@@ -297,6 +296,35 @@ was asked.
   connection.
 - The press on a file or a folder uses the navigation of the Files part.
 
+### What the mockups changed
+
+Milestone 1 drew the screens on 9 November 2026. These are my calls from
+that work:
+
+- The pages live at `app/file-mentions`, beside `app/workspace-links`, not
+  under `app/composer`. Reason: `app/composer` already shows five screens,
+  and a folder with child pages shows only its canonical screen, so child
+  pages there would move its four states.
+- On a phone an attached file keeps its × button of touch size at its end,
+  as today. Reason: a × inside the chip is only as high as the chip, which
+  is too small for a finger. A chip in the text keeps a × as high as its
+  line, as decision 217 accepts.
+- The words of the list are "Loading files…", "The list of all files is
+  unavailable", and "Nothing matches “<query>”". Reason: they follow All
+  files and the command palette.
+- When the kept tree is marked unavailable but holds entries, the list
+  shows those entries with no note. Reason: the entries are most likely
+  still right, and the note belongs to All files.
+- The cell of the icon takes the hover fill of a chip link,
+  `--ui-selected`, under the pointer.
+- The mockups keep the shared parts for the app: the pill of every chip in
+  `InlineChip.module.css`, the cell and the end × in `ChipRemove.tsx`,
+  `FileChip`, `FileMentionList`, and `EntryIcon`. `FileChip` imports no
+  fixture code, so the app can use it, as it uses `WorkspaceChip`.
+- A static view cannot nest the × button in a link, so the mockups draw
+  the name of a chip in the field without its link. The app opens the
+  file on a press on the name.
+
 ### Design calls
 
 Each call is my own, made on 9 November 2026.
@@ -334,19 +362,23 @@ Depends on: none
 
 Draw the list, the file chips, and the × of each chip of the composer.
 
-- [ ] Add a child page of `app/composer` for the list, with at most five
-      screens: a query with matches, the list without a query, nothing
-      matches, and the unavailable list.
-- [ ] Add a child page for the chips: file and folder chips in the field,
-      the × under the pointer, and a sent message with file chips.
-- [ ] Show the × under the pointer on a workspace chip and on an attached
+- [x] Add the page `app/file-mentions` with a query with matches, and its
+      child page `list` with the list without a query, nothing matches,
+      the loading list, and the unavailable list.
+- [x] Add the child page `app/file-mentions/chips`: file and folder chips
+      in the field, the × under the pointer, and a sent message with file
+      chips.
+- [x] Show the × under the pointer on a workspace chip and on an attached
       file. Remove the × at the end of each attached file in
       `app/composer`.
-- [ ] Draw the phone variant of each screen, with the × at the end of
+- [x] Draw the phone variant of each screen, with the × at the end of
       each chip, as decision 217 says.
-- [ ] Update `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Add the flow `user-flows/mention-a-file`.
+- [x] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
+- [x] Capture the marketing pictures again, because the `agents` picture
+      shows attached files.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -376,13 +408,18 @@ Milestone 8p of [the main plan](boat-native-remote-workspaces.md) also
 changes the attached files of the composer. The branch that merges second
 keeps both changes.
 
-- [ ] Add the shared icon part of a chip, which swaps the icon for a ×
-      while a pointer is over it.
-- [ ] Use it in the workspace chip of the message field. The × removes
-      the chip as one step of undo.
-- [ ] Use it in the attached files. Remove the × at the end.
+- [ ] Use the shared icon part of a chip from the mockups,
+      `ChipIconCell` and `ChipEndRemove` in
+      `docs/mockups/src/components/chat/ChipRemove.tsx`, which swaps the
+      icon for a × while a pointer is over it.
+- [ ] Use it in the workspace chip of the message field, through the
+      `removal` prop of `WorkspaceChip`. The × removes the chip as one step
+      of undo.
+- [ ] Use it in the attached files, with the classes of
+      `AttachmentChips.module.css`. Remove the × at the end on desktop.
 - [ ] Where no pointer hovers, show the × at the end of each chip, as
-      decision 217 says.
+      decision 217 says. An attached file keeps its × button of touch
+      size there.
 - [ ] Add DOM tests for the removal from the field and from the files.
 
 ## Milestone 4: The list
@@ -391,7 +428,9 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Add the module of the text form to the chat, with unit tests.
+- [ ] Add the module of the text form to the chat, with unit tests. The
+      mockup `fileMentions.ts` gives the order of the rows.
+- [ ] Use the list of the mockups, `FileMentionList` and its styles.
 - [ ] Give the chat the kept files of the workspace, connected while the
       chat shows.
 - [ ] Add the match and the order of the rows, with unit tests.
@@ -408,8 +447,9 @@ Tags: ui
 
 Depends on: 3, 4
 
-- [ ] Add the file chip and the folder chip to the message field: a pick,
-      the draft, a paste, a copy, and the ×.
+- [ ] Add the file chip and the folder chip to the message field, with
+      `FileChip` of the mockups: a pick, the draft, a paste, a copy, and
+      the ×.
 - [ ] Show the chips in sent messages.
 - [ ] Open a file, or show a folder in All files, on a press.
 - [ ] Add DOM tests for the chip, the draft, and the press.

@@ -41,3 +41,16 @@
   font-size: var(--ui-text-xs);
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * A file of the composer starts with the cell of its icon, at its edge,
+ * and its size ends it (decision 215).
+ */
+.removable {
+  padding: 0 8px 0 0;
+}
+
+/* Where no pointer hovers, the × at the end closes the file. */
+.withEnd {
+  padding-right: 0;
+}
