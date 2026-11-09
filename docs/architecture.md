@@ -224,13 +224,22 @@ the merge.
 ## Protocol docs
 
 - [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
-  image, the life of a workspace, and the tools of a workspace.
+  image, the life of a workspace, and the number and the link of each
+  workspace.
+- [Tools of a workspace](protocol/tools-of-a-workspace.md): All files and
+  Changes, the terminal, port previews, and the desktop.
 - [Create a workspace](protocol/create-a-workspace.md): New workspace as a
   page or as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox.
-- [Chat and events](protocol/chat-and-events.md): sessions, messages, the
-  agent runner, and the events.
+- [Chat and events](protocol/chat-and-events.md): messages, what the chat
+  shows, and the events.
+- [Agents and sessions](protocol/agents-and-sessions.md): the agents and
+  their logins, the sessions, and the names of workspaces and sessions.
+- [Workspace links](protocol/workspace-links.md): Copy link, and the chips
+  that show workspace links in chat.
+- [Agent runner](protocol/agent-runner.md): the program in each sandbox,
+  its events and their limits, and the repair of lost updates.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
 - [GitHub banner](protocol/github-banner.md): the pull request bar and its

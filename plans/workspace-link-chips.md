@@ -55,6 +55,9 @@ Related work on other branches:
 
 Contract owners:
 
+- [Workspace links](../docs/protocol/workspace-links.md) holds Copy link,
+  chips, and the message-field rules.
+
 - [Chat and events](../docs/protocol/chat-and-events.md). Milestone 2
   adds the chips.
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md).
@@ -204,6 +207,10 @@ approved.
   box shows the chips again when a draft comes back, such as after a
   failed send or a draft move to a new session. Reason: the drafts, the
   sends, and the stored history then need no change.
+- Agent call, from the documentation check on 9 November 2026: normal
+  typed text keeps its existing behaviour. Paste and restored drafts
+  create chips. Reason: automatic conversion of manually typed URLs is
+  outside the approved paste feature and is not needed to complete it.
 - Agent call: Enter, Shift+Enter, the input methods of other languages,
   the touch keyboard, the placeholder, the limit of eight lines in the
   chat and page, and the focus keep their rules of today. The New
@@ -240,6 +247,19 @@ approved.
 - Agent call: the agent tools get no call that reads or messages another
   workspace. Reason: such a call lets sandbox code reach more of the org,
   so it needs its own brainstorm. Conductor's CLI can do both.
+
+### Link presentation
+
+- Agent call, from backend preparation on 9 November 2026: the Worker
+  builds public links at each response or browser-connection boundary.
+  A browser connection keeps its effective app origin. Internal saved
+  events and create results need no saved origin. Reason: local HTTP
+  requests and asynchronous Durable Object work have different origin
+  context, while each public link must open the same app.
+- Agent call: presentation fills the immutable number and current web
+  link in old saved workspace events and create results. It preserves
+  their saved names, states, times, and event numbers. Reason: an upgrade
+  must keep saved history readable without changing its order.
 
 ## Replaced ways
 
@@ -385,21 +405,22 @@ Depends on: 1, 1a
 The protocol docs state the number, Copy link, the chips, and the agent
 tool fields, with decisions 150 and 151 and their rejected options.
 
-- [ ] Add a section on workspace chips to
+- [x] Add workspace chip requirements in
+      `docs/protocol/workspace-links.md`, linked from
       `docs/protocol/chat-and-events.md`: the paste rule of the message
       boxes, the chips in sent messages and agent answers, the plain link
       that the message keeps, and the rules of a link that finds no
       workspace.
-- [ ] Add a section on workspace numbers to
+- [x] Add a section on workspace numbers to
       `docs/protocol/workspaces-and-sandboxes.md`: the number, the label,
       no reuse, the button in the header, and the link with the workspace
       ID.
-- [ ] Add the number and the link to the create and list calls in
+- [x] Add the number and the link to the create and list calls in
       `docs/protocol/agent-tools.md`.
-- [ ] Add number search to the command palette protocol. Search `395`
+- [x] Add number search to the command palette protocol. Search `395`
       and `W-395` with the same rules as workspace names. Show the label
       when the query matches it.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: Numbers and links in the Worker
 
@@ -422,12 +443,19 @@ of the app and of the agent tools.
       web app, the fake API, and the fixtures of `src/test-support/`.
 - [ ] Build `link` from `APP_ORIGIN`, the app origin of the Worker, also
       for the routes of the agent tools.
+- [ ] Present links for each browser connection and explicit response.
+      Keep local request origins distinct from the Durable Object's bound
+      environment. Fill number and link in older saved workspace events
+      and create results while preserving their saved fields and order.
 - [ ] Add `number` and `link` to `AgentWorkspaceSummary` and to the reply
       of a create. Describe the link in the CLI help and in the MCP tool
       descriptions in `tools/`.
 - [ ] Test the numbers of two creates, of a failed create, of the
       existing workspaces after the migration, and of a restored org. Test
       the link in the replies of the app and of the tools.
+- [ ] Test old-event replay and an asynchronous update through two local
+      app origins. Each connection gets its own link and the same saved
+      name, state, time, and event order.
 - [ ] Update `tools/README.md`, `worker/tools/README.md`, and
       `worker/lifecycle/README.md`.
 

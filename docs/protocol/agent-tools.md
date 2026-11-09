@@ -15,6 +15,9 @@ says.
 - With the workspace token, the tools can make only these three calls.
   [The workspace token](access-and-security.md#the-workspace-token) states
   what the token allows.
+- A call that reads the chat of another workspace, or sends it a message,
+  was left out. Reason: such a call lets sandbox code reach more of the
+  org.
 - The tools call `api.conductive.build`, the hostname for machines. Its
   gate checks the workspace token in place of a sign-in.
 - Create and list calls use `/v1/tools/workspaces`. Mac command requests
@@ -36,9 +39,19 @@ says.
 - Without a choice in the call, the new workspace gets the default section
   and the default model of its workspace owner.
 - The agent of the new workspace starts on the first message at once.
-- A list call returns every workspace of the org, with its name, its
-  branch, and its state. Reason: every member of the org already sees
-  these workspaces.
+- The reply to a create call gives the new workspace with its number and
+  its link, as
+  [Workspace numbers and links](workspaces-and-sandboxes.md#workspace-numbers-and-links)
+  says (decision 151).
+- A list call returns every workspace of the org, with its number, its
+  link, its name, its branch, and its state. Reason: every member of the
+  org already sees these workspaces.
+- The help of the CLI and the descriptions of the MCP tools say that a
+  workspace link in a message names the workspace with that link. They
+  also say that a workspace link in an answer shows as a chip, as
+  [Workspace links](workspace-links.md#messages-and-answers) says.
+- Reason: the agent can then match a link in a message to its workspace,
+  and point to a workspace that it created.
 
 ## Mac commands
 
