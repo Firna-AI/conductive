@@ -9,6 +9,7 @@ import {
   CircleMinus,
   Cloud,
   Contrast,
+  Download,
   ListTree,
   PanelsTopLeft,
   SquarePlus,
@@ -36,4 +37,5 @@ export const siteIcons: Readonly<Record<IconName, LucideIcon>> = {
   'circle-minus': CircleMinus,
   'calendar-check': CalendarCheck,
   'arrow-right': ArrowRight,
+  download: Download,
 }
