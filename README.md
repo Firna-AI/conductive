@@ -147,6 +147,9 @@ states how the Worker keeps them away from the browser and the sandboxes.
 `https://api.conductive.build`, and `PREVIEW_DOMAIN` is `conductive.page`.
 It sets `CONDUCTIVE_TITLE_MODEL` for automatic workspace names, as
 [The title model](docs/deployment.md#the-title-model) says.
+It also holds the model list and the app default in `CONDUCTIVE_MODELS`
+and `CONDUCTIVE_DEFAULT_CHOICE`. Edit these values in the repository.
+The next deploy publishes them, as [Models](docs/deployment.md#models) says.
 A value in `.dev.vars` replaces the corresponding production value locally.
 When `.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
 requests to that address keep that role. The
