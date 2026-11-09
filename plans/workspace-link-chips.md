@@ -15,7 +15,8 @@ The header shows the number as a Copy link button. The message boxes of
 the chat and of New workspace turn a pasted workspace link into a chip.
 Sent messages and agent answers show the same chips. A message keeps the
 plain link, which holds the workspace ID. So the agent reads the link,
-and the shown label can change later. The user chose this on
+and the shown label can change later. The search of the command palette
+also finds a workspace by its number. The user chose this on
 9 November 2026, in decisions 150 and 151.
 
 The change does not cover these things:
@@ -32,16 +33,22 @@ The change does not cover these things:
 The decision numbers continue after 149, the highest decision number on
 any branch on 9 November 2026. The brainstorm asked them as items 1 and 2.
 The options check of 9 November 2026 added options to both decisions. Its
-report is in `.context/workspace-link-chips/options-check.md`. Decision 151
-waits for one answer: whether to add option D or E to option B. No
-milestone waits for it, because D and E only add to B.
+report is in `.context/workspace-link-chips/options-check.md`. After the
+check, the user chose option D for decision 151: the number, and a search
+of the command palette that finds it.
 
 Related work on other branches:
 
 - `calummoore/command-palette-mockups` adds a command palette with a
-  workspace search. Option D of decision 151 adds the number to that
-  search. Both branches change `src/app/screens.md` and
-  `src/chat/README.md`, so the later merge resolves those files.
+  workspace search, in [PR #77](https://github.com/Firna-AI/remote-code/pull/77)
+  and the Conductor workspace "Command Palette Mockups". Decision 151 adds
+  the number to that search. This branch can merge without that part, as
+  the user said on 9 November 2026. When this branch is ready, the agent
+  checks whether the palette is on `main`. When it is, this branch adds
+  the number search. When it is not, this branch merges without it, and
+  after the merge a message asks the palette workspace to add it. Both
+  branches change `src/app/screens.md` and `src/chat/README.md`, so the
+  later merge resolves those files.
 - `calummoore/private-workspace-support` lets an owner hide a workspace
   from the other members. The chips and the agent tools then follow the
   list that each reader may see, as the design says.
@@ -83,6 +90,18 @@ approved.
   The rows of the workspace list keep their layout. Reason: a person
   copies and reads a reference in those two places, and a row has no room
   for more.
+- The search of the command palette also finds a workspace by its number,
+  such as `395` or `W-395` (decision 151).
+- Agent call: the palette searches the label as one more field of each
+  workspace, with the same rules as the name. Reason: one rule serves
+  every field.
+- Agent call: a workspace row of the palette shows the label when the
+  query matches it. Reason: a person can then tell apart the workspaces
+  that match a part of a number, such as `39`.
+- Agent call: the rule of the palette search goes into the protocol doc
+  of the palette, in the change that builds it. Reason: a protocol doc
+  states only behaviour that the code has, and the palette is not on
+  `main` yet.
 
 ### Copy link
 
@@ -244,7 +263,7 @@ approved.
 - **Related:** Decision 150, work that waits. Options C and H of decision 150 need option B or C here.
 - **Recommendation:** D. The options check changed it from B. D lets a person find `W-395` where the app already searches, at a small cost. When the palette has not merged, E gives the same step in the rows.
 - **Action:** asked the user, because a short number gives every workspace a new name that no requirement covers.
-- **Chosen:** B, by the user on 9 November 2026, with this note: "the actual link should be the id though, not the display name, meaning we could technically update the display name". So links and messages hold the workspace ID, and `W-395` is only a label. After the options check, the user decides whether to add D or E. B stays in force until then.
+- **Chosen:** D, by the user on 9 November 2026, after the options check. The user first chose B, with this note: "the actual link should be the id though, not the display name, meaning we could technically update the display name". So links and messages hold the workspace ID, and `W-395` is only a label. With D, the user added: "we can merge without pallete, but lets see where we are upto when this is ready, if this is ready first, we can just send a message to the pallete workspace after this merges". So the palette part does not block the merge of this branch.
 
 ## Milestone 1: Mockups
 
@@ -405,6 +424,11 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [ ] Check whether the command palette is on `main`. When it is, merge
+      `main`. Then add a mockup milestone and a ui milestone before this
+      one, for the number search and the label in a palette row, and run
+      them. When it is not, keep the palette task of the post-merge
+      follow-up below.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
@@ -412,6 +436,15 @@ Depends on: every other milestone
       plan, and the follow-up items that the change adds.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Only when the palette was not on `main` at the merge: send a
+      message to the Conductor workspace "Command Palette Mockups",
+      `8f4c4c29-c7d4-4042-9c41-ef4a0d159eb4`, on
+      `calummoore/command-palette-mockups`. Ask it to merge `main` and to
+      add the number search of decision 151. The palette search then
+      finds `395` and `W-395`, with the same rules as the name. A
+      workspace row shows the label when the query matches it. The
+      protocol doc of the palette states the rule.
 
 - [ ] On the deployed app, try the message box on an iPhone and on an
       Android phone: paste a link, type around the chip, delete it, and
