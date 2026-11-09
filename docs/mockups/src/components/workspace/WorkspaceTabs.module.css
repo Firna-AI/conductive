@@ -207,6 +207,18 @@
   box-sizing: border-box;
 }
 
+/*
+ * The row clips what overflows it. So a line before the first tab or after
+ * the last tab draws just inside the row, with its whole end.
+ */
+.drop:first-child .line {
+  left: 4px;
+}
+
+.drop:last-child .line {
+  left: -6px;
+}
+
 /* The tab under the pointer: a raised card with a full outline. */
 .lifted,
 .lifted:hover {

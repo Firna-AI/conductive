@@ -201,6 +201,12 @@ clicks, types, and lets the answers of the fake API settle.
   unmount. It checks that a switch stops the old store before the new one
   connects, and shows only the new store. It also checks when the hook keeps
   a store, connects it again, or makes a new one.
+- `pointer-drag.ts`: `usePointerDrag`, the drag and drop of any pointer
+  that the tab row of the chat uses: the press, the start after a move of a
+  mouse or a long press of a finger, Escape, the click after a drag, and the
+  scroll lock of touch. `ownPress` keeps a press on a control inside a
+  dragged element, such as Close, for that control.
+  `pointer-drag.test.tsx` mounts it in happy-dom.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and

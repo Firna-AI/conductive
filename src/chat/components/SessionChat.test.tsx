@@ -152,6 +152,7 @@ describe('session parts', () => {
         mobile={false}
         onCancelRename={() => {}}
         onClose={() => {}}
+        onMove={() => {}}
         onNew={() => {}}
         onRename={() => {}}
         onSelect={() => {}}
@@ -159,7 +160,14 @@ describe('session parts', () => {
         onStartRename={() => {}}
         readOnly={false}
         renaming={null}
-        tabs={[{ id: 'a', title: 'Address autocomplete', selected: true }]}
+        tabs={[
+          {
+            kind: 'session',
+            id: 'a',
+            title: 'Address autocomplete',
+            selected: true,
+          },
+        ]}
       />,
     )
     expect(textOf(html)).toContain(

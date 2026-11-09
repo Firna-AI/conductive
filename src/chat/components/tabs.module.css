@@ -16,3 +16,31 @@
 .rename:focus {
   border-color: var(--ui-primary);
 }
+
+/*
+ * A tab that a drag can move. A long press must not open the menu of a link
+ * or select text, and a finger still scrolls the row sideways.
+ */
+.dragSurface {
+  touch-action: pan-x;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/*
+ * The frame of the lifted tab above the page. Its centre follows the
+ * pointer, it keeps the width of the whole title, and it takes no pointer
+ * input.
+ */
+.floating {
+  position: fixed;
+  z-index: 60;
+  width: max-content;
+  pointer-events: none;
+  transform: translateX(-50%) rotate(-1.5deg);
+}
+
+/* On a phone, the lifted tab keeps the touch size of the tabs of the row. */
+.touch {
+  --ui-touch-min: 44px;
+}

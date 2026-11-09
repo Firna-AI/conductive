@@ -57,7 +57,14 @@ stops its own controller:
   the titles that the mockups show: the first session of a new workspace
   has the workspace name, and the agent's title renames both. The
   development page does the same.
-- `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
+- `renderTab(tab, draw)` draws a file or diff tab of the saved view, such
+  as an open file, at its place in the tab row. For `draw.kind` `row`, it
+  spreads `draw.item` on the `<li>` of the tab and `draw.close` on the
+  wrapper of its Close button. These hold the handlers, the classes, and the
+  ref of the drag of the row. For `lifted`, it draws the copy that a drag
+  lifts above the page: the icon and the whole title, with no link and no
+  Close. Without `renderTab`, the row shows only the session tabs, as on a
+  phone. `components/tab-row.ts` holds these types.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.
@@ -78,15 +85,17 @@ stops its own controller:
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
-  positioned frame: the app frame.
+  positioned frame: the app frame. The lifted tab of a drag draws on
+  `document.body` with a fixed position, because the row clips what it
+  holds.
 - The Mac app shows two more parts of Mac commands outside the chat:
   `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
   say how to mount them.
 - `useChatController` gives the controller and its snapshot to an app that
   composes `SessionTabs` and `SessionChat` in its own layout. Such an app
-  takes the tabs from `tabSessions`, and the session history from
-  `historySessions` with the times of `endedAt`, so an archived workspace
-  navigates without a write.
+  takes the tabs from `rowOf` with the sessions of `tabSessions`, and the
+  session history from `historySessions` with the times of `endedAt`, so an
+  archived workspace navigates without a write.
 - `useChatController` makes the controller through the shared
   `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
   starts the controller after the render. It stops the controller at
@@ -141,6 +150,22 @@ members from the models of the app.
   row. It saves through the shared view writer, then sorts the open
   sessions for Close. A new or reopened session opens at the end. A
   read-only workspace moves no tab.
+- The tab row draws the tabs in the row order and moves them by drag and
+  drop, on the shared `usePointerDrag` of [the web app](../app/README.md).
+  A mouse drags a tab after a move of more than 4 px. A finger lifts a tab
+  after a long press of 450 ms. The drop place is before the first other
+  tab whose middle is right of the pointer, else after the last tab. A line
+  that takes no space marks it, so no tab moves during the drag. The tab
+  stays at its place as a faint copy, and a lifted copy hangs below the row
+  under the pointer. The status of the row tells a screen reader the title
+  and the place, such as "Moving Debounce lookups to place 2 of 3". The
+  release calls `moveTab`, and a drop at the tab's own place moves nothing.
+  Escape ends a drag with no move.
+- A drag does not change the shown tab: the click at its end selects
+  nothing. A press on Close starts no drag. A read-only chat binds no drag,
+  and neither does a tab that shows its rename field. The tabs take the
+  touch CSS of a drag: a long press opens no link menu and selects no text,
+  and a finger still scrolls the row sideways.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
@@ -164,9 +189,9 @@ members from the models of the app.
   the workspace is read-only, and the server path otherwise. The controller
   reads `readOnly` at each action, because a suspension can start during a
   visit, and it sends no other write then.
-- A read-only chat shows no composer, no +, no Rename, no Try again, and
-  no answer to a Mac command. Its empty state names only the session
-  history.
+- A read-only chat shows no composer, no +, no Rename, no Try again, no
+  drag of a tab, and no answer to a Mac command. Its empty state names only
+  the session history.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - A Stop request records the member who pressed Stop, and ends nothing. The
@@ -250,6 +275,11 @@ start, a stop before its success, and a resume whose workspace record comes
 first. It also checks a send that the Worker refuses during the first start.
 `components/FirstStart.dom.test.tsx` mounts the chat during the first start,
 presses Enter, and then sends after the start succeeds.
+`components/TabDrag.dom.test.tsx` mounts the chat with the real
+`FileTabItem` of the Files screens and drags tabs with pointer events over
+boxes that `components/tab-drag-test-kit.tsx` gives them. A mouse moves a
+file tab before a session tab, and the click at the end selects nothing.
+Escape keeps the order. A finger lifts a session tab after 450 ms.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -264,6 +294,13 @@ check in the Mac app.
   state and its actions, with `show` and `hide` for a kept chat.
 - `state/tab-order.ts`: the pure row order, the places of the open
   sessions, and the move before or after a neighbour.
+- `components/SessionTabs.tsx`: the tab row, with the session tabs of
+  `components/SessionTab.tsx` and the tabs of `renderTab`.
+  `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
+  the row in the saved order.
+- `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
+  move, and the status. `components/TabDragParts.tsx`: the drop line and
+  the lifted tab.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `state/load.ts`: the order of the first reads and the stream start.

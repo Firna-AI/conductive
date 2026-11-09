@@ -154,7 +154,12 @@ The screens:
 - `FileTabItem` is the closable tab of a file or a diff, as a list item
   for the tab row of the centre column on desktop. `onClose` asks the shell
   to close the tab. It takes the tab styles of the mockups' `WorkspaceTabs`,
-  as the session tabs do.
+  as the session tabs do. `item` takes more props of its list item, and
+  `close` props of the wrapper of its Close button, such as the handlers,
+  the classes, and the ref of the drag of the row. They are plain element
+  props, so the Files code imports nothing from the chat.
+  `LiftedFileTab` is the copy of the tab that a drag lifts above the page:
+  its icon and its whole file name, with no link and no Close.
 
 A module worker parses the Markdown of a preview: its blocks, its inline
 content, and its link references. Vite bundles the worker, so the shell

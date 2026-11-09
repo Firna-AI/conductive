@@ -467,6 +467,24 @@ The agent made these calls on 9 November 2026, in Milestone 1:
   because a rename must not switch the chat.
 - The rename field of the app takes its look from the shared `.rename`
   rule of the mockups. Reason: one look then has one rule.
+
+The agent made these calls on 9 November 2026, in the first part of
+Milestone 4:
+
+- `renderTab` gets the props of the list item and of the Close control, or
+  a request to draw the lifted copy. Reason: the chat then ignores a press
+  on Close without a class name, and the host draws the icon of a file.
+- The status of a drag is one live region of the row, with the words of
+  the mockup and no period. A file or diff tab is named by its file name.
+- At the tab's own place, the drop line draws before the tab, as the
+  mockup does.
+- The lifted copy is centred under the pointer, 70% down the tab, and
+  stays inside the window on a phone.
+- The drag follows only the pointer that pressed. It ends a press whose
+  release never came. After Escape, the release selects nothing.
+- The drop line draws just inside the row before the first tab and after
+  the last tab. Reason: the row clips what overflows it, so the line
+  showed only a sliver there.
 - The wheel helper is shared. Reason:
   `plans/follow-ups/sideways-tab-rows-ignore-vertical-wheel.md` can then
   use it for the other rows that scroll sideways.
@@ -610,12 +628,12 @@ Depends on: 1, 3
 Draw the row in the saved order, and add the drag, the tab menu, and the
 full row.
 
-- [ ] Add the shared pointer drag hook of the design, with its tests.
-- [ ] Make `SessionTabs` draw the row order. Replace `extraTabs` with
+- [x] Add the shared pointer drag hook of the design, with its tests.
+- [x] Make `SessionTabs` draw the row order. Replace `extraTabs` with
       `renderTab` in `WorkspaceChat`, `WorkspaceChatView`, `ChatArea`,
       and `src/shell/workspace/files/chat-files.tsx`.
-- [ ] Give `FileTabItem` the drag props of its list item.
-- [ ] Add the drag of the tab row: the drop place along the row, the
+- [x] Give `FileTabItem` the drag props of its list item.
+- [x] Add the drag of the tab row: the drop place along the row, the
       lifted tab, the faint copy, the drop line, and the touch CSS, as the
       mockup draws them. Bind no drag in a read-only workspace or on a tab
       that shows its rename field.
@@ -644,9 +662,9 @@ full row.
       back to the tab after a move, and the announcement of the new
       place.
 - [ ] Test the mounted chat:
-  - [ ] A pointer drag of a file tab before a session tab saves the new
+  - [x] A pointer drag of a file tab before a session tab saves the new
         order, and the click at its end selects nothing.
-  - [ ] Escape during a drag keeps the order.
+  - [x] Escape during a drag keeps the order.
   - [ ] A long press of a touch pointer lifts a session tab. A release
         without a move opens the tab menu as a sheet.
   - [ ] Shift and F10 on a focused tab opens the tab menu.

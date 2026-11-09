@@ -4,7 +4,7 @@ import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 export type TabPlace = { before: WorkspaceTab } | { after: WorkspaceTab }
 
 /** One file or diff keeps its identity when its display mode changes. */
-function tabKey(tab: WorkspaceTab): string {
+export function tabKey(tab: WorkspaceTab): string {
   return tab.kind === 'session'
     ? `session:${tab.sessionId}`
     : `${tab.kind}:${tab.path}`

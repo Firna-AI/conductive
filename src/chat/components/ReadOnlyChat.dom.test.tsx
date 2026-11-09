@@ -23,6 +23,7 @@ import {
 } from '../../test-support/mount'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
 import { WorkspaceChat } from '../WorkspaceChat'
+import { pointer, rowStatus } from './tab-drag-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -80,12 +81,21 @@ describe('a read-only chat', () => {
       () => isShownTab('Debounce lookups'),
       'the second session as the shown tab',
     )
+    const mouse = { pointerType: 'mouse' }
+    pointer(byRole('button', 'Debounce lookups'), 'pointerdown', {
+      ...mouse,
+      clientX: 50,
+    })
+    pointer(window, 'pointermove', { ...mouse, clientX: 90 })
+    const drag = rowStatus()
+    pointer(window, 'pointerup', { ...mouse, clientX: 90, buttons: 0 })
     expect({
       refused: queryByText("The sandbox can't start") !== null,
       composer: document.querySelector('textarea') !== null,
       newSession: queryByRole('button', 'New session') !== null,
       rename: queryByRole('button', 'Rename Debounce lookups') !== null,
       resume: queryByRole('button', 'Resume') !== null,
+      drag,
       writes: server.requests
         .filter((request) => request.method !== 'GET')
         .map((request) => `${request.method} ${new URL(request.url).pathname}`),
@@ -95,6 +105,7 @@ describe('a read-only chat', () => {
       newSession: false,
       rename: false,
       resume: false,
+      drag: '',
       writes: [],
     })
   })
