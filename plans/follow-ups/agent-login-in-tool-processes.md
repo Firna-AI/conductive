@@ -2,12 +2,13 @@
 
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
-- **Added:** 2026-11-07, from PR #30, branch `conductor/boat-native-remote-workspaces-milestone-7u`, a problem outside the scope that the check of round 1 finding 2 found. The user sees it as item 114. Updated on 2026-11-08 by branch `conductor/boat-native-remote-workspaces-milestone-7x`, which implements option C.
+- **Added:** 2026-11-07, from PR #30, branch `conductor/boat-native-remote-workspaces-milestone-7u`, a problem outside the scope that the check of round 1 finding 2 found. The user sees it as item 114. Updated on 2026-11-08 by branch `conductor/boat-native-remote-workspaces-milestone-7x`, which implements option C. Updated on 2026-11-09 by branch `calummoore/openai-subscription-token-support`, which adds the Codex access token as a fourth login kind.
 - **Location:** `spawnClaudeProcess` in `runner/src/providers/claude-process.ts:12`, the login request in `runner/src/providers/codex.ts:117`, `providerEnvironment` in `runner/src/providers/environment.ts:13`, `runner/agent-logins.md`, and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
-- **Reason:** the code of option C is complete, but its proof needs real logins of three kinds in a real sandbox, and only the primary workspace holds those logins and the real-sandbox settings.
+- **Reason:** the code of option C is complete, but its proof needs real logins of four kinds in a real sandbox, and only the primary workspace holds those logins and the real-sandbox settings.
 
 - **Terms:**
-  - **Agent login:** the Claude subscription token from `claude setup-token`, the Anthropic API key, or the OpenAI API key of the member who started a session. Every turn of that session uses it.
+  - **Agent login:** the Claude subscription token from `claude setup-token`, the Anthropic API key, the OpenAI API key, or the Codex access token of the member who started a session. Every turn of that session uses it.
+  - **Codex access token:** a token that a member of a ChatGPT Business or Enterprise workspace makes in ChatGPT's admin console. Codex then runs on the plan of that workspace. Each token expires.
   - **Tool process:** a program that the agent starts for a tool, such as a shell command or a dev server.
   - **Runner:** the program of Conductive in each cloud computer that runs the agents. `runner/README.md` describes it.
   - **Probe server:** a small HTTP server that the agent starts with its shell tool in this check. Each answer holds only its process ID and two true or false values.
@@ -24,20 +25,25 @@
   - The code of option C is complete. The agent environment holds no login, because `providerEnvironment` removes each inherited variable that starts with `ANTHROPIC_`, `CLAUDE_`, `OPENAI_`, or `CODEX_`, and `CLAUDECODE`.
   - Claude: `spawnClaudeProcess` gives the `claude` program a pipe on file descriptor 3. Its environment holds only `CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=3` for a token, or `CLAUDE_CODE_API_KEY_FILE_DESCRIPTOR=3` for an API key. The runner writes the login and a newline, and then closes its end of the pipe.
   - The pinned `claude` program 2.1.318 of Claude Agent SDK 0.3.318 reads that pipe until the newline or the end, and closes it. Then it removes the descriptor variable. It writes a copy of the login to disk only when `CLAUDE_CODE_REMOTE` is set, and the runner removes that variable.
-  - Codex: the runner starts `codex app-server` 0.167.0 with no login in its environment or its arguments. After `initialize`, it sends `account/login/start` with the type `apiKey` on the standard input of the App Server. When that request succeeds, the runner sends `thread/start` or `thread/resume`.
+  - Codex with an OpenAI API key: the runner starts `codex app-server` 0.167.0 with no login in its environment or its arguments. After `initialize`, it sends `account/login/start` with the type `apiKey` on the standard input of the App Server. When that request succeeds, the runner sends `thread/start` or `thread/resume`.
   - The Codex model provider has `requires_openai_auth=true` and no `env_key`. The credential store is `ephemeral`, so Codex keeps the key in memory.
+  - Codex with a Codex access token: the runner gives the token only to the App Server. The credential store stays `ephemeral`. `runner/agent-logins.md` names the route, which is one of these two:
+    - The config route: the token goes in the `config` of `thread/start` and `thread/resume`, on the standard input of the App Server.
+    - The variable route: the runner adds the token as `CODEX_ACCESS_TOKEN` to the environment of the App Server only. The runner also sets the shell environment rule of Codex that removes that variable from shell commands.
   - The section "Agent logins in a sandbox" of the access doc now requires that no process that the agent starts inherits the login, and that no agent program writes a copy to disk. `runner/agent-logins.md` gives the code facts.
   - The runner tests use fake logins. The Claude login tests run the pinned SDK with a fake child process. No test starts a real agent program. So no run has shown that the real programs take these routes, or that a real tool server gets no login.
   - The accepted risk stays: a member with a terminal, or another process of the same sandbox user, can read the login of a running turn on purpose and keep a copy. This check does not test that risk.
   - Earlier cases of a login that outlived its turn: the idle agent process that kept the login between turns, fixed in PR #30, and an agent that ran after its turn ended, round 1 finding 2 of PR #30.
-- **Task:** Run the live check below once for each login kind: a Claude subscription token, an Anthropic API key, and an OpenAI API key for Codex. It checks a tool server before and after the end of a turn, after a resumed conversation, and after Stop.
+- **Task:** Run the live check below once for each login kind: a Claude subscription token, an Anthropic API key, an OpenAI API key for Codex, and a Codex access token. It checks a tool server before and after the end of a turn, after a resumed conversation, and after Stop.
 - **Impact if no action:** The access doc states a requirement that no real run has confirmed. If a pinned program does not take its login through its route in a real sandbox, every turn on that login kind fails. If a login still reaches a tool process, a dev server can keep it for days.
 - **Needs:**
   - A runner build that holds option C in the org image of a test org. `runner/src/providers/claude-process.ts` must exist in that build. `runner/service/README.md` and `image/developer-scripts.md` give the build and image steps.
   - The test Worker, the signed-in test account, the test org, and its repository that "What a real check needs" in `image/developer-scripts.md` lists. The primary workspace holds these settings as `LIVE_*` variables.
-  - The three logins in a secret store, and a model of each agent that the test account can use.
+  - For the Codex access token row, the test Worker, its account page, and the runner build must accept a Codex access token.
+  - The four logins in a secret store, and a model of each agent that the test account can use. The Codex model must also run on the ChatGPT plan of the access token.
+  - A Codex access token with the Codex scope that has not expired. It comes from a ChatGPT Business or Enterprise workspace whose owner allows access tokens and local Codex use. Only the user can give one.
   - The terminal of a test workspace on that repository.
-- **Done when:** every step below gives its expected result for all three login kinds, and the evidence holds only the values that the evidence rules allow. Then delete this item. When a step fails, keep this item, record the failure as the evidence rules say, and report it to the user.
+- **Done when:** every step below gives its expected result for all four login kinds, and the evidence holds only the values that the evidence rules allow. Then delete this item. When a step fails, keep this item, record the failure as the evidence rules say, and report it to the user.
 - **Related:** `plans/follow-ups/agent-logins-readable-in-sandbox.md` has the same cause: the real login is in the sandbox while a turn runs. Its options keep the real login out of the sandbox. If one of them lands before this check runs, drop this item.
 
 ## Live check
@@ -58,6 +64,7 @@
      'CLAUDE_CODE_OAUTH_TOKEN',
      'OPENAI_API_KEY',
      'CODEX_API_KEY',
+     'CODEX_ACCESS_TOKEN',
    ]
    const descriptorKeys = [
      'CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR',
@@ -98,6 +105,7 @@ Do these steps for each row, one row at a time. `PORT` and `NAME` stand for the 
 | Claude subscription token | Claude | 43181 | `token` |
 | Anthropic API key | Claude | 43182 | `api-key` |
 | OpenAI API key | Codex | 43183 | `codex` |
+| Codex access token | Codex | 43184 | `access-token` |
 
 Start the row:
 
@@ -120,7 +128,7 @@ First turn, a normal end:
    The `read` waits on the gate, so the turn stays open without a timing guess.
 4. Wait until the chat shows the running shell tool. Run `grep -c 'probe ready' .context/7x/live-login-probes/NAME.log`. Expect `1`.
 5. Run `curl --fail --silent http://127.0.0.1:PORT/`. Expect `"loginEnvironmentPresent":false` and `"loginDescriptorMarkerPresent":false`. Record the `pid`. This shows that the server did not inherit a login variable or a login descriptor number while the turn ran.
-6. For Codex only, check that the server shares no open file with the standard input of the App Server, which carried the login request. Replace `<pid>` with the recorded `pid`. Expect `readable` and then `0`.
+6. For the two Codex rows only, check that the server shares no open file with the standard input of the App Server, which can carry the login. Replace `<pid>` with the recorded `pid`. Expect `readable` and then `0`.
 
    ```sh
    app=$(pgrep -o -f 'app-serve[r]')
@@ -164,7 +172,7 @@ Clean up the row:
 20. Stop the probe server with `curl --fail --silent http://127.0.0.1:PORT/close`.
 21. Remove the files of the row with `rm -f .context/7x/live-login-probes/NAME*`.
 
-After the three rows, remove the scratch folder and stop the test workspace. Replace or disconnect the test logins, as the live-test credential route of the primary workspace expects.
+After the four rows, remove the scratch folder and stop the test workspace. Replace or disconnect the test logins, as the live-test credential route of the primary workspace expects.
 
 If the probe server stops when the tool command ends, record that, and start the row again with `setsid` before `node`. Then the probe is out of the process group of the tool command, and a tool timeout cannot stop it.
 
@@ -179,4 +187,5 @@ If the probe server stops when the tool command ends, record that, and start the
 
 - It does not test the accepted risk: a member with a terminal, or another process of the same sandbox user, can still read the login of a running turn on purpose.
 - It covers only the pinned versions: the `claude` program 2.1.318 of Claude Agent SDK 0.3.318, and Codex 0.167.0. Run it again after an update of either version.
+- It checks only a server that the shell tool starts. It does not check an MCP server or a hook that the agent program starts. On the variable route of a Codex access token, the shell environment rule of Codex does not cover such a process.
 - `image/live-check.mjs` checks real chat and resume. But it starts no server through a tool, and its measurement forks get `LIVE_AGENT_LOGIN` in their resume env. So that script alone does not show this requirement.

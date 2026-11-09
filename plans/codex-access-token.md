@@ -179,6 +179,17 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
   splits it after the open branches merge.
 - No follow-up item records Sign in with ChatGPT, because option A of
   decision 170 leaves it out.
+- The Terms page names the share default of a Codex access token, with a
+  draft field that asks whether OpenAI's terms allow the share, and the
+  change sets a new Terms revision. Reason: `src/marketing/README.md`
+  updates each legal sentence that repeats a changed protocol fact, and
+  commit `a263151` set a new revision for the same sentence. The project
+  is not in production, so a new agreement at the next sign-in costs
+  little. This call is of 9 November 2026, from the report of
+  Milestone 2.
+- The protocol doc adds no separate line that a shared Codex access token
+  stays a risk. The reason line of the share defaults and the risk of a
+  personal token already say it.
 
 Risks:
 
@@ -245,29 +256,29 @@ Depends on: 1
 The protocol doc states the new login kind, the waitlist of Sign in with
 ChatGPT, the share default, and the risks of the token.
 
-- [ ] In the section "Agent logins" of
+- [x] In the section "Agent logins" of
       `docs/protocol/access-and-security.md`, state that a member connects
       Codex with a Codex access token from a ChatGPT Business or Enterprise
       workspace, or with an OpenAI API key (decision 170).
-- [ ] State that the app offers no Sign in with ChatGPT, because OpenAI
+- [x] State that the app offers no Sign in with ChatGPT, because OpenAI
       offers it only to the partners that it admits. Replace the old
       waitlist sentence.
-- [ ] State the rejected login file of `codex login`, and its reason.
-- [ ] Add the risks: a token expires, OpenAI meant tokens for trusted
+- [x] State the rejected login file of `codex login`, and its reason.
+- [x] Add the risks: a token expires, OpenAI meant tokens for trusted
       runners, turns on a personal token show as its owner in the owner's
       ChatGPT workspace, and a workspace admin can enforce Codex settings.
-- [ ] State in the share setting rules that a new Codex access token is not
+- [x] State in the share setting rules that a new Codex access token is not
       shared (decision 171). Its reason line names Section 3.1 of the
       OpenAI Services Agreement.
-- [ ] Update "Features" and "What a user needs" in the root `README.md`.
-- [ ] Add the Codex access token to the live check of
+- [x] Update "Features" and "What a user needs" in the root `README.md`.
+- [x] Add the Codex access token to the live check of
       `plans/follow-ups/agent-login-in-tool-processes.md`. Add
       `CODEX_ACCESS_TOKEN` to its probe variables.
-- [ ] Add the Codex access token to the logins that the Worker model proxy
+- [x] Add the Codex access token to the logins that the Worker model proxy
       of `plans/follow-ups/agent-logins-readable-in-sandbox.md` must cover.
       Note that the hosts and the metadata request of this kind are
       unchecked.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: Login contracts and Worker
 
@@ -331,8 +342,11 @@ The runner starts Codex on an access token for the turns of the kind
       key route does not change. For the variable route, the token is only
       in the environment of the app server, and the shell rule is set.
 - [ ] Check that the output filter hides the token in agent output.
-- [ ] Update the sections "The agent environment" and "Codex" of
-      `runner/agent-logins.md`.
+- [ ] Update the opening lines that list the login kinds, and the sections
+      "The agent environment" and "Codex", of `runner/agent-logins.md`.
+- [ ] Make the token route text of
+      `plans/follow-ups/agent-login-in-tool-processes.md` name only the
+      chosen route.
 
 ## Milestone 5: Connect form
 
@@ -353,6 +367,11 @@ it.
       the kind on a second line, as the mockup does.
 - [ ] Add the search word "token" to the Agents command in
       `src/app/palette/commands.ts`, as the palette mockup does.
+- [ ] Say on the Terms page in `src/marketing/terms.ts` that the share
+      setting of a Codex access token starts off, with a draft field that
+      asks whether OpenAI's terms let other members use it. Set a new
+      `TERMS_VERSION` in `src/shared/terms.ts`, such as
+      `2026-11-09-codex-access-token`.
 - [ ] Add tests: the Codex form selects "API key" first, a token save sends
       the kind `token`, and a Codex row connected by a token shows "Access
       token" and its share switch.
@@ -381,6 +400,9 @@ and the review prove the change.
   - [ ] A conversation that started on an API key resumes on the token.
         Record a failure as a finding.
   - [ ] Save the evidence under `.context/codex-access-token/`.
+  - [ ] Update the line of
+        `plans/follow-ups/agent-login-in-tool-processes.md` that says no
+        run has shown the real programs take their routes.
 - [ ] Run the targeted tests and `npm run check`, after
       `npm --prefix desktop ci` and `npm ci --prefix runner`.
 - [ ] Commit with Conventional Commits and push the branch.

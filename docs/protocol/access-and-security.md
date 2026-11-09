@@ -206,11 +206,16 @@ Later screens add the frame and connection sources that they need.
 - Each agent login has a share setting (decision 116). It says whether the
   messages of other members can run on that login.
 - The kind of a login sets the default of its share setting. A new Claude
-  subscription login does not let other members use it. A new API key lets
+  subscription login does not let other members use it. A new Codex access
+  token does not let them use it either (decision 171). A new API key lets
   them use it.
 - Reason: Anthropic's consumer terms forbid making a Claude account
-  available to anyone else. The owner of an API key may let a team use it.
-  Sharing every login by default was rejected for that reason.
+  available to anyone else. Section 3.1 of the
+  [OpenAI Services Agreement](https://cdn.openai.com/osa/openai-services-agreement.pdf)
+  says: "Customer will not share Account access credentials or individual
+  login credentials between multiple users." The owner of an API key may
+  let a team use it. Sharing every login by default was rejected for these
+  reasons.
 - A replaced login keeps its share setting while its kind stays the same. A
   login whose kind changes gets the default of its new kind. Reason: a key
   rotation keeps the choice of its owner.
@@ -346,14 +351,36 @@ Later screens add the frame and connection sources that they need.
 
 - A user connects Claude with a subscription token from
   `claude setup-token`, or with an Anthropic API key (decisions 24 and 37).
-- A user connects Codex with an OpenAI API key. The app offers no ChatGPT
-  plan sign-in, because OpenAI allows it for hosted apps only after a
-  waitlist.
 - Anthropic gave the operator permission to use `claude setup-token`
   tokens (decision 37).
 - Risk: Anthropic plans to make bare mode the default, and bare mode reads
   no subscription login. A later release of the agent program can then
   stop the tokens.
+- A user connects Codex with a Codex access token from a ChatGPT Business
+  or Enterprise workspace, or with an OpenAI API key (decision 170).
+- The app offers no Sign in with ChatGPT, because OpenAI offers it only to
+  the partners that it admits.
+- The login file that `codex login` writes was rejected as a Codex login.
+  Reason: OpenAI sends hosted apps to the waitlist of Sign in with ChatGPT,
+  and it says not to share that file. The refresh token in that file works
+  only once. So after the first renewal in a sandbox, the copy that the app
+  stores stops working.
+- Risk: each Codex access token expires. It also stops working when
+  someone revokes it in ChatGPT, and while its owner has no local Codex
+  use. A turn that starts on such a token fails.
+- Risk: OpenAI meant access tokens for trusted scripts, schedulers, and
+  private CI runners. It warns that shared machines can expose a token to
+  people outside the ChatGPT workspace. A member with a terminal in a
+  sandbox can read the login of a running turn, as
+  [Agent logins in a sandbox](#agent-logins-in-a-sandbox) says.
+- Risk: a personal access token acts as the person who made it. The
+  records of their ChatGPT workspace show each turn on the token as their
+  work. While they share the token, this includes the messages of other
+  members.
+- Risk: an admin of a ChatGPT workspace can enforce Codex settings, such as
+  the approval policy, the sandbox mode, and the allowed MCP servers. On a
+  token of that workspace, these settings can replace the settings that
+  the runner gives Codex.
 - A sign-in inside a sandbox was rejected, because the login would stay on
   the disk of one workspace.
 - A user's agent logins serve all of that user's orgs (decision 21).

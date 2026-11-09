@@ -35,7 +35,8 @@ These features are planned. The protocol docs state each one.
 - Chat with agents powered by Claude and Codex. A workspace holds several
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
-- Each user connects their own Claude subscription token or API keys.
+- Each user connects their own Claude subscription token, Codex access
+  token from a ChatGPT Business or Enterprise workspace, or API keys.
 - Files and Changes, a terminal, port previews, and a live desktop.
 - A pull request bar with the GitHub state of the branch and its checks.
 - One prepared cloud computer image for each org, built from an install
@@ -50,8 +51,10 @@ These features are planned. The protocol docs state each one.
 ## What a user needs
 
 - a GitHub account
-- a Claude subscription token or an Anthropic API key, or an OpenAI API key
-  for Codex
+- a login for Claude, Codex, or both:
+  - Claude: a Claude subscription token or an Anthropic API key
+  - Codex: a Codex access token from a ChatGPT Business or Enterprise
+    workspace, or an OpenAI API key
 
 ## Get started
 
