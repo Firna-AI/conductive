@@ -68,6 +68,7 @@ async function prepareWorkspaceRecords(
       user: creation.user,
       senderUserId: creation.sender.id,
       city: creation.city,
+      name: creation.name,
       branch: creation.branch,
       sessionId: creation.sessionId,
       turnId: job.turnId,
