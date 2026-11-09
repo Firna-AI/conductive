@@ -128,6 +128,13 @@ how long data stays. The other facts come from the
 [architecture doc](../../docs/architecture.md) and the
 [protocol docs](../../docs/protocol/).
 
+When you change a fact in the architecture doc or in a protocol doc, read
+both legal pages in full. The legal pages are the Terms page in
+`src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts`.
+In the same change, update each sentence of the legal pages that restates
+the fact. A search for the old words is not enough, because a legal page
+can restate a fact in other words.
+
 The words of the legal pages, of the page for an unknown address, and of
 the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`,
 and `legal-text.ts` hold them. `layouts/LegalPage.astro` and

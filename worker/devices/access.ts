@@ -85,7 +85,7 @@ export async function activeStoredTurn(
     ? turn
     : null
 }
-export function currentCommandAccess(
+function currentCommandAccess(
   db: D1Database,
   workspaceId: string,
   senderId: string,

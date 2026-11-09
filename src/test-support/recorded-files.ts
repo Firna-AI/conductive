@@ -4,12 +4,9 @@ import type {
   FileEvent,
   RunnerFileEvent,
 } from '../shared/files'
-import type {
-  RunnerFileCommand,
-  RunnerFileResponse,
-} from '../shared/runner-files'
+import type { RunnerFileResponse } from '../shared/runner-files'
 import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
-import { FAKE_FILE_PATH, toolFixtures } from './fixtures/tools'
+import { toolFixtures } from './fixtures/tools'
 
 const data = toolFixtures()
 const changed: ChangesResponse = {
@@ -108,7 +105,7 @@ export const recordedRunnerFileEvents: readonly RunnerFileEvent[] =
     }
   })
 
-/** Multipart reports for the fake endpoint and future workspace joining. */
+/** @public Multipart reports for the fake endpoint and future workspace joining. */
 export const recordedMultipartRunnerFileEvents: readonly RunnerFileEvent[] =
   recordedRunnerFileEvents.flatMap((event): readonly RunnerFileEvent[] => {
     if (event.type === 'files.unavailable') return [event]
@@ -163,27 +160,6 @@ export function recordedFileEvents(
     event: structuredClone(event),
   }))
 }
-
-export const recordedFileRequests: readonly RunnerFileCommand[] = [
-  {
-    type: 'file.read',
-    requestId: 'read-1',
-    path: FAKE_FILE_PATH,
-    maxBytes: 65_536,
-  },
-  {
-    type: 'file.diff',
-    requestId: 'diff-1',
-    path: FAKE_FILE_PATH,
-    defaultBranch: 'main',
-  },
-  {
-    type: 'file.read',
-    requestId: 'read-limit',
-    path: FAKE_FILE_PATH,
-    maxBytes: 16,
-  },
-]
 
 export const recordedFileResponses: readonly RunnerFileResponse[] = [
   {

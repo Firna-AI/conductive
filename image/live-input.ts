@@ -26,7 +26,7 @@ export function integer(value: unknown): number {
   return value
 }
 
-export function required(env: NodeJS.ProcessEnv, key: string): string {
+function required(env: NodeJS.ProcessEnv, key: string): string {
   const value = env[key]
   if (!value) throw new CheckError(`Set ${key}.`)
   return value
