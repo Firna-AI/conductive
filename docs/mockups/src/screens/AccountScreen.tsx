@@ -10,6 +10,8 @@ import {
   SignInSection,
   type OpenAgentForm,
 } from '../components/settings/AccountSections'
+import { inviteStates } from '../components/settings/inviteCodeCopy'
+import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
@@ -25,7 +27,7 @@ import { paths } from '../paths'
 export const accountSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['connections', 'form'],
+  required: ['connections', 'form', 'invites'],
   properties: {
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
@@ -34,6 +36,11 @@ export const accountSchema = {
      * other agent is.
      */
     form: { enum: ['none', 'claude', 'codex'] },
+    /**
+     * The invite code of the user: invites left, sign-ups paused, every
+     * invite used, or turned off by an operator.
+     */
+    invites: { enum: inviteStates },
   },
 } as const
 
@@ -56,10 +63,11 @@ function loginsFor(state: AccountState): AgentLogins {
 }
 
 /**
- * The account: the GitHub sign-in, and what every org shares. The GitHub
- * App, the agents, and the model of new workspaces. The product is free,
- * so the page shows no plan and no billing, and the sandbox provider stays
- * out of sight. The Mac app adds the This Mac section.
+ * The account: the GitHub sign-in, the invite code of the user, and what
+ * every org shares. The GitHub App, the agents, and the model of new
+ * workspaces. The product is free, so the page shows no plan and no
+ * billing, and the sandbox provider stays out of sight. The Mac app adds
+ * the This Mac section.
  */
 export function AccountScreen(props: {
   state: AccountState
@@ -85,6 +93,7 @@ export function AccountScreen(props: {
     >
       <SignInSection />
       {mac ? <ThisMacSection /> : null}
+      <InviteCodeSection fresh={!connected} state={props.state.invites} />
       <GitHubSection connected={connected} />
       <AgentsSection form={openForm} logins={loginsFor(props.state)} />
       <DefaultsSection />

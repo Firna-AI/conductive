@@ -6,6 +6,7 @@ export const paths = {
   notFound: 'marketing/not-found',
   signIn: 'app/sign-in',
   signInTerms: 'app/sign-in/terms',
+  waitlist: 'app/sign-in/waitlist',
   invitations: 'app/sign-in/invitations',
   getStarted: 'app/sign-in/get-started',
   getStartedInstalled: 'app/sign-in/get-started/installed',

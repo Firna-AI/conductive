@@ -6,9 +6,12 @@ how a screen is built, and links to the other pages.
 The home page follows the calm structure of a Conductor-style home page: a
 header, a hero with a short headline, one sentence, and a large picture of
 the app, then one section for each feature, the smaller features, a last
-call to action, and a footer. Both actions, "Start free with GitHub"
-and "Sign in", lead to `app/sign-in`. The parts live in
-`src/components/marketing/`.
+call to action, and a footer. Both actions, "Join the waitlist" and "Sign
+in", lead to `app/sign-in`. A new person waits for app access, so the
+main action promises a place on the waitlist, not use at once.
+`startLabel` in `src/components/marketing/SiteActions.tsx` holds its words
+for the header, the hero, the last call to action, and the footer. The
+parts live in `src/components/marketing/`.
 
 The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
 Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).

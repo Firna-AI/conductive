@@ -98,6 +98,12 @@ the owners of the workspaces, Archive, and Delete org.
 the steps of Get started, and the notice for an agent that is not
 connected.
 
+## The waitlist
+
+[The waitlist](orgs-and-logins.md#the-waitlist) gives the screen of a
+person without app access, the invite codes and invite links, and the
+invite code on the Account page.
+
 ## The Mac app
 
 [The Mac app](mac-app.md) gives the screens of the Mac app: its window, the
