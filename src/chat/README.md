@@ -60,11 +60,13 @@ stops its own controller:
 - `renderTab(tab, draw)` draws a file or diff tab of the saved view, such
   as an open file, at its place in the tab row. For `draw.kind` `row`, it
   spreads `draw.item` on the `<li>` of the tab and `draw.close` on the
-  wrapper of its Close button. These hold the handlers, the classes, and the
-  ref of the drag of the row. For `lifted`, it draws the copy that a drag
-  lifts above the page: the icon and the whole title, with no link and no
-  Close. Without `renderTab`, the row shows only the session tabs, as on a
-  phone. `components/tab-row.ts` holds these types.
+  wrapper of its Close button, and gives `draw.link.ref` to the link of the
+  tab. These hold the handlers, the classes, and the refs of the drag, of
+  the tab menu, and of the scroll of the row. The ref of the link gives the
+  tab the focus back after a move from the tab menu. For `lifted`, it draws
+  the copy that a drag lifts above the page: the icon and the whole title,
+  with no link and no Close. Without `renderTab`, the row shows only the
+  session tabs, as on a phone. `components/tab-row.ts` holds these types.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.
@@ -85,17 +87,18 @@ stops its own controller:
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
-  positioned frame: the app frame. The lifted tab of a drag draws on
-  `document.body` with a fixed position, because the row clips what it
-  holds.
+  positioned frame: the app frame. The lifted tab of a drag, and the tab
+  menu on desktop, draw on `document.body` with a fixed position, because
+  the row clips what it holds.
 - The Mac app shows two more parts of Mac commands outside the chat:
   `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
   say how to mount them.
 - `useChatController` gives the controller and its snapshot to an app that
   composes `SessionTabs` and `SessionChat` in its own layout. Such an app
-  takes the tabs from `rowOf` with the sessions of `tabSessions`, and the
-  session history from `historySessions` with the times of `endedAt`, so an
-  archived workspace navigates without a write.
+  takes the tabs from `rowOf` with the sessions of `tabSessions` and the
+  shown tab of `shownTab`, and the session history from `historySessions`
+  with the times of `endedAt`, so an archived workspace navigates without a
+  write.
 - `useChatController` makes the controller through the shared
   `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
   starts the controller after the render. It stops the controller at
@@ -162,10 +165,38 @@ members from the models of the app.
   release calls `moveTab`, and a drop at the tab's own place moves nothing.
   Escape ends a drag with no move.
 - A drag does not change the shown tab: the click at its end selects
-  nothing. A press on Close starts no drag. A read-only chat binds no drag,
-  and neither does a tab that shows its rename field. The tabs take the
-  touch CSS of a drag: a long press opens no link menu and selects no text,
-  and a finger still scrolls the row sideways.
+  nothing, also the click that a finger sends after it lets go. A press on
+  Close starts no drag. A read-only chat binds no drag, and neither does a
+  tab that shows its rename field. The tabs take the touch CSS of a drag: a
+  long press opens no link menu and selects no text, and a finger still
+  scrolls the row sideways.
+- The tab menu opens on a right click of a tab, at the pointer, and on
+  Shift and F10 or the Menu key of a focused tab, below the tab. The key
+  handler of the tab opens it on every system and stops the key, so the
+  browser opens no menu of its own. On a phone, a long press that ends with
+  no move opens it as a sheet. A session tab has Rename session, a line,
+  Move left, and Move right. A file or diff tab has Move left and Move
+  right. A move that the place of the tab rules out is off: it keeps its
+  place at half opacity, and the arrow keys skip it. Escape or a press
+  outside closes the menu.
+- Move left and Move right call `moveTab` with the neighbour of the tab.
+  The focus goes back to the link of the tab, and the status of the row
+  says the new place, such as "app.ts moves to place 2 of 3". Rename
+  session opens the rename field in that tab, also when the tab does not
+  show, and the shown tab does not change. The tab with the field has no
+  fill of its own unless it is the shown tab. A read-only chat and a tab
+  with its rename field open no tab menu, so the browser shows its own.
+- A row whose tabs do not fit at their minimum width scrolls sideways, with
+  no scrollbar. It keeps the tab with the rename field, else the shown tab,
+  in view: at the mount, when that tab changes, and when the row gets
+  narrower. A tab that opens shows too, as far as the kept tab still shows
+  with it, and so does a tab after a move. A tab that scrolls into view
+  stops clear of the fades, at the scroll padding of the row. A vertical
+  wheel turn over the row scrolls it sideways, through `useSidewaysWheel`
+  of the web app. The row sets `.fadeStart` and `.fadeEnd` from its scroll
+  position and the sizes of the row and its tabs. During a drag, the
+  pointer within 32 px of an end of the row, or past it, scrolls the row,
+  and the drag finds its drop place again after each scroll.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
@@ -189,7 +220,7 @@ members from the models of the app.
   the workspace is read-only, and the server path otherwise. The controller
   reads `readOnly` at each action, because a suspension can start during a
   visit, and it sends no other write then.
-- A read-only chat shows no composer, no +, no Rename, no Try again, no
+- A read-only chat shows no composer, no +, no tab menu, no Try again, no
   drag of a tab, and no answer to a Mac command. Its empty state names only
   the session history.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
@@ -279,7 +310,14 @@ presses Enter, and then sends after the start succeeds.
 `FileTabItem` of the Files screens and drags tabs with pointer events over
 boxes that `components/tab-drag-test-kit.tsx` gives them. A mouse moves a
 file tab before a session tab, and the click at the end selects nothing.
-Escape keeps the order. A finger lifts a session tab after 450 ms.
+Escape keeps the order. A finger lifts a session tab after 450 ms, and its
+release with no move opens the tab menu as a sheet, which the late click
+of the finger does not close. `components/TabMenu.dom.test.tsx` opens the
+tab menu with Shift and F10 and with a right click, moves a file tab with
+Move left, and opens the rename field in a tab that does not show.
+`components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
+its fades. `components/tab-row-test-kit.ts` sends their right clicks,
+keys, and wheel turns.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -301,6 +339,13 @@ check in the Mac app.
 - `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
+- `components/useTabMenu.ts` and `components/TabMenu.tsx`: the tab menu,
+  its items, and its drawing at a point or in a sheet.
+  `components/useTabMoves.ts`: the moves of the row, the focus after a move
+  from the menu, and the words of the status.
+- `components/row-scroll.ts`: the scroll of a full row, its fades, and the
+  scroll of a drag near an end. `components/tab-nodes.ts`: the elements of
+  the tabs, which the drag, the scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `state/load.ts`: the order of the first reads and the stream start.

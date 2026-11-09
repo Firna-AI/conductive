@@ -1,5 +1,7 @@
 import { act } from 'react'
 import { createApiClient } from '../../app/api/client'
+import type { FilesNavigation } from '../../files/navigation'
+import { FileTabItem, LiftedFileTab } from '../../files/tabs/FileTabItem'
 import {
   workspaceViewPath,
   type WorkspaceTab,
@@ -13,7 +15,7 @@ import type { SubscribeToWorkspace } from '../stream/workspace-stream'
 import { WorkspaceChat } from '../WorkspaceChat'
 import type { RenderTab } from './tab-row'
 
-// The helpers of the tests that drag the tabs of the mounted chat.
+// The helpers of the tests that mount the chat and drag the tabs of its row.
 
 const viewPath = workspaceViewPath(FAKE_IDS.org, FAKE_IDS.workspace)
 
@@ -57,6 +59,24 @@ export async function mountChat(options: {
     />,
   )
   await waitFor(() => queryByText('Debounce lookups'), 'the session tabs')
+}
+
+/** Draws the file and diff tabs with the real tab of the Files screens. */
+export function fileTabs(navigation: FilesNavigation): RenderTab {
+  return (tab, draw) =>
+    draw.kind === 'lifted' ? (
+      <LiftedFileTab tab={tab} />
+    ) : (
+      <FileTabItem
+        close={draw.close}
+        item={draw.item}
+        link={draw.link}
+        navigation={navigation}
+        onClose={() => {}}
+        selected={false}
+        tab={tab}
+      />
+    )
 }
 
 /** Gives the list item of each tab a box 100 px wide, in this order. */

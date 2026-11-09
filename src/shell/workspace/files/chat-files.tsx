@@ -52,6 +52,7 @@ function FileTab(props: {
     <FileTabItem
       close={props.draw.close}
       item={props.draw.item}
+      link={props.draw.link}
       navigation={navigation}
       onClose={close}
       selected={isShown(tab)}

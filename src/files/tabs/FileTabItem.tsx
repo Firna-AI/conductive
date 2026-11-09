@@ -1,4 +1,4 @@
-import type { ComponentProps, ComponentPropsWithRef } from 'react'
+import type { ComponentProps, ComponentPropsWithRef, Ref } from 'react'
 import { X } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { splitPath, type FilesNavigation, type FilesTab } from '../navigation'
@@ -28,9 +28,11 @@ function FileTabLabel(props: { tab: FilesTab }) {
  * column on desktop. It is a list item, so the shell puts it in the same
  * list as the session tabs, and it takes their styles from the mockups. The
  * tab is a link to its own address. `item` takes more props of the list
- * item, such as the handlers, the classes, and the ref of a drag of the row.
- * `close` takes props of the wrapper of the Close button, such as a press
- * handler that keeps a press on Close from starting a drag.
+ * item, such as the handlers, the classes, and the ref of a drag and of the
+ * tab menu of the row. `link` takes the ref of the link, such as one that
+ * gives the tab the focus back after a move. `close` takes props of the
+ * wrapper of the Close button, such as a press handler that keeps a press
+ * on Close from starting a drag.
  */
 export function FileTabItem(props: {
   tab: FilesTab
@@ -38,6 +40,7 @@ export function FileTabItem(props: {
   navigation: FilesNavigation
   onClose: () => void
   item?: ComponentPropsWithRef<'li'>
+  link?: { ref?: Ref<HTMLAnchorElement> }
   close?: ComponentProps<'span'>
 }) {
   const { tab, item } = props
@@ -57,6 +60,7 @@ export function FileTabItem(props: {
         aria-label={diff ? `${name} changes` : undefined}
         className={styles.link}
         navigation={props.navigation}
+        ref={props.link?.ref}
         title={tab.path}
         to={tab}
       >

@@ -489,6 +489,66 @@ Milestone 4:
   `plans/follow-ups/sideways-tab-rows-ignore-vertical-wheel.md` can then
   use it for the other rows that scroll sideways.
 
+The agent made these calls on 9 November 2026, in the second part of
+Milestone 4:
+
+- The arrow keys skip an item of the menu that is off. The item is a
+  button that is off, so a screen reader still reads it as unavailable.
+  Reason: the dropdown of `@firna/ui`, the design system of the mockups,
+  and the shell menu skip it.
+- A right click opens the tab menu with its top left corner at the
+  pointer. The keys open it 4 px below the tab, at its left side. A menu
+  that would pass the right side of the window moves left, and one that
+  would pass its bottom opens upwards. Reason: a menu of the system opens
+  at the pointer, and the mockup draws the menu below the tab.
+- Tab in the tab menu closes it, and the focus goes back to where it was.
+  Reason: a menu above the page has no place in the order of Tab.
+- The tab stops the keys that open its menu, and the menu stops a right
+  click over it. So a browser that also sends its menu event, to the tab
+  or to the focus in the menu, opens no second menu and no menu of its
+  own. Reason: some browsers send that event after these keys.
+- After a move from the menu, the status of the row says "<title> moves to
+  place 2 of 4" with no period, in the live region of the drag. It says
+  nothing when the move did not save, and a drag takes the region over.
+  Reason: one live region for the row, with the words of the protocol.
+- After a move from the menu, the focus goes to the link or the button of
+  the tab, through a ref that `renderTab` gets with the props of the tab.
+  Reason: a right click does not focus the tab in every browser, and the
+  Files code still imports nothing from the chat.
+- The row keeps the tab with the rename field, or else the shown tab, in
+  view. The shown tab of a file or diff page is the active tab of the
+  view. Reason: the field must stay in reach, and the chat knows the shown
+  file or diff tab only from the view.
+- When a tab opens without showing, such as a session that another member
+  starts, and it does not fit beside the shown tab, the row keeps the
+  shown tab in view. The new tab scrolls in only as far as the shown tab
+  still shows. Reason: decision 143 keeps the shown tab in sight, and a
+  session of another member must not move the view of the user. The
+  orchestrator made this call, which the agent of this part asked about.
+- During a drag, the pointer within 32 px of an end of the row, or past
+  it, scrolls the row by up to 12 px a frame, faster nearer the end. The
+  shared drag hook finds the drop place again after any scroll. Reason:
+  the zone is the width of a fade, and the hook stays generic for the
+  workspace list.
+- The wheel helper counts 40 px for a line of a wheel that turns by lines,
+  and the width of the row for a page. It leaves a turn with Ctrl, which
+  zooms, and a turn past an end of the row, to the browser. Reason: Firefox
+  can send lines, and a row at its end has nothing to scroll.
+- A phone tab whose title has no room for 24 px, two letters and the
+  ellipsis, shows only its icon, in the middle of the tab. The title wraps
+  onto a second line of the link, which the link clips. The selected
+  phone tab keeps 124 px: the icon, 48 px of the title, and Close.
+  Reason: CSS alone does it, so the mockups and the app share it.
+- The click that ends a lifted press reaches nothing, wherever it lands,
+  until the next press or key. Reason: a finger sends that click after it
+  lets go. It closed the sheet that the release opened, and before this
+  change it selected the tab of a long press with no move.
+- The tab menu closes when its tab leaves the row, starts to rename, or
+  the row turns read-only. Reason: the menu must not open again when the
+  tab comes back.
+- The tab whose menu is open takes the fill of a hover, also behind the
+  sheet of a phone. Reason: the mockup draws it so.
+
 Contract owners:
 
 - [Chat and events](../docs/protocol/chat-and-events.md#sessions).
@@ -637,49 +697,49 @@ full row.
       lifted tab, the faint copy, the drop line, and the touch CSS, as the
       mockup draws them. Bind no drag in a read-only workspace or on a tab
       that shows its rename field.
-- [ ] Add the full row: the sideways scroll, the scroll of each new or
+- [x] Add the full row: the sideways scroll, the scroll of each new or
       shown tab into view, also when the row gets narrower, the shared
       wheel helper, the fades, and the scroll of a drag near an end.
-- [ ] Add the item that is off and the placement at a point to the `Menu`
+- [x] Add the item that is off and the placement at a point to the `Menu`
       part of the chat.
-- [ ] Remove the Rename button from `Tab` in
+- [x] Remove the Rename button from `Tab` in
       `src/chat/components/SessionTabs.tsx`. Then narrow the selected phone
       tab in `WorkspaceTabs.module.css`, which the app shares.
-- [ ] Give the row of the app the `.scroll` class of Milestone 1, set
+- [x] Give the row of the app the `.scroll` class of Milestone 1, set
       `.fadeStart` and `.fadeEnd` by script, and update the comment of
       the row in `WorkspaceTabs.module.css`.
-- [ ] Make a phone tab at its minimum width show only its icon, in
+- [x] Make a phone tab at its minimum width show only its icon, in
       `WorkspaceTabs.module.css`, which the app shares.
-- [ ] Draw the lifted tab and the tab menu in a portal above the page.
-- [ ] Give the tab with the rename field the `.renaming` state of
+- [x] Draw the lifted tab and the tab menu in a portal above the page.
+- [x] Give the tab with the rename field the `.renaming` state of
       Milestone 1. Make `RenameField` use the shared `.rename` rule, and
       delete its copy in `src/chat/components/tabs.module.css`. The rule
       sizes the field with `field-sizing: content`, which only Chromium
       supports. Other browsers fall back to the default width of the
       input, within the 168 px cap.
-- [ ] Add the tab menu of the design: its own handler for Shift and F10
+- [x] Add the tab menu of the design: its own handler for Shift and F10
       and the Menu key, the sheet after a long press on a phone, the focus
       back to the tab after a move, and the announcement of the new
       place.
-- [ ] Test the mounted chat:
+- [x] Test the mounted chat:
   - [x] A pointer drag of a file tab before a session tab saves the new
         order, and the click at its end selects nothing.
   - [x] Escape during a drag keeps the order.
-  - [ ] A long press of a touch pointer lifts a session tab. A release
+  - [x] A long press of a touch pointer lifts a session tab. A release
         without a move opens the tab menu as a sheet.
-  - [ ] Shift and F10 on a focused tab opens the tab menu.
-  - [ ] A right click on a tab opens the tab menu. "Move left" moves the
+  - [x] Shift and F10 on a focused tab opens the tab menu.
+  - [x] A right click on a tab opens the tab menu. "Move left" moves the
         tab one place, saves the order, announces the new place, and gives
         the focus back to the tab.
-  - [ ] "Move left" is off on the first tab, and "Rename session" shows
+  - [x] "Move left" is off on the first tab, and "Rename session" shows
         only on a session tab.
-  - [ ] "Rename session" on a tab that does not show opens its rename
+  - [x] "Rename session" on a tab that does not show opens its rename
         field.
-  - [ ] A read-only workspace opens no tab menu. Move the read-only case
+  - [x] A read-only workspace opens no tab menu. Move the read-only case
         of `src/chat/components/ReadOnlyChat.dom.test.tsx` from the Rename
         button to the tab menu.
-  - [ ] A vertical wheel turn over the row scrolls it sideways.
-- [ ] Update `src/chat/README.md`, `src/files/README.md`,
+  - [x] A vertical wheel turn over the row scrolls it sideways.
+- [x] Update `src/chat/README.md`, `src/files/README.md`,
       `src/shell/workspace/README.md`, and
       `src/shell/workspace/screen-parts.md`, which says that the file tabs
       come after the session tabs.

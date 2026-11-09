@@ -11,7 +11,7 @@ import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
-import { rowOf, type RenderTab } from './components/tab-row'
+import { rowOf, shownTab, type RenderTab } from './components/tab-row'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import { sessionState, type ChatSnapshot } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
@@ -113,7 +113,7 @@ function ChatBody(
         tabs={rowOf(
           snapshot.view,
           tabSessions(snapshot),
-          content === null ? active : null,
+          shownTab(snapshot.view, active, content !== null),
           props.renderTab !== undefined,
         )}
       />

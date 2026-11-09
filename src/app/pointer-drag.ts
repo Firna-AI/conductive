@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type HTMLAttributes } from 'react'
+import { stopNextClick } from './next-click'
 
 /** The box of an element, in CSS px of the window. */
 export interface DragBox {
@@ -47,7 +48,7 @@ export interface PointerDragOptions<T, P> {
 /** The handlers of the element where a drag starts. */
 export type PointerDragProps = Pick<
   HTMLAttributes<HTMLElement>,
-  'onPointerDown' | 'onClickCapture' | 'onContextMenu' | 'onDragStart'
+  'onPointerDown' | 'onContextMenu' | 'onDragStart'
 >
 
 /** A press of the pointer on a bound element, until its release. */
@@ -90,9 +91,11 @@ export const ownPress: Pick<HTMLAttributes<HTMLElement>, 'onPointerDown'> = {
  * Drag and drop with any pointer. A mouse or a pen drags after a move of
  * more than 4 px. A finger lifts the item after a long press of 450 ms, and
  * the page does not scroll while the item is lifted. A finger that moves
- * first scrolls the page. Escape ends a drag with no drop. The click at the
- * end of a drag reaches no control of the bound element, a finger opens no
- * menu of the browser, and no press starts a native drag.
+ * first scrolls the page. Escape ends a drag with no drop. The click that
+ * ends a lifted press reaches nothing, also the click that a finger sends
+ * after it lets go. A finger opens no menu of the browser, and no press
+ * starts a native drag. A scroll during a drag, of the page or of any
+ * element, finds the drop place again.
  *
  * `bind(item, from)` gives the handlers of the element where a drag starts.
  * `locate` finds the drop place at each move of the pointer, and `drop`
@@ -103,7 +106,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
   const latest = useRef(options)
   const press = useRef<Press<T, P> | null>(null)
   const dragging = useRef<PointerDrag<T, P> | null>(null)
-  const suppressClick = useRef(false)
+  const clickWait = useRef<(() => void) | null>(null)
   const start = useRef<(press: Press<T, P>) => void>(() => undefined)
   useEffect(() => {
     latest.current = options
@@ -167,6 +170,20 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
     function onTouchMove(event: TouchEvent) {
       if (press.current?.lifted) event.preventDefault()
     }
+    // A scroll under a still pointer, such as of a row that a drag near its
+    // end scrolls, moves the drop places under it.
+    function onScroll() {
+      const current = press.current
+      const state = dragging.current
+      if (!current || !state) return
+      const place = latest.current.locate(
+        state.item,
+        current.x,
+        current.y,
+        state.place,
+      )
+      if (!Object.is(place, state.place)) show({ ...state, place })
+    }
     function onKey(event: KeyboardEvent) {
       if (event.key !== 'Escape' || !press.current) return
       // The press stays until its release, so that the release selects nothing.
@@ -189,13 +206,11 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       window.removeEventListener('pointercancel', onCancel)
       window.removeEventListener('keydown', onKey)
       document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('scroll', onScroll, true)
       if (state) show(null)
       if (!current?.lifted) return
-      // The click that ends a drag selects nothing.
-      suppressClick.current = true
-      setTimeout(() => {
-        suppressClick.current = false
-      }, 0)
+      clickWait.current?.()
+      clickWait.current = stopNextClick()
       if (release && state) latest.current.drop(state)
     }
     start.current = (next) => {
@@ -205,9 +220,16 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       window.addEventListener('pointercancel', onCancel)
       window.addEventListener('keydown', onKey)
       document.addEventListener('touchmove', onTouchMove, { passive: false })
+      document.addEventListener('scroll', onScroll, {
+        capture: true,
+        passive: true,
+      })
       if (next.touch) next.timer = setTimeout(() => lift(next), longPress)
     }
-    return () => finish(false)
+    return () => {
+      finish(false)
+      clickWait.current?.()
+    }
   }, [])
 
   const bind = (item: T, from: P): PointerDragProps => ({
@@ -233,11 +255,6 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
         timer: null,
         lifted: false,
       })
-    },
-    onClickCapture: (event) => {
-      if (!suppressClick.current) return
-      event.preventDefault()
-      event.stopPropagation()
     },
     onContextMenu: (event) => {
       if (press.current?.touch) event.preventDefault()

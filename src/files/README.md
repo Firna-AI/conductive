@@ -156,8 +156,11 @@ The screens:
   to close the tab. It takes the tab styles of the mockups' `WorkspaceTabs`,
   as the session tabs do. `item` takes more props of its list item, and
   `close` props of the wrapper of its Close button, such as the handlers,
-  the classes, and the ref of the drag of the row. They are plain element
-  props, so the Files code imports nothing from the chat.
+  the classes, and the ref of the drag and of the tab menu of the row.
+  `link` takes the ref of its link, which the row uses to give the tab the
+  focus back after a move from the tab menu. `FilesLink` takes that `ref`.
+  They are plain element props, so the Files code imports nothing from the
+  chat.
   `LiftedFileTab` is the copy of the tab that a drag lifts above the page:
   its icon and its whole file name, with no link and no Close.
 

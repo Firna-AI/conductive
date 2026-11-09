@@ -10,7 +10,10 @@
   box-sizing: border-box;
 }
 
-/* Like browser tabs, the other tabs shrink so that every tab shows. */
+/*
+ * Like browser tabs, the tabs shrink to their minimum width. A row whose
+ * tabs still do not fit scrolls sideways, as `.scroll` says.
+ */
 .tabs {
   display: flex;
   flex: 0 1 auto;
@@ -84,10 +87,30 @@
   min-width: 44px;
 }
 
-/* The icon, 48 px of the title, and the 44 px rename and close buttons. */
+/* The icon, 48 px of the title, and the 44 px Close button. */
 .phone .selected {
   flex-shrink: 1;
-  min-width: 168px;
+  min-width: 124px;
+}
+
+/*
+ * A phone tab with no room for two letters of its title shows only its
+ * icon, in the middle of the tab. The title wraps onto a second line, which
+ * the link clips, and the icon takes the height of the link, so it stays in
+ * the middle. A tab that renames its session keeps its field on one line.
+ */
+.phone .tab:not(.renaming) .link {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.phone .link .icon {
+  height: 100%;
+}
+
+.phone .title {
+  flex: 1 1 0;
+  min-width: 24px;
 }
 
 /*

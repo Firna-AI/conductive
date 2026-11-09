@@ -2,8 +2,12 @@
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { testNavigation } from '../../files/files-test-kit'
-import { FileTabItem, LiftedFileTab } from '../../files/tabs/FileTabItem'
-import { byRole, byText, queryByText } from '../../test-support/dom-queries'
+import {
+  byRole,
+  byText,
+  queryByRole,
+  queryByText,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
   MOUNTED_TEST_TIMEOUT,
@@ -12,6 +16,7 @@ import {
 } from '../../test-support/mount'
 import {
   file,
+  fileTabs,
   first,
   layOut,
   liftedCopy,
@@ -25,34 +30,22 @@ import {
   shownTab,
   viewSaves,
 } from './tab-drag-test-kit'
-import type { RenderTab } from './tab-row'
+import { allowed, menuItems } from './tab-row-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const mouse = { pointerType: 'mouse' }
+const fingerClick = { bubbles: true, cancelable: true, detail: 1 }
 
 describe('a drag in the tab row', () => {
   it('saves the order after a mouse drags a file tab before a session tab, and the click at the end of the drag shows nothing', async () => {
     const server = new FakeApiServer()
     const navigation = testNavigation()
-    const renderTab: RenderTab = (tab, draw) =>
-      draw.kind === 'lifted' ? (
-        <LiftedFileTab tab={tab} />
-      ) : (
-        <FileTabItem
-          close={draw.close}
-          item={draw.item}
-          navigation={navigation}
-          onClose={() => {}}
-          selected={false}
-          tab={tab}
-        />
-      )
     await mountChat({
       server,
       tabs: [first, second, file],
       viewport: 'desktop',
-      renderTab,
+      renderTab: fileTabs(navigation),
     })
     const fileTab = await waitFor(() => queryByText('app.ts'), 'the file tab')
     layOut(
@@ -118,7 +111,7 @@ describe('a drag in the tab row', () => {
     })
   })
 
-  it('lifts a session tab on a phone after a finger holds it 450 ms', async () => {
+  it('lifts a session tab on a phone after a finger holds it 450 ms, and opens its tab menu as a sheet when the finger lets go without a move', async () => {
     const server = new FakeApiServer()
     await mountChat({ server, tabs: [first, second], viewport: 'mobile' })
     const tab = byRole('button', 'Debounce lookups')
@@ -133,12 +126,35 @@ describe('a drag in the tab row', () => {
       act(() => vi.advanceTimersByTime(1))
       const held = rowStatus()
       const lifted = liftedCopy('Debounce lookups')
-      pointer(window, 'pointerup', { ...finger, buttons: 0 })
+      pointer(window, 'pointermove', { ...finger, clientX: 156 })
+      pointer(window, 'pointerup', { ...finger, clientX: 156, buttons: 0 })
+      // A finger sends its click after the release, on what is under it then:
+      // the dimmed page behind the sheet.
+      act(() => vi.advanceTimersByTime(20))
+      const dimmed = queryByRole(
+        'dialog',
+        'Debounce lookups',
+      )?.previousElementSibling
+      allowed(dimmed ?? document.body, new MouseEvent('click', fingerClick))
 
-      expect({ early, held, lifted }).toEqual({
+      expect({
+        early,
+        held,
+        lifted,
+        afterRelease: rowStatus(),
+        sheet: queryByRole('dialog', 'Debounce lookups') !== null,
+        menu: menuItems('Debounce lookups'),
+      }).toEqual({
         early: '',
         held: 'Moving Debounce lookups to place 2 of 2',
         lifted: true,
+        afterRelease: '',
+        sheet: true,
+        menu: [
+          { name: 'Rename session', off: false },
+          { name: 'Move left', off: false },
+          { name: 'Move right', off: true },
+        ],
       })
     } finally {
       vi.useRealTimers()

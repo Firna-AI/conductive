@@ -12,11 +12,16 @@ type Drop = Pick<
 
 /**
  * Two items in a row, each 100 px wide, with a Close control that keeps its
- * own press. The drop place is the item under the pointer.
+ * own press. The drop place is the item under the pointer, after the row
+ * scrolled by `scroll.left`.
  */
-function Row(props: { drops: Drop[]; picks: string[] }) {
+function Row(props: {
+  drops: Drop[]
+  picks: string[]
+  scroll?: { left: number }
+}) {
   const { drag, bind } = usePointerDrag<string, number>({
-    locate: (_item, x) => Math.floor(x / 100),
+    locate: (_item, x) => Math.floor((x + (props.scroll?.left ?? 0)) / 100),
     drop: ({ item, place, touch, moved }) =>
       props.drops.push({ item, place, touch, moved }),
   })
@@ -141,6 +146,30 @@ describe('the pointer drag', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('finds the drop place again when a scroll moves the places under a pointer that stays still', async () => {
+    const drops: Drop[] = []
+    const scroll = { left: 0 }
+    const view = await mount(<Row drops={drops} picks={[]} scroll={scroll} />)
+    const list = view.container.querySelector('ul')
+    if (!list) throw new Error('The row has no list.')
+
+    pointer(byRole('button', 'a'), 'pointerdown', { ...mouse, clientX: 50 })
+    pointer(window, 'pointermove', { ...mouse, clientX: 150 })
+    const before = shown()
+    scroll.left = 100
+    act(() => {
+      list.dispatchEvent(new Event('scroll'))
+    })
+    const after = shown()
+    pointer(window, 'pointerup', { ...mouse, clientX: 150, buttons: 0 })
+
+    expect({ before, after, drops }).toEqual({
+      before: 'a at 1',
+      after: 'a at 2',
+      drops: [{ item: 'a', place: 2, touch: false, moved: true }],
+    })
   })
 
   it('lifts an item that a mouse drags, but not from a control that keeps its own press, and starts no native drag', async () => {

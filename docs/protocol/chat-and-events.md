@@ -95,6 +95,8 @@ says.
 - The row scrolls a tab into view when the tab opens, when it becomes the
   shown tab, and after it moves.
 - When the row gets narrower, it scrolls the shown tab back into view.
+- A tab that opens without showing, such as a session that another member
+  starts, does not push the shown tab out of view.
 - A vertical turn of the mouse wheel over the row scrolls the row sideways.
   A sideways swipe, on a trackpad or with a finger, also scrolls it.
 - A fade marks each end of the row that clips tabs.

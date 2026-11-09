@@ -1,9 +1,8 @@
-import { useState } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { usePointerDrag } from '../../app/pointer-drag'
-import type { WorkspaceTab } from '../../shared/workspace-view'
 import type { TabPlace } from '../state/tab-order'
+import type { TabNodes } from './tab-nodes'
 import {
   rowKey,
   titleOf,
@@ -30,32 +29,6 @@ export interface TabRowDrag {
 /** The lifted tab hangs below the row: its top is 70% down the tab. */
 const hang = 0.7
 
-/** The list items of the tabs of one row, which a drag measures. */
-class TabBoxes {
-  private readonly items = new Map<string, HTMLElement>()
-
-  /** The ref of the list item of the tab with this key. */
-  ref(key: string): (node: HTMLElement | null) => void {
-    return (node) => {
-      if (node) this.items.set(key, node)
-      else this.items.delete(key)
-    }
-  }
-
-  /**
-   * The drop place among the tabs other than the dragged one: before the
-   * first one whose middle is right of `x`, else after the last one.
-   */
-  placeAt(keys: readonly string[], dragged: string, x: number): number {
-    const others = keys.filter((key) => key !== dragged)
-    const index = others.findIndex((key) => {
-      const box = this.items.get(key)?.getBoundingClientRect()
-      return box !== undefined && x < box.left + box.width / 2
-    })
-    return index < 0 ? others.length : index
-  }
-}
-
 /**
  * The move of the tab with `key` to the place `index` among the other tabs:
  * before the tab at that place, or after the last tab. Its own place moves
@@ -80,24 +53,31 @@ function moveTo(
  * place as a faint copy, a line that takes no space marks the drop place,
  * and a lifted copy hangs below the row under the pointer. The drop place is
  * before the first other tab whose middle is right of the pointer, else
- * after the last tab. A read-only row binds no drag, and neither does a tab
- * that shows its rename field. A drag does not change the shown tab.
+ * after the last tab. A long press that ends with no move calls `onHold` at
+ * the point of the press, for the tab menu. A read-only row binds no drag,
+ * and neither does a tab that shows its rename field. A drag does not change
+ * the shown tab.
  */
 export function useTabDrag(props: {
   tabs: readonly RowTab[]
+  nodes: TabNodes
   enabled: boolean
   renaming: string | null
-  onMove: (tab: WorkspaceTab, place: TabPlace) => void
+  onMove: (tab: RowTab, place: TabPlace) => void
+  onHold: (key: string, at: { x: number; y: number }) => void
 }): TabRowDrag {
-  const { tabs, onMove } = props
-  const [boxes] = useState(() => new TabBoxes())
+  const { tabs, nodes, onMove } = props
   const keys = tabs.map(rowKey)
   const { drag, bind } = usePointerDrag<string, number>({
-    locate: (key, x) => boxes.placeAt(keys, key, x),
-    drop: ({ item: key, place }) => {
+    locate: (key, x) => nodes.placeAt(keys, key, x),
+    drop: ({ item: key, place, moved, x, y }) => {
+      if (!moved) {
+        props.onHold(key, { x, y })
+        return
+      }
       const tab = tabs.find((item) => rowKey(item) === key)
       const to = moveTo(tabs, key, place)
-      if (tab && to) onMove(viewTabOf(tab), to)
+      if (tab && to) onMove(tab, to)
     },
   })
   // A tab that left the row during its drag, such as by a close, shows no drag.
@@ -105,7 +85,7 @@ export function useTabDrag(props: {
   const dragged = drag && own >= 0 ? { ...drag, tab: tabs[own] } : null
   const item = (tab: RowTab, index: number): TabItemProps => {
     const key = rowKey(tab)
-    const ref = boxes.ref(key)
+    const ref = nodes.itemRef(key)
     const renaming = tab.kind === 'session' && tab.id === props.renaming
     if (!props.enabled || renaming) return { ref }
     return {

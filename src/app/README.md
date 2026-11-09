@@ -203,10 +203,17 @@ clicks, types, and lets the answers of the fake API settle.
   a store, connects it again, or makes a new one.
 - `pointer-drag.ts`: `usePointerDrag`, the drag and drop of any pointer
   that the tab row of the chat uses: the press, the start after a move of a
-  mouse or a long press of a finger, Escape, the click after a drag, and the
-  scroll lock of touch. `ownPress` keeps a press on a control inside a
-  dragged element, such as Close, for that control.
-  `pointer-drag.test.tsx` mounts it in happy-dom.
+  mouse or a long press of a finger, Escape, the click after a drag, the
+  scroll lock of touch, and a new drop place after a scroll under a still
+  pointer. `ownPress` keeps a press on a control inside a dragged element,
+  such as Close, for that control. `next-click.ts`: `stopNextClick`, which
+  stops the click that ends a drag wherever it lands, also the late click
+  of a finger. `pointer-drag.test.tsx` mounts the hook in happy-dom.
+- `sideways-wheel.ts`: `useSidewaysWheel` and `sidewaysWheel`, which turn a
+  vertical wheel turn over a row that scrolls sideways into a sideways
+  scroll of the row. A sideways swipe and a turn with Ctrl stay with the
+  browser, and so does a turn past an end of the row. The tab row of the
+  chat uses it, and any row that scrolls sideways can.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and

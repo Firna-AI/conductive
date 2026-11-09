@@ -1,32 +1,50 @@
-import { Fragment, useCallback, useRef } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { History, Plus } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { ownPress } from '../../app/pointer-drag'
+import { useSidewaysWheel } from '../../app/sideways-wheel'
 import type { WorkspaceTab } from '../../shared/workspace-view'
 import type { TabPlace } from '../state/tab-order'
 import { IconButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
 import { useDismiss } from '../ui/dismiss'
 import { Menu, type MenuEntry } from '../ui/Menu'
+import { useEdgeScroll, useRowScroll } from './row-scroll'
 import { SessionTabItem } from './SessionTab'
 import { DropLine, LiftedTab } from './TabDragParts'
+import { TabMenu } from './TabMenu'
+import { TabNodes } from './tab-nodes'
 import { rowKey, type RenderTab, type RowTab } from './tab-row'
 import { useTabDrag } from './useTabDrag'
+import { useTabMenu } from './useTabMenu'
+import { useTabMoves } from './useTabMoves'
+
+/** The tab that the row keeps in view: the one that renames, else the shown one. */
+function keptTab(tabs: readonly RowTab[], renaming: string | null) {
+  const tab = tabs.find((item) =>
+    renaming === null
+      ? item.selected
+      : item.kind === 'session' && item.id === renaming,
+  )
+  return tab ? rowKey(tab) : null
+}
 
 /**
  * The tab row: the session tabs and the tabs that the host draws with
  * `renderTab`, such as open files, in the order of the saved view, then +
  * for a new session on the same branch and cloud computer, and the clock of
- * the session history. Every tab closes, and the current session can be
- * renamed. A tab moves by drag and drop, or by a long press on a phone, as
- * `useTabDrag` says. On desktop the history opens beside the clock; a phone
- * shows it as a sheet that the chat draws.
+ * the session history. Every tab closes. A tab moves by drag and drop, or
+ * by a long press on a phone, as `useTabDrag` says, and its tab menu renames
+ * a session and moves a tab one place, as `useTabMenu` says. A row whose
+ * tabs do not fit scrolls sideways, as `useRowScroll` says. On desktop the
+ * history and the tab menu open beside their trigger; a phone shows them as
+ * sheets.
  */
 export function SessionTabs(props: {
   tabs: readonly RowTab[]
   mobile: boolean
-  /** A read-only chat: no new session, no rename, and no move. */
+  /** A read-only chat: no new session, no tab menu, and no move. */
   readOnly: boolean
   renaming: string | null
   historyOpen: boolean
@@ -41,52 +59,88 @@ export function SessionTabs(props: {
   onNew: () => void
   onShowHistory: (open: boolean) => void
 }) {
+  const { tabs, renaming, onShowHistory } = props
+  const [nodes] = useState(() => new TabNodes())
+  const row = useRef<HTMLUListElement>(null)
   const anchor = useRef<HTMLSpanElement>(null)
-  const { onShowHistory } = props
   const closeHistory = useCallback(() => onShowHistory(false), [onShowHistory])
-  const menuOpen = props.historyOpen && !props.mobile
-  useDismiss(anchor, menuOpen, closeHistory)
-  const drag = useTabDrag({
-    tabs: props.tabs,
-    enabled: !props.readOnly,
-    renaming: props.renaming,
-    onMove: props.onMove,
+  const historyMenu = props.historyOpen && !props.mobile
+  useDismiss(anchor, historyMenu, closeHistory)
+  const enabled = !props.readOnly
+  const moves = useTabMoves({ tabs, nodes, onMove: props.onMove })
+  const menu = useTabMenu({
+    tabs,
+    enabled,
+    renaming,
+    onRename: props.onStartRename,
+    onStep: moves.step,
   })
+  const drag = useTabDrag({
+    tabs,
+    nodes,
+    enabled,
+    renaming,
+    onMove: moves.drop,
+    onHold: menu.open,
+  })
+  const dragging = drag.lifted !== null
+  const { forget } = moves
+  useEffect(() => {
+    if (dragging) forget()
+  }, [dragging, forget])
+  const fades = useRowScroll({
+    row,
+    nodes,
+    keys: tabs.map(rowKey),
+    kept: keptTab(tabs, renaming),
+    moved: moves.last,
+  })
+  useEdgeScroll(row, drag.lifted?.x ?? null)
+  useSidewaysWheel(row)
+  const parts = (tab: RowTab, index: number) => {
+    const key = rowKey(tab)
+    return {
+      item: menu.item(tab, drag.item(tab, index)),
+      link: { ref: nodes.linkRef(key) },
+      close: ownPress,
+    }
+  }
   return (
     <nav
       aria-label="Sessions and files"
       className={classes(styles.bar, props.mobile && styles.phone)}
     >
-      <ul className={styles.tabs}>
-        {props.tabs.map((tab, index) => (
+      <ul
+        className={classes(
+          styles.tabs,
+          styles.scroll,
+          fades.start && styles.fadeStart,
+          fades.end && styles.fadeEnd,
+        )}
+        ref={row}
+      >
+        {tabs.map((tab, index) => (
           <Fragment key={rowKey(tab)}>
             {drag.lineBefore === rowKey(tab) ? <DropLine /> : null}
             {tab.kind === 'session' ? (
               <SessionTabItem
-                close={ownPress}
-                item={drag.item(tab, index)}
+                {...parts(tab, index)}
                 onCancelRename={props.onCancelRename}
                 onClose={props.onClose}
                 onRename={props.onRename}
                 onSelect={props.onSelect}
-                onStartRename={props.onStartRename}
-                readOnly={props.readOnly}
-                renaming={props.renaming === tab.id}
+                renaming={renaming === tab.id}
                 tab={tab}
               />
             ) : (
-              props.renderTab?.(tab.tab, {
-                kind: 'row',
-                item: drag.item(tab, index),
-                close: ownPress,
-              })
+              props.renderTab?.(tab.tab, { kind: 'row', ...parts(tab, index) })
             )}
           </Fragment>
         ))}
         {drag.lineAtEnd ? <DropLine /> : null}
       </ul>
       <span className={controls.hidden} role="status">
-        {drag.status}
+        {drag.status || moves.status}
       </span>
       {props.readOnly ? null : (
         <IconButton icon={Plus} label="New session" onPress={props.onNew} />
@@ -99,7 +153,7 @@ export function SessionTabs(props: {
           menu
           onPress={() => onShowHistory(!props.historyOpen)}
         />
-        {menuOpen ? (
+        {historyMenu ? (
           <Menu
             entries={props.historyEntries}
             label="Session history"
@@ -109,6 +163,9 @@ export function SessionTabs(props: {
           />
         ) : null}
       </span>
+      {menu.menu ? (
+        <TabMenu menu={menu.menu} mobile={props.mobile} onClose={menu.close} />
+      ) : null}
       {drag.lifted ? (
         <LiftedTab
           mobile={props.mobile}

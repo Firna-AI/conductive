@@ -1,11 +1,12 @@
 import { useRef } from 'react'
 import { MessageSquare } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
-import local from './tabs.module.css'
 
 /**
- * The title of the current session as a field, in place of its tab label.
- * Enter or leaving the field saves the name, and Escape keeps the old one.
+ * The title of a session as a field, in place of the label of its tab, in
+ * the look of the rename field of the mockups. The field opens focused, with
+ * the title selected, so typing replaces the title. Enter or leaving the
+ * field saves the name, and Escape keeps the old one.
  */
 export function RenameField(props: {
   title: string
@@ -34,7 +35,7 @@ export function RenameField(props: {
       <input
         aria-label="Session name"
         autoFocus
-        className={local.rename}
+        className={styles.rename}
         defaultValue={props.title}
         name="title"
         onBlur={(event) => finish(true, event.currentTarget.value)}

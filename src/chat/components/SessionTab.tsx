@@ -1,33 +1,45 @@
-import { MessageSquare, Pencil, X } from 'lucide-react'
+import { MessageSquare, X } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { IconButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
 import { RenameField } from './RenameField'
-import type { SessionTab, TabCloseProps, TabItemProps } from './tab-row'
+import type {
+  SessionTab,
+  TabCloseProps,
+  TabItemProps,
+  TabLinkProps,
+} from './tab-row'
 
 /**
- * The tab of a session: a button that shows the session, and Close. The
- * shown session tab can be renamed, and its rename field takes the place of
- * the button. `item` and `close` are the props that the row gives the list
- * item and the wrapper of Close.
+ * The tab of a session: a button that shows the session, and Close. Its
+ * rename field takes the place of both while the user renames the session
+ * from the tab menu. The field marks the tab, so the tab keeps a fill only
+ * when it is the shown tab. `item`, `link`, and `close` are the props that
+ * the row gives the list item, the button, and the wrapper of Close.
  */
 export function SessionTabItem(props: {
   tab: SessionTab
-  readOnly: boolean
   renaming: boolean
   item: TabItemProps
+  link: TabLinkProps
   close: TabCloseProps
   onSelect: (id: string) => void
   onClose: (id: string) => void
-  onStartRename: (id: string) => void
   onRename: (id: string, title: string) => void
   onCancelRename: () => void
 }) {
-  const { tab, item } = props
+  const { tab, item, link, close } = props
   if (props.renaming) {
     return (
-      <li {...item} className={classes(styles.tab, styles.selected)}>
+      <li
+        {...item}
+        className={classes(
+          styles.tab,
+          tab.selected && styles.selected,
+          styles.renaming,
+        )}
+      >
         <RenameField
           onCancel={props.onCancelRename}
           onSave={(title) => props.onRename(tab.id, title)}
@@ -46,6 +58,7 @@ export function SessionTabItem(props: {
       )}
     >
       <button
+        {...link}
         aria-current={tab.selected ? 'page' : undefined}
         className={classes(controls.bare, styles.link)}
         onClick={() => props.onSelect(tab.id)}
@@ -54,15 +67,7 @@ export function SessionTabItem(props: {
         <MessageSquare aria-hidden className={styles.icon} size={13} />
         <span className={styles.title}>{tab.title}</span>
       </button>
-      {tab.selected && !props.readOnly ? (
-        <IconButton
-          icon={Pencil}
-          label={`Rename ${tab.title}`}
-          onPress={() => props.onStartRename(tab.id)}
-          quiet
-        />
-      ) : null}
-      <span {...props.close} className={styles.close}>
+      <span {...close} className={styles.close}>
         <IconButton
           icon={X}
           label={`Close ${tab.title}`}

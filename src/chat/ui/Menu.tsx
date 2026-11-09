@@ -1,10 +1,16 @@
-import { useRef, type KeyboardEvent, type ReactNode } from 'react'
+import {
+  useLayoutEffect,
+  useRef,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Check } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/common/Menu.module.css'
 import controls from './controls.module.css'
 import { useFocusInside } from './dismiss'
+import local from './menu.module.css'
 
 export type MenuItem = {
   kind: 'item'
@@ -20,6 +26,8 @@ export type MenuItem = {
   trailingIcon?: LucideIcon
   /** A choice in a group: the menu marks the current one. */
   checked?: boolean
+  /** An item that is off: it keeps its place, greyed, and the arrows skip it. */
+  disabled?: boolean
 }
 
 export type MenuEntry =
@@ -28,10 +36,30 @@ export type MenuEntry =
   | { kind: 'note'; text: string }
   | { kind: 'divider' }
 
-export type MenuPlacement =
-  'below-start' | 'below-end' | 'above-start' | 'above-end' | 'sheet'
+/** A point of the window, in CSS px, where a menu opens. */
+export interface MenuPoint {
+  x: number
+  y: number
+}
 
-const ITEM = '[role="menuitem"], [role="menuitemradio"]'
+/**
+ * Where a menu opens: beside its trigger, with its top left corner at a
+ * point of the window, or in a phone sheet.
+ */
+export type MenuPlacement =
+  | 'below-start'
+  | 'below-end'
+  | 'above-start'
+  | 'above-end'
+  | 'sheet'
+  | MenuPoint
+
+/** The items that the keyboard reaches: the items that are on. */
+const ITEM =
+  '[role="menuitem"]:not(:disabled), [role="menuitemradio"]:not(:disabled)'
+
+/** A menu at a point keeps this gap to the right and bottom of the window. */
+const edge = 4
 
 function Item(props: { entry: MenuItem }) {
   const { entry } = props
@@ -44,7 +72,13 @@ function Item(props: { entry: MenuItem }) {
   return (
     <button
       aria-checked={choice ? entry.checked : undefined}
-      className={classes(controls.bare, styles.item, controls.row)}
+      className={classes(
+        controls.bare,
+        styles.item,
+        controls.row,
+        entry.disabled && styles.disabled,
+      )}
+      disabled={entry.disabled}
       onClick={entry.onSelect}
       role={choice ? 'menuitemradio' : 'menuitem'}
       tabIndex={-1}
@@ -71,10 +105,13 @@ function firstItem(menu: HTMLElement): HTMLElement | null {
 }
 
 /**
- * An open menu of actions or choices, in the dense rows of the mockups. Its
- * trigger's wrapper sets the position that it opens from. The arrow keys
- * move between rows. Escape closes it, and Tab closes a popover. Tab stays
- * inside a sheet. A wide menu fits long rows, such as session titles.
+ * An open menu of actions or choices, in the dense rows of the mockups.
+ * Beside its trigger, the trigger's wrapper sets the position that it opens
+ * from. At a point, it draws above the page from its own fixed position. The
+ * arrow keys move between the items that are on, and skip the items that are
+ * off, as the menus of the design system do. Escape closes it. Tab closes a
+ * popover, and a menu at a point gives the focus back to where it was. Tab
+ * stays inside a sheet. A wide menu fits long rows, such as session titles.
  */
 export function Menu(props: {
   label: string
@@ -84,7 +121,22 @@ export function Menu(props: {
   wide?: boolean
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const { placement } = props
+  const point = typeof placement === 'string' ? null : placement
+  const x = point?.x
+  const y = point?.y
   useFocusInside(ref, firstItem)
+  // At a point, the top left corner of the menu goes there. A menu that would
+  // pass the right side of the window moves left, and one that would pass
+  // its bottom opens upwards from the point.
+  useLayoutEffect(() => {
+    const node = ref.current
+    if (!node || x === undefined || y === undefined) return
+    const right = window.innerWidth - node.offsetWidth - edge
+    const fits = y + node.offsetHeight <= window.innerHeight - edge
+    node.style.left = `${Math.max(0, Math.min(x, right))}px`
+    node.style.top = `${fits ? y : Math.max(0, y - node.offsetHeight)}px`
+  }, [x, y])
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const menu = ref.current
     if (!menu) return
@@ -96,7 +148,11 @@ export function Menu(props: {
       next = items[(index - 1 + items.length) % items.length]
     } else if (event.key === 'Home') next = items[0]
     else if (event.key === 'End') next = items.at(-1)
-    else if (event.key === 'Tab' && props.placement !== 'sheet') props.onClose()
+    else if (event.key === 'Tab' && placement !== 'sheet') {
+      // A menu at a point has no place in the order of Tab.
+      if (point) event.preventDefault()
+      props.onClose()
+    }
     if (!next) return
     event.preventDefault()
     next.focus()
@@ -106,7 +162,7 @@ export function Menu(props: {
       aria-label={props.label}
       className={classes(
         styles.menu,
-        styles[props.placement],
+        typeof placement === 'string' ? styles[placement] : local.point,
         props.wide && styles.wide,
       )}
       onKeyDown={onKeyDown}
