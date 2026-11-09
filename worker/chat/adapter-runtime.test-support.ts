@@ -1,6 +1,5 @@
 import { Miniflare } from 'miniflare'
 import { build } from 'vite'
-
 import { encrypt, hash, sign } from '../security/crypto'
 import { SESSION_COOKIE } from '../security/cookies'
 import { TEST_ORIGIN } from '../test-support/harness'
@@ -11,7 +10,6 @@ import {
   WORKSPACE_TOKEN,
 } from './harness.test-support'
 import { agentLoginContext } from './queries'
-
 export async function createAdapterRuntime(
   entryPoint = 'worker/workspace.ts',
   workspaceId = WORKSPACE_ID,
@@ -90,7 +88,7 @@ export async function createAdapterRuntime(
       .prepare(
         'INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)',
       )
-      .bind('session', 'owner', 4_000_000_000_000),
+      .bind('session', 'owner', 4000000000000),
     db
       .prepare(
         'INSERT INTO orgs (id, name, creator_user_id, created_at) VALUES (?, ?, ?, ?)',
@@ -144,7 +142,7 @@ export async function createAdapterRuntime(
     )
     .run()
   const sessionToken = await sign(
-    { sessionId: 'session', expiresAt: 4_000_000_000_000 },
+    { sessionId: 'session', expiresAt: 4000000000000 },
     'session',
     btoa('s'.repeat(32)),
   )

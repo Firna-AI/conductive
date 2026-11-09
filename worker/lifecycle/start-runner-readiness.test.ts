@@ -22,7 +22,7 @@ it('keeps the create pending through runner readiness and fails at its original 
     phase: 'runner',
     deadlineAt: TEST_TIME + 1_200_000,
   })
-  expect(start.storage.alarmAt).toBe(TEST_TIME + 1_200_000)
+  expect(await start.storage.getAlarm()).toBe(TEST_TIME + 1_200_000)
   expect(
     await fixture.runtime.env.DB.prepare(
       'SELECT state FROM workspace_creation_attempts WHERE workspace_id = ?',
@@ -32,12 +32,12 @@ it('keeps the create pending through runner readiness and fails at its original 
   ).toBe('pending')
   const commands = fixture.boat.commandRequests.length
   const polls = fixture.boat.statusRequests.length
-  start.restart()
+  await start.restart()
   await start.tick(TEST_TIME + 1_199_999)
   expect(await start.job()).toMatchObject({ phase: 'runner' })
   expect(fixture.boat.commandRequests).toHaveLength(commands)
   expect(fixture.boat.statusRequests).toHaveLength(polls)
-  fixture.setTime(TEST_TIME + 1_200_000)
+  await fixture.setTime(TEST_TIME + 1_200_000)
   await actor.reportRunnerLifecycle({ type: 'runner.ready' })
   expect((await actor.readLifecycle())?.state).toBe('starting')
   await start.tick(TEST_TIME + 1_200_000)
@@ -138,7 +138,7 @@ it('saves org suspension at runner readiness before native stop reconciliation',
     state: 'starting',
     runnerConnected: false,
   })
-  start.restart()
+  await start.restart()
   await start.tick(now + 1_000)
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toMatchObject({
@@ -150,5 +150,5 @@ it('saves org suspension at runner readiness before native stop reconciliation',
     runnerConnected: false,
   })
   expect(fixture.boat.states.get('bx_1')).toBe('archived')
-  expect(start.storage.alarmAt).toBeNull()
+  expect(await start.storage.getAlarm()).toBeNull()
 })

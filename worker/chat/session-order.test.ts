@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import {
   sessionPaths,
   sessionsPath,
@@ -7,7 +6,6 @@ import {
 } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
-
 describe('session display order', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -19,16 +17,16 @@ describe('session display order', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('lists sessions by creation time and closed sessions by last close before storage key order', async () => {
     const ids = ['z-session', 'a-session']
     const fixture = await createChatFixture(harness, {
-      randomId: () => ids.shift() ?? 'close-command',
+      ids,
+      idFallback: 'close-command',
     })
     const z = await fixture.createSession()
-    await fixture.clock.advance(1_000)
+    await fixture.clock.advance(1000)
     const a = await fixture.createSession()
-    expect(a.createdAt).toBe(z.createdAt + 1_000)
+    expect(a.createdAt).toBe(z.createdAt + 1000)
     const open: SessionsResponse = await (
       await fixture.fetch(sessionsPath(fixture.org.id, WORKSPACE_ID))
     ).json()
@@ -37,13 +35,13 @@ describe('session display order', () => {
       'a-session',
     ])
     expect(open.history).toEqual([])
-    await fixture.clock.advance(1_000)
+    await fixture.clock.advance(1000)
     await fixture.fetch(
       sessionPaths.close(fixture.org.id, WORKSPACE_ID, a.id),
       { stopRunningTurn: false },
     )
     const aClosedAt = fixture.clock.now()
-    await fixture.clock.advance(1_000)
+    await fixture.clock.advance(1000)
     await fixture.fetch(
       sessionPaths.close(fixture.org.id, WORKSPACE_ID, z.id),
       { stopRunningTurn: false },
@@ -58,7 +56,7 @@ describe('session display order', () => {
         closedAt: session.closedAt,
       })),
     ).toEqual([
-      { id: 'z-session', closedAt: aClosedAt + 1_000 },
+      { id: 'z-session', closedAt: aClosedAt + 1000 },
       { id: 'a-session', closedAt: aClosedAt },
     ])
   })

@@ -1,5 +1,4 @@
 import { expect, it } from 'vitest'
-
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { workspaceEventsPath } from '../../src/shared/events'
 import { FILE_EVENT_MAX_BYTES } from '../../src/shared/files'
@@ -11,8 +10,7 @@ import {
   WORKSPACE_ID,
   WORKSPACE_TOKEN,
 } from './harness.test-support'
-import { snapshot } from './runner-limits.test-support'
-
+import { snapshot } from './runner-fixtures.test-support'
 it('restores confirmed parts and complete reports larger than one SQLite value after eviction', async () => {
   const { runtime, headers } = await createAdapterRuntime()
   const parts = Array.from({ length: 12 }, (_, index) =>
@@ -32,7 +30,7 @@ it('restores confirmed parts and complete reports larger than one SQLite value a
   }
   expect(
     new TextEncoder().encode(JSON.stringify(expected)).length,
-  ).toBeGreaterThan(2_000_000)
+  ).toBeGreaterThan(2000000)
   for (const part of parts)
     expect(
       new TextEncoder().encode(JSON.stringify(part)).length,

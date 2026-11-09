@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
@@ -10,8 +9,6 @@ import {
   refreshCommands,
   refusedEvents,
 } from './runner-repairs.test-support'
-import { ChatStore } from './store'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -22,16 +19,15 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('keeps one repair and refusal after a post-commit crash before the first send', async () => {
   const fixture = await createChatFixture(harness)
   const runner = await fixture.connect()
-  fixture.storage.crashAfterCommit = true
+  await fixture.failNextCommit('after', 'Injected post-commit crash')
   runner.emit(oversizedReport('workspace.title'))
   await expect(fixture.drain()).rejects.toThrow('Injected post-commit crash')
   expect(refreshCommands(runner)).toEqual([])
   expect(runner.pendingEvents().map((event) => event.eventNumber)).toEqual([1])
-  fixture.restart()
+  await fixture.restart()
   expect(
     await fixture.chat.store.read(WORKSPACE_ID, (view) => view.repairs.all()),
   ).toEqual([
@@ -72,19 +68,20 @@ it('keeps one repair and refusal after a post-commit crash before the first send
   ])
   expect(runner.pendingEvents()).toEqual([])
 })
-
 it('commits a repair with its refusal and cursor before any send and retries a failed commit', async () => {
   const fixture = await createChatFixture(harness)
   const runner = await fixture.connect()
-  fixture.storage.beforeCommit = async (staged) => {
-    const store = new ChatStore(staged, fixture.clock.now)
-    if (
-      (await store.read(WORKSPACE_ID, (view) =>
-        view.cursor('fake-stream-1'),
-      )) === 1
-    )
-      throw new Error('Injected storage failure')
-  }
+  await fixture.setStorageHooks({
+    beforeCommit: async (staged) => {
+      const store = staged
+      if (
+        (await store.read(WORKSPACE_ID, (view) =>
+          view.cursor('fake-stream-1'),
+        )) === 1
+      )
+        throw new Error('Injected storage failure')
+    },
+  })
   runner.emit(oversizedReport('workspace.title'))
   await expect(fixture.drain()).rejects.toThrow('Injected storage failure')
   expect(refreshCommands(runner)).toEqual([])
@@ -93,8 +90,8 @@ it('commits a repair with its refusal and cursor before any send and retries a f
     await fixture.chat.store.read(WORKSPACE_ID, (view) => view.repairs.all()),
   ).toEqual([])
   expect(runner.pendingEvents().map((event) => event.eventNumber)).toEqual([1])
-  fixture.storage.beforeCommit = null
-  fixture.restart()
+  await fixture.clearFaults()
+  await fixture.restart()
   await fixture.connect(runner)
   expect(refreshCommands(runner).map((command) => command.kind)).toEqual([
     'workspace.title',
@@ -103,14 +100,16 @@ it('commits a repair with its refusal and cursor before any send and retries a f
   expect(runner.pendingEvents()).toEqual([])
   runner.emit(fullReport('workspace.title', 2))
   await fixture.drain()
-  fixture.storage.beforeCommit = async (staged) => {
-    const store = new ChatStore(staged, fixture.clock.now)
-    const repair = await store.read(WORKSPACE_ID, (view) =>
-      view.repairs.get('workspace.title'),
-    )
-    if (repair?.cause.eventNumber === 3 && repair.sent)
-      throw new Error('Injected delivery commit failure')
-  }
+  await fixture.setStorageHooks({
+    beforeCommit: async (staged) => {
+      const store = staged
+      const repair = await store.read(WORKSPACE_ID, (view) =>
+        view.repairs.get('workspace.title'),
+      )
+      if (repair?.cause.eventNumber === 3 && repair.sent)
+        throw new Error('Injected delivery commit failure')
+    },
+  })
   runner.emit(oversizedReport('workspace.title', 3))
   await expect(fixture.drain()).rejects.toThrow(
     'Injected delivery commit failure',
@@ -120,8 +119,8 @@ it('commits a repair with its refusal and cursor before any send and retries a f
     kind: 'workspace.title',
   })
   expect(runner.pendingEvents().map((event) => event.eventNumber)).toEqual([3])
-  fixture.storage.beforeCommit = null
-  fixture.restart()
+  await fixture.clearFaults()
+  await fixture.restart()
   await fixture.connect(runner)
   const requests = refreshCommands(runner)
   expect(requests).toHaveLength(3)
@@ -129,18 +128,20 @@ it('commits a repair with its refusal and cursor before any send and retries a f
   expect(runner.pendingEvents()).toEqual([])
   expect(await refusedEvents(fixture)).toHaveLength(2)
 })
-
 it('redelivers one durable repair after restart between marker commit and first send without confirming early', async () => {
   const fixture = await createChatFixture(harness)
   const runner = await fixture.connect()
   const attempted: WorkspaceToRunner[] = []
-  fixture.transport.dropOutgoing = (message) => {
+  await fixture.setSendRule({
+    type: 'report.refresh',
+    error: 'Injected refresh send failure',
+  })
+  fixture.observeOutgoing((message) => {
     if (message.type === 'report.refresh') {
       attempted.push(message)
-      throw new Error('Injected refresh send failure')
     }
     return false
-  }
+  })
   runner.emit(oversizedReport('files.snapshot'))
   await expect(fixture.drain()).rejects.toThrow('Injected refresh send failure')
   expect(runner.received).toEqual([
@@ -158,8 +159,8 @@ it('redelivers one durable repair after restart between marker commit and first 
       view.cursor('fake-stream-1'),
     ),
   ).toBe(1)
-  fixture.transport.dropOutgoing = () => false
-  fixture.restart()
+  await fixture.setSendRule(null)
+  await fixture.restart()
   await fixture.connect(runner)
   expect(runner.received.slice(1)).toEqual([
     {
@@ -180,7 +181,6 @@ it('redelivers one durable repair after restart between marker commit and first 
   await fixture.connect(runner)
   expect(refreshCommands(runner)).toEqual([...attempted, ...attempted])
 })
-
 it('bounds welcome only for the stream whose repair has not been sent', async () => {
   const fixture = await createChatFixture(harness)
   const second = await fixture.connect(
@@ -190,11 +190,10 @@ it('bounds welcome only for the stream whose repair has not been sent', async ()
     second.emit(fullReport('workspace.title', revision))
   await fixture.drain()
   const first = await fixture.connect()
-  fixture.transport.dropOutgoing = (message) => {
-    if (message.type === 'report.refresh')
-      throw new Error('Injected refresh send failure')
-    return false
-  }
+  await fixture.setSendRule({
+    type: 'report.refresh',
+    error: 'Injected refresh send failure',
+  })
   first.emit(oversizedReport('files.snapshot'))
   await expect(fixture.drain()).rejects.toThrow('Injected refresh send failure')
   await expect(fixture.connect(second)).rejects.toThrow(

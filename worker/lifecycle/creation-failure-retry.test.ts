@@ -6,7 +6,7 @@ import { authenticateWorkspaceToken, readWorkspaceToken } from './tokens'
 import { recordSandboxCleanup, retrySandboxCleanup } from './cleanup'
 import { resumeWorkspace } from './workspace-resume'
 import { createWorkspace } from './workspaces'
-import { heldOperation } from './platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 
 const fixtureForTest = setupBackendTests()
 
@@ -62,7 +62,7 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
     authenticateWorkspaceToken(runtime.env, oldToken),
   ).rejects.toMatchObject({ code: 'workspace_token_refused' })
 
-  start.restart()
+  await start.restart()
   const paused = heldOperation()
   const workspace = runtime.workspace
   let reads = 0
@@ -109,7 +109,7 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
   expect(joined.workspace.id).toBe(id)
 
   boat.commandExitCode = 0
-  start.restart()
+  await start.restart()
   for (let step = 0; step < 16 && (await start.job()); step++) {
     if ((await start.job())?.phase === 'runner')
       await fixture.actors

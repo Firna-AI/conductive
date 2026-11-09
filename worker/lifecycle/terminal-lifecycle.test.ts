@@ -31,6 +31,14 @@ it('starts and caches the terminal after startup at create and resume while rete
     if (!command.includes('systemctl start conductive-terminal.service')) return
     expect(detached).toBe(true)
     terminalStarts++
+    expect(boat.commandRequests.at(-2)).toMatchObject({
+      detached: true,
+    })
+    expect(
+      lifecycleCommandBody(boat.commandRequests.at(-2)?.command),
+    ).toContain("bash '/run/conductive/startup.sh'")
+  }
+  const reportReadyDuringTerminal = async () => {
     await endpoint.reportRunnerLifecycle({ type: 'runner.ready' })
     expect(await endpoint.readLifecycle()).toMatchObject({
       state: 'starting',
@@ -47,12 +55,6 @@ it('starts and caches the terminal after startup at create and resume while rete
         ]),
       },
     })
-    expect(boat.commandRequests.at(-2)).toMatchObject({
-      detached: true,
-    })
-    expect(
-      lifecycleCommandBody(boat.commandRequests.at(-2)?.command),
-    ).toContain("bash '/run/conductive/startup.sh'")
   }
   for (let step = 0; step < 16; step++) {
     const job = await coordinator.job()
@@ -73,6 +75,7 @@ it('starts and caches the terminal after startup at create and resume while rete
   })
   expect(terminalStarts).toBe(0)
   await coordinator.advance()
+  await reportReadyDuringTerminal()
   expect(await coordinator.job()).toMatchObject({
     phase: 'terminal',
     processId: expect.any(Number),
@@ -97,17 +100,24 @@ it('starts and caches the terminal after startup at create and resume while rete
   }
   await stopWorkspaceSandbox(context)
   await endpoint.lifecycleStopped()
-  fixture.setTime(runtime.dependencies.now() + DISK_KEEPALIVE_MS)
-  for (let step = 0; step < 5; step++) await endpoint.alarm()
+  await fixture.setTime(runtime.dependencies.now() + DISK_KEEPALIVE_MS)
+  for (let step = 0; step < 5; step++) await endpoint.advance()
   expect((await endpoint.readLifecycle())?.state).toBe('stopped')
   expect(boat.resumeIds).toEqual(['bx_1'])
   expect(terminalStarts).toBe(1)
   expect(boat.fileReads).toEqual([`${TERMINAL_RUNTIME_VIEW}/password`])
 
   boat.terminalPassword = 'c'.repeat(64)
-  const resumed = await fixture.run(() =>
-    resumeWorkspace(runtime, org.id, id, user.id),
-  )
+  const resumeQueued = fixture.nextQueued()
+  const resuming = resumeWorkspace(runtime, org.id, id, user.id)
+  void resuming.catch(() => {})
+  await resumeQueued
+  for (let step = 0; step < 16 && (await coordinator.job()); step++) {
+    const previousStarts = terminalStarts
+    await coordinator.advance()
+    if (terminalStarts !== previousStarts) await reportReadyDuringTerminal()
+  }
+  const resumed = await resuming
   expect(resumed.workspace.state).toBe('ready')
   expect(terminalStarts).toBe(2)
   expect(await terminalPassword(runtime.env, id, 'bx_1')).toBe('c'.repeat(64))

@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import type { WorkspaceValues } from './platform-storage'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { startRetryFixture, statusFault } from './retry-test-support'
@@ -16,8 +17,8 @@ it('ends a startup script that never exits at the original start deadline and pu
   fixture.boat.commandOutput = 'unfinished startup output\n'
   await start.tick(TEST_TIME + 1_199_999)
   const before = await start.job()
-  const alarm = start.storage.alarmAt
-  start.restart()
+  const alarm = await start.storage.getAlarm()
+  await start.restart()
   await start.tick(TEST_TIME + 1_200_000)
 
   expect(await start.job()).toBeUndefined()
@@ -72,7 +73,7 @@ it('gives each resume its own deadline and restores an old saved start when its 
   expect(await fixture.run(() => start.wait())).toEqual({ ok: true })
   await start.endpoint.lifecycleStopped()
   fixture.boat.states.set('bx_1', 'archived')
-  fixture.setTime(TEST_TIME + 300_000)
+  await fixture.setTime(TEST_TIME + 300_000)
   const endpoint = fixture.runtime.workspace(base.workspaceId)
   expect(
     await endpoint.queueLifecycleStart({
@@ -90,12 +91,12 @@ it('gives each resume its own deadline and restores an old saved start when its 
   fixture.boat.states.set('bx_1', 'provisioning')
   await start.tick(TEST_TIME + 1_499_999)
   const before = await start.job()
-  const alarm = start.storage.alarmAt
-  const legacy = await start.storage.get('job', START_JOB_KEY)
+  const alarm = await start.storage.getAlarm()
+  const legacy = await start.storage.get<WorkspaceValues['job']>(START_JOB_KEY)
   if (!legacy) throw new Error('Missing saved resume')
   delete legacy.deadlineAt
-  await start.storage.put('job', START_JOB_KEY, legacy)
-  start.restart()
+  await start.storage.put<WorkspaceValues['job']>(START_JOB_KEY, legacy)
+  await start.restart()
   await start.tick(TEST_TIME + 1_500_000)
 
   expect(await start.job()).toBeUndefined()
@@ -124,9 +125,9 @@ it('enforces the start deadline before a later provider retry after reconstructi
   const fault = statusFault(fixture)
   fault.fail('60')
   await start.tick(TEST_TIME + 1_199_000)
-  const alarm = start.storage.alarmAt
+  const alarm = await start.storage.getAlarm()
   const polls = fixture.boat.statusRequests.length
-  start.restart()
+  await start.restart()
   await start.tick(TEST_TIME + 1_200_000)
 
   expect(await start.job()).toBeUndefined()
@@ -151,7 +152,7 @@ it('fails a start when terminal preparation completes at the deadline before pub
   })
   fixture.boat.beforeStatus = async () => {
     fixture.boat.beforeStatus = undefined
-    fixture.setTime(TEST_TIME + 1_200_000)
+    await fixture.setTime(TEST_TIME + 1_200_000)
   }
   await start.tick(TEST_TIME + 1_199_999)
 
@@ -176,7 +177,7 @@ it('fails a start when its terminal password read completes at the deadline befo
   fixture.runtime.dependencies.fetch = async (request) => {
     const response = await fetch(request)
     if (new URL(request.url).pathname.endsWith('/files'))
-      fixture.setTime(TEST_TIME + 1_200_000)
+      await fixture.setTime(TEST_TIME + 1_200_000)
     return response
   }
   await start.tick(TEST_TIME + 1_199_999)

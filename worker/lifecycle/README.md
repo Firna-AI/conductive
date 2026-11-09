@@ -96,23 +96,8 @@ Disk retention resumes also replace the saved capture.
 
 ## Development
 
-Run the lifecycle tests with `npm run test -- worker/lifecycle`. They run in
-Node with local D1 and fakes. Node cannot load `worker/workspace.ts`,
-because it imports `cloudflare:workers`. So the logic of the class lives in
-this folder, where the tests can reach it.
-
-Some tests run the production `Workspace` with native storage in Miniflare.
-Their test entries extend `NativeAlarmWorkspace` in
-[`native-alarm-workspace.test-support.ts`](native-alarm-workspace.test-support.ts),
-or call `advanceScheduledAlarms` of
-[`scheduled-alarms.test-support.ts`](scheduled-alarms.test-support.ts)
-directly. Both advance a test clock and run only the stored alarms that are
-due, in time order. Each run deletes its alarm before the handler, as the
-runtime does. So a native test cannot run work that no stored alarm asked
-for. Do not call the alarm handler of a native entry directly.
-
-D1 holds the workspace, token, build, and log records. The storage of each
-object holds the lifecycle state, the turn records, and the events.
+Run `npm run test -- worker/lifecycle` from the repository root with Node 24.
+The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarms, and focused checks.
 
 ### Key Code
 

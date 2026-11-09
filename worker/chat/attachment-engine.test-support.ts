@@ -2,9 +2,7 @@ import type { AgentChatEvent } from '../../src/shared/chat-events'
 import { engineFixture } from '../../runner/test-support/engine'
 import type { FakeRunner } from '../test-support/fake-runner'
 import type { attachmentFixture } from './attachment.test-support'
-
 type AttachmentFixture = Awaited<ReturnType<typeof attachmentFixture>>
-
 export async function connectAttachmentEngine(
   fixture: AttachmentFixture,
   runner: FakeRunner,
@@ -20,7 +18,7 @@ export async function connectAttachmentEngine(
     runner.emit(event)
   }
   const commands: Promise<void>[] = []
-  fixture.transport.dropOutgoing = (command) => {
+  fixture.observeOutgoing((command) => {
     if (
       command.type === 'turn' ||
       command.type === 'message' ||
@@ -29,7 +27,7 @@ export async function connectAttachmentEngine(
     )
       commands.push(harness.engine.command(command))
     return false
-  }
+  })
   const drain = async () => {
     let count: number
     do {

@@ -86,7 +86,7 @@ it('keeps an overdue disk deadline and runs its restart after the user is lifted
   if (!stopped || stopped.nextDiskKeepaliveAt === null)
     throw new Error('Missing stopped disk deadline')
   const nextKeepaliveAt = stopped.nextDiskKeepaliveAt
-  fixture.setTime(nextKeepaliveAt + 1)
+  await fixture.setTime(nextKeepaliveAt + 1)
   await actor.reconcileLifecycleAccess('overdue')
   expect(await fixture.actors.get('overdue')?.storage.getAlarm()).toBeNull()
   expect((await actor.readLifecycle())?.nextDiskKeepaliveAt).toBe(

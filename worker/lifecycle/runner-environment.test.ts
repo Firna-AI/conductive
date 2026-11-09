@@ -1,9 +1,14 @@
 import { expect, it } from 'vitest'
 
+import type { WorkspaceValues } from './platform-storage'
 import { encrypt } from '../security/crypto'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
-import { SOFTWARE } from './backend-test-support'
+import {
+  SOFTWARE,
+  type backendFixture as createBackendFixture,
+} from './backend-test-support'
+import { seededCompletedWorkspace } from './backend-workspace.test-support'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { readRetention } from './retention-data'
 import { FIRST_MESSAGE } from './durable-test-support'
@@ -17,39 +22,39 @@ import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-
 
 const backendFixture = setupBackendTests()
 
-it('supplies each start its repository branch and encrypted org settings without leaking their values', async () => {
+async function saveEnvironment(
+  fixture: Awaited<ReturnType<typeof createBackendFixture>>,
+  secret: string,
+  classified = true,
+) {
+  const { runtime, org } = fixture
+  const ciphertext = await encrypt(
+    JSON.stringify(
+      classified
+        ? {
+            ORG_SECRET: { value: secret, secret: true },
+            PUBLIC_MODE: { value: 'production', secret: false },
+            PUBLIC_FLAG: { value: '1', secret: false },
+            SHORT_SECRET: { value: 'a', secret: true },
+          }
+        : { ORG_SECRET: secret },
+    ),
+    orgEnvironmentContext(org.id),
+    runtime.env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  await runtime.env.DB.prepare(
+    'UPDATE settings SET env_vars_ciphertext = ? WHERE org_id = ?',
+  )
+    .bind(ciphertext, org.id)
+    .run()
+  return ciphertext
+}
+
+it('captures the create branch and masks legacy encrypted settings in its streamed start log', async () => {
   const fixture = await backendFixture()
   const { runtime, org, user, boat } = fixture
   const initialSecret = 'create-environment-secret'
-  const resumedSecret = 'resume-environment-secret'
-  const saveEnvironment = async (secret: string, classified = true) => {
-    const ciphertext = await encrypt(
-      JSON.stringify(
-        classified
-          ? {
-              ORG_SECRET: { value: secret, secret: true },
-              PUBLIC_MODE: { value: 'production', secret: false },
-              PUBLIC_FLAG: { value: '1', secret: false },
-              SHORT_SECRET: { value: 'a', secret: true },
-            }
-          : { ORG_SECRET: secret },
-      ),
-      orgEnvironmentContext(org.id),
-      runtime.env.BOAT_KEY_ENCRYPTION_KEY,
-    )
-    await runtime.env.DB.prepare(
-      'UPDATE settings SET env_vars_ciphertext = ? WHERE org_id = ?',
-    )
-      .bind(ciphertext, org.id)
-      .run()
-  }
-  await saveEnvironment(initialSecret, false)
-  const resumes: Request[] = []
-  runtime.dependencies.fetch = async (request) => {
-    if (new URL(request.url).pathname.endsWith('/resume'))
-      resumes.push(request.clone())
-    return boat.fetch(request)
-  }
+  await saveEnvironment(fixture, initialSecret, false)
   await seedPublishedImage(runtime.env.DB, {
     orgId: org.id,
     buildId: 'configured-runtime-image',
@@ -91,7 +96,29 @@ it('supplies each start its repository branch and encrypted org settings without
   expect(
     await workspaceEnvironmentSettings(runtime.env, org.id, captured),
   ).toEqual({ ORG_SECRET: { value: initialSecret, secret: true } })
+})
 
+it('captures fresh resume settings, preserves the ready computer capture, and pins retention settings after rotation', async () => {
+  const fixture = await backendFixture()
+  const { runtime, org, user, boat } = fixture
+  const initialSecret = 'create-environment-secret'
+  const resumedSecret = 'resume-environment-secret'
+  const environmentCiphertext = await saveEnvironment(
+    fixture,
+    initialSecret,
+    false,
+  )
+  const { id, actor: platform } = await seededCompletedWorkspace(fixture, {
+    environmentCiphertext,
+  })
+  const actor = platform.endpoint()
+  const resumes: Request[] = []
+  runtime.dependencies.fetch = async (request) => {
+    if (new URL(request.url).pathname.endsWith('/resume'))
+      resumes.push(request.clone())
+    return boat.fetch(request)
+  }
+  boat.statusChunkSize = 17
   await actor.lifecycleStopped()
   boat.states.set('bx_1', 'archived')
   await runtime.env.DB.prepare(
@@ -99,7 +126,7 @@ it('supplies each start its repository branch and encrypted org settings without
   )
     .bind('resume-main', fixture.repositoryId)
     .run()
-  await saveEnvironment(resumedSecret)
+  await saveEnvironment(fixture, resumedSecret)
   boat.commandOutput = `settings ${resumedSecret} production 1 a\n`
   const resumed = await fixture.run(() =>
     resumeWorkspace(runtime, org.id, id, user.id),
@@ -122,11 +149,11 @@ it('supplies each start its repository branch and encrypted org settings without
   )
   const secrets = await fixture.actors
     .get(id)
-    ?.storage.get('text', 'lifecycle:start-secrets')
+    ?.storage.get<WorkspaceValues['text']>('lifecycle:start-secrets')
   expect(secrets).not.toContain(resumedSecret)
 
   await actor.lifecycleStopped()
-  await saveEnvironment('rotated-environment-secret')
+  await saveEnvironment(fixture, 'rotated-environment-secret')
   await fixture.run(() => resumeWorkspace(runtime, org.id, id, user.id))
   expect(resumes).toHaveLength(1)
   expect((await actor.readLifecycleStartLog()).text).toBe(
@@ -136,9 +163,9 @@ it('supplies each start its repository branch and encrypted org settings without
   await actor.lifecycleStopped()
   boat.states.set('bx_1', 'archived')
   const retentionSecret = 'retention-environment-secret'
-  await saveEnvironment(retentionSecret)
-  fixture.setTime(runtime.dependencies.now() + 1_123_200_000)
-  await actor.alarm()
+  await saveEnvironment(fixture, retentionSecret)
+  await fixture.setTime(runtime.dependencies.now() + 1_123_200_000)
+  await fixture.advanceTo(runtime.dependencies.now(), id)
   expect(await readRetention(runtime.env.DB, id)).toEqual({
     phase: 'wait',
     error: null,
@@ -152,7 +179,7 @@ it('supplies each start its repository branch and encrypted org settings without
       CONDUCTIVE_DISK_KEEPALIVE: '1',
     },
   })
-  await saveEnvironment('rotated-after-retention')
+  await saveEnvironment(fixture, 'rotated-after-retention')
   expect(
     await workspaceEnvironmentSettings(
       runtime.env,

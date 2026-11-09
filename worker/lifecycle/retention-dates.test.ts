@@ -27,7 +27,7 @@ it('restarts a physically stopped failed resume on day thirteen and keeps its sa
   fixture.boat.commandRunning = true
   await start.tick(TEST_TIME + 1_230_000)
   const stopped = await start.actor.readLifecycle()
-  start.restart()
+  await start.restart()
   await start.tick(TEST_TIME + 1_235_000)
   expect(await start.actor.readLifecycle()).toMatchObject({
     state: 'error',
@@ -53,11 +53,11 @@ it('restarts a physically stopped failed resume on day thirteen and keeps its sa
     diskRetentionCommand: undefined,
   })
   await addRetentionAdmin(fixture)
-  fixture.setTime(TEST_TIME + 1_124_460_000)
+  await fixture.setTime(TEST_TIME + 1_124_460_000)
   await suspendUser(fixture.runtime, fixture.user.githubId, 'retention-admin')
-  expect(platform.storage.alarmAt).toBeNull()
+  expect(await platform.storage.getAlarm()).toBeNull()
   await reassignRetentionOwner(fixture, job.workspaceId)
-  expect(platform.storage.alarmAt).toBe(TEST_TIME + 2_247_650_000)
+  expect(await platform.storage.getAlarm()).toBe(TEST_TIME + 2_247_650_000)
   expect(await start.actor.readLifecycle()).toMatchObject({
     error: { message: TIMEOUT },
     stoppedAt: TEST_TIME + 1_124_450_000,
@@ -71,7 +71,7 @@ it('clears suspended maintenance on confirmed stop and starts a fresh overdue at
   await fixture.tick(DUE)
   expect(await fixture.progress()).toEqual({ phase: 'wait', error: null })
   fixture.boat.states.set('bx_1', 'provisioning')
-  fixture.setTime(DUE + 10_000)
+  await fixture.setTime(DUE + 10_000)
   await suspendUser(fixture.runtime, fixture.user.githubId, 'retention-admin')
   expect(await fixture.progress()).toBeNull()
   expect(await fixture.platform.endpoint().readLifecycle()).toMatchObject({
@@ -81,11 +81,11 @@ it('clears suspended maintenance on confirmed stop and starts a fresh overdue at
     diskRetentionCommand: undefined,
     error: null,
   })
-  expect(fixture.platform.storage.alarmAt).toBeNull()
-  fixture.platform.restart()
-  fixture.setTime(TEST_TIME + 1_987_200_000)
+  expect(await fixture.platform.storage.getAlarm()).toBeNull()
+  await fixture.platform.restart()
+  await fixture.setTime(TEST_TIME + 1_987_200_000)
   await reassignRetentionOwner(fixture, fixture.id)
-  expect(fixture.platform.storage.alarmAt).toBe(DUE)
+  expect(await fixture.platform.storage.getAlarm()).toBe(DUE)
   await fixture.tick(TEST_TIME + 1_987_200_000)
   expect(fixture.boat.resumeIds).toEqual(['bx_1', 'bx_1'])
   expect(await fixture.progress()).toEqual({ phase: 'wait', error: null })
@@ -111,7 +111,7 @@ it('keeps the real disk date when maintenance resume is refused through its orig
     return fetch(request)
   }
   await fixture.tick(DUE)
-  fixture.platform.restart()
+  await fixture.platform.restart()
   await fixture.tick(DUE + 1_199_999)
   await fixture.tick(DUE + 1_200_000)
   expect(await fixture.platform.endpoint().readLifecycle()).toMatchObject({
@@ -125,9 +125,9 @@ it('keeps the real disk date when maintenance resume is refused through its orig
   expect(fixture.boat.resumeIds).toEqual([])
   expect(fixture.boat.stopIds).toEqual([])
   expect(await fixture.progress()).toBeNull()
-  expect(fixture.platform.storage.alarmAt).toBe(DUE + 1_205_000)
+  expect(await fixture.platform.storage.getAlarm()).toBe(DUE + 1_205_000)
   refused = false
-  fixture.platform.restart()
+  await fixture.platform.restart()
   await fixture.tick(DUE + 1_205_000)
   expect(fixture.boat.resumeIds).toEqual(['bx_1'])
   expect(await fixture.platform.endpoint().readLifecycle()).toMatchObject({
@@ -144,7 +144,7 @@ it('renews disk retention from its own saved stop request across stopping replie
   fixture.boat.stopReplyState = 'archiving'
   await fixture.tick(DUE + 20_000)
   expect(fixture.boat.stopIds).toEqual(['bx_1'])
-  fixture.platform.restart()
+  await fixture.platform.restart()
   await fixture.tick(DUE + 25_000)
   expect(fixture.boat.stopIds).toEqual(['bx_1'])
   fixture.boat.states.set('bx_1', 'archived')
@@ -168,8 +168,8 @@ it('renews disk retention from its own saved stop request across stopping replie
     diskRetentionCommand: { stopRequestedAt: TEST_TIME + 2_246_440_000 },
   })
   fixture.boat.states.set('bx_1', 'archived')
-  fixture.setTime(nextDue + 30_000)
-  fixture.platform.restart()
+  await fixture.setTime(nextDue + 30_000)
+  await fixture.platform.restart()
   await fixture.platform.endpoint().lifecycleStopped()
   expect(await fixture.platform.endpoint().readLifecycle()).toMatchObject({
     stoppedAt: TEST_TIME + 2_246_440_000,
