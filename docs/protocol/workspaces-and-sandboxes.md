@@ -155,6 +155,11 @@ says.
   Bold text marks unread output.
 - Archived workspaces sit in the Archived group at the end of the list.
 
+## The workspace menu
+
+- [Workspace menu](workspace-menu.md) holds the requirements of the menu
+  of a workspace row: Move to section, Reassign to, Rename, and Archive.
+
 ## Stop and resume
 
 - A sandbox stops after 30 minutes without user activity on its workspace
@@ -200,10 +205,15 @@ says.
   are not committed and for commits that are not pushed.
 - When the check finds such work, the question lists it. The user can then
   archive anyway or cancel.
+- When the check does not finish, the question says so and names the
+  failure. It offers Try again and Cancel.
+- The app archives nothing without a finished check.
 - Reason: an archive without the check can delete work that was never
   pushed.
 - The pull request bar offers Archive after the merge, as
-  [GitHub banner](github-banner.md#banner-states) says.
+  [GitHub banner](github-banner.md#banner-states) says. The menu of a
+  workspace row offers it too, as [Archive](workspace-menu.md#archive)
+  says.
 - An archived workspace has no file lists and no tools. A phone shows only
   its chat.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may

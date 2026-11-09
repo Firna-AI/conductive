@@ -43,7 +43,7 @@ at `app/chat/tables`, and in the open work of a turn at
 - A screen reader reads each table as a table, by its rows and its
   columns.
 - Tables look the same in agent messages and in the file preview. The
-  [mockups](../mockups/design.md) give the look.
+  [mockups](../mockups/design-chat.md) give the look.
 
 ### Table text
 

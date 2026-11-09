@@ -10,15 +10,18 @@ and archives through existing controls. The server accepts a new workspace
 name, but the app has no workspace name editor.
 
 The change adds one workspace menu with Move to section, Reassign to,
-Rename, and Archive. It opens from a right-click or a More button on a row.
-It uses the existing actions and permission rules. Copy link and the other
-actions in the reference screenshot stay outside the chosen scope.
+Rename, and Archive. A right-click or the menu keys open it on a row, as
+Decision 2 F chose. No row has a More button. The row keeps main's hover
+Archive shortcut. It uses the existing actions and permission rules. Copy
+link and the other actions in the reference screenshot stay outside the
+chosen scope.
 
 Contract owners:
 
+- [Workspace menu](../docs/protocol/workspace-menu.md).
 - [Orgs, sections, and members](../docs/protocol/orgs-and-members.md).
 - [Workspace lifecycle and Archive](../docs/protocol/workspaces-and-sandboxes.md).
-- [Workspace and session names](../docs/protocol/chat-and-events.md#workspace-and-session-names).
+- [Workspace and session names](../docs/protocol/agents-and-sessions.md#workspace-and-session-names).
 - [Command palette and layers](../docs/protocol/command-palette.md).
 - [Web app data and composition](../src/app/README.md).
 - [Workspace screen](../src/shell/workspace/README.md).
@@ -63,6 +66,82 @@ This number refers to item 1 of the workspace menu discussion.
 All options assume a menu on a workspace row. The task message requires it.
 They keep the existing role limits and Archive check. The protocol docs
 require those limits. None needs new storage, a migration, or a new API.
+
+## Decision 2: Combine the row action controls
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `src/shell/list/WorkspaceRow.tsx`.
+- **Terms:**
+  - **More:** The button that opens the four-action workspace menu.
+  - **Archive shortcut:** The separate icon that archives a workspace from its row.
+- **Background:** The approved plan adds More beside each row link. Main
+  now has a separate Archive shortcut from PR #124, merged on 9 November
+  2026. The shortcut appears only on hover. The header has no Archive.
+- **Problem:** The two controls use the same space over the row's time.
+  The approved menu and the new shortcut need one combined row design.
+- **Impact if no action:** A blind merge can overlap controls or lose the
+  new shortcut. The final merge and pull request must wait.
+- **Root question:** Which row controls should appear on hover, on keyboard
+  focus, on selected rows, and on touch?
+- **Options:**
+  - **A.** Keep both controls on desktop. Keep Archive on hover and the
+    approved More entry points. Reserve room for both. Keep the time
+    visible on selected and focused rows. This adds a second icon.
+    Effort: Medium.
+  - **B.** Put Archive in the menu only. Keep the approved More behavior
+    and the four menu actions. This keeps one row control but removes the
+    new direct shortcut. Effort: Medium.
+  - **C.** Keep the Archive shortcut on mouse desktops. Open the menu there
+    by right click or the menu keys. Show More on phones and hoverless
+    screens. This keeps one control but makes the desktop menu less visible.
+    Effort: Medium.
+  - **D.** Keep C. Also reveal More when it has keyboard focus and while its
+    menu is open. Place it over the end of the name so the time stays
+    visible. This keeps the hover shortcut and a visible keyboard path.
+    Each row has another Tab stop. Effort: Medium.
+  - **E.** Show More on every row, after the time, on every screen. Keep
+    Archive over the time on hover. The menu is always visible, but every
+    workspace name has less room. Effort: Medium.
+  - **F.** Keep Archive as on main. Remove the workspace More button on
+    every screen. Open the menu by right click and the existing local
+    menu keys. Add no replacement touch control. Effort: Medium.
+    The user supplied this option.
+- **Left out:** Restore Archive in the header, because the new user
+  decision on main removed it. Remove the row menu, because the current
+  task requires it. Change nothing, because the two changes must coexist.
+- **Wider fix:** None. This is a choice of product controls.
+- **Previous examples:** `origin/main` commit `c02744f`, PR #124, adds the
+  shortcut and removes Archive from the header. Decision 1 of this plan
+  chooses the four menu actions. The completed mockups show More.
+- **Recommendation:** F. The user chose a right-click menu with the
+  existing Archive control. Earlier recommendations were B, then D.
+- **Action:** Apply F. The user answered on 9 November 2026.
+- **Chosen:** F, by the user on 9 November 2026: "we should not have the
+  3 dot menu, have the archive as it was before, just right click loads
+  the menu".
+
+All options keep the four menu actions, the role rules, the Archive check,
+main's header without Archive, and its archive-state and focus fixes. They
+keep More on phones and hoverless screens. The task and protocol docs
+require those behaviors. A, C, D, and E keep main's time on selection and
+keyboard focus. B removes the shortcut and overrides that visibility rule,
+so it needs explicit approval. C, D, and E change the agent's desktop More
+design call. A touch laptop can hover while More shows, so every option
+except B needs space for both icons. These were the assumptions of the
+earlier options check. The user's F supersedes the assumption that More
+stays on touch. No workspace row shows More. The Archive shortcut keeps
+main's hover-only behavior and permissions. Section menu buttons stay.
+
+The options check recommended D before the user's answer. Its record is
+`.context/workspace-context-menu/decision2/options-check.md`.
+
+Integration after the answer must preserve main's keyboard moves and
+focus from every row control. The menu and any retained shortcut must use
+one Archive flow. It must also remove stale comparisons with header
+Archive from the menu protocol and catalogue. The hoverless comment must
+describe More without changing the shortcut's hover-only rule.
 
 ## Design calls
 
@@ -146,6 +225,132 @@ These are agent calls from the completed mockup milestone.
 - The General-only case uses Acme after deletion of its custom sections,
   which moves their workspaces to General. It keeps the shared fixture model.
 
+### Documentation design calls, 9 November 2026
+
+These are agent calls from the documentation milestone.
+
+- The menu requirements live on a new protocol page, Workspace menu, which
+  belongs to Workspaces and sandboxes. The owner docs link to it. Reason:
+  the menu needs about 150 lines, so each owner doc would pass the length
+  target of about 250 lines. One page also keeps the menu rules together,
+  as Workspace links does for Copy link and the chips.
+- The architecture doc does not list the new page. Reason: it passes the
+  length target, so a change needs a split outside this milestone. Its
+  list names Workspaces and sandboxes, which links the page, as Access and
+  security links GitHub tokens.
+- The protocol cites no number for Decision 1. It gives the choice, the
+  rejected actions, and the reason. Reason: the number 1 belongs to this
+  plan only, and `plans/follow-ups/decision-numbers-across-plans.md` still
+  waits for the numbering rule of the user.
+- The protocol now states two behaviors that the app already has. Every
+  member moves and renames a workspace that is not archived. The Archive
+  question names a check that does not finish, with Try again and Cancel.
+  Reason: the menu offers both from every row, and the design calls above
+  keep both. Neither adds behavior.
+
+### App guide design call, 9 November 2026
+
+This is an agent call from Milestone 2a.
+
+- The body of Key code in the web app README moves, unchanged, to
+  `src/app/key-code.md`. The README keeps the Key code heading and a short
+  paragraph that links the page. Reason: the waitlist merge and the menu
+  docs brought the README to 390 lines, past the limit of 300. Key code
+  was its largest section, with 181 lines, so the README now has 214
+  lines. The page sits beside the README, so each path and link stays
+  correct. A move of Run it alone was left out, because the README would
+  still pass 300 lines.
+
+### Workspace action design calls, 9 November 2026
+
+These are agent calls from Milestone 3.
+
+- `OrgModel.workspaceActions` owns the row writes and the Archive flows
+  of unopened rows. `ShownWorkspaces` joins those actions to an existing
+  kept model. Reason: the row must change without opening its workspace
+  or making a workspace model for it.
+- A kept but closed workspace reuses its model's Archive flow and owner
+  callback, as the open workspace does. Reason: its cached header must
+  show the new fields on a return, without a read or a new model.
+- A name reply confirms only `name`. An owner reply confirms only
+  `owner`. An Archive reply confirms only `state` and `archivedAt` in the
+  list. Its kept detail also takes `start` and `error` from the reply.
+  Reason: an older action reply must keep newer activity and other fields.
+- Local action fields stay over pending first-open replies as well as
+  Resume replies. Reason: a first read can start before a row action,
+  and its older reply must keep that action's confirmed fields.
+- The UI uses the screen's Archive question for its current row. It draws
+  that same question during the first detail load too. For another row,
+  it draws one list-owned question over the current page. Reason: each
+  action must show one question, including while the current row loads.
+
+### Workspace menu UI design calls, 9 November 2026
+
+These are agent calls from Milestone 4.
+
+- The app reads the actions of the menu from `workspaceMenuItems` in the
+  mockups' `workspaceMenu.ts`, which no longer imports a fixture. The
+  mockup section choices moved to `rowControls.ts`. Reason: one list of
+  the actions, their order, words, icons, and role rules serves the
+  mockups and every entry point. The rules match `mayArchive` and the
+  owner picker. The list's suspension check removes every action.
+- The menu extends the shell's menu list with items that show choices,
+  and adds `PointMenu`, a menu at a point in a fixed layer on the page.
+  Firna's dropdown and context menu were left out: they have no
+  submenus, and their rows are taller than the dense design. The chat's
+  point menu stays. Only its menu keys move to the shared `opensMenu`.
+  Reason: the list, its sheets, and its layers use the shell kit, and
+  this change migrates no other menu.
+- A hover shows the choices of an item at once, and the item under the
+  pointer takes the focus, so one row shows the highlight. A key or a
+  press moves the focus into the choices. A hover leaves it in the menu.
+  Reason: the mockups show one highlighted row, as native menus do.
+- Reassign to reuses the state of the owner picker through
+  `useOwnerChoices` and its panel. While a change runs, the menu refuses
+  Escape, Left, a press outside, Tab, and the palette key. The owner
+  choices stay, and the other items and actions do nothing. Reason: the
+  protocol asks for the states of the owner picker, which refuses to
+  close in the same way, so its result or its error stays in view.
+- More shows at all times when the main pointer cannot hover or any
+  pointer is coarse. Reason: a finger on the touch screen of a laptop
+  cannot hover, and its long press drags the row.
+- A second press on More closes its menu, and a press on More is no press
+  outside. Reason: More toggles its menu, as the other menu buttons do.
+- The list cancels its own Archive flow when its row becomes the current
+  page or the list closes. Reason: a question must never show twice or
+  return after its owner closed.
+- The Rename field stays open and read-only while its save runs, so
+  Enter, a blur, and Escape send nothing more. Its border shows its focus,
+  without the focus ring of the browser, as the mockups draw it. Reason:
+  the field saves once, and closes after the confirmed reply.
+
+### Mockup guide design call, 9 November 2026
+
+Each guide keeps its entry page, with linked chat and operator pages
+beside it. The split keeps every original line. These are the largest
+contiguous groups with one topic. It brings both guides below 300 lines
+with the fewest pages. Moving only the catalogue's operator details would
+leave little room. A third design page is unnecessary.
+
+### Right-click documentation design calls, 9 November 2026
+
+These are agent calls from Milestone 4c.
+
+- Decision 2 F supersedes each earlier design call above that gives More
+  a place, a visibility, a touch role, or a toggle. Those calls stay as
+  dated records. The protocol and the guides state F.
+- The protocol names the layout, not the device, for the sheet. Reason: a
+  narrow window shows the phone layout, where a right click opens the
+  sheet. A touch screen gets no way to open the menu, as F chose.
+- The design guide keeps the saved sentence that the app reads the action
+  list of `workspaceMenu.ts`, so that file imports no fixture. Reason: the
+  rule names no More, and it guards the list that Milestone 4d shares
+  with the app again.
+- The key code page names one Archive flow for the row shortcut and the
+  menu, `ShownWorkspaces.archive`, and no separate list Archive hook. It
+  does not name the hook that draws the question. Reason: Milestone 4d
+  joins main's row Archive and the menu in one flow and chooses that hook.
+
 ## Milestone 1: Workspace menu mockups
 
 Tags: mockup
@@ -196,16 +401,30 @@ Action: `docs implementor`.
 
 The protocol states the menu behavior. Area READMEs name useful entry points.
 
-- [ ] Add the workspace menu and Rename requirements to the owning protocol
+- [x] Add the workspace menu and Rename requirements to the owning protocol
       docs. Keep the existing role, automatic naming, and Archive rules.
-- [ ] Read both `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
+- [x] Read both `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
       full. Update any sentence that restates a changed protocol fact.
-- [ ] Update the app, workspace, and mockup READMEs where the change adds
+- [x] Update the app, workspace, and mockup READMEs where the change adds
       useful behavior or entry points. Check all changed relative links.
+
+Evidence: `.context/workspace-context-menu/milestone2/report.md`.
+
+## Milestone 2a: Keep app documentation short
+
+Depends on: 2
+
+Action: `docs implementor`.
+
+- [x] Split the app README into linked pages. Keep all entry points and
+      the current facts from the waitlist merge.
+- [x] Check the links and the legal pages on the combined source.
+
+Evidence: `.context/workspace-context-menu/milestone2a/report.md`.
 
 ## Milestone 3: Workspace row actions
 
-Depends on: 2
+Depends on: 2, 2a
 
 Action: `non-ui implementor`.
 
@@ -213,70 +432,155 @@ Use the existing workspace PATCH, member, and Archive routes. Keep data
 writes and response handling in the app model and action layer. This
 milestone adds no backend route or schema change.
 
-- [ ] Add the rename action and a field-specific confirmed list update.
-- [ ] Keep newer unrelated workspace fields when a rename reply arrives.
+- [x] Add the rename action and a field-specific confirmed list update.
+- [x] Keep newer unrelated workspace fields when a rename reply arrives.
       Keep the existing open-workspace metadata and saved-view behavior.
-- [ ] Add an owner-only list update for a Reassign reply. Keep newer name,
+- [x] Add an owner-only list update for a Reassign reply. Keep newer name,
       state, and section changes when that reply arrives.
-- [ ] Give an unopened row a list-level Archive flow with `ArchiveModel`.
+- [x] Give an unopened row a list-level Archive flow with `ArchiveModel`.
       Apply its confirmed archive state to the list without opening a
       workspace. Use the open workspace's existing flow for its own row.
-- [ ] Check the development fake's existing rename route and align it only
+- [x] Check the development fake's existing rename route and align it only
       where it differs from the real route.
-- [ ] Add a focused test for the rename write and preservation of a newer
+- [x] Add a focused test for the rename write and preservation of a newer
       unrelated workspace update. Use the existing test services.
-- [ ] Cover the owner-only confirmation and an unopened row's Archive result
+- [x] Cover the owner-only confirmation and an unopened row's Archive result
       at the model layer. Keep only cases not covered by existing tests.
-- [ ] Run the targeted tests, typecheck, lint, and format checks.
+- [x] Run the targeted tests, typecheck, lint, and format checks.
+
+Evidence: `.context/workspace-context-menu/milestone3/report.md`.
+
+## Milestone 3a: Integrate the current header mockups
+
+Tags: mockup
+
+Depends on: 3
+
+Action: `ui implementor`.
+
+- [x] Keep the workspace menu with main's current header. Resolve the
+      design text and refresh the two conflicting desktop pictures.
+- [x] Check the combined desktop and phone views in both schemes. Keep
+      the one-row Archive result.
+
+Evidence: `.context/workspace-context-menu/milestone3a/report.md`.
 
 ## Milestone 4: Workspace row menu
 
 Tags: ui
 
-Depends on: 3
+Depends on: 3, 3a
 
 Action: `ui implementor`.
 
 Implement the approved mockups for the shared row in the sidebar and list.
 Reuse the existing move, member, rename, and Archive actions.
 
-- [ ] Check `@firna/ui`, then the existing menu and point-menu components.
+- [x] Check `@firna/ui`, then the existing menu and point-menu components.
       Reuse suitable parts and avoid a second workspace menu definition.
-- [ ] Add right-click and More entry points with keyboard focus, Escape,
+- [x] Add right-click and More entry points with keyboard focus, Escape,
       outside-press dismissal, window bounds, and no sidebar clipping.
-- [ ] Add submenus to the reused app menu. Cover pointer hover, the right
+- [x] Add submenus to the reused app menu. Cover pointer hover, the right
       and left arrow keys, Escape, and choices that replace a phone sheet.
-- [ ] Reuse the row-control styles for More and Rename. Draw the real menu
+- [x] Reuse the row-control styles for More and Rename. Draw the real menu
       above the page. The mockup point offsets only place static examples.
-- [ ] Show More on hoverless screens as well as phone layouts, including
+- [x] Show More on hoverless screens as well as phone layouts, including
       touch screens that use the desktop layout.
-- [ ] Add the existing local menu keys. Use `ownPress` on More. Let the
+- [x] Add the existing local menu keys. Use `ownPress` on More. Let the
       shared drag context handler end mouse presses and keep touch presses.
       Cover that shared change in the existing pointer-drag tests.
-- [ ] Connect section choices, member choices, Rename, and Archive to the
+- [x] Connect section choices, member choices, Rename, and Archive to the
       target workspace. Keep the current workspace open when the menu opens.
-- [ ] Reuse the existing permission checks, active and archived rules, and
+      Render one Archive question, including during its first detail load.
+- [x] Reuse the existing permission checks, active and archived rules, and
       org suspension handling. Close obsolete choices when access changes.
-- [ ] Keep drag, touch hold, modified-click navigation, and palette layer
+- [x] Keep drag, touch hold, modified-click navigation, and palette layer
       behavior. Restore focus to the row or More button after dismissal.
-- [ ] Add focused interaction tests for target identity, permissions,
+- [x] Add focused interaction tests for target identity, permissions,
       Rename save, cancel, empty draft, and failure, and the existing Archive
       confirmation flow. Check a failed saved-work read without bypassing
       confirmation. Keep each requirement at one test layer.
-- [ ] Extend an existing drag regression test only if the new menu changes
+- [x] Extend an existing drag regression test only if the new menu changes
       an interaction that it does not already cover.
-- [ ] Run new asynchronous and DOM tests ten times, as the testing skill
+- [x] Run new asynchronous and DOM tests ten times, as the testing skill
       requires. Record their times and the failures seen before the fix.
-- [ ] Run the targeted checks and smoke-test the menu in the browser.
+- [x] Run the targeted checks and smoke-test the menu in the browser.
       Check pointer placement, keyboard access, a phone layout, and a
       scrolled sidebar. Save evidence under `.context/workspace-context-menu/`.
 
+Evidence: `.context/workspace-context-menu/milestone4/report.md`.
+
+## Milestone 4a: Keep the mockup guides short
+
+Depends on: 4
+
+Action: `docs implementor`.
+
+- [x] Split the catalogue and design guides into linked pages. Preserve
+      every current fact, catalogue path, and entry point.
+- [x] Check the moved content and all affected links.
+
+Evidence: `.context/workspace-context-menu/milestone4a/report.md`.
+
+## Milestone 4b: Mockups for the chosen row controls
+
+Tags: mockup
+
+Depends on: 4a
+
+Action: `ui implementor`.
+
+- [x] Integrate main's hover-only Archive and its viewer permissions into
+      the mockups. Keep the header without Archive.
+- [x] Apply Decision 2 F. Remove workspace More, its examples, and its
+      unused styles and metadata. Keep the four-action right-click menu.
+- [x] Check desktop and phone views in both schemes. Refresh affected
+      marketing pictures and keep the one-row Archive result.
+
+Evidence: `.context/workspace-context-menu/resume-f/mockups/report.md`.
+
+## Milestone 4c: Document right-click entry
+
+Depends on: 4b
+
+Action: `docs implementor`.
+
+- [x] Update the menu protocol and live guides for F. Keep the existing
+      menu keys and touch drag. Add no replacement button or gesture.
+- [x] Read both legal pages in full and keep restated facts aligned.
+      Check links and remove stale header-Archive and More references.
+
+Evidence: `.context/workspace-context-menu/resume-f/docs/report.md`.
+
+## Milestone 4d: Integrate the frontend behavior
+
+Tags: ui
+
+Depends on: 4c
+
+Actions: `non-ui implementor` for model state, then `ui implementor` for
+the components and interactions. This milestone changes no backend route.
+
+- [ ] Merge main's confirmed Archive state and older-read protections
+      with the field-specific name, owner, and archive updates.
+- [ ] Use one Archive flow for the shortcut and the menu. Preserve the
+      currently open workspace and the single question during its load.
+- [ ] Remove the workspace More control on every screen and its dead
+      helpers. Keep the hover-only Archive, its permissions, and its layout.
+- [ ] Keep main's focus and keyboard moves from every row control. Keep
+      right-click, local menu keys, drag, and modified-click navigation.
+- [ ] Preserve all main tests. Update tests of the explicitly removed
+      More behavior. Verify new or changed asynchronous tests ten times.
+- [ ] Run the targeted checks and browser smoke test on the combined UI.
+
 ## Milestone 5: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3, 4
+Depends on: 1, 2, 3, 4, 4a, 4b, 4c, 4d
 
 Action: `default orchestrator`.
 
+- [x] Resolve Decision 2 before integrating main's Archive row control.
+      Then add the required integration milestones for its chosen approach.
 - [ ] Run the early checks and `npm run check` on the complete implementation.
       Install root, desktop, and runner dependencies as `AGENTS.md` requires.
 - [ ] Review the final diff for scope, preserved functionality, protocol

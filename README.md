@@ -50,6 +50,8 @@ These features are planned. The protocol docs state each one.
   the header copies the link of the workspace. A workspace link in chat
   shows as a chip with the number and the name.
 - Orgs with members, sections, reassignment, Archive, and Delete org.
+- A menu on a workspace row moves, reassigns, renames, or archives the
+  workspace.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
 - The web app works on phones and on desktops.
@@ -266,6 +268,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Agents and sessions](docs/protocol/agents-and-sessions.md)
   - [Workspace links](docs/protocol/workspace-links.md)
   - [Chat Markdown](docs/protocol/chat-markdown.md)
+  - [Workspace menu](docs/protocol/workspace-menu.md)
   - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
   - [GitHub banner](docs/protocol/github-banner.md)
