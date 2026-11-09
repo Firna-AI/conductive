@@ -42,7 +42,12 @@ export async function runWorkspaceCli(
   try {
     if (args[0] === 'mac') return await runMacCli(args, client, output)
     const { values, positionals } = parseArguments(args)
-    if (positionals.length !== 2) {
+    if (
+      positionals.length !== 2 ||
+      !['workspaces', 'repositories', 'sections', 'models'].includes(
+        positionals[0],
+      )
+    ) {
       throw new ToolInputError(commandHelp)
     }
     let result: unknown

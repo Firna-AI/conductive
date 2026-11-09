@@ -234,59 +234,69 @@ Report: `.context/agent-tool-lists-and-names/m1-docs-report.md`.
 
 Depends on: 1
 
-- [ ] Add the three paths and the answer types to
+- [x] Add the three paths and the answer types to
       `src/shared/agent-tools.ts`.
-- [ ] Serve the three GET routes with the workspace token check of the
+- [x] Serve the three GET routes with the workspace token check of the
       existing tool route, and route them in `worker/application.ts`.
-- [ ] Read the repositories of the newest good org image, the sections,
+- [x] Read the repositories of the newest good org image, the sections,
       the configured models, and the owner's default choice. Keep the
       queries apart from the handler.
-- [ ] Test each list: only the calling org's data, the `current` and
+- [x] Test each list: only the calling org's data, the `current` and
       `default` marks, the order, `defaultChoice`, and the
       `image_required` and `models_unavailable` errors.
-- [ ] Add the new routes to the existing token and method scope tests.
-- [ ] Update `worker/tools/README.md`. Also say that production answers
+- [x] Add the new routes to the existing token and method scope tests.
+- [x] Update `worker/tools/README.md`. Also say that production answers
       `503 default_model_unavailable` when no default choice exists: only
       a test service gives `owner_defaults_unavailable`.
+
+Report: `.context/agent-tool-lists-and-names/m2-m4-report.md`.
 
 ## Milestone 3: Lists in the CLI and the MCP server
 
 Depends on: 2
 
-- [ ] Add the three calls to the client, the answer readers, the CLI, and
+- [x] Add the three calls to the client, the answer readers, the CLI, and
       the MCP server.
-- [ ] Give each ID field of `create_workspace` a description that names
+- [x] Give each ID field of `create_workspace` a description that names
       its list tool.
-- [ ] Add the list calls to the existing CLI and MCP tests.
-- [ ] Update `tools/README.md`.
+- [x] Add the list calls to the existing CLI and MCP tests.
+- [x] Update `tools/README.md`.
+
+Report: `.context/agent-tool-lists-and-names/m2-m4-report.md`.
 
 ## Milestone 4: Workspace name at create
 
 Depends on: 3
 
-- [ ] Reserve a migration range in `migrations/README.md`. Add the
+- [x] Reserve a migration range in `migrations/README.md`. Add the
       migration with the nullable `workspace_creation_plans.name`.
       Describe it in the README.
-- [ ] Carry the optional name from the tool call through the creation
+- [x] Carry the optional name from the tool call through the creation
       plan to the new workspace row. Keep the branch rule and the city.
-- [ ] Copy `src/shared/session-title.ts` from branch
+- [x] Copy `src/shared/session-title.ts` from branch
       `calummoore/chat-title-rename` without change, with its test, and
       clean the name with `sessionTitleFrom` in the Worker, as decision 1,
       D, says. A blank result counts as no name.
-- [ ] Add `name` to the shared request, the input reader, the CLI, and
+- [x] Add `name` to the shared request, the input reader, the CLI, and
       the MCP tool.
-- [ ] Test: a create with a name gives that name and the normal branch,
+- [x] Test: a create with a name gives that name and the normal branch,
       also after a creation retry reads the stored plan. A name with line
       breaks or over 60 code points comes back cleaned, and a blank name
       gives the city name.
-- [ ] Update `tools/README.md` and `worker/tools/README.md`.
+- [x] Update `tools/README.md` and `worker/tools/README.md`.
+
+Reports: `.context/agent-tool-lists-and-names/m2-m4-report.md` and
+`.context/agent-tool-lists-and-names/fix-1/report.md`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Smoke-test the CLI and the MCP server against the local Worker with
-      a local workspace token, or record the blocker.
+- [x] Smoke-test the CLI and the MCP server against the local Worker with
+      a local workspace token, or record the blocker. Evidence:
+      `.context/agent-tool-lists-and-names/smoke/cli-mcp.log`. A create
+      needs an active turn and a cloud computer, so the smoke test
+      covers the lists, and the route tests cover the create.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
