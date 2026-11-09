@@ -41,6 +41,12 @@ Existing Claude subscription tokens refuse re-use by default.
 Existing API keys allow re-use by default.
 The migration keeps the encrypted secret and its timestamps.
 
+`202611090000_routines.sql` adds org-scoped routines and their run records.
+Routine owners reference users, so membership removal can transfer their records.
+Org deletion cascades to both tables.
+Run workspace IDs have no foreign key, so a removed workspace can still have a failure record.
+The routine also keeps the former owner's name and its consecutive failure count.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -74,6 +80,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 15o Org suspension | `202611080000`–`202611080059` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
+| Routines: records and routes | `202611090000`–`202611090059` |
 
 ## Key code
 

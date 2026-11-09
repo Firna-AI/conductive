@@ -118,12 +118,31 @@ export async function removeMembership(
       ),
     db
       .prepare(
+        `UPDATE routines SET owner_user_id = (${recipient}), active = 0,
+         inactive_reason = 'owner_left', next_run_at = NULL,
+         moved_from_name = (SELECT COALESCE(display_name, github_login) FROM users WHERE id = ?),
+         updated_at = ?
+       WHERE org_id = ? AND owner_user_id = ? AND EXISTS (${recipient}) AND ${permission}`,
+      )
+      .bind(
+        orgId,
+        recipientId,
+        userId,
+        now,
+        orgId,
+        userId,
+        orgId,
+        recipientId,
+        ...access,
+      ),
+    db
+      .prepare(
         `DELETE FROM org_members WHERE org_id = ? AND user_id = ? AND ${permission}
        AND EXISTS (${recipient})`,
       )
       .bind(orgId, userId, ...access, orgId, recipientId),
   ])
-  return result[1].meta.changes > 0
+  return result[2].meta.changes > 0
     ? result[0].results.map((row) => row.id)
     : null
 }

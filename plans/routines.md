@@ -1474,39 +1474,45 @@ Depends on: 2
 Store routines and serve their routes with the access rules. Nothing runs
 yet.
 
-- [ ] Add the migration with `routines` and `routine_runs`, in the range
+- [x] Add the migration with `routines` and `routine_runs`, in the range
       `202611090000`–`202611090059`. Add
       the row to the range table of `migrations/README.md`. Add the new
       tables to the reset list of `worker/test-support/harness.ts`.
-- [ ] Add `src/shared/routines.ts` with the paths and the routine,
+- [x] Add `src/shared/routines.ts` with the paths and the routine,
       trigger, run, request, and response types.
-- [ ] Add `croner` with `npm install`. Add the schedule rules: the trigger
+- [x] Add `croner` with `npm install`. Add the schedule rules: the trigger
       list, the five-field cron with one minute, the time zone, and the
       next time.
-  - [ ] Test the next time of each preset and of a custom cron across a
+  - [x] Test the next time of each preset and of a custom cron across a
         change of summer time.
-  - [ ] Test the refusal of a cron with two minutes, of a six-field cron,
+  - [x] Test the refusal of a cron with two minutes, of a six-field cron,
         and of an unknown time zone.
-- [ ] Resolve the logins of each author filter to GitHub account IDs when
+- [x] Resolve the logins of each author filter to GitHub account IDs when
       a routine saves. Refuse a login that names no GitHub account.
-  - [ ] Test a save with a member, a bot, and an unknown login.
-- [ ] Serve the list, read, create, update, and delete routes behind the
+  - [x] Test a save with a member, a bot, and an unknown login.
+- [x] Serve the list, read, create, update, and delete routes behind the
       app gate. Check the repository, the section, and the model as New
       workspace does. Apply the access rules of decision 202.
-  - [ ] Test that a member reads, that only the owner changes a routine
+  - [x] Test that a member reads, that only the owner changes a routine
         and turns it on, and that an admin turns it off and deletes it.
-  - [ ] Test that a leave moves that owner's routines in that org, turned
+  - [x] Test that a leave moves that owner's routines in that org, turned
         off, to the member who gets the workspaces.
-  - [ ] Test that a save with an empty prompt, or a prompt of only
+  - [x] Test that a save with an empty prompt, or a prompt of only
         spaces, gets the refusal.
-- [ ] Add the routines of the member who leaves to the leave batch of
+- [x] Add the routines of the member who leaves to the leave batch of
       `worker/members/member-data.ts` (decision 208 E).
-- [ ] Move the routines of a deleted section to General, and turn off each
+- [x] Move the routines of a deleted section to General, and turn off each
       routine whose repository stops being a chosen repository of the org,
       with its reason.
-  - [ ] Test both moves.
+  - [x] Test both moves.
 
-- [ ] Add the routines area to the Worker README.
+- [x] Add the routines area to the Worker README.
+
+Milestone completed on 9 November 2026. A Codex non-ui implementor
+session built it. The orchestrator re-ran the targeted tests of
+`worker/routines`, `worker/members`, and `worker/app-api` (79 passed) and
+the typecheck, lint, format, file-length, and export checks. The handoff
+is in `.context/routines/reports/m3-worker.md`.
 
 ## Milestone 4: Runs and Run now
 

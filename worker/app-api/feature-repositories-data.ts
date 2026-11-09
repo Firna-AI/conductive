@@ -57,6 +57,24 @@ export async function saveShellRepository(
         repository.orgId,
         userId,
       ),
+    db
+      .prepare(
+        `UPDATE routines SET active = 0, inactive_reason = 'repository_removed',
+         next_run_at = NULL, updated_at = ?
+       WHERE org_id = ? AND repository_id = ? AND ? = 0
+         AND EXISTS (SELECT 1 FROM repositories WHERE id = ? AND org_id = ? AND selected = 0)
+         AND ${activeAdminPredicate}`,
+      )
+      .bind(
+        now,
+        repository.orgId,
+        repository.id,
+        selectedValue,
+        repository.id,
+        repository.orgId,
+        repository.orgId,
+        userId,
+      ),
   ])
   return result[1].meta.changes > 0
 }

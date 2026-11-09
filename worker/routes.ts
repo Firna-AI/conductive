@@ -12,6 +12,7 @@ import { invitationsRoute } from './app-api/invitations'
 import { membersRoute } from './members/route'
 import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
+import { routinesRoute } from './routines/route'
 
 export { routeDevice } from './devices/router'
 
@@ -44,6 +45,8 @@ export async function route(
     productionMembersHooks(env, dependencies),
   )
   if (members) return members
+  const routines = await routinesRoute(request, env, context, dependencies)
+  if (routines) return routines
   const featureShell = await featureShellRoute(
     request,
     env,

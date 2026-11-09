@@ -23,6 +23,9 @@ The [archive route](archive.ts) uses the real workspace object to check saved wo
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
+The [routine routes](../routines/README.md) serve routine records after the same app gate.
+Section deletion moves routines to General in its workspace-move batch.
+Repository deselection turns matching routines off in its repository-write batch.
 
 ## Rules
 

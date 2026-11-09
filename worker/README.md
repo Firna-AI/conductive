@@ -23,6 +23,7 @@ On the app hostname, the Worker serves these API routes:
 - The session, sign-out, the org list, a new org, and one org.
 - The account, its default model, its agent logins, the model list, and Get started.
 - The sections, the repositories, the members, and the workspace list of an org.
+- The list, read, create, update, and delete routes of an org's routines.
 - Leave org, under the existing last-active-admin rule.
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
@@ -42,6 +43,9 @@ The [feature shell](app-api/feature-shell.ts) implements the shared shell writes
 The [workspace features](features/workspace.ts) dispatch files, terminal,
 previews, and desktop inside the real workspace object.
 The [GitHub composition](features/github.ts) stores banner updates in the common chat stream.
+The [routines area](routines/README.md) stores saved prompts and their triggers.
+It validates schedules and resolves author-filter logins at save.
+It serves records only and starts no runs.
 
 On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, workspace create/list
@@ -83,6 +87,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [features/alarms.ts](features/alarms.ts) keeps separate durable alarm deadlines for lifecycle, devices, previews, and GitHub.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
+- [routines/route.ts](routines/route.ts) serves routine records after the request gate.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.
 - [http/json-body.ts](http/json-body.ts) owns the shared JSON object parsing policy.
@@ -96,3 +101,4 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [Access and security](../docs/protocol/access-and-security.md)
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)
+- [Routines](../docs/protocol/routines.md)
