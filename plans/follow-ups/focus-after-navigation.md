@@ -8,7 +8,7 @@
 
 - **Terms:**
   - **Move:** a change of the address of the web app, which shows another screen, such as after Send on the New workspace page.
-  - **Main area:** the `main` element of a desktop frame in `src/shell/layout/frames.tsx`, which holds the screen beside the rail and the sidebar.
+  - **Main area:** the `main` element in `src/shell/layout/DesktopLayers.tsx`. It holds the screen in every desktop frame, including a page alone.
 - **Background:** The web app moves to another screen after some actions: Send on the New workspace page opens the new workspace, and Connect on that page or in the chat opens the Account page with the Connect form. The control that the user pressed leaves the page with the old screen. The browser then puts the keyboard focus on the page body. The New workspace dialog was fixed in its own branch: when it closes because the address changed, the main area of the new screen takes the focus, as `docs/protocol/create-a-workspace.md` requires.
 - **Problem:** After Send or Connect on the New workspace page, and after Connect in the chat, the focus is on the page body. A keyboard user must tab from the top of the page to reach the new screen. A screen reader announces no new place.
 - **Impact if no action:** Keyboard and screen reader users lose their place after each such move, and the app treats the dialog and the page in different ways.

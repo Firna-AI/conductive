@@ -89,7 +89,7 @@ describe('a create from the New workspace dialog', () => {
     })
   })
 
-  test('goes on when the address changes while it runs, which closes the dialog and gives the focus to the main area of the new screen, and the accepted create opens the new workspace', async () => {
+  test('goes on when the address changes while it runs, which closes the dialog and gives the focus to the main area of the new screen, also of Create org, and the accepted create opens the new workspace', async () => {
     const server = serverWith('dialog')
     const held = new HeldRequests(server)
     const tab = await openTab(server, { fetch: held.fetch })
@@ -128,6 +128,23 @@ describe('a create from the New workspace dialog', () => {
       address: createdAt,
       header: created.workspace.name,
       creates: 1,
+    })
+    // Create org stands alone, without the rail, as after Back to it.
+    click(newWorkspaceRow(sidebarOf(tab.view)))
+    await settle()
+    const reopened = dialogIn(tab.view) !== null
+    await tab.go(routes.createOrg())
+    const main = tab.view.querySelector('main')
+    expect({
+      reopened,
+      dialog: dialogIn(tab.view),
+      address: tab.address(),
+      focusInMain: main?.contains(document.activeElement) ?? false,
+    }).toEqual({
+      reopened: true,
+      dialog: null,
+      address: routes.createOrg(),
+      focusInMain: true,
     })
   })
 })

@@ -229,6 +229,11 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   which say whether they closed, and the modal layers with their owners.
   The palette reads them before it opens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
+- `../shell/layout/frames.tsx`: the frames: the desktop frame with the
+  rail, a desktop page alone, such as Create org, and the phone frame.
+  `../shell/layout/DesktopLayers.tsx`: `DesktopLayers`, the layers and the
+  main area that every desktop frame shares: sheets and dialogs, the New
+  workspace dialog, and the command palette.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
   every sheet and dialog uses. Escape closes only the newest layer.

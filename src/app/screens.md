@@ -123,16 +123,19 @@ what the palette does.
 - New workspace opens as the page or as a dialog over the current
   screen, as [Page or dialog](../../docs/protocol/create-a-workspace.md#page-or-dialog)
   says. Each of its places opens it through `useNewWorkspace`: the row at
-  the top of the list, the button of the main area of an org, and the
-  item in the menu of a section. The dialog opens on a computer when the
-  user chose it. The place opens the page on a phone, without that
-  choice, while the account loads, and while a New workspace form shows.
-  A New workspace form marks itself with `useShownForm`. The row stays a
-  link, so a click with a modifier key opens the page in a new tab.
-- The desktop frame hosts the dialog, over the whole frame
-  (`NewWorkspaceHost`). The dialog has no address: it closes in the same
-  render as a change of the address, also while its create runs. A phone
-  frame has no dialog.
+  the top of the list, the button of the main area of an org, the item in
+  the menu of a section, and the command palette. The dialog opens on a
+  computer when the user chose it. The place opens the page on a phone,
+  without that choice, while the account loads, and while a New workspace
+  form shows. A New workspace form marks itself with `useShownForm`. The
+  row stays a link, so a click with a modifier key opens the page in a
+  new tab.
+- Every desktop frame hosts the dialog, over the whole frame
+  (`NewWorkspaceHost`). The frame with the rail and a page alone, such as
+  Create org, get it from `DesktopLayers`, with the layer of sheets and
+  dialogs, the command palette, and the main area. The dialog has no
+  address: it closes in the same render as a change of the address, also
+  while its create runs. A phone frame has no dialog.
 - Escape and a press outside close the dialog, except while the create
   runs. An action of the dialog that opens another page, such as Connect
   or Choose repositories, closes the dialog first.
@@ -147,9 +150,10 @@ what the palette does.
   the control that opened it. When the address changes, such as after
   Connect, Choose repositories, a create, or Back, the main area of the
   new screen takes the focus (`requestScreenFocus`), so the next Tab
-  moves into that screen. The main area is no tab stop: it can take the
-  focus only for such a move, until the focus leaves it. On a phone, no
-  main area takes it.
+  moves into that screen. A page alone, such as Create org, has such a
+  main area too. The main area is no tab stop: it can take the focus
+  only for such a move, until the focus leaves it. On a phone, no main
+  area takes it.
 - The page and the dialog share their form (`useNewWorkspaceForm`): the
   repository picker, the notices, the send, and one readiness. In an org
   without chosen repositories, an admin gets Choose repositories, and a

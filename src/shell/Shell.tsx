@@ -13,36 +13,24 @@ import { AccountScreen } from './account/AccountScreen'
 import { SignInScreen } from './auth/SignInScreen'
 import { useApp } from './context'
 import { InvitationsScreen } from './invitations/InvitationsScreen'
-import { PhoneFrame } from './layout/frames'
-import layout from './layout/layout.module.css'
+import { PhoneFrame, StandaloneFrame } from './layout/frames'
 import { Sidebar } from './list/Sidebar'
 import { useKeptOrg } from './mac/mac-app'
-import { WindowStrip } from './mac/WindowControls'
 import { GetStartedScreen } from './onboarding/GetStartedScreen'
 import { CreateOrgScreen } from './orgs/CreateOrgScreen'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
-import { PaletteLayer } from './palette/PaletteLayer'
 import { ActionButton } from './ui/actions'
-import { OverlayHost } from './ui/Overlay'
 import { useViewport } from './ui/viewport'
 import ui from './ui/ui.module.css'
 
 /**
  * A page alone in the window: a phone frame, or a desktop page without the
- * rail. In the Mac app a strip with the window controls tops it.
+ * rail.
  */
 function Alone(props: { children: ReactNode }) {
   if (useViewport() === 'phone')
     return <PhoneFrame>{props.children}</PhoneFrame>
-  return (
-    <div className={layout.standalone}>
-      <OverlayHost>
-        <WindowStrip />
-        {props.children}
-        <PaletteLayer />
-      </OverlayHost>
-    </div>
-  )
+  return <StandaloneFrame>{props.children}</StandaloneFrame>
 }
 
 /** The wait of the first load, as the app shows it. */

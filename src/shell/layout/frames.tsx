@@ -5,10 +5,9 @@ import { useStore } from '../../app/store'
 import { useMacApp, useNarrowWindow, type MacChrome } from '../mac/mac-app'
 import mac from '../mac/mac.module.css'
 import { WindowControls, WindowStrip } from '../mac/WindowControls'
-import { NewWorkspaceHost } from '../new-workspace/NewWorkspaceHost'
 import { PaletteLayer } from '../palette/PaletteLayer'
 import { OverlayHost } from '../ui/Overlay'
-import { useScreenFocus } from '../ui/screen-focus'
+import { DesktopLayers } from './DesktopLayers'
 import layout from './layout.module.css'
 import { usePanelWidths } from './panels'
 import { ResizeHandle } from './ResizeHandle'
@@ -49,33 +48,22 @@ function SidebarPanel(props: {
   )
 }
 
-/**
- * The main area of a desktop frame. When a layer closes with a move to
- * another screen, it takes the focus, so the next Tab starts in the new
- * screen.
- */
-function MainArea(props: { children: ReactNode }) {
-  const main = useRef<HTMLElement>(null)
-  useScreenFocus(main)
-  return (
-    <main className={classes(frame.main, layout.screen)} ref={main}>
-      {props.children}
-    </main>
-  )
-}
-
 /** The desktop app in a browser. */
 function BrowserFrame(props: FrameProps) {
   return (
     <div className={frame.frame}>
-      <OverlayHost>
-        <NewWorkspaceHost>
-          {props.rail}
-          {props.sidebar ? <SidebarPanel>{props.sidebar}</SidebarPanel> : null}
-          <MainArea>{props.children}</MainArea>
-          <PaletteLayer />
-        </NewWorkspaceHost>
-      </OverlayHost>
+      <DesktopLayers
+        leading={
+          <>
+            {props.rail}
+            {props.sidebar ? (
+              <SidebarPanel>{props.sidebar}</SidebarPanel>
+            ) : null}
+          </>
+        }
+      >
+        {props.children}
+      </DesktopLayers>
     </div>
   )
 }
@@ -100,8 +88,8 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
         !shown && mac.cornerFrame,
       )}
     >
-      <OverlayHost>
-        <NewWorkspaceHost>
+      <DesktopLayers
+        leading={
           <div className={classes(frame.left, !shown && mac.cornerLeft)}>
             <WindowControls
               chrome={props.chrome}
@@ -115,10 +103,10 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
               ) : null}
             </div>
           </div>
-          <MainArea>{props.children}</MainArea>
-          <PaletteLayer />
-        </NewWorkspaceHost>
-      </OverlayHost>
+        }
+      >
+        {props.children}
+      </DesktopLayers>
     </div>
   )
 }
@@ -126,14 +114,26 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
 /**
  * The desktop app: the org rail, the sidebar of the org, and the main area.
  * Below 900 px the sidebar hides, and the org in the rail leads to its
- * list. A page can leave out the sidebar.
- * Dialogs and the command palette open over the whole frame. A phone
- * has no such dialog: New workspace opens the page there.
+ * list. A page can leave out the sidebar. Its layers come from
+ * `DesktopLayers`, as for a page alone.
  */
 export function AppFrame(props: FrameProps) {
   const chrome = useMacApp()
   if (chrome) return <MacFrame chrome={chrome} {...props} />
   return <BrowserFrame {...props} />
+}
+
+/**
+ * A desktop page alone in the window, without the rail and the sidebar,
+ * such as Create org or the sign-in. In the Mac app a strip with the
+ * window controls tops it. It has the layers of every desktop frame.
+ */
+export function StandaloneFrame(props: { children: ReactNode }) {
+  return (
+    <div className={layout.standalone}>
+      <DesktopLayers leading={<WindowStrip />}>{props.children}</DesktopLayers>
+    </div>
+  )
 }
 
 /**

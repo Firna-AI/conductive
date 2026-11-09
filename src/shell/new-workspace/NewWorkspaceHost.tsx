@@ -91,11 +91,11 @@ export function useShownForm(): void {
 
 /**
  * The one way to open New workspace, for each of its places: the row at
- * the top of the list, the button of an org without workspaces, and the
- * item in the menu of a section. On a computer, with the dialog chosen, it
- * opens the dialog over the current screen. It opens the page on a phone,
- * without that choice, while the account loads, and while the screen shows
- * a New workspace form.
+ * the top of the list, the button of an org without workspaces, the item
+ * in the menu of a section, and the command palette. On a computer, with
+ * the dialog chosen, it opens the dialog over the current screen. It opens
+ * the page on a phone, without that choice, while the account loads, and
+ * while the screen shows a New workspace form.
  */
 export function useNewWorkspace() {
   const dialog = useContext(DialogContext)
