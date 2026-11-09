@@ -1,4 +1,5 @@
 import { Hammer } from 'lucide-react'
+import { changedScriptNotice } from '../app/first-build'
 import type { Org } from '../shared/api'
 import type {
   BuildLogEvent,
@@ -34,6 +35,16 @@ export type MemberComputerViewProps = {
    * says why.
    */
   suspended?: boolean
+}
+
+/**
+ * The notice under an install script that changed after a build started,
+ * with the words that the tab of an admin also shows. Only an admin builds
+ * the computer, so the notice has no Build computer.
+ */
+function ChangedScript(props: { builds: BuildsResponse }) {
+  const notice = changedScriptNotice(props.builds)
+  return <Notice body={notice.body} icon={Hammer} title={notice.title} />
 }
 
 /**
@@ -84,11 +95,7 @@ export function MemberComputerView(props: MemberComputerViewProps) {
           .join(' ')}
         notice={
           settings.needsBuild ? (
-            <Notice
-              body="It runs at the next build. Workspaces keep the current build until then."
-              icon={Hammer}
-              title="The install script changed"
-            />
+            <ChangedScript builds={props.builds} />
           ) : undefined
         }
         script={settings.installScript}

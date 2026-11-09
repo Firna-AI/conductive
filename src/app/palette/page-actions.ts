@@ -45,6 +45,8 @@ export interface WorkspacePage {
   rightColumn: boolean
   /** The page shows the chat with its session tabs. */
   chat: boolean
+  /** The page offers the Desktop tool, which the app can hide. */
+  desktopTool: boolean
 }
 
 /** The actions that the screen of an open workspace offers. */
@@ -67,7 +69,8 @@ const goToActions: readonly WorkspaceActionId[] = [
  * order. A read-only workspace, archived or in a suspended org, offers no
  * New session. Session history stays, because it changes nothing. The Go
  * to rows need the tabs of the right column, which an archived workspace
- * does not show. Archive follows `mayArchive`.
+ * does not show. Go to Desktop also needs the Desktop tool. Archive
+ * follows `mayArchive`.
  */
 export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
   const { access, workspace } = page
@@ -76,7 +79,11 @@ export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
   const ids: WorkspaceActionId[] = []
   if (page.chat && !readOnly) ids.push('new-session')
   if (page.chat) ids.push('session-history')
-  if (page.rightColumn && !archived) ids.push(...goToActions)
+  if (page.rightColumn && !archived) {
+    ids.push(
+      ...goToActions.filter((id) => id !== 'go-to-desktop' || page.desktopTool),
+    )
+  }
   if (mayArchive(access, workspace, page.viewer)) ids.push('archive-workspace')
   return ids
 }

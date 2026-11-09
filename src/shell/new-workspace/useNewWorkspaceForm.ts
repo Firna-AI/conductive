@@ -12,7 +12,11 @@ import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { useGo } from '../ui/AppLink'
-import { createFailure, useBlockingNotice } from './notices'
+import {
+  createFailure,
+  useBlockingNotice,
+  useFirstBuildNotice,
+} from './notices'
 
 /** A New workspace form, as the page and the dialog show it. */
 export interface NewWorkspaceForm {
@@ -26,6 +30,8 @@ export interface NewWorkspaceForm {
   models: readonly AgentModel[]
   /** The notice of a failed create, with Try again, or `null`. */
   failure: ReactNode
+  /** The first-build notice, or `null` after a good image is available. */
+  buildNotice: ReactNode
   /** The notice of a missing agent login, or `null`. It holds the message. */
   notice: ReactNode
   /** Whether the message can go now: by Send, Create, Try again, and Enter. */
@@ -38,7 +44,7 @@ export interface NewWorkspaceForm {
  * The state of a New workspace form, which the page and the dialog share,
  * so that they cannot drift: the repository, the model, the notices, one
  * readiness for every way to send, and the send. The readiness reads the
- * text and the files of the draft, the agent login, the repository, the
+ * text and the files of the draft, the agent login, the org image, the repository, the
  * model, and the suspension of the org. When the server accepts the create,
  * the app opens the new workspace, also when the form closed while the
  * create ran. `open` goes to another page from a notice, such as Connect.
@@ -57,15 +63,17 @@ export function useNewWorkspaceForm(
   const draft = useStore(model.draft)
   const create = useStore(model.create)
   const { suspended } = useOrgAccess(org)
-  useEffect(() => orgModel.watch('repositories', 'list'), [orgModel])
+  useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
   const repositories = loaded?.filter((item) => item.selected)
   const repositoryId = draft.repositoryId ?? repositories?.[0]?.id
   const repository = repositories?.find((item) => item.id === repositoryId)
   const choice = draft.choice ?? account?.defaultChoice
   const notice = useBlockingNotice(choice, models, open)
+  const buildNotice = useFirstBuildNotice(org, open)
   const defaults =
     !suspended &&
     notice === null &&
+    buildNotice === null &&
     repositoryId !== undefined &&
     choice !== undefined &&
     draftReady(draft)
@@ -85,6 +93,7 @@ export function useNewWorkspaceForm(
     choice,
     models,
     failure: createFailure(create, defaults !== null, send),
+    buildNotice,
     notice,
     ready: defaults !== null,
     send,

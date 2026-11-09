@@ -1,5 +1,5 @@
-import { useRef, useState, type Ref } from 'react'
-import { InputFrame, type InputFrameProps } from '@firna/ui/input'
+import { useRef, useState } from 'react'
+import { InputFrame } from '@firna/ui/input'
 import { CornerDownLeft } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import layer from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
@@ -25,12 +25,8 @@ import {
   UploadError,
 } from './parts'
 import local from './new-workspace.module.css'
+import { useCursorAtEnd } from './useCursorAtEnd'
 import { useNewWorkspaceForm } from './useNewWorkspaceForm'
-
-type InputHandle =
-  NonNullable<InputFrameProps['inputRef']> extends Ref<infer Handle>
-    ? Handle
-    : never
 
 /** The org and the section that the new workspace joins, such as General. */
 function usePlace(org: OrgSummary, sectionId: string | null): string {
@@ -73,10 +69,11 @@ function CreateButton(props: {
 /**
  * The card of the dialog. While the create runs, Escape and a press outside
  * leave it open. An action that opens another page closes it first. The
- * message takes the focus as it opens. As it closes, the focus goes back to
- * the control that opened it. When another screen opened, the main area of
- * that screen takes the focus. In a suspended org, the refused bar takes
- * the place of the composer.
+ * message takes the focus as it opens, with the cursor at the end of a
+ * kept message. As it closes, the focus goes back to the control that
+ * opened it. When another screen opened, the main area of that screen
+ * takes the focus. In a suspended org, the refused bar takes the place of
+ * the composer.
  */
 function DialogCard(props: {
   org: OrgSummary
@@ -99,7 +96,7 @@ function DialogCard(props: {
   const place = usePlace(org, props.sectionId)
   const sending = form.create.state === 'sending'
   const card = useRef<HTMLElement>(null)
-  const message = useRef<InputHandle>(null)
+  const message = useCursorAtEnd(form.draft.text)
   useModalLayer(
     card,
     () => {
@@ -109,7 +106,11 @@ function DialogCard(props: {
   )
   const sendKey = useSendKey(form.ready, form.send)
   const unchosen = form.repositories?.length === 0
-  const notices = form.failure !== null || form.notice !== null || unchosen
+  const notices =
+    form.failure !== null ||
+    form.buildNotice !== null ||
+    form.notice !== null ||
+    unchosen
   return (
     <section
       aria-label="New workspace"
@@ -165,6 +166,7 @@ function DialogCard(props: {
           {notices ? (
             <div className={styles.notices}>
               {form.failure}
+              {form.buildNotice}
               {form.notice}
               {unchosen ? (
                 <ChooseRepositoriesNotice open={leave} org={org} />

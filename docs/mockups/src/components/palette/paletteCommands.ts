@@ -12,7 +12,6 @@ import {
   ListChecks,
   LogIn,
   MessageSquarePlus,
-  Monitor,
   Plus,
   Server,
   Settings2,
@@ -62,7 +61,6 @@ const rightColumnActions: readonly Command[] = [
     words: ['port'],
     to: paths.preview,
   },
-  { label: 'Go to Desktop', lead: icon(Monitor), to: paths.desktop },
 ]
 
 /**

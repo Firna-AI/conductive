@@ -4,7 +4,10 @@ import { PanelBar } from './PanelBar'
 import { toolTabs, type ToolKey } from './tools'
 import styles from './ToolsPanel.module.css'
 
-/** The desktop panel of the tools: the terminal, the preview, the desktop. */
+/**
+ * The desktop panel of the tools, with a tab for each tool that the app
+ * offers.
+ */
 export function ToolsPanel(props: { tool: ToolKey; children: ReactNode }) {
   const tabs = toolTabs.map((tab) => ({
     label: tab.label,

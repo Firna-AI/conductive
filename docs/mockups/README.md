@@ -2,9 +2,8 @@
 
 The mockups are the visual spec of the app, in the browser and in a Mac app.
 Each workspace is a cloud sandbox with its own branch. It has a chat with
-coding agents, files, a terminal, port previews, a live desktop, and a pull
-request bar. The mockups also draw the marketing site, which shows the app to
-visitors.
+coding agents, files, a terminal, port previews, and a pull request bar.
+The mockups also draw the marketing site, which shows the app to visitors.
 [Mokly](https://www.npmjs.com/package/@mokly/mokly) renders every screen at
 mobile and desktop sizes, in light and dark, from React components that use
 [`@firna/ui`](https://www.npmjs.com/package/@firna/ui).

@@ -10,6 +10,7 @@ import {
 } from '../../shared/orgs'
 import { record, text, type JsonObject } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
+import { startBuild } from './build-routes'
 import {
   ID,
   json,
@@ -44,15 +45,20 @@ function withInitials(org: OrgSummary, fields: JsonObject): OrgSummary {
 
 /**
  * Create org. The new org has its own state, as `freshOrg` says: the
- * repositories of the account catalogue, with the GitHub IDs of the
- * request added. When the user has no org yet, the new org becomes the
- * org of Get started.
+ * repositories chosen by the request, and a running first build. When the
+ * user has no org yet, the new org becomes the org of Get started.
  */
 function createOrg(backend: DevBackend, body: unknown): Response {
   const { state } = backend
   const fields = record(body)
   const name = requiredText(fields, 'name')
   const chosen = optional(fields, 'repositoryIds', numbers) ?? []
+  if (chosen.length === 0)
+    throw new RouteError(
+      400,
+      'repository_required',
+      'Choose at least one repository.',
+    )
   const id = uniqueId(
     slugify(name, 'org'),
     state.orgs.map((item) => item.org.id),
@@ -64,6 +70,7 @@ function createOrg(backend: DevBackend, body: unknown): Response {
     chosen,
   )
   state.orgs = [...state.orgs, org]
+  startBuild(backend, org)
   if (state.getStarted.orgId === null) {
     state.getStarted = { ...state.getStarted, orgId: id }
     completeStep(state, 'org')

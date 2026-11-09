@@ -83,7 +83,9 @@ export const privacyDocument: LegalDocument = {
             Cloudflare's AI model service also writes a short name for each
             new workspace from the text of its first message.`,
           text`GitHub signs you in, and gives ${productName} access to your
-            repositories through its GitHub App.`,
+            repositories through its GitHub App. The Mac app also checks
+            GitHub for updates and downloads new versions. These requests
+            send your network address to GitHub.`,
           text`A cloud computer provider runs the cloud computers of every org
             for ${productName}, in the account of ${productName}. Your code,
             your files, and your agent sessions are in them. ${productName}

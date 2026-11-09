@@ -37,7 +37,9 @@ These features are planned. The protocol docs state each one.
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
 - Each user connects their own Claude subscription token or API keys.
-- Files and Changes, a terminal, port previews, and a live desktop.
+- Files and Changes, a terminal, and port previews. The live desktop is
+  hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
+  says.
 - A pull request bar with the GitHub state of the branch and its checks.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
@@ -193,11 +195,15 @@ complete yet:
   space of the window buttons.
 - The Worker routes the browser-to-app GitHub sign-in handoff. The Mac
   workflow builds and tests desktop changes on Apple silicon and Intel.
-- Builds have an ad-hoc signature, because no Apple Developer ID exists
-  yet. No release is published, so the updater stays off.
+- Pull request and local builds have an ad-hoc signature. Release builds
+  have a Developer ID signature, and Apple notarizes them.
+- Each merge of the release pull request publishes a GitHub release of
+  this repository with the signed Mac app. The published builds update
+  themselves from later releases.
 
 [Mac app](docs/protocol/desktop-app.md) states the requirements.
-[desktop/README.md](desktop/README.md) gives the commands.
+[desktop/README.md](desktop/README.md) gives the commands, and
+[desktop/RELEASES.md](desktop/RELEASES.md#releases) gives the release steps.
 
 ## Key code
 
@@ -247,6 +253,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   [flows](docs/architecture/flows.md), and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
+  - [Workspace tools](docs/protocol/workspace-tools.md)
   - [Create a workspace](docs/protocol/create-a-workspace.md)
   - [Repository folders](docs/protocol/repository-folders.md)
   - [Chat and events](docs/protocol/chat-and-events.md)

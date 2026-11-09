@@ -1,0 +1,11 @@
+{
+  "order": [
+    "installed",
+    "org-created",
+    "preparing",
+    "connected",
+    "build-failed",
+    "no-build",
+    "no-org"
+  ]
+}
