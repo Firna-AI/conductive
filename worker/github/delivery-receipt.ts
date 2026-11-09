@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from '../chat/workspace-events'
 import type { GitHubSnapshot, GitHubUpdate } from './contracts'
 
 type GitHubEnvelopeIdentity = Pick<

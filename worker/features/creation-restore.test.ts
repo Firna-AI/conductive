@@ -56,6 +56,7 @@ it('continues a sandbox-free admitted create only when opened after Restore, wit
   expect(created.status).toBe(201)
   const response = record(await created.json())
   const id = string(record(response.workspace).id)
+  expect(record(response.workspace).number).toBe(3)
   const sessionId = string(response.sessionId)
   const original = record(
     featureState(await active.actor(id).inspectFeatureState()).get(
@@ -81,6 +82,13 @@ it('continues a sandbox-free admitted create only when opened after Restore, wit
     ).status,
   ).toBe(200)
   expect(active.boat.starts).toEqual([])
+  expect(
+    await active.env.DB.prepare(
+      'SELECT workspace_number_count FROM orgs WHERE id = ?',
+    )
+      .bind(OUTER_ORG)
+      .first('workspace_number_count'),
+  ).toBe(3)
   expect(
     await active.env.DB.prepare(
       'SELECT state, sandbox_id AS sandboxId FROM workspaces WHERE id = ?',
@@ -137,6 +145,20 @@ it('continues a sandbox-free admitted create only when opened after Restore, wit
     await readWorkspaceToken(active.env, id),
   )
   expect(record(active.boat.starts[0].env).WORKSPACE_TOKEN).not.toBe(token)
+  const next = await active.request(workspacesPath(OUTER_ORG), {
+    method: 'POST',
+    body: JSON.stringify({
+      repositoryId: OUTER_REPOSITORY,
+      firstMessage: {
+        id: 'after-restore',
+        text: 'A task after Restore',
+        choice: CLAUDE,
+        attachmentIds: [],
+      },
+    }),
+  })
+  expect(next.status).toBe(201)
+  expect(record(record(await next.json()).workspace).number).toBe(4)
   const history = await active.request(
     chatHistoryPath(OUTER_ORG, id, sessionId),
   )

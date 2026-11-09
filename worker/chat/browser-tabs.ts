@@ -1,10 +1,13 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type {
+  WorkspaceEventEnvelope,
+  WorkspaceEventPeer as BrowserPeer,
+} from './workspace-events'
 import { HttpError } from '../http'
 import {
   CONNECTION_CHECK_MS,
   type ConnectionIdentity,
 } from '../security/connection-access'
-import type { BrowserPeer, ChatDependencies } from './types'
+import type { ChatDependencies } from './types'
 
 interface BrowserRegistration {
   identity: ConnectionIdentity

@@ -96,6 +96,7 @@ export function DevPage(props: {
         note(`The app opens the Connect form of ${agent}.`)
       }
       onOpenDiff={(path) => note(`The app opens the diff of ${path}.`)}
+      onOpenPage={(to) => note(`The app opens ${to}.`)}
       onWorkspaceChange={setWorkspace}
       orgId={backend.target.orgId}
       subscribe={backend.stream.subscribe}
