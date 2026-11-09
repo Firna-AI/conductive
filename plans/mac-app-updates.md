@@ -268,6 +268,7 @@ reviewers on the environments of a public repository.
 - **Previous examples:** Mokly's `ts/desktop/src/updates.ts` offers "Open release page" for Linux packages that cannot install an update.
 - **Recommendation:** D. It asks once, at launch, and only when the copy cannot update, as many Mac apps do. The first recommendation was B, and the options check recommended E. E best avoids a prompt for people who never get an update.
 - **Action:** ask the user, because each option except A adds a new dialog that no requirement covers.
+- **Chosen:** A in this change, and D as a follow-up, by the user on 9 November 2026: "4 = A now - D as a follow up". The follow-up item `plans/follow-ups/read-only-copies-never-update.md` holds D.
 
 ### 5. Answer a manual update check
 
@@ -294,6 +295,7 @@ reviewers on the environments of a public repository.
 - **Previous examples:** None found.
 - **Recommendation:** B. A person who asks gets an answer, and the automatic checks stay silent. D's "Restart to update" item can join B at small cost.
 - **Action:** ask the user, because B, C, and D change the protocol rule that a failed update check shows no error, or add new user-visible behaviour.
+- **Chosen:** B, by the user on 9 November 2026: "5 = B".
 
 ## Milestone 1: Documentation and protocol
 
@@ -360,16 +362,17 @@ builds that publish.
         artifacts.
 - [ ] Run the desktop typecheck, lint, format check, and unit tests.
 
-## Milestone 4: Update dialog, install location, and manual checks
+## Milestone 4: Update dialog and manual checks
 
 Depends on: 1
 
-Make the in-app update flow work for each copy.
+Show the update dialog only for an update that can install, and answer
+each manual check.
 
 - [ ] Show "The update is ready." only after Squirrel.Mac accepts the
       update.
-- [ ] Apply decision 4.
-- [ ] Apply decision 5.
+- [ ] Apply decision 5: the dialogs that answer a manual check. Decision 4
+      chose no change in this branch.
 - [ ] Add unit tests in `desktop/src/updates.test.ts` for each new outcome.
 - [ ] Run the desktop typecheck, lint, format check, and unit tests.
 
