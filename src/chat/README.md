@@ -58,7 +58,7 @@ says how `WorkspaceChatView` draws a controller that the app keeps: its
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
   formatting and the tables of agent messages. [Agent text](agent-text.md)
   gives the rules of the code that formats them, and the table parts that
-  the file preview and the mockups share.
+  the chat shares with the file preview and the mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
   sends, and Stop.
@@ -173,11 +173,12 @@ check in the Mac app.
   that the chat draws, and puts each insert at its place, also in a fold.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
-  full text.
-- `components/agent-text.ts`: `textBlocks`, the paragraphs, lists, and code
-  blocks of an agent message, and `inlineParts`, its inline code and strong
-  text. `components/AgentText.tsx`: `AgentText`, which draws them, and
-  `InlineMarkdown`, which the message line shares.
+  full text. A message line with a table opens the table under the line.
+- `components/agent-text.ts`: `textBlocks`, the paragraphs, lists, code
+  blocks, and tables of an agent message, with `TextTable`, and
+  `inlineParts`, its inline code and strong text.
+  `components/AgentText.tsx`: `AgentText`, which draws them, and
+  `AgentBlocks` and `InlineMarkdown`, which the message line shares.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which
@@ -203,7 +204,8 @@ check in the Mac app.
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
-  in `dev/dev-logins.ts`.
+  in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the answers of the
+  scripted agent, which the `answer` option chooses.
 
 
 ### Related docs

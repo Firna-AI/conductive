@@ -3,7 +3,12 @@ import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { createApiClient } from '../../app/api/client'
 import type { WorkspaceEvent } from '../../shared/events'
-import { byLabel, byText, queryByText } from '../../test-support/dom-queries'
+import {
+  accessibleName,
+  byLabel,
+  byText,
+  queryByText,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -38,13 +43,31 @@ const blocks = [
   '2. Run the tests',
 ]
 const planLine = blocks.join(' ')
+const sizes = [
+  'The machine has room for more workers:',
+  '| Resource | Free |',
+  '| --- | ---: |',
+  '| CPU | 4 vCPUs | 8 threads |',
+  '| Memory | 6.0 GiB |',
+  '',
+  'Memory stays under 5 GiB.',
+].join('\n')
+const sizesLine =
+  'The machine has room for more workers: Resource · Free · CPU · 4 vCPUs · Memory · 6.0 GiB Memory stays under 5 GiB.'
+const timings = [
+  '| Workers | Time |',
+  '| ---: | ---: |',
+  '| 4 | 3m 10s |',
+].join('\n')
+const timingsLine = 'Workers · Time · 4 · 3m 10s'
 
 /**
- * Mounts the chat of the recorded turn, which goes on with a message of
- * four blocks, a call, and its answer, then a call after the answer, and
- * finishes. `emit` sends a later event of the workspace.
+ * Mounts the chat of the recorded turn, which goes on with `work`, by
+ * default a message of four blocks, then a call and its answer, then a call
+ * after the answer, and finishes. `emit` sends a later event of the
+ * workspace.
  */
-async function mountFinishedTurn() {
+async function mountFinishedTurn(work: readonly string[] = [plan]) {
   holdAnimationFrames()
   const server = new FakeApiServer({ conversation: 'running' })
   const emit = (event: WorkspaceEvent) =>
@@ -54,7 +77,7 @@ async function mountFinishedTurn() {
       occurredAt: FAKE_TIME,
       event,
     })
-  emit(said('plan-2', plan))
+  work.forEach((text, index) => emit(said(`plan-${index + 2}`, text)))
   emit(update('lint', 'npm run lint', 0))
   emit(said('answer-3', answer))
   emit(update('unit', 'npm test', 0))
@@ -90,6 +113,42 @@ function lineOf(element: Element): HTMLElement {
 
 /** The text of an element, with each tag as a space. */
 const textIn = (element: Element) => textOf(element.innerHTML).trim()
+
+/**
+ * Lays the line out at `top` in the chat. The chat keeps its bottom in
+ * place, so a fold that opens pushes its line up by the height that it
+ * adds, unless the chat scrolls.
+ */
+function place(line: HTMLElement, top: number, adds: number) {
+  const scroller = byLabel('Chat').firstElementChild
+  if (!(scroller instanceof HTMLElement)) throw new Error('No chat scrolls')
+  vi.spyOn(line, 'getBoundingClientRect').mockImplementation(() =>
+    DOMRect.fromRect({
+      y: top - (foldOf(line).open ? adds : 0) - scroller.scrollTop,
+      height: 24,
+    }),
+  )
+}
+
+/**
+ * The blocks of a message line in its fold, outside its line: a paragraph
+ * as its text, and a table as the text of its cells, row by row.
+ */
+function bodyOf(line: HTMLElement): (string | string[][])[] {
+  return Array.from(foldOf(line).querySelectorAll('p, table'), (block) =>
+    block.tagName === 'TABLE'
+      ? Array.from(block.querySelectorAll('tr'), (row) =>
+          Array.from(row.children, textIn),
+        )
+      : textIn(block),
+  )
+}
+
+/** Presses the line, then reads whether its fold is open, and its top. */
+async function pressed(line: HTMLElement) {
+  await press(line)
+  return { open: foldOf(line).open, top: line.getBoundingClientRect().top }
+}
 
 describe('an open fold', () => {
   it('lists its steps in order, opens a message line to its full text, and keeps both choices', async () => {
@@ -134,25 +193,6 @@ describe('an open fold', () => {
 
   it('keeps its line in place when the user opens or closes it: a work fold, a run of tool calls, and a message line', async () => {
     await mountFinishedTurn()
-    const scroller = byLabel('Chat').firstElementChild
-    if (!(scroller instanceof HTMLElement)) throw new Error('No chat scrolls')
-    // The chat keeps its bottom in place, so a fold that opens pushes its
-    // line up by the height that it adds, unless the chat scrolls.
-    const place = (line: HTMLElement, top: number, adds: number) =>
-      vi.spyOn(line, 'getBoundingClientRect').mockImplementation(() =>
-        DOMRect.fromRect({
-          y: top - (foldOf(line).open ? adds : 0) - scroller.scrollTop,
-          height: 24,
-        }),
-      )
-    /** Presses the line, then reads whether its fold is open, and its top. */
-    const pressed = async (line: HTMLElement) => {
-      await press(line)
-      return {
-        open: foldOf(line).open,
-        top: line.getBoundingClientRect().top,
-      }
-    }
     const work = byText('2 tool calls, 2 messages')
     const run = byText('1 tool call')
     place(work, 148, 382)
@@ -178,5 +218,52 @@ describe('an open fold', () => {
       { open: true, top: 602 },
       { open: false, top: 602 },
     ])
+  })
+
+  it('shows a message with a table as one line, opens the table and the rest under the line, keeps the line in place, and keeps a name for a line that starts with a table', async () => {
+    await mountFinishedTurn([sizes, timings])
+    const work = byText('2 tool calls, 3 messages')
+    await press(work)
+    // The message lines of the work, after the recorded message.
+    const [, line, first] = foldOf(work).querySelectorAll<HTMLElement>(
+      ':scope > ul > li > details > summary',
+    )
+    place(line, 260, 180)
+    const closed = [accessibleName(line), accessibleName(first)]
+    const opened = await pressed(line)
+    expect({
+      closed,
+      ...opened,
+      name: accessibleName(line),
+      // A summary holds only phrasing content.
+      flow: line.querySelectorAll('p, ul, ol, li, pre, div, table').length,
+      body: bodyOf(line),
+    }).toEqual({
+      closed: [sizesLine, timingsLine],
+      open: true,
+      top: 260,
+      name: 'The machine has room for more workers:',
+      flow: 0,
+      body: [
+        [
+          ['Resource', 'Free'],
+          ['CPU', '4 vCPUs'],
+          ['Memory', '6.0 GiB'],
+        ],
+        'Memory stays under 5 GiB.',
+      ],
+    })
+    expect(await pressed(line)).toEqual({ open: false, top: 260 })
+
+    await press(first)
+    expect({ name: accessibleName(first), body: bodyOf(first) }).toEqual({
+      name: timingsLine,
+      body: [
+        [
+          ['Workers', 'Time'],
+          ['4', '3m 10s'],
+        ],
+      ],
+    })
   })
 })

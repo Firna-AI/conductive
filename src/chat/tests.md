@@ -21,7 +21,16 @@ host, sends with Enter and Send during the first start and after it failed,
 and checks the saved message on the bar of a failed first start and of a
 failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
 turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
-fold and a message line, and checks that each line keeps its place.
+fold and a message line, and checks that each line keeps its place. It
+also opens a message line with a table: the closed line shows the cells,
+the table opens under the line, and a line that starts with a table keeps
+a name.
+`components/AgentText.dom.test.tsx` renders `AgentText`. It checks where a
+table starts and ends, the alignment, the content of a cell, HTML as text,
+code blocks, the cells of each row, and the span of at most 1,000 columns.
+`components/TableReply.dom.test.tsx` drives chat events. It checks a header
+row before its separator row, the rows and a partial row that arrive, and
+the same reply from the saved history.
 `components/ReadingPlace.dom.test.tsx` lays the chat out as a browser lays
 out its reversed scroll box. It ends a long turn while the reader reads
 higher up, and checks the read row and the newest message at the bottom.

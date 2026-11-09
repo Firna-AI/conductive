@@ -118,6 +118,15 @@ Agent design calls, dated 9 November 2026:
   Behavioral chat changes still depend on the requirements milestone.
 - Keep the chat and files README entry points short and move their detail into topic guides.
   Preserve their old anchors as linked sections so existing readers keep working links.
+- Check for tables before list and heading rules, after the code-fence rule.
+  This applies the approved pipe-table grammar without changing non-table formatting.
+- Treat an indented table after a flat list as the next block, so rows never join the item text.
+- Clip extra cells in the chat parser for the closed message preview.
+  The shared view also clips other callers, so the preview and opened table agree.
+- Render a folded message's native table only while its line is open, so closed previews do no hidden table layout.
+- Keep a table-first line's preview in a visually hidden span while open, so its summary keeps an accessible name.
+- Put the scripted table reply behind `answer=tables` on the development page.
+  Keep `answer=text` as the default to preserve the existing example and its timing.
 
 ## Replaced ways
 
@@ -206,19 +215,23 @@ Tags: ui
 
 Depends on: 2 and 2a
 
+Status: Completed on 9 November 2026.
+
 Share the existing table rules and render chat tables with the chosen short-row behavior.
 
-- [ ] Add a failing regression through the public `AgentText` component for the reported table shape.
-- [ ] Move the file renderer to the shared table view while preserving its current presentation.
-- [ ] Add table blocks to the chat parser before paragraph lines join.
-- [ ] Render chat tables with actual row cells and a final cell that spans missing columns.
-- [ ] Apply the native span maximum without rejecting message input.
-- [ ] Update `MessageLine` for table blocks. Keep its inline preview and render opened tables outside `<summary>`.
-- [ ] Keep current inline formatting, fenced code, and readable incomplete input.
-- [ ] Constrain the table wrapper to scroll inside the chat column.
-- [ ] Add a streamed table to the chat development page.
-- [ ] Remove replaced table markup and unused styles after all callers move.
-- [ ] Update the READMEs with the final entry points and check their links.
+- [x] Add a failing regression through the public `AgentText` component for the reported table shape.
+- [x] Move the file renderer to the shared table view while preserving its current presentation.
+- [x] Add table blocks to the chat parser before paragraph lines join.
+- [x] Render chat tables with actual row cells and a final cell that spans missing columns.
+- [x] Apply the native span maximum without rejecting message input.
+- [x] Update `MessageLine` for table blocks. Keep its inline preview and render opened tables outside `<summary>`.
+- [x] Keep current inline formatting, fenced code, and readable incomplete input.
+- [x] Constrain the table wrapper to scroll inside the chat column.
+- [x] Add a streamed table to the chat development page.
+- [x] Remove replaced table markup and unused styles after all callers move.
+- [x] Update the READMEs with the final entry points and check their links.
+
+Evidence: `.context/markdown-table-support/milestone-3-ui-report.md` and `final-code-guides-report.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
@@ -226,29 +239,31 @@ Depends on: 3
 
 Verify table behavior through the public component and chat events.
 
-- [ ] Extend the component regression for cells, alignment, escaped pipes, and current inline formatting.
-- [ ] Cover fenced table examples and malformed table-like text without repeating parser tests.
-- [ ] Check short rows use the correct span and add no empty padding cells.
-- [ ] Check a gap beyond 1,000 columns leaves further positions empty and preserves actual cell content.
-- [ ] Use chat events to split a table across header, separator, and body updates.
-- [ ] Check the completed reply and saved-history reply through the same harness.
-- [ ] Extend the work-fold DOM regression for a table message's preview, expanded table, and retained reading position.
-- [ ] Keep the existing file-preview table safety tests and run them after extraction.
-- [ ] Observe each new regression fail on its intended assertion before the fix.
-- [ ] Run targeted chat and Markdown tests. Run each new asynchronous test ten times.
-- [ ] Measure the known sparse shapes at about 24 KB and 40 KB in Chrome and WebKit with the final shared view.
-- [ ] Stream the 24 KB shape one row at a time. Check spans, alignment, responsiveness, and the single-line borders.
-- [ ] Save results under `.context/`. Report unavailable engines and their blockers. Add no timing test or new CI gate.
-- [ ] Raise a new decision only if a measured failure needs a different policy. Keep option D unselected without user approval.
-- [ ] Run format, lint, file length, and unused-export checks.
-- [ ] Smoke-test resource, partial, short-row, and wide tables in the chat development page.
-- [ ] Inspect desktop and phone layouts in both color schemes. Save evidence under `.context/`.
-- [ ] Install root, desktop, and runner check dependencies. Run `npm run check`.
-- [ ] Commit with Conventional Commits and push the current branch.
+- [x] Extend the component regression for cells, alignment, escaped pipes, and current inline formatting.
+- [x] Cover fenced table examples and malformed table-like text without repeating parser tests.
+- [x] Check short rows use the correct span and add no empty padding cells.
+- [x] Check a gap beyond 1,000 columns leaves further positions empty and preserves actual cell content.
+- [x] Use chat events to split a table across header, separator, and body updates.
+- [x] Check the completed reply and saved-history reply through the same harness.
+- [x] Extend the work-fold DOM regression for a table message's preview, expanded table, and retained reading position.
+- [x] Keep the existing file-preview table safety tests and run them after extraction.
+- [x] Observe each new regression fail on its intended assertion before the fix.
+- [x] Run targeted chat and Markdown tests. Run each new asynchronous test ten times.
+- [x] Measure the known sparse shapes at about 24 KB and 40 KB in Chrome and WebKit with the final shared view.
+- [x] Stream the 24 KB shape one row at a time. Check spans, alignment, responsiveness, and the single-line borders.
+- [x] Save results under `.context/`. Report unavailable engines and their blockers. Add no timing test or new CI gate.
+- [x] Raise a new decision only if a measured failure needs a different policy. Keep option D unselected without user approval.
+- [x] Run format, lint, file length, and unused-export checks.
+- [x] Smoke-test resource, partial, short-row, and wide tables in the chat development page.
+- [x] Inspect desktop and phone layouts in both color schemes. Save evidence under `.context/`.
+- [x] Install root, desktop, and runner check dependencies. Run `npm run check`.
+- [x] Commit with Conventional Commits and push the current branch.
 - [ ] Review the complete local diff against `origin/main` after the push with the `implementation-review` skill.
 - [ ] Report findings. Fix `fix now` findings, record the rest as follow-up items, and re-review once.
 - [ ] Delete this plan when the `plans` skill requires it.
 - [ ] Open the pull request with dated decisions, design calls, the plan permalink, and new follow-up items.
+
+Evidence: `.context/markdown-table-support/browser/final-measurements.md`, the browser JSON results, screenshots, and `complete-gate-1.log`.
 
 Options review: `.context/markdown-table-support/options-check.md` confirms both
 choices. Its layout evidence is under `.context/markdown-table-support/measurements/`.

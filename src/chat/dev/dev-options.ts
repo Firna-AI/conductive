@@ -38,6 +38,11 @@ export interface DevOptions {
    * cloud computer could not read them.
    */
   files: 'listed' | 'unread'
+  /**
+   * The answer of each scripted turn: a line of text, or three tables that
+   * arrive one line at a time.
+   */
+  answer: 'text' | 'tables'
 }
 
 export const choices = {
@@ -89,6 +94,7 @@ export const choices = {
   change: ['done', 'done-not-saved', 'failed'],
   page: ['chat', 'this-mac'],
   files: ['listed', 'unread'],
+  answer: ['text', 'tables'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
 /** The options in the order that the page lists them. */
@@ -108,6 +114,7 @@ export const optionNames = [
   'change',
   'page',
   'files',
+  'answer',
 ] as const satisfies readonly (keyof DevOptions)[]
 
 function pick<T extends string>(
@@ -136,6 +143,7 @@ export function readOptions(search: string): DevOptions {
     change: pick(choices.change, get('change')),
     page: pick(choices.page, get('page')),
     files: pick(choices.files, get('files')),
+    answer: pick(choices.answer, get('answer')),
   }
 }
 

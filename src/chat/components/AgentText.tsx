@@ -1,5 +1,6 @@
 import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import inlineStyles from '../../../docs/mockups/src/components/common/InlineText.module.css'
+import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
 import markdownStyles from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
 import { inlineParts, textBlocks, type TextBlock } from './agent-text'
 
@@ -21,6 +22,11 @@ export function InlineMarkdown(props: { text: string }) {
       })}
     </>
   )
+}
+
+/** A cell of a table in an answer, with its inline code and strong text. */
+function tableCell(text: string) {
+  return <InlineMarkdown text={text} />
 }
 
 function Block(props: { block: TextBlock }) {
@@ -47,16 +53,31 @@ function Block(props: { block: TextBlock }) {
     }
     case 'code':
       return <pre className={markdownStyles.block}>{block.text}</pre>
+    case 'table':
+      return (
+        <MarkdownTable
+          align={block.align}
+          head={block.head}
+          renderCell={tableCell}
+          rows={block.rows}
+        />
+      )
   }
 }
 
-/** An answer of the agent: paragraphs, lists, and code, as it writes them. */
+/**
+ * The blocks of an answer in order, as `AgentText` and an open message line
+ * draw them. The element around them sets the type and the space between.
+ */
+export function AgentBlocks(props: { blocks: readonly TextBlock[] }) {
+  return props.blocks.map((block, index) => <Block block={block} key={index} />)
+}
+
+/** An answer of the agent: paragraphs, lists, code, and tables, as it writes them. */
 export function AgentText(props: { text: string }) {
   return (
     <div className={itemStyles.agent}>
-      {textBlocks(props.text).map((block, index) => (
-        <Block block={block} key={index} />
-      ))}
+      <AgentBlocks blocks={textBlocks(props.text)} />
     </div>
   )
 }

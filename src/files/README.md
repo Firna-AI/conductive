@@ -209,13 +209,15 @@ tests keep their static markup checks in Node.
 - `markdown/markdown-tables.ts`: `parseTable`, which reads one table of a
   file and fills its short rows, and `TableBudget`, the empty cells that
   the tables of one file may add. It reads each row with
-  `../markdown/table-rows.ts`, which also holds the table types of the
-  mockups. [Table parts](../chat/agent-text.md#table-parts) gives the rules
+  `../markdown/table-rows.ts`, which also holds the shared table types.
+  [Table parts](../chat/agent-text.md#table-parts) gives the rules
   of the shared table code.
 - `markdown/markdown-worker.ts` and `markdown/worker-parse.ts`: the module
   worker that runs the parse, and its start from the view, which ends it.
 - `markdown/MarkdownView.tsx`: the safe renderer of a parsed document.
-  `parser` replaces the worker for a static render.
+  `parser` replaces the worker for a static render. It draws each table
+  through the shared `MarkdownTable` of the mockups, with the margin of
+  its `.table` class.
 - `code/`: the syntax colours and the code view.
 - `diff/`: the unified diff parser and view.
 - `dev/`: the development page, its Vite config, its fixtures, its Copy
