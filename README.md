@@ -19,8 +19,9 @@ Today the repository holds:
 - the Mac app shell in `desktop/`, which is not complete yet, as
   [Mac app](#mac-app) says
 
-A test deployment runs at `conductive.build`. The project is not in
-production yet. [Deployment inputs](docs/deployment.md) lists what a
+A test deployment runs at `conductive.build`. Each push to `main` deploys
+it, as [Automatic deploys](docs/automatic-deploys.md) says. The project is
+not in production yet. [Deployment inputs](docs/deployment.md) lists what a
 deployment needs.
 
 ## Features
@@ -75,8 +76,11 @@ Local development needs no Cloudflare account. Wrangler provides local D1
 and Durable Object storage under `.wrangler/`. The D1 ID in
 `wrangler.jsonc` names the production database. Local commands, such as
 `npm run db:migrate` and `npm run dev`, use only the local storage.
-This setup creates no Cloudflare resources and includes no deploy command.
-Put local secrets in `.dev.vars`, which Git ignores.
+
+This local setup creates no Cloudflare resources and deploys nothing. The
+`Deploy` workflow in GitHub Actions deploys each push to `main`, as
+[Automatic deploys](docs/automatic-deploys.md) says. Put local secrets in
+`.dev.vars`, which Git ignores.
 
 The app origin is the scheme, host, and port of the web app. A deployed
 Worker reads it from `APP_ORIGIN`, which `wrangler.jsonc` does not set.
@@ -166,7 +170,9 @@ under `.wrangler/`, which Git also ignores.
 GitHub Actions uses `.nvmrc`. It installs with `npm ci`,
 `npm --prefix desktop ci`, and `npm ci --prefix runner`. Then it runs
 `npm run check` on pull requests, and on pushes to `main` and to the primary
-branch of the plan. It does not deploy.
+branch of the plan. CI does not deploy. The `Deploy` workflow deploys each
+push to `main`, as [Automatic deploys](docs/automatic-deploys.md) says. It
+does not wait for CI.
 
 ## Mac app
 
