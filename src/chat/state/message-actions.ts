@@ -4,7 +4,7 @@ import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
 import { showTarget, takeReply } from './linked-replies'
-import { confirmWorkspace } from './session-records'
+import { confirmWorkspace } from './workspace-records'
 import { toUpload } from './uploads'
 
 function change(
