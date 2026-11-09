@@ -1,10 +1,10 @@
 import type { AppDependencies } from '../env'
 import { scheduleConnectionCheck } from '../security/connection-access'
-import { gatewayError } from './errors'
+import { gatewayError, GatewayRequestError } from './errors'
 import { downstreamHeaders, upstreamHeaders } from './headers'
 import { allowedModelRoute, gatewayPath } from './paths'
 import { redactErrorBody } from './redact'
-import { GatewayRequestError, GatewayRequestLifetime } from './request-lifetime'
+import { GatewayRequestLifetime } from './request-lifetime'
 import { gatewayStream } from './stream'
 import { turnTokenRoute } from './token'
 import type { TurnTokenEndpoint } from './types'
@@ -41,6 +41,7 @@ export async function routeModelGateway(
       return gatewayError(agent, 'turn_token_invalid')
     const endpoint = runtime.workspace(route.workspaceId)
     const lifetime = new GatewayRequestLifetime(request, {
+      agent,
       check: () => endpoint.checkTurnToken(token),
       now: runtime.dependencies.now,
       schedule:

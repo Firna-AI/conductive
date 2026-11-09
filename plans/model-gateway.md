@@ -112,7 +112,7 @@ are a record, not a question.
 - **Related:** Decision 2. Option A of both decisions kept the old login route.
 - **Recommendation:** D, after the options check of 9 November 2026. The first recommendation was A. Cal recorded the check before any cutover, so D gives the outcome with no wait.
 - **Action:** ask the user, because Cal asked to decide this himself.
-- **Chosen by Cal on 9 November 2026:** the provider check is done. Cal wrote: "I checked with anthropic and this is fine, because of security reasons". So every login kind goes through the gateway on a newer runner, also the subscription token. Options A to D no longer apply. Open check 2, about OpenAI's terms, stays, because the answer covers Anthropic only.
+- **Chosen by Cal on 9 November 2026:** the provider check is done. Cal wrote: "I checked with anthropic and this is fine, because of security reasons". So every login kind goes through the gateway on a newer runner, also the subscription token. Options A to D no longer apply. Open check 2, about OpenAI's terms, stayed, because the answer covers Anthropic only. On 9 November 2026 Cal also recorded: "openai said it was fine". So OpenAI keys go through the gateway too.
 
 ### 2. Older runners keep real logins
 
@@ -317,6 +317,25 @@ are a record, not a question.
 - **Action:** ask the user, because each option adds a rejection, and it must match the open address item of the own-endpoint workspace.
 - **Chosen by Cal on 9 November 2026:** B. The gateway sends a login only to an `https` address, on any port that the Worker can reach. Open check 9 finds those ports.
 
+### 9. OpenAI background requests outlive the turn
+
+Added on 9 November 2026 from finding 5 of review round 2.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Review.
+- **Category:** Security.
+- **Location:** the Codex route in `worker/model-gateway/route.ts` and its upload reader.
+- **Background:** OpenAI's background guide says that a response with `background: true` keeps running after its connection drops. The gateway passed request bodies unchanged. The pinned Codex never sends the field, so only other sandbox code with a copied turn token can.
+- **Problem:** Such code could start OpenAI work that keeps billing the starter's login after the turn, so the 30-second bound of decision 6 fails.
+- **Root question:** How does the gateway prevent provider work from continuing beyond its turn?
+- **Options:**
+  - **A.** Refuse a request whose top-level `background` holds any value except `false`, a body that is not one JSON object, and an encoded body. The check runs before the last byte of the body reaches the upstream. Effort: Medium.
+  - **B.** Rewrite `background` to `false` in the streamed body. Effort: Medium.
+  - **C.** Accept only the body fields that the pinned Codex sends. Effort: Medium.
+- **Left out:** Cancelling by response ID, forcing `store: false`, and a plain byte search, as the follow-up of the finding said.
+- **Recommendation:** A.
+- **Chosen by Cal on 9 November 2026:** A.
+
 ## Design
 
 The gateway is a Worker route on the machine hostname. Each running turn
@@ -331,8 +350,8 @@ each workspace pins the runner version of its image.
 Open checks:
 
 1. Cal's provider check. Done on 9 November 2026 (decision 1).
-2. OpenAI's terms for a proxy of a user's own key, and OpenAI's request
-   size limit. Milestone 1 reads them.
+2. Done on 9 November 2026: Milestone 1 read OpenAI's terms, and Cal
+   recorded that OpenAI said the gateway is fine.
 3. Done on 9 November 2026 in Milestone 3, against a fake gateway with no
    network: the pinned `claude` program 2.1.318 calls only
    `/v1/messages` and `/v1/messages/count_tokens`. It sends an API key in
@@ -401,7 +420,8 @@ more approaches of each call.
   pattern, such as `anthropic-*` and `x-claude-code-*`, and the headers
   that open check 4 lists. The gateway removes credentials, cookies,
   `cf-*`, `x-forwarded-*`, and Conductive headers. Bodies pass unchanged.
-  Error bodies pass unchanged, except for the removal of D29. Reason:
+  Error bodies pass unchanged, except for the removal of D29. The Codex
+  route also refuses the bodies of decision 9. Reason:
   Anthropic's gateway guide asks to forward `anthropic-*` headers and body
   fields as open lists, and error bodies as they are.
 - **D9. Address.** One base address for each agent under `/v1/` on
@@ -675,7 +695,8 @@ after its merge (D25).
       against inheritance (decision 2 A). Name the repository settings
       path of D10 in that risk.
 - [ ] Same doc, "Agent logins": Anthropic confirmed the gateway for
-      subscription tokens on 9 November 2026 (decision 1).
+      subscription tokens on 9 November 2026 (decision 1). OpenAI
+      confirmed the gateway for OpenAI keys on the same day.
 - [ ] Same doc: the risk of decision 124 gives turn tokens of later turns
       on a newer runner, and real logins on an older runner.
 - [ ] `docs/protocol/model-gateway.md`: the own endpoint as an upstream,
@@ -722,9 +743,9 @@ tokens. The own endpoint goes through the gateway.
       `TurnCompletion.finish`, and drop the type match of turn ends in
       `runnerEventStored` and `worker/chat/runner-receipt.ts`. This is the
       wider fix of review finding 6.
-- [ ] Before any runner gets a turn token, apply the user's answer to
-      `plans/follow-ups/gateway-background-requests.md` (review finding 5)
-      and to `plans/follow-ups/openai-intermediary-review.md`.
+- [x] Before any runner gets a turn token, apply the user's answers on
+      OpenAI background requests and OpenAI's review. Done on 9 November
+      2026: gateway decision 9 A, and OpenAI confirmed the gateway.
 - [ ] Check the Worker's other fetches. Then turn on
       `global_fetch_strictly_public` in `wrangler.jsonc` (open check 8).
       Save the check under `.context/model-gateway/`.

@@ -114,6 +114,16 @@ while the change is open. Its pull request keeps them after the merge.
 - The gateway passes each request body unchanged. It passes each answer
   body unchanged.
 - An error body also passes unchanged, unless it holds the real login.
+- On the route of Codex, the gateway refuses a request whose body is not
+  one JSON object, or is encoded. It also refuses a request whose
+  top-level `background` field holds any value except `false` (gateway
+  decision 9).
+- Reason: OpenAI keeps a background response running after its connection
+  closes. So the end of the turn could not stop it.
+- The gateway refuses such a request before the upstream gets the last
+  byte of its body. Rewriting `background` and a closed list of body
+  fields were rejected. The rewrite changes a streamed body, and the list
+  would block each later Codex update.
 - No response header and no error body carries the real login. The
   gateway removes the login from them before it sends them on.
 - Reason: [Anthropic's gateway guide](https://code.claude.com/docs/en/llm-gateway-protocol)

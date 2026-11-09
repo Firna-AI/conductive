@@ -24,6 +24,15 @@ A subscription Claude turn and a Codex turn use Bearer authorization.
 The real login replaces the token in the header for that login kind.
 The gateway passes `anthropic-beta` unchanged.
 
+The Codex upload reader checks for one valid JSON object as bytes arrive.
+It checks each top-level `background` key after JSON string unescaping, including repeated keys.
+That field must be absent or hold the literal `false`.
+Nested keys pass unchanged.
+The request owner refuses a Codex body with a `content-encoding` other than `identity` before the upstream fetch.
+These refusals return HTTP 400 in the OpenAI error shape, with code `model_request_refused`.
+The request owner cancels the upload, upstream fetch, and answer together.
+Claude uploads keep their existing rules.
+
 Request headers use fixed names and the `anthropic-*`, `x-claude-code-*`, and `x-stainless-*` patterns.
 The fixed names include content metadata and the Codex session and turn headers.
 Transport framing stays with fetch, so the client `Content-Length` does not pass.
@@ -35,7 +44,11 @@ Error bodies redact both plain and JSON-escaped login bytes across chunk boundar
 Success body chunks pass directly, with no text decoding or copy.
 
 The upload reads through the entry's 100,000,000-byte budget.
+The Codex scanner retains no body, key, or value text between chunks.
+Its memory holds a fixed decoding window, compact container states, and one pending upload byte.
+That byte stays pending until another chunk passes or valid EOF arrives.
 An early upstream answer waits for the remaining upload to pass that reader.
+The remaining Codex bytes pass the same scan before an early answer can return.
 An overflow aborts the upstream request and returns the entry's shared 413 error.
 Each request gets a 30-second lease from its first turn check, before the upstream fetch.
 Checks start every 15 seconds while the upload, fetch, or answer runs.
@@ -63,6 +76,9 @@ Production uses the shared connection scheduler.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
 - [upload.ts](upload.ts): streaming upload and draining after an early reply.
+- [codex-body.ts](codex-body.ts): `CodexBodyScanner` checks the streamed JSON grammar and top-level `background` fields.
+- [json-tokens.ts](json-tokens.ts): `JsonTokens` reads JSON tokens and unescapes keys without keeping token text.
+- [json-stack.ts](json-stack.ts): `JsonStack` stores compact container states without a separate depth limit.
 - [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the lease, periodic checks, cancellation, and cleanup across every forwarding phase.
 - [stream.ts](stream.ts): answer forwarding under the request lease.
 - [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
@@ -86,4 +102,6 @@ Production uses the shared connection scheduler.
 - [fixture.test-support.ts](fixture.test-support.ts): a running turn whose session starter differs from its message sender.
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
+- [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
+- [codex-stream.test.ts](codex-stream.test.ts): a 100,000,000-byte object, the shared 413, and refusal after an early answer.
 - [runtime.test.ts](runtime.test.ts): production workspace RPC on SQLite, with eviction after a saved gateway Stop, one interrupt after reconnect, duplicate runner ends, the saved failure cause, and Retry.

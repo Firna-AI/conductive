@@ -1,23 +1,17 @@
+import type { Agent } from '../../src/shared/agents'
 import {
   CONNECTION_CHECK_MS,
   type ConnectionScheduler,
 } from '../security/connection-access'
-import type { GatewayRefusal } from './errors'
+import { CodexBodyScanner } from './codex-body'
+import { GatewayRequestError, refuseCodexBody } from './errors'
 import type { TurnTokenCheck } from './types'
 import { gatewayUpload } from './upload'
 
 const LEASE_MS = 30_000
 
-export class GatewayRequestError extends Error {
-  readonly code: GatewayRefusal
-
-  constructor(code: GatewayRefusal, message: string) {
-    super(message)
-    this.code = code
-  }
-}
-
 interface GatewayLifetimeOptions {
+  agent: Agent
   check: () => Promise<TurnTokenCheck>
   now: () => number
   schedule: ConnectionScheduler
@@ -39,7 +33,11 @@ export class GatewayRequestLifetime {
   constructor(request: Request, options: GatewayLifetimeOptions) {
     this.request = request
     this.options = options
-    this.upload = gatewayUpload(request.body, (reason) => this.cancel(reason))
+    this.upload = gatewayUpload(
+      request.body,
+      (reason) => this.cancel(reason),
+      options.agent === 'codex' ? new CodexBodyScanner() : undefined,
+    )
     request.signal.addEventListener('abort', this.disconnected, { once: true })
     if (request.signal.aborted) this.disconnected()
   }
@@ -48,7 +46,16 @@ export class GatewayRequestLifetime {
     this.deadline = this.options.now() + LEASE_MS
     this.scheduleExpiry()
     try {
-      return await this.check()
+      const checked = await this.check()
+      if (this.options.agent === 'codex') {
+        const encoding = this.request.headers.get('content-encoding')
+        if (
+          !this.request.body ||
+          (encoding !== null && encoding.trim().toLowerCase() !== 'identity')
+        )
+          refuseCodexBody()
+      }
+      return checked
     } catch (error) {
       this.cancel(error)
       throw error

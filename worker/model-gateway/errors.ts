@@ -8,6 +8,23 @@ export type GatewayRefusal =
   | 'agent_mismatch'
   | 'model_gateway_unavailable'
   | 'model_upstream_unavailable'
+  | 'model_request_refused'
+
+export class GatewayRequestError extends Error {
+  readonly code: GatewayRefusal
+
+  constructor(code: GatewayRefusal, message: string) {
+    super(message)
+    this.code = code
+  }
+}
+
+export function refuseCodexBody(): never {
+  throw new GatewayRequestError(
+    'model_request_refused',
+    refusals.model_request_refused[1],
+  )
+}
 
 const refusals = {
   turn_token_invalid: [401, 'The turn token is not valid. Start a new turn.'],
@@ -26,6 +43,10 @@ const refusals = {
   model_upstream_unavailable: [
     502,
     'The model service is not available. Try again.',
+  ],
+  model_request_refused: [
+    400,
+    'Use one JSON object with background absent or false and no body encoding.',
   ],
 } as const
 
