@@ -6,10 +6,27 @@ import {
   workspaceTokenResourcePredicate,
 } from '../data/workspace-token-access'
 import { decrypt, hash } from '../security/crypto'
+import { workspaceNameColumn } from '../data/workspace-name'
 import { agentLoginKind } from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
 const workspaceColumns = `w.id, w.org_id AS orgId, w.archived_at AS archivedAt`
+
+const automaticTitleWorkspacePredicate = `archived_at IS NULL AND state != 'archived'
+  AND EXISTS (SELECT 1 FROM orgs WHERE orgs.id = workspaces.org_id
+    AND orgs.deleted_at IS NULL AND orgs.suspended_at IS NULL)`
+
+export async function readAutomaticTitleWorkspace(
+  db: D1Database,
+  workspaceId: string,
+): Promise<{ name: string | null } | null> {
+  return db
+    .prepare(
+      `SELECT ${workspaceNameColumn('workspaces')} FROM workspaces WHERE id = ? AND ${automaticTitleWorkspacePredicate}`,
+    )
+    .bind(workspaceId)
+    .first<{ name: string | null }>()
+}
 
 export function findChatWorkspace(
   db: D1Database,
@@ -35,8 +52,7 @@ export async function updateWorkspaceTitle(
   await db
     .prepare(
       `UPDATE workspaces SET name = ?, updated_at = ?
-    WHERE id = ? AND archived_at IS NULL AND EXISTS
-    (SELECT 1 FROM orgs WHERE orgs.id = workspaces.org_id AND orgs.deleted_at IS NULL)`,
+    WHERE id = ? AND name = '' AND ${automaticTitleWorkspacePredicate}`,
     )
     .bind(name, now, workspaceId)
     .run()

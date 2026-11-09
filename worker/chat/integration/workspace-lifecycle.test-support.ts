@@ -22,7 +22,7 @@ export async function createLifecycleChatFixture(bundle: string) {
       VALUES (?, ?, 'owner', 'first-session', 'first-turn', 'claude', 'test-claude', 'high', 'first-message')`,
     ).bind(OUTER_WORKSPACE, OUTER_ORG),
     fixture.env.DB.prepare(
-      'UPDATE workspaces SET sandbox_id = ? WHERE id = ?',
+      "UPDATE workspaces SET sandbox_id = ?, name = '' WHERE id = ?",
     ).bind('bx_lifecycle', OUTER_WORKSPACE),
   ])
   fixture.boat.states.set('bx_lifecycle', 'ready')

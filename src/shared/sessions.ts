@@ -38,7 +38,7 @@ export function retryMessagePath(
 export interface Session {
   id: string
   workspaceId: string
-  title: string
+  title: string | null
   /** Its agent stays fixed. Another agent opens another session. */
   choice: AgentChoice
   createdAt: Timestamp

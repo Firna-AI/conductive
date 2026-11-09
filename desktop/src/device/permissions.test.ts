@@ -71,11 +71,14 @@ it('keeps separate workspace deadlines and never renews a live grant', () => {
 it('keeps the original deadline across a restart and expires without a settings read', () => {
   const test = setup()
   const store = test.open()
-  store.allowWorkspace('one', 'First workspace')
+  store.allowWorkspace('one', null)
   test.advance(400_000)
   store.dispose()
   const restored = test.open()
   expect(restored.permits('anything', 'one')).toBe(true)
+  expect(restored.settings().workspaceWindows).toEqual([
+    { workspaceId: 'one', workspaceName: null, expiresAt: 1_800_000_900_000 },
+  ])
   test.advance(500_000)
   expect(restored.settings().workspaceWindows).toEqual([])
   expect(test.open().permits('anything', 'one')).toBe(false)

@@ -1,0 +1,62 @@
+import { Ban } from 'lucide-react'
+import type { UserPage } from '../../fixtures/operatorPages'
+import { paths } from '../../paths'
+import { Notice } from '../common/Notice'
+import { DetailList } from '../settings/DetailList'
+import { Section } from '../settings/Section'
+import { suspendedTitle, suspendedUserBody } from './operatorCopy'
+import { TargetList, TargetRow } from './targets'
+
+/** The notice of a suspended user, at the top of their page. */
+function UserNotice(props: { user: UserPage }) {
+  const { user } = props
+  if (!user.suspension) return null
+  const { since, by, stopping } = user.suspension
+  return (
+    <Notice
+      body={suspendedUserBody(`@${user.login}`, stopping)}
+      icon={Ban}
+      title={suspendedTitle(since, by)}
+    />
+  )
+}
+
+/**
+ * The page of a user for the operator: their state, their name and other
+ * details, the workspaces that they own, and their orgs with their roles.
+ * Each org opens the page of that org. A user without a name on GitHub
+ * has no Name row.
+ */
+export function UserDetails(props: { user: UserPage }) {
+  const { user } = props
+  return (
+    <>
+      <UserNotice user={user} />
+      <Section title="Details">
+        <DetailList
+          rows={[
+            ...(user.name ? [{ term: 'Name', value: user.name }] : []),
+            { term: 'GitHub ID', value: String(user.githubId), mono: true },
+            { term: 'Joined', value: user.joined },
+            {
+              term: 'Workspaces',
+              value: `${user.owned} owned, ${user.running} running`,
+            },
+          ]}
+        />
+      </Section>
+      <Section title="Orgs">
+        <TargetList label={`Orgs of @${user.login}`}>
+          {user.orgs.map((org) => (
+            <TargetRow
+              end={org.role}
+              key={org.name}
+              target={{ kind: 'org', name: org.name, initials: org.initials }}
+              to={paths.operatorOrg}
+            />
+          ))}
+        </TargetList>
+      </Section>
+    </>
+  )
+}
