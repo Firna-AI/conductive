@@ -26,7 +26,7 @@ export type BuildState = 'ready' | 'building' | 'failed' | 'time-limit' | 'none'
 type LogState = 'building' | 'failed' | 'time-limit'
 
 /** The log of the build that runs or failed, in each state with a log. */
-export type BuildLogs = Readonly<Record<LogState, readonly TerminalLine[]>>
+type BuildLogs = Readonly<Record<LogState, readonly TerminalLine[]>>
 
 /**
  * The builds of an org that the card shows: the newest good build, which

@@ -27,7 +27,7 @@ const entities: Readonly<Record<string, string>> = {
 }
 
 /** Escapes text for element content and for quoted attribute values. */
-export function escapeHtml(text: string): string {
+function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (character) => entities[character])
 }
 

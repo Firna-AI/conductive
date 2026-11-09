@@ -57,6 +57,7 @@ export const paths = {
   sessionHistory: 'app/sessions/history',
   noStarterLogin: 'app/sessions/no-starter-login',
   linkedSession: 'app/sessions/linked',
+  loginNotShared: 'app/composer/not-shared',
   reassign: 'app/reassign',
   archive: 'app/archive',
   archivePushed: 'app/archive/pushed',

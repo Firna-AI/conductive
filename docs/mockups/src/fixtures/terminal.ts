@@ -8,7 +8,7 @@ import { checkoutAutocomplete, savedCarts } from './workspaces'
 export type TerminalTone =
   'prompt' | 'plain' | 'muted' | 'success' | 'accent' | 'error'
 
-export type TerminalSegment = { text: string; tone: TerminalTone }
+type TerminalSegment = { text: string; tone: TerminalTone }
 
 export type TerminalLine = readonly TerminalSegment[]
 
@@ -126,8 +126,6 @@ export const timedOutFirstBuildLog: readonly TerminalLine[] = [
   plain('Setting up nodejs (24.11.0-1nodesource1) ...'),
   muted(timedOutBuild.error),
 ]
-
-export const workspaceSessionPrompt = `${workspaceLocation} $ `
 
 /** A new workspace: the terminal waits at its first prompt. */
 export const freshSessionPrompt = `storefront (${savedCarts.branch}) $ `

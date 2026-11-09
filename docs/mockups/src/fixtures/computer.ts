@@ -39,7 +39,7 @@ export const envVars: readonly EnvVar[] = [
   { name: 'NEXT_PUBLIC_SITE_URL' },
 ]
 
-export type BuildResult = 'succeeded' | 'failed'
+type BuildResult = 'succeeded' | 'failed'
 
 export type Build = { when: string; result: BuildResult; duration: string }
 

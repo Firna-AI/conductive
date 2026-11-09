@@ -107,12 +107,14 @@ export async function senderLoginAccess(
   db: D1Database,
   workspaceId: string,
   loginOwnerId: string | null,
+  agent: Agent,
   runnerTokenHash?: string,
   senderId?: string,
 ): Promise<{
   senderAllowed: boolean
   loginOwnerAllowed: boolean
   runnerAllowed: boolean
+  reuseAllowed: boolean
 }> {
   const row = await db
     .prepare(
@@ -122,6 +124,8 @@ export async function senderLoginAccess(
          WHERE org_id = w.org_id AND user_id = ? AND sender.suspended_at IS NULL) AS senderAllowed,
        EXISTS(SELECT 1 FROM org_members JOIN users login_owner ON login_owner.id = org_members.user_id
          WHERE org_id = w.org_id AND user_id = ? AND login_owner.suspended_at IS NULL) AS loginOwnerAllowed,
+       EXISTS(SELECT 1 FROM agent_logins WHERE user_id = ? AND agent = ?
+         AND no_reuse = 1 AND user_id != ?) AS reuseDenied,
        EXISTS(SELECT 1 FROM workspace_tokens t WHERE t.workspace_id = w.id
          AND t.token_hash = ? AND ${workspaceTokenAccessPredicate}) AS runnerAllowed
      FROM workspaces w WHERE w.id = ?`,
@@ -129,6 +133,9 @@ export async function senderLoginAccess(
     .bind(
       senderId ?? loginOwnerId,
       loginOwnerId,
+      loginOwnerId,
+      agent,
+      senderId ?? loginOwnerId,
       runnerTokenHash ?? null,
       workspaceId,
     )
@@ -137,11 +144,13 @@ export async function senderLoginAccess(
       senderAllowed: number
       loginOwnerAllowed: number
       runnerAllowed: number
+      reuseDenied: number
     }>()
   return {
     senderAllowed: row?.workspaceAllowed === 1 && row.senderAllowed === 1,
     loginOwnerAllowed:
       row?.workspaceAllowed === 1 && row.loginOwnerAllowed === 1,
     runnerAllowed: row?.workspaceAllowed === 1 && row.runnerAllowed === 1,
+    reuseAllowed: row?.reuseDenied !== 1,
   }
 }

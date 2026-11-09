@@ -5,7 +5,7 @@ import type { ToolRequests } from './tool-parts/workspace'
 export type ReadyTerminal = Extract<TerminalResponse, { state: 'ready' }>
 
 /** Narrows the terminal response, or gives null for any other body. */
-export function parseTerminalResponse(body: unknown): TerminalResponse | null {
+function parseTerminalResponse(body: unknown): TerminalResponse | null {
   if (!isRecord(body)) return null
   const { state, socketPath, protocol } = body
   if (state === 'starting' || state === 'stopped') {

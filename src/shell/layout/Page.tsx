@@ -7,7 +7,7 @@ import { IconButton } from '../ui/actions'
 import { AppLink, useGo } from '../ui/AppLink'
 import { useViewport } from '../ui/viewport'
 
-export interface BackLink {
+interface BackLink {
   label: string
   to: string
 }

@@ -1,0 +1,57 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "include": ["exports", "types", "nsExports", "nsTypes"],
+  "workspaces": {
+    ".": {
+      // Vite, Wrangler, Vitest, and package scripts supply their own entries.
+      // These extra entries run directly or load by browser and framework conventions.
+      "entry": [
+        "src/**/dev/main.tsx",
+        "src/files/markdown/markdown-worker.ts",
+        "tools/main.ts",
+        "image/*.mjs",
+        "image/live-main.ts",
+        "worker/chat/integration/run-browser-harness.mjs",
+        "worker/chat/integration/browser-server.test-support.ts",
+        "worker/chat/integration/*-entry.test-support.ts",
+        "worker/devices/test-worker.test-support.ts",
+        "worker/lifecycle/workspace-runtime-test-worker.ts",
+        "worker/features/{entry,activity-entry,checkpoint-entry}.test-support.ts",
+        "docs/mockups/src/entries/**/*.tsx",
+        "docs/mockups/src/render.tsx",
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "worker/**/*.{ts,mjs}",
+        "tools/**/*.ts",
+        "image/*.{ts,mjs}",
+        "docs/mockups/src/**/*.{ts,tsx}",
+        "*.{ts,js}",
+      ],
+      "vite": {
+        "config": ["vite.config.ts", "src/**/dev/vite.config.{ts,js}"],
+      },
+    },
+    "desktop": {
+      "entry": ["src/main.ts", "renderer/main.tsx", "scripts/*.ts"],
+      "project": [
+        "src/**/*.ts",
+        "renderer/**/*.{ts,tsx}",
+        "scripts/*.ts",
+        "tests/**/*.ts",
+        "*.ts",
+      ],
+      "includeEntryExports": true,
+    },
+    "runner": {
+      "entry": ["src/{main,measure,compare}.ts", "scripts/*.mjs"],
+      "project": [
+        "src/**/*.ts",
+        "test-support/**/*.ts",
+        "scripts/*.mjs",
+        "*.ts",
+      ],
+      "includeEntryExports": true,
+    },
+  },
+}

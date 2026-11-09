@@ -22,7 +22,7 @@ export function invitationLink(appOrigin: string, inviteId: string): string {
 }
 
 /** Development deliberately writes invitation links to the local log. */
-export function logInvitationMailer(
+function logInvitationMailer(
   log: (message: string) => void = (message) => console.info(message),
 ): InvitationMailer {
   return {
