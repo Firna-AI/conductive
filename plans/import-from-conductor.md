@@ -266,10 +266,14 @@ and changed the recommendation from H to I.
 - **Options:**
   - **B.** Copy them into the live log as read-only sessions. Each first
     show then replays every old event. Effort: Large.
-  - **F.** Store each old session as a Markdown document, with a read-only
-    view that loads on open. It needs no event mapping. A resumed session
-    starts as a linked session that links back to the document. Effort:
-    Medium.
+  - **F.** Each old session becomes one Markdown file. The imported
+    workspace lists its old sessions as links, and a link opens the file in
+    the app's existing Markdown view. The app keeps these files for the life
+    of the workspace, so the links work before activation and while the
+    cloud computer is stopped. Activation also puts them in
+    `.context/conductor/` for the agent. It needs no event mapping and no
+    change to how the chat loads. A resumed session starts as a new session
+    tab that links back to its old file. Effort: Medium.
   - **H.** Store each old session apart from the live log, as the app's
     own chat events. It opens as a session tab, and it loads only when
     opened. A resumed session adds its new turns below the old part.
@@ -294,13 +298,13 @@ and changed the recommendation from H to I.
   read-only.
 - **Related:** Decision 5: a resumed part needs E or F there, and the
   Markdown of option F here can serve B there.
-- **Recommendation:** I. The slowdown comes from readers that replay the
-  whole log, and I fixes that for every workspace. Choose H if this plan
-  must not touch those readers. Choose F if a document look is enough. Add
-  J for each session without its agent file. The plan first recommended H.
-- **Action:** ask the user, because I changes how the chat history loads
-  for every workspace, and F and H trade that against how the old chats
-  look.
+- **Recommendation:** F. The user asked on 9 November 2026 for links to
+  Markdown files, so a document look is enough, and F adds no load to the
+  chat. Add J for each session without its agent file. The slow replay of
+  long workspaces is a separate problem, and option I can fix it in its own
+  change. The plan first recommended H, then I.
+- **Action:** ask the user, because the user asked a question and has not
+  chosen F yet.
 
 ### 8. What the data bucket holds
 
