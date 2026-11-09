@@ -226,9 +226,10 @@ Calls of the `ui implementor` in the mockups, 9 November 2026:
 - Only an admin gets Try again in Get started and the link in the notice.
   A member gets the state with no action. Reason: only an admin builds, as
   decision 57 says.
-- A create that comes while the first build runs, such as from an old tab
-  or an agent tool, gets a refusal that says the cloud computer is still
-  being prepared. Reason: the old words ask for a manual build.
+- A create that comes while the first build runs, such as from an old
+  tab, gets a refusal that says the cloud computer is still being
+  prepared. Reason: the old words ask for a manual build. An agent tool
+  cannot meet this case, because its own workspace needed a good image.
 
 ## Milestone 1: Mockups
 
@@ -260,7 +261,8 @@ this milestone.
       `.context/automatic-first-build/merge-decisions.md`.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
-- [ ] The user reviews the mockups.
+- [x] The user reviews the mockups. The user asked on 9 November 2026 to
+      implement every milestone, which closes the review.
 - [x] Decision 151: draw Create org with no repository chosen, and with no
       repository that the GitHub App reaches, both with Create org off.
       Draw the Cloud computer tab of the first build after an admin saved
@@ -272,20 +274,20 @@ Depends on: 1
 
 State the automatic first build and what the app shows during it.
 
-- [ ] `docs/protocol/workspaces-and-sandboxes.md`, The org image: Create
+- [x] `docs/protocol/workspaces-and-sandboxes.md`, The org image: Create
       org with at least one repository starts the first build
       (decision 150). Later changes of the repositories need Build
       computer.
-- [ ] `docs/protocol/workspaces-and-sandboxes.md`, Create a workspace:
+- [x] `docs/protocol/workspaces-and-sandboxes.md`, Create a workspace:
       until the first good image, New workspace shows the state of the
       first build and keeps Send off. A create in that time gets a refusal
       that names the state.
-- [ ] `docs/protocol/orgs-and-members.md`, Orgs: Create org requires at
+- [x] `docs/protocol/orgs-and-members.md`, Orgs: Create org requires at
       least one repository (decision 151).
-- [ ] `docs/protocol/workspaces-and-sandboxes.md`, The org image: when the
+- [x] `docs/protocol/workspaces-and-sandboxes.md`, The org image: when the
       repositories or the install script changed during the first good
       build, the app starts one more build when it ends (decision 151).
-- [ ] `docs/protocol/orgs-and-members.md`, Get started: the org step shows
+- [x] `docs/protocol/orgs-and-members.md`, Get started: the org step shows
       the first build, with Try again for an admin. The finish says that
       the org is ready only after the first build succeeds.
 
@@ -361,7 +363,7 @@ Depends on: every other milestone
       once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives decision 150 and the
+- [ ] Open the pull request. Its description gives decisions 150, 151, and 152, and the
       design calls of this plan with their dates, a permalink to this
       plan, and the follow-up items that the change adds.
 

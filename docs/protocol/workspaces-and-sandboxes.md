@@ -46,14 +46,22 @@ says.
   base image includes before the install script runs.
 - "Build computer" starts a build. A build runs the install script on a
   copy of the image, with every chosen repository cloned (decision 12).
+- The app also starts some builds of a new org by itself, as
+  [The first build](#the-first-build) says.
 - A build replaces the org image only when it succeeds. A failed build
   keeps the last good image (decision 9).
 - While a build runs, its log streams on the Cloud computer tab. New
   workspaces keep starting from the last good image.
 - A failed build shows the end of its log and Try again. The Settings link
   of the sidebar then shows a mark.
+- After a failed build, the app starts no new build by itself
+  (decision 12). This also holds for the first build of an org. Reason: a
+  broken install script fails again.
 - After the user saves a changed install script, the tab asks for a build,
-  because the script runs only in a build.
+  because the script runs only in a build. While the org has no good image
+  and a build runs, the tab asks for no build. It says that one more build
+  runs the script when that build succeeds, as
+  [The first build](#the-first-build) says.
 - The Cloud computer tab lists the builds, each with its time, its result,
   and its length.
 - A push to the default branch of a chosen repository refreshes the org
@@ -64,6 +72,52 @@ says.
   not run the install script.
 - Reason: a new workspace then needs only a small fetch. The limit of one
   refresh in 30 minutes saves starts, because each refresh is a start.
+
+### The first build
+
+- Create org starts the first build of the org by itself (decision 150).
+  Create org requires at least one repository, as
+  [Orgs](orgs-and-members.md#orgs) says, so every new org starts its first
+  build at create (decision 151).
+- Reason: a new org then gets its org image with no manual step.
+- Create org starts the build before it answers. A build that the browser
+  starts after the create was rejected, because a closed tab could then
+  lose the build.
+- The first build is a normal build. The person who creates the org, its
+  first admin, is the starter of that build. Its log and its result show
+  on the Cloud computer tab, as for every build.
+- When the first build cannot start, Create org still creates the org. An
+  admin can then start a build on the Cloud computer tab, with Build
+  computer or Try again. Reason: the org is valid without a build.
+- An org has no org image until its first good build. The first good build
+  is the earliest build of the org that succeeds. It can be the first
+  build, or a build after a failure.
+- Until the first good build, no workspace of the org can start.
+  [Create a workspace](#create-a-workspace) and
+  [Get started](orgs-and-members.md#get-started) say what the app shows in
+  that time.
+- The repositories or the install script can change during the first good
+  build. In that case, the app starts one more build by itself, the added
+  build, when that build ends (decision 151).
+- Reason: a build holds the repositories and the install script that were
+  saved when it began. The added build takes in each change from any
+  screen during the first good build. So such a change needs no Build
+  computer.
+- Only the first good build can get an added build. A failed build gets
+  none. Reason: Try again then builds the current settings.
+- The added build runs for an admin who is not suspended, as an automatic
+  refresh does. An org without such an admin gets no added build. Reason:
+  one rule then covers each build that the app starts by itself.
+- [Starts, stops, and builds](operator-actions.md#starts-stops-and-builds)
+  states what a suspension does to each build.
+- When the added build cannot start, the org keeps its first good image.
+  The change then waits for Build computer.
+- After the first good build, each change of the repositories or of the
+  install script waits for Build computer (decision 12). This also holds
+  for a change during the added build.
+- A build at each save was rejected, because the Repositories tab saves
+  each repository on its own. Such a build could start with only part of
+  the choice.
 
 ## Repository folders
 
@@ -97,6 +151,31 @@ says.
   message creates the workspace.
 - The app accepts that message before the sandbox is ready, as
   [Chat and events](chat-and-events.md#messages) says.
+- A new workspace needs a good org image, because it starts from the org
+  image (decision 13). While the org has no good image, such as during its
+  [first build](#the-first-build), New workspace shows a notice over the
+  composer. Send then stays off (decision 150).
+- The notice shows the state of the newest build of the org:
+  - While a build runs, it says that the cloud computer is being prepared,
+    with the time since the build began.
+  - After a failed build, it says that the cloud computer did not build.
+  - With no build, it says that the cloud computer needs a build.
+- After a failed build or with no build, an admin gets a link to the Cloud
+  computer tab, which offers Try again or Build computer. A member who is
+  not an admin gets no link, and the notice says that an admin can build.
+  Reason: only an admin builds (decision 57).
+- When a build succeeds, the notice goes, and Send turns on.
+- Once the org has a good image, New workspace shows no such notice, also
+  during a later build or after a failed later build. New workspaces then
+  start from the last good image (decision 9).
+- A create that comes while the org has no good image, such as from an old
+  tab, gets a refusal. While a build runs, the refusal says that the cloud
+  computer is still being prepared. Otherwise, it says that the cloud
+  computer needs a build. The composer keeps the message.
+- Reason: the user learns the state before the send, in place of a refused
+  create. A create that waits for the first build was left out for now
+  (decision 152). Such a wait changes the start limit and the path that
+  creates every workspace.
 - The create answers when the workspace and its first message are stored,
   before the sandbox starts (decision 91). The answer holds the workspace,
   its session ID, and the queued first message, so that the new workspace
