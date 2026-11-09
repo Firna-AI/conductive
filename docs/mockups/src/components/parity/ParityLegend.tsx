@@ -1,8 +1,13 @@
 import type { Viewport } from '@mokly/mokly'
 import { CalendarCheck } from 'lucide-react'
+import { parityPageCopy } from '../../../../../src/marketing/from-conductor/copy'
+import { dueRule } from '../../../../../src/marketing/from-conductor/dates'
+import {
+  parityStatuses,
+  statusOrder,
+} from '../../../../../src/marketing/from-conductor/statuses'
 import { classes } from '../common/classes'
 import { StatusMark } from './ParityMarks'
-import { dueRule, parityStatuses, statusOrder } from './parityStatus'
 import styles from './ParityLegend.module.css'
 
 /**
@@ -19,7 +24,7 @@ export function ParityLegend(props: { viewport: Viewport }) {
       )}
     >
       <h2 className={styles.title} id="legend-title">
-        How to read the list
+        {parityPageCopy.legendTitle}
       </h2>
       <dl className={styles.items}>
         {statusOrder.map((status) => (

@@ -1,25 +1,18 @@
 import type { Viewport } from '@mokly/mokly'
 import { Cloud } from 'lucide-react'
-import { productName } from '../../brand'
-import {
-  conductorCloudDays,
-  parityCheckedOn,
-} from '../../fixtures/conductorParity'
+import { parityPageCopy } from '../../../../../src/marketing/from-conductor/copy'
 import { classes } from '../common/classes'
-import { dayWords } from './parityStatus'
+import { ParityCopyText } from './ParityCopyText'
 import styles from './ParityIntro.module.css'
-
-/** A day of the page as a `time` element, such as "13 November 2026". */
-function Day(props: { day: string }) {
-  return <time dateTime={props.day}>{dayWords(props.day, 'long')}</time>
-}
 
 /**
  * The top of the page for people who move from Conductor Cloud: the title,
- * one sentence, the note that the list covers Conductor Cloud only, and the
- * days that matter for a move. Every layout of the page starts with it.
+ * one sentence, the note that the list covers Conductor Cloud only, the
+ * days of Conductor Cloud with its announcement, and the day of the last
+ * check of the list.
  */
 export function ParityIntro(props: { viewport: Viewport }) {
+  const copy = parityPageCopy
   return (
     <header
       className={classes(
@@ -27,27 +20,19 @@ export function ParityIntro(props: { viewport: Viewport }) {
         props.viewport === 'mobile' && styles.mobile,
       )}
     >
-      <span className={styles.label}>From Conductor Cloud</span>
-      <h1 className={styles.title}>Coming from Conductor Cloud?</h1>
-      <p className={styles.lead}>
-        See which Conductor Cloud features work in {productName} today, which
-        are on the way, and which work differently.
-      </p>
+      <span className={styles.label}>{copy.label}</span>
+      <h1 className={styles.title}>{copy.title}</h1>
+      <p className={styles.lead}>{copy.lead}</p>
       <div className={styles.scope} role="note">
         <Cloud aria-hidden className={styles.scopeIcon} size={16} />
         <p className={styles.scopeText}>
-          <strong className={styles.scopeTitle}>
-            Conductor Cloud features only.
-          </strong>{' '}
-          The list leaves out the features of local Conductor workspaces on a
-          Mac.
+          <strong className={styles.scopeTitle}>{copy.scope.title}</strong>{' '}
+          {copy.scope.text}
         </p>
       </div>
       <p className={styles.facts}>
-        Conductor Cloud turns read-only on{' '}
-        <Day day={conductorCloudDays.readOnly} /> and shuts down on{' '}
-        <Day day={conductorCloudDays.shutDown} />. Checked on{' '}
-        <Day day={parityCheckedOn} />.
+        <ParityCopyText linkClassName={styles.link} text={copy.cloudDays} />{' '}
+        <ParityCopyText linkClassName={styles.link} text={copy.checked} />
       </p>
     </header>
   )

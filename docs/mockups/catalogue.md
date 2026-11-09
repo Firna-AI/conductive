@@ -43,9 +43,9 @@ with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
-index document, `index.md`, gives the notes of the page and the limits of
-its sample, and links to `marketing/from-conductor/one-table`, which links
-back to it. `app/org-settings/cloud-computer` and its building
+index document, `index.md`, gives the notes of the page and where its
+content comes from, and links to `marketing/from-conductor/one-table`,
+which links back to it. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own

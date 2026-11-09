@@ -1,0 +1,75 @@
+import type { ParityFeature } from '../model'
+
+export const automationAndApiFeatures: readonly ParityFeature[] = [
+  {
+    id: 'conductor-api',
+    area: 'automation-and-api',
+    name: 'Conductor API',
+    status: 'considering',
+    note: 'A public API for your own applications and scripts is under consideration.',
+  },
+  {
+    id: 'api-keys',
+    area: 'automation-and-api',
+    name: 'API keys',
+    status: 'considering',
+    note: 'Personal API keys for Conductive are under consideration.',
+  },
+  {
+    id: 'workspace-api-token',
+    area: 'automation-and-api',
+    name: 'Workspace API token',
+    status: 'available',
+    note: 'Workspace programs get a workspace token for the built in workspace tools.',
+  },
+  {
+    id: 'transcript-sql-search',
+    area: 'automation-and-api',
+    name: 'Transcript SQL search',
+    status: 'considering',
+    note: 'SQL search across chat transcripts is under consideration.',
+  },
+  {
+    id: 'api-message-attachments',
+    area: 'automation-and-api',
+    name: 'API message attachments',
+    status: 'considering',
+    note: 'Adding message attachments through a public API is under consideration.',
+  },
+  {
+    id: 'routines',
+    area: 'automation-and-api',
+    name: 'Routines',
+    status: 'planned',
+    note: 'Scheduled and pull request routines are planned. Each run gets a new workspace. Webhook triggers are outside the planned scope.',
+    due: null,
+  },
+  {
+    id: 'hosted-mcp-server',
+    area: 'automation-and-api',
+    name: 'Hosted MCP server',
+    status: 'considering',
+    note: 'An MCP server for outside applications to manage Conductive workspaces is under consideration.',
+  },
+  {
+    id: 'conductor-cli',
+    area: 'automation-and-api',
+    name: 'Conductor CLI',
+    status: 'considering',
+    note: 'A CLI for your own computer is under consideration. The workspace CLI already creates workspaces and lists available choices.',
+  },
+  {
+    id: 'agents-that-delegate',
+    area: 'automation-and-api',
+    name: 'Agents that delegate',
+    status: 'available',
+    note: 'Agents can create workspaces and list workspaces, repositories, sections, and models. Managing existing sessions is under consideration.',
+  },
+  {
+    id: 'deep-links',
+    area: 'automation-and-api',
+    name: 'Deep links',
+    status: 'considering',
+    note: 'Web links open workspaces, tabs, and settings. Links that fill a new workspace composer are under consideration.',
+  },
+]

@@ -1,5 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
-import { productName } from '../brand'
+import { parityPageCopy } from '../../../../src/marketing/from-conductor/copy'
 import { classes } from '../components/common/classes'
 import { ClosingCall } from '../components/marketing/ClosingCall'
 import { SitePage } from '../components/marketing/SitePage'
@@ -24,13 +24,11 @@ export function FromConductorScreen(props: { viewport: Viewport }) {
       >
         <ParityIntro viewport={viewport} />
         <ParityOneTable viewport={viewport} />
-        <p className={styles.footnote}>
-          {productName} is not affiliated with Conductor.
-        </p>
+        <p className={styles.footnote}>{parityPageCopy.affiliation}</p>
         <ClosingCall
           signIn={paths.signIn}
-          text="Sign up with GitHub, connect your repositories, and send the first task."
-          title="Bring your next task."
+          text={parityPageCopy.closing.text}
+          title={parityPageCopy.closing.title}
           viewport={viewport}
         />
       </div>

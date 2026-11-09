@@ -1,10 +1,13 @@
 import { CalendarCheck } from 'lucide-react'
+import { parityPageCopy } from '../../../../../src/marketing/from-conductor/copy'
+import { dayWords } from '../../../../../src/marketing/from-conductor/dates'
 import type {
-  ParityFeature,
+  ComingFeature,
   ParityStatus,
-} from '../../fixtures/conductorParity'
+} from '../../../../../src/marketing/from-conductor/model'
+import { parityStatuses } from '../../../../../src/marketing/from-conductor/statuses'
 import { classes } from '../common/classes'
-import { dayWords, isComing, parityStatuses } from './parityStatus'
+import { siteIcons } from '../marketing/siteIcons'
 import styles from './ParityMarks.module.css'
 
 /**
@@ -13,38 +16,33 @@ import styles from './ParityMarks.module.css'
  * the app.
  */
 export function StatusMark(props: { status: ParityStatus }) {
-  const words = parityStatuses[props.status]
-  const Icon = words.icon
+  const status = parityStatuses[props.status]
+  const Icon = siteIcons[status.icon]
   return (
-    <span className={classes(styles.mark, styles[words.tone])}>
+    <span className={classes(styles.mark, styles[status.tone])}>
       <Icon aria-hidden className={styles.icon} size={15} />
-      {words.label}
+      {status.label}
     </span>
   )
 }
 
 /**
- * The due day of a feature that is on the way, or "No date yet". A feature
- * that is not on the way shows nothing, because it has no due day.
+ * The due day of a feature that is on the way, or "No date yet" when the
+ * team has recorded no dated commitment for it.
  */
-export function DueDay(props: {
-  feature: ParityFeature
-  length?: 'long' | 'short'
-}) {
-  const { feature } = props
-  if (!isComing(feature)) return null
-  if (feature.due === null) {
+export function DueDay(props: { feature: ComingFeature }) {
+  const { due } = props.feature
+  if (due === null) {
     return (
-      <span className={classes(styles.due, styles.undated)}>No date yet</span>
+      <span className={classes(styles.due, styles.undated)}>
+        {parityPageCopy.noDate}
+      </span>
     )
   }
   return (
     <span className={styles.due}>
       <CalendarCheck aria-hidden className={styles.dueIcon} size={13} />
-      Due{' '}
-      <time dateTime={feature.due}>
-        {dayWords(feature.due, props.length ?? 'short')}
-      </time>
+      {parityPageCopy.due} <time dateTime={due}>{dayWords(due, 'short')}</time>
     </span>
   )
 }

@@ -48,12 +48,28 @@ tr.groupEnd > * {
  * The merged area cell spans every row of its area, so its own bottom edge
  * is the end of the area. No feature line crosses it.
  */
-th.area {
+th.groupArea {
   border-bottom-color: var(--ui-border2);
+}
+
+/*
+ * Each row also has its own area cell, for a phone. A computer hides it, and
+ * a phone hides the merged cell, so the table needs no script.
+ */
+.rowArea {
+  display: none;
 }
 
 .mobile {
   gap: 40px;
+}
+
+.mobile .groupArea {
+  display: none;
+}
+
+.mobile .rowArea {
+  display: block;
 }
 
 .mobile .area {

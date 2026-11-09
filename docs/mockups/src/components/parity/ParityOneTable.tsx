@@ -1,22 +1,26 @@
 import type { Viewport } from '@mokly/mokly'
-import { productName } from '../../brand'
-import { parityAreas, type ParityArea } from '../../fixtures/conductorParity'
+import {
+  parityAreas,
+  type ParityArea,
+} from '../../../../../src/marketing/from-conductor/areas'
+import { parityPageCopy } from '../../../../../src/marketing/from-conductor/copy'
+import { featuresOf } from '../../../../../src/marketing/from-conductor/features'
 import { classes } from '../common/classes'
 import { FeatureCells } from './FeatureCells'
 import { ParityLegend } from './ParityLegend'
-import { featuresOf } from './parityStatus'
 import rows from './parityRows.module.css'
 import styles from './ParityOneTable.module.css'
 
 /**
- * The rows of one area: a row group with a row for each feature. On a
- * computer, the first row holds the area as one header cell that spans the
- * rows of the group, so no line crosses it until the darker hairline at the
- * end of the area. A phone stacks each row, so each row names its area in a
- * cell of its own.
+ * The rows of one area: a row group with a row for each feature. The first
+ * row holds the area as one header cell that spans the rows of the group,
+ * and each row also holds the area in a cell of its own. A computer shows
+ * the merged cell, so no line crosses it until the darker hairline at the
+ * end of the area. A phone stacks each row and shows its own area cell.
+ * CSS alone chooses, so one table serves both layouts without a script.
  */
-function AreaRows(props: { area: ParityArea; mobile: boolean }) {
-  const { area, mobile } = props
+function AreaRows(props: { area: ParityArea }) {
+  const { area } = props
   const features = featuresOf(area.key)
   return (
     <tbody>
@@ -27,18 +31,18 @@ function AreaRows(props: { area: ParityArea; mobile: boolean }) {
             index === 0 && styles.groupStart,
             index === features.length - 1 && styles.groupEnd,
           )}
-          key={feature.name}
+          key={feature.id}
         >
-          {mobile ? <td className={styles.area}>{area.title}</td> : null}
-          {!mobile && index === 0 ? (
+          {index === 0 ? (
             <th
-              className={styles.area}
+              className={classes(styles.area, styles.groupArea)}
               rowSpan={features.length}
               scope="rowgroup"
             >
               {area.title}
             </th>
           ) : null}
+          <td className={classes(styles.area, styles.rowArea)}>{area.title}</td>
           <FeatureCells feature={feature} />
         </tr>
       ))}
@@ -54,6 +58,7 @@ function AreaRows(props: { area: ParityArea; mobile: boolean }) {
  */
 export function ParityOneTable(props: { viewport: Viewport }) {
   const mobile = props.viewport === 'mobile'
+  const columns = parityPageCopy.columns
   return (
     <div
       className={classes(
@@ -66,14 +71,14 @@ export function ParityOneTable(props: { viewport: Viewport }) {
       <table className={rows.table}>
         <thead className={classes(rows.head, styles.columns)}>
           <tr>
-            <th scope="col">Area</th>
-            <th scope="col">Conductor Cloud feature</th>
-            <th scope="col">In {productName}</th>
-            <th scope="col">Notes</th>
+            <th scope="col">{columns.area}</th>
+            <th scope="col">{columns.feature}</th>
+            <th scope="col">{columns.status}</th>
+            <th scope="col">{columns.note}</th>
           </tr>
         </thead>
         {parityAreas.map((area) => (
-          <AreaRows area={area} key={area.key} mobile={mobile} />
+          <AreaRows area={area} key={area.key} />
         ))}
       </table>
     </div>

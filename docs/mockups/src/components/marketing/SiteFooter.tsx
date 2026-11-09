@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { parityLinkCopy } from '../../../../../src/marketing/from-conductor/copy'
 import { abuseAddress } from '../../../../../src/marketing/legal-text'
 import { productName } from '../../brand'
 import { ScreenLink } from '../common/ScreenLink'
@@ -51,7 +52,7 @@ export function SiteFooter(props: {
           </li>
           <li>
             <ScreenLink className={styles.link} to={props.links.fromConductor}>
-              From Conductor Cloud
+              {parityLinkCopy.footer}
             </ScreenLink>
           </li>
         </Column>

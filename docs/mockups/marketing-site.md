@@ -81,11 +81,13 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   and a due date only when the team commits to one. Each status has a word,
   an icon, and an icon colour: green for Available and Works differently,
   amber for In progress, blue for Planned, grey for Under consideration,
-  and red for Not planned. `src/fixtures/conductorParity.ts` holds the
-  sample data, and `src/components/parity/` holds the parts. The index
-  document of `marketing/from-conductor` gives the limits of the sample and
-  its example dates. The short link of the hero and the Product column of
-  the footer lead to the page.
+  and red for Not planned. The rows, the statuses, the dates, and the words
+  come from `src/marketing/from-conductor/`, the modules that the site also
+  reads. `src/components/parity/` holds the parts. One table serves both
+  layouts: each row also has an area cell of its own, and CSS shows the
+  merged cell on a computer and the cell of each row on a phone. The short
+  link of the hero and the Product column of the footer lead to the page,
+  with the words of the same modules.
 - `app/sign-in/terms` draws the page that the Worker shows before GitHub
   when a sign-in starts without the agreement, such as the browser sign-in
   of the Mac app. It has the words of the sign-in page from
