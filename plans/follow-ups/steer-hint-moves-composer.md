@@ -13,7 +13,7 @@
   - **Steer message:** a message that a member types while the agent works. It joins the running turn, and the agent reads it at its next tool call.
   - **Steer hint:** the muted text "The agent reads this at its next step." that shows under the composer box while the user types a steer message.
 - **Background:**
-  - On 2026-11-09 the user asked that the composer box never moves. The user said this when asking to move the name of another member's login, "Cal's login", from a line under the box into the bar of the box. That change is on pull request #75.
+  - On 2026-11-08 the user asked that the composer box never moves. The user said this when asking to move the name of another member's login, "Cal's login", from a line under the box into the bar of the box. That change is on pull request #75.
   - The composer is a column: the box, then the steer hint under it. The column sits at the bottom of the chat, so a line under the box pushes the box up.
   - The hint shows only while a turn runs, the message steers that turn, and the text field holds text. The placeholder of the empty field already says "Steer the agent while it works".
   - `docs/protocol/chat-and-events.md` says that the agent reads a message of a running turn at its next tool call. No protocol doc states the hint text.
@@ -23,7 +23,7 @@
 - **Options:**
   - **A.** Change nothing. The box keeps moving while the user types a steer message. Effort: Small.
   - **B.** Remove the hint. The placeholder "Steer the agent while it works" still says that a message steers the turn, before the user types. The user then does not learn that the agent reads the message at its next step. Change both composers, the mockup state `app/chat/turns/steer`, and the tests that check the hint. Effort: Small.
-  - **C.** Show the hint in the bar of the box, before Stop, as the reason of a waiting Send shows today. On a phone during a turn, the bar already holds the model picker, the login name, Stop, and Send. So the hint must be short, such as "Reads at next step", or it wraps and the box grows. Effort: Small.
+  - **C.** Show the hint in the bar of the box, before Stop, as the reason of a waiting Send shows today. On a phone during a turn, the bar is already full: the model picker, the login name, Stop, and Send. At 390 pixels the effort of the picker and the end of the login name already give way. A hint there takes more of their width, or it wraps and the box grows. Effort: Small.
 - **Left out:**
   - Keep the room of the hint under the box during the whole turn: the box then moves when a turn starts and when it ends, so it fails the goal.
   - Put the hint over the box edge with absolute positioning: it covers the chat above the box, and the chat can be under it.

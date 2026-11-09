@@ -1,3 +1,8 @@
+/*
+ * In a narrow bar, the picker gives up width with its neighbours. Its text
+ * then gives way with an ellipsis: the effort first, then the model. The
+ * chevron stays.
+ */
 .anchor {
   display: flex;
   position: relative;
@@ -7,20 +12,35 @@
 .trigger {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
 }
 
 .model {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--ui-ink);
   font-weight: 500;
 }
 
 .effort {
+  flex-shrink: 1000;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--ui-muted);
+}
+
+/* The space before the effort is part of it, so it goes with the effort. */
+.effort::before {
+  content: '';
+  padding-left: 6px;
 }
 
 .chevron {
   flex-shrink: 0;
+  margin-left: 6px;
   color: var(--ui-muted);
 }

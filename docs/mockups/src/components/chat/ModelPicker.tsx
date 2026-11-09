@@ -12,6 +12,15 @@ import { pickerMenu } from './pickers'
 import styles from './ModelPicker.module.css'
 
 /**
+ * The style of the button of each model picker. In a narrow bar the button
+ * shrinks with its container, so that it never runs under the control after
+ * it. Its text then gives way: the effort first, then the model.
+ */
+export function pickerButtonStyle(height: number) {
+  return { height, minWidth: 0, flexShrink: 1, paddingHorizontal: 8 }
+}
+
+/**
  * One picker for the model and the effort of the next message, such as
  * "Opus 5.5 High". The effort shows in a muted colour. `open` draws its
  * menu open. `sessionAgent` is the agent of a session with messages, whose
@@ -44,7 +53,7 @@ export function ModelPicker(props: {
         hasPopup="menu"
         onPress={noop}
         size="sm"
-        style={{ height: control.height, paddingHorizontal: 8 }}
+        style={pickerButtonStyle(control.height)}
         tone="plain"
       />
       {props.open ? (

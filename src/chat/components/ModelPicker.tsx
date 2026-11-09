@@ -3,6 +3,7 @@ import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/ModelPicker'
 import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
 import { effortLabels, modelLabel } from '../state/format'
 import { useDismiss } from '../ui/dismiss'
@@ -59,7 +60,7 @@ export function ModelPicker(props: {
         hasPopup="menu"
         onPress={() => setOpen((current) => !current)}
         size="sm"
-        style={{ height: control.height, paddingHorizontal: 8 }}
+        style={pickerButtonStyle(control.height)}
         tone="plain"
       />
       {open ? (

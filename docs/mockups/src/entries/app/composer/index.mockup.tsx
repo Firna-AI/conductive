@@ -40,18 +40,18 @@ export const composer = defineScreen({
       slug: 'login',
       title: "Another member's login",
       description:
-        'Priya, a member of Acme, opens a session that Cal started. Cal turned on the switch that lets other members use the Claude login. The bar of the composer box says "Cal\'s login" after the model picker. So a message of Priya spends the login of Cal, also while a turn runs. In a session of Priya, the bar names no login.',
+        'Priya, a member of Acme, opens a session that Cal started, while the turn of Cal runs. Cal turned on the switch that lets other members use the Claude login. The bar of the composer box says "Cal\'s login" after the model picker. So a message of Priya spends the login of Cal, and it joins the running turn. On a phone the bar is full, so the effort of the picker gives way first, then the name, each with an ellipsis. In a session of Priya, the bar names no login.',
       rationale:
         'The user chose option F of decision 105 on 7 November 2026. Each session runs on the login of its starter, the member who started it. A message of any member uses that login. A message during a turn joins that turn at once. The composer names the login of another member, so each member sees when a message spends that login. As the user decided on 8 November 2026, the name sits in the bar, so the box keeps its place, and the own login gets no name, because it tells the user nothing new. The message needs no Claude login of Priya, so the composer shows no Connect notice. When Cal keeps the login for the messages of Cal, the composer says before Send that the message starts a new session, as the Login not shared state shows.',
-      props: { viewer: 'member' },
+      props: { viewer: 'member', conversation: 'running' },
     },
     {
       slug: 'not-shared',
       title: 'Login not shared',
       description:
-        'Cal started Address autocomplete, and the switch under the Claude login of Cal is off. The turn of Cal runs. Priya opens the session and writes a message. The notice over the composer says that the message starts a new session, because the Claude login of Cal is for the messages of Cal only. Stop still ends the turn of Cal, and the message does not steer it. Send opens the new session, as app/sessions/linked shows.',
+        'Cal started Address autocomplete, and the switch under the Claude login of Cal is off. The turn of Cal runs. Priya opens the session and writes a message. The notice over the composer says that the message starts a new session, because the Claude login of Cal is for the messages of Cal only. The bar names no login, because the message runs on the own login of Priya. Stop still ends the turn of Cal, and the message does not steer it. Send opens the new session, as app/sessions/linked shows.',
       rationale:
-        'Option B of decision 116, which the user chose on 7 November 2026: each login has a switch that lets other members use it, off for a Claude subscription and on for an API key. A message of another member in a session whose starter keeps the login starts a new, empty session on the login of that member, as decision 115 A says. The session record says whether the starter shares the login, so the notice shows before Send, and the line names the login that the message uses. When Priya has no Claude login, the notice that asks to connect takes its place, as the Agent not connected state shows, and Send is off. Cal sees no notice in this session, because it runs on the own login of Cal.',
+        'Option B of decision 116, which the user chose on 7 November 2026: each login has a switch that lets other members use it, off for a Claude subscription and on for an API key. A message of another member in a session whose starter keeps the login starts a new, empty session on the login of that member, as decision 115 A says. The session record says whether the starter shares the login, so the notice shows before Send. When Priya has no Claude login, the notice that asks to connect takes its place, as the Agent not connected state shows, and Send is off. Cal sees no notice in this session, because it runs on the own login of Cal.',
       props: {
         viewer: 'member',
         composer: 'not-shared',
