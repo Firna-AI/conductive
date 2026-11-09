@@ -1,6 +1,6 @@
 # Mac app downloads
 
-Status: Active. [PR #128](https://github.com/Firna-AI/remote-code/pull/128) is open. It is the first of two pull requests, and it keeps this plan. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #128](https://github.com/Firna-AI/remote-code/pull/128) and the stacked draft [PR #130](https://github.com/Firna-AI/remote-code/pull/130) are open. Both keep this plan until Milestone 4 ends. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The marketing site at `conductive.build` does not mention the Mac app, and
 it links no download. Its spec still says that the page shows no desktop
@@ -297,14 +297,19 @@ change of the Terms changes the contract with each user.
 Depends on: 4, 5, 6
 
 - [ ] Merge `main` into the branch, as the `git-merge` skill says.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the diff against `origin/main` with the
       `implementation-review` skill after the push, and apply the fix rule
-      as in Milestone 4.
+      as in Milestone 4. The branch `calummoore/mac-app-downloads-site` is
+      stacked on the first pull request, so the review used that branch as
+      its base. It found no findings.
+- [x] Open the second pull request as a draft, stacked on the first. It
+      keeps this plan until Milestone 4 ends. It is
+      [PR #130](https://github.com/Firna-AI/remote-code/pull/130).
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the second pull request. Its description gives the decisions
+- [ ] Mark the second pull request ready. Its description gives the decisions
       and the design calls of this plan with their dates, a permalink to
       this plan, and the follow-up items that the change adds.
 
