@@ -95,6 +95,14 @@ GitHub Actions runs `npm run check` from `.github/workflows/ci.yml` on each
 pull request, and on each push to `main` and to the primary branch of the
 plan. A push to another branch runs no CI until its pull request opens.
 
+A commit reaches `main` only through a pull request with a green
+`Complete gate` check. An admin can bypass this rule. No ruleset on `main`
+enforces it yet.
+
+`.github/workflows/deploy.yml` deploys each push to `main` to the test
+deployment at `conductive.build`. It does not wait for CI, as
+[Automatic deploys](docs/automatic-deploys.md) says.
+
 - Agent merges: off
 
 ## Repository rules
