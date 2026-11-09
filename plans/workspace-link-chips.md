@@ -653,9 +653,9 @@ Depends on: every other milestone
 - [x] Run the complete gate after the review fix.
 - [x] Isolate editor history by draft identity, including equal-text owner
       changes. Preserve focus and same-draft moves.
-- [ ] Run the complete gate after the final ownership fix.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the complete gate after the final ownership fix.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -670,6 +670,9 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this
       plan, and the follow-up items that the change adds.
+
+Evidence: `.context/workspace-link-chips/verification.md` and
+`.context/reviews/calummoore/workspace-link-widget-brainstorm/findings.md`.
 
 ## Post-merge follow-up (non-blocking)
 
