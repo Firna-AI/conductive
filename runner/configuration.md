@@ -9,6 +9,7 @@ The [agent runner](README.md) reads these variables when the service starts.
 | `CONDUCTIVE_RUNNER_URL`       | Yes      | The `https:` or `wss:` URL of the runner route.                       |
 | `CONDUCTIVE_REPOSITORY`       | Yes      | The folder of the workspace repository.                               |
 | `CONDUCTIVE_DEFAULT_BRANCH`   | Yes      | The default branch, as a name that Git resolves in that folder.       |
+| `CONDUCTIVE_WORKSPACE_BRANCH` | No       | The workspace branch that the app tracks, from the Worker's record.   |
 | `CONDUCTIVE_HOME`             | No       | The home folder of the agents. The default is the home of the user.   |
 | `CONDUCTIVE_STATE_PATH`       | No       | The state file. The default is `.conductive/runner-state.json` there. |
 
@@ -24,6 +25,12 @@ The [agent runner](README.md) reads these variables when the service starts.
   hash uses the same path checks as a read, and a fixed value for a refused
   or missing target. So an edit, a link into an ignored folder, or a clean
   filter cannot hide a change from the open files and diffs.
+- `CONDUCTIVE_WORKSPACE_BRANCH` is the workspace branch that the
+  [agent instructions](../docs/protocol/agent-instructions.md#the-branches)
+  name. The runner does not take it from the current Git branch of the
+  repository folder, because that branch can change. When the variable is
+  missing, the runner writes a warning to standard error and starts. The
+  agent instructions then name no workspace branch.
 - The home folder also holds `.conductive/claude` and `.conductive/codex`,
   where the agents keep their sessions. Boat keeps the disk across a stop
   and a resume, so the sessions stay.

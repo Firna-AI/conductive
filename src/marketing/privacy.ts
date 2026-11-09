@@ -42,7 +42,8 @@ export const privacyDocument: LegalDocument = {
         list(
           text`Your GitHub account: your GitHub user ID, login, display name,
             and avatar. They sign you in, and they show who owns and who
-            sends each piece of work.`,
+            sends each piece of work. Your login and display name also tell
+            the agents who sent each message.`,
           text`Your agreement: you accept the current version of the terms at
             each sign-in. ${productName} keeps the latest version that you
             accepted, and the time when you first accepted it. They show that
@@ -99,12 +100,15 @@ export const privacyDocument: LegalDocument = {
             your files, and your agent sessions are in them. ${productName}
             sends the provider the requests that start, stop, and use them.`,
           text`Anthropic and OpenAI get your messages, your files, and your
-            code when an agent works on them. Each session uses the login of
-            the member who started it. Your messages in another member's
-            session use that member's login only when that member lets other
-            members use it. When that member does not share the login, your
-            message starts a new session on your own login. The terms of that
-            provider apply.`,
+            code when an agent works on them. With each message, they also get
+            the GitHub login and the display name of its sender. They also get
+            the name of the workspace branch, which starts with the GitHub
+            login of the first owner of the workspace. Each session uses the
+            login of the member who started it. Your messages in another
+            member's session use that member's login only when that member
+            lets other members use it. When that member does not share the
+            login, your message starts a new session on your own login. The
+            terms of that provider apply.`,
           text`The members of your orgs see the workspaces of the org and
             their chats. A member with a terminal in a cloud computer can read
             the agent login and the GitHub token of a turn that runs there. A

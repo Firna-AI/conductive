@@ -42,6 +42,9 @@ says.
 - [Access and security](access-and-security.md#agent-logins-in-a-sandbox)
   states how a login reaches the sandbox, its share setting, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
+- [Agent instructions](agent-instructions.md) states the text that each
+  session gets apart from the messages, and the sender line of each
+  message.
 
 ## Names in the product
 

@@ -2,6 +2,9 @@
 
 Status: Active. On branch `conductor/conductor-prompts`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
+Cal approved all milestones and tasks on 9 November 2026 with
+"impl all plan milestones and tasks".
+
 The agent runner gives Claude and Codex tools, but no text about
 Conductive. Each message reaches the agent with only its text and its
 attachments. Claude agents also run with an empty system prompt. So an
@@ -224,8 +227,9 @@ The protocol doc states these facts as requirements:
   repository.
 - The workspace branch and the target branch. The agent must not rename the
   branch, because the app finds the pull request by the branch name.
-- The cloud computer: the Desktop tab shows the desktop where the agent uses
-  the computer tools, and a member opens a port preview by its port number.
+- The cloud computer: agents use the available computer tools in the
+  sandbox, and a member opens a port preview by its port number. Main now
+  hides the Desktop panel, so the instructions do not direct members to it.
 - The workspace tools: they create and list workspaces, and they ask to run
   a command on the Mac of the member whose message started the turn.
 - Several members can write in one session, and each message starts with
@@ -261,6 +265,9 @@ them.
   Facts that change, such as the pull request state, stay out. Reason: a
   changed text rewrites the prompt cache, Claude keeps the first text where
   recording is on, and Codex keeps the instructions of a thread.
+  Save the chosen text with the session so a runner restart or a later
+  configuration change cannot replace it. This implements the same
+  stability requirement across sandbox resumes.
 - The runner builds the instructions, not the Worker of option F. It reads
   the product name from `docs/mockups/src/brand.ts`, as the repository
   rules say. Reason: the runner has every fact that this change needs, and
@@ -287,9 +294,9 @@ them.
 - Claude subagents do not get the instructions. Reason: the public options
   of the Agent SDK reach only the main agent. Risk: a subagent does not
   know the branch rule.
-- A session that started before this change can keep its old instructions.
-  Reason: both SDKs keep the instructions of a session, and the product is
-  not in production.
+- A session keeps the first instruction text that it gets. A saved session
+  without text can get it once at a later turn. Reason: instruction text
+  stays fixed after the runner chooses it, including for an older session.
 - Each provider takes the instructions as a required option. A later agent
   without a system field sends them in its first message. This change adds
   no code for that case, because no current agent needs it. Reason: a
@@ -299,6 +306,15 @@ them.
   `docs/protocol/agent-instructions.md`. Reason: `chat-and-events.md` is
   past the length target of the `documentation` skill, and `agent-tools.md`
   covers tools.
+- After merging main on 9 November 2026, keep its hidden Desktop panel.
+  Describe the available computer tools without directing members to that
+  panel. Update the runner variable table in `runner/configuration.md`,
+  where main moved it from the runner README. These are adjustments to
+  current paths and product facts, not changes to the chosen approaches.
+- Missing workspace branch metadata warns and continues without a branch
+  fact. The Worker supplies it on every managed start. Reason: the user's
+  rules prohibit a new start failure, and an unavailable fact must not be
+  replaced by a guess from the sandbox's checkout.
 
 ## Milestone 1: Documentation and protocol
 
@@ -307,17 +323,19 @@ Depends on: none
 Write the requirements and the decisions in force for the agent
 instructions, before the code changes.
 
-- [ ] Add `docs/protocol/agent-instructions.md`. State what the
+- [x] Add `docs/protocol/agent-instructions.md`. State what the
       instructions hold, the sender line, what the chat shows, the naming
       rule, and that the instructions stay the same for a session. Give each
       decision in force with its rejected alternative and its reason.
-- [ ] Add the new doc to the list of protocol docs in `docs/architecture.md`.
-- [ ] Link the new doc from the section "Agents" of
+- [x] Add the new doc to the list of protocol docs in `docs/architecture.md`.
+- [x] Link the new doc from the section "Agents" of
       `docs/protocol/chat-and-events.md`.
-- [ ] Read the Terms page and the Privacy page in full, as `AGENTS.md`
+- [x] Read the Terms page and the Privacy page in full, as `AGENTS.md`
       says. Update each sentence that restates a changed fact, such as the
       member data that reaches the model providers in the sender line.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: `.context/agent-instructions/documentation-report.md`.
 
 ## Milestone 2: The workspace branch for the runner
 
@@ -328,11 +346,11 @@ Give the runner the branch that the app tracks.
 - [ ] Add `CONDUCTIVE_WORKSPACE_BRANCH` to the environment that
       `worker/lifecycle/start-machine.ts` sets at each start. Check
       `worker/lifecycle/disk-retention.ts`, which also sets
-      `CONDUCTIVE_DEFAULT_BRANCH`, and add the branch there when that start
-      runs the runner.
-- [ ] Read the variable in `runner/src/config.ts`.
-- [ ] Add the variable to the lists in `image/README.md`,
-      `runner/README.md`, and `docs/deployment.md`.
+      `CONDUCTIVE_DEFAULT_BRANCH`, and add the branch there too.
+- [ ] Read the optional variable in `runner/src/config.ts`. Warn and
+      continue when it is missing, without guessing the workspace branch.
+- [x] Add the variable to the lists in `image/README.md`,
+      `runner/configuration.md`, and `docs/deployment.md`.
 - [ ] Add the new value to the existing tests of the start environment and
       of the runner configuration.
 
@@ -347,11 +365,16 @@ Codex.
       configuration and the repository folder variables.
 - [ ] Add a required `instructions` field to `ProviderOptions`. Fill it
       where the engine starts a provider.
+- [ ] Save each session's chosen instruction text before starting its
+      provider. Reuse it after a runner restart, even if the current
+      workspace configuration or base text has changed. Read older saved
+      sessions without this field and choose their text once.
 - [ ] Send the instructions as `developerInstructions` on the Codex
       `thread/start` and `thread/resume` requests.
-- [ ] Check once with the real Codex App Server that a thread that resumes
+- [x] Check once with the real Codex App Server that a thread that resumes
       with the same `developerInstructions` keeps one copy of the text. Save
       the output under `.context/agent-instructions/`.
+      Evidence: `.context/agent-instructions/codex-probe/verification.json`.
 - [ ] Start the text of each message to Claude and to Codex with the sender
       line, from `message.sender`. Keep the attachments as they are.
 - [ ] Tests, at the provider entry points:
@@ -360,6 +383,8 @@ Codex.
   - [ ] A Codex thread start and a thread resume carry the instructions.
   - [ ] Each message to Claude and to Codex starts with the sender line of
         its sender.
+  - [ ] A runner restart with changed configuration preserves the saved
+        session's instructions, while a new session uses the current text.
 - [ ] Update the runner README: the new module under its key code, and a
       link to the protocol doc.
 
@@ -370,9 +395,11 @@ Depends on: 3
 Send the instructions to Claude after the short custom base prompt of
 decision 2 C.
 
-- [ ] Merge `origin/main` first. The own endpoint logins change on the
+- [x] Merge `origin/main` first. The own endpoint logins change on the
       branch `calummoore/cli-proxy-setup` edits the same `query` options in
       `runner/src/providers/claude.ts`. Keep its options when it has merged.
+      Main was merged at `b4dd1cf` without conflicts. The preservation
+      evidence is `.context/agent-instructions/pre-implementation-merge-review.txt`.
 - [ ] Write the seven base rules in Conductive's own wording. Keep the
       text short and fixed. Follow it with the workspace instructions.
 - [ ] Pass the combined text as the custom `systemPrompt` string in
@@ -381,7 +408,7 @@ decision 2 C.
       the second result's usage. Save the output under
       `.context/agent-instructions/` and report any failure or limit. A
       fixed custom prompt does not by itself prove a cache hit.
-- [ ] State the base prompt of Claude agents in
+- [ ] Check that the final base prompt meets the seven rules in
       `docs/protocol/agent-instructions.md`.
 - [ ] Test that a Claude session start and resume pass the same base rules
       and workspace instructions as the custom system prompt.
