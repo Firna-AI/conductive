@@ -200,7 +200,9 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   and computer settings of one org, with `watch` and the wait of each part.
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the New workspace view, the GitHub App installations,
-  and the repositories that Create org offers.
+  and the repositories that Create org offers. A screen watches the
+  installations: they read at once, and again with the steps of Get started
+  each time that the user comes back to the page.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
@@ -254,7 +256,10 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   is not deleted.
 - `palette/`: the command palette without React. `palette-results.ts`
   gives the groups and the empty state of each tab for a query, from
-  `palette-groups.ts` and the rows of `palette-rows.ts`. `matcher.ts`
+  `palette-groups.ts` and the rows of `palette-rows.ts`. `palette-status.ts`
+  gives the status part, which stands in place of the workspace groups
+  while the list or the repository names load or after a read failed,
+  and the reads that its Try again does again. `matcher.ts`
   ranks the matches. `commands.ts` holds the labels and the search words.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
@@ -265,6 +270,8 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
   frame, `palette-context.ts` gives `usePaletteOffer` and
   `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
+  `use-palette-source.ts` gives the list and the repositories of the org
+  with their load states, and `PaletteStatus.tsx` draws the status part.
 - `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
   which say whether they closed, and the modal layers with their owners.
   The palette reads them before it opens.

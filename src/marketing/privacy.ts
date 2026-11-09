@@ -83,8 +83,8 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         list(
           text`Cloudflare runs ${productName} and stores its data.
-            Cloudflare's AI model service also writes a short name for each
-            new workspace from the text of its first message.`,
+            If a workspace has no name, Cloudflare's AI model service can
+            write a short name from the text of its first message.`,
           text`GitHub signs you in, and gives ${productName} access to your
             repositories through its GitHub App.`,
           text`A cloud computer provider runs the cloud computers of every org

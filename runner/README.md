@@ -8,7 +8,7 @@ repository.
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It sends numbered events. It gets turns, messages, interrupts, model
 changes, file requests, and report requests.
-[Chat and events](../docs/protocol/agent-runner.md#the-agent-runner)
+[Agent runner](../docs/protocol/agent-runner.md)
 states its requirements, and the
 [shared contracts](../src/shared/README.md) define its messages.
 
@@ -274,8 +274,9 @@ tools that time the first agent start after a resume.
 ## Related docs
 
 - [Architecture: sandbox software](../docs/architecture/components.md#sandbox-software)
-- [Chat and events: the agent runner](../docs/protocol/agent-runner.md#the-agent-runner)
-- [Chat and events: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Agent runner](../docs/protocol/agent-runner.md)
+- [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Chat and events: agents](../docs/protocol/chat-and-events.md#agents)
 - [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
 - [Workspaces and sandboxes: files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)

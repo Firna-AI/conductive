@@ -4,8 +4,8 @@ This guide belongs to the [agent runner](README.md). It gives the limits
 that the runner keeps for each event, and the file reports.
 
 The runner keeps each event within the limits that
-[Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner) and
-[Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+[Agent runner](../docs/protocol/agent-runner.md) and
+[Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
 state. The [shared contracts](../src/shared/README.md) hold the constants.
 No variable changes them, and the runner protocol stays at version 1. Each
 byte budget measures the event or field after the output filter.

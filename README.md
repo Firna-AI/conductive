@@ -116,9 +116,12 @@ In a deployment, the client secret and both keys are Worker secrets, as
 `/api/auth/github/callback` on the same app origin. The GitHub App must
 accept that callback address, for example
 `http://127.0.0.1:5174/api/auth/github/callback` for `npm run preview`. The
-GitHub App is "Conductive", in the Firna-AI organization. It sends its
-webhooks to the address in
+GitHub App is "Conductive Build", with the slug `conductive-build`, in the
+Firna-AI organization. It sends its webhooks to the address in
 [The GitHub App](docs/protocol/github-banner.md#the-github-app).
+[The GitHub App](docs/deployment.md#the-github-app) in the deployment guide
+gives each setting of the GitHub App, with the address where GitHub returns
+the user after an install.
 Automated tests use fakes and need no credentials.
 
 Every cloud computer of every org runs in the app's own Boat organization.
@@ -255,7 +258,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
     - [Tools of a workspace](docs/protocol/workspace-tools.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
     - [Messages and attachments](docs/protocol/messages-and-attachments.md)
-    - [The agent runner](docs/protocol/agent-runner.md)
+    - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
     - [Isolation of orgs and sandboxes](docs/protocol/isolation.md)
     - [Tokens and secrets](docs/protocol/tokens-and-secrets.md)
@@ -269,6 +272,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Operator actions](docs/protocol/operator-actions.md)
   - [Operator section](docs/protocol/operator-section.md)
   - [Command palette](docs/protocol/command-palette.md)
+  - [Command palette: empty and unavailable states](docs/protocol/command-palette-states.md)
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): licenses for copied icons
   and the bundled font.

@@ -33,8 +33,3 @@
 .choice:not([aria-selected='true']):hover {
   background: var(--ui-soft);
 }
-
-/* The list that did not load, with Try again. */
-.failure {
-  padding: 12px;
-}

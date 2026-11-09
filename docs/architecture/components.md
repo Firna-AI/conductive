@@ -124,8 +124,8 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
   Claude or OpenAI account of the starter of its session.
-- **Workers AI:** the Cloudflare model service writes the title of each new
-  workspace from its first message. Its use bills to the Cloudflare account
-  of the app (decision 184).
+- **Workers AI:** the Cloudflare model service writes a title for a
+  workspace that has no name, from its first message. Its use bills to the
+  Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. The app is free, with no limits (decision 81).

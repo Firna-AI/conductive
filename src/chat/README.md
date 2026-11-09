@@ -1,11 +1,12 @@
 # Chat
 
 The chat of a workspace: the session tabs with the session history, and the
-chat of the open session with its composer. It shows messages, folded tool
-calls, the running turn, steer, Stop, failures with Try again, the start
-steps of the sandbox, the Mac commands of each turn, and the bar that takes
-the composer's place while the sandbox does not run. After a failed first
-start of a new workspace, that bar sits above the composer, which stays. The workspace screen
+chat of the open session with its composer. It shows messages, folded runs
+of tool calls, the folded work of each ended turn above its answer, the
+running turn, steer, Stop, failures with Try again, the start steps of the
+sandbox, the Mac commands of each turn, and the bar that takes the
+composer's place while the sandbox does not run. After a failed first start
+of a new workspace, that bar sits above the composer, which stays. The workspace screen
 of the app shell mounts it by default, as
 [the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
 says. It builds against the fake API and the recorded chat events of
@@ -156,7 +157,10 @@ members from the models of the app.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
-  and Try again.
+  the work fold of each ended turn, and Try again.
+- [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
+  says what folds when a turn ends. It also says that the line of each fold
+  stays in place when the user opens or closes it, also for a run of calls.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
@@ -281,7 +285,12 @@ a failed start from a read and the stream, and a send that the Worker
 refuses. `components/FirstStart.dom.test.tsx` mounts the chat without a
 host, sends with Enter and Send during the first start and after it failed,
 and checks the saved message on the bar of a failed first start and of a
-failed resume.
+failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
+turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
+fold and a message line, and checks that each line keeps its place.
+`components/ReadingPlace.dom.test.tsx` lays the chat out as a browser lays
+out its reversed scroll box. It ends a long turn while the reader reads
+higher up, and checks the read row and the newest message at the bottom.
 `components/SessionTabs.test.tsx` renders the tab of a session with no
 title and its rename field.
 
@@ -343,6 +352,23 @@ check in the Mac app.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
   event from the mockups' `lostCopy.ts`.
+- `components/turn-work.ts` and `components/transcript-entries.ts`:
+  `foldedWork` finds the work of each ended turn that folds, as the
+  [transcript rules](transcript.md) say. `groupEntries` makes the entries
+  that the chat draws, and puts each insert at its place, also in a fold.
+- `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
+  of an ended turn with its steps, and the message line that grows to the
+  full text.
+- `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
+  `CallLine`, which the work fold shares.
+- `components/reading-place.ts`: the keeper of the reader's place, which
+  `ChatPane` gives through `ChatKeeper`. While the reader is scrolled up, it
+  keeps the top row in view in place for every change of size of the
+  transcript. When that row folds away, the fold that took it keeps its
+  place.
+- `components/useFold.ts`: `useFold` opens and closes a fold on a click on
+  its line, and gives the line to the keeper, also at the bottom of the
+  chat, so the line keeps its place.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
@@ -364,6 +390,8 @@ check in the Mac app.
 ### Related docs
 
 - [Chat and events](../../docs/protocol/chat-and-events.md)
+- [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
+  runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspace-life.md):
   start steps, stop and resume, and archive.
 - [Architecture](../../docs/architecture.md)

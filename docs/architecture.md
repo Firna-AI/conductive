@@ -130,10 +130,12 @@ the merge.
     shell variable of each repository in a sandbox.
   - [Life of a workspace](protocol/workspace-life.md)
   - [Tools of a workspace](protocol/workspace-tools.md)
-- [Chat and events](protocol/chat-and-events.md): sessions, messages, the
-  agent runner, and the events.
+- [Chat and events](protocol/chat-and-events.md): sessions, messages, what
+  the chat shows, and the events.
   - [Messages and attachments](protocol/messages-and-attachments.md)
-  - [The agent runner](protocol/agent-runner.md)
+  - [Agent runner](protocol/agent-runner.md): the connection of the runner,
+    its events and their limits, its turns, and the repair of lost workspace
+    updates.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](protocol/isolation.md)
@@ -156,3 +158,6 @@ the merge.
   operator in the web app, their counts, and their searches.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
+- [Command palette: empty and unavailable states](protocol/command-palette-states.md):
+  what the palette shows while its workspace data loads or did not load,
+  and when a tab or a search has no row.

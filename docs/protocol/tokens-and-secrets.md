@@ -12,10 +12,12 @@ decision number names a dated record, as
 ## The workspace token
 
 - Each workspace has its own workspace token.
-- With the token, the sandbox of the workspace can do four things:
+- With the token, the sandbox of the workspace can do five things:
   - connect its agent runner to the Durable Object of its own workspace
   - get a GitHub token for its own workspace
   - create and list workspaces through the agent tools
+  - list the repositories of its org image, the sections of its org, and
+    the models of the app, through the agent tools
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
 - The token allows nothing else. It can never answer a request for a Mac

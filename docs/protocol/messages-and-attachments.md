@@ -124,8 +124,8 @@ says.
 - Reason: a tab that missed newer events can still show an older Try again.
   A check in the chat alone was rejected, because such a tab could send an
   older message again. The agent would then answer out of order.
-- When the app accepts the first message of a new workspace, it asks a
-  small model of Workers AI for a title (decision 184). The request asks
+- For a workspace with no name, the app asks a small model of Workers AI
+  for a title after accepting its first message (decision 184). The request asks
   for three to five words. Workers AI is the model service of Cloudflare,
   on the account that hosts the app.
 - The model writes the title from the text of that message. The request

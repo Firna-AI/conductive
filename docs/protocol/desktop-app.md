@@ -122,6 +122,11 @@ These docs belong to this doc:
   Reason: the launch address needs a sign-in session, and the browser may
   hold none.
 
+## GitHub App install
+
+- [GitHub App install](desktop-sign-in.md#github-app-install) states the
+  browser return after an install and the refresh in the Mac app.
+
 ## Packages and updates
 
 - The electron-builder tool packages a DMG and a ZIP for each processor

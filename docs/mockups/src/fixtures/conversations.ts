@@ -17,6 +17,7 @@ import {
   savedCartsMessage,
 } from './newWorkspaceConversations'
 import { unavailableConversations } from './unavailableConversations'
+import { workConversations } from './workConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
@@ -30,6 +31,8 @@ export type ChatItem =
       /** The files of the message, which show under it. */
       attachments?: readonly Attachment[]
       queued?: boolean
+      /** Sent while a turn runs: it joins that turn as a new part. */
+      during?: true
     }
   | {
       kind: 'agent'
@@ -129,6 +132,8 @@ export const conversationKeys = [
   'linked',
   'sent-files',
   'queued-files',
+  'steered',
+  'mac-in-work',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -227,6 +232,10 @@ const cutOffTurn: readonly ChatItem[] = [
  */
 export const followUpDraft = linkedSession.firstMessage
 
+/** The steer message that the user types while a turn runs. */
+export const steerDraft =
+  'Also debounce the lookups to 250 ms, so we stay under the rate limit.'
+
 export const conversations: Readonly<
   Record<ConversationKey, readonly ChatItem[]>
 > = {
@@ -260,8 +269,9 @@ export const conversations: Readonly<
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations,
   ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
+  ...workConversations({
+    start: autocompleteStart,
+    tests: autocompleteTests,
+    steer: steerDraft,
+  }),
 }
-
-/** The steer message that the user types while a turn runs. */
-export const steerDraft =
-  'Also debounce the lookups to 250 ms, so we stay under the rate limit.'

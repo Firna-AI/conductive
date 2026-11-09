@@ -13,6 +13,18 @@ says.
   GitHub webhooks.
 - A user installs the GitHub App on each GitHub account that owns
   repositories that the user wants to use.
+- After an install, or a change of an install, GitHub returns the user to
+  `https://app.conductive.build/github/setup`.
+- From a browser, the return opens the screen where the install started:
+  Get started or Account. A return that names neither screen opens the app
+  as usual.
+- The return needs no sign-in, and it trusts no value that GitHub adds.
+  The app reads the installs with the user's own GitHub token.
+- Get started and Account read the installs again each time that the user
+  comes back to the page.
+- A return through the sign-in callback was rejected. Reason: the callback
+  refuses a GitHub reply that the app's own sign-in did not start.
+- [The Mac app](desktop-sign-in.md#github-app-install) has its own return.
 - The GitHub App sends pull request, check, status, and push webhooks to
   the Worker, at `https://api.conductive.build/v1/github/webhooks`.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
