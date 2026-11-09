@@ -35,6 +35,11 @@ A blank result counts as no name, and the app shows "Untitled".
 The name does not change the branch.
 The create answer holds the stored name.
 `workspaces list` returns every workspace in the org, including archived workspaces.
+Each list item gives its number and canonical web link.
+Create gives both fields in the complete workspace record.
+A workspace link in a message names that workspace.
+A workspace link in an answer shows as a chip.
+The number is a display label. Links keep the workspace ID.
 `repositories list` returns the repositories that a create accepts, with IDs and the current repository mark.
 `sections list` returns the org's sections in sidebar order, with IDs and the default section mark.
 `models list` returns the app's models, their agents and efforts, and the owner's default choice.

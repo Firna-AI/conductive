@@ -50,7 +50,7 @@ export const newWorkspaceConversations = {
     {
       kind: 'agent',
       id: 'plan',
-      paragraphs: ["I'll check how carts and sessions work today."],
+      blocks: ["I'll check how carts and sessions work today."],
     },
     {
       kind: 'tool',

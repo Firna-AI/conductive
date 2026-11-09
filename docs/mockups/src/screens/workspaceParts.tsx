@@ -12,6 +12,7 @@ import {
   archivedSections,
   suspendedSections,
   workspaceSections,
+  type OpenWorkspace,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import {
@@ -21,6 +22,7 @@ import {
   type StartingLog,
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
+import type { Membership } from '../fixtures/members'
 import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -142,17 +144,27 @@ export function ToolContent(props: {
  * The sidebar beside an open workspace, which shows its current status. An
  * archived workspace sits in the open Archived group. In a suspended org
  * every row shows stopped, and nothing in the sidebar changes the org.
+ * `created` adds the workspaces that the create flow made by then.
  */
 export function workspaceSidebar(
   workspace: Workspace,
   status: ActivityStatus,
   suspended: boolean,
+  viewer: Membership,
+  created: readonly OpenWorkspace[] = [],
 ): ReactNode {
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
-      : workspaceSections({ workspace, status })
-    return <Sidebar org={orgs.acme} sections={sections} suspended={suspended} />
+      : workspaceSections({ workspace, status }, undefined, created)
+    return (
+      <Sidebar
+        org={orgs.acme}
+        sections={sections}
+        suspended={suspended}
+        viewer={viewer}
+      />
+    )
   }
   const list = archivedSections(workspace, suspended)
   return (
@@ -161,6 +173,7 @@ export function workspaceSidebar(
       org={orgs.acme}
       sections={list.sections}
       suspended={suspended}
+      viewer={viewer}
     />
   )
 }

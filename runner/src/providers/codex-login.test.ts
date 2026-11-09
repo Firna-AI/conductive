@@ -50,6 +50,7 @@ function fixture() {
     login: command.login,
     choice: command.message.choice,
     conversationId: null,
+    instructions: '',
     tools: fakeToolContext,
     event: () => {},
     warn: () => {},

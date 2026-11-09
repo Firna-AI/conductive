@@ -1,0 +1,48 @@
+/* The button never gives up its room, and the note lies under it. */
+.anchor {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/*
+ * The label has the type of the repository beside it, and
+ * it never breaks at its hyphen.
+ */
+.label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/*
+ * The note that gives the result of a press: a small raised box under the
+ * button, over the content below the header, as an open menu lies over it.
+ * It starts at the start of the button, so a long note stays on a phone
+ * screen.
+ */
+.note {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-composer);
+  box-shadow: 0 6px 18px var(--ui-shadow);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* A copy that failed: the colours of a danger notice, and its error text. */
+.failed {
+  border-color: var(--ui-danger-border);
+  background: var(--ui-rose-soft);
+  color: var(--ui-rose);
+}

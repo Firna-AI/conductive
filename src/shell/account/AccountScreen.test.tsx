@@ -167,7 +167,7 @@ describe('AccountScreen', () => {
     }).toEqual({
       general: {
         current: ['General'],
-        sections: ['GitHub', 'Agents'],
+        sections: ['GitHub', 'Agents', 'Invite code'],
         model: false,
         choice: null,
       },

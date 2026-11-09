@@ -32,15 +32,15 @@ export function findChatWorkspace(
   db: D1Database,
   orgId: string,
   workspaceId: string,
-): Promise<WorkspaceRecord | null> {
+): Promise<(WorkspaceRecord & { number: number }) | null> {
   return db
     .prepare(
-      `SELECT ${workspaceColumns} FROM workspaces w
+      `SELECT ${workspaceColumns}, w.number FROM workspaces w
      JOIN orgs ON orgs.id = w.org_id
      WHERE w.id = ? AND w.org_id = ? AND orgs.deleted_at IS NULL`,
     )
     .bind(workspaceId, orgId)
-    .first<WorkspaceRecord>()
+    .first<WorkspaceRecord & { number: number }>()
 }
 
 export async function updateWorkspaceTitle(

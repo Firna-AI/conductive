@@ -36,6 +36,8 @@ jobs:
       - run: npm --prefix desktop run format:check
       - run: npm --prefix desktop run test:logic
       - run: npm --prefix desktop run build
+        env:
+          CONDUCTIVE_FRAME_SOURCES: https://*.conductive.page https://*.on.boat.dev
       - run: npm --prefix desktop run test:electron
       - run: npm --prefix desktop run package
       - run: npm --prefix desktop run test:packaged

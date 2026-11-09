@@ -17,6 +17,8 @@ decision number names a dated record, as
 - New workspace opens as this page or as a dialog over the current screen.
   A preference of the user chooses which. Reason: the user asked for both
   ways.
+- [The message field](workspace-links.md#the-message-field) says how the
+  message field of the page and of the dialog shows a workspace link.
 
 ### The preference
 
@@ -193,7 +195,7 @@ decision number names a dated record, as
 - Reason: a GitHub login is unique, so the branches of each person stay
   together. A first name was rejected, because two people can share one.
 - A new workspace has no name, and the app shows "Untitled" in its place,
-  as [Workspace and session names](chat-and-events.md#workspace-and-session-names)
+  as [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says (decision 182).
 - A create call of an agent can give the workspace a name, as
   [Create and list calls](agent-tools.md#create-and-list-calls) says.

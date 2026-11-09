@@ -13,17 +13,23 @@ export type LinkTab = {
 /**
  * A row of tabs. Each tab is a link to the screen that shows it. `wrap`
  * puts the tabs in three columns on as many lines as they need, so that
- * every tab shows.
+ * every tab shows. `flow` keeps the tabs on one line while they fit, and
+ * moves the rest to a second line.
  */
 export function LinkTabs(props: {
   label: string
   tabs: readonly LinkTab[]
   wrap?: boolean
+  flow?: boolean
 }) {
   return (
     <nav
       aria-label={props.label}
-      className={classes(styles.tabs, props.wrap && styles.wrap)}
+      className={classes(
+        styles.tabs,
+        props.wrap && styles.wrap,
+        props.flow && styles.flow,
+      )}
     >
       {props.tabs.map((tab) => (
         <ScreenLink

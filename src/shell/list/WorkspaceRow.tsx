@@ -1,13 +1,16 @@
 import type { FocusEvent, HTMLAttributes, KeyboardEvent, Ref } from 'react'
+import { Archive } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
 import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
 import { routes } from '../../app/router'
+import { ownPress } from '../../app/pointer-drag'
 import { formatAgo } from '../../app/time'
 import { nameLabel } from '../../shared/name-label'
 import type { Workspace } from '../../shared/workspaces'
 import { AppLink } from '../ui/AppLink'
+import { IconButton } from '../ui/actions'
 import ui from '../ui/ui.module.css'
 import list from './list.module.css'
 
@@ -35,8 +38,8 @@ function RowContent(props: { workspace: Workspace; now: number }) {
 /**
  * One workspace on one line: its state as a dot-matrix square, its name,
  * or Untitled before it has one, and the time since its last activity. Bold
- * marks unread output. A drag lifts the row, and a faint copy stays where
- * it was.
+ * marks unread output. Archive covers the time on hover only. A drag
+ * lifts the row, and a faint copy stays where it was.
  */
 export function WorkspaceRow({
   rowRef,
@@ -51,13 +54,14 @@ export function WorkspaceRow({
   /** The pointer handlers of a drag, and the keys that move the row. */
   bind?: HTMLAttributes<HTMLElement>
   onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void
+  onArchive?: () => void
   /** The row's box, which a drag measures. */
   rowRef?: Ref<HTMLSpanElement>
   /** The row's link, which keeps the focus after a move by keys. */
   linkRef?: Ref<HTMLAnchorElement>
-  /** The row's link takes the focus, or loses it. */
-  onLinkFocus?: (event: FocusEvent<HTMLAnchorElement>) => void
-  onLinkBlur?: (event: FocusEvent<HTMLAnchorElement>) => void
+  /** A control in the row takes the focus, or loses it. */
+  onFocus?: (event: FocusEvent<HTMLSpanElement>) => void
+  onBlur?: (event: FocusEvent<HTMLSpanElement>) => void
 }) {
   const { workspace } = props
   const className = classes(
@@ -77,20 +81,34 @@ export function WorkspaceRow({
   return (
     <span
       {...props.bind}
-      className={list.dragSurface}
+      className={classes(
+        list.dragSurface,
+        styles.container,
+        props.onArchive && !props.drag && styles.archivable,
+      )}
       onKeyDown={props.onKeyDown}
+      onFocus={props.onFocus}
+      onBlur={props.onBlur}
       ref={rowRef}
     >
       <AppLink
         aria-current={props.selected ? 'page' : undefined}
         className={className}
-        onBlur={props.onLinkBlur}
-        onFocus={props.onLinkFocus}
         ref={linkRef}
         to={routes.workspace(workspace.orgId, workspace.id)}
       >
         <RowContent now={props.now} workspace={workspace} />
       </AppLink>
+      {props.onArchive && !props.drag ? (
+        <span {...ownPress} className={styles.archive}>
+          <IconButton
+            icon={Archive}
+            label="Archive workspace"
+            onPress={props.onArchive}
+            quiet
+          />
+        </span>
+      ) : null}
     </span>
   )
 }

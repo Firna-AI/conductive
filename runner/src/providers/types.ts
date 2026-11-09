@@ -43,6 +43,7 @@ export interface ProviderOptions {
   login: RunnerLogin
   choice: AgentChoice
   conversationId: string | null
+  instructions: string
   tools: WorkspaceToolContext
   event: (event: ProviderEvent) => void
   warn: (message: string) => void

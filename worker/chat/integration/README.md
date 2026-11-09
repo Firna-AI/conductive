@@ -75,6 +75,10 @@ depends on where the code runs:
 - `routeChat` matches the `sessions` path of a workspace and each path below
   it. It also matches the `history` and `events` paths. Each other path goes
   on to the app request gate.
+- Before forwarding, the chat and feature routers call `sessionGate` on
+  the original request. It checks the session and app access without
+  reading the body. A waiting session gets 403 `access_required` before
+  any workspace lookup or call.
 - `routeChat` decodes the workspace ID of the path once. An ID that does not
   decode gets `404 workspace_not_found`.
 - `forwardWorkspaceRequest` sends the original request to

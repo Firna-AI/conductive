@@ -1,0 +1,67 @@
+/* The field of an invite code beside Use code. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Why a typed code did not work, under the field, as Firna shows an error. */
+.error {
+  color: var(--ui-rose);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* The org invitations, with their intro, above the code field. */
+.invitations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.intro {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: 1.5;
+}
+
+/* The person signed in, under a hairline at the foot of the card. */
+.account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.person {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.login {
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

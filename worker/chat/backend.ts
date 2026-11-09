@@ -1,8 +1,9 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import {
+  presentWorkspaceMessage,
+  type WorkspaceEvent,
+  type WorkspaceEventEnvelope,
+} from './workspace-events'
 import type { UserMessage } from '../../src/shared/messages'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
@@ -136,6 +137,7 @@ export class WorkspaceChat {
           access.context,
           this.operation(access.workspace.id),
           this.dependencies,
+          access.presentation,
         )
         if (write) await this.runner.flush()
         return privateResponse(response)
@@ -250,7 +252,11 @@ export class WorkspaceChat {
       operation: this.operation(access.workspace.id),
       access,
       after,
-      peer,
+      peer: {
+        send: (message) =>
+          peer.send(presentWorkspaceMessage(message, access.presentation)),
+        close: () => peer.close(),
+      },
     })
   }
 

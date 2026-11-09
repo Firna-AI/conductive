@@ -1,7 +1,4 @@
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import { updateWorkspaceTitle } from './queries'
 import { applyWorkspaceSessionTitle } from './session-titles'
 import type { ChatTransaction } from './store'
