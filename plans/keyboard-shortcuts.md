@@ -6,13 +6,19 @@ Conductive gets keyboard shortcuts like Conductor's, and each person can
 change them on a new Keyboard shortcuts tab of the Account page. The keys
 run the actions that Conductive already has, with Conductor's keys as the
 defaults. A person's changes follow the account to every browser and to
-the Mac app (decision 180). Where a normal browser tab keeps Conductor's
+the Mac app (decision 190). Where a normal browser tab keeps Conductor's
 key for itself, the command also gets a second default key that the
-browser lets through (decision 181). The palette key ⌘K becomes one of
+browser lets through (decision 191). The palette key ⌘K becomes one of
 these shortcuts, and the palette rows show the key of each command. The
 change adds no new feature behind a key, such as a theme or a zen mode.
-Decisions 182 to 184 are open: the browser's own keys in a tab, the
-workspace row move, and the keys of Windows and Linux.
+Decisions 192 to 195 are open: the browser's own keys in a tab, the
+workspace row move, the keys of Windows and Linux, and a search on the
+tab.
+
+On 2026-11-09 this plan's decisions moved from 180 to 184 to 190 to 194,
+because `main` uses 181, 182, 184, and 185 for the workspace titles of PR
+#87. The user answered decisions 190 and 191 by their item numbers 1 and
+2, so the answers stay.
 
 This workspace owns all shortcuts of the app. On 2026-11-08 the user said
 so, and the command palette work (decision 145) left the other keys to it.
@@ -43,7 +49,7 @@ Replaced ways:
 
 ## Decisions
 
-### Decision 180: Where a person's shortcut changes live
+### Decision 190: Where a person's shortcut changes live
 
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design.
@@ -86,7 +92,7 @@ Replaced ways:
 - **Previous examples:** Decision 143 rejected a send key that each person
   sets, and kept one fixed rule. Conductor's Keyboard shortcuts page.
   [VS Code's Keyboard Shortcuts editor](https://code.visualstudio.com/docs/configure/keybindings).
-- **Related:** Decision 181 sets the defaults that this editor changes.
+- **Related:** Decision 191 sets the defaults that this editor changes.
 - **Recommendation:** A. The keys work the same everywhere, and the
   architecture rule stays. The options check kept A, also because the
   Preferences change (PR #73) rejected browser storage for an Account
@@ -95,7 +101,7 @@ Replaced ways:
   against a day of work and a change of an architecture rule.
 - **Answer:** A, chosen by the user on 2026-11-09.
 
-### Decision 181: Default keys where a browser tab keeps Conductor's key
+### Decision 191: Default keys where a browser tab keeps Conductor's key
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
@@ -156,7 +162,7 @@ Replaced ways:
 - **Previous examples:** Decision 145 asked this question for the palette,
   and the user chose only ⌘K. [code-server issue 112](https://github.com/coder/code-server/issues/112)
   lists the same kept keys.
-- **Related:** Decision 180. Its editor can replace each of these
+- **Related:** Decision 190. Its editor can replace each of these
   defaults.
 - **Recommendation:** G, changed from B by the options check. G keeps B,
   and B as first written misses ⌘L in Safari and the tab keys of Firefox.
@@ -167,7 +173,7 @@ Replaced ways:
   each supported browser, which is G. Reason: B's reason is a working key
   in every browser tab, and only G gives it in Firefox and Safari.
 
-### Decision 182: The browser's own keys in a browser tab
+### Decision 192: The browser's own keys in a browser tab
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
@@ -191,7 +197,7 @@ Replaced ways:
   - **A.** Take each key that a browser tab lets through, as Conductor's
     defaults say. The person can remove a key in the tab. Effort: Small.
   - **B.** Leave ⌘1 to ⌘9 and ⌘L to the browser in a tab. There, Workspace
-    1 to 9 and Focus the message field use second keys, as decision 181
+    1 to 9 and Focus the message field use second keys, as decision 191
     does. The Mac app and an installed app take Conductor's keys. Effort:
     Medium.
   - **C.** Leave each browser key to the browser in a tab. Each command
@@ -203,7 +209,7 @@ Replaced ways:
   - **E.** Added by the options check. Leave ⌘1 to ⌘9 and ⌘L to the
     browser in a tab, as in B, but give Workspace 1 to 9 no second key, as
     VS Code for the Web does. The person can record a key, also ⌘1 to ⌘9.
-    Focus the message field keeps its second key from decision 181. Cost:
+    Focus the message field keeps its second key from decision 191. Cost:
     Workspace 1 to 9 has no default key in a tab. Effort: Small.
   - **F.** Added by the options check. It goes with any other option. The
     table of each browser also holds the keys that the browser uses but
@@ -217,7 +223,7 @@ Replaced ways:
   each default key that hides a browser feature, also for later commands.
 - **Previous examples:** VS Code for the Web drops its ⌘0 to ⌘9 and
   ⌘⌥← and ⌘⌥→ defaults in a browser tab, in `keybindingService.ts`.
-- **Related:** Decision 181 gives the second keys.
+- **Related:** Decision 191 gives the second keys.
 - **Recommendation:** B. Tab switching and the address bar are the browser
   keys that people use most. ⌘L costs the most: after ⌘L, an address that
   the person types and sends goes to the agent. The other browser keys
@@ -226,7 +232,7 @@ Replaced ways:
 - **Action:** ask the user, because each option trades Conductor's keys
   against the browser's keys, and no option is clearly best.
 
-### Decision 183: Arrow keys of a focused workspace row or divider
+### Decision 193: Arrow keys of a focused workspace row or divider
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -286,7 +292,7 @@ Replaced ways:
 - **Action:** ask the user, because each option except C changes
   behaviour that is on `main`, and that needs the user's approval.
 
-### Decision 184: The keys of Windows and Linux
+### Decision 194: The keys of Windows and Linux
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -299,13 +305,13 @@ Replaced ways:
   Firefox opens its menus on Alt and a letter. The Mac keys ⌃1 to ⌃9 and
   ⌘1 to ⌘9 both become Ctrl+1 to Ctrl+9.
 - **Problem:** The Mac keys with ⌥ or ⌃, and the second keys of decision
-  181, have no clear twin on Windows and Linux.
+  191, have no clear twin on Windows and Linux.
 - **Impact if no action:** Milestone 1 cannot fix the Windows and Linux
   keys.
 - **Root question:** Which default key does each command get on a Windows
   or Linux keyboard, so that the key reaches the page and types no
   character? The options check wrote this question, because one key table
-  holds all three cases. Decision 182 also sets the Ctrl twins of the
+  holds all three cases. Decision 192 also sets the Ctrl twins of the
   browser's own keys, such as Ctrl+1 to Ctrl+9.
 - **Options:**
   - **A.** Alt+Shift with the same key for each Mac key with ⌥ and for
@@ -332,14 +338,14 @@ Replaced ways:
 - **Wider fix:** None. This is a design question, not a class of defect.
 - **Previous examples:** VS Code for the Web uses Ctrl+K and then N on
   Windows for a new file, to avoid AltGr.
-- **Related:** Decision 181 gives the second keys that this decision
-  places on Windows and Linux. Decision 183 D keeps Alt+Shift+↑ and
+- **Related:** Decision 191 gives the second keys that this decision
+  places on Windows and Linux. Decision 193 D keeps Alt+Shift+↑ and
   Alt+Shift+↓ away from the row move.
 - **Recommendation:** A. No key types a character, and Firefox's menus need
   Alt without Shift. The options check found three costs:
   - ⌥⌘T and ⌥⇧⌘T both become Alt+Shift+T, so one needs a key chosen by
     hand.
-  - Alt+Shift+↑ and Alt+Shift+↓ land on the row move, unless decision 183
+  - Alt+Shift+↑ and Alt+Shift+↓ land on the row move, unless decision 193
     takes D.
   - The Orca screen reader on Linux uses Alt+Shift with Left and Right, the
     twins of ⌥⌘← and ⌥⌘→.
@@ -347,6 +353,61 @@ Replaced ways:
   Under B, Ctrl+Shift with Left or Right selects a word, so its arrow keys
   do not run from the message field.
 - **Action:** ask the user, because no key family is clearly best.
+
+### Decision 195: Finding one command on the Keyboard shortcuts tab
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `docs/mockups/src/components/settings/ShortcutsSections.tsx`
+- **Background:** The Mac app mockup of the tab lists about 50 commands
+  that a person can change and more than 25 fixed keys, in eight groups.
+  The tab is about 3,500 px high in the Mac window. The first view shows
+  General, View, and the start of Navigation. The plan gives the tab no
+  search.
+- **Problem:** To find one command, such as Go to Checks, a person scrolls
+  through most of the list.
+- **Impact if no action:** Finding a command is slow, mostly in the long
+  Workspace group.
+- **Root question:** How does a person reach the row of one command
+  quickly?
+- **Options:**
+  - **A.** A search field at the top of the tab. It filters the rows by
+    their words and by their keys, as the Repositories tab filters its
+    list. Cost: a field, an empty result line, a mockup screen, a protocol
+    line, and a test. A search by keys also needs a way to enter a key,
+    because a text field cannot type ⌘ or ⌥. Effort: Medium.
+  - **B.** Each group can collapse, as the sections of the workspace list
+    do. Cost: the state of each group, and a mockup screen. Effort: Medium.
+  - **C.** Change nothing. The person scrolls, or uses the browser's own
+    find. The Mac app has no find, because its Edit menu has none. Effort:
+    Small.
+  - **D.** Added by the options check. A row of links to the groups at the
+    top of the tab. A link scrolls to its group. The person must know the
+    group of the command. Effort: Small.
+  - **E.** Added by the options check. A search field as in A, but it
+    matches only the words of a row, its label and its search words, with
+    the palette's matcher. So the two searches of the app agree. A person
+    cannot find a command by its key. The conflict line already names the
+    command that uses a recorded key. Effort: Medium.
+  - **F.** Added by the options check. The palette's Settings tab finds
+    each command by its words, shows its first key, and opens the tab with
+    that row in view. Cost: a new kind of settings row, a link to one row,
+    two mockup screens, and a change of the palette's Settings rules. A
+    query such as "workspace" adds many rows beside the actions. Effort:
+    Medium.
+- **Left out:** A fold of the nine org rows and the nine workspace rows,
+  because alone it fails the goal. Most rows stay, and Go to Checks moves
+  up only a little. A fold can join B, D, or E later.
+- **Wider fix:** None. This is a design question, not a class of defect.
+- **Previous examples:** `RepositoryList` filters a long list with a search
+  field. Conductor's settings have Search settings, and VS Code's
+  Keyboard Shortcuts editor searches by words and by keys.
+- **Recommendation:** E, changed from A by the options check. E finds the
+  row with the palette's own matcher, and it drops A's search by keys,
+  which has no clear way to enter a key.
+- **Action:** ask the user, because A adds behaviour that no requirement
+  covers.
 
 ## Design
 
@@ -364,7 +425,7 @@ one: Go to All files, Checks, Preview, and Desktop, New section, Session
 history, and Create org.
 
 "Kept" names the browsers that keep a key in a normal tab. "Second key"
-is the key of decision 181 that a browser tab lets through.
+is the key of decision 191 that a browser tab lets through.
 
 | Group | Command | Mac keys | Where |
 | --- | --- | --- | --- |
@@ -372,28 +433,28 @@ is the key of decision 181 that a browser tab lets through.
 | General | Keyboard shortcuts | ⌥⌘/ | Every page |
 | General | Account page | ⌘, | Every page |
 | View | Hide or show the sidebar | ⌘B | Mac app |
-| View | Hide or show the right column | ⌥⌘B | Workspace, after PR #79 merges |
+| View | Hide or show the right column | ⌥⌘B | Workspace |
 | Navigation | Back, Forward | ⌘[, ⌘] | Mac app |
 | Navigation | Workspace list | ⇧⌘H | Org pages |
 | Navigation | Previous tab | ⌃⇧Tab, ⇧⌘[, ⌥⌘← (all kept), second key ⌥⌘[ | Workspace |
 | Navigation | Next tab | ⌃Tab, ⇧⌘], ⌥⌘→ (all kept), second key ⌥⌘] | Workspace |
 | Navigation | Close tab | ⌘W (kept), second key ⌥⌘W | Workspace |
-| Navigation | Reopen the last closed session | ⇧⌘T (kept in Chrome), second key ⌥⇧⌘T | Workspace |
-| Navigation | Org 1 to 9 | ⌃1 to ⌃9 | Every page |
+| Navigation | Reopen closed session | ⇧⌘T (kept in Chrome), second key ⌥⇧⌘T | Workspace |
+| Navigation | Switch to org 1 to 9, one row each | ⌃1 to ⌃9 | Every page |
 | Navigation | Repositories settings | ⌥⌘A | Org pages, admins |
 | Workspace | New workspace | ⌘N (kept), second key ⌥⌘N | Org pages |
 | Workspace | Archive workspace | ⇧⌘A | Workspace, owner and admins |
-| Workspace | Workspace 1 to 9 | ⌘1 to ⌘9, see decision 182 | Org pages |
-| Workspace | Previous, next workspace | ⌥⌘↑, ⌥⌘↓ (kept in Firefox), second key in Milestone 1 | Org pages |
+| Workspace | Open workspace 1 to 9, one row each | ⌘1 to ⌘9, see decision 192 | Org pages |
+| Workspace | Previous, next workspace | ⌥⌘↑, ⌥⌘↓ (kept in Firefox), second keys ⌃⌘↑, ⌃⌘↓ | Org pages |
 | Workspace | Next workspace that needs input | ⌥⌘L | Org pages |
 | Workspace | Go to Changes | ⌥⌘U | Workspace |
 | Workspace | Go to Terminal | ⌘J | Workspace |
 | Chat | New session | ⌘T (kept), second key ⌥⌘T | Workspace |
-| Chat | Focus the message field | ⌘L (kept in Safari), second key in Milestone 1 | Workspace |
+| Chat | Focus the message field | ⌘L (kept in Safari), second key ⇧⌘L | Workspace |
 | Chat | Attach files | ⌘U | Workspace |
 | Chat | Model picker | ⌘/ | Workspace |
 | Chat | Next effort level | ⇧⌘/ | Workspace |
-| Chat | Stop the turn | ⇧⌘⌫ | Workspace |
+| Chat | Stop the agent | ⇧⌘⌫ | Workspace |
 
 Fixed shortcuts, which show in the list with "Fixed shortcut":
 
@@ -403,7 +464,7 @@ Fixed shortcuts, which show in the list with "Fixed shortcut":
   Right on the palette tabs.
 - Enter saves and Escape cancels a rename.
 - On a focused workspace row, Alt with Up or Down moves the row. On a
-  focused divider, the arrows, Home, and End move it. Decision 183 sets
+  focused divider, the arrows, Home, and End move it. Decision 193 sets
   their modifiers.
 - The text keys: ⌘C, ⌘V, ⌘X, ⌘A, ⌘Z, and ⇧⌘Z, and in the Mac app also
   ⌥⇧⌘V, from its Edit menu.
@@ -412,14 +473,15 @@ Fixed shortcuts, which show in the list with "Fixed shortcut":
 - The tab menu key ⇧F10, if the tab drag change
   (`calummoore/tab-drag-and-drop`) merges first.
 
-Decision 184 sets the Windows and Linux keys. Ctrl takes the place of ⌘
+Decision 194 sets the Windows and Linux keys. Ctrl takes the place of ⌘
 in each case.
 
-Agent call, 2026-11-09: the second keys of decision 181 on a Mac are ⌥⌘N,
-⌥⌘T, ⌥⌘W, ⌥⇧⌘T, ⌥⌘[, and ⌥⌘]. Milestone 1 chooses the second keys of
-Previous workspace, Next workspace, and Focus the message field. It checks
-each key against the kept keys of Chrome, Edge, Firefox, and Safari, and
-against the keys that macOS takes first, such as ⇧⌘/ for the Help menu.
+Agent call, 2026-11-09: the second keys of decision 191 on a Mac are ⌥⌘N,
+⌥⌘T, ⌥⌘W, ⌥⇧⌘T, ⌥⌘[, ⌥⌘], ⌃⌘↑, ⌃⌘↓, and ⇧⌘L. Chrome has no command on
+⌥⌘T, ⌥⌘W, ⌥⇧⌘T, ⌥⌘[, ⌥⌘], ⌃⌘↑, or ⌃⌘↓. It uses ⌥⌘N and ⇧⌘L for
+features that the page may take. No source confirms Safari's keys.
+Milestone 1 also checks each key against the keys that macOS takes first,
+such as ⇧⌘/ for the Help menu.
 
 ### Where a key goes
 
@@ -464,9 +526,32 @@ the hosts apart by the Mac app's own marker, the display mode of an
 installed app, and the browser's name. An unknown browser uses all three
 tables.
 
-Decision 183 sets what ⌥⌘↑ and ⌥⌘↓ do on a focused workspace row.
+Decision 193 sets what ⌥⌘↑ and ⌥⌘↓ do on a focused workspace row.
+
 
 ### The Keyboard shortcuts tab
+
+Agent calls of Milestone 1, 2026-11-09:
+
+- The Mac app pages come first, because no open decision changes what the
+  Mac app shows. The browser and phone pages wait for decisions 192 and
+  194. Until then, only the Mac app shows the third Account tab.
+- The copy of the tab: "Select a shortcut to change it." as the intro,
+  "Add shortcut" on a row with no key, "Press the keys" in the recorder,
+  "Hide Conductive always uses ⌘H." for a refused fixed key, "Model picker
+  uses ⌘/." for a conflict with Replace and Cancel, and "⇧⌘P wasn't saved.
+  Try again." for a failed save.
+- Labels follow the words of the app and of macOS: Stop the agent, Switch
+  to org 1, Open workspace 1, Reopen closed session, Quit Conductive, and
+  Hide Conductive.
+- In each group, the fixed rows come after the rows that a person can
+  change. The groups Text and Mac app hold only fixed keys, close the
+  list, and say once that their keys are fixed.
+- The key chips use Inter, which draws ⌘ on every system. Enter, Esc, and
+  Tab show as words.
+- A palette row shows the first key of its command. Workspace rows show no
+  key, because the palette orders them by activity, not by their place in
+  the list.
 
 Agent calls, 2026-11-08 and 2026-11-09:
 
@@ -479,16 +564,19 @@ Agent calls, 2026-11-08 and 2026-11-09:
   Search row does.
 - The tab groups the commands as Conductor does: General, View,
   Navigation, Workspace, and Chat. Each row shows its keys.
-- A press on a key, or on Add key, records the next key. Escape cancels
+- A press on a key, or on Add shortcut, records the next key. Escape cancels
   the recording. Each change saves at once, as Preferences does.
 - A command holds at most four keys.
 - A changed row shows Reset. The tab has Reset all, for the keyboard of
-  this device.
+  this device. Reset all shows only after a change, and it asks first
+  with `ConfirmDialog`, as `docs/mockups/design.md` asks for an action that
+  a person cannot simply undo. Agent call, 2026-11-09.
 - When a recorded key belongs to another command that can run in the same
   place, the row names that command and offers Replace. Replace moves the
   key in one save.
 - The recorder does not take a fixed key. The row says which fixed key it
-  is.
+  is. When several fixed rows share the key, such as Enter or Esc, the row
+  says only that the key is fixed. Agent call, 2026-11-09.
 - In a browser tab, a kept key shows as kept, with one line that names
   where it works: the Mac app, and in Chrome and Edge also the installed
   app. Firefox has no installed app on a Mac.
@@ -533,33 +621,49 @@ Agent calls, 2026-11-09:
 
 Tags: mockup
 
-Depends on: the answers to decisions 182, 183, and 184, PR #73 (the
-Preferences tab) merged into `main`, and `main` merged into this branch.
+Depends on: none for the Mac app TODOs. PR #73, the Preferences tab, is
+on `main` and in this branch. The other TODOs depend on the answers to
+decisions 192, 193, and 194, as each TODO says.
 
 The Keyboard shortcuts tab, its states, and the keys in the palette.
 
-- [ ] Fix the key table for each keyboard: the Windows and Linux keys of
-      decision 184, the second keys that Milestone 1 chooses, and the keys
-      of decision 182. Check each key against the kept keys and the menu
-      keys of Chrome, Edge, Firefox, and Safari, and against the keys that
-      macOS takes first, from their sources and help pages. Also check
+- [x] Choose the Mac second keys of Previous workspace, Next workspace,
+      and Focus the message field, and check them. Evidence:
+      `.context/keyboard-shortcuts/key-checks.md`.
+- [ ] After decisions 192 and 194: fix the rest of the key table, the
+      Windows and Linux keys and the keys of decision 192. Check each key
+      against the kept keys and the menu keys of Chrome, Edge, Firefox,
+      and Safari, and against the keys that macOS takes first, from their
+      sources and help pages. Also check
       that Firefox on Linux switches tabs on Alt+1 to Alt+8, and that
       Windows switches the input language on the left Alt with Shift. Run
       Chrome and Firefox where a check needs a browser. Mark each key that
       no source confirms. Record the evidence under
       `.context/keyboard-shortcuts/`.
-- [ ] Draw the Keyboard shortcuts tab of the Account page, desktop and
-      phone, at `app/account/shortcuts`.
-- [ ] Draw its states as sub-pages, with five screens or fewer on each
-      page: recording, a conflict with Replace, a browser tab with kept
-      keys, a changed row with Reset and a failed save, and the Mac app
-      with its fixed menu keys.
-- [ ] Draw the palette rows with their keys, and the Search row with the
-      person's palette key.
+- [x] Draw the Keyboard shortcuts tab of the Account page in the Mac app,
+      with its fixed menu keys, and its states: recording, a conflict with
+      Replace, a changed row with Reset, and a failed save. No open
+      decision changes the Mac app, because it takes every key.
+- [x] Draw the palette in the Mac app with the key of each row, the Search
+      row with a changed palette key, and the Keyboard shortcuts row of
+      the Settings tab.
+- [ ] After decisions 192 and 194: draw the tab in a browser, desktop and
+      phone, at `app/account/shortcuts`, with the kept keys and the second
+      keys. Add the tab to the Account tabs of the browser pages. Draw the
+      palette rows with their keys in a browser.
+- [ ] After decision 193: draw the keys of the row move and the divider.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark.
+  - [x] The Mac app pages: `mac-app/shortcuts`, its child pages, and
+        `mac-app/command-palette`. Evidence: `.context/keyboard-shortcuts/m1/`
+        and `.context/keyboard-shortcuts/shots/`.
+  - [ ] The browser and phone pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+  - [x] The Mac app pages: decision 195, the Reset all question, the fixed
+        groups, the new fixed rows, and the follow-up
+        `plans/follow-ups/search-row-key-symbols.md`.
+  - [ ] The browser and phone pages.
 
 ## Milestone 2: Documentation and protocol
 
@@ -567,7 +671,7 @@ Depends on: 1
 
 - [ ] Write `docs/protocol/keyboard-shortcuts.md`: the commands, the
       fixed keys, where a key goes, the kept keys and the second keys
-      (decision 181), the tab (decision 180), and the storage scope.
+      (decision 191), the tab (decision 190), and the storage scope.
 - [ ] Update `docs/protocol/command-palette.md`: the palette key is a
       shortcut with ⌘K or Ctrl+K as its default, and the rows show the
       keys. Remove "Only the palette has a key" and the rejection of keys
@@ -622,7 +726,7 @@ Depends on: 1, 3
       consumer of "Replaced ways". Delete `palette-keys.ts`.
 - [ ] Offer each command from the part of the page that owns its control.
       Add the key-only commands as offers that the palette does not list.
-- [ ] Apply decision 183 to the row move, the divider, and the keys of
+- [ ] Apply decision 193 to the row move, the divider, and the keys of
       the workspaces and the tabs.
 - [ ] If PR #79 merged, offer its right column toggle with ⌘⌥B.
 - [ ] Show the keys in the palette rows, the Search row, the tooltips, and
