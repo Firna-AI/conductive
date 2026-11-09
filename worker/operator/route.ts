@@ -8,6 +8,8 @@ import { suspendOrg } from './suspend-org'
 import { isOperator } from './access'
 import { readOperatorOverview } from './overview'
 import { operatorDirectoryRoute } from './directory-route'
+import { liftOrgSuspension, liftUserSuspension } from './lift'
+import { numericGitHubId } from './directory'
 
 export async function handleOperatorRequest(
   request: Request,
@@ -25,9 +27,15 @@ export async function handleOperatorRequest(
   const match = path.match(
     /^\/api\/operator\/(users|orgs)\/([^/]+)\/suspension$/,
   )
-  if (!overview && !directory && (!match || request.method !== 'POST'))
+  const suspensionWrite =
+    request.method === 'POST' || request.method === 'DELETE'
+  if (!overview && !directory && (!match || !suspensionWrite)) return null
+  if (
+    request.method === 'POST' &&
+    match?.[1] === 'users' &&
+    !/^[1-9]\d*$/.test(match[2])
+  )
     return null
-  if (match?.[1] === 'users' && !/^[1-9]\d*$/.test(match[2])) return null
   if (!isOperator(env, context.user.githubId))
     throw new HttpError(
       403,
@@ -49,7 +57,29 @@ export async function handleOperatorRequest(
   try {
     target = decodeURIComponent(match[2])
   } catch {
+    if (request.method === 'DELETE' && match[1] === 'users')
+      throw new HttpError(
+        404,
+        'user_not_found',
+        'The account is not available.',
+      )
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
+  }
+  if (request.method === 'DELETE') {
+    if (match[1] === 'orgs')
+      return Response.json(
+        await liftOrgSuspension(runtime, target, context.user.id),
+      )
+    const githubId = numericGitHubId(target)
+    if (githubId === null)
+      throw new HttpError(
+        404,
+        'user_not_found',
+        'The account is not available.',
+      )
+    return Response.json(
+      await liftUserSuspension(runtime, githubId, context.user.id),
+    )
   }
   const result =
     match[1] === 'orgs'

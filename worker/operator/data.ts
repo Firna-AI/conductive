@@ -1,4 +1,4 @@
-import { HttpError } from '../http'
+import { recordSuspensionChange } from './events-data'
 
 export async function recordUserSuspension(
   db: D1Database,
@@ -6,16 +6,16 @@ export async function recordUserSuspension(
   operatorId: string,
   now: number,
 ): Promise<{ userId: string; suspendedAt: number }> {
-  const user = await db
-    .prepare(
-      `UPDATE users SET suspended_at = COALESCE(suspended_at, ?),
-       suspended_by_user_id = COALESCE(suspended_by_user_id, ?)
-       WHERE github_id = ? RETURNING id AS userId, suspended_at AS suspendedAt`,
-    )
-    .bind(now, operatorId, githubId)
-    .first<{ userId: string; suspendedAt: number }>()
-  if (!user)
-    throw new HttpError(404, 'user_not_found', 'The account is not available.')
+  const recorded = await recordSuspensionChange(
+    db,
+    { kind: 'user', githubId },
+    'suspend',
+    operatorId,
+    now,
+  )
+  if (recorded.suspendedAt === null)
+    throw new Error('Missing recorded user suspension')
+  const user = { userId: recorded.id, suspendedAt: recorded.suspendedAt }
   await db.batch([
     db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.userId),
     db

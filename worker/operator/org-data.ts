@@ -1,4 +1,4 @@
-import { HttpError } from '../http'
+import { recordSuspensionChange } from './events-data'
 
 export async function recordOrgSuspension(
   db: D1Database,
@@ -6,16 +6,16 @@ export async function recordOrgSuspension(
   operatorId: string,
   now: number,
 ): Promise<{ orgId: string; suspendedAt: number }> {
-  const org = await db
-    .prepare(
-      `UPDATE orgs SET suspended_at = COALESCE(suspended_at, ?),
-       suspended_by_user_id = COALESCE(suspended_by_user_id, ?)
-       WHERE id = ? RETURNING id AS orgId, suspended_at AS suspendedAt`,
-    )
-    .bind(now, operatorId, orgId)
-    .first<{ orgId: string; suspendedAt: number }>()
-  if (!org)
-    throw new HttpError(404, 'org_not_found', 'The org is not available.')
+  const recorded = await recordSuspensionChange(
+    db,
+    { kind: 'org', orgId },
+    'suspend',
+    operatorId,
+    now,
+  )
+  if (recorded.suspendedAt === null)
+    throw new Error('Missing recorded org suspension')
+  const org = { orgId: recorded.id, suspendedAt: recorded.suspendedAt }
   await db.batch([
     db
       .prepare(

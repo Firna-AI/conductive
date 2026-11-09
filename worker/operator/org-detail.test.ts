@@ -37,7 +37,8 @@ it('reads org state buckets, builds, named and unnamed members, suspension, and 
   await harness.env.DB.prepare(
     `INSERT INTO repositories
      (id, org_id, github_repository_id, full_name, default_branch, selected)
-     VALUES ('second-repo', 'org/with%id', 2, 'example/second', 'main', 0)`,
+     VALUES ('second-repo', 'org/with%id', 2, 'example/second', 'main', 1),
+       ('unselected-repo', 'org/with%id', 3, 'example/unselected', 'main', 0)`,
   ).run()
   for (const state of [
     'starting',

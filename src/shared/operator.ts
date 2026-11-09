@@ -162,3 +162,15 @@ export interface UserSuspensionResponse {
   pendingWorkspaceIds: readonly string[]
   pendingBuildIds: readonly string[]
 }
+
+export interface UserSuspensionLiftResponse {
+  userId: string
+  liftedAt: number | null
+  pendingWorkspaceIds: readonly string[]
+}
+
+export interface OrgSuspensionLiftResponse {
+  orgId: string
+  liftedAt: number | null
+  pendingWorkspaceIds: readonly string[]
+}

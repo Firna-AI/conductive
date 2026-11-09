@@ -535,19 +535,22 @@ Evidence: `.context/operator-section/m4-report.md` and
 
 Depends on: 4
 
-- [ ] Add a migration with an append-only table of suspension events: the
+- [x] Add a migration with an append-only table of suspension events: the
       user or the org, the kind, suspend or lift, the time, and the
       operator. The two suspend routes write their rows.
-- [ ] Add `DELETE` on the user and the org suspension paths, behind the
+- [x] Add `DELETE` on the user and the org suspension paths, behind the
       gate and the operator check. Each lift clears the suspension, writes
       its row, and runs the owner-change check of each affected workspace.
       A repeat changes nothing.
-- [ ] Test with local D1 and the workspace object: a lift of a user and of
+- [x] Test with local D1 and the workspace object: a lift of a user and of
       an org, a repeat, an unknown target, 403 `operator_required` for
       another user, the disk restart set again, a deleted org that stays
       deleted, and a revoked token that stays revoked.
-- [ ] Update `worker/operator/README.md`, `worker/README.md`, and the path
+- [x] Update `worker/operator/README.md`, `worker/README.md`, and the path
       helpers in `src/shared/operator.ts`.
+
+Evidence: `.context/operator-section/m5-report.md` and
+`.context/operator-section/milestone-5/verification.md`.
 
 ## Milestone 6: Operator section in the web app
 

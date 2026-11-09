@@ -92,7 +92,7 @@ Match is null for a name match or no search.
 User entries give `githubId`, `login`, `name`, `joinedAt`, `orgs`, `workspaces`, and `status`.
 User status is `active` or `suspended`.
 
-The org page gives its identity, creation time, and repository count.
+The org page gives its identity, creation time, and selected repository count.
 It gives `workspaceStates`, `running`, and members with their identities, names, roles, and suspension flags.
 It also gives `suspension` and `deletion`, each null when absent.
 The deletion gives `deletedAt` and `purgeAt`.
@@ -118,96 +118,65 @@ These reads return no chat, file, env value, agent login, or email address.
 
 ## Suspend a user
 
-Send `POST /api/operator/users/<githubId>/suspension` to the app hostname.
-`userSuspensionPath` in [`src/shared/operator.ts`](../../src/shared/operator.ts)
-builds the path. `<githubId>` is the numeric GitHub user ID of the target
-user. GitHub keeps that ID when the user renames their login.
-
-Access:
-
-- The normal app gate runs first. It needs the session cookie of a
-  signed-in user, a matching `Origin` header, and a JSON object body, as
-  the [request gate](../security/README.md) says. The action reads nothing
-  from the body, so send `{}`.
-- The action then checks that the GitHub ID of the signed-in user is in
-  `OPERATOR_GITHUB_IDS`. Otherwise it answers 403 `operator_required`.
-  Without that setting, every request gets this answer.
-- A GitHub ID without an account gets 404 `user_not_found`.
-
-The action takes these steps, in this order:
-
-1. It records the suspension on the user: the time, and the operator who
-   sent the request.
-2. In one D1 batch, it deletes every sign-in session of the user, also
-   the sign-in sessions of the Mac app. In the same batch, it revokes the
-   workspace token and the preview hostnames of each workspace that the
-   user owns. This happens before any stop request. A workspace whose
-   token is revoked gets a new token at its next start.
-3. It asks the Durable Object of each workspace that the user owns to
-   cancel the active start and stop the sandbox, as
-   [The stop of one workspace](#the-stop-of-one-workspace) says.
-4. It wakes the image coordinator of each unfinished image build that the
-   user started. The coordinator stops the build and marks it failed. It
-   retries the cleanup until no build sandbox of that build is left.
-
-The reply is a `UserSuspensionResponse`: `userId`, `suspendedAt`,
-`pendingWorkspaceIds`, and `pendingBuildIds`. The status is 200 when
-nothing is pending. It is 202 when the stop of a workspace has not
-finished, or when the user started an unfinished build. A call that the
-workspace object skipped also counts as not finished. The suspension is
-in force in both cases. Each pending workspace retries its stop on its own
-alarm, without the operator.
-
-The action is idempotent. A repeat keeps the first time and the first
-operator, and runs the other steps again. Repeat it to see what is still
-pending. No route lifts a suspension.
-
-To send the request from a terminal, sign in to the app in a browser as an
-operator. Copy the value of the `__Host-conductive-session` cookie from the
-developer tools of the browser. `gh api users/<login> --jq .id` gives the
-GitHub ID of a login. Then run:
-
-```sh
-APP=https://app.conductive.build
-curl -X POST "$APP/api/operator/users/<githubId>/suspension" \
-  -H "Origin: $APP" \
-  -H 'Content-Type: application/json' \
-  -H 'Cookie: __Host-conductive-session=<cookie value>' \
-  --data '{}'
-```
+Send `POST /api/operator/users/<githubId>/suspension` with `{}` through the app gate.
+`userSuspensionPath` builds the path.
+The operator check runs after the gate.
+The reply is `UserSuspensionResponse`, with `userId`, `suspendedAt`, `pendingWorkspaceIds`, and `pendingBuildIds`.
+The status is 202 while a stop is pending, and 200 otherwise.
+[User suspension](suspension-actions.md#suspend-a-user) gives the steps and a terminal example.
 
 ## Suspend an org
 
-Send `POST /api/operator/orgs/<orgId>/suspension` with `{}` through the same operator gate.
+Send `POST /api/operator/orgs/<orgId>/suspension` with `{}` through the same gate.
 `orgSuspensionPath` builds the encoded path.
-The reply is `OrgSuspensionResponse`, with `orgId`, `suspendedAt`, and the two pending lists of the user action.
-An unknown org gets 404 `org_not_found`.
-A repeat keeps the first suspension time and operator.
-Only internal storage holds the operator ID.
+The reply is `OrgSuspensionResponse`, with `orgId` and the other fields of a user suspension.
+The action covers every owner and starter in the org.
+[Org suspension](suspension-actions.md#suspend-an-org) gives the checks and cleanup.
 
-The action revokes every workspace token and preview hostname of the org before it asks for stops.
-It stops every workspace and unfinished build of the org, whoever owns or started it.
-The native workspace and image alarms retry incomplete cleanup after runtime restarts.
-Failed creates stay in `pendingWorkspaceIds` while their sandbox cleanup records remain, including after their workspace rows are removed.
-The action reads those cleanup records after workspace processing and lists each workspace ID once.
-The existing native cleanup alarm retries Delete for those computers.
-The org remains readable, and members keep their account sessions and other orgs.
-`OrgSummary.suspension` gives members the suspension time.
+## Lift a suspension
 
-Org writes get 403 `org_suspended`, with the abuse address from the product domain.
-The exact POST Leave route stays open under its existing active-admin rule.
-The shared org SQL predicate also guards member mutations, invitation acceptance, build admission, publication, and refresh claims.
-Account sign-in still saves verified emails without accepting an invitation.
+Send `DELETE` to `userSuspensionPath` or `orgSuspensionPath` with `{}`.
+These are the same paths that a suspension uses.
+The normal app gate requires a session, a matching `Origin`, and a JSON object body.
+The same operator check then runs.
+Another user gets 403 `operator_required`.
+An unknown target gets 404 `user_not_found` or `org_not_found`.
 
-Every sandbox and token check uses the shared workspace rule, which also requires an org that is not suspended.
-Each start and build step uses the same suspension check as user suspension.
-An image source grant cannot issue or release credentials for a suspended org.
-A pending allocation still recovers its saved request before cleanup removes the resource.
-An org suspension prevents every disk retention resume, including deleted-org maintenance and a later owner change.
-It also blocks lifecycle activity and turn deadline extensions inside the workspace queue.
-An activity body that finishes after suspension gets 403 `org_suspended`.
-The refusal keeps the activity time, provider deadline, and pending stop alarm unchanged.
-No route lifts an org suspension.
+A lift clears the current suspension and records its event in one D1 batch.
+It then calls `reconcileLifecycleAccess` for each affected workspace.
+For a user, these are the workspaces that the user owns.
+For an org, these are all workspaces of that org.
+The check sets the disk restart again when no suspension or other rule blocks it.
+An overdue restart runs on the due alarm.
+
+The reply is `UserSuspensionLiftResponse` or `OrgSuspensionLiftResponse`.
+It gives `userId` or `orgId`, `liftedAt`, and `pendingWorkspaceIds`.
+The user ID is the stored account ID, as in a suspension reply.
+`liftedAt` is the lift time in Unix milliseconds.
+The status is always 200 after the lift succeeds.
+A failed workspace call does not fail the lift.
+
+`pendingWorkspaceIds` lists the checks that did not finish.
+A repeat changes nothing, writes no event, and runs no workspace check.
+Its `liftedAt` is null and its pending list is empty.
+A lift brings back no session, workspace token, preview, or build.
+A deleted org keeps its deletion and its restore window.
+The org and user pages show only the current suspension, never its event history.
+
+## Suspension events
+
+`suspension_events` keeps an append-only record of each suspension and lift.
+Each row has an ID, target kind, target ID, action, time, and operator account ID.
+Target kinds are `user` and `org`.
+Actions are `suspend` and `lift`.
+Target IDs are the stored user and org IDs.
+The state change and its event commit in the same D1 batch.
+
+A repeat suspension keeps the first time and operator and writes no event.
+After a lift, a new suspension gets its own time, operator, and event.
+The app never removes an event when its target is deleted.
+Deleting an operator sets the event's operator reference to null.
+The migration copies each current suspension into its first event.
 
 ## What a suspension blocks
 
@@ -242,6 +211,7 @@ Run `npm run test -- worker/operator` from the repository root, with Node
 24. The tests use local D1 and the fake GitHub and Boat servers.
 They check overview access, state counts, time windows, daily counts, and org order.
 The directory tests check search keys, cursor pages, status, names, and operator access.
+The lift tests check events, access, retained revocations, Restore, and native disk alarms.
 Run `npm run test -- worker/app-api/account-operator.test.ts` to check the account's operator flag.
 
 The tests of sandbox access and of the automatic refreshes live beside
@@ -262,6 +232,8 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
 - [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview and org page.
+- [`lift.ts`](lift.ts): the lifts and the checks of affected workspaces.
+- [`events-data.ts`](events-data.ts): atomic event writes and current suspension changes.
 - [`suspend-org.ts`](suspend-org.ts) and [`org-data.ts`](org-data.ts): the org action, stored suspension, revocations, and pending resources.
 - [`org-access.ts`](../data/org-access.ts): the active-org SQL predicate and the org error.
 - [`suspend-user.ts`](suspend-user.ts): `suspendUser`, the steps and the
@@ -282,6 +254,8 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
   `requireActiveStartUsers`, the user check of a queued start.
 - [`202611072200_user_terms_and_suspension.sql`](../../migrations/202611072200_user_terms_and_suspension.sql):
   the columns of the suspension and of the terms consent.
+- [`202611090030_suspension_events.sql`](../../migrations/202611090030_suspension_events.sql):
+  the event table and the current suspension records.
 
 ### Related Docs
 
