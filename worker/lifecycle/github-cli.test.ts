@@ -69,12 +69,30 @@ it('stops the GitHub CLI when authentication fails and keeps credentials out of 
     },
   )
   try {
-    const result = await launcher.runGitHub('', ['issue', 'list'])
-    expect(result.exitCode).toBe(1)
-    expect(result.stdout).toBe('')
-    expect(result.stderr).toBe(
-      'GitHub access failed. Check the current turn and sign in again.\n',
-    )
+    const cases = [
+      { args: ['issue', 'list'], free: false },
+      { args: ['issue', 'list', '--help'], free: true },
+      { args: ['issue', '--help'], free: true },
+      { args: ['pr', 'create', '--help'], free: true },
+      { args: ['issue', 'list', '--state=open', '--help'], free: true },
+      { args: ['issue', 'create', '--title', '--help'], free: false },
+      { args: ['auth', 'status', '-h', 'github.com'], free: false },
+      { args: ['-h', 'github.com', 'auth', 'status'], free: false },
+      { args: ['issue', 'list', '--', '--help'], free: false },
+      { args: ['extension', 'exec', 'tool', '--help'], free: false },
+    ]
+    for (const { args, free } of cases) {
+      const result = await launcher.runGitHub('', args)
+      expect(result.exitCode, args.join(' ')).toBe(free ? 7 : 1)
+      expect(result.stdout, args.join(' ')).toBe(
+        free ? JSON.stringify({ args, token: null, input: '' }) : '',
+      )
+      expect(result.stderr, args.join(' ')).toBe(
+        free
+          ? ''
+          : 'GitHub access failed. Check the current turn and sign in again.\n',
+      )
+    }
   } finally {
     await launcher.dispose()
   }

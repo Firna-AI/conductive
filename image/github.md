@@ -33,7 +33,14 @@ That mode reads no stdin and returns only the token.
 The wrapper sets `GH_TOKEN` for `/usr/bin/gh`, then replaces itself with that program.
 Arguments, stdin, signals, and exit status pass through.
 An explicit `GH_TOKEN` or `GITHUB_TOKEN` takes precedence.
-Help, version, and completion commands pass through without a credential request.
+The wrapper classifies help, version, and completion before it requests a token.
+The first-argument forms pass through without a credential request.
+A lone `-h` does too.
+A later `--help` passes through only before `--`, after a non-flag argument
+or an argument with `=`.
+Other forms keep their credential request because the flag can be a value.
+This preserves `--title --help` and the hostname flag `-h`.
+Extension execution and dynamic completion keep their credential requests.
 
 With a turn ID, the Worker returns that turn sender's token.
 Without a turn ID, it returns the workspace owner's token.
