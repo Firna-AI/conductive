@@ -1,4 +1,4 @@
-import { readFile, stat } from 'node:fs/promises'
+import { readdir, readFile, stat } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import { publishRelease } from './publish-release.ts'
@@ -23,6 +23,7 @@ try {
     {
       run: (program, args) =>
         runReleaseCommand(program, args, process.env, controller.signal),
+      list: (directory) => readdir(directory),
       read: (path) => readFile(path, 'utf8'),
       size: async (path) => {
         const file = await stat(path)

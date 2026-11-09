@@ -2,7 +2,7 @@ import { join } from 'node:path'
 import { expect, it } from 'vitest'
 
 import { publishRelease } from './publish-release.ts'
-import { publishHarness } from './publish.test-support.ts'
+import { publishHarness, releaseNames } from './publish.test-support.ts'
 
 it('uploads every signed file and publishes only after GitHub confirms the assets', async () => {
   const { release, dependencies, names } = publishHarness()
@@ -91,13 +91,48 @@ it('warns and changes nothing when the release is already published', async () =
   expect(dependencies.read).not.toHaveBeenCalled()
 })
 
-it('leaves the draft when a required local file is missing', async () => {
-  const { release, dependencies, state, names } = publishHarness()
-  state.sizes.delete(join('/signed', names[0]))
-  await expect(publishRelease(release, dependencies)).rejects.toThrow(
-    `Missing file: /signed/${names[0]}`,
-  )
+it.each([
+  ['Conductive-0.1.0-mac-arm64.dmg', 'Missing the arm64 DMG file'],
+  [
+    'Conductive-0.1.0-mac-arm64.zip',
+    'Missing release file: Conductive-0.1.0-mac-arm64.zip',
+  ],
+  [
+    'Conductive-0.1.0-mac-arm64.zip.blockmap',
+    'Missing release file: Conductive-0.1.0-mac-arm64.zip.blockmap',
+  ],
+  ['Conductive-0.1.0-mac-x64.dmg', 'Missing the x64 DMG file'],
+  [
+    'Conductive-0.1.0-mac-x64.zip',
+    'Missing release file: Conductive-0.1.0-mac-x64.zip',
+  ],
+  [
+    'Conductive-0.1.0-mac-x64.zip.blockmap',
+    'Missing release file: Conductive-0.1.0-mac-x64.zip.blockmap',
+  ],
+  ['latest-mac.yml', 'Missing release file: latest-mac.yml'],
+])('leaves the draft when the signed files lack %s', async (name, error) => {
+  const { release, dependencies, state } = publishHarness()
+  state.sizes.delete(join('/signed', name))
+  await expect(publishRelease(release, dependencies)).rejects.toThrow(error)
   expect(dependencies.run).toHaveBeenCalledTimes(1)
+})
+
+it('publishes the files that packaging names, whatever their prefix', async () => {
+  const renamed = releaseNames.map((name) =>
+    name.replace('Conductive-', 'Renamed-'),
+  )
+  const { release, dependencies } = publishHarness(renamed)
+  expect(await publishRelease(release, dependencies)).toBe('published')
+  expect(dependencies.run).toHaveBeenCalledWith('gh', [
+    'release',
+    'upload',
+    'v0.1.0',
+    '--repo',
+    'Firna-AI/remote-code',
+    '--clobber',
+    ...renamed.map((name) => join('/signed', name)),
+  ])
 })
 
 it('leaves the draft when its update metadata names a different version', async () => {
@@ -113,7 +148,16 @@ it('leaves the draft when its update metadata omits a ZIP file', async () => {
   const { release, dependencies, state, names } = publishHarness()
   state.metadata = state.metadata.replace(names[4], 'missing.zip')
   await expect(publishRelease(release, dependencies)).rejects.toThrow(
-    'latest-mac.yml must list both release ZIP files and no other files',
+    'Missing release file: missing.zip',
+  )
+  expect(dependencies.run).toHaveBeenCalledTimes(1)
+})
+
+it('leaves the draft when its update metadata lists one ZIP file', async () => {
+  const { release, dependencies, state } = publishHarness()
+  state.metadata = state.metadata.replace(/ {2}- url: [^\n]*x64\.zip\n/, '')
+  await expect(publishRelease(release, dependencies)).rejects.toThrow(
+    'latest-mac.yml must list one arm64 ZIP file and one x64 ZIP file',
   )
   expect(dependencies.run).toHaveBeenCalledTimes(1)
 })

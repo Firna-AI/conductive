@@ -72,6 +72,7 @@ Installed copies update themselves from these releases.
 The reusable workflow `desktop-mac-checks.yml` holds the Mac checks, and `desktop-sign.yml` holds the signing steps.
 The Desktop workflow and the release workflow run the same Mac checks.
 `desktop/scripts/publish.ts` checks the files and publishes the draft.
+It takes the file names from `latest-mac.yml` and from the signed files, so it holds no copy of the package naming rule.
 A release happens in these steps:
 
 1. On each push to `main`, release-please keeps one release pull request up to date.
@@ -95,6 +96,11 @@ Risk: electron-builder marks `dmg.writeUpdateInfo` as private, so an upgrade can
 
 When a run fails, the draft stays.
 A re-run of the failed jobs replaces the files of the draft.
+A re-run uses the same release commit, so it repeats a failure that the publish code itself causes.
+Then fix that code on `main`.
+To publish the signed files of the failed run by hand, download its `desktop-signed-packages` artifact into `desktop/dist/release`.
+Then run `RELEASE_TAG=vX.Y.Z RELEASE_VERSION=X.Y.Z node desktop/scripts/publish.ts` from the fixed checkout, with a GitHub login that can write releases.
+Otherwise, delete the draft, and the next release carries the fix.
 The publish job never changes or deletes a published release.
 When the version already has a published release, it warns and publishes nothing.
 

@@ -1,11 +1,12 @@
 import { join } from 'node:path'
 
-import { releaseFiles, verifyUpdateMetadata } from './publish-assets.ts'
+import { selectReleaseFiles } from './publish-assets.ts'
 
 const REPOSITORY = 'Firna-AI/remote-code'
 
 export interface PublishDependencies {
   run(program: string, args: string[]): Promise<{ stdout: string }>
+  list(directory: string): Promise<string[]>
   read(path: string): Promise<string>
   size(path: string): Promise<number>
   warn(message: string): void
@@ -42,12 +43,13 @@ export async function publishRelease(
   const draft = matching.find((candidate) => candidate.draft)
   if (!draft) throw new Error(`No draft release exists for ${tag}`)
 
-  verifyUpdateMetadata(
+  const names = selectReleaseFiles(
     await dependencies.read(join(directory, 'latest-mac.yml')),
     version,
+    await dependencies.list(directory),
   )
   const files = await Promise.all(
-    releaseFiles(version).map(async (name) => ({
+    names.map(async (name) => ({
       name,
       path: join(directory, name),
       size: await dependencies.size(join(directory, name)),

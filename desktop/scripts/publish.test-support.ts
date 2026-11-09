@@ -1,21 +1,22 @@
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { vi } from 'vitest'
 
 import type { PublishDependencies } from './publish-release.ts'
 
-export function publishHarness() {
+// Written out, so that the tests do not take the expected files from the
+// code under test. Each release must hold these seven files.
+export const releaseNames = [
+  'Conductive-0.1.0-mac-arm64.dmg',
+  'Conductive-0.1.0-mac-arm64.zip',
+  'Conductive-0.1.0-mac-arm64.zip.blockmap',
+  'Conductive-0.1.0-mac-x64.dmg',
+  'Conductive-0.1.0-mac-x64.zip',
+  'Conductive-0.1.0-mac-x64.zip.blockmap',
+  'latest-mac.yml',
+]
+
+export function publishHarness(names: readonly string[] = releaseNames) {
   const release = { tag: 'v0.1.0', version: '0.1.0', directory: '/signed' }
-  // Written out, so that the tests do not take the expected files from the
-  // code under test. Each release must hold these seven files.
-  const names = [
-    'Conductive-0.1.0-mac-arm64.dmg',
-    'Conductive-0.1.0-mac-arm64.zip',
-    'Conductive-0.1.0-mac-arm64.zip.blockmap',
-    'Conductive-0.1.0-mac-x64.dmg',
-    'Conductive-0.1.0-mac-x64.zip',
-    'Conductive-0.1.0-mac-x64.zip.blockmap',
-    'latest-mac.yml',
-  ]
   const sizes = new Map(
     names.map((name, index) => [join('/signed', name), 100 + index]),
   )
@@ -49,6 +50,9 @@ export function publishHarness() {
   })
   const dependencies = {
     run,
+    list: vi.fn(async () =>
+      Array.from(state.sizes.keys(), (path) => basename(path)),
+    ),
     read: vi.fn(async () => state.metadata),
     size: vi.fn(async (path: string) => {
       const size = state.sizes.get(path)
