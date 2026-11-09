@@ -41,6 +41,9 @@ Select **+** to start another session in the same workspace.
 The sessions share its files and branch.
 Use a separate workspace when a task needs its own files and branch.
 
+- [Connect and share agent logins](/docs/agent-logins)
+- [Use sessions and chat](/docs/sessions-and-chat)
+
 ## Follow and review the work
 
 The workspace keeps your conversation beside the code and tools.
@@ -61,6 +64,10 @@ Your chat history remains available while it starts or stays stopped.
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**.
 
+- [Review files and changes](/docs/files-and-changes)
+- [Use Terminal and previews](/docs/terminal-and-previews)
+- [Follow a pull request](/docs/pull-requests)
+
 ## Work with your team
 
 Every member of an org can see its workspaces and chats.
@@ -74,6 +81,9 @@ Each workspace has a number, such as `W-12`.
 Select the number in its header to copy its link.
 Paste the link into a chat in the same org.
 The link shows the workspace's number, name, and state in a small box.
+
+- [Manage orgs and members](/docs/orgs-and-members)
+- [Understand access to credentials](/docs/security)
 
 ## Start your first task
 
@@ -92,3 +102,6 @@ Conductive then starts the workspace's own cloud computer.
 The workspace keeps your message until the agent can begin.
 
 - [Get started](/docs/get-started)
+- [Create and manage workspaces](/docs/workspaces)
+- [Configure the shared cloud computer setup](/docs/cloud-computer)
+- [Install the Mac app](/docs/mac-app)

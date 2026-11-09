@@ -238,21 +238,21 @@ The site stays usable with a complete overview and Get started guide.
       Describe the guide-action list item from the design calls.
       Check `npm run site:build` and open the pages through the Worker. Evidence: `.context/website-docs/implementation/astro-ui/results.md`.
 
-## Milestone 4: Complete the public guides
+## Milestone 4: Complete the public guides completed
 
 Depends on: 3
 
 The `external docs implementor` writes the remaining ten guides and checks all 12.
 
-- [ ] Write the remaining ten launch guides that [Source references](../src/marketing/docs-authoring.md#source-references) lists.
+- [x] Write the remaining ten launch guides that [Source references](../src/marketing/docs-authoring.md#source-references) lists.
       Explain the user's actions, prerequisites, results, and relevant recovery steps.
-- [ ] Confirm each claim against the current requirements and implementation.
+- [x] Confirm each claim against the current requirements and implementation.
       Distinguish the Mac app from the hidden live desktop of a sandbox.
       Do not promise a download, capability, or limit that has not shipped.
-- [ ] Check the naming rules and all public page and heading links.
+- [x] Check the naming rules and all public page and heading links.
       Keep internal source paths and credentials out of published pages.
-- [ ] Check each guide in the site build.
-      The `docs implementor` updates the author workflow if writing exposes a missing step.
+- [x] Check each guide in the site build.
+      The `docs implementor` updates the author workflow if writing exposes a missing step. Evidence: `.context/website-docs/implementation/m4-link-and-content-results.json`.
 
 ## Milestone 5: Docs behaviour checks
 

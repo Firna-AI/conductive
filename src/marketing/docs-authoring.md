@@ -105,7 +105,7 @@ order: 20
   `docs/mockups/src/brand.ts`, so a rename of the product changes the
   guides too.
 
-The last line of `get-started.md` is a guide action:
+A guide action can link to the overview:
 
 ```markdown
 - [Read the Overview](/docs)

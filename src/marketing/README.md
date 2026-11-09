@@ -164,11 +164,10 @@ of the marketing mockups is their visual spec.
 steps for their authors.
 
 Each Markdown file in `docs/` is one guide, and the site builds one page
-from each file. The site has two guides at this time: the overview at
-`/docs`, from `overview.md`, and Get started at `/docs/get-started`. The
-other ten launch guides in
-[Source references](docs-authoring.md#source-references) have no file
-yet, so the site has no page for them.
+from each file. The site has all twelve launch guides. The overview is at
+`/docs`, from `overview.md`, and Get started is at `/docs/get-started`.
+[Source references](docs-authoring.md#source-references) lists every guide
+with its address and sources.
 
 - Astro reads the files as the `docs` content collection, without a
   schema. Only the file name gives the ID of a guide. Each missing or

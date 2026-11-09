@@ -9,12 +9,14 @@ order: 20
 
 Have these ready:
 
-- A GitHub account with access to at least one repository.
+- A GitHub account.
+- GitHub read access to the repository where you will create a workspace.
 - Permission to install a GitHub App if you will set up your own org.
 - A Claude subscription token, an Anthropic API key, or an OpenAI API key.
 
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
+Your GitHub permissions still govern repository reads and pushes made with your account.
 Conductive runs the agents and repositories on cloud computers.
 You can use the browser without a local copy of your repository.
 
@@ -58,6 +60,8 @@ Then try again.
 If a code no longer works or is used up, ask for another code.
 If **Sign-ups are paused** appears, try again later.
 The pause keeps your code unused and your org invitation available.
+
+- [Join or manage an org](/docs/orgs-and-members)
 
 ## Install the GitHub App
 
@@ -141,6 +145,8 @@ If your first agent request reports a login error, open **Account**.
 Remove that agent's login.
 Then connect the correct token or key.
 
+- [Manage logins and sharing](/docs/agent-logins)
+
 ## Create your first workspace
 
 At the end of **Get started**, select **Open** followed by your org's name.
@@ -182,6 +188,10 @@ Read the agent's answer in chat.
 Ask a follow-up in the same session when you need more detail.
 Open **Changes** to inspect any edits the agent makes.
 
+- [Continue in sessions and chat](/docs/sessions-and-chat)
+- [Review files and changes](/docs/files-and-changes)
+- [Use Terminal and previews](/docs/terminal-and-previews)
+
 ## Optional setup
 
 You can create your first workspace without writing an install script or a startup script.
@@ -217,3 +227,5 @@ Use **Environment variables** for values your application needs.
 Changed values apply at the next start of each workspace's cloud computer.
 
 - [Read the Overview](/docs)
+- [Configure the cloud computer](/docs/cloud-computer)
+- [Understand credential access](/docs/security)
