@@ -23,7 +23,7 @@ On the app hostname, the Worker serves these API routes:
 - The session, sign-out, the org list, a new org, and one org.
 - The account, its default model, its agent logins, the model list, and Get started.
 - The sections, the repositories, the members, and the workspace list of an org.
-- The list, read, create, update, and delete routes of an org's routines.
+- The list, read, create, update, and delete routes of an org's routines, Run now, and run history.
 - Leave org, under the existing last-active-admin rule.
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
@@ -45,7 +45,11 @@ previews, and desktop inside the real workspace object.
 The [GitHub composition](features/github.ts) stores banner updates in the common chat stream.
 The [routines area](routines/README.md) stores saved prompts and their triggers.
 It validates schedules and resolves author-filter logins at save.
-It serves records only and starts no runs.
+Its owner-only Run now starts a stored run as a new workspace.
+The run starter joins repeated creates through a stable first-message ID and returns before the workspace start ends.
+The runs list projects the current workspace state and retains failed-start and first-turn causes.
+Three failed runs in a row turn the routine off.
+Schedule scans and pull request dispatch do not call the starter yet.
 
 On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, workspace create/list
@@ -88,6 +92,8 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
 - [routines/route.ts](routines/route.ts) serves routine records after the request gate.
+- [routines/run-route.ts](routines/run-route.ts) serves Run now and paginated run history.
+- [routines/run-starter.ts](routines/run-starter.ts) starts queued runs with the owner's logins.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.
 - [http/json-body.ts](http/json-body.ts) owns the shared JSON object parsing policy.

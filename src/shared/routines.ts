@@ -11,6 +11,12 @@ export function routinePath(orgId: string, routineId: string): string {
   return `${routinesPath(orgId)}/${encodeURIComponent(routineId)}`
 }
 
+export const routinePaths = {
+  runs: (orgId: string, id: string, before?: string) =>
+    `${routinePath(orgId, id)}/runs${before === undefined ? '' : `?before=${encodeURIComponent(before)}`}`,
+  runNow: (orgId: string, id: string) => `${routinePath(orgId, id)}/run-now`,
+} as const
+
 export type RoutineWeekday =
   | 'monday'
   | 'tuesday'
@@ -135,4 +141,17 @@ export interface RoutineResponse {
 
 export interface RoutinesResponse {
   routines: readonly (Routine & { lastRun: RoutineRun | null })[]
+}
+
+export interface RunRoutineRequest {
+  requestId: string
+}
+
+export interface RoutineRunResponse {
+  run: RoutineRun
+}
+
+export interface RoutineRunsResponse {
+  runs: readonly RoutineRun[]
+  nextCursor: string | null
 }

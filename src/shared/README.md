@@ -112,6 +112,10 @@ The git credential payload is not defined yet.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
   Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
+  Run now takes a page request ID and returns its run after workspace admission.
+  Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
+  Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
+- [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.
 - [Runner fakes](../../worker/test-support/README.md) use these message types.

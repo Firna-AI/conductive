@@ -18,5 +18,6 @@ export interface WorkspaceView {
 }
 export interface WorkspaceViewResponse {
   view: WorkspaceView
+  routine?: { id: string; name: string } | null
 }
 export type UpdateWorkspaceViewRequest = WorkspaceView

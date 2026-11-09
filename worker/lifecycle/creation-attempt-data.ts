@@ -44,12 +44,13 @@ export function creationSender(
 export async function markCreationFailed(
   db: D1Database,
   workspaceId: string,
+  error?: { code: string; message: string },
 ): Promise<void> {
   await db
     .prepare(
-      "UPDATE workspace_creation_attempts SET state = 'failed' WHERE workspace_id = ?",
+      "UPDATE workspace_creation_attempts SET state = 'failed', error_code = COALESCE(error_code, ?), error_message = COALESCE(error_message, ?) WHERE workspace_id = ?",
     )
-    .bind(workspaceId)
+    .bind(error?.code ?? null, error?.message ?? null, workspaceId)
     .run()
 }
 

@@ -99,6 +99,8 @@ object holds the lifecycle state, the turn records, and the events.
   route.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
   workspace and queues its start.
+- [`creation-attempt-data.ts`](creation-attempt-data.ts) keeps the public failure code and message after a failed create.
+  [`start-failure.ts`](start-failure.ts) writes that cause and reports a run failure before it removes the workspace.
 - [`creation-claims.ts`](creation-claims.ts): `claimCreation`, which records
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).

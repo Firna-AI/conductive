@@ -98,7 +98,15 @@ export async function routinesRoute(
     previous,
     dependencies,
   )
-  if (!(await saveRoutine(env.DB, prepared, userId, previous === null))) {
+  if (
+    !(await saveRoutine(
+      env.DB,
+      prepared,
+      userId,
+      previous === null,
+      body.active !== undefined,
+    ))
+  ) {
     if (previous) await checkWriteAccess(env, orgId, previous.id, userId, false)
     else await requireShellWriter(env.DB, orgId, userId)
     await checkReferences(env, prepared)

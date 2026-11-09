@@ -1520,33 +1520,41 @@ Depends on: 3
 
 Start a run as a new workspace, and let the owner start one by hand.
 
-- [ ] Add the migration with the error columns of
+- [x] Add the migration with the error columns of
       `workspace_creation_attempts`, in the range
       `202611090100`–`202611090159`. Write them in the start failure.
-- [ ] Add the run starter: the checks, the create with the stable message
+- [x] Add the run starter: the checks, the create with the stable message
       ID, the run text, and the stored workspace or failure.
-  - [ ] Test that a run creates its workspace with the owner, the
+  - [x] Test that a run creates its workspace with the owner, the
         repository, the section, and the model of the routine.
-  - [ ] Test that a repeat of one run key gives one run and one
+  - [x] Test that a repeat of one run key gives one run and one
         workspace.
-  - [ ] Test that a missing agent login and expired GitHub access each
+  - [x] Test that a missing agent login and expired GitHub access each
         fail the run with their code, before any create.
-  - [ ] Test that a failed start shows the run as failed with its stored
+  - [x] Test that a failed start shows the run as failed with its stored
         cause after the app removes the workspace.
-- [ ] Skip a queued run that cannot start, with its reason: its routine
+- [x] Skip a queued run that cannot start, with its reason: its routine
       is off, its owner left or is suspended, or its org is suspended or
       deleted.
-- [ ] Count the failed runs in a row of each routine, from the run row,
+- [x] Count the failed runs in a row of each routine, from the run row,
       the start, and the first turn, and turn the routine off at three
       (decision 213 B).
-  - [ ] Test that three failed runs in a row turn the routine off with its
+  - [x] Test that three failed runs in a row turn the routine off with its
         reason, that a finished first turn resets the count, and that a
         skipped run does not count.
 
-- [ ] Serve Run now, which accepts only the owner, and the runs list with
+- [x] Serve Run now, which accepts only the owner, and the runs list with
       the state of each run.
-- [ ] Add `routine` to the workspace view.
-- [ ] Update the Worker README.
+- [x] Add `routine` to the workspace view.
+- [x] Update the Worker README.
+
+Milestone completed on 9 November 2026. A Codex non-ui implementor
+session built it. It changed the exact expectations of four existing chat
+tests to hold the new `routine: null` field and the stored error of a
+failed turn; no assertion got looser. The orchestrator re-ran 180 tests
+of `worker/routines`, `worker/chat`, and the changed tests, and the
+typecheck, lint, format, file-length, and export checks. The handoff is in
+`.context/routines/reports/m4-worker.md`.
 
 ## Milestone 5: Schedules
 

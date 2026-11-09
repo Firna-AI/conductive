@@ -171,6 +171,16 @@ runner commands.
 [Retries](retries.md) gives the stored retry state, and the rules of the
 retry route for `Session.retryMessageId`.
 
+## Routine first turns
+
+A run workspace reports the stored outcome of its first turn to its D1 run record.
+The report keeps the failure cause, including a login failure before dispatch.
+A finished first turn resets the routine's consecutive failure count.
+A failed first turn adds one failure and stays failed after an in-workspace retry.
+Later turns do not change that run outcome.
+Chat commits the turn before it reports the outcome.
+Each later chat change checks for an unreported outcome, including runner redelivery after a failed D1 write.
+
 ## Report repairs
 
 [Report repairs](report-repairs.md) says how the chat backend asks the
@@ -229,6 +239,7 @@ tests through the production Worker entry.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
   chunks of large file reports.
+- `routine-run.ts`: reports a routine's stored first-turn result after a chat transaction commits.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event.

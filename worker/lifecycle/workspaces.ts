@@ -42,7 +42,8 @@ export async function createWorkspace(
       .workspace(existing.id)
       .readCreationLifecycleResult()
     if (result?.ok) return provisionedResponse(runtime, orgId, existing.id)
-    if (result) await markCreationFailed(runtime.env.DB, existing.id)
+    if (result)
+      await markCreationFailed(runtime.env.DB, existing.id, result.error)
     else return joinCreation(runtime, key, existing, user, sender, input)
   }
   const candidate = await prepareCreationRequest(

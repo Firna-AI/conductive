@@ -89,7 +89,11 @@ export async function prepareAgentEvent(
       await new TurnLifecycle(transaction, session).finish(
         turn,
         event.type === 'turn.failed'
-          ? { state: 'failed', retryMessageId: event.retryMessageId }
+          ? {
+              state: 'failed',
+              retryMessageId: event.retryMessageId,
+              error: event.error,
+            }
           : event.state === 'finished'
             ? { state: 'finished', randomId }
             : { state: 'stopped' },

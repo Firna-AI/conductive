@@ -47,6 +47,11 @@ Org deletion cascades to both tables.
 Run workspace IDs have no foreign key, so a removed workspace can still have a failure record.
 The routine also keeps the former owner's name and its consecutive failure count.
 
+`202611090100_routine_run_failures.sql` keeps the public code and message of a failed workspace creation attempt.
+It also records the owner when a run enters the queue.
+The saved owner prevents an old queued request from using a replacement owner's logins.
+Message indexes support first-turn reports and creation recovery.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -81,6 +86,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 | Routines: records and routes | `202611090000`–`202611090059` |
+| Routines: runs and Run now | `202611090100`–`202611090159` |
 
 ## Key code
 

@@ -200,6 +200,10 @@ export class RunnerDelivery {
         await new TurnLifecycle(transaction, session).finish(turn, {
           state: 'failed',
           retryMessageId: command.messageId,
+          error: {
+            code: 'agent_login_required',
+            message: reason ?? unavailableLoginMessage(session),
+          },
         })
       },
       this.publish,

@@ -26,6 +26,10 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
 The [routine routes](../routines/README.md) serve routine records after the same app gate.
 Section deletion moves routines to General in its workspace-move batch.
 Repository deselection turns matching routines off in its repository-write batch.
+Run now and run history use the same app gate.
+Workspace view replies include `routine`, the run's routine ID and name, or null.
+A join from the run record supplies it without a new lifecycle field.
+Deleting the routine removes that link and keeps its normal run workspaces.
 
 ## Rules
 

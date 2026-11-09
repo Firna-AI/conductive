@@ -167,10 +167,16 @@ export class ChatStore {
   private tail: Promise<unknown> = Promise.resolve()
   private readonly storage: ChatStorage
   private readonly now: () => number
+  private readonly changed: (workspaceId: string) => Promise<void>
 
-  constructor(storage: ChatStorage, now: () => number) {
+  constructor(
+    storage: ChatStorage,
+    now: () => number,
+    changed: (workspaceId: string) => Promise<void> = async () => undefined,
+  ) {
     this.storage = storage
     this.now = now
+    this.changed = changed
   }
 
   run<T>(work: () => Promise<T>): Promise<T> {
@@ -231,6 +237,7 @@ export class ChatStore {
       return { result, events: transaction.emitted }
     })
     committed(events)
+    await this.changed(workspaceId)
     return result
   }
 }

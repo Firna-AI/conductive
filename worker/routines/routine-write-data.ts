@@ -13,8 +13,9 @@ export async function saveRoutine(
   input: Routine,
   actorId: string,
   create: boolean,
+  activeChanged = false,
 ): Promise<boolean> {
-  const values = [
+  const fields = [
     input.name,
     input.repositoryId,
     input.sectionId,
@@ -22,13 +23,6 @@ export async function saveRoutine(
     input.choice.agent,
     input.choice.model,
     input.choice.effort,
-    input.active ? 1 : 0,
-    input.inactiveReason,
-    input.failedRunsInARow,
-    input.timeZone,
-    JSON.stringify(input.triggers),
-    input.nextRunAt,
-    input.updatedAt,
   ]
   const referenceValues = [
     input.orgId,
@@ -46,7 +40,14 @@ export async function saveRoutine(
       WHERE ${activeShellMemberPredicate} AND ${referencesExist}`,
         )
         .bind(
-          ...values,
+          ...fields,
+          input.active ? 1 : 0,
+          input.inactiveReason,
+          input.failedRunsInARow,
+          input.timeZone,
+          JSON.stringify(input.triggers),
+          input.nextRunAt,
+          input.updatedAt,
           input.id,
           input.orgId,
           actorId,
@@ -58,11 +59,25 @@ export async function saveRoutine(
     : db
         .prepare(
           `UPDATE routines SET name = ?, repository_id = ?, section_id = ?, prompt = ?, agent = ?, model = ?, effort = ?,
-      active = ?, inactive_reason = ?, failed_runs_in_a_row = ?, time_zone = ?, triggers_json = ?, next_run_at = ?, updated_at = ?
+      active = CASE WHEN ? = 1 THEN ? ELSE active END,
+      inactive_reason = CASE WHEN ? = 1 THEN ? ELSE inactive_reason END,
+      failed_runs_in_a_row = CASE WHEN ? = 1 AND active = 0 AND ? = 1 THEN 0 ELSE failed_runs_in_a_row END,
+      time_zone = ?, triggers_json = ?, next_run_at = CASE WHEN ? = 0 AND active = 0 THEN NULL ELSE ? END, updated_at = ?
       WHERE org_id = ? AND id = ? AND owner_user_id = ? AND ${activeShellMemberPredicate} AND ${referencesExist}`,
         )
         .bind(
-          ...values,
+          ...fields,
+          activeChanged ? 1 : 0,
+          input.active ? 1 : 0,
+          activeChanged ? 1 : 0,
+          input.inactiveReason,
+          activeChanged ? 1 : 0,
+          input.active ? 1 : 0,
+          input.timeZone,
+          JSON.stringify(input.triggers),
+          activeChanged ? 1 : 0,
+          input.nextRunAt,
+          input.updatedAt,
           input.orgId,
           input.id,
           actorId,

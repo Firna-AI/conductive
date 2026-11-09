@@ -16,6 +16,7 @@ import {
 } from './cleanup'
 import { deleteProvisionalWorkspace } from './workspace-data'
 import { markCreationFailed } from './creation-attempt-data'
+import { failRoutineWorkspaceStart } from '../routines/run-outcome-data'
 import { startTimeLimitReached } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { WorkspaceStartError } from './workspace-start'
@@ -138,7 +139,8 @@ export async function finishFailedStart(
       orgId: job.orgId,
       sandboxId,
     })
-  await markCreationFailed(env.DB, job.workspaceId)
+  await markCreationFailed(env.DB, job.workspaceId, failure)
+  await failRoutineWorkspaceStart(env.DB, job.workspaceId, failure, now())
   if (await endpoint.readLifecycle())
     await endpoint.lifecycleFailed({
       code: failure.code,

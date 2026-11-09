@@ -6,7 +6,11 @@ import type { PendingCommand, StoredTurn } from './types'
 
 type TurnEnd =
   | { state: 'stopped' }
-  | { state: 'failed'; retryMessageId?: string }
+  | {
+      state: 'failed'
+      retryMessageId?: string
+      error?: { code: string; message: string }
+    }
   | { state: 'finished'; randomId: () => string }
 
 /** Owns the active turn and its stored chain of waiting turns. */
@@ -83,6 +87,7 @@ export class TurnLifecycle {
       }
     }
     turn.state = end.state
+    if (end.state === 'failed') turn.error = end.error
     turn.nextTurnId = null
     await this.removeCommands(turn.id)
     await this.transaction.saveTurn(turn)

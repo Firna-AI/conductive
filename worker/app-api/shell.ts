@@ -8,6 +8,7 @@ import type { AppDependencies, AppEnv } from '../env'
 import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
 import { listMembers } from '../members/membership'
 import type { RequestContext } from '../security/gate'
+import { workspaceRoutine } from '../routines/workspace-routine-data'
 import {
   saveWorkspaceReadMark,
   shellRepositories,
@@ -72,6 +73,7 @@ export async function shellRoute(
   if (path === viewPath && request.method === 'GET')
     return Response.json({
       view: await savedWorkspaceView(env.DB, workspaceId, userId),
+      routine: await workspaceRoutine(env.DB, orgId, workspaceId),
     })
   if (path === viewPath && request.method === 'PUT') {
     requireWritableWorkspace(workspace)
@@ -83,7 +85,10 @@ export async function shellRoute(
       view,
       now: dependencies.now(),
     })
-    return Response.json({ view })
+    return Response.json({
+      view,
+      routine: await workspaceRoutine(env.DB, orgId, workspaceId),
+    })
   }
   if (path === readPath && request.method === 'PUT') {
     requireWritableWorkspace(workspace)

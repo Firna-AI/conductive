@@ -56,6 +56,10 @@ export async function refuseRunnerEvent(
   ) {
     await new TurnLifecycle(transaction, target.session).finish(target.turn, {
       state: 'failed',
+      error: {
+        code: 'runner_event_refused',
+        message: 'The agent could not finish. Try again in the workspace.',
+      },
     })
   }
 }

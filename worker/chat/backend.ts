@@ -23,6 +23,7 @@ import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
+import { reportRoutineFirstTurn } from './routine-run'
 import {
   runWorkspaceOperation,
   type WorkspaceOperation,
@@ -84,7 +85,9 @@ export class WorkspaceChat {
   ) {
     this.env = env
     this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
-    this.store = new ChatStore(storage, this.dependencies.now)
+    this.store = new ChatStore(storage, this.dependencies.now, (id) =>
+      reportRoutineFirstTurn(env.DB, this.store, id, this.dependencies.now()),
+    )
     this.browsers = new BrowserTabs(this.dependencies)
     this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
       this.publish(events),
