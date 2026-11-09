@@ -59,6 +59,10 @@ stops its own controller:
   has the workspace name, and the agent's title renames both. The
   development page does the same.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
+- `onOpenDiff` gets the real path of a changed file of a finished turn. The
+  chip of the file shows the label of its path, `displayPath`, which hides
+  each secret value, as [Labels of paths](../files/README.md#labels-of-paths)
+  says.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.
@@ -80,6 +84,10 @@ stops its own controller:
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position. A dialog or a sheet covers the nearest
   positioned frame: the app frame.
+- The menus, the dialogs, and the sheets of the chat note themselves in
+  the open layers of the app shell, from `../shell/ui/layers.ts`. So the
+  key of the command palette closes an open menu, and does nothing while
+  a dialog or a sheet is open. Outside the app, nothing notes them.
 - The Mac app shows two more parts of Mac commands outside the chat:
   `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
   say how to mount them.
@@ -259,8 +267,7 @@ check in the Mac app.
   follows in place of its own reads.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session, with its records
-  in event order and its newest record. `offer` takes the record of a read
-  or a reply.
+  in event order and its newest record. The record owner keeps the logs private.
 - `state/known-turns.ts`: the known turns, their order, their ends, and
   `retryItemId`, the one failed item that offers Try again.
 - `state/placement.ts`: where an item goes in its turn, also a late one.
@@ -274,9 +281,14 @@ check in the Mac app.
 - `state/archive-view.ts`: the tabs and the session history of a
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
-  that first shows the new session.
-- `state/session-records.ts`: the order of the session records and of the
-  workspace record by event number, and the pending edits of a session.
+  that first shows the new session. Its target becomes selected only while
+  the source stays selected. A newer session, file, or diff tab stays selected.
+- `state/session-records.ts`: the order of session records by event number,
+  and the pending edits of a session. It publishes accepted records from
+  replies, complete current lists, and event merges. `confirmSessions`
+  establishes the current records before the shown session starts its history.
+- `state/workspace-records.ts`: the order of the workspace record and its
+  start steps by event number, with the remembered first-start success.
 - `state/first-start.ts`: the success of the first start of the workspace,
   which the snapshot remembers, and the wait of Send until then.
 - `state/session-login.ts`: whose login a message uses, from the session

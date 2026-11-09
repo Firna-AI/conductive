@@ -7,7 +7,7 @@ import type { RunnerFileCommand, RunnerFileResponse } from './runner-files'
 import type { WorkspaceStart } from './workspaces'
 
 export const RUNNER_PROTOCOL_VERSION = 1 as const
-export type RunnerProtocolVersion = typeof RUNNER_PROTOCOL_VERSION
+type RunnerProtocolVersion = typeof RUNNER_PROTOCOL_VERSION
 
 /**
  * Maximum UTF-8 bytes of JSON.stringify(the complete RunnerEventEnvelope).
@@ -58,7 +58,7 @@ export type RunnerToWorkspace =
  * The runner removes either result from its outbox and never retries it.
  * A confirmed file part includes durable assembly state across reconnects.
  */
-export interface RunnerConfirm {
+interface RunnerConfirm {
   type: 'confirm'
   streamId: string
   throughEventNumber: number
@@ -75,13 +75,13 @@ export interface RunnerConfirm {
  * A refused turn.completed or turn.failed still ends its active turn.
  * A storage or network failure is not a refusal. Close without confirming.
  */
-export interface RunnerWelcome {
+interface RunnerWelcome {
   type: 'welcome'
   protocolVersion: RunnerProtocolVersion
   streamId: string
   confirmedThrough: number
 }
-export interface RunnerResend {
+interface RunnerResend {
   type: 'resend'
   streamId: string
   fromEventNumber: number

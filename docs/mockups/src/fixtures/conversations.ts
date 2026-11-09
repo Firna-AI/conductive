@@ -14,7 +14,7 @@ import { workConversations } from './workConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
-export type ToolCallStatus = 'done' | 'running' | 'stopped'
+type ToolCallStatus = 'done' | 'running' | 'stopped'
 
 export type ChatItem =
   | {
@@ -85,8 +85,8 @@ export type ChatItem =
       /**
        * The first line of a linked session. A member's message in another
        * session opened it, because the login of the starter of that session
-       * was not available. `from` is the title of that session, which the
-       * line links to.
+       * was not available, or that starter did not let other members use
+       * it. `from` is the title of that session, which the line links to.
        */
       kind: 'linked'
       id: string

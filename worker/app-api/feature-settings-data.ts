@@ -2,6 +2,7 @@ import { BASE_IMAGE } from '../../src/shared/base-image'
 import type { OrgSettings } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
 import { activeAdminPredicate } from '../members/org-data'
+import type { OrgEnvironment } from '../lifecycle/org-environment'
 
 export interface ShellSettingsRow {
   installScript: string
@@ -33,15 +34,15 @@ export async function readShellSettings(
 
 export function shellSettingsView(
   row: ShellSettingsRow,
-  environment: Record<string, string>,
+  environment: OrgEnvironment,
 ): OrgSettings {
   return {
     baseImage: BASE_IMAGE,
     installScript: row.installScript,
     startupScript: row.startupScript,
-    envVars: Object.keys(environment)
-      .sort()
-      .map((name) => ({ name })),
+    envVars: Object.entries(environment)
+      .sort(([a], [b]) => (a === b ? 0 : a < b ? -1 : 1))
+      .map(([name, entry]) => ({ name, secret: entry.secret })),
     updatedAt: row.updatedAt,
     needsBuild: row.builtRevision !== row.revision,
   }

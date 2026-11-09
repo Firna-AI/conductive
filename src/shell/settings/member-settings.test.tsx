@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { productName } from '../../../docs/mockups/src/brand'
 import type { SettingsTab } from '../../app/router'
 import { valueOf } from '../../app/store'
 import { ManualDelay, requestLines } from '../../app/test-kit'
@@ -69,7 +70,7 @@ function line(eventNumber: number, text: string): BuildLogEvent {
 }
 
 describe('the org settings of a member who is not an admin', () => {
-  test('a member sees General, Repositories, and Cloud computer without edit controls', async () => {
+  test('a member sees General, Repositories, and Cloud computer without edit controls, and each Secret mark as a word', async () => {
     holdAnimationFrames()
     const { settings } = await signedIn(new FakeApiServer({ role: 'member' }))
     const general = settings('general')
@@ -89,7 +90,7 @@ describe('the org settings of a member who is not an admin', () => {
       'cloud computer': computer.innerHTML,
     }
     for (const [page, html] of Object.entries(pages)) {
-      expect(html, page).not.toMatch(/<button|<input|<textarea/)
+      expect(html, page).not.toMatch(/<button|<input|<textarea|role="switch"/)
       expect(textOf(html), page).not.toMatch(/Save|Build computer|Delete org/)
     }
     expect(tabLabels(pages.general)).toEqual([
@@ -111,6 +112,9 @@ describe('the org settings of a member who is not an admin', () => {
     )
     expect(textOf(pages['cloud computer'])).toContain(
       'Install software Cloud computers run Ubuntu 24.04 and include Node.js 24, npm, pnpm, Bun, Python 3.12, uv, Go, Rust, Java, GCC, Clang, Docker, git, and gh. The install script runs only at a build of the computer.',
+    )
+    expect(textOf(pages['cloud computer'])).toContain(
+      `DATABASE_URL Secret •••••••• PLACES_API_KEY Secret •••••••• STRIPE_SECRET_KEY Secret •••••••• NEXT_PUBLIC_SITE_URL •••••••• ${productName} hides secret values in agent output and start logs. Changes apply at the next start.`,
     )
   })
 

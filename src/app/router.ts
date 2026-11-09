@@ -104,7 +104,7 @@ export function parseRoute(pathname: string, search: string): Route {
   return { screen: 'not-found' }
 }
 
-/** The org that a screen belongs to, for the rail and the sidebar. */
+/** The org that a screen belongs to, such as the org of the command palette. */
 export function routeOrgId(route: Route): string | null {
   return 'orgId' in route ? route.orgId : null
 }

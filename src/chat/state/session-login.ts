@@ -1,3 +1,4 @@
+import type { LinkedReason } from '../../../docs/mockups/src/components/chat/linkedCopy'
 import type { SessionLogin } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import type { MessageSender } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
@@ -5,20 +6,24 @@ import type { Session } from '../../shared/sessions'
 /**
  * Whose agent login a message of the reader uses in a session. A session runs
  * on the login of its starter, the member who started it, whoever sends a
- * message. While that login is not available, a message of another member
- * starts a new linked session on that member's own login. An older record
- * that names no starter takes the same way, and names nobody.
+ * message. While that login is not available, or the starter keeps it for
+ * their own messages, a message of another member starts a new linked session
+ * on that member's own login. An older record that names no starter takes the
+ * same way, and names nobody.
  */
 export type SessionLoginView =
-  /** The reader started the session. Its record says whether that login works. */
+  /**
+   * The reader started the session. Its record says whether that login
+   * works. A login that its starter keeps private still works for them.
+   */
   | { kind: 'own'; available: boolean }
-  /** Another member started the session, and the login of that member works. */
+  /** Another member started the session, and shares a login that works. */
   | { kind: 'member'; name: string }
   /** A message starts a linked session on the reader's own login. */
-  | { kind: 'linked'; starter: string | null }
+  | { kind: 'linked'; starter: string | null; reason: LinkedReason }
 
 /** The name of a member: the display name, or else the GitHub login. */
-export function memberName(
+function memberName(
   person: Pick<MessageSender, 'displayName' | 'githubLogin'>,
 ): string {
   return person.displayName?.trim() || person.githubLogin
@@ -34,15 +39,21 @@ export function sessionLoginOf(
   readerId: string | null,
 ): SessionLoginView | null {
   const { startedBy } = session
-  if (startedBy === null) return { kind: 'linked', starter: null }
+  if (startedBy === null) {
+    return { kind: 'linked', starter: null, reason: 'unavailable' }
+  }
   if (readerId === null) return null
   if (startedBy.id === readerId) {
     return { kind: 'own', available: session.loginAvailable }
   }
   const name = memberName(startedBy)
-  return session.loginAvailable
-    ? { kind: 'member', name }
-    : { kind: 'linked', starter: name }
+  if (!session.loginAvailable) {
+    return { kind: 'linked', starter: name, reason: 'unavailable' }
+  }
+  if (!session.loginShared) {
+    return { kind: 'linked', starter: name, reason: 'private' }
+  }
+  return { kind: 'member', name }
 }
 
 /**

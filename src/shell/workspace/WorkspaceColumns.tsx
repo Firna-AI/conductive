@@ -4,6 +4,7 @@ import {
   Globe,
   MessageSquare,
   Monitor,
+  PanelRight,
   SquareTerminal,
   type LucideIcon,
 } from 'lucide-react'
@@ -14,27 +15,51 @@ import column from '../../../docs/mockups/src/components/workspace/RightColumn.m
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import { ResizeHandle } from '../layout/ResizeHandle'
-import { usePanelWidths } from '../layout/panels'
+import { usePanelLayout } from '../layout/panels'
+import { IconButton } from '../ui/actions'
 import { AppLink } from '../ui/AppLink'
 import type { WorkspaceContext } from './features'
 import workspace from './workspace.module.css'
 
 /**
+ * The toggle at the end of the workspace header on desktop. It hides the
+ * right column, and shows it again.
+ */
+export function RightColumnToggle() {
+  const panels = usePanelLayout()
+  const shown = useStore(panels.rightShown)
+  return (
+    <IconButton
+      icon={PanelRight}
+      label={shown ? 'Hide the right column' : 'Show the right column'}
+      onPress={panels.toggleRight}
+    />
+  )
+}
+
+/**
  * The column beside the chat: the pull request bar, the file lists, and the
  * tools panel below them. A handle on its inner edge resizes it. Without
  * `tools`, the files part fills the column, as for an archived workspace.
+ *
+ * A column that the user hid stays mounted. So the file lists keep the
+ * connection that the file tabs of the centre use, and the terminal keeps
+ * its session.
  */
 export function RightColumn(props: {
   pullRequest: ReactNode
   files: ReactNode
   tools?: ReactNode
 }) {
-  const width = useStore(usePanelWidths().widths).right
+  const panels = usePanelLayout()
+  const width = useStore(panels.widths).right
+  const shown = useStore(panels.rightShown)
   const aside = useRef<HTMLElement>(null)
   return (
     <aside
       aria-label="Files and tools"
       className={classes(column.column, workspace.right)}
+      hidden={!shown}
       ref={aside}
       style={width === null ? undefined : { width }}
     >

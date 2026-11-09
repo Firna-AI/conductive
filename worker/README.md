@@ -17,6 +17,17 @@ The [operator area](operator/README.md) owns the operator's suspension of users 
 
 ## Routes
 
+On the root domain, the Worker serves Astro's built site through the assets
+binding. Listed pages use paths such as `/terms`. Listed files other than
+HTML and the file list load under `/_site/`. `/favicon.ico` also serves the
+brand favicon. Other paths get the built unknown-address page with `404`.
+The [marketing README](../src/marketing/README.md#how-the-worker-serves-it)
+gives the methods, markers, headers, policy, and unavailable-build response.
+
+The app host serves the built agreement page through GitHub sign-in.
+It also serves listed site files under `/_site/`. Other site paths get the
+app page, as unknown app paths do.
+
 On the app hostname, the Worker serves these API routes:
 
 - The health check, GitHub sign-in and its callback, and the sign-in exchange of the Mac app.
@@ -74,6 +85,8 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
+- [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
+- [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.

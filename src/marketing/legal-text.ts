@@ -31,7 +31,7 @@ export type Block =
   | { readonly kind: 'list'; readonly items: readonly Text[] }
 
 /** One section of a legal page: a heading, and its paragraphs and lists. */
-export type LegalSection = {
+type LegalSection = {
   readonly title: string
   readonly blocks: readonly Block[]
 }
@@ -50,7 +50,7 @@ export function draft(text: string): DraftField {
 }
 
 /** A link to a page of the site. */
-export function link(page: SitePage, text: string): TextLink {
+function link(page: SitePage, text: string): TextLink {
   return { page, text }
 }
 

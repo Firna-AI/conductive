@@ -33,6 +33,7 @@ function record(id: string, closedAt: number | null): Session {
     startedBy: senderSnapshot(fakeUser),
     sourceSessionId: null,
     loginAvailable: true,
+    loginShared: true,
   }
 }
 

@@ -74,13 +74,3 @@ export async function load<T>(
 export function valueOf<T>(loadable: Loadable<T>): T | undefined {
   return loadable.state === 'ready' ? loadable.value : undefined
 }
-
-/** Changes a loaded value in place. A store that has no value stays as it is. */
-export function patch<T>(
-  store: Store<Loadable<T>>,
-  change: (value: T) => T,
-): void {
-  store.change((current) =>
-    current.state === 'ready' ? ready(change(current.value)) : current,
-  )
-}
