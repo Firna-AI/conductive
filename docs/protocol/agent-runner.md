@@ -117,7 +117,9 @@ says.
 
 - The file tree, the changes list, the start steps, and the workspace name
   belong to no session. A later full report of the same kind replaces each
-  of them.
+  of them. But a report of the workspace name sets that name only while
+  the workspace has no name, as
+  [Workspace and session names](chat-and-events.md#workspace-and-session-names) says.
 - When the workspace refuses an update of one of these kinds, the update is
   lost. The workspace stores its marker. Then it asks the runner once for a
   fresh full report of that kind (decision 96).
@@ -134,7 +136,9 @@ says.
 - Each kind has at most one open request. After a further refusal of that
   kind, the workspace sends no second request.
 - A stored complete report of that kind ends the repair, also a failed one.
-  It ends no repair of another kind. After the next refusal of that kind, the
+  A report of the workspace name that comes when the workspace already has
+  a name also ends the repair, because it can change nothing. It ends no
+  repair of another kind. After the next refusal of that kind, the
   workspace asks for a new report, with a new command ID.
 - A replacement is a later full report of the same kind.
   [Files and changes](workspaces-and-sandboxes.md#files-and-changes) says

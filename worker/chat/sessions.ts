@@ -24,7 +24,7 @@ export async function createSession(
   const session: Session = {
     id,
     workspaceId: transaction.workspaceId,
-    title: 'New session',
+    title: null,
     choice,
     createdAt: transaction.now,
     closedAt: null,

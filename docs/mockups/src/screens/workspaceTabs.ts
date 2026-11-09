@@ -1,5 +1,5 @@
+import { nameLabel } from '../../../../src/shared/name-label'
 import type { WorkspaceTab } from '../components/workspace/WorkspaceTabs'
-import { conversations } from '../fixtures/conversations'
 import {
   linkedSession,
   newSession,
@@ -17,29 +17,30 @@ export function isNew(state: WorkspaceState): boolean {
 }
 
 /**
- * The name of the workspace: the city that the app gave it, until the
- * agent's first answer names it after the task.
+ * The name that the screen shows for the workspace. A new workspace has no
+ * name from the send until its title comes, about a second later, while
+ * the sandbox starts, so it shows Untitled. After a failed title request
+ * it stays Untitled until a later message with text gets a title.
  */
 export function workspaceName(
   state: WorkspaceState,
   workspace: Workspace,
 ): string {
-  const answered = conversations[state.conversation].some(
-    (item) => item.kind === 'agent',
-  )
-  return !answered && workspace.generatedName
-    ? workspace.generatedName
-    : workspace.name
+  const untitled = state.name === 'untitled' && isNew(state)
+  return nameLabel(untitled ? null : workspace.name)
 }
 
 /**
  * The tabs of the centre column: the sessions, the code file that stays
  * open, and the file, the diff, or the new session that the state opens.
  * A tab whose file name the app does not know shows "File".
- * The linked session opens as the last tab. While the login of the starter
- * of the first session is not available, that first session leads to its
- * view for the member, beside the linked session. While the starter keeps
- * the login for their own messages, the first session leads to that view.
+ * The one session of a new workspace takes the title of the workspace, so
+ * its tab shows the same name as the header, Untitled before the title
+ * comes. The linked session opens as the last tab. While the login of the
+ * starter of the first session is not available, that first session leads
+ * to its view for the member, beside the linked session. While the starter
+ * keeps the login for their own messages, the first session leads to that
+ * view.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -58,11 +59,16 @@ export function tabsFor(
     {
       key: first.key,
       kind: 'session',
-      title: first.title,
+      title: nameLabel(first.title),
       to: firstPath,
       selected: state.tab === 'session',
     },
-    { key: second.key, kind: 'session', title: second.title, selected: false },
+    {
+      key: second.key,
+      kind: 'session',
+      title: nameLabel(second.title),
+      selected: false,
+    },
     {
       key: 'code',
       kind: 'code',
@@ -105,7 +111,7 @@ export function tabsFor(
     tabs.push({
       key,
       kind: 'session',
-      title,
+      title: nameLabel(title),
       to: paths.sessions,
       selected: true,
     })
@@ -115,7 +121,7 @@ export function tabsFor(
     tabs.push({
       key,
       kind: 'session',
-      title,
+      title: nameLabel(title),
       to: paths.linkedSession,
       selected: true,
     })

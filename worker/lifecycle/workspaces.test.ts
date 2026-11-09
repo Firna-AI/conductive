@@ -101,6 +101,12 @@ it('keeps a failed create and its first message while revoking its token and ret
       createCompletedWorkspace(runtime, org.id, user, input),
     )
     expect(retry.workspace.id).toBe(created.workspace.id)
+    expect(created.workspace.name).toBeNull()
+    expect(
+      await runtime.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')
+        .bind(created.workspace.id)
+        .first('name'),
+    ).toBe('')
     expect(created.workspace.branch).toMatch(/^octocat\/[a-z]+-[a-z0-9]{4}$/)
     expect(created.first.request).toEqual(FIRST_MESSAGE)
     expect(

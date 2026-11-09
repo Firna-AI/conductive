@@ -1,14 +1,18 @@
 import { useRef } from 'react'
 import { MessageSquare } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import { nameLabel } from '../../shared/name-label'
 import local from './tabs.module.css'
 
 /**
  * The title of the current session as a field, in place of its tab label.
  * Enter or leaving the field saves the name, and Escape keeps the old one.
+ * A session with no title starts with an empty field, which shows Untitled
+ * as its hint, so the label never becomes its name. An empty field keeps
+ * the old name.
  */
 export function RenameField(props: {
-  title: string
+  title: string | null
   onSave: (title: string) => void
   onCancel: () => void
 }) {
@@ -35,7 +39,7 @@ export function RenameField(props: {
         aria-label="Session name"
         autoFocus
         className={local.rename}
-        defaultValue={props.title}
+        defaultValue={props.title ?? ''}
         name="title"
         onBlur={(event) => finish(true, event.currentTarget.value)}
         onFocus={(event) => event.currentTarget.select()}
@@ -44,6 +48,7 @@ export function RenameField(props: {
           event.preventDefault()
           finish(false, '')
         }}
+        placeholder={nameLabel(props.title)}
       />
     </form>
   )

@@ -2,6 +2,8 @@ import { useCallback, useRef, type ReactNode } from 'react'
 import { History, MessageSquare, Pencil, Plus, X } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import { nameLabel } from '../../shared/name-label'
+import type { Session } from '../../shared/sessions'
 import { IconButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
 import { useDismiss } from '../ui/dismiss'
@@ -10,7 +12,8 @@ import { RenameField } from './RenameField'
 
 export interface SessionTab {
   id: string
-  title: string
+  /** The title of the session. The tab shows Untitled while it is null. */
+  title: Session['title']
   selected: boolean
 }
 
@@ -25,6 +28,7 @@ function Tab(props: {
   onCancelRename: () => void
 }) {
   const { tab } = props
+  const label = nameLabel(tab.title)
   if (props.renaming) {
     return (
       <li className={classes(styles.tab, styles.selected)}>
@@ -45,12 +49,12 @@ function Tab(props: {
         type="button"
       >
         <MessageSquare aria-hidden className={styles.icon} size={13} />
-        <span className={styles.title}>{tab.title}</span>
+        <span className={styles.title}>{label}</span>
       </button>
       {tab.selected && !props.readOnly ? (
         <IconButton
           icon={Pencil}
-          label={`Rename ${tab.title}`}
+          label={`Rename ${label}`}
           onPress={() => props.onStartRename(tab.id)}
           quiet
         />
@@ -58,7 +62,7 @@ function Tab(props: {
       <span className={styles.close}>
         <IconButton
           icon={X}
-          label={`Close ${tab.title}`}
+          label={`Close ${label}`}
           onPress={() => props.onClose(tab.id)}
           quiet
         />
