@@ -73,6 +73,7 @@ The reusable workflow `desktop-mac-checks.yml` holds the Mac checks, and `deskto
 The Desktop workflow and the release workflow run the same Mac checks.
 `desktop/scripts/publish.ts` checks the files and publishes the draft.
 It takes the file names from `latest-mac.yml` and from the signed files, so it holds no copy of the package naming rule.
+`desktop/scripts/verify-release-tag.ts` checks the release tag.
 A release happens in these steps:
 
 1. On each push to `main`, release-please keeps one release pull request up to date.
@@ -81,7 +82,9 @@ A release happens in these steps:
    It also adds the changes to the root `CHANGELOG.md`.
 2. Merge the release pull request.
    release-please then creates the tag `vX.Y.Z` on the merge commit, and a draft GitHub release.
+   This merge commit is the release commit.
 3. The release workflow runs the Mac checks.
+   Its `verify-tag` job then checks that `refs/tags/vX.Y.Z` points to the release commit.
    Its signing job then builds both architectures with the updater on, signs and notarizes them, and runs the packaged tests.
 4. The publish job uploads the files to the draft.
    It publishes the draft only after GitHub lists every file with its full size.
@@ -104,6 +107,23 @@ Otherwise, delete the draft, and the next release carries the fix.
 The publish job never changes or deletes a published release.
 When the version already has a published release, it warns and publishes nothing.
 
+The tag check reads the tag by its full name, so a branch with the same name does not count.
+The check fails when it cannot read the tag, when the tag is missing, or when the tag points to another commit.
+Then the run signs and publishes nothing, and the draft stays.
+The workflow never moves a tag.
+A tag can point to another commit when someone pushed it before the merge.
+Find out who pushed the tag and why before you move it.
+The log of the failed check names the release commit.
+`gh pr view NUMBER --json mergeCommit` also gives it, for the number of the release pull request.
+When the tag is missing or wrong, point it at the release commit:
+
+```sh
+git push --force origin RELEASE_COMMIT:refs/tags/vX.Y.Z
+```
+
+Then re-run the failed jobs, for example with `gh run rerun RUN_ID --failed`.
+The re-run checks the tag again, and then signs and publishes.
+
 The publish job runs on Linux with the built-in `GITHUB_TOKEN` and `contents: write`.
 It downloads the signed files and uploads them with `gh`.
 It runs no `npm ci` and no build, so no dependency script runs beside a token that can write releases.
@@ -113,11 +133,16 @@ The signing job keeps a read-only token.
 That run keeps the updater off and publishes nothing.
 Use it to test signing.
 
-release-please uses the `RELEASE_PLEASE_TOKEN` secret when it exists, and the built-in token otherwise.
+release-please uses the `RELEASE_PLEASE_TOKEN` repository Actions secret when it exists, and the built-in token otherwise.
+The repository has this secret.
+The secret needs a fine-grained personal access token for `Firna-AI/remote-code` only, with read and write access to contents, issues, and pull requests.
+The owner of that token then opens the release pull request, and CI runs on it with no approval.
+The workflow uses the secret while it exists, also after its token expires.
+So store a new token in the secret before the old one expires.
+Risk: a workflow on any branch of this repository can read the secret.
 With the built-in token, `github-actions[bot]` opens the release pull request.
 GitHub then runs CI on it only after a person with write access approves the runs.
 The built-in token also needs "Allow GitHub Actions to create and approve pull requests" in the repository's Actions settings.
-A token in the `RELEASE_PLEASE_TOKEN` Actions secret runs CI on the release pull request with no approval, and needs no code change.
 
 One root release-please component covers the whole product, so the web app and the Mac app share one version.
 Versions have the form `0.x.y`.

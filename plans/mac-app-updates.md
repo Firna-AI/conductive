@@ -68,8 +68,9 @@ and 3. The options check of the decisions added the calls that say so:
 - release-please uses `secrets.RELEASE_PLEASE_TOKEN || github.token`, as in
   Mokly. With the built-in token, GitHub runs CI on the release pull request
   only after a person approves it. A stored token runs CI with no approval,
-  and needs no code change. Decision 7 chooses. Added on 9 November 2026,
-  and corrected on the same day after the options check.
+  and needs no code change. Decision 7 chose the stored token. Added on 9
+  November 2026, and corrected on the same day after the options check and
+  after decision 7.
 - Only the signing job of a release turns the updater on. Manual, pull
   request, and local builds keep it off. Reason: macOS installs an update
   only into a Developer ID build, and a test build with the updater on could
@@ -89,6 +90,15 @@ and 3. The options check of the decisions added the calls that say so:
   request. GitHub gives a release the date of that commit, so each release is
   newer than the release before it. From the options check, updated on 9
   November 2026.
+- Before signing, the `verify-tag` job reads `refs/tags/vX.Y.Z` and its
+  peeled commit with `git ls-remote`. It fails when the tag does not point
+  to the release commit. It runs in a job of its own after the Mac checks,
+  so a re-run of the failed jobs repeats it with the outputs of the
+  release-please job. No job moves a tag. Manual runs skip it, because they
+  create no release. Decision 11 chose the check. Added on 9 November 2026.
+- The Mac checks run on the Apple silicon and the Intel runner for every
+  event, also for pull requests. The path filters of the Desktop workflow
+  stay. Decision 12 chose this. Added on 9 November 2026.
 - Every published release of this repository carries the Mac app files and
   `latest-mac.yml`. Reason: electron-updater reads the newest release of the
   whole repository, so a release without them stops all updates. Added on 9
@@ -143,6 +153,12 @@ Calls of the docs implementor in Milestone 1, accepted on 9 November 2026:
 - The rule for failures covers a failed check, download, or install. Only a
   failed manual check shows an error, as decision 5 says.
 
+Agent call on 9 November 2026 after the final docs check: the privacy notice
+also names the Mac app's GitHub update requests and their network address.
+Reason: this states the data flow of the approved GitHub update feed. It
+adds no product behavior or data recipient. Both legal pages were read in
+full. GitHub's privacy statement confirms collection of request addresses.
+
 ## Decisions
 
 The options check ran on 8 November 2026. Its report is
@@ -154,6 +170,13 @@ decision 1 with a new option, H. The user also chose option D of decision 3,
 a release pull request. The feed is now the releases of this
 repository. Decision 2 got a new option, H, because GitHub allows required
 reviewers on the environments of a public repository.
+
+Later on 9 November 2026, the user chose A for decision 7. The user also
+answered three open items: "6 = follow up; 11 = F; 12 = B". Decision 6
+moved to a follow-up item, and no option of it is chosen. Items 11 and 12
+were follow-up items of this branch, so this branch applies them. Items 8
+to 10 are the review findings of the branch, in
+`.context/reviews/calummoore/desktop-app-auto-update/findings.md`.
 
 ### 1. Choose the credential that publishes releases
 
@@ -230,6 +253,7 @@ reviewers on the environments of a public repository.
 - **Recommendation:** D. Releases then come only from the release pull request on `main`, and GitHub enforces it. The merge of that pull request stays the user's single step. The first recommendation was B, the options check recommended D, and H was recommended while tags were the trigger. H best protects the codebase, because it also stops a release that an agent merges. E can join D or H at small cost.
 - **Action:** ask the user, because D removes the tag trigger and changes the environment rules that the user approved on 8 November 2026, and H adds a gate.
 - **Chosen:** D, by the user on 9 November 2026: "2 = D". This also fixes `plans/follow-ups/branch-tags-get-signing-secrets.md`.
+- **Applied:** on 9 November 2026, the `v*` rule of `desktop-release` was removed. A read of the environment on the same day found one deployment rule, the branch `main`. Evidence: `.context/mac-app-updates/resume-docs/github-settings.log`.
 
 ### 3. Choose where the release version comes from
 
@@ -354,6 +378,7 @@ root question, and changed the recommendation from B to E. Its report is
 - **Related:** `plans/follow-ups/read-only-copies-never-update.md` adds an offer at launch to move a read-only copy into Applications. E's read-only text only explains a refusal after a manual check.
 - **Recommendation:** E. It costs the same as B, and its answer stays true for every failure after the promise, also on a read-only copy, where B's "Try again later." never helps. The first recommendation was B.
 - **Action:** ask the user, because B, D, E, and F add or change answers that no requirement covers, and C changes the found-version text of decision 5.
+- **Deferred:** by the user on 9 November 2026: "6 = follow up". The user chose no option, so this branch does not apply E or any other option. The app and the protocol keep the current behaviour: after "Downloading the new version.", a failed download or a refusal by macOS shows no dialog. `plans/follow-ups/manual-update-check-ends-silently.md` holds the open decision, with options A to F and the recommendation E.
 
 ### 7. Give the release pull request a green check
 
@@ -392,6 +417,74 @@ options E and F and changed the recommendation from D to A.
 - **Previous examples:** `.github/workflows/release.yml` of `mokly-ai/mokly` reads `RELEASE_PLEASE_TOKEN`.
 - **Recommendation:** A. The user already works this way in `mokly-ai/mokly` and `futex-ai/ui`, and the workflow already reads the secret, so CI runs on every update with no click and no code change. The first recommendation was D, which fails. E is best without a stored token. F best protects the release itself.
 - **Action:** ask the user, because A, B, and E need a credential or a setting that only the user can create, C changes a rule of `AGENTS.md`, and F adds a gate.
+- **Chosen:** A, by the user on 9 November 2026. The repository Actions secret `RELEASE_PLEASE_TOKEN` was saved. A check of its metadata on 9 November 2026 at 08:50:34Z confirmed it. The workflow already reads the secret, so the choice needs no code change, and the Actions setting of E is not necessary.
+
+### 11. An early release tag stays on its release
+
+The finding check of review finding 8 found this case on 9 November 2026,
+from the options F and G of that finding. This branch recorded it as the
+follow-up item `early-release-tag-stays-on-release.md`, and deletes that
+item with the fix.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Review.
+- **Category:** Process.
+- **Location:** The `release-please` job and the jobs after it in `.github/workflows/release.yml`, and the section "Releases" of `docs/protocol/desktop-app.md`.
+- **Terms:**
+  - **release-please:** the GitHub Action that keeps one release pull request on `main`. Merging that pull request creates the `vX.Y.Z` tag and a draft GitHub release.
+  - **Release commit:** the merge commit of the release pull request. The action gives it as the output `sha`.
+- **Background:**
+  - The release workflow builds, signs, and publishes the release commit. Each job checks out the commit by its SHA, never by a tag or branch name.
+  - release-please v17.6.0 ignores the error "tag already exists" when it creates a release (`src/github-api.ts`, line 667). So a `v0.2.0` tag that someone pushes before the merge stays on the release, at its own commit.
+  - The signed files of that release still come from the release commit. The release page and its source archives follow the tag, so they show the other commit.
+  - release-please starts the changelog of the next release at the commit of the newest release tag (`tagCommit.oid` in `src/manifest.ts`). An early tag on a commit that is not on `main` makes that changelog collect commits up to its search limit of 500.
+  - The `desktop-release` environment admits only `main`, so a pushed tag gets no signing secrets. Agents push tags with the user's account.
+- **Problem:** A tag that someone pushes before the merge decides the source that the release page shows and where the next changelog starts.
+- **Impact if no action:** A release can show source that it was not built from, and the next changelog can list many unrelated commits. The signed app stays correct.
+- **Root question:** How does each published release point at the commit that it was built from?
+- **Options:**
+  - **A.** Change nothing. A person moves a wrong tag by hand when they see it. Effort: Small.
+  - **F.** Before signing, the workflow reads the tag by its full name, `refs/tags/vX.Y.Z`, and stops when it does not point to the release commit. Recovery is by hand: move the tag, then re-run the failed jobs. It adds a release failure and one protocol line. Effort: Small.
+  - **G.** Right after release-please creates the draft, the workflow moves a release tag that points to another commit onto the release commit, and logs a warning with the old commit. It needs no manual step, but it rewrites a tag that a person pushed. Effort: Small.
+  - **C.** Only a release identity may create `v*` tags and branches, through a GitHub tag rule. It needs an identity that is not the user's account, such as a GitHub App, because agents act as the user. Effort: Medium.
+- **Left out:** GitHub's immutable releases: they lock a tag only after its release is published, so they fail the goal.
+- **Wider fix:** C. It keeps every other identity from creating a release tag, whatever the tag points to.
+- **Previous examples:** The tag `v0.1.0-alpha.1`, which an agent pushed on an unmerged branch on 8 November 2026.
+- **Related:** Review finding 8: its fix builds every release job from the release commit SHA, so a tag or branch name cannot choose the code that the jobs build.
+- **Recommendation:** F. It never ships a release whose tag disagrees with its build, and it changes no tag silently. C best protects the codebase, but it needs a release identity first.
+- **Action:** ask the user, because F adds a release failure, G rewrites a tag that a person pushed, and C needs a new identity.
+- **Chosen:** F, by the user on 9 November 2026: "11 = F". Before signing, the workflow checks the full tag name and fails when the tag does not point to the release commit. A person corrects the tag and re-runs the failed jobs. No step moves a tag. Milestone 6 applies it.
+
+### 12. Desktop CI saves Mac minutes that are free
+
+The plan found this on 9 November 2026, after the user made the repository
+public. This branch recorded it as the follow-up item
+`desktop-ci-mac-minutes-now-free.md`, and deletes that item with the fix.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Process.
+- **Location:** The `on:` path filters of `.github/workflows/desktop-ci.yml`, and the `matrix.runner` expression of `.github/workflows/desktop-mac-checks.yml`. The paragraph "Mac CI runs the source and packaged tests" and the path list after it in the section "Checks and packages" of `desktop/README.md`.
+- **Terms:**
+  - **Standard GitHub-hosted runner:** a runner that GitHub provides, such as `macos-15` or `ubuntu-latest`, as opposed to a larger or a self-hosted runner.
+- **Background:**
+  - The Desktop workflow runs only when a change touches `desktop/**`, `worker/security/desktop-*`, `src/**`, its own file, or `.github/workflows/desktop-mac-checks.yml`.
+  - Pull requests ran only the Apple silicon runner. Pushes to `main` and to the primary branch, and manual runs, also ran the Intel runner. The release workflow runs both runners before it signs a release.
+  - `desktop/README.md` said: "The orchestrator chose these filters because private Mac runner minutes cost about ten times Linux minutes."
+  - The user made `Firna-AI/remote-code` public on 9 November 2026. GitHub does not charge for standard GitHub-hosted runners in public repositories. Nobody checked the billing page of the organization.
+- **Problem:** The README gave a cost reason that no longer holds. Pull requests skipped the Intel checks to save minutes that are now free.
+- **Impact if no action:** An Intel-only failure shows only after the merge, and the README misleads the next reader.
+- **Root question:** Which Mac checks should run on each change, now that Mac minutes are free?
+- **Options:**
+  - **A.** Keep the filters and the runners. Change the README reason to the queue time of Mac runners. Effort: Small.
+  - **B.** Run both Mac runners on pull requests, and keep the path filters. Effort: Small.
+  - **C.** Remove the path filters, and run both Mac runners on every pull request and push. Changes that cannot affect the Mac app also wait for Mac runners. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None. This is a CI choice, not a defect class.
+- **Previous examples:** None found.
+- **Recommendation:** B. It catches Intel failures before the merge at no cost, and the filters still skip changes that cannot affect the app.
+- **Action:** ask the user, because B and C add a check to pull requests.
+- **Chosen:** B, by the user on 9 November 2026: "12 = B". Both Mac runners run on pull requests, and the path filters stay. Milestone 6 applies it.
 
 ## Milestone 1: Documentation and protocol
 
@@ -425,13 +518,15 @@ Depends on: none
 Apply the GitHub setting of decision 2. The Conductor app cannot change
 repository settings, so the user does this step.
 
-- [ ] The user changes the deployment rules of the `desktop-release`
+- [x] The user changes the deployment rules of the `desktop-release`
       environment to admit only `main`, as decision 2 chose. This can happen
       at once, because no release uses a tag any more.
-- [ ] The user applies the setting or the token of decision 7. Without a
+- [x] The user applies the setting or the token of decision 7. Without a
       `RELEASE_PLEASE_TOKEN` secret, release-please needs "Allow GitHub
       Actions to create and approve pull requests" in the repository's
       Actions settings.
+
+Evidence: `.context/mac-app-updates/resume-docs/github-settings.log`.
 
 ## Milestone 3: Publish pipeline
 
@@ -475,13 +570,16 @@ each manual check.
       update.
 - [x] Apply decision 5: the dialogs that answer a manual check. Decision 4
       chose no change in this branch.
-- [ ] Apply decision 6, when the user answers it.
+- [x] Record decision 6 as the follow-up item
+      `plans/follow-ups/manual-update-check-ends-silently.md`, because the
+      user deferred it on 9 November 2026. The app keeps its current
+      behaviour.
 - [x] Add unit tests in `desktop/src/updates.test.ts` for each new outcome.
 - [x] Run the desktop typecheck, lint, format check, and unit tests.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3, 4
+Depends on: 1, 2, 3, 4, 6
 
 Check the whole change, review it, and open the pull request.
 
@@ -493,19 +591,50 @@ Check the whole change, review it, and open the pull request.
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [x] Run the targeted tests and the complete gate again after Milestone 6.
+      Evidence: `.context/mac-app-updates/gate-final-after-answers.log` and
+      `.context/mac-app-updates/resume-code-report.md`.
+- [ ] Commit the changes of Milestones 2, 4, and 6 with Conventional
+      Commits, and push the branch.
+- [ ] Review the complete local diff against `origin/main` again with the
+      `implementation-review` skill after the push, with a focus on the
+      changes of Milestone 6. Apply the same fix rule, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 
+## Milestone 6: Release tag check and Intel pull request checks
+
+Depends on: 1, 3
+
+Apply the answers of 9 November 2026 to decisions 11 and 12.
+
+- [x] Before signing, check that `refs/tags/vX.Y.Z` points to the release
+      commit, and fail when it does not, as decision 11 chose. No step
+      moves a tag.
+- [x] Run the Mac checks on both runners for pull requests, and keep the
+      path filters, as decision 12 chose.
+- [x] Update "Releases" in `docs/protocol/desktop-app.md` and the release
+      steps in `desktop/RELEASES.md` for the tag check.
+- [x] Update the Mac CI paragraph of `desktop/README.md`, and remove its
+      reason about the cost of Mac minutes.
+- [x] Delete `plans/follow-ups/early-release-tag-stays-on-release.md` and
+      `plans/follow-ups/desktop-ci-mac-minutes-now-free.md`.
+- [x] Run the desktop typecheck, lint, format check, and unit tests.
+      Evidence: `.context/mac-app-updates/resume-code-report.md` and
+      `.context/mac-app-updates/gate-final-after-answers.log`.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Merge the first release pull request. Check that `v0.1.0` becomes a
-      published release with the expected files.
+      published release with the expected files. Follow-up item:
+      `plans/follow-ups/first-mac-release-check.md`.
 - [ ] On a Mac, install `0.1.0` from its DMG into Applications. Merge the
       next release pull request. Check that the app downloads the new
       version, offers Restart now, and restarts into it. Check that Later
-      installs it at the next quit.
+      installs it at the next quit. Follow-up item:
+      `plans/follow-ups/mac-update-smoke-test.md`.
 - [ ] Tell the people with `0.1.0-alpha.1` to install a new version by hand
-      once.
+      once. Follow-up item: `plans/follow-ups/alpha-build-manual-install.md`.

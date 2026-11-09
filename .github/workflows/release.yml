@@ -42,9 +42,27 @@ jobs:
     uses: ./.github/workflows/desktop-mac-checks.yml
     with:
       ref: ${{ needs.release-please.outputs.sha || github.sha }}
-  sign:
-    if: ${{ !cancelled() && needs.mac.result == 'success' && github.ref == 'refs/heads/main' }}
+  verify-tag:
+    if: needs.release-please.outputs.release_created == 'true'
     needs: [release-please, mac]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Verify the release tag points to the release commit
+        run: node desktop/scripts/verify-release-tag.ts
+        env:
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+          RELEASE_COMMIT: ${{ needs.release-please.outputs.sha }}
+  sign:
+    if: ${{ !cancelled() && needs.mac.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.verify-tag.result == 'success') && github.ref == 'refs/heads/main' }}
+    needs: [release-please, mac, verify-tag]
     uses: ./.github/workflows/desktop-sign.yml
     with:
       ref: ${{ needs.release-please.outputs.sha || github.sha }}

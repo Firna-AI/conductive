@@ -1,7 +1,7 @@
 name: Desktop
 
-# Pull requests run Apple silicon only. Pushes to main and
-# the primary branch also run Intel. release.yml handles signing and releases.
+# Pull requests and pushes run Apple silicon and Intel checks.
+# release.yml handles signing and releases.
 on:
   workflow_dispatch:
   push:

@@ -206,8 +206,8 @@ It calls the production browser download module and checks the saved response by
 It also checks a refused response, child and preview frames, another window, and a data address.
 Run it after the desktop build with `npm --prefix desktop run test:electron -- tests/downloads.spec.ts`.
 
-Mac CI runs the source and packaged tests on an Apple silicon runner for each pull request.
-Pushes to `main` and to the primary branch of the plan also run them on an Intel runner.
+Mac CI runs the source and packaged tests on an Apple silicon runner and on an Intel runner.
+It runs them for each pull request, and for each push to `main` and to the primary branch of the plan.
 It builds DMG and ZIP files with publishing disabled.
 Mac jobs run only when changed files match these paths:
 
@@ -217,7 +217,6 @@ Mac jobs run only when changed files match these paths:
 - `.github/workflows/desktop-ci.yml`
 - `.github/workflows/desktop-mac-checks.yml`
 
-The orchestrator chose these filters because private Mac runner minutes cost about ten times Linux minutes.
 The Linux gate installs desktop dependencies without downloading the Electron binary.
 
 On a Mac, run these commands after the build:

@@ -336,6 +336,16 @@ limits, their results, and what the chat shows.
 - After the merge, the release workflow runs the Mac checks. It then signs
   and notarizes both architectures, runs the packaged tests, and uploads
   the files to the draft.
+- Before it signs, the release workflow checks that the tag `vX.Y.Z` points
+  to the merge commit of the release pull request. A branch with the same
+  name does not count. The release stops before signing when the check
+  cannot find the tag on that commit.
+- Reason: the release page, its source archives, and the start of the next
+  changelog follow the tag. A tag that someone pushes before the merge can
+  point to code that the release was not built from.
+- A person then moves the tag to the merge commit and runs the failed jobs
+  again. The release workflow never moves a tag. Reason: a workflow that
+  moves a tag by itself rewrites a tag that a person pushed, without review.
 - When a step fails, the release workflow publishes nothing.
 - The draft becomes a published release only after GitHub lists every file
   with its full size. Reason: the updater reads only published releases,

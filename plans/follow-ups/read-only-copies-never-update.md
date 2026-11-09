@@ -33,5 +33,6 @@
   - An "Open release page" link: it leaves the copy where it cannot update, so each version needs a manual install. D and E fix the cause with the same single dialog.
 - **Wider fix:** None. The app already waits for Squirrel.Mac before it offers Restart now, which covers every refusal. The options differ only in when they offer the move.
 - **Previous examples:** Mokly's "Open release page" offer for Linux packages that cannot update.
+- **Related:** `plans/follow-ups/manual-update-check-ends-silently.md` holds the open decision about the answer after a manual check whose update fails. Its option E explains a refusal on a read-only copy only after a manual check. This item offers the move at launch. Either item can ship first.
 - **Recommendation:** D. It asks once, at launch, and only when the copy cannot update. E best avoids a dialog for people who never get an update.
 - **Action:** fix after merge, apply D, because the user chose D as a follow-up on 9 November 2026, after the first release with self-updates.
