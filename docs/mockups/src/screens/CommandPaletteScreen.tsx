@@ -1,5 +1,8 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { openPaletteViews } from '../components/palette/paletteViews'
+import {
+  openPaletteViews,
+  paletteStatuses,
+} from '../components/palette/paletteViews'
 import { WorkspaceListScreen } from './WorkspaceListScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace } from './workspaceState'
@@ -24,7 +27,9 @@ export type CommandPaletteState = SchemaProps<typeof commandPaletteSchema>
 /**
  * The command palette open over a page of the app. The list and the
  * workspace screens own the palette as a part of their state, so their
- * pages can draw it too. This screen chooses the page under it.
+ * pages can draw it too. This screen chooses the page under it. The list
+ * reads the same workspace list as the palette, so it shows the same
+ * failure.
  */
 export function CommandPaletteScreen(props: {
   state: CommandPaletteState
@@ -39,9 +44,14 @@ export function CommandPaletteScreen(props: {
       />
     )
   }
+  const failed = paletteStatuses[view] === 'list-failed'
   return (
     <WorkspaceListScreen
-      state={{ list: 'workspaces', menu: 'none', palette: view }}
+      state={{
+        list: failed ? 'failed' : 'workspaces',
+        menu: 'none',
+        palette: view,
+      }}
       viewport={props.viewport}
     />
   )
