@@ -83,7 +83,10 @@ export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =
   {
     'sign-in': { label: 'Sign-in', words: ['sign out', 'account'] },
     github: { label: 'GitHub', words: ['github app', 'install'] },
-    agents: { label: 'Agents', words: ['claude', 'codex', 'login', 'api key'] },
+    agents: {
+      label: 'Agents',
+      words: ['claude', 'codex', 'login', 'api key', 'token'],
+    },
     'new-workspaces': {
       label: 'New workspaces',
       words: ['model', 'effort', 'default'],

@@ -357,25 +357,25 @@ Depends on: 1, 3
 The account page connects Codex with an access token, as Milestone 1 draws
 it.
 
-- [ ] Give each agent its own kind labels in `src/shell/account/labels.ts`.
-- [ ] Give Codex the switch, the access token field, the help text, and
+- [x] Give each agent its own kind labels in `src/shell/account/labels.ts`.
+- [x] Give Codex the switch, the access token field, the help text, and
       the link in `src/shell/account/AgentConnectForm.tsx`. The save sends
       the chosen kind.
-- [ ] Show the per-agent kind label in `src/shell/account/AgentList.tsx`.
-- [ ] Add `styles.agentList` to the agent list and `styles.agentRow` to each
+- [x] Show the per-agent kind label in `src/shell/account/AgentList.tsx`.
+- [x] Add `styles.agentList` to the agent list and `styles.agentRow` to each
       agent row in `src/shell/account/AgentList.tsx`, so that a phone shows
       the kind on a second line, as the mockup does.
-- [ ] Add the search word "token" to the Agents command in
+- [x] Add the search word "token" to the Agents command in
       `src/app/palette/commands.ts`, as the palette mockup does.
-- [ ] Say on the Terms page in `src/marketing/terms.ts` that the share
+- [x] Say on the Terms page in `src/marketing/terms.ts` that the share
       setting of a Codex access token starts off, with a draft field that
       asks whether OpenAI's terms let other members use it. Set a new
       `TERMS_VERSION` in `src/shared/terms.ts`, such as
       `2026-11-09-codex-access-token`.
-- [ ] Add tests: the Codex form selects "API key" first, a token save sends
+- [x] Add tests: the Codex form selects "API key" first, a token save sends
       the kind `token`, and a Codex row connected by a token shows "Access
       token" and its share switch.
-- [ ] Smoke-test the account page in `npm run dev` at phone and desktop
+- [x] Smoke-test the account page in `npm run dev` at phone and desktop
       sizes. Save the screenshots under `.context/codex-access-token/`.
 
 ## Milestone 6: Verification, commit, review, and pull request

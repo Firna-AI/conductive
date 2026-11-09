@@ -1,4 +1,5 @@
 import { useId, useState, type ReactNode } from 'react'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import styles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
 import { AGENTS } from '../../app/api/read-core'
@@ -63,7 +64,7 @@ function AgentRow(props: {
     )
   }
   return (
-    <div className={styles.row}>
+    <div className={classes(styles.row, styles.agentRow)}>
       <span className={styles.name} id={props.nameId}>
         {name}
       </span>
@@ -71,7 +72,9 @@ function AgentRow(props: {
         {login ? (
           <>
             <StatusText label="Connected" tone="success" />
-            <span className={styles.kind}>{loginLabels[login.kind]}</span>
+            <span className={styles.kind}>
+              {loginLabels[login.agent][login.kind]}
+            </span>
           </>
         ) : null}
       </span>
@@ -82,11 +85,13 @@ function AgentRow(props: {
 
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
- * login. Connect opens the form of the agent under its row, one form at a
- * time. `initial` opens a form at first. `removable` gives each connected
- * login its Remove, and `shares` its share setting, as on the account.
- * `closable` gives each form its Cancel. `disabled` turns Connect off, as
- * in a later step of Get started.
+ * login. In a narrow list, as on a phone, Connected and the kind go on a
+ * second line under the name, so that the kind shows in full. Connect opens
+ * the form of the agent under its row, one form at a time. `initial` opens
+ * a form at first. `removable` gives each connected login its Remove, and
+ * `shares` its share setting, as on the account. `closable` gives each form
+ * its Cancel. `disabled` turns Connect off, as in a later step of Get
+ * started.
  */
 export function AgentList(props: {
   initial: Agent | null
@@ -103,7 +108,7 @@ export function AgentList(props: {
   const ids = useId()
   const close = () => setOpen(null)
   return (
-    <ul aria-label="Agents" className={styles.list}>
+    <ul aria-label="Agents" className={classes(styles.list, styles.agentList)}>
       {AGENTS.map((agent) => {
         const login = connectedLogin(account, agent)
         const formOpen = open === agent && login === null

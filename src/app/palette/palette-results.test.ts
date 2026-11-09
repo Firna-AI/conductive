@@ -84,6 +84,7 @@ describe('the All tab of the palette', () => {
       branch: search('rounding vat'),
       repository: search('billing'),
       words: search('claude'),
+      token: search('token'),
     }).toEqual({
       name: [['Workspaces', ['Sales tax']]],
       branch: [['Workspaces', ['Sales tax']]],
@@ -99,6 +100,7 @@ describe('the All tab of the palette', () => {
         ['Archived', ['Stripe SDK upgrade']],
       ],
       words: [['Settings', ['Agents · Account']]],
+      token: [['Settings', ['Agents · Account']]],
     })
   })
 })

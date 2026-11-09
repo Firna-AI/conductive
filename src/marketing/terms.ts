@@ -85,10 +85,12 @@ export const termsDocument: LegalDocument = {
             repositories of the org.`,
           text`Each login that you connect has a setting that lets other
             members use it in the sessions that you start. For a Claude
-            subscription, the setting starts off. For an API key, it starts
-            on. When you replace a login with one of the same kind, the
-            setting stays. You can change it on your account page.
-            ${draft("Do Anthropic's terms let other members use a member's Claude subscription?")}`,
+            subscription or a Codex access token, the setting starts off. For
+            an API key, it starts on. When you replace a login with one of the
+            same kind, the setting stays. You can change it on your account
+            page.
+            ${draft("Do Anthropic's terms let other members use a member's Claude subscription?")}
+            ${draft("Do OpenAI's terms let other members use a member's Codex access token?")}`,
           text`While a turn runs, its agent login and its GitHub token are in
             the cloud computer of the workspace. A member with a terminal in
             that cloud computer can read them. A program that a tool of the
