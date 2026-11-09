@@ -264,3 +264,6 @@ the merge.
   suspension of a user, and abuse reports.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
+- [Command palette: empty and unavailable states](protocol/command-palette-states.md):
+  what the palette shows while its workspace data loads or did not load,
+  and when a tab or a search has no row.

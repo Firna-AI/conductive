@@ -228,22 +228,11 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - Tab moves the focus to the tabs and the filters. The focus stays inside
   the palette, as in the other dialogs of the app.
 
-## Empty states
+## Empty and unavailable states
 
-- When the Workspaces tab has no workspace to show and the search field is
-  empty, one line says where its workspaces show.
-- With the Active filter, the line says
-  `Workspaces of <org or repository> show here`.
-- With the Archived filter, the line says
-  `Archived workspaces of <org or repository> show here`.
-- `<org or repository>` names the chosen repository, such as
-  acme/marketing-site, or the org while the filter shows all repositories.
-- Without an org, the line has no name: `Workspaces show here`, or
-  `Archived workspaces show here`.
-- When a query matches no row of the current tab, the palette says
-  `Nothing matches “<query>”`. `<query>` is the text of the search field.
-- Under it, the palette says "Try a workspace name, a branch, or a
-  repository."
+- [Command palette: empty and unavailable states](command-palette-states.md)
+  gives what the palette shows while its workspace data loads or did not
+  load, and when a tab or a search has no row.
 
 ## Access
 

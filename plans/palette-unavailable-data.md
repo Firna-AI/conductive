@@ -29,8 +29,8 @@ change does not send the repository names with the workspace list
 
 Contract owners:
 
-- [Command palette](../docs/protocol/command-palette.md), section "Empty
-  states".
+- [Command palette: empty and unavailable states](../docs/protocol/command-palette-states.md),
+  and its link in [Command palette](../docs/protocol/command-palette.md).
 - The [mockup catalogue](../docs/mockups/catalogue.md).
 - The [web app README](../src/app/README.md) and its
   [Screens](../src/app/screens.md) page.
@@ -64,6 +64,29 @@ made on 9 November 2026. The user can change it before the work merges.
 - Agent call: the repository filter of the Workspaces tab lists the
   repositories when their names arrive. Until then it offers only All
   repositories.
+- Agent call, from the mockups: the status part is not a row. The first
+  row after it is highlighted, so Enter runs that row, and Up and Down
+  skip the status part. Reason: the keys move between results, and the
+  status part is not a result.
+- Agent call, from the mockups: on desktop, the list behind the palette
+  shows the same failure, because both read the same workspace list.
+  Reason: a list with its workspaces beside a palette that says they did
+  not load is a state that the app can not reach.
+- Agent call: when one read that a tab needs failed and the other still
+  loads, the status part is the notice of the failed read. Reason: the
+  person can act on a failure at once. When both reads failed, the notice
+  says "The workspaces didn't load". Reason: a failed list hides every
+  workspace row. Try again reads again each read that failed.
+- Agent call: `app/command-palette/search` draws failed repository names
+  in a fifth variant, `repositories-unavailable`. The texts of the search
+  variants say where the status part stands with an empty field. Reason:
+  the variant draws the second notice that the protocol states, and the
+  All tab page has child pages, so it shows only one screen.
+- Agent call: the empty and unavailable states move from
+  `docs/protocol/command-palette.md` to their own page,
+  `docs/protocol/command-palette-states.md`. Reason: the doc passed 250
+  lines, and the `documentation` skill splits such a doc. The key sections
+  stay, because another workspace edits them.
 
 ## Decisions
 
@@ -88,26 +111,43 @@ Depends on: none
 The palette mockups draw the status part on the All tab and on the
 Workspaces tab, on desktop and on a phone.
 
-- [ ] Add the `loading` and `unavailable` variants to
+- [x] Add the `loading` and `unavailable` variants to
       `app/command-palette/search`: a query that matches actions and
       settings, with the spinner, or with the notice and Try again, in
       place of the workspace groups.
-- [ ] Add the `unavailable` variant to `app/command-palette/workspaces`:
+- [x] Add the `unavailable` variant to `app/command-palette/workspaces`:
       the notice of a failed list with Try again.
-- [ ] Update `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+- [x] Add the `repositories-unavailable` variant to
+      `app/command-palette/search`: the list is ready, the repository
+      names failed, and the notice "The repositories didn't load" with Try
+      again stands in place of the workspace groups.
+- [x] Draw the same failure in the list behind the palette, in the two
+      variants whose list failed. `LoadFailure` in
+      `docs/mockups/src/components/common/` draws each list that did not
+      load, also on the invitations page.
+- [x] Update `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run file-length:check`. Smoke-test the new pages in light
       and dark, on desktop and on a phone.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: the check logs are in `.context/palette-unavailable-data/`, and
+the screenshots are in `.context/command-palette/shots/`.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] State decision 164 in the section "Empty states" of
+- [x] State decision 164 in the section "Empty states" of
       `docs/protocol/command-palette.md`: the status part, its words, Try
       again, the rows that stay, and when "Nothing matches" shows.
+- [x] State the rule for a read that failed while the other loads, and
+      for two failed reads.
+- [x] Move the empty and unavailable states to
+      `docs/protocol/command-palette-states.md`, with a link from
+      `docs/protocol/command-palette.md`. Add the page to the protocol
+      lists of `docs/architecture.md` and `README.md`.
 
 ## Milestone 3: The status part in the app
 
@@ -124,7 +164,8 @@ Depends on: 2
 - [ ] Make Try again read again each read that failed.
 - [ ] Test in Node each state: the list loading and failed, with and
       without a query; the names loading and failed, with and without a
-      query; and a search over loaded data without a match.
+      query; one read failed while the other loads, and both failed; and a
+      search over loaded data without a match.
 - [ ] Extend the mounted test of the failed list to the All tab, with a
       search that also matches an action, and Try again.
 - [ ] Update `src/app/screens.md` and the Key code of `src/app/README.md`
