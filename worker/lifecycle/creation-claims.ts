@@ -88,7 +88,7 @@ export async function claimCreation(
   const claim = results[3].results[0]
   if (!claim) throw new Error('The creation claim could not be recorded')
   if (claim.state === 'pending' || claim.state === 'succeeded') return claim
-  throw imageAdmissionError(claim.state)
+  throw await imageAdmissionError(db, job.orgId, claim.state)
 }
 
 interface PlanRow {
@@ -98,6 +98,7 @@ interface PlanRow {
   sessionId: string
   turnId: string
   city: string
+  name: string | null
   branch: string
   attempt: string
   startupScript: string
@@ -123,7 +124,7 @@ export async function recordedCreationJob(
   const plan = await db
     .prepare(
       `SELECT p.repository_id AS repositoryId, p.owner_user_id AS ownerUserId,
-    p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.branch,
+    p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.branch,
     p.start_attempt AS attempt, p.startup_script AS startupScript, p.environment_ciphertext AS environmentCiphertext,
     p.image_name AS imageName, p.default_branch AS defaultBranch, p.agent, p.model, p.effort,
     p.repositories_json AS repositoriesJson, p.repository_locations_json AS repositoryLocationsJson, p.message_text AS messageText,
@@ -169,6 +170,7 @@ export async function recordedCreationJob(
       sectionId: plan.sectionId ?? undefined,
       sessionId: plan.sessionId,
       city: plan.city,
+      ...(plan.name !== null && { name: plan.name }),
       branch: plan.branch,
       createdAt: plan.createdAt,
       request: {

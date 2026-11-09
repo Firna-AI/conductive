@@ -142,7 +142,7 @@ export function orgSettingRows(
   }))
 }
 
-/** The sections of the Account page. Each row opens the Account page. */
+/** The sections of the Account page. Each row opens the tab that holds it. */
 export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
   return accountSettingIds
     .filter((id) => mac || id !== 'this-mac')
@@ -153,6 +153,9 @@ export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
       label: accountSettings[id].label,
       words: accountSettings[id].words,
       detail: withDetail ? accountLabel : undefined,
-      href: routes.account(),
+      href:
+        id === 'new-workspaces'
+          ? routes.accountTab('preferences')
+          : routes.account(),
     }))
 }

@@ -26,6 +26,7 @@ gives the create, read, resume, and activity routes of a workspace to
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
   the current turn.
+- Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
 
@@ -233,6 +234,8 @@ object holds the lifecycle state, the turn records, and the events.
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
+- [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
+  which starts changed settings after the first good build finishes cleanup.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
 - [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
   replays a saved allocation request and saves the recovered sandbox ID.

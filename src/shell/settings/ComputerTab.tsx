@@ -3,19 +3,47 @@ import { Hammer } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { TabIntro } from '../../../docs/mockups/src/components/settings/TabIntro'
 import { ComputerModel } from '../../app/computer-model'
+import { changedScriptNotice } from '../../app/first-build'
 import { latestBuild } from '../../app/org-model'
 import { mayChangeSettings } from '../../app/permissions'
 import { useStore, valueOf } from '../../app/store'
 import { softwareSentence } from '../../members/software'
+import type { BuildsResponse } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
-import { useAction } from '../ui/useAction'
+import { useAction, type Action } from '../ui/useAction'
 import { BuildCard } from './BuildCard'
 import { BuildButton } from './BuildParts'
 import { EnvVarsSection } from './EnvVarsSection'
 import { Loaded } from './LoadState'
 import { MemberComputer } from './MemberComputer'
 import { ScriptSection } from './ScriptSection'
+
+/**
+ * The notice under an install script that an admin saved after the newest
+ * build started, with the words of `changedScriptNotice`. Once the org has
+ * a good build, it offers Build computer, which waits while a build runs.
+ */
+function ChangedScript(props: {
+  builds: BuildsResponse | undefined
+  build: Action<[]>
+}) {
+  const { builds } = props
+  const notice = changedScriptNotice(builds)
+  const running = builds ? latestBuild(builds)?.state === 'running' : false
+  return (
+    <Notice
+      action={
+        notice.offersBuild ? (
+          <BuildButton action={props.build} running={running} tone="primary" />
+        ) : undefined
+      }
+      body={notice.body}
+      icon={Hammer}
+      title={notice.title}
+    />
+  )
+}
 
 /**
  * The Cloud computer tab of an admin, as the model holds it: the builds,
@@ -36,16 +64,7 @@ export function ComputerSettings(props: {
     () => computer.startBuild(),
     'The build did not start',
   )
-  const loaded = valueOf(builds)
-  const running = loaded ? latestBuild(loaded)?.state === 'running' : false
-  const changed = (
-    <Notice
-      action={<BuildButton action={build} running={running} tone="primary" />}
-      body="It runs at the next build. Workspaces keep the current build until then."
-      icon={Hammer}
-      title="The install script changed"
-    />
-  )
+  const changed = <ChangedScript build={build} builds={valueOf(builds)} />
   return (
     <>
       <TabIntro title="Cloud computer">

@@ -28,6 +28,7 @@ import {
 import { anotherOrg, newOrg } from '../fixtures/repositories'
 import { menuSection } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
+import { paths } from '../paths'
 import {
   ChooseWorkspace,
   DeletedOrg,
@@ -47,7 +48,8 @@ export const workspaceListSchema = {
     /**
      * The workspaces of Acme, the first org of a new user or another new
      * org, both without workspaces, a deleted org, Acme after the operator
-     * suspended it, or a deleted org that the operator suspended.
+     * suspended it, a deleted org that the operator suspended, or Acme
+     * after its list did not load.
      */
     list: {
       enum: [
@@ -57,6 +59,7 @@ export const workspaceListSchema = {
         'deleted',
         'suspended',
         'deleted-suspended',
+        'failed',
       ],
     },
     /**
@@ -114,20 +117,35 @@ const rails: Readonly<Partial<Record<WorkspaceListState['menu'], RailState>>> =
   }
 
 /**
+ * A new org before its first workspace, and its New workspace page. The
+ * mockups draw the first build of Firna on its own New workspace page.
+ */
+type FreshOrg = {
+  org: Org
+  rail: readonly Org[]
+  form: NewOrg
+  newWorkspaceTo: string
+}
+
+/**
  * The new orgs before their first workspace: the first org of the sign-up,
  * and another org that Create org made beside the user's orgs.
  */
-const newOrgs: Readonly<
-  Partial<
-    Record<
-      WorkspaceListState['list'],
-      { org: Org; rail: readonly Org[]; form: NewOrg }
-    >
-  >
-> = {
-  'new-org': { org: orgs.firna, rail: orgList, form: newOrg },
-  'another-org': { org: orgs.labs, rail: orgListWithLabs, form: anotherOrg },
-}
+const newOrgs: Readonly<Partial<Record<WorkspaceListState['list'], FreshOrg>>> =
+  {
+    'new-org': {
+      org: orgs.firna,
+      rail: orgList,
+      form: newOrg,
+      newWorkspaceTo: paths.firstBuildWorkspace,
+    },
+    'another-org': {
+      org: orgs.labs,
+      rail: orgListWithLabs,
+      form: anotherOrg,
+      newWorkspaceTo: paths.newWorkspace,
+    },
+  }
 
 function MobileList(props: { state: WorkspaceListState }) {
   const { list, menu, palette } = props.state
@@ -162,8 +180,10 @@ function MobileList(props: { state: WorkspaceListState }) {
     <MobileFrame>
       <HomeList
         drag={listDrag(menu)}
+        failed={list === 'failed'}
         menu={listMenu(menu)}
         menuStyle="sheet"
+        newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
         sections={fresh ? newOrgSections() : workspaceSections()}
       />
@@ -231,9 +251,15 @@ export function WorkspaceListScreen(props: {
     return (
       <AppFrame
         rail={rail}
-        sidebar={<Sidebar org={fresh.org} sections={newOrgSections()} />}
+        sidebar={
+          <Sidebar
+            newWorkspaceTo={fresh.newWorkspaceTo}
+            org={fresh.org}
+            sections={newOrgSections()}
+          />
+        }
       >
-        <NewOrgEmpty org={fresh.form} />
+        <NewOrgEmpty newWorkspaceTo={fresh.newWorkspaceTo} org={fresh.form} />
       </AppFrame>
     )
   }
@@ -246,7 +272,13 @@ export function WorkspaceListScreen(props: {
       overlay={listPalette(palette, props.viewport)}
       rail={rail}
       sidebar={
-        <Sidebar drag={drag} menu={open} org={orgs.acme} sections={sections} />
+        <Sidebar
+          drag={drag}
+          failed={list === 'failed'}
+          menu={open}
+          org={orgs.acme}
+          sections={sections}
+        />
       }
     >
       <div className={`${responsive.wideOnly} ${styles.choose}`}>
@@ -255,6 +287,7 @@ export function WorkspaceListScreen(props: {
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
           drag={drag}
+          failed={list === 'failed'}
           keys
           menu={open}
           menuStyle="anchored"

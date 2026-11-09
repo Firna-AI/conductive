@@ -10,12 +10,36 @@ export interface ToolPlace {
   previewId: string | null
 }
 
+/**
+ * The tools that the app offers to every user. The app hides Desktop for
+ * now and keeps its code for its return, as
+ * docs/protocol/workspace-tools.md#desktop says. A hidden tool keeps its
+ * key, so an address or a saved view that names it stays valid.
+ */
+const offeredTools: ReadonlySet<ToolKey> = new Set(['terminal', 'preview'])
+
+/** Whether the app offers a tool: its tab, its phone page, and its Go to row. */
+export function toolOffered(tool: ToolKey): boolean {
+  return offeredTools.has(tool)
+}
+
+/**
+ * The tool that shows when an address or the saved view names `tool`. A
+ * hidden tool shows Terminal, and the saved view keeps its name.
+ */
+export function shownTool(tool: ToolKey): ToolKey {
+  return toolOffered(tool) ? tool : 'terminal'
+}
+
 /** The tools in the order of their tabs, with their labels. */
-export const toolTabs: readonly { tool: ToolKey; label: string }[] = [
+const toolTabs: readonly { tool: ToolKey; label: string }[] = [
   { tool: 'terminal', label: 'Terminal' },
   { tool: 'preview', label: 'Preview' },
   { tool: 'desktop', label: 'Desktop' },
 ]
+
+/** The tabs of the tools that the app offers, in their order. */
+export const offeredToolTabs = toolTabs.filter((tab) => toolOffered(tab.tool))
 
 /**
  * The tool of the address after the workspace, or null for the chat, the

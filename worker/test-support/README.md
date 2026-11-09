@@ -103,6 +103,7 @@ So a plain object does not type-check as the environment of a child process.
 - `fake-anthropic.ts` supplies the Messages and token-count upstream.
 - `fake-openai.ts` supplies the Responses upstream.
 - `fake-model-upstream.ts` records model requests and supplies fresh response factories.
+- `fake-site.ts` supplies built site files, the sign-in agreement, and the GitHub install return pages.
 - `fake-runner.ts` supplies the runner without an agent SDK.
 - `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.

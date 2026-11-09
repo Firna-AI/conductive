@@ -1,4 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
+import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
 import { toolKeys } from '../components/workspace/tools'
@@ -21,12 +22,14 @@ export const workspaceStateSchema = {
     'sandbox',
     'startError',
     'conversation',
+    'fold',
     'banner',
     'files',
     'tool',
     'ports',
     'focus',
     'tab',
+    'tabRow',
     'composer',
     'resize',
     'rightColumn',
@@ -61,6 +64,12 @@ export const workspaceStateSchema = {
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
+    /**
+     * The fold of the work of each ended turn: closed, as it starts, open,
+     * or open with its last message line open too. A view runs no script,
+     * so a chat with open folds starts at its top.
+     */
+    fold: { enum: foldStates },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
     files: { enum: fileLists },
@@ -88,6 +97,16 @@ export const workspaceStateSchema = {
       ],
     },
     /**
+     * The tab row, from decisions 186 to 188: each tab where it opened, the
+     * drag of a tab, the code file after its move between the two
+     * sessions, a full row with more tabs than fit, scrolled to the shown
+     * tab, or the rename field in the first session tab after Rename
+     * session in its tab menu. The drag lifts the code file on desktop,
+     * and on a phone the second session, because a phone shows only the
+     * sessions.
+     */
+    tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
+    /**
      * The composer: empty, with a message that is not sent yet, with
      * attached files, with its picker open, or with a message for an agent
      * that is not connected. Or with a message in a session whose starter's
@@ -114,8 +133,9 @@ export const workspaceStateSchema = {
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, or the
-     * question of Archive, with work that is not pushed or with none.
+     * before a running session closes, the owner of the workspace, the
+     * question of Archive, with work that is not pushed or with none, or
+     * the tab menu of the first session.
      */
     overlay: {
       enum: [
@@ -125,6 +145,7 @@ export const workspaceStateSchema = {
         'reassign',
         'archive-unpushed',
         'archive-pushed',
+        'tab-menu',
       ],
     },
     /** The person signed in: an admin of the org, or a member who is not. */
@@ -175,12 +196,14 @@ export const readyWorkspace: WorkspaceState = {
   sandbox: 'ready',
   startError: 'failed',
   conversation: 'history',
+  fold: 'closed',
   banner: 'ready-to-merge',
   files: 'changes',
   tool: 'terminal',
   ports: 'open',
   focus: 'chat',
   tab: 'session',
+  tabRow: 'opened',
   composer: 'empty',
   resize: 'none',
   rightColumn: 'shown',

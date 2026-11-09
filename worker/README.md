@@ -50,6 +50,12 @@ On the app hostname, the Worker serves these API routes:
 - `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 
+On the app hostname, the Worker also serves `/github/setup`, where GitHub sends the user after an install of the GitHub App.
+[`github-setup.ts`](github-setup.ts) serves it before the request gate, with no session.
+It sends an install from a browser back to the screen where it started.
+It answers an install from the Mac app with a page that sends the user back to the Mac app.
+[The GitHub App](../docs/protocol/github-banner.md#the-github-app) states the rules.
+
 The [app API](app-api/README.md) serves the account, shell, and workspace routes after the request gate.
 `CONDUCTIVE_FRAME_SOURCES` adds trusted HTTPS desktop stream origins to the asset policy.
 Use the same configured sources in the web app and Mac app.
@@ -101,6 +107,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
+- [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
 - [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk and image alarms from the Cron Trigger.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
@@ -127,4 +134,5 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [Deployment inputs](../docs/deployment.md)
 - [Access and security](../docs/protocol/access-and-security.md)
 - [Chat and events](../docs/protocol/chat-and-events.md)
+- [Agent runner](../docs/protocol/agent-runner.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)

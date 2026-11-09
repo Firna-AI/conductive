@@ -6,6 +6,9 @@ and a page for an unknown address. Visitors need no sign-in. The pages run
 no script and set no cookie. Every sign-in link leads to the app, on the
 `app.` host.
 
+The shared header links to the public source repository on GitHub.
+The link appears on phones and desktops.
+
 The marketing mockups are the visual spec:
 [`MarketingScreen.tsx`](../../docs/mockups/src/screens/MarketingScreen.tsx),
 [`LegalScreen.tsx`](../../docs/mockups/src/screens/LegalScreen.tsx),
@@ -45,7 +48,10 @@ assets binding.
   It keeps `default-src 'none'`, images and fonts from `'self'`, and
   `base-uri`, `form-action`, and `frame-ancestors` set to `'none'`.
 - The app host serves the built agreement page only through sign-in.
-  The Worker fills its Continue address and site-origin markers.
+  It also serves the built GitHub install return page at `/github/setup`
+  for an install that started in the Mac app. That page tells the user
+  to go back to the Mac app.
+  The Worker fills the agreement's Continue address and the site-origin markers.
   It keeps the same page headers, with `Cache-Control: no-store`.
   The app host also serves listed site files under `/_site/`. Other paths
   there get the app page, as an unknown app path does.
@@ -118,13 +124,15 @@ direct development dependency `sharp` to write lossless WebP files in
 its server and browser and removes its temporary files on success,
 failure, or interruption.
 
-## Legal drafts
+## Legal pages
 
-The Terms and Privacy pages are drafts for a lawyer.
-Each page shows "Draft for lawyer review" at the top. Each fact that the
-operator or the lawyer must still give is a marked draft field, such as
-the legal name, the address, the contact, the law, the lawful basis, and
-how long data stays. The other facts come from the
+The Terms and Privacy pages show their title, introduction, and sections.
+The operator is Firna Ltd, registered in England and Wales.
+`legalOperator` in `legal-text.ts` holds its company number, registered
+office, and VAT number. Both pages use those details. Each page keeps its
+own effective date. The Terms use the law of England and Wales and preserve
+mandatory consumer protections.
+The facts about the service come from the
 [architecture doc](../../docs/architecture.md) and the
 [protocol docs](../../docs/protocol/).
 
@@ -148,25 +156,43 @@ Sources for the review:
   It lists the identity and the contact, the purposes and the lawful
   basis, the recipients, transfers to other countries, retention, the
   rights, and complaints. The Privacy page has a section for each.
+- The [ICO guide to lawful bases](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/a-guide-to-lawful-basis/)
+  explains contract, legitimate interests, and legal obligations.
+- [Data protection complaints](https://www.gov.uk/data-protection/make-a-complaint)
+  gives the contact details of the Information Commissioner's Office.
+- [Article 13 of the UK GDPR](https://www.legislation.gov.uk/eur/2016/679/article/13)
+  states the information that a notice must give about international transfers.
+- The [UK-US data bridge guidance](https://www.gov.uk/government/publications/uk-us-data-bridge-supporting-documents/uk-us-data-bridge-factsheet-for-uk-organisations)
+  and [its regulations](https://www.legislation.gov.uk/uksi/2023/1028/contents)
+  cover transfers to US organisations certified under the UK Extension.
+- [Cloudflare's data processing terms](https://www.cloudflare.com/cloudflare-customer-dpa/)
+  and [GitHub's privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
+  describe their published transfer protections.
+- [Anthropic's privacy policy](https://www.anthropic.com/legal/privacy),
+  [its data processing terms](https://www.anthropic.com/legal/data-processing-addendum),
+  and [OpenAI's data processing terms](https://openai.com/policies/data-processing-addendum/)
+  describe protections under the account that an agent session uses.
 - Boat's terms: <https://boat.dev/terms>. They cover the allowed use of
   the app's Boat organization, and they make the operator answer for what
-  users do in it. The Terms and Privacy pages name no provider and link to
-  no provider terms. The Acceptable use section of the Terms page passes
-  on those rules in its own words. A draft field asks the operator to
-  confirm that the section protects the providers at least as much as
-  their own rules do.
+  users do in it. The Terms and Privacy pages do not name the cloud computer
+  provider or link to its terms. The Acceptable use section passes on
+  those rules in its own words.
+- [Boat's privacy policy](https://boat.dev/privacy) reports its EU hosting
+  locations and says that an Article 28 agreement is available on request.
+  Its public policy does not prove that Firna has that agreement.
 
 Each sign-in accepts the current revision of the Terms. The agreement sits
 beside Continue with GitHub, as
 [Terms consent](../../worker/security/README.md#terms-consent) says. The
 Terms page also has a Suspension section and a Report abuse section. The
 [operator action](../../worker/operator/README.md) suspends an account.
-Draft fields still wait for the notice of a suspension, its review, and
-what happens to the data.
+The Suspension section explains how to request a review and warns that
+a stopped cloud computer can lose its disk.
 
-The footer of the site and the Report abuse section give `abuseAddress`
-from `legal-text.ts`: `abuse@` and the product domain. No code or setup in
-this repository creates that mailbox.
+The footer and the Report abuse section use `abuseAddress` from
+`legal-text.ts`: `abuse@` and the product domain. Legal and privacy contact
+links use `legalAddress`: `legal@` and the product domain.
+No code or setup in this repository creates those mailboxes.
 
 ## Development
 
@@ -180,6 +206,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.
   The agreement preview is at `/app-host/terms-consent`.
+  The GitHub return previews are at `/app-host/github-setup/installed`
+  and `/app-host/github-setup/requested`.
 - Run `npm run site:build` to write the pages, files, and file list into
   `public/_site/`, which Git ignores. `npm run dev` and `npm run build`
   build the site first. Restart the Worker after rebuilding the site so
@@ -205,13 +233,16 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   marker replacement with HTML escaping.
 - [`worker/marketing/consent.ts`](../../worker/marketing/consent.ts): the
   agreement response for sign-in on the app host.
+- [`worker/marketing/github-setup.ts`](../../worker/marketing/github-setup.ts):
+  the built GitHub install return page for the Mac app.
 - [`worker/marketing/assets.ts`](../../worker/marketing/assets.ts): site
   asset reads and the app host's handling of other site paths.
 - `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
 - `features.ts`: the home page's feature copy.
-- `links.ts`: site paths and `pageHrefs` for links from another origin.
-- `terms.ts`, `privacy.ts`, `legal-text.ts`: legal drafts and the shared
-  text model, titles, draft notice, abuse address, and sign-in agreement.
+- `links.ts`: the source repository address, site paths, and `pageHrefs`
+  for links from another origin.
+- `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
+  text model, titles, contact addresses, and sign-in agreement.
 - `request-values.ts`: built-page markers and local Astro preview values.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
   CSS for the font, tokens and picture sizes, and the file list writer.

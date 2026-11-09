@@ -31,7 +31,7 @@ while the change is open. Its pull request keeps them after the merge.
   to the upstream.
 - A runner of protocol version 1 gets the agent login itself with each
   turn (gateway decision 2).
-  [The agent runner](chat-and-events.md#the-agent-runner) states which
+  [The agent runner](agent-runner.md#the-agent-runner) states which
   runner versions a workspace accepts.
 - An HTTPS proxy on a new server was rejected. Reason: it is one more
   server to run and secure. The agent programs must also trust its

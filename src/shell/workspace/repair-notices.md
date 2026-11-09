@@ -10,7 +10,7 @@ asks the runner for a fresh full report, and the screen shows nothing.
 When the workspace refuses that report too, the repair failed. Then a bar
 below the header names the data that is out of date, with the time since
 the repair failed.
-[Lost workspace updates](../../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../../../docs/protocol/agent-runner.md#lost-workspace-updates)
 gives the rules. The Files panel shows the notices of the file lists, as
 [the Files screens](../../files/README.md#integration) say.
 

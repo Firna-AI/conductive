@@ -9,7 +9,9 @@ import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
 import { sitePaths } from '../../src/marketing/links'
+import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
+import { githubSetupResponse } from '../github-setup'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
 import { termsConsentResponse } from './consent'
@@ -96,7 +98,7 @@ it('sends every sign-in to the app and shows the request year', async () => {
   expect(html).toContain(`© 2027 ${productName}`)
 })
 
-it('opens the Terms and Privacy footer links as drafts for lawyer review', async () => {
+it('opens the Terms and Privacy footer links without draft text', async () => {
   const home = await (await get('/')).text()
   const footer = home.slice(home.indexOf('<footer'))
   for (const name of ['Terms', 'Privacy']) {
@@ -109,8 +111,9 @@ it('opens the Terms and Privacy footer links as drafts for lawyer review', async
     const response = await get(address.pathname)
     expect(response.status, name).toBe(200)
     const page = await response.text()
-    expect(page, name).toContain('Draft for lawyer review')
-    expect(page, name).toContain('<mark class="draft-field">')
+    expect(page, name).not.toMatch(
+      /lawyer review|A lawyer reviews|To confirm:|To write:|draft-field/,
+    )
   }
 })
 
@@ -182,4 +185,42 @@ it('serves the built agreement with Continue and legal links on the given origin
   expect(response.headers.get('Content-Security-Policy')).toBe(
     expectedPolicy(page),
   )
+})
+
+it('serves built GitHub install returns with the Mac instructions, site link, and style policy', async () => {
+  const cases = [
+    ['install', 'The GitHub App is installed', 'Go back to the Conductive app'],
+    ['request', 'Install request sent', 'After an owner of the GitHub account'],
+  ] as const
+  for (const [action, title, text] of cases) {
+    const response = await githubSetupResponse(
+      new Request(
+        `${APP_ORIGIN}${GITHUB_SETUP_PATH}?state=mac&setup_action=${action}`,
+      ),
+      { APP_ORIGIN, MARKETING_ORIGIN: SITE, ASSETS: assets },
+    )
+    const page = await response.text()
+    expect(response.status, action).toBe(200)
+    expect(page, action).toContain(`<h1 class="text-title">${title}</h1>`)
+    expect(page, action).toContain(text)
+    expect(
+      links(page).map((link) => link.href),
+      action,
+    ).toEqual([`${SITE}/`])
+    expect(page, action).not.toMatch(/<script\b|\sstyle\s*=/i)
+    expect(response.headers.get('Cache-Control'), action).toBe('no-store')
+    expect(response.headers.get('Set-Cookie'), action).toBeNull()
+    expect(response.headers.get('Content-Security-Policy'), action).toBe(
+      expectedPolicy(page),
+    )
+  }
+  const head = await githubSetupResponse(
+    new Request(`${APP_ORIGIN}${GITHUB_SETUP_PATH}?state=mac`, {
+      method: 'HEAD',
+    }),
+    { APP_ORIGIN, MARKETING_ORIGIN: SITE, ASSETS: assets },
+  )
+  expect(head.status).toBe(200)
+  expect(head.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
+  expect(await head.text()).toBe('')
 })

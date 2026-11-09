@@ -32,7 +32,7 @@ export const macCommandsInChat = defineScreen({
       slug: 'done',
       title: 'Done',
       description:
-        'The command ran on the Mac. Its card at its place in the chat shows the time that it took and its output, which went back to the agent.',
+        'The command ran on the Mac. Its card at its place in the chat shows the time that it took and its output, which went back to the agent. When the turn ends, the card folds with the work of the turn at its place, as `app/chat/work/mac-command` shows.',
       props: { conversation: 'mac-done' },
       useCasePaths: flow,
     },

@@ -46,4 +46,6 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,
-  or Mac not available.
+  or Mac not available. When its turn ends, the card folds with the work
+  of the turn at its place, from decision 151, as
+  `app/chat/work/mac-command` shows.

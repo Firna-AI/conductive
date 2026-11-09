@@ -54,6 +54,23 @@ export function useKeptFiles(context: WorkspaceContext): WorkspaceFiles {
 }
 
 /**
+ * The same kept store for a part that shows files only in some states, such
+ * as the file tabs of the chat, or null while `shows` is false. It makes no
+ * store while it returns null, and it connects nothing.
+ */
+export function useKeptFilesWhile(
+  context: WorkspaceContext,
+  shows: boolean,
+): WorkspaceFiles | null {
+  const lookup = useKeptLookup(context)
+  const { org, workspace } = context
+  return useMemo(
+    () => (shows ? lookup({ orgId: org.id, workspaceId: workspace.id }) : null),
+    [shows, lookup, org.id, workspace.id],
+  )
+}
+
+/**
  * Copy and Download over the services of the org. Download reads the route
  * with the fetch of the org, so the Mac app reads it from its own Worker,
  * and a refusal of a suspended org marks the org. The object stays the same

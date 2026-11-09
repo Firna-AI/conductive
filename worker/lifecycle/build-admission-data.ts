@@ -8,6 +8,27 @@ import type { RepositoryLocation } from './repository-locations'
 import type { ImageSoftwareArtifact } from './image-software'
 import { serializeSavedScript, type SavedScript } from './saved-script'
 
+export async function finishUnscheduledBuild(
+  db: D1Database,
+  buildId: string,
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE image_build_jobs SET phase = CASE
+       WHEN phase = 'create' AND EXISTS (SELECT 1 FROM image_builds
+         WHERE id = image_build_jobs.build_id AND sandbox_id IS NULL AND snapshot_name IS NULL)
+         THEN 'done'
+       WHEN phase = 'allocating' AND EXISTS (SELECT 1 FROM image_builds
+         WHERE id = image_build_jobs.build_id AND sandbox_id IS NULL) THEN 'allocating'
+       ELSE 'cleanup' END
+       WHERE build_id = ? AND phase != 'done'
+     AND EXISTS (SELECT 1 FROM image_builds WHERE id = image_build_jobs.build_id
+       AND state = 'failed')`,
+    )
+    .bind(buildId)
+    .run()
+}
+
 export async function insertBuild(
   db: D1Database,
   input: {
@@ -94,9 +115,19 @@ export async function publishBuild(
       .bind(now, job.buildId),
     db
       .prepare(
-        `UPDATE image_build_jobs SET phase = 'cleanup', process_id = NULL WHERE build_id = ? AND EXISTS (SELECT 1 FROM image_builds WHERE id = image_build_jobs.build_id AND state = 'succeeded')`,
+        `UPDATE image_build_jobs SET phase = CASE WHEN ? IS NULL AND ? = 'build'
+          AND EXISTS (SELECT 1 FROM settings WHERE org_id = ? AND revision > ?)
+          THEN 'cleanup-build' ELSE 'cleanup' END,
+          process_id = NULL WHERE build_id = ? AND EXISTS
+          (SELECT 1 FROM image_builds WHERE id = image_build_jobs.build_id AND state = 'succeeded')`,
       )
-      .bind(job.buildId),
+      .bind(
+        job.previousImageName,
+        job.kind,
+        job.orgId,
+        job.settingsRevision,
+        job.buildId,
+      ),
   ])
   await requireActiveOrg(db, job.orgId)
 }

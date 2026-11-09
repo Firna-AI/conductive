@@ -66,8 +66,8 @@ function connectView(view: WorkspaceView): () => void {
 }
 
 /**
- * An open workspace. Desktop shows the chat column beside the right column;
- * a phone shows one view at a time, with five tabs to switch. The shell draws
+ * An open workspace. On desktop the chat column sits beside the right column.
+ * A phone shows one view at a time, with tabs to switch. The shell draws
  * the header, the start steps, and the states of the sandbox, and the chat
  * fills the centre. The app's own parts fill the files, the tools, the pull
  * request bar, and the owner picker, unless the host gives its own.

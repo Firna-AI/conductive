@@ -77,6 +77,9 @@ describe('SessionChat', () => {
     expect(text()).toContain('Thinking 2m 41s')
     expect(text()).toContain('Stop')
     expect(markup()).toContain('placeholder="Steer the agent while it works"')
+    chat.controller.setDraft(FAKE_IDS.session, 'Use the saved address.')
+    expect(markup()).toContain('placeholder="Steer the agent while it works"')
+    expect(text()).not.toContain('The agent reads this at its next step.')
   })
 
   it('names a missing login, also when the account lists no entry for the agent, and keeps Send off', async () => {
@@ -153,6 +156,7 @@ describe('session parts', () => {
         mobile={false}
         onCancelRename={() => {}}
         onClose={() => {}}
+        onMove={() => {}}
         onNew={() => {}}
         onRename={() => {}}
         onSelect={() => {}}
@@ -160,7 +164,15 @@ describe('session parts', () => {
         onStartRename={() => {}}
         readOnly={false}
         renaming={null}
-        tabs={[{ id: 'a', title: 'Address autocomplete', selected: true }]}
+        tabs={[
+          {
+            kind: 'session',
+            id: 'a',
+            title: 'Address autocomplete',
+            name: 'Address autocomplete',
+            selected: true,
+          },
+        ]}
       />,
     )
     expect(textOf(html)).toContain(

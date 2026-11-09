@@ -22,9 +22,12 @@ says.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
 - On desktop, the chat shows the file and diff tabs of the saved view
-  after the session tabs. The file or diff tab of the address shows in
-  place of the chat of the session, and the tabs stay. No session tab is
-  the current one then.
+  among the session tabs, in the one order of the tab row. A file or diff
+  tab moves by drag and with its tab menu, as a session tab does, as
+  [the chat](../../chat/README.md#rules-for-this-code) says. The file or
+  diff tab of the address shows in place of the chat of the session, and
+  the tabs stay. No session tab is the current one then, and the row keeps
+  the tab of the address in view.
 - A click on a session tab, a new session, or a reopened session makes
   that session the active tab of the view. The address then goes back to
   the chat.
@@ -81,11 +84,13 @@ Each folder of a path is a part of the address. Another address under
 
 ## The tools part
 
-The shell gives its own Terminal, Preview, and Desktop tools, with the
-[terminal](../../terminal/README.md), the
-[previews](../../previews/README.md), and the
-[desktop](../../desktop/README.md). A `tools` part of the host takes their
-place. An archived workspace has no tools.
+The shell gives its own Terminal and Preview tools, with the
+[terminal](../../terminal/README.md) and the
+[previews](../../previews/README.md). It keeps the
+[Desktop tool](../../desktop/README.md) hidden, as
+[Desktop](../../../docs/protocol/workspace-tools.md#desktop) says. A
+`tools` part of the host takes their place. An archived workspace has no
+tools.
 
 - While the sandbox does not run, the tools show its state: starting,
   stopped, failed, or refused. On desktop the panel keeps its tabs around
@@ -96,21 +101,28 @@ place. An archived workspace has no tools.
 
 | Address | What shows |
 | ------- | ---------- |
-| `terminal`, `desktop` | That tool |
+| `terminal` | The Terminal tool |
 | `preview`, `preview/<previewId>` | The Preview tool, with that preview |
+| `desktop` | The Terminal tool, because Desktop is hidden |
 
 - An address that names a tool shows it and saves it as `tool` of the
   view. Without one, the saved view names the tool.
-- On desktop the panel has a tab for each tool. A click saves the tool,
+- The `desktop` address and a saved `desktop` tool show Terminal. Neither
+  mounts Desktop or saves Terminal in place of the saved tool. The view
+  keeps `desktop` as a valid tool.
+- On desktop the panel has a tab for each tool that the app offers. A
+  click saves the tool,
   and the address keeps the tab of the centre. Only a tool address follows
   the new tool. A preview tab changes the address only from a preview
   address, and otherwise picks the preview in the panel.
-- On a phone each tool is a page of the tab bar, with its own address.
+- On a phone each tool that the app offers is a page of the tab bar, with
+  its own address.
 - The terminal mounts at its first show, then stays mounted and hidden
   while another tool shows, so its connection stays. Its socket opens at
   the `socketPath` of the terminal state through `openSocket` of the app's
   event source, so the Mac app reaches its own Worker.
-- The Desktop tool mounts at each show, so it reads a new desktop URL.
+- The mount of the Desktop tool stays for its return. It mounts at each
+  show, so it reads a new desktop URL.
 - The tools part marks the element of the terminal for the command
   palette. So Ctrl+K in the terminal goes to its shell on Windows and
   Linux, as the

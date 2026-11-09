@@ -9,6 +9,10 @@ export const SETTINGS_TABS = [
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
+export const ACCOUNT_TABS = ['general', 'preferences'] as const
+
+export type AccountTab = (typeof ACCOUNT_TABS)[number]
+
 /**
  * A page of the operator section: a tab, or the page of one org or one
  * user. A tab of a list keeps its search, which is empty for the newest
@@ -25,7 +29,8 @@ export type OperatorView =
 export type Route =
   | { screen: 'home' }
   | { screen: 'get-started' }
-  | { screen: 'account'; connect: Agent | null }
+  /** `connect` opens the Connect form of that agent on General. */
+  | { screen: 'account'; tab: AccountTab; connect: Agent | null }
   | { screen: 'create-org'; first: boolean }
   | { screen: 'org'; orgId: string }
   | { screen: 'new-workspace'; orgId: string; sectionId: string | null }
@@ -54,8 +59,11 @@ function operatorList(list: 'orgs' | 'users', search: string): string {
 export const routes = {
   home: () => '/',
   getStarted: () => '/get-started',
+  /** General, with the Connect form of `connect` open. */
   account: (connect?: Agent) =>
     connect ? `/account?connect=${connect}` : '/account',
+  accountTab: (tab: AccountTab) =>
+    tab === 'general' ? '/account' : `/account/${tab}`,
   createOrg: (first = false) => (first ? '/orgs/new?first=1' : '/orgs/new'),
   org: (orgId: string) => `/orgs/${encode(orgId)}`,
   newWorkspace: (orgId: string, sectionId?: string) =>
@@ -77,9 +85,13 @@ export const routes = {
   operatorUser: (githubId: number) => `/operator/users/${githubId}`,
 } as const
 
-function settingsTab(value: string | undefined): SettingsTab | null {
-  if (value === undefined) return 'general'
-  return SETTINGS_TABS.find((tab) => tab === value) ?? null
+/** The tab of a path segment. No segment is the first tab. */
+function tabOf<Tab extends string>(
+  tabs: readonly [Tab, ...Tab[]],
+  value: string | undefined,
+): Tab | null {
+  if (value === undefined) return tabs[0]
+  return tabs.find((tab) => tab === value) ?? null
 }
 
 function agentParam(value: string | null): Agent | null {
@@ -144,8 +156,16 @@ export function parseRoute(pathname: string, search: string): Route {
   if (first === 'get-started' && orgId === undefined) {
     return { screen: 'get-started' }
   }
-  if (first === 'account' && orgId === undefined) {
-    return { screen: 'account', connect: agentParam(query.get('connect')) }
+  if (first === 'account' && area === undefined) {
+    // The segment after `account` names the tab.
+    const tab = tabOf(ACCOUNT_TABS, orgId)
+    if (tab) {
+      return {
+        screen: 'account',
+        tab,
+        connect: agentParam(query.get('connect')),
+      }
+    }
   }
   if (first !== 'orgs' || orgId === undefined) return { screen: 'not-found' }
   if (orgId === 'new' && area === undefined) {
@@ -159,7 +179,7 @@ export function parseRoute(pathname: string, search: string): Route {
     return { screen: 'workspace', orgId, workspaceId: id, view: rest }
   }
   if (area === 'settings' && rest.length === 0) {
-    const tab = settingsTab(id)
+    const tab = tabOf(SETTINGS_TABS, id)
     if (tab) return { screen: 'settings', orgId, tab }
   }
   return { screen: 'not-found' }
