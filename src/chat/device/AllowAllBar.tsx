@@ -21,7 +21,7 @@ import {
 } from './settings-results'
 
 /** The 15 minutes of one workspace on this Mac, while they run. */
-export function runningWindow(
+function runningWindow(
   state: MacSettingsState,
   workspaceId: string,
   now: number,

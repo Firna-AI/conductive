@@ -37,7 +37,7 @@ export const pullRequest: PullRequest = {
   url: 'https://github.com/acme/storefront/pull/482',
 }
 
-export type CheckState = 'passed' | 'failed' | 'running'
+type CheckState = 'passed' | 'failed' | 'running'
 
 export type Check = {
   name: string

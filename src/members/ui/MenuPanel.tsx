@@ -12,7 +12,7 @@ export type MenuChoice<T extends string> = {
 }
 
 /** The choices of a menu, in their order. */
-export function menuItems(menu: HTMLElement | null): HTMLElement[] {
+function menuItems(menu: HTMLElement | null): HTMLElement[] {
   if (!menu) return []
   return Array.from(
     menu.querySelectorAll<HTMLElement>('[role="menuitemradio"]'),

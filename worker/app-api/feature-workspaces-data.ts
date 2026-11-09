@@ -1,21 +1,5 @@
 import { activeShellMemberPredicate } from './feature-shell-access'
 
-export async function orderedSectionWorkspaceIds(
-  db: D1Database,
-  orgId: string,
-  sectionId: string,
-  exceptId: string,
-): Promise<string[]> {
-  const { results } = await db
-    .prepare(
-      `SELECT id FROM workspaces WHERE org_id = ? AND section_id = ? AND id != ?
-     AND archived_at IS NULL AND state != 'archived' ORDER BY position, created_at, id`,
-    )
-    .bind(orgId, sectionId, exceptId)
-    .all<{ id: string }>()
-  return results.map((row) => row.id)
-}
-
 export function shellSectionExists(
   db: D1Database,
   orgId: string,
@@ -33,18 +17,16 @@ export async function updateShellWorkspace(
     orgId: string
     userId: string
     workspaceId: string
-    sectionId: string
+    sectionId?: string
     name?: string
-    move: boolean
-    order?: readonly string[]
+    position?: number
     now: number
   },
 ): Promise<boolean> {
-  const { orgId, userId, workspaceId, sectionId, name, order, now, move } =
-    input
+  const { orgId, userId, workspaceId, sectionId, name, position, now } = input
   const guard = `org_id = ? AND archived_at IS NULL AND state != 'archived'
     AND ${activeShellMemberPredicate}
-    AND EXISTS (SELECT 1 FROM sections WHERE org_id = ? AND id = ?)`
+    AND EXISTS (SELECT 1 FROM sections WHERE org_id = ? AND id = COALESCE(?, workspaces.section_id))`
   const statements = [
     db
       .prepare(
@@ -53,33 +35,47 @@ export async function updateShellWorkspace(
       )
       .bind(
         name ?? null,
-        move ? sectionId : null,
+        sectionId ?? null,
         now,
         workspaceId,
         orgId,
         orgId,
         userId,
         orgId,
-        sectionId,
+        sectionId ?? null,
       ),
   ]
-  for (const [position, id] of order?.entries() ?? [])
+  if (sectionId !== undefined || position !== undefined)
     statements.push(
       db
         .prepare(
-          `UPDATE workspaces SET position = ? WHERE id = ? AND ${guard}
-          AND EXISTS (SELECT 1 FROM workspaces moving WHERE moving.id = ?
-            AND moving.org_id = ? AND moving.archived_at IS NULL AND moving.state != 'archived')`,
+          `WITH moving AS MATERIALIZED (
+             SELECT id, section_id FROM workspaces WHERE id = ? AND ${guard}
+           ), siblings AS MATERIALIZED (
+             SELECT id, ROW_NUMBER() OVER (ORDER BY position, created_at, id) - 1 AS rank
+             FROM workspaces WHERE org_id = ? AND section_id = (SELECT section_id FROM moving)
+               AND id != ? AND archived_at IS NULL AND state != 'archived'
+           ), destination AS MATERIALIZED (
+             SELECT MIN(?, COUNT(*)) AS position FROM siblings
+           ), ranks AS MATERIALIZED (
+             SELECT siblings.id, rank + CASE WHEN rank >= destination.position THEN 1 ELSE 0 END AS position
+             FROM siblings CROSS JOIN destination
+             UNION ALL SELECT moving.id, destination.position FROM moving CROSS JOIN destination
+           ) UPDATE workspaces SET position = (
+             SELECT ranks.position FROM ranks WHERE ranks.id = workspaces.id
+           ) WHERE org_id = ? AND section_id = (SELECT section_id FROM moving)
+             AND id IN (SELECT id FROM ranks)`,
         )
         .bind(
-          position,
-          id,
+          workspaceId,
           orgId,
           orgId,
           userId,
           orgId,
-          sectionId,
+          sectionId ?? null,
+          orgId,
           workspaceId,
+          position ?? 0,
           orgId,
         ),
     )

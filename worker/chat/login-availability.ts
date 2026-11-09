@@ -1,4 +1,5 @@
 import type { Agent } from '../../src/shared/agents'
+import type { Session } from '../../src/shared/sessions'
 import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'
 import { agentLoginKind } from './login-kind'
 
@@ -8,11 +9,16 @@ export interface SessionLoginTarget {
   agent: Agent
 }
 
-export async function readLoginAvailability(
+export type SessionLoginMetadata = Pick<
+  Session,
+  'loginAvailable' | 'loginShared'
+>
+
+export async function readLoginMetadata(
   db: D1Database,
   workspaceId: string,
   targets: readonly SessionLoginTarget[],
-): Promise<ReadonlySet<string>> {
+): Promise<ReadonlyMap<string, SessionLoginMetadata>> {
   const rows = await db
     .prepare(
       `WITH requested AS (
@@ -21,7 +27,8 @@ export async function readLoginAvailability(
          json_extract(value, '$.agent') AS agent
        FROM json_each(?)
      )
-     SELECT requested.sessionId, requested.agent, agent_logins.kind
+     SELECT requested.sessionId, requested.agent, agent_logins.kind,
+       agent_logins.no_reuse AS noReuse
      FROM requested
      JOIN workspaces w ON w.id = ? AND ${workspaceTokenResourcePredicate}
      JOIN org_members ON org_members.org_id = w.org_id
@@ -32,10 +39,13 @@ export async function readLoginAvailability(
        AND agent_logins.agent = requested.agent`,
     )
     .bind(JSON.stringify(targets), workspaceId)
-    .all<{ sessionId: string; agent: Agent; kind: string }>()
-  return new Set(
+    .all<{ sessionId: string; agent: Agent; kind: string; noReuse: number }>()
+  return new Map<string, SessionLoginMetadata>(
     rows.results
       .filter((row) => agentLoginKind(row.agent, row.kind) !== null)
-      .map((row) => row.sessionId),
+      .map((row): [string, SessionLoginMetadata] => [
+        row.sessionId,
+        { loginAvailable: true, loginShared: row.noReuse === 0 },
+      ]),
   )
 }

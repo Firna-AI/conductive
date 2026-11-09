@@ -31,7 +31,7 @@ function image(
   const { label, crop } = marketingPictures[key][layout]
   const priority = loading === 'eager' ? 'high' : 'auto'
   return html`<img
-    src="${pictureFiles[key][layout].dark}"
+    src="${pictureFiles(key)[layout].dark}"
     alt="${label}"
     width="${crop.width}"
     height="${crop.height}"
@@ -48,7 +48,7 @@ function image(
  */
 function images(key: MarketingPictureKey, loading: Loading): Html {
   const { desktop, mobile } = marketingPictures[key]
-  const files = pictureFiles[key]
+  const files = pictureFiles(key)
   if (desktop.label !== mobile.label) {
     return html`<picture class="for-desktop"
         >${source(lightMedia, files.desktop.light)}${image(key, 'desktop', loading)}</picture

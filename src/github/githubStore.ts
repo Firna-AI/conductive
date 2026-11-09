@@ -18,6 +18,7 @@ import {
  * The pages of one replay share one cutoff, and a page can leave out event
  * numbers. A page with more to come has `hasMore` and `nextAfterEventNumber`.
  * The returned function ends the subscription.
+ * @public The workspace GitHub adapter imports this subscription boundary.
  */
 export type SubscribeToWorkspace = (
   afterEventNumber: number,

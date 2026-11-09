@@ -2,7 +2,7 @@ import { createHarness, TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import type { ProxySocket, SocketRuntime } from './types'
 import { toolsActivity } from './activity.test-support'
 
-export class TestSocket implements ProxySocket {
+class TestSocket implements ProxySocket {
   binaryType: 'blob' | 'arraybuffer' = 'blob'
   accepted = false
   sent: (string | ArrayBuffer)[] = []
@@ -74,7 +74,7 @@ export class TestSocket implements ProxySocket {
   }
 }
 
-export function socketResponse(socket: ProxySocket, protocol = '') {
+function socketResponse(socket: ProxySocket, protocol = '') {
   const response = new Response(null, {
     headers: protocol ? { 'Sec-WebSocket-Protocol': protocol } : {},
   })

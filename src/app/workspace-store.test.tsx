@@ -3,7 +3,22 @@
 import { act, useLayoutEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { expect, it, onTestFinished, vi } from 'vitest'
+import { terminalPaths } from '../shared/terminal'
+import { FakeApiServer } from '../test-support/fake-api'
+import { mount } from '../test-support/mount'
+import {
+  devSubscribe,
+  emitDevEvent,
+  sandboxReadyEvent,
+} from '../terminal/dev/devServer'
+import {
+  createTerminalStore,
+  type TerminalStore,
+} from '../terminal/terminalStore'
+import type { SubscribeWorkspaceEvents } from '../terminal/tool-parts/workspace'
+import { settle } from '../shell/test-mount'
 import { Store } from './store'
+import { HeldRequests, requestLines } from './test-kit'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
@@ -183,4 +198,80 @@ it('keeps the store for the same workspace, connects it again for a new connect 
     'reconnect cart#2',
   ])
   expect(view.text()).toBe('cart#2 loading')
+})
+
+function TerminalView(props: {
+  workspace: WorkspaceIdentity
+  lifecycle: WorkspaceStoreLifecycle<TerminalStore>
+}) {
+  const { snapshot } = useWorkspaceStore(props.workspace, props.lifecycle)
+  return (
+    <output>
+      {props.workspace.workspaceId} {snapshot.view.state}
+    </output>
+  )
+}
+
+it('connects a real terminal store and drops old reads and events after a workspace switch and unmount', async () => {
+  const server = new FakeApiServer()
+  const held = new HeldRequests(server)
+  const cartPath = terminalPaths.connection(cart.orgId, cart.workspaceId)
+  const cartsPath = terminalPaths.connection(carts.orgId, carts.workspaceId)
+  for (const path of [cartPath, cartsPath]) {
+    server.json('GET', path, { state: 'starting', socketPath: null })
+  }
+  const stopped = vi.fn()
+  const subscribe: SubscribeWorkspaceEvents = (listener) => {
+    const stop = devSubscribe(server)(listener)
+    return () => {
+      stop()
+      stopped()
+    }
+  }
+  const lifecycle = {
+    create: createTerminalStore,
+    connect: (store: TerminalStore) =>
+      store.connect({ fetch: held.fetch, subscribe }),
+  }
+  const view = await mount(
+    <TerminalView workspace={cart} lifecycle={lifecycle} />,
+  )
+  await settle()
+  expect(view.container.textContent).toBe('cart starting')
+
+  held.holdAnswer('GET', cartPath)
+  server.json('GET', cartPath, {
+    state: 'ready',
+    socketPath: terminalPaths.socket(cart.orgId, cart.workspaceId),
+    protocol: 'tty',
+  })
+  act(() => emitDevEvent(server, cart.workspaceId, sandboxReadyEvent()))
+  await settle()
+  expect(view.container.textContent).toBe('cart loading')
+  await view.rerender(<TerminalView workspace={carts} lifecycle={lifecycle} />)
+  await settle()
+  expect(stopped).toHaveBeenCalledTimes(1)
+  expect(server.requests.at(1)?.signal.aborted).toBe(true)
+  held.release('GET', cartPath)
+  act(() => emitDevEvent(server, cart.workspaceId, sandboxReadyEvent()))
+  await settle()
+  expect(view.container.textContent).toBe('carts starting')
+
+  held.holdAnswer('GET', cartsPath)
+  act(() => emitDevEvent(server, carts.workspaceId, sandboxReadyEvent()))
+  await settle()
+  expect(view.container.textContent).toBe('carts loading')
+  await view.unmount()
+  expect(stopped).toHaveBeenCalledTimes(2)
+  expect(server.requests.at(-1)?.signal.aborted).toBe(true)
+  held.release('GET', cartsPath)
+  act(() => emitDevEvent(server, carts.workspaceId, sandboxReadyEvent()))
+  await settle()
+  expect(view.container.textContent).toBe('')
+  expect(requestLines(server)).toEqual([
+    `GET ${cartPath}`,
+    `GET ${cartPath}`,
+    `GET ${cartsPath}`,
+    `GET ${cartsPath}`,
+  ])
 })

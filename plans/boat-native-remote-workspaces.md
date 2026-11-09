@@ -1,6 +1,6 @@
 # Boat-Native Remote Workspaces
 
-Status: Active. On branch `calummoore/conductor-alternative-architecture`. Pull request #57 brings the first version into `main` and keeps this plan for the later pull requests (decision 141). The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/conductor-alternative-architecture`. Pull request #57 merged the first version into `main` on 8 November 2026, and this plan stays for the later pull requests (decision 141). The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Conductor Cloud goes read-only on 13 November 2026 and shuts down on
 20 November 2026. This change builds Conductive, a browser-only replacement, at
@@ -3649,6 +3649,8 @@ Added on 7 November 2026 from the review of Milestone 15f.
 - **Recommendation:** A.
 - **Chosen:** A now, and C as a later follow-up, by the user on 7 November
   2026: `plans/follow-ups/unused-export-check.md`.
+- **Applied:** Milestone 15p added the check to the complete gate on
+  8 November 2026, and deleted that follow-up item.
 
 ### 113. Give the Worker tests a longer hang guard
 
@@ -4122,6 +4124,172 @@ Added on 8 November 2026, when the user asked to merge the baseline.
 - **Chosen:** C, by the user on 8 November 2026. The pull request keeps
   this plan, because the work goes on in later pull requests, as the
   `plans` skill says.
+
+### 142. Choose which quick chat edit wins
+
+Added on 8 November 2026 from Milestone 8q.
+
+- **Background:** A tab sends each session rename or model change at once.
+  The server checks access before it queues the write. Milestone 8q
+  reproduced two quick edits of one field that committed in the reverse
+  order.
+- **Options:**
+  - **A.** State that the last committed edit wins, and keep the current
+    behaviour.
+  - **C.** The app queues the requests of each field.
+  - **D.** The server queues the write before the access check.
+  - **E.** The app disables the field while its request waits.
+  - **F.** Each tab sends an edit sequence number, and the server keeps the
+    newest edit of that tab.
+- **Recommendation:** C.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 8q states the
+  rule in `docs/protocol/chat-and-events.md`.
+
+### 143. Choose where milestones merge after the first merge
+
+Added on 8 November 2026, after pull request #57 merged into `main`.
+
+- **Background:** Decision 135 said that milestones merge into `main` after
+  the first merge. The running milestones target the primary branch, and
+  `AGENTS.md` turns agent merges into `main` off.
+- **Options:**
+  - **A.** Keep the primary branch for integration. The orchestrator
+    reviews and merges each milestone there, and opens a batched pull
+    request into `main`.
+  - **B.** Point each milestone pull request at `main`. The user merges
+    each one.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026, who added "merge them into
+  main when ready". So the orchestrator also merges each batched pull
+  request into `main` when its CI passes. This replaces the merge target
+  of decision 135.
+
+### 144. Choose how the browser uploads a file of up to 25 MB
+
+Added on 8 November 2026 from workspace 386, "Attachment Upload Issue",
+when the user reported that attachments do not work. Milestone 8p builds
+the attachments (decision 132 A), and its upload route waits for this
+answer.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Security.
+- **Location:** `worker/security/gate.ts:93`, `worker/http/request-body.ts:8`,
+  and `src/chat/state/uploads.ts:18`.
+- **Terms:**
+  - **App gate:** the check in `worker/security/gate.ts` before each
+    browser API route. It checks the sign-in, the `Origin` header, the
+    org membership, and a JSON body for each write.
+  - **Body limit:** the byte limit of a request body at the Worker entry.
+    It is 1 MB by default, and a route that needs more declares its own
+    limit.
+  - **Preflight:** the check that a browser sends to a site before it
+    sends that site a request with a content type other than a form or
+    plain text.
+- **Background:** Decision 132 A stores each attached file in one R2
+  bucket, Cloudflare's object storage, with a limit of 25 MB for each
+  file. Today the composer sends a file as one JSON request, with the
+  bytes in base64. The access protocol says that the app gate needs a
+  JSON body for each write. Decision 65 keeps large bodies out of Worker
+  memory, because an isolate has 128 MB for all of its requests. Each
+  option keeps the R2 storage and the 25 MB limit of decision 132 A.
+- **Problem:** A 25 MB file becomes about 34 MB of JSON. The gate parses
+  the whole body in memory, so one upload holds about 100 MB at its peak.
+- **Impact if no action:** No upload route can take a large file safely,
+  so attachments stay broken.
+- **Root question:** How does a file of up to 25 MB get from the browser
+  into storage without filling the memory of an isolate?
+- **Options:**
+  - **A.** Keep one JSON request with base64, and give the upload routes
+    a body limit of 36 MB. The gate rule stays. One upload can use about
+    100 MB, so two uploads in one isolate can stop it, with the requests
+    of other users. Effort: Small.
+  - **B.** Send each file in JSON parts of about 700 KB, under the default
+    body limit. The Worker stores each part as its own R2 object, and the
+    download joins the parts. The gate rule and the body limit stay. A
+    25 MB file needs about 37 requests, and each part needs its own retry
+    and clean-up. Effort: Large.
+  - **C.** Send each file in JSON parts of 5 MiB, and join them with an R2
+    multipart upload. The part route declares a body limit of 7.5 MB. The
+    gate rule stays. Each part holds about 25 MB of memory while the gate
+    parses it. The upload needs three routes and stored part state.
+    Effort: Large.
+  - **D.** Send the raw bytes in one request, with the content type
+    `application/octet-stream`. The Worker streams the body into R2 and
+    never holds the whole file. The two upload routes declare a body
+    limit of 25 MiB. For these two routes only, the gate keeps the
+    sign-in, `Origin`, and membership checks, and it needs this content
+    type in place of JSON. Like JSON, this content type needs a preflight,
+    so a page on another site still cannot send it. The access protocol
+    and the Mac app protocol change. Effort: Medium.
+  - **E.** Upload from the browser straight to R2, with a signed address
+    from the Worker. The Worker needs R2 access keys as a new secret. The
+    bucket needs CORS rules, and the content policy and the Mac app must
+    allow the R2 host. Effort: Large.
+  - **F.** Send the raw bytes in parts of 5 MiB, with the content type
+    `application/octet-stream`, and join them with an R2 multipart
+    upload. Each part streams into R2, so memory stays small. A lost
+    connection loses one part, and the app can show progress after each
+    part. It needs three routes, stored part state, and clean-up of
+    abandoned parts. Both protocols change, as in D. Effort: Large.
+    Added by the options check of 8 November 2026.
+- **Left out:** A limit of 1 MB for each file, because it breaks the
+  25 MB limit of decision 132 A. An upload route in the workspace Durable
+  Object, because the object also has 128 MB, so it has the problem of
+  option A.
+- **Wider fix:** None. The body limit at the Worker entry, from decisions
+  65 and 93, already keeps every other route safe.
+- **Previous examples:** Decision 65 set the body limit, and decision 93
+  moved it to the Worker entry.
+- **Recommendation:** D. It streams each file in one request, with no
+  part state, no new secret, and no new host, and it keeps the protection
+  of the JSON rule.
+- **Action:** ask the user, because D changes the rule "a JSON body for
+  each write" of the access protocol, and no recorded decision covers
+  that change.
+- **Chosen:** D, by the user on 8 November 2026. Milestone 8p builds it,
+  with the conditions of the options check.
+- **Options check, 8 November 2026:** it keeps D. A test in Miniflare
+  confirmed that D streams into R2 through a fixed-length stream, so D
+  needs a required `Content-Length`. D keeps the forged-request
+  protection when the gate refuses a request with no content type and
+  the file name goes in the URL. D also changes
+  `docs/protocol/desktop-app.md`. Report:
+  `.context/options-check-144/report.md`.
+
+### 145. Choose how file paths with a secret value work
+
+Added on 8 November 2026 from finding 3 of the review of Milestone 15r.
+
+- **Background:** Decision 133 C hides each marked org env var in the
+  chat. The filter also masked file paths, so a path that held a marked
+  value could not open, and two paths could become one.
+- **Options:**
+  - **A.** Keep the real paths for every operation, and mask only the
+    shown labels. The access protocol and the privacy page say that a
+    path can show a marked value.
+  - **B.** Use opaque file handles with masked labels.
+  - **C.** Replace a value in a path with a reversible token.
+  - **D.** Leave every repository field unmasked.
+- **Recommendation:** D.
+- **Chosen:** A, by the user on 8 November 2026. Milestone 15r applies it.
+
+### 146. Choose whether the desktop stream ends on access loss now
+
+Added on 8 November 2026 from Milestone 15q.
+
+- **Background:** Decision 117 C chose that the desktop stream goes
+  through the Worker, so that the Worker can end it when a viewer loses
+  access. The provider documents its desktop stream as WebRTC, which a
+  Worker cannot relay.
+- **Options:**
+  - **A.** Take the desktop work out of Milestone 15q. The desktop tool
+    stays as it is, with its documented exception and its follow-up item.
+  - **B.** Build a VNC gateway with a noVNC viewer, so that all desktop
+    data passes the Worker's access checks.
+- **Recommendation:** A.
+- **Chosen:** A, by the user on 8 November 2026. The follow-up item
+  `plans/follow-ups/desktop-stream-after-access-loss.md` keeps B.
 
 ## Design
 
@@ -5231,6 +5399,10 @@ November 2026.
       and delete that item.
 - [ ] Apply option C of `plans/follow-ups/terminal-replies-count-as-activity.md`,
       and delete that item.
+- [ ] Apply option D of `plans/follow-ups/concurrency-callback-errors.md`,
+      and delete that item. Added on 8 November 2026.
+- [ ] Apply option A of `plans/follow-ups/activity-for-suspended-owner.md`,
+      and delete that item. Added on 8 November 2026.
 
 ## Milestone 5f: Tests on the real workspace object
 
@@ -5246,6 +5418,9 @@ both items recommend.
       one native harness. Delete both items.
 - [ ] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
       113), and delete that item.
+- [ ] Apply option A of `plans/follow-ups/start-time-limit-test-under-load.md`
+      after the move to the real object, and delete that item. Added on 8
+      November 2026.
 
 ## Milestone 6: App shell and workspaces
 
@@ -7005,20 +7180,40 @@ Evidence: `.context/milestone-15o/ui-product/report.md`,
 
 Depends on: none.
 
+Completed on 8 November 2026.
+
 Apply the small `fix after merge` items of the gate, the tests, and the
 marketing site. Added on 8 November 2026.
 
-- [ ] Apply option C of `plans/follow-ups/unused-export-check.md` (decision
+Agent calls on 8 November 2026, within the approved options:
+
+- Use Knip for value exports and type exports. Reason: the approved check
+  concerns exports, not dependencies or files.
+- Keep `src/marketing/features.ts` as the shared owner of the feature
+  text. Reason: the site already reads this module, and the mockups can
+  read it too.
+- Keep exports that pending branches or documented work need, with narrow
+  public markers. Reason: an unused export is not dead when work keeps it
+  on purpose.
+- Keep the module-load failure for a missing listed picture. Reason: the
+  glob lists existing files, and the complete gate still catches a missing
+  file. Detection moves from the build to the tests.
+- Let the chosen glob emit each matching file. Reason: the marketing host
+  still serves only the files that the shared list names.
+- Wait for pointer input before each new frame's first click. Reason: a
+  loaded document does not prove that the browser can send input to it.
+
+- [x] Apply option C of `plans/follow-ups/unused-export-check.md` (decision
       112): add an unused-export check to the complete gate. Delete that
-      item.
-- [ ] Apply option A of `plans/follow-ups/mac-top-navigation-flake.md`, and
-      delete that item.
-- [ ] Apply option A of `plans/follow-ups/workspace-store-hook-test-store.md`,
-      and delete that item.
-- [ ] Apply option D of `plans/follow-ups/legal-pages-follow-protocol.md`,
-      and delete that item.
-- [ ] Apply option C of `plans/follow-ups/marketing-site-copies.md`, and
-      delete that item.
+      item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
+- [x] Apply option A of `plans/follow-ups/mac-top-navigation-flake.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
+- [x] Apply option A of `plans/follow-ups/workspace-store-hook-test-store.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
+- [x] Apply option D of `plans/follow-ups/legal-pages-follow-protocol.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
+- [x] Apply option C of `plans/follow-ups/marketing-site-copies.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15p`.
 
 ## Milestone 15q: Access follow-ups
 
@@ -7030,15 +7225,48 @@ the desktop paths.
 Apply the `fix after merge` items of the access rules. Added on 8 November
 2026.
 
-- [ ] Draw the "no re-use" login setting and the linked session in the
+Scope extension approved on 8 November 2026: this workspace also owns
+`worker/app-api/boot.ts`, `worker/app-api/account-data.ts`, one new
+migration, and their tests and README lines. The primary orchestrator
+chose option A of the workspace's scope question.
+
+Design calls by the agent on 8 November 2026:
+
+- Save the share setting without sending the secret again. Reason: a
+  stored secret never returns to the browser.
+- Keep the saved share setting when a replacement has the same login
+  kind. Apply the new kind's default when the kind changes. Reason: a key
+  rotation must keep the owner's choice.
+- Keep `loginAvailable` about the starter's login. Reason: a refusal to
+  share does not stop the starter from using that login.
+- Add `loginShared` to the session record. Reason: another member's
+  composer must name the login that its next message will use.
+- Read only metadata when a session starts. Reason: its availability and
+  sharing state need no decrypted secret.
+- Read older records and events as shared until the next metadata check.
+  Reason: those records came from the earlier sharing rule.
+- Use a newer metadata result before returning a resolved login. Reason:
+  a sharing refusal or a missing login must not leave a stale credential
+  eligible for Send.
+- Use `2026-11-08-login-sharing` as the Terms revision. Reason: a changed
+  Terms page needs a distinct revision on the same date.
+
+The primary orchestrator approved the session reuse metadata, chat UI,
+Privacy, chat protocol, mockup notes, shared contract notes, and Terms
+revision scope on 8 November 2026, with option A of workspace item 2.
+Decision 146 moves the desktop TODO to `plans/follow-ups/desktop-stream-after-access-loss.md`.
+Evidence: `.context/boat-native-remote-workspaces/reports/`.
+
+- [x] Draw the "no re-use" login setting and the linked session in the
       mockups. Then build them, and compare them with their mockups.
-- [ ] Apply option B of `plans/follow-ups/login-reuse-setting.md` (decision
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15q`.
+- [x] Apply option B of `plans/follow-ups/login-reuse-setting.md` (decision
       116), with the access protocol and the Terms page. Delete that item.
-- [ ] Apply option C of `plans/follow-ups/desktop-stream-after-access-loss.md`
-      (decision 117), and delete that item.
-- [ ] Apply option B of `plans/follow-ups/restore-for-suspended-admin.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15q`.
+- [x] Apply option B of `plans/follow-ups/restore-for-suspended-admin.md`,
       with its lines in `docs/protocol/operator-actions.md` and
       `worker/members/README.md`. Delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15q`.
 
 ## Milestone 15r: Secret org env vars
 
@@ -7055,6 +7283,99 @@ November 2026. Added on 8 November 2026.
 - [ ] Apply option C of `plans/follow-ups/org-env-values-in-output.md`,
       with the changes to `docs/protocol/access-and-security.md` and the
       privacy page. Delete that item.
+
+## Milestone 8r: Chat write follow-ups
+
+Depends on: 8p, 8q. They change the chat path and the chat client that
+these items change.
+
+Apply the `fix after merge` items of the chat writes. Added on 8 November
+2026.
+
+- [ ] Apply option C of `plans/follow-ups/chat-access-before-queued-writes.md`,
+      and delete that item.
+- [ ] Apply option B of `plans/follow-ups/chat-open-edits-after-read-only.md`,
+      and delete that item.
+
+## Milestone 15s: Shell list follow-ups
+
+Depends on: none.
+
+Apply the `fix after merge` items of the workspace and section lists.
+Added on 8 November 2026.
+
+- [x] Apply option A of `plans/follow-ups/new-workspace-position-after-reorder.md`,
+      and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+- [x] Apply option B of `plans/follow-ups/atomic-workspace-and-section-moves.md`,
+      and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15s`.
+
+Design calls by the implementor, checked by the orchestrator on 8 November
+2026:
+
+- A position-only workspace move uses its stored section inside the
+  transaction. An earlier read can have a stale section after another move.
+- Keep the existing archive filters and tie order. Workspace ties use
+  creation time, then ID. Section ties use ID. Rank only the target list,
+  so other sections keep their saved positions.
+- Build the workspace snapshot from the guarded moving row. A refused
+  update then changes no sibling position.
+- Remove `orderedSectionWorkspaceIds` after its caller uses the atomic
+  operation. No live caller needs the old read-and-write path.
+- Keep the list reader, app list change, and dev create fake as they are.
+  They already use stored order or put new workspaces first.
+- Change the regression setup to use the new section and index inputs.
+  Keep the same order assertions, so the baseline failures still apply.
+- Keep the list order rule in the app API README. The lifecycle README
+  links to it, so the shared rule has one home.
+
+Evidence: `.context/boat-native-remote-workspaces/15s/orchestrator-checks.md`.
+
+## Milestone 13c: GitHub follow-ups
+
+Depends on: 5e. Its one alarm scheduler changes the GitHub alarms.
+
+Apply the `fix after merge` items of the GitHub code. Added on 8 November
+2026.
+
+- [ ] Apply option B of `plans/follow-ups/github-push-refresh-isolation.md`,
+      and delete that item.
+- [ ] Apply option E of `plans/follow-ups/shared-github-app-credentials.md`,
+      and delete that item.
+
+## Milestone 15t: Typed Worker warnings
+
+Depends on: 5e, 8o. They change the start and the failed start, where
+most warnings live.
+
+Apply the wider fix of findings 1 and 6 of the review of the deploy fixes.
+Added on 8 November 2026.
+
+- [ ] Apply option D of `plans/follow-ups/typed-worker-warnings.md`, and
+      delete that item.
+
+## Milestone 15u: One record of every cloud computer
+
+Depends on: 5e, 8o, 15q. They change the start, the failed start, and the
+member actions that read the computers.
+
+Apply option F of finding 10 of PR #52. Added on 8 November 2026.
+
+- [ ] Apply option F of `plans/follow-ups/computer-ledger.md`, and delete
+      that item.
+
+## Milestone 2c: Doc follow-ups
+
+Depends on: 8o, 8p, 15q, 15r. They change the protocol docs that this
+milestone splits.
+
+Apply the `fix after merge` items of the docs. Added on 8 November 2026.
+
+- [ ] Apply option A of `plans/follow-ups/protocol-docs-split.md`, and
+      delete that item.
+- [ ] Apply option A of `plans/follow-ups/readme-feature-list.md`, and
+      delete that item.
 
 ## Milestone 15d: Marketing site
 

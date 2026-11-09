@@ -7,6 +7,7 @@ import { imageNodeExecutable } from '../lifecycle/image-runtime'
 import { WORKSPACE_TOOLS_MCP } from '../../src/shared/agent-tools'
 import { TOOL_ENV } from '../../tools/context'
 
+/** @public Image installation checks identify the tools by this path. */
 export const WORKSPACE_TOOLS_DIRECTORY = '/opt/conductive/agent-tools'
 export const WORKSPACE_TOOLS_COMMAND = WORKSPACE_TOOLS_MCP.command
 export const WORKSPACE_TOOLS_SECRETS_FILE = '/run/ascii-secrets/env.sh'
