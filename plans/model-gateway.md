@@ -878,16 +878,16 @@ Depends on: 5
 The privacy draft states the new facts. The legal mockup renders the same
 file (D24).
 
-- [ ] `src/marketing/privacy.ts`: model requests pass through Conductive
+- [x] `src/marketing/privacy.ts`: model requests pass through Conductive
       on Cloudflare, and Conductive keeps no copy. A cloud computer from a
       newer image holds no agent login, and its processes can use the
       turn token of a running turn. Keep the login and tool-server
       sentences for cloud computers with an older runner. Keep the GitHub
-      token risk.
-- [ ] Read `src/marketing/terms.ts` in full, and update each sentence that
-      restates a changed fact.
-- [ ] Run `npm run mockups:check`. Open the privacy page in the mockup
-      preview.
+      token risk. Branch: `conductor/model-gateway-legal-copy`.
+- [x] Read `src/marketing/terms.ts` in full, and update each sentence that
+      restates a changed fact. Branch: `conductor/model-gateway-legal-copy`.
+- [x] Run `npm run mockups:check`. Open the privacy page in the mockup
+      preview. Branch: `conductor/model-gateway-legal-copy`.
 
 ## Milestone 9: Split the long docs
 
