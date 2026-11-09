@@ -287,36 +287,36 @@ Depends on: 2
 The browser, the Worker, and the runner command accept a Codex login of the
 kind `token`. The database stores it.
 
-- [ ] Let `SaveAgentLoginRequest` and `AgentLoginStatus` in
+- [x] Let `SaveAgentLoginRequest` and `AgentLoginStatus` in
       `src/shared/account.ts` and `RunnerLogin` in `src/shared/runner.ts`
       take the kind `token` for Codex.
-- [ ] Add a migration that rebuilds `agent_logins` without the rule
+- [x] Add a migration that rebuilds `agent_logins` without the rule
       `CHECK (agent = 'claude' OR kind = 'api-key')`.
-  - [ ] Read the `databases` skill first. Check whether the own endpoint
+  - [x] Read the `databases` skill first. Check whether the own endpoint
         logins change has merged, and build on the schema of `main`.
-  - [ ] Keep every row and every column, also `no_reuse`. Keep the other
+  - [x] Keep every row and every column, also `no_reuse`. Keep the other
         rules and the primary key. Check that no table, index, or trigger
         depends on `agent_logins`.
-  - [ ] Reserve the range `202611090000`–`202611090059` in
+  - [x] Reserve the range `202611090000`–`202611090059` in
         `migrations/README.md`, and describe the migration there.
-- [ ] Accept the Codex token in `worker/chat/login-kind.ts`, in the login
+- [x] Accept the Codex token in `worker/chat/login-kind.ts`, in the login
       save of `worker/app-api/boot.ts`, and in `accountLogins` of
       `worker/app-api/account-data.ts`.
-- [ ] Add one typed function that gives the share default of each agent
+- [x] Add one typed function that gives the share default of each agent
       and login kind, as option C of decision 171 says. A Codex token
       starts not shared. The Worker save in
       `worker/app-api/account-data.ts` and the dev backend in
       `src/app/dev/account-routes.ts` both call it, so a new kind fails the
       typecheck until it has a default.
-- [ ] Accept the Codex token in `readLogin` of `src/app/api/read-core.ts`
+- [x] Accept the Codex token in `readLogin` of `src/app/api/read-core.ts`
       and in the dev backend `src/app/dev/account-routes.ts`.
-- [ ] Add Worker tests: a saved Codex token reads back with its kind and
+- [x] Add Worker tests: a saved Codex token reads back with its kind and
       starts not shared, a change of kind sets the default of the new kind,
       and a turn command carries the kind `token` for Codex.
-- [ ] Add a test of the migration: a row that the old rule refused now
+- [x] Add a test of the migration: a row that the old rule refused now
       saves, and an existing row keeps its values.
-- [ ] Add a test of `readLogin` for a Codex token.
-- [ ] Update the login lines of `worker/app-api/README.md` and
+- [x] Add a test of `readLogin` for a Codex token.
+- [x] Update the login lines of `worker/app-api/README.md` and
       `worker/chat/README.md`.
 
 ## Milestone 4: Runner

@@ -239,8 +239,8 @@ it('keeps account data and Get started isolated from other users and deleted org
   await expectBoth(firstSaved, otherConnected)
   await putAccountValue(harness, other, agentLoginPath('codex'), {
     agent: 'codex',
-    kind: 'api-key',
-    secret: 'other-codex-key',
+    kind: 'token',
+    secret: 'other-codex-token',
   })
   await expectBoth(firstSaved, otherSaved)
   await putAccountValue(harness, other, ACCOUNT_PATHS.defaultModel, { choice })

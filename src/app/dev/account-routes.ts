@@ -1,10 +1,12 @@
 import {
   ACCOUNT_PATHS,
   agentLoginPath,
+  defaultAgentLoginNoReuse,
   type AccountResponse,
   type AgentLoginStatus,
   type GitHubInstallationsResponse,
   type SaveAgentLoginResponse,
+  type SaveAgentLoginRequest,
   type SetDefaultModelResponse,
   type UpdateAgentLoginResponse,
 } from '../../shared/account'
@@ -44,15 +46,15 @@ function putLogin(backend: DevBackend, login: AgentLoginStatus): void {
  * Whether a saved login keeps other members out of the sessions of its
  * owner, as the Worker decides. A new secret of the same kind keeps the
  * choice. A new login, or one of another kind, takes the default of its
- * kind: on for a subscription token, off for an API key.
+ * kind, from the shared account contract.
  */
 function noReuseOf(
   saved: AgentLoginStatus,
-  kind: 'token' | 'api-key',
+  kind: SaveAgentLoginRequest['kind'],
 ): boolean {
   return saved.connected && saved.kind === kind
     ? saved.noReuse
-    : kind === 'token'
+    : defaultAgentLoginNoReuse(saved.agent, kind)
 }
 
 /**
@@ -66,15 +68,14 @@ function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
   requiredText(fields, 'secret')
   const updatedAt = backend.now()
   const saved = savedLogin(backend, agent)
-  let login: AgentLoginStatus
-  if (agent === 'codex') {
-    const kind = choice(fields, 'kind', ['api-key'])
-    const noReuse = noReuseOf(saved, kind)
-    login = { agent, connected: true, kind, noReuse, updatedAt }
-  } else {
-    const kind = choice(fields, 'kind', ['token', 'api-key'])
-    const noReuse = noReuseOf(saved, kind)
-    login = { agent, connected: true, kind, noReuse, updatedAt }
+  const kind = choice(fields, 'kind', ['token', 'api-key'])
+  const noReuse = noReuseOf(saved, kind)
+  const login: AgentLoginStatus = {
+    agent,
+    connected: true,
+    kind,
+    noReuse,
+    updatedAt,
   }
   putLogin(backend, login)
   completeStep(backend.state, 'agent-login')

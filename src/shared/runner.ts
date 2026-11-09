@@ -90,7 +90,7 @@ interface RunnerResend {
 /** This type is server-only. The runner keeps the login in memory for this turn. */
 export type RunnerLogin =
   | { agent: 'claude'; kind: 'token' | 'api-key'; secret: string }
-  | { agent: 'codex'; kind: 'api-key'; secret: string }
+  | { agent: 'codex'; kind: 'token' | 'api-key'; secret: string }
 
 export interface RunnerAttachment {
   attachmentId: string

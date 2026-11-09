@@ -3,6 +3,8 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
 import { readAccount } from '../../src/app/api/read-core'
 import { agentLoginContext, readAgentLogin } from '../chat/queries'
+import { CODEX, createChatFixture } from '../chat/harness.test-support'
+import { messageCommands } from '../chat/turn-lifecycle.test-support'
 import { decrypt, encrypt } from '../security/crypto'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { saveAccountLogin } from './account-data'
@@ -81,5 +83,43 @@ it('reads a token that an older save stored with spaces and line breaks', async 
     agent: 'claude',
     kind: 'token',
     secret: JOINED,
+  })
+})
+
+it('delivers a saved Codex token to its starter turn with its kind and normalized secret', async () => {
+  const fixture = await createChatFixture(harness)
+  const saved = await harness.request(
+    agentLoginPath('codex'),
+    fixture.ownerCookie,
+    {
+      method: 'PUT',
+      body: JSON.stringify({
+        agent: 'codex',
+        kind: 'token',
+        secret: 'codex-access first\n second',
+      }),
+    },
+  )
+  expect(saved.status).toBe(200)
+  const session = await fixture.createSession(CODEX)
+  expect(session).toMatchObject({ loginAvailable: true, loginShared: false })
+  const runner = await fixture.connect()
+  runner.emit({ type: 'runner.ready' })
+  await fixture.drain()
+  await fixture.send(session.id, 'codex-token', fixture.ownerCookie, CODEX)
+  expect(messageCommands(runner, 'codex-token')).toMatchObject([
+    {
+      type: 'turn',
+      login: {
+        agent: 'codex',
+        kind: 'token',
+        secret: 'codex-accessfirstsecond',
+      },
+    },
+  ])
+  expect(await readAgentLogin(harness.env, fixture.owner.id, 'codex')).toEqual({
+    agent: 'codex',
+    kind: 'token',
+    secret: 'codex-accessfirstsecond',
   })
 })

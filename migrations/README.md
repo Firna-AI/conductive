@@ -41,6 +41,9 @@ Existing Claude subscription tokens refuse re-use by default.
 Existing API keys allow re-use by default.
 The migration keeps the encrypted secret and its timestamps.
 
+`202611090000_codex_access_token.sql` rebuilds `agent_logins` to accept a Codex access token with the kind `token`.
+It keeps every row, column, and other rule, including `no_reuse`, the primary key, and the user deletion cascade.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -72,6 +75,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 15e Mac app | `202611072000`–`202611072059` |
 | 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
 | 15o Org suspension | `202611080000`–`202611080059` |
+| Codex access tokens | `202611090000`–`202611090059` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 

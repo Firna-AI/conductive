@@ -1,4 +1,8 @@
-import type { AgentLoginStatus } from '../../src/shared/account'
+import {
+  defaultAgentLoginNoReuse,
+  type AgentLoginStatus,
+  type SaveAgentLoginRequest,
+} from '../../src/shared/account'
 import type { Agent, AgentChoice } from '../../src/shared/agents'
 
 type ConnectedLogin = Extract<AgentLoginStatus, { connected: true }>
@@ -17,17 +21,8 @@ export async function accountLogins(
   return (['claude', 'codex'] as const).map((agent): AgentLoginStatus => {
     const login = results.find((item) => item.agent === agent)
     if (!login) return { agent, connected: false }
-    if (login.agent === 'claude')
-      return {
-        ...login,
-        agent: 'claude',
-        connected: true,
-        noReuse: login.noReuse === 1,
-      }
     return {
       ...login,
-      agent: 'codex',
-      kind: 'api-key',
       connected: true,
       noReuse: login.noReuse === 1,
     }
@@ -68,7 +63,7 @@ export async function saveAccountLogin(
   db: D1Database,
   userId: string,
   agent: Agent,
-  kind: 'token' | 'api-key',
+  kind: SaveAgentLoginRequest['kind'],
   ciphertext: string,
   now: number,
 ): Promise<boolean> {
@@ -81,7 +76,15 @@ export async function saveAccountLogin(
          THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
        updated_at = excluded.updated_at RETURNING no_reuse`,
     )
-    .bind(userId, agent, kind, ciphertext, kind === 'token' ? 1 : 0, now, now)
+    .bind(
+      userId,
+      agent,
+      kind,
+      ciphertext,
+      defaultAgentLoginNoReuse(agent, kind) ? 1 : 0,
+      now,
+      now,
+    )
     .first<number>('no_reuse')
   return noReuse === 1
 }

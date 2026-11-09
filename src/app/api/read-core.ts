@@ -124,15 +124,6 @@ export function readLogin(value: unknown): AgentLoginStatus {
   if (!flag(login, 'connected')) return { agent, connected: false }
   const updatedAt = count(login, 'updatedAt')
   const noReuse = flag(login, 'noReuse')
-  if (agent === 'codex') {
-    return {
-      agent,
-      connected: true,
-      kind: choice(login, 'kind', ['api-key']),
-      noReuse,
-      updatedAt,
-    }
-  }
   return {
     agent,
     connected: true,

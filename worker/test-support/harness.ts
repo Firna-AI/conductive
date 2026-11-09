@@ -12,7 +12,9 @@ import { applyMigrations } from './migrations'
 export const TEST_ORIGIN = 'https://app.conductive.test'
 export const TEST_TIME = 1_800_000_000_000
 
-export async function createHarness() {
+export async function createHarness(
+  options: { migrationsBefore?: string } = {},
+) {
   const runtime = new Miniflare({
     enableDevRegistry: false,
     telemetry: { enabled: false },
@@ -38,7 +40,7 @@ export async function createHarness() {
     ],
   })
   const db = await runtime.getD1Database('DB')
-  await applyMigrations(db)
+  await applyMigrations(db, { before: options.migrationsBefore })
   const env: AppEnv = {
     DB: db,
     APP_ORIGIN: TEST_ORIGIN,

@@ -127,6 +127,8 @@ The Durable Object runs the gates itself.
   other workspace gets `404 workspace_not_found`. So does a workspace that
   `matchesObject` refuses, because `WORKSPACES.idFromName` names another
   object.
+- Both agents accept the login kinds `token` and `api-key`. A `token` is a
+  Claude subscription token or a Codex access token.
 - Every login lookup goes through `SessionLogins`. Its credential path uses
   `readLogin` in `login-access.ts`, the only caller of `resolveLogin`. It
   reads the agent login of a starter or of a linked-session member, for one

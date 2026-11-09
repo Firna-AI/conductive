@@ -46,8 +46,8 @@ export const otherLogins: readonly AgentLoginStatus[] = [
   {
     agent: 'codex',
     connected: true,
-    kind: 'api-key',
-    noReuse: false,
+    kind: 'token',
+    noReuse: true,
     updatedAt: TEST_TIME,
   },
 ]

@@ -21,6 +21,51 @@ beforeEach(async () => {
 })
 afterAll(async () => harness.dispose())
 
+it('reads a private Codex token and resets sharing only when its kind changes', async () => {
+  const cookie = await harness.login()
+  const save = (kind: 'token' | 'api-key', secret = 'codex-secret') =>
+    harness.request(agentLoginPath('codex'), cookie, {
+      method: 'PUT',
+      body: JSON.stringify({ agent: 'codex', kind, secret }),
+    })
+  const update = (noReuse: boolean) =>
+    harness.request(agentLoginPath('codex'), cookie, {
+      method: 'PATCH',
+      body: JSON.stringify({ noReuse }),
+    })
+  const saved = await save('token')
+  expect(saved.status).toBe(200)
+  expect(await saved.json()).toEqual({
+    agent: 'codex',
+    connected: true,
+    kind: 'token',
+    noReuse: true,
+    updatedAt: TEST_TIME,
+  })
+  expect(
+    await (await harness.request(ACCOUNT_PATHS.account, cookie)).json(),
+  ).toMatchObject({
+    agentLogins: [
+      { agent: 'claude', connected: false },
+      { agent: 'codex', connected: true, kind: 'token', noReuse: true },
+    ],
+  })
+  expect(await (await update(false)).json()).toMatchObject({ noReuse: false })
+  expect(await (await save('token', 'rotated-token')).json()).toMatchObject({
+    kind: 'token',
+    noReuse: false,
+  })
+  expect(await (await update(true)).json()).toMatchObject({ noReuse: true })
+  expect(await (await save('api-key')).json()).toMatchObject({
+    kind: 'api-key',
+    noReuse: false,
+  })
+  expect(await (await save('token')).json()).toMatchObject({
+    kind: 'token',
+    noReuse: true,
+  })
+})
+
 it('saves login reuse defaults and changes only the signed-in account preference without a secret', async () => {
   const first = await harness.login()
   const save = (

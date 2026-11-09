@@ -7,6 +7,10 @@ Backend tests use it without an external account or cloud computer.
 Every harness uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
 It applies migrations in filename order with Wrangler's SQL splitter.
 The splitter keeps each trigger body in one statement.
+The optional `before` filename stops before that migration.
+The optional `from` filename starts with that migration.
+`createHarness({ migrationsBefore })` creates a database at an earlier schema
+for a migration test.
 
 Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
 Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.

@@ -17,7 +17,25 @@ export function agentLoginPath(agent: Agent): string {
 /** Secrets occur only in writes and runner commands, never in account responses. */
 export type SaveAgentLoginRequest =
   | { agent: 'claude'; kind: 'token' | 'api-key'; secret: string }
-  | { agent: 'codex'; kind: 'api-key'; secret: string }
+  | { agent: 'codex'; kind: 'token' | 'api-key'; secret: string }
+
+type AgentLoginKinds = {
+  [A in Agent]: Extract<SaveAgentLoginRequest, { agent: A }>['kind']
+}
+
+const loginNoReuseDefaults: {
+  [A in Agent]: Record<AgentLoginKinds[A], boolean>
+} = {
+  claude: { token: true, 'api-key': false },
+  codex: { token: true, 'api-key': false },
+}
+
+export function defaultAgentLoginNoReuse<A extends Agent>(
+  agent: A,
+  kind: AgentLoginKinds[A],
+): boolean {
+  return loginNoReuseDefaults[agent][kind]
+}
 
 export type AgentLoginStatus =
   | { agent: Agent; connected: false }
@@ -31,7 +49,7 @@ export type AgentLoginStatus =
   | {
       agent: 'codex'
       connected: true
-      kind: 'api-key'
+      kind: 'token' | 'api-key'
       noReuse: boolean
       updatedAt: Timestamp
     }

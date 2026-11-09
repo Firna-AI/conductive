@@ -36,10 +36,13 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
 - A new login or a change of kind sets `noReuse` to true for a Claude
-  subscription token and false for an API key. Replacing a secret of the
-  same kind keeps its preference. A `PATCH` changes only that login's
-  preference for the signed-in account. It needs no secret and keeps `updatedAt` as the
-  last secret-save time. It returns the current metadata, including a
+  subscription token or a Codex access token, and false for an API key.
+  The Worker and the dev backend use `defaultAgentLoginNoReuse` in the
+  [account contract](../../src/shared/account.ts) for these defaults.
+  Replacing a secret of the same kind keeps its preference. A `PATCH`
+  changes only that login's preference for the signed-in account. It needs
+  no secret and keeps `updatedAt` as the last secret-save time. It returns
+  the current metadata, including a
   disconnected status when the login was removed.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
 - `getStartedGitHubComplete` owns the `github-app` step in every org state.
@@ -107,13 +110,16 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 
 - `boot.test.ts` checks the boot routes, the saved preferences, the
   encrypted logins, and a missing model list. Two users save different
-  defaults and logins, both with a Claude login. After each save and a
+  defaults and logins, including a Codex access token. After each save and a
   delete, each reads only their own account and Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
+  It also checks the Codex token kind and secret in a runner turn command.
 - `agent-login-reuse.test.ts` checks the login-kind defaults, the private
   preference update, and unchanged secret data and timestamps.
+- `agent-login-migration.test.ts` checks that the table rebuild keeps
+  existing login values and accepts Codex tokens.
 - `feature-github-install.test.ts` checks the install link of the GitHub
   App, and the default app when the slug is missing or not valid.
 - `shell-resources.test.ts` and `chat-read-state.test.ts` check the lists,
