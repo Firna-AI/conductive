@@ -670,6 +670,7 @@ The complete change passes the gate and the review.
 Evidence: `.context/sandbox-provider-groundwork/complete-gate.log` records
 the complete gate on the finished independent groundwork. The live check
 and the org image migration still wait for their required inputs.
+
 - [ ] Run the live check of `image/` on Boat: create a workspace, run a
       chat turn, open the terminal and a preview, then stop, resume, and
       archive. Save the output under `.context/sandbox-provider-groundwork/`.
@@ -684,6 +685,7 @@ and the org image migration still wait for their required inputs.
 Review summary: the read-only review of `4f41d9a1` against `8999b4b4`
 reported no findings. No finding check, fix round, or re-review was needed.
 The report is `.context/reviews/calummoore/vercel-sandbox-provider/round-1-review.md`.
+
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
