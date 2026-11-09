@@ -132,7 +132,8 @@ hooks that report runner events to the lifecycle.
 ### Stop and summary
 
 [Stop and summary](workspace-lifecycle.md#stop-and-summary) gives the
-runner stop at a stopped or failed state, and the workspace summary.
+runner stop at a stopped or error state, and the workspace summary. It
+also gives the kept chat and queued messages of a failed admitted create.
 
 ## Milestone 9: files
 

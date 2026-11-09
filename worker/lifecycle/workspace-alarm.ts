@@ -56,8 +56,37 @@ export async function runWorkspaceAlarm(input: {
       Boolean(await input.startJobs.publication())
     if (due.has('lifecycle:publication') || legacyPublication || recoveringRun)
       await publishCreationResult(env, input.startJobs)
+    const cleanupId = await storage.get('text', 'lifecycle:cleanup')
+    const pending = await storage.get('job', START_JOB_KEY)
+    const terminal = Boolean(
+      pending &&
+      (pending.cancelled ||
+        pending.failure ||
+        (pending.deadlineAt !== undefined &&
+          pending.deadlineAt <= dependencies.now())),
+    )
+    const startRequested = requested('lifecycle:start') || due.has('lifecycle')
+    const cleanupRequested =
+      requested('lifecycle:cleanup') || due.has('lifecycle')
+    let cleanupAttempted = false
+    if (cleanupId && !terminal && (cleanupRequested || startRequested)) {
+      cleanupAttempted = true
+      await advanceCleanup(input.cleanupStorage, env, dependencies, cleanupId)
+    }
+    if (!terminal && (await storage.get('text', 'lifecycle:cleanup'))) {
+      if (pending && startRequested)
+        await input.startStorage.setAlarm(
+          Math.min(
+            (await storage.get('number', 'alarm:lifecycle:cleanup')) ??
+              dependencies.now() + 30_000,
+            startAlarmDeadline(pending, dependencies.now()),
+          ),
+        )
+      await lifecycle.schedule()
+      return
+    }
     if (await input.starts.pending()) {
-      if (requested('lifecycle:start') || due.has('lifecycle')) {
+      if (terminal || startRequested) {
         try {
           if (await input.starts.advance()) {
             if (!(await input.starts.pending())) {
@@ -100,23 +129,15 @@ export async function runWorkspaceAlarm(input: {
       (await input.accessStop.check(state.workspaceId)) !== undefined
     )
       return
-    const cleanupId = await storage.get('text', 'lifecycle:cleanup')
-    if (cleanupId && (requested('lifecycle:cleanup') || due.has('lifecycle'))) {
-      await input.cleanupStorage.setAlarm(dependencies.now() + 30_000)
-      try {
-        if (
-          (await retryAllocationCleanup(storage, env, dependencies)) &&
-          (await retrySandboxCleanup(env, dependencies, cleanupId))
-        ) {
-          await input.cleanupStorage.transaction(async (transaction) => {
-            await transaction.delete('lifecycle:cleanup')
-            await transaction.deleteAlarm()
-          })
-        } else await input.cleanupStorage.setAlarm(dependencies.now() + 30_000)
-      } catch {
-        await input.cleanupStorage.setAlarm(dependencies.now() + 30_000)
-      }
-    } else if (!cleanupId) await input.cleanupStorage.deleteAlarm()
+    const remainingCleanup = await storage.get('text', 'lifecycle:cleanup')
+    if (remainingCleanup && !cleanupAttempted && cleanupRequested)
+      await advanceCleanup(
+        input.cleanupStorage,
+        env,
+        dependencies,
+        remainingCleanup,
+      )
+    else if (!remainingCleanup) await input.cleanupStorage.deleteAlarm()
     if (requested('lifecycle') || state?.startStop === 'pending') {
       try {
         await lifecycle.alarm()
@@ -135,4 +156,28 @@ export async function runWorkspaceAlarm(input: {
   } finally {
     await run.finish(dependencies.now())
   }
+}
+
+async function advanceCleanup(
+  storage: WorkspaceStorage,
+  env: AppEnv,
+  dependencies: AppDependencies,
+  cleanupId: string,
+): Promise<void> {
+  await storage.setAlarm(dependencies.now() + 30_000)
+  try {
+    if (
+      (await retryAllocationCleanup(storage, env, dependencies)) &&
+      (await retrySandboxCleanup(env, dependencies, cleanupId))
+    ) {
+      await storage.transaction(async (transaction) => {
+        await transaction.delete('lifecycle:cleanup')
+        await transaction.deleteAlarm()
+      })
+      return
+    }
+  } catch {
+    /* The cleanup owner keeps its retry time. */
+  }
+  await storage.setAlarm(dependencies.now() + 30_000)
 }

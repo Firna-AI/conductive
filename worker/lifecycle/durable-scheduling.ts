@@ -62,13 +62,21 @@ export async function scheduleLifecycleState(
     await storage.setAlarm(now() + 30_000)
     return
   }
-  const alarm = isConfirmedStopped(state)
-    ? state.nextDiskKeepaliveAt
-    : state.state === 'error'
-      ? now() + 5_000
-      : state.runningSessions.length
-        ? now() + TURN_HEARTBEAT_MS
-        : state.lastActivityAt + IDLE_MS
+  const startPending = (await hooks.startPending?.()) ?? false
+  const failedFirstStart =
+    state.state === 'error' &&
+    state.start?.kind === 'create' &&
+    state.start.steps.some((step) => step.state === 'failed')
+  const alarm =
+    failedFirstStart && !startPending
+      ? null
+      : isConfirmedStopped(state)
+        ? state.nextDiskKeepaliveAt
+        : state.state === 'error'
+          ? now() + 5_000
+          : state.runningSessions.length
+            ? now() + TURN_HEARTBEAT_MS
+            : state.lastActivityAt + IDLE_MS
   if (alarm === null || state.state === 'archived') await storage.deleteAlarm()
   else {
     const next = Math.min(

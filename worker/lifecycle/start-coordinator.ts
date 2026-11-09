@@ -1,5 +1,6 @@
 import type {
   WorkspaceStartJob,
+  WorkspaceStartIntent,
   WorkspaceStartResult,
   StartJobStorage,
   WorkspaceCreationAdmission,
@@ -32,12 +33,12 @@ import {
 import {
   readStartForAdvance,
   retryStartError,
-  startDeadlineAt,
   startTimeLimitReached,
 } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { applyStartRunnerReady } from './start-runner'
 import { prepareStartSuccess, runnerStartConnected } from './start-completion'
+import { enqueueWorkspaceStart } from './start-admission'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -66,36 +67,20 @@ export class WorkspaceStartCoordinator {
     this.finishResumeFailure = finishResumeFailure
   }
 
-  enqueue(job: WorkspaceStartJob): Promise<boolean> {
-    const accepted = this.accepting.then(async () => {
-      if (job.kind === 'create' && (await this.storage.creationResult()))
-        return false
-      if (await this.storage.job()) return false
-      await requireActiveStartUsers(this.env.DB, job)
-      const epoch = await this.storage.epoch()
-      const state = await this.endpoint.readLifecycle()
-      if (state?.startStop === 'pending') return false
-      if (
-        job.kind === 'resume' &&
-        state?.state !== 'stopped' &&
-        state?.state !== 'error'
-      )
-        return false
-      if (job.kind === 'resume') await this.endpoint.finishDiskMaintenance()
-      if (
-        !(await this.storage.begin(
-          {
-            ...job,
-            deadlineAt: startDeadlineAt(job, this.dependencies.now()),
-          },
-          epoch,
-        ))
-      )
-        return false
-      await this.endpoint.beginLifecycleStart(job.kind)
-      await this.storage.schedule()
-      return true
-    })
+  enqueue(
+    job: WorkspaceStartJob,
+    intent: WorkspaceStartIntent = { kind: 'continue' },
+  ): Promise<boolean> {
+    const accepted = this.accepting.then(() =>
+      enqueueWorkspaceStart(
+        this.env,
+        this.dependencies,
+        this.endpoint,
+        this.storage,
+        job,
+        intent,
+      ),
+    )
     this.accepting = accepted.catch(() => undefined)
     return accepted
   }

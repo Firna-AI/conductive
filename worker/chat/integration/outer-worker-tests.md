@@ -30,6 +30,10 @@ npm run test -- worker/chat/integration
 - `workspace-admission.test.ts` checks that the lifecycle admission stores
   the assigned first message before any browser callback. The message stays
   after a restart, and a repeat adds no history.
+- `failed-first-start-retry.test.ts` checks a kept first-start failure through
+  restart, a retry by another member, fresh credentials, and ordered queued delivery.
+- `failed-creation-replay.test.ts` checks all history pages of a kept failed
+  workspace through the normal member event socket, which stays live.
 - `workspace-lifecycle.test.ts` joins runner readiness, a reconnect, a
   confirmed stop, and the next queued turn. No hook enters the chat queue
   again. A follow-up message with a model change, queued before the start
@@ -154,8 +158,8 @@ CHAT_HARNESS_ASSETS=path/to/client CHAT_HARNESS_PORT=5181 \
   It returns no log and no secret.
 - The fake runner treats a stop by a control as a cancel. An error of an
   active fake runner still shows in the status.
-- With these controls, a browser check can fail a create after its
-  admission. It holds the start, leaves, fails the start, and waits for the
-  result and a `404`. Then it returns through history, and retries with the
-  same message ID and a new workspace ID.
+- With these controls, a browser check can fail a create after admission.
+  It holds the start, leaves, and fails the start.
+  The workspace stays readable with its error and queued messages.
+  It returns through history and retries in the same workspace.
 - The Worker routes no attachment upload yet, so such a check sends text.

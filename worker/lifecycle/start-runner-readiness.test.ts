@@ -51,9 +51,7 @@ it('keeps the create pending through runner readiness and fails at its original 
     },
   })
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
-  expect(
-    (await fixture.failedCreation(before.workspaceId))?.error.message,
-  ).toBe(
+  expect((await actor.readLifecycle())?.error?.message).toBe(
     'The cloud computer did not start within the 20-minute limit. Try again.',
   )
 })

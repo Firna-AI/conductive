@@ -7,6 +7,7 @@ import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import type { ConnectionScheduler } from '../security/connection-access'
 import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 import type { StoredWorkspaceStartJob } from './start-job-codec'
+import type { WorkspaceStartIntent } from './start-types'
 
 const CLOCK_KEY = '__test:workspace-alarm-clock'
 
@@ -40,8 +41,11 @@ export class NativeAlarmWorkspace extends ProductionWorkspace {
     return this.alarmNow()
   }
 
-  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
-    const accepted = await super.queueLifecycleStart(job)
+  async queueLifecycleStart(
+    job: StoredWorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean> {
+    const accepted = await super.queueLifecycleStart(job, intent)
     if (accepted && job.phase === 'records') await this.advanceStartAlarm()
     return accepted
   }

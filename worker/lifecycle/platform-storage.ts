@@ -1,5 +1,4 @@
 import type { DurableLifecycleState } from './durable-types'
-import type { FailedCreationDraft } from './failed-creations'
 import type { ImageCoordinatorState } from './image-timers'
 import type {
   WorkspaceStartResult,
@@ -7,7 +6,7 @@ import type {
   CompletedWorkspaceCreation,
 } from './start-types'
 import type { StoredWorkspaceStartJob } from './start-job-codec'
-import type { PendingTurn } from './workspace-runtime'
+import type { FirstWorkspaceMessage, PendingTurn } from './workspace-runtime'
 import { assertReceiverActive } from '../members/receiver-fence'
 import type { ReceiverStorage } from '../members/receiver-storage'
 
@@ -19,7 +18,7 @@ export interface WorkspaceValues {
   creation: CompletedWorkspaceCreation
   turns: PendingTurn[]
   image: ImageCoordinatorState
-  draft: FailedCreationDraft
+  first: FirstWorkspaceMessage
   number: number
   text: string
 }

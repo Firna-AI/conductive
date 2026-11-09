@@ -5,7 +5,6 @@ import type {
   PendingTurn,
   LifecycleActivityResult,
 } from './workspace-runtime'
-import type { FailedCreationDraft } from './failed-creations'
 import type { ImageCoordinatorState } from './image-timers'
 import type {
   LifecyclePublisher,
@@ -35,10 +34,6 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
     now: number,
     publish: LifecyclePublisher,
   ): Promise<boolean>
-  failedLifecycleCreation(
-    orgId: string,
-    senderUserId: string,
-  ): Promise<FailedCreationDraft | undefined>
   acknowledgeLifecycleFirstMessage(publish?: LifecyclePublisher): Promise<void>
   recoverLifecycle(publish?: LifecyclePublisher): Promise<void>
   registerLifecycleTurn(

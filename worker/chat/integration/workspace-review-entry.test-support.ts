@@ -4,6 +4,7 @@ import { NativeAlarmWorkspace } from '../../lifecycle/native-alarm-workspace.tes
 import type { WorkspaceCompositionEnv } from '../workspace-integration'
 import { START_JOB_KEY } from '../../lifecycle/start-storage'
 import type { StoredWorkspaceStartJob } from '../../lifecycle/start-job-codec'
+import type { WorkspaceStartIntent } from '../../lifecycle/start-types'
 
 /** Only test controls differ. All state changes use the production object. */
 export class Workspace extends NativeAlarmWorkspace {
@@ -32,8 +33,11 @@ export class Workspace extends NativeAlarmWorkspace {
     return state
   }
 
-  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
-    const accepted = await super.queueLifecycleStart(job)
+  async queueLifecycleStart(
+    job: StoredWorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean> {
+    const accepted = await super.queueLifecycleStart(job, intent)
     if (accepted) {
       this.queued++
       for (const reader of this.queueReaders)

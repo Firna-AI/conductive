@@ -32,12 +32,12 @@ it('ends a startup script that never exits at the original start deadline and pu
     await fixture.runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspaces',
     ).first('count'),
-  ).toBe(0)
+  ).toBe(1)
   expect(
     await fixture.runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspace_tokens',
     ).first('count'),
-  ).toBe(0)
+  ).toBe(1)
   const actor = [...fixture.actors.values()][0]
   expect(actor?.events.map(({ event }) => event)).toEqual(
     expect.arrayContaining([
@@ -56,9 +56,7 @@ it('ends a startup script that never exits at the original start deadline and pu
       }),
     ]),
   )
-  expect(
-    (await fixture.failedCreation(before?.workspaceId ?? ''))?.error.message,
-  ).toBe(FAILURE)
+  expect((await start.endpoint.readLifecycle())?.error?.message).toBe(FAILURE)
 })
 
 it('gives each resume its own deadline and restores an old saved start when its computer never becomes ready', async () => {
@@ -139,6 +137,34 @@ it('enforces the start deadline before a later provider retry after reconstructi
   expect(alarm).toBe(TEST_TIME + 1_200_000)
   expect(fixture.boat.statusRequests).toHaveLength(polls)
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
+})
+
+it('fails a start when terminal preparation completes at the deadline before publishing success', async () => {
+  const fixture = await backendFixture()
+  const start = await startRetryFixture(fixture)
+  await start.advance()
+  await start.advance()
+  const terminal = await start.job()
+  expect(terminal).toMatchObject({
+    phase: 'terminal',
+    processId: expect.any(Number),
+  })
+  fixture.boat.beforeStatus = async () => {
+    fixture.boat.beforeStatus = undefined
+    fixture.setTime(TEST_TIME + 1_200_000)
+  }
+  await start.tick(TEST_TIME + 1_199_999)
+
+  expect(fixture.boat.statusRequests.at(-1)?.processId).toBe(
+    terminal?.processId,
+  )
+  expect(await start.wait()).toMatchObject({
+    ok: false,
+    error: { code: 'workspace_start_failed', message: FAILURE },
+  })
+  expect(await start.job()).toBeUndefined()
+  expect(fixture.boat.deletedIds).toEqual(['bx_1'])
+  expect(fixture.boat.fileReads).toEqual([])
 })
 
 it('fails a start when its terminal password read completes at the deadline before publishing success', async () => {

@@ -149,14 +149,17 @@ it('recovers an accepted create after its caller closes and the actor restarts',
       error: { code: 'workspace_start_stopped' },
     })
     expect(fixture.boat.deletedIds).toEqual(['bx_2'])
-    expect((await fixture.failedCreation(cancelledId))?.request.id).toBe(
-      'second-message',
-    )
+    expect(
+      await fixture.runtime.workspace(cancelledId).waitCreationAdmission(),
+    ).toMatchObject({
+      ok: true,
+      created: { first: { request: { id: 'second-message' } } },
+    })
     expect(
       await fixture.runtime.env.DB.prepare(
         'SELECT COUNT(*) AS count FROM workspaces',
       ).first('count'),
-    ).toBe(1)
+    ).toBe(2)
   } finally {
     await fixture.dispose()
   }

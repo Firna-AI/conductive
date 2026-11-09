@@ -161,3 +161,30 @@ export function withStartFailure(
       : null,
   }
 }
+
+export function withCreateFailure(
+  state: DurableLifecycleState,
+  error: DurableLifecycleState['error'],
+  now: number,
+): DurableLifecycleState {
+  if (state.state === 'stopped' || state.state === 'archived') return state
+  const failed = withStartFailure(
+    state.start
+      ? state
+      : {
+          ...state,
+          start: { kind: 'create', startedAt: now, steps: [] },
+        },
+    error,
+    now,
+  )
+  return failed.start?.steps.some((step) => step.state === 'failed')
+    ? failed
+    : withStartStep(
+        failed,
+        'start',
+        'Starting the cloud computer',
+        'failed',
+        now,
+      )
+}

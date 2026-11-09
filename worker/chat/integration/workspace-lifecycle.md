@@ -81,10 +81,12 @@ methods of `Workspace`.
 
 ## Stop and summary
 
-- When the lifecycle state becomes `stopped` or `error`, or a failed create
-  clears the lifecycle, `stopWorkspace` closes the runner. It ends each
-  running or stopping turn as stopped. Queued turns stay for the resume.
-  Device cleanup starts too.
+- When the lifecycle state becomes `stopped` or `error`, `stopWorkspace`
+  closes the runner. It ends each running or stopping turn as stopped.
+  Queued turns stay for the resume. Device cleanup starts too.
+- A failed admitted create keeps the same workspace and normal access to chat.
+  Later messages remain queued. A replacement create uses a fresh computer token.
+  Its readiness releases the existing commands in their saved order.
 - During org deletion, a missing workspace ends only the state projection.
   Device reconciliation still settles the request and sends its broker cancellation.
 - `workspaceSummary` gives the last event number, the last event number
@@ -93,5 +95,10 @@ methods of `Workspace`.
   working.
 - Known limit: `Workspace.alarm` holds the queue during one lifecycle
   phase. A phase can make several provider requests. Each can take up to 30
-  seconds, or 65 for a file read. So a slow phase delays the chat reads, the
-  messages, and the runner receipts of that workspace.
+  seconds, 65 for a file read, or 610 for a command. The restore watch runs
+  such a command when it writes the restore marker. So a slow phase delays
+  the chat reads, the messages, and the runner receipts of that workspace.
+  The startup script and the terminal setup run detached, so no request
+  waits for their whole run, as
+  [Creates and resumes](../../lifecycle/workspace-object.md#creates-and-resumes)
+  says.
