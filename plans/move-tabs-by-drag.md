@@ -580,26 +580,26 @@ Depends on: 2
 Add the row order, the places of the sessions, and the move to the chat
 state, with no UI.
 
-- [ ] Add `src/chat/state/tab-order.ts` with the row order, the places of
+- [x] Add `src/chat/state/tab-order.ts` with the row order, the places of
       the sessions, and the move of the design.
-- [ ] Give the open sessions their places at the load and when an open
+- [x] Give the open sessions their places at the load and when an open
       session first arrives. Drop the places of the sessions that are not
       open.
-- [ ] Add `ChatController.moveTab`, with the save and the sort of the open
+- [x] Add `ChatController.moveTab`, with the save and the sort of the open
       sessions. It changes nothing in a read-only workspace.
-- [ ] Test through the controller on the fake API:
-  - [ ] A session tab moves after a file tab, and the saved view keeps the
+- [x] Test through the controller on the fake API:
+  - [x] A session tab moves after a file tab, and the saved view keeps the
         new order.
-  - [ ] A move in a row without file tabs keeps the place of each file
+  - [x] A move in a row without file tabs keeps the place of each file
         tab.
-  - [ ] In a new workspace, a file tab opens after the first session.
-  - [ ] A reopened session opens at the end, also when the saved view held
+  - [x] In a new workspace, a file tab opens after the first session.
+  - [x] A reopened session opens at the end, also when the saved view held
         an old place for it.
-  - [ ] After a move, a new session opens at the end, and Close of the
+  - [x] After a move, a new session opens at the end, and Close of the
         shown session shows its neighbour in the new order.
-  - [ ] A move in a read-only workspace changes nothing and sends no
+  - [x] A move in a read-only workspace changes nothing and sends no
         write.
-- [ ] Update `src/chat/README.md`.
+- [x] Update `src/chat/README.md`.
 
 ## Milestone 4: Drag, tab menu, and full row
 

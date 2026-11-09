@@ -127,6 +127,20 @@ members from the models of the app.
 
 ## Rules for this code
 
+- The state keeps one saved order for session, file, and diff tabs. The row
+  order includes each tab once. A host with no file or diff tabs leaves
+  their saved places in the view. In a read-only workspace, the row uses
+  the session tabs that the browser keeps.
+- The load gives each open session a place and removes the places of
+  sessions that are not open. When an open session first arrives, the
+  state adds its missing place at the end. It drops no other place.
+  At the load, missing places go at the end, in the order of creation.
+  These changes send no write of their own. The next view save carries
+  them, and a read-only workspace keeps them in the browser only.
+- `moveTab(tab, place)` puts a tab before or after its neighbour in the
+  row. It saves through the shared view writer, then sorts the open
+  sessions for Close. A new or reopened session opens at the end. A
+  read-only workspace moves no tab.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
@@ -248,6 +262,8 @@ check in the Mac app.
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
   state and its actions, with `show` and `hide` for a kept chat.
+- `state/tab-order.ts`: the pure row order, the places of the open
+  sessions, and the move before or after a neighbour.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `state/load.ts`: the order of the first reads and the stream start.

@@ -102,6 +102,7 @@ export function chatFor(
      * own readers, such as two tabs, get the same events.
      */
     stream?: FakeWorkspaceEvents
+    readOnly?: () => boolean
   } = {},
 ) {
   const server = new FakeApiServer(options)
@@ -133,6 +134,7 @@ export function chatFor(
       )
     },
     timers,
+    readOnly: options.readOnly,
     newId: () => {
       ids += 1
       return `client-${ids}`

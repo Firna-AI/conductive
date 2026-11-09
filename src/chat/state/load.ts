@@ -6,6 +6,7 @@ import { logOf, messageOf, withTranscript, type ChatContext } from './context'
 import { hydrate } from './history'
 import { confirmWorkspace, shownRecord } from './session-records'
 import { orderSessions, pickActive, sortHistory } from './sessions'
+import { withSessionPlaces } from './tab-order'
 
 const orNull = <T>(request: Promise<T>): Promise<T | null> =>
   request.catch(() => null)
@@ -64,8 +65,9 @@ export async function loadChat(context: ChatContext): Promise<void> {
     fail(error)
     return
   }
-  const [view, models, account, org, members] = await extras
+  const [savedView, models, account, org, members] = await extras
   if (!context.live()) return
+  const view = withSessionPlaces(savedView, first.sessions)
   const active = pickActive(orderSessions(first.sessions, view), view)
   // An input that an app model owns keeps the value of its source.
   const read = owned
@@ -98,19 +100,19 @@ export async function loadChat(context: ChatContext): Promise<void> {
   confirmWorkspace(context, detail)
   store.update((snapshot) => {
     const records = listed.map((item) => shownRecord(context, item.id) ?? item)
-    const open = orderSessions(
-      records.filter((item) => item.closedAt === null),
-      snapshot.view,
-    )
+    const openRecords = records.filter((item) => item.closedAt === null)
+    const view = withSessionPlaces(snapshot.view, openRecords)
+    const open = orderSessions(openRecords, view)
     const shown = open.some((item) => item.id === snapshot.activeSessionId)
     let next: ChatSnapshot = {
       ...snapshot,
       load: { state: 'ready' },
+      view,
       sessions: open,
       history: sortHistory(records.filter((item) => item.closedAt !== null)),
       activeSessionId: shown
         ? snapshot.activeSessionId
-        : pickActive(open, snapshot.view),
+        : pickActive(open, view),
     }
     for (const { id } of listed) {
       const log = logOf(context, id)
