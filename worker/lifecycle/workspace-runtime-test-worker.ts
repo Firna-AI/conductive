@@ -21,6 +21,7 @@ import { CONNECTION_CHECK_MS } from '../security/connection-access'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { authenticateWorkspaceToken } from './tokens'
 import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
+import { exerciseRepairBudget } from './repair-budget-native-test-support'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
@@ -119,6 +120,9 @@ export class WorkspaceRuntimeFixture extends Workspace {
   }
   imageSchedule(): Promise<ImageCoordinatorState | undefined> {
     return this.ctx.storage.get('org-image:coordinator')
+  }
+  repairBudget(now: number) {
+    return exerciseRepairBudget(this.env, now)
   }
   checkpoint(): Promise<StoredWorkspaceStartJob | undefined> {
     return this.ctx.storage.get(START_JOB_KEY)

@@ -1,0 +1,44 @@
+/* One row for each state, in a box with a full outline. */
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--ui-touch-min);
+  padding: 9px 12px;
+  box-sizing: border-box;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-border);
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+}
+
+/* The counts line up in a column, so they use tabular figures. */
+.count {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ui-weight-strong);
+}
+
+.share {
+  width: 44px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}

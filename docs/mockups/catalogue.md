@@ -17,6 +17,7 @@ how a screen is built, and links to the other pages.
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs and a search |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
+| `app/operator`      | The operator's Overview, Orgs, and Users tabs, the page of an org and of a user with Suspend and Lift, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its error, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
@@ -36,7 +37,7 @@ A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/shell`, `app/command-palette`, `app/orgs`, `app/orgs/suspended`,
 `app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
-`app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/operator`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -73,6 +74,31 @@ shows stopped. Its child pages:
 - `app/orgs/suspended/deleted` has a deleted org that is also suspended:
   the notice of the org above the page of the deleted org, with its date,
   and no Restore.
+
+`app/operator` shows the Overview tab of the operator, the person who runs
+the app for everyone, from decision 142. It holds live counts across every
+org, as decision 144 chose for now. The Orgs and Users tabs come from
+decision 147, and they find a suspended org or user. Its child pages:
+
+- `app/operator/menu` has Operator in the rail, above the account, and in
+  the org switcher of a phone, under Account. Only an operator sees it.
+- `app/operator/orgs` has the Orgs tab: the newest orgs, a search by name,
+  a search by preview address, and a search with no match.
+- `app/operator/org` has the page of an org, with the names of its
+  members, and Suspend org. Its child pages have the question before the
+  suspension, the suspended org with Lift, the question before the lift,
+  from decision 145, and a deleted org. The child page of the deleted org
+  has its question before a suspension, the deleted org that is also
+  suspended, and its question before a lift. They say that no admin can
+  restore a suspended org, and that a lift leaves the org deleted.
+- `app/operator/users` has the Users tab: the newest users, a search, and
+  a search with no match.
+- `app/operator/user` has the page of a user, with the name, and Suspend
+  user. Its variants have the question before the suspension, the warning
+  before the operator suspends their own account, the suspended user, and
+  the question before the lift.
+- `app/operator/error` has the numbers that could not load, with Try
+  again. Its `loading` variant has the page while it reads the numbers.
 
 `app/command-palette` shows the All tab of the command palette over the
 list of Acme. Its child pages:
