@@ -159,9 +159,12 @@ Rules:
   count and no mark.
 - A fold starts closed. A click opens it, and it keeps that choice while
   the chat shows it.
-- An open fold lists its steps in order, one line each. A tool call shows
-  as an open run shows it. A message shows its first words, and a click
-  opens its full text.
+- When the user opens or closes a fold, its line stays in place, and its
+  list opens or closes below it.
+- An open fold lists its steps in order. A tool call shows as an open run
+  shows it. A message shows its first words on one line, and a click
+  grows the line to its full text. A card shows as the card, and a lost
+  line shows as the lost line, at the left edge of the list.
 - While a turn runs, the chat does not change. Each message shows, and
   each run of tool calls folds on its own.
 - When a turn ends while the user reads its work higher up, the work
@@ -185,10 +188,14 @@ Mockups:
   a turn end.
 - A member message that a fixture marks as sent during the turn joins
   that turn and starts a new part.
+- A lost line whose turn never started belongs to no turn, so it ends a
+  run.
 - A mockup state opens the fold, for the page that shows the open fold.
+  A view runs no script, so a chat with open folds starts at its top, as
+  after a click on a fold near the top.
 
-Design calls. Each is my call of 8 November 2026, and the user can
-override it:
+Design calls. Each is my call of 8 November 2026, unless it gives another
+date, and the user can override it:
 
 - The answer of each part is its last agent message, with the agent
   messages right before it. The work after the answer stays in view.
@@ -213,6 +220,26 @@ override it:
   opens on a click. Rejected: each message in full, which the screenshot
   does not show. Rejected: the runs of tool calls as folds inside the
   fold, which need two clicks to show a call.
+- A click on a message line grows that line to the full text, with its
+  paragraphs and bullets. My call of 9 November 2026, from the mockups.
+  Reason: the message keeps its place in the list, and no words show
+  twice. Rejected: the full text under the cut line, which repeats the
+  first words of the message.
+- When the user opens or closes a fold, its line stays in place. My call
+  of 9 November 2026, from the mockups. Reason: the chat keeps its newest
+  lines in view, so an open list grows upward. On a phone, the line of the
+  fold of `app/chat` left the view when it opened: it moved from 148 px to
+  −234 px from the top. Rejected: the chat keeps its bottom in place,
+  which shows the end of the list and hides the line that closes it.
+- The runs of tool calls keep their line in place too. My call of
+  9 November 2026, from an item that the mockup implementor raised. On a
+  phone, the line of a run of `app/chat/turns/failed` moved from 255 px to
+  142 px from the top when it opened, above the chat at 146 px. Reason:
+  both kinds of fold share one line, so one behaviour is easy to learn,
+  and the fix is small in files that this change edits. Rejected: only
+  the work folds keep their line, which leaves the two kinds of fold
+  different. Rejected: the chat keeps what the user reads in place for
+  every change of size, which changes all scrolling of the chat.
 - The work folds when the turn ends, also while the user reads it higher
   up. Reason: Conductor folds at the end of the turn, and one click opens
   the fold again. Rejected: a fold that waits until the user scrolls to
@@ -241,31 +268,33 @@ The mockup chat folds the work of each ended turn. `app/chat` shows the
 folded work of its finished turn. A new child page shows the open fold,
 a turn with parts, and the answer of decision 151.
 
-- [ ] Group the work of each ended turn in
+- [x] Group the work of each ended turn in
       `docs/mockups/src/components/chat/groupItems.ts`, with the rules of
       the design.
-- [ ] Add the fold part beside `ToolGroup.tsx`, with its styles in
+- [x] Add the fold part beside `ToolGroup.tsx`, with its styles in
       `ToolGroup.module.css`. Share the call line and the icons with
       `ToolGroup`. Draw the message lines that open to their full text.
       Draw the new entry in `ChatPane.tsx`.
-- [ ] Add a mockup state that opens the fold. Add the child page
+- [x] Add a mockup state that opens the fold. Add the child page
       `app/chat/work`, and add it to the order in
       `app/chat/_folder.json`. Draw these screens on it:
-  - [ ] The open fold of the finished turn, with one message line open.
-  - [ ] A finished turn with a member message during the turn: a fold
+  - [x] The open fold of the finished turn, with one message line open.
+  - [x] A finished turn with a member message during the turn: a fold
         and an answer for each part.
-  - [ ] A finished turn with a Mac command card and a lost line among
+  - [x] A finished turn with a Mac command card and a lost line among
         its work, folded at their place, as decision 151 says.
-- [ ] Update each description and rationale that the change makes stale:
+- [x] Update each description and rationale that the change makes stale:
       `app/chat`, the stopped and failed variants of `app/chat/turns`, and
       the pages of lost data. Check the hero picture of the marketing
       site, which draws the finished chat.
-- [ ] Update `docs/mockups/design.md` and `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at both
+- [x] Update `docs/mockups/design.md` and `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at both
       sizes, in light and dark. Save the screenshots under
       `.context/fold-turn-work/`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: the screenshots and the logs in `.context/fold-turn-work/m1/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -306,6 +335,8 @@ mockups show.
 - [ ] Add the fold component. Share the call line and the icons of
       `ToolGroup`, and use the mockup styles.
 - [ ] Draw the fold entry in `TranscriptView.tsx`.
+- [ ] Keep the line of each fold in place when the user opens or closes
+      it, as the design says: the work folds and the runs of tool calls.
 - [ ] Test the requirements of the fold. See each test fail first:
   - [ ] A finished turn folds its work before its answer, and the line
         counts the calls and the messages.
@@ -320,9 +351,14 @@ mockups show.
         of lost lines alone does not fold.
   - [ ] The open fold lists its steps in order, and a message line opens
         to its full text.
+  - [ ] The line of a fold keeps its place when the user opens it.
 - [ ] Update the tests whose expected text changes on purpose, such as
       `LostData.test.tsx` and `PendingCommands.test.tsx`. Name each one in
       the report.
+- [ ] Capture the pictures of the marketing site again with
+      `npm run marketing:pictures`. The hero picture and the desktop
+      picture of the agents show the chat of a finished turn, whose work
+      now folds.
 - [ ] Smoke-test a finished turn on the development page of the chat.
       Save the screenshots under `.context/fold-turn-work/`.
 

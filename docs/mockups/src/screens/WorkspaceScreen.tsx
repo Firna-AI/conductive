@@ -80,6 +80,7 @@ export function WorkspaceScreen(props: {
           title="New session"
         />
       }
+      fold={state.fold}
       items={fresh ? [] : conversations[state.conversation]}
       notice={
         // An archived workspace keeps its archived bar, so the notice of a

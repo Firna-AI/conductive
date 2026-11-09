@@ -19,7 +19,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
-| `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
+| `app/chat`          | A finished turn with its work folded, then running turns, open work, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -83,10 +83,15 @@ requested changes tint the bar amber. `app/banner/no-commits` has a branch
 without commits, whose bar offers no Create pull request, as in
 `app/new-workspace/creating` and `first-turn`.
 
-`app/chat` shows a finished turn. Its child pages: `app/chat/turns` has the
-running turn, steer, interrupt, and a failure, which moved from
-`app/chat/running`, `steer`, `interrupted`, and `failed` and declare
-`movedFrom`. `app/chat/lost-data` draws the data that the chat does not
+`app/chat` shows a finished turn, whose work folds into one line. Its child
+pages: `app/chat/turns` has the running turn, steer, interrupt, and a
+failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
+`failed` and declare `movedFrom`. `app/chat/work` draws the work of ended
+turns, from decisions 150 and 151: the open work of the finished turn with
+one message open, a turn with a message that the user sent during it, whose
+two parts each fold their own work, and a turn whose open work holds a Mac
+command card and a lost line at their place. The `fold` state opens the
+folds. `app/chat/lost-data` draws the data that the chat does not
 have, from decision 76: tool output and turn files that the runner left out,
 and the lines of runner events that the workspace refused.
 `app/chat/lost-updates` draws a failed repair, from decision 96. After a
