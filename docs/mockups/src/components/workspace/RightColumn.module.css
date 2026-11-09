@@ -11,11 +11,6 @@
   container-type: inline-size;
 }
 
-/* The column that the user hid with the toggle at the end of the header. */
-.column[hidden] {
-  display: none;
-}
-
 .files {
   display: flex;
   flex: 1 1 55%;
