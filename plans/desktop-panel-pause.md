@@ -129,6 +129,7 @@ The orchestrator checks the complete change and its preservation of the retained
 - [x] Install the desktop and runner check dependencies if needed. Run `npm run check` once on the complete implementation.
 - [x] Commit with Conventional Commits and push this branch. Record the approved UI removals and the retained Desktop implementation.
 - [ ] Review the complete local diff against `origin/main` with the implementation-review skill after the push. Fix the confirmed `fix now` findings, record follow-up items for the rest, re-review once, and report.
+  - [x] Correct the stale phone-tab count in the workspace source comment, as confirmed by review finding 2.
 - [ ] Delete this plan under the plans skill's completion rules.
 - [ ] Open the pull request. Its description keeps this decision, the clarification, the design calls, and a permalink to this plan.
 
