@@ -16,8 +16,9 @@ Create PR, Commit and push, Fix checks, Resolve conflicts, and Address
 review. The app merges as the member who clicks, and only a member whose
 GitHub rights allow it sees Merge (decision 221). After a merge, Continue
 moves the workspace to a new branch from the updated base, and keeps the
-sandbox and the sessions (decision 223). Archive stays as it is.
-Decisions 224 to 228 are open. The change does not cover auto-merge,
+sandbox and the sessions (decision 223). Every member may continue
+(decision 224). Archive stays as it is. The user answered decisions 224
+to 228 on 9 November 2026. The change does not cover auto-merge,
 merge queues, custom prompts, keyboard shortcuts, or command palette
 entries.
 
@@ -253,7 +254,7 @@ for the left-out approach, and named two more costs of option A.
 
 ### 224. Choose who may continue another person's workspace
 
-Added on 9 November 2026 while this plan was written. Open.
+Added on 9 November 2026 while this plan was written.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -286,13 +287,15 @@ Added on 9 November 2026 while this plan was written. Open.
 - **Recommendation:** A. Continue changes the owner's branch and sessions,
   as Archive changes the owner's sandbox, so one rule fits both actions
   after a merge.
-- **Action:** ask the user, because the recommended option adds a
+- **Action:** asked the user, because the recommended option adds a
   permission rule that no requirement covers.
+- **Chosen:** B, by the user on 9 November 2026. Every member of the org
+  may continue each workspace of the org.
 
 ### 225. Choose how the agent learns why a check failed
 
-Added on 9 November 2026 while this plan was written. Open. The options
-check widened the root question to checks from other services.
+Added on 9 November 2026 while this plan was written. The options check
+widened the root question to checks from other services.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -338,13 +341,20 @@ check widened the root question to checks from other services.
   grant is still small beside the Contents write and the Workflows write
   that each token already has. The prompt keeps the text of A for checks
   of other services and for installs that have not approved.
-- **Action:** ask the user, because the recommended option changes the
+- **Action:** asked the user, because the recommended option changes the
   GitHub App's permissions, which needs the operator and each install
   owner.
+- **Chosen:** B, in force since 9 November 2026. The user answered that
+  the App already had this access. GitHub's public record of the App,
+  updated at 18:57 UTC that day, lists Actions write, which includes the
+  read of option B. Write also lets each member token start, re-run, and
+  cancel workflow runs, turn workflows on and off, and delete runs, logs,
+  artifacts, and caches. Each install owner must still approve the
+  permission.
 
 ### 226. Choose whose GitHub access fetches the base for Continue
 
-Added on 9 November 2026 from the options check. Open. The second options
+Added on 9 November 2026 from the options check. The second options
 check corrected the background, added option C, and gave option A a new
 reason.
 
@@ -409,12 +419,16 @@ reason.
   first reason, that no Git call gets the owner's token, was false. C
   protects the tokens best, because its token reads one repository and
   ends with the fetch.
-- **Action:** ask the user, because each option adds a token rule at a
+- **Action:** asked the user, because each option adds a token rule at a
   security boundary, and no requirement covers it.
+- **Chosen:** A, by the user on 9 November 2026. With decision 224 B,
+  the member who presses Continue can be another member than the owner.
+  That member's token then reaches the owner's sandbox for the fetch, as
+  it does for a message of that member.
 
 ### 227. Choose how each session works on the new branch
 
-Added on 9 November 2026 from the options check. Open. The second options
+Added on 9 November 2026 from the options check. The second options
 check rewrote the root question, added option D, and moved the
 recommendation from A to D.
 
@@ -478,12 +492,14 @@ recommendation from A to D.
 - **Recommendation:** D. The first recommendation was A. D reaches every
   session in each message, also after a summary and in a session that
   starts later, and it keeps the fixed text and its cache.
-- **Action:** ask the user, because the options conflict with the rules of
+- **Action:** asked the user, because the options conflict with the rules of
   open pull request #112, and no rule settles which side wins.
+- **Chosen:** D, by the user on 9 November 2026. The plan also applies
+  the wider fix: the same line names a changed target branch.
 
 ### 228. Choose how the bar guards a merge
 
-Added on 9 November 2026 from the options check. Open.
+Added on 9 November 2026 from the options check.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -534,8 +550,12 @@ Added on 9 November 2026 from the options check. Open.
 - **Recommendation:** C. One more click guards the app's first GitHub
   write, as Archive guards its own, and the member sees the work that the
   merge leaves out. Its question also names each turn that runs.
-- **Action:** ask the user, because the options trade speed against
+- **Action:** asked the user, because the options trade speed against
   safety, and no option is clearly best.
+- **Chosen:** A, by the user on 9 November 2026. Merge runs on one click.
+  While the sandbox has local work, Commit and push takes the place of
+  Merge and of the fix actions. A stray untracked file also counts as
+  local work.
 
 ## Design
 
@@ -554,14 +574,15 @@ has a pull request. The labels are drafts for the mockups.
 | Checks failed | Fix checks | Agent |
 | Merge conflict | Resolve conflicts | Agent |
 | Changes requested | Address review | Agent |
+| Open pull request with local work, in any state | Commit and push | Agent |
 | Ready to merge, for a member who may merge | Merge | App |
 | Merged | Continue and Archive | App |
 | No commits and no local work | None: "No commits yet" | None |
 | Checks running, draft, blocked, and closed | None | None |
 
-- Commit and push, by the agent, shows when an open pull request has
-  local work. Decision 228 decides whether it shows beside the main
-  action or in its place.
+- Local work comes first, as decision 228 chose. While an open pull
+  request has local work, Commit and push takes the place of Merge and of
+  the fix actions.
 - Local work is changed files that are not committed, or commits that no
   remote branch holds, in the sandbox. Today the runner marks only the
   changed files. Milestone 3 adds the count of commits.
@@ -609,8 +630,9 @@ has a pull request. The labels are drafts for the mockups.
   - Commit and push: "Commit the changes that are not committed, with a
     clear message, and push this branch."
   - Fix checks: "These checks failed on pull request #<number>:
-    <names>. Find out why with `gh pr checks <number>` and the details of
-    each check. When no log is available, run the failed checks locally.
+    <names>. Find out why with `gh pr checks <number>`. Read the logs of
+    failed GitHub Actions jobs with `gh run view --log-failed`. For a
+    check from another service, read its details, or run it locally.
     Fix the cause, then commit and push."
   - Resolve conflicts: "Pull request #<number> has conflicts with
     `<base>`. Merge `origin/<base>` into this branch, resolve each
@@ -650,8 +672,7 @@ has a pull request. The labels are drafts for the mockups.
   branch rules are out of scope. A direct merge into a branch that needs
   a merge queue gets GitHub's refusal. Reason: the user's list names none
   of them.
-- Decision 228 decides the confirmation, and the place of Commit and push
-  beside Merge.
+- Merge runs on one click, with no confirmation, as decision 228 chose.
 
 ### Continue
 
@@ -689,8 +710,24 @@ has a pull request. The labels are drafts for the mockups.
 - A workspace keeps the software of its first org image for each later
   task. So the `gh` of #110, and the runner changes of Milestones 3 and
   7, reach only workspaces from a newer image.
-- Decision 226 decides whose token fetches the base. Decision 227 decides
-  how each session works on the new branch.
+- Every member of the org may continue, as decision 224 chose.
+- The fetch of the base runs in a trusted Continue job, with the token of
+  the member who pressed Continue, as decision 226 chose. The credential
+  route accepts the ID of the job only while its fetch runs.
+- Design call: the fetch runs in a separate staging repository with a
+  clean Git config. The repository folder then fetches from that copy,
+  with no token. Reason: agent code can change the Git settings and hooks
+  of the repository folder, and the fetch carries a member's token. Image
+  builds keep their tokens away from such settings in the same way.
+- The Worker sends the current workspace branch with each message, as
+  decision 227 chose. A session that started on an older branch gets one
+  line in each message, after the line that names its sender. The line
+  names the current workspace branch and the current target branch. A new
+  session gets the current branches in its fixed text.
+- Design call: when pull request #112 has not merged first, the branch
+  line stands at the start of the input, and the Worker records the
+  branch of each session when the session starts. Reason: the line must
+  work with and without the fixed text of #112.
 
 ### Layouts
 
@@ -722,12 +759,12 @@ current mockups say that the app merges nothing. Change that text.
 - [ ] Draw Merge with its method, the merge that runs, a moved head, a
       missing right, and another refusal. Draw Ready to merge for a member
       who may not merge.
-- [ ] Draw Commit and push and the guard of Merge, as decision 228
-      chooses. This TODO waits for decision 228.
+- [ ] Draw Commit and push in the place of Merge and of the fix actions
+      while local work exists, as decision 228 chose.
 - [ ] Draw Continue beside Archive, its question with local work, the
       branch change that runs, a failed Continue, Continue while a turn
-      runs, and the bar after Continue. Draw who sees Continue when
-      decision 224 is answered.
+      runs, and the bar after Continue, for every member, as decision 224
+      chose.
 - [ ] Draw the message that an agent action sends, in the chat, and the
       note of Continue in a session.
 - [ ] Draw the actions at the top of the Checks tab on a phone.
@@ -752,16 +789,19 @@ the answers of decisions 224 to 228 when they come.
       and the actions on a phone. Remove the rules that every action links
       to GitHub and that the app merges nothing.
 - [ ] Update `docs/protocol/chat-and-events.md`: an action is a message of
-      the member who clicks, and the note of Continue.
+      the member who clicks, the note of Continue, and the branch line of
+      decision 227.
 - [ ] Update `docs/protocol/workspaces-and-sandboxes.md` with a Continue
-      section beside Archive. Put who may continue into
-      `docs/protocol/orgs-and-members.md`, "Members and roles", when
-      decision 224 is answered.
+      section beside Archive. State in
+      `docs/protocol/orgs-and-members.md`, "Members and roles", that every
+      member may continue a workspace (decision 224).
 - [ ] Update `docs/protocol/create-a-workspace.md`: the branch rule also
       names the branch of Continue.
 - [ ] Update `docs/protocol/github-tokens.md`: the Worker reads a member's
-      merge right and merges with that member's own token. Add the answers
-      of decisions 225 and 226.
+      merge right and merges with that member's own token. Record the
+      Actions permission of the App and its reason (decision 225), and
+      the trusted Continue job with the token of the member who pressed
+      Continue (decision 226).
 - [ ] Update `docs/architecture.md` and `docs/architecture/flows.md`: a
       workspace has one branch at a time, and it can hold one task after
       another. Update the same words in `AGENTS.md` and `README.md`.
@@ -822,7 +862,8 @@ Depends on: 1, 4
 - [ ] Read the member's merge right and method when the bar loads and
       after a reconnect.
 - [ ] Show Merge in Ready to merge for a member who may merge, with the
-      method in its label, and with the guard of decision 228.
+      method in its label. Merge runs on one click, and local work hides
+      it, as decision 228 chose.
 - [ ] Show the merge that runs, and each refusal, as the mockups draw
       them.
 - [ ] Show the actions at the top of the Checks tab on a phone.
@@ -841,8 +882,8 @@ Depends on: 1, 3, 4
 - [ ] Add the fixed prompts in one module, with the pull request number,
       the base, the failed checks, and the reviewers.
 - [ ] Show the agent action of each state, as "Actions by state" lists
-      it, to a member with write access. Place Commit and push as
-      decision 228 chooses.
+      it, to a member with write access. Show Commit and push in the
+      place of the main action while local work exists (decision 228).
 - [ ] Test each state, local work, a member without write access, a
       blocked send, and a send during a turn.
 - [ ] Smoke-test each action in the development page of the GitHub
@@ -853,23 +894,25 @@ Depends on: 1, 3, 4
 
 Depends on: 2
 
-Continue moves the workspace to a new branch. Its TODOs wait for
-decisions 224, 226, and 227, as each TODO says.
+Continue moves the workspace to a new branch, under decisions 224, 226,
+and 227.
 
 - [ ] Add the Continue route. It accepts only a merged pull request, and
       refuses an archived workspace, a suspended org, and a workspace
-      where a turn runs. Apply the permission rule of decision 224.
+      where a turn runs. Allow every member of the org (decision 224).
 - [ ] Make the check for local work count the unpushed commits of every
       local branch. Use it for the question of Archive and of Continue.
 - [ ] Run the branch change in the sandbox. Start a stopped sandbox
-      first. Fetch the default branch with the token that decision 226
-      chooses. Create the new branch with the changed files. Keep the old
-      branch when Git refuses.
+      first. Fetch the default branch in a trusted Continue job, with the
+      token of the member who pressed Continue (decision 226), through a
+      staging repository with a clean Git config. Create the new branch
+      with the changed files. Keep the old branch when Git refuses.
 - [ ] Store the new branch in D1 and in the workspace object. Read the
       GitHub state of the new branch, and publish the change to each tab.
-- [ ] Add the note of Continue to the chat events. Give each session the
-      new branch, as decision 227 chooses. Check first whether pull
-      request #112 has merged.
+- [ ] Add the note of Continue to the chat events. Send the current
+      workspace branch with each message, and add the branch line of
+      decision 227 in the runner. Check first whether pull request #112
+      has merged.
 - [ ] Test the route rules, the count of every local branch, the branch
       change, a refused move, the routing of GitHub events to the new
       branch, and the note.
@@ -882,8 +925,8 @@ Tags: ui
 
 Depends on: 1, 7
 
-- [ ] Show Continue beside Archive after a merge, with the permission
-      rule of decision 224.
+- [ ] Show Continue beside Archive after a merge, to every member
+      (decision 224).
 - [ ] Show the question with local work, the branch change that runs, a
       failed Continue, and Continue while a turn runs, as the mockups draw
       them.
