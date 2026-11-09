@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-08, from the options check of decision 148 of the plan `plans/automatic-first-build.md`, branch `calummoore/box-auto-build-onboarding`.
+- **Added:** 2026-11-08, from the options check of decision 151 of the plan `plans/automatic-first-build.md`, branch `calummoore/box-auto-build-onboarding`.
 - **Location:** `src/shell/new-workspace/NewWorkspaceScreen.tsx:130-131`, `worker/lifecycle/published-image-data.ts:22-31` and `:65`.
 - **Reason:** the problem exists on `origin/main` after each change of the repositories, so it is outside the scope of the automatic first build of a new org.
 

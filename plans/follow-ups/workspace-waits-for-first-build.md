@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-09, from decision 149 of the plan `plans/automatic-first-build.md`, branch `calummoore/box-auto-build-onboarding`.
+- **Added:** 2026-11-09, from decision 152 of the plan `plans/automatic-first-build.md`, branch `calummoore/box-auto-build-onboarding`.
 - **Location:** `worker/lifecycle/workspaces.ts` (`createWorkspace`), `worker/lifecycle/create-request.ts`, `worker/lifecycle/published-image-data.ts` (`readCreationImage`), `worker/lifecycle/creation-claims.ts` (`claimCreation`), `worker/lifecycle/creation-plan-statements.ts:10-20`, `worker/lifecycle/start-records.ts:65-73`, `worker/lifecycle/start-coordinator.ts`, `src/shell/new-workspace/`, and the sections "Create a workspace" and "Time limits of builds and starts" of `docs/protocol/workspaces-and-sandboxes.md`.
 - **Reason:** the user chose on 9 November 2026 to ship the automatic first build with a notice first, and to build the wait in a later change. That change chooses among the options below.
 

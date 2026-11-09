@@ -63,7 +63,7 @@ plan limits.
 - No workspace shows as expiring. Near day 14 of a stop, the app starts the
   cloud computer briefly and stops it again, from decision 43.
 - Any user creates orgs. Create org of the first run returns to Get started.
-- Create org needs at least one repository, from decision 148, because it
+- Create org needs at least one repository, from decision 151, because it
   starts the first build of the cloud computer. The hint under
   Repositories says to add at least one, and Create org stays off until
   one is added, as `app/orgs/new/no-repository` shows. When the GitHub App
@@ -107,14 +107,14 @@ plan limits.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
 - Create org starts the first build of the cloud computer of the org, from
-  decision 147. The org step shows that build under the org: preparing
+  decision 150. The org step shows that build under the org: preparing
   with its time, then ready, or the failure with its saved message, Try
   again, and a link to its log. An org with repositories and no build,
   such as after a build that did not start, shows No build yet with Build
   computer. The person connects an agent while the build runs.
 - A repository or an install script that an admin saves during the first
   build goes into one more build, which starts by itself when the first
-  build succeeds, from decision 148. The Cloud computer tab says so, as
+  build succeeds, from decision 151. The Cloud computer tab says so, as
   `app/org-settings/cloud-computer/first-build/script-changed` shows.
 - The finish says that the org is ready for a new workspace only after the
   first build succeeded. While the build runs, it says that the cloud

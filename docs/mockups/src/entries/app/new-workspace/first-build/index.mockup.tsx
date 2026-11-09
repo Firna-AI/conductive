@@ -12,7 +12,7 @@ export const firstBuild = defineScreen({
   description:
     'New workspace of Firna, the new org of the sign-up, while the first build of its cloud computer runs. Cal has typed the task of the first workspace. A notice over the composer says that the cloud computer is being prepared, with the time of the build, and that Cal can send when it is ready. Send is off, and the message stays in the composer.',
   rationale:
-    'The user chose option C of decision 147 on 8 November 2026. A workspace starts from the org image (decision 13), so the page keeps Send off until the first build succeeds, in place of a create that fails and asks for a manual build. The notice shows only while the org has no good image. After the first good image, a later build or a failed later build leaves that image in use, as decision 9 says, so the New workspace page of Acme shows no notice.',
+    'The user chose option C of decision 150 on 8 November 2026. A workspace starts from the org image (decision 13), so the page keeps Send off until the first build succeeds, in place of a create that fails and asks for a manual build. The notice shows only while the org has no good image. After the first good image, a later build or a failed later build leaves that image in use, as decision 9 says, so the New workspace page of Acme shows no notice.',
   relatedDocs: [],
   propSchema: newWorkspaceSchema,
   props: { ...newWorkspaceForm, org: 'new', firstBuild: 'running' },

@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-09, option D of the options check of decision 149 of the plan `plans/automatic-first-build.md`, branch `calummoore/box-auto-build-onboarding`.
+- **Added:** 2026-11-09, option D of the options check of decision 152 of the plan `plans/automatic-first-build.md`, branch `calummoore/box-auto-build-onboarding`.
 - **Location:** `worker/lifecycle/image-build-failure.ts`, `worker/lifecycle/image-builds.ts` (`startImageBuild`), and the section "The org image" of `docs/protocol/workspaces-and-sandboxes.md`.
 - **Reason:** the retry changes the decision of 5 November 2026 that a failed build waits for Try again, and the user did not ask about it.
 

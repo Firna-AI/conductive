@@ -55,9 +55,9 @@ own folders and kept their paths, so `app/orgs` shows only its canonical
 screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
 
-The first build of a new org shows in three places, from decision 147.
+The first build of a new org shows in three places, from decision 150.
 Create org starts it, and Create org needs at least one repository, from
-decision 148. The mockups draw it for Firna, the first org of the sign-up:
+decision 151. The mockups draw it for Firna, the first org of the sign-up:
 
 - `app/orgs/new` draws the rule on Create org. The hint under Repositories
   says to add at least one, in each state. Its `no-repository` variant has
