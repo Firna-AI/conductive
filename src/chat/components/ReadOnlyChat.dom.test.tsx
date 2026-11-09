@@ -224,7 +224,12 @@ describe('a read-only chat', () => {
     })
     await press(byRole('button', 'Session history'))
     const history = byRole('menu', 'Session history')
-    expect(queryByText('Places proxy timeouts', history)).not.toBeNull()
+    expect(
+      queryByText(
+        'Why does the places proxy time out on slow networks?',
+        history,
+      ),
+    ).not.toBeNull()
     expect(writes(server)).toEqual([])
   })
 })
