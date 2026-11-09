@@ -79,7 +79,9 @@ export const termsDocument: LegalDocument = {
             owner allows it. Otherwise, the message of another member starts a
             new session on the login of that member. Each turn's git calls use
             a GitHub token of the member whose message started the turn.
-            Pushes and pull requests show as that member.`,
+            Pushes and pull requests show as that member. Outside an agent
+            turn, the GitHub CLI uses the workspace owner's account.
+            Each terminal connection uses that same account.`,
           text`That GitHub token reaches every repository where that person
             installed the GitHub App and has access, not only the
             repositories of the org.`,
@@ -94,7 +96,9 @@ export const termsDocument: LegalDocument = {
             that cloud computer can read them. A program that a tool of the
             agent starts, such as a dev server, can keep the agent login after
             the turn ends. A member with a terminal can read it there too. The
-            setting of your login does not change this. Work in an org only
+            setting of your login does not change this. A member with a
+            terminal can also get the workspace owner's GitHub token without
+            a running turn. Work in an org only
             with people whom you trust with your logins.`,
           text`Admins manage the members, the repositories, the scripts, and
             the env vars of the org.`,

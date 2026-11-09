@@ -116,6 +116,13 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
     expect(await first.json()).toEqual({ token: 'sender-token-one' })
     expect(await second.json()).toEqual({ token: 'sender-token-two' })
     expect(second.headers.get('Cache-Control')).toBe('no-store')
+    const terminalRequest = () =>
+      new Request(
+        `${runtime.env.MACHINE_ORIGIN}${MACHINE_PATHS.gitCredential}`,
+        { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+      )
+    const terminal = await handleGitCredential(terminalRequest(), runtime)
+    expect(await terminal.json()).toEqual({ token: 'sender-token-two' })
     await save(user.id, 'new-sender-token')
     expect(
       await (
@@ -142,6 +149,14 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
     await expect(
       handleGitCredential(request(replacement.turnId), runtime),
     ).rejects.toMatchObject({ status: 409, code: 'current_turn_required' })
+    await fixture.finish({
+      sessionId: created.first.sessionId,
+      turnId: created.first.turnId,
+      messageId: created.first.request.id,
+    })
+    const idle = await handleGitCredential(terminalRequest(), runtime)
+    expect(idle.headers.get('Cache-Control')).toBe('no-store')
+    expect(await idle.json()).toEqual({ token: 'new-sender-token' })
   } finally {
     await fixture.dispose()
   }

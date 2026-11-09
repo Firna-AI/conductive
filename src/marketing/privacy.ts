@@ -102,7 +102,9 @@ export const privacyDocument: LegalDocument = {
             the agent login and the GitHub token of a turn that runs there. A
             program that a tool of the agent starts, such as a dev server, can
             keep the agent login after the turn ends. A member with a terminal
-            can read it there too.`,
+            can read it there too. Outside an agent turn, the GitHub CLI uses
+            the workspace owner's account. Each member with a terminal can
+            get that owner's GitHub token without a running turn.`,
           text`The members of your orgs also see who started each session,
             whose login it uses, and whether it can use that login. They also
             see whether its starter lets other members use that login.`,
