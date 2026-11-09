@@ -5,7 +5,7 @@ tree of every file. Changes lists the files that the branch changes
 against the base branch, under the totals of the change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
 A changed file opens its unified diff. The requirements are in
-[Files and changes](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes).
 The visual spec is the `app/files` page of the
 [mockup catalogue](../../docs/mockups/README.md), and
 `app/chat/unavailable-files` for a tree that the cloud computer could not
@@ -81,7 +81,7 @@ The workspace can refuse an update of a file list. After such a first
 loss, it asks the runner for a fresh full report of that list, and the
 screens show nothing. When the workspace refuses that report too, the
 repair failed.
-[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 gives the rules. `FilesSnapshot.failedRepairs` holds the failed repairs of
 the two lists:
 
@@ -92,7 +92,7 @@ the two lists:
   repair. A first loss adds nothing. The chat owns the markers of a session.
 - Only a later full report of the same list in the stream clears it. A
   tree delta and a report of the other list clear nothing.
-  [Files and changes](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
   says which reports replace a list.
 - A reply of a route clears nothing, also the read of the tree after a gap
   in the revisions. Only the order of the stream shows that a report is
@@ -199,7 +199,7 @@ a label beside the real path: `name` and `displayPath` of an entry,
 `displayPath` of a file or diff reply. A label hides each secret value. The
 Worker leaves `displayPath` out when it equals the real path, so a record
 without one shows its real path.
-[Access and security](../../docs/protocol/access-and-security.md) states
+[Access and security](../../docs/protocol/tokens-and-secrets.md) states
 the rule.
 
 - The screens show only labels: the rows of All files and Changes, a

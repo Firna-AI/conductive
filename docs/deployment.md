@@ -93,7 +93,7 @@ examples.
 ## The attachment bucket
 
 `CHAT_ATTACHMENTS` holds the files that users attach to chat messages, as
-[Attachments](protocol/chat-and-events.md#attachments) says. One bucket
+[Attachments](protocol/messages-and-attachments.md#attachments) says. One bucket
 serves every org.
 
 - Create the private bucket once, before the first deploy that declares
@@ -107,7 +107,7 @@ serves every org.
   So create it first.
 - Keep public access off. Add no custom domain, no `r2.dev` address, and
   no CORS rule. Only the Worker reads and writes the bucket, as
-  [Orgs and workspaces](protocol/access-and-security.md#orgs-and-workspaces)
+  [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
   says.
 - Add no lifecycle rule that deletes files by age. Such a rule would also
   delete the files of sent messages, which stay until the app deletes their
@@ -282,7 +282,7 @@ No org has a Boat key, and the Worker stores no Boat key in D1.
   `MACHINE_ORIGIN`.
 - Both are settings of the Worker only. The key never goes to the browser,
   into a sandbox, into a log, or into a saved snapshot, as
-  [Access and security](protocol/access-and-security.md#the-apps-boat-key)
+  [Access and security](protocol/isolation.md#the-apps-boat-key)
   says.
 - [The app's Boat account](../worker/sandbox/README.md#the-apps-boat-account)
   says how to make the organization and the key.

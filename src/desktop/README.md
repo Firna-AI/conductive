@@ -41,5 +41,5 @@ screen mounts the tool at each show, so each show reads a new desktop URL.
 - `DesktopFrame.tsx`: the frame of the stream.
 - `desktopApi.ts`: the request for a new desktop URL.
 
-See [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md#desktop)
-and [Access and security](../../docs/protocol/access-and-security.md#desktop).
+See [Workspaces and sandboxes](../../docs/protocol/workspace-tools.md#desktop)
+and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#desktop).

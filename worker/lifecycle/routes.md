@@ -92,7 +92,7 @@ turn and the branch step use the sender.
 
 ## Input activity
 
-[Stop and resume](../../docs/protocol/workspaces-and-sandboxes.md#stop-and-resume)
+[Stop and resume](../../docs/protocol/workspace-life.md#stop-and-resume)
 says which input counts as activity. One `InputActivityOwner` in each
 workspace object receives the input times of the browser `activity` route
 and of previews. The preview handler reports each request through

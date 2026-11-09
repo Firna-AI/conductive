@@ -210,13 +210,13 @@ fake API, with its address options, its controls, and the test command.
 
 ## Related docs
 
-- [Lost workspace updates](../../../docs/protocol/chat-and-events.md#lost-workspace-updates):
+- [Lost workspace updates](../../../docs/protocol/agent-runner.md#lost-workspace-updates):
   the repair, and the notice of a failed repair.
-- [Start steps](../../../docs/protocol/workspaces-and-sandboxes.md#start-steps)
-  and [Workspace states](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-states).
+- [Start steps](../../../docs/protocol/workspace-life.md#start-steps)
+  and [Workspace states](../../../docs/protocol/workspace-life.md#workspace-states).
 - [Web app: data and composition](../../app/README.md): the models, the
   event stream, and the features.
 - [The chat](../../chat/README.md): the chat that fills the centre.
 - [The Files screens](../../files/README.md) and
   [the browser fakes](../../test-support/README.md).
-- [The web app in the architecture](../../../docs/architecture.md#web-app).
+- [The web app in the architecture](../../../docs/architecture/components.md#web-app).

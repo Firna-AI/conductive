@@ -137,6 +137,6 @@ After a change to the terms consent or to the suspension checks of sign-in, run 
 
 - [Access requirements](../../docs/protocol/access-and-security.md#hostnames-and-gates)
 - [Attachment uploads](../../docs/protocol/access-and-security.md#attachment-uploads)
-- [Access of open tabs](../../docs/protocol/access-and-security.md#orgs-and-workspaces)
+- [Access of open tabs](../../docs/protocol/isolation.md#orgs-and-workspaces)
 - [Worker backend](../README.md)
 - [Operator actions](../operator/README.md)

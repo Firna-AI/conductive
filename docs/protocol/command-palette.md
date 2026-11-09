@@ -54,7 +54,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - A click outside the frame gives the keys back to the app.
 - The menu bar of the Mac app has no Search item. Reason: the page hears
   ⌘K itself. The menu cannot run an action inside the page, because the
-  page has no bridge, as [Permissions](desktop-app.md#permissions) says.
+  page has no bridge, as [Permissions](desktop-commands.md#permissions) says.
 
 ## Entry points
 
@@ -123,7 +123,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   age of the latest activity, as the workspace list does.
 - The state mark and the bold name of an unread workspace mean what they
   mean in the list, as
-  [Workspace states](workspaces-and-sandboxes.md#workspace-states) says.
+  [Workspace states](workspace-life.md#workspace-states) says.
 - The results show no highlight of the letters that match.
 - A coloured bar at the left edge of a workspace row, as in Conductor, was
   rejected, because the state mark already gives the state.
@@ -212,7 +212,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - The second group, Account, holds the sections of the Account page:
   Sign-in, GitHub, Agents, and New workspaces.
 - In the Mac app, the Account group also holds
-  [This Mac](desktop-app.md#saved-choices).
+  [This Mac](desktop-commands.md#saved-choices).
 - A row of the org settings opens its tab. A row of the Account group
   opens the Account page.
 
@@ -249,5 +249,5 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 
 - The palette shows only data that the app already shows the person.
 - The palette sends no request that reaches another org.
-  [Orgs and workspaces](access-and-security.md#orgs-and-workspaces) states
+  [Orgs and workspaces](isolation.md#orgs-and-workspaces) states
   which requests reach an org.
