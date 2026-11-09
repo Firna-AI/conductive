@@ -19,6 +19,7 @@ import { you } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { repositories } from '../fixtures/repositories'
 import { startErrors } from '../fixtures/starting'
+import { followUpTask } from '../fixtures/workspaceLinkConversations'
 import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import styles from './NewWorkspaceScreen.module.css'
@@ -26,7 +27,7 @@ import styles from './NewWorkspaceScreen.module.css'
 export const newWorkspaceSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['result', 'org'],
+  required: ['result', 'org', 'draft'],
   properties: {
     /**
      * The empty form, or a create whose first start failed: a failure, or
@@ -39,6 +40,11 @@ export const newWorkspaceSchema = {
      * workspace in place of the composer, with the words of the org.
      */
     org: { enum: ['active', 'suspended'] },
+    /**
+     * The first message: the task of the create flow, or a task with a
+     * pasted link to an earlier workspace, which shows as a chip.
+     */
+    draft: { enum: ['task', 'workspace-link'] },
   },
 } as const
 
@@ -48,6 +54,7 @@ export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
 export const newWorkspaceForm: NewWorkspaceState = {
   result: 'form',
   org: 'active',
+  draft: 'task',
 }
 
 type CreateFailure = Exclude<NewWorkspaceState['result'], 'form'>
@@ -101,6 +108,8 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   // A suspended org refuses each create, so no create of it failed.
   const failure = suspended || result === 'form' ? null : result
   const failed = failure !== null
+  // Send leads to the create flow, which draws the task of Saved carts.
+  const linked = props.state.draft === 'workspace-link'
   const notice = failure ? (
     <Notice
       action={<ActionButton tone="primary">Try again</ActionButton>}
@@ -115,10 +124,10 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
       composer={{
         attachments: [],
         choice: savedCarts.choice,
-        draft: savedCartsMessage,
+        draft: linked ? followUpTask : savedCartsMessage,
         placeholder: 'Describe the task',
         running: false,
-        sendTo: failed ? undefined : paths.creating,
+        sendTo: failed || linked ? undefined : paths.creating,
       }}
       empty={suspended ? undefined : <Start />}
       items={[]}

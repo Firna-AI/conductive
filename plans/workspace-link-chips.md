@@ -117,6 +117,25 @@ approved.
   origin.
 - Agent call: Copy link copies the address without a tab path, such as
   an open file. Reason: the link names the workspace.
+- Agent call, from the mockups: on desktop, the button sits right after
+  the name, before the repository. On a phone, it leads the line under
+  the name, before the repository and the branch, and its touch area is
+  44 px high. A link icon leads the label. Reason: the number joins the
+  other names of the workspace, in the same order on both sizes. On the
+  right of a phone header, it left the name only 50 to 80 px.
+- Agent call, from the mockups: the accessible name is "Copy link to
+  W-395". After a press, a check takes the place of the icon, and a note
+  under the button says "Link copied" for a moment. A failed copy says
+  "The link didn't copy. Try again." in the danger colour, as the file
+  page says "The text didn't copy. Try again." The note is a status for
+  screen readers, and it lies over the content, so nothing moves.
+  Reason: "Copied" alone could mean that only the number was copied.
+- Agent call, from the mockups: on desktop, the repository and the
+  branch share one group in place of the spacer. The group takes only the
+  room that the other parts leave, so the name is cut short only when
+  that group has no room left. Reason: the label takes about 73 px, and
+  the name is the most important part. A larger shrink factor still cut
+  the name by less than a pixel, which shows an ellipsis.
 
 ### Chips
 
@@ -153,6 +172,15 @@ approved.
   window, as the other links of the app do. The Mac app opens it in its
   window, as [Navigation](../docs/protocol/desktop-app.md#navigation)
   says.
+- Agent call, from the mockups: a chip is 2 px shorter than its line of
+  text, so the line keeps its height. It is at most 22 em wide, and a
+  long name is cut short, with the whole name as its title. Its corners
+  have the 4 px radius of the file chips, not the full pill of Conductor.
+  Reason: the design uses small radii.
+- Agent call, from the mockups: a long word in a message or an answer,
+  such as a long link that stays plain text, breaks to fit the line.
+  Reason: long links went past the edge of a phone. The app reuses this
+  style, so its chat gets the same rule.
 
 ### The message box
 
@@ -276,27 +304,37 @@ boxes, and the chips in sent messages and agent answers. A user flow
 links one workspace from another. Each screen has a desktop and a phone
 variant.
 
-- [ ] Add a number and a link to each workspace of the fixtures in
+- [x] Add a number and a link to each workspace of the fixtures in
       `docs/mockups/src/fixtures/`.
-- [ ] Add the chip part to `docs/mockups/src/components/chat/`: the state
+- [x] Add the chip part to `docs/mockups/src/components/chat/`: the state
       mark, the label, and the name. Draw a long name, an archived
       workspace, and a chip inside a message box.
-- [ ] Add the `W-395` Copy link button to the workspace header, on
+- [x] Add the `W-395` Copy link button to the workspace header, on
       desktop and on a phone, with its copied state.
-- [ ] Add the page `app/workspace-links`: the header with the button, the
+- [x] Add the page `app/workspace-links`: the header with the button, the
       message box with a chip after a paste, a sent message and an agent
       answer with chips, and a link of another org as plain text. Split
       it into sub-pages when it passes five screens.
-- [ ] Draw a chip in the New workspace message box.
-- [ ] Add the user flow `user-flows/link-a-workspace`: copy the link in
+- [x] Draw a chip in the New workspace message box.
+- [x] Add the user flow `user-flows/link-a-workspace`: copy the link in
       one workspace, paste it in another, send, read the agent answer,
       and press the chip.
-- [ ] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
-- [ ] Run `npm run mockups:check`, `npm run lint`, and
+- [x] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
+- [x] Run `npm run mockups:check`, `npm run lint`, and
       `npm run format:check`. Smoke-test the changed pages at phone and
       desktop sizes.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Draw the failed copy of the button. Make `app/workspace-links` a
+      folder page with child pages, so that each page keeps five screens
+      or fewer. Let the repository and the branch give up their room in
+      the desktop header first.
+- [x] Record the problems outside the scope as follow-up items:
+      `plans/follow-ups/chat-links-not-pressable.md` and
+      `plans/follow-ups/archived-group-closed-mockup.md`.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+The screenshots of this milestone are in
+`.context/workspace-link-chips/mockups/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -355,9 +393,20 @@ Tags: ui
 Depends on: 3
 
 - [ ] Add the `W-395` button to `src/shell/workspace/WorkspaceHeader.tsx`,
-      on desktop and on a phone, as the mockups draw it.
-- [ ] Copy `workspace.link` with `AppServices.copy`, and show the
-      confirmation of the mockups. A failed copy shows its error.
+      on desktop and on a phone, as the mockups draw it. Reuse the pure
+      part `docs/mockups/src/components/workspace/CopyLinkButton.tsx`
+      with its `onPress` and `result`, and the `.line` class of the header
+      styles.
+- [ ] Put the repository and the branch of the desktop header in the
+      `.metas` group of the header styles, in place of the spacer, as the
+      mockup header does.
+- [ ] Copy `workspace.link` with `AppServices.copy`. Show "Link copied",
+      or "The link didn't copy. Try again." when the copy fails. A failed
+      copy keeps the link icon, and the note stays a status for screen
+      readers.
+- [ ] Run `npm run marketing:pictures`, because the pictures of the
+      marketing site come from the mockups, whose header now shows the
+      number. Commit the new pictures.
 - [ ] Test the copy and the confirmation in happy-dom.
 - [ ] Update `src/shell/workspace/README.md`.
 
@@ -376,9 +425,10 @@ Depends on: 3
       and through its own read when it has no sources. Keep the list
       current while the chat shows, also on a phone, where no
       `OrgList` watches it. Give the development page a list too.
-- [ ] Add the interactive chip over the mockup part. A press opens its
-      link through a new callback of the chat, which the app connects to
-      its navigation.
+- [ ] Add the interactive chip over the pure mockup part
+      `docs/mockups/src/components/chat/WorkspaceChip.tsx`, with its
+      `opener` set to a link of the app. A press opens its page through a
+      new callback of the chat, which the app connects to its navigation.
 - [ ] Show chips in user messages and in agent answers.
 - [ ] Test the chips with the current name and state, an archived
       workspace, plain text for the other links, and a rename that
@@ -401,6 +451,9 @@ Depends on: 5
       paste rule, Backspace, Delete, and the arrow keys, Enter and
       Shift+Enter, input methods, the placeholder, the limit of eight
       lines, the sizes of `useControlSizes`, and the label "Message".
+      Reuse the styles of the mockup part
+      `docs/mockups/src/components/chat/ChipTextField.tsx`, and put each
+      chip in an element that the caret cannot enter.
 - [ ] Use it in `src/chat/components/Composer.tsx` and in
       `src/shell/new-workspace/Composer.tsx`. The draft stays plain text.
 - [ ] Update the DOM tests that type into a message box, such as

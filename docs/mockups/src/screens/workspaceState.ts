@@ -31,6 +31,7 @@ export const workspaceStateSchema = {
     'lostUpdate',
     'tree',
     'org',
+    'copyLink',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -76,7 +77,8 @@ export const workspaceStateSchema = {
      * The composer: empty, with a message that is not sent yet, with
      * attached files, with its picker open, or with a message for an agent
      * that is not connected, or in a session whose starter's login is not
-     * available.
+     * available. `workspace-link` holds a message with a pasted link to
+     * another workspace of the org, which shows as a chip.
      */
     composer: {
       enum: [
@@ -86,6 +88,7 @@ export const workspaceStateSchema = {
         'picker',
         'no-agent',
         'no-starter-login',
+        'workspace-link',
       ],
     },
     /** The user drags the handle of the right column to widen it. */
@@ -129,6 +132,12 @@ export const workspaceStateSchema = {
      * refusal, and nothing in the workspace can change.
      */
     org: { enum: ['active', 'suspended'] },
+    /**
+     * The label of the workspace number in the header, which copies the
+     * link of the workspace: as it is, or just after a press, while it
+     * shows for a moment that the copy worked or failed.
+     */
+    copyLink: { enum: ['none', 'copied', 'failed'] },
   },
 } as const
 
@@ -153,6 +162,7 @@ export const readyWorkspace: WorkspaceState = {
   lostUpdate: 'none',
   tree: 'latest',
   org: 'active',
+  copyLink: 'none',
 }
 
 /**

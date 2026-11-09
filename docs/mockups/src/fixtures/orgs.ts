@@ -9,16 +9,38 @@ export type OrgKey = (typeof orgKeys)[number]
 
 export type Org = {
   key: OrgKey
+  /** The ID of the org in the web addresses of the app: a random string. */
+  id: string
   name: string
   /** Up to two letters, which the rail shows. */
   initials: string
 }
 
 export const orgs: Readonly<Record<OrgKey, Org>> = {
-  acme: { key: 'acme', name: 'Acme', initials: 'AC' },
-  futex: { key: 'futex', name: 'Futex', initials: 'FX' },
-  firna: { key: 'firna', name: 'Firna', initials: 'FI' },
-  labs: { key: 'labs', name: 'Acme Labs', initials: 'AL' },
+  acme: {
+    key: 'acme',
+    id: 'N2DvTcIZh3UyiYLNKnsipwFKRNBrQHk2VIxLsZLV1S4',
+    name: 'Acme',
+    initials: 'AC',
+  },
+  futex: {
+    key: 'futex',
+    id: 'aNEek6ylnabtIbzjzNPtxRLzOuH6iZsbVNnEGMXM8E0',
+    name: 'Futex',
+    initials: 'FX',
+  },
+  firna: {
+    key: 'firna',
+    id: 'tGEfi7uh4g29lUtsNIZvpp4rRaH3wu1qZOOd7W1bxgU',
+    name: 'Firna',
+    initials: 'FI',
+  },
+  labs: {
+    key: 'labs',
+    id: 'TYA-KHTDE8e22FZsr9uHNHtwpP5N-dRsW2OXAGBWViw',
+    name: 'Acme Labs',
+    initials: 'AL',
+  },
 }
 
 /**

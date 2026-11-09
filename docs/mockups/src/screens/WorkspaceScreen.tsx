@@ -1,6 +1,7 @@
 import type { Viewport } from '@mokly/mokly'
 import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
+import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
 import { EmptyState } from '../components/common/EmptyState'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
@@ -24,6 +25,7 @@ import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
+import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import {
   FilesContent,
@@ -71,36 +73,39 @@ export function WorkspaceScreen(props: {
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   const chat = (
-    <ChatPane
-      composer={composerFor(state, workspace)}
-      empty={
-        <EmptyState
-          body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-          icon={MessageSquarePlus}
-          title="New session"
-        />
-      }
-      items={fresh ? [] : conversations[state.conversation]}
-      notice={
-        // An archived workspace keeps its archived bar, so the notice of a
-        // suspended org shows above it.
-        archived && suspended ? (
-          <SuspendedOrgNotice org={orgs[suspendedOrg]} />
-        ) : (
-          composerNotice(state, workspace)
-        )
-      }
-      problem={problem}
-      starting={startingLogFor(state)}
-      viewer={viewer}
-      viewport={viewport}
-    />
+    <ChatWorkspaces rows={chatWorkspacesOf(state, { workspace, status })}>
+      <ChatPane
+        composer={composerFor(state, workspace)}
+        empty={
+          <EmptyState
+            body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
+            icon={MessageSquarePlus}
+            title="New session"
+          />
+        }
+        items={fresh ? [] : conversations[state.conversation]}
+        notice={
+          // An archived workspace keeps its archived bar, so the notice of a
+          // suspended org shows above it.
+          archived && suspended ? (
+            <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+          ) : (
+            composerNotice(state, workspace)
+          )
+        }
+        problem={problem}
+        starting={startingLogFor(state)}
+        viewer={viewer}
+        viewport={viewport}
+      />
+    </ChatWorkspaces>
   )
   const workspaceHeader = (
     <WorkspaceHeader
       archivable={archivable}
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
+      copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       status={status}
@@ -162,7 +167,12 @@ export function WorkspaceScreen(props: {
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
-      sidebar={workspaceSidebar(workspace, status, suspended)}
+      sidebar={workspaceSidebar(
+        workspace,
+        status,
+        suspended,
+        createdWorkspaces(state),
+      )}
     >
       <WorkspaceBody
         center={file ? <FilePage view={file} /> : chat}

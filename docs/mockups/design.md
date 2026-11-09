@@ -15,14 +15,15 @@ The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. The centre column has a slim header that names the
-repository, the branch, and the owner of the workspace, and ends with
-Archive. Then come a tab for each agent session and each open file or diff,
-+ for a new session, and a clock that opens the session history. The right
-column has the pull request bar on top, the All files, Changes, and Checks
+workspace and its number, such as `W-395`, the repository, the branch, and
+the owner of the workspace, and ends with Archive. Then come a tab for
+each agent session and each open file or diff, + for a new session, and
+a clock that opens the session history. The right column has the pull
+request bar on top, the All files, Changes, and Checks
 lists below it, and the Terminal, Preview, and Desktop tabs at the bottom.
 It shows no file content. A phone shows an org switcher at the top of the list, and the
-workspace with a compact pull request row, the sessions as tabs above the
-chat, and five tabs at the bottom.
+workspace with its number under its name, a compact pull request row, the
+sessions as tabs above the chat, and five tabs at the bottom.
 
 - The tokens live in `src/design/`: the colours of each scheme in
   `palette.ts`, and the type, density, sizes, radii, and fonts in
@@ -60,6 +61,46 @@ chat, and five tabs at the bottom.
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
+- Each workspace has a number in its org, and `workspaceLabel` in
+  `src/components/workspaces/label.ts` shows it as `W-395`. The number
+  shows only in the header and in chips, and the rows of the list keep
+  their layout.
+  - `CopyLinkButton` in `src/components/workspace/` is the label in the
+    header, after the name. A press copies the link of the workspace. A
+    check then takes the place of its link icon, and a note under it says
+    "Link copied" for a moment, over the content, so nothing moves. When
+    the copy fails, the icon stays, and the note says "The link didn't
+    copy. Try again." in the danger colour. The note is a status, so
+    screen readers hear it. The name of the button is "Copy link to
+    W-395".
+  - On desktop, the repository and the branch share one group in place of
+    the spacer. The group takes only the room that the other parts leave,
+    so the name is cut short only when the group has no room left.
+  - On a phone the label leads the line under the name, before the
+    repository and the branch, so the name keeps its room. The button
+    keeps the height of that line, and its touch area of 44 px reaches up
+    over the name and down to the bottom edge of the header.
+- `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
+  the org as a chip in a line of text: a small rounded pill with the
+  `StatusGlyph` of the workspace, its label in a muted colour, and its
+  current name. Its height is the height of the line less 2 px, so a line
+  with a chip keeps its height. A chip is never wider than its line or
+  than 22 times the size of its font, and a long name is cut short. It
+  takes no fixtures, so the app can use it too.
+  - `MessageText` shows the chips in sent messages and in answers, as
+    links to the screens of the workspaces. A Markdown link to a
+    workspace shows as the chip alone, and a link in code stays code. A
+    link to another org, or to a workspace that the list does not hold,
+    stays plain text, and a long link breaks to fit the line.
+  - The chat finds each workspace in the list of the org, with the
+    archived ones and with the states of the list, through
+    `ChatWorkspaces`. A phone finds the same workspaces with no list on
+    the screen. An archived workspace keeps its chip, with the archived
+    mark.
+  - A pasted link becomes a chip in the message box at once, in the chat
+    and in New workspace. `ChipTextField` draws that box: plain text with
+    each chip as one unit, with the sizes of the plain text field. The
+    draft keeps the plain link.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green

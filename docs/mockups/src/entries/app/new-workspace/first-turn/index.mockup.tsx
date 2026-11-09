@@ -17,7 +17,7 @@ export const firstTurn = defineScreen({
     conversation: 'first-turn',
     banner: 'no-commits',
   },
-  useCasePaths: ['user-flows/create-workspace'],
+  useCasePaths: ['user-flows/create-workspace', 'user-flows/link-a-workspace'],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),

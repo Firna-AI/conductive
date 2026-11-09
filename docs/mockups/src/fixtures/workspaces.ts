@@ -1,5 +1,7 @@
+import { appDomain } from '../brand'
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type PersonKey } from './members'
+import { orgs, type Org } from './orgs'
 import type { RepositoryKey } from './repositories'
 import type { SectionKey } from './sections'
 
@@ -32,6 +34,18 @@ export type OpenableWorkspace = (typeof openableWorkspaces)[number]
 export type Workspace = {
   key: string
   name: string
+  /**
+   * The number of the workspace in its org. It counts up from 1 in the
+   * order of creation. The header and each chip show it as a label,
+   * such as `W-395`.
+   */
+  number: number
+  /**
+   * The web address of the workspace, with the IDs of its org and of the
+   * workspace. Copy link copies it, and a message keeps it under a chip,
+   * so the label can change later.
+   */
+  link: string
   branch: string
   repository: RepositoryKey
   section: SectionKey
@@ -54,6 +68,17 @@ export type Workspace = {
 }
 
 /**
+ * The web address of a workspace: the app, the ID of the org, and the ID
+ * of the workspace, a random string as the app gives it.
+ */
+export function workspaceLink(
+  workspaceId: string,
+  org: Org = orgs.acme,
+): string {
+  return `https://${appDomain}/orgs/${org.id}/workspaces/${workspaceId}`
+}
+
+/**
  * The branch of a workspace: the GitHub login of its owner, then a name,
  * such as `calummoore/lisbon-7k2q`, as decision 53 says.
  */
@@ -64,6 +89,8 @@ function branchFor(owner: PersonKey, name: string): string {
 export const checkoutAutocomplete: Workspace = {
   key: 'checkout-autocomplete',
   name: 'Checkout address autocomplete',
+  number: 395,
+  link: workspaceLink('19v5znSjpADj4i7RmHDBMV2eKxcVeLbJh6lamYBLd6M'),
   branch: branchFor('cal', 'checkout-autocomplete'),
   repository: 'storefront',
   section: 'checkout',
@@ -73,10 +100,12 @@ export const checkoutAutocomplete: Workspace = {
   owner: 'cal',
 }
 
-/** The workspace that the create flow makes. */
+/** The workspace that the create flow makes, the newest of Acme. */
 export const savedCarts: Workspace = {
   key: 'saved-carts',
   name: 'Saved carts',
+  number: 402,
+  link: workspaceLink('ffpdvCrydZ85CicAsK7cqpirDrbK6GhAA6hB33ck1vE'),
   generatedName: 'Lisbon',
   branch: branchFor('cal', 'lisbon-7k2q'),
   repository: 'storefront',
@@ -100,22 +129,32 @@ const codex: AgentChoice = {
   effort: 'medium',
 }
 
-type Details = Pick<Workspace, 'repository' | 'section' | 'status' | 'updated'>
+type Details = Pick<
+  Workspace,
+  'number' | 'repository' | 'section' | 'status' | 'updated'
+> & {
+  /** The ID of the workspace in its link. */
+  id: string
+  owner?: PersonKey
+}
 
 /** A workspace of Acme. Its branch starts with the GitHub login of its owner. */
 function workspace(
   key: string,
   name: string,
-  details: Details & { owner?: PersonKey },
+  details: Details,
   choice: AgentChoice = defaultChoice,
 ): Workspace {
-  const owner = details.owner ?? 'cal'
-  return { key, name, branch: branchFor(owner, key), choice, ...details, owner }
+  const { id, owner = 'cal', ...rest } = details
+  const branch = branchFor(owner, key)
+  return { key, name, link: workspaceLink(id), branch, choice, ...rest, owner }
 }
 
 /** The workspaces of Acme when the app opens, newest first in each section. */
 export const workspaceList: readonly Workspace[] = [
   workspace('email-dark-mode', 'Dark mode for emails', {
+    number: 401,
+    id: 'O9k18xFxGwojR6dZ-C3QxC6x0UdyUubyOLkiNw_N73o',
     repository: 'marketing-site',
     section: 'general',
     status: 'starting',
@@ -125,6 +164,8 @@ export const workspaceList: readonly Workspace[] = [
     'invoice-fonts',
     'Invoice PDF fonts',
     {
+      number: 397,
+      id: 'P6TigmLANbi1rKL6IHM5YPp4G95FysReAy4FWUAn6m8',
       repository: 'billing-service',
       section: 'general',
       status: 'error',
@@ -134,6 +175,8 @@ export const workspaceList: readonly Workspace[] = [
     codex,
   ),
   workspace('pricing-copy', 'Pricing page copy', {
+    number: 389,
+    id: 'n0xP51lF7RiJGPlSS16EhTqHcD6HSbnMVGPM3fPKsxk',
     repository: 'marketing-site',
     section: 'general',
     status: 'stopped',
@@ -144,6 +187,8 @@ export const workspaceList: readonly Workspace[] = [
     'fix-cart-flake',
     'Fix flaky cart test',
     {
+      number: 400,
+      id: 'tQqSgUwtBpPQ389LeaIEwlXvZvrUuva9WJPG9YvAuds',
       repository: 'storefront',
       section: 'checkout',
       status: 'working',
@@ -152,12 +197,16 @@ export const workspaceList: readonly Workspace[] = [
     codex,
   ),
   workspace('webhook-retries', 'Retry failed webhooks', {
+    number: 399,
+    id: 'dKe1UpohWZD_r7BFTPBvx9FhBhZRb5I_Ec77f_T-ALM',
     repository: 'billing-service',
     section: 'checkout',
     status: 'unread',
     updated: '5m',
   }),
   workspace('apple-pay', 'Apple Pay button', {
+    number: 398,
+    id: 'Vi1ajLlUgS7Q581Q6lWrNplWT2aOgFeubaecbNP1gDM',
     repository: 'storefront',
     section: 'checkout',
     status: 'ready',
@@ -165,12 +214,16 @@ export const workspaceList: readonly Workspace[] = [
   }),
   checkoutAutocomplete,
   workspace('next-16', 'Upgrade to Next.js 16', {
+    number: 396,
+    id: 'D6PoTiiZc0Hjl_YPwUGBE39vNTb-i2kKLIfKALHf3wU',
     repository: 'storefront',
     section: 'infra',
     status: 'ready',
     updated: '20m',
   }),
   workspace('retry-queue', 'Move retries to a queue', {
+    number: 391,
+    id: 'NM4Zxi-VthgkFMFmG9UN4BSzpBfLH-Z7RZQStgmP09w',
     repository: 'billing-service',
     section: 'infra',
     status: 'stopped',
@@ -178,6 +231,30 @@ export const workspaceList: readonly Workspace[] = [
     owner: 'jonas',
   }),
 ]
+
+/**
+ * A workspace of Acme that a member archived weeks ago. The app keeps it in
+ * the Archived group of the list, and a chip still finds it, with the
+ * archived state. A member gave it a long name.
+ */
+export const postcodeLookup = workspace(
+  'postcode-lookup',
+  'Postcode lookup for the shipping and billing forms',
+  {
+    number: 372,
+    id: 'sWqf3Lm9jj41zKQ1-L5UDzz4AkseW78wSU1wWONFZlA',
+    repository: 'storefront',
+    section: 'checkout',
+    status: 'archived',
+    updated: '3w',
+  },
+)
+
+/**
+ * The archived workspaces of Acme. The list keeps them in its Archived
+ * group, which stays closed until the user opens it.
+ */
+export const archivedWorkspaces: readonly Workspace[] = [postcodeLookup]
 
 /** The workspace that the drag state moves, and where it lands. */
 export const workspaceDrag = {

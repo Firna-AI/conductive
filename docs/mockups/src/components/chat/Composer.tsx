@@ -8,6 +8,9 @@ import { ScreenLink } from '../common/ScreenLink'
 import { ActionButton, IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import { AttachmentChips } from './AttachmentChips'
+import { useChatWorkspaces } from './chatWorkspaces'
+import { ChipTextField } from './ChipTextField'
+import { DraftText, linksWorkspace } from './MessageText'
 import { ModelPicker } from './ModelPicker'
 import { SendWait } from './SendWait'
 import { SessionLoginLine, type SessionLogin } from './SessionLogin'
@@ -68,33 +71,43 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
  * attach button, the model picker, and Send. While a turn runs, a message
  * steers the turn, and Stop ends it. While Send waits for the first start
  * of a new workspace, a message in the box shows the reason beside Send. A
- * line under the box names whose agent login the session uses.
+ * line under the box names whose agent login the session uses. A pasted
+ * link to a workspace of the org shows as a chip in the text at once, and
+ * the draft keeps the plain link.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()
+  const workspaces = useChatWorkspaces()
   const placeholder = props.running
     ? 'Steer the agent while it works'
     : (props.placeholder ?? 'Message the agent')
   const off = props.blocked === true || props.waits === true
   const written = props.draft !== '' || props.attachments.length > 0
+  const lines = props.lines ?? 2
   return (
     <div className={styles.wrap}>
       <div className={styles.composer}>
         {props.attachments.length > 0 ? (
           <AttachmentChips attachments={props.attachments} />
         ) : null}
-        <InputFrame
-          accessibilityLabel="Message"
-          focusIndicator="none"
-          maxLines={8}
-          multiline
-          numberOfLines={props.lines ?? 2}
-          onChangeText={noop}
-          placeholder={placeholder}
-          size={field}
-          value={props.draft}
-          variant="seamless"
-        />
+        {linksWorkspace(props.draft, workspaces) ? (
+          <ChipTextField label="Message" lines={lines}>
+            <DraftText text={props.draft} />
+          </ChipTextField>
+        ) : (
+          <InputFrame
+            accessibilityLabel="Message"
+            focusIndicator="none"
+            maxLines={8}
+            multiline
+            numberOfLines={lines}
+            onChangeText={noop}
+            placeholder={placeholder}
+            size={field}
+            value={props.draft}
+            variant="seamless"
+          />
+        )}
         <div className={styles.bar}>
           <IconButton icon={Paperclip} label="Attach files" />
           <ModelPicker

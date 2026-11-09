@@ -17,7 +17,7 @@ how a screen is built, and links to the other pages.
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
+| `app/new-workspace` | An empty chat, its errors, a pasted workspace link, the start, a held second message, the first turn |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
 | `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -25,17 +25,18 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
+| `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |
 | `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
-| `user-flows`        | Sign up, create a workspace, reopen it, create an org, run a Mac command      |
+| `user-flows`        | Sign up, create a workspace, reopen it, create an org, run a Mac command, link a workspace |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/shell`, `app/orgs`, `app/orgs/suspended`,
 `app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
-`app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -101,3 +102,22 @@ the cloud computer could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
+
+`app/workspace-links` draws the workspace numbers and the chips of
+decisions 150 and 151. Its canonical screen has a message and an answer
+with chips in Checkout address autocomplete, `W-395`. Its child pages:
+
+- `app/workspace-links/copy-link` has the header of Saved carts, `W-402`,
+  just after a press on the label, with the note "Link copied". Its
+  `failed` variant has a copy that failed, with the note "The link didn't
+  copy. Try again." in the danger colour.
+- `app/workspace-links/messages` has a pasted link as a chip in the
+  message box. Its `sent` variant has the sent message while the agent
+  works, and its `other-org` variant has a link of another org as plain
+  text.
+
+The message box of New workspace shows a pasted link as a chip in
+`app/new-workspace/workspace-link`, a child page of `app/new-workspace`.
+The flow `user-flows/link-a-workspace` goes from the copy to the answer,
+and ends with a press on the chip, which opens
+`app/new-workspace/first-turn`.

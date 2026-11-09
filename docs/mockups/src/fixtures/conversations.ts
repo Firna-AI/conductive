@@ -10,6 +10,7 @@ import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { unavailableConversations } from './unavailableConversations'
+import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
@@ -111,6 +112,9 @@ export const conversationKeys = [
   'files-unavailable',
   'stopped-files-unavailable',
   'linked',
+  'link-sent',
+  'link-answer',
+  'other-org-link',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -269,6 +273,7 @@ export const conversations: Readonly<
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations(followUpDraft),
+  ...workspaceLinkConversations(history),
 }
 
 /** The steer message that the user types while a turn runs. */
