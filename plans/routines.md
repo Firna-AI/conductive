@@ -504,6 +504,13 @@ Added on 9 November 2026 from the mockups of Milestone 1.
     run shows two groups, the run's own work and the changes of the pull
     request. It needs a second list in the runner's reports and a protocol
     change. Effort: Large.
+  - **G.** Added by the user on 9 November 2026: "can we not just set the
+    base branch to be the branch rather than main?" Each workspace keeps a
+    base branch. It is the default branch for a normal workspace, the head
+    branch of the pull request for an opened or pushed run, and the base
+    branch of the pull request for a merged run. Changes, its diffs, the
+    pull request bar, and "Create pull request" use the base branch. It is
+    D without the stored start commit. Effort: Medium.
 - **Left out:**
   - Work on the pull request's own branch, option B of decision 205. The
     user chose A, so that no two workspaces share a branch.
@@ -522,8 +529,12 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   2026. The first recommendation was C. D gives the result of C also for
   a merged run on another base branch, and E stops a duplicate pull
   request that the agent opens itself.
-- **Action:** ask the user, because C and D change what Changes and the
-  pull request bar show, and no requirement covers it.
+- **Action:** asked the user, because C and D change what Changes and the
+  pull request bar show, and no requirement covered it.
+- **Chosen:** G, by the user on 9 November 2026. The design section "Pull
+  request runs" gives the base branch, the merge base that Changes uses,
+  and the starts that keep the base branch.
+
 
 ### 208. Choose how the org keeps a routine whose owner left
 
@@ -758,9 +769,14 @@ number names the user's choice. The user can override any part of it.
   `error_message` columns. The start failure writes them when it marks the
   attempt failed. Reason: the workspace object clears its result after a
   failed start, so D1 keeps no cause today.
-- `workspace_creation_plans` gets a nullable `base_ref` and `base_sha`.
-  Reason: `joinCreation` rebuilds each job from the plan row, so a base
-  only in memory gets lost.
+- `workspace_creation_plans` gets a nullable `base_branch` and
+  `start_sha`. Reason: `joinCreation` rebuilds each job from the plan row,
+  so a base only in memory gets lost.
+- `workspaces` gets a nullable `base_branch`. Null means the default
+  branch of the repository. Reason: a resume and the restart near day 14
+  pass the default branch today, at `worker/lifecycle/workspace-resume.ts:46`
+  and `worker/lifecycle/disk-retention.ts:113`, so a base that only the
+  create knows gets lost at the next start (decision 207 G).
 - The org purge needs no change. The cascades from `orgs` remove the
   routines and their runs, and no new key points to `org_members`.
 - Each migration takes a free minute in the range of its milestone. The
@@ -791,8 +807,9 @@ number names the user's choice. The user can override any part of it.
      the failure code and message.
 - The run text is the prompt, a separator line, and the trigger facts:
   the routine name, the trigger, and for a pull request its number, its
-  address, its head branch with the head commit, and its base branch. The
-  text copies no title or body of a pull request.
+  address, its head branch with the head commit, the branch that it
+  merges into, and the branch that the run's own work goes to. The text
+  copies no title or body of a pull request.
 - The state of a run comes from three places, in this order:
   - The run row: `queued` before a workspace exists, `failed` with its
     cause, or `skipped` with its reason.
@@ -867,14 +884,33 @@ number names the user's choice. The user can override any part of it.
   minute scan starts each run that the background did not start. Reason:
   GitHub waits only 10 seconds for an answer.
 - The run of an opened or pushed pull request creates its branch from the
-  head commit of the event (decision 205). The fetch phase fetches
-  `refs/pull/<number>/head` into the remote-tracking ref
-  `refs/remotes/origin/pull/<number>`. The branch phase creates the
-  branch at the head commit of the event. When that commit is missing, it
-  uses the fetched head. Reason for the remote-tracking ref: the archive
-  check counts each commit that no remote ref holds as unpushed, at
-  `worker/app-api/archive.ts:38`, so a fetch into `FETCH_HEAD` alone
-  would show the commits of the pull request as unpushed work.
+  head commit of the event (decision 205). Its base branch is the head
+  branch of the pull request (decision 207 G). The fetch phase fetches
+  that branch into its remote-tracking ref `refs/remotes/origin/<head
+  branch>`, as the start fetches the default branch today. The branch
+  phase creates the branch at the head commit of the event. When that
+  commit is missing, it uses the fetched head. A pull request from a fork
+  never starts a run, so its head branch is always in the repository.
+  Reason for the remote-tracking ref: the archive check counts each commit
+  that no remote ref holds as unpushed, at `worker/app-api/archive.ts:38`.
+- The base branch of a workspace sets what it compares with and where its
+  work goes:
+  - The runner gets the base branch at each start, in place of the default
+    branch, so Changes and each diff compare with it.
+  - Changes compares from the merge base of the branch and the base
+    branch. Reason: the head branch of a pull request can move while a run
+    works, and a plain comparison would show the newer commits as
+    reverted. For a normal workspace, the merge base gives the same list
+    as today while the default branch has not moved.
+  - The pull request bar names the base branch, and "Create pull request"
+    opens a pull request into it. So the work of a run goes into the pull
+    request that started it.
+  - The create sets `gh-merge-base` in the Git config of the run branch to
+    the base branch. So a pull request that the agent opens with `gh`
+    targets it too, once `gh` has a login.
+  - The run text names the base branch as the branch that the run's own
+    work goes to. It calls the base of the pull request the branch that
+    the pull request merges into, so that "base" names one branch only.
 - The run row in the Runs list and the header of a pull request run link
   to the pull request, from the facts of the run. This adds option D of
   decision 205 to the chosen A.
@@ -899,7 +935,7 @@ number names the user's choice. The user can override any part of it.
     nothing for an author that the owner's filter leaves out. Reason: the
     owner chose that exclusion, and a row for each such event is noise.
 - The run of a merged pull request creates its branch from the base
-  branch of the pull request.
+  branch of the pull request, and that branch is its base branch.
 - The start step label says "Fetching the pull request" or "Fetching the
   base branch" for such a run. The branch name keeps the rule of
   decision 53.
@@ -1001,8 +1037,17 @@ These calls of 9 November 2026 come from the code searches of this plan:
 - The pull request of a run links from its row and from the header of its
   workspace. Reason: the options check recommended option D of decision
   205, and its parts add to the chosen A without a change to it.
-- A pull request run fetches the head into a remote-tracking ref, so that
-  the archive check counts no commit of the pull request as unpushed.
+- A pull request run fetches its head branch into a remote-tracking ref,
+  so that the archive check counts no commit of the pull request as
+  unpushed.
+- The pull request bar shows both branch names, each cut with an ellipsis
+  when the column is narrow, with the full name as a tooltip. Reason: it
+  keeps one bar layout for every workspace.
+
+- Changes compares from the merge base of a branch and its base branch,
+  for every workspace. Reason: the base branch of a run can move while the
+  run works. The follow-up item `changes-base-stale-default-branch.md`
+  keeps the separate problem of an old local default branch.
 - An author filter matches GitHub account IDs, which the Worker resolves
   from the logins at each save. Reason: a login can change owner.
 - The Runs list shows a skipped run for an author or a sender outside the
@@ -1107,9 +1152,16 @@ the code milestones can follow them.
       a pull request run, and the run holds the owner's logins and the
       org's env vars.
 - [ ] Update `docs/protocol/workspaces-and-sandboxes.md`: the branch of a
-      pull request run and its start step (decision 205).
+      pull request run and its start step (decision 205), and the base
+      branch of each workspace, which Changes compares with from the merge
+      base (decision 207 G).
 - [ ] Update `docs/protocol/github-banner.md`: the pull request webhooks
-      also start routine runs.
+      also start routine runs, and the bar names the base branch of the
+      workspace and opens "Create pull request" into it (decision 207 G).
+- [ ] Read the Terms in `src/marketing/terms.ts` and the Privacy notice in
+      `src/marketing/privacy.ts` in full. Update each sentence that
+      restates a fact that this milestone changes, such as how agents run
+      on a member's logins.
 - [ ] Update `docs/protocol/orgs-and-members.md` and
       `docs/protocol/operator-actions.md`: a member who leaves turns off
       their routines, and a suspended user or org gets no runs.
@@ -1201,14 +1253,26 @@ Depends on: 4
 
 Start runs from pull request events, on a branch from the pull request.
 
-- [ ] Add the migration with `base_ref` and `base_sha` on
-      `workspace_creation_plans`, in the range
-      `202611090200`–`202611090259`.
+- [ ] Add the migration with `base_branch` and `start_sha` on
+      `workspace_creation_plans`, and `base_branch` on `workspaces`, in
+      the range `202611090200`–`202611090259`.
 - [ ] Let a create start its branch from a base that only the Worker
-      passes: the plan columns, the fetch of the ref, the branch at the
-      head commit, and the step labels.
+      passes: the plan columns, the fetch of the base branch, the branch
+      at the head commit, the `gh-merge-base` setting, and the step
+      labels.
   - [ ] Test a create from the head of a pull request, and a create from
         the base branch after a merge, with the fake Git server.
+- [ ] Keep the base branch at each start: the create, a resume, and the
+      restart near day 14 give it to the runner.
+  - [ ] Test that a resumed run workspace still compares with the head
+        branch of its pull request.
+- [ ] Let the runner compare Changes and each diff from the merge base of
+      the branch and its base branch.
+  - [ ] Test that a new commit on the base branch does not show as
+        reverted in Changes.
+- [ ] Add the base branch to the workspace view and to the state of the
+      pull request bar.
+
 - [ ] Read the action, the number, `merged`, the head commit, the base
       branch, the address, the author, and the sender in `webhookRoute`.
 - [ ] Add the `pullRequest` callback with its own error boundary. Find the
@@ -1270,7 +1334,7 @@ Let the owner create and change a routine.
 
 Tags: ui
 
-Depends on: 4, 8
+Depends on: 4, 6, 8
 
 Show the runs, and let the owner start one.
 
@@ -1282,6 +1346,9 @@ Show the runs, and let the owner start one.
 - [ ] Show the routine link in the header of a run workspace, and the
       pull request link for a pull request run, in the header and in the
       Runs list.
+- [ ] Let the pull request bar name the base branch of the workspace, and
+      open "Create pull request" into it.
+
   - [ ] Test Run now, the states of the runs, and the header links.
 - [ ] Update the web app README.
 

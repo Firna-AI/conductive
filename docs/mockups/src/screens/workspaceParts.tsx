@@ -21,11 +21,7 @@ import { orgs } from '../fixtures/orgs'
 import { workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import {
-  freshPromptFor,
-  holdsPullRequestWork,
-  runStartingLog,
-} from './workspaceRun'
+import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -85,7 +81,7 @@ export function FilesContent(props: {
   return (
     <FilesPanel
       banner={state.banner}
-      edited={!isNew(state) || holdsPullRequestWork(state)}
+      edited={!isNew(state)}
       open={open}
       placeholder={placeholder}
       tree={state.tree}

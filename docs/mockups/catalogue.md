@@ -132,4 +132,7 @@ New workspace opens. Its child pages:
   except `saved`.
 - `app/routines/run-workspace` has the workspace of a pull request run,
   its start, and the workspace of a run of Run now. It draws the workspace
-  screen with its `run` state, which no other workspace page sets.
+  screen with its `run` state, which no other workspace page sets. The
+  base branch of a pull request run is the head branch of its pull
+  request, so its bar names that branch, and Changes lists only the work
+  of the run. The run of Run now keeps `main`.

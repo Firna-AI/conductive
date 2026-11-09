@@ -1,8 +1,11 @@
 /**
  * The workspaces of routine runs. A run workspace is a normal workspace in
  * the section of its routine (decision 204), on a new branch of the owner.
- * Its first message is the prompt, a separator line, and the facts of the
- * trigger. The message copies no title or body of a pull request.
+ * The base branch of a pull request run is the head branch of its pull
+ * request, so its Changes list and its pull request bar show only its own
+ * work (decision 207 G). Its first message is the prompt, a separator
+ * line, and the facts of the trigger. The message copies no title or body
+ * of a pull request.
  */
 
 import { defaultChoice } from './agents'
@@ -28,12 +31,6 @@ export type RunWorkspace = {
   queued: readonly ChatItem[]
   /** The first message and the first turn of the agent. */
   firstTurn: readonly ChatItem[]
-  /**
-   * The branch starts at the head commit of the pull request (decision
-   * 205). Changes compares with the default branch, so it lists the work
-   * of the pull request.
-   */
-  fromPullRequest: boolean
   starting: StartingLog
 }
 
@@ -74,7 +71,8 @@ const reviewMessage = runMessage(review, [
   'Trigger: PR opened',
   `Pull request: #${pullRequest.number}, ${pullRequest.url}`,
   `Head: ${checkoutAutocomplete.branch} at ${headCommit}`,
-  `Base: ${storefront.defaultBranch}`,
+  `Merges into: ${storefront.defaultBranch}`,
+  `Your work goes to: ${checkoutAutocomplete.branch}`,
 ])
 
 const summaryMessage = runMessage(summary, ['Trigger: Run now'])
@@ -102,6 +100,7 @@ const reviewRun: Workspace = {
   status: 'working',
   updated: 'now',
   owner: 'cal',
+  baseBranch: checkoutAutocomplete.branch,
 }
 
 const summaryRun: Workspace = {
@@ -151,7 +150,6 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
       },
       { kind: 'working', id: 'working', elapsed: '48s' },
     ],
-    fromPullRequest: true,
     starting: cloudStart(
       `Fetching pull request #${pullRequest.number} of ${storefront.name}`,
       reviewRun.branch,
@@ -179,7 +177,6 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
       },
       { kind: 'working', id: 'working', elapsed: '12s' },
     ],
-    fromPullRequest: false,
     starting: cloudStart(
       `Fetching ${storefront.defaultBranch} of ${storefront.name}`,
       summaryRun.branch,

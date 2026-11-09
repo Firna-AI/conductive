@@ -24,6 +24,6 @@
 - **Left out:** A reset of the local default branch at each start. It moves a branch that the agent or a member may use.
 - **Wider fix:** B. It gives the right base after every later push to the default branch.
 - **Previous examples:** None found.
-- **Related:** Decision 207 of `plans/routines.md`, while that plan is open, asks how a pull request run shows only its own work. Its option D gives each workspace a stored base.
+- **Related:** Decision 207 G of `plans/routines.md`, chosen on 9 November 2026, gives each workspace a base branch. Its Milestone 6 makes Changes compare from the merge base of a branch and its base branch, for every workspace. That removes the case of newer default-branch work that shows as reverted. The old local default branch stays, so after that milestone option A alone completes this item.
 - **Recommendation:** B. A merge base is the base that GitHub uses for a pull request, so Changes then matches the pull request.
-- **Action:** fix after merge, apply B, because the case needs a reproduction first, and the routines plan does not change normal workspaces. First confirm the case: create a workspace after a push to the default branch and before the next refresh of the image.
+- **Action:** fix after merge, apply B, because the case needs a reproduction first, and the routines plan changes only the comparison, not which copy of the default branch the runner reads. First confirm the case: create a workspace after a push to the default branch and before the next refresh of the image.

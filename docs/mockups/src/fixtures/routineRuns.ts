@@ -30,7 +30,8 @@ export type FailureCause = 'agent-login' | 'github-access' | 'start'
  * Why a rule skipped a pull request event (decision 206 C): its author, or
  * the account that caused it, is not a member and is not in "is".
  */
-export type SkipReason = { who: 'author' | 'sender'; login: string }
+export type SkipReason =
+  { who: 'author' | 'sender'; login: string } | { who: 'org' }
 
 type RunBase = { key: string; trigger: RunTrigger; when: string }
 

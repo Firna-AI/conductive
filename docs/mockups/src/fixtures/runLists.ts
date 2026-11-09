@@ -99,6 +99,7 @@ function afterSuspension(run: Run): Run {
   const when = run.when === 'now' ? '1m' : run.when
   switch (run.state) {
     case 'queued':
+      return { ...run, state: 'skipped', skip: { who: 'org' }, when }
     case 'failed':
     case 'skipped':
       return { ...run, when }

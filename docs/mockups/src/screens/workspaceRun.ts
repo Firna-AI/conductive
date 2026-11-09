@@ -48,14 +48,6 @@ export function runStartingLog(state: WorkspaceState): StartingLog | undefined {
   return state.run === undefined ? undefined : runWorkspaces[state.run].starting
 }
 
-/**
- * A pull request run starts at the head commit of its pull request, so its
- * Changes list, which compares with the default branch, holds that work.
- */
-export function holdsPullRequestWork(state: WorkspaceState): boolean {
-  return state.run !== undefined && runWorkspaces[state.run].fromPullRequest
-}
-
 /** The prompt of the terminal of a new workspace, on its own branch. */
 export function freshPromptFor(state: WorkspaceState): string {
   if (state.run === undefined) return freshSessionPrompt

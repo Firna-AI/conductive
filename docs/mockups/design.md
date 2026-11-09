@@ -95,7 +95,10 @@ bottom.
   trigger in a sheet. A suspended org keeps its Routines link, and shows
   its routines read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
-  workspace, which links to its routine and to its pull request. The
+  workspace, which links to its routine and to its pull request. The pull
+  request bar names the base branch of a workspace: the default branch, or
+  for a pull request run the head branch of its pull request. A long base
+  branch ends in an ellipsis at half of the line. The
   bubble of a message keeps its line breaks, as in the app, so the first
   message of a run shows the facts of its trigger on their own lines.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a

@@ -91,14 +91,16 @@ const senderVerbs = {
 } as const
 
 /**
- * Why a rule skipped a pull request event: its author, or the account that
- * caused it, is not a member of the org and is not in "is".
+ * Why a run was skipped: the author of a pull request event, or the account
+ * that caused it, is not a member of the org and is not in "is". Or the org
+ * is suspended, so a queued run cannot start.
  */
 export function skipCopy(
   skip: SkipReason,
   trigger: RunTrigger,
   org: string,
 ): string {
+  if (skip.who === 'org') return `${org} is suspended.`
   const verb =
     skip.who === 'author' || trigger.kind !== 'pull-request'
       ? senderVerbs.opened
