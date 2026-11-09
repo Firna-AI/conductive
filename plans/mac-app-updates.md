@@ -159,6 +159,18 @@ Reason: this states the data flow of the approved GitHub update feed. It
 adds no product behavior or data recipient. Both legal pages were read in
 full. GitHub's privacy statement confirms collection of request addresses.
 
+The final review and its separate checks on 9 November 2026 confirmed two
+remaining release defects. The pinned Node strategy proposes `1.0.0` from
+the current `0.0.0` manifest, contrary to the first-version call above.
+`plans/follow-ups/first-release-version-is-one.md` records the explicit
+initial-version fix. It must land before the first release pull request
+merges. A retry of an older draft also marks it latest after a newer
+release exists. `plans/follow-ups/older-release-retry-resets-latest.md`
+records the API fix before the second release. Both are deferred because
+the two original review fix rounds are used. The check also recorded the
+separate footer documentation task in
+`plans/follow-ups/release-as-footer-lost-in-squash.md`.
+
 ## Decisions
 
 The options check ran on 8 November 2026. Its report is
@@ -594,11 +606,17 @@ Check the whole change, review it, and open the pull request.
 - [x] Run the targeted tests and the complete gate again after Milestone 6.
       Evidence: `.context/mac-app-updates/gate-final-after-answers.log` and
       `.context/mac-app-updates/resume-code-report.md`.
-- [ ] Commit the changes of Milestones 2, 4, and 6 with Conventional
+- [x] Commit the changes of Milestones 2, 4, and 6 with Conventional
       Commits, and push the branch.
-- [ ] Review the complete local diff against `origin/main` again with the
+      Commit: `3b0a75a`.
+- [x] Review the complete local diff against `origin/main` again with the
       `implementation-review` skill after the push, with a focus on the
       changes of Milestone 6. Apply the same fix rule, and report.
+      Evidence: `.context/reviews/calummoore/desktop-app-auto-update/round-3-review.md`
+      and `round-3-checks.md`. Findings 13 and 14 have follow-up records.
+- [x] Run the complete gate on the final merge of `origin/main`, after its
+      composer changes arrived during the review.
+      Evidence: `.context/mac-app-updates/gate-final-merged.log`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

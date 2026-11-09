@@ -124,6 +124,9 @@ git push --force origin RELEASE_COMMIT:refs/tags/vX.Y.Z
 Then re-run the failed jobs, for example with `gh run rerun RUN_ID --failed`.
 The re-run checks the tag again, and then signs and publishes.
 
+A retry of an older draft currently marks that version as latest, even after a newer release exists.
+The [release-order follow-up](../plans/follow-ups/older-release-retry-resets-latest.md) records this defect and its fix before the second release.
+
 The publish job runs on Linux with the built-in `GITHUB_TOKEN` and `contents: write`.
 It downloads the signed files and uploads them with `gh`.
 It runs no `npm ci` and no build, so no dependency script runs beside a token that can write releases.
@@ -148,7 +151,9 @@ One root release-please component covers the whole product, so the web app and t
 Versions have the form `0.x.y`.
 With `bump-minor-pre-major`, a breaking change raises the minor number before 1.0.
 The manifest starts at `0.0.0` from the bootstrap commit in `release-please-config.json`.
-The first `feat` commit after that commit makes the first release `0.1.0`.
+The required first release is `0.1.0`.
+The current Node strategy instead treats `0.0.0` as no previous release and proposes `1.0.0`.
+Apply the [initial-version fix](../plans/follow-ups/first-release-version-is-one.md) before merging the first release pull request.
 A commit with the footer `Release-As: X.Y.Z` sets another next version.
 The signed `0.1.0-alpha.1` build has the updater off.
 People with that build install a newer version by hand once, from the DMG of a release.
