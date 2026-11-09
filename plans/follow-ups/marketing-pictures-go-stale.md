@@ -26,3 +26,4 @@
 - **Previous examples:** Commits `9ad3d12` and `e9827da`, and finding 5 of the review of `calummoore/tab-drag-and-drop`.
 - **Recommendation:** B. It catches every stale picture before the merge, at the cost of one more step in the gate.
 - **Action:** ask the user, because each option other than A adds a gate or a build error.
+- **Answer:** On 9 November 2026, the user chose to keep this work as a follow-up item for a later change, and to merge the change that found it without it. No option is chosen yet, so the item still needs a decision.

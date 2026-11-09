@@ -24,3 +24,4 @@
 - **Previous examples:** `plans/follow-ups/list-failure-test.md`, and findings 2 and 6 of the review of `calummoore/tab-drag-and-drop`.
 - **Recommendation:** C. It shows the unprotected lines to the review at a medium cost, without a gate that fails on mutants that change nothing. B best protects the codebase.
 - **Action:** ask the user, because B adds a gate, and C adds a CI step that the user should weigh.
+- **Answer:** On 9 November 2026, the user chose to keep this work as a follow-up item for a later change, and to merge the change that found it without it. No option is chosen yet, so the item still needs a decision.
