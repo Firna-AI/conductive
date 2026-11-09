@@ -25,6 +25,9 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
       version: ${{ steps.release.outputs.version }}
+      # The merge commit of the release pull request. Jobs check out this SHA,
+      # never a tag or branch name, so a name cannot point them at other code.
+      sha: ${{ steps.release.outputs.sha }}
     steps:
       - name: Create or update release pull request
         id: release
@@ -38,13 +41,13 @@ jobs:
     needs: release-please
     uses: ./.github/workflows/desktop-mac-checks.yml
     with:
-      ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
+      ref: ${{ needs.release-please.outputs.sha || github.sha }}
   sign:
     if: ${{ !cancelled() && needs.mac.result == 'success' && github.ref == 'refs/heads/main' }}
     needs: [release-please, mac]
     uses: ./.github/workflows/desktop-sign.yml
     with:
-      ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
+      ref: ${{ needs.release-please.outputs.sha || github.sha }}
       updates: ${{ needs.release-please.outputs.release_created == 'true' }}
   publish:
     if: needs.release-please.outputs.release_created == 'true'
@@ -55,7 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release-please.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:

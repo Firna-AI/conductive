@@ -136,15 +136,17 @@ it('fails without creating a release when no matching draft exists', async () =>
   expect(dependencies.run).toHaveBeenCalledTimes(1)
 })
 
-it('leaves the draft when GitHub has a missing, incomplete, or pending asset', async () => {
-  for (const failure of ['missing', 'size', 'state']) {
-    const { release, dependencies, state, names } = publishHarness()
-    if (failure === 'missing') state.assets.shift()
-    if (failure === 'size') state.assets[0].size = 1
-    if (failure === 'state') state.assets[0].state = 'starter'
-    await expect(publishRelease(release, dependencies)).rejects.toThrow(
-      `GitHub has not uploaded the complete asset: ${names[0]}`,
-    )
-    expect(dependencies.run).toHaveBeenCalledTimes(3)
-  }
+it.each([
+  ['a missing asset', 'missing'],
+  ['an incomplete asset', 'size'],
+  ['a pending asset', 'state'],
+] as const)('leaves the draft when GitHub has %s', async (_name, failure) => {
+  const { release, dependencies, state, names } = publishHarness()
+  if (failure === 'missing') state.assets.shift()
+  if (failure === 'size') state.assets[0].size = 1
+  if (failure === 'state') state.assets[0].state = 'starter'
+  await expect(publishRelease(release, dependencies)).rejects.toThrow(
+    `GitHub has not uploaded the complete asset: ${names[0]}`,
+  )
+  expect(dependencies.run).toHaveBeenCalledTimes(3)
 })
