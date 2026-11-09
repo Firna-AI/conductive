@@ -783,19 +783,19 @@ Depends on: 4
 
 Depends on: 1, 2, 3, 4, 5
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
       the targeted tests and `npm run check`.
-- [ ] Smoke-test `npm run dev` on desktop and at a phone size:
-  - [ ] Drag a file tab before a session tab, and check that the view
+- [x] Smoke-test `npm run dev` on desktop and at a phone size:
+  - [x] Drag a file tab before a session tab, and check that the view
         write holds the new order. Cancel a drag with Escape.
-  - [ ] Open the tab menu with a right click, and with Shift and F10 in
+  - [x] Open the tab menu with a right click, and with Shift and F10 in
         Chrome on Linux. Move a tab and rename a session with the menu.
-  - [ ] At a phone size with touch emulation, open the menu with a long
+  - [x] At a phone size with touch emulation, open the menu with a long
         press, and rename a session.
-  - [ ] Fill the row until it scrolls. Check the wheel, the fades, a new
+  - [x] Fill the row until it scrolls. Check the wheel, the fades, a new
         tab in view, and a drag near an end.
-  - [ ] Save the screenshots under `.context/move-tabs-by-drag/`.
-- [ ] Commit with Conventional Commits and push the branch.
+  - [x] Save the screenshots under `.context/move-tabs-by-drag/`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
@@ -809,6 +809,10 @@ Depends on: 1, 2, 3, 4, 5
       adds: `plans/follow-ups/session-click-overwrites-unread-view.md`,
       `plans/follow-ups/read-only-session-click-over-file.md`, and
       `plans/follow-ups/sideways-tab-rows-ignore-vertical-wheel.md`.
+
+Evidence: the gate logs `.context/move-tabs-by-drag/gate-*.log`, the merge
+audit `.context/move-tabs-by-drag/audit-merge.log`, and the smoke results in
+`.context/move-tabs-by-drag/m6/smoke/`.
 
 ## Post-merge follow-up (non-blocking)
 
