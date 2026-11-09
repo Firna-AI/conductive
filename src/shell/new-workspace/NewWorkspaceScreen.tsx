@@ -16,6 +16,7 @@ import { useViewport } from '../ui/viewport'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
 import { Composer } from './Composer'
 import { useShownForm } from './NewWorkspaceHost'
+import { OrgLinks } from './OrgLinks'
 import { repositoriesFirst } from './notices'
 import { RepositoryMenu } from './parts'
 import {
@@ -135,13 +136,15 @@ export function NewWorkspaceScreen(props: {
             <>
               {form.failure}
               {form.notice}
-              <Composer
-                choice={form.choice}
-                model={model}
-                models={form.models}
-                ready={form.ready}
-                send={form.send}
-              />
+              <OrgLinks orgId={org.id}>
+                <Composer
+                  choice={form.choice}
+                  model={model}
+                  models={form.models}
+                  ready={form.ready}
+                  send={form.send}
+                />
+              </OrgLinks>
             </>
           )}
         </div>

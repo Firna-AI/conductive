@@ -43,6 +43,7 @@ function KeptChat(props: {
       host={props.host}
       onConnectAgent={(agent) => go(routes.account(agent))}
       onOpenDiff={files.onOpenDiff}
+      onOpenPage={go}
       readOnly={context.readOnly}
       viewport={context.viewport === 'phone' ? 'mobile' : 'desktop'}
     />

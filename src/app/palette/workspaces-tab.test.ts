@@ -13,10 +13,11 @@ import {
 } from './results-test-kit'
 
 describe('the Workspaces tab of the palette', () => {
-  test('the Workspaces tab shows each section in the order of the list, also a collapsed one, and its filters choose the repository and the archived workspaces', () => {
+  test('the Workspaces tab shows each section in the order of the list, also a collapsed one, and its filters choose the repository and the archived workspaces, also for a search by number', () => {
     const banner = extra({
       id: 'banner',
       name: 'Black Friday banner',
+      number: 386,
       repositoryId: 'storefront',
       state: 'archived',
       archivedAt: FAKE_TIME - 2,
@@ -24,6 +25,7 @@ describe('the Workspaces tab of the palette', () => {
     const redesign = extra({
       id: 'redesign',
       name: 'Checkout page redesign',
+      number: 393,
       repositoryId: 'storefront',
       state: 'archived',
       archivedAt: FAKE_TIME - 1,
@@ -31,6 +33,7 @@ describe('the Workspaces tab of the palette', () => {
     const admin = extra({
       id: 'refunds',
       name: 'Refunds',
+      number: 403,
       repositoryId: 'admin-dashboard',
     })
     const list = ready({
@@ -43,6 +46,8 @@ describe('the Workspaces tab of the palette', () => {
       all: shown(tab({})),
       storefront: shown(tab({ repositoryId: 'storefront' })),
       archived: shown(tab({ archived: true })),
+      storefrontNumber: shown(tab({ repositoryId: 'storefront', text: '39' })),
+      archivedNumber: shown(tab({ archived: true, text: '39' })),
       choices: tab({}).repositories.map((choice) => choice.name),
     }).toEqual({
       all: [
@@ -80,6 +85,14 @@ describe('the Workspaces tab of the palette', () => {
       archived: [
         ['Archived', ['Checkout page redesign', 'Black Friday banner']],
       ],
+      storefrontNumber: [
+        [
+          'Checkout',
+          ['W-398 Apple Pay button', 'W-395 Checkout address autocomplete'],
+        ],
+        ['Infra', ['W-396 Upgrade to Next.js 16']],
+      ],
+      archivedNumber: [['Archived', ['W-393 Checkout page redesign']]],
       choices: [
         'acme/storefront',
         'acme/billing-service',

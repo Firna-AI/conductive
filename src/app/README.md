@@ -247,7 +247,10 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `palette/`: the command palette without React. `palette-results.ts`
   gives the groups and the empty state of each tab for a query, from
   `palette-groups.ts` and the rows of `palette-rows.ts`. `matcher.ts`
-  ranks the matches. `commands.ts` holds the labels and the search words.
+  ranks the matches. `rowTexts` includes the workspace number label, such
+  as `W-395`, in the search texts. `withNumberLabel` adds that label when
+  a query word matches it. `../shell/palette/PaletteList.tsx` draws it
+  before the name. `commands.ts` holds the labels and the search words.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
   `palette-keys.ts` the palette key and what it does, and `controller.ts`

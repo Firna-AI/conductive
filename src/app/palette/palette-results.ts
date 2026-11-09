@@ -1,7 +1,7 @@
 import type { ApiError } from '../api/client'
 import { rankRows, searchWords } from './matcher'
 import { tabGroups } from './palette-groups'
-import { rowTexts, type PaletteGroup } from './palette-rows'
+import { rowTexts, withNumberLabel, type PaletteGroup } from './palette-rows'
 import type {
   PaletteQuery,
   PaletteSource,
@@ -70,7 +70,8 @@ function repositoryChoices(source: PaletteSource): RepositoryChoice[] {
 
 /**
  * What the palette shows for a query: the groups of its tab with the rows
- * that match, ranked, and the groups without a match left out.
+ * that match, ranked, and the groups without a match left out. A workspace
+ * row shows the label of its number when a word of the query is in it.
  */
 export function paletteResults(
   query: PaletteQuery,
@@ -81,7 +82,9 @@ export function paletteResults(
   const groups = tabGroups(query, source, searching)
     .map((group) => ({
       label: group.label,
-      rows: rankRows(group.rows, words, rowTexts),
+      rows: rankRows(group.rows, words, rowTexts).map((row) =>
+        withNumberLabel(row, words),
+      ),
     }))
     .filter((group) => group.rows.length > 0)
   return {

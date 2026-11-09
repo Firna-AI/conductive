@@ -49,10 +49,19 @@ const activeStates: ReadonlySet<WorkspaceState> = new Set([
   'starting',
 ])
 
-const listWait: RefreshWait<ListData> = (list) =>
-  list?.workspaces.some((workspace) => activeStates.has(workspace.state))
+/**
+ * The wait of a shown workspace list: short while one of its workspaces is
+ * active. A chat that reads the list itself uses it too.
+ */
+export const workspacesWait: RefreshWait<readonly Workspace[]> = (
+  workspaces,
+) =>
+  workspaces?.some((workspace) => activeStates.has(workspace.state))
     ? activeWait
     : idleWait
+
+const listWait: RefreshWait<ListData> = (list) =>
+  workspacesWait(list?.workspaces)
 
 const buildsWait: RefreshWait<BuildsResponse> = (builds) =>
   builds?.builds.some((build) => build.state === 'running')

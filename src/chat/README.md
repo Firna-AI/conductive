@@ -29,6 +29,7 @@ stops its own controller:
   onWorkspaceChange={(workspace) => showInHeader(workspace)}
   onViewChange={(view) => keepTabs(view)}
   onOpenDiff={(path) => openDiffTab(path)}
+  onOpenPage={(to) => navigate(to)}
   onConnectAgent={(agent) => openAccount(agent)}
 />
 ```
@@ -77,6 +78,11 @@ stops its own controller:
   chip of the file shows the label of its path, `displayPath`, which hides
   each secret value, as [Labels of paths](../files/README.md#labels-of-paths)
   says.
+- `onOpenPage` gets the page of a workspace chip in a sent message or an
+  answer, such as `/orgs/acme/workspaces/<id>/files`, after a plain click.
+  The app opens it in the same window. A click with a modifier key stays
+  with the browser, as for each link of the app. Without `onOpenPage`, a
+  chip is a plain link.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.
@@ -138,8 +144,8 @@ the connection. The app makes the controller with a stable `client` and
   nothing.
 
 The app can also give the controller `sources`, a `ChatSources` from
-`state/sources.ts`. It gives the account, the org, the models, and the
-members from the models of the app.
+`state/sources.ts`. It gives the account, the org, the models, the
+members, and the workspace list of the org from the models of the app.
 
 - With sources, the load sends none of these four reads and writes none of
   these values. So no reply of an old read replaces a newer value of the
@@ -149,6 +155,13 @@ members from the models of the app.
 - `start` copies the sources into the snapshot and follows them. `stop`
   ends the subscriptions. `hide` and `show` keep them.
 - A chat without sources reads the four values at each load.
+- The workspace list gives the chips their workspaces, with the archived
+  ones. The chat watches it from `start` or `show` until `hide` or `stop`,
+  through `watchWorkspaces`, which the app connects to
+  `OrgModel.watch('list')`. So the chips stay current on a phone, where no
+  list is on the screen, and a hidden chat reads nothing. A chat without
+  sources reads the list itself while it shows, with the wait of a shown
+  list of the app, in `state/workspace-list.ts`.
 
 ## Rules for this code
 
@@ -196,7 +209,24 @@ members from the models of the app.
   and the page and the dialog of New workspace. On a computer, Enter sends
   and Shift+Enter adds a line, as
   [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)
-  says. In the phone layout, Enter adds a line.
+  says. In the phone layout, Enter adds a line. The message field asks the
+  send key through `onEnter` before it adds a line, so Enter never adds a
+  line to a message that it sends.
+- The message field of every composer is the chip text field of
+  `components/chip-field/`, as
+  [The message field](../../docs/protocol/workspace-links.md#the-message-field)
+  says. It holds plain text and a chip for each workspace link. A paste and
+  a draft that comes back turn each workspace link into a chip, and typed
+  text stays text. A paste reads only the plain text of the paste event.
+  The draft is plain text with the exact link of each chip. A space goes
+  beside a chip only where the text beside it would join its link, also in
+  a copy. When the list of the org changes, a chip whose workspace left it
+  becomes ordinary text, and a pasted or restored link whose workspace the
+  list now holds becomes a chip, with no new step of undo. A new draft from
+  the owner, such as an empty one after a send, clears the undo history,
+  and the owner's echo of the field's own text changes nothing. The field
+  stays a focusable textbox while it takes no change, such as during a
+  create. Its chips find their workspaces through `LinksProvider`.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as
@@ -233,6 +263,14 @@ members from the models of the app.
   `src/components/chat/sizes.ts`. The attached files, the left-out output,
   the mockups, and the composer of a new workspace share it. The chat keeps
   no size formatter of its own.
+- Sent messages and agent answers show each workspace link as a chip, as
+  [Workspace links](../../docs/protocol/workspace-links.md) says.
+  `links/workspace-links.ts` reads each link with the URL parser and
+  `parseRoute`. A link is a chip only when it has the origin of the links
+  of the list, and the router reads a page of a workspace of the org in
+  that list. The chip shows the current name and state, and it opens the
+  page that the router read, with its tab path, query, and hash. Code stays
+  code, and every other link stays as the text has it.
 - User-facing text follows the
   [names in the product](../../docs/protocol/chat-and-events.md#names-in-the-product):
   no "Claude Code", and no provider name.
@@ -270,6 +308,18 @@ and checks the saved message on the bar of a failed first start and of a
 failed resume.
 `components/SessionTabs.test.tsx` renders the tab of a session with no
 title and its rename field.
+`components/chip-field/ChipTextField.test.tsx` pastes workspace links,
+steps over a chip, removes it with Backspace and Delete, restores a draft,
+copies, follows the list, and checks a field that takes no change.
+`components/chip-field/field-text.test.ts` checks the separator rule. The
+DOM tests type, paste, and read the field through
+`src/test-support/message-field.ts`.
+`links/workspace-links.test.ts` reads links with and without a tab path,
+Markdown links, code, `..`, other origins and orgs, unknown workspaces, and
+punctuation. `links/LinkedText.test.tsx` mounts an answer with chips.
+`state/workspace-list.test.ts` checks that a chat without sources reads the
+list while it shows, and not while it is hidden. The workspace screen's
+`LinkChips.test.tsx` checks the chips of a kept chat on a phone.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -287,7 +337,20 @@ check in the Mac app.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/chat-and-events.md#messages)
   states.
+- `components/chip-field/`: `ChipTextField`, the message field of every
+  composer, over Lexical. `chip-nodes.tsx` holds the chip node and the
+  node of a link that waits for its workspace. `field-content.ts` turns
+  plain text into nodes and back, and reconciles the chips with the list.
+  `field-text.ts` joins the parts of the plain text with the separator
+  rule. `field-plugins.tsx` holds the value, paste, copy, Enter, editable,
+  reconcile, and focus plugins.
 - `state/load.ts`: the order of the first reads and the stream start.
+- `links/`: `workspace-links.ts`, the pure reader of the workspace links
+  of a text, `LinksContext.tsx`, the workspaces that chips find and the
+  open of a chip, and `LinkedText.tsx`, text with chips in messages and
+  answers.
+- `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
+  read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
 - `state/transcript.ts`: how chat events become the parts of a transcript.

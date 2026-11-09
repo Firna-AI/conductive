@@ -48,11 +48,17 @@ export function query(overrides: Partial<PaletteQuery> = {}): PaletteQuery {
 }
 
 function label(row: PaletteRow): string {
-  if (row.kind === 'workspace') return nameLabel(row.workspace.name)
+  if (row.kind === 'workspace') {
+    const name = nameLabel(row.workspace.name)
+    return row.numberLabel ? `${row.numberLabel} ${name}` : name
+  }
   return row.detail ? `${row.label} · ${row.detail}` : row.label
 }
 
-/** Each group as its label and the labels of its rows. */
+/**
+ * Each group as its label and the labels of its rows. A workspace row that
+ * shows the label of its number starts with it, as the palette draws it.
+ */
 export function shown(results: PaletteResults): [string, string[]][] {
   return results.groups.map((group) => [group.label, group.rows.map(label)])
 }

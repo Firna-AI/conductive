@@ -1,9 +1,13 @@
 import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import inlineStyles from '../../../docs/mockups/src/components/common/InlineText.module.css'
 import markdownStyles from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
+import { LinkedText } from '../links/LinkedText'
 import { inlineParts, textBlocks, type TextBlock } from './agent-text'
 
-/** Text with `code` and **strong** parts. */
+/**
+ * Text with `code` and **strong** parts. Each workspace link outside code is
+ * a chip, and so is a Markdown link to a workspace.
+ */
 function InlineMarkdown(props: { text: string }) {
   return (
     <>
@@ -15,9 +19,9 @@ function InlineMarkdown(props: { text: string }) {
             </code>
           )
         }
-        if (part.kind === 'strong')
-          return <strong key={index}>{part.text}</strong>
-        return part.text
+        const text = <LinkedText code={false} key={index} text={part.text} />
+        if (part.kind === 'strong') return <strong key={index}>{text}</strong>
+        return text
       })}
     </>
   )

@@ -9,6 +9,7 @@ import type { Action } from '../../shell/ui/useAction'
 import {
   byRole,
   queryAllByRole,
+  queryByLabel,
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
@@ -86,7 +87,7 @@ describe('a read-only chat', () => {
     )
     expect({
       refused: queryByText("The sandbox can't start") !== null,
-      composer: document.querySelector('textarea') !== null,
+      composer: queryByLabel('Message') !== null,
       newSession: queryByRole('button', 'New session') !== null,
       rename: queryByRole('button', `Rename ${second}`) !== null,
       resume: queryByRole('button', 'Resume') !== null,

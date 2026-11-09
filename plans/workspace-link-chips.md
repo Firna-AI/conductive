@@ -143,6 +143,9 @@ approved.
 - Agent call, from the user's icon change: the copied state also keeps
   the number alone. The status note confirms the copy without moving the
   repository or branch.
+- Agent call, from implementation: the success note clears after two
+  seconds. A failed copy note stays until the next press. Reason: the
+  existing file-copy control uses the same feedback.
 - Agent call, from the mockups: on desktop, the repository and the
   branch share one group in place of the spacer. The group takes only the
   room that the other parts leave, so the name is cut short only when
@@ -281,14 +284,14 @@ approved.
 The local inline-chip editor replaces the plain `InputFrame` used by the
 message fields. Drafts and stored messages keep the same plain text.
 
-- [ ] Move `src/chat/components/Composer.tsx` to the chip editor.
-- [ ] Move `src/shell/new-workspace/Composer.tsx` to the chip editor.
-- [ ] Move the field in `src/shell/new-workspace/NewWorkspaceDialog.tsx`
+- [x] Move `src/chat/components/Composer.tsx` to the chip editor.
+- [x] Move `src/shell/new-workspace/Composer.tsx` to the chip editor.
+- [x] Move the field in `src/shell/new-workspace/NewWorkspaceDialog.tsx`
       to the same chip editor. Keep its seven-line minimum, fourteen-line
       maximum, and initial focus.
-- [ ] Move Enter handling and the DOM input helpers to the editor's public
+- [x] Move Enter handling and the DOM input helpers to the editor's public
       interface. Preserve their existing behaviour checks.
-- [ ] Remove the replaced field markup and any now-unused imports or
+- [x] Remove the replaced field markup and any now-unused imports or
       styles. Keep no second editor path or format converter.
 
 ## Decisions
@@ -484,7 +487,7 @@ Milestone 3 ran. This merge keeps those tools and the workspace-link fields.
 - [x] Resolve the agent tool, help, README, and migration reservation
       conflicts path by path. Preserve both approved features.
 - [x] Check the merged tool contracts, readers, and create/list replies.
-- [ ] Run the affected tests and typecheck. Audit merge preservation.
+- [x] Run the affected tests and typecheck. Audit merge preservation.
 
 ## Milestone 4: Copy link in the header
 
@@ -492,23 +495,23 @@ Tags: ui
 
 Depends on: 3, 3a
 
-- [ ] Add the `W-395` button to `src/shell/workspace/WorkspaceHeader.tsx`,
+- [x] Add the `W-395` button to `src/shell/workspace/WorkspaceHeader.tsx`,
       on desktop and on a phone, as the mockups draw it. Reuse the pure
       part `docs/mockups/src/components/workspace/CopyLinkButton.tsx`
       with its `onPress` and `result`, and the `.line` class of the header
       styles.
-- [ ] Put the repository and the branch of the desktop header in the
+- [x] Put the repository and the branch of the desktop header in the
       `.metas` group of the header styles, in place of the spacer, as the
       mockup header does.
-- [ ] Copy `workspace.link` with `AppServices.copy`. Show "Link copied",
+- [x] Copy `workspace.link` with `AppServices.copy`. Show "Link copied",
       or "The link didn't copy. Try again." when the copy fails. A failed
       copy keeps the number, and the note stays a status for screen
       readers.
-- [ ] Run `npm run marketing:pictures`, because the pictures of the
+- [x] Run `npm run marketing:pictures`, because the pictures of the
       marketing site come from the mockups, whose header now shows the
       number. Commit the new pictures.
-- [ ] Test the copy and the confirmation in happy-dom.
-- [ ] Update `src/shell/workspace/README.md`.
+- [x] Test the copy and the confirmation in happy-dom.
+- [x] Update `src/shell/workspace/README.md`.
 
 ## Milestone 5: Chips in the chat
 
@@ -516,24 +519,24 @@ Tags: ui
 
 Depends on: 3, 3a
 
-- [ ] Add a pure function that splits text into plain text, code, and
+- [x] Add a pure function that splits text into plain text, code, and
       workspace links, with the URL parser and `parseRoute`. Test a link
       with and without a tab path, a Markdown link, a link in code, a
       link with `..`, a link of another origin or org, an unknown link,
       and a link next to punctuation.
-- [ ] Give the chat the workspace list of the org through `ChatSources`,
+- [x] Give the chat the workspace list of the org through `ChatSources`,
       and through its own read when it has no sources. Keep the list
       current while the chat shows, also on a phone, where no
       `OrgList` watches it. Give the development page a list too.
-- [ ] Add the interactive chip over the pure mockup part
+- [x] Add the interactive chip over the pure mockup part
       `docs/mockups/src/components/chat/WorkspaceChip.tsx`, with its
       `opener` set to a link of the app. A press opens its page through a
       new callback of the chat, which the app connects to its navigation.
-- [ ] Show chips in user messages and in agent answers.
-- [ ] Test the chips with the current name and state, an archived
+- [x] Show chips in user messages and in agent answers.
+- [x] Test the chips with the current name and state, an archived
       workspace, plain text for the other links, and a rename that
       changes a chip.
-- [ ] Update `src/chat/README.md`.
+- [x] Update `src/chat/README.md`.
 
 ## Milestone 6: Chips in the message boxes
 
@@ -541,33 +544,33 @@ Tags: ui
 
 Depends on: 5
 
-- [ ] Prove the editor first. Add `lexical` and `@lexical/react` with
+- [x] Prove the editor first. Add `lexical` and `@lexical/react` with
       `npm install`. Show that a DOM test can type, paste a link, and
       send. Show that Chrome with a phone screen can type around a chip
       and delete it. When Lexical fails, try Tiptap in the same way. When
       both fail, stop and report it as a decision, with option E of
       decision 150 as the fallback.
-- [ ] Add the local chip text field: plain text with inline chips, the
+- [x] Add the local chip text field: plain text with inline chips, the
       paste rule, Backspace, Delete, and the arrow keys, Enter and
       Shift+Enter, input methods, the placeholder, the limit of eight
       lines, the sizes of `useControlSizes`, and the label "Message".
       Reuse the styles of the mockup part
       `docs/mockups/src/components/chat/ChipTextField.tsx`, and put each
       chip in an element that the caret cannot enter.
-- [ ] Use it in `src/chat/components/Composer.tsx` and in
+- [x] Use it in `src/chat/components/Composer.tsx` and in
       `src/shell/new-workspace/Composer.tsx`, and in the message field of
       `src/shell/new-workspace/NewWorkspaceDialog.tsx`. Keep the dialog's
       seven-line minimum, fourteen-line maximum, and initial focus. The
       draft stays plain text.
-- [ ] Update the DOM tests that type into a message box, such as
+- [x] Update the DOM tests that type into a message box, such as
       `FirstStart.dom.test.tsx` and `NewWorkspaceScreen.test.tsx`. Test a
       paste, a Backspace after a chip, a draft that comes back with
       chips, and Enter.
-- [ ] Measure the growth of the app bundle. Save the numbers under
+- [x] Measure the growth of the app bundle. Save the numbers under
       `.context/workspace-link-chips/`.
-- [ ] Add the chip text field to
+- [x] Add the chip text field to
       `plans/follow-ups/firna-ui-missing-parts.md`.
-- [ ] Update `src/chat/README.md` and `src/app/screens.md`.
+- [x] Update `src/chat/README.md` and `src/app/screens.md`.
 
 ## Milestone 6a: Number search in the command palette
 
@@ -575,9 +578,24 @@ Tags: ui
 
 Depends on: 3, 1a
 
-- [ ] Search the workspace number label with the same rules as its name.
-- [ ] Show the number in a palette result when the query matches it.
-- [ ] Test number search and update the area README.
+- [x] Search the workspace number label with the same rules as its name.
+- [x] Show the number in a palette result when the query matches it.
+- [x] Test number search and update the area README.
+
+## Milestone 6b: Final integration with current main
+
+Depends on: 4, 5, 6, 6a
+
+Main added ended-turn folding, palette loading states, automatic titles,
+and a marketing link while the UI milestones ran. Keep those features
+and workspace chips together before the complete gate.
+
+- [ ] Resolve the current main integration path by path. Preserve the
+      current protocol requirements and the workspace-link feature.
+- [ ] Check the combined chat, editor, palette and title paths. Run the
+      affected tests and static checks.
+- [ ] Refresh the marketing pictures if the merged mockups change them.
+- [ ] Audit merge preservation and smoke-test the merged app.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

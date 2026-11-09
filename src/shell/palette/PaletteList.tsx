@@ -34,6 +34,11 @@ function opensElsewhere(event: MouseEvent): boolean {
   )
 }
 
+/**
+ * What a row shows. A workspace shows its state mark, the label of its
+ * number while the query matches that label, its name, its repository, and
+ * the age of its latest activity.
+ */
 function RowContent(props: { row: PaletteRow; now: number }) {
   const { row } = props
   if (row.kind === 'command') {
@@ -55,6 +60,9 @@ function RowContent(props: { row: PaletteRow; now: number }) {
       <span className={styles.lead}>
         <StatusGlyph status={workspace.state} />
       </span>
+      {row.numberLabel ? (
+        <span className={styles.number}>{row.numberLabel}</span>
+      ) : null}
       <span className={styles.label}>{nameLabel(workspace.name)}</span>
       <span className={styles.repository}>{row.repository}</span>
       <span className={styles.end}>

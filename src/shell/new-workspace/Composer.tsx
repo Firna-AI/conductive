@@ -1,10 +1,10 @@
 import { Button } from '@firna/ui/button'
-import { InputFrame } from '@firna/ui/input'
 import { ArrowUp } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { useStore } from '../../app/store'
+import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import { useSendKey } from '../../chat/components/send-key'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import { ModelPicker } from '../ui/ModelPicker'
@@ -16,7 +16,7 @@ import { AttachButton, AttachmentList, UploadError } from './parts'
  * the message can go, as the screen decides for Send and Try again. Enter
  * sends as in every composer: on a computer, Enter sends and Shift+Enter
  * adds a line. While the create runs, the text and the attach button are
- * off.
+ * off. A pasted workspace link shows as a chip, which `OrgLinks` finds.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
@@ -33,25 +33,22 @@ export function Composer(props: {
   const sendKey = useSendKey(props.ready, props.send)
   return (
     <div className={styles.wrap}>
-      <div className={styles.composer} onKeyDownCapture={sendKey}>
+      <div className={styles.composer}>
         {draft.attachments.length > 0 ? (
           <AttachmentList
             attachments={draft.attachments}
             remove={(id) => props.model.detach(id)}
           />
         ) : null}
-        <InputFrame
-          accessibilityLabel="Message"
+        <ChipTextField
           editable={!sending}
-          focusIndicator="none"
+          label="Message"
+          lines={2}
           maxLines={8}
-          multiline
-          numberOfLines={2}
           onChangeText={(text) => props.model.setText(text)}
+          onEnter={sendKey}
           placeholder="Describe the task"
-          size={control.field}
           value={draft.text}
-          variant="seamless"
         />
         <div className={styles.bar}>
           <AttachButton disabled={sending} model={props.model} />
