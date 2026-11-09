@@ -302,6 +302,8 @@ Added on 8 November 2026 from the options check of decision 142. Open.
   do not fit, the row scrolls sideways. It shows no scrollbar.
 - The row scrolls each new or shown tab into view: a new tab, a tab that
   the Files panel or the session history shows, and a tab after a move.
+- When the row gets narrower, for example when the window shrinks, the row
+  scrolls the shown tab back into view. Decision 143 names this case.
 - A vertical turn of the mouse wheel over the row scrolls it sideways. A
   sideways swipe on a trackpad scrolls it as before.
 - A fade marks each end of the row that clips tabs.
@@ -551,25 +553,25 @@ Depends on: 1
 
 State the rules of the row before the code changes.
 
-- [ ] In the Sessions section of `docs/protocol/chat-and-events.md`,
+- [x] In the Sessions section of `docs/protocol/chat-and-events.md`,
       replace the order of creation with the rules of decision 142: one
       order for all tabs of the row, and a new tab at the end. Add the
       move of any tab by drag, and by a long press on a phone. Add the
       order kept for each user and workspace, and no move in a read-only
       workspace. Give the rejected group order and its reason.
-- [ ] Add the full row of decision 143 to the same section: the row
+- [x] Add the full row of decision 143 to the same section: the row
       scrolls sideways and keeps the shown tab in view.
-- [ ] Add the tab menu of decision 144 to the same section: a right
+- [x] Add the tab menu of decision 144 to the same section: a right
       click, Shift and F10, or a long press on a phone opens Rename
       session, Move left, and Move right. Say that the user renames a
       session from the tab menu. A read-only workspace opens no tab
       menu.
-- [ ] In the Files and changes section of
+- [x] In the Files and changes section of
       `docs/protocol/workspaces-and-sandboxes.md`, say that a file or diff
       tab opens at the end of the row. Link to the rules of the row.
-- [ ] Add a line to decision 77 in `plans/boat-native-remote-workspaces.md`
+- [x] Add a line to decision 77 in `plans/boat-native-remote-workspaces.md`
       that says decision 142 changed it on 8 November 2026.
-- [ ] Check the relative links of each changed Markdown file.
+- [x] Check the relative links of each changed Markdown file.
 
 ## Milestone 3: Tab order in the chat state
 
@@ -618,8 +620,8 @@ full row.
       mockup draws them. Bind no drag in a read-only workspace or on a tab
       that shows its rename field.
 - [ ] Add the full row: the sideways scroll, the scroll of each new or
-      shown tab into view, the shared wheel helper, the fades, and the
-      scroll of a drag near an end.
+      shown tab into view, also when the row gets narrower, the shared
+      wheel helper, the fades, and the scroll of a drag near an end.
 - [ ] Add the item that is off and the placement at a point to the `Menu`
       part of the chat.
 - [ ] Remove the Rename button from `Tab` in
@@ -659,8 +661,10 @@ full row.
         of `src/chat/components/ReadOnlyChat.dom.test.tsx` from the Rename
         button to the tab menu.
   - [ ] A vertical wheel turn over the row scrolls it sideways.
-- [ ] Update `src/chat/README.md`, `src/files/README.md`, and
-      `src/shell/workspace/README.md`.
+- [ ] Update `src/chat/README.md`, `src/files/README.md`,
+      `src/shell/workspace/README.md`, and
+      `src/shell/workspace/screen-parts.md`, which says that the file tabs
+      come after the session tabs.
 
 ## Milestone 5: Share the drag mechanics with the workspace list
 

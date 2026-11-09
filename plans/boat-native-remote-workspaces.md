@@ -2962,6 +2962,9 @@ review.
 - **Recommendation:** A.
 - **Chosen:** A, by the user on 6 November 2026. The chat protocol states
   it.
+- **Changed by decision 142 on 8 November 2026:** the user can move any
+  tab, a session or a file, to any place in the row. A new tab still opens
+  at the end of the row. `plans/move-tabs-by-drag.md` records the decision.
 
 ### 78. Bind each invitation to the person it names
 
