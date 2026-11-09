@@ -100,7 +100,7 @@ export function workspaceLinkConversations(history: readonly ChatItem[]) {
         target: 'gh pr edit 482 --body-file pr.md',
         status: 'done',
       },
-      { kind: 'agent', id: 'link-answer', paragraphs: linkAnswer },
+      { kind: 'agent', id: 'link-answer', blocks: linkAnswer },
       {
         kind: 'turn-end',
         id: 'link-turn-end',
@@ -125,7 +125,7 @@ export function workspaceLinkConversations(history: readonly ChatItem[]) {
       {
         kind: 'agent',
         id: 'other-org-answer',
-        paragraphs: [
+        blocks: [
           "That link is a workspace of another org, so I can't read its branch from here. Paste the fix, and I'll apply it.",
         ],
       },

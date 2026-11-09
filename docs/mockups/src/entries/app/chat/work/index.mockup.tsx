@@ -36,5 +36,15 @@ export const chatWork = defineScreen({
         'The user chose A of decision 151 on 9 November 2026: a Mac command card and a lost line of the turn fold with its work at their place. They add no count and no mark to the line of the fold.',
       props: { conversation: 'mac-in-work', fold: 'open' },
     },
+    {
+      slug: 'table',
+      title: 'Tables in open work',
+      description:
+        'The work of a finished turn holds two messages with tables. The first message is closed: its line shows the cells of its table as text, with a dot between two cells, and an ellipsis cuts it. The user opened the second message, so its line shows its first words, and its table shows under the line, at the left edge of the text.',
+      rationale:
+        'A closed message stays one line, so the steps of the work stay close together, also when a message holds a table. A table needs the width of the chat to read, so the open message shows it under its line, in the look of a table in a reply. A table wider than the chat scrolls sideways inside the message.',
+      relatedDocs: ['docs/protocol/chat-markdown.md'],
+      props: { conversation: 'tables-in-work', fold: 'open-message' },
+    },
   ],
 })
