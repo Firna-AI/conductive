@@ -131,6 +131,9 @@ These agent calls are also dated 2026-11-09. The Milestone 1 mockups showed the 
   On a phone, that link is then a 44 px target that covers no other text.
   The author steps describe this pattern. It adds no check, and links in sentences stay allowed.
 
+This agent call is also dated 2026-11-09. Commit af96807 on `main` changed app access, so Milestone 2a corrects the access copy of the docs mockups.
+Milestone 2b takes the first writing task of Milestone 3, because the writing can proceed while 2a corrects the sample copy. Both read the same requirements and change different files, so they can run in parallel.
+
 The Mac downloads plan on `calummoore/desktop-app-website-mention` changes
 the same header, footer, and maintenance guidance. Merge its changes through
 `main` before implementation when available. Preserve both sets of links.
@@ -146,29 +149,7 @@ Technical references:
 
 ## Launch guides
 
-The guide title is followed by its source for requirements. The writer must
-also inspect the current screens and code before making a product claim.
-The source paths below remain internal. Public guides link to other public pages.
-
-| Page | Public path | Internal source |
-| --- | --- | --- |
-| Overview | `/docs` | [Architecture](../docs/architecture.md) |
-| Get started | `/docs/get-started` | [Orgs and members](../docs/protocol/orgs-and-members.md#get-started) |
-| Agent logins | `/docs/agent-logins` | [Chat and events](../docs/protocol/chat-and-events.md#agents), [Security](../docs/protocol/access-and-security.md) |
-| Workspaces | `/docs/workspaces` | [Create a workspace](../docs/protocol/create-a-workspace.md), [Workspaces](../docs/protocol/workspaces-and-sandboxes.md) |
-| Sessions and chat | `/docs/sessions-and-chat` | [Chat and events](../docs/protocol/chat-and-events.md) |
-| Files and changes | `/docs/files-and-changes` | [Workspace tools](../docs/protocol/workspace-tools.md#files-and-changes) |
-| Terminal and previews | `/docs/terminal-and-previews` | [Workspace tools](../docs/protocol/workspace-tools.md) |
-| Pull requests | `/docs/pull-requests` | [GitHub banner](../docs/protocol/github-banner.md) |
-| Cloud computer | `/docs/cloud-computer` | [Org image](../docs/protocol/workspaces-and-sandboxes.md#the-org-image) |
-| Orgs and members | `/docs/orgs-and-members` | [Orgs and members](../docs/protocol/orgs-and-members.md) |
-| Mac app | `/docs/mac-app` | [Mac app](../docs/protocol/desktop-app.md), [Releases](../desktop/RELEASES.md) |
-| Security | `/docs/security` | [Access and security](../docs/protocol/access-and-security.md), [Agent tools](../docs/protocol/agent-tools.md) |
-
-The Mac app guide must use the release state at writing time.
-The live sandbox desktop is currently hidden. Do not describe it as an available tool.
-The security guide must explain the access that agents have to repository
-code and credentials, in product language that matches the current requirements.
+The launch keeps 12 guides. [Source references](../src/marketing/docs-authoring.md#source-references) in the author page lists each guide with its public path, sources, and writing notes. That page outlives this plan.
 
 ## Milestone 1: Docs mockups completed
 
@@ -209,18 +190,38 @@ The `docs implementor` records the selected public behaviour before implementati
 
 Evidence: `.context/website-docs/implementation/m2-docs-report.md` and `m2-markdown-check.md`.
 
+## Milestone 2a: App access in the docs mockups completed
+
+Tags: mockup
+
+Depends on: 1, 2
+
+Since commit af96807 on `main`, a new account waits for app access before Get started. The `ui implementor` corrects the docs mockups for it.
+
+- [x] Update the Get started sample for app access through the waitlist and invite codes. Keep the approved layout.
+- [x] In [The marketing site](../docs/mockups/marketing-site.md), the desktop header still names "Start free with GitHub". Change it to "Join the waitlist".
+- [x] Run `npm run mockups:check`. Compare the changed views on a desktop and a phone, with each phone disclosure open.
+- [x] Update this plan's design and TODOs for each problem that the changed mockups show.
+
+## Milestone 2b: Overview and Get started guides completed
+
+Depends on: 2
+
+The `external docs implementor` writes the first two guides, in parallel with Milestone 2a.
+
+- [x] The `external docs implementor` writes the complete Overview and Get started Markdown pages.
+      Follow the current onboarding flow, including the automatic first org-image build.
+      Also follow the current app access flow, with the waitlist and invite codes, as [Waitlist](../docs/protocol/waitlist.md) says.
+
 ## Milestone 3: Markdown collection and docs layout
 
 Tags: ui
 
-Depends on: 1, 2
+Depends on: 1, 2, 2a, 2b
 
-The `external docs implementor` first writes Overview and Get started.
-The `ui implementor` then builds the approved design in Astro with those guides.
+The `ui implementor` builds the approved design in Astro, with the mockups of Milestone 2a and the guides of Milestone 2b.
 The site stays usable with a complete overview and Get started guide.
 
-- [ ] The `external docs implementor` writes the complete Overview and Get started Markdown pages.
-      Follow the current onboarding flow, including the automatic first org-image build.
 - [ ] The `ui implementor` adds the content collection and integrates the two completed guides.
 - [ ] Add `/docs` and `/docs/<page>` through Astro's static page generation.
       Use collection metadata and the documented defaults and sorting for navigation. Add no new metadata-rejection gate.
@@ -243,7 +244,7 @@ Depends on: 3
 
 The `external docs implementor` writes the remaining ten guides and checks all 12.
 
-- [ ] Write the remaining ten launch guides from the table above.
+- [ ] Write the remaining ten launch guides that [Source references](../src/marketing/docs-authoring.md#source-references) lists.
       Explain the user's actions, prerequisites, results, and relevant recovery steps.
 - [ ] Confirm each claim against the current requirements and implementation.
       Distinguish the Mac app from the hidden live desktop of a sandbox.
@@ -272,7 +273,7 @@ The `non-ui implementor` extends the existing marketing integration tests.
 
 ## Milestone 6: Verification, review, and pull request
 
-Depends on: 1, 2, 3, 4, 5
+Depends on: 1, 2, 2a, 2b, 3, 4, 5
 
 The orchestrator owns the combined checks and the pull request.
 

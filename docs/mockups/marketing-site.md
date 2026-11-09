@@ -15,8 +15,8 @@ promises no use at once either.
 for the header, the hero, the last call to action, and the footer. The
 parts live in `src/components/marketing/`.
 
-The header of a desktop has Features, Docs, GitHub, Sign in, and Start
-free with GitHub. A phone keeps the wordmark, Docs, GitHub, and Sign in.
+The header of a desktop has Features, Docs, GitHub, Sign in, and Join the
+waitlist. A phone keeps the wordmark, Docs, GitHub, and Sign in.
 Each link of the phone header is a 44 px target. There GitHub shows only
 its mark, in a square named "GitHub", so that the links fit on a 360 px
 phone. GitHub leads to the public source repository in both layouts. The

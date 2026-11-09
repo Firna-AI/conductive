@@ -10,6 +10,7 @@ import { paths } from '../paths'
 const sections = {
   before: { id: 'before-you-start', title: 'Before you start' },
   signIn: { id: 'sign-in', title: 'Sign in' },
+  access: { id: 'get-access', title: 'Get access' },
   steps: { id: 'finish-the-three-steps', title: 'Finish the three steps' },
   agent: { id: 'connect-an-agent', title: 'Connect an agent' },
   computer: {
@@ -61,8 +62,7 @@ function GetStartedBody() {
       <h2 id={sections.signIn.id}>{sections.signIn.title}</h2>
       <p>
         Choose Continue with GitHub on the sign-in page. Each sign-in accepts
-        the Terms of use, and a new account signs up in the same step. Get
-        started then shows three steps.
+        the Terms of use. Your first sign-in also creates your account.
       </p>
       <ul>
         <li>
@@ -72,6 +72,31 @@ function GetStartedBody() {
           <ScreenLink to={paths.terms}>Read the Terms of use</ScreenLink>
         </li>
       </ul>
+      <h2 id={sections.access.id}>{sections.access.title}</h2>
+      <p>
+        A new account starts on the waitlist. Until you have access, the app
+        shows only the waitlist screen. One of these gives you access:
+      </p>
+      <ul>
+        <li>
+          <strong>Invite code</strong>: type it on the waitlist screen, then
+          choose Use code. An invite link comes with its code, so you do not
+          type it.
+        </li>
+        <li>
+          <strong>Org invitation</strong>: an org admin invites an email address
+          that is verified on your GitHub account. Choose Accept invitation on
+          the waitlist screen.
+        </li>
+        <li>
+          <strong>Approval</strong>: otherwise, you wait for an approval. If a
+          primary verified email is available, the notice goes there.
+        </li>
+      </ul>
+      <p>
+        After an invite code or an approval, Get started opens with three steps.
+        An accepted invitation opens its org instead.
+      </p>
       <h2 id={sections.steps.id}>{sections.steps.title}</h2>
       <ol>
         <li>
@@ -166,7 +191,7 @@ function GetStartedBody() {
 /** The Get started guide, at `/docs/get-started`. */
 export const docsGetStartedPage: DocsPage = {
   guide: 'get-started',
-  lead: 'Sign in with GitHub, create an org, and connect an agent. Then give the agent its first task.',
+  lead: 'Sign in with GitHub and get access. Then create an org, connect an agent, and give the agent its first task.',
   sections: Object.values(sections),
   body: <GetStartedBody />,
 }

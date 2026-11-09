@@ -153,8 +153,8 @@ No code or setup in this repository creates those mailboxes.
 The public docs are guides to the product at `/docs`.
 [Website docs](../../docs/protocol/website-docs.md) states their
 requirements, and [The docs](../../docs/mockups/marketing-site.md#the-docs)
-of the marketing mockups is their visual spec. The site does not serve
-them yet: no route, docs layout, or guide file exists.
+of the marketing mockups is their visual spec. The first two guide files
+are ready. The routes and docs layout do not serve them yet.
 [Writing the public guides](docs-authoring.md) gives the rules and the
 steps for their authors.
 
