@@ -1,0 +1,37 @@
+---
+import { productName } from '../../../../../docs/mockups/src/brand'
+import {
+  githubSetupCopy,
+  type GitHubSetupOutcome,
+} from '../../../../../docs/mockups/src/screens/githubSetupCopy'
+import Wordmark from '../../../components/Wordmark.astro'
+import Document from '../../../layouts/Document.astro'
+import { siteOriginHrefs } from '../../../request-values'
+
+export function getStaticPaths() {
+  return Object.entries(githubSetupCopy).map(([outcome, copy]) => ({
+    params: { outcome },
+    props: { copy },
+  }))
+}
+
+type Props = { copy: (typeof githubSetupCopy)[GitHubSetupOutcome] }
+
+const { copy } = Astro.props
+---
+
+<Document title={`${copy.title} – ${productName}`} description={copy.text}>
+  <header class="header">
+    <div class="header-inner">
+      <Wordmark home={siteOriginHrefs.home} />
+    </div>
+  </header>
+  <main class="main text-page">
+    <article class="text-article">
+      <header class="text-head">
+        <h1 class="text-title">{copy.title}</h1>
+        <p class="text-lead">{copy.text}</p>
+      </header>
+    </article>
+  </main>
+</Document>

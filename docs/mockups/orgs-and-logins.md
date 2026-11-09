@@ -30,20 +30,20 @@ plan limits.
   messages of other members use that login only while that member shares
   it, with the switch under each login of the account. So a reassign
   changes no login, and the cloud computer keeps running.
-- The line under the composer names the login that a message uses, such
-  as "Uses Cal's Claude login" in `app/composer/login`, or "Uses your Claude
-  login". When the login of the member who started a session is not
-  available, a message of another member starts a new session. The notice
-  over the composer of the first session says so, and its chat stays as it
-  was, as `app/sessions/no-starter-login` shows. The same happens when that
-  member does not share the login. The notice then says that the login is
-  for the messages of that member only, as `app/composer/not-shared` shows.
-  In both cases, the line under the composer names the own login of the
-  viewer, and a message does not steer a running turn. A viewer without a
-  login for the agent sees the notice that asks to connect, as
-  `app/composer/no-agent` shows. The new session starts with a line that
-  links back to the first session, then the new message, as
-  `app/sessions/linked` shows. The parts live in
+- When a message uses the login of another member, the bar of the
+  composer names that login after the model picker, such as "Cal's login"
+  in `app/composer/login`. So the box keeps its place. A message on the own
+  login of the viewer shows no name. When the login of the member who
+  started a session is not available, a message of another member starts
+  a new session. The notice over the composer of the first session says
+  so, and its chat stays as it was, as `app/sessions/no-starter-login`
+  shows. The same happens when that member does not share the login. The
+  notice then says that the login is for the messages of that member only,
+  as `app/composer/not-shared` shows. In both cases, a message does not
+  steer a running turn. A viewer without a login for the agent sees the
+  notice that asks to connect, as `app/composer/no-agent` shows. The new
+  session starts with a line that links back to the first session, then
+  the new message, as `app/sessions/linked` shows. The parts live in
   `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
 - A stopped turn names the member who pressed Stop, from decision 72,
   because all members of an org see the same chat. That member sees "You

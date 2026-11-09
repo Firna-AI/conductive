@@ -45,7 +45,10 @@ assets binding.
   It keeps `default-src 'none'`, images and fonts from `'self'`, and
   `base-uri`, `form-action`, and `frame-ancestors` set to `'none'`.
 - The app host serves the built agreement page only through sign-in.
-  The Worker fills its Continue address and site-origin markers.
+  It also serves the built GitHub install return page at `/github/setup`
+  for an install that started in the Mac app. That page tells the user
+  to go back to the Mac app.
+  The Worker fills the agreement's Continue address and the site-origin markers.
   It keeps the same page headers, with `Cache-Control: no-store`.
   The app host also serves listed site files under `/_site/`. Other paths
   there get the app page, as an unknown app path does.
@@ -180,6 +183,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.
   The agreement preview is at `/app-host/terms-consent`.
+  The GitHub return previews are at `/app-host/github-setup/installed`
+  and `/app-host/github-setup/requested`.
 - Run `npm run site:build` to write the pages, files, and file list into
   `public/_site/`, which Git ignores. `npm run dev` and `npm run build`
   build the site first. Restart the Worker after rebuilding the site so
@@ -205,6 +210,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   marker replacement with HTML escaping.
 - [`worker/marketing/consent.ts`](../../worker/marketing/consent.ts): the
   agreement response for sign-in on the app host.
+- [`worker/marketing/github-setup.ts`](../../worker/marketing/github-setup.ts):
+  the built GitHub install return page for the Mac app.
 - [`worker/marketing/assets.ts`](../../worker/marketing/assets.ts): site
   asset reads and the app host's handling of other site paths.
 - `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
