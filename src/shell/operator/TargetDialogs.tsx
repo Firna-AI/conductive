@@ -13,6 +13,26 @@ import { useAction } from '../ui/useAction'
 import { targetName, type Target } from './TargetParts'
 
 /**
+ * The write of a question, and the dismissal of the question. While the
+ * write runs, nothing closes the question, as the Archive question does:
+ * Cancel is off, and Escape and a press outside do nothing, on desktop and
+ * in the sheet of a phone. A dismissal cannot stop the write, and a failure
+ * shows in the question. The rest of the page is inert while the question
+ * shows, so no newer question opens before the write ends, and the close
+ * after the write closes only its own question.
+ */
+function useQuestion(write: () => Promise<void>, close: () => void) {
+  const action = useAction(async () => {
+    await write()
+    close()
+  })
+  const dismiss = () => {
+    if (!action.pending) close()
+  }
+  return { ...action, dismiss }
+}
+
+/**
  * The operator confirms a suspension. The question says what stops, what the
  * members keep, and that the files of a stopped workspace can be deleted. On
  * the operator's own page it warns first. A failed suspension shows its error,
@@ -27,15 +47,14 @@ export function SuspendDialog(props: {
 }) {
   const { target } = props
   const name = targetName(target)
-  const suspend = useAction(async () => {
-    await props.suspend()
-    props.close()
-  })
+  const suspend = useQuestion(props.suspend, props.close)
   return (
     <Dialog
       actions={
         <>
-          <ActionButton onPress={props.close}>Cancel</ActionButton>
+          <ActionButton disabled={suspend.pending} onPress={suspend.dismiss}>
+            Cancel
+          </ActionButton>
           <ActionButton
             busy={suspend.pending}
             icon={Ban}
@@ -46,7 +65,7 @@ export function SuspendDialog(props: {
           </ActionButton>
         </>
       }
-      close={props.close}
+      close={suspend.dismiss}
       title={`Suspend ${name}?`}
     >
       {props.self ? (
@@ -78,15 +97,14 @@ export function LiftDialog(props: {
 }) {
   const { target } = props
   const name = targetName(target)
-  const lift = useAction(async () => {
-    await props.lift()
-    props.close()
-  })
+  const lift = useQuestion(props.lift, props.close)
   return (
     <Dialog
       actions={
         <>
-          <ActionButton onPress={props.close}>Cancel</ActionButton>
+          <ActionButton disabled={lift.pending} onPress={lift.dismiss}>
+            Cancel
+          </ActionButton>
           <ActionButton
             busy={lift.pending}
             icon={LockOpen}
@@ -97,7 +115,7 @@ export function LiftDialog(props: {
           </ActionButton>
         </>
       }
-      close={props.close}
+      close={lift.dismiss}
       title={`Lift the suspension of ${name}?`}
     >
       <DialogText>{liftGivesBack(target.kind, name)}</DialogText>

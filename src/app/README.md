@@ -26,8 +26,11 @@ pull request bar, and the owner picker. A host can give its own parts, as
   switcher show Operator. The [operator section](../shell/operator/README.md)
   then shows the sample orgs and users of the mockups, and Suspend and Lift
   change them. A suspension of Acme, Futex, or Firna also suspends that org
-  in the org list of the dev user. Without the option, each operator
-  request gets `operator_required`, as the Worker does.
+  in the state of the fake, so the fake refuses each write of that org with
+  `org_suspended`. The open app does not read its orgs again, so its pages
+  of that org show the suspension only after such a refusal. Without the
+  option, each operator request gets `operator_required`, as the Worker
+  does.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds

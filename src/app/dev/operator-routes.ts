@@ -35,7 +35,12 @@ function ids(count: number, prefix: string): string[] {
  * The operator section of the dev fake: the sample orgs and users of the
  * mockups, which Suspend and Lift change. Only an operator, from
  * `operator=1`, gets an answer, as the Worker says. A suspension of an org
- * of the user also suspends it in the org list, so its other pages follow.
+ * of the user also suspends it in the state of the fake, so the fake
+ * refuses each write of that org with `org_suspended`. The open app does
+ * not read its orgs again, so its pages of that org show the suspension
+ * only after such a refusal. After a lift, the fake takes the writes of
+ * that org again, and the app keeps the mark of a refusal until it loads
+ * again.
  */
 export function operatorRoutes(backend: DevBackend): Route[] {
   const { state } = backend
@@ -63,7 +68,10 @@ export function operatorRoutes(backend: DevBackend): Route[] {
     githubId: state.account.user.githubId,
     login: state.account.user.githubLogin,
   })
-  /** The org of the user with the same ID follows its suspension. */
+  /**
+   * The org of the user with the same ID, in the state of the fake, follows
+   * its suspension, so that the fake refuses its writes as the Worker does.
+   */
   const follow = (orgId: string, suspendedAt: number | null) => {
     for (const item of state.orgs) {
       if (item.org.id !== orgId) continue

@@ -23,13 +23,11 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const overviewPath = operatorOverviewPath()
 
-/** The words of the platform for a UTC day, as the chart writes a date. */
-function utcDay(month: number, day: number, year: number): string {
-  return new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  }).format(Date.UTC(year, month - 1, day))
+/** The labels of the axis of a chart that name a day, such as "17 Dec". */
+function axisDays(chart: HTMLElement): string[] {
+  return Array.from(chart.querySelectorAll('*'), (element) =>
+    element.children.length === 0 ? (element.textContent ?? '') : '',
+  ).filter((text) => /^\d{1,2} [A-Z][a-z]+$/.test(text))
 }
 
 describe('the Overview of the operator section', () => {
@@ -86,8 +84,8 @@ describe('the Overview of the operator section', () => {
     })
   })
 
-  test.each(['Pacific/Pago_Pago', 'Pacific/Noumea'])(
-    'places each day of a chart at noon UTC, so in %s its first and last points name their UTC days',
+  test.each(['America/Los_Angeles', 'Pacific/Tongatapu'])(
+    'names each day of a chart by its UTC day in %s, on the axis and on its points',
     async (zone) => {
       const before = process.env.TZ
       process.env.TZ = zone
@@ -98,15 +96,30 @@ describe('the Overview of the operator section', () => {
       const server = new FakeApiServer()
       serveOperator(server)
       await mountShell(server, '/operator')
-      const points = queryAllByRole(
-        'button',
-        `${utcDay(12, 17, 2026)}. New workspaces: 9`,
-      )
-      const last = queryAllByRole(
-        'button',
-        `${utcDay(1, 15, 2027)}. New workspaces: 16`,
-      )
-      expect([points.length, last.length]).toEqual([1, 1])
+      const chart = byText('New workspaces').closest('section')
+      if (!chart) throw new Error('The page has no chart of new workspaces.')
+      const point = (label: string) =>
+        queryAllByRole('button', label, chart).length
+      expect({
+        axis: axisDays(chart),
+        first: point('17 Dec. New workspaces: 9'),
+        last: point('15 Jan. New workspaces: 16'),
+      }).toEqual({
+        axis: [
+          '17 Dec',
+          '20 Dec',
+          '23 Dec',
+          '26 Dec',
+          '29 Dec',
+          '1 Jan',
+          '4 Jan',
+          '7 Jan',
+          '10 Jan',
+          '13 Jan',
+        ],
+        first: 1,
+        last: 1,
+      })
     },
   )
 

@@ -51,8 +51,10 @@ the last search.
 - Suspend sends `POST` and Lift sends `DELETE` to the suspension path of
   the target, each with the body `{}`, as the gate of the app asks. After
   either, the page reads the target again.
-- The question stays open while the write runs. A failed write shows its
-  error in the question, and the question stays open.
+- The question stays open while the write runs. Cancel is off, and
+  Escape and a press outside do nothing, on desktop and in the sheet of a
+  phone. A failed write shows its error in the question, and the question
+  stays open.
 - The reply of a suspension names the stops that have not finished. The
   page counts them in its notice until the page closes or a lift.
 - A suspension of the operator's own account ends every session of the
@@ -61,15 +63,17 @@ the last search.
 ## Parts shared with the mockups
 
 The section reuses the parts of the mockups that import no fixture:
-`WorkspaceStates`, the words of `operatorCopy.ts`, and the CSS modules of
-`docs/mockups/src/components/operator/`. So the app and the mockups keep
-the same words and look.
+`WorkspaceStates`, `DailyChart`, the words of `operatorCopy.ts`, and the
+CSS modules of `docs/mockups/src/components/operator/`. So the app and the
+mockups keep the same words, dates, and look.
 
-The table under each daily chart is the section's own. The table of the
-Firna chart names each day of a time axis by its number of milliseconds,
-so `DailyChart` turns it off and lists the UTC days itself. Each day of a
-chart sits at noon UTC, so that its local date is its UTC day from UTC-11
-to UTC+11.
+`DailyChart` names each point and each label of its axis with the words
+of its UTC day, such as "10 Oct", in British English. So no time zone and
+no locale of the browser changes a date. The axis has one slot for each
+day, and it shows every few labels, so the labels leave out the year. The
+table of the Firna chart cannot name its first column, so `DailyChart`
+turns it off and lists the UTC days in its own table. A day of another
+year than the last day has its year there.
 
 ## Development
 
@@ -87,9 +91,9 @@ to UTC+11.
 - `OperatorRoutes.tsx`: the access check, the frames, and the page of each
   address.
 - `OperatorPage.tsx`: the header and the tabs of each page.
-- `OverviewTab.tsx`, `OverviewParts.tsx`, `DailyChart.tsx`, and
-  `OverviewLoading.tsx`: the Overview, its tiles, charts, largest orgs, and
-  placeholders.
+- `OverviewTab.tsx`, `OverviewParts.tsx`, and `OverviewLoading.tsx`: the
+  Overview, its tiles, largest orgs, and placeholders. Its charts are
+  `DailyChart` of `docs/mockups/src/components/operator/`.
 - `OrgsTab.tsx`, `UsersTab.tsx`, `DirectoryList.tsx`, and
   `SearchField.tsx`: the searches and their rows.
 - `OrgPage.tsx`, `UserPage.tsx`, `TargetPage.tsx`, and

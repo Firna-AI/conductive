@@ -242,11 +242,12 @@ on 8 November 2026:
   workspaces by state names the builds, so that the two numbers agree.
 - New users in the last 30 days show as a second chart, with the total of
   the 30 days above it. The chart of new workspaces does the same.
-- Each chart is a line with an area over a time axis, because the labels
-  of 30 daily columns did not fit. The axis shows about five dates, and
-  the table toggle lists every day.
-- Each day of a chart sits at noon UTC, so that its local date is the UTC
-  day in each time zone from UTC-11 to UTC+11.
+- Each chart is a line with an area. Since finding 51 of the review, its
+  axis has one slot for each day, labelled with the UTC day, such as
+  "10 Oct", and it shows every third label on desktop and every sixth on
+  a phone. No date of a chart depends on the time zone or the locale of
+  the browser.
+- One shared chart part serves the app and the mockups.
 - The largest orgs are the five orgs with the most workspaces, archived
   ones included. A tie goes by org name. Deleted orgs are left out.
 - A phone leaves out the Members column of the largest orgs, so that each
@@ -383,8 +384,9 @@ checked by the orchestrator:
   year fits. The mockups follow.
 - The builds line of an org page says "2 cloud computer builds also run
   now", because an org page has no Running now tile.
-- The data table under each chart is the app's own, with UTC days,
-  because the table of the Firna chart lists a time axis as milliseconds.
+- The data table under each chart is the chart part's own, with a "UTC
+  day" column, because the table of the Firna chart cannot name its first
+  column.
 - The stopping sentence has a singular form, and it shows on a user page
   after a suspension too.
 - The initials of a user with no name come from the login, by the rule

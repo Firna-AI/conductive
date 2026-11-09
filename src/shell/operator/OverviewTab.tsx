@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CircleAlert, RefreshCw, RotateCw } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { DailyChart } from '../../../docs/mockups/src/components/operator/DailyChart'
 import { WorkspaceStates } from '../../../docs/mockups/src/components/operator/WorkspaceStates'
 import { readOperatorOverview } from '../../app/api/read-operator'
 import { OperatorRead } from '../../app/operator-read'
@@ -16,7 +17,6 @@ import { useViewport } from '../ui/viewport'
 import { formatClock } from './format'
 import { OperatorPage } from './OperatorPage'
 import { OverviewLoading } from './OverviewLoading'
-import { DailyChart } from './DailyChart'
 import { LargestOrgs, OverviewTiles } from './OverviewParts'
 
 function OverviewNumbers(props: {
@@ -24,6 +24,7 @@ function OverviewNumbers(props: {
   refreshing: boolean
 }) {
   const { overview, refreshing } = props
+  const narrow = useViewport() === 'phone'
   return (
     <>
       <OverviewTiles overview={overview} />
@@ -34,13 +35,13 @@ function OverviewNumbers(props: {
       />
       <DailyChart
         days={overview.newWorkspacesByDay}
-        readAt={overview.readAt}
+        narrow={narrow}
         refreshing={refreshing}
         title="New workspaces"
       />
       <DailyChart
         days={overview.newUsersByDay}
-        readAt={overview.readAt}
+        narrow={narrow}
         refreshing={refreshing}
         title="New users"
       />

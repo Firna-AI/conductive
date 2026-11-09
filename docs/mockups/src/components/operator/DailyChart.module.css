@@ -1,6 +1,6 @@
 /*
- * The toggle of the table under a daily chart. It has the look of the
- * table toggle of the Firna chart, whose table names each day by a number.
+ * The toggle and the table of the days under a daily chart. The toggle
+ * has the look of the table toggle of the Firna chart.
  */
 .tableFooter {
   display: flex;

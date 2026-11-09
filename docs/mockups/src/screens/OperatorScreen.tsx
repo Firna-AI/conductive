@@ -49,14 +49,14 @@ function OperatorBody(props: { state: OperatorState; viewport: Viewport }) {
             page="overview"
           />
           <DailyChart
-            rows={newWorkspacesByDay}
+            days={newWorkspacesByDay}
+            narrow={props.viewport === 'mobile'}
             title="New workspaces"
-            viewport={props.viewport}
           />
           <DailyChart
-            rows={newUsersByDay}
+            days={newUsersByDay}
+            narrow={props.viewport === 'mobile'}
             title="New users"
-            viewport={props.viewport}
           />
           <LargestOrgs viewport={props.viewport} />
         </>

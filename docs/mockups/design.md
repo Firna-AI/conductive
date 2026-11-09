@@ -147,7 +147,14 @@ chat, and five tabs at the bottom.
 - Suspend and Lift sit in the header of the page of an org or a user, and
   in its footer on a phone. Each asks first, with `ConfirmDialog`. The
   words of the questions and the notices live in `operatorCopy.ts`, which
-  imports no fixture, so the app uses them too. So does `WorkspaceStates`.
+  imports no fixture, so the app uses them too. So do `WorkspaceStates`
+  and `DailyChart`.
+- `DailyChart` names each point and each label of its axis with the UTC
+  day, such as "10 Oct", in British English, so that no time zone and no
+  locale of a browser or of the build machine changes a date. Its axis has
+  one slot for each day and shows every few labels, so the labels leave
+  out the year. Its own table lists the UTC days, because the table of the
+  Firna chart cannot name its first column.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its rename and close buttons.
