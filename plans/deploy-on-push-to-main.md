@@ -1,6 +1,6 @@
 # Deploy on push to main
 
-Status: Active. On branch `calummoore/deployment-on-merge-to-main`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #82](https://github.com/Firna-AI/remote-code/pull/82) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 No push deploys the app today. An agent deployed the test app at
 `conductive.build` by hand, from the primary branch of the Boat-native
@@ -447,9 +447,12 @@ Depends on: 1, 2, 3
       `.context/reviews/calummoore/deployment-on-merge-to-main/findings.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
+- [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
-      and the follow-up items that the change adds.
+      and the follow-up items that the change adds. Done on 9 November 2026:
+      [PR #82](https://github.com/Firna-AI/remote-code/pull/82), opened
+      before the plan's deletion, because the setup steps of the user above
+      are still open.
 
 ## Post-merge follow-up (non-blocking)
 
