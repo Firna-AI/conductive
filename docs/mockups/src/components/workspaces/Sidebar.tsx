@@ -13,8 +13,9 @@ import styles from './Sidebar.module.css'
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
  * link, New workspace, Routines, and the sections of the org. A suspended
- * org shows its sections without New workspace, Routines, and their menus,
- * because nothing in it can change.
+ * org shows its sections without New workspace and without their menus,
+ * because nothing in it can change. Its Routines link stays, because a
+ * suspension keeps every read, and it opens the routines of that org.
  */
 export function Sidebar(props: {
   org: Org
@@ -42,18 +43,19 @@ export function Sidebar(props: {
         />
       </div>
       <div className={styles.scroll} data-mokly-scroll="workspace-list">
-        {suspended ? null : (
-          <div className={styles.links}>
+        <div className={styles.links}>
+          {suspended ? null : (
             <NewWorkspaceLink
               current={props.current === 'new-workspace'}
               variant="sidebar"
             />
-            <RoutinesLink
-              current={props.current === 'routines'}
-              variant="sidebar"
-            />
-          </div>
-        )}
+          )}
+          <RoutinesLink
+            current={props.current === 'routines'}
+            to={suspended ? paths.suspendedRoutines : undefined}
+            variant="sidebar"
+          />
+        </div>
         <SectionList
           archived={props.archived}
           drag={props.drag}

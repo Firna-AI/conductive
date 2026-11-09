@@ -1,5 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { ChevronDown, ChevronUp, Clock, GitPullRequest, X } from 'lucide-react'
+import { orgs } from '../../fixtures/orgs'
 import type { TriggerEdit } from '../../fixtures/routineTriggers'
 import type { Trigger } from '../../fixtures/routines'
 import { paths } from '../../paths'
@@ -36,7 +37,7 @@ function FilterSummary(props: { trigger: Trigger }) {
   if (trigger.kind !== 'pull-request' || !trigger.authors) return null
   return (
     <span className={styles.summary}>
-      {authorSummary(trigger.authors).map((line) => (
+      {authorSummary(trigger.authors, orgs.acme.name).map((line) => (
         <span key={line}>{line}</span>
       ))}
     </span>

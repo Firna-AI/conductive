@@ -11,7 +11,10 @@ export type TriggerEdit = {
   trigger: Trigger
   /** The author filter of a pull request trigger is open. */
   filterOpen?: true
-  /** Text typed in the Author is list, which the members match. */
+  /**
+   * Text typed in the Author is list, which the suggestions match. An empty
+   * text is a field with the focus, which offers every suggestion.
+   */
   typed?: string
   /** A login of the filter that names no GitHub account. Save refused it. */
   unknownLogin?: string
@@ -37,9 +40,13 @@ export type TriggerView = (typeof triggerViewKeys)[number]
 /** The views that draw the saved triggers of the routine. */
 type SavedView = 'saved' | 'menu'
 
-/** Cal's teammates in Acme, and the bot that opens dependency updates. */
+/**
+ * The members of Acme and the bot that opens dependency updates. Cal added
+ * the bot to an empty list, so the list added Members of Acme first.
+ */
 const authors: AuthorFilter = {
-  is: ['priyaraman', 'jonasweber', 'dependabot[bot]'],
+  members: true,
+  is: ['dependabot[bot]'],
   isNot: [],
 }
 
@@ -66,7 +73,7 @@ const triggerEdits: Readonly<
       trigger: {
         kind: 'pull-request',
         event: 'pushed',
-        authors: { is: [], isNot: ['calummoore'] },
+        authors: { members: false, is: [], isNot: ['calummoore'] },
       },
     },
   ],
@@ -75,10 +82,10 @@ const triggerEdits: Readonly<
       trigger: {
         kind: 'pull-request',
         event: 'opened',
-        authors: { is: ['priyaraman', 'dependabot[bot]'], isNot: [] },
+        authors: { members: false, is: ['dependabot[bot]'], isNot: [] },
       },
       filterOpen: true,
-      typed: 'jo',
+      typed: '',
     },
   ],
   'unknown-login': [

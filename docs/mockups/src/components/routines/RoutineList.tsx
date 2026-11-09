@@ -1,7 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
-import type { RoutineRow } from '../../fixtures/routineRuns'
+import type { RoutineRow } from '../../fixtures/routineRows'
 import { repositories } from '../../fixtures/repositories'
-import { paths } from '../../paths'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { StatusText } from '../common/StatusText'
@@ -10,13 +9,6 @@ import { StatusGlyph } from '../workspaces/StatusGlyph'
 import { runStateLabels } from './runCopy'
 import { triggersSummary } from './triggerCopy'
 import styles from './RoutineList.module.css'
-
-/** The routine pages that the mockups draw, as Cal opens them. */
-const routineLinks: Readonly<Record<string, string>> = {
-  'review-prs': paths.routine,
-  'dependency-updates': paths.routineAdmin,
-  'copy-review': paths.routineOwnerLeft,
-}
 
 /** The state of the last run and its time, or no run yet. */
 function LastRun(props: { row: RoutineRow }) {
@@ -55,10 +47,9 @@ function State(props: { row: RoutineRow }) {
   )
 }
 
-function Row(props: { row: RoutineRow; viewport: Viewport }) {
-  const { row } = props
+function Row(props: { row: RoutineRow; to?: string; viewport: Viewport }) {
+  const { row, to } = props
   const { routine } = row
-  const to = routineLinks[routine.key]
   const detail = `${repositories[routine.repository].name} · ${triggersSummary(routine.triggers)}`
   const mobile = props.viewport === 'mobile'
   const content = (
@@ -100,12 +91,19 @@ function Row(props: { row: RoutineRow; viewport: Viewport }) {
  */
 export function RoutineList(props: {
   rows: readonly RoutineRow[]
+  /** The routine pages that the mockups draw, by routine. */
+  links: Readonly<Record<string, string>>
   viewport: Viewport
 }) {
   return (
     <ul aria-label="Routines" className={styles.list}>
       {props.rows.map((row) => (
-        <Row key={row.routine.key} row={row} viewport={props.viewport} />
+        <Row
+          key={row.routine.key}
+          row={row}
+          to={props.links[row.routine.key]}
+          viewport={props.viewport}
+        />
       ))}
     </ul>
   )

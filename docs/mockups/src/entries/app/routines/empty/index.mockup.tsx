@@ -12,7 +12,7 @@ export const emptyRoutines = defineScreen({
     'The empty state names the outcome and has one action, so the header has no second New routine.',
   relatedDocs: [],
   propSchema: routinesSchema,
-  props: { list: 'empty' },
+  props: { list: 'empty', org: 'active' },
   render: (props, context) => (
     <RoutinesScreen state={props} viewport={context.viewport} />
   ),

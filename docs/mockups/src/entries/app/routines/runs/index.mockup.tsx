@@ -10,12 +10,12 @@ const flow = ['user-flows/create-routine']
 export const runs = defineScreen({
   title: 'Runs',
   description:
-    'The runs of the routine that reviews pull requests, newest first: queued, starting, working, needs input, done and unread, ready, stopped, and archived. Each run shows its trigger, its pull request, its time, and its state. A run with a workspace opens it from its row. A phone shows the runs below the form.',
+    'The newest 50 runs of the routine that reviews pull requests: queued, starting, working, needs input, done and unread, ready, stopped, and archived, then older runs. Each run shows its trigger, its pull request, its time, and its state. A run with a workspace opens it from its row. Older runs exist, so Show older runs ends the list. A phone shows the runs on the Runs tab.',
   rationale:
-    'Each run opens a new workspace, from decision 201 A, so a run takes the state of its workspace and the same mark as the workspace list. A queued run has no workspace yet. The pull request of a run opens on GitHub, from option D of decision 205, which the design adds to the chosen A. The run of PR opened #482 opens its workspace.',
+    'Each run opens a new workspace, from decision 201 A, so a run takes the state of its workspace and the same mark as the workspace list. A queued run has no workspace yet. The pull request of a run opens on GitHub, from option D of decision 205, which the design adds to the chosen A. The run of PR opened #482 opens its workspace. The list holds the newest 50 runs, so that each read every 10 seconds stays small, and Show older runs reaches the rest.',
   relatedDocs: [],
   propSchema: routineStateSchema,
-  props: { ...ownerRoutine, focus: 'runs' },
+  props: { ...ownerRoutine, tab: 'runs' },
   render: (props, context) => (
     <RoutineScreen state={props} viewport={context.viewport} />
   ),
@@ -42,10 +42,10 @@ export const runs = defineScreen({
       slug: 'saved',
       title: 'Saved, no runs yet',
       description:
-        'Morning summary after its first save: Weekdays at 09:00 in Europe/London, and no runs yet. Run now starts a run at once.',
+        'Morning summary after its first save: Weekdays at 09:00 in Europe/London, and no runs yet. Run now starts a run at once. A phone shows the Routine tab.',
       rationale:
         'Only the owner uses Run now, because a run spends the logins of the owner. Run now also works while the routine is off, so the owner can test it before its schedule runs.',
-      props: { routine: 'morning-summary', runs: 'none', focus: 'form' },
+      props: { routine: 'morning-summary', runs: 'none', tab: 'routine' },
       useCasePaths: flow,
     },
     {

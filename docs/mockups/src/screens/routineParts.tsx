@@ -15,9 +15,10 @@ import {
   TriggerList,
 } from '../components/routines/TriggerList'
 import { eventLabels, hasSchedule } from '../components/routines/triggerCopy'
+import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { SectionText } from '../components/settings/Section'
 import { agents } from '../fixtures/agents'
-import { orgs } from '../fixtures/orgs'
+import { orgs, suspendedOrg } from '../fixtures/orgs'
 import type { TriggerEdit } from '../fixtures/routineTriggers'
 import type { Routine } from '../fixtures/routines'
 import { paths } from '../paths'
@@ -67,15 +68,29 @@ function ReadOnlyNote(props: { routine: Routine; access: RoutineAccess }) {
   )
 }
 
+/** Why the routine shows without fields: the org, or the access of the person. */
+function Note(props: {
+  routine: Routine
+  access: RoutineAccess
+  suspended: boolean
+}) {
+  if (props.suspended) return <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+  if (props.access === 'owner') return null
+  return <ReadOnlyNote access={props.access} routine={props.routine} />
+}
+
 /**
  * The form of a routine: its fields, its triggers, and its prompt. Only the
- * owner gets fields. Every other member reads the same facts.
+ * owner gets fields. Every other member reads the same facts. In a
+ * suspended org every person reads them under the notice of the org, and
+ * no line names the logins of runs, because no run starts.
  */
 export function RoutineForm(props: {
   routine: Routine
   access: RoutineAccess
   edits: readonly TriggerEdit[]
   menu: boolean
+  suspended: boolean
   viewport: Viewport
 }) {
   const { routine, access } = props
@@ -83,10 +98,10 @@ export function RoutineForm(props: {
   const schedules = hasSchedule(props.edits.map((edit) => edit.trigger))
   let whose: string | undefined = `${routine.owner.name}'s`
   if (access === 'owner') whose = 'your'
-  if (routine.owner.left) whose = undefined
+  if (routine.owner.left || props.suspended) whose = undefined
   return (
     <>
-      {readOnly ? <ReadOnlyNote access={access} routine={routine} /> : null}
+      <Note access={access} routine={routine} suspended={props.suspended} />
       {readOnly ? (
         <RoutineFacts routine={routine} schedules={schedules} />
       ) : (

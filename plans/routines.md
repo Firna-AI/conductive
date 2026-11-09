@@ -454,6 +454,168 @@ Added on 9 November 2026 from a new problem of the options check.
 - **Chosen:** C, by the user on 9 November 2026. The design section "Pull
   request runs" gives the rule and the filter.
 
+### 207. Choose how a pull request run shows and sends its own work
+
+Added on 9 November 2026 from the mockups of Milestone 1.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** The mockup `app/routines/run-workspace`.
+- **Background:** A pull request run starts its own branch at the head
+  commit of the pull request (decision 205 A). Changes and the pull
+  request bar compare each branch with the default branch. Option E of
+  decision 205, which compares with the head commit, stayed out.
+- **Problem:** The run of #482 shows the commits of #482 in Changes, as if
+  the run made them. The bar also offers "Create pull request" for a
+  branch that holds only those commits.
+- **Impact if no action:** A member can open a second pull request with
+  another person's work.
+- **Root question:** How does a pull request run show only its own work,
+  and send that work to the pull request?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Hide "Create pull request" until the branch has commits after
+    the head commit. Changes still shows the commits of the pull request.
+    Effort: Medium.
+  - **C.** Compare Changes with the head commit, and let "Create pull
+    request" open a pull request into the head branch of the pull request.
+    A fix of a run then goes into the pull request that it reviewed.
+    Effort: Medium.
+- **Left out:** Work on the pull request's own branch, option B of decision
+  205. The user chose A, so that no two workspaces share a branch.
+- **Wider fix:** None, because this decision sets a rule for one kind of
+  workspace.
+- **Previous examples:** None found.
+- **Related:** Decision 205 E holds the comparison part of C.
+- **Recommendation:** C. A run then shows and sends only its own work, and
+  Milestone 6 already stores the head commit as `base_sha`.
+- **Action:** ask the user, because C changes what Changes and the pull
+  request bar show for a run workspace, and no requirement covers it.
+
+### 208. Choose how the org keeps a routine whose owner left
+
+Added on 9 November 2026 from the mockups of Milestone 1.
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** The mockup `app/routines/routine/owner-left`.
+- **Background:** When the owner leaves the org, the routine turns off.
+  The owner never changes, and only the owner turns a routine on.
+- **Problem:** An admin can only delete such a routine. A member must copy
+  its triggers and its prompt by hand.
+- **Impact if no action:** Teams rebuild routines by hand when people
+  leave.
+- **Root question:** How does the org keep the work of a routine after its
+  owner leaves?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Add Duplicate for each member who can create a routine. The copy
+    belongs to that member and starts off. Effort: Medium.
+  - **C.** Let an admin give the routine to a member, who accepts it
+    first. It breaks the rule that the owner never changes. Effort:
+    Medium.
+- **Left out:** None.
+- **Wider fix:** None, because this decision adds one action.
+- **Previous examples:** Decision 39 moves the workspaces of a member who
+  leaves to an admin.
+- **Recommendation:** B. It keeps the owner rule, and recovery takes one
+  action.
+- **Action:** ask the user, because B adds an action that no requirement
+  covers.
+
+### 209. Choose how the owner runs a failed event again
+
+Added on 9 November 2026 from the mockups of Milestone 1.
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** The mockup `app/routines/runs/failed`.
+- **Background:** A run fails when the owner has no agent login, when the
+  owner's GitHub access expired, or when the cloud computer did not
+  start. Run now starts a new run without any pull request facts.
+- **Problem:** A failed "PR opened" run cannot run again with its pull
+  request. A failed start has no recovery action.
+- **Impact if no action:** That pull request gets no run until a new event
+  arrives.
+- **Root question:** How does the owner run an event again after a
+  failure?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Add Run again to a failed run, for the owner only. It starts a
+    new run with the same trigger facts. Effort: Medium.
+  - **C.** Retry a failed start once, without a person. It spends another
+    start of the shared daily starts. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** None, because this decision adds one action.
+- **Previous examples:** Try again retries the newest failed turn of a
+  session (decision 97).
+- **Recommendation:** B. The owner fixes the cause, then runs the same
+  event again.
+- **Action:** ask the user, because B adds an action that no requirement
+  covers.
+
+### 210. Choose how the owner tests a pull request routine
+
+Added on 9 November 2026 from the mockups of Milestone 1.
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** The mockup `app/routines/routine`.
+- **Background:** Run now gives the trigger "Run now" and no pull request.
+  A review routine often has only pull request triggers.
+- **Problem:** Run now cannot test such a routine on a chosen pull
+  request.
+- **Impact if no action:** An owner cannot test a review routine before a
+  real event.
+- **Root question:** How does the owner test a pull request routine on a
+  chosen pull request?
+- **Options:**
+  - **A.** Change nothing. The prompt must work without a pull request.
+    Effort: Small.
+  - **B.** Run now offers a pull request number when the routine has a
+    pull request trigger. The run then starts from that pull request, as
+    a pull request run does. Effort: Medium.
+  - **C.** Hide Run now on a routine that has only pull request triggers.
+    The owner then cannot test it. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None, because this decision changes one action.
+- **Previous examples:** None found.
+- **Related:** Decision 209 B would reuse the start of a pull request run
+  in the same way.
+- **Recommendation:** B. The owner tests the real case.
+- **Action:** ask the user, because B adds behaviour that no requirement
+  covers.
+
+### 211. Choose whether a routine may save without a prompt
+
+Added on 9 November 2026 from the mockups of Milestone 1.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** The mockup `app/routines/routine/new`.
+- **Background:** An empty name saves as "Untitled routine". The plan says
+  nothing about an empty prompt.
+- **Problem:** A routine without a prompt gives the agent only the trigger
+  facts.
+- **Impact if no action:** Each run spends a start on no task.
+- **Root question:** May a routine save, or run, without a prompt?
+- **Options:**
+  - **A.** Save and run an empty prompt. Effort: Small.
+  - **B.** Keep Save off until the prompt has text. Effort: Small.
+  - **C.** Save a routine without a prompt as a draft. It stays off, and
+    Run now stays off, until the prompt has text. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None, because this decision sets one rule.
+- **Previous examples:** Send of the composer waits for text or a file.
+- **Recommendation:** B. A run without a prompt has no task.
+- **Action:** ask the user, because B and C add a refusal, and the user's
+  rules keep each new refusal for the user.
+
 ## Design
 
 The design below is the agent's, of 9 November 2026, unless a decision
@@ -583,7 +745,9 @@ number names the user's choice. The user can override any part of it.
   - A routine of a restored org runs once for its missed times, under the
     same rule.
 - The scan also calls the run starter again for each queued run older
-  than one minute. This covers a Worker that stopped between the store
+  than one minute. A queued run that cannot start, because its owner left
+  or is suspended, or its org is suspended or deleted, becomes skipped
+  with that reason. This covers a Worker that stopped between the store
   and the create, and a webhook whose background start did not end.
 - The scan handles at most 50 routines and 50 queued runs each minute.
   The rest wait for the next minute.
@@ -768,6 +932,38 @@ These calls of 9 November 2026 come from the code searches of this plan:
 - The Runs list shows a skipped run for an author or a sender outside the
   org, and nothing for an author that the owner's filter leaves out.
 
+These calls of 9 November 2026 come from the mockups of Milestone 1:
+
+- "Author is" can hold the entry "Members of <org>". An empty "Author is"
+  means members only. When the owner adds a first account to an empty
+  "Author is", the list adds "Members of <org>" first, so the members'
+  pull requests still start runs. The owner can remove that entry to
+  limit runs to the named accounts. Reason: a bot in "Author is" would
+  otherwise stop every run of the members, and nothing would say so.
+- A suspended org shows its Routines link and read-only routine pages
+  with the org notice and no actions. Reason: an org suspension takes
+  away no access to read.
+- The Runs list shows the newest 50 runs, and "Show older runs" when older
+  runs exist. Reason: an hourly routine adds 24 runs a day.
+- A phone shows the routine page in two tabs, Routine and Runs. Reason: a
+  member who reads runs must not scroll past the whole form.
+- A new routine starts active, with the first repository of the org, the
+  General section, and the default model of the owner.
+- Save stays off while nothing changed and while the form refuses a cron.
+- An admin who is not the owner sees Turn off only while the routine is
+  on.
+- Times use the 24-hour clock, with an hour select and a minute select.
+- A run workspace shows "Run of <routine> for #<number>" on a line under
+  its header, with both links.
+- The start step of a pull request run says "Fetching pull request
+  #<number> of <repository>".
+- The mockups at `app/routines` hold the copy of each state, each failure,
+  and each skip. Milestones 7 to 9 take the copy from there.
+- A queued run that cannot start, because its owner left or is suspended,
+  or its org is suspended or deleted, becomes skipped with that reason.
+  The scan then stops retrying it. Reason: the rule that such an owner or
+  org gets no runs, and a run that stays queued says nothing.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -777,36 +973,45 @@ Depends on: none
 Draw every screen and state of routines, each in a phone and a desktop
 variant, and one flow. Each page holds five screens or fewer.
 
-- [ ] Add the Routines link to the desktop sidebar and to the phone list
+- [x] Add the Routines link to the desktop sidebar and to the phone list
       of the org, with a `routines` value for the current link of the
       sidebar.
-- [ ] Draw the Routines page under `app/routines`: the routines of the org
+- [x] Draw the Routines page under `app/routines`: the routines of the org
       with their triggers, state, owner, and last run. Add the empty
       state as a variant.
-- [ ] Draw the routine page under `app/routines/routine`: the owner's view
+- [x] Draw the routine page under `app/routines/routine`: the owner's view
       of a saved routine with its triggers and its runs. Add variants for
       a new routine with "No runs yet", a member's read-only view, an
       admin's view with Turn off and Delete, and a routine that turned off
       because its owner left.
-- [ ] Draw the triggers under `app/routines/triggers`: the open Add
+- [x] Draw the triggers under `app/routines/triggers`: the open Add
       trigger menu with its two groups, the Hourly, Daily, and Weekly
       editors with the time zone, a custom cron that the form refuses
       because it runs more than once an hour, and the author filter of a
       pull request trigger with its "is" and "is not" lists.
-- [ ] Draw the Runs list under `app/routines/runs`: queued, starting,
+- [x] Draw the Runs list under `app/routines/runs`: queued, starting,
       working, needs input, finished, and archived runs, a failed run for
       each cause: no agent login, expired GitHub access, and a failed
       start, and a skipped run whose author is outside the org.
-- [ ] Draw the run workspace under `app/routines/run-workspace`: the
+- [x] Draw the run workspace under `app/routines/run-workspace`: the
       header with the links to its routine and to its pull request, and
       the first message with the trigger facts of a pull request.
-- [ ] Add the flow "Create a routine": the new routine page, the saved
+- [x] Add the flow "Create a routine": the new routine page, the saved
       routine, Run now, and the run workspace.
-- [ ] Update `docs/mockups/catalogue.md` and `docs/mockups/src/paths.ts`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at both
+- [x] Draw read-only routine pages for a suspended org under
+      `app/orgs/suspended/routines`, with the org notice and no actions.
+- [x] Update `docs/mockups/catalogue.md` and `docs/mockups/src/paths.ts`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at both
       sizes, in light and dark.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+      Done for the design calls of the mockups. Decisions 207 to 211 wait
+      for the user, and their answers can add mockup work.
+
+Evidence: `.context/routines/m1-ui-implementor-report.md`, the check logs
+`.context/routines/m1-orchestrator-checks.log` and
+`.context/routines/m1-orchestrator-checks-r2.log`, and the screenshots in
+`.context/routines/m1-screens/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -961,6 +1166,8 @@ Let members find the routines of their org.
 - [ ] Build the Routines page and its empty state from the mockup.
   - [ ] Test that the link opens the page, and that the page lists the
         routines of the API.
+- [ ] Capture again the marketing pictures that show the sidebar, as
+      `src/marketing/README.md` says, so that they show the Routines link.
 - [ ] Update the web app README.
 
 ## Milestone 8: Routine page

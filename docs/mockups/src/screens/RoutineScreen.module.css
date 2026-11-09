@@ -20,26 +20,13 @@
   padding: 24px 24px 40px;
 }
 
-/* A phone: one column that scrolls, with the runs below the form. */
+/* A phone: the tab that it shows, which scrolls. */
 .phoneScroll {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
   overflow-y: auto;
-}
-
-/*
- * Column-reverse starts the view at the end of the page, where the runs
- * are, as a chat starts at its newest message. A short page stays at the
- * top.
- */
-.atEnd {
-  flex-direction: column-reverse;
-}
-
-.atEnd > .phoneContent {
-  margin-bottom: auto;
 }
 
 .phoneContent {

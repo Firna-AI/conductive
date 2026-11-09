@@ -8,7 +8,7 @@ import {
 export const routine = defineScreen({
   title: 'Routine',
   description:
-    "Cal's routine that reviews pull requests, as Cal sees it: the name, the Active switch, the repository, the section of the run workspaces, and By Cal. Then the triggers, PR opened and PR pushed, and the prompt with the model picker inside its box. Delete, Run now, and Save sit in the header, and the Runs list fills the column at the right. A phone shows Run now and Save at the bottom, Delete at the end of the form, and the runs below it.",
+    "Cal's routine that reviews pull requests, as Cal sees it: the name, the Active switch, the repository, the section of the run workspaces, and By Cal. Then the triggers, PR opened and PR pushed, and the prompt with the model picker inside its box. Delete, Run now, and Save sit in the header, and the Runs list fills the column at the right. A phone shows the routine in two tabs, Routine and Runs, with Run now and Save at the bottom and Delete at the end of the form.",
   rationale:
     'Each run uses the agent login and the GitHub access of the person who created the routine, so the line under the prompt names them. Only that person changes the routine, turns it on, and uses Run now, as the user chose in decision 202 B. A run workspace is a normal workspace in the section that the routine chooses, from decision 204 A. Save stays off until something changes.',
   relatedDocs: [],
@@ -22,7 +22,7 @@ export const routine = defineScreen({
       slug: 'new',
       title: 'New routine',
       description:
-        'New routine opens an empty routine. Its name says Untitled routine, it is active, and it uses the first repository and the General section. It has no trigger yet, and the prompt asks what the routine should do. Save is the only action, and the Runs list says No runs yet.',
+        'New routine opens an empty routine. Its name says Untitled routine, it is active, and it uses the first repository and the General section. It has no trigger yet, and the prompt asks what the routine should do. Save is the only action. The Runs list says No runs yet, and a phone shows no tabs until the first save.',
       rationale:
         'An empty name saves as Untitled routine, as in Conductor. A routine can have no trigger, because Run now still starts it. Run now and Delete come after the first save.',
       props: { routine: 'new', runs: 'none' },

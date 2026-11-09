@@ -1,6 +1,6 @@
 import type { SchemaProps } from '@mokly/mokly'
 import { memberViewer, you, type PersonKey } from '../fixtures/members'
-import { runListKeys } from '../fixtures/routineRuns'
+import { runListKeys } from '../fixtures/runLists'
 import { triggerViewKeys } from '../fixtures/routineTriggers'
 import { routineKeys, type Routine } from '../fixtures/routines'
 
@@ -11,7 +11,7 @@ import { routineKeys, type Routine } from '../fixtures/routines'
 export const routineStateSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['routine', 'viewer', 'triggers', 'runs', 'focus'],
+  required: ['routine', 'viewer', 'triggers', 'runs', 'tab', 'org'],
   properties: {
     /** A new routine, a draft of one, or a saved routine of Acme. */
     routine: { enum: routineKeys },
@@ -29,10 +29,17 @@ export const routineStateSchema = {
     /** The runs that the Runs list shows. */
     runs: { enum: runListKeys },
     /**
-     * Where a phone shows the page: at the top of the form, or at its end,
-     * with the Runs list below the form. A desktop shows both.
+     * The tab that a phone shows: the form of the routine, or its runs. A
+     * desktop shows both, with the runs in a column at the right. A new
+     * routine has no tabs, because it has no runs yet.
      */
-    focus: { enum: ['form', 'runs'] },
+    tab: { enum: ['routine', 'runs'] },
+    /**
+     * The org: in use, or suspended by the operator. A suspended org keeps
+     * every read, so each member reads its routines and runs, and nobody
+     * changes them, also an admin or the owner.
+     */
+    org: { enum: ['active', 'suspended'] },
   },
 } as const
 
@@ -44,7 +51,8 @@ export const ownerRoutine: RoutineState = {
   viewer: 'admin',
   triggers: 'saved',
   runs: 'review',
-  focus: 'form',
+  tab: 'routine',
+  org: 'active',
 }
 
 /**
@@ -60,6 +68,8 @@ function viewerOf(state: RoutineState): PersonKey {
 }
 
 export function accessOf(state: RoutineState, routine: Routine): RoutineAccess {
+  // A suspended org refuses every change, so every person only reads.
+  if (state.org === 'suspended') return 'member'
   return routine.owner.key === viewerOf(state) ? 'owner' : state.viewer
 }
 

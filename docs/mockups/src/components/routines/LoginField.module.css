@@ -36,6 +36,12 @@
   white-space: nowrap;
 }
 
+/* The entry of every member: a name, not a login, so it has the text font. */
+.group {
+  gap: 4px;
+  font-family: inherit;
+}
+
 /* The login that names no GitHub account: a tinted chip with a full outline. */
 .unknown {
   border-color: var(--ui-danger-border);

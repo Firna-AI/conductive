@@ -35,6 +35,8 @@ export function routineActions(props: {
   access: RoutineAccess
   save: SaveState
   viewport: Viewport
+  /** The form is on the screen, so Save shows. The Runs tab of a phone has none. */
+  withForm: boolean
   /** The screen after Save, when the mockups draw it. */
   saveTo?: string
   /** The screen after Run now, when the mockups draw it. */
@@ -68,7 +70,7 @@ export function routineActions(props: {
             <ActionButton icon={Play}>Run now</ActionButton>,
             props.runNowTo,
           )}
-          {save}
+          {props.withForm ? save : null}
         </>
       )
     }

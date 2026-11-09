@@ -36,7 +36,8 @@ A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/shell`, `app/orgs`, `app/orgs/suspended`,
 `app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
-`app/banner`, `app/chat`, `app/routines`, and `app/routines/triggers` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/banner`, `app/chat`, `app/routines`, `app/routines/triggers`, and
+`app/orgs/suspended/routines` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -66,6 +67,10 @@ shows stopped. Its child pages:
   old tab can still open. The refused bar takes the place of the composer.
 - `app/orgs/suspended/settings` has the four tabs, read-only also for an
   admin.
+- `app/orgs/suspended/routines` has the routines of the org under its
+  notice, without New routine, because a suspension takes away no read.
+  Its child page `app/orgs/suspended/routines/routine` has a routine
+  without Save, Run now, Delete, Turn off, or Add trigger.
 - `app/orgs/suspended/leave` has Leave org for a member who is not an
   admin, and its `confirm` variant has the question before the leave. Acme
   is the only org of that member, so Leave org opens
@@ -116,13 +121,15 @@ New workspace opens. Its child pages:
   `app/routines/triggers/schedules` has the Hourly, Daily, and Weekly
   editors with the time zone, and a custom cron that the form refuses.
   Its child page `app/routines/triggers/author-filter` has the author
-  filter of a pull request trigger, with member suggestions and with a
-  login that the save refused.
-- `app/routines/runs` has the runs in each state of their workspaces, a
-  failed run for each cause, and skipped runs. Its `saved` and `run-now`
-  variants have the routine of the flow before and after Run now. On a
-  phone, each of these pages opens at the end of the routine page, where
-  the runs are, except `saved`, which opens at the top of the form.
+  filter of a pull request trigger: Author is with the entry Members of
+  Acme and a bot, the suggestions that offer that entry, and a login that
+  the save refused.
+- `app/routines/runs` has the newest 50 runs, in each state of their
+  workspaces, with Show older runs at the end. Its variants have a failed
+  run for each cause, skipped runs, and, as `saved` and `run-now`, the
+  routine of the flow before and after Run now. A phone shows a saved
+  routine in two tabs, Routine and Runs. These pages open on the Runs tab,
+  except `saved`.
 - `app/routines/run-workspace` has the workspace of a pull request run,
   its start, and the workspace of a run of Run now. It draws the workspace
   screen with its `run` state, which no other workspace page sets.

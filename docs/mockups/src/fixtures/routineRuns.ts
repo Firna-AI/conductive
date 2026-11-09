@@ -5,14 +5,7 @@
  * rule skipped it with its reason.
  */
 
-import {
-  changelog,
-  errorTriage,
-  routines,
-  type PullRequestEvent,
-  type Routine,
-  type ScheduleTrigger,
-} from './routines'
+import type { PullRequestEvent, ScheduleTrigger } from './routines'
 import type { ActivityStatus } from './workspaces'
 
 /** The states of a run that has no workspace: before it, or in place of it. */
@@ -47,182 +40,32 @@ export type Run =
   | (RunBase & { state: 'failed'; cause: FailureCause })
   | (RunBase & { state: 'skipped'; skip: SkipReason })
 
-function pr(event: PullRequestEvent, number: number): RunTrigger {
+/** The trigger of a run that a pull request event started. */
+export function pr(event: PullRequestEvent, number: number): RunTrigger {
   return { kind: 'pull-request', event, number }
 }
 
-const weekly: RunTrigger = { kind: 'schedule', schedule: 'weekly' }
-
-/** The run lists that the Runs list can show, newest first. */
-export const runListKeys = [
-  'review',
-  'failed',
-  'skipped',
-  'weekly',
-  'owner-left',
-  'none',
-  'run-now',
-] as const
-
-export type RunListKey = (typeof runListKeys)[number]
-
-export const runLists: Readonly<Record<RunListKey, readonly Run[]>> = {
-  /** The runs of a pull request routine in each state of a workspace. */
-  review: [
-    {
-      key: 'pushed-485',
-      trigger: pr('pushed', 485),
-      state: 'queued',
-      when: 'now',
-    },
-    {
-      key: 'opened-485',
-      trigger: pr('opened', 485),
-      state: 'starting',
-      when: '1m',
-    },
-    {
-      key: 'opened-482',
-      trigger: pr('opened', 482),
-      state: 'working',
-      when: '4m',
-    },
-    {
-      key: 'pushed-481',
-      trigger: pr('pushed', 481),
-      state: 'input',
-      when: '26m',
-    },
-    {
-      key: 'opened-481',
-      trigger: pr('opened', 481),
-      state: 'unread',
-      when: '1h',
-    },
-    {
-      key: 'pushed-479',
-      trigger: pr('pushed', 479),
-      state: 'ready',
-      when: '3h',
-    },
-    {
-      key: 'opened-478',
-      trigger: pr('opened', 478),
-      state: 'stopped',
-      when: '1d',
-    },
-    {
-      key: 'opened-474',
-      trigger: pr('opened', 474),
-      state: 'archived',
-      when: '4d',
-    },
-  ],
-  /** A failed run for each cause, and a run whose cloud computer failed. */
-  failed: [
-    {
-      key: 'opened-488',
-      trigger: pr('opened', 488),
-      state: 'failed',
-      cause: 'agent-login',
-      when: '2m',
-    },
-    {
-      key: 'pushed-487',
-      trigger: pr('pushed', 487),
-      state: 'failed',
-      cause: 'github-access',
-      when: '1h',
-    },
-    {
-      key: 'opened-487',
-      trigger: pr('opened', 487),
-      state: 'failed',
-      cause: 'start',
-      when: '3h',
-    },
-    {
-      key: 'pushed-486',
-      trigger: pr('pushed', 486),
-      state: 'error',
-      when: '5h',
-    },
-    {
-      key: 'opened-486',
-      trigger: pr('opened', 486),
-      state: 'ready',
-      when: '6h',
-    },
-  ],
-  /** Events of accounts outside Acme, which start no run. */
-  skipped: [
-    {
-      key: 'opened-490',
-      trigger: pr('opened', 490),
-      state: 'working',
-      when: '2m',
-    },
-    {
-      key: 'opened-489',
-      trigger: pr('opened', 489),
-      state: 'skipped',
-      skip: { who: 'author', login: 'rui-silva' },
-      when: '12m',
-    },
-    {
-      key: 'pushed-483',
-      trigger: pr('pushed', 483),
-      state: 'skipped',
-      skip: { who: 'sender', login: 'github-actions[bot]' },
-      when: '40m',
-    },
-    {
-      key: 'opened-483',
-      trigger: pr('opened', 483),
-      state: 'ready',
-      when: '2h',
-    },
-  ],
-  weekly: [
-    { key: 'weekly-3', trigger: weekly, state: 'ready', when: '3d' },
-    { key: 'weekly-2', trigger: weekly, state: 'archived', when: '10d' },
-    { key: 'weekly-1', trigger: weekly, state: 'archived', when: '17d' },
-  ],
-  'owner-left': [
-    { key: 'weekly-copy-2', trigger: weekly, state: 'stopped', when: '2w' },
-    { key: 'weekly-copy-1', trigger: weekly, state: 'archived', when: '3w' },
-  ],
-  none: [],
-  'run-now': [
-    {
-      key: 'run-now',
-      trigger: { kind: 'run-now' },
-      state: 'starting',
-      when: 'now',
-    },
-  ],
+/**
+ * The state of a workspace after the operator suspended its org: the
+ * suspension stopped its cloud computer, unless it was archived.
+ */
+export function workspaceAfterSuspension(
+  state: ActivityStatus,
+): ActivityStatus {
+  return state === 'archived' ? 'archived' : 'stopped'
 }
 
-/** A routine in the list of the org, with the state of its last run. */
-export type RoutineRow = {
-  routine: Routine
-  lastRun?: { state: RunState; when: string }
+/**
+ * The state that a run shows after the operator suspended its org. A run
+ * without a workspace keeps its state.
+ */
+export function stateAfterSuspension(state: RunState): RunState {
+  switch (state) {
+    case 'queued':
+    case 'failed':
+    case 'skipped':
+      return state
+    default:
+      return workspaceAfterSuspension(state)
+  }
 }
-
-/** The routines of Acme, as its Routines page lists them. */
-export const routineRows: readonly RoutineRow[] = [
-  {
-    routine: routines['review-prs'],
-    lastRun: { state: 'working', when: 'now' },
-  },
-  { routine: errorTriage, lastRun: { state: 'unread', when: '32m' } },
-  {
-    routine: routines['dependency-updates'],
-    lastRun: { state: 'ready', when: '3d' },
-  },
-  { routine: changelog, lastRun: { state: 'archived', when: '6d' } },
-  {
-    routine: routines['copy-review'],
-    lastRun: { state: 'stopped', when: '2w' },
-  },
-]

@@ -2,6 +2,7 @@ import type { Viewport } from '@mokly/mokly'
 import { History } from 'lucide-react'
 import type { Run } from '../../fixtures/routineRuns'
 import type { Routine } from '../../fixtures/routines'
+import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
 import { RunList } from './RunList'
 import styles from './RunsPanel.module.css'
@@ -9,6 +10,8 @@ import styles from './RunsPanel.module.css'
 /** The runs that the panel shows, and what the list needs to draw them. */
 export type RunsPanelProps = {
   runs: readonly Run[]
+  /** Runs older than the newest 50 exist, so the end of the list offers them. */
+  older: boolean
   routine: Routine
   /** The person signed in created the routine. */
   ownerViews: boolean
@@ -28,34 +31,43 @@ function NoRuns() {
   )
 }
 
+/** The runs, newest first, with Show older runs at the end when they exist. */
+function Runs(props: RunsPanelProps) {
+  const mobile = props.viewport === 'mobile'
+  return (
+    <>
+      <RunList
+        boxed={mobile}
+        links={props.links}
+        ownerViews={props.ownerViews}
+        routine={props.routine}
+        runs={props.runs}
+      />
+      {props.older ? (
+        <div className={mobile ? styles.olderPhone : styles.older}>
+          <ActionButton>Show older runs</ActionButton>
+        </div>
+      ) : null}
+    </>
+  )
+}
+
 /**
  * The runs of a routine: a column at the right of the page on desktop, and
- * a part below the form on a phone. Each run shows its time, its trigger,
- * its state, and a link to its workspace.
+ * the Runs tab on a phone. Each run shows its time, its trigger, its
+ * state, and a link to its workspace. The list holds the newest 50 runs.
  */
 export function RunsPanel(props: RunsPanelProps) {
   const empty = props.runs.length === 0
-  const list = (
-    <RunList
-      boxed={props.viewport === 'mobile'}
-      links={props.links}
-      ownerViews={props.ownerViews}
-      routine={props.routine}
-      runs={props.runs}
-    />
-  )
   if (props.viewport === 'mobile') {
     return (
-      <section aria-labelledby="runs-heading" className={styles.section}>
-        <h2 className={styles.heading} id="runs-heading">
-          Runs
-        </h2>
+      <section aria-label="Runs" className={styles.section}>
         {empty ? (
           <div className={styles.emptyBox}>
             <NoRuns />
           </div>
         ) : (
-          list
+          <Runs {...props} />
         )}
       </section>
     )
@@ -65,7 +77,9 @@ export function RunsPanel(props: RunsPanelProps) {
       <h2 className={styles.bar} id="runs-heading">
         Runs
       </h2>
-      <div className={styles.scroll}>{empty ? <NoRuns /> : list}</div>
+      <div className={styles.scroll}>
+        {empty ? <NoRuns /> : <Runs {...props} />}
+      </div>
     </aside>
   )
 }

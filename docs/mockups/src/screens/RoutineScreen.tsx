@@ -1,20 +1,23 @@
 import type { Viewport } from '@mokly/mokly'
-import { classes } from '../components/common/classes'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
 import { RunsPanel } from '../components/routines/RunsPanel'
-import { workspaceSections } from '../components/workspaces/sections'
+import {
+  suspendedSections,
+  workspaceSections,
+} from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people } from '../fixtures/members'
-import { orgs } from '../fixtures/orgs'
-import { runLists } from '../fixtures/routineRuns'
+import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { editsOf } from '../fixtures/routineTriggers'
 import { routines, type Routine } from '../fixtures/routines'
+import { hasOlderRuns, runLists } from '../fixtures/runLists'
 import { paths } from '../paths'
 import { PhoneDelete, routineActions } from './routineActions'
 import { PhoneSheet, RoutineForm, runLinks, titleOf } from './routineParts'
 import { accessOf, saveStateOf, type RoutineState } from './routineState'
+import { RoutineTabs } from './routineTabs'
 import styles from './RoutineScreen.module.css'
 
 /**
@@ -35,8 +38,9 @@ function flowLinks(state: RoutineState, routine: Routine) {
  * The page of a routine: its name, the Active switch, the repository, the
  * section of the run workspaces, the triggers, and the prompt with its
  * model, beside the Runs list. Desktop shows the runs in a column at the
- * right, and a phone below the form. Every member sees the routine and its
- * runs, and only its owner changes it (decision 202).
+ * right. A phone shows a saved routine in two tabs, Routine and Runs.
+ * Every member sees the routine and its runs, and only its owner changes
+ * it (decision 202). A suspended org shows them read-only to everyone.
  */
 export function RoutineScreen(props: {
   state: RoutineState
@@ -44,22 +48,27 @@ export function RoutineScreen(props: {
 }) {
   const { state, viewport } = props
   const mobile = viewport === 'mobile'
+  const suspended = state.org === 'suspended'
   const routine = routines[state.routine]
   const access = accessOf(state, routine)
   const edits = editsOf(state.triggers, routine.triggers)
   const menu = state.triggers === 'menu'
+  // A new routine has no runs yet, so a phone shows it without tabs.
+  const runsTab = mobile && routine.saved && state.tab === 'runs'
   const form = (
     <RoutineForm
       access={access}
       edits={edits}
       menu={menu}
       routine={routine}
+      suspended={suspended}
       viewport={viewport}
     />
   )
   const runs = (
     <RunsPanel
-      links={runLinks}
+      links={suspended ? {} : runLinks}
+      older={hasOlderRuns(state.runs)}
       ownerViews={access === 'owner'}
       routine={routine}
       runs={runLists[state.runs]}
@@ -73,25 +82,34 @@ export function RoutineScreen(props: {
         access,
         save: saveStateOf(state, routine),
         viewport,
+        withForm: !runsTab,
         ...flowLinks(state, routine),
       })}
-      back={{ label: 'Routines', to: paths.routines }}
+      back={{
+        label: 'Routines',
+        to: suspended ? paths.suspendedRoutines : paths.routines,
+      }}
       fill
       subtitle="Routine"
+      tabs={
+        mobile && routine.saved ? (
+          <RoutineTabs
+            routine={routine}
+            suspended={suspended}
+            tab={state.tab}
+          />
+        ) : undefined
+      }
       title={titleOf(routine)}
       viewport={viewport}
     >
       {mobile ? (
-        <div
-          className={classes(
-            styles.phoneScroll,
-            state.focus === 'runs' && styles.atEnd,
-          )}
-        >
+        <div className={styles.phoneScroll}>
           <div className={styles.phoneContent}>
-            {form}
-            {access === 'owner' && routine.saved ? <PhoneDelete /> : null}
-            {runs}
+            {runsTab ? runs : form}
+            {!runsTab && access === 'owner' && routine.saved ? (
+              <PhoneDelete />
+            ) : null}
           </div>
         </div>
       ) : (
@@ -116,13 +134,15 @@ export function RoutineScreen(props: {
     <AppFrame
       rail={{
         ...acmeRail,
+        suspended: suspended ? suspendedOrg : undefined,
         person: state.viewer === 'member' ? people[memberViewer] : undefined,
       }}
       sidebar={
         <Sidebar
           current="routines"
           org={orgs.acme}
-          sections={workspaceSections()}
+          sections={suspended ? suspendedSections() : workspaceSections()}
+          suspended={suspended}
         />
       }
     >

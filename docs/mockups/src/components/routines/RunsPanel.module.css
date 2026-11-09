@@ -41,16 +41,21 @@
   gap: 8px;
 }
 
-.heading {
-  margin: 0;
-  color: var(--ui-ink2);
-  font-size: var(--ui-text-sm);
-  font-weight: 700;
-  line-height: 18px;
-}
-
 .emptyBox {
   display: flex;
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius-md);
+}
+
+/* Show older runs, under the last run of the column. */
+.older {
+  display: flex;
+  padding: 10px 12px 16px;
+  border-top: 1px solid var(--ui-border);
+}
+
+/* On a phone the button takes the width of the list. */
+.olderPhone {
+  display: flex;
+  flex-direction: column;
 }

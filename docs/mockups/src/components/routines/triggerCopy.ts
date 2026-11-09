@@ -73,10 +73,19 @@ function logins(list: readonly string[]): string {
   return list.map((login) => `@${login}`).join(', ')
 }
 
-/** An author filter in words, one line for each list that has logins. */
-export function authorSummary(filter: AuthorFilter): string[] {
+/** The entry of "Author is" that stands for every member of the org. */
+export function membersEntry(org: string): string {
+  return `Members of ${org}`
+}
+
+/** An author filter in words, one line for each list that has entries. */
+export function authorSummary(filter: AuthorFilter, org: string): string[] {
   const lines: string[] = []
-  if (filter.is.length > 0) lines.push(`Author is ${logins(filter.is)}`)
+  const is = [
+    ...(filter.members ? [membersEntry(org)] : []),
+    ...filter.is.map((login) => `@${login}`),
+  ]
+  if (is.length > 0) lines.push(`Author is ${is.join(', ')}`)
   if (filter.isNot.length > 0) {
     lines.push(`Author is not ${logins(filter.isNot)}`)
   }

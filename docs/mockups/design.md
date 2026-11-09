@@ -88,9 +88,12 @@ bottom.
     `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
     keeps its short panels beside the bar.
 - The parts of routines live in `src/components/routines/`. The routine
-  page puts its form beside the Runs column on desktop, and the runs below
-  the form on a phone. A phone opens the Add trigger menu and the author
-  filter of a pull request trigger in a sheet. `RunLinks` in
+  page puts its form beside the Runs column on desktop. A phone shows a
+  saved routine in two tabs, Routine and Runs. The Runs list holds the
+  newest 50 runs, and Show older runs ends it when older runs exist. A
+  phone opens the Add trigger menu and the author filter of a pull request
+  trigger in a sheet. A suspended org keeps its Routines link, and shows
+  its routines read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
   workspace, which links to its routine and to its pull request. The
   bubble of a message keeps its line breaks, as in the app, so the first

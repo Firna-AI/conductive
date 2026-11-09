@@ -38,9 +38,16 @@ export type PullRequestEvent = 'opened' | 'pushed' | 'merged'
 /**
  * The author filter of a pull request trigger (decision 206 C). An author
  * passes "is" when the list names the author, and "is not" when it does
- * not. An account outside the org starts runs only when "is" names it.
+ * not. An empty "is" means every member. `members` is the entry "Members
+ * of <org>" in "is", which stands for every member. A first account added
+ * to an empty "is" adds that entry first, so the members keep their runs.
+ * An account outside the org starts runs only when "is" names it.
  */
-export type AuthorFilter = { is: readonly string[]; isNot: readonly string[] }
+export type AuthorFilter = {
+  members: boolean
+  is: readonly string[]
+  isNot: readonly string[]
+}
 
 type PullRequestTrigger = {
   kind: 'pull-request'
