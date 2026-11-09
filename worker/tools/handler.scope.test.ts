@@ -6,6 +6,12 @@ import { toolFixture, TOOL_TEST_ORIGIN, type ToolFixture } from './test-support'
 
 let harness: TestHarness
 let fixture: ToolFixture
+const toolPaths = [
+  MACHINE_PATHS.workspaces,
+  MACHINE_PATHS.repositories,
+  MACHINE_PATHS.sections,
+  MACHINE_PATHS.models,
+]
 
 beforeAll(async () => {
   harness = await createHarness()
@@ -21,7 +27,7 @@ afterAll(async () => {
 it('lists every workspace of the authenticated org, including other owners and archives', async () => {
   await fixture.db
     .prepare(
-      "UPDATE workspaces SET state = 'input' WHERE id = 'teammate-workspace'",
+      "UPDATE workspaces SET state = 'input', name = '' WHERE id = 'teammate-workspace'",
     )
     .run()
   const response = await fixture.request(
@@ -40,7 +46,7 @@ it('lists every workspace of the authenticated org, including other owners and a
       },
       {
         id: 'teammate-workspace',
-        name: 'Paris',
+        name: null,
         branch: 'teammate-login/paris-cd34',
         state: 'input',
       },
@@ -71,14 +77,21 @@ it('denies missing, invalid, revoked, archived, and deleted-org workspace creden
     'Bearer unknown-token',
     'Basic browser-session',
   ]) {
-    const response = await fixture.request({
-      headers: {
-        Authorization: authorization,
-        Cookie: 'session=browser-session',
-      },
-    })
-    expect(response.status, authorization).toBe(401)
-    expect(await response.json(), authorization).toEqual(expected)
+    for (const path of toolPaths) {
+      const response = await fixture.request(
+        {
+          headers: {
+            Authorization: authorization,
+            Cookie: 'session=browser-session',
+          },
+        },
+        `${TOOL_TEST_ORIGIN}${path}`,
+      )
+      expect(response.status, `${path}: ${authorization}`).toBe(401)
+      expect(await response.json(), `${path}: ${authorization}`).toEqual(
+        expected,
+      )
+    }
   }
   for (const update of [
     'UPDATE workspace_tokens SET revoked_at = 1',
@@ -88,9 +101,11 @@ it('denies missing, invalid, revoked, archived, and deleted-org workspace creden
     "UPDATE orgs SET suspended_at = 1 WHERE id = 'org-a'",
   ]) {
     await fixture.db.prepare(update).run()
-    const response = await fixture.request()
-    expect(response.status, update).toBe(401)
-    expect(await response.json(), update).toEqual(expected)
+    for (const path of toolPaths) {
+      const response = await fixture.request({}, `${TOOL_TEST_ORIGIN}${path}`)
+      expect(response.status, `${path}: ${update}`).toBe(401)
+      expect(await response.json(), `${path}: ${update}`).toEqual(expected)
+    }
     await fixture.db.batch([
       fixture.db.prepare('UPDATE workspace_tokens SET revoked_at = NULL'),
       fixture.db.prepare(
@@ -114,18 +129,26 @@ it('grants the workspace token no other host, route, method, or socket', async (
     const response = await fixture.request({}, `${TOOL_TEST_ORIGIN}${path}`)
     expect(response.status, path).toBe(404)
   }
-  const otherHost = await fixture.request(
-    {},
-    `https://app.conductive.test${MACHINE_PATHS.workspaces}`,
-  )
-  expect(otherHost.status).toBe(404)
-  for (const init of [
-    { method: 'DELETE' },
-    { headers: { Upgrade: 'websocket' } },
-  ]) {
-    const response = await fixture.request(init)
-    expect(response.status).toBe(405)
-    expect(response.headers.get('Allow')).toBe('GET, POST')
+  for (const path of toolPaths) {
+    const otherHost = await fixture.request(
+      {},
+      `https://app.conductive.test${path}`,
+    )
+    expect(otherHost.status, path).toBe(404)
+    const methods =
+      path === MACHINE_PATHS.workspaces
+        ? ['DELETE']
+        : ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
+    for (const init of [
+      ...methods.map((method) => ({ method })),
+      { headers: { Upgrade: 'websocket' } },
+    ]) {
+      const response = await fixture.request(init, `${TOOL_TEST_ORIGIN}${path}`)
+      expect(response.status, `${path}: ${JSON.stringify(init)}`).toBe(405)
+      expect(response.headers.get('Allow')).toBe(
+        path === MACHINE_PATHS.workspaces ? 'GET, POST' : 'GET',
+      )
+    }
   }
   expect(fixture.services.createWorkspace).not.toHaveBeenCalled()
 })

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import { stepTarget, type SectionGroup } from '../../app/sections'
 import type { Workspace } from '../../shared/workspaces'
+import { nameLabel } from '../../shared/name-label'
 import ui from '../ui/ui.module.css'
 import { ArchivedGroup } from './ArchivedGroup'
 import type { DropTarget } from './drop-target'
@@ -91,7 +92,7 @@ export function SectionList(props: {
       (group) => group.section.id === target.sectionId,
     )
     setAnnouncement(
-      `${workspace.name} moves to ${section?.section.name ?? 'another section'}, place ${target.index + 1}.`,
+      `${nameLabel(workspace.name)} moves to ${section?.section.name ?? 'another section'}, place ${target.index + 1}.`,
     )
     props.move(workspace.id, target)
   }
@@ -104,7 +105,7 @@ export function SectionList(props: {
         const target = drag?.place.sectionId === section.id ? drag.place : null
         const rest = workspaces.filter((item) => item.id !== drag?.item.id)
         const line = drag ? (
-          <DropLine name={drag.item.name} section={section.name} />
+          <DropLine name={nameLabel(drag.item.name)} section={section.name} />
         ) : null
         return (
           <section

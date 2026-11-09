@@ -9,8 +9,7 @@ import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { failedFirstStart } from '../../app/first-start'
 import { modelLabel } from '../state/format'
-import { loginLineOf, sessionLoginOf } from '../state/session-login'
-import { agentNames } from './AgentMark'
+import { loginLabelOf, sessionLoginOf } from '../state/session-login'
 import { ChatPane } from './ChatPane'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
@@ -102,11 +101,12 @@ function sandboxParts(props: SessionChatProps): ChatHost {
  * takes the composer's place while the sandbox does not run. After a failed
  * first start, the bar sits above the composer, which stays. The status of
  * the stored history comes from its load alone, so content never hides a
- * failed load. The composer names whose login the session uses. A linked
- * session starts with a link to the session that it started from. The
- * shown record comes from the tabs, so a closed session that an archived
- * workspace shows keeps its link too. A read-only workspace, archived or of
- * a suspended org, shows no composer and no control that writes.
+ * failed load. The composer names the login of another member that a
+ * message spends. A linked session starts with a link to the session that
+ * it started from. The shown record comes from the tabs, so a closed
+ * session that an archived workspace shows keeps its link too. A read-only
+ * workspace, archived or of a suspended org, shows no composer and no
+ * control that writes.
  */
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
@@ -185,7 +185,7 @@ export function SessionChat(props: SessionChatProps) {
           blocked={block !== null}
           choice={session.choice}
           draft={state.draft}
-          login={loginLineOf(login, agentNames[session.choice.agent])}
+          login={loginLabelOf(login)}
           models={snapshot.models}
           onAttach={(files) => void controller.attachFiles(session.id, files)}
           onChangeText={(text) => controller.setDraft(session.id, text)}

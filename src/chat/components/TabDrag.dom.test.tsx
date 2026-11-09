@@ -16,6 +16,7 @@ import {
 } from '../../test-support/mount'
 import { RowLayout, widthsByText } from './row-layout-test-kit'
 import {
+  debounce,
   file,
   fileTabs,
   first,
@@ -77,7 +78,7 @@ describe('a drag in the tab row', () => {
     )
     layOut(
       byRole('button', 'Address autocomplete'),
-      byRole('button', 'Debounce lookups'),
+      byRole('button', debounce),
       fileTab,
     )
 
@@ -101,7 +102,7 @@ describe('a drag in the tab row', () => {
       moving: 'Moving app-[redacted].ts to place 2 of 3',
       lifted: true,
       saved: [[first, file, second]],
-      row: ['Address autocomplete', 'app-[redacted].ts', 'Debounce lookups'],
+      row: ['Address autocomplete', 'app-[redacted].ts', debounce],
       visited: [],
       shown: 'Address autocomplete',
     })
@@ -110,7 +111,7 @@ describe('a drag in the tab row', () => {
   it('keeps the order when Escape ends a drag, and the release after it shows nothing', async () => {
     const server = new FakeApiServer()
     await mountChat({ server, tabs: [first, second], viewport: 'desktop' })
-    const tab = byRole('button', 'Debounce lookups')
+    const tab = byRole('button', debounce)
     layOut(byRole('button', 'Address autocomplete'), tab)
 
     pointer(tab, 'pointerdown', { ...mouse, clientX: 150 })
@@ -130,10 +131,10 @@ describe('a drag in the tab row', () => {
       row: rowTitles(),
       shown: shownTab(),
     }).toEqual({
-      moving: 'Moving Debounce lookups to place 1 of 2',
+      moving: `Moving ${debounce} to place 1 of 2`,
       afterEscape: '',
       saves: 0,
-      row: ['Address autocomplete', 'Debounce lookups'],
+      row: ['Address autocomplete', debounce],
       shown: 'Address autocomplete',
     })
   })
@@ -142,12 +143,12 @@ describe('a drag in the tab row', () => {
     // Two tabs of 150 px in a row of 200 px: the row clips the second tab.
     const rowLayout = new RowLayout(
       200,
-      widthsByText({ 'Address autocomplete': 150, 'Debounce lookups': 150 }),
+      widthsByText({ 'Address autocomplete': 150, [debounce]: 150 }),
     )
     const server = new FakeApiServer()
     await mountChat({ server, tabs: [first, second], viewport: 'mobile' })
     rowLayout.settle()
-    const tab = byRole('button', 'Debounce lookups')
+    const tab = byRole('button', debounce)
     // 10 px from the clipped end: inside the zone where a drag scrolls the row.
     const finger = { pointerType: 'touch', pointerId: 2, clientX: 190 }
 
@@ -158,7 +159,7 @@ describe('a drag in the tab row', () => {
       const early = rowStatus()
       act(() => vi.advanceTimersByTime(1))
       const held = rowStatus()
-      const lifted = liftedCopy('Debounce lookups')
+      const lifted = liftedCopy(debounce)
       // A finger that stays within 8 px of its press has not moved. The
       // frames of 300 ms run while it holds still.
       pointer(window, 'pointermove', { ...finger, clientX: 196 })
@@ -168,10 +169,7 @@ describe('a drag in the tab row', () => {
       // A finger sends its click after the release, on what is under it then:
       // the dimmed page behind the sheet.
       act(() => vi.advanceTimersByTime(20))
-      const dimmed = queryByRole(
-        'dialog',
-        'Debounce lookups',
-      )?.previousElementSibling
+      const dimmed = queryByRole('dialog', debounce)?.previousElementSibling
       allowed(dimmed ?? document.body, new MouseEvent('click', fingerClick))
 
       expect({
@@ -180,11 +178,11 @@ describe('a drag in the tab row', () => {
         lifted,
         scrolled,
         afterRelease: rowStatus(),
-        sheet: queryByRole('dialog', 'Debounce lookups') !== null,
-        menu: menuItems('Debounce lookups'),
+        sheet: queryByRole('dialog', debounce) !== null,
+        menu: menuItems(debounce),
       }).toEqual({
         early: '',
-        held: 'Moving Debounce lookups to place 2 of 2',
+        held: `Moving ${debounce} to place 2 of 2`,
         lifted: true,
         scrolled: 0,
         afterRelease: '',
@@ -206,7 +204,7 @@ describe('a drag in the tab row', () => {
       200,
       widthsByText({
         'Address autocomplete': 100,
-        'Debounce lookups': 100,
+        [debounce]: 100,
         'app-[redacted].ts': 100,
       }),
     )
@@ -227,7 +225,7 @@ describe('a drag in the tab row', () => {
     try {
       // 5 px from an end, the pointer is 27 px into the 32 px zone of the
       // edge scroll: the row scrolls 11 of the 12 px of a full step a frame.
-      dragTo('Debounce lookups', 195)
+      dragTo(debounce, 195)
       const firstFrame = holdFrames(1)
       const rightEnd = holdFrames(11)
       pointer(window, 'pointermove', { ...mouse, clientX: 5 })
@@ -243,15 +241,15 @@ describe('a drag in the tab row', () => {
       expect({ firstFrame, rightEnd, leftEnd, saved, nextDrag }).toEqual({
         firstFrame: {
           left: 11,
-          status: 'Moving Debounce lookups to place 2 of 3',
+          status: `Moving ${debounce} to place 2 of 3`,
         },
         rightEnd: {
           left: 100,
-          status: 'Moving Debounce lookups to place 3 of 3',
+          status: `Moving ${debounce} to place 3 of 3`,
         },
         leftEnd: {
           left: 0,
-          status: 'Moving Debounce lookups to place 1 of 3',
+          status: `Moving ${debounce} to place 1 of 3`,
         },
         saved: [[second, first, file]],
         nextDrag: {

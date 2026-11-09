@@ -4,6 +4,7 @@ import type {
   ReactNode,
   RefCallback,
 } from 'react'
+import { nameLabel } from '../../shared/name-label'
 import type { Session } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { rowTabs, tabKey } from '../state/tab-order'
@@ -67,7 +68,10 @@ export type RenderTab = (tab: HostTab) => RenderedTab
 export interface SessionTab {
   kind: 'session'
   id: string
+  /** The name that the tab shows: the title, or Untitled. */
   title: string
+  /** The title of the session, or null while it has none. */
+  name: Session['title']
   /** The tab shows as the current one. */
   selected: boolean
 }
@@ -132,9 +136,10 @@ export function rowOf(
   return rowTabs(view, sessions, host).flatMap((tab): RowTab[] => {
     const selected = tabKey(tab) === current
     if (tab.kind === 'session') {
-      const title = titles.get(tab.sessionId)
-      if (title === undefined) return []
-      return [{ kind: 'session', id: tab.sessionId, title, selected }]
+      if (!titles.has(tab.sessionId)) return []
+      const name = titles.get(tab.sessionId) ?? null
+      const title = nameLabel(name)
+      return [{ kind: 'session', id: tab.sessionId, title, name, selected }]
     }
     // Without a host, `rowTabs` gives no file or diff tab.
     return renderTab ? [{ kind: 'host', tab, selected, ...renderTab(tab) }] : []

@@ -58,8 +58,29 @@ says.
 - A workspace holds one or more sessions. Each session is a closable tab in
   the centre column, beside the open files and diffs (decision 19).
 - "+" starts a new session on the same branch and in the same sandbox.
+- The tab of a session shows the title of the session.
+- A new session has no title, and its tab shows "Untitled".
+  [Workspace and session names](#workspace-and-session-names) says when
+  the app gives it a title.
+- When the workspace takes a title as its name, as [Messages](#messages)
+  says, the first session takes the title too (decision 181).
+- Each other session takes its title from the first message with text that
+  the workspace accepts in that session (decision 181). The title is the
+  first line with text of that message.
+- A message with no text, such as a message with only a screenshot, gives
+  no title.
+- In a title from a message, each run of spaces becomes one space. The app
+  removes one final full stop, but it keeps an ellipsis.
+- A title from a message holds at most 60 characters. The limit counts
+  Unicode code points. The app cuts a longer line after its last whole
+  word that fits the limit. When the first word does not fit, the app cuts
+  the line at the limit.
 - The user renames a session from its tab menu, as
   [The tab row](#the-tab-row) says.
+- Reason: the first session does the task of the workspace, and each other
+  session does the task of its own first message. A title request for each
+  session was rejected, because the first message names that task with no
+  model call.
 - Each session has its own model picker.
 - When one tab sends two edits of the same field of a session, the edit
   that the server commits last wins (decision 142).
@@ -132,6 +153,32 @@ says.
 - A read-only workspace, such as an archived workspace or a workspace of a
   suspended org, moves no tab and opens no tab menu.
 
+## Workspace and session names
+
+- In this section, a name is the name of a workspace or the title of a
+  session.
+- A new workspace has no name (decision 182). Each new session has no name
+  either (decision 185).
+- The app shows "Untitled" in place of a missing name.
+- In the workspace record, a missing name is null in `name`. In the session
+  record, a missing name is null in `title`.
+- An automatic name is a name that the app gives on its own. These names
+  are automatic:
+  - the title of a workspace, as [Messages](#messages) says
+  - a workspace name that the agent runner reports, as
+    [Lost workspace updates](#lost-workspace-updates) says
+  - the title that a session takes, as [Sessions](#sessions) says
+- The app gives an automatic name only to a workspace or a session that has
+  no name (decision 182). So no automatic name replaces a name that a
+  member or the app gave.
+- The app gives no automatic name in an archived workspace, or in a
+  workspace of a deleted org.
+- Reason: a missing name shows that no one named the workspace or the
+  session yet. A text comparison with "New session" or the city name of
+  the branch was rejected. A member can type the same text and then lose
+  that name.
+- Reason: an archived workspace shows its chat read-only (decision 16).
+
 ## Messages
 
 - The composer chooses the model and the effort of each message, and with
@@ -172,17 +219,23 @@ says.
   member says before the send that the message starts a new session. When
   that member has no login for the agent, the composer shows the notice of
   a missing login instead.
-- Reason: the composer names the login of each message before the send. A
+- Reason: the composer shows before the send which login a message uses. A
   record without the share setting was rejected, because the composer then
   names the login of the starter until the send.
-- The composer names the member whose login its message runs on, such as
-  "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
+- When a message runs on the login of another member, the composer names
+  that member inside the message box, such as "Priya's login". A line under
+  the box was rejected, because the box then moved between sessions.
+- The composer names no login when a message runs on the user's own login.
+  A name for the own login was rejected, because it tells the user nothing
+  new.
 - The composer attaches files to a message.
+- [The send key](create-a-workspace.md#the-send-key) gives the key that
+  sends a message from the composer (decision 143).
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.
 - The first message of a new workspace creates the workspace, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  [Create a workspace](create-a-workspace.md)
   says. The app accepts that message before the sandbox is ready
   (decision 14).
 - The app also accepts a later message while the sandbox is not ready
@@ -194,7 +247,7 @@ says.
 - A message that waits for the sandbox shows that it waits. A queue in the
   browser was rejected, because a closed tab would lose the message.
 - Reason: a failed first start keeps its workspace and its queued messages,
-  as [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  as [Create a workspace](create-a-workspace.md#a-failed-first-start)
   says. So members can add work at once, and an accepted message survives
   a reload of the tab. A hold of later messages in the composer until the
   first start succeeds was rejected for these reasons.
@@ -202,6 +255,9 @@ says.
   sends during a turn joins that turn. A message of another member joins it
   too while the starter shares the login. Such a message goes to the agent
   at once, and the agent reads it at its next tool call.
+- The composer uses its placeholder to show that a message steers the
+  running turn. It shows no steer hint under the message box.
+  Reason: a hint under the box moves it when the user starts to type.
 - In a turn without tool calls, the agent reads such a message when the
   turn ends.
 - A message that the workspace accepted stays in its session, also when the
@@ -237,10 +293,33 @@ says.
 - Reason: a tab that missed newer events can still show an older Try again.
   A check in the chat alone was rejected, because such a tab could send an
   older message again. The agent would then answer out of order.
-- After the first answer of the agent in a new workspace, the app asks the
-  agent for a title of three to five words. The chat does not show that
-  request.
-- The workspace then takes the title as its name.
+- When the app accepts the first message of a new workspace, it asks a
+  small model of Workers AI for a title (decision 184). The request asks
+  for three to five words. Workers AI is the model service of Cloudflare,
+  on the account that hosts the app.
+- The model writes the title from the text of that message. The request
+  holds no other data of the workspace. It uses no agent login of a
+  member. The chat does not show it.
+- The reply to the message does not wait for the title. The workspace
+  then takes the title as its name, as
+  [Workspace and session names](#workspace-and-session-names) says.
+- When the request fails, the name of the workspace does not change. The
+  app then asks again when it accepts the next message with text in the
+  workspace. It asks only while the workspace has no name.
+- A later request also uses the text of the first message. Only when the
+  first message has no text does it use the text of the message that
+  starts it.
+- A first message with no text starts no request. The next message with
+  text in the workspace then starts it.
+- Reason: the name shows within seconds, while the sandbox starts, and the
+  operator chooses the model and its speed.
+- A request in the sandbox on the agent login of the member was rejected.
+  The name then waits for the sandbox, and each title spends the
+  subscription of the member.
+- A Claude model with an API key of the operator was rejected, because it
+  sends each first message to another company. A name from the first
+  words of the message, with no model, was rejected, because such names
+  are weaker.
 
 ## What the chat shows
 
@@ -398,7 +477,9 @@ says.
 
 - The file tree, the changes list, the start steps, and the workspace name
   belong to no session. A later full report of the same kind replaces each
-  of them.
+  of them. But a report of the workspace name sets that name only while
+  the workspace has no name, as
+  [Workspace and session names](#workspace-and-session-names) says.
 - When the workspace refuses an update of one of these kinds, the update is
   lost. The workspace stores its marker. Then it asks the runner once for a
   fresh full report of that kind (decision 96).
@@ -415,7 +496,9 @@ says.
 - Each kind has at most one open request. After a further refusal of that
   kind, the workspace sends no second request.
 - A stored complete report of that kind ends the repair, also a failed one.
-  It ends no repair of another kind. After the next refusal of that kind, the
+  A report of the workspace name that comes when the workspace already has
+  a name also ends the repair, because it can change nothing. It ends no
+  repair of another kind. After the next refusal of that kind, the
   workspace asks for a new report, with a new command ID.
 - A replacement is a later full report of the same kind.
   [Files and changes](workspaces-and-sandboxes.md#files-and-changes) says

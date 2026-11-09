@@ -51,12 +51,27 @@ stops its own controller:
   Stop, and names that member to the others. When the members do not load,
   it names nobody but the reader.
 - `onWorkspaceChange` gets the workspace record after each change: its state,
-  and the title that the agent writes through `workspace.title` and
+  and the title that the backend gives it through `workspace.title` and
   `workspace.updated` events. The header and the list of the app show it.
+- A new workspace and each new session have no name: the `name` of the
+  workspace record and the `title` of the session record are null. The
+  tabs, the session history, the line of a linked session, and the header
+  and the list of the app then show "Untitled", from `nameLabel` in
+  `src/shared/name-label.ts`, as
+  [Workspace and session names](../../docs/protocol/chat-and-events.md#workspace-and-session-names)
+  says. "New session" names only the action of +: its label, the heading
+  of the empty chat, and the detail in the model picker.
 - Each tab shows the `title` of its session record. The backend provides
-  the titles that the mockups show: the first session of a new workspace
-  has the workspace name, and the agent's title renames both. The
-  development page does the same.
+  the titles that the mockups show. The title from the first message names
+  the workspace and its first session, as
+  [Messages](../../docs/protocol/chat-and-events.md#messages) says. Each
+  other session takes the first line of its first message with text as its
+  title, as [Sessions](../../docs/protocol/chat-and-events.md#sessions)
+  says. A name that a member set never changes. The development page does
+  the same.
+- The rename field of a session with no title starts empty, with
+  "Untitled" as its hint, so the label never becomes the name of the
+  session. An empty field keeps the old name.
 - `renderTab(tab)` renders a file or diff tab of the saved view, such as an
   open file. Its `title` is the name of the tab, as a screen reader reads
   it from the tab, with each secret value hidden, such as "app.ts changes"
@@ -260,6 +275,12 @@ members from the models of the app.
   free Resume button, still run when its reply is older. The header of
   [`state/session-records.ts`](state/session-records.ts) gives the pending
   edits of a rename or a model change.
+- The composer reads Enter through `useSendKey` of
+  `components/send-key.ts`, the one send key of every composer: the chat,
+  and the page and the dialog of New workspace. On a computer, Enter sends
+  and Shift+Enter adds a line, as
+  [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)
+  says. In the phone layout, Enter adds a line.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as
@@ -320,7 +341,7 @@ It checks the plain message of a refused retry in a tab that missed newer events
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
 on one fake stream. `components/SessionLogin.test.tsx` renders the login
-line and its notices. `components/SourceLink.dom.test.tsx` presses the link
+label and its notices. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
@@ -364,6 +385,8 @@ end. The row scrolls, the release drops the tab at the place that the
 status says, and no tab menu opens.
 `components/tab-row-test-kit.ts` sends their right clicks, keys, and
 wheel turns.
+`components/SessionTabs.test.tsx` renders the tab of a session with no
+title and its rename field.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -396,6 +419,9 @@ check in the Mac app.
   scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
+- `components/Composer.tsx`: the message box and its controls, with the
+  steering prompt that [Messages](../../docs/protocol/chat-and-events.md#messages)
+  states.
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
@@ -424,7 +450,7 @@ check in the Mac app.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, and the words of the line under the composer.
+  record and the reader, and the login label in the composer.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its
@@ -441,6 +467,8 @@ check in the Mac app.
   responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
+- `components/send-key.ts`: `useSendKey`, the send key that the composer
+  shares with the page and the dialog of New workspace in the app shell.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its

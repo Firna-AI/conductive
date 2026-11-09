@@ -63,8 +63,9 @@ function offeredRows(offers: readonly PaletteOffer[]): PaletteRow[] {
 
 /**
  * The actions in their four parts: the open workspace, the org, the orgs,
- * and the window. New workspace opens a page, so it shows wherever the org
- * takes changes. A deleted org has no Switch to row.
+ * and the window. New workspace shows wherever the org takes changes. Its
+ * row links to the page, and it opens as the page or the dialog that the
+ * user chose. A deleted org has no Switch to row.
  */
 function actionGroups(source: PaletteSource): PaletteGroup[] {
   const { org, offers } = source

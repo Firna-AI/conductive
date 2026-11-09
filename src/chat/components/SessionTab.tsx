@@ -43,7 +43,7 @@ export function SessionTabItem(props: {
         <RenameField
           onCancel={props.onCancelRename}
           onSave={(title) => props.onRename(tab.id, title)}
-          title={tab.title}
+          title={tab.name}
         />
       </li>
     )

@@ -22,6 +22,7 @@ import {
 } from '../../test-support/mount'
 import { RowLayout, widthsByText } from './row-layout-test-kit'
 import {
+  debounce,
   file,
   fileTabs,
   first,
@@ -83,7 +84,7 @@ describe('a full tab row', () => {
       viewport: 'desktop',
     })
     const list = tabList()
-    const tab = byRole('button', 'Debounce lookups')
+    const tab = byRole('button', debounce)
     // 200 px of a row whose tabs take 500 px: it scrolls up to 300 px.
     fillRow(list, 200, 500)
     const steps: { left: number; free: boolean; fades: string[] }[] = []
@@ -116,7 +117,7 @@ describe('a full tab row', () => {
     const layout = new RowLayout(
       200,
       widthsByText({
-        'Debounce lookups': 100,
+        [debounce]: 100,
         'app-[redacted].ts': 100,
         'Address autocomplete': 100,
       }),
@@ -136,7 +137,7 @@ describe('a full tab row', () => {
     }
 
     await step()
-    await press(byRole('button', 'Debounce lookups'))
+    await press(byRole('button', debounce))
     await step()
     rightClick(byText('app-[redacted].ts'), { clientX: 150, clientY: 12 })
     await press(byRole('menuitem', 'Move right'))
@@ -146,7 +147,7 @@ describe('a full tab row', () => {
 
     expect({ steps, shown: shownTab() }).toEqual({
       steps: [100, 0, 100, 0],
-      shown: 'Debounce lookups',
+      shown: debounce,
     })
   })
 
@@ -155,7 +156,7 @@ describe('a full tab row', () => {
     const layout = new RowLayout(
       200,
       widthsByText({
-        'Debounce lookups': 60,
+        [debounce]: 60,
         'Address autocomplete': 80,
         'Postcode rules': 100,
         'Checkout copy': 150,
@@ -180,7 +181,7 @@ describe('a full tab row', () => {
     await open('copy', 'Checkout copy')
     // The shown tab moves 60 px to the left, past the start of the row.
     streamRecord(server, { ...recordOf('debounce'), closedAt: FAKE_TIME })
-    await waitFor(() => !queryByText('Debounce lookups'), 'the closed tab')
+    await waitFor(() => !queryByText(debounce), 'the closed tab')
     layout.settle()
     steps.push(list.scrollLeft)
 
@@ -194,7 +195,7 @@ describe('a full tab row', () => {
     const layout = new RowLayout(
       200,
       widthsByText({
-        'Debounce lookups': 150,
+        [debounce]: 150,
         'Address autocomplete': 120,
         // The tab with the rename field.
         '': 120,
@@ -223,7 +224,7 @@ describe('a full tab row', () => {
 
     turnWheel(list, { deltaY: -500 })
     const scrolled = list.scrollLeft
-    rightClick(byRole('button', 'Debounce lookups'), {
+    rightClick(byRole('button', debounce), {
       clientX: 20,
       clientY: 12,
     })
@@ -243,7 +244,7 @@ describe('a full tab row', () => {
     // Two tabs of 150 px in a row of 200 px: the row clips the second tab.
     const layout = new RowLayout(
       200,
-      widthsByText({ 'Address autocomplete': 150, 'Debounce lookups': 150 }),
+      widthsByText({ 'Address autocomplete': 150, [debounce]: 150 }),
     )
     const server = new FakeApiServer()
     await mountChat({ server, tabs: [first, second], viewport: 'mobile' })

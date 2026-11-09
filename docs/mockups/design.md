@@ -47,6 +47,13 @@ chat, and five tabs at the bottom.
   in every composer, such as "Opus 5.5 High". It names no agent brand. In a
   session with messages, each model of the other agent says "New session",
   because it opens a new session with the draft, from decision 51.
+- A workspace or a session that has no name yet shows "Untitled", in the
+  style of a name, from decisions 182 and 185. The list, the header, the
+  session tabs, and the session history show it, as
+  `app/new-workspace/creating/first-second` and `app/sessions` show.
+  "New session" names only the action that opens a session. The label of
+  +, the heading of the empty chat that + opens, and each model of the
+  other agent say it.
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace. Each queued message shows "Sends when the
   sandbox is ready", as `app/new-workspace/waiting` shows. After a failed
@@ -86,6 +93,22 @@ chat, and five tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
+  workspace as a wide, compact dialog over the dimmed app, for a user who
+  chose the dialog in Preferences. It lies in the layer and over the scrim
+  of `ConfirmDialog`. The repository picker sits at the top left, and the
+  org and the section of the new workspace, in plain text, at the top
+  right. The message and its files fill the middle, and the notices of the
+  New workspace page follow them. The model picker sits at the bottom left,
+  and the attach button and Create, with the hint of the Enter key, at the
+  bottom right. A phone always opens the page, so the dialog has no phone
+  layout.
+- The account has two tabs, General and Preferences, as links, as the org
+  settings have. Preferences holds the New workspaces section, whose rows
+  put each label beside its control in two columns. A segmented control
+  chooses how New workspace opens, with a helper line under it, and a
+  narrow section puts it under its label. A failed save shows its error
+  under the control.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a

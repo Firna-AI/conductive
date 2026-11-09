@@ -15,6 +15,7 @@ import {
   waitFor,
 } from '../../test-support/mount'
 import {
+  debounce,
   file,
   fileTabs,
   first,
@@ -48,7 +49,7 @@ describe('the tab menu', () => {
       viewport: 'desktop',
     })
     const tab = byRole('button', 'Address autocomplete')
-    layOut(tab, byRole('button', 'Debounce lookups'))
+    layOut(tab, byRole('button', debounce))
     act(() => tab.focus())
 
     const keyReachesBrowser = pressOn(tab, 'F10', { shiftKey: true })
@@ -106,7 +107,7 @@ describe('the tab menu', () => {
     )
     layOut(
       byRole('button', 'Address autocomplete'),
-      byRole('button', 'Debounce lookups'),
+      byRole('button', debounce),
       fileTab,
     )
 
@@ -136,7 +137,7 @@ describe('the tab menu', () => {
       shown: shownTab(),
     }).toEqual({
       saved: [[first, file, second]],
-      row: ['Address autocomplete', 'app-[redacted].ts', 'Debounce lookups'],
+      row: ['Address autocomplete', 'app-[redacted].ts', debounce],
       status: 'app-[redacted].ts moves to place 2 of 3',
       focus: 'app-[redacted].ts',
       closed: [],
@@ -150,11 +151,11 @@ describe('the tab menu', () => {
       tabs: [first, second],
       viewport: 'desktop',
     })
-    const tab = byRole('button', 'Debounce lookups')
+    const tab = byRole('button', debounce)
     layOut(byRole('button', 'Address autocomplete'), tab)
 
     rightClick(tab, { clientX: 150, clientY: 12 })
-    expect(menuItems('Debounce lookups')).toEqual([
+    expect(menuItems(debounce)).toEqual([
       { name: 'Rename session', off: false },
       { name: 'Move left', off: false },
       { name: 'Move right', off: true },
@@ -177,9 +178,9 @@ describe('the tab menu', () => {
       shown: shownTab(),
       drag,
       browserMenu,
-      menu: menuItems('Debounce lookups'),
+      menu: menuItems(debounce),
     }).toEqual({
-      value: 'Debounce lookups',
+      value: debounce,
       focus: 'Session name',
       row: ['Address autocomplete', ''],
       shown: 'Address autocomplete',

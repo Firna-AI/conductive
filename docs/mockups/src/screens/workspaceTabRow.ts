@@ -1,4 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
+import { nameLabel } from '../../../../src/shared/name-label'
 import type { TabKind, WorkspaceTab } from '../components/workspace/TabItem'
 import type { TabDrag } from '../components/workspace/WorkspaceTabs'
 import {
@@ -15,7 +16,7 @@ export const codeTabKey = 'code'
 
 function sessionTab(session: Session): WorkspaceTab {
   const { key, title } = session
-  return { key, kind: 'session', title, selected: false }
+  return { key, kind: 'session', title: nameLabel(title), selected: false }
 }
 
 function fileTab(key: string, kind: TabKind, title: string): WorkspaceTab {

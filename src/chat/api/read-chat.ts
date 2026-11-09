@@ -140,7 +140,7 @@ export function readSession(value: unknown): Session {
   return {
     id: text(source.id),
     workspaceId: text(source.workspaceId),
-    title: text(source.title),
+    title: nullable(text)(source.title),
     choice: readChoice(source.choice),
     createdAt: count(source.createdAt),
     closedAt: nullable(count)(source.closedAt),

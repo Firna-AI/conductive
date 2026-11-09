@@ -68,7 +68,12 @@ describe('closing a session with waiting work', () => {
     ).json()
     expect(closed.sessions).toEqual([])
     expect(closed.history).toEqual([
-      { ...session, activeTurnId: null, closedAt: 1_800_000_000_000 },
+      {
+        ...session,
+        title: 'Check this code',
+        activeTurnId: null,
+        closedAt: 1_800_000_000_000,
+      },
     ])
     const history = await fixture.history(session.id)
     const stopped = history.events

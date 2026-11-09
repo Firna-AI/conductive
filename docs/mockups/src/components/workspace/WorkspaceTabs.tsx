@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { History, Plus, RotateCcw } from 'lucide-react'
+import { nameLabel } from '../../../../../src/shared/name-label'
 import { closedSessions } from '../../fixtures/sessions'
 import { paths } from '../../paths'
 import { AgentMark } from '../chat/AgentMark'
@@ -26,7 +27,7 @@ export type TabDrag = { tab: string; index: number }
 export const historyEntries: readonly MenuEntry[] = closedSessions.map(
   (session): MenuEntry => ({
     kind: 'item',
-    label: session.title,
+    label: nameLabel(session.title),
     mark: <AgentMark agent={session.agent} />,
     detail: session.closed,
     trailingIcon: RotateCcw,

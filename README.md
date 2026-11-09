@@ -110,9 +110,12 @@ In a deployment, the client secret and both keys are Worker secrets, as
 `/api/auth/github/callback` on the same app origin. The GitHub App must
 accept that callback address, for example
 `http://127.0.0.1:5174/api/auth/github/callback` for `npm run preview`. The
-GitHub App is "Conductive", in the Firna-AI organization. It sends its
-webhooks to the address in
+GitHub App is "Conductive Build", with the slug `conductive-build`, in the
+Firna-AI organization. It sends its webhooks to the address in
 [The GitHub App](docs/protocol/github-banner.md#the-github-app).
+[The GitHub App](docs/deployment.md#the-github-app) in the deployment guide
+gives each setting of the GitHub App, with the address where GitHub returns
+the user after an install.
 Automated tests use fakes and need no credentials.
 
 Every cloud computer of every org runs in the app's own Boat organization.
@@ -242,6 +245,8 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   [flows](docs/architecture/flows.md), and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
+  - [Create a workspace](docs/protocol/create-a-workspace.md)
+  - [Repository folders](docs/protocol/repository-folders.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
   - [Access and security](docs/protocol/access-and-security.md)
   - [GitHub banner](docs/protocol/github-banner.md)

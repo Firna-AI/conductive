@@ -14,6 +14,8 @@ import { byLabel, queryByText } from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { holdAnimationFrames, mount, waitFor } from '../../test-support/mount'
+import { nameLabel } from '../../shared/name-label'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { readView } from '../api/read-responses'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
 import { WorkspaceChat } from '../WorkspaceChat'
@@ -28,8 +30,13 @@ export const first: WorkspaceTab = {
   kind: 'session',
   sessionId: FAKE_IDS.session,
 }
-/** The session tab of "Debounce lookups". */
+/** The session tab of the second session of the fixtures. */
 export const second: WorkspaceTab = { kind: 'session', sessionId: 'debounce' }
+
+/** The name that the tab of the second session shows. */
+export const debounce = nameLabel(
+  workspaceFixtures('ready').sessions.sessions[1].title,
+)
 
 /** A fake secret value, which the real path of the file tab holds. */
 const secret = 'acme-7f3k'
@@ -74,7 +81,7 @@ export async function mountChat(options: {
       workspaceId={FAKE_IDS.workspace}
     />,
   )
-  await waitFor(() => queryByText('Debounce lookups'), 'the session tabs')
+  await waitFor(() => queryByText(debounce), 'the session tabs')
 }
 
 /**

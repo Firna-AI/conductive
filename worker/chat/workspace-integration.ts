@@ -20,7 +20,7 @@ import type { LifecyclePublisher } from '../lifecycle/durable-types'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
 import { WorkspaceChat } from './backend'
 import { firstMessageIdentity } from './first-message'
-import { updateWorkspaceTitle } from './queries'
+import { projectWorkspaceTitle } from './workspace-title'
 import type { ChatCallbackPublisher, ChatDependencies } from './types'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
@@ -31,6 +31,7 @@ export type WorkspaceChatResolvers = Partial<
     | 'scheduleRunnerCheck'
     | 'scheduleBrowserCheck'
     | 'randomId'
+    | 'runTitleModel'
   >
 >
 
@@ -142,13 +143,7 @@ export function createWorkspaceIntegration(
             envelope.occurredAt,
           )
         }
-        if (event.type === 'workspace.title')
-          await updateWorkspaceTitle(
-            env.DB,
-            envelope.workspaceId,
-            event.name,
-            now(),
-          )
+        await projectWorkspaceTitle(env.DB, envelope, now())
       } finally {
         if (
           event.type === 'turn.completed' ||

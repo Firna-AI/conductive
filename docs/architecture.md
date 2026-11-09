@@ -154,6 +154,9 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
   Claude or OpenAI account of the starter of its session.
+- **Workers AI:** the Cloudflare model service writes the title of each new
+  workspace from its first message. Its use bills to the Cloudflare account
+  of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. The app is free, with no limits (decision 81).
 
@@ -222,6 +225,10 @@ the merge.
 
 - [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
   image, the life of a workspace, and the tools of a workspace.
+- [Create a workspace](protocol/create-a-workspace.md): New workspace as a
+  page or as a dialog, the create, the branch, and a failed first start.
+- [Repository folders](protocol/repository-folders.md): the folder and the
+  shell variable of each repository in a sandbox.
 - [Chat and events](protocol/chat-and-events.md): sessions, messages, the
   agent runner, and the events.
 - [Access and security](protocol/access-and-security.md): sign-in, the

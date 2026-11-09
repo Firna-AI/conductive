@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { nameLabel } from '../../../shared/name-label'
 import { routes } from '../../../app/router'
 import {
   layOut,
@@ -37,6 +38,11 @@ import { click, settle } from '../../test-mount'
 import { bodiesOf } from '../kept-test-kit'
 import { currents, linkTo, openTab } from '../wiring-test-kit'
 import { filesHref } from './files-address'
+
+/** The name that the tab of the second session of the fixtures shows. */
+const debounce = nameLabel(
+  workspaceFixtures('ready').sessions.sessions[1].title,
+)
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -80,17 +86,21 @@ describe('the Files screens in the workspace', () => {
     expect(queryByRole('region', 'Chat', view)).toBeNull()
     expect(currents(tabs, fileHref)).toEqual(['page'])
     expect(
-      byRole('button', session.title, tabs).getAttribute('aria-current'),
+      byRole('button', nameLabel(session.title), tabs).getAttribute(
+        'aria-current',
+      ),
     ).toBeNull()
 
-    click(byRole('button', session.title, tabs))
+    click(byRole('button', nameLabel(session.title), tabs))
     await settle()
 
     expect(navigation.href()).toBe(routes.workspace(org, id))
     expect(queryByRole('region', 'Chat', view)).not.toBeNull()
     expect(queryByRole('region', fileName, view)).toBeNull()
     expect(
-      byRole('button', session.title, tabs).getAttribute('aria-current'),
+      byRole('button', nameLabel(session.title), tabs).getAttribute(
+        'aria-current',
+      ),
     ).toBe('page')
     expect(currents(tabs, fileHref)).toEqual([null])
     // The last save is the chat's own, when it showed the session again.
@@ -127,7 +137,7 @@ describe('the Files screens in the workspace', () => {
     layOut(
       byRole('button', 'Address autocomplete', row),
       link,
-      byRole('button', 'Debounce lookups', row),
+      byRole('button', debounce, row),
     )
     pointer(link, 'pointerdown', { pointerType: 'mouse', clientX: 150 })
     pointer(window, 'pointermove', { pointerType: 'mouse', clientX: 140 })
