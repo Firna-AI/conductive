@@ -39,7 +39,7 @@ It defaults to `https://app.conductive.build`.
 Local development can use an HTTP localhost origin.
 `CONDUCTIVE_FRAME_SOURCES` lists space-separated HTTPS frame origins.
 Set the same frame sources in the web policy.
-Include the preview domain, `https://*.conductive.page`, and the cloud desktop stream origin when those tools exist.
+Include the preview domain, `https://*.conductive.page`, and the desktop stream hosts, `https://*.on.boat.dev`, as [Frame sources](../docs/deployment.md#frame-sources) says.
 Packaged apps use their bundled configuration.
 They ignore runtime environment overrides.
 
@@ -187,7 +187,7 @@ At each step, it also checks the bar and the place of the sidebar toggle.
 Other hosts skip this test.
 
 The [window controls test](tests/window-controls.spec.ts) checks the bar, the left panel, and the drag regions in a workspace.
-It also checks the sidebar toggle, Back and Forward, and the layout after a sidebar resize and a window resize.
+It also checks the sidebar toggle, the toggle of the right column, Back and Forward, and the layout after a sidebar resize and a window resize.
 The [browser window test](tests/browser-window.spec.ts) opens a fresh web build in a plain Electron window.
 There, the workspace shows no window controls.
 

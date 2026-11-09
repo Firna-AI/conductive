@@ -1,0 +1,40 @@
+/*
+ * What the app adds to the CSS module of the mockup palette. The mockup
+ * draws the phone page in place of the list, and its rows and tabs as
+ * links. The app lays the page over the frame, and draws the tabs and the
+ * rows that run an action as buttons.
+ */
+
+/*
+ * On a phone the palette is a page that covers the whole frame. It lies
+ * above the parts of the page, and under the sheet of a filter.
+ */
+.pageLayer {
+  display: flex;
+  position: absolute;
+  z-index: 25;
+  inset: 0;
+  flex-direction: column;
+}
+
+/* A tab is a button, without the box of a button. */
+:where(.tab) {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* A row that runs an action has the hover of a row that opens a page. */
+.choice {
+  cursor: pointer;
+}
+
+.choice:not([aria-selected='true']):hover {
+  background: var(--ui-soft);
+}
+
+/* The list that did not load, with Try again. */
+.failure {
+  padding: 12px;
+}

@@ -55,6 +55,7 @@ export interface GitHubRepository {
 
 export interface AccountResponse {
   user: User
+  operator: boolean
   defaultChoice: AgentChoice
   agentLogins: readonly AgentLoginStatus[]
   /**

@@ -98,6 +98,12 @@ with the message of the API.
   with more room, and it gets shorter to fit. It follows its button when the
   page scrolls or the window changes size. In a long menu, only the choices
   scroll. The heading, an error, and the note stay in view.
+- The menus and the questions note themselves in the open layers of the
+  app shell, from `../shell/ui/layers.ts`. So the key of the command
+  palette asks an open desktop menu to close, as Escape does. While its
+  change runs, the menu refuses, and the key does nothing, as it does
+  while a question or a sheet is open. Outside the app, nothing notes
+  them.
 - While a removal, owner change, org deletion, or restore runs, its question
   or menu stays open. Cancel, Escape, Tab,
   a press outside, on the dimmed page, or on the menu's button, and a close

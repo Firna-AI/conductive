@@ -13,9 +13,20 @@ The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the a
 The Worker reads that key from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
-The [operator area](operator/README.md) owns the operator's suspension of users and orgs.
+The [operator area](operator/README.md) owns the operator's app-wide numbers and suspension of users and orgs.
 
 ## Routes
+
+On the root domain, the Worker serves Astro's built site through the assets
+binding. Listed pages use paths such as `/terms`. Listed files other than
+HTML and the file list load under `/_site/`. `/favicon.ico` also serves the
+brand favicon. Other paths get the built unknown-address page with `404`.
+The [marketing README](../src/marketing/README.md#how-the-worker-serves-it)
+gives the methods, markers, headers, policy, and unavailable-build response.
+
+The app host serves the built agreement page through GitHub sign-in.
+It also serves listed site files under `/_site/`. Other site paths get the
+app page, as unknown app paths do.
 
 On the app hostname, the Worker serves these API routes:
 
@@ -27,7 +38,14 @@ On the app hostname, the Worker serves these API routes:
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
 - The Mac device routes.
+- `GET /api/operator/overview`, the app-wide numbers for operators.
+- `GET /api/operator/orgs`, the org search and cursor pages for operators.
+- `GET /api/operator/users`, the user search and cursor pages for operators.
+- `GET /api/operator/orgs/<orgId>`, the org page for operators.
+- `GET /api/operator/users/<githubId>`, the user page for operators.
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
+- `DELETE /api/operator/users/<githubId>/suspension`, the operator's lift of a user suspension.
+- `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 
 The [app API](app-api/README.md) serves the account, shell, and workspace routes after the request gate.
@@ -54,6 +72,9 @@ The preview domain forwards each private preview to its workspace object.
 Its authorizer redeems the one-use viewer grant before any sandbox request.
 The object owns preview expiry and revocation beside its other alarm sources.
 A Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
+It also repairs overdue workspace disk alarms and org image refreshes after a 15-minute grace period.
+The repair checks at most 50 workspaces and 50 orgs per run.
+It defers failed calls and logs counts when either limit leaves work pending.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
 
 ## Development
@@ -66,7 +87,7 @@ Run `npm run test -- worker/chat/integration` to check the forwarding, the shell
 It also checks the runner start script.
 Run `node worker/chat/integration/run-browser-harness.mjs` to serve a production app build through the local Worker, with fake Boat and GitHub.
 [Outer Worker tests](chat/integration/outer-worker-tests.md#browser-harness) gives its settings.
-Run `npm run test -- worker/operator` to check the suspension of users and orgs.
+Run `npm run test -- worker/operator` to check the overview and the suspension of users and orgs.
 The [test support area](test-support/README.md) supplies local D1 and fake providers.
 [Deployment inputs](../docs/deployment.md) lists the bindings, variables, and secrets of a deployment.
 
@@ -74,12 +95,15 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
+- [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk and image alarms from the Cron Trigger.
+- [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
+- [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
-- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Each message is fixed safe text, never a token, a raw error, a request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
+- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Messages use fixed safe text and numeric repair counts. They hold no token, raw error, request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
 - [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of each alarm run of a workspace object. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
 - [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the devices, the previews, and GitHub. [Workspace Durable Object](lifecycle/workspace-object.md) gives its rules.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.

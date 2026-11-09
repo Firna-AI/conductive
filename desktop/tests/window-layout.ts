@@ -79,6 +79,30 @@ export async function expectCornerLayout(page: Page, heading: Locator) {
   expect(bar.x + bar.width - forward.x - forward.width).toBeLessThanOrEqual(8)
 }
 
+/**
+ * Whether the right column shows, and the gap from the end of the
+ * workspace header to the column, or to the right edge of the window while
+ * the column is hidden. The centre column has no accessible role, so its
+ * header gives its right edge.
+ */
+export async function rightColumnLayout(page: Page, heading: Locator) {
+  const column = page.getByRole('complementary', {
+    name: 'Files and tools',
+    exact: true,
+  })
+  const shown = await column.isVisible()
+  // The bounds of the header have no accessible state.
+  const headerEnd = await heading.evaluate((element) => {
+    const header = element.closest('header')
+    if (!header) throw new Error('The page has no top bar')
+    return header.getBoundingClientRect().right
+  })
+  const edge = shown
+    ? (await box(column)).x
+    : await page.evaluate(() => innerWidth)
+  return { shown, gap: edge - headerEnd }
+}
+
 export async function expectWindowLayout(page: Page) {
   const controls = page.getByRole('navigation', { name: 'Window controls' })
   const sidebar = page.getByRole('complementary', { name: 'Workspaces' })

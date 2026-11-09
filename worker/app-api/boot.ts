@@ -11,6 +11,7 @@ import { choice, invalidInput } from '../chat/inputs'
 import { loginSecret, agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
 import { requiredString } from '../http'
+import { isOperator } from '../operator/access'
 import { encrypt } from '../security/crypto'
 import type { RequestContext } from '../security/gate'
 import {
@@ -42,6 +43,7 @@ export async function bootRoute(
     if (path === ACCOUNT_PATHS.account) {
       return Response.json({
         user: context.user,
+        operator: isOperator(env, context.user.githubId),
         defaultChoice:
           (await accountDefault(env.DB, userId)) ??
           configuredDefaultChoice(env),

@@ -31,6 +31,7 @@
   background: var(--ui-rose);
 }
 
+/* The rows at the top of the list: New workspace and Search. */
 .newWorkspace {
   display: flex;
   align-items: center;
@@ -53,6 +54,15 @@
 .selected:hover {
   background: var(--ui-selected);
   color: var(--ui-ink);
+}
+
+/* The key that opens the palette, at the end of the Search row. */
+.keys {
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: var(--ui-tracking-label);
 }
 
 /* The icon fills the 12 px column of the status marks below it. */

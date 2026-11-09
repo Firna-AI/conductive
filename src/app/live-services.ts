@@ -4,6 +4,8 @@ import { browserDelay, socketEventSource } from './events'
 import {
   windowFocus,
   windowInput,
+  windowKeys,
+  windowPlatform,
   windowStorage,
   windowVisibility,
   type AppServices,
@@ -27,6 +29,8 @@ export function createLiveServices(target: Window): AppServices {
     delay: browserDelay,
     onFocus: windowFocus(target),
     onInput: windowInput(target),
+    onKey: windowKeys(target),
+    platform: windowPlatform(target),
     visible: windowVisibility(target),
     storage: windowStorage(target),
     newId: () => target.crypto.randomUUID(),

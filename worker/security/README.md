@@ -80,7 +80,9 @@ Each GitHub sign-in starts after an agreement to the current Terms.
 - `startSignIn` sends the browser to GitHub only when the address of `API_PATHS.githubSignIn` has the current revision as its `terms_version` value.
 - The sign-in screen of the app shows the agreement, and its button opens `acceptedTermsSignInPath()`, which adds that value.
 - Without the current revision, as in the browser sign-in of the Mac app, the Worker answers with an HTML agreement page.
-  `termsConsentPage` in [`src/marketing/sign-in-consent.ts`](../../src/marketing/sign-in-consent.ts) makes it.
+  `termsConsentResponse` in [`marketing/consent.ts`](../marketing/consent.ts) reads it from the Astro build.
+  It fills the Continue address and site origin as escaped text.
+  It keeps the site's security headers and `Cache-Control: no-store`.
   Its Continue with GitHub link adds the current revision and keeps the `desktop_challenge` of the Mac app.
   Its links lead to the Terms and Privacy pages on `MARKETING_ORIGIN`, or on the product domain without that setting.
 - The signed OAuth state cookie carries the revision to the callback. A `terms_version` value in the callback address counts for nothing.

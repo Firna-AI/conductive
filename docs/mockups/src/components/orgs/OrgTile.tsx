@@ -9,12 +9,30 @@ import { account, type Org } from '../../fixtures/orgs'
  * decorative: its link names the org.
  */
 export function OrgTile(props: { org: Org; size: number; current?: boolean }) {
+  return (
+    <InitialsTile
+      current={props.current}
+      initials={props.org.initials}
+      size={props.size}
+    />
+  )
+}
+
+/**
+ * The square of an org from its initials alone, for an org that is not
+ * one of the user's own, such as an org on the operator page.
+ */
+export function InitialsTile(props: {
+  initials: string
+  size: number
+  current?: boolean
+}) {
   const theme = useSharedUiTheme()
   const accent = props.current ?? false
   return (
     <Avatar
       decorative
-      label={props.org.initials}
+      label={props.initials}
       shape="square"
       size={props.size}
       style={{

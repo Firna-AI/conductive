@@ -33,6 +33,7 @@ import { ToolsPart } from './tools/ToolsPart'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
+import { WorkspacePaletteActions } from './WorkspacePaletteActions'
 import type { WorkspaceView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
 
@@ -210,7 +211,13 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  const dialog = <ArchiveDialog archive={model.archive} workspace={workspace} />
+  // The Archive question, and the actions of the screen for the palette.
+  const dialog = (
+    <>
+      <ArchiveDialog archive={model.archive} workspace={workspace} />
+      <WorkspacePaletteActions chat={chat} context={context} />
+    </>
+  )
   if (phone) {
     const view = phoneView(props.view)
     const archived = sandbox === 'archived'

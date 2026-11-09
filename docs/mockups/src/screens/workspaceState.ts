@@ -1,5 +1,6 @@
 import type { SchemaProps } from '@mokly/mokly'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
+import { paletteViews } from '../components/palette/paletteViews'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversations'
 import { pathStates } from '../fixtures/maskedFiles'
@@ -27,12 +28,14 @@ export const workspaceStateSchema = {
     'tab',
     'composer',
     'resize',
+    'rightColumn',
     'overlay',
     'viewer',
     'lostUpdate',
     'tree',
     'paths',
     'org',
+    'palette',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -101,6 +104,11 @@ export const workspaceStateSchema = {
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**
+     * The right column of the desktop: shown, or hidden with the toggle at
+     * the end of the header. A phone has no right column.
+     */
+    rightColumn: { enum: ['shown', 'hidden'] },
+    /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, or the
      * question of Archive, with work that is not pushed or with none.
@@ -145,6 +153,12 @@ export const workspaceStateSchema = {
      * refusal, and nothing in the workspace can change.
      */
     org: { enum: ['active', 'suspended'] },
+    /**
+     * The command palette, closed or open on one of its views. Over an
+     * open workspace it offers the actions of the workspace first. A phone
+     * opens it from the list, so a phone shows the palette of the list.
+     */
+    palette: { enum: paletteViews },
   },
 } as const
 
@@ -164,12 +178,14 @@ export const readyWorkspace: WorkspaceState = {
   tab: 'session',
   composer: 'empty',
   resize: 'none',
+  rightColumn: 'shown',
   overlay: 'none',
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
   paths: 'plain',
   org: 'active',
+  palette: 'closed',
 }
 
 /**

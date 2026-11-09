@@ -15,10 +15,12 @@ requirements of each feature.
 - **Admin** and **member:** the two roles in an org. Each person in an org
   has one of them.
 - **Operator:** the person who runs the app, as opposed to the admin of an
-  org. Only an operator can suspend a user.
-- **Suspension:** the block of one user by the operator. It ends the
-  sign-in sessions of the user, stops the sandboxes of the workspaces that
-  the user owns, and blocks new starts.
+  org. Only an operator can suspend a user or an org, or lift a
+  suspension. Only an operator opens the operator section.
+- **Suspension:** the block of one user or one org by an operator, until
+  an operator lifts it. It stops the sandboxes of the workspaces that the
+  user owns, or of every workspace of the org, and blocks new starts. A
+  user suspension also ends the sign-in sessions of the user.
 - **Workspace:** one task in an org. It has one repository, one branch,
   one sandbox, and one or more sessions.
 - **Workspace owner:** the person who is responsible for a workspace. It is
@@ -55,8 +57,14 @@ requirements of each feature.
 
 - A few static pages at the root of `conductive.build`, with the Terms and
   Privacy pages. Visitors see them without a sign-in.
+- Astro builds these pages ahead of time. The Worker serves the built files
+  on `conductive.build`. It fills in the values of each request, such as
+  the app address in the sign-in links and the year in the footer.
 - [The marketing site README](../src/marketing/README.md) describes how the
   Worker serves them.
+- The same build also makes the page that asks for the
+  [agreement to the Terms](protocol/access-and-security.md#sign-in) before
+  the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
 - The main action is "Start free with GitHub". The site does not name
   Boat, and users need no Boat account (decision 80).
 
@@ -67,6 +75,10 @@ requirements of each feature.
 - It shows the orgs, the workspaces, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](mockups/README.md) (decision 15).
+- For an operator, it also shows the operator section at `/operator`. The
+  section gives counts across every org. It finds any org or user, and it
+  suspends or lifts it.
+  [Operator section](protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
   the Worker. A tab keeps the chats that it showed in memory, as
@@ -178,72 +190,31 @@ the app (decision 6).
 
 ## Flows
 
-### Create a workspace
-
-1. The user sends the first message of a new workspace. The Worker records
-   the workspace, and its Durable Object keeps the message.
-2. With the Boat key, the Worker asks Boat for a sandbox from the newest
-   good org image of the org. The sandbox gets the workspace token and the
-   org's env vars, but no agent login.
-3. The Durable Object pushes each start step to the open tabs.
-4. The agent runner starts and connects to the Durable Object. The Durable
-   Object sends it the waiting message.
-
-### Chat
-
-1. A tab sends a message to the Worker. The Durable Object forwards it to
-   the agent runner, with the agent login of the starter of its session.
-   The Worker first copies the files of the message from the attachment
-   storage into the sandbox.
-2. The runner gives it to the agent through the SDK. It numbers each agent
-   event and sends it to the Durable Object.
-3. The Durable Object stores each event, confirms it to the runner, and
-   pushes it to every open tab of the workspace.
-
-### Terminal, previews, and desktop
-
-- The terminal socket goes from the browser to the Worker on
-  `app.conductive.build`. The Worker connects it to the private terminal
-  port.
-- A preview frame loads its preview hostname. The Worker proxies the
-  request to the private port of the sandbox.
-- The Worker asks Boat for a short-lived desktop URL, and the browser
-  shows Boat's desktop stream.
-
-### GitHub events
-
-- GitHub sends pull request, check, status, and push webhooks. The Worker
-  routes each event to the workspace of its branch.
-- A push to the default branch of a chosen repository can also start a
-  refresh of the org image.
-
-### Stops
-
-- The Durable Object stops a sandbox when the stop rule of
-  [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md#stop-and-resume)
-  says so.
-- Near day 14 of a stop, the app starts the sandbox briefly and stops it
-  again, so that Boat keeps its disk (decision 43).
+The [flows page](architecture/flows.md) describes how the components work
+together for a new workspace, chat, the terminal, previews, the desktop,
+GitHub events, and stops.
 
 ## Where data lives
 
-| Data                                                     | Home                                     |
-| -------------------------------------------------------- | ---------------------------------------- |
-| Users, orgs, members, sections, workspaces, and settings | D1                                       |
-| The org of each sandbox and each saved snapshot          | D1                                       |
-| Env var values and agent logins                          | The Worker's storage, encrypted          |
-| The Boat key and the other keys of the Worker            | Worker secrets                           |
-| Chat history and banner state                            | The workspace Durable Object             |
-| Files attached to chat messages                          | The attachment storage, an R2 bucket     |
-| The records of attached files                            | D1                                       |
-| The repository, the files, and the agent sessions        | The home folder of the sandbox           |
-| The prepared repositories and the installed software     | The org image, in the app's Boat account |
-| Panel widths                                             | The browser, or the Mac app              |
+| Data                                                                         | Home                                     |
+| ---------------------------------------------------------------------------- | ---------------------------------------- |
+| Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
+| The org of each sandbox and each saved snapshot                              | D1                                       |
+| Env var values and agent logins                                              | The Worker's storage, encrypted          |
+| The Boat key and the other keys of the Worker                                | Worker secrets                           |
+| Chat history and banner state                                                | The workspace Durable Object             |
+| Files attached to chat messages                                              | The attachment storage, an R2 bucket     |
+| The records of attached files                                                | D1                                       |
+| The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
+| The prepared repositories and the installed software                         | The org image, in the app's Boat account |
+| Panel widths                                                                 | The browser, or the Mac app              |
 
 ## Trust boundaries
 
 - The org is the boundary between tenants. A request reaches an org only
-  for a member of that org.
+  for a member of that org. An operator is the one exception, as
+  [Orgs and workspaces](protocol/access-and-security.md#orgs-and-workspaces)
+  says.
 - The one Boat key reaches the sandboxes and the saved snapshots of every
   org (decision 80). So the Worker's own records keep the orgs apart, as
   [Access and security](protocol/access-and-security.md#orgs-and-workspaces)
@@ -282,4 +253,9 @@ the merge.
   roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
 - [Operator actions](protocol/operator-actions.md): the operator, the
-  suspension of a user, and abuse reports.
+  suspension of a user or an org, the lift of a suspension, and abuse
+  reports.
+- [Operator section](protocol/operator-section.md): the pages of the
+  operator in the web app, their counts, and their searches.
+- [Command palette](protocol/command-palette.md): the key and the search
+  that finds the workspaces, the actions, and the settings.

@@ -12,6 +12,7 @@ export const ID = {
   section: ':section',
   repository: ':repository',
   build: ':build',
+  user: ':user',
 } as const
 
 /** The IDs in a path, by name, such as `params.org` for `:org`. */
@@ -19,7 +20,7 @@ export type Params = Readonly<Record<string, string>>
 
 interface RouteRequest {
   params: Params
-  /** The query of the address, such as the name of an uploaded file. */
+  /** The query of the address, such as the search of a list or the name of an uploaded file. */
   query: URLSearchParams
   /**
    * The JSON body, or `null` when the request has none. The raw body of a
