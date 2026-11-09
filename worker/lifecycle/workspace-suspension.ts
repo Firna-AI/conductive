@@ -137,6 +137,7 @@ async function stopForAccess(
       ),
     )
     if (result === 'pending') {
+      await lifecycle.endRestoreWatch()
       await storage.setAlarm(dependencies.now() + 30_000)
       return false
     }

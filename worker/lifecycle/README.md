@@ -168,7 +168,8 @@ object holds the lifecycle state, the turn records, and the events.
 - [`durable-alarm.ts`](durable-alarm.ts): `advanceLifecycleAlarm`, the
   lifecycle step of the alarm. It advances stop cleanup before normal
   lifecycle work. It runs the turn repair before its deadline and idle
-  decisions.
+  decisions. When the restore watch is due, it runs the restore check in
+  place of the Boat state read.
 - [`create-workspace-lifecycle.ts`](create-workspace-lifecycle.ts):
   `createWorkspaceLifecycle`, the lifecycle with its hooks and the shared
   state writer. Its `recoverTurns` hook reads the committed chat through
@@ -177,8 +178,12 @@ object holds the lifecycle state, the turn records, and the events.
   physical stop classification across lifecycle maintenance. A saved public
   error stays separate. `finishRetentionAttempt` clears an ended attempt
   and renews dates only when its owner supplies a stop-request time.
-- [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline, and
-  state read actions on the sandbox.
+- [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline,
+  state read, and restore check actions on the sandbox.
+  `checkWorkspaceRestore` reads `hydrated`, and it writes the restore
+  marker of the [terminal backend](../terminal/README.md) when the restore
+  ends, as the [restore watch](workspace-object.md#creates-and-resumes)
+  says.
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
   path to a Boat call that creates a sandbox or a snapshot. It stores the
   request first, so the lifecycle finds the resource after a lost reply.

@@ -1,5 +1,24 @@
 import type { StartStep } from '../../src/shared/workspaces'
-import type { DurableLifecycleState } from './durable-types'
+import { RESTORE_POLL_MS, type DurableLifecycleState } from './durable-types'
+
+export function withPreparedStart(
+  state: DurableLifecycleState,
+  now: number,
+): DurableLifecycleState {
+  if (state.state === 'stopped' || state.state === 'archived') return state
+  return {
+    ...state,
+    startupPrepared: true,
+    restoreWatchAt: state.startupPrepared
+      ? state.restoreWatchAt
+      : now + RESTORE_POLL_MS,
+    state: state.runnerConnected
+      ? state.runningSessions.length
+        ? 'working'
+        : 'ready'
+      : 'starting',
+  }
+}
 
 export function withStartStep(
   state: DurableLifecycleState,

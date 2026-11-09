@@ -12,6 +12,7 @@ import {
   extendWorkspaceDeadline,
   stopWorkspaceSandbox,
   reconcileWorkspaceSandbox,
+  checkWorkspaceRestore,
   workspaceActionContext,
 } from './workspace-actions'
 import { keepWorkspaceDisk } from './disk-retention'
@@ -88,6 +89,13 @@ export function createWorkspaceLifecycle(
           await workspaceActionContext(env, dependencies, lifecycle),
         )
         if (result) await turns.clear()
+        return result
+      },
+      checkRestore: async () => {
+        const result = await checkWorkspaceRestore(
+          await workspaceActionContext(env, dependencies, lifecycle),
+        )
+        if (result === 'stopped' || result === 'error') await turns.clear()
         return result
       },
       startPending: () => hasPendingStartWork(ctx.storage),
