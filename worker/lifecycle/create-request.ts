@@ -6,6 +6,10 @@ import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
 
+export interface WorkspaceCreationInput extends CreateWorkspaceRequest {
+  name?: string
+}
+
 const CITIES = [
   'lisbon',
   'oslo',
@@ -26,7 +30,7 @@ export async function prepareCreationRequest(
   orgId: string,
   user: User,
   sender: User,
-  input: CreateWorkspaceRequest,
+  input: WorkspaceCreationInput,
   reservedId?: string,
 ): Promise<WorkspaceStartJob> {
   const { env, dependencies } = runtime
@@ -63,6 +67,7 @@ export async function prepareCreationRequest(
       repositoryId: repository.id,
       sectionId: input.sectionId,
       city,
+      ...(input.name !== undefined && { name: input.name }),
       branch,
       sessionId,
       request: input.firstMessage,

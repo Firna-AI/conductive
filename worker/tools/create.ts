@@ -1,4 +1,5 @@
 import type { AgentCreateWorkspaceRequest } from '../../src/shared/agent-tools'
+import { sessionTitleFrom } from '../../src/shared/session-title'
 import { choice } from '../../tools/input'
 import { HttpError } from '../http'
 import type { AgentToolServices } from './services'
@@ -56,6 +57,7 @@ export async function createFromTool(
       'The default model is not available. Choose a model and effort.',
     )
   }
+  const name = input.name === undefined ? null : sessionTitleFrom(input.name)
   return services.createWorkspace({
     orgId: caller.orgId,
     owner,
@@ -63,6 +65,7 @@ export async function createFromTool(
     sectionId,
     choice: choice({ ...model, effort }),
     firstMessage: input.firstMessage,
+    ...(name !== null && { name }),
     sender,
     createdByWorkspaceId: caller.workspaceId,
   })

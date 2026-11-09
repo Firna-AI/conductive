@@ -224,7 +224,7 @@ says.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
   This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
 - The complete runner envelope also meets the
-  [runner event limit](chat-and-events.md#the-agent-runner).
+  [runner event limit](agent-runner.md#the-agent-runner).
   Reason: paths have no fixed byte length, so an item count cannot bound an event.
 - Full trees and branch changes lists use numbered parts of one revision (decision 76).
   Every path and entry stays whole. Each path appears once in the complete report.
@@ -248,7 +248,7 @@ says.
 - A new full report has a newer revision than the last applied report of its kind.
   It can skip unapplied revisions to recover missing or refused data.
 - After a refused tree report or tree delta, the workspace asks for one full file tree, as
-  [Lost workspace updates](chat-and-events.md#lost-workspace-updates) says (decision 96).
+  [Lost workspace updates](agent-runner.md#lost-workspace-updates) says (decision 96).
   After a refused changes report, it asks for one full changes list.
 - After the refused update, each part of that kind belongs to a replacement.
   The only exception is a remaining part of the refused report or of an earlier report.
@@ -271,7 +271,7 @@ says.
 - When the runner cannot read the repository, it sends `files.unavailable`
   (decision 109). The event holds no other data. A failed scan after a
   connect does not stop `runner.ready`, as
-  [The agent runner](chat-and-events.md#the-agent-runner) says.
+  [The agent runner](agent-runner.md#the-agent-runner) says.
 - The workspace then marks the file tree as unavailable, and each open tab
   gets the mark. The changes list keeps its last complete report.
 - The tree that the workspace serves then carries `unavailable: true`. It
