@@ -257,13 +257,14 @@ Verify table behavior through the public component and chat events.
 - [x] Smoke-test resource, partial, short-row, and wide tables in the chat development page.
 - [x] Inspect desktop and phone layouts in both color schemes. Save evidence under `.context/`.
 - [x] Install root, desktop, and runner check dependencies. Run `npm run check`.
+- [x] Verify the combined tree after the latest main merge with the complete gate.
 - [x] Commit with Conventional Commits and push the current branch.
 - [ ] Review the complete local diff against `origin/main` after the push with the `implementation-review` skill.
 - [ ] Report findings. Fix `fix now` findings, record the rest as follow-up items, and re-review once.
 - [ ] Delete this plan when the `plans` skill requires it.
 - [ ] Open the pull request with dated decisions, design calls, the plan permalink, and new follow-up items.
 
-Evidence: `.context/markdown-table-support/browser/final-measurements.md`, the browser JSON results, screenshots, and `complete-gate-1.log`.
+Evidence: `.context/markdown-table-support/browser/final-measurements.md`, the browser JSON results, screenshots, `complete-gate-1.log`, and `complete-gate-2.log`.
 
 Options review: `.context/markdown-table-support/options-check.md` confirms both
 choices. Its layout evidence is under `.context/markdown-table-support/measurements/`.
