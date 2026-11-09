@@ -9,6 +9,7 @@ import { requestLines, testServices } from '../../app/test-kit'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { API_PATHS } from '../../shared/api'
 import { GET_STARTED_PATH } from '../../shared/onboarding'
+import { orgSettingsPaths, type ImageBuild } from '../../shared/org-settings'
 import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
@@ -16,7 +17,10 @@ import {
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
-import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
+import {
+  holdAnimationFrames,
+  MOUNTED_TEST_TIMEOUT,
+} from '../../test-support/mount'
 import { Shell } from '../Shell'
 import { click, mountScreen, settle, typeText } from '../test-mount'
 import type { Viewport } from '../ui/viewport'
@@ -95,6 +99,69 @@ describe('the steps of Get started', () => {
       created: false,
       intro: 'Welcome, Priya Raman. Finish these steps to create a workspace.',
       orgStep: '2. Create an org',
+    })
+  })
+
+  test('Open the log of a failed first build opens the Cloud computer tab, and Try again starts a build that the step and the finish follow', async () => {
+    const server = new FakeApiServer()
+    const failed: ImageBuild = {
+      id: 'first',
+      orgId: FAKE_IDS.org,
+      kind: 'build',
+      state: 'failed',
+      startedAt: FAKE_TIME - 720_000,
+      completedAt: FAKE_TIME - 582_000,
+      durationMs: 138_000,
+      error: 'The cloud computer image could not build.',
+    }
+    const started: ImageBuild = {
+      ...failed,
+      id: 'second',
+      state: 'running',
+      startedAt: FAKE_TIME,
+      completedAt: null,
+      durationMs: null,
+      error: null,
+    }
+    const buildsPath = orgSettingsPaths.builds(FAKE_IDS.org)
+    server.json('GET', buildsPath, {
+      builds: [failed],
+      currentImageBuildId: null,
+    })
+    server.json('POST', buildsPath, { build: started, log: [] }, 202)
+    // The spinners of the tab and of the running build stay on one frame.
+    holdAnimationFrames()
+    const { view, navigation } = await mountApp(
+      server,
+      routes.getStarted(),
+      'desktop',
+    )
+    click(byRole('button', 'Open the log', view))
+    await settle()
+    const log = navigation.history.at(-1)
+    act(() => navigation.push(routes.getStarted()))
+    await settle()
+    click(byRole('button', 'Try again', view))
+    await settle()
+    const orgStep = Array.from(view.querySelectorAll('h2'))
+      .find((title) => title.textContent === '2. Create an org')
+      ?.closest('section')
+    expect({
+      log,
+      starts: requestLines(server).filter(
+        (line) => line === `POST ${buildsPath}`,
+      ).length,
+      preparing: (orgStep?.textContent ?? '').includes('Preparing · 0s'),
+      tryAgain: queryByRole('button', 'Try again', view),
+      finish: view.querySelector('ol + * p')?.textContent,
+      open: pressable(view, 'Open Acme'),
+    }).toEqual({
+      log: routes.settings(FAKE_IDS.org, 'cloud-computer'),
+      starts: 1,
+      preparing: true,
+      tryAgain: null,
+      finish: "Acme's cloud computer is still being prepared.",
+      open: true,
     })
   })
 

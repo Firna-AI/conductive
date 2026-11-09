@@ -106,7 +106,11 @@ function DialogCard(props: {
   )
   const sendKey = useSendKey(form.ready, form.send)
   const unchosen = form.repositories?.length === 0
-  const notices = form.failure !== null || form.notice !== null || unchosen
+  const notices =
+    form.failure !== null ||
+    form.buildNotice !== null ||
+    form.notice !== null ||
+    unchosen
   return (
     <section
       aria-label="New workspace"
@@ -162,6 +166,7 @@ function DialogCard(props: {
           {notices ? (
             <div className={styles.notices}>
               {form.failure}
+              {form.buildNotice}
               {form.notice}
               {unchosen ? (
                 <ChooseRepositoriesNotice open={leave} org={org} />

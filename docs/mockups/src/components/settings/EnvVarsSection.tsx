@@ -124,13 +124,16 @@ function AddVariableForm() {
  * write-only: the app shows that a value is set, and an admin can replace
  * it. Each variable has a Secret mark, which an admin switches. `readOnly`
  * shows the names and the marks without controls. `form` opens Add
- * variable, or the new value of the first variable.
+ * variable, or the new value of the first variable. `vars` are the
+ * variables of the org. A new org has none yet.
  */
 export function EnvVarsSection(props: {
   org: string
   readOnly?: boolean
   form?: EnvVarForm
+  vars?: readonly EnvVar[]
 }) {
+  const vars = props.vars ?? envVars
   const form = props.readOnly ? 'none' : (props.form ?? 'none')
   const row = (item: EnvVar, index: number) => {
     if (props.readOnly) return <ReadOnlyRow item={item} key={item.name} />
@@ -149,10 +152,16 @@ export function EnvVarsSection(props: {
       description={`Workspaces of ${props.org} get these each time their cloud computer starts. Builds run without them.`}
       title="Environment variables"
     >
-      <ul aria-label="Environment variables" className={styles.list}>
-        {envVars.map(row)}
-      </ul>
-      <SectionText muted>{secretNote}</SectionText>
+      {vars.length === 0 ? (
+        <SectionText muted>No variables yet.</SectionText>
+      ) : (
+        <>
+          <ul aria-label="Environment variables" className={styles.list}>
+            {vars.map(row)}
+          </ul>
+          <SectionText muted>{secretNote}</SectionText>
+        </>
+      )}
       {form === 'add' ? <AddVariableForm /> : null}
     </Section>
   )

@@ -22,7 +22,10 @@ export async function readShellSettings(
       `SELECT s.install_script AS installScript, s.startup_script AS startupScript,
        s.env_vars_ciphertext AS envVarsCiphertext, s.revision, s.updated_at AS updatedAt,
        b.settings_revision AS builtRevision
-       FROM settings s LEFT JOIN image_builds b ON b.id = s.image_build_id
+       FROM settings s LEFT JOIN image_builds b ON b.org_id = s.org_id
+       AND b.id = COALESCE(s.image_build_id,
+         (SELECT id FROM image_builds WHERE org_id = s.org_id AND kind = 'build'
+          ORDER BY started_at DESC, id DESC LIMIT 1))
        WHERE s.org_id = ?`,
     )
     .bind(orgId)
@@ -44,7 +47,8 @@ export function shellSettingsView(
       .sort(([a], [b]) => (a === b ? 0 : a < b ? -1 : 1))
       .map(([name, entry]) => ({ name, secret: entry.secret })),
     updatedAt: row.updatedAt,
-    needsBuild: row.builtRevision !== row.revision,
+    needsBuild:
+      row.builtRevision !== null && row.builtRevision !== row.revision,
   }
 }
 

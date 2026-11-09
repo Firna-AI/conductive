@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-09, from round 1 finding 5 of the review of branch `calummoore/tab-drag-and-drop`.
 - **Location:** `tools/marketing-pictures/run.ts`, the capture command `npm run marketing:pictures`. `src/marketing/pictures/`, the committed pictures. `package.json`, the `mockups:check` script.
-- **Reason:** Each option adds a gate or a build error, which the user decides.
+- **Reason:** The recommended check adds a gate, which the user decides.
 
 - **Terms:**
   - **Marketing picture:** a still capture of a mockup screen that the public site shows. Git keeps each picture as a file under `src/marketing/pictures/`.
@@ -23,7 +23,7 @@
   - **D.** The site build captures the pictures from the current mockups, and Git keeps no picture. Each build then needs Chrome, and no person checks a picture before it goes public. Effort: Large.
 - **Left out:** Draw the screens live on the site, because the content security policy of the site allows only hashed style elements. One more doc rule, because three doc rules did not stop the class.
 - **Wider fix:** B, the cheapest check that catches a stale picture from any cause, with no browser in the gate.
-- **Previous examples:** Commits `9ad3d12` and `e9827da`, and finding 5 of the review of `calummoore/tab-drag-and-drop`.
+- **Previous examples:** Commits `9ad3d12` and `e9827da`, and the removed session Rename button that remained in ten marketing pictures.
 - **Recommendation:** B. It catches every stale picture before the merge, at the cost of one more step in the gate.
 - **Action:** ask the user, because each option other than A adds a gate or a build error.
 - **Answer:** On 9 November 2026, the user chose to keep this work as a follow-up item for a later change, and to merge the change that found it without it. No option is chosen yet, so the item still needs a decision.

@@ -1,17 +1,91 @@
 import type { ReactNode } from 'react'
-import { CircleAlert, FolderGit2, Plug } from 'lucide-react'
+import { ArrowRight, CircleAlert, FolderGit2, Hammer, Plug } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { firstBuildCopy as buildCopy } from '../../../docs/mockups/src/screens/firstBuildCopy'
 import type { ApiError } from '../../app/api/client'
+import { firstBuildOf } from '../../app/first-build'
+import { mayChangeSettings } from '../../app/permissions'
 import type { CreateState } from '../../app/new-workspace-model'
 import { routes } from '../../app/router'
-import { useStore } from '../../app/store'
+import { useStore, valueOf } from '../../app/store'
+import { formatElapsed, useNow } from '../../app/time'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
+import type { ImageBuild } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp } from '../context'
+import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
 import { modelLabel } from '../ui/ModelPicker'
 
 const agentNames = { claude: 'Claude', codex: 'Codex' } as const
+
+/** The notice of the build that runs, with its time, which moves on. */
+function RunningBuild(props: { build: ImageBuild }) {
+  const now = useNow(1_000)
+  // A narrow phone keeps the time on one line.
+  const elapsed = formatElapsed(now - props.build.startedAt).replaceAll(
+    ' ',
+    '\u00a0',
+  )
+  return (
+    <Notice
+      body={buildCopy.running.body}
+      busy
+      icon={Hammer}
+      title={buildCopy.running.title(elapsed)}
+    />
+  )
+}
+
+/**
+ * The notice over the composer while the org has no good image: its first
+ * build runs, failed, or never started. A notice turns Send off, so no
+ * create fails for want of an image. Only an admin builds the computer, so
+ * only an admin gets the link to the Cloud computer tab, and a member reads
+ * who can act. Once a build succeeded, no notice shows, also during a
+ * later build. None shows while the builds load.
+ */
+export function useFirstBuildNotice(
+  org: OrgSummary,
+  openPage: (to: string) => void,
+): ReactNode {
+  const builds = valueOf(useStore(useOrgModel(org.id).builds))
+  const admin = mayChangeSettings(useOrgAccess(org))
+  if (!builds) return null
+  const first = firstBuildOf(builds)
+  const open = admin ? (
+    <ActionButton
+      icon={ArrowRight}
+      onPress={() => openPage(routes.settings(org.id, 'cloud-computer'))}
+    >
+      {buildCopy.open}
+    </ActionButton>
+  ) : undefined
+  switch (first.state) {
+    case 'succeeded':
+      return null
+    case 'running':
+      return <RunningBuild build={first.build} />
+    case 'failed':
+      return (
+        <Notice
+          action={open}
+          body={admin ? buildCopy.failed.admin : buildCopy.failed.member}
+          icon={CircleAlert}
+          title={buildCopy.failed.title}
+          tone="danger"
+        />
+      )
+    case 'none':
+      return (
+        <Notice
+          action={open}
+          body={admin ? buildCopy.none.admin : buildCopy.none.member}
+          icon={Hammer}
+          title={buildCopy.none.title}
+        />
+      )
+  }
+}
 
 /**
  * The notice over the composer when a message cannot go yet: the agent of
