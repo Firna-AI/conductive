@@ -12,6 +12,7 @@ import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { unavailableConversations } from './unavailableConversations'
+import { workConversations } from './workConversations'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -19,7 +20,14 @@ export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 type ToolCallStatus = 'done' | 'running' | 'stopped'
 
 export type ChatItem =
-  | { kind: 'user'; id: string; text: string; queued?: boolean }
+  | {
+      kind: 'user'
+      id: string
+      text: string
+      queued?: boolean
+      /** Sent while a turn runs: it joins that turn as a new part. */
+      during?: true
+    }
   | {
       kind: 'agent'
       id: string
@@ -119,6 +127,8 @@ export const conversationKeys = [
   'link-sent',
   'link-answer',
   'other-org-link',
+  'steered',
+  'mac-in-work',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -217,6 +227,10 @@ const cutOffTurn: readonly ChatItem[] = [
  */
 export const followUpDraft = linkedSession.firstMessage
 
+/** The steer message that the user types while a turn runs. */
+export const steerDraft =
+  'Also debounce the lookups to 250 ms, so we stay under the rate limit.'
+
 export const conversations: Readonly<
   Record<ConversationKey, readonly ChatItem[]>
 > = {
@@ -250,8 +264,9 @@ export const conversations: Readonly<
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations,
   ...workspaceLinkConversations(history),
+  ...workConversations({
+    start: autocompleteStart,
+    tests: autocompleteTests,
+    steer: steerDraft,
+  }),
 }
-
-/** The steer message that the user types while a turn runs. */
-export const steerDraft =
-  'Also debounce the lookups to 250 ms, so we stay under the rate limit.'

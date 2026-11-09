@@ -101,7 +101,7 @@ says.
 
 ## Workspace numbers and links
 
-- Each workspace has a number in its org (decision 151). The numbers of an
+- Each workspace has a number in its org (decision 212). The numbers of an
   org count up from 1, in the order in which its workspaces were created.
 - The app never gives a number twice in one org. This holds also after a
   failed first start and after a Restore of the org.
@@ -123,7 +123,7 @@ says.
   origin, such as
   `https://app.conductive.build/orgs/<org ID>/workspaces/<workspace ID>`.
 - The link names the org and the workspace by their IDs, never by a number
-  or a name. So the label and the name can change later (decision 151).
+  or a name. So the label and the name can change later (decision 212).
 - The workspace record gives the number in `number` and the link in
   `link`. Copy link, the chips, and the agent tools use this link.
 - Reason: the page of the Mac app runs on its own origin, and a sandbox

@@ -2,14 +2,13 @@
 
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
-runner, its events and their limits, the end of each turn, and the repair
-of lost workspace updates. It belongs to
-[Chat and events](chat-and-events.md). The terms are those of the
+runner, its events and their limits, its turns, and the repair of lost
+workspace updates. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
 
-## Connection, events, and turns
+## The agent runner
 
 - The runner starts with the sandbox, and starts again after each resume.
 - The runner opens one outbound WebSocket to the Durable Object of its
@@ -114,7 +113,7 @@ says.
   [Files and changes](tools-of-a-workspace.md#files-and-changes) says.
   File results are not part of the chat history.
 
-## Lost workspace updates
+### Lost workspace updates
 
 - The file tree, the changes list, the start steps, and the workspace name
   belong to no session. A later full report of the same kind replaces each

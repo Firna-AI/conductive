@@ -200,13 +200,44 @@ says.
   changed no files. A failed turn was rejected, because it shows a failure
   for finished work.
 - A tool detail and a turn file list give a count of data that their limits omit.
-- A refused runner event shows one chat line that names the lost data,
-  unless it is a
-  [lost workspace update](agent-runner.md#lost-workspace-updates).
+- A refused runner event shows one chat line that names the lost data, unless
+  it is a [lost workspace update](agent-runner.md#lost-workspace-updates).
+  Such a line among the work of a turn folds with that work (decision 151).
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
   result can answer more than one message.
+
+### The work of a turn
+
+- While a turn runs, each agent message shows in full. Each run of tool
+  calls gets its own line that folds it, such as "3 tool calls".
+- When a turn ends, also when it stops or fails, the work before its answer
+  folds into one line (decision 150).
+- Reason: the answer of a long turn stays easy to find. A fold while the
+  turn runs was rejected, because the user watches the agent work.
+- The work of a turn is its agent messages and its tool calls. The results
+  of its [Mac commands](agent-tools.md#mac-commands) and the lines of its
+  refused events are part of that work, at their place (decision 151).
+- Reason: the turn stays as short as in Conductor. A command result or a
+  line of a refused event that stays in view between two folds was rejected.
+- A message that a member sends during a turn stays in view. It starts a
+  new part of the turn, with its own answer and its own fold.
+- The answer of a part is its last agent message, with the agent messages
+  directly before it. A part with no agent message has no fold.
+- The answer and the work after it stay in view, such as the tool calls
+  that a stop cut off. The end of the turn stays in view too.
+- The line of the fold counts the tool calls and the messages, such as
+  "8 tool calls, 7 messages". It leaves out a zero count.
+- As on the line of a run of tool calls, the line of the fold shows the kinds
+  of tool. It also shows the total size of the output that the runner left
+  out. Command results and lines of refused events add no count and no mark.
+- The fold starts closed. A click opens or closes it, and the fold keeps
+  that choice while the chat shows it.
+- An open fold lists its steps in order, with one line for each tool call
+  and each message. A click opens a message line to its full text.
+- When the user opens or closes a fold or a run of tool calls, its line
+  stays in place. Its list opens or closes below the line.
 
 ## Events
 
@@ -225,14 +256,3 @@ says.
   device.
 - A cache on the disk was rejected, because the chat, with its code and
   any secret that an agent printed, would stay on the device.
-
-## The agent runner
-
-- [Agent runner](agent-runner.md) says how the agent runner connects,
-  sends its events within their limits, and ends each turn.
-
-### Lost workspace updates
-
-- [Lost workspace updates](agent-runner.md#lost-workspace-updates) says how
-  the workspace repairs a lost report of the files, the changes, the start
-  steps, or the workspace name.

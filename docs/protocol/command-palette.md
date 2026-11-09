@@ -122,7 +122,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - A workspace row shows the state mark, the name, the repository, and the
   age of the latest activity, as the workspace list does.
 - When a word of the query is in the label of the number of a workspace,
-  its row also shows that label, before the name (decision 151). Reason:
+  its row also shows that label, before the name (decision 212). Reason:
   the person can then tell apart the workspaces that match a part of a
   number, such as `39`.
 - The state mark and the bold name of an unread workspace mean what they
@@ -155,7 +155,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   the start of a word ranks first.
 - The label of the number, such as `W-395`, follows the same rules as the
   other texts. So `395` and `W-395` both find that workspace
-  (decision 151). Reason: one rule serves every text.
+  (decision 212). Reason: one rule serves every text.
 - Rows of the same rank keep the order that the tab shows without a query.
   For workspaces, that is the order of the list.
 
@@ -237,22 +237,11 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - Tab moves the focus to the tabs and the filters. The focus stays inside
   the palette, as in the other dialogs of the app.
 
-## Empty states
+## Empty and unavailable states
 
-- When the Workspaces tab has no workspace to show and the search field is
-  empty, one line says where its workspaces show.
-- With the Active filter, the line says
-  `Workspaces of <org or repository> show here`.
-- With the Archived filter, the line says
-  `Archived workspaces of <org or repository> show here`.
-- `<org or repository>` names the chosen repository, such as
-  acme/marketing-site, or the org while the filter shows all repositories.
-- Without an org, the line has no name: `Workspaces show here`, or
-  `Archived workspaces show here`.
-- When a query matches no row of the current tab, the palette says
-  `Nothing matches “<query>”`. `<query>` is the text of the search field.
-- Under it, the palette says "Try a workspace name, a branch, or a
-  repository."
+- [Command palette: empty and unavailable states](command-palette-states.md)
+  gives what the palette shows while its workspace data loads or did not
+  load, and when a tab or a search has no row.
 
 ## Access
 

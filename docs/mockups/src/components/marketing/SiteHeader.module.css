@@ -23,6 +23,7 @@
 .link {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   min-height: var(--ui-touch-min);
   padding: 6px 10px;
   border-radius: var(--ui-radius-lg);

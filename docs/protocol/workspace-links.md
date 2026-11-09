@@ -16,7 +16,7 @@ number names a dated record, as
 ## Copy link
 
 - The label of the number in the workspace header is the Copy link button,
-  on desktop and on a phone (decision 151).
+  on desktop and on a phone (decision 212).
 - The button shows the label alone, with no link icon. When a pointer is
   over the button, it shows a hover effect.
 - The accessible name of the button is "Copy link to" and the label, such
@@ -39,7 +39,7 @@ number names a dated record, as
 
 - A chip is a small rounded box in a line of text. It shows the state
   mark, the label of the number, and the current name of one workspace
-  (decision 150).
+  (decision 211).
 - A chip changes when the name or the state of its workspace changes. This
   holds also on a phone, where the workspace list is not on the screen.
 - Reason: the mark shows the live state, which matters when one workspace
@@ -77,7 +77,7 @@ number names a dated record, as
   the domain is planned, and a plain link still works where the old domain
   forwards to the new one.
 - Text such as `W-395` stays text, also when a workspace of the org has
-  that label (decision 150).
+  that label (decision 211).
 - Typed labels that become chips or links were rejected, because the
   message field then shows them as text, not as chips. A label meant as
   plain text would also become a link.
@@ -85,7 +85,7 @@ number names a dated record, as
 ## Messages and answers
 
 - A workspace link in a sent message or in an agent answer shows as a chip
-  (decision 150).
+  (decision 211).
 - A Markdown link whose target is a workspace link, such as
   `[W-395](<link>)`, shows as the chip alone. Reason: an agent often writes
   links in Markdown.
@@ -101,7 +101,7 @@ number names a dated record, as
 - A sent message keeps the plain link of each chip. The agent gets that
   link in the text of the message.
 - Reason: the link names the workspace by its ID, so its label and its name
-  can change later (decision 151).
+  can change later (decision 212).
 - Workspaces in a field of their own in the message were rejected, because
   the chip then leaves the sentence.
 - The agent tools give the agent the number and the link of each
@@ -111,7 +111,7 @@ number names a dated record, as
 ## The message field
 
 - The message field of each composer turns each pasted workspace link into
-  a chip at once (decision 150). The composers are the chat of a
+  a chip at once (decision 211). The composers are the chat of a
   workspace, the New workspace page, and the New workspace dialog.
 - A chip that shows only after Send was rejected, because the person then
   sees a long address until Send.

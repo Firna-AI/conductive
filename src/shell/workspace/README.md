@@ -220,7 +220,7 @@ fake API, with its address options, its controls, and the test command.
 
 ## Related docs
 
-- [Lost workspace updates](../../../docs/protocol/chat-and-events.md#lost-workspace-updates):
+- [Lost workspace updates](../../../docs/protocol/agent-runner.md#lost-workspace-updates):
   the repair, and the notice of a failed repair.
 - [Start steps](../../../docs/protocol/workspaces-and-sandboxes.md#start-steps)
   and [Workspace states](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-states).

@@ -50,7 +50,7 @@ export const newWorkspaceDialog = defineScreen({
       description:
         'The task names an earlier workspace. Cal pasted the link of Checkout address autocomplete, the workspace under the dialog, and the message shows it as a chip at once, with the ready state that the list shows. Create is on.',
       rationale:
-        'The dialog turns a pasted link into a chip, as the message boxes of the New workspace page and of the chat do, from decision 150. The chip finds its workspace in the list of the screen, as the chat does. The first message keeps the plain link.',
+        'The dialog turns a pasted link into a chip, as the message boxes of the New workspace page and of the chat do, from decision 211. The chip finds its workspace in the list of the screen, as the chat does. The first message keeps the plain link.',
       props: { draft: 'workspace-link' },
     },
   ],

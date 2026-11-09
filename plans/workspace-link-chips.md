@@ -17,31 +17,32 @@ Sent messages and agent answers show the same chips. A message keeps the
 plain link, which holds the workspace ID. So the agent reads the link,
 and the shown label can change later. The search of the command palette
 also finds a workspace by its number. The user chose this on
-9 November 2026, in decisions 150 and 151.
+9 November 2026, in decisions 211 and 212.
 
 The change does not cover these things:
 
 - an agent tool that reads the chat of another workspace, or sends a
   message to it
 - a picker that finds a workspace while the person types, option F of
-  decision 150
+  decision 211
 - a line for the agent about each linked workspace, option G of
-  decision 150
+  decision 211
 - chips for typed numbers, such as `W-395`, and for links to another org
 - links of other kinds in chat text, which stay plain text
 
-The decision numbers continue after 149, the highest decision number on
-any branch on 9 November 2026. The brainstorm asked them as items 1 and 2.
+These decisions were originally numbered 150 and 151. The final merge
+renumbered them 211 and 212 because main uses 150 and 151 for turn folding.
+The choices and dates stay the same. The brainstorm asked them as items 1 and 2.
 The options check of 9 November 2026 added options to both decisions. Its
 report is in `.context/workspace-link-chips/options-check.md`. After the
-check, the user chose option D for decision 151: the number, and a search
+check, the user chose option D for decision 212: the number, and a search
 of the command palette that finds it.
 
 Related work on other branches:
 
 - `calummoore/command-palette-mockups` adds a command palette with a
   workspace search, in [PR #77](https://github.com/Firna-AI/remote-code/pull/77)
-  and the Conductor workspace "Command Palette Mockups". Decision 151 adds
+  and the Conductor workspace "Command Palette Mockups". Decision 212 adds
   the number to that search. This branch can merge without that part, as
   the user said on 9 November 2026. When this branch is ready, the agent
   checks whether the palette is on `main`. When it is, this branch adds
@@ -79,7 +80,7 @@ approved.
 ### The number
 
 - The number of a workspace counts up from 1 in its org, in the order of
-  creation (decision 151). Workspaces that exist before the change get
+  creation (decision 212). Workspaces that exist before the change get
   numbers in the order of their creation times.
 - Agent call: the app never gives a number twice in one org. The
   workspace of a failed first start keeps its number used. A restored org
@@ -91,14 +92,14 @@ approved.
   gets the same atomic allocation, including direct test seeds.
 - Agent call: the label is `W-` and the number, in every org. It is only
   a label. Links, stored messages, and the agent tools name a workspace by
-  its ID (decision 151). Reason: the user asked that the label can change
+  its ID (decision 212). Reason: the user asked that the label can change
   later.
 - Agent call: the number shows in the workspace header and in each chip.
   The rows of the workspace list keep their layout. Reason: a person
   copies and reads a reference in those two places, and a row has no room
   for more.
 - The search of the command palette also finds a workspace by its number,
-  such as `395` or `W-395` (decision 151).
+  such as `395` or `W-395` (decision 212).
 - Agent call: the palette searches the label as one more field of each
   workspace, with the same rules as the name. Reason: one rule serves
   every field.
@@ -201,7 +202,7 @@ approved.
 ### The message box
 
 - The message boxes of the chat and of New workspace turn each pasted
-  workspace link into a chip at once (decision 150).
+  workspace link into a chip at once (decision 211).
 - Agent call: the box reads a paste from the paste event, not from the
   clipboard API. Reason: the Mac app denies clipboard reads, as
   [Permissions](../docs/protocol/desktop-app.md#permissions) says.
@@ -238,7 +239,7 @@ approved.
   React. The other choices, in order:
   - [Tiptap](https://tiptap.dev), which wraps ProseMirror for React, is
     the second choice. It adds more packages for a plain text box.
-  - Option E of decision 150, a native text field with a layer that draws
+  - Option E of decision 211, a native text field with a layer that draws
     each chip, is the fallback. Its chip is styled text, not one unit,
     and it has no room for the state mark.
   - A field of our own is rejected, because input methods, undo, and
@@ -249,7 +250,7 @@ approved.
 - Agent call: Milestone 6 first proves Lexical in the DOM tests and in
   Chrome with a phone screen. When Lexical fails, the proof tries Tiptap.
   When both fail, the milestone stops, and the editor becomes a decision
-  for the user, with option E of decision 150 as the fallback.
+  for the user, with option E of decision 211 as the fallback.
 - Agent call, from editor preparation: use the supported React composer
   and plugin APIs in `lexical` and `@lexical/react`. Reason: they meet the
   field's needs with the two planned direct packages.
@@ -296,7 +297,7 @@ message fields. Drafts and stored messages keep the same plain text.
 
 ## Decisions
 
-### 150. Chat cannot point at another workspace
+### 211. Chat cannot point at another workspace
 
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design.
@@ -314,21 +315,21 @@ message fields. Drafts and stored messages keep the same plain text.
 - **Options:**
   - **A.** Keep the box as it is. A pasted link shows as the full address until Send. Sent messages and agent answers show each workspace link as a chip. Cost: the user sees no chip before Send. Effort: Medium.
   - **B.** A pasted link, or a pick from a menu, adds a chip to the row of attached files. The message stores the workspaces as data. The agent gets a block that names each one. Cost: the chip is not in the sentence. The message, the Worker, and the runner each need a new field. Effort: Large.
-  - **C.** A pasted link becomes the text `W-395` in the box. People can also type it. A line under the box names each workspace that the text points to. Sent messages and agent answers show each `W-395` and each link as a chip. Cost: it needs the short numbers of decision 151, and the box shows text, not a chip. [GitHub works this way](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/autolinked-references-and-urls): it shows a pasted issue link as `#26`. Effort: Large, with decision 151.
+  - **C.** A pasted link becomes the text `W-395` in the box. People can also type it. A line under the box names each workspace that the text points to. Sent messages and agent answers show each `W-395` and each link as a chip. Cost: it needs the short numbers of decision 212, and the box shows text, not a chip. [GitHub works this way](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/autolinked-references-and-urls): it shows a pasted issue link as `#26`. Effort: Large, with decision 212.
   - **D.** A new message box holds chips inside the text, so a pasted link becomes a chip at once. The agent gets the plain link. Cost: the message boxes of the chat and of New workspace need a new editor. That editor has risks with phone keyboards, input methods, undo, and focus. It needs Lexical, ProseMirror, or a new `@firna/ui` part. Effort: Large.
   - **E.** Added by the options check. Keep the native text field, and draw each chip on a layer behind its text. A paste puts the label and the name in the field, and a map turns that text back into the link at Send. Cost: the chip is styled text, not one unit. Key handlers must delete it whole and move the caret past it. The layer must follow the font, the wrap, and the scroll of the field, and it has no room for the state mark. Input methods, undo, and phone keyboards stay native, and no editor package comes in. Effort: Large.
   - **F.** Added by the options check. D, and a picker in the box. A button in the bar, or a typed `#`, lists the workspaces of the org, and a choice adds the chip. Cost: a menu with keys and a phone layout inside the new editor. A typed `#` also opens the menu when a person means a plain `#`. A person in the Mac app or on a phone then needs no Copy link. Effort: Large. The picker alone is Medium.
   - **G.** Added by the options check. D, and the agent gets one line for each linked workspace, as it gets one for each attached file. The line gives the label, the name, the branch, and the state. Cost: a change in the runner or in the turn command, with tests and a protocol line. The line is a copy from the time of the send. Effort: Large. The line alone is Medium.
-  - **H.** Added by the options check. C, but Send turns each `W-395` of the org into its link, so the message keeps the ID. Cost: the box shows text, not a chip. A `W-395` that a person meant as plain text becomes a link, unless it is in code. Effort: Large, with decision 151.
+  - **H.** Added by the options check. C, but Send turns each `W-395` of the org into its link, so the message keeps the ID. Cost: the box shows text, not a chip. A `W-395` that a person meant as plain text becomes a link, unless it is in code. Effort: Large, with decision 212.
 - **Left out:** No change, because a pasted link stays a long address, and agent answers show no links. An agent tool that reads a pasted link with no chip, because people still see a long address. Parent and child links between workspaces, because they cover only the workspaces that an agent created, not a workspace that a person names. A preview card under the message or the box, as Slack shows for links, because the long address stays in the text.
 - **Wider fix:** None, because this is a new feature, not a class of defect.
 - **Previous examples:** None found in the plans, the follow-ups, the git log, or the names of earlier workspaces. Similar parts are the linked-session line, `LinkedLine.tsx`, and the file chips, `AttachmentChips.tsx`.
-- **Related:** Decision 151, work that waits. Options C and H need option B or C of decision 151. The other options can show a number in the chip when decision 151 adds one.
-- **Recommendation:** D. The options check changed it from C. D shows the chip at once and keeps the ID in the message, as the note on decision 151 asks, and C stores the label. E is the fallback when the editor proof of Milestone 6 fails. F and G can follow as additions.
+- **Related:** Decision 212, work that waits. Options C and H need option B or C of decision 212. The other options can show a number in the chip when decision 212 adds one.
+- **Recommendation:** D. The options check changed it from C. D shows the chip at once and keeps the ID in the message, as the note on decision 212 asks, and C stores the label. E is the fallback when the editor proof of Milestone 6 fails. F and G can follow as additions.
 - **Action:** asked the user, because each option adds chat behaviour that no requirement covers. The options also trade the look of the box against the risk of a new editor.
 - **Chosen:** D, by the user on 9 November 2026.
 
-### 151. Workspaces have no short number
+### 212. Workspaces have no short number
 
 - **Severity:** Low. **Effort:** Medium.
 - **Source:** Design.
@@ -338,7 +339,7 @@ message fields. Drafts and stored messages keep the same plain text.
   - **Short number:** a number for each workspace in its org, such as 395 in `W-395`. Conductive has none today.
 - **Background:** A workspace has a long random ID, a name, and a branch such as `calummoore/lisbon-7k2q`. The agent renames a workspace after its first answer, and two workspaces can have the same name. Conductor shows a short ID such as `W-395` in its header.
 - **Problem:** People cannot name a workspace in a few characters, when they speak or write. With B alone, a person who hears or reads a number has no place to look it up.
-- **Impact if no action:** Option C of decision 150 cannot work. The chip and the header can show only the name. With B alone, people find a workspace by its name, not by its number.
+- **Impact if no action:** Option C of decision 211 cannot work. The chip and the header can show only the name. With B alone, people find a workspace by its name, not by its number.
 - **Root question:** How can people name one workspace in a few characters, so that a person who hears or reads the name can find that workspace? The options check widened the question, because under B nobody can look a number up.
 - **Options:**
   - **A.** Add no short number. The chip and the header show the name. Cost: workspaces with the same name look the same, and nobody can type a workspace from memory. Effort: Small.
@@ -349,7 +350,7 @@ message fields. Drafts and stored messages keep the same plain text.
 - **Left out:** A part of the random ID, and the end of the branch name, such as `lisbon-7k2q`, because people cannot easily say them.
 - **Wider fix:** None, because this is a new feature.
 - **Previous examples:** None in this repository. Other tools: Conductor's `W-395`, GitHub's issue numbers, and Linear's issue keys such as `ENG-123`.
-- **Related:** Decision 150, work that waits. Options C and H of decision 150 need option B or C here.
+- **Related:** Decision 211, work that waits. Options C and H of decision 211 need option B or C here.
 - **Recommendation:** D. The options check changed it from B. D lets a person find `W-395` where the app already searches, at a small cost. When the palette has not merged, E gives the same step in the rows.
 - **Action:** asked the user, because a short number gives every workspace a new name that no requirement covers.
 - **Chosen:** D, by the user on 9 November 2026, after the options check. The user first chose B, with this note: "the actual link should be the id though, not the display name, meaning we could technically update the display name". So links and messages hold the workspace ID, and `W-395` is only a label. With D, the user added: "we can merge without pallete, but lets see where we are upto when this is ready, if this is ready first, we can just send a message to the pallete workspace after this merges". So the palette part does not block the merge of this branch.
@@ -590,12 +591,12 @@ Main added ended-turn folding, palette loading states, automatic titles,
 and a marketing link while the UI milestones ran. Keep those features
 and workspace chips together before the complete gate.
 
-- [ ] Resolve the current main integration path by path. Preserve the
+- [x] Resolve the current main integration path by path. Preserve the
       current protocol requirements and the workspace-link feature.
-- [ ] Check the combined chat, editor, palette and title paths. Run the
+- [x] Check the combined chat, editor, palette and title paths. Run the
       affected tests and static checks.
-- [ ] Refresh the marketing pictures if the merged mockups change them.
-- [ ] Audit merge preservation and smoke-test the merged app.
+- [x] Refresh the marketing pictures if the merged mockups change them.
+- [x] Audit merge preservation and smoke-test the merged app.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

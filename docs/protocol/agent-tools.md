@@ -68,10 +68,10 @@ says.
 - The reply to a create call gives the new workspace with its number and
   its link, as
   [Workspace numbers and links](workspaces-and-sandboxes.md#workspace-numbers-and-links)
-  says (decision 151).
-- A list call returns every workspace of the org, with its number, its
-  link, its name, its branch, and its state. Reason: every member of the
-  org already sees these workspaces.
+  says (decision 212).
+- A workspace list call returns every workspace of the org, with its
+  number, its link, its name, its branch, and its state. Reason: every
+  member of the org already sees these workspaces.
 - The help of the CLI and the descriptions of the MCP tools say that a
   workspace link in a message names the workspace with that link. They
   also say that a workspace link in an answer shows as a chip, as
@@ -222,6 +222,10 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   requests waits.
 - After its result, the command shows at its place in the chat: denied,
   done with its output, or Mac not available.
+- When its turn ends, the result folds with the work of the turn, at its
+  place, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
+  says (decision 151). A result that stays in view between two folds was
+  rejected, because the work then does not fold into one line.
 
 ## Computer tools
 

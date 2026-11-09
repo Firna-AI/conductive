@@ -246,7 +246,10 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   is not deleted.
 - `palette/`: the command palette without React. `palette-results.ts`
   gives the groups and the empty state of each tab for a query, from
-  `palette-groups.ts` and the rows of `palette-rows.ts`. `matcher.ts`
+  `palette-groups.ts` and the rows of `palette-rows.ts`. `palette-status.ts`
+  gives the status part, which stands in place of the workspace groups
+  while the list or the repository names load or after a read failed,
+  and the reads that its Try again does again. `matcher.ts`
   ranks the matches. `rowTexts` includes the workspace number label, such
   as `W-395`, in the search texts. `withNumberLabel` adds that label when
   a query word matches it. `../shell/palette/PaletteList.tsx` draws it
@@ -260,6 +263,8 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
   frame, `palette-context.ts` gives `usePaletteOffer` and
   `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
+  `use-palette-source.ts` gives the list and the repositories of the org
+  with their load states, and `PaletteStatus.tsx` draws the status part.
 - `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
   which say whether they closed, and the modal layers with their owners.
   The palette reads them before it opens.

@@ -235,6 +235,22 @@ a.highlighted:hover {
   font-size: var(--ui-text-sm);
 }
 
+/*
+ * The status part of workspace data that did not load. It stands first in
+ * the results, in place of the workspace groups, and the other groups
+ * follow it.
+ */
+.status {
+  padding-top: 8px;
+}
+
+/* The spinner, centred in the place of the groups. */
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 12px;
+}
+
 /* On a phone the palette is a page that fills the screen. */
 .page {
   display: flex;

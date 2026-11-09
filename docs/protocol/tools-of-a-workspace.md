@@ -30,7 +30,7 @@ number names a dated record, as
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
   This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
 - The complete runner envelope also meets the
-  [runner event limit](agent-runner.md).
+  [runner event limit](agent-runner.md#the-agent-runner).
   Reason: paths have no fixed byte length, so an item count cannot bound an event.
 - Full trees and branch changes lists use numbered parts of one revision (decision 76).
   Every path and entry stays whole. Each path appears once in the complete report.
@@ -77,7 +77,7 @@ number names a dated record, as
 - When the runner cannot read the repository, it sends `files.unavailable`
   (decision 109). The event holds no other data. A failed scan after a
   connect does not stop `runner.ready`, as
-  [The agent runner](agent-runner.md) says.
+  [The agent runner](agent-runner.md#the-agent-runner) says.
 - The workspace then marks the file tree as unavailable, and each open tab
   gets the mark. The changes list keeps its last complete report.
 - The tree that the workspace serves then carries `unavailable: true`. It

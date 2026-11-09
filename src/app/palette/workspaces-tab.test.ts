@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
-import { loading, ready } from '../store'
+import { ready } from '../store'
 import type { PaletteQuery } from './palette-source'
 import { paletteResults } from './palette-results'
 import {
@@ -102,9 +102,9 @@ describe('the Workspaces tab of the palette', () => {
     })
   })
 
-  test('a Workspaces tab without a workspace names where they show, a query without a match says so, and a list that loads waits', () => {
-    const empty = (filters: Partial<PaletteQuery>, overrides = {}) =>
-      paletteResults(query(filters), source(overrides)).empty
+  test('a Workspaces tab without a workspace names where they show, and a query without a match says so', () => {
+    const empty = (filters: Partial<PaletteQuery>) =>
+      paletteResults(query(filters), source()).empty
     expect([
       empty({
         tab: 'workspaces',
@@ -114,7 +114,6 @@ describe('the Workspaces tab of the palette', () => {
       empty({ tab: 'workspaces', archived: true }),
       empty({ tab: 'workspaces', repositoryId: 'admin-dashboard' }),
       empty({ tab: 'actions', text: ' refund ' }),
-      empty({ tab: 'workspaces' }, { list: loading }),
     ]).toEqual([
       {
         kind: 'line',
@@ -123,7 +122,6 @@ describe('the Workspaces tab of the palette', () => {
       { kind: 'line', text: 'Archived workspaces of Acme show here' },
       { kind: 'line', text: 'Workspaces of acme/admin-dashboard show here' },
       { kind: 'no-match', query: 'refund' },
-      { kind: 'loading' },
     ])
   })
 })

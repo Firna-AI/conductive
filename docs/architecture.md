@@ -238,8 +238,9 @@ the merge.
   their logins, the sessions, and the names of workspaces and sessions.
 - [Workspace links](protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
-- [Agent runner](protocol/agent-runner.md): the program in each sandbox,
-  its events and their limits, and the repair of lost updates.
+- [Agent runner](protocol/agent-runner.md): the connection of the runner,
+  its events and their limits, its turns, and the repair of lost workspace
+  updates.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
 - [GitHub banner](protocol/github-banner.md): the pull request bar and its
@@ -256,3 +257,6 @@ the merge.
   operator in the web app, their counts, and their searches.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
+- [Command palette: empty and unavailable states](protocol/command-palette-states.md):
+  what the palette shows while its workspace data loads or did not load,
+  and when a tab or a search has no row.

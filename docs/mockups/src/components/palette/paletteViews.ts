@@ -4,7 +4,9 @@ import { paths } from '../../paths'
  * The states of an open command palette that the mockups draw. Each state
  * names its tab. The states of the Workspaces tab name their filter, or the
  * menu that lies open, and the states of a search name their query.
- * `workspaces-empty` has filters that leave no workspace to show.
+ * `workspaces-empty` has filters that leave no workspace to show. The
+ * `loading` and `unavailable` states lack workspace data, as
+ * `paletteStatuses` says.
  */
 export const openPaletteViews = [
   'all',
@@ -12,12 +14,16 @@ export const openPaletteViews = [
   'workspaces-repository',
   'workspaces-archived',
   'workspaces-empty',
+  'workspaces-unavailable',
   'actions',
   'settings',
   'search',
   'number',
   'number-part',
   'no-results',
+  'search-loading',
+  'search-unavailable',
+  'search-repositories-unavailable',
 ] as const
 
 export type OpenPaletteView = (typeof openPaletteViews)[number]
@@ -69,19 +75,23 @@ export const viewTabs: Readonly<Record<OpenPaletteView, PaletteTab>> = {
   'workspaces-repository': 'workspaces',
   'workspaces-archived': 'workspaces',
   'workspaces-empty': 'workspaces',
+  'workspaces-unavailable': 'workspaces',
   actions: 'actions',
   settings: 'settings',
   search: 'all',
   number: 'all',
   'number-part': 'all',
   'no-results': 'all',
+  'search-loading': 'all',
+  'search-unavailable': 'all',
+  'search-repositories-unavailable': 'all',
 }
 
 /**
  * The text that the person typed. The search finds the Checkout workspace
  * and an archived one. The number finds the workspace of `W-395`, and the
  * part of a number finds each workspace whose label holds it. Nothing in
- * Acme matches the last query.
+ * Acme matches "refund". "new" matches actions and a setting.
  */
 export const paletteQueries: Readonly<
   Partial<Record<OpenPaletteView, string>>
@@ -90,4 +100,25 @@ export const paletteQueries: Readonly<
   number: 'W-395',
   'number-part': '39',
   'no-results': 'refund',
+  'search-loading': 'new',
+  'search-unavailable': 'new',
+  'search-repositories-unavailable': 'new',
+}
+
+/**
+ * The workspace data that a state of the palette lacks: the repository
+ * names, which a search looks at, while they load or after their read
+ * failed, or the workspace list after its read failed. The page under the
+ * palette reads the same list.
+ */
+export type PaletteStatus =
+  'repositories-loading' | 'repositories-failed' | 'list-failed'
+
+export const paletteStatuses: Readonly<
+  Partial<Record<OpenPaletteView, PaletteStatus>>
+> = {
+  'workspaces-unavailable': 'list-failed',
+  'search-loading': 'repositories-loading',
+  'search-unavailable': 'list-failed',
+  'search-repositories-unavailable': 'repositories-failed',
 }

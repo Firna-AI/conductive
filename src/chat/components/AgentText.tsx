@@ -6,9 +6,10 @@ import { inlineParts, textBlocks, type TextBlock } from './agent-text'
 
 /**
  * Text with `code` and **strong** parts. Each workspace link outside code is
- * a chip, and so is a Markdown link to a workspace.
+ * a chip, and so is a Markdown link to a workspace. An answer and a message
+ * line of a work fold both draw their text with it.
  */
-function InlineMarkdown(props: { text: string }) {
+export function InlineMarkdown(props: { text: string }) {
   return (
     <>
       {inlineParts(props.text).map((part, index) => {
