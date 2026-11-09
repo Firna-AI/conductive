@@ -286,7 +286,7 @@ The orchestrator owns the combined checks and the pull request.
 - [x] Install the desktop and runner check dependencies, then run `npm run check`.
       Keep every existing test assertion and security header requirement.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete diff against `origin/main` after the push with `implementation-review`.
+- [x] Review the complete diff against `origin/main` after the push with `implementation-review`.
       Report findings, apply the fix rule, record follow-ups, and re-review once.
       Wait for the last commit's CI result.
 - [x] The external docs implementor corrects the login replacement and recovery steps for checked review finding 4.
