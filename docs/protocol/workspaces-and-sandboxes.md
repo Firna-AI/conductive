@@ -107,6 +107,9 @@ says.
   the error state, because each is a larger build.
 - A new workspace starts from the newest good org image. It then creates
   its branch in the folder of its repository.
+- The run of a pull request creates its branch from that pull request, as
+  [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
+  says (decision 205 A).
 - When the GitHub repository has no refs, such as branches or tags, the
   start first pushes an empty first commit to the default branch of the
   repository (decision 89). It then fetches that branch and creates the
@@ -140,6 +143,8 @@ says.
   attachments.
 - Try again creates the workspace with a new workspace ID. The message
   keeps its message ID.
+- A routine run has no such tab. Its run keeps the cause of the failed
+  start, as [Failed runs](routine-runs.md#failed-runs) says.
 - The first message is the only message that a new workspace accepts
   before its first start succeeds, as
   [Messages](chat-and-events.md#messages) says (decision 130). So the
@@ -147,6 +152,14 @@ says.
 - After the removal, only the member who sent the first message can still
   get the events of the failed workspace. That member gets the stored
   events once, and the connection then closes.
+
+## Base branch
+
+- Each workspace has a base branch, the branch that its work targets
+  (decision 207 G). It is the default branch, except for the run of a pull
+  request.
+- Changes, each diff, the pull request bar, and "Create pull request" use
+  the base branch. [Base branches](base-branches.md) states the rules.
 
 ## Start steps
 
@@ -156,6 +169,10 @@ says.
 - The steps are product steps, not the raw output of the provider.
 - A new workspace shows steps such as the start from the org image, the
   fetch of the default branch, and the creation of the branch.
+- The run of a pull request fetches that pull request, or its base branch
+  after a merge.
+  [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
+  gives its steps.
 - A resume shows that the files come back as the user left them.
 - The chat history shows at once while a sandbox starts. The files and the
   tools wait until the sandbox is ready.
@@ -266,10 +283,11 @@ says.
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).
-- Changes lists the files that the branch changes against the default
-  branch. Its summary gives the number of changed files and the lines that
+- Changes lists the files that the branch changes against its base branch,
+  from the merge base of the two, as [Base branches](base-branches.md)
+  says. Its summary gives the number of changed files and the lines that
   they add and remove.
-- A changed file opens its diff against the default branch as a tab.
+- A changed file opens its diff against the base branch as a tab.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.

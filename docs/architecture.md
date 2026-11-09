@@ -4,6 +4,7 @@ Conductive is a coding tool at `conductive.build`. Each workspace is one
 task with its own branch and its own cloud computer, a Boat sandbox.
 Agents powered by Claude and Codex work only in the sandbox. The user
 follows them in the browser or in the Mac app, which shows the web app.
+Routines also start agents without a person, each run in a new workspace.
 This doc describes the components, their responsibilities, and the
 boundaries between them. The [protocol docs](#protocol-docs) hold the
 requirements of each feature.
@@ -48,6 +49,13 @@ requirements of each feature.
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
   build or a refresh. The app's Boat account limits the starts of all orgs.
+- **Routine:** a saved prompt of an org that runs an agent without a
+  person. A schedule, a GitHub pull request event, or Run now starts each
+  run. Each run creates a new workspace, the run workspace.
+- **Routine owner:** the member whose logins the runs of a routine use. It
+  is the member who created the routine, until that member leaves the org.
+- **Base branch:** the branch that the work of a workspace targets. Changes
+  compares with it, and "Create pull request" opens into it.
 
 ## Components
 
@@ -64,9 +72,9 @@ requirements of each feature.
 
 - A React app, built with Vite, that uses the `@firna/ui` components.
 - It lives on `app.conductive.build`, behind the GitHub sign-in.
-- It shows the orgs, the workspaces, the chat, the files, the tools, and
-  the org settings. It follows the phone and the desktop layouts of the
-  [mockups](mockups/README.md) (decision 15).
+- It shows the orgs, the workspaces, the routines, the chat, the files, the
+  tools, and the org settings. It follows the phone and the desktop
+  layouts of the [mockups](mockups/README.md) (decision 15).
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
   the Worker. A tab keeps the chats that it showed in memory, as
@@ -88,11 +96,15 @@ requirements of each feature.
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](protocol/access-and-security.md)
   states the gates.
+- Two Cron Triggers run its timed work. One runs every 15 minutes, and it
+  does the work of deleted orgs. One runs every minute, and it starts the
+  routine runs that are due and the runs that stayed queued.
 
 ### D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, and the active preview hostnames.
+  repositories, workspaces, routines and their runs, settings, and the
+  active preview hostnames.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -197,6 +209,23 @@ the app (decision 6).
   routes each event to the workspace of its branch.
 - A push to the default branch of a chosen repository can also start a
   refresh of the org image.
+- A pull request event can also start the runs of routines, as
+  [Routine runs](#routine-runs) says.
+
+### Routine runs
+
+1. A trigger fires: the minute Cron Trigger finds a due schedule, a pull
+   request webhook matches a trigger, or the owner uses Run now.
+2. The Worker stores the run in D1, once for each schedule time, delivery,
+   or Run now request. It checks the owner, the org, and the owner's
+   logins. A failed check creates no workspace.
+3. The Worker creates a workspace as the owner, with the run text as its
+   first message. The workspace starts as in
+   [Create a workspace](#create-a-workspace).
+4. The Durable Object of the workspace reports how the first turn ended,
+   so that a failed first turn shows as a failed run.
+
+[Routines](protocol/routines.md) and its linked pages state the rules.
 
 ### Stops
 
@@ -211,6 +240,7 @@ the app (decision 6).
 | Data                                                     | Home                                     |
 | -------------------------------------------------------- | ---------------------------------------- |
 | Users, orgs, members, sections, workspaces, and settings | D1                                       |
+| Routines and their runs                                  | D1                                       |
 | The org of each sandbox and each saved snapshot          | D1                                       |
 | Env var values and agent logins                          | The Worker's storage, encrypted          |
 | The Boat key and the other keys of the Worker            | Worker secrets                           |
@@ -237,18 +267,24 @@ the app (decision 6).
   its session. The members of one org can reach that login, as
   [Access and security](protocol/access-and-security.md#agent-logins-in-a-sandbox)
   says.
+- A routine run acts as its owner while no person watches. It holds the
+  owner's logins and the org's env vars. Other GitHub accounts can write
+  text that its agent reads, as
+  [Risks that stay open](protocol/routines.md#risks-that-stay-open) says.
 
 ## Decision numbers
 
 A decision number, such as decision 36, names the dated record of one
-decision. The plan of the change that wrote these docs keeps the records
-while the change is open. The pull request of that change keeps them after
-the merge.
+decision. The plan of the change that made the decision keeps the record
+while that change is open. The pull request of that change keeps the
+record after the merge. The decisions of routines use the numbers from
+201, so that each number names one record.
 
 ## Protocol docs
 
 - [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
-  image, the life of a workspace, and the tools of a workspace.
+  image, the life of a workspace, its base branch, and the tools of a
+  workspace.
 - [Chat and events](protocol/chat-and-events.md): sessions, messages, the
   agent runner, and the events.
 - [Access and security](protocol/access-and-security.md): sign-in, the
@@ -262,3 +298,6 @@ the merge.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
 - [Operator actions](protocol/operator-actions.md): the operator, the
   suspension of a user, and abuse reports.
+- [Routines](protocol/routines.md): routines and their schedules, with the
+  linked pages [Routine runs](protocol/routine-runs.md) and
+  [Pull request runs](protocol/pull-request-runs.md).

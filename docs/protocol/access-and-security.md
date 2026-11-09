@@ -258,6 +258,9 @@ Later screens add the frame and connection sources that they need.
   get it too, for example with `git credential fill`. A copied token keeps
   working after the turn until it expires. It also reaches the
   repositories of that person outside the org (decision 121).
+- A routine run holds the logins of its owner while no person watches.
+  [Risks that stay open](routines.md#risks-that-stay-open) states the risks
+  of routines.
 - Risk: each member with a terminal in a sandbox can read its workspace
   token. A copy of the token of a workspace that another member owns
   keeps the runner connection, the git credential route, and the agent

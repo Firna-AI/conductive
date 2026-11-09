@@ -48,13 +48,19 @@ export const privacyDocument: LegalDocument = {
           text`Your session: a cookie of the app keeps you signed in. A
             second cookie protects the GitHub sign-in while it runs.`,
           text`Your orgs: the orgs, members, roles, invites, sections,
-            repositories, workspaces, scripts, and settings that you and your
-            team make. They run the service.`,
+            repositories, workspaces, routines, scripts, and settings that you
+            and your team make. They run the service.`,
+          text`Routines: the prompt, the triggers, and the author filters of
+            each routine, with the GitHub accounts that a filter names. Each
+            run keeps its trigger, its state, and its pull request. A skipped
+            run keeps the GitHub login of the account outside the org whose
+            event it skipped. They run the routines and show their runs.`,
           text`Keys and logins: the env var values of each org, and your
             Claude or OpenAI logins. ${productName} stores them encrypted. It
-            uses your login only for the turns of the sessions that you start.
-            The messages of other members in those sessions use it only when
-            you let other members use that login.`,
+            uses your login only for the turns of the sessions that you start,
+            also the sessions that the runs of your routines start. The
+            messages of other members in those sessions use it only when you
+            let other members use that login.`,
           text`Your work: ${productName} keeps your messages and the answers
             of the agents as the chat history of each workspace. It also
             keeps the last file list and the last summary of changes of each
@@ -64,7 +70,9 @@ export const privacyDocument: LegalDocument = {
             runs for your org. ${productName} reads a file or a diff when you
             open it, to show it to you.`,
           text`GitHub events: the state of the pull requests and the checks
-            of your branches, which GitHub sends to ${productName}.`,
+            of your branches, which GitHub sends to ${productName}. A routine
+            also uses the GitHub accounts that open, push to, or merge a pull
+            request, to decide whether the event starts a run.`,
           text`Panel widths: your browser keeps the widths of the panels of
             the app. They stay in your browser.`,
         ),
@@ -84,17 +92,23 @@ export const privacyDocument: LegalDocument = {
             sends the provider the requests that start, stop, and use them.`,
           text`Anthropic and OpenAI get your messages, your files, and your
             code when an agent works on them. Each session uses the login of
-            the member who started it. Your messages in another member's
-            session use that member's login only when that member lets other
-            members use it. When that member does not share the login, your
-            message starts a new session on your own login. The terms of that
-            provider apply.`,
+            the member who started it. Each run of a routine sends its prompt
+            on the login of the member who owns the routine. Your messages in
+            another member's session use that member's login only when that
+            member lets other members use it. When that member does not share
+            the login, your message starts a new session on your own login.
+            The terms of that provider apply.`,
           text`The members of your orgs see the workspaces of the org and
-            their chats. A member with a terminal in a cloud computer can read
-            the agent login and the GitHub token of a turn that runs there. A
-            program that a tool of the agent starts, such as a dev server, can
-            keep the agent login after the turn ends. A member with a terminal
-            can read it there too.`,
+            their chats. They also see the routines of the org, with their
+            prompts and their runs. A member with a terminal in a cloud
+            computer can read the agent login and the GitHub token of a turn
+            that runs there. A program that a tool of the agent starts, such
+            as a dev server, can keep the agent login after the turn ends. A
+            member with a terminal can read it there too.`,
+          text`The run of your routine for a pull request reads the comments,
+            reviews, and descriptions of other GitHub accounts. Such text can
+            steer the agent while the run holds your logins and the env vars
+            of the org.`,
           text`The members of your orgs also see who started each session,
             whose login it uses, and whether it can use that login. They also
             see whether its starter lets other members use that login.`,

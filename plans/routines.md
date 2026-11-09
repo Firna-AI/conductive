@@ -855,7 +855,50 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
 - **Chosen:** B, by the user on 9 November 2026. Every failed run counts,
   also a failed first turn and a failure that clears by itself.
 
+### 214. Choose whether a run's agent may ask for a command on a Mac
+
+Added on 9 November 2026 from the docs of Milestone 2.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Security.
+- **Location:** None. The rules are in `docs/protocol/agent-tools.md`,
+  "Mac commands", and in `docs/protocol/routine-runs.md`.
+- **Terms:**
+  - **Mac command request:** an agent asks to run a command on the Mac of
+    the person who sent its turn. The Mac app asks that person first.
+  - **Always allow:** a choice that a person saves in the Mac app. A later
+    request with the same command text then runs without a question.
+- **Background:** The owner of a routine is the sender of the first
+  message of each run (decision 201 A). A Mac command request goes to the
+  Mac of the sender of the turn (decision 62). The agent of a pull request
+  run reads text that other GitHub accounts write.
+- **Problem:** Text in a pull request can make the agent of a run ask for a
+  command on the owner's Mac. When the owner chose Always allow for that
+  command, it runs without a question, in a folder that the request names.
+- **Impact if no action:** A GitHub account outside the org can run an
+  always-allowed command on the owner's Mac.
+- **Root question:** How does a run that no person watches stay away from
+  the Macs of the members?
+- **Options:**
+  - **A.** Record it as an open risk in `docs/protocol/routines.md`, and
+    change nothing else. Effort: Small.
+  - **B.** The first turn of a run gets the answer that the Mac is not
+    available. Later messages that members send in the run workspace keep
+    the normal rule. Effort: Medium.
+  - **C.** Each request from the first turn of a run asks, also for an
+    always-allowed command. Effort: Medium.
+- **Left out:** No Mac requests in any run workspace. It blocks the members
+  who later work there, and B is better on every point.
+- **Wider fix:** B. It removes the case for every turn that no person sent.
+- **Previous examples:** None found.
+- **Recommendation:** B. No person watches the first turn of a run, so no
+  Mac should get its requests.
+- **Action:** ask the user, because B adds a new refusal, and the user's
+  rules keep each new refusal for the user.
+
 ## Design
+
 
 
 The design below is the agent's, of 9 November 2026, unless a decision
@@ -1261,6 +1304,24 @@ These calls of 9 November 2026 come from the mockups of Milestone 1:
   #<number> of <repository>".
 - The mockups at `app/routines` hold the copy of each state, each failure,
   and each skip. Milestones 7 to 9 take the copy from there.
+
+These calls of 9 November 2026 come from the docs of Milestone 2:
+
+- A queued run whose routine is off becomes skipped with that reason, as
+  for the other reasons why a queued run cannot start.
+- Deleting a section moves its routines to General, as it moves its
+  workspaces.
+- When the repository of a routine stops being a chosen repository of the
+  org, the routine turns off, and its page says why. Reason: no run of it
+  can succeed.
+- The author filter decides before the trust rule. An event whose author
+  the filter leaves out gives no row.
+- The start step of an opened or pushed run says "Fetching pull request
+  #<number> of <repository>", and a merged run says "Fetching <branch> of
+  <repository>".
+- The loop guard skips while a run of the same routine for the same pull
+  request is queued, starting, working, or waiting for input.
+- After its routine is deleted, a run workspace shows no routine line.
 - A queued run that cannot start, because its owner left or is suspended,
   or its org is suspended or deleted, becomes skipped with that reason.
   The scan then stops retrying it. Reason: the rule that such an owner or
@@ -1333,7 +1394,7 @@ Depends on: 1
 State the requirements and the decisions in force for routines, so that
 the code milestones can follow them.
 
-- [ ] Write `docs/protocol/routines.md`: routines, triggers, runs, the run
+- [x] Write `docs/protocol/routines.md`: routines, triggers, runs, the run
       text, access, the schedule limit, a member who leaves, suspensions,
       and decisions 201 to 213 with their rejected options. Keep it near
       250 lines, and split it into linked pages if it passes that. State
@@ -1341,32 +1402,37 @@ the code milestones can follow them.
       branch of decision 207 G, and the turn-off after three failed runs
       of decision 213 B.
 
-- [ ] Record the risks that stay open in `docs/protocol/routines.md`, as
+- [x] Record the risks that stay open in `docs/protocol/routines.md`, as
       `access-and-security.md` does for decisions 105 and 121. Comments,
       reviews, and description edits by other accounts reach the agent of
       a pull request run, and the run holds the owner's logins and the
       org's env vars.
-- [ ] Update `docs/protocol/workspaces-and-sandboxes.md`: the branch of a
+- [x] Update `docs/protocol/workspaces-and-sandboxes.md`: the branch of a
       pull request run and its start step (decision 205), and the base
       branch of each workspace, which Changes compares with from the merge
       base (decision 207 G).
-- [ ] Update `docs/protocol/github-banner.md`: the pull request webhooks
+- [x] Update `docs/protocol/github-banner.md`: the pull request webhooks
       also start routine runs, and the bar names the base branch of the
       workspace and opens "Create pull request" into it (decision 207 G).
-- [ ] Read the Terms in `src/marketing/terms.ts` and the Privacy notice in
+- [x] Read the Terms in `src/marketing/terms.ts` and the Privacy notice in
       `src/marketing/privacy.ts` in full. Update each sentence that
       restates a fact that this milestone changes, such as how agents run
       on a member's logins.
-- [ ] Update `docs/protocol/orgs-and-members.md` and
+- [x] Update `docs/protocol/orgs-and-members.md` and
       `docs/protocol/operator-actions.md`: the routines of a member who
       leaves move, turned off, with the workspaces (decision 208 E), and a
       suspended user or org gets no runs.
 
-- [ ] Update `docs/architecture.md`: the terms, the minute Cron Trigger,
+- [x] Update `docs/architecture.md`: the terms, the minute Cron Trigger,
       a flow for routine runs, routines in "Where data lives", and the new
       protocol doc in the list.
-- [ ] Add routines to the feature list and the docs list of `README.md`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Add routines to the feature list and the docs list of `README.md`.
+- [x] Check each relative link of each changed Markdown file.
+
+Milestone completed on 9 November 2026. A docs implementor subagent wrote
+`docs/protocol/routines.md`, `routine-runs.md`, `pull-request-runs.md`,
+and `base-branches.md`, and updated the other docs and both legal pages.
+Its report is in `.context/routines/reports/m2-docs.md`.
 
 ## Milestone 3: Routine records and routes
 
@@ -1402,6 +1468,10 @@ yet.
         spaces, gets the refusal.
 - [ ] Add the routines of the member who leaves to the leave batch of
       `worker/members/member-data.ts` (decision 208 E).
+- [ ] Move the routines of a deleted section to General, and turn off each
+      routine whose repository stops being a chosen repository of the org,
+      with its reason.
+  - [ ] Test both moves.
 
 - [ ] Add the routines area to the Worker README.
 
@@ -1424,6 +1494,9 @@ Start a run as a new workspace, and let the owner start one by hand.
         fail the run with their code, before any create.
   - [ ] Test that a failed start shows the run as failed with its stored
         cause after the app removes the workspace.
+- [ ] Skip a queued run that cannot start, with its reason: its routine
+      is off, its owner left or is suspended, or its org is suspended or
+      deleted.
 - [ ] Count the failed runs in a row of each routine, from the run row,
       the start, and the first turn, and turn the routine off at three
       (decision 213 B).
@@ -1570,6 +1643,8 @@ Prove the whole change, review it, and open the pull request.
 - [ ] Smoke-test with the browser harness of
       `worker/chat/integration/run-browser-harness.mjs`: create a routine,
       use Run now, and open the run workspace.
+- [ ] Change `TERMS_VERSION` in `src/shared/terms.ts`, because Milestone 2
+      changed the Terms for routines, so that each user accepts them again.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the

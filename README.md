@@ -41,6 +41,8 @@ These features are planned. The protocol docs state each one.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
 - Agents can create and list workspaces.
+- Routines run a saved prompt on a schedule or on a pull request event,
+  each time in a new workspace.
 - Orgs with members, sections, reassignment, Archive, and Delete org.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
@@ -227,5 +229,6 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Orgs and members](docs/protocol/orgs-and-members.md)
   - [Mac app](docs/protocol/desktop-app.md)
   - [Operator actions](docs/protocol/operator-actions.md)
+  - [Routines](docs/protocol/routines.md)
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [AGENTS.md](AGENTS.md): the rules for agents in this repository.

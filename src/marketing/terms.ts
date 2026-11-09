@@ -62,7 +62,9 @@ export const termsDocument: LegalDocument = {
             account or key of your own for them.`,
           text`The agents run on the Claude or OpenAI login that you connect.
             The model use of each message bills to the account of the member
-            who started its session, under the terms of Anthropic or OpenAI.`,
+            who started its session, under the terms of Anthropic or OpenAI.
+            The runs of a routine start their sessions on the login of the
+            member who owns the routine.`,
           text`Keep your keys and logins safe.
             ${draft('To write: your duties for the use of your keys and logins')}`,
         ),
@@ -72,8 +74,8 @@ export const termsDocument: LegalDocument = {
       title: 'Working in an org',
       blocks: [
         list(
-          text`Every member of an org sees all of its workspaces, and can send
-            messages in each of them.`,
+          text`Every member of an org sees all of its workspaces and all of its
+            routines, and can send messages in each workspace.`,
           text`Each session runs on the agent login of the member who started
             it. The messages of other members use that login only when its
             owner allows it. Otherwise, the message of another member starts a
@@ -96,6 +98,19 @@ export const termsDocument: LegalDocument = {
             the turn ends. A member with a terminal can read it there too. The
             setting of your login does not change this. Work in an org only
             with people whom you trust with your logins.`,
+          text`A routine runs an agent without a person, on a schedule or when
+            a pull request opens, gets new commits, or merges. Each run starts
+            a new workspace as the member who owns the routine. The run uses
+            the agent login and the GitHub token of that member, so its pushes
+            and pull requests show as that member.`,
+          text`Only the owner of a routine changes it or turns it on. An admin
+            can turn it off or delete it. When the owner leaves the org, the
+            routine moves to the member who gets their workspaces. It stays
+            off until that member turns it on, with their own logins.`,
+          text`The run of a routine for a pull request reads that pull request,
+            also the comments, reviews, and descriptions of other GitHub
+            accounts. Such text can steer the agent while the run holds the
+            logins of the owner and the env vars of the org.`,
           text`Admins manage the members, the repositories, the scripts, and
             the env vars of the org.`,
         ),
@@ -144,14 +159,15 @@ export const termsDocument: LegalDocument = {
           notice.`,
         paragraph`A suspension of an account ends its sign-in. It stops the
           cloud computers of the workspaces that the account owns, closes
-          their previews, and blocks new starts.`,
+          their previews, and blocks new starts. Its routines start no
+          runs.`,
         paragraph`A suspension of an org stops each cloud computer of the org,
-          closes its previews and terminals, and blocks each start and
-          build. Its members keep their accounts and their other orgs. They
-          can still open the org and read its chat history. Nothing in the
-          org can change, except that a member can leave it. An admin can
-          leave only while another admin whose account is not suspended
-          remains.`,
+          closes its previews and terminals, and blocks each start, build,
+          and routine run. Its members keep their accounts and their other
+          orgs. They can still open the org and read its chat history.
+          Nothing in the org can change, except that a member can leave it.
+          An admin can leave only while another admin whose account is not
+          suspended remains.`,
         paragraph`A stopped cloud computer gets no restart to keep its disk
           while its workspace owner or org is suspended. So its disk can be
           deleted, with any work that is not pushed to GitHub.`,

@@ -109,6 +109,9 @@ These rules hold for each workspace that the suspended user owns.
   unpushed work of the members. An admin can assign the workspace to
   another member, as the refusal above says.
 - A suspended user can create no workspace and start no build.
+- The routines of a suspended user start no runs, as
+  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+  says.
 - Each unfinished build that the user started stops and fails. The app
   removes its build sandbox.
 - An automatic refresh of an org image, after a push or on the daily
@@ -154,6 +157,8 @@ of a deleted org takes effect.
 - When the org has no active admin, the workspaces move to the earliest
   remaining member who is not suspended. Only when no such member remains
   do they move to the earliest admin.
+- The routines of the member who leaves move to the same member as the
+  workspaces (decision 208 E).
 - For a leave and a change of role, the last-admin rule counts only
   active admins. An admin can leave the org, or lose the admin role, only
   while another active admin remains.
@@ -200,6 +205,9 @@ whoever owns or started it (decision 129).
   terminals, and the desktops of the org end.
 - Nobody can create, resume, or start a workspace of the org. No build and
   no image refresh of the org runs, by hand or automatically.
+- No routine of the org starts a run, as
+  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+  says.
 - A start of a workspace of the org that waits or runs stops before its
   next step.
 - Each unfinished build of the org stops and fails. The app removes its
@@ -222,6 +230,8 @@ whoever owns or started it (decision 129).
 - The org suspension takes away no access to read. Members can still open
   the org and its workspaces, also archived ones, and read the chat
   history of each workspace.
+- Members can also read the routines of the org and their runs. The
+  routine pages show no actions.
 - The org and each of its workspaces show a notice. It says that the org
   is suspended, and it gives the address for abuse reports.
 - While the org is suspended, no member can change anything in it, and
