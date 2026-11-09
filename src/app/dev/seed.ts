@@ -6,6 +6,11 @@ import {
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
+import {
+  sampleOperator,
+  sampleRecords,
+  type OperatorRecords,
+} from '../../test-support/fixtures/operator'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
@@ -68,6 +73,27 @@ function acme(
 }
 
 /**
+ * The records of the operator samples. Acme of the options is deleted or
+ * suspended there too, so the operator sees it as its members do.
+ */
+function operatorRecords(options: DevOptions): OperatorRecords {
+  const records = sampleRecords(FAKE_TIME)
+  if (options.deleted) {
+    records.orgDeletions.set(FAKE_IDS.org, {
+      deletedAt: FAKE_TIME,
+      purgeAt: FAKE_TIME + DELETE_AFTER,
+    })
+  }
+  if (options.suspended) {
+    records.orgSuspensions.set(FAKE_IDS.org, {
+      suspendedAt: FAKE_TIME,
+      operator: sampleOperator,
+    })
+  }
+  return records
+}
+
+/**
  * The state when the app opens. Get started is done before `firstRun`, and
  * not done from it on. The other recorded orgs start as new orgs, because
  * the recorded server has no replies for them.
@@ -90,6 +116,7 @@ export function seedState(options: DevOptions): DevState {
   return {
     account: {
       ...core.account,
+      operator: options.operator,
       agentLogins: noLogin
         ? AGENTS.map((agent): AgentLoginStatus => ({ agent, connected: false }))
         : core.account.agentLogins,
@@ -105,6 +132,7 @@ export function seedState(options: DevOptions): DevState {
     githubAppInstalled: firstRun !== 'github-app',
     attachments: new Map(),
     stopAfterMs: options.stopAfterMs,
+    operator: operatorRecords(options),
     shareSaveFails: options.shareSaveFails,
   }
 }

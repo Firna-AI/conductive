@@ -4,7 +4,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { createApiClient } from '../../app/api/client'
 import type { WorkspaceEvent } from '../../shared/events'
 import { sessionPaths } from '../../shared/sessions'
-import { workspacePath, type WorkspaceState } from '../../shared/workspaces'
+import {
+  workspacePath,
+  type WorkspaceStart,
+  type WorkspaceState,
+} from '../../shared/workspaces'
 import {
   byRole,
   queryByRole,
@@ -17,6 +21,7 @@ import {
   holdAnimationFrames,
   mount,
   MOUNTED_TEST_TIMEOUT,
+  press,
   pressKey,
   typeText,
   waitFor,
@@ -29,12 +34,27 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
 const messages = sessionPaths.messages(org, ws, FAKE_IDS.session)
-const reason = 'You can send when the sandbox is ready'
-const words = 'Keep a saved cart for 30 days.'
+const saved =
+  'The cloud computer did not start within the 20-minute limit. Try again.'
 
 const workspaceIn = (state: WorkspaceState) => ({
   ...workspaceFixtures().detail.workspace,
   state,
+})
+
+/** A start whose one step failed: a create, or a resume. */
+const failedStart = (kind: WorkspaceStart['kind']): WorkspaceStart => ({
+  kind,
+  startedAt: FAKE_TIME,
+  steps: [
+    {
+      id: 'image',
+      label: 'Starting from the cloud computer of Acme',
+      state: 'failed',
+      startedAt: FAKE_TIME,
+      completedAt: FAKE_TIME,
+    },
+  ],
 })
 
 /** A Firna button marks itself with `aria-disabled`, a native one with `disabled`. */
@@ -42,8 +62,8 @@ const blocked = (element: Element) =>
   element.getAttribute('aria-disabled') === 'true' ||
   element.hasAttribute('disabled')
 
-describe('the composer during the first start of a new workspace', () => {
-  it('keeps the message while Send waits with its reason, ignores Enter, and sends only when the user asks after the start', async () => {
+describe('the chat of a new workspace without a host', () => {
+  it('sends with Send and Enter during the first start and after it failed, shows the saved cause above the composer, and keeps the bar of a failed resume in its place', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ conversation: 'queued' })
     // The read holds the state before the events that the test sends.
@@ -56,12 +76,14 @@ describe('the composer during the first start of a new workspace', () => {
     const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
       server.events.subscribe(after, (message) => listener.message(message))
     const emit = (event: WorkspaceEvent) =>
-      server.events.emit({
-        workspaceId: ws,
-        eventNumber: server.events.history().throughEventNumber + 1,
-        occurredAt: FAKE_TIME,
-        event,
-      })
+      act(async () =>
+        server.events.emit({
+          workspaceId: ws,
+          eventNumber: server.events.history().throughEventNumber + 1,
+          occurredAt: FAKE_TIME,
+          event,
+        }),
+      )
     const sends = () =>
       server.requests.filter(
         (request) =>
@@ -82,28 +104,40 @@ describe('the composer during the first start of a new workspace', () => {
       () => queryByRole('textbox', 'Message'),
       'the message box',
     )
-    await typeText(box, words)
-    expect(queryByText(reason)).not.toBeNull()
-    expect(blocked(byRole('button', 'Send'))).toBe(true)
+    await typeText(box, 'Keep a saved cart for 30 days.')
+    expect(blocked(byRole('button', 'Send'))).toBe(false)
     await pressKey('Enter')
-    expect(sends()).toHaveLength(0)
+    await waitFor(() => sends().length === 1, 'the send during the start')
 
-    await act(async () =>
-      emit({ type: 'workspace.updated', workspace: workspaceIn('ready') }),
-    )
+    await emit({
+      type: 'workspace.updated',
+      workspace: workspaceIn('error'),
+      error: { code: 'workspace_start_failed', message: saved },
+    })
+    await emit({ type: 'start.updated', start: failedStart('create') })
     await waitFor(
-      () => !blocked(byRole('button', 'Send')),
-      'Send after the start',
+      () => queryByText(`${saved} Your chat is saved.`),
+      'the saved cause of the failed first start',
     )
-    expect(queryByText(reason)).toBeNull()
-    expect(sends()).toHaveLength(0)
-    expect(byRole('textbox', 'Message')).toHaveProperty('value', words)
+    expect(queryByRole('button', 'Try again')).not.toBeNull()
+    expect(queryByRole('textbox', 'Message')).not.toBeNull()
+    await typeText(byRole('textbox', 'Message'), 'Add an index on the user ID.')
+    await press(byRole('button', 'Send'))
+    await waitFor(() => sends().length === 2, 'the send after the failure')
 
-    await pressKey('Enter')
-    const [sent] = await waitFor(
-      () => sends().length === 1 && sends(),
-      'the send of the message',
+    await emit({ type: 'start.updated', start: failedStart('resume') })
+    await waitFor(
+      () => queryByText(`${saved} Your files and chat are saved.`),
+      'the saved cause of the failed resume',
     )
-    expect(await sent.clone().json()).toMatchObject({ text: words })
+    expect(queryByRole('textbox', 'Message')).toBeNull()
+    expect(
+      await Promise.all(
+        sends().map(async (request) => (await request.clone().json()).text),
+      ),
+    ).toEqual([
+      'Keep a saved cart for 30 days.',
+      'Add an index on the user ID.',
+    ])
   })
 })

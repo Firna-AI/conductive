@@ -9,8 +9,12 @@ const orgWords =
 const ownerWords = 'Jonas is suspended, so this workspace cannot start.'
 
 describe('the sandbox view of an open workspace', () => {
-  test('a refusal of the org or the owner comes before the saved message of a failed start, which shows when nothing refuses the start', () => {
-    const failed = { sandbox: 'error', savedError: saved } as const
+  test('a refusal of the org or the owner comes before the saved message of a failed start, which shows when nothing refuses the start and marks a failed first start', () => {
+    const failed = {
+      sandbox: 'error',
+      savedError: saved,
+      firstStart: false,
+    } as const
     expect({
       org: sandboxView({ ...failed, suspended: true, startError: null }),
       owner: sandboxView({
@@ -19,6 +23,12 @@ describe('the sandbox view of an open workspace', () => {
         startError: new ApiError(403, 'user_suspended', ownerWords),
       }),
       none: sandboxView({ ...failed, suspended: false, startError: null }),
+      first: sandboxView({
+        ...failed,
+        firstStart: true,
+        suspended: false,
+        startError: null,
+      }),
     }).toEqual({
       org: {
         refusal: { problem: 'refused', reason: orgWords },
@@ -34,8 +44,14 @@ describe('the sandbox view of an open workspace', () => {
       },
       none: {
         refusal: null,
-        bar: { problem: 'error', message: saved },
-        panel: { problem: 'error', message: saved },
+        bar: { problem: 'error', message: saved, firstStart: false },
+        panel: { problem: 'error', message: saved, firstStart: false },
+        orgNotice: false,
+      },
+      first: {
+        refusal: null,
+        bar: { problem: 'error', message: saved, firstStart: true },
+        panel: { problem: 'error', message: saved, firstStart: true },
         orgNotice: false,
       },
     })

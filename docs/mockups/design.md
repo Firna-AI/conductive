@@ -16,7 +16,9 @@ the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. The centre column has a slim header that names the
 repository, the branch, and the owner of the workspace, and ends with
-Archive. Then come a tab for each agent session and each open file or diff,
+Archive and the toggle of the right column. The toggle hides the right
+column, so the centre column takes its width, and shows it again. Then
+come a tab for each agent session and each open file or diff,
 + for a new session, and a clock that opens the session history. The right
 column has the pull request bar on top, the All files, Changes, and Checks
 lists below it, and the Terminal, Preview, and Desktop tabs at the bottom.
@@ -44,13 +46,12 @@ chat, and five tabs at the bottom.
   in every composer, such as "Opus 5.5 High". It names no agent brand. In a
   session with messages, each model of the other agent says "New session",
   because it opens a new session with the draft, from decision 51.
-- While the sandbox of a new workspace starts for the first time, Send
-  waits in each session, and each box keeps its message.
-  `SendWait` in `src/components/chat/` gives the short reason beside Send,
-  "You can send when the sandbox is ready", in two lines on a phone. The
-  user sends the message when the sandbox is ready, as
-  `app/new-workspace/waiting` shows. A resume of a stopped workspace still
-  takes messages, which wait for the sandbox.
+- While a sandbox starts, also for the first time, Send queues each
+  message in the workspace. Each queued message shows "Sends when the
+  sandbox is ready", as `app/new-workspace/waiting` shows. After a failed
+  first start, the bar of the error sits above the composer, so members
+  can still queue messages, as `app/new-workspace/error` shows. Every
+  other bar of the sandbox takes the place of the composer.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button, or in a `Sheet` on a phone.
   Firna's own menu rows are taller than the dense design. A row can lead with
@@ -144,6 +145,31 @@ chat, and five tabs at the bottom.
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
   frame of a picture on the marketing site.
+- The operator section has the tabs Overview, Orgs, and Users, from
+  `OperatorPage` in `src/components/operator/`. The overview uses the stat
+  tiles, the line chart, the table, and the skeletons of `@firna/ui`. A
+  view runs no script, so the chart keeps the width that the page column
+  gives it. The workspaces by state reuse `StatusGlyph`.
+- A table of the operator keeps fewer columns on a phone, so that each
+  name keeps one line. The line under a name gives what a search found,
+  when it is not the name, and the state of a suspended or deleted target,
+  with a dot between them. A column of days fits a day of another year,
+  such as 30 Sept 2026, on one line. A person shows on a disc and an org on
+  a square, with `PersonAvatar` and `InitialsTile` from
+  `src/components/orgs/`.
+- Suspend and Lift sit in the header of the page of an org or a user, and
+  in its footer on a phone. Each asks first, with `ConfirmDialog`. The
+  words of the questions and the notices live in `operatorCopy.ts`, which
+  imports no fixture, so the app uses them too. So do `WorkspaceStates`
+  and `DailyChart`. Each text of an org takes its deletion, so the
+  questions and the notices of a deleted org promise nothing that its
+  members cannot open, and nothing that a lift does not give back.
+- `DailyChart` names each point and each label of its axis with the UTC
+  day, such as "10 Oct", in British English, so that no time zone and no
+  locale of a browser or of the build machine changes a date. Its axis has
+  one slot for each day and shows every few labels, so the labels leave
+  out the year. Its own table lists the UTC days, because the table of the
+  Firna chart cannot name its first column.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its rename and close buttons.

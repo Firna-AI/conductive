@@ -12,7 +12,7 @@ import { lifecycleCommandBody } from './command-test-support'
 
 const backendFixture = setupBackendTests()
 
-it('removes a failed create and its token while retaining the draft and cleanup ownership', async () => {
+it('keeps a failed create and its first message while revoking its token and retaining cleanup ownership', async () => {
   const fixture = await backendFixture()
   try {
     const { runtime, org, user, boat } = fixture
@@ -38,15 +38,21 @@ it('removes a failed create and its token while retaining the draft and cleanup 
     }
     await expect(
       fixture.run(() => createCompletedWorkspace(runtime, org.id, user, input)),
-    ).rejects.toMatchObject({ code: 'workspace_cleanup_pending' })
+    ).rejects.toMatchObject({ code: 'workspace_start_failed' })
     expect(input.firstMessage).toEqual(FIRST_MESSAGE)
     expect(boat.starts[1]).toEqual(boat.starts[0])
-    const failed = await fixture.failedCreation('lifecycle-1')
+    const failed = await runtime
+      .workspace('lifecycle-1')
+      .waitCreationAdmission()
     input.firstMessage.text = 'The browser closed and lost its draft.'
     expect(failed).toMatchObject({
-      orgId: org.id,
-      senderUserId: user.id,
-      request: { text: 'Keep the first draft.' },
+      ok: true,
+      created: {
+        first: {
+          sender: { id: user.id },
+          request: { text: 'Keep the first draft.' },
+        },
+      },
     })
     expect(
       await runtime.env.DB.prepare(
@@ -60,12 +66,12 @@ it('removes a failed create and its token while retaining the draft and cleanup 
       await runtime.env.DB.prepare(
         'SELECT COUNT(*) AS count FROM workspaces',
       ).first('count'),
-    ).toBe(0)
+    ).toBe(1)
     expect(
       await runtime.env.DB.prepare(
         'SELECT COUNT(*) AS count FROM workspace_tokens',
       ).first('count'),
-    ).toBe(0)
+    ).toBe(1)
     expect(
       await runtime.env.DB.prepare(
         'SELECT workspace_id AS id FROM lifecycle_sandbox_cleanup',
@@ -85,6 +91,9 @@ it('removes a failed create and its token while retaining the draft and cleanup 
       ).first('count'),
     ).toBe(0)
     boat.commandExitCode = 0
+    await fixture.run(() =>
+      resumeWorkspace(runtime, org.id, 'lifecycle-1', user.id),
+    )
     const created = await fixture.run(() =>
       createCompletedWorkspace(runtime, org.id, user, input),
     )
@@ -103,7 +112,7 @@ it('removes a failed create and its token while retaining the draft and cleanup 
       from: 'last-good-image',
       noEnv: true,
       labels: {
-        user: user.id,
+        user: 'reassigned-user',
         repository: fixture.repositoryId,
         workspace: created.workspace.id,
         org: org.id,

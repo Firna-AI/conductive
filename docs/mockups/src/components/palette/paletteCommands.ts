@@ -46,12 +46,34 @@ function icon(value: LucideIcon): CommandLead {
   return { kind: 'icon', icon: value }
 }
 
+const rightColumnActions: readonly Command[] = [
+  { label: 'Go to All files', lead: icon(Files), to: paths.filesAll },
+  { label: 'Go to Changes', lead: icon(FileDiff), to: paths.filesChanges },
+  {
+    label: 'Go to Checks',
+    lead: icon(ListChecks),
+    words: ['ci'],
+    to: checksPaths['ready-to-merge'],
+  },
+  { label: 'Go to Terminal', lead: icon(SquareTerminal), to: paths.terminal },
+  {
+    label: 'Go to Preview',
+    lead: icon(Globe),
+    words: ['port'],
+    to: paths.preview,
+  },
+  { label: 'Go to Desktop', lead: icon(Monitor), to: paths.desktop },
+]
+
 /**
  * The actions of the open workspace: a new session, the session history,
  * each tab of the right column, and Archive, which only the owner of the
  * workspace and the admins of the org see.
  */
-export function workspaceActions(archivable: boolean): Command[] {
+export function workspaceActions(
+  archivable: boolean,
+  rightColumn = true,
+): Command[] {
   const actions: Command[] = [
     {
       label: 'New session',
@@ -65,22 +87,7 @@ export function workspaceActions(archivable: boolean): Command[] {
       words: ['closed', 'reopen'],
       to: paths.sessionHistory,
     },
-    { label: 'Go to All files', lead: icon(Files), to: paths.filesAll },
-    { label: 'Go to Changes', lead: icon(FileDiff), to: paths.filesChanges },
-    {
-      label: 'Go to Checks',
-      lead: icon(ListChecks),
-      words: ['ci'],
-      to: checksPaths['ready-to-merge'],
-    },
-    { label: 'Go to Terminal', lead: icon(SquareTerminal), to: paths.terminal },
-    {
-      label: 'Go to Preview',
-      lead: icon(Globe),
-      words: ['port'],
-      to: paths.preview,
-    },
-    { label: 'Go to Desktop', lead: icon(Monitor), to: paths.desktop },
+    ...(rightColumn ? rightColumnActions : []),
   ]
   if (!archivable) return actions
   return [

@@ -10,7 +10,7 @@ import {
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { type AgentChoice, defaultChoice } from '../fixtures/agents'
 import { firstGoodBuild, lastBuild } from '../fixtures/computer'
-import { savedCartsMessage } from '../fixtures/conversations'
+import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
 import { memberViewer, people } from '../fixtures/members'
 import { type Org, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
 import { newOrg, newOrgDraft, repositories } from '../fixtures/repositories'

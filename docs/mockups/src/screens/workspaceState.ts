@@ -28,6 +28,7 @@ export const workspaceStateSchema = {
     'tab',
     'composer',
     'resize',
+    'rightColumn',
     'overlay',
     'viewer',
     'lostUpdate',
@@ -99,6 +100,11 @@ export const workspaceStateSchema = {
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**
+     * The right column of the desktop: shown, or hidden with the toggle at
+     * the end of the header. A phone has no right column.
+     */
+    rightColumn: { enum: ['shown', 'hidden'] },
+    /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, or the
      * question of Archive, with work that is not pushed or with none.
@@ -168,6 +174,7 @@ export const readyWorkspace: WorkspaceState = {
   tab: 'session',
   composer: 'empty',
   resize: 'none',
+  rightColumn: 'shown',
   overlay: 'none',
   viewer: 'admin',
   lostUpdate: 'none',

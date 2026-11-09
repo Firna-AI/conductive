@@ -5,6 +5,7 @@ import type { ProvisionedWorkspace } from './workspace-response'
 import type { RepositoryLocation } from './repository-locations'
 import type { SavedScript } from './saved-script'
 import type { ProviderRetryState } from './provider-retry'
+import type { FirstWorkspaceMessage } from './workspace-runtime'
 
 interface WorkspaceStartData {
   workspaceId: string
@@ -37,6 +38,10 @@ interface WorkspaceStartData {
   providerRetry?: ProviderRetryState | null
   deadlineAt?: number
 }
+
+/** Admission intent is transient. Saved starts always continue their progress. */
+export type WorkspaceStartIntent =
+  { kind: 'continue' } | { kind: 'retry-failed-create' }
 
 export type WorkspaceMachinePhase =
   'machine' | 'ready' | 'fetch' | 'branch' | 'startup' | 'runner'
@@ -92,7 +97,11 @@ export interface CreationPublication {
 export interface StartJobStorage {
   job(): Promise<WorkspaceStartJob | undefined>
   epoch(): Promise<number>
-  begin(job: WorkspaceStartJob, epoch: number): Promise<boolean>
+  begin(
+    job: WorkspaceStartJob,
+    epoch: number,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean>
   stop(): Promise<boolean>
   update(job: WorkspaceStartJob): Promise<void>
   retry(
@@ -103,6 +112,7 @@ export interface StartJobStorage {
   result(): Promise<WorkspaceStartResult | undefined>
   creationResult(): Promise<WorkspaceStartResult | undefined>
   admission(): Promise<WorkspaceCreationAdmission | undefined>
+  firstMessage(): Promise<FirstWorkspaceMessage | undefined>
   publication(): Promise<CreationPublication | undefined>
   clearPublication(): Promise<void>
   complete(result: WorkspaceStartResult): Promise<void>

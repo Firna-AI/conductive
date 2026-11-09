@@ -157,7 +157,7 @@ it('continues a sandbox-free admitted create only when opened after Restore, wit
   )
 })
 
-it('keeps the existing failed-create draft when a retained creation loses its image pin', async () => {
+it('keeps the workspace and its accepted message when a retained creation loses its image pin', async () => {
   const active = (fixture = await featureFixture(bundle, {
     configuration: {
       CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
@@ -213,20 +213,26 @@ it('keeps the existing failed-create draft when a retained creation loses its im
       Awaited<ReturnType<Workspace['waitCreationLifecycle']>>
     >(active.actor(id), active.actor(id).waitCreationLifecycle()),
   ).toMatchObject({ ok: false, error: { code: 'image_required' } })
-  expect(
-    await active.actor(id).failedLifecycleCreation(OUTER_ORG, 'member'),
-  ).toMatchObject({
-    senderUserId: 'member',
-    request: {
-      id: 'missing-pin-message',
-      text: 'Keep this if the pin is missing',
+  expect(await active.actor(id).waitCreationAdmission()).toMatchObject({
+    ok: true,
+    created: {
+      first: {
+        sender: { id: 'member' },
+        request: {
+          id: 'missing-pin-message',
+          text: 'Keep this if the pin is missing',
+        },
+      },
     },
+  })
+  expect(await active.actor(id).readLifecycle()).toMatchObject({
+    state: 'error',
     error: { code: 'image_required' },
   })
   expect(
     await active.env.DB.prepare('SELECT id FROM workspaces WHERE id = ?')
       .bind(id)
       .first(),
-  ).toBeNull()
+  ).toEqual({ id })
   expect(active.boat.starts).toEqual([])
 })

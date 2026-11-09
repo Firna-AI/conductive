@@ -8,7 +8,7 @@ import {
 export const firstTurn = defineScreen({
   title: 'First turn',
   description:
-    'The sandbox is ready, and the agent works on the first message. Its first answer named the workspace Saved carts. The branch keeps its name, and has no changes yet.',
+    'The sandbox is ready, and the agent works on the first message. The second message from the queue went to the agent too, which reads it at its next step. Its first answer named the workspace Saved carts. The branch keeps its name, and has no changes yet.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {

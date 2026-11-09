@@ -3,10 +3,7 @@ import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
 import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/screens/NewWorkspaceScreen.module.css'
-import {
-  draftReady,
-  type NewWorkspaceModel,
-} from '../../app/new-workspace-model'
+import { draftReady } from '../../app/new-workspace-model'
 import { currentBuild } from '../../app/org-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
@@ -100,26 +97,23 @@ function Start(props: {
 /**
  * New workspace: an empty chat with the repository, and the composer with
  * its files and its model. The first message creates the workspace, and the
- * app names it and its branch. A failed create keeps the message. `form`
- * is the form of a message that came back after its sandbox did not start.
- * Without it, the screen shows the form of the section. While the org has
- * no good image, the notice of its first build keeps the draft and turns
- * Send and Try again off. A suspended org refuses each create, so its page
- * shows the refused bar in place of the composer, and the empty chat
- * invites no first message.
+ * app names it and its branch. A create request that fails keeps the
+ * message in the form of the section, with Try again. Once the server
+ * takes the message, the workspace exists, also when its first start
+ * fails. While the org has no good image, the notice of its first build
+ * keeps the draft and turns Send and Try again off. A suspended org
+ * refuses each create, so its page shows the refused bar in place of the
+ * composer, and the empty chat invites no first message.
  */
 export function NewWorkspaceScreen(props: {
   org: OrgSummary
   sectionId: string | null
-  form?: NewWorkspaceModel
 }) {
   const { org } = props
   const app = useApp()
   const go = useGo()
   const orgModel = useOrgModel(org.id)
-  const [model] = useState(
-    () => props.form ?? orgModel.newWorkspace(props.sectionId),
-  )
+  const [model] = useState(() => orgModel.newWorkspace(props.sectionId))
   const account = useStore(app.account.account)
   const models = useStore(app.models)
   const repositories = valueOf(useStore(orgModel.repositories))
@@ -178,13 +172,9 @@ export function NewWorkspaceScreen(props: {
             <RefusedBar reason={orgRefusal.reason} />
           ) : (
             <>
-              {create.state === 'failed' || create.state === 'not-started' ? (
+              {create.state === 'failed' ? (
                 <CreateFailed
-                  error={
-                    create.state === 'failed'
-                      ? create.error
-                      : (create.error ?? null)
-                  }
+                  error={create.error}
                   ready={ready !== null}
                   retry={() => void send()}
                 />

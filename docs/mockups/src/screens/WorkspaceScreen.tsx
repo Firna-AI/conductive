@@ -72,6 +72,7 @@ export function WorkspaceScreen(props: {
   const archivable = !readOnly && (admin || workspace.owner === viewer)
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
+  const rightHidden = state.rightColumn === 'hidden'
   const chat = (
     <ChatPane
       composer={composerFor(state, workspace)}
@@ -109,6 +110,7 @@ export function WorkspaceScreen(props: {
       canReassign={admin && !readOnly}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
+      rightHidden={rightHidden}
       status={status}
       viewport={viewport}
       workspace={workspace}
@@ -176,7 +178,11 @@ export function WorkspaceScreen(props: {
   const palette =
     state.palette === 'closed' ? null : (
       <CommandPalette
-        context={{ open: { workspace, status }, archivable }}
+        context={{
+          open: { workspace, status },
+          archivable,
+          rightColumn: !rightHidden,
+        }}
         view={state.palette}
         viewport={viewport}
       />
@@ -202,6 +208,7 @@ export function WorkspaceScreen(props: {
             workspace={workspace}
           />
         }
+        rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
         tabs={
           <WorkspaceTabs

@@ -10,7 +10,6 @@ import { useMacApp } from '../components/mac/MacApp'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { firstBuildStates } from '../fixtures/computer'
 import { memberViewer, you } from '../fixtures/members'
-import { startErrors } from '../fixtures/starting'
 import { paths } from '../paths'
 import { FirstBuildNotice } from './firstBuildNotice'
 import { pageOrg, railOf, sidebarOf, Start } from './newWorkspaceParts'
@@ -21,10 +20,10 @@ export const newWorkspaceSchema = {
   required: ['result', 'org', 'firstBuild', 'viewer'],
   properties: {
     /**
-     * The empty form, or a create whose first start failed: a failure, or
-     * the 20-minute limit of a start.
+     * The empty form, or a create request that failed, whose message stays
+     * for Try again. A failed first start keeps its workspace instead.
      */
-    result: { enum: ['form', 'error', 'time-limit'] },
+    result: { enum: ['form', 'error'] },
     /**
      * The org: Acme in use, Acme suspended by the operator, or Firna, the
      * new org of the sign-up, before its first workspace. A suspended org
@@ -56,20 +55,15 @@ export const newWorkspaceForm: NewWorkspaceState = {
   viewer: 'admin',
 }
 
-type CreateFailure = Exclude<NewWorkspaceState['result'], 'form'>
-
 /**
- * The body of a create whose first start failed. A start that passed its
- * limit shows the message that the app saved for it.
+ * The body of a create request that failed, such as when the app could
+ * not reach the server.
  */
-const failureBodies: Readonly<Record<CreateFailure, string>> = {
-  error: "Its sandbox didn't start. Your message is kept.",
-  'time-limit': `${startErrors['time-limit']} Your message is kept.`,
-}
+const requestFailed = "The app can't reach the server. Your message is kept."
 
 /**
  * The notice over the composer: the first build of a new org while the
- * org has no good image, or a create whose first start failed.
+ * org has no good image, or a create request that failed.
  */
 function notice(state: NewWorkspaceState): ReactNode {
   if (state.org === 'new' && state.firstBuild !== 'succeeded') {
@@ -85,7 +79,7 @@ function notice(state: NewWorkspaceState): ReactNode {
   return (
     <Notice
       action={<ActionButton tone="primary">Try again</ActionButton>}
-      body={failureBodies[state.result]}
+      body={requestFailed}
       icon={CircleAlert}
       title="The workspace wasn't created"
       tone="danger"
@@ -95,16 +89,18 @@ function notice(state: NewWorkspaceState): ReactNode {
 
 /**
  * The empty chat and its composer. The first message creates the workspace.
- * In a suspended org the refused bar takes the place of the composer, and
- * the chat invites no first message, because the org refuses the create.
- * While a new org has no good image, Send is off and the draft stays.
+ * When the create request fails, the message stays in the composer, and
+ * Try again sends it again. In a suspended org the refused bar takes the
+ * place of the composer, and the chat invites no first message, because the
+ * org refuses the create. While a new org has no good image, Send is off and
+ * the draft stays.
  */
 function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const { state } = props
   const page = pageOrg(state)
   const suspended = state.org === 'suspended'
   const waits = state.org === 'new' && state.firstBuild !== 'succeeded'
-  const failed = !suspended && state.result !== 'form'
+  const failed = !suspended && state.result === 'error'
   return (
     <ChatPane
       composer={{
