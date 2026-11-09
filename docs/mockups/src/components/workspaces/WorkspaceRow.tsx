@@ -15,7 +15,7 @@ export type RowDrag = 'lifted' | 'placeholder'
 /**
  * One workspace on one line: its state as a small square on the left, its
  * name, and the time since its last activity. Archive covers the time on
- * hover or focus. A drag lifts the row and leaves a faint copy behind.
+ * hover only. A drag lifts the row and leaves a faint copy behind.
  */
 export function WorkspaceRowView(props: {
   row: WorkspaceRow

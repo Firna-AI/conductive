@@ -38,7 +38,7 @@ function RowContent(props: { workspace: Workspace; now: number }) {
 /**
  * One workspace on one line: its state as a dot-matrix square, its name,
  * or Untitled before it has one, and the time since its last activity. Bold
- * marks unread output. Archive covers the time on hover or focus. A drag
+ * marks unread output. Archive covers the time on hover only. A drag
  * lifts the row, and a faint copy stays where it was.
  */
 export function WorkspaceRow({

@@ -112,8 +112,8 @@ says.
 - The app keeps the archived workspaces in the Archived group at the end
   of the list. The users do not edit that group.
 - A workspace row offers Archive only to its owner and the org's admins.
-  On hover or keyboard focus, its archive icon covers the time without
-  moving the row content. Touch screens show the icon without a hover.
+  Only hover reveals its archive icon over the time without moving the row
+  content. Selection and keyboard focus alone keep the time visible.
   The workspace header has no archive control.
 
 ## Members and roles

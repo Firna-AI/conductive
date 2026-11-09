@@ -14,8 +14,8 @@ as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
-drag and drop. Archive covers the time on hover or keyboard focus without
-moving the row content. Touch screens show the icon without a hover.
+drag and drop. Archive covers the time on hover only, without moving the
+row content. Selection and keyboard focus alone keep the time visible.
 The centre column has a slim header that names the
 workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
