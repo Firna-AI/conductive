@@ -32,6 +32,8 @@ import { routePreview, routeWorkspaceFeatures } from './features/router'
 import { productionAgentTools } from './tools/composition'
 import { productionGitHubWebhook } from './github/composition'
 import { appFrameSources } from './configuration'
+import { routineRunRuntime } from './routines/run-runtime'
+import { scanRoutineSchedules } from './routines/schedule-scan'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -162,12 +164,16 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
   }
   return {
     fetch: requestBodyEntry(application.fetch),
-    async scheduled(_event: ScheduledController, env: AppEnv): Promise<void> {
-      await cleanupDeletedOrgs(
-        env,
-        dependencies,
-        productionMembersHooks(env, dependencies),
-      )
+    async scheduled(event: ScheduledController, env: AppEnv): Promise<void> {
+      if (event.cron === '* * * * *') {
+        await scanRoutineSchedules(routineRunRuntime(env, dependencies))
+      } else if (event.cron === '*/15 * * * *') {
+        await cleanupDeletedOrgs(
+          env,
+          dependencies,
+          productionMembersHooks(env, dependencies),
+        )
+      }
     },
   }
 }

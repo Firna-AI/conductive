@@ -3,7 +3,7 @@
   "name": "conductive",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-11-06",
-  "triggers": { "crons": ["*/15 * * * *"] },
+  "triggers": { "crons": ["*/15 * * * *", "* * * * *"] },
   // The deployment serves only its own hostnames.
   "workers_dev": false,
   "preview_urls": false,

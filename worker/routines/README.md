@@ -40,7 +40,8 @@ It checks the owner's agent login and fresh GitHub access before the create.
 The first session uses the owner's own login, independent of its share setting.
 It calls the existing workspace create and first-message admission paths.
 It does not wait for cloud computer startup.
-Schedule and webhook callers can reuse this starter but are not connected yet.
+The minute schedule scan calls this starter.
+Webhook callers can reuse it but are not connected yet.
 
 Failed checks, starts, and first turns update the run and the consecutive failure count in one D1 batch.
 Each terminal outcome counts once.
@@ -52,8 +53,21 @@ Owner activation resets the count.
 An edit preserves failures and automatic turn-off committed after its earlier read.
 
 Schedules keep both their preset fields and a normalized cron expression.
-The save computes the earliest next time of all schedules in the routine's time zone.
+Each save, Active change, and time zone change computes the earliest next time of all schedules in the routine's time zone.
 An inactive routine or one without schedules has no next time.
+The `* * * * *` Cron Trigger scans at most 50 due routines each minute.
+It reads current org deletion, org and owner suspension, and owner membership before each claim.
+One D1 batch stores the run and advances the claimed time to the next time after the scan's clock.
+The batch checks the old due time, owner, time zone, and trigger list again.
+Repeated scans share one run key for that routine and due time.
+Missed times give one run, also after an org Restore.
+The scan selects the oldest due times first, with the routine ID as a tie-breaker.
+It processes independent due routines in parallel.
+The scan also retries at most 50 queued runs older than one minute, oldest first.
+It reuses their stored run and first-message IDs.
+The starter skips a queued run whose current owner, org, or routine cannot start it.
+One failed claim or retry logs a safe warning and leaves the other scan items available.
+
 Author-filter requests hold logins.
 Replies and stored triggers hold GitHub account IDs and canonical logins.
 Each save resolves those logins again with the owner's GitHub user token.
@@ -73,6 +87,8 @@ The schedule tests use fixed dates around changes of summer time.
 - [routine-data.ts](routine-data.ts) reads routines and checks their repository and section.
 - [routine-write-data.ts](routine-write-data.ts) guards mutations with current membership and ownership.
 - [schedules.ts](schedules.ts) validates schedules and computes their next time through `croner`.
+- [schedule-scan.ts](schedule-scan.ts) starts due schedules and retries old queued runs through the shared starter.
+- [schedule-scan-data.ts](schedule-scan-data.ts) reads bounded scan batches and claims due times with their run rows atomically.
 - [triggers.ts](triggers.ts) parses trigger inputs and expands presets to cron expressions.
 - [author-filters.ts](author-filters.ts) resolves filter logins through GitHub.
 - [stored-triggers.ts](stored-triggers.ts) reads stored account filters and prepares logins for a later save.

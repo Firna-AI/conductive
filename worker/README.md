@@ -49,7 +49,8 @@ Its owner-only Run now starts a stored run as a new workspace.
 The run starter joins repeated creates through a stable first-message ID and returns before the workspace start ends.
 The runs list projects the current workspace state and retains failed-start and first-turn causes.
 Three failed runs in a row turn the routine off.
-Schedule scans and pull request dispatch do not call the starter yet.
+The minute schedule scan calls the same starter.
+Pull request dispatch does not call the starter yet.
 
 On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, workspace create/list
@@ -61,7 +62,9 @@ It keeps the inherited owner separate from the sender of the first message.
 The preview domain forwards each private preview to its workspace object.
 Its authorizer redeems the one-use viewer grant before any sandbox request.
 The object owns preview expiry and revocation beside its other alarm sources.
-A Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
+The `*/15 * * * *` Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
+The `* * * * *` Cron Trigger runs routine schedules and recovers old queued runs each minute.
+The scheduled entry dispatches each trigger by its cron expression.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
 
 ## Development
@@ -94,6 +97,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [routines/route.ts](routines/route.ts) serves routine records after the request gate.
 - [routines/run-route.ts](routines/run-route.ts) serves Run now and paginated run history.
 - [routines/run-starter.ts](routines/run-starter.ts) starts queued runs with the owner's logins.
+- [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due routines and retries up to 50 old queued runs each minute.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.
 - [http/json-body.ts](http/json-body.ts) owns the shared JSON object parsing policy.

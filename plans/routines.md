@@ -1562,19 +1562,25 @@ Depends on: 4
 
 Run the schedules from the minute scan.
 
-- [ ] Add the minute Cron Trigger to `wrangler.jsonc`, and dispatch
+- [x] Add the minute Cron Trigger to `wrangler.jsonc`, and dispatch
       `scheduled` on the cron expression of the event.
-- [ ] Add the scan: the due routines, the batch that claims each due time,
+- [x] Add the scan: the due routines, the batch that claims each due time,
       the run starter, the queued runs older than one minute, and the
       limit of 50 of each.
-  - [ ] Test with a fixed clock that a due routine runs once, that two
+  - [x] Test with a fixed clock that a due routine runs once, that two
         scans in one minute give one run, and that missed times give one
         run.
-  - [ ] Test that a suspended owner, a suspended org, and a deleted org
+  - [x] Test that a suspended owner, a suspended org, and a deleted org
         get no run, and that a restored org runs once.
-- [ ] Compute `next_run_at` again at each save, Active change, and time
+- [x] Compute `next_run_at` again at each save, Active change, and time
       zone change.
-- [ ] Update the Worker README, which names the Cron Trigger.
+- [x] Update the Worker README, which names the Cron Trigger.
+
+Milestone completed on 9 November 2026. A Codex non-ui implementor
+session built it. The orchestrator re-ran 87 tests of `worker/routines`,
+`worker/scheduled.test.ts`, and `worker/members`, and the typecheck, lint,
+format, file-length, and export checks. The handoff is in
+`.context/routines/reports/m5-worker.md`.
 
 ## Milestone 6: Pull request runs
 
