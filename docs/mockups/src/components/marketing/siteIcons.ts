@@ -1,8 +1,10 @@
 import {
   Archive,
+  ArrowLeft,
   ArrowRight,
   ArrowRightLeft,
   CalendarCheck,
+  ChevronDown,
   CircleCheck,
   CircleDashed,
   CircleEllipsis,
@@ -10,6 +12,7 @@ import {
   Cloud,
   Contrast,
   ListTree,
+  Menu,
   PanelsTopLeft,
   SquarePlus,
   Users,
@@ -36,4 +39,7 @@ export const siteIcons: Readonly<Record<IconName, LucideIcon>> = {
   'circle-minus': CircleMinus,
   'calendar-check': CalendarCheck,
   'arrow-right': ArrowRight,
+  menu: Menu,
+  'chevron-down': ChevronDown,
+  'arrow-left': ArrowLeft,
 }
