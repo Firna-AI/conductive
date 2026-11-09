@@ -32,9 +32,13 @@ export function createMailSender(
       const response = await fetch(
         new Request('https://api.resend.com/emails', {
           method: 'POST',
-          redirect: 'error',
+          // The Workers runtime throws a TypeError for 'error'. A redirect
+          // is not ok, so the send still fails without following it.
+          redirect: 'manual',
           signal: AbortSignal.timeout(30_000),
           headers: {
+            // Resend requires a User-Agent, and the Workers runtime adds none.
+            'User-Agent': productName,
             Authorization: `Bearer ${env.RESEND_API_KEY}`,
             'Content-Type': 'application/json',
             'Idempotency-Key': await message.deliveryKey(body),
