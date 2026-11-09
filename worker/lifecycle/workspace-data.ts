@@ -1,5 +1,5 @@
 import { activeOrgIdPredicate } from '../data/org-access'
-import { workspaceName } from '../data/workspace-name'
+import { workspaceNameColumn } from '../data/workspace-name'
 import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
@@ -17,7 +17,7 @@ export interface WorkspaceRow {
   githubLogin: string
   displayName: string | null
   avatarUrl: string | null
-  name: string
+  name: string | null
   branch: string
   sandboxId: string | null
   state: WorkspaceState
@@ -34,7 +34,7 @@ export interface WorkspaceRow {
 const columns = `w.id, w.org_id AS orgId, w.repository_id AS repositoryId,
   w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
   u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
-  w.name, w.branch, w.sandbox_id AS sandboxId, w.state,
+  ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId, w.state,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
@@ -73,7 +73,7 @@ export function workspaceView(row: WorkspaceRow): Workspace {
       displayName: row.displayName,
       avatarUrl: row.avatarUrl,
     },
-    name: workspaceName(row.name),
+    name: row.name,
     branch: row.branch,
     choice: { agent: row.agent, model: row.model, effort: row.effort },
     state: row.state,

@@ -4,6 +4,7 @@ import type { WorkspaceChat } from '../chat/backend'
 import { tokenWorkspace } from '../chat/queries'
 import type { AppEnv } from '../env'
 import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
+import { workspaceNameColumn } from '../data/workspace-name'
 import { HttpError } from '../http'
 import { memberSender } from '../tools/store'
 
@@ -41,7 +42,11 @@ export async function activeDeviceSender(
   workspaceId: string,
   turnId: string,
   tokenHash: string,
-): Promise<{ sender: DeviceSender; sessionId: string; workspaceName: string }> {
+): Promise<{
+  sender: DeviceSender
+  sessionId: string
+  workspaceName: string | null
+}> {
   return chat.store.run(async () => {
     const turn = await activeStoredTurn(chat, workspaceId, turnId)
     if (!turn)
@@ -93,7 +98,7 @@ export function currentCommandAccess(
 ) {
   return db
     .prepare(
-      `SELECT w.org_id AS orgId, w.name FROM workspaces w
+      `SELECT w.org_id AS orgId, ${workspaceNameColumn('w')} FROM workspaces w
     JOIN org_members m ON m.org_id = w.org_id AND m.user_id = ?
     JOIN users sender ON sender.id = m.user_id AND sender.suspended_at IS NULL
     JOIN workspace_tokens t ON t.workspace_id = w.id
@@ -102,7 +107,7 @@ export function currentCommandAccess(
     AND t.token_hash = ?`,
     )
     .bind(senderId, workspaceId, tokenHash)
-    .first<{ orgId: string; name: string }>()
+    .first<{ orgId: string; name: string | null }>()
 }
 export function desktopSessionAlive(
   db: D1Database,

@@ -40,8 +40,9 @@ write fill only an empty D1 name under the same workspace access rule.
 A name set through the workspace route stays.
 
 D1 keeps `workspaces.name` as non-null text. An empty string means no name.
-`workspaceName` in `worker/data/workspace-name.ts` maps it to null at the
-data boundary. Workspace responses, events, and the agent tools use null.
+`workspaceNameColumn` in `worker/data/workspace-name.ts` supplies the SQL
+column expression that maps it to null in every workspace name query.
+Workspace responses, events, and the agent tools use null.
 `nameLabel` in `src/shared/name-label.ts` gives the display label "Untitled".
 
 Local development disables remote bindings in `vite.config.ts`. Workers AI

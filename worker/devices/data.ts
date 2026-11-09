@@ -1,5 +1,6 @@
 import type { WorkspaceState } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
+import { workspaceNameColumn } from '../data/workspace-name'
 
 export async function workspaceOrg(
   db: D1Database,
@@ -23,7 +24,7 @@ export interface WorkspaceRow {
   orgId: string
   repositoryId: string
   sectionId: string
-  name: string
+  name: string | null
   branch: string
   state: WorkspaceState
   createdAt: number
@@ -39,7 +40,7 @@ export function readDeviceWorkspace(db: D1Database, workspaceId: string) {
   return db
     .prepare(
       `SELECT w.id, w.org_id AS orgId, w.repository_id AS repositoryId,
-    COALESCE(w.section_id, s.id) AS sectionId, w.name, w.branch, w.state,
+    COALESCE(w.section_id, s.id) AS sectionId, ${workspaceNameColumn('w')}, w.branch, w.state,
     w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
     u.id AS ownerId, u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl
     FROM workspaces w JOIN users u ON u.id = w.owner_user_id

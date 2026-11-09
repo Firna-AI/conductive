@@ -1,3 +1,3 @@
-export function workspaceName(name: string): string | null {
-  return name === '' ? null : name
+export function workspaceNameColumn(table: 'w' | 'workspaces'): string {
+  return `NULLIF(${table}.name, '') AS name`
 }

@@ -972,7 +972,7 @@ Evidence: `.context/workspace-title-from-first-message/dev-page-untitled/` and `
       with empty names.
 - [x] Update the [chat README](../src/chat/README.md) and the development
       page README.
-- [ ] Give a Mac command request of a workspace with no name
+- [x] Give a Mac command request of a workspace with no name
       `workspaceName: null`, and show "Untitled" in the chat card, the This
       Mac section, and the macOS notification. Make every Worker read of
       the name go through one mapping.

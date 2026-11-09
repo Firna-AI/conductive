@@ -6,7 +6,7 @@ import {
   workspaceTokenResourcePredicate,
 } from '../data/workspace-token-access'
 import { decrypt, hash } from '../security/crypto'
-import { workspaceName } from '../data/workspace-name'
+import { workspaceNameColumn } from '../data/workspace-name'
 import { agentLoginKind } from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
@@ -20,13 +20,12 @@ export async function readAutomaticTitleWorkspace(
   db: D1Database,
   workspaceId: string,
 ): Promise<{ name: string | null } | null> {
-  const row = await db
+  return db
     .prepare(
-      `SELECT name FROM workspaces WHERE id = ? AND ${automaticTitleWorkspacePredicate}`,
+      `SELECT ${workspaceNameColumn('workspaces')} FROM workspaces WHERE id = ? AND ${automaticTitleWorkspacePredicate}`,
     )
     .bind(workspaceId)
-    .first<{ name: string }>()
-  return row ? { name: workspaceName(row.name) } : null
+    .first<{ name: string | null }>()
 }
 
 export function findChatWorkspace(
