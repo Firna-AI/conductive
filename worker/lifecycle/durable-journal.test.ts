@@ -3,13 +3,13 @@ import { expect, it } from 'vitest'
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import { TEST_TIME } from '../test-support/harness'
 import { WorkspaceEventJournal } from './durable-journal'
-import { MemoryWorkspaceStorage } from './platform-test-storage'
+import { nativeLifecycleStorage } from './native-storage.test-support'
 import type { WorkspaceEventPublication } from './workspace-platform'
 
 it.each([{ kind: 'resume' }, { kind: 'create' }] as const)(
   'publishes only the saved $kind error and its clearing, with ordered steps and durable suppression',
   async ({ kind }) => {
-    const storage = new MemoryWorkspaceStorage()
+    const { storage } = await nativeLifecycleStorage()
     const events: WorkspaceEventPublication[] = []
     const publish = async (event: WorkspaceEventPublication) => {
       events.push(structuredClone(event))

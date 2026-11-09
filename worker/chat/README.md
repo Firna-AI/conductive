@@ -196,8 +196,9 @@ npm run test -- worker/chat
 npm run typecheck
 ```
 
-[Chat backend tests](tests.md) names the test support files and what each
-group of tests covers.
+The shared chat and runner fixtures run the production workspace object in Miniflare with native SQLite.
+Their restart helpers evict the real object.
+[Chat backend tests](tests.md) names the native controls and each group of tests.
 
 `write-access.test.ts` holds a rename at its body read or in the queue.
 Then one access fact ends, such as a sign-out, a removal from the org, or

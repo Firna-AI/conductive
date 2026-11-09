@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from 'vitest'
 
+import { nativeWorkspaceStorage } from './platform-storage'
 import { setupBackendTests } from './backend-test-hooks'
 import { IDLE_MS } from './durable-types'
 import { startRetryFixture } from './retry-test-support'
@@ -43,9 +44,7 @@ async function completedCreationWithBlockedPublication() {
   const state = await start.endpoint.readLifecycle()
   const idleAt = (state?.lastActivityAt ?? 0) + IDLE_MS
   const fireOnceAt = async (at: number) => {
-    fixture.setTime(at)
-    await start.storage.deleteAlarm()
-    await actor.endpoint().alarm()
+    await fixture.advanceTo(at, job.workspaceId)
   }
   const allowPublication = () =>
     fixture.runtime.env.DB.prepare(
@@ -92,12 +91,12 @@ it('keeps the original idle alarm after a stored creation result retries its D1 
     allowPublication,
   } = await completedCreationWithBlockedPublication()
   await allowPublication()
-  start.restart()
+  await start.restart()
   await start.tick(completedAt + 1_000)
   expect(await publicationState()).toBe('succeeded')
-  expect(start.storage.alarmAt).toBe(completedAt + 5_000)
+  expect(await start.storage.getAlarm()).toBe(completedAt + 5_000)
   await start.tick(completedAt + 5_000)
-  expect(start.storage.alarmAt).toBe(idleAt)
+  expect(await start.storage.getAlarm()).toBe(idleAt)
   await start.tick(idleAt - 1)
   expect(fixture.boat.stopIds).toEqual([])
   await start.tick(idleAt)
@@ -114,24 +113,24 @@ it('stops at the original idle deadline while the completed creation still needs
     fireOnceAt,
     allowPublication,
   } = await completedCreationWithBlockedPublication()
-  start.restart()
+  await start.restart()
   await start.tick(completedAt + 1_000)
   expect(await publicationState()).toBe('pending')
-  expect(start.storage.alarmAt).toBe(completedAt + 2_000)
+  expect(await start.storage.getAlarm()).toBe(completedAt + 2_000)
   await fireOnceAt(idleAt - 1)
   expect(fixture.boat.stopIds).toEqual([])
-  expect(start.storage.alarmAt).toBe(idleAt)
+  expect(await start.storage.getAlarm()).toBe(idleAt)
   await fireOnceAt(idleAt)
   expect(fixture.boat.stopIds).toEqual(['bx_1'])
   const stopped = await start.endpoint.readLifecycle()
   expect(stopped).toMatchObject({ state: 'stopped', stoppedAt: idleAt })
   expect(await publicationState()).toBe('pending')
-  expect(start.storage.alarmAt).toBe(idleAt + 999)
+  expect(await start.storage.getAlarm()).toBe(idleAt + 999)
   await allowPublication()
-  start.restart()
+  await start.restart()
   await start.tick(idleAt + 1_000)
   expect(await publicationState()).toBe('succeeded')
-  expect(start.storage.alarmAt).toBe(stopped?.nextDiskKeepaliveAt)
+  expect(await start.storage.getAlarm()).toBe(stopped?.nextDiskKeepaliveAt)
   expect(await start.endpoint.readLifecycle()).toEqual(stopped)
   expect(fixture.boat.stopIds).toEqual(['bx_1'])
 })
@@ -141,27 +140,29 @@ it('retains an older creation publication retry after a resume completes', async
     await queuedResumeWithBlockedPublication()
   await advanceToRunner(start)
   const resumedAt = fixture.runtime.dependencies.now()
-  expect(start.storage.alarmAt).toBe(resumedAt + 1_000)
+  expect(await start.storage.getAlarm()).toBe(resumedAt + 1_000)
   await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
   await start.tick(resumedAt)
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toEqual({ ok: true })
   expect(await publicationState()).toBe('pending')
   expect(fixture.boat.resumeIds).toEqual(['bx_1'])
-  expect(start.storage.alarmAt).toBe(resumedAt + 1_000)
+  expect(await start.storage.getAlarm()).toBe(resumedAt + 1_000)
   const resumed = await start.endpoint.readLifecycle()
-  start.restart()
+  await start.restart()
   await start.tick(resumedAt + 1_000)
   expect(await publicationState()).toBe('pending')
-  expect(start.storage.alarmAt).toBe(resumedAt + 2_000)
+  expect(await start.storage.getAlarm()).toBe(resumedAt + 2_000)
   await allowPublication()
-  start.restart()
+  await start.restart()
   await start.tick(resumedAt + 2_000)
   expect(await publicationState()).toBe('succeeded')
   expect(await start.endpoint.readLifecycle()).toEqual(resumed)
-  expect(start.storage.alarmAt).toBe(resumedAt + 5_000)
+  expect(await start.storage.getAlarm()).toBe(resumedAt + 5_000)
   await start.tick(resumedAt + 5_000)
-  expect(start.storage.alarmAt).toBe((resumed?.lastActivityAt ?? 0) + IDLE_MS)
+  expect(await start.storage.getAlarm()).toBe(
+    (resumed?.lastActivityAt ?? 0) + IDLE_MS,
+  )
   expect(fixture.boat.stopIds).toEqual(['bx_1'])
   expect(fixture.boat.resumeIds).toEqual(['bx_1'])
 })
@@ -175,16 +176,16 @@ it('recovers publication during runner wait without moving the resume deadline',
     phase: 'runner',
     deadlineAt: idleAt + 1_200_000,
   })
-  expect(start.storage.alarmAt).toBe(waitingAt + 1_000)
+  expect(await start.storage.getAlarm()).toBe(waitingAt + 1_000)
   await allowPublication()
-  start.restart()
+  await start.restart()
   await start.tick(waitingAt + 1_000)
   expect(await publicationState()).toBe('succeeded')
   expect(await start.job()).toMatchObject({
     phase: 'runner',
     deadlineAt: idleAt + 1_200_000,
   })
-  expect(start.storage.alarmAt).toBe(idleAt + 1_200_000)
+  expect(await start.storage.getAlarm()).toBe(idleAt + 1_200_000)
   await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
   await start.tick(waitingAt + 1_000)
   expect(await start.job()).toBeUndefined()
@@ -209,7 +210,7 @@ it('stops a suspended owner while the completed creation still needs publication
     runnerConnected: false,
   })
   expect(await publicationState()).toBe('pending')
-  expect(start.storage.alarmAt).toBe(completedAt + 1_000)
+  expect(await start.storage.getAlarm()).toBe(completedAt + 1_000)
 })
 
 it('recovers a stored creation publication from a legacy lifecycle alarm', async () => {
@@ -222,26 +223,26 @@ it('recovers a stored creation publication from a legacy lifecycle alarm', async
     fireOnceAt,
     allowPublication,
   } = await completedCreationWithBlockedPublication()
-  const alarms = workspaceTaskAlarms(start.storage)
+  const alarms = workspaceTaskAlarms(nativeWorkspaceStorage(start.storage))
   await alarms.set('lifecycle:publication', null)
   await alarms.set('lifecycle', completedAt + 1_000)
-  start.restart()
+  await start.restart()
   await fireOnceAt(completedAt + 1_000)
   expect(await publicationState()).toBe('pending')
-  expect(start.storage.alarmAt).toBe(completedAt + 2_000)
+  expect(await start.storage.getAlarm()).toBe(completedAt + 2_000)
   await allowPublication()
-  start.restart()
+  await start.restart()
   await start.tick(completedAt + 2_000)
   expect(await publicationState()).toBe('succeeded')
-  expect(start.storage.alarmAt).toBe(completedAt + 5_000)
+  expect(await start.storage.getAlarm()).toBe(completedAt + 5_000)
   await start.tick(completedAt + 5_000)
-  expect(start.storage.alarmAt).toBe(idleAt)
+  expect(await start.storage.getAlarm()).toBe(idleAt)
   expect(fixture.boat.stopIds).toEqual([])
 })
 
 it('releases start and publication alarms after archive removes their records', async () => {
   const { start, actor } = await queuedResumeWithBlockedPublication()
-  const alarms = workspaceTaskAlarms(start.storage)
+  const alarms = workspaceTaskAlarms(nativeWorkspaceStorage(start.storage))
   expect(await alarms.has('lifecycle:start')).toBe(true)
   expect(await alarms.has('lifecycle:publication')).toBe(true)
   // Archive removes these records before it clears lifecycle state.
@@ -249,9 +250,9 @@ it('releases start and publication alarms after archive removes their records', 
     'lifecycle:start-job',
     'lifecycle:create-publication',
   ])
-  actor.endpoint().cancelLifecycleWaiters()
+  await actor.cancelWaiters()
   await actor.endpoint().clearLifecycle()
   expect(await alarms.has('lifecycle:start')).toBe(false)
   expect(await alarms.has('lifecycle:publication')).toBe(false)
-  expect(start.storage.alarmAt).toBeNull()
+  expect(await start.storage.getAlarm()).toBeNull()
 })

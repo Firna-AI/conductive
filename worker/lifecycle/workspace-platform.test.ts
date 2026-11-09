@@ -1,12 +1,13 @@
 import { expect, it } from 'vitest'
 
-import { MemoryWorkspaceStorage } from './platform-test-storage'
+import { nativeLifecycleStorage } from './native-storage.test-support'
 import { nativeWorkspacePlatform } from './workspace-platform'
 
 it('rethrows a failed operation after the native blocking callback succeeds', async () => {
   const failure = new Error('The first message was refused')
   let rejectedCallbacks = 0
   let completedCallbacks = 0
+  const { storage } = await nativeLifecycleStorage()
   const platform = nativeWorkspacePlatform(
     {
       blockConcurrencyWhile: async (operation) => {
@@ -22,7 +23,7 @@ it('rethrows a failed operation after the native blocking callback succeeds', as
       waitUntil: () => {},
     },
     async () => {},
-    new MemoryWorkspaceStorage(),
+    storage,
   )
   expect(await platform.blockConcurrencyWhile(async () => 'admitted')).toBe(
     'admitted',

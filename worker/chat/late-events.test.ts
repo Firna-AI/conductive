@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { sessionPaths } from '../../src/shared/sessions'
 import { FakeRunner } from '../test-support/fake-runner'
 import {
@@ -15,7 +14,6 @@ import {
   startTurn,
   terminalEvent,
 } from './turn-lifecycle.test-support'
-
 describe('late runner events', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -27,7 +25,6 @@ describe('late runner events', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('replays dropped start, text, tools, and an end after workspace stop without changing a newer turn', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -71,8 +68,8 @@ describe('late runner events', () => {
     ]
     expect(runner.pendingEvents()).toEqual(dropped)
     await endTurn(fixture, old)
-    fixture.chat.closeRunner()
-    fixture.restart()
+    await fixture.chat.closeRunner()
+    await fixture.restart()
     fixture.transport.dropIncoming = () => false
     const resumed = await fixture.connect(
       new FakeRunner({ workspaceId: WORKSPACE_ID, streamId: 'new-stream' }),
@@ -112,9 +109,8 @@ describe('late runner events', () => {
     expect(
       tab.messages.filter((message) => message.type === 'event'),
     ).toHaveLength(4)
-    tab.close()
+    await tab.close()
   })
-
   it('checks late acknowledgements and unsafe context before appending without message or command changes', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -122,14 +118,13 @@ describe('late runner events', () => {
     runner.emit({ type: 'runner.ready' })
     await fixture.drain()
     const old = await startTurn(fixture, runner, session.id, 'old-message')
-    fixture.transport.dropOutgoing = (message) => {
-      if (message.type === 'message')
-        throw new Error('Injected steer send failure')
-      return false
-    }
+    await fixture.setSendRule({
+      type: 'message',
+      error: 'Injected steer send failure',
+    })
     await fixture.send(session.id, 'unanswered')
     await endTurn(fixture, old)
-    fixture.transport.dropOutgoing = () => false
+    await fixture.setSendRule(null)
     await fixture.connect(runner)
     const before = await lifecycleSnapshot(fixture)
     runner.emit({
@@ -174,7 +169,6 @@ describe('late runner events', () => {
     expect(await lifecycleSnapshot(fixture)).toEqual(before)
     expect(runner.pendingEvents()).toEqual([])
   })
-
   it('keeps old ended data when start evidence is positive or incomplete without reopening a closed session', async () => {
     const fixture = await createChatFixture(harness)
     const runner = await fixture.connect()

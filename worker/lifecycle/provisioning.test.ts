@@ -18,7 +18,7 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     }
     // The caller leaves while its response waits. The actor keeps the job.
     const firstQueue = fixture.nextQueued()
-    void createWorkspace(
+    const abandoned = createWorkspace(
       fixture.runtime,
       fixture.org.id,
       fixture.user,
@@ -38,9 +38,10 @@ it('recovers an accepted create after its caller closes and the actor restarts',
       processId: 1,
       stdoutOffset: 4,
     })
-    actor.restart()
+    await abandoned
+    await actor.restart()
     fixture.boat.statusChunkSize = Infinity
-    const heldRead = actor.holdResultRead()
+    const heldRead = await actor.holdResultRead()
     let settled = false
     const waiting = actor.wait().then((result) => {
       settled = true
@@ -119,8 +120,8 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     await fixture.advanceTo(fixture.runtime.dependencies.now() + 1_000, id)
     expect(fixture.boat.resumeIds).toHaveLength(resumeCount)
     expect(fixture.boat.deletedIds).toEqual([])
-    const heldAdmission = actor.holdAdmission()
-    const stale = endpoint.queueLifecycleStart({
+    const heldAdmission = await actor.holdAdmission()
+    const stale = actor.queueForEpochGuard({
       ...resume,
       attempt: 'cancel-before-admission',
     })
@@ -138,8 +139,10 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     const cancelledId = await secondQueue
     const cancelled = fixture.starts.get(cancelledId)
     if (!cancelled) throw new Error('Missing canceled create')
-    await cancelled.advance()
-    await cancelled.advance()
+    for (let step = 0; step < 8; step++) {
+      if ((await cancelled.job())?.allocatedSandboxId) break
+      await cancelled.advance()
+    }
     const cancelledContext = { ...context, workspaceId: cancelledId }
     await stopWorkspaceSandbox(cancelledContext)
     await fixture.runtime.workspace(cancelledId).lifecycleStopped()

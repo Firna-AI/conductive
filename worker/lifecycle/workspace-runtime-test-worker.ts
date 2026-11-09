@@ -196,19 +196,32 @@ export default {
               publicExponent: new Uint8Array([1, 0, 1]),
               hash: 'SHA-256',
             },
-            false,
+            true,
             ['sign', 'verify'],
           )
           if (!('privateKey' in keys))
             throw new Error('RSA key pair unavailable')
-          await installationToken(send, env.GITHUB_CLIENT_ID, keys.privateKey, {
-            id: 'source',
-            orgId: 'org',
-            fullName: 'example/source',
-            defaultBranch: 'main',
-            githubRepositoryId: 1,
-            installationId: 91,
-          })
+          const encoded = await crypto.subtle.exportKey(
+            'pkcs8',
+            keys.privateKey,
+          )
+          if (!(encoded instanceof ArrayBuffer))
+            throw new Error('PKCS#8 key unavailable')
+          const privateKey = `-----BEGIN PRIVATE KEY-----\n${btoa(String.fromCharCode(...new Uint8Array(encoded)))}\n-----END PRIVATE KEY-----`
+          await installationToken(
+            send,
+            env.GITHUB_CLIENT_ID,
+            privateKey,
+            {
+              id: 'source',
+              orgId: 'org',
+              fullName: 'example/source',
+              defaultBranch: 'main',
+              githubRepositoryId: 1,
+              installationId: 91,
+            },
+            Date.now,
+          )
           break
         }
       }
