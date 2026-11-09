@@ -1,3 +1,5 @@
+import { routes } from '../app/router'
+import { FAKE_ORIGIN } from '../test-support/fixtures/core'
 import type { ReactElement } from 'react'
 import { describe, expect, it } from 'vitest'
 import type { User } from '../shared/api'
@@ -46,6 +48,8 @@ const deletedAcme: OrgSummary = {
 }
 const workspace: Workspace = {
   id: 'checkout',
+  number: 1,
+  link: new URL(routes.workspace('acme', 'checkout'), FAKE_ORIGIN).href,
   orgId: 'acme',
   repositoryId: 'storefront',
   sectionId: 'general',

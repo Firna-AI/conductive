@@ -20,6 +20,7 @@ const tileKeys = ['users', 'orgs', 'workspaces', 'running'] as const
 const stateKeys = ['running', 'stopped', 'failed', 'archived'] as const
 const chartTitles = ['New workspaces', 'New users'] as const
 
+/** The users tile also has the line of the people on the waitlist. */
 function TilePlaceholders() {
   return (
     <section aria-label="Totals" className={tiles.band}>
@@ -29,6 +30,7 @@ function TilePlaceholders() {
             <SkeletonBar height={10} width={56} />
             <SkeletonBar height={24} width={72} />
             <SkeletonBar height={10} width={88} />
+            {key === 'users' ? <SkeletonBar height={10} width={104} /> : null}
           </SkeletonGroup>
         ))}
       </StatTileRow>

@@ -52,8 +52,8 @@ share.
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages, the entries that moved,
-the child pages of `app/account`, `app/orgs/suspended`, `app/banner`, and
-`app/chat`, and the New workspace dialog.
+the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
+`app/chat`, and `app/workspace-links`, and the New workspace dialog.
 
 ## Folder layout
 
@@ -118,10 +118,16 @@ workspace screen draws them, as `app/chat/masked-paths` shows.
 the steps of Get started, and the notice for an agent that is not
 connected.
 
+## The waitlist
+
+[The waitlist](orgs-and-logins.md#the-waitlist) gives the screen of a
+person without app access, the invite codes and invite links, and the
+invite code on the Account page.
+
 ## The Mac app
 
 [The Mac app](mac-app.md) gives the screens of the Mac app: its window, the
-commands that an agent runs on the Mac, and This Mac.
+waitlist, the commands that an agent runs on the Mac, and This Mac.
 
 ## The marketing site
 

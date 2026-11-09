@@ -6,14 +6,12 @@ import { Notice } from '../components/common/Notice'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
-import {
-  PendingInviteList,
-  type PendingInviteRow,
-} from '../components/members/PendingInvites'
+import { PendingInviteList } from '../components/members/PendingInvites'
 import { orgLinks } from '../components/orgs/orgLinks'
 import { pendingInvites } from '../fixtures/members'
-import { account, orgs, type Org } from '../fixtures/orgs'
+import { account, orgs } from '../fixtures/orgs'
 import { paths } from '../paths'
+import { inviteRows } from './inviteRows'
 import styles from './InvitationsScreen.module.css'
 
 export const invitationsSchema = {
@@ -33,24 +31,6 @@ export type InvitationsState = SchemaProps<typeof invitationsSchema>
 
 /** The org whose invitation the failed accept could not accept. */
 const failedOrg = orgs.acme
-
-/** Accept invitation of one org. It opens the org when the mockups draw it. */
-function Accept(props: { org: Org }) {
-  const button = (
-    <ActionButton
-      accessibilityLabel={`Accept the invitation to ${props.org.name}`}
-    >
-      Accept invitation
-    </ActionButton>
-  )
-  const to = orgLinks[props.org.key]
-  if (!to) return button
-  return (
-    <ScreenLink asChild to={to}>
-      {button}
-    </ScreenLink>
-  )
-}
 
 /**
  * The accept that failed: what failed, the message of the server, and Try
@@ -90,18 +70,6 @@ function ContinueLink() {
   )
 }
 
-function inviteRows(): PendingInviteRow[] {
-  return pendingInvites.map((invite) => {
-    const org = orgs[invite.org]
-    return {
-      id: org.key,
-      orgName: org.name,
-      email: invite.email,
-      accept: <Accept org={org} />,
-    }
-  })
-}
-
 /** The invitations with their intro, or the notice of a list that did not load. */
 function Body(props: { state: InvitationsState; mobile: boolean }) {
   if (props.state.result === 'load-failed') {
@@ -113,7 +81,10 @@ function Body(props: { state: InvitationsState; mobile: boolean }) {
     <>
       <p className={styles.intro}>Accept an invitation to join its org.</p>
       {props.state.result === 'accept-failed' ? <AcceptFailure /> : null}
-      <PendingInviteList invites={inviteRows()} stacked={props.mobile} />
+      <PendingInviteList
+        invites={inviteRows(pendingInvites)}
+        stacked={props.mobile}
+      />
     </>
   )
 }

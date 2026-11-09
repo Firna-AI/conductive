@@ -6,6 +6,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { MailLink } from './CatalogueText'
 import { LegalLinks } from './LegalLinks'
+import { startLabel } from './SiteActions'
 import type { SiteLinks } from './SiteHeader'
 import { Wordmark } from './Wordmark'
 import styles from './SiteFooter.module.css'
@@ -57,7 +58,7 @@ export function SiteFooter(props: {
         <Column title="Account">
           <li>
             <ScreenLink className={styles.link} to={props.links.signIn}>
-              Start free with GitHub
+              {startLabel}
             </ScreenLink>
           </li>
           <li>

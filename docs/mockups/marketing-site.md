@@ -8,9 +8,14 @@ header, a hero with a short link, a short headline, one sentence, and a
 large picture of the app, then one section for each feature, the smaller
 features, a last call to action, and a footer. The short link above the
 headline, "From Conductor Cloud? Compare the features", leads to the page
-for people who move from Conductor Cloud. Both actions, "Start free with GitHub"
-and "Sign in", lead to `app/sign-in`. The parts live in
-`src/components/marketing/`.
+for people who move from Conductor Cloud. Both actions, "Join the waitlist"
+and "Sign in", lead to `app/sign-in`. A new person waits for app access,
+so the main action promises a place on the waitlist, not use at once.
+The title of the last call to action, "Give your next task its own cloud
+computer.", promises no use at once either.
+`startLabel` in `src/components/marketing/SiteActions.tsx` holds its words
+for the header, the hero, the last call to action, and the footer. The
+parts live in `src/components/marketing/`.
 
 The header links to the public source repository on GitHub in both layouts.
 

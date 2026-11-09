@@ -20,6 +20,9 @@ conductive mac run --command TEXT --folder PATH --reason TEXT
 Create starts a workspace in the calling workspace's org, with its owner.
 Omitted options use the owner's model and effort, and the default section.
 The lists return the org's workspaces, repositories, sections, or the app's models.
+List returns every workspace in the org, with its number and web link.
+A workspace link in a message names that workspace.
+A workspace link in an answer shows as a chip.
 `
 
 const commandHelp =

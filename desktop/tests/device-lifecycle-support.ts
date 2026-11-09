@@ -70,7 +70,7 @@ export function deviceLifecycleFixture() {
       value: 'fixture.signature',
       expiresAt: time.clock.now() + 1_000_000,
     }),
-    authenticate: async () => userId,
+    authenticate: async () => ({ userId, appAccess: true }),
     connect: (credential, events) => {
       const wire = new Wire()
       wires.push(wire)

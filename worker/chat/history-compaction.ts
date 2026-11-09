@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { hash } from '../security/crypto'
 import { chatKey } from './storage-keys'
 import type { ChatData } from './types'

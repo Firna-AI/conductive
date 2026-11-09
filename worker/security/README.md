@@ -1,8 +1,10 @@
 # Sign-in and request gate
 
-This area checks browser sign-in, request origins, and org membership.
+This area checks browser sign-in, app access, request origins, and org membership.
 Protected app requests pass through `gate` before route dispatch.
 The gate checks access before it reads a write body.
+`sessionGate` owns the host, Origin, session, and app access checks.
+The chat and feature routers use it before forwarding an unread request to a workspace object.
 Open chat tabs and terminal sockets check their access again through the [shared connection reader](#open-connections).
 Sign-in also asks for the [terms consent](#terms-consent) and refuses [suspended users](#suspended-users).
 
@@ -77,9 +79,10 @@ Each GitHub sign-in starts after an agreement to the current Terms.
   `termsConsentResponse` in [`marketing/consent.ts`](../marketing/consent.ts) reads it from the Astro build.
   It fills the Continue address and site origin as escaped text.
   It keeps the site's security headers and `Cache-Control: no-store`.
-  Its Continue with GitHub link adds the current revision and keeps the `desktop_challenge` of the Mac app.
+  Its Continue with GitHub link adds the current revision and keeps the `desktop_challenge` of the Mac app and the `invite_code` of a join link.
   Its links lead to the Terms and Privacy pages on `MARKETING_ORIGIN`, or on the product domain without that setting.
 - The signed OAuth state cookie carries the revision to the callback. A `terms_version` value in the callback address counts for nothing.
+- The signed state also carries the join code. A code in the callback address counts for nothing.
 - The callback creates a new account only when its signed state carries the current revision.
   Otherwise it answers 403 `terms_acceptance_required`, and it saves no user and no session.
 - Each sign-in whose signed state carries the current revision saves that revision in the `terms_version` column of `users`.
@@ -100,6 +103,46 @@ After that, each entry of this area refuses that user:
 - `sessionUser` finds no user for a suspended account. So the gate answers 401 `sign_in_required` to each session of that user.
 - `readConnectionAccess` gives a suspended user no grant. So their open chat tabs and terminal sockets close at the next refresh, and their preview requests and preview data stop at the next check.
 
+## App access at sign-in
+
+Each sign-in saves the GitHub account creation time and its primary verified
+email. A missing primary verified email saves no address.
+`signInAppAccess` grants access to operators through the shared
+[grant step](../waitlist/README.md). It uses a signed join code only for a
+user without app access. A failed code still creates a sign-in session.
+Its browser redirect keeps the code and the reason on the join path.
+The Mac handoff follows the same access grant before its session exchange.
+
+Each new account starts without app access unless its operator identity or
+signed join code grants access. A repeat sign-in preserves existing access.
+Accounts migrated from before the waitlist keep the `existing` source.
+[Waitlist](../../docs/protocol/waitlist.md) states the complete access rules.
+
+## App access gate
+
+[`app-access.ts`](app-access.ts) owns the single allow list for a session
+without app access:
+
+- `GET /api/session`
+- `POST /api/auth/logout`
+- `GET /api/waitlist`
+- `POST /api/waitlist/code`
+- `GET /api/invites`
+- `POST /api/invites/<inviteId>/accept`
+
+The invitation route still checks that the pending invitation belongs to
+the signed-in user. Every other method or path gets HTTP 403
+`access_required`. Every upgrade gets the same refusal, including an
+upgrade of an allowed read. Public sign-in, its callback and Mac exchange,
+health, and desktop preflights keep their own entry rules.
+An upgrade outside the API also runs the session gate before asset dispatch.
+
+The check follows the active session read. It precedes membership checks,
+operator checks, route dispatch, and JSON reads. `gate` accepts the original
+request separately when a caller changes the request for its later checks.
+The members gate and the body-free device gate supply that original
+request, so its method, path, and Upgrade header govern app access.
+
 ## Development
 
 Run `npm run test -- worker/security/gate.test.ts worker/security/gate-body.test.ts worker/http/bounded-body.test.ts` from the repository root.
@@ -113,14 +156,20 @@ The tests of its callers check it.
 After a change to the reader, run `npm run test -- worker/chat/tab-access.test.ts worker/chat/tab-deadlines.test.ts worker/chat/security.test.ts worker/terminal/access.test.ts`.
 
 After a change to the terms consent or to the suspension checks of sign-in, run `npm run test -- worker/security/terms.test.ts worker/security/auth.test.ts worker/operator/route.test.ts`.
+Run `npm run test -- worker/security/waitlist-auth.test.ts worker/security/waitlist-join.test.ts` for the access grants, primary email, and signed join codes.
+Run `npm run test -- worker/security/waitlist-gate.test.ts worker/security/waitlist-desktop.test.ts worker/devices/waitlist.test.ts` for the waiting-session gate and Mac access transitions.
 
 ### Key Code
 
 - [gate.ts](gate.ts) checks the host, origin, session, membership, and JSON body.
+- [app-access.ts](app-access.ts) checks the original request against the waiting-session allow list.
+- [waitlist-gate.test.ts](waitlist-gate.test.ts) checks waiting sessions, allowed requests, default refusals, and suspensions.
 - [connection-access.ts](connection-access.ts) exports `readConnectionAccess`, the identity and grant types, `CONNECTION_CHECK_MS`, and `scheduleConnectionCheck`.
 - [gate-body.test.ts](gate-body.test.ts) checks the exact body limit and early cancellation through HTTP routes.
 - [gate.test.ts](gate.test.ts) checks access, dispatch order, and JSON errors.
 - [auth.ts](auth.ts) starts and finishes GitHub sign-in, with the terms consent and the suspension check.
+- [sign-in-access.ts](sign-in-access.ts) applies operator and join-code grants before either session flow.
+- [github.ts](github.ts) reads the GitHub identity, creation time, and verified emails with their primary flag.
 - [terms.test.ts](terms.test.ts) checks the consent at the start of sign-in and the consent record of new and existing accounts.
 - [cookies.ts](cookies.ts) builds and reads the session cookies.
 - [crypto.ts](crypto.ts) signs and verifies tokens.

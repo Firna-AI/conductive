@@ -5,7 +5,7 @@ import {
   DESKTOP_ORIGIN,
   DESKTOP_SESSION_COOKIE,
 } from '../../../worker/security/desktop-contract.js'
-import type { DeviceCredential } from './connection.js'
+import type { DeviceAccount, DeviceCredential } from './connection.js'
 
 /** Read only the real host cookie. A renderer cannot supply a credential. */
 export function desktopCredential(
@@ -37,7 +37,7 @@ export async function deviceAccount(
   credential: string,
   signal: AbortSignal,
   request = fetch,
-): Promise<string | undefined> {
+): Promise<DeviceAccount | undefined> {
   const response = await request(
     new Request(new URL(API_PATHS.session, appOrigin), {
       headers: {
@@ -55,6 +55,8 @@ export async function deviceAccount(
   if (
     typeof value === 'object' &&
     value !== null &&
+    'appAccess' in value &&
+    typeof value.appAccess === 'boolean' &&
     'user' in value &&
     typeof value.user === 'object' &&
     value.user !== null &&
@@ -62,5 +64,5 @@ export async function deviceAccount(
     typeof value.user.id === 'string' &&
     value.user.id.length > 0
   )
-    return value.user.id
+    return { userId: value.user.id, appAccess: value.appAccess }
 }

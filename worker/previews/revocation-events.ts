@@ -1,4 +1,4 @@
-import type { WorkspaceEvent } from '../../src/shared/events'
+import type { WorkspaceEvent } from '../chat/workspace-events'
 import type { ChatData } from '../chat/types'
 
 export class PreviewRevocations {

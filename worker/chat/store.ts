@@ -1,7 +1,4 @@
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import { HttpError } from '../http'
 import {
   FIRST_MESSAGE_ADMISSION_KEY,

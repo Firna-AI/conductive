@@ -1,0 +1,46 @@
+import { createContext, useContext, type ReactNode } from 'react'
+import type { ChipWorkspace } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
+import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
+import { nameLabel } from '../../shared/name-label'
+import type { Workspace } from '../../shared/workspaces'
+import type { WorkspaceLinks } from './workspace-links'
+
+/** The workspaces that chips find, and how a chip opens its page. */
+export interface ChatLinks {
+  links: WorkspaceLinks
+  /**
+   * Opens a page of the app, such as the page of a chip, in the same window.
+   * Without it, a chip is a plain link that the browser opens.
+   */
+  open?: (to: string) => void
+}
+
+const LinksContext = createContext<ChatLinks>({
+  links: { orgId: '', workspaces: null },
+})
+
+/** Gives each chip inside it the workspaces of the org and the way to open them. */
+export function LinksProvider(props: {
+  value: ChatLinks
+  children: ReactNode
+}) {
+  return (
+    <LinksContext.Provider value={props.value}>
+      {props.children}
+    </LinksContext.Provider>
+  )
+}
+
+/** The workspaces that chips find. Outside a provider, no link is a chip. */
+export function useChatLinks(): ChatLinks {
+  return useContext(LinksContext)
+}
+
+/** What a chip shows of its workspace now: the label, the name, and the state. */
+export function chipOf(workspace: Workspace): ChipWorkspace {
+  return {
+    label: workspaceLabel(workspace.number),
+    name: nameLabel(workspace.name),
+    status: workspace.state,
+  }
+}

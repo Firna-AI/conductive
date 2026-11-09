@@ -16,19 +16,20 @@ export async function membersGate(
   const path = new URL(request.url).pathname
   const match = path.match(new RegExp(`^${API_PATHS.orgs}/([^/]+)(?:/|$)`))
   if (!match) return gate(request, env, now)
-  let orgId: string
-  try {
-    orgId = decodeURIComponent(match[1])
-  } catch {
-    throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  }
   // The existing gate performs every identity, host, Origin, and body check.
   // Membership then uses the original path and fresh data, including deleted-org visibility.
   const context = await gate(
     new Request(new URL(API_PATHS.session, request.url), request),
     env,
     now,
+    request,
   )
+  let orgId: string
+  try {
+    orgId = decodeURIComponent(match[1])
+  } catch {
+    throw new HttpError(404, 'org_not_found', 'The org is not available.')
+  }
   const allowDeleted =
     (path === orgPath(orgId) && request.method === 'GET') ||
     (path === restoreOrgPath(orgId) && request.method === 'POST') ||
