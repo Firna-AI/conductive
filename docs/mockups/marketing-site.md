@@ -10,6 +10,8 @@ call to action, and a footer. Both actions, "Start free with GitHub"
 and "Sign in", lead to `app/sign-in`. The parts live in
 `src/components/marketing/`.
 
+The header links to the public source repository on GitHub in both layouts.
+
 The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
 Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
 
