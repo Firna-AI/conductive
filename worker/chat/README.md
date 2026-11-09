@@ -82,6 +82,15 @@ The Durable Object runs the gates itself.
   header, the session cookie, the org membership, and the body of writes.
 - `findChatWorkspace` then reads the workspace from D1. The workspace must
   belong to that org, and the org must not be deleted.
+- Each browser write then enters the serial queue of the object. In the
+  queue, `authorizeChatBrowser` checks the access again, with the body that
+  the gate already read and the time of the queued check. It runs
+  `gateAccess`, the [access checks](../security/README.md#access-checks) of
+  the gate, and reads the workspace and its archive state again. This
+  repeats the D1 reads of the first check. So a write that waited for its
+  body or for the queue gets the refusal that a new request would get. An
+  example is `401 sign_in_required` after a sign-out. The write saves
+  nothing. Reads and the events socket take no second check.
 - Each open tab holds a `workspace` identity. The
   [shared connection reader](../security/README.md#open-connections) of
   the security area gives it a grant with a deadline. The `workspace` kind
@@ -151,7 +160,8 @@ The Durable Object runs the gates itself.
 
 An org suspension keeps chat history and event subscriptions readable.
 The common browser write gate refuses session and message changes with `org_suspended`.
-The same check runs inside the browser write queue before session or message changes.
+The second access check of each browser write refuses such a change again in the queue.
+This also holds when the suspension starts while the change waits.
 The shared token rule refuses runners and agent logins for the org.
 
 ## History and event order
@@ -180,6 +190,11 @@ npm run typecheck
 
 [Chat backend tests](tests.md) names the test support files and what each
 group of tests covers.
+
+`write-access.test.ts` holds a rename at its body read or in the queue.
+Then one access fact ends, such as a sign-out, a removal from the org, or
+an archive. The rename gets the refusal that a new request would get, and
+saves nothing. A new refused request leaves its body unread.
 
 ## Seams for other milestones
 
@@ -214,7 +229,9 @@ tests through the production Worker entry.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
   turns as stopped when the lifecycle state becomes stopped or error.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
-  the object.
+  the object. With the body that the gate already read, it runs
+  `gateAccess` in place of `gate`, and finds the workspace again.
+  `WorkspaceChat.fetch` uses this form in the queue for each browser write.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
   a browser tab: the login refresh, the tab registration, the close after
   a failed start, and the grant check before the history.

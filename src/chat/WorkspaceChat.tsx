@@ -12,7 +12,11 @@ import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
-import { sessionState, type ChatSnapshot } from './state/chat-snapshot'
+import {
+  sessionState,
+  type ChatSnapshot,
+  type Overlay,
+} from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
@@ -59,6 +63,16 @@ function useReport<T>(value: T | null, report?: (value: T) => void): void {
   }, [value, report])
 }
 
+/**
+ * The overlay that the chat shows. A read-only chat sends no write, so it
+ * shows only the session history. An open rename or close question then
+ * counts as none, also one that opened before the chat turned read-only.
+ * The store keeps the edit.
+ */
+function permittedOverlay(overlay: Overlay, readOnly: boolean): Overlay {
+  return readOnly && overlay.kind !== 'history' ? { kind: 'none' } : overlay
+}
+
 /** The session tabs, the chat of the open session, and the overlays. */
 function ChatBody(
   props: ChatViewProps & { controller: ChatController; snapshot: ChatSnapshot },
@@ -66,6 +80,7 @@ function ChatBody(
   const { controller, snapshot } = props
   const readOnly =
     snapshot.workspace?.state === 'archived' || (props.readOnly ?? false)
+  const overlay = permittedOverlay(snapshot.overlay, readOnly)
   const mobile = props.viewport === 'mobile'
   const content = props.content ?? null
   const active = snapshot.activeSessionId
@@ -73,7 +88,7 @@ function ChatBody(
   const ticking =
     running !== null ||
     snapshot.workspace?.state === 'starting' ||
-    snapshot.overlay.kind === 'history'
+    overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
@@ -87,7 +102,6 @@ function ChatBody(
     reopen,
     (item) => endedAt(snapshot, item),
   )
-  const { overlay } = snapshot
   const body = (
     <>
       <SessionTabs

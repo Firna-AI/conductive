@@ -53,11 +53,11 @@ export function checkOrigin(request: Request, env: AppEnv): void {
   }
 }
 
-export async function gate(
+export async function gateAccess(
   request: Request,
   env: AppEnv,
   now: number,
-): Promise<RequestContext> {
+): Promise<Omit<RequestContext, 'body' | 'rawUploadBytes'>> {
   checkHost(request, env)
   checkOrigin(request, env)
   const token = readCookie(request, sessionCookie(request))
@@ -91,17 +91,24 @@ export async function gate(
       throw new HttpError(404, 'org_not_found', 'The org is not available.')
   }
   if (org) await requireWritableOrgRequest(request, env.DB, org.id)
+  return { user, sessionId, org }
+}
+
+export async function gate(
+  request: Request,
+  env: AppEnv,
+  now: number,
+): Promise<RequestContext> {
+  const access = await gateAccess(request, env, now)
   const raw = rawUploadRoute(request)
   if (raw)
     return {
-      user,
-      sessionId,
-      org,
+      ...access,
       body: null,
       rawUploadBytes: rawUploadLength(request, raw.maxBytes),
     }
   const body = ['GET', 'HEAD', 'OPTIONS'].includes(request.method)
     ? null
     : await readJsonObject(request)
-  return { user, sessionId, org, body }
+  return { ...access, body }
 }

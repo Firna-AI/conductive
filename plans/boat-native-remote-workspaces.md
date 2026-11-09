@@ -7948,10 +7948,30 @@ these items change.
 Apply the `fix after merge` items of the chat writes. Added on 8 November
 2026.
 
-- [ ] Apply option C of `plans/follow-ups/chat-access-before-queued-writes.md`,
+- [x] Apply option C of `plans/follow-ups/chat-access-before-queued-writes.md`,
       and delete that item.
-- [ ] Apply option B of `plans/follow-ups/chat-open-edits-after-read-only.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8r`.
+- [x] Apply option B of `plans/follow-ups/chat-open-edits-after-read-only.md`,
       and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8r`.
+
+Implementation calls by the orchestrator on 9 November 2026:
+
+- Reuse the shared access checks inside the browser write queue. This
+  keeps the refusal order and codes equal to a new request. The queued
+  check makes four D1 reads, in place of the earlier org-only read.
+- Keep the parsed body separate from the fresh access context. The gate
+  also keeps the raw-upload branch that the attachment work added after
+  the follow-up item was written.
+- Derive the permitted overlay in a private helper beside `ChatBody`.
+  Keep only the session history while the chat is read-only. Use the
+  same value for the tabs, the dialogs, and the history clock. The store
+  keeps its overlay, as option B requires.
+- The primary update adds an operator action that lifts a suspension.
+  An open page learns of the lift only after a reload. Its kept chat
+  therefore stays read-only for the visit, so option B still applies.
+
+Evidence: `.context/boat-native-remote-workspaces/8r/orchestrator-checks.md`.
 
 ## Milestone 15s: Shell list follow-ups
 
