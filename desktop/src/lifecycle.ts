@@ -2,7 +2,7 @@ import type { BrowserWindow } from 'electron'
 
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
 
-export interface DesktopApp {
+interface DesktopApp {
   requestSingleInstanceLock(): boolean
   quit(): void
   whenReady(): Promise<unknown>

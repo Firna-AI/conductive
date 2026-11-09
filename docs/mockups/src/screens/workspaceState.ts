@@ -1,7 +1,9 @@
 import type { SchemaProps } from '@mokly/mokly'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
+import { paletteViews } from '../components/palette/paletteViews'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversations'
+import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
@@ -30,7 +32,9 @@ export const workspaceStateSchema = {
     'viewer',
     'lostUpdate',
     'tree',
+    'paths',
     'org',
+    'palette',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -59,7 +63,8 @@ export const workspaceStateSchema = {
     /**
      * The tab of the centre column: the first session, a new session, the
      * linked session that a member's message opened from the first session,
-     * or a file, a Markdown preview, or a diff. A phone shows a file in
+     * or a file, a Markdown preview, a diff, or a file whose name the app
+     * does not know, such as a file that moved. A phone shows a file in
      * Files.
      */
     tab: {
@@ -70,13 +75,15 @@ export const workspaceStateSchema = {
         'code',
         'markdown',
         'diff',
+        'unnamed-file',
       ],
     },
     /**
      * The composer: empty, with a message that is not sent yet, with
      * attached files, with its picker open, or with a message for an agent
-     * that is not connected, or in a session whose starter's login is not
-     * available.
+     * that is not connected. Or with a message in a session whose starter's
+     * login is not available, or whose starter keeps that login for their
+     * own messages.
      */
     composer: {
       enum: [
@@ -86,6 +93,7 @@ export const workspaceStateSchema = {
         'picker',
         'no-agent',
         'no-starter-login',
+        'not-shared',
       ],
     },
     /** The user drags the handle of the right column to widen it. */
@@ -123,12 +131,24 @@ export const workspaceStateSchema = {
      */
     tree: { enum: treeStates },
     /**
+     * The paths of the files: plain, or two paths that hold the secret value
+     * of an org env var. Each list, tab, and page then shows "[redacted]" in
+     * place of the value, and a diff opens the masked seed script.
+     */
+    paths: { enum: pathStates },
+    /**
      * The org of the workspace: in use, or suspended by the operator. In a
      * suspended org every start is refused, so the screen draws a sandbox
      * that is not archived as `refused`, with the words of the org's
      * refusal, and nothing in the workspace can change.
      */
     org: { enum: ['active', 'suspended'] },
+    /**
+     * The command palette, closed or open on one of its views. Over an
+     * open workspace it offers the actions of the workspace first. A phone
+     * opens it from the list, so a phone shows the palette of the list.
+     */
+    palette: { enum: paletteViews },
   },
 } as const
 
@@ -152,7 +172,9 @@ export const readyWorkspace: WorkspaceState = {
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
+  paths: 'plain',
   org: 'active',
+  palette: 'closed',
 }
 
 /**

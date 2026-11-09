@@ -6,6 +6,8 @@ import { browserDelay } from '../../../app/events'
 import {
   windowFocus,
   windowInput,
+  windowKeys,
+  windowPlatform,
   windowVisibility,
 } from '../../../app/services'
 import type { WorkspaceIdentity } from '../../../app/workspace-store'
@@ -37,6 +39,8 @@ const app = new AppModel({
   delay: browserDelay,
   onFocus: windowFocus(window),
   onInput: windowInput(window),
+  onKey: windowKeys(window),
+  platform: windowPlatform(window),
   visible: windowVisibility(window),
   storage: null,
   newId: () => crypto.randomUUID(),

@@ -20,9 +20,9 @@ const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
 
 /** Priya, the member who is not an admin, who reads the member role. */
-export const priya = senderSnapshot(fakeUsers[1])
+const priya = senderSnapshot(fakeUsers[1])
 
-export const opus: AgentChoice = {
+const opus: AgentChoice = {
   agent: 'claude',
   model: 'Opus 5.5',
   effort: 'high',
@@ -76,13 +76,19 @@ export const loginGone = (session: Session): Session => ({
   loginAvailable: false,
 })
 
+/** The starter of a session keeps a login that works for their own messages. */
+export const loginPrivate = (session: Session): Session => ({
+  ...session,
+  loginShared: false,
+})
+
 /**
  * Answers each Send and Try again as the Worker does when the login of the
  * starter is not available: a new linked session takes the message, and the
  * reply names it with its record. A retry sends the message of the fixture
  * again as `retry-1`. The linked session has an empty history.
  */
-export function opensLinked(server: FakeApiServer) {
+function opensLinked(server: FakeApiServer) {
   server.json('GET', chatHistoryPath(org, ws, LINKED), {
     events: [],
     throughEventNumber: 0,

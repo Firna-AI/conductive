@@ -1,0 +1,51 @@
+---
+/*
+ * A whole page of the site: the head with its icons, its font, and its
+ * styles, then the body. The build puts each stylesheet inline in the head,
+ * so a page needs no other request before it shows. The page has no script.
+ *
+ * The stylesheets keep the order of the cascade: the font and the design
+ * tokens, the parts of the pages, then the size of each picture.
+ */
+import 'virtual:site-tokens.css'
+import '../styles/base.css'
+import '../styles/chrome.css'
+import '../styles/hero.css'
+import '../styles/frames.css'
+import '../styles/sections.css'
+import '../styles/legal.css'
+import 'virtual:site-pictures.css'
+import interFont from '../../../docs/mockups/src/fonts/InterVariable.woff2?url'
+import { SITE_ICONS } from '../../shared/site-build'
+
+/** What the head of a page says about it. */
+type Props = { title: string; description: string }
+
+const { title, description } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href={SITE_ICONS.faviconIco} sizes="32x32" />
+    <link rel="icon" href={SITE_ICONS.faviconSvg} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={SITE_ICONS.appleTouchIcon} />
+    <link
+      rel="preload"
+      href={interFont}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+  </head>
+  <body>
+    <div class="site">
+      <slot />
+    </div>
+  </body>
+</html>

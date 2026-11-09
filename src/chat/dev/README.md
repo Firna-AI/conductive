@@ -31,7 +31,7 @@ The address chooses the state. The first value of each option is the default:
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |
 | `login` | `on`, `off` |
-| `starter` | `on`, `off` (the login of each starter is not available), `none` (older records that name no starter), `linked` (the reader's message opened a linked session, whose turn waits) |
+| `starter` | `on`, `off` (the login of each starter is not available), `private` (each starter keeps the login for their own messages), `none` (older records that name no starter), `linked` (the reader's message opened a linked session, whose turn waits) |
 | `replay` | `stored`, `live` (the recorded chat arrives event by event) |
 | `viewport` | `desktop`, `mobile` |
 | `scheme` | `dark`, `light` |
@@ -54,7 +54,8 @@ changes, uploads, Resume, and the view. As in the Worker, Try again sends the
 message that the session record names again, as a new message. It refuses
 each other message with 409. Each accepted message sets that record's
 `retryMessageId` to null. Send and Try again in a session whose starter's
-login is not available open a linked session, as the Worker does. The page
+login is not available, or private, open a linked session, as the Worker
+does. The page
 sends as the member of the `role` option, who also starts each new
 session. A model change opens its session under the ID that
 the chat chose. Stop and the close of a running tab

@@ -8,6 +8,10 @@ if (process.platform !== 'darwin') {
   throw new Error('Build the Mac DMG and ZIP packages on macOS')
 }
 const desktop = resolve(import.meta.dirname, '..')
+if (process.argv.includes('--release')) {
+  await import('./release.ts')
+  process.exit(0)
+}
 const icon = spawnSync(
   process.execPath,
   [resolve(desktop, 'scripts/icon.ts')],

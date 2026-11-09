@@ -1,0 +1,45 @@
+---
+import { signInCopy } from '../../../../docs/mockups/src/screens/signInCopy'
+import GitHubMark from '../../components/GitHubMark.astro'
+import RunningText from '../../components/RunningText.astro'
+import Wordmark from '../../components/Wordmark.astro'
+import Document from '../../layouts/Document.astro'
+import { termsAgreement } from '../../legal-text'
+import { requestValues, siteOriginHrefs } from '../../request-values'
+
+/*
+ * The page before GitHub when a sign-in starts without the agreement to
+ * the current terms, such as from the menu of the Mac app. Only the app
+ * host serves it. It shows the agreement beside Continue with GitHub. Its
+ * links lead to the pages of the site on the site origin.
+ */
+---
+
+<Document title={signInCopy.title} description={signInCopy.text}>
+  <header class="header">
+    <div class="header-inner">
+      <Wordmark home={siteOriginHrefs.home} />
+    </div>
+  </header>
+  <main class="main text-page">
+    <article class="text-article">
+      <header class="text-head">
+        <h1 class="text-title">{signInCopy.title}</h1>
+        <p class="text-lead">{signInCopy.text}</p>
+      </header>
+      <div class="intro">
+        <p class="intro-text">
+          <RunningText text={termsAgreement} hrefs={siteOriginHrefs} />
+        </p>
+        <div class="actions">
+          <a class="button button-primary" href={requestValues.continueAddress}>
+            <span class="button-icon">
+              <GitHubMark size={16} />
+            </span>
+            <span>{signInCopy.action}</span>
+          </a>
+        </div>
+      </div>
+    </article>
+  </main>
+</Document>

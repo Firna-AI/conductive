@@ -23,6 +23,33 @@ export interface ToolNavigation {
 }
 
 /**
+ * The address of each tool, and the select of its tab: it saves the tool
+ * in the view. On a phone it opens the page of the tool. On desktop it
+ * moves the address only from the address of a tool.
+ */
+export function useToolSelect(
+  context: WorkspaceContext,
+): Pick<ToolNavigation, 'href' | 'select'> {
+  const navigation = useNavigation()
+  const { org, workspace, viewport, savedView } = context
+  const placeTool = toolPlace(context.view)?.tool ?? null
+  const phone = viewport === 'phone'
+  const href = useCallback(
+    (tool: ToolKey) => toolHref(org.id, workspace.id, tool),
+    [org.id, workspace.id],
+  )
+  const select = useCallback(
+    (tool: ToolKey) => {
+      saveView(savedView, withTool(tool))
+      if (phone) navigation.push(href(tool))
+      else if (placeTool) navigation.replace(href(tool))
+    },
+    [savedView, phone, navigation, href, placeTool],
+  )
+  return { href, select }
+}
+
+/**
  * The tool of the open workspace and its navigation. An address that names
  * a tool shows it, and saves it in the view. Without one, the saved view
  * names the tool. A click saves the tool. On a phone each tool is a page
@@ -44,18 +71,7 @@ export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
   useEffect(() => {
     if (known && placeTool) savedView.updateView(withTool(placeTool))
   }, [savedView, known, placeTool])
-  const href = useCallback(
-    (tool: ToolKey) => toolHref(org.id, workspace.id, tool),
-    [org.id, workspace.id],
-  )
-  const select = useCallback(
-    (tool: ToolKey) => {
-      saveView(savedView, withTool(tool))
-      if (phone) navigation.push(href(tool))
-      else if (placeTool) navigation.replace(href(tool))
-    },
-    [savedView, phone, navigation, href, placeTool],
-  )
+  const { href, select } = useToolSelect(context)
   const preview = useMemo<PreviewRoute>(() => {
     const previewHref = (id: string) =>
       toolHref(org.id, workspace.id, 'preview', id)

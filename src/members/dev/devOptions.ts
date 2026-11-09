@@ -6,7 +6,7 @@ import { devOrgIds, type DevOrgId } from './devOrgs'
 import { devFailures, type DevFailure } from './devServer'
 
 /** The screens of the dev page. */
-export const devViews = [
+const devViews = [
   'general',
   'repositories',
   'computer',

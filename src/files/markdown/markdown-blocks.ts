@@ -10,7 +10,7 @@ import { listMarker, parseList } from './markdown-lists'
 import { parseTable, TableBudget, tableStarts } from './markdown-tables'
 import { takeDefinitions } from './markdown-text'
 
-export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
+type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 export type CellAlign = 'left' | 'center' | 'right' | null
 
 /**

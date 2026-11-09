@@ -17,6 +17,7 @@ export type SandboxState = (typeof SANDBOX_STATES)[number]
 export interface Sandbox {
   id: string
   state: SandboxState
+  hydrated?: boolean
 }
 
 export interface SandboxStart {
@@ -65,7 +66,7 @@ export interface CommandStatus extends CommandOffsets {
   more: boolean
 }
 
-export interface SandboxFile {
+interface SandboxFile {
   path: string
   sizeBytes: number
   encoding: 'utf-8' | 'base64'
