@@ -73,6 +73,22 @@ chat, and five tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
+  workspace as a wide, compact dialog over the dimmed app, for a user who
+  chose the dialog in Preferences. It lies in the layer and over the scrim
+  of `ConfirmDialog`. The repository picker sits at the top left, and the
+  org and the section of the new workspace, in plain text, at the top
+  right. The message and its files fill the middle, and the notices of the
+  New workspace page follow them. The model picker sits at the bottom left,
+  and the attach button and Create, with the hint of the Enter key, at the
+  bottom right. A phone always opens the page, so the dialog has no phone
+  layout.
+- The account has two tabs, General and Preferences, as links, as the org
+  settings have. Preferences holds the New workspaces section, whose rows
+  put each label beside its control in two columns. A segmented control
+  chooses how New workspace opens, with a helper line under it, and a
+  narrow section puts it under its label. A failed save shows its error
+  under the control.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
@@ -137,8 +153,10 @@ chat, and five tabs at the bottom.
   chip: a notice over the composer names it, gives the limit, and offers
   "Attach a smaller file", as `app/attachments/too-large` shows. The files
   of a sent message show under it, at the right, without Remove. The New
-  workspace composer uses the same chips before the workspace exists, as
-  `app/new-workspace/files` shows.
+  workspace page and dialog use the same chips before the workspace exists,
+  as `app/new-workspace/files` and `app/new-workspace/dialog/files` show.
+  In the dialog, the notice of a file over 25 MB sits with its other
+  notices, under the message.
 - Data that the chat does not have shows in plain words, from decision 76.
   `lostCopy.ts` in `src/components/chat/` holds the words. A tool call whose
   output the runner shortened shows the size that it left out, such as "1.2 MB left out", and

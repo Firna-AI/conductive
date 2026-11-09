@@ -2,6 +2,7 @@
   "order": [
     "not-created",
     "files",
+    "dialog",
     "creating",
     "waiting",
     "first-turn",

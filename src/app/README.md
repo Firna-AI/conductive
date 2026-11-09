@@ -115,7 +115,8 @@ the workspace stores, and the raw event streams of feature stores.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the command palette, the focus, saved drafts, and New workspace.
+layers, the command palette, the focus, saved drafts, and New workspace as a page or a dialog,
+with the send key that every composer shares.
 
 ## Rules for this code
 
@@ -167,6 +168,8 @@ server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
 mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
 clicks, types, and lets the answers of the fake API settle.
+`../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
+for the tests of New workspace as a page or a dialog, and of its send key.
 
 ## Key code
 
@@ -196,8 +199,8 @@ clicks, types, and lets the answers of the fake API settle.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   and computer settings of one org, with `watch` and the wait of each part.
 - `account-model.ts`: the agent logins with their share setting, the
-  default model, the GitHub App installations, and the repositories that
-  Create org offers.
+  default model, the New workspace view, the GitHub App installations,
+  and the repositories that Create org offers.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
@@ -266,8 +269,26 @@ clicks, types, and lets the answers of the fake API settle.
   which say whether they closed, and the modal layers with their owners.
   The palette reads them before it opens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
+- `../shell/layout/frames.tsx`: the frames: the desktop frame with the
+  rail, a desktop page alone, such as Create org, and the phone frame.
+  `../shell/layout/DesktopLayers.tsx`: `DesktopLayers`, the layers and the
+  main area that every desktop frame shares: sheets and dialogs, the New
+  workspace dialog, and the command palette.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
-  `useDismiss`, the layer of sheets and dialogs.
+  `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
+  every sheet and dialog uses. Escape closes only the newest layer.
+  `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
+  screen after a layer closes with a move, which the main area of a
+  desktop frame takes through `useScreenFocus`.
+- `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the
+  New workspace dialog of a desktop frame, and `useNewWorkspace`, the one
+  way that each place opens New workspace as the dialog or the page.
+  `NewWorkspaceDialog.tsx`: the dialog.
+- `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
+  and the dialog share: the repository, the notices, the readiness, and
+  the send. `parts.tsx`: their repository menu.
+- `../chat/components/send-key.ts`: `useSendKey`, the send key of every
+  composer.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.
   `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
 - `../shell/orgs/`: Create org and the name and initials fields.

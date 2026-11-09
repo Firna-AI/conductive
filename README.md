@@ -249,6 +249,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   [flows](docs/architecture/flows.md), and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
+    - [Create a workspace](docs/protocol/create-a-workspace.md)
     - [Repository folders](docs/protocol/repository-folders.md)
     - [Life of a workspace](docs/protocol/workspace-life.md)
     - [Tools of a workspace](docs/protocol/workspace-tools.md)

@@ -40,6 +40,7 @@ export const paths = {
   paletteSearch: 'app/command-palette/search',
   paletteNoResults: 'app/command-palette/search/no-results',
   account: 'app/account',
+  accountPreferences: 'app/account/preferences',
   accountSetup: 'app/account/setup',
   connectClaude: 'app/account/connect-claude',
   connectCodex: 'app/account/connect-codex',

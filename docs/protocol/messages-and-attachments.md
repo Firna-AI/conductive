@@ -55,11 +55,13 @@ says.
   "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
 - The composer attaches files to a message, as [Attachments](#attachments)
   says.
+- [The send key](create-a-workspace.md#the-send-key) gives the key that
+  sends a message from the composer (decision 143 of PR #73).
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.
 - The first message of a new workspace creates the workspace, as
-  [Create a workspace](workspace-life.md#create-a-workspace)
+  [Create a workspace](create-a-workspace.md)
   says. The app accepts that message before the sandbox is ready
   (decision 14).
 - The app also accepts a later message while the sandbox is not ready
@@ -71,7 +73,7 @@ says.
 - A message that waits for the sandbox shows that it waits. A queue in the
   browser was rejected, because a closed tab would lose the message.
 - Reason: a failed first start keeps its workspace and its queued messages,
-  as [Create a workspace](workspace-life.md#create-a-workspace)
+  as [Create a workspace](create-a-workspace.md#a-failed-first-start)
   says. So members can add work at once, and an accepted message survives
   a reload of the tab. A hold of later messages in the composer until the
   first start succeeds was rejected for these reasons.
@@ -189,7 +191,7 @@ says.
   purge of a deleted org (decision 132).
 - A failed first start deletes no file of the first message. The files stay
   with the accepted message in the failed workspace, as
-  [Create a workspace](workspace-life.md#create-a-workspace)
+  [Create a workspace](create-a-workspace.md#a-failed-first-start)
   says. Try again uses them in the same workspace.
 - The app deletes an unsent file 7 days after its upload (decision 132). A
   file is unsent while no accepted message uses it.

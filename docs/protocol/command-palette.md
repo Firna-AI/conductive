@@ -174,7 +174,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - The palette offers only the actions that the current page offers to the
   person.
 - New workspace also shows on each page where the palette has an org that
-  takes changes, because it opens a page.
+  takes changes. It uses the
+  [saved view of New workspace](create-a-workspace.md#page-or-dialog).
 - New section shows only where the page shows the workspace list.
 - The Go to rows show only where the page shows the right column.
 - On the All tab and on the Actions tab, the actions come in this order:
@@ -214,7 +215,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - In the Mac app, the Account group also holds
   [This Mac](desktop-commands.md#saved-choices).
 - A row of the org settings opens its tab. A row of the Account group
-  opens the Account page.
+  opens the tab of the Account page that holds its section.
 
 ## Keys inside the palette
 

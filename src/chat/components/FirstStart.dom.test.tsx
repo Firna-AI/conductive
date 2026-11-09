@@ -2,7 +2,9 @@
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { createApiClient } from '../../app/api/client'
+import { HeldRequests } from '../../app/test-kit'
 import type { WorkspaceEvent } from '../../shared/events'
+import { attachmentUploadPath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
 import {
   workspacePath,
@@ -15,6 +17,7 @@ import {
   queryByText,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { fetchFiles } from '../../test-support/fake-files'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import {
@@ -63,9 +66,10 @@ const blocked = (element: Element) =>
   element.hasAttribute('disabled')
 
 describe('the chat of a new workspace without a host', () => {
-  it('sends with Send and Enter during the first start and after it failed, shows the saved cause above the composer, and keeps the bar of a failed resume in its place', async () => {
+  it('Enter waits for uploads during the first start. Send works after failure. The saved cause shows, and a failed resume hides the composer.', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ conversation: 'queued' })
+    const held = new HeldRequests(server)
     // The read holds the state before the events that the test sends.
     server.json('GET', workspacePath(org, ws), {
       workspace: workspaceIn('starting'),
@@ -90,9 +94,9 @@ describe('the chat of a new workspace without a host', () => {
           request.method === 'POST' &&
           new URL(request.url).pathname === messages,
       )
-    await mount(
+    const view = await mount(
       <WorkspaceChat
-        client={createApiClient(server.fetch)}
+        client={createApiClient(held.fetch, fetchFiles(held.fetch))}
         orgId={org}
         subscribe={subscribe}
         viewport="desktop"
@@ -105,6 +109,30 @@ describe('the chat of a new workspace without a host', () => {
       'the message box',
     )
     await typeText(box, 'Keep a saved cart for 30 days.')
+    const uploadPath = attachmentUploadPath(org, {
+      type: 'workspace',
+      workspaceId: ws,
+    })
+    held.holdAnswer('POST', uploadPath)
+    const picker =
+      view.container.querySelector<HTMLInputElement>('input[type="file"]')
+    if (!picker) throw new Error('The composer has no file picker.')
+    const chosen = new DataTransfer()
+    chosen.items.add(
+      new File(['png'], 'postcode-overlap.png', { type: 'image/png' }),
+    )
+    await act(async () => {
+      picker.files = chosen.files
+      picker.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(blocked(byRole('button', 'Send'))).toBe(true)
+    await pressKey('Enter')
+    expect(sends()).toHaveLength(0)
+    held.release('POST', uploadPath)
+    await waitFor(
+      () => !blocked(byRole('button', 'Send')),
+      'the completed upload',
+    )
     expect(blocked(byRole('button', 'Send'))).toBe(false)
     await pressKey('Enter')
     await waitFor(() => sends().length === 1, 'the send during the start')
@@ -133,11 +161,20 @@ describe('the chat of a new workspace without a host', () => {
     expect(queryByRole('textbox', 'Message')).toBeNull()
     expect(
       await Promise.all(
-        sends().map(async (request) => (await request.clone().json()).text),
+        sends().map(async (request) => {
+          const body: unknown = await request.clone().json()
+          return body
+        }),
       ),
     ).toEqual([
-      'Keep a saved cart for 30 days.',
-      'Add an index on the user ID.',
+      expect.objectContaining({
+        text: 'Keep a saved cart for 30 days.',
+        attachmentIds: ['attachment-1'],
+      }),
+      expect.objectContaining({
+        text: 'Add an index on the user ID.',
+        attachmentIds: [],
+      }),
     ])
   })
 })

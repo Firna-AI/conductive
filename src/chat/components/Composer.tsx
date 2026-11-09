@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef } from 'react'
 import { Button } from '@firna/ui/button'
 import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
@@ -15,6 +15,7 @@ import { ActionButton, IconButton } from '../ui/actions'
 import { DraftFiles, OversizeNotice } from './AttachmentChips'
 import local from './chat.module.css'
 import { ModelPicker } from './ModelPicker'
+import { useSendKey } from './send-key'
 
 export interface ComposerProps {
   draft: Draft
@@ -53,8 +54,9 @@ export interface ComposerProps {
  * which can open the file picker again. While a turn runs, a message
  * steers the turn, and Stop sits beside Send. While the sandbox is not
  * ready, Send still sends, and the workspace queues the message. A line
- * under the box names whose agent login the session uses. On desktop, Enter
- * sends and Shift+Enter starts a new line.
+ * under the box names whose agent login the session uses. Enter sends as
+ * the shared rule of `useSendKey` says: on desktop, Enter sends and
+ * Shift+Enter starts a new line.
  * The composer reads Enter before the text field does, so Enter never adds
  * a line to a message that it sends.
  */
@@ -64,15 +66,8 @@ export function Composer(props: ComposerProps) {
   const { draft } = props
   const empty = draft.text.trim() === '' && draft.files.length === 0
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
-  const touch = control.field === 'lg'
   const steers = props.running && props.startsSession !== true
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (touch || event.key !== 'Enter' || event.shiftKey) return
-    if (event.nativeEvent.isComposing) return
-    if (!(event.target instanceof HTMLTextAreaElement)) return
-    event.preventDefault()
-    if (!off) props.onSend()
-  }
+  const onKeyDown = useSendKey(!off, props.onSend)
   return (
     <>
       <OversizeNotice

@@ -9,10 +9,12 @@ says.
 
 These docs belong to this doc:
 
+- [Create a workspace](create-a-workspace.md): New workspace as a page or
+  as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](repository-folders.md): the folder and the shell
   variable of each repository in a sandbox.
-- [Life of a workspace](workspace-life.md): the create, the start steps,
-  the time limits, the states, the stop and resume, and the archive.
+- [Life of a workspace](workspace-life.md): the start steps, the time
+  limits, the states, the stop and resume, and the archive.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
   terminal, the port previews, and the desktop.
 

@@ -10,6 +10,7 @@ import {
   DraftFiles,
   OversizeNotice,
 } from '../../chat/components/AttachmentChips'
+import { useSendKey } from '../../chat/components/send-key'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import { IconButton } from '../ui/actions'
 import { ModelPicker } from '../ui/ModelPicker'
@@ -20,8 +21,9 @@ import ui from '../ui/ui.module.css'
  * attach button, the model and effort picker, and Send. The files upload
  * before the workspace exists, with the chips and the notice of the
  * workspace chat. Send is off until the message can go, as the screen
- * decides for Send and Try again. While the create runs, the text and the
- * attach button are off.
+ * decides for Send and Try again. Enter sends as in every composer: on a
+ * computer, Enter sends and Shift+Enter adds a line. While the create runs,
+ * the text and the attach button are off.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
@@ -36,6 +38,7 @@ export function Composer(props: {
   const create = useStore(props.model.create)
   const files = useRef<HTMLInputElement>(null)
   const sending = create.state === 'sending'
+  const sendKey = useSendKey(props.ready, props.send)
   return (
     <>
       <OversizeNotice
@@ -43,7 +46,7 @@ export function Composer(props: {
         refused={draft.refused}
       />
       <div className={styles.wrap}>
-        <div className={styles.composer}>
+        <div className={styles.composer} onKeyDownCapture={sendKey}>
           {draft.files.length > 0 ? (
             <DraftFiles
               files={draft.files}
