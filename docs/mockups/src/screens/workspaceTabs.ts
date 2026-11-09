@@ -1,4 +1,5 @@
 import type { WorkspaceTab } from '../components/workspace/WorkspaceTabs'
+import { conversations } from '../fixtures/conversations'
 import {
   linkedSession,
   newSession,
@@ -23,8 +24,10 @@ export function workspaceName(
   state: WorkspaceState,
   workspace: Workspace,
 ): string {
-  const waiting = state.conversation === 'queued'
-  return waiting && workspace.generatedName
+  const answered = conversations[state.conversation].some(
+    (item) => item.kind === 'agent',
+  )
+  return !answered && workspace.generatedName
     ? workspace.generatedName
     : workspace.name
 }

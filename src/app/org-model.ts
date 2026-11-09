@@ -110,12 +110,10 @@ export class OrgModel {
   readonly repositories: Readable<Loadable<readonly Repository[]>>
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
-  /** The admitted creates of this tab, until their starts end. */
-  readonly creations: Creations
+  /** The create requests of this tab, which a sign-out ends. */
+  readonly creations = new Creations()
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
-  /** The workspaces that the server removed while this tab showed them. */
-  private readonly removed = new Set<string>()
 
   constructor(
     services: AppServices,
@@ -161,7 +159,6 @@ export class OrgModel {
       builds: new Refresher(builds, buildsWait, this.services),
       members: new Refresher(members, onEntry, this.services),
     }
-    this.creations = new Creations(this)
   }
 
   /**
@@ -197,26 +194,9 @@ export class OrgModel {
    * an open, Archive, or a create. Its place in the list stays.
    */
   putWorkspace(workspace: Workspace): void {
-    if (this.removed.has(workspace.id)) return
     this.resources.list.confirm(
       workspaceUpdated(workspace),
       `workspace ${workspace.id}`,
-    )
-  }
-
-  /**
-   * Takes a workspace out of the list, such as a create whose sandbox did
-   * not start, which the server removes. A list answer that started before
-   * keeps it out, and so does a later record of it from this tab.
-   */
-  removeWorkspace(workspaceId: string): void {
-    this.removed.add(workspaceId)
-    this.resources.list.confirm(
-      (list) => ({
-        ...list,
-        workspaces: list.workspaces.filter((item) => item.id !== workspaceId),
-      }),
-      `workspace ${workspaceId}`,
     )
   }
 
