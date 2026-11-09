@@ -8,14 +8,14 @@ import styles from './SectionList.module.css'
  * The archived workspaces at the end of the list, from decision 16. The
  * group is the app's own, not a section of the user, so it has no menu,
  * and it is collapsed until the user opens it. An archived workspace opens
- * with its chat read-only. `controlsOf` gives each row its More, which
- * only an admin sees on an archived row.
+ * with its chat read-only. `controlsOf` draws the menu that a right click
+ * opened on a row, which only an admin has on an archived row.
  */
 export function ArchivedGroup(props: {
   rows: readonly WorkspaceRow[]
   open: boolean
   variant: 'sidebar' | 'page'
-  controlsOf?: (row: WorkspaceRow) => RowControls
+  controlsOf?: (row: WorkspaceRow) => RowControls | undefined
 }) {
   const Chevron = props.open ? ChevronDown : ChevronRight
   return (

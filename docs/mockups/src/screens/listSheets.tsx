@@ -103,9 +103,10 @@ export function SectionSheet() {
 }
 
 /**
- * The menu of a workspace row, as a phone shows it after More: a sheet
- * with the name of the workspace. A choice with a submenu, such as Move to
- * section, shows its choices in the sheet in place of the menu.
+ * The menu of a workspace row, as a phone layout shows it after a right
+ * click or the menu keys: a sheet with the name of the workspace. A choice
+ * with a submenu, such as Move to section, shows its choices in the sheet
+ * in place of the menu.
  */
 export function WorkspaceMenuSheet(props: { menu: RowMenuOpen }) {
   const { menu } = props

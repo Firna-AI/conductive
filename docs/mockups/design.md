@@ -14,10 +14,12 @@ as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
-drag and drop. A right click on a row, or its More, opens the menu of the
-workspace. The centre column has a slim header that names the
+drag and drop. Archive covers the time on hover only, without moving the
+row content. Selection and keyboard focus alone keep the time visible.
+A right click on a row opens the menu of the workspace. The centre column
+has a slim header that names the
 workspace and its number, such as `W-395`, the repository, and
-the owner of the workspace, and ends with Archive and the toggle of the
+the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
 session and each open file or diff, in the order that the user gives them
@@ -71,16 +73,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - The menu of a workspace row has Move to section, Reassign to, Rename, a
   line, then Archive, as `app/workspace-menu` shows. It lists only the
   actions that the person can use, from `workspaceMenu.ts` in
-  `src/components/workspaces/`, and a row with none has no menu. More,
-  from `RowMenu.tsx` beside it, sits at the end of the row beside its
-  link, in place of the time. It shows under the pointer, on the row with
-  the focus, on the current row, and while the menu is open. A right click
-  opens the menu at the pointer, and More opens it below itself. The row
-  of the open menu keeps the fill of a hover. A phone shows More on every
-  row, after the time, and opens the menu and its choices in a sheet. A
-  long press on a phone still lifts the row for a drag. Rename puts a
-  field in place of the name and the time, with the name selected.
-  `RowMenu.module.css` styles More, the field, and the menu at the pointer.
+  `src/components/workspaces/`, and a row with none has no menu. A right
+  click opens the menu at the pointer, from `RowMenu.tsx` beside it.
+  Shift+F10 and the Menu key on a focused row open it below the row. No
+  row has a button for the menu. The row under the pointer keeps its
+  hover, with Archive over the time when the person can archive the
+  workspace. A phone layout opens the menu and its choices in a sheet. A
+  long press on a phone still lifts the row for a drag, and opens no menu.
+  Rename puts a field in place of the name and the time, with the name
+  selected. `RowMenu.module.css` styles the field and the menu at the
+  pointer.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, at the
   bottom right of a desktop and at the bottom of a phone, as

@@ -14,7 +14,7 @@ how a screen is built, and links to the other pages.
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
-| `app/workspace-menu` | The menu of a workspace row from a right click or More: its section and owner choices, Rename, Archive from the list, and the menus of each role |
+| `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
@@ -196,12 +196,10 @@ Invite codes tabs come from decision 160. Its child pages:
 
 `app/workspace-menu` shows the menu of Apple Pay button, a row of the list
 of Acme, at the pointer of a right click: Move to section, Reassign to,
-Rename, and Archive. A phone opens it from More as a sheet. The user chose
-these four actions on 9 November 2026. The More of that row in every list
-opens `app/workspace-menu/more`. Its child pages:
+Rename, and Archive. Shift+F10 and the Menu key open it too, and a phone
+layout opens it as a sheet. No row has a button for the menu. The user
+chose these four actions on 9 November 2026. Its child pages:
 
-- `app/workspace-menu/more` has the menu below More, which shows at the
-  end of a row in place of the time.
 - `app/workspace-menu/move` has the sections beside the menu, with the
   current one checked. Its `general-only` variant has Acme with General
   only, whose menu has no Move to section.
@@ -212,14 +210,14 @@ opens `app/workspace-menu/more`. Its child pages:
   name selected. Its `failed` variant keeps the draft in the field, under
   the toast of the list that names the failure.
 - `app/workspace-menu/archive` has the question of Archive over the list,
-  which `app/archive` asks from the header. Its `check-failed` variant has
+  which `app/archive` also asks. Its `check-failed` variant has
   a check that a stopped cloud computer refused, and its `archived`
   variant has the list after the archive.
   `user-flows/archive-from-list` goes from the list through the menu and
   the question to that list.
 - `app/workspace-menu/roles` has the menu of a member who is not an
-  admin, then her own workspace, her archived rows without More, and a
-  suspended org, whose rows have no More and no menu.
+  admin, then her own workspace, her archived row without a menu, and a
+  suspended org, whose rows have no menu.
 
 The child pages of `app/operator/user` follow. The first two were variants
 of `app/operator/user` and kept their paths:

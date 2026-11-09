@@ -16,7 +16,7 @@ export const archiveFromList = defineUseCase({
       screenPath: 'app/workspace-menu',
       title: 'Open its menu',
       description:
-        'A right click on the row opens its menu at the pointer. On a phone, More at the end of the row opens it as a sheet.',
+        'A right click on the row opens its menu at the pointer. The menu keys open it too.',
     },
     {
       screenPath: 'app/workspace-menu/archive',

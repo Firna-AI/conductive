@@ -147,6 +147,6 @@ export async function expectWindowLayout(page: Page) {
     page.getByRole('heading', { name: workspaceTitle, exact: true }),
   )
   await expect(
-    page.getByRole('button', { name: 'Archive workspace', exact: true }),
+    page.getByRole('button', { name: 'Copy link to W-395', exact: true }),
   ).toHaveCSS('-webkit-app-region', 'no-drag')
 }

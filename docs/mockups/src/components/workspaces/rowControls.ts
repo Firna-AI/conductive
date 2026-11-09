@@ -1,38 +1,51 @@
-import { you, type PersonKey } from '../../fixtures/members'
-import type { SectionKey } from '../../fixtures/sections'
-import { menuTarget } from '../../fixtures/workspaceMenu'
-import { paths } from '../../paths'
+import type { Membership } from '../../fixtures/members'
+import { sections, type SectionKey } from '../../fixtures/sections'
 import type { MenuEntry } from '../common/Menu'
 import { reassignMenu } from '../workspace/OwnerPicker'
 import type { OpenSubmenu, RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
-import { sectionChoices, workspaceMenuOf, type Submenu } from './workspaceMenu'
+import { workspaceMenuOf, type Submenu } from './workspaceMenu'
 
-/** What a view draws on one row: its open menu, its field, or a hover. */
+/**
+ * What a view draws on one row: the menu that a right click or the menu
+ * keys opened, its field of Rename, or a hover.
+ */
 export type RowDrawing =
-  | { kind: 'menu'; at: 'pointer' | 'more'; submenu?: Submenu }
+  | { kind: 'menu'; submenu?: Submenu }
   | { kind: 'rename'; value: string; selected: boolean }
   | { kind: 'hover' }
 
-/** The person who looks at a list, and the one row that a view draws. */
-export type ListRows = {
-  viewer: PersonKey
-  /** The person is an admin of the org. */
-  admin: boolean
-  focus?: { workspace: string; drawing: RowDrawing }
-}
-
-/** Cal, an admin of each org, as the canonical views draw the list. */
-export const adminRows: ListRows = { viewer: you, admin: true }
+/** The one row that a view draws, and what it draws on it. */
+export type RowFocus = { workspace: string; drawing: RowDrawing }
 
 /** The list around a row. */
 export type RowContext = {
+  /** The person who looks at the list. Their role decides the actions. */
+  viewer: Membership
   /** The sections of the list, which Move to section offers. */
   sections: readonly SectionKey[]
   /** The org is suspended, so no row has a menu. */
   readOnly: boolean
-  /** The screen has no hover: More shows on every row, and a sheet opens. */
-  touch: boolean
+  /** The list opens a menu as a sheet, as on a phone, and has no hover. */
+  sheet: boolean
+}
+
+/**
+ * The sections of the list, where a workspace can move, with its own
+ * section checked. Its own section changes nothing.
+ */
+function sectionChoices(
+  current: SectionKey,
+  keys: readonly SectionKey[],
+): MenuEntry[] {
+  return [
+    { kind: 'label', label: 'Section' },
+    ...keys.map((key): MenuEntry => ({
+      kind: 'item',
+      label: sections[key].name,
+      checked: key === current,
+    })),
+  ]
 }
 
 /**
@@ -66,61 +79,45 @@ function submenuOf(
 }
 
 /**
- * More and the drawn state of one row. The canonical row of the menu, when
- * the view draws nothing on it, links More to its open menu.
+ * The drawn state of one row: the menu that a right click or the menu keys
+ * opened, at the pointer or in a sheet, the field of Rename, or a hover. A
+ * row whose person has no action draws no menu and no field, so a right
+ * click opens the browser's own menu.
  */
 export function rowControls(
   row: WorkspaceRow,
-  rows: ListRows,
+  focus: RowFocus | undefined,
   context: RowContext,
-): RowControls {
+): RowControls | undefined {
   const { workspace } = row
-  const drawing =
-    rows.focus?.workspace === workspace.key ? rows.focus.drawing : undefined
-  const submenu = drawing?.kind === 'menu' ? drawing.submenu : undefined
+  const drawing = focus?.workspace === workspace.key ? focus.drawing : undefined
+  if (!drawing) return undefined
+  // A screen without hover draws none.
+  if (drawing.kind === 'hover') {
+    return context.sheet ? undefined : { hovered: true }
+  }
+  const submenu = drawing.kind === 'menu' ? drawing.submenu : undefined
   const entries = context.readOnly
     ? []
     : workspaceMenuOf(
         {
-          admin: rows.admin,
-          owner: workspace.owner === rows.viewer,
+          admin: context.viewer.role === 'admin',
+          owner: workspace.owner === context.viewer.person,
           archived: row.status === 'archived',
           otherSection: context.sections.length > 1,
         },
         submenu,
       )
-  const controls: RowControls = {
-    more: entries.length > 0,
-    touch: context.touch,
-    moreTo:
-      workspace.key === menuTarget && !drawing
-        ? paths.workspaceMenuMore
-        : undefined,
+  if (entries.length === 0) return undefined
+  if (drawing.kind === 'rename') {
+    return { rename: { value: drawing.value, selected: drawing.selected } }
   }
-  // A row without an action has no menu and no field: a right click opens
-  // the browser's own menu.
-  switch (drawing?.kind) {
-    case undefined:
-      return controls
-    case 'hover':
-      // A screen without hover draws none.
-      return context.touch ? controls : { ...controls, hovered: true }
-    case 'rename':
-      if (!controls.more) return controls
-      return {
-        ...controls,
-        rename: { value: drawing.value, selected: drawing.selected },
-      }
-    case 'menu':
-      if (!controls.more) return controls
-      return {
-        ...controls,
-        open: {
-          at: drawing.at,
-          label: workspace.name,
-          entries,
-          submenu: submenu && submenuOf(submenu, row, context, entries),
-        },
-      }
+  return {
+    open: {
+      at: context.sheet ? 'sheet' : 'pointer',
+      label: workspace.name,
+      entries,
+      submenu: submenu && submenuOf(submenu, row, context, entries),
+    },
   }
 }

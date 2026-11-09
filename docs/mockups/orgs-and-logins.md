@@ -67,7 +67,7 @@ plan limits.
   workspace that is not archived. Only an admin sees Reassign to, and only
   the owner and the admins see Archive. The archived row of an admin
   offers only Reassign to. An archived row of a member and every row of a
-  suspended org have no menu and no More.
+  suspended org have no menu.
 - No workspace shows as expiring. Near day 14 of a stop, the app starts the
   cloud computer briefly and stops it again, from decision 43.
 - Any user creates orgs. Create org of the first run returns to Get started.

@@ -1,66 +1,7 @@
 /*
- * A workspace row with More, the button of its menu. The link fills the
- * row, and More sits over the end of the row, beside the link.
+ * The menu of a workspace row and its field of Rename. A right click or
+ * the menu keys open the menu: a row has no button of its own for it.
  */
-.item {
-  position: relative;
-}
-
-/*
- * More shows on hover, on focus, on the current row, and while the menu is
- * open. It takes the place of the time.
- */
-.more {
-  display: none;
-  position: absolute;
-  top: 0;
-  right: 2px;
-  bottom: 0;
-  align-items: center;
-  border-radius: var(--ui-radius-md);
-}
-
-.item:hover .more,
-.item:focus-within .more,
-.current .more,
-.open .more,
-.hovered .more,
-.touch .more {
-  display: flex;
-}
-
-.item:hover .time,
-.item:focus-within .time,
-.current .time,
-.open .time,
-.hovered .time {
-  visibility: hidden;
-}
-
-/*
- * A screen without hover shows More on every row. The row keeps its time
- * and makes room for More.
- */
-.item.touch .time {
-  visibility: visible;
-}
-
-.touch .link {
-  padding-right: calc(max(var(--ui-control-height), var(--ui-touch-min)) + 4px);
-}
-
-/* More while its menu is open. */
-.moreOpen {
-  background: var(--ui-selected);
-}
-
-/*
- * The row whose menu is open keeps the fill of a hover. A view runs no
- * script, so it draws a hover with the same fill.
- */
-.held {
-  background: var(--ui-soft);
-}
 
 /*
  * A view runs no script, so it draws the menu of a right click at a pointer
@@ -104,6 +45,14 @@
   font: inherit;
   white-space: nowrap;
   box-sizing: border-box;
+}
+
+/*
+ * The border of the field shows that it has the focus, so the app draws no
+ * focus ring of the browser around it.
+ */
+.field:focus {
+  outline: none;
 }
 
 /* A row of the list page is taller, and so is its field. */

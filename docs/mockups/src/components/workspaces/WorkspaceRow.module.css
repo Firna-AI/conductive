@@ -1,3 +1,8 @@
+.container {
+  position: relative;
+  display: block;
+}
+
 .row {
   display: flex;
   align-items: center;
@@ -12,7 +17,7 @@
   box-sizing: border-box;
 }
 
-a.row:hover {
+.container:hover .row {
   background: var(--ui-soft);
 }
 
@@ -24,7 +29,7 @@ a.row:hover {
 }
 
 .selected,
-a.selected:hover {
+.container:hover .selected {
   background: var(--ui-selected);
 }
 
@@ -52,13 +57,59 @@ a.selected:hover {
 
 .time {
   flex-shrink: 0;
-  min-width: 22px;
+  min-width: max(22px, var(--ui-touch-min));
   color: var(--ui-muted);
   font-family: var(--ui-font-label);
   font-size: var(--ui-text-sm);
   font-weight: 400;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+.archive {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.archivable:hover .time {
+  visibility: hidden;
+}
+
+.archivable:hover .archive {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/*
+ * A view runs no script, so it draws a hover with `.hovered`, such as on
+ * the row of a menu that a right click opened: the fill of a hover, and
+ * Archive over the time on a row that the person can archive. `.held`
+ * keeps the row of a menu in a sheet marked with the same fill.
+ */
+.hovered .row,
+.held .row {
+  background: var(--ui-soft);
+}
+
+.hovered .selected,
+.held .selected {
+  background: var(--ui-selected);
+}
+
+.archivable.hovered .time {
+  visibility: hidden;
+}
+
+.archivable.hovered .archive {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* The row under the pointer: a raised card with a full outline. */

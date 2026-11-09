@@ -28,14 +28,14 @@ export const workspaceMenuRoles = defineScreen({
       slug: 'archived',
       title: 'Archived rows of a member',
       description:
-        "Priya opens the Archived group. She has no action on an archived row, so Checkout page redesign shows no More, also under the pointer, and a right click opens the browser's own menu. The other rows keep More. On a phone the archived rows show no More.",
+        "Priya opens the Archived group. She has no action on an archived row, so a right click on Checkout page redesign opens the browser's own menu. Under the pointer the row shows only the fill of a hover.",
       props: { menu: 'workspace-archived-member' },
     },
     {
       slug: 'suspended',
       title: 'Suspended org',
       description:
-        "Acme after the operator suspended it. Nothing in the org can change, so no row has More or a menu, also Apple Pay button under the pointer. A right click opens the browser's own menu. On a phone no row shows More.",
+        "Acme after the operator suspended it. Nothing in the org can change, so no row has a menu or Archive, also Apple Pay button under the pointer. A right click opens the browser's own menu.",
       rationale:
         'A suspended org refuses every change, from decision 129, so its screens show no action that it refuses, as app/orgs/suspended shows.',
       props: { list: 'suspended', menu: 'workspace-hover' },

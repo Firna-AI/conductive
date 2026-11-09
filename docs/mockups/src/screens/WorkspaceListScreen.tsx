@@ -1,9 +1,8 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { paletteViews } from '../components/palette/paletteViews'
-import { acmeRail, type RailState } from '../components/layout/OrgRail'
+import type { RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
-import { SuspendedOrgPanel } from '../components/orgs/SuspendedOrgNotice'
 import {
   newOrgSections,
   suspendedSections,
@@ -11,6 +10,7 @@ import {
   type SidebarSection,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { viewerMembership } from '../fixtures/members'
 import { deletedOrg, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
 import {
   ChooseWorkspace,
@@ -18,6 +18,7 @@ import {
   HomeList,
   ListHeader,
   NewOrgEmpty,
+  SuspendedList,
 } from './listParts'
 import {
   listDrag,
@@ -83,6 +84,9 @@ export const workspaceListSchema = {
 
 export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
 
+/** Cal, an admin of each org, who looks at the lists of these views. */
+const viewer = viewerMembership('admin')
+
 /** The sections of a list before any state changes them. */
 function sectionsOf(list: WorkspaceListState['list']): SidebarSection[] {
   if (list === 'general-only') return generalOnlySections()
@@ -123,11 +127,12 @@ function MobileList(props: { state: WorkspaceListState }) {
     return (
       <MobileFrame>
         <HomeList
+          focus={view?.focus}
           menuStyle="sheet"
           org={orgs[suspendedOrg]}
-          rows={view?.rows}
           sections={sections}
           suspended
+          viewer={view?.viewer ?? viewer}
         />
         {menu === 'orgs' ? listSheet(menu) : null}
       </MobileFrame>
@@ -141,12 +146,13 @@ function MobileList(props: { state: WorkspaceListState }) {
         archivedCollapsed={view?.archivedCollapsed}
         drag={listDrag(menu)}
         failed={list === 'failed'}
+        focus={view?.focus}
         menu={listMenu(menu)}
         menuStyle="sheet"
         newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
-        rows={view?.rows}
         sections={sections}
+        viewer={view?.viewer ?? viewer}
       />
       {view ? view.over : listSheet(menu)}
     </MobileFrame>
@@ -154,41 +160,10 @@ function MobileList(props: { state: WorkspaceListState }) {
 }
 
 /**
- * The list of a suspended org on desktop. The main area shows the notice
- * of the org in place of New workspace. A narrow window shows the list as
- * a page, with the notice at its top. Its rows have no More and no menu.
- */
-function SuspendedList(props: { view?: MenuListView }) {
-  const org = orgs[suspendedOrg]
-  const sections = props.view?.sections ?? suspendedSections()
-  const rows = props.view?.rows
-  return (
-    <AppFrame
-      rail={{ ...acmeRail, suspended: suspendedOrg }}
-      sidebar={<Sidebar org={org} rows={rows} sections={sections} suspended />}
-    >
-      <div className={`${responsive.wideOnly} ${styles.choose}`}>
-        <SuspendedOrgPanel org={org} />
-      </div>
-      <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
-        <HomeList
-          keys
-          menuStyle="anchored"
-          org={org}
-          rows={rows}
-          sections={sections}
-          suspended
-        />
-      </div>
-    </AppFrame>
-  )
-}
-
-/**
  * The workspace list of an org, grouped in the sections that the user made.
  * On a phone and in a narrow window it is the home screen. On a wide
  * desktop the list is the sidebar, and the main area waits for a choice.
- * A row opens its menu from a right click or from More.
+ * A right click on a row, or the menu keys, opens the menu of the row.
  */
 export function WorkspaceListScreen(props: {
   state: WorkspaceListState
@@ -197,7 +172,15 @@ export function WorkspaceListScreen(props: {
   const { list, menu, palette } = props.state
   if (props.viewport === 'mobile') return <MobileList state={props.state} />
   const view = rowMenuView(props.state, props.viewport)
-  if (list === 'suspended') return <SuspendedList view={view} />
+  if (list === 'suspended') {
+    return (
+      <SuspendedList
+        focus={view?.focus}
+        sections={view?.sections}
+        viewer={view?.viewer ?? viewer}
+      />
+    )
+  }
   if (list === 'deleted' || list === 'deleted-suspended') {
     const rail: RailState = {
       orgs: orgList,
@@ -221,6 +204,7 @@ export function WorkspaceListScreen(props: {
             newWorkspaceTo={fresh.newWorkspaceTo}
             org={fresh.org}
             sections={newOrgSections()}
+            viewer={viewer}
           />
         }
       >
@@ -234,9 +218,10 @@ export function WorkspaceListScreen(props: {
     drag: listDrag(menu),
     failed: list === 'failed',
     menu: listMenu(menu),
+    focus: view?.focus,
     org: orgs.acme,
-    rows: view?.rows,
     sections: view?.sections ?? sectionsOf(list),
+    viewer: view?.viewer ?? viewer,
   }
   return (
     <AppFrame

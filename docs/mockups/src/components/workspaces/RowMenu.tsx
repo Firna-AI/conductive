@@ -1,8 +1,4 @@
-import { MoreHorizontal } from 'lucide-react'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
 import { Menu, type MenuEntry } from '../common/Menu'
-import { ScreenLink } from '../common/ScreenLink'
 import styles from './RowMenu.module.css'
 
 /** The choices of an open submenu, beside its item of the menu. */
@@ -15,27 +11,19 @@ export type OpenSubmenu = {
 }
 
 /**
- * The open menu of a row: at the pointer of a right click, or below More.
- * `label` is the name of the workspace.
+ * The open menu of a row, which a right click or the menu keys opened: at
+ * the pointer, or in a sheet that the screen draws, as on a phone. `label`
+ * is the name of the workspace.
  */
 export type RowMenuOpen = {
-  at: 'pointer' | 'more'
+  at: 'pointer' | 'sheet'
   label: string
   entries: readonly MenuEntry[]
   submenu?: OpenSubmenu
 }
 
-/**
- * What a row shows beside its link. A row whose person can use one of its
- * actions has More. A phone shows More on every such row and draws an open
- * menu as a sheet, so the row draws only the pressed More.
- */
+/** What a view draws on a row: its open menu, the field of Rename, or a hover. */
 export type RowControls = {
-  more: boolean
-  /** The screen has no hover, so More shows on every row. */
-  touch: boolean
-  /** The page that More opens, when the mockups draw it. */
-  moreTo?: string
   open?: RowMenuOpen
   /** A field in place of the name and the time, after Rename. */
   rename?: { value: string; selected: boolean }
@@ -68,45 +56,9 @@ function PointMenu(props: { menu: RowMenuOpen }) {
   )
 }
 
-/**
- * More, the button of the menu of a row, beside the link of the row. It
- * opens the same menu as a right click, below itself on desktop.
- */
-export function RowMore(props: { name: string; controls: RowControls }) {
-  const { controls } = props
-  const open = controls.open !== undefined
-  const button = (
-    <IconButton
-      expanded={open}
-      icon={MoreHorizontal}
-      label={`More for ${props.name}`}
-      menu
-      quiet
-    />
-  )
-  return (
-    <span className={classes(styles.more, open && styles.moreOpen)}>
-      {controls.moreTo && !open ? (
-        <ScreenLink asChild to={controls.moreTo}>
-          {button}
-        </ScreenLink>
-      ) : (
-        button
-      )}
-      {controls.open?.at === 'more' && !controls.touch ? (
-        <Menu
-          entries={controls.open.entries}
-          label={controls.open.label}
-          placement="below-end"
-        />
-      ) : null}
-    </span>
-  )
-}
-
-/** The menu of a right click, drawn in place on desktop. */
+/** The menu of a right click, drawn in place at the pointer on desktop. */
 export function RowPointMenu(props: { controls: RowControls }) {
-  const { open, touch } = props.controls
-  if (!open || open.at !== 'pointer' || touch) return null
+  const { open } = props.controls
+  if (open?.at !== 'pointer') return null
   return <PointMenu menu={open} />
 }

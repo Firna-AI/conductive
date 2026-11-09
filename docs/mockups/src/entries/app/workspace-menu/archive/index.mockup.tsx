@@ -9,9 +9,9 @@ const flow = ['user-flows/archive-from-list']
 export const workspaceMenuArchive = defineScreen({
   title: 'Archive from the list',
   description:
-    'Archive in the menu of Apple Pay button checks its cloud computer for work that is not on GitHub, then asks first, with the question that the header asks: a changed file that is not committed, and two commits that are not pushed. Cancel leaves the workspace as it was. Archive anyway deletes the cloud computer and keeps the chat. The workspace does not open, and the list stays where it was. On a phone the question is a sheet.',
+    'Archive in the menu of Apple Pay button checks its cloud computer for work that is not on GitHub, then asks first, with the question of Archive: a changed file that is not committed, and two commits that are not pushed. Cancel leaves the workspace as it was. Archive anyway deletes the cloud computer and keeps the chat. The workspace does not open, and the list stays where it was. On a phone the question is a sheet.',
   rationale:
-    'The menu reuses Archive with its check and its question, from decision 16, as app/archive shows from the header of an open workspace. Only the owner and the admins see Archive, from decision 42. The question opens over the page that shows the list, so the menu archives a workspace without opening it. The menu of the open workspace opens the question of its header, so one action asks one question.',
+    'The menu reuses Archive with its check and its question, from decision 16, as app/archive shows. Only the owner and the admins see Archive, from decision 42. The question opens over the page that shows the list, so the menu archives a workspace without opening it, as Archive on its row does. For the open workspace, the menu opens the same question as the other ways to archive it, so one action asks one question.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
   props: { list: 'workspaces', menu: 'workspace-archive', palette: 'closed' },

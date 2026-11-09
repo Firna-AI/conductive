@@ -10,14 +10,13 @@ import {
 
 /**
  * The states of the menu of a workspace row, as values of the `menu` prop
- * of the list: the menu at the pointer of a right click or below More, its
- * section and owner choices, the field of Rename and its failed save,
- * Archive from the list, the menus of a member and of an admin on an
- * archived row, and the hover of a row without a menu.
+ * of the list: the menu at the pointer of a right click, its section and
+ * owner choices, the field of Rename and its failed save, Archive from the
+ * list, the menus of a member and of an admin on an archived row, and the
+ * hover of a row without a menu.
  */
 export const workspaceMenuStates = [
   'workspace',
-  'workspace-more',
   'workspace-move',
   'workspace-reassign',
   'workspace-rename',
@@ -53,7 +52,7 @@ export type Scenario = {
 }
 
 function atPointer(workspace: string, submenu?: Submenu): Focus {
-  return { workspace, drawing: { kind: 'menu', at: 'pointer', submenu } }
+  return { workspace, drawing: { kind: 'menu', submenu } }
 }
 
 function hovered(workspace: string): Focus {
@@ -65,9 +64,6 @@ const targetName =
 
 export const scenarios: Readonly<Record<WorkspaceMenuState, Scenario>> = {
   workspace: { focus: atPointer(menuTarget) },
-  'workspace-more': {
-    focus: { workspace: menuTarget, drawing: { kind: 'menu', at: 'more' } },
-  },
   'workspace-move': { focus: atPointer(menuTarget, 'move') },
   'workspace-reassign': { focus: atPointer(menuTarget, 'reassign') },
   'workspace-rename': {

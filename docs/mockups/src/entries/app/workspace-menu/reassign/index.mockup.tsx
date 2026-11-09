@@ -23,7 +23,7 @@ export const workspaceMenuReassign = defineScreen({
       description:
         'Cal, an admin, opens the Archived group and right-clicks Checkout page redesign. Its menu has only Reassign to, because an archived workspace does not move, take a new name, or archive again. On a phone the sheet has the same one action.',
       rationale:
-        "An admin can still give an archived workspace a new owner. A member who is not an admin has no action on an archived row, so the row shows no More, and a right click opens the browser's own menu, as the Roles page shows.",
+        "An admin can still give an archived workspace a new owner. A member who is not an admin has no action on an archived row, so a right click opens the browser's own menu, as the Roles page shows.",
       props: { menu: 'workspace-archived-row' },
     },
   ],

@@ -8,7 +8,7 @@ import {
 } from '../components/workspace/ArchiveDialog'
 import {
   rowControls,
-  type ListRows,
+  type RowFocus,
 } from '../components/workspaces/rowControls'
 import {
   suspendedSections,
@@ -17,7 +17,12 @@ import {
   type WorkspaceRow,
 } from '../components/workspaces/sections'
 import { archivedWorkspaceList } from '../fixtures/archivedWorkspaces'
-import { memberViewer, people, you } from '../fixtures/members'
+import {
+  memberViewer,
+  people,
+  viewerMembership,
+  type Membership,
+} from '../fixtures/members'
 import { suspendedOrg } from '../fixtures/orgs'
 import { defaultSection, sections } from '../fixtures/sections'
 import { workspaceList } from '../fixtures/workspaces'
@@ -44,7 +49,10 @@ export type MenuListView = {
   sections: readonly SidebarSection[]
   archived?: readonly WorkspaceRow[]
   archivedCollapsed?: boolean
-  rows: ListRows
+  /** The person who looks at the list. */
+  viewer: Membership
+  /** The row whose menu, field, or hover the view draws. */
+  focus?: RowFocus
   rail: RailState
   /** A phone sheet, a question of Archive, or a toast. */
   over: ReactNode
@@ -105,19 +113,23 @@ const listArchiveLinks: ArchiveLinks = {
   archived: paths.workspaceMenuArchived,
 }
 
-/** The phone sheet of the open menu of the drawn row, if any. */
+/**
+ * The phone sheet of the menu that a context event opened on the drawn
+ * row, if any.
+ */
 function sheetOf(view: Omit<MenuListView, 'over'>): ReactNode {
-  const focus = view.rows.focus
+  const { focus } = view
   const row = [
     ...view.sections.flatMap((item) => item.rows),
     ...(view.archived ?? []),
   ].find((item) => item.workspace.key === focus?.workspace)
   if (!row || focus?.drawing.kind !== 'menu') return null
-  const { open } = rowControls(row, view.rows, {
+  const open = rowControls(row, focus, {
+    viewer: view.viewer,
     sections: view.sections.map((item) => item.section.key),
     readOnly: false,
-    touch: true,
-  })
+    sheet: true,
+  })?.open
   return open ? <WorkspaceMenuSheet menu={open} /> : null
 }
 
@@ -174,11 +186,8 @@ export function menuListView(
   if (list === 'suspended') rail = { ...acmeRail, suspended: suspendedOrg }
   const view = {
     ...rowsOf(list, scenario),
-    rows: {
-      viewer: member ? memberViewer : you,
-      admin: !member,
-      focus: scenario.focus,
-    },
+    viewer: viewerMembership(member ? 'member' : 'admin'),
+    focus: scenario.focus,
     rail,
   }
   return { ...view, over: overOf(scenario, view, viewport) }

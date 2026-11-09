@@ -1,8 +1,9 @@
 import type { Org } from '../../fixtures/orgs'
+import type { Membership } from '../../fixtures/members'
 import { paths } from '../../paths'
 import { classes } from '../common/classes'
 import { LoadFailure } from '../common/LoadFailure'
-import type { ListRows } from './rowControls'
+import type { RowFocus } from './rowControls'
 import type {
   ListDrag,
   ListMenu,
@@ -36,15 +37,16 @@ export function Sidebar(props: {
   archived?: readonly WorkspaceRow[]
   /** The Archived group shows collapsed, with its count. */
   archivedCollapsed?: boolean
-  /** The person who looks at the list, and the row that the view draws. */
-  rows?: ListRows
+  /** The row whose menu, field, or hover the view draws. */
+  focus?: RowFocus
   /** The operator suspended the org. */
   suspended?: boolean
   /** The workspace list of the org did not load. */
   failed?: boolean
+  viewer: Membership
 }) {
   const suspended = props.suspended ?? false
-  const drawing = props.rows?.focus?.drawing.kind
+  const drawing = props.focus?.drawing.kind
   return (
     <>
       <div className={styles.top}>
@@ -80,10 +82,11 @@ export function Sidebar(props: {
             archivedCollapsed={props.archivedCollapsed}
             drag={props.drag}
             menu={props.menu}
+            focus={props.focus}
             readOnly={suspended}
-            rows={props.rows}
             sections={props.sections}
             variant="sidebar"
+            viewer={props.viewer}
           />
         )}
       </div>

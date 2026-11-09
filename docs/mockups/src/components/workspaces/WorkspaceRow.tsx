@@ -1,7 +1,10 @@
+import { Archive } from 'lucide-react'
+import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
+import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { RowMore, RowPointMenu, type RowControls } from './RowMenu'
+import { RowPointMenu, type RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { activityPresentation } from './status'
 import { StatusGlyph } from './StatusGlyph'
@@ -15,8 +18,8 @@ type Variant = 'sidebar' | 'page'
 
 /**
  * The row of a workspace that the user renames from its menu. The field
- * takes the place of the name and the time, so the row shows no More. It
- * opens with the name selected, and after a failed save it keeps the draft.
+ * takes the place of the name and the time. It opens with the name
+ * selected, and after a failed save it keeps the draft.
  */
 function RenameRow(props: {
   row: WorkspaceRow
@@ -51,73 +54,75 @@ function RenameRow(props: {
 
 /**
  * One workspace on one line: its state as a small square on the left, its
- * name, and the time since its last activity. A drag lifts the row, and
- * leaves a faint copy where it was. `controls` adds More beside the link,
- * the open menu, the field of Rename, or the fill of a hover. The lifted
- * row shows no More, and the faint copy keeps a faint one.
+ * name, and the time since its last activity. Archive covers the time on
+ * hover only. A drag lifts the row and leaves a faint copy behind.
+ * `controls` draws the menu that a right click opened, the field of
+ * Rename, or a hover, because a view runs no script.
  */
 export function WorkspaceRowView(props: {
   row: WorkspaceRow
   variant: Variant
   drag?: RowDrag
+  archivable?: boolean
   controls?: RowControls
 }) {
-  const { row, drag } = props
-  const controls = drag === 'lifted' ? undefined : props.controls
-  if (controls?.rename && !drag) {
+  const { row } = props
+  const controls = props.drag ? undefined : props.controls
+  if (controls?.rename) {
     return (
       <RenameRow rename={controls.rename} row={row} variant={props.variant} />
     )
   }
   const status = activityPresentation[row.status]
-  const more = controls?.more ? controls : undefined
-  const held = (controls?.open || controls?.hovered) && !row.selected
   const className = classes(
     styles.row,
     props.variant === 'page' && styles.page,
     row.selected && styles.selected,
     styles[status.emphasis],
-    drag && !more && styles[drag],
-    more && rowMenu.link,
-    held && rowMenu.held,
+    props.drag && styles[props.drag],
   )
   const content = (
     <>
       <StatusGlyph status={row.status} />
       <span className={styles.name}>{row.workspace.name}</span>
-      <span className={classes(styles.time, rowMenu.time)}>
-        {row.workspace.updated}
-      </span>
+      <span className={styles.time}>{row.workspace.updated}</span>
       <span className={a11y.hidden}>, {status.label}</span>
     </>
   )
-  const link =
-    !row.to || drag ? (
-      <div className={className}>{content}</div>
-    ) : (
-      <ScreenLink
-        aria-current={row.selected ? 'page' : undefined}
-        className={className}
-        to={row.to}
-      >
-        {content}
-      </ScreenLink>
-    )
-  if (!more) return link
+  if (props.drag) return <div className={className}>{content}</div>
+  const archivable = props.archivable === true && row.status !== 'archived'
+  // The pointer of a right click lies over the row of its menu. A sheet
+  // keeps its row marked, without a hover.
+  const hovered = controls?.open?.at === 'pointer' || controls?.hovered
+  const held = controls?.open?.at === 'sheet'
   return (
-    <div
+    <span
       className={classes(
-        rowMenu.item,
-        more.touch && rowMenu.touch,
-        row.selected && rowMenu.current,
-        more.open && rowMenu.open,
-        more.hovered && rowMenu.hovered,
-        drag && styles[drag],
+        styles.container,
+        archivable && styles.archivable,
+        hovered && styles.hovered,
+        held && styles.held,
       )}
     >
-      {link}
-      <RowMore controls={more} name={row.workspace.name} />
-      <RowPointMenu controls={more} />
-    </div>
+      {row.to ? (
+        <ScreenLink
+          aria-current={row.selected ? 'page' : undefined}
+          className={className}
+          to={row.to}
+        >
+          {content}
+        </ScreenLink>
+      ) : (
+        <div className={className}>{content}</div>
+      )}
+      {archivable ? (
+        <span className={styles.archive}>
+          <ScreenLink asChild to={paths.archive}>
+            <IconButton icon={Archive} label="Archive workspace" quiet />
+          </ScreenLink>
+        </span>
+      ) : null}
+      {controls ? <RowPointMenu controls={controls} /> : null}
+    </span>
   )
 }
