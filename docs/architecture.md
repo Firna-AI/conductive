@@ -225,6 +225,10 @@ the merge.
 
 - [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
   image, the life of a workspace, and the tools of a workspace.
+- [Create a workspace](protocol/create-a-workspace.md): New workspace as a
+  page or as a dialog, the create, the branch, and a failed first start.
+- [Repository folders](protocol/repository-folders.md): the folder and the
+  shell variable of each repository in a sandbox.
 - [Chat and events](protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
 - [Agent runner](protocol/agent-runner.md): the connection of the runner,

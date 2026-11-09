@@ -10,7 +10,7 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
@@ -107,8 +107,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 
 - `boot.test.ts` checks the boot routes, the saved preferences, the
   encrypted logins, and a missing model list. Two users save different
-  defaults and logins, both with a Claude login. After each save and a
-  delete, each reads only their own account and Get started step.
+  defaults, New workspace views, and logins, both with a Claude login.
+  After each save and a delete, each reads only their own account and
+  Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.

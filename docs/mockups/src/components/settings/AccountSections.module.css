@@ -46,15 +46,34 @@
   text-overflow: ellipsis;
 }
 
+/*
+ * The rows of the New workspaces section: each label, then its control, in
+ * two columns, so the controls line up. A label sits on the first line of
+ * its control, also when a helper line follows the control.
+ */
 .defaults {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  justify-items: start;
   gap: 12px;
+  container: defaults / inline-size;
 }
 
 .defaultsLabel {
   color: var(--ui-ink2);
   font-size: var(--ui-text-md);
+}
+
+/*
+ * A wide control, such as a segmented choice. A narrow section, as on a
+ * phone, puts it on its own line under its label.
+ */
+@container defaults (max-width: 400px) {
+  .defaultsWide {
+    grid-column: 1 / -1;
+    margin-top: -4px;
+  }
 }
 
 /* The person signed in: a card with the full outline of the others. */
