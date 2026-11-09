@@ -215,6 +215,7 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   writes, their changes, moves, and the Archived group.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace, its
   `startError` and `reassigned`, and Archive.
+  `workspace-detail.ts` maps its stream and Archive records to detail.
 - `../shell/list/useListArchive.tsx`: Archive from a workspace row, with
   the same permission check and confirmation dialog as the open workspace.
 - `suspension.ts` and `permissions.ts`: the suspension of an org, the

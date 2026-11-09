@@ -149,8 +149,8 @@ export function SectionList(props: {
                             ? undefined
                             : (event) => onKeyDown(workspace, event)
                         }
-                        onLinkBlur={rows.blur}
-                        onLinkFocus={(event) => rows.focus(workspace.id, event)}
+                        onBlur={rows.blur}
+                        onFocus={(event) => rows.focus(workspace.id, event)}
                         rowRef={layout.row(workspace.id, section.id)}
                         selected={workspace.id === props.selectedId}
                         variant={props.variant}

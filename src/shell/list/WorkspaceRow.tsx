@@ -59,9 +59,9 @@ export function WorkspaceRow({
   rowRef?: Ref<HTMLSpanElement>
   /** The row's link, which keeps the focus after a move by keys. */
   linkRef?: Ref<HTMLAnchorElement>
-  /** The row's link takes the focus, or loses it. */
-  onLinkFocus?: (event: FocusEvent<HTMLAnchorElement>) => void
-  onLinkBlur?: (event: FocusEvent<HTMLAnchorElement>) => void
+  /** A control in the row takes the focus, or loses it. */
+  onFocus?: (event: FocusEvent<HTMLSpanElement>) => void
+  onBlur?: (event: FocusEvent<HTMLSpanElement>) => void
 }) {
   const { workspace } = props
   const className = classes(
@@ -87,13 +87,13 @@ export function WorkspaceRow({
         props.onArchive && !props.drag && styles.archivable,
       )}
       onKeyDown={props.onKeyDown}
+      onFocus={props.onFocus}
+      onBlur={props.onBlur}
       ref={rowRef}
     >
       <AppLink
         aria-current={props.selected ? 'page' : undefined}
         className={className}
-        onBlur={props.onLinkBlur}
-        onFocus={props.onLinkFocus}
         ref={linkRef}
         to={routes.workspace(workspace.orgId, workspace.id)}
       >
