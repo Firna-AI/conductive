@@ -513,20 +513,23 @@ Evidence: `.context/operator-section/m3-report.md` and
 
 Depends on: 3
 
-- [ ] Add `GET /api/operator/orgs` and `GET /api/operator/users` with a
+- [x] Add `GET /api/operator/orgs` and `GET /api/operator/users` with a
       search, behind the gate and the operator check. Each gives 20
       results, newest first, and a cursor for Show more. The keys are
       those of the design.
-- [ ] Add `GET /api/operator/orgs/<orgId>` and
+- [x] Add `GET /api/operator/orgs/<orgId>` and
       `GET /api/operator/users/<githubId>`: the details with the name of a
       user, the workspaces by state, the running cloud computers, the
       members with their names and roles or the orgs with their roles, and
       the suspension with its time and its operator.
-- [ ] Test with local D1: each search key, an empty search, Show more, a
+- [x] Test with local D1: each search key, an empty search, Show more, a
       deleted org, a suspended user and org, an unknown target, and 403
       `operator_required` for another user.
-- [ ] Update `worker/operator/README.md`, and the path helpers and types
+- [x] Update `worker/operator/README.md`, and the path helpers and types
       in `src/shared/operator.ts`.
+
+Evidence: `.context/operator-section/m4-report.md` and
+`.context/operator-section/milestone-4/verification.md`.
 
 ## Milestone 5: Lift a suspension in the Worker
 

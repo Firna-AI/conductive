@@ -28,6 +28,10 @@ On the app hostname, the Worker serves these API routes:
 - The view and the read mark of a workspace.
 - The Mac device routes.
 - `GET /api/operator/overview`, the app-wide numbers for operators.
+- `GET /api/operator/orgs`, the org search and cursor pages for operators.
+- `GET /api/operator/users`, the user search and cursor pages for operators.
+- `GET /api/operator/orgs/<orgId>`, the org page for operators.
+- `GET /api/operator/users/<githubId>`, the user page for operators.
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 

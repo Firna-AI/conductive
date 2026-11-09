@@ -1,8 +1,10 @@
 import type { OperatorOverview } from '../../src/shared/operator'
+import {
+  runningWorkspacePredicate,
+  workspaceStateCounts,
+} from './workspace-counts'
 
 const DAY = 24 * 60 * 60 * 1_000
-const runningWorkspace = `w.archived_at IS NULL
-  AND w.state IN ('starting', 'ready', 'working', 'unread', 'input')`
 
 type DailyCount = OperatorOverview['newUsersByDay'][number]
 type LargestOrg = OperatorOverview['largestOrgs'][number]
@@ -55,10 +57,7 @@ export async function readOperatorOverview(
          ) CROSS JOIN (
            SELECT COUNT(*) AS workspacesTotal,
              COUNT(CASE WHEN w.created_at BETWEEN ?1 AND ?2 THEN 1 END) AS workspacesLastWeek,
-             COUNT(CASE WHEN ${runningWorkspace} THEN 1 END) AS running,
-             COUNT(CASE WHEN w.archived_at IS NULL AND w.state = 'stopped' THEN 1 END) AS stopped,
-             COUNT(CASE WHEN w.archived_at IS NULL AND w.state = 'error' THEN 1 END) AS failed,
-             COUNT(CASE WHEN w.archived_at IS NOT NULL OR w.state = 'archived' THEN 1 END) AS archived
+             ${workspaceStateCounts}
            FROM workspaces w
          ) CROSS JOIN (
            SELECT COUNT(*) AS builds FROM image_builds b
@@ -84,7 +83,7 @@ export async function readOperatorOverview(
       `SELECT o.id, o.name, o.initials,
          (SELECT COUNT(*) FROM org_members m WHERE m.org_id = o.id) AS members,
          COUNT(w.id) AS workspaces,
-         COUNT(CASE WHEN ${runningWorkspace} THEN 1 END) AS running
+         COUNT(CASE WHEN ${runningWorkspacePredicate} THEN 1 END) AS running
        FROM orgs o LEFT JOIN workspaces w ON w.org_id = o.id
        WHERE o.deleted_at IS NULL GROUP BY o.id
        ORDER BY workspaces DESC, o.name LIMIT 5`,
