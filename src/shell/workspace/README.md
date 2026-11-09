@@ -32,8 +32,8 @@ of the shell, their addresses, and the saved view.
 
 ## The tools part
 
-[The tools part](screen-parts.md#the-tools-part) gives the Terminal,
-Preview, and Desktop tools of the shell, and their addresses.
+[The tools part](screen-parts.md#the-tools-part) gives the Terminal and
+Preview tools of the shell, the hidden Desktop tool, and their addresses.
 
 ## The GitHub part
 

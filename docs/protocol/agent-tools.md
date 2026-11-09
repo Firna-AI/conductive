@@ -133,5 +133,6 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 - The agent runner gives these tools to the agents.
 - The agents use the computer tools for browser work on the desktop of the
   sandbox.
-- The Desktop tab of the workspace shows the same desktop, so the user can
-  watch the agent work.
+- The Desktop tool can show the same desktop, so the user can watch the
+  agent work. The app hides it for now, as
+  [Desktop](workspace-tools.md#desktop) says.

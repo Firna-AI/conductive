@@ -8,7 +8,7 @@ The change hides Desktop throughout the shared web and Mac interface. It keeps t
 
 Contract owners:
 
-- [Workspace tools](../docs/protocol/workspaces-and-sandboxes.md#tools-of-a-workspace).
+- [Workspace tools](../docs/protocol/workspace-tools.md#desktop).
 - [Command palette](../docs/protocol/command-palette.md#actions).
 - [Workspace screen](../src/shell/workspace/README.md).
 - [Desktop tool](../src/desktop/README.md).
@@ -87,12 +87,14 @@ Depends on: 1
 
 The docs describe the temporary interface pause and retain the Desktop backend contract.
 
-- [ ] Read both legal pages in full before changing protocol facts. Update a legal sentence only if it restates a changed fact.
-- [ ] Update the Desktop requirement in `docs/protocol/workspaces-and-sandboxes.md`. State the hidden entry points, Terminal fallback, and intentional retention of the implementation. Split a touched protocol page that exceeds the documentation skill's length target.
-- [ ] Update the action list in `docs/protocol/command-palette.md` for the pause. Preserve the other palette requirements.
-- [ ] Update the root, mockup, Desktop, and workspace READMEs where they describe available tools. Preserve the Desktop mounting and backend guidance for its return.
-- [ ] Check current live references to Desktop in docs, plans, and READMEs. Preserve historical plan records and the two deferred transport follow-ups.
-- [ ] Check every relative Markdown link changed by this milestone.
+- [x] Read both legal pages in full before changing protocol facts. Update a legal sentence only if it restates a changed fact.
+- [x] Update the Desktop requirement in `docs/protocol/workspaces-and-sandboxes.md`. State the hidden entry points, Terminal fallback, and intentional retention of the implementation. Split a touched protocol page that exceeds the documentation skill's length target.
+- [x] Update the action list in `docs/protocol/command-palette.md` for the pause. Preserve the other palette requirements.
+- [x] Update the root, mockup, Desktop, and workspace READMEs where they describe available tools. Preserve the Desktop mounting and backend guidance for its return.
+- [x] Check current live references to Desktop in docs, plans, and READMEs. Preserve historical plan records and the two deferred transport follow-ups.
+- [x] Check every relative Markdown link changed by this milestone.
+
+Completed on 9 November 2026. The parent confirmed the new requirements, exact preservation of moved requirements, all changed and inbound links, and both legal read outcomes. Evidence: `.context/desktop-panel/m2-report.md` and `.context/desktop-panel/m2/link-check.log`.
 
 ## Milestone 3: Hide Desktop throughout the app
 
