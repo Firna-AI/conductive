@@ -45,7 +45,7 @@ describe('CreateOrgScreen', () => {
       ),
     )
     const intro =
-      'Create an org Name Initials Shown in the rail. Repositories The cloud computer of the org holds these repositories, and its workspaces start in them.'
+      'Create an org Name Initials Shown in the rail. Repositories The cloud computer of the org holds these repositories, and its workspaces start in them. Add at least one.'
     expect({ listed, empty, failed }).toEqual({
       listed: `${intro} acme/storefront The online shop Add acme/billing-service Invoices, payments, and webhooks Add acme/marketing-site The public website Add acme/admin-dashboard Internal tools for orders and refunds Add acme/mobile-app The iOS and Android shop app Add acme/data-pipeline Nightly stock and price imports Add firna/components Shared React components Add firna/docs The documentation site Add firna/icons The icon set Add The list shows the repositories that the GitHub App can reach. Manage access Cancel Create org`,
       empty: `${intro} Give the GitHub App access to a repository The repositories that the GitHub App can reach show here. Manage access Cancel Create org`,

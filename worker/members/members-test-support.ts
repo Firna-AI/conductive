@@ -3,6 +3,7 @@ import type { Workspace } from '../../src/shared/workspaces'
 import type { AppDependencies } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import type { InvitationEmail } from '../invitation-mailer'
+import { saveGitHubTokens } from '../security/github-tokens'
 import { workspaceNameColumn } from '../data/workspace-name'
 import {
   TEST_ORIGIN,
@@ -120,6 +121,22 @@ export async function memberFixture(
       ],
       TEST_TIME,
     )
+  await Promise.all(
+    [seed.fixture.admin, seed.fixture.member, seed.fixture.other].map(
+      ({ user }) =>
+        saveGitHubTokens(
+          harness.env,
+          user.id,
+          {
+            accessToken: `github-test-token-${user.id}`,
+            refreshToken: null,
+            expiresAt: null,
+            refreshExpiresAt: null,
+          },
+          TEST_TIME,
+        ),
+    ),
+  )
   harness.github.profile = seed.profile
   return seed.fixture
 }

@@ -41,7 +41,7 @@ export const startFailed = defineScreen({
       slug: 'files',
       title: 'Files on a phone',
       description:
-        "The Files tab of a phone after the failed first start. The panel says that the sandbox couldn't start and that the chat is saved, with Try again. The Terminal, Preview, and Desktop tabs show the same panel.",
+        "The Files tab of a phone after the failed first start. The panel says that the sandbox couldn't start and that the chat is saved, with Try again. The Terminal and Preview tabs show the same panel.",
       rationale:
         'A phone shows the bar of the chat only on the Chat tab, so each panel of a phone shows the action too. The new workspace has no saved lists, so the panel takes the place of All files and Changes.',
       props: { focus: 'files' },

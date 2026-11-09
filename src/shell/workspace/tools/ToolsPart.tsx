@@ -13,7 +13,7 @@ import type { ToolWorkspace } from '../../../terminal/tool-parts/workspace'
 import { useOrgServices } from '../../context'
 import { usePaletteTerminal } from '../../palette/palette-context'
 import type { WorkspaceContext } from '../features'
-import { toolTabs } from './tool-address'
+import { offeredToolTabs } from './tool-address'
 import { useToolNavigation, type ToolNavigation } from './tool-navigation'
 import styles from './tools.module.css'
 
@@ -34,7 +34,7 @@ function ToolTabs(props: { navigation: ToolNavigation }) {
   const { navigation } = props
   return (
     <nav aria-label="Tools" className={tabs.tabs}>
-      {toolTabs.map((tab) => {
+      {offeredToolTabs.map((tab) => {
         const selected = tab.tool === navigation.tool
         return (
           <a
@@ -75,14 +75,15 @@ function useTerminalConnect(): ConnectTerminal {
 }
 
 /**
- * The Terminal, Preview, and Desktop tools of the workspace: a panel with
- * their tabs on desktop, and the page of one tool on a phone. Each tool
- * reads the routes through the fetch of the org, and the events of the
- * workspace in order. The terminal stays mounted after its first show, so
- * its connection stays while another tool shows. The Desktop tool mounts
- * at each show, so it reads a new desktop address. A `placeholder`, such as
- * the state of a sandbox that does not run, takes the place of the tools:
- * the tabs stay on desktop, and no tool mounts.
+ * The tools of the workspace that the app offers, Terminal and Preview: a
+ * panel with their tabs on desktop, and the page of one tool on a phone.
+ * Each tool reads the routes through the fetch of the org, and the events
+ * of the workspace in order. The terminal stays mounted after its first
+ * show, so its connection stays while another tool shows. The app hides
+ * Desktop and keeps its mount for its return: it mounts at each show, so
+ * it reads a new desktop address. A `placeholder`, such as the state of a
+ * sandbox that does not run, takes the place of the tools: the tabs stay on
+ * desktop, and no tool mounts.
  */
 export function ToolsPart(props: {
   context: WorkspaceContext

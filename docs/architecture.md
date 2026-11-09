@@ -239,7 +239,8 @@ the merge.
 ## Protocol docs
 
 - [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
-  image, the life of a workspace, and the tools of a workspace.
+  image and the life of a workspace.
+- [Workspace tools](protocol/workspace-tools.md): the tools of a workspace.
 - [Create a workspace](protocol/create-a-workspace.md): New workspace as a
   page or as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](protocol/repository-folders.md): the folder and the

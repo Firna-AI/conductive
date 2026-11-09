@@ -15,7 +15,6 @@ const goTo = [
   'go-to-checks',
   'go-to-terminal',
   'go-to-preview',
-  'go-to-desktop',
 ]
 
 describe('the actions of an open workspace', () => {
@@ -27,6 +26,7 @@ describe('the actions of an open workspace', () => {
         viewer: cal,
         rightColumn: true,
         chat: true,
+        desktopTool: false,
         ...overrides,
       })
     expect({
@@ -40,6 +40,7 @@ describe('the actions of an open workspace', () => {
       phoneTool: ids({ rightColumn: false, chat: false }),
       suspended: ids({ access: { role: 'admin', suspended: true } }),
       archived: ids({ workspace: { ...workspace, state: 'archived' } }),
+      desktopTool: ids({ desktopTool: true }),
     }).toEqual({
       owner: ['new-session', 'session-history', ...goTo, 'archive-workspace'],
       otherMember: ['new-session', 'session-history', ...goTo],
@@ -48,6 +49,13 @@ describe('the actions of an open workspace', () => {
       phoneTool: ['archive-workspace'],
       suspended: ['session-history', ...goTo],
       archived: ['session-history'],
+      desktopTool: [
+        'new-session',
+        'session-history',
+        ...goTo,
+        'go-to-desktop',
+        'archive-workspace',
+      ],
     })
   })
 })

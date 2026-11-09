@@ -901,7 +901,7 @@ Depends on: every other milestone
       `app/account`, as this branch did for the other Account states, and
       give each Account entry the prop. The merge decisions are in
       `.context/waitlist/merge-justifications.md`.
-- [ ] Merge the latest `main` again before the review and the pull
+- [x] Merge the latest `main` again before the review and the pull
       request.
 - [ ] Smoke-test in `npm run dev`: a person who waits, a code, a join
       link, an org invitation, the referral code, the pause, and the

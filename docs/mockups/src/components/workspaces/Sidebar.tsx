@@ -25,6 +25,8 @@ export function Sidebar(props: {
   current?: 'settings' | 'new-workspace'
   /** A build of the org's cloud computer failed. */
   settingsAlert?: boolean
+  /** The New workspace page of the org, such as that of a new org. */
+  newWorkspaceTo?: string
   menu?: ListMenu
   drag?: ListDrag
   /** The archived workspaces, which show in an open Archived group. */
@@ -50,6 +52,7 @@ export function Sidebar(props: {
           {suspended ? null : (
             <NewWorkspaceLink
               current={props.current === 'new-workspace'}
+              to={props.newWorkspaceTo}
               variant="sidebar"
             />
           )}

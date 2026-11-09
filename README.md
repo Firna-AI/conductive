@@ -39,7 +39,9 @@ These features are planned. The protocol docs state each one.
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
 - Each user connects their own Claude subscription token or API keys.
-- Files and Changes, a terminal, port previews, and a live desktop.
+- Files and Changes, a terminal, and port previews. The live desktop is
+  hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
+  says.
 - A pull request bar with the GitHub state of the branch and its checks.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
@@ -253,6 +255,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   [flows](docs/architecture/flows.md), and the terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
+  - [Workspace tools](docs/protocol/workspace-tools.md)
   - [Create a workspace](docs/protocol/create-a-workspace.md)
   - [Repository folders](docs/protocol/repository-folders.md)
   - [Chat and events](docs/protocol/chat-and-events.md)

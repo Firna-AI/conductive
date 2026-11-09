@@ -8,10 +8,14 @@ import { ScreenLink } from '../common/ScreenLink'
  * A create that failed, over the composer of the New workspace page or in
  * the New workspace dialog. The message stays, and Try again sends it again.
  */
-export function CreateFailedNotice() {
+export function CreateFailedNotice(props: { ready?: boolean }) {
   return (
     <Notice
-      action={<ActionButton tone="primary">Try again</ActionButton>}
+      action={
+        <ActionButton disabled={props.ready === false} tone="primary">
+          Try again
+        </ActionButton>
+      }
       body="The app can't reach the server. Your message is kept."
       icon={CircleAlert}
       title="The workspace wasn't created"

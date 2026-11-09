@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { API_PATHS, orgPath, type Org, type User } from '../../src/shared/api'
+import { API_PATHS, orgPath, type User } from '../../src/shared/api'
 import { orgSuspensionPath } from '../../src/shared/operator'
 import {
   createHarness,
@@ -26,18 +26,8 @@ it('restricts org suspension to operators and keeps the first operator, sessions
   const { user }: { user: User } = await (
     await harness.request(API_PATHS.session, operator)
   ).json()
-  const { org }: { org: Org } = await (
-    await harness.request(API_PATHS.orgs, operator, {
-      method: 'POST',
-      body: '{"name":"Shared"}',
-    })
-  ).json()
-  const { org: other }: { org: Org } = await (
-    await harness.request(API_PATHS.orgs, operator, {
-      method: 'POST',
-      body: '{"name":"Other"}',
-    })
-  ).json()
+  const org = await harness.createOrg(operator, 'Shared')
+  const other = await harness.createOrg(operator, 'Other')
   const path = orgSuspensionPath(org.id)
   expect(
     (await harness.request(path, operator, { method: 'POST', body: '{}' }))

@@ -10,7 +10,7 @@ export type TextLinkRenderer = (link: {
 }) => ReactNode
 
 /**
- * Running text of the site: plain words, draft fields, and links. The
+ * Running text of the site: plain words and links. The
  * caller draws each link, so that the mockups link to the catalogue and the
  * app links to the site. The app uses it too, so it imports nothing of the
  * catalogue.
@@ -18,13 +18,6 @@ export type TextLinkRenderer = (link: {
 export function RunningText(props: { text: Text; link: TextLinkRenderer }) {
   return props.text.map((part, index) => {
     if (typeof part === 'string') return <Fragment key={index}>{part}</Fragment>
-    if ('draft' in part) {
-      return (
-        <mark className={styles.draft} key={index}>
-          {part.draft}
-        </mark>
-      )
-    }
     return (
       <Fragment key={index}>
         {props.link({

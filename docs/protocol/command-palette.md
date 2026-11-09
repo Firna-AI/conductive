@@ -183,8 +183,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - On the All tab and on the Actions tab, the actions come in this order:
   1. While a workspace is open, its actions: New session, Session history,
      a Go to row for each tab of the right column, and Archive workspace.
-     The Go to rows lead to All files, Changes, Checks, Terminal, Preview,
-     and Desktop.
+     The Go to rows lead to All files, Changes, Checks, Terminal, and
+     Preview. Desktop has no Go to row while the app hides it, as
+     [Desktop](workspace-tools.md#desktop) says.
   2. The actions of the org: New workspace and New section.
   3. Create org, then a Switch to row for each other org of the person, in
      the order of the org rail.

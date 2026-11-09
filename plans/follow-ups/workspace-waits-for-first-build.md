@@ -1,0 +1,47 @@
+# A new workspace could wait for the first build
+
+- **Severity:** Medium. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-09, from decision 152 of the plan `plans/automatic-first-build.md`, branch `calummoore/box-auto-build-onboarding`.
+- **Location:** `worker/lifecycle/workspaces.ts` (`createWorkspace`), `worker/lifecycle/create-request.ts`, `worker/lifecycle/published-image-data.ts` (`readCreationImage`), `worker/lifecycle/creation-claims.ts` (`claimCreation`), `worker/lifecycle/creation-plan-statements.ts:10-20`, `worker/lifecycle/start-records.ts:65-73`, `worker/lifecycle/start-coordinator.ts`, `src/shell/new-workspace/`, and the sections "Create a workspace" and "Time limits of builds and starts" of `docs/protocol/workspaces-and-sandboxes.md`.
+- **Reason:** the user chose on 9 November 2026 to ship the automatic first build with a notice first, and to build the wait in a later change. That change chooses among the options below.
+
+- **Source:** Design. **Category:** Docs or spec.
+- **Terms:**
+  - **Org image:** the saved snapshot of an org's cloud computer, with a copy of each chosen repository. Every new workspace starts from it.
+  - **First build:** the build that makes the first org image of an org. Create org starts it by itself when the org is saved with its repositories.
+  - **Start steps:** the steps that a new workspace shows while its cloud computer starts, with their times. The create answers before the sandbox starts, so the workspace shows these steps on its own events.
+  - **Start limit:** each start of a workspace has a 20-minute limit from its beginning. A build has a 60-minute limit.
+- **Background:**
+  - Create org starts the first build of the org. Until it succeeds, the org has no org image.
+  - While that build runs, New workspace shows a notice with the time of the build, and Send is off. After a failed build or with no build, the notice says so, and Send stays off. Get started shows the build in its org step.
+  - A create needs a published org image today. `createWorkspace` in `worker/lifecycle/workspaces.ts` calls `prepareCreationRequest`, which reads the image with `readCreationImage` and refuses with HTTP 409 `image_required` when none exists.
+  - `claimCreation` in `worker/lifecycle/creation-claims.ts` then runs one D1 batch. It inserts the creation attempt only when the published image holds the repository, stores the start plan, and leases the image.
+  - The start plan of `worker/lifecycle/creation-plan-statements.ts` copies the startup script and the env vars of the org at the create. So a create that waits keeps the values of the create time, unless the wait reads them again when the build succeeds.
+  - `worker/lifecycle/start-records.ts:65-73` leases the image before it inserts the workspace row.
+  - `docs/protocol/workspaces-and-sandboxes.md` says that the create answers when the workspace and its first message are stored, before the sandbox starts. It also says that a failed first start keeps its workspace, with its first message, its error, and its queue, for every member, and that Try again starts the cloud computer again in the same workspace.
+  - The same doc says that each time limit covers the whole build or start from the moment that it began.
+  - That rule came to `main` on 9 November 2026, in commit `f3479cd8`, "fix(workspaces): keep failed first starts and queued messages".
+- **Problem:** A user who reaches New workspace during the first build must wait with Send off and come back to send. The first task then waits for the user, not only for the build.
+- **Impact if no action:** A new user who leaves during the build finds no agent at work on return.
+- **Root question:** How does a user who gives the first task of a new org during its first build get an agent at work on it without coming back?
+- **Options:**
+  - **A.** Keep the notice, and keep Send off during the first build. Effort: Small.
+  - **B.** New workspace accepts the first message during the first build. The workspace appears at once, and its first start step, such as "Waiting for the cloud computer", waits for the build. When the build succeeds, the start captures and leases the new image, reads the env vars and the startup script again, and goes on as today. When the build fails, the start fails, and the workspace keeps its first message and the error, as for any failed first start. The 20-minute start limit begins when the build succeeds, and the build keeps its 60-minute limit. Effort: Large.
+  - **E.** B, and Try again of a failed wait waits again while a build runs, and otherwise says that the cloud computer needs a build. Members can queue later messages during the wait, as they can during any first start. Effort: Large.
+  - **F.** E, and a create waits for each running build that holds its repository whenever the newest good image lacks it, not only for the first build. New workspace then needs to know which repositories a good image holds and which a running build holds, as `plans/follow-ups/new-workspace-offers-unbuilt-repositories.md` also needs. Effort: Large.
+- **Left out:**
+  - The browser holds the message and sends it after the build. A closed tab loses the message, and the app never sends a draft by itself.
+  - The first workspace starts without an org image. Only a build copies each chosen repository with an installation token, which a workspace sandbox never gets.
+  - The Worker holds the message at the org, outside a workspace. The create must store the workspace and its first message before it answers.
+  - A message to the user when the build ends, and a shorter first build. Both leave the task waiting for the user.
+- **Wider fix:** F. It holds one rule for every build: a create waits for the running build that holds its repository.
+- **Previous examples:** On 8 November 2026 the user chose the notice over the same wait for the first release of the automatic first build.
+- **Related:** `plans/follow-ups/new-workspace-offers-unbuilt-repositories.md`, which needs the same data as F. `plans/follow-ups/first-build-retry.md`, which can join any option.
+- **Recommendation:** E. It gives a failed wait the same Try again as any failed first start, so the user never needs a manual build after a passing fault. The calls that the plan proposed for B also hold for E and F:
+  - A create waits only for a running build that holds its repository. In every other case, the error of today applies.
+  - During the wait, New workspace keeps Send on, with a short note that the workspace starts when the cloud computer is ready.
+  - With no running build and no good image, New workspace keeps its notice, and Send stays off.
+  - Get started stays as it is.
+  - Each waiting start stops when the org is suspended or deleted, as each start does today.
+- **Action:** ask the user, because each option changes the create path and the start limit.

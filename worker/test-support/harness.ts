@@ -9,6 +9,7 @@ import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
 import { seedAppAccess } from './app-access'
 import { FakeBoat } from './fake-boat'
 import { FakeGitHub } from './fake-github'
+import { createTestOrg } from './org-test-support'
 import { applyMigrations } from './migrations'
 
 export const TEST_ORIGIN = 'https://app.conductive.test'
@@ -105,16 +106,7 @@ export async function createHarness() {
   const createOrg = async (
     session: string,
     name = 'Example org',
-  ): Promise<Org> => {
-    const response = await request(API_PATHS.orgs, session, {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    })
-    const value: { org: Org } = await response.json()
-    if (response.status !== 201)
-      throw new Error(`Org create returned ${response.status}`)
-    return value.org
-  }
+  ): Promise<Org> => createTestOrg({ github, db, request }, session, name)
   return {
     env,
     github,

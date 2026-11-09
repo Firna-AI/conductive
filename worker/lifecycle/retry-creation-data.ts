@@ -87,7 +87,7 @@ export async function pinRetryCreation(
     creation.request.text,
   )
   if (!saved || saved.attempt !== job.attempt)
-    throw imageAdmissionError('image_required')
+    throw await imageAdmissionError(db, job.orgId, 'image_required')
   return {
     ...saved,
     kind: 'create',
