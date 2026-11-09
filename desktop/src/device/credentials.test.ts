@@ -47,7 +47,7 @@ it('gets the account identity from the authenticated API without a credential in
   const captured: Request[] = []
   const request: typeof fetch = async (resource, options) => {
     captured.push(new Request(resource, options))
-    return Response.json({ user: { id: 'user-one' } })
+    return Response.json({ user: { id: 'user-one' }, appAccess: true })
   }
   expect(
     await deviceAccount(
@@ -56,7 +56,7 @@ it('gets the account identity from the authenticated API without a credential in
       new AbortController().signal,
       request,
     ),
-  ).toBe('user-one')
+  ).toEqual({ userId: 'user-one', appAccess: true })
   expect(captured[0].url).toBe(origin + '/api/session')
   expect(captured[0].headers.get('Origin')).toBe(DESKTOP_ORIGIN)
   expect(captured[0].headers.get('Cookie')).toBe(

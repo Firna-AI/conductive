@@ -17,7 +17,11 @@ import {
   texts,
 } from './parse'
 import { ROLES } from './read-core'
-import { readRunning, readWorkspaceStates } from './read-operator'
+import {
+  readOperatorUserAccess,
+  readRunning,
+  readWorkspaceStates,
+} from './read-operator'
 
 function readSuspension(value: unknown): OperatorSuspension {
   const suspension = record(value, 'suspension')
@@ -69,6 +73,7 @@ export function readOperatorOrg(value: unknown): OperatorOrgDetail {
 export function readOperatorUser(value: unknown): OperatorUserDetail {
   const user = record(value, 'user')
   return {
+    ...readOperatorUserAccess(user),
     githubId: count(user, 'githubId'),
     login: text(user, 'login'),
     name: maybeText(user, 'name'),

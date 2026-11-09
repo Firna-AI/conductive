@@ -10,6 +10,8 @@ import {
   SignInSection,
   type OpenAgentForm,
 } from '../components/settings/AccountSections'
+import { inviteStates } from '../components/settings/inviteCodeCopy'
+import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
 import { workspaceSections } from '../components/workspaces/sections'
@@ -26,7 +28,15 @@ import { paths } from '../paths'
 export const accountSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'connections', 'form', 'view', 'save', 'shareChange'],
+  required: [
+    'tab',
+    'connections',
+    'form',
+    'view',
+    'save',
+    'shareChange',
+    'invites',
+  ],
   properties: {
     /**
      * The tab: General, with the sign-in and the connections, or
@@ -48,6 +58,11 @@ export const accountSchema = {
      */
     save: { enum: ['saved', 'failed'] },
     /**
+     * The invite code of the user: invites left, sign-ups paused, every
+     * invite used, or turned off by an operator.
+     */
+    invites: { enum: inviteStates },
+    /**
      * The last change of a share setting: none, or a change of the Claude
      * login that the app did not save.
      */
@@ -65,6 +80,7 @@ export const accountGeneral: AccountState = {
   view: 'page',
   save: 'saved',
   shareChange: 'none',
+  invites: 'left',
 }
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -85,7 +101,9 @@ function loginsFor(state: AccountState): AgentLogins {
 
 /**
  * The General tab: the GitHub sign-in, and what every org shares, the
- * GitHub App and the agents. The Mac app adds the This Mac section.
+ * GitHub App and the agents, then the invite code of the user, last, so
+ * that a phone shows the form of an agent near the top. The Mac app adds
+ * the This Mac section.
  */
 function GeneralTab(props: { state: AccountState }) {
   const { form } = props.state
@@ -106,13 +124,17 @@ function GeneralTab(props: { state: AccountState }) {
           notSaved: props.state.shareChange === 'not-saved' ? 'claude' : null,
         }}
       />
+      <InviteCodeSection
+        fresh={props.state.connections !== 'connected'}
+        state={props.state.invites}
+      />
     </>
   )
 }
 
 /**
- * The account, in two tabs. General holds the GitHub sign-in and what every
- * org shares. Preferences holds how new workspaces start: their model, and
+ * The account, in two tabs. General holds the GitHub sign-in, what every
+ * org shares, and the invite code of the user. Preferences holds how new workspaces start: their model, and
  * how New workspace opens. The product is free, so the page shows no plan
  * and no billing, and the sandbox provider stays out of sight.
  */

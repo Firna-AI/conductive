@@ -10,6 +10,8 @@ import {
 } from './invite-data'
 import { requireMember } from './membership'
 import { requireOrgAdmin } from './permissions'
+import { canAcceptSignup } from '../waitlist/data'
+import { inviteCodeError } from '../waitlist/errors'
 
 export async function inviteOrgMember(
   db: D1Database,
@@ -57,7 +59,13 @@ export async function acceptOrgInvite(
   now: number,
 ): Promise<OrgMember> {
   await guardedMembersWrite({
-    checks: [() => requireActiveOrg(db, orgId)],
+    checks: [
+      () => requireActiveOrg(db, orgId),
+      async () => {
+        if (!(await canAcceptSignup(db, userId)))
+          throw inviteCodeError('signups_paused')
+      },
+    ],
     write: () => takeInvite(db, orgId, userId, inviteId, now),
     refusal: inviteNotFound,
   })

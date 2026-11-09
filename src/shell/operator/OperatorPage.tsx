@@ -3,19 +3,25 @@ import { routes } from '../../app/router'
 import { Page, type BackLink } from '../layout/Page'
 import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
+import { PauseNotice } from './PauseParts'
 
 /** The tabs of the operator section. */
-export type OperatorTab = 'overview' | 'orgs' | 'users'
+export type OperatorTab = 'overview' | 'orgs' | 'users' | 'waitlist' | 'codes'
 
 const tabs = [
   { tab: 'overview', label: 'Overview', to: routes.operator() },
   { tab: 'orgs', label: 'Orgs', to: routes.operatorOrgs() },
   { tab: 'users', label: 'Users', to: routes.operatorUsers() },
+  { tab: 'waitlist', label: 'Waitlist', to: routes.operatorWaitlist() },
+  { tab: 'codes', label: 'Invite codes', to: routes.operatorCodes() },
 ] as const satisfies readonly { tab: OperatorTab; label: string; to: string }[]
 
 /**
  * A page of the operator section: the header, and the tabs Overview, Orgs,
- * and Users under it. On a phone the header leads back to the workspaces,
+ * Users, Waitlist, and Invite codes under it. While sign-ups are paused,
+ * the page starts with the notice of the pause. On a phone the tabs keep
+ * one line while they fit, and the last ones move to a second line, so that
+ * each tab shows. The header of a phone leads back to the workspaces,
  * unless the page gives its own way back, which desktop shows too. The
  * actions sit in the header on desktop and in the footer on a phone.
  */
@@ -37,6 +43,7 @@ export function OperatorPage(props: {
       subtitle={props.subtitle}
       tabs={
         <LinkTabs
+          flow={phone}
           label="Operator"
           tabs={tabs.map((item) => ({
             label: item.label,
@@ -47,6 +54,7 @@ export function OperatorPage(props: {
       }
       title={props.title}
     >
+      <PauseNotice />
       {props.children}
     </Page>
   )

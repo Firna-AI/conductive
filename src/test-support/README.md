@@ -70,10 +70,16 @@ The default org is `acme`. The default workspace is `checkout-autocomplete`.
 Options select the org role, workspace state, conversation, and GitHub banner state.
 Replace a reply to draw a missing login, a first run, or a deleted org.
 The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
+`server.signIn(user)` serves the session of another person, with app access, as a sign-in of that person does.
+The session reply has app access, and `GET /api/waitlist` answers with `accessState` of `fixtures/waitlist.ts`: no pause, and the invite code of the mockups with 2 of its 5 invites used.
+`serveWaiting(server)` in `waitlist.ts` serves the session of Sam Okafor, who waits for app access, with the waitlist state of the mockups. `serveWaiting(server, { email: 'none' })` serves the account without a verified email.
+`codeRefusal(code)` gives the status and the error body of a code that let nobody in, as the Worker sends them.
+`fixtures/waitlist.ts` also gives `waitingUser`, `waitingState`, `ownInviteCode(uses)`, and `sampleCodes`, an invite code of the operator mockups that works, one that is used up, and one that is disabled.
 `serveSuspendedAcme(server, role)` in `suspended-org.ts` serves Acme as a suspended org in the org list, and `orgSuspendedBody` is the error body of the API for a write that a suspended org refuses.
-`serveOperator(server)` in `operator.ts` makes the person signed in an operator, and serves the operator replies of the samples: the Overview, the newest orgs and users, and the page of each sample org and user. It returns the replies, so a test can change one. `operatorRequiredBody` is the error body of the API for an operator request of anyone else.
-The operator samples in `fixtures/operator-samples.ts` have the names and the counts of the operator mockups, with an ID for each org and user, and the people of the other fixtures. Each time counts back from the time of the samples. Hexwave is suspended, Pinecrest is deleted, and Dana Kim is suspended. `SAMPLE_IDS` names them.
-`fixtures/operator.ts` builds the replies from the samples and their records: the page of an org or a user, its row in a list, and the Overview with the 30 UTC days up to the day of the read. The dev fake changes the records with Suspend and Lift.
+`serveOperator(server)` in `operator.ts` makes the person signed in an operator, and serves the operator replies of the samples: the Overview, the newest orgs and users, the people who wait, the invite codes, the pause of sign-ups, which is off, and the page of each sample org and user. It returns the replies, so a test can change one. `operatorRequiredBody` is the error body of the API for an operator request of anyone else.
+The operator samples in `fixtures/operator-samples.ts` have the names and the counts of the operator mockups, with an ID for each org and user, and the people of the other fixtures. Ten of them wait, with the names of the waitlist mockups. Each time counts back from the time of the samples. Hexwave is suspended, Pinecrest is deleted, and Dana Kim is suspended. `SAMPLE_IDS` names them, and Sam Okafor and Kenji Watanabe, who wait with and without a verified email.
+`fixtures/operator-access-samples.ts` gives the way in of each user who came after the waitlist, the age of each GitHub account, the referral code of each user with app access, and the invite codes of the mockups. `fixtures/operator-access.ts` turns them into the app access of a user, the waitlist, and the codes, with the records that an operator changes: the approvals, the codes, and the pause. The approval email of Ana Pereira went, and the one of Joe Quinn never went. The suspension of Dana Kim disabled her referral code.
+`fixtures/operator.ts` builds the replies from the samples and their records: the page of an org or a user, its row in a list, and the Overview with the 30 UTC days up to the day of the read and the count of the people who wait. The dev fake changes the records with Suspend, Lift, Approve, New code, Disable, and the pause. Its waitlist reads the same codes and pause, and a code that works there counts its use and gives a referral code.
 `macCommands` chooses the Mac commands of the fake workspace, and `onMac` makes the window the Mac app on the Mac of the fake user.
 Without `onMac`, the window is a browser: it has no pairing, and the Mac settings refuse it as the Worker does.
 Each fake record has a `requestKey` from `fakeRequestKey`, which differs from its `requestId` and is safe in an address.
@@ -155,7 +161,9 @@ Replies, timers, and `waitFor` go on.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `suspended-org.ts` serves Acme as a suspended org, and gives the body of an `org_suspended` refusal.
 - `operator.ts` serves the operator section of the samples, and gives the body of an `operator_required` refusal.
+- `waitlist.ts` serves a person who waits for app access, and gives the reply of a refused code. `fixtures/waitlist.ts` gives the person, the waitlist states, and the codes of the mockups.
 - `fixtures/operator-samples.ts` and `fixtures/operator.ts` give the sample orgs and users of the operator section, and build its replies.
+- `fixtures/operator-access-samples.ts` and `fixtures/operator-access.ts` give the waitlist, the codes, and the app access of the samples, and `disabledCode`, the reply of a disable.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.
