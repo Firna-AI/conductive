@@ -376,11 +376,16 @@ Depends on: every other milestone
       items, the mockups, and the docs when main has taken them.
 - [x] Run the targeted tests and `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+      Round 1 found one finding: the added build can be lost after the
+      first good build. Its check confirmed it and found one more case. Both
+      are rare, so they are deferred to
+      `plans/follow-ups/added-build-can-be-lost.md`. No finding was fixed,
+      so no second round ran. Reports: the review folder of the branch.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives decisions 150, 151, and 152, and the
@@ -389,6 +394,6 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] On the deployed app, create an org with one repository, and check
+- [x] On the deployed app, create an org with one repository, and check
       that Get started shows its build and that the first workspace starts
-      after it.
+      after it. Moved to `plans/follow-ups/first-build-smoke-test.md`.
