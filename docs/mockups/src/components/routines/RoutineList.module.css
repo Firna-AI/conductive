@@ -94,10 +94,19 @@
   white-space: nowrap;
 }
 
+/* Wide enough for the short reason that a routine turned off. */
 .state {
   display: flex;
   flex-shrink: 0;
-  width: 58px;
+  flex-direction: column;
+  gap: 1px;
+  width: 78px;
+}
+
+.reason {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+  white-space: nowrap;
 }
 
 /* A phone wraps the repository and the triggers, so they show in full. */

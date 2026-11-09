@@ -1,9 +1,10 @@
 import type { Viewport } from '@mokly/mokly'
 import type { RoutineRow } from '../../fixtures/routineRows'
 import { repositories } from '../../fixtures/repositories'
+import { offAfterFailedRuns } from '../../fixtures/routines'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
+import { StatusText, type StatusTone } from '../common/StatusText'
 import { PersonAvatar } from '../orgs/OrgTile'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import { runStateLabels } from './runCopy'
@@ -35,14 +36,19 @@ function Owner(props: { row: RoutineRow }) {
   )
 }
 
+/**
+ * Whether the routine is on. A routine that turned off after failed runs
+ * says so in short, under Off (decision 213 B).
+ */
 function State(props: { row: RoutineRow }) {
-  const { active } = props.row.routine
+  const { routine } = props.row
+  const failed = offAfterFailedRuns(routine)
+  let tone: StatusTone = routine.active ? 'success' : 'muted'
+  if (failed) tone = 'danger'
   return (
     <span className={styles.state}>
-      <StatusText
-        label={active ? 'Active' : 'Off'}
-        tone={active ? 'success' : 'muted'}
-      />
+      <StatusText label={routine.active ? 'Active' : 'Off'} tone={tone} />
+      {failed ? <span className={styles.reason}>3 failed runs</span> : null}
     </span>
   )
 }

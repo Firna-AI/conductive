@@ -17,5 +17,6 @@
 - **Left out:** A list of undelivered messages for each sender outside the removed workspace (option E of decision 130), because D keeps the messages where every member already reads them.
 - **Wider fix:** D.
 - **Previous examples:** option E of decision 91, option D of decision 130, and finding 15 of PR #50, whose check names this item as the fix of its class.
+- **Related:** Decisions 209 F and 212 B of `plans/routines.md`, chosen on 9 November 2026: a routine run whose start fails keeps its workspace with Try again once this item lands. Until then, such a run shows as a failed row in the Runs list of its routine.
 - **Recommendation:** D. It keeps the queue of decision 14 A for the first start too.
 - **Action:** fix after merge, apply D, because the user chose A now and D as a later follow-up on 8 November 2026 (decision 130).

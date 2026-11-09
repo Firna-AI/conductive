@@ -13,6 +13,7 @@ import {
 } from './routineRuns'
 
 const weekly: RunTrigger = { kind: 'schedule', schedule: 'weekly' }
+const hourly: RunTrigger = { kind: 'schedule', schedule: 'hourly' }
 
 /**
  * The newest runs of the routine that reviews pull requests, in each state
@@ -129,6 +130,7 @@ export const runListKeys = [
   'none',
   'run-now',
   'suspended',
+  'turned-off',
 ] as const
 
 export type RunListKey = (typeof runListKeys)[number]
@@ -221,4 +223,34 @@ export const runLists: Readonly<Record<RunListKey, readonly Run[]>> = {
   ],
   /** The runs of the review routine after the suspension of Acme. */
   suspended: reviewRuns.map(afterSuspension),
+  /**
+   * An hourly routine whose last three runs failed, because the Claude
+   * login of its owner is not connected, so it turned off.
+   */
+  'turned-off': [
+    {
+      key: 'hourly-6',
+      trigger: hourly,
+      state: 'failed',
+      cause: 'agent-login',
+      when: '5m',
+    },
+    {
+      key: 'hourly-5',
+      trigger: hourly,
+      state: 'failed',
+      cause: 'agent-login',
+      when: '1h',
+    },
+    {
+      key: 'hourly-4',
+      trigger: hourly,
+      state: 'failed',
+      cause: 'agent-login',
+      when: '2h',
+    },
+    { key: 'hourly-3', trigger: hourly, state: 'ready', when: '3h' },
+    { key: 'hourly-2', trigger: hourly, state: 'archived', when: '4h' },
+    { key: 'hourly-1', trigger: hourly, state: 'archived', when: '5h' },
+  ],
 }

@@ -46,6 +46,7 @@ const routineLinks: Readonly<Record<string, string>> = {
   'review-prs': paths.routine,
   'dependency-updates': paths.routineAdmin,
   'copy-review': paths.routineOwnerLeft,
+  'error-triage': paths.routineTurnedOff,
 }
 
 const suspendedLinks: Readonly<Record<string, string>> = {

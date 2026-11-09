@@ -14,6 +14,7 @@ const tabPages: Readonly<Partial<Record<string, TabPages>>> = {
   },
   'dependency-updates': { routine: paths.routineAdmin },
   'copy-review': { routine: paths.routineOwnerLeft },
+  'error-triage': { routine: paths.routineTurnedOff },
 }
 
 /**

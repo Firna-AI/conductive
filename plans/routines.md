@@ -781,8 +781,14 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
   first recommendation was B. D ships routines as soon as B does, and the
   follow-up then delivers all of decision 209 F, also for a run without an
   agent login. F best protects the codebase.
-- **Action:** ask the user, because the options trade the launch of
+- **Action:** asked the user, because the options trade the launch of
   routines against the behaviour that the user chose.
+- **Chosen:** B, by the user on 9 November 2026. At launch, a failed run
+  shows as a failed row with its cause and a link that fixes it, and it
+  keeps no workspace. When the follow-up of decision 130 D lands, a run
+  whose start fails keeps its workspace with Try again. A run that the
+  create checks refuse, such as a run without an agent login, stays a
+  failed row, because B does not widen the follow-up.
 
 ### 213. Choose how a routine stops after repeated failed runs
 
@@ -844,8 +850,10 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
   first recommendation was B. E stops a cause that repeats, also a login
   that the provider refuses, and it does not stop a routine for a passing
   failure.
-- **Action:** ask the user, because B and C add a rule that stops runs,
+- **Action:** asked the user, because B and C add a rule that stops runs,
   and D narrows the user's choice of decision 209 F.
+- **Chosen:** B, by the user on 9 November 2026. Every failed run counts,
+  also a failed first turn and a failure that clears by itself.
 
 ## Design
 
@@ -952,6 +960,17 @@ number names the user's choice. The user can override any part of it.
      its own start.
   4. It stores the workspace ID. When `createWorkspace` throws, it stores
      the failure code and message.
+- A failed run keeps no workspace at launch (decision 212 B). When the
+  follow-up of decision 130 D lands, a run whose start fails keeps its
+  workspace in its error state with Try again (decision 209 F).
+- A routine turns off after three runs in a row fail (decision 213 B).
+  - A run counts as failed when the run row failed, when its start
+    failed, or when its first turn failed. A run whose first turn
+    finished resets the count. A skipped run and a queued run do not
+    count.
+  - `routines.failed_runs_in_a_row` holds the count. At three, the routine
+    turns off with the reason `failed_runs`, and its routine page says
+    why. Only the owner turns it on again, and that resets the count.
 - The run text is the prompt, a separator line, and the trigger facts:
   the routine name, the trigger, and for a pull request its number, its
   address, its head branch with the head commit, the branch that it
@@ -1157,8 +1176,8 @@ answered the decisions of that report and changed none of the calls.
   "Daily at 9:00" must mean the owner's 9:00.
 - A late schedule starts one run, not one for each missed time.
 - The first message of a run is the prompt and the trigger facts.
-- A failed run shows its cause, and the routine stays on. Decision 213 can
-  change the second part.
+- A failed run shows its cause. The routine stays on until three runs in
+  a row fail, as decision 213 B later chose.
 
 - A suspended owner or org gets no runs. When the owner leaves the org,
   the routine turns off. Decision 208 E later moved it to an admin too.
@@ -1286,10 +1305,21 @@ variant, and one flow. Each page holds five screens or fewer.
 - [x] Update `docs/mockups/catalogue.md` and `docs/mockups/src/paths.ts`.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages at both
       sizes, in light and dark.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
-      Done for the design calls of the mockups. Decisions 207 to 211 wait
-      for the user, and their answers can add mockup work.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The mockups raised decisions 207 to 213, which the
+      user answered on 9 November 2026, and the design calls of the
+      mockups. The mockups draw each answer.
+- [x] Draw the answers: the base branch of a pull request run (207 G), a
+      routine that moved to an admin (208 E), no Run now on a routine with
+      only pull request triggers (210 C), Save off without a prompt
+      (211 B), and a routine that turned off after three failed runs
+      under `app/routines/routine/turned-off` (213 B).
+
+Milestone completed on 9 November 2026. A UI implementor subagent drew
+the screens in seven rounds. The orchestrator re-ran the mockup, lint,
+format, file-length, and export checks after each round, and looked at
+the screenshots.
+
 
 Evidence: `.context/routines/m1-ui-implementor-report.md`, the check logs
 `.context/routines/m1-orchestrator-checks.log` and
@@ -1305,9 +1335,12 @@ the code milestones can follow them.
 
 - [ ] Write `docs/protocol/routines.md`: routines, triggers, runs, the run
       text, access, the schedule limit, a member who leaves, suspensions,
-      and decisions 201 to 206 with their rejected options. Keep it near
-      250 lines. State the author rule and the author filter of
-      decision 206 C.
+      and decisions 201 to 213 with their rejected options. Keep it near
+      250 lines, and split it into linked pages if it passes that. State
+      the author rule and the author filter of decision 206 C, the base
+      branch of decision 207 G, and the turn-off after three failed runs
+      of decision 213 B.
+
 - [ ] Record the risks that stay open in `docs/protocol/routines.md`, as
       `access-and-security.md` does for decisions 105 and 121. Comments,
       reviews, and description edits by other accounts reach the agent of
@@ -1391,6 +1424,13 @@ Start a run as a new workspace, and let the owner start one by hand.
         fail the run with their code, before any create.
   - [ ] Test that a failed start shows the run as failed with its stored
         cause after the app removes the workspace.
+- [ ] Count the failed runs in a row of each routine, from the run row,
+      the start, and the first turn, and turn the routine off at three
+      (decision 213 B).
+  - [ ] Test that three failed runs in a row turn the routine off with its
+        reason, that a finished first turn resets the count, and that a
+        skipped run does not count.
+
 - [ ] Serve Run now, which accepts only the owner, and the runs list with
       the state of each run.
 - [ ] Add `routine` to the workspace view.

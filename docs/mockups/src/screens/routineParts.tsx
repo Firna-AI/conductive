@@ -1,5 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
-import { UserX } from 'lucide-react'
+import { PowerOff, UserX } from 'lucide-react'
 import { Notice } from '../components/common/Notice'
 import { Menu } from '../components/common/Menu'
 import { Sheet } from '../components/common/Sheet'
@@ -20,7 +20,7 @@ import { SectionText } from '../components/settings/Section'
 import { agents } from '../fixtures/agents'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import type { TriggerEdit } from '../fixtures/routineTriggers'
-import type { Routine } from '../fixtures/routines'
+import { offAfterFailedRuns, type Routine } from '../fixtures/routines'
 import { paths } from '../paths'
 import type { RoutineAccess } from './routineState'
 import styles from './RoutineScreen.module.css'
@@ -54,9 +54,30 @@ function ReadOnlyNote(props: { routine: Routine; access: RoutineAccess }) {
 }
 
 /**
+ * Why a routine turned off after three failed runs in a row (decision
+ * 213 B). The owner fixes the cause and turns it on. Another person reads
+ * who can.
+ */
+function FailedRunsNotice(props: { routine: Routine; ownerViews: boolean }) {
+  return (
+    <Notice
+      body={
+        props.ownerViews
+          ? 'Three runs in a row failed. Fix the cause, then turn it on.'
+          : `Three runs in a row failed. Only ${props.routine.owner.name} can turn it on again.`
+      }
+      icon={PowerOff}
+      title="This routine turned off"
+      tone="danger"
+    />
+  )
+}
+
+/**
  * The note above the routine: the notice of a suspended org, the reason
- * why the person signed in reads it without fields, or, for its owner, the
- * notice of a routine that moved from a member who left (decision 208 E).
+ * why it turned off after failed runs, the reason why the person signed in
+ * reads it without fields, or, for its owner, the notice of a routine that
+ * moved from a member who left (decision 208 E).
  */
 function Note(props: {
   routine: Routine
@@ -65,6 +86,14 @@ function Note(props: {
 }) {
   const { routine } = props
   if (props.suspended) return <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+  if (offAfterFailedRuns(routine)) {
+    return (
+      <FailedRunsNotice
+        ownerViews={props.access === 'owner'}
+        routine={routine}
+      />
+    )
+  }
   if (props.access !== 'owner') {
     return <ReadOnlyNote access={props.access} routine={routine} />
   }

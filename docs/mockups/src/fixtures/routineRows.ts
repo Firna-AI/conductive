@@ -4,7 +4,7 @@
  */
 
 import { stateAfterSuspension, type RunState } from './routineRuns'
-import { changelog, errorTriage, routines, type Routine } from './routines'
+import { changelog, routines, type Routine } from './routines'
 
 /** A routine in the list of the org, with the state of its last run. */
 export type RoutineRow = {
@@ -18,7 +18,10 @@ export const routineRows: readonly RoutineRow[] = [
     routine: routines['review-prs'],
     lastRun: { state: 'working', when: 'now' },
   },
-  { routine: errorTriage, lastRun: { state: 'unread', when: '32m' } },
+  {
+    routine: routines['error-triage'],
+    lastRun: { state: 'failed', when: '5m' },
+  },
   {
     routine: routines['dependency-updates'],
     lastRun: { state: 'ready', when: '3d' },

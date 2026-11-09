@@ -74,6 +74,11 @@ export type Routine = {
    * turned off, to its owner (decision 208 E).
    */
   movedFrom?: string
+  /**
+   * The runs that failed in a row. A failed run, a failed start, and a
+   * failed first turn count. A finished first turn resets the count.
+   */
+  failedRunsInARow?: number
   active: boolean
   /** The one time zone of every schedule of the routine. */
   timeZone: string
@@ -93,6 +98,7 @@ export const routineKeys = [
   'morning-summary',
   'dependency-updates',
   'copy-review',
+  'error-triage',
 ] as const
 
 export type RoutineKey = (typeof routineKeys)[number]
@@ -184,22 +190,31 @@ export const routines: Readonly<Record<RoutineKey, Routine>> = {
     choice: defaultChoice,
     saved: true,
   },
+  'error-triage': {
+    key: 'error-triage',
+    name: 'Triage new errors',
+    repository: 'billing-service',
+    section: 'infra',
+    owner: people.cal,
+    failedRunsInARow: 3,
+    active: false,
+    timeZone: london,
+    triggers: [{ kind: 'hourly', minute: 15 }],
+    prompt:
+      'Read the errors of the last hour. Group them by cause, and open an issue for each new cause.',
+    choice: defaultChoice,
+    saved: true,
+  },
 }
 
-/** A routine of Jonas that runs each hour, which only the list shows. */
-export const errorTriage: Routine = {
-  key: 'error-triage',
-  name: 'Triage new errors',
-  repository: 'billing-service',
-  section: 'infra',
-  owner: people.jonas,
-  active: true,
-  timeZone: london,
-  triggers: [{ kind: 'hourly', minute: 15 }],
-  prompt:
-    'Read the errors of the last hour. Group them by cause, and open an issue for each new cause.',
-  choice: defaultChoice,
-  saved: true,
+/** The failed runs in a row that turn a routine off (decision 213 B). */
+const failedRunsToTurnOff = 3
+
+/** The routine turned off because its last runs failed in a row. */
+export function offAfterFailedRuns(routine: Routine): boolean {
+  return (
+    !routine.active && (routine.failedRunsInARow ?? 0) >= failedRunsToTurnOff
+  )
 }
 
 /** A routine that Jonas turned off, which only the list shows. */
