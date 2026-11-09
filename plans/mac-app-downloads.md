@@ -209,14 +209,14 @@ Depends on: 1
 State the fixed DMG names and the site downloads as requirements, before
 the code changes.
 
-- [ ] In "Releases" of `docs/protocol/desktop-app.md`, state that each DMG
+- [x] In "Releases" of `docs/protocol/desktop-app.md`, state that each DMG
       name has no version, so that the latest release always gives the
       newest DMG of each chip at one address.
-- [ ] State there that a release build runs on macOS 13 or later, from
+- [x] State there that a release build runs on macOS 13 or later, from
       its `LSMinimumSystemVersion`.
-- [ ] In `docs/architecture.md`, say that the marketing site links the
+- [x] In `docs/architecture.md`, say that the marketing site links the
       Mac app downloads.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: Fixed DMG names
 

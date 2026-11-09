@@ -67,6 +67,13 @@ requirements of each feature.
   the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
 - The main action is "Start free with GitHub". The site does not name
   Boat, and users need no Boat account (decision 80).
+- The home page has a Mac app section. It links the DMG for Apple silicon
+  first, then the DMG for Intel, from the latest release of the public
+  source repository on GitHub. It names the oldest macOS version that the
+  app runs on. The footer links the section. In the desktop layout, the
+  header links it too.
+- The DMGs come from GitHub, not from the Worker.
+  [Releases](protocol/desktop-app.md#releases) states their addresses.
 
 ### Web app
 
@@ -87,6 +94,10 @@ requirements of each feature.
 ### Mac app
 
 - An Electron shell for macOS, as [Mac app](protocol/desktop-app.md) says.
+- Its packages and its updates come from the GitHub releases of the
+  public source repository, as
+  [Packages and updates](protocol/desktop-app.md#packages-and-updates)
+  says.
 
 ### Worker
 

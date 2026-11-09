@@ -325,6 +325,8 @@ limits, their results, and what the chat shows.
   signed and notarized. Each app and DMG has a stapled notarization ticket.
 - Release packaging fails if credentials are missing, the signing team is
   wrong, or signature, ticket, or Gatekeeper verification fails.
+- A release package runs on macOS 13 or later. Its app has
+  `LSMinimumSystemVersion` 13.0, so macOS 12 and older refuse to open it.
 - Risk: macOS refuses to open a downloaded ad-hoc build until
   the user allows it.
 
@@ -374,6 +376,21 @@ limits, their results, and what the chat shows.
   - `latest-mac.yml`, which gives the updater the version and the ZIP files
 - `latest-mac.yml` lists no DMG file. Reason: stapling changes each DMG
   after the build records its size and hash.
+- Each DMG of a release has a fixed name, without the version:
+  `Conductive-mac-arm64.dmg` for arm64 and `Conductive-mac-x64.dmg` for
+  x64. So the address
+  `https://github.com/Firna-AI/remote-code/releases/latest/download/<name>`
+  always gives the DMG of the latest release for that processor type.
+- Reason: the marketing site runs no script, so it needs one address that
+  always gives the newest DMG. A link to the release page was rejected,
+  because the visitor must then choose from nine files. A Worker route that
+  finds the newest version was rejected, because it adds a GitHub request
+  to each download.
+- Each ZIP file and its block map keep the version in their names. Reason:
+  the updater finds each ZIP file through `latest-mac.yml`, so a ZIP file
+  needs no fixed name.
+- The releases before the fixed names, such as `v0.2.0`, keep the version
+  in their DMG names. Reason: a published release never changes.
 - From the second update after a DMG install, the block maps let the
   updater download only the changed blocks.
 - Only workflow runs on `main` sign. The protected `desktop-release`
