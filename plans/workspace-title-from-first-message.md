@@ -804,11 +804,14 @@ Evidence: `.context/workspace-title-from-first-message/gate-3.log`.
 
 - [x] Run the targeted tests and the complete gate `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+      Rounds 3 and 4 ran. Finding 6 is fixed in `48c7f70`. Finding 5 is
+      the follow-up item `plans/follow-ups/late-title-after-archive.md`.
+      The re-review found nothing new.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
