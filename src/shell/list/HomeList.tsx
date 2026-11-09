@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, ChevronDown, Plus } from 'lucide-react'
+import { Check, ChevronDown, Gauge, Plus } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import styles from '../../../docs/mockups/src/screens/WorkspaceListScreen.module.css'
@@ -16,13 +16,18 @@ import ui from '../ui/ui.module.css'
 import { NewWorkspaceLink, SettingsLink } from './Sidebar'
 import { OrgList } from './OrgList'
 
-/** The org switcher of a phone, which has no rail. */
+/**
+ * The org switcher of a phone, which has no rail: every org, Create org,
+ * and the account. An operator also gets Operator under the account.
+ */
 function OrgSwitcherSheet(props: {
   current: string
   user: User
   close: () => void
 }) {
-  const orgs = useStore(useApp().orgs)
+  const app = useApp()
+  const orgs = useStore(app.orgs)
+  const operator = useStore(app.account.account)?.operator === true
   return (
     <Sheet close={props.close} title="Orgs">
       <nav aria-label="Orgs">
@@ -71,6 +76,18 @@ function OrgSwitcherSheet(props: {
           <PersonAvatar person={props.user} size={26} />
           <span className={styles.sheetLabel}>Account</span>
         </AppLink>
+        {operator ? (
+          <AppLink
+            className={styles.sheetRow}
+            onClick={props.close}
+            to={routes.operator()}
+          >
+            <span className={styles.operatorTile}>
+              <Gauge aria-hidden size={15} />
+            </span>
+            <span className={styles.sheetLabel}>Operator</span>
+          </AppLink>
+        ) : null}
       </nav>
     </Sheet>
   )

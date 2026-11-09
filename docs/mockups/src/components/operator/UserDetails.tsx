@@ -4,19 +4,19 @@ import { paths } from '../../paths'
 import { Notice } from '../common/Notice'
 import { DetailList } from '../settings/DetailList'
 import { Section } from '../settings/Section'
+import { suspendedTitle, suspendedUserBody } from './operatorCopy'
 import { TargetList, TargetRow } from './targets'
 
 /** The notice of a suspended user, at the top of their page. */
 function UserNotice(props: { user: UserPage }) {
   const { user } = props
   if (!user.suspension) return null
-  const { since, by } = user.suspension
-  const name = `@${user.login}`
+  const { since, by, stopping } = user.suspension
   return (
     <Notice
-      body={`${name} cannot sign in, and no member can start the workspaces that ${name} owns. An admin can move them to another member.`}
+      body={suspendedUserBody(`@${user.login}`, stopping)}
       icon={Ban}
-      title={`Suspended on ${since} by @${by}`}
+      title={suspendedTitle(since, by)}
     />
   )
 }

@@ -35,7 +35,7 @@ export type OperatorOrgsState = SchemaProps<typeof operatorOrgsSchema>
 const columns: Readonly<Record<Viewport, TableColumn[]>> = {
   desktop: [
     { key: 'org', label: 'Org', flex: 1 },
-    { key: 'created', label: 'Created', width: 76 },
+    { key: 'created', label: 'Created', width: 100 },
     { key: 'members', label: 'Members', align: 'right', width: 76 },
     { key: 'workspaces', label: 'Workspaces', align: 'right', width: 92 },
     { key: 'running', label: 'Running', align: 'right', width: 72 },
@@ -54,13 +54,22 @@ const orgPaths: Readonly<Record<TargetStatus, string>> = {
 }
 
 /**
- * The line under the name: what a search matched, or the state of a
- * suspended or deleted org. A phone has no Created column, so its line
- * gives the creation day of an org in use.
+ * The line under the name: what a search matched, and the state of a
+ * suspended or deleted org. A phone has no Created column, so the line of
+ * an org in use that a name found gives its creation day.
  */
 function lineOf(row: OrgRow, viewport: Viewport) {
+  const state =
+    row.status === 'active' ? null : <TargetState status={row.status} />
+  if (row.match && state) {
+    return (
+      <>
+        {row.match} · {state}
+      </>
+    )
+  }
   if (row.match) return row.match
-  if (row.status !== 'active') return <TargetState status={row.status} />
+  if (state) return state
   return viewport === 'mobile' ? `Created ${row.created}` : undefined
 }
 

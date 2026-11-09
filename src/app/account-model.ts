@@ -74,6 +74,16 @@ export class AccountModel {
     })
   }
 
+  /**
+   * The API refused an operator request, so the person is no longer an
+   * operator. The rail and the org switcher drop Operator, and the operator
+   * section shows the not-found page, until the next load reads the account.
+   */
+  refuseOperator(): void {
+    const account = this.account.get()
+    if (account?.operator) this.account.set({ ...account, operator: false })
+  }
+
   login(agent: Agent): AgentLoginStatus {
     return (
       this.account.get()?.agentLogins.find((item) => item.agent === agent) ?? {

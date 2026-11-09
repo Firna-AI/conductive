@@ -39,7 +39,7 @@ export const EFFORTS = [
   'xhigh',
   'max',
 ] as const satisfies readonly Effort[]
-const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
+export const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
 export function readUser(value: unknown): User {
   const user = record(value, 'user')

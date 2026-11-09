@@ -48,6 +48,10 @@ const BANNERS = [
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.
+ * - `operator=1`: the user is an operator. The rail and the org switcher
+ *   show Operator, and the operator section shows the sample orgs and
+ *   users of the mockups. Without it, each operator request gets
+ *   `operator_required`, as the Worker does.
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
  * - `stop=<seconds>`: an open workspace stops that many seconds after it
  *   opens, as a sandbox does that stops while its workspace is open.
@@ -60,6 +64,7 @@ export interface DevOptions {
   noAgentLogin: boolean
   deleted: boolean
   suspended: boolean
+  operator: boolean
   signedOut: boolean
   /** The wait before an open workspace stops, or `null` for no stop. */
   stopAfterMs: number | null
@@ -88,6 +93,7 @@ export function readDevOptions(search: string): DevOptions {
     noAgentLogin: params.get('login') === 'none',
     deleted: params.get('deleted') === '1',
     suspended: params.get('suspended') === '1',
+    operator: params.get('operator') === '1',
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
   }

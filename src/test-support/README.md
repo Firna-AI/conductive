@@ -64,6 +64,9 @@ Options select the org role, workspace state, conversation, and GitHub banner st
 Replace a reply to draw a missing login, a first run, or a deleted org.
 The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
 `serveSuspendedAcme(server, role)` in `suspended-org.ts` serves Acme as a suspended org in the org list, and `orgSuspendedBody` is the error body of the API for a write that a suspended org refuses.
+`serveOperator(server)` in `operator.ts` makes the person signed in an operator, and serves the operator replies of the samples: the Overview, the newest orgs and users, and the page of each sample org and user. It returns the replies, so a test can change one. `operatorRequiredBody` is the error body of the API for an operator request of anyone else.
+The operator samples in `fixtures/operator-samples.ts` have the names and the counts of the operator mockups, with an ID for each org and user, and the people of the other fixtures. Each time counts back from the time of the samples. Hexwave is suspended, Pinecrest is deleted, and Dana Kim is suspended. `SAMPLE_IDS` names them.
+`fixtures/operator.ts` builds the replies from the samples and their records: the page of an org or a user, its row in a list, and the Overview with the 30 UTC days up to the day of the read. The dev fake changes the records with Suspend and Lift.
 `macCommands` chooses the Mac commands of the fake workspace, and `onMac` makes the window the Mac app on the Mac of the fake user.
 Without `onMac`, the window is a browser: it has no pairing, and the Mac settings refuse it as the Worker does.
 Each fake record has a `requestKey` from `fakeRequestKey`, which differs from its `requestId` and is safe in an address.
@@ -142,6 +145,8 @@ Replies, timers, and `waitFor` go on.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `suspended-org.ts` serves Acme as a suspended org, and gives the body of an `org_suspended` refusal.
+- `operator.ts` serves the operator section of the samples, and gives the body of an `operator_required` refusal.
+- `fixtures/operator-samples.ts` and `fixtures/operator.ts` give the sample orgs and users of the operator section, and build its replies.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.

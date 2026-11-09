@@ -14,6 +14,7 @@ import { accountRoutes } from './account-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
+import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
 import { routeFetch, RouteError, type Route } from './router'
@@ -57,6 +58,7 @@ export function createFakeServices(search: string): AppServices {
     ...createRoutes(backend),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
+    ...operatorRoutes(backend),
   ]
   const fetch = routeFetch(
     routes,

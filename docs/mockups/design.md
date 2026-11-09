@@ -138,12 +138,16 @@ chat, and five tabs at the bottom.
   view runs no script, so the chart keeps the width that the page column
   gives it. The workspaces by state reuse `StatusGlyph`.
 - A table of the operator keeps fewer columns on a phone, so that each
-  name keeps one line. The line under a name gives the state of a
-  suspended or deleted target. A person shows on a disc and an org on a
-  square, with `PersonAvatar` and `InitialsTile` from
+  name keeps one line. The line under a name gives what a search found,
+  when it is not the name, and the state of a suspended or deleted target,
+  with a dot between them. A column of days fits a day of another year,
+  such as 30 Sept 2026, on one line. A person shows on a disc and an org on
+  a square, with `PersonAvatar` and `InitialsTile` from
   `src/components/orgs/`.
 - Suspend and Lift sit in the header of the page of an org or a user, and
-  in its footer on a phone. Each asks first, with `ConfirmDialog`.
+  in its footer on a phone. Each asks first, with `ConfirmDialog`. The
+  words of the questions and the notices live in `operatorCopy.ts`, which
+  imports no fixture, so the app uses them too. So does `WorkspaceStates`.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its rename and close buttons.

@@ -27,7 +27,7 @@ export type OrgPage = {
 }
 
 const hexwaveMembers: readonly OrgMember[] = [
-  { login: 'vex-ops', initials: 'VO', role: 'Admin' },
+  { login: 'vex-ops', initials: 'V', role: 'Admin' },
   { login: 'kt-null', name: 'Kai Tanaka', initials: 'KT', role: 'Member' },
   {
     login: 'dana-k',

@@ -3,14 +3,8 @@ import { LockOpen } from 'lucide-react'
 import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
+import { liftFiles, liftGivesBack } from './operatorCopy'
 import { targetName, type Target } from './targets'
-
-/** What a lift gives back, for each kind of target. */
-function givesBack(target: Target): string {
-  return target.kind === 'user'
-    ? `${targetName(target)} can sign in again, and their workspaces can start again.`
-    : `Members can change ${target.name} again, and its workspaces can start again.`
-}
 
 /**
  * The operator confirms a lift. The dialog says what comes back, and that
@@ -40,10 +34,10 @@ export function LiftDialog(props: {
       title={`Lift the suspension of ${targetName(props.target)}?`}
       viewport={props.viewport}
     >
-      <DialogText>{givesBack(props.target)}</DialogText>
       <DialogText>
-        A workspace that stopped 14 days ago or more may have lost its files.
+        {liftGivesBack(props.target.kind, targetName(props.target))}
       </DialogText>
+      <DialogText>{liftFiles}</DialogText>
     </ConfirmDialog>
   )
 }

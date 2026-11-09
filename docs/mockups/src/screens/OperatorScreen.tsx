@@ -46,6 +46,7 @@ function OperatorBody(props: { state: OperatorState; viewport: Viewport }) {
           <WorkspaceStates
             builds={runningComputers.builds}
             counts={workspaceStates}
+            page="overview"
           />
           <DailyChart
             rows={newWorkspacesByDay}

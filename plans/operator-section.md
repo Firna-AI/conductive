@@ -366,6 +366,33 @@ first group, and the orchestrator made the second after its questions:
   C chose. The question of a fresh sign-in for operator writes waits for
   the user in `plans/follow-ups/fresh-sign-in-for-operator-writes.md`.
 
+The calls of Milestone 6, on 9 November 2026, made by the UI agent and
+checked by the orchestrator:
+
+- The not-found rule keys on HTTP 403 with the code `operator_required`.
+  A 403 of the gate, such as `origin_forbidden`, shows its own error.
+- After a suspension of the operator's own account, the app shows the
+  sign-in and reads nothing more, because the session ended.
+- A search runs after a pause of 300 ms or on Enter. It replaces the
+  address, so Back does not step through each search.
+- Refresh keeps the numbers and dims the charts until the answer.
+- The line under a found org gives the match and the state, such as
+  "Preview address · Suspended", with the short labels "Preview address",
+  "Org ID", and "Cloud computer ID". The mockup follows.
+- The Created and Joined columns are 100 px, so that a day of another
+  year fits. The mockups follow.
+- The builds line of an org page says "2 cloud computer builds also run
+  now", because an org page has no Running now tile.
+- The data table under each chart is the app's own, with UTC days,
+  because the table of the Firna chart lists a time axis as milliseconds.
+- The stopping sentence has a singular form, and it shows on a user page
+  after a suspension too.
+- The initials of a user with no name come from the login, by the rule
+  for people in the app.
+- The loading and failure states of the tabs and the pages use the
+  existing parts of the app: placeholder rows, the spinner and notice of
+  `Loaded`, and `LoadFailure` with Try again.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -558,17 +585,20 @@ Tags: ui
 
 Depends on: 3, 4, 5
 
-- [ ] Add the `/operator` route and its screen, with the parts of the
+- [x] Add the `/operator` route and its screen, with the parts of the
       mockups. Other people see the not-found page.
-- [ ] Add Operator to the rail and to the org switcher of a phone, for
+- [x] Add Operator to the rail and to the org switcher of a phone, for
       operators only.
-- [ ] Add the loading and error states, and Refresh.
-- [ ] Add the Orgs and Users tabs, their searches, and the page of an org
+- [x] Add the loading and error states, and Refresh.
+- [x] Add the Orgs and Users tabs, their searches, and the page of an org
       and of a user, with Suspend and Lift and their dialogs.
-- [ ] Test the screens, the routes, the links, the suspend, and the lift.
-- [ ] Update the Privacy draft in `src/marketing/privacy.ts` for the lift
+- [x] Test the screens, the routes, the links, the suspend, and the lift.
+- [x] Update the Privacy draft in `src/marketing/privacy.ts` for the lift
       and the record of each suspension and lift.
-- [ ] Add a README for the new area, and update `src/app/README.md`.
+- [x] Add a README for the new area, and update `src/app/README.md`.
+
+Evidence: `.context/operator-section/m6/` and the `app-` screenshots in
+`.context/operator-section/shots/`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

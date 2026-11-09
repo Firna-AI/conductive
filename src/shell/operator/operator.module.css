@@ -1,0 +1,32 @@
+/*
+ * The toggle of the table under a daily chart. It has the look of the
+ * table toggle of the Firna chart, whose table names each day by a number.
+ */
+.tableFooter {
+  display: flex;
+  padding-top: 8px;
+}
+
+.tableToggle {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: none;
+  color: var(--ui-muted);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tableToggle:hover {
+  background: var(--ui-soft);
+}
+
+.tableToggle:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}
+
+.table {
+  padding-top: 8px;
+}

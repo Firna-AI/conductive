@@ -4,15 +4,8 @@ import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+import { selfSuspendWarning, suspendFiles, suspendStops } from './operatorCopy'
 import { targetName, type Target } from './targets'
-
-/** What a suspension stops, and what the members keep, for each kind. */
-function stops(target: Target): string {
-  const name = targetName(target)
-  return target.kind === 'user'
-    ? `${name} is signed out everywhere and cannot sign in. Their workspaces stop, and no member can start them until an admin moves them to another member.`
-    : `Every cloud computer and build of ${name} stops now. Members can still open and read it, but they cannot change it or start a workspace.`
-}
 
 /**
  * The operator confirms a suspension. The dialog says what stops, what
@@ -47,17 +40,12 @@ export function SuspendDialog(props: {
       viewport={props.viewport}
     >
       {props.self ? (
-        <Notice
-          icon={TriangleAlert}
-          title="This is your own account. You will be signed out, and another operator must lift the suspension."
-          tone="danger"
-        />
+        <Notice icon={TriangleAlert} title={selfSuspendWarning} tone="danger" />
       ) : null}
-      <DialogText>{stops(props.target)}</DialogText>
       <DialogText>
-        A stopped workspace gets no restart near day 14, so its files can be
-        deleted. Lift gives the access back.
+        {suspendStops(props.target.kind, targetName(props.target))}
       </DialogText>
+      <DialogText>{suspendFiles}</DialogText>
     </ConfirmDialog>
   )
 }
