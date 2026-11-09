@@ -217,3 +217,63 @@ it('shows the newest state of all history pages after the final page, then the l
   send(page([githubEvent(8, 'checks-failed')]))
   expect(states).toEqual(['checks-failed', 'merged'])
 })
+
+it('replays an unfinished GitHub update after reconnects when each read fails', async () => {
+  const server = new FakeApiServer()
+  server.json('GET', bannerPath, unavailable, 503)
+  const store = new GitHubStore(target)
+  const after: number[] = []
+  let send: (message: WorkspaceSocketMessage) => void = () => {}
+  const source = {
+    fetch: server.fetch,
+    delay: new ManualDelay().delay,
+    subscribe: (
+      position: number,
+      listener: (message: WorkspaceSocketMessage) => void,
+    ) => {
+      after.push(position)
+      send = listener
+      listener({
+        type: 'history',
+        history:
+          position < 32
+            ? {
+                events: position < 2 ? [githubEvent(2, 'checks-failed')] : [],
+                throughEventNumber: 40,
+                hasMore: true,
+                nextAfterEventNumber: 32,
+              }
+            : { events: [], throughEventNumber: Math.max(position, 40) },
+      })
+      return () => {}
+    },
+  }
+  let leave = store.connect(source)
+  await store.load()
+  for (let reconnect = 0; reconnect < 2; reconnect += 1) {
+    leave()
+    leave = store.connect(source)
+    await store.load()
+  }
+  const pending = shown(store)
+  send({
+    type: 'history',
+    history: { events: [], throughEventNumber: 40 },
+  })
+  const replayed = shown(store)
+  leave()
+  leave = store.connect(source)
+  await store.load()
+  send({ type: 'event', envelope: githubEvent(41, 'merged') })
+  leave()
+  leave = store.connect(source)
+  await store.load()
+  leave()
+
+  expect({ after, pending, replayed, final: shown(store) }).toEqual({
+    after: [0, 0, 0, 40, 41],
+    pending: 'error',
+    replayed: 'checks-failed',
+    final: 'merged',
+  })
+})

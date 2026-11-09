@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import astro from 'eslint-plugin-astro'
 import reactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
@@ -12,6 +13,8 @@ export default defineConfig([
     'dist',
     '.wrangler',
     'coverage',
+    '.astro',
+    'public/_site',
   ]),
   {
     files: ['**/*.{ts,tsx}'],
@@ -25,4 +28,5 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  astro.configs.recommended,
 ])

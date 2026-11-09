@@ -6,6 +6,8 @@ import { browserDelay, type WorkspaceEventSource } from '../events'
 import {
   windowFocus,
   windowInput,
+  windowKeys,
+  windowPlatform,
   windowStorage,
   windowVisibility,
   type AppServices,
@@ -74,6 +76,8 @@ export function createFakeServices(search: string): AppServices {
     delay: browserDelay,
     onFocus: windowFocus(window),
     onInput: windowInput(window),
+    onKey: windowKeys(window),
+    platform: windowPlatform(window),
     visible: windowVisibility(window),
     storage: windowStorage(window),
     newId,

@@ -100,7 +100,7 @@ the workspace stores, and the raw event streams of feature stores.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the focus, saved drafts, and New workspace.
+layers, the command palette, the focus, saved drafts, and New workspace.
 
 ## Rules for this code
 
@@ -124,12 +124,15 @@ layers, the focus, saved drafts, and New workspace.
   open, it can schedule the next mark of the new visit.
 - One follower owns the requests and the timer of a build log. After it
   stops, an answer changes nothing and schedules nothing.
-- Timers, the focus, the visibility, and the input of the page come from
-  `AppServices` (`delay`, `onFocus`, `visible`, and `onInput`), so that no
-  unit test runs a real timer or needs a browser page. The browser hears
-  the input in the capture phase, before a field can stop it. An open
-  workspace counts the input anywhere on the page as activity, at most
-  once a minute.
+- Timers, the focus, the visibility, the input, and the keys of the page
+  come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
+  `onKey`), so that no unit test runs a real timer or needs a browser
+  page. The browser hears the input and the keys in the capture phase,
+  before a field can stop them. An open workspace counts the input
+  anywhere on the page as activity, at most once a minute. `onKey` is not
+  passive, so the palette key stops the browser's own action.
+  `AppServices.platform` says whether the keyboard is a Mac, which
+  chooses the palette key and its hint.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
@@ -142,7 +145,7 @@ layers, the focus, saved drafts, and New workspace.
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
 fake API, requests or answers that wait for the test (also two at one
 path), a manual timer with the wait of each pending timer, a manual page
-focus, visibility, and input, and a recording event source.
+focus, visibility, input, and keys, and a recording event source.
 `../shell/test-render.tsx` draws a screen with every provider through
 server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
@@ -203,6 +206,25 @@ clicks, types, and lets the answers of the fake API settle.
   connects, and shows only the new store. It also checks when the hook keeps
   a store, connects it again, or makes a new one.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
+- `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
+  the tab opened last, from `AppModel.lastOrg`, or else the first org that
+  is not deleted.
+- `palette/`: the command palette without React. `palette-results.ts`
+  gives the groups and the empty state of each tab for a query, from
+  `palette-groups.ts` and the rows of `palette-rows.ts`. `matcher.ts`
+  ranks the matches. `commands.ts` holds the labels and the search words.
+  `page-actions.ts` gives the offers of the parts of the page and
+  `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
+  `palette-keys.ts` the palette key and what it does, and `controller.ts`
+  the open state and the offers of one tab, with `show`, the one way to
+  open the palette.
+- `../shell/palette/`: the layer of the palette. `PaletteProvider.tsx`
+  hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
+  frame, `palette-context.ts` gives `usePaletteOffer` and
+  `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
+- `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
+  which say whether they closed, and the modal layers with their owners.
+  The palette reads them before it opens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs.

@@ -4,6 +4,7 @@ import { recoverLifecycleTurns } from './durable-turns'
 import { isConfirmedStopped } from './confirmed-stop'
 import {
   IDLE_MS,
+  RESTORE_POLL_MS,
   type DurableLifecycleState,
   type LifecycleHooks,
   type LifecycleStorage,
@@ -25,7 +26,14 @@ export async function advanceLifecycleAlarm(
   }
   state = await recoverLifecycleTurns(state, hooks)
   let stopPending = false
-  if (!state.runnerConnected && !isConfirmedStopped(state) && hooks.reconcile) {
+  const restoreDue =
+    state.restoreWatchAt !== undefined && state.restoreWatchAt <= now()
+  if (
+    !state.runnerConnected &&
+    !isConfirmedStopped(state) &&
+    hooks.reconcile &&
+    !(restoreDue && hooks.checkRestore && state.state !== 'error')
+  ) {
     state = reconciledLifecycle(state, await hooks.reconcile(), now())
   }
   if (isConfirmedStopped(state)) {
@@ -49,6 +57,24 @@ export async function advanceLifecycleAlarm(
       result === 'pending' ? undefined : (result ?? 'stopped'),
       now(),
     )
+  }
+  if (stopPending) state = { ...state, restoreWatchAt: undefined }
+  if (
+    restoreDue &&
+    !stopPending &&
+    !isConfirmedStopped(state) &&
+    state.state !== 'error' &&
+    hooks.checkRestore
+  ) {
+    const result = await hooks.checkRestore()
+    state =
+      result === 'pending' || result === 'done'
+        ? {
+            ...state,
+            restoreWatchAt:
+              result === 'pending' ? now() + RESTORE_POLL_MS : undefined,
+          }
+        : reconciledLifecycle(state, result, now())
   }
   await write(state)
   if (stopPending) await storage.setAlarm(now() + 30_000)
