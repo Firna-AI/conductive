@@ -16,7 +16,7 @@
 - **Root question:** When the user hides the right column, how long does it stay hidden?
 - **Options:**
   - **A.** Until the page reloads or closes, as now. No doc changes. Effort: Small.
-  - **B.** Across reloads and tabs in the same browser. `PanelLayout` keeps the choice in the browser storage beside the panel widths, and a browser that refuses its storage keeps it until the page closes. Update the architecture doc in both places and the Privacy notice line, so that they name whether the right column shows. Effort: Small.
+  - **B.** Across reloads and tabs in the same browser. `PanelLayout` keeps the choice in the browser storage beside the panel widths, and a browser that refuses its storage keeps it until the page closes. Update the architecture doc in both places. `AGENTS.md` then asks for a full read of both legal pages, `src/marketing/terms.ts` and `src/marketing/privacy.ts`, and an update of each sentence that restates the fact. Today that is the "Panel widths" line of the Privacy notice. Effort: Small.
   - **C.** On every device of the user. The Worker keeps the choice as a setting of the user. It needs a field in the account API, a D1 migration, a write at each press of the toggle, and the same doc changes as B. Effort: Medium.
 - **Left out:** A choice for each workspace, because the widths are one choice for the tab, and a choice for each workspace makes the column jump at each switch. The toggle keeps one choice for the tab, as a design call of 2026-11-08.
 - **Wider fix:** None, because this is one choice, not a class of problem.
