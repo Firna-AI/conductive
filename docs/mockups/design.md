@@ -136,6 +136,11 @@ chat, and five tabs at the bottom.
   passed its limit names that limit, as
   `app/org-settings/cloud-computer/build-failed/time-limit`,
   `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show.
+- A new org has no image until its first build succeeds. Until then New
+  workspace keeps Send off under a notice with the state of that build, as
+  `app/new-workspace/first-build` shows. A notice of work that runs, such
+  as that build, shows a spinner in place of its icon: `Notice` in
+  `src/components/common/` takes `busy`.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no

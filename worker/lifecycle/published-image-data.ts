@@ -1,5 +1,6 @@
 import { activeOrgIdPredicate } from '../data/org-access'
 import { HttpError } from '../http'
+import { runningBuild } from './build-data'
 import { readSavedScript, type SavedScript } from './saved-script'
 import { readRepositories, type SelectedRepository } from './settings-data'
 import {
@@ -21,12 +22,18 @@ export const publishedRepositorySource = `${publishedImageSource}
 
 export type ImageAdmissionFailure = 'image_required' | 'repository_not_found'
 
-export function imageAdmissionError(code: ImageAdmissionFailure): HttpError {
+export async function imageAdmissionError(
+  db: D1Database,
+  orgId: string,
+  code: ImageAdmissionFailure,
+): Promise<HttpError> {
   return code === 'image_required'
     ? new HttpError(
         409,
         code,
-        'Ask an org admin to build the cloud computer image first.',
+        (await runningBuild(db, orgId))
+          ? 'The cloud computer is still being prepared.'
+          : 'The cloud computer needs a build. Ask an org admin to build it.',
       )
     : new HttpError(404, code, 'The repository is not available.')
 }
@@ -42,7 +49,7 @@ export async function readImageRepositories(
     )
     .bind(orgId)
     .first<{ repositoriesJson: string }>()
-  if (!image) throw imageAdmissionError('image_required')
+  if (!image) throw await imageAdmissionError(db, orgId, 'image_required')
   return readRepositories(JSON.parse(image.repositoriesJson)).filter(
     (repository) => repository.orgId === orgId,
   )
@@ -74,12 +81,13 @@ export async function readCreationImage(
       startupScript: string
       environmentCiphertext: string | null
     }>()
-  if (!image) throw imageAdmissionError('image_required')
+  if (!image) throw await imageAdmissionError(db, orgId, 'image_required')
   const repositories = readRepositories(JSON.parse(image.repositoriesJson))
   const repository = repositories.find(
     (entry) => entry.id === repositoryId && entry.orgId === orgId,
   )
-  if (!repository) throw imageAdmissionError('repository_not_found')
+  if (!repository)
+    throw await imageAdmissionError(db, orgId, 'repository_not_found')
   return {
     ...image,
     startupScript: readSavedScript(image.startupScript),

@@ -28,6 +28,7 @@ import {
 import { anotherOrg, newOrg } from '../fixtures/repositories'
 import { menuSection } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
+import { paths } from '../paths'
 import {
   ChooseWorkspace,
   DeletedOrg,
@@ -116,20 +117,35 @@ const rails: Readonly<Partial<Record<WorkspaceListState['menu'], RailState>>> =
   }
 
 /**
+ * A new org before its first workspace, and its New workspace page. The
+ * mockups draw the first build of Firna on its own New workspace page.
+ */
+type FreshOrg = {
+  org: Org
+  rail: readonly Org[]
+  form: NewOrg
+  newWorkspaceTo: string
+}
+
+/**
  * The new orgs before their first workspace: the first org of the sign-up,
  * and another org that Create org made beside the user's orgs.
  */
-const newOrgs: Readonly<
-  Partial<
-    Record<
-      WorkspaceListState['list'],
-      { org: Org; rail: readonly Org[]; form: NewOrg }
-    >
-  >
-> = {
-  'new-org': { org: orgs.firna, rail: orgList, form: newOrg },
-  'another-org': { org: orgs.labs, rail: orgListWithLabs, form: anotherOrg },
-}
+const newOrgs: Readonly<Partial<Record<WorkspaceListState['list'], FreshOrg>>> =
+  {
+    'new-org': {
+      org: orgs.firna,
+      rail: orgList,
+      form: newOrg,
+      newWorkspaceTo: paths.firstBuildWorkspace,
+    },
+    'another-org': {
+      org: orgs.labs,
+      rail: orgListWithLabs,
+      form: anotherOrg,
+      newWorkspaceTo: paths.newWorkspace,
+    },
+  }
 
 function MobileList(props: { state: WorkspaceListState }) {
   const { list, menu, palette } = props.state
@@ -167,6 +183,7 @@ function MobileList(props: { state: WorkspaceListState }) {
         failed={list === 'failed'}
         menu={listMenu(menu)}
         menuStyle="sheet"
+        newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
         sections={fresh ? newOrgSections() : workspaceSections()}
       />
@@ -234,9 +251,15 @@ export function WorkspaceListScreen(props: {
     return (
       <AppFrame
         rail={rail}
-        sidebar={<Sidebar org={fresh.org} sections={newOrgSections()} />}
+        sidebar={
+          <Sidebar
+            newWorkspaceTo={fresh.newWorkspaceTo}
+            org={fresh.org}
+            sections={newOrgSections()}
+          />
+        }
       >
-        <NewOrgEmpty org={fresh.form} />
+        <NewOrgEmpty newWorkspaceTo={fresh.newWorkspaceTo} org={fresh.form} />
       </AppFrame>
     )
   }
