@@ -1,6 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react'
+import type {
+  CellAlign,
+  TableCells,
+} from '../../../../../src/markdown/table-rows'
 import { classes } from './classes'
-import type { CellAlign, TableCells } from './tableCells'
 import styles from './MarkdownTable.module.css'
 
 /** The most columns that one cell can span. HTML reads a larger span as it. */

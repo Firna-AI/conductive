@@ -2,7 +2,7 @@
  * The contents of the files that the previews show.
  */
 
-import type { TableCells } from '../components/common/tableCells'
+import type { TableCells } from '../../../../src/markdown/table-rows'
 
 export type MarkdownBlock =
   | { kind: 'h1' | 'h2' | 'p'; text: string }

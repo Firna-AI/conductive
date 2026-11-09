@@ -2,8 +2,8 @@
  * Chat transcripts. Text in backticks renders as inline code.
  */
 
+import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
-import type { TableCells } from '../components/common/tableCells'
 import { changedFiles, type ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
 import { lostConversations } from './lostConversations'

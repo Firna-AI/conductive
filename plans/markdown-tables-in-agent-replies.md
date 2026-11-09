@@ -15,7 +15,7 @@ the existing text events and saved messages.
 Contract owners:
 
 - [Chat and events](../docs/protocol/chat-and-events.md): live text and saved history.
-- [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md): existing file-preview table behavior.
+- [Workspace tools](../docs/protocol/workspace-tools.md): existing file-preview table behavior.
 - [Chat README](../src/chat/README.md): chat entry points and tests.
 - [Files README](../src/files/README.md): the existing Markdown implementation.
 - [Mockups README](../docs/mockups/README.md): desktop and phone visual requirements.
@@ -114,6 +114,8 @@ Agent design calls, dated 9 November 2026:
 - Render cells as React text and elements. Supplied HTML remains text.
 - Keep sample rows in mockups, development fixtures, and tests.
   Add no dependency, input rejection, validation rule, or new gate.
+- The source-preserving row-reader extraction can follow the mockups independently of documentation.
+  Behavioral chat changes still depend on the requirements milestone.
 
 ## Replaced ways
 
@@ -159,6 +161,10 @@ Evidence: `.context/markdown-table-support/milestone-1-report.md`.
 
 Depends on: 1
 
+Status: Blocked before edits. The prescribed Claude model rejected both the
+initial request and one retry with HTTP 429. A user model override is required
+to use another model for this work.
+
 Document the chosen table behavior without changing unrelated Markdown requirements.
 
 - [ ] Add `docs/protocol/chat-markdown.md` with table syntax, short rows, streaming, safety, and scrolling requirements.
@@ -171,17 +177,34 @@ Document the chosen table behavior without changing unrelated Markdown requireme
 - [ ] Update each legal sentence that restates a changed fact.
 - [ ] Check every relative link in changed Markdown.
 
+## Milestone 2a: Shared table row reader
+
+Tags: ui
+
+Depends on: 1
+
+Status: Completed on 9 November 2026.
+
+Extract existing file-preview logic without adding or changing behavior.
+This preparation does not depend on the new chat requirements.
+
+- [x] Move shared table data types into the neutral plain TypeScript module.
+- [x] Extract row reading, alignment, and separator checks from the file table parser.
+- [x] Move the file parser to the shared reader while preserving its padding and budget.
+- [x] Move every type and helper consumer to the new owner. Remove the replaced helpers and type module.
+- [x] Run the existing file Markdown tests and relevant typechecks, lint, and formatting checks.
+
+Evidence: `.context/markdown-table-support/milestone-3-core-report.md`.
+
 ## Milestone 3: Tables in agent replies
 
 Tags: ui
 
-Depends on: 2
+Depends on: 2 and 2a
 
 Share the existing table rules and render chat tables with the chosen short-row behavior.
 
 - [ ] Add a failing regression through the public `AgentText` component for the reported table shape.
-- [ ] Extract row reading, alignment, separator checks, and shared types from the file table parser.
-- [ ] Move the file parser to the shared reader while preserving its padding and budget.
 - [ ] Move the file renderer to the shared table view while preserving its current presentation.
 - [ ] Add table blocks to the chat parser before paragraph lines join.
 - [ ] Render chat tables with actual row cells and a final cell that spans missing columns.
@@ -190,7 +213,7 @@ Share the existing table rules and render chat tables with the chosen short-row 
 - [ ] Keep current inline formatting, fenced code, and readable incomplete input.
 - [ ] Constrain the table wrapper to scroll inside the chat column.
 - [ ] Add a streamed table to the chat development page.
-- [ ] Remove replaced helpers and unused styles after all callers move.
+- [ ] Remove replaced table markup and unused styles after all callers move.
 - [ ] Update the READMEs with the final entry points and check their links.
 
 ## Milestone 4: Verification, commit, review, and pull request
