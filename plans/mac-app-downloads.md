@@ -126,17 +126,44 @@ Agent calls on 9 November 2026:
   to the release page was rejected, because it shows nine files. A Worker
   route that looks up the newest version was rejected, because it adds a
   GitHub request to each download.
-- One source: one module that imports nothing holds the fixed DMG names.
-  `src/marketing/links.ts` builds the download addresses from it, beside
-  `sourceRepositoryHref`, for the site and the mockups.
-  `desktop/scripts/release.ts` passes the same names to electron-builder.
-  Reason: the links break when two copies of a name differ, and the
-  publish step already finds each DMG by its `.dmg` suffix and its chip.
+- One source: `docs/mockups/src/brand.ts`, which imports nothing, derives
+  the fixed DMG names from the product name. `src/marketing/links.ts`
+  builds the download addresses from them, beside `sourceRepositoryHref`,
+  for the site and the mockups. `desktop/scripts/release.ts`, which
+  already reads `brand.ts`, passes the same names to electron-builder.
+  Reason: the links break when two copies of a name differ, and code reads
+  the product name only from `brand.ts`. The publish step already finds
+  each DMG by its `.dmg` suffix and its chip.
+- The words of the Mac app section are their own export of
+  `src/marketing/features.ts`, not an entry of `features`. Reason: the
+  site renders each entry of `features`, so the section stays off the
+  live site until Milestone 5.
+- Oldest macOS version: macOS 13, from `LSMinimumSystemVersion` 13.0 in
+  the `Info.plist` of the app of release `v0.2.0`, read on 9 November
+  2026.
 - Two pull requests. The first holds the mockups, the docs, and the fixed
   names. The second holds the site and the legal drafts, and it merges
   only after a release with the fixed names is published. Reason: each
   push to `main` deploys the site, so the links of the site must work at
   its merge.
+
+Agent calls of Milestone 1 on 9 November 2026, from its mockups:
+
+- The Mac app section comes after the Phone section, so that the two
+  device sections sit together. Its headline is "Work from the Mac app."
+- The buttons are "Download for Mac (Apple silicon)", filled, and
+  "Download for Mac (Intel)", outlined. Reason: two links with the same
+  name confuse screen readers. They are links styled as buttons.
+- The phone header has no Download link, because it fits only three items.
+  The footer link reaches the section on a phone.
+- The page description of the home page is its hero sentence, as the site
+  already does. The page title keeps its words.
+- The picture list moved its capture pages, captures, and file names into
+  `docs/mockups/src/screens/marketingPictureCaptures.ts`. Reason: the Mac
+  picture took the list over the limit of 300 lines.
+- The capture command resets only the animations of the document timeline.
+  Reason: Chrome refuses a time value for an animation that scrolling
+  drives, such as the fade of the waiting requests in the Mac picture.
 
 ## Milestone 1: Mockups
 
@@ -148,30 +175,31 @@ Draw the Mac app on the home page: a feature section with a real picture
 of the Mac window and both downloads, links from the header and the
 footer, and the Mac app in the hero and the footer.
 
-- [ ] Add a Mac app picture to
+- [x] Add a Mac app picture to
       `docs/mockups/src/screens/marketingPictureList.ts`, with its capture
       page in `marketingPictures.tsx`. It shows a real screen of
       `MacAppScreen`: the window buttons, the sidebar, and a command
       request that waits for Allow. The phone layout shows the same file,
       because the Mac app has no phone layout.
-- [ ] Add the words of the Mac app section to `src/marketing/features.ts`,
+- [x] Add the words of the Mac app section to `src/marketing/features.ts`,
       and draw the section in `MarketingScreen.tsx`. Show "Download for
       Mac" for Apple silicon and for Intel, and the oldest macOS version.
       Claim only what `docs/protocol/desktop-app.md` states.
-- [ ] Add the module of the fixed DMG names, and build the two download
-      addresses from it in `src/marketing/links.ts`.
-- [ ] Add a Download link to the header and a Mac app link to the Product
+- [x] Derive the fixed DMG names from the product name in
+      `docs/mockups/src/brand.ts`, and build the two download addresses
+      from them in `src/marketing/links.ts`.
+- [x] Add a Download link to the header and a Mac app link to the Product
       column of the footer. Both go to the section.
-- [ ] Name the Mac app in the hero sentence, the page description, and the
+- [x] Name the Mac app in the hero sentence, the page description, and the
       footer tagline.
-- [ ] Remove the desktop app from the claims that the page leaves out, in
+- [x] Remove the desktop app from the claims that the page leaves out, in
       `docs/mockups/marketing-site.md` and in the rationale of
       `docs/mockups/src/entries/marketing/index.mockup.tsx`.
-- [ ] Update the description of that entry, which names six features and a
+- [x] Update the description of that entry, which names six features and a
       header without the Mac app.
-- [ ] Run `npm run mockups:check`. Smoke-test the home page at desktop and
+- [x] Run `npm run mockups:check`. Smoke-test the home page at desktop and
       phone sizes, in light and dark.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -184,9 +212,8 @@ the code changes.
 - [ ] In "Releases" of `docs/protocol/desktop-app.md`, state that each DMG
       name has no version, so that the latest release always gives the
       newest DMG of each chip at one address.
-- [ ] State there the oldest macOS version that a release build accepts.
-      Read it from `LSMinimumSystemVersion` in the `Info.plist` of the
-      release `v0.2.0`.
+- [ ] State there that a release build runs on macOS 13 or later, from
+      its `LSMinimumSystemVersion`.
 - [ ] In `docs/architecture.md`, say that the marketing site links the
       Mac app downloads.
 - [ ] Check each relative link of the changed Markdown files.
@@ -229,7 +256,13 @@ them.
 - [ ] Build the Mac app section, both downloads, the oldest macOS version,
       the header and footer links, and the new copy, in the Astro
       components of `src/marketing/`.
-- [ ] Capture the pictures with `npm run marketing:pictures`.
+- [ ] Move the hero sentence and the footer tagline into one shared export
+      that the site and the mockups both read. Today `index.astro` holds
+      the hero sentence twice, and `SiteFooter.astro` holds the tagline.
+- [ ] Keep the header links on one line, as the mockup header does with
+      `nowrap`. Without it, "Sign in" wraps between 760 and 776 px.
+- [ ] Capture the pictures again with `npm run marketing:pictures` when a
+      screen of a picture changed after Milestone 1.
 - [ ] Add or change the tests that the `testing` skill asks for.
 - [ ] Update `src/marketing/README.md`.
 - [ ] Compare each changed page with its mockup at desktop and phone

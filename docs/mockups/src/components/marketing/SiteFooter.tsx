@@ -47,6 +47,15 @@ export function SiteFooter(props: {
               Features
             </ScreenLink>
           </li>
+          <li>
+            <ScreenLink
+              className={styles.link}
+              fragment="mac-app"
+              to={props.links.home}
+            >
+              Mac app
+            </ScreenLink>
+          </li>
         </Column>
         <Column title="Account">
           <li>
