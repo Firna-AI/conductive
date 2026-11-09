@@ -1,0 +1,84 @@
+/* The top of the page uses the type of the text pages of the site. */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 40px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 17px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* The scope note is a quiet box with a full outline and no coloured edge. */
+.scope {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xxl);
+  background: var(--ui-sidebar);
+}
+
+.scopeIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ui-primary);
+}
+
+.scopeText {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 14px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.scopeTitle {
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-heading);
+}
+
+.facts {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* A day never breaks across two lines. */
+.facts time {
+  white-space: nowrap;
+}
+
+.mobile .title {
+  font-size: 30px;
+}
+
+.mobile .lead {
+  font-size: 16px;
+}

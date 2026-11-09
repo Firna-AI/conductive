@@ -9,6 +9,7 @@ how a screen is built, and links to the other pages.
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
+| `marketing/from-conductor` | Three layouts of the page for people who move from Conductor Cloud, for a design comparison: by area, by status, and by task |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
@@ -40,7 +41,9 @@ with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
-one screen. `app/org-settings/cloud-computer` and its building
+one screen. `marketing/from-conductor` has no screen of its own either. Its
+index document, `index.md`, gives the notes of the design comparison and
+links to its three layouts, and each layout links back to it. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own

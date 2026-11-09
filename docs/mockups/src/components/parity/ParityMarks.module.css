@@ -1,0 +1,53 @@
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ui-ink2);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.success .icon {
+  color: var(--ui-success);
+}
+
+.active .icon {
+  color: var(--ui-primary);
+}
+
+.neutral .icon {
+  color: var(--ui-ink2);
+}
+
+.muted .icon {
+  color: var(--ui-muted);
+}
+
+/* A due day reads as a time of the app: the label font, in capitals. */
+.due {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+.dueIcon {
+  flex-shrink: 0;
+  color: var(--ui-primary);
+}
+
+.undated {
+  color: var(--ui-muted);
+}

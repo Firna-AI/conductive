@@ -59,7 +59,7 @@ the child pages of `app/account`, `app/orgs/suspended`, `app/banner`, and
 
 | Folder or file            | Contents                                                            |
 | ------------------------- | ------------------------------------------------------------------- |
-| `src/entries/`            | The Mokly root: entry modules, folder records, and the flows        |
+| `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files      |
