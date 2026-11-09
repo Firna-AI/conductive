@@ -36,13 +36,11 @@ it.each(['failed', 'empty'] as const)(
       run.mockRejectedValueOnce(new Error('private answer'))
     else run.mockResolvedValueOnce({ response: 'Title: ""' })
     run.mockResolvedValue({ response: 'Fix chat titles' })
-    const warning = vi
-      .spyOn(console, 'warn')
-      .mockImplementation(() => undefined)
     const { fixture, first, acceptFirst, drain } = await createTitleFixture(
       harness,
       run,
     )
+    await fixture.actor.api.controls.captureWarnings(true)
     await acceptFirst()
     await drain()
     expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
@@ -51,8 +49,8 @@ it.each(['failed', 'empty'] as const)(
         .bind(WORKSPACE_ID)
         .first('name'),
     ).toBe('')
-    expect(warning).toHaveBeenCalledTimes(1)
-    fixture.restart()
+    expect(await fixture.actor.api.controls.warningCount()).toBe(1)
+    await fixture.restart()
     await fixture.send(
       first.sessionId,
       'retry-title',
@@ -81,7 +79,6 @@ it('asks nothing for an attachment-only first message and titles from the next a
   const run = vi
     .fn<TitleModelCall>()
     .mockResolvedValue({ response: 'Inspect login screenshot' })
-  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   const { fixture, first, acceptFirst, drain } = await createTitleFixture(
     harness,
     run,
@@ -100,12 +97,13 @@ it('asks nothing for an attachment-only first message and titles from the next a
       }),
     },
   )
+  await fixture.actor.api.controls.captureWarnings(true)
   first.request.text = ''
   first.request.attachmentIds = ['screenshot']
   await acceptFirst()
   await drain()
   expect(run).not.toHaveBeenCalled()
-  expect(warning).not.toHaveBeenCalled()
+  expect(await fixture.actor.api.controls.warningCount()).toBe(0)
   expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
   await fixture.send(
     first.sessionId,

@@ -1,5 +1,9 @@
 import { expect, it } from 'vitest'
 
+import {
+  nativeWorkspaceStorage,
+  type WorkspaceValues,
+} from './platform-storage'
 import { setupBackendTests } from './backend-test-hooks'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
@@ -32,13 +36,16 @@ it.each([
     const state = await actor.endpoint().readLifecycle()
     if (!state) throw new Error('Missing workspace lifecycle')
     const now = state.lastActivityAt + IDLE_MS
-    const alarms = workspaceTaskAlarms(actor.storage)
+    const alarms = workspaceTaskAlarms(nativeWorkspaceStorage(actor.storage))
     await alarms.set('lifecycle', null)
     await alarms.set(
       'lifecycle:changed',
       changedAfter === null ? null : now + changedAfter,
     )
-    await actor.storage.put('number', 'alarm:lifecycle:run', now + leaseAfter)
+    await actor.storage.put<WorkspaceValues['number']>(
+      'alarm:lifecycle:run',
+      now + leaseAfter,
+    )
     await alarms.schedule()
 
     await fixture.advanceTo(now, id)
@@ -49,7 +56,7 @@ it.each([
       runnerConnected: false,
     })
     expect(
-      await actor.storage.get('number', 'alarm:lifecycle:run'),
+      await actor.storage.get<WorkspaceValues['number']>('alarm:lifecycle:run'),
     ).toBeUndefined()
   },
 )

@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
-import { heldOperation } from './platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import { retentionCommandFixture } from './retention-command-test-support'
 import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 
@@ -22,7 +22,7 @@ it('polls a retained never-ending maintenance script across reconstruction and s
       await held.wait()
   }
   const commands = boat.commandRequests.length
-  const advancing = platform.endpoint().alarm()
+  const advancing = platform.endpoint().advance()
   try {
     const result = await Promise.race([
       advancing.then(() => 'advanced'),
@@ -37,10 +37,10 @@ it('polls a retained never-ending maintenance script across reconstruction and s
   expect(boat.commandRequests.slice(commands)).toEqual([
     expect.objectContaining({ detached: true }),
   ])
-  platform.restart()
+  await platform.restart()
   await fixture.tick(DEADLINE - 1)
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
-  expect(platform.storage.alarmAt).toBe(DEADLINE)
+  expect(await platform.storage.getAlarm()).toBe(DEADLINE)
   expect(boat.commandRequests).toHaveLength(commands + 1)
   expect(boat.statusRequests.at(-1)).toEqual({
     processId: 5,
@@ -48,7 +48,7 @@ it('polls a retained never-ending maintenance script across reconstruction and s
     stderrOffset: 0,
   })
   boat.failStop = true
-  platform.restart()
+  await platform.restart()
   await fixture.tick(DEADLINE)
   expect(await fixture.progress()).toEqual({ phase: 'stop', error: FAILURE })
   expect(boat.stopIds).toEqual(['bx_1'])
@@ -58,7 +58,7 @@ it('polls a retained never-ending maintenance script across reconstruction and s
   })
   boat.failStop = false
   boat.commandRunning = false
-  platform.restart()
+  await platform.restart()
   await fixture.tick(DEADLINE + 5_000)
   expect(await fixture.progress()).toBeNull()
   expect(boat.stopIds).toEqual(['bx_1', 'bx_1'])
@@ -81,7 +81,7 @@ it('hands an active maintenance script to confirmed stop cleanup before acceptin
   const fixture = await retentionCommandFixture(await backendFixture())
   const { boat, platform, runtime, org, user, id } = fixture
   boat.commandRunning = true
-  await platform.endpoint().alarm()
+  await platform.endpoint().advance()
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
   const commands = boat.commandRequests.length
   boat.commandRunning = false

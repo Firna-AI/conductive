@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
   AGENT_BYTES,
@@ -11,7 +10,6 @@ import {
   startTurn,
   terminalEvent,
 } from './turn-lifecycle.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -22,12 +20,11 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('shares a held message copy with its continuation and preserves agent edits after delivery', async () => {
   const { copy, fixture, file, session, runner } =
     await attachmentOwnerFixture(harness)
   const messageId = 'held-continuation-file'
-  fixture.transport.dropOutgoing = (command) => {
+  fixture.observeOutgoing((command) => {
     if (
       (command.type === 'turn' || command.type === 'message') &&
       command.message.id === messageId
@@ -35,7 +32,7 @@ it('shares a held message copy with its continuation and preserves agent edits a
       for (const attachment of command.attachments)
         copy.edit('sandbox-owner', attachment.path)
     return false
-  }
+  })
   const turn = await startTurn(fixture, runner, session.id, 'held-start')
   try {
     expect(
@@ -83,7 +80,6 @@ it('shares a held message copy with its continuation and preserves agent edits a
     runner.disconnect()
   }
 })
-
 it('keeps message copy proof after continuation replaces its command and after restart', async () => {
   const { copy, fixture, file, session, runner } =
     await attachmentOwnerFixture(harness)
@@ -110,7 +106,7 @@ it('keeps message copy proof after continuation replaces its command and after r
     expect.soft(copy.writes).toHaveLength(1)
     expect.soft(copy.read('sandbox-owner', path)).toEqual(AGENT_BYTES)
     runner.disconnect()
-    fixture.restart()
+    await fixture.restart()
     await fixture.connect(runner)
     await fixture.drainAttachments()
     expect.soft(messageCommands(runner, messageId)).toHaveLength(3)
@@ -123,7 +119,6 @@ it('keeps message copy proof after continuation replaces its command and after r
     runner.disconnect()
   }
 })
-
 it('fails the current continuation when its shared message copy fails', async () => {
   const { copy, fixture, file, session, runner } = await attachmentOwnerFixture(
     harness,

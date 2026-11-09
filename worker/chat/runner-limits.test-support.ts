@@ -1,123 +1,61 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
-import { MemoryChatStorage } from './memory-storage.test-support'
-import type { SessionLoginMetadata } from './login-availability'
-import { RunnerChannel } from './runner-channel'
-import { parseRunnerTransport } from './runner-input'
-import { ChatStore, type ChatTransaction } from './store'
-import type { ChatDependencies, RunnerPeer } from './types'
+import type { ChatTransaction } from './store'
+import type { NativeChatCallbacks } from '../test-support/native-chat-resolvers'
+import { nativeChatStore } from './native-store.test-support'
+import { seedRunnerWorkspace } from './runner-seed.test-support'
 
-export const context = { sessionId: 'session', turnId: 'turn' }
-/** @public Shared by the history compaction and ordering fixtures. */
-export const choice = {
-  agent: 'claude',
-  model: 'test',
-  effort: 'high',
-} as const
-export const file = (path: string) => ({
-  path,
-  name: path.split('/').at(-1) ?? path,
-  kind: 'file' as const,
-  change: null,
-})
-export const snapshot = (
-  revision: number,
-  partNumber: number,
-  partCount: number,
-  paths: string[],
-) => ({
-  type: 'files.snapshot' as const,
-  tree: { revision, partNumber, partCount, entries: paths.map(file) },
-})
-
-export function numberedRunnerInput(value: unknown) {
-  const input = parseRunnerTransport(value)
-  if (input.type !== 'event')
-    throw new Error('Expected a numbered runner event.')
-  return input
-}
+import { choice, context } from './runner-fixtures.test-support'
 
 export async function createRunnerLimitsFixture(
-  overrides: Partial<ChatDependencies> = {},
+  overrides: NativeChatCallbacks = {},
 ) {
-  const storage = new MemoryChatStorage()
+  const native = await nativeChatStore()
+  const { harness, actor, store } = native
+  await seedRunnerWorkspace(harness)
+  const options = { callbacks: overrides, idPrefix: 'command', idWidth: 0 }
+  await native.configure(options)
   const sent: WorkspaceToRunner[] = []
   const published: WorkspaceEventEnvelope[] = []
   const hooks: WorkspaceEventEnvelope[] = []
-  let closed = 0
-  let failSend = false
-  let commandSequence = 0
-  let connectionSequence = 0
-  let store = new ChatStore(storage, () => 25)
-  const dependencies: ChatDependencies = {
-    readAutomaticTitleWorkspace: async () => ({ name: null }),
-    filterRunnerOutput: async (_transaction, _workspace, input) => ({
-      events: [input],
-      save: async () => undefined,
-    }),
-    runnerAttached: () => undefined,
-    runnerDetached: () => undefined,
-    waitUntil: (promise) => {
-      void promise.catch(() => undefined)
-    },
-    runnerDisconnected: async () => undefined,
-    turnDispatching: async () => true,
-    turnDispatchFailed: async () => undefined,
-    browserOpened: async () => undefined,
-    browserClosed: async () => undefined,
-    now: () => 25,
-    scheduleBrowserCheck: () => () => undefined,
-    scheduleRunnerCheck: () => () => undefined,
-    readRunnerAccess: async () => true,
-    readConnectionAccess: async () => [],
-    randomId: () => `command-${++commandSequence}`,
-    randomConnectionId: () => `connection-${++connectionSequence}`,
-    readLoginMetadata: async () => new Map<string, SessionLoginMetadata>(),
-    resolveLogin: async () => null,
-    resolveAttachments: async () => ({ attachments: [], paths: [] }),
-    prepareAttachments: async () => null,
-    attachmentSandboxId: async () => null,
-    receiveFileResult: async () => undefined,
-    runnerEventStored: async (envelope) => {
-      hooks.push(structuredClone(envelope))
-    },
-    runnerReady: async () => undefined,
-    runnerHello: async () => undefined,
-    matchesObject: () => true,
-    ...overrides,
-  }
-  const publish = (events: readonly WorkspaceEventEnvelope[]) => {
-    published.push(...structuredClone(events))
-  }
-  let channel = new RunnerChannel(store, dependencies, publish)
-  let peer: RunnerPeer
+  let connection = 0
+  let peer = ''
   let streamId = 'stream'
+  let closed = 0
+  const collect = async () => {
+    const batch = await actor.api.peers.take(peer)
+    closed += batch.closed
+    for (const message of batch.messages) {
+      if (message.type === 'event' || message.type === 'history')
+        throw new Error('Unexpected browser message.')
+      sent.push(message)
+    }
+    const events = await actor.api.controls.takeEvents()
+    published.push(...events)
+    hooks.push(
+      ...events.filter(
+        ({ event }) =>
+          !['session.updated', 'message.accepted', 'message.sent'].includes(
+            event.type,
+          ),
+      ),
+    )
+  }
   const connect = async (stream = streamId, restart = false) => {
     streamId = stream
-    if (restart) {
-      store = new ChatStore(storage, () => 25)
-      channel = new RunnerChannel(store, dependencies, publish)
-    }
-    peer = {
-      send: (message) => {
-        if (failSend) throw new Error('Injected network failure')
-        sent.push(structuredClone(message))
-      },
-      close: () => {
-        closed++
-      },
-    }
-    await channel.open(
-      { id: 'workspace', orgId: 'org', archivedAt: null, tokenHash: 'hash' },
-      peer,
-    )
-    await channel.receive(peer, {
+    if (restart) await actor.restart()
+    peer = `runner-${++connection}`
+    await actor.api.peers.connectRunner(peer, {
+      url: 'https://machines.conductive.test/v1/runner',
+      headers: { Authorization: 'Bearer runner-limits-token' },
+    })
+    await actor.api.peers.receiveRunner(peer, {
       type: 'hello',
       protocolVersion: 1,
       workspaceId: 'workspace',
       streamId,
     })
-    await store.settled()
+    await collect()
   }
   await connect()
   await store.change(
@@ -152,25 +90,34 @@ export async function createRunnerLimitsFixture(
         closeAfterStop: false,
       })
     },
-    publish,
+    () => undefined,
   )
+  const raw = async (value: unknown) => {
+    try {
+      await actor.api.peers.receiveRunner(peer, value)
+    } finally {
+      await collect()
+    }
+  }
   return {
-    storage,
+    ...native,
     sent,
     published,
     hooks,
     connect,
-    failCursorCommit: (eventNumber: number) => {
-      storage.beforeCommit = async (staged) => {
-        const stagedStore = new ChatStore(staged, dependencies.now)
-        const cursor = await stagedStore.read('workspace', (view) =>
-          view.cursor(streamId),
-        )
-        if (cursor === eventNumber) throw new Error('Injected storage failure')
-      }
-    },
+    failCursorCommit: async (eventNumber: number) =>
+      native.setStorageHooks({
+        beforeCommit: async (staged) => {
+          if (
+            (await staged.read('workspace', (view) =>
+              view.cursor(streamId),
+            )) === eventNumber
+          )
+            throw new Error('Injected storage failure')
+        },
+      }),
     receive: (eventNumber: number, event: unknown, extra = {}) =>
-      channel.receive(peer, {
+      raw({
         type: 'event',
         streamId,
         eventNumber,
@@ -178,15 +125,17 @@ export async function createRunnerLimitsFixture(
         event,
         ...extra,
       }),
-    raw: (value: unknown) => channel.receive(peer, value),
-    history: () => store.read('workspace', (view) => view.history(0)),
+    raw,
+    history: () => actor.api.controls.history('workspace'),
     read: <T>(work: (view: ChatTransaction) => Promise<T>) =>
       store.read('workspace', work),
     get closed() {
       return closed
     },
-    set failSend(value: boolean) {
-      failSend = value
-    },
+    setFailSend: (fail: boolean) =>
+      actor.api.peers.rule(
+        peer,
+        fail ? { error: 'Injected network failure' } : null,
+      ),
   }
 }

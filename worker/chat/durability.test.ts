@@ -1,10 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { retryRequest, sessionRecord } from './retry.test-support'
 import { terminalEvent } from './turn-lifecycle.test-support'
-
 describe('workspace chat durability', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -16,7 +14,6 @@ describe('workspace chat durability', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('confirms and broadcasts only after an atomic commit', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -30,10 +27,12 @@ describe('workspace chat durability', () => {
     const confirmations = runner.received.length
     const entered = deferred()
     const release = deferred()
-    fixture.storage.beforeCommit = async () => {
-      entered.resolve()
-      await release.promise
-    }
+    await fixture.setStorageHooks({
+      beforeCommit: async () => {
+        entered.resolve()
+        await release.promise
+      },
+    })
     runner.emit({
       type: 'assistant.delta',
       sessionId: session.id,
@@ -55,10 +54,9 @@ describe('workspace chat durability', () => {
       type: 'event',
       envelope: { event: { type: 'assistant.delta', text: 'Durable' } },
     })
-    fixture.storage.beforeCommit = null
-    tab.close()
+    await fixture.clearFaults()
+    await tab.close()
   })
-
   it('continues unanswered messages with their sender after a text-only turn', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -100,7 +98,6 @@ describe('workspace chat durability', () => {
       202,
     )
   })
-
   it('does not dispatch stale commands after a queued login fails', async () => {
     const fixture = await createChatFixture(harness)
     const first = await fixture.createSession()
@@ -134,7 +131,7 @@ describe('workspace chat durability', () => {
       turnId: running.turnId,
       senderId: fixture.member.id,
       choice: CLAUDE,
-      startedAt: 1_800_000_000_000,
+      startedAt: 1800000000000,
       messageIds: ['separate-turn'],
     })
     await fixture.drain()
@@ -190,7 +187,6 @@ describe('workspace chat durability', () => {
     ).toEqual({ type: 'workspace.title', name: 'The stream still works' })
   })
 })
-
 function deferred() {
   let resolve: () => void = () => {
     throw new Error('The deferred promise is not ready.')

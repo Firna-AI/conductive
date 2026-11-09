@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { attachmentFixture, held } from './attachment.test-support'
 import {
@@ -7,7 +6,6 @@ import {
   startTurn,
   terminalEvent,
 } from './turn-lifecycle.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -18,7 +16,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('closes after a failed shared-proof save and recovers the continuation with committed proof', async () => {
   for (const boundary of ['rejected', 'committed'] as const) {
     await harness.reset()
@@ -49,16 +46,20 @@ it('closes after a failed shared-proof save and recovers the continuation with c
     await entered.promise
     runner.emit(terminalEvent(turn, 'finished'))
     await fixture.drain()
-    fixture.storage.beforeCommit = async (staged) => {
-      if (
-        !staged.writes.some((key) => key.startsWith('chat:v1:attachment-copy:'))
-      )
-        return
-      fixture.storage.beforeCommit = null
-      if (boundary === 'rejected')
-        throw new Error('Injected copy-proof save failure')
-      fixture.storage.crashAfterCommit = true
-    }
+    await fixture.setStorageHooks({
+      beforeCommit: async (staged) => {
+        if (
+          !staged.writes.some((key) =>
+            key.startsWith('chat:v1:attachment-copy:'),
+          )
+        )
+          return
+        await fixture.clearFaults()
+        if (boundary === 'rejected')
+          throw new Error('Injected copy-proof save failure')
+        await fixture.failNextCommit('after', 'Injected post-commit crash')
+      },
+    })
     release.resolve()
     await expect(fixture.drainAttachments()).rejects.toThrow(
       boundary === 'rejected'
@@ -67,7 +68,7 @@ it('closes after a failed shared-proof save and recovers the continuation with c
     )
     expect(fixture.transport.closedConnections).toBe(1)
     expect(messageCommands(runner, 'proof-recovery')).toEqual([])
-    fixture.restart()
+    await fixture.restart()
     await fixture.connect(runner)
     await fixture.drainAttachments()
     expect(messageCommands(runner, 'proof-recovery')).toHaveLength(1)

@@ -2,7 +2,7 @@ import { readDeviceRecord } from '../../../src/shared/device-read'
 import { readDeviceValue } from '../../devices/storage'
 import { DEVICE_TEST_NOW } from '../../devices/clock.test-support'
 import { advanceScheduledAlarms } from '../../lifecycle/scheduled-alarms.test-support'
-import { heldOperation } from '../../lifecycle/platform-test-storage'
+import { heldOperation } from '../../test-support/held-operation'
 import type { WorkspaceCompositionEnv } from '../workspace-integration'
 import { Workspace as ReviewWorkspace } from './workspace-review-entry.test-support'
 

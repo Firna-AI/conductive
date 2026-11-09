@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { attachmentFixture, FILE_BYTES, held } from './attachment.test-support'
 import {
@@ -8,7 +7,6 @@ import {
   selectAttachmentComputer,
 } from './attachment-owner.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -19,7 +17,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('binds an owner to its selected computer while a new computer copies independently', async () => {
   const entered = held<void>()
   const release = held<void>()
@@ -63,7 +60,7 @@ it('binds an owner to its selected computer while a new computer copies independ
     expect.soft(copy.lateWrites).toBe(0)
     expect.soft(copy.read('sandbox-new', path)).toEqual(AGENT_BYTES)
     runner.disconnect()
-    fixture.restart()
+    await fixture.restart()
     await selectAttachmentComputer(harness, 'sandbox-old')
     await fixture.connect(runner)
     await fixture.drainAttachments()

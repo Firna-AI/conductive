@@ -1,6 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
 
-import { MemoryChatStorage } from '../chat/memory-storage.test-support'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { DeviceBroker } from './broker'
 import { deviceApprovalPath, deviceCommandsPath } from '../../src/shared/device'
@@ -23,8 +22,10 @@ afterEach(async () => {
 
 it('removes a failed settings send and handles its waiter rejection', async () => {
   harness = await createHarness()
+  const actor = harness.native.actor('device-broker-test')
+  await actor.ready
   const broker = new DeviceBroker(
-    new MemoryChatStorage(),
+    actor.api.storage,
     harness.env,
     async () => undefined,
   )

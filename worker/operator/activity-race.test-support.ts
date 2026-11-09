@@ -1,7 +1,7 @@
 import { expect } from 'vitest'
 
 import { createApp } from '../application'
-import { heldOperation } from '../lifecycle/platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import { realRuntimeFixture } from '../lifecycle/real-runtime-test-support'
 import { runningRuntimeWorkspace } from '../lifecycle/runtime-lifecycle-test-support'
 import { SESSION_COOKIE } from '../security/cookies'

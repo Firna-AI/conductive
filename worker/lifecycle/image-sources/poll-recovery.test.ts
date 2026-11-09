@@ -10,7 +10,7 @@ import {
 } from '../../test-support/harness'
 import { readBuildJob } from '../build-data'
 import { advanceImageBuild } from '../image-builds'
-import { heldOperation } from '../platform-test-storage'
+import { heldOperation } from '../../test-support/held-operation'
 import { WORKSPACE_TOOLS_DIRECTORY } from '../../tools/image'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'

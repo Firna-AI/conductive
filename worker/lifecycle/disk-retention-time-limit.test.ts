@@ -24,7 +24,7 @@ async function retentionFixture() {
   const id = created.workspace.id
   const platform = fixture.actors.get(id)
   if (!platform) throw new Error('Missing workspace controller')
-  fixture.setTime(TEST_TIME)
+  await fixture.setTime(TEST_TIME)
   fixture.boat.states.set('bx_1', 'archived')
   await platform.endpoint().lifecycleStopped()
   await fixture.advanceTo(STARTED_AT, id)
@@ -50,8 +50,8 @@ it('ends an unready retention restart at its original deadline through phase cha
   boat.states.set('bx_1', 'provisioning')
   await fixture.tick(DEADLINE - 1)
   const before = await fixture.progress()
-  const alarm = platform.storage.alarmAt
-  platform.restart()
+  const alarm = await platform.storage.getAlarm()
+  await platform.restart()
   boat.failStop = true
   await fixture.tick(DEADLINE)
 
@@ -63,7 +63,7 @@ it('ends an unready retention restart at its original deadline through phase cha
     state: 'stopped',
     error: { code: 'workspace_start_failed', message: FAILURE, log: null },
   })
-  platform.restart()
+  await platform.restart()
   await fixture.tick(DEADLINE + 5_000)
   expect(await fixture.progress()).toEqual({ phase: 'stop', error: FAILURE })
   expect(boat.stopIds).toEqual(['bx_1', 'bx_1'])
@@ -93,12 +93,12 @@ it('records retention timeout when startup finishes at the original deadline and
   await fixture.tick(STARTED_AT + 5_000)
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
   fixture.boat.beforeCommand = async (_command, detached) => {
-    if (detached) fixture.setTime(DEADLINE)
+    if (detached) await fixture.setTime(DEADLINE)
   }
   await fixture.tick(DEADLINE - 1)
 
   expect(await fixture.progress()).toEqual({ phase: 'stop', error: FAILURE })
-  fixture.platform.restart()
+  await fixture.platform.restart()
   await fixture.tick(DEADLINE + 5_000)
   expect(await fixture.progress()).toBeNull()
   expect(await fixture.platform.endpoint().readLifecycle()).toMatchObject({

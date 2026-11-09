@@ -22,7 +22,7 @@ it('preserves the saved daily refresh deadline after a build fails at hour 23', 
   })
   await finishImageBuild(fixture, good)
   const image = (await readImageSettings(runtime.env.DB, org.id)).imageName
-  fixture.setTime(TEST_TIME + 82_800_000)
+  await fixture.setTime(TEST_TIME + 82_800_000)
   images.prepareSources = async () => {
     throw new Error('Source transfer failed')
   }
@@ -57,7 +57,7 @@ it('advances an admitted daily refresh before failure and waits until the next d
     software: SOFTWARE,
   })
   await finishImageBuild(fixture, good)
-  fixture.setTime(TEST_TIME + 86_400_000)
+  await fixture.setTime(TEST_TIME + 86_400_000)
   await runtime.env.DB.prepare(
     'UPDATE settings SET pending_push_refresh_at = ?, last_push_refresh_at = ? WHERE org_id = ?',
   )

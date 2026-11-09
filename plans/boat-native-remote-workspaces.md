@@ -5627,7 +5627,7 @@ Fix round 2, 9 November 2026. Agent call:
 
 Fix-round evidence: `.context/boat-native-remote-workspaces/5e/fix-round-2/summary.md`.
 
-## Milestone 5f: Tests on the real workspace object
+## Milestone 5f: Tests on the real workspace object (completed)
 
 Depends on: 5e, 8m. Both change the lifecycle and chat tests that this
 milestone moves.
@@ -5636,14 +5636,30 @@ Apply the `fix after merge` items of the Worker tests. Added on 8 November
 2026. One native harness serves the chat tests and the lifecycle tests, as
 both items recommend.
 
-- [ ] Apply option D of `plans/follow-ups/chat-tests-on-real-object.md` and
+- [x] Apply option D of `plans/follow-ups/chat-tests-on-real-object.md` and
       option E of `plans/follow-ups/lifecycle-tests-on-real-object.md`, with
       one native harness. Delete both items.
-- [ ] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5f`.
+- [x] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
       113), and delete that item.
-- [ ] Apply option A of `plans/follow-ups/start-time-limit-test-under-load.md`
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5f`.
+- [x] Apply option A of `plans/follow-ups/start-time-limit-test-under-load.md`
       after the move to the real object, and delete that item. Added on 8
       November 2026.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5f`.
+
+9 November 2026. Agent calls:
+
+- Share one native runtime, D1, and R2 per test file. Keep each test's data isolated.
+- Run ordinary lifecycle calls through the production RPC and log codecs.
+- Keep transaction faults on live native transactions. Keep synchronous peer faults inside the native runtime.
+- Reset the real object context before eviction. This releases native request timers without changing production deadlines.
+- Keep the cancellation epoch proof on a focused native controller path. Ordinary RPC calls share the production chat queue.
+- Observe queries, decryption, warnings, and request bodies inside the native runtime. Host spies cannot observe those calls.
+- Batch prerequisite records and split independent long cases. Keep every product assertion, table row, and tested transition.
+- Include the new primary-branch naming tests. Keep their current expected values and native restart checks.
+
+Verification evidence: `.context/boat-native-remote-workspaces/5f/`.
 
 ## Milestone 6: App shell and workspaces
 

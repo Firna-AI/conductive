@@ -1,12 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { API_PATHS } from '../../src/shared/api'
 import { sessionPath } from '../../src/shared/sessions'
-import { heldOperation } from '../lifecycle/platform-test-storage'
-import {
-  heldJsonBody,
-  observeNextQueuedTask,
-} from '../operator/chat-write-race.test-support'
+import { heldOperation } from '../test-support/held-operation'
 import {
   createHarness,
   TEST_TIME,
@@ -17,7 +12,6 @@ import {
   WORKSPACE_ID,
   type ChatFixture,
 } from './harness.test-support'
-
 const refusals = {
   signIn: {
     status: 401,
@@ -45,14 +39,12 @@ const refusals = {
     },
   },
 }
-
 interface AccessChange {
   name: string
   refusal: keyof typeof refusals
   prepare?(fixture: ChatFixture): Promise<unknown>
   change(fixture: ChatFixture): Promise<unknown>
 }
-
 const queuedChanges: AccessChange[] = [
   {
     name: 'the stored session expires',
@@ -120,7 +112,6 @@ const queuedChanges: AccessChange[] = [
         .run(),
   },
 ]
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -131,17 +122,16 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('refuses a rename held at the body reader after sign-out and leaves new refused bodies unread', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
   const value = { title: 'After sign-out' }
   const path = sessionPath(fixture.org.id, WORKSPACE_ID, session.id)
   const base = fixture.request(path, value, fixture.memberCookie, 'PATCH')
-  const before = structuredClone(fixture.storage.records)
-  const writes = fixture.storage.writes.length
-  const held = heldJsonBody(base, value)
-  const changing = fixture.chat.fetch(held.request)
+  const before = structuredClone((await fixture.snapshot()).records)
+  const writes = (await fixture.snapshot()).writes.length
+  const held = await fixture.heldRequest(base, value)
+  const changing = held.fetch()
   try {
     await held.reading
     const signedOut = await harness.request(
@@ -158,32 +148,31 @@ it('refuses a rename held at the body reader after sign-out and leaves new refus
   expect(response.status).toBe(401)
   expect(await response.json()).toEqual({ error: refusals.signIn.error })
   expect(response.headers.get('Cache-Control')).toBe('no-store')
-  expect(fixture.storage.records).toEqual(before)
-  expect(fixture.storage.writes).toHaveLength(writes)
-  const early = heldJsonBody(
+  expect((await fixture.snapshot()).records).toEqual(before)
+  expect((await fixture.snapshot()).writes).toHaveLength(writes)
+  const early = await fixture.heldRequest(
     fixture.request(path, value, fixture.memberCookie, 'PATCH'),
     value,
   )
   try {
-    expect((await fixture.chat.fetch(early.request)).status).toBe(401)
-    expect(early.request.bodyUsed).toBe(false)
+    expect((await early.fetch()).status).toBe(401)
+    expect(await early.bodyUsed()).toBe(false)
   } finally {
     early.release()
   }
 })
-
 it.each(queuedChanges)(
   'refuses a queued rename after $name',
   async (change) => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
     await change.prepare?.(fixture)
-    const before = structuredClone(fixture.storage.records)
-    const writes = fixture.storage.writes.length
+    const before = structuredClone((await fixture.snapshot()).records)
+    const writes = (await fixture.snapshot()).writes.length
     const held = heldOperation()
     const holding = fixture.chat.store.run(held.wait)
     await held.entered
-    const observer = observeNextQueuedTask(fixture.chat)
+    const observer = await fixture.observeNextQueued()
     const changing = fixture.fetch(
       sessionPath(fixture.org.id, WORKSPACE_ID, session.id),
       { title: 'After access ended' },
@@ -197,14 +186,14 @@ it.each(queuedChanges)(
       held.release()
       await holding
       await changing
-      observer.restore()
+      await observer.restore()
     }
     const response = await changing
     const refusal = refusals[change.refusal]
     expect(response.status).toBe(refusal.status)
     expect(await response.json()).toEqual({ error: refusal.error })
     expect(response.headers.get('Cache-Control')).toBe('no-store')
-    expect(fixture.storage.records).toEqual(before)
-    expect(fixture.storage.writes).toHaveLength(writes)
+    expect((await fixture.snapshot()).records).toEqual(before)
+    expect((await fixture.snapshot()).writes).toHaveLength(writes)
   },
 )

@@ -32,19 +32,18 @@ it.each(['model', 'binding'] as const)(
   'warns once per workspace object and keeps names empty when the %s is missing',
   async (missing) => {
     const run = vi.fn<TitleModelCall>()
-    const warning = vi
-      .spyOn(console, 'warn')
-      .mockImplementation(() => undefined)
     const { fixture, first, acceptFirst, drain } = await createTitleFixture(
       harness,
       missing === 'binding' ? undefined : run,
     )
-    if (missing === 'model') delete fixture.env.CONDUCTIVE_TITLE_MODEL
+    await fixture.actor.api.controls.captureWarnings(true)
+    if (missing === 'model')
+      await fixture.setEnvironment({ CONDUCTIVE_TITLE_MODEL: undefined })
     await acceptFirst()
     await drain()
     await fixture.send(first.sessionId, 'without-title-config')
     await drain()
-    expect(warning).toHaveBeenCalledTimes(1)
+    expect(await fixture.actor.api.controls.warningCount()).toBe(1)
     expect(run).not.toHaveBeenCalled()
     expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
     expect(
