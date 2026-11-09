@@ -8,12 +8,15 @@
 import { sessionTitleFrom } from '../../../../src/shared/session-title'
 import type { AgentKey } from './agents'
 import type { PersonKey } from './members'
-import { untitled } from './workspaces'
 
 export type Session = {
   key: string
-  /** The title that the tab and the history show, or `untitled`. */
-  title: string
+  /**
+   * Its title, or null before it has one. The tab and the history show it
+   * through `nameLabel` in `src/shared/`, so a session with no title shows
+   * Untitled.
+   */
+  title: string | null
   /**
    * The text of the first message of a later session, which is each
    * session after the first session of the workspace. Its first line gives
@@ -32,8 +35,11 @@ export type StartedSession = Session & { starter: PersonKey }
  * screen. A message with no text, such as one with only a screenshot,
  * gives no title, so the session stays Untitled.
  */
-function firstMessage(text: string): { firstMessage: string; title: string } {
-  return { firstMessage: text, title: sessionTitleFrom(text) ?? untitled }
+function firstMessage(text: string): {
+  firstMessage: string
+  title: string | null
+} {
+  return { firstMessage: text, title: sessionTitleFrom(text) }
 }
 
 /**
@@ -55,7 +61,7 @@ export const workspaceSessions: readonly StartedSession[] = [
  * The session that + starts, before its first message. It has no title
  * yet, so its tab shows Untitled.
  */
-export const newSession: Session = { key: 'new', title: untitled }
+export const newSession: Session = { key: 'new', title: null }
 
 /**
  * The session that a message of Priya opened from the first session, after

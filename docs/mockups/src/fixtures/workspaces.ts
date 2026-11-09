@@ -29,16 +29,12 @@ export const openableWorkspaces = [
 
 export type OpenableWorkspace = (typeof openableWorkspaces)[number]
 
-/**
- * The label of a workspace or a session that has no name yet, such as a
- * new one before its title comes. The name, when it comes, takes the place
- * of the label.
- */
-export const untitled = 'Untitled'
-
 export type Workspace = {
   key: string
-  /** Its name. The screen shows `untitled` before a new workspace has one. */
+  /**
+   * Its name. A new workspace has no name until its title comes, and the
+   * screen then shows the label of `nameLabel` in `src/shared/`.
+   */
   name: string
   branch: string
   repository: RepositoryKey

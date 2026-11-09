@@ -964,12 +964,18 @@ Tags: ui
 
 Depends on: 12, 14
 
-- [ ] Show "Untitled" in the list, the header, the tabs, and the history,
+Evidence: `.context/workspace-title-from-first-message/dev-page-untitled/` and `.context/workspace-title-from-first-message/m15/`.
+
+- [x] Show "Untitled" in the list, the header, the tabs, and the history,
       as the mockups show, in the web app and the Mac app.
-- [ ] Make the development page and the fake API of the app tests start
+- [x] Make the development page and the fake API of the app tests start
       with empty names.
-- [ ] Update the [chat README](../src/chat/README.md) and the development
+- [x] Update the [chat README](../src/chat/README.md) and the development
       page README.
+- [ ] Give a Mac command request of a workspace with no name
+      `workspaceName: null`, and show "Untitled" in the chat card, the This
+      Mac section, and the macOS notification. Make every Worker read of
+      the name go through one mapping.
 
 ## Milestone 16: Verification, review, and pull request
 

@@ -92,7 +92,7 @@ export function SectionList(props: {
       (group) => group.section.id === target.sectionId,
     )
     setAnnouncement(
-      `${workspace.name} moves to ${section?.section.name ?? 'another section'}, place ${target.index + 1}.`,
+      `${nameLabel(workspace.name)} moves to ${section?.section.name ?? 'another section'}, place ${target.index + 1}.`,
     )
     props.move(workspace.id, target)
   }

@@ -3,14 +3,20 @@ import { sessionTitleFrom } from '../../shared/session-title'
 import type { Session } from '../../shared/sessions'
 import type { DevBackend } from './dev-backend'
 
-/** The title of a session that has no title of its own yet. */
-const NEW_SESSION = 'New session'
-
 /** The title of a new workspace, in place of the title model of the Worker. */
 export const WORKSPACE_TITLE = 'Saved carts'
 
 /** The time that the title model takes to answer: about a second. */
 const TITLE_DELAY_MS = 1_000
+
+/**
+ * An automatic name fills a name only while it is empty, and never in an
+ * archived workspace, as the Worker does. So a name that a member set never
+ * changes.
+ */
+function canFill(backend: DevBackend, name: string | null): boolean {
+  return name === null && backend.workspace.state !== 'archived'
+}
 
 /** Places a session among the tabs or in the history, and tells the tabs. */
 export function place(backend: DevBackend, session: Session): void {
@@ -67,9 +73,9 @@ export function clearRetry(backend: DevBackend, sessionId: string): void {
 
 /**
  * A later session, each session but the first session of a new workspace,
- * takes the first line of an accepted message as its title while it still
- * has the title "New session", as the Worker does. So a name that a member
- * gave the session stays, and a message with no text leaves the title.
+ * takes the first line of an accepted message as its title while it has no
+ * title, as the Worker does. So a name that a member gave the session stays,
+ * and a message with no text leaves the session with no title.
  */
 export function titleFromMessage(
   backend: DevBackend,
@@ -78,7 +84,7 @@ export function titleFromMessage(
 ): void {
   const session = recordOf(backend, sessionId)
   if (!session || session.id === backend.titled) return
-  const title = session.title === NEW_SESSION ? sessionTitleFrom(text) : null
+  const title = canFill(backend, session.title) ? sessionTitleFrom(text) : null
   if (title !== null) place(backend, { ...session, title })
 }
 
@@ -97,7 +103,7 @@ export function newSession(
   const session: Session = {
     id: options.id ?? `dev-session-${backend.count}`,
     workspaceId,
-    title: NEW_SESSION,
+    title: null,
     choice,
     createdAt: backend.clock.now(),
     closedAt: null,
@@ -133,19 +139,17 @@ export function targetOf(backend: DevBackend, session: Session): Session {
 
 /**
  * The title of a workspace, as the Worker stores it. The workspace takes it
- * as its name. The first session of a new workspace takes it too, while it
- * still has the name that the workspace had, so a name that a user gave the
- * session stays. The backend gives these titles. This page does the same,
- * so its tabs match the mockups.
+ * as its name only while it has no name. The first session of a new
+ * workspace takes it too, while that session has no title, so a name that a
+ * user gave the session stays. The backend gives these titles. This page
+ * does the same, so its tabs match the mockups.
  */
 export function writeTitle(backend: DevBackend, name: string): void {
-  const previous = backend.workspace.name
+  if (!canFill(backend, backend.workspace.name)) return
   backend.workspace = { ...backend.workspace, name }
   backend.stream.emit({ type: 'workspace.title', name })
-  const first = [...backend.open, ...backend.closed].find(
-    (session) => session.id === backend.titled,
-  )
-  if (first && first.title === previous) {
+  const first = backend.titled ? recordOf(backend, backend.titled) : undefined
+  if (first && first.title === null) {
     place(backend, { ...first, title: name })
   } else {
     backend.sync()
@@ -153,28 +157,33 @@ export function writeTitle(backend: DevBackend, name: string): void {
 }
 
 /**
- * A message with text that the page accepts asks for the title of a new
- * workspace, as the Worker asks its title model. The title comes about a
- * second later, whether or not the sandbox is ready. A message with no text
- * asks nothing, so the next message with text asks. The page asks once,
- * because its title never fails. When the workspace already has the title,
- * such as from a button of the page, the page does not write it again.
+ * A message with text that the page accepts asks for the title of a
+ * workspace with no name, as the Worker asks its title model. The title
+ * comes about a second later, whether or not the sandbox is ready. A message
+ * with no text asks nothing, so the next message with text asks. The page
+ * asks once, because its title never fails. A name that the workspace has
+ * by then, such as from a button of the page, stays.
  */
 export function askTitle(backend: DevBackend, text: string): void {
-  if (backend.titled === null || backend.titleAsked || text.trim() === '')
+  if (
+    !canFill(backend, backend.workspace.name) ||
+    backend.titleAsked ||
+    text.trim() === ''
+  )
     return
   backend.titleAsked = true
   backend.timers.push(
-    window.setTimeout(() => {
-      if (backend.workspace.name !== WORKSPACE_TITLE)
-        writeTitle(backend, WORKSPACE_TITLE)
-    }, TITLE_DELAY_MS),
+    window.setTimeout(
+      () => writeTitle(backend, WORKSPACE_TITLE),
+      TITLE_DELAY_MS,
+    ),
   )
 }
 
 /**
- * A new workspace: its first session takes the workspace name, as the
- * backend gives it. The create and the recorded chat accepted their messages
+ * A new workspace: it and its first session have no name yet, as the
+ * backend gives them, and the first session follows the title of the
+ * workspace. The create and the recorded chat accepted their messages
  * before the page loaded, so the first of them with text asks for the title
  * as the page loads.
  */
@@ -182,11 +191,6 @@ export function followTitle(backend: DevBackend): void {
   const [first] = backend.open
   if (!first) return
   backend.titled = first.id
-  backend.open = [
-    { ...first, title: backend.workspace.name },
-    ...backend.open.slice(1),
-  ]
-  backend.sync()
   for (const message of backend.messages.values()) {
     askTitle(backend, message.text)
   }

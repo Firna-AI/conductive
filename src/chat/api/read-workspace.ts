@@ -66,7 +66,7 @@ export function readWorkspace(value: unknown): Workspace {
     repositoryId: text(source.repositoryId),
     sectionId: text(source.sectionId),
     owner: readSender(source.owner),
-    name: text(source.name),
+    name: nullable(text)(source.name),
     branch: text(source.branch),
     choice: readChoice(source.choice),
     state: readState(source.state),

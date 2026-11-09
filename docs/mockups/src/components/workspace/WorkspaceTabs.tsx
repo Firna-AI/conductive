@@ -12,6 +12,7 @@ import {
   RotateCcw,
   X,
 } from 'lucide-react'
+import { nameLabel } from '../../../../../src/shared/name-label'
 import { closedSessions } from '../../fixtures/sessions'
 import { paths } from '../../paths'
 import { AgentMark } from '../chat/AgentMark'
@@ -79,7 +80,7 @@ function Tab(props: { tab: WorkspaceTab; readOnly: boolean }) {
 export const historyEntries: readonly MenuEntry[] = closedSessions.map(
   (session): MenuEntry => ({
     kind: 'item',
-    label: session.title,
+    label: nameLabel(session.title),
     mark: <AgentMark agent={session.agent} />,
     detail: session.closed,
     trailingIcon: RotateCcw,

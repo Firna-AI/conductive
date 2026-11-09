@@ -45,6 +45,8 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { created, detail } = workspaceFixtures()
 const createdId = created.workspace.id
+/** The name that the header and the list show for the new workspace. */
+const untitled = 'Untitled'
 
 /** An event of the created workspace, with its own event number. */
 function createdEvent(event: WorkspaceEvent, server: FakeApiServer) {
@@ -92,7 +94,7 @@ describe('the first message of a create whose start fails', () => {
     await act(() => app.org(org).newWorkspace(null).attach([file]))
     click(byLabel('Send', view))
     await settle()
-    expect(headerName(view)).toBe(created.workspace.name)
+    expect(headerName(view)).toBe(untitled)
     const opened = socket.opens.length
     const before = server.requests.length
 
@@ -111,7 +113,7 @@ describe('the first message of a create whose start fails', () => {
     expect(requestLines(server).slice(before)).not.toContain(
       `POST ${workspacePaths.resume(org, createdId)}`,
     )
-    expect(sidebar(view)).not.toContain(created.workspace.name)
+    expect(sidebar(view)).not.toContain(untitled)
 
     go(away)
     await settle()
@@ -146,7 +148,7 @@ describe('the first message of a create whose start fails', () => {
     typeText(messageField(view), 'Let shoppers save their cart.')
     click(byLabel('Send', view))
     await settle()
-    expect(headerName(view)).toBe(created.workspace.name)
+    expect(headerName(view)).toBe(untitled)
     const passedLimit: WorkspaceEvent = {
       type: 'workspace.updated',
       workspace: { ...created.workspace, state: 'error' },
@@ -180,7 +182,7 @@ describe('the first message of a create whose start fails', () => {
     expect(queryByRole('button', 'Resume', view)).not.toBeNull()
     go(routes.workspace(org, createdId))
     await settle()
-    expect(headerName(view)).toBe(created.workspace.name)
+    expect(headerName(view)).toBe(untitled)
 
     // The server publishes the error state, then the failed step.
     createdEvent(createdState('error'), server)
@@ -193,7 +195,7 @@ describe('the first message of a create whose start fails', () => {
     expect(view.textContent).toContain("Its sandbox didn't start.")
     expect(view.textContent).not.toContain('Your files and chat are saved.')
     expect(queryByRole('button', 'Try again', view)).toBeNull()
-    expect(sidebar(view)).not.toContain(created.workspace.name)
+    expect(sidebar(view)).not.toContain(untitled)
 
     go(here)
     await settle()
@@ -229,7 +231,7 @@ describe('the first message of a create whose start fails', () => {
     await settle()
     go(routes.workspace(org, createdId))
     await settle()
-    expect(headerName(view)).toBe(created.workspace.name)
+    expect(headerName(view)).toBe(untitled)
     const passedLimit: WorkspaceEvent = {
       type: 'workspace.updated',
       workspace: { ...created.workspace, state: 'error' },

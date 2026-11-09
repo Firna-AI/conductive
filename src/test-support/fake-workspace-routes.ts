@@ -68,11 +68,13 @@ export function fakeWorkspaceRoutes(
       })),
     }
     if (workspace.id === data.created.workspace.id) {
+      // The first session of a new workspace has no title until the title of
+      // the workspace comes.
       sessions.sessions = [
         {
           ...sessions.sessions[0],
           id: data.created.sessionId,
-          title: data.created.workspace.name,
+          title: null,
           activeTurnId: null,
           activeTurnStartedAt: null,
           retryMessageId: null,

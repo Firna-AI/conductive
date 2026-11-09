@@ -129,10 +129,12 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
     createdAt: FAKE_TIME,
     state: 'sent',
   }
+  // A new workspace has no name until its title comes. Its branch has a
+  // city name.
   const createdWorkspace: Workspace = {
     ...workspace,
     id: 'saved-carts',
-    name: 'Lisbon',
+    name: null,
     branch: 'calummoore/lisbon-7k2q',
     sectionId: 'general',
     state: 'starting',

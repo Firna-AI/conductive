@@ -1,10 +1,11 @@
+import { nameLabel } from '../../../../src/shared/name-label'
 import type { WorkspaceTab } from '../components/workspace/WorkspaceTabs'
 import {
   linkedSession,
   newSession,
   workspaceSessions,
 } from '../fixtures/sessions'
-import { untitled, type Workspace } from '../fixtures/workspaces'
+import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 
@@ -23,7 +24,8 @@ export function workspaceName(
   state: WorkspaceState,
   workspace: Workspace,
 ): string {
-  return state.name === 'untitled' && isNew(state) ? untitled : workspace.name
+  const untitled = state.name === 'untitled' && isNew(state)
+  return nameLabel(untitled ? null : workspace.name)
 }
 
 /**
@@ -50,11 +52,16 @@ export function tabsFor(
     {
       key: first.key,
       kind: 'session',
-      title: first.title,
+      title: nameLabel(first.title),
       to: linked ? paths.noStarterLogin : paths.app,
       selected: state.tab === 'session',
     },
-    { key: second.key, kind: 'session', title: second.title, selected: false },
+    {
+      key: second.key,
+      kind: 'session',
+      title: nameLabel(second.title),
+      selected: false,
+    },
     {
       key: 'code',
       kind: 'code',
@@ -88,7 +95,7 @@ export function tabsFor(
     tabs.push({
       key,
       kind: 'session',
-      title,
+      title: nameLabel(title),
       to: paths.sessions,
       selected: true,
     })
@@ -98,7 +105,7 @@ export function tabsFor(
     tabs.push({
       key,
       kind: 'session',
-      title,
+      title: nameLabel(title),
       to: paths.linkedSession,
       selected: true,
     })

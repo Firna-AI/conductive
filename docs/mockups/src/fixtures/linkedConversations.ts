@@ -1,3 +1,4 @@
+import { nameLabel } from '../../../../src/shared/name-label'
 import type { ChatItem } from './conversations'
 import { linkedSession } from './sessions'
 
@@ -9,7 +10,7 @@ import { linkedSession } from './sessions'
  */
 export const linkedConversations = {
   linked: [
-    { kind: 'linked', id: 'linked', from: linkedSession.from.title },
+    { kind: 'linked', id: 'linked', from: nameLabel(linkedSession.from.title) },
     { kind: 'user', id: 'ask', text: linkedSession.firstMessage },
     { kind: 'working', id: 'working', elapsed: '3s' },
   ],
