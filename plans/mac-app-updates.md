@@ -207,6 +207,7 @@ reviewers on the environments of a public repository.
   - `plans/follow-ups/branch-tags-get-signing-secrets.md`: the same tag path gives branch code the signing secrets. D or H of this item fixes that item too.
 - **Recommendation:** D. Releases then come only from the release pull request on `main`, and GitHub enforces it. The merge of that pull request stays the user's single step. The first recommendation was B, the options check recommended D, and H was recommended while tags were the trigger. H best protects the codebase, because it also stops a release that an agent merges. E can join D or H at small cost.
 - **Action:** ask the user, because D removes the tag trigger and changes the environment rules that the user approved on 8 November 2026, and H adds a gate.
+- **Chosen:** D, by the user on 9 November 2026: "2 = D". This also fixes `plans/follow-ups/branch-tags-get-signing-secrets.md`.
 
 ### 3. Choose where the release version comes from
 
@@ -285,7 +286,7 @@ reviewers on the environments of a public repository.
 - **Root question:** How does a person who chooses Check for updates learn the result?
 - **Options:**
   - **A.** Change nothing. A found update still shows its dialog after the download. Effort: Small.
-  - **B.** Answer a manual check with a dialog. When no update exists: "Conductive is up to date." When the check fails: "Conductive could not check for updates. Try again later." When an update waits, it offers Restart now again. A found update downloads, and the existing dialog follows. A manual check during a running check waits for its result. Automatic checks stay silent. Effort: Small.
+  - **B.** Answer a manual check with a dialog. When no update exists: "Conductive is up to date." When the check fails: "Conductive could not check for updates. Try again later." When an update waits, it offers Restart now again. When a new version is found: "Downloading the new version. Conductive tells you when it is ready." The existing dialog follows when it is ready. A manual check during a running check waits for its result. Automatic checks stay silent. Updated on 9 November 2026 with the text for a found version. Effort: Small.
   - **C.** Answer a manual check with a native notification, with the texts of B. It does not interrupt, but people who turned off notifications see nothing. Effort: Small.
   - **D.** The Help menu item shows the result. After a manual check, it reads "Conductive is up to date" until the next check. While a downloaded update waits, it reads "Restart to update". No dialog opens. The person sees the answer only when they open the menu again. Effort: Small.
 - **Left out:** A menu label that shows only "Checking for updates…": it gives no result, so it fails the goal. D shows the result in the menu instead.
@@ -324,8 +325,9 @@ Depends on: none
 Apply the GitHub setting of decision 2. The Conductor app cannot change
 repository settings, so the user does this step.
 
-- [ ] The user changes the `desktop-release` environment as decision 2
-      chooses.
+- [ ] The user changes the deployment rules of the `desktop-release`
+      environment to admit only `main`, as decision 2 chose. This can happen
+      at once, because no release uses a tag any more.
 
 ## Milestone 3: Publish pipeline
 
@@ -351,7 +353,9 @@ builds that publish.
         leftover draft, a published release for the version, a missing
         file, and a failed upload.
 - [ ] Update `.github/workflows/desktop-ci.yml`.
-  - [ ] Apply decision 2 to the old tag-triggered release job.
+  - [ ] Remove the tag trigger and the old tag release job, as decision 2
+        chose. Delete `plans/follow-ups/branch-tags-get-signing-secrets.md`
+        in the same commit.
   - [ ] Keep `latest-mac.yml` and the ZIP block maps in the signed
         artifacts.
 - [ ] Run the desktop typecheck, lint, format check, and unit tests.

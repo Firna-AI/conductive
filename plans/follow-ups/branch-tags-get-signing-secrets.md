@@ -31,6 +31,6 @@
 - **Left out:** None.
 - **Wider fix:** E. GitHub's settings keep the secrets from every run that the user did not approve, whatever the branch changes.
 - **Previous examples:** The tag `v0.1.0-alpha.1` and Actions run 42519666993.
-- **Related:** The Mac app update change moves releases to a release-please pull request on `main`, as the user chose on 9 November 2026. Its decision on which runs sign is the same question. If it chooses B or E, that change fixes this item.
+- **Related:** The Mac app update change moves releases to a release-please pull request on `main`, as the user chose on 9 November 2026. On the same day, the user chose there that `desktop-release` admits only `main`, which is B here. That change fixes this item and deletes this file.
 - **Recommendation:** B. Releases come only from the release pull request on `main`, so no other run needs the secrets. E adds an approval for each signing run, which also stops a release that an agent merges. B was also the first recommendation. E was recommended while tags were the release trigger.
 - **Action:** ask the user, because E and B change the environment rules that the user approved on 8 November 2026.
