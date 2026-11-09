@@ -1,7 +1,9 @@
+/* One equal column for each tab, so the tabs fill the bar at any count. */
 .bar {
   display: grid;
   flex-shrink: 0;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
   padding: 6px 4px 12px;
   border-top: 1px solid var(--ui-border);
   background: var(--ui-bar);

@@ -101,8 +101,7 @@ const startingLabel =
   'A new workspace: the first message waits while the cloud computer starts and creates the branch'
 const reviewLabel =
   'The pull request is ready to merge, over the five changed files and their added and removed lines'
-const toolsLabel =
-  'The terminal of the cloud computer runs the dev server, beside the Preview and Desktop tabs'
+const toolsLabel = 'The terminal of the cloud computer runs the dev server'
 const orgLabel =
   'The cloud computer of the org: its last build, Build computer, and the history of builds'
 const phoneLabel =

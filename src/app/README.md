@@ -85,7 +85,7 @@ feature leaves its place empty.
 | `composer`    | The composer of that column while the sandbox runs or starts |
 | `center`      | A part in place of the whole chat. Without it, the chat shows the file or diff tab of the address |
 | `files`       | All files, Changes, and Checks. The shell gives its own |
-| `tools`       | Terminal, Preview, and Desktop. The shell gives its own |
+| `tools`       | Terminal and Preview. The shell gives its own |
 | `pullRequest` | The pull request bar, or the row on a phone. The shell gives its own |
 | `owner`       | The owner picker that reassigns a workspace. The shell gives its own |
 
