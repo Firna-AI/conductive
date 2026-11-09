@@ -31,6 +31,7 @@ Contract owners:
 - `docs/protocol/model-gateway.md`, which Milestone 1 creates.
 - [Access and security](../docs/protocol/access-and-security.md).
 - [Chat and events](../docs/protocol/chat-and-events.md).
+- [Agent runner](../docs/protocol/agent-runner.md), extracted on `main`.
 - [Architecture](../docs/architecture.md).
 - The [runner README](../runner/README.md) and its
   [agent logins page](../runner/agent-logins.md).
@@ -587,6 +588,12 @@ more approaches of each call.
   other things. `docs/architecture.md`, "Decision numbers", defines the
   form. Rejected: new numbers after the main plan's last decision, which
   parallel plans would compete for.
+- **D32. Parallel implementation, 9 November 2026.** Cal asked to split
+  independent work across workspaces. A read-only Claude transport check
+  starts beside Milestone 5. After Milestone 5, the Worker, legal copy,
+  and document-split work can use separate checkouts with disjoint file
+  scopes. The runner cutover follows the Worker contract. The workspace
+  ledger is `.context/model-gateway/workspaces.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -740,6 +747,22 @@ version 2.
       workspace without a version accepts version 1. A refresh keeps the
       version of its image.
 
+## Milestone 4a: Claude transport check
+
+Depends on: 3
+
+This read-only check can run beside Milestone 5. It needs the pinned
+agent program and the chosen gateway requirements, not the new runner
+wire types. Keep scripts and proof under `.context/model-gateway/`.
+
+- [ ] Check the pinned Claude program's available transport mechanisms
+      and tool environments. Find a route that fixes the gateway address
+      while preserving a project's own model settings and private
+      credential delivery. Check commands, background commands, both
+      hook forms, and MCP servers with fake keys and local fake upstreams.
+- [ ] Return the mechanism, its proof, and any requirement exception it
+      would need. Select no such exception without Cal's answer.
+
 ## Milestone 5: Login docs for the gateway
 
 Depends on: 1
@@ -747,8 +770,11 @@ Depends on: 1
 Write the remaining gateway requirements for the existing Anthropic and
 OpenAI login kinds. Decision 10 B removes the own-endpoint dependency.
 
-- [ ] Merge `origin/main` into the primary branch with the `git-merge`
+- [x] Merge `origin/main` into the primary branch with the `git-merge`
       skill.
+      The sync at `819f4605` preserved the gateway rules in the extracted
+      `docs/protocol/agent-runner.md`. Audit:
+      `.context/model-gateway/integration/main-sync-audit.log`.
 - [ ] `docs/protocol/access-and-security.md`, "Agent logins in a sandbox":
       a cloud computer with a newer runner holds a turn token and no login.
       Remove the rejection of a login proxy (decision 120). State what
@@ -803,15 +829,13 @@ tokens for the existing Anthropic and OpenAI login kinds.
 
 ## Milestone 7: Runner on the gateway
 
-Depends on: 6
+Depends on: 6, 4a
 
 The runner speaks version 2 only. Its agent programs send their model
 requests to the gateway with the turn token.
 
 - [ ] The provider adapters take an endpoint and a credential (D23).
-- [ ] Before porting the settings, check the pinned Claude program's
-      available transport mechanisms and tool environments. Select a
-      mechanism that preserves the existing tool behavior. Keep the
+- [ ] Apply the transport result of Milestone 4a. Keep the
       gateway address from overriding a project's own model settings
       through inherited `ANTHROPIC_BASE_URL`. Keep the turn credential
       on its private route. A change of merge order does not choose an
