@@ -32,12 +32,12 @@ it('ends a startup script that never exits at the original start deadline and pu
     await fixture.runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspaces',
     ).first('count'),
-  ).toBe(0)
+  ).toBe(1)
   expect(
     await fixture.runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspace_tokens',
     ).first('count'),
-  ).toBe(0)
+  ).toBe(1)
   const actor = [...fixture.actors.values()][0]
   expect(actor?.events.map(({ event }) => event)).toEqual(
     expect.arrayContaining([
@@ -56,9 +56,7 @@ it('ends a startup script that never exits at the original start deadline and pu
       }),
     ]),
   )
-  expect(
-    (await fixture.failedCreation(before?.workspaceId ?? ''))?.error.message,
-  ).toBe(FAILURE)
+  expect((await start.endpoint.readLifecycle())?.error?.message).toBe(FAILURE)
 })
 
 it('gives each resume its own deadline and restores an old saved start when its computer never becomes ready', async () => {

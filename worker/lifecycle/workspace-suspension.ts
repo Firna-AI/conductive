@@ -15,6 +15,7 @@ import { revokeWorkspacePreviews } from './workspace-data'
 import { reconciledLifecycle } from './durable-reconciliation'
 import { isConfirmedStopped } from './confirmed-stop'
 import { retentionResourceAllowed } from './retention-data'
+import { hasPendingStartWork } from './start-storage'
 
 export interface WorkspaceSuspensionContext {
   env: AppEnv
@@ -119,7 +120,7 @@ async function stopForAccess(
   const { env, dependencies, storage, lifecycle, starts, turns } = input
   if (row.orgSuspended || row.ownerSuspended) await starts.cancel()
   await revokeWorkspacePreviews(env.DB, workspaceId, dependencies.now())
-  if (await starts.pending()) {
+  if (await hasPendingStartWork(storage)) {
     await storage.setAlarm(dependencies.now() + 1_000)
     return false
   }

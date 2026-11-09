@@ -34,13 +34,13 @@ export const createWorkspace = defineUseCase({
       screenPath: 'app/new-workspace/waiting',
       title: 'Write more',
       description:
-        'The user writes a second message. The composer keeps it, and Send waits until the sandbox is ready. The user then sends it.',
+        'The user sends a second message. It waits in the queue under the first one until the sandbox is ready.',
     },
     {
       screenPath: 'app/new-workspace/first-turn',
       title: 'The agent starts',
       description:
-        'The sandbox is ready, and the agent works on the message. The workspace keeps the title Saved carts.',
+        'The sandbox is ready, and the agent gets both messages in their order. The workspace keeps the title Saved carts.',
     },
   ],
 })

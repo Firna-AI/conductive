@@ -162,7 +162,6 @@ export interface ChatDependencies {
     identities: readonly ConnectionIdentity[],
     now: number,
   ) => Promise<readonly ConnectionGrant[]>
-  firstStartIncomplete: (workspaceId: string) => Promise<boolean>
   randomId: () => string
   randomConnectionId: () => string
   readLoginMetadata: (

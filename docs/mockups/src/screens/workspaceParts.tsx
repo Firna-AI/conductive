@@ -7,6 +7,7 @@ import { DesktopView } from '../components/tools/DesktopView'
 import { PortPreview, PreviewEmpty } from '../components/tools/PortPreview'
 import { TerminalView } from '../components/tools/TerminalView'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
+import { replacesLists } from '../components/workspace/sandboxNoticeState'
 import {
   archivedSections,
   suspendedSections,
@@ -73,12 +74,11 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 }
 
 /**
- * The files panel. After a stop or a failed start, All files and Changes
- * keep the lists that the workspace saved. While the sandbox starts, or
- * when its start is refused, the sandbox state takes the place of the
- * lists. On a phone, an open file shows as a page of the Files tab. An
- * archived workspace has no file lists: its files went with the cloud
- * computer.
+ * The files panel. After a stop or a failed resume, All files and Changes
+ * keep the lists that the workspace saved. Otherwise, while the sandbox is
+ * not running, the sandbox state takes the place of the lists. On a phone,
+ * an open file shows as a page of the Files tab. An archived workspace has
+ * no file lists: its files went with the cloud computer.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -95,7 +95,7 @@ export function FilesContent(props: {
     return <FilePage back={backFrom(open)} view={open} />
   }
   const placeholder =
-    panel && (panel.problem === 'starting' || panel.problem === 'refused') ? (
+    panel && replacesLists(panel) ? (
       <SandboxPanel phone={phone} state={panel} />
     ) : undefined
   return (

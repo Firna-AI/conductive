@@ -11,7 +11,7 @@ import {
   readLoginMetadata,
   type SessionLoginMetadata,
 } from './login-availability'
-import { firstStartIncomplete, readAutomaticTitleWorkspace } from './queries'
+import { readAutomaticTitleWorkspace } from './queries'
 import { titleModelBinding } from './title-model'
 import type { ChatDependencies } from './types'
 import { filterRunnerOutput } from './runner-output'
@@ -39,7 +39,6 @@ export function chatDependencies(
       runnerTokenAllowed(env.DB, id, tokenHash),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
-    firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),
     randomId: randomToken,
     randomConnectionId: randomToken,
     readLoginMetadata: (targets) => {

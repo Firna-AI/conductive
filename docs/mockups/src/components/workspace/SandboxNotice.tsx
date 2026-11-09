@@ -3,9 +3,11 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { Archive, CircleAlert, CirclePause } from 'lucide-react'
 import { archivedOn } from '../../fixtures/archive'
+import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
 import { Notice } from '../common/Notice'
+import { ScreenLink } from '../common/ScreenLink'
 import { refusedIcon } from '../orgs/suspension'
 import styles from './SandboxNotice.module.css'
 import type {
@@ -33,6 +35,12 @@ const saved = 'Your files and chat are saved.'
  * notice promises only the chat history.
  */
 const history = 'Your chat history is available.'
+
+/**
+ * A failed first start leaves a new workspace with no files yet, so its
+ * notice promises only the chat, with its queued messages.
+ */
+const chatSaved = 'Your chat is saved.'
 
 const problems: Readonly<Record<SandboxProblem, Problem>> = {
   stopped: {
@@ -67,8 +75,24 @@ const problems: Readonly<Record<SandboxProblem, Problem>> = {
   },
 }
 
-function RecoveryButton(props: { label: string }) {
-  return <ActionButton tone="primary">{props.label}</ActionButton>
+/**
+ * The one way forward. The mockups draw one failed first start, so its Try
+ * again leads to the start of a new cloud computer in that workspace.
+ */
+function RecoveryButton(props: { label: string; state: SandboxNoticeState }) {
+  const { state } = props
+  const button = <ActionButton tone="primary">{props.label}</ActionButton>
+  if (state.problem !== 'error' || state.firstStart !== true) return button
+  return (
+    <ScreenLink asChild to={paths.retrying}>
+      {button}
+    </ScreenLink>
+  )
+}
+
+/** What stays of the workspace: a failed first start keeps only its chat. */
+function keptBody(state: SandboxNoticeState, body: string): string {
+  return state.problem === 'error' && state.firstStart ? chatSaved : body
 }
 
 /** The text of the bar: the refusal, or the saved message before the body. */
@@ -85,20 +109,23 @@ function barBody(state: SandboxNoticeState, body: string): string {
 }
 
 /**
- * The bar that replaces the composer while the sandbox is not running. A
- * refused start shows the words of the refusal, and no action, because the
- * start stays refused until its cause changes. A start that failed shows
- * the message that the app saved for it, such as the 20-minute limit of a
- * start, before the body.
+ * The bar under the chat while the sandbox is not running. It takes the
+ * place of the composer, except after a failed first start, whose composer
+ * stays under it. A refused start shows the words of the refusal, and no
+ * action, because the start stays refused until its cause changes. A start
+ * that failed shows the message that the app saved for it, such as the
+ * 20-minute limit of a start, before the body.
  */
 export function SandboxBar(props: SandboxNoticeState) {
   const problem = problems[props.problem]
   return (
     <Notice
       action={
-        problem.action ? <RecoveryButton label={problem.action} /> : undefined
+        problem.action ? (
+          <RecoveryButton label={problem.action} state={props} />
+        ) : undefined
       }
-      body={barBody(props, problem.body)}
+      body={barBody(props, keptBody(props, problem.body))}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}
@@ -131,13 +158,13 @@ export function SandboxPanel(props: {
     <EmptyState
       action={
         props.phone && problem.action ? (
-          <RecoveryButton label={problem.action} />
+          <RecoveryButton label={problem.action} state={state} />
         ) : undefined
       }
       body={
         props.phone && state.problem === 'refused'
           ? state.reason
-          : problem.panelBody
+          : keptBody(state, problem.panelBody)
       }
       icon={problem.icon}
       title={archived ? 'Archived' : problem.title}
