@@ -5,13 +5,14 @@ import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
 import { cacheTerminalPassword } from './credentials'
-import { privilegedCommand } from './privileged'
+import { privilegedCommand, shellArgument } from './privileged'
 import {
   credentialScript,
   launcherScript,
   sessionServerScript,
   TERMINAL_RUNTIME,
   TERMINAL_RUNTIME_VIEW,
+  TERMINAL_RESTORE_MARKER,
 } from './scripts'
 
 export const TERMINAL_PORT = 7681
@@ -103,6 +104,18 @@ systemctl start conductive-terminal.service
 systemctl is-active --quiet conductive-terminal.service
 install -d -m 700 -o user -g user ${TERMINAL_RUNTIME_VIEW}
 mountpoint -q ${TERMINAL_RUNTIME_VIEW} || mount --bind ${TERMINAL_RUNTIME} ${TERMINAL_RUNTIME_VIEW}`)
+}
+
+export async function markTerminalRestoreEnded(
+  provider: Pick<SandboxProvider, 'runCommand'>,
+  sandboxId: string,
+): Promise<void> {
+  const result = await provider.runCommand(
+    sandboxId,
+    privilegedCommand(`touch ${shellArgument(TERMINAL_RESTORE_MARKER)}`),
+  )
+  if (result.exitCode !== 0 || result.timedOut)
+    throw new ProviderError('unavailable', 502)
 }
 
 /** Read and cache the password only after the detached setup command succeeds. */

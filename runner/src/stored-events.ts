@@ -29,6 +29,9 @@ function entry(value: unknown): FileEntry {
   const input = object(value)
   return {
     path: string(input.path),
+    ...(typeof input.displayPath === 'string'
+      ? { displayPath: input.displayPath }
+      : {}),
     name: string(input.name),
     kind: oneOf(input.kind, ['file', 'directory']),
     change: input.change === null ? null : oneOf(input.change, changes),
@@ -39,9 +42,15 @@ function changed(value: unknown): ChangedFile {
   const input = object(value)
   return {
     path: string(input.path),
+    ...(typeof input.displayPath === 'string'
+      ? { displayPath: input.displayPath }
+      : {}),
     change: oneOf(input.change, changes),
     added: integer(input.added),
     removed: integer(input.removed),
+    ...(typeof input.previousDisplayPath === 'string'
+      ? { previousDisplayPath: input.previousDisplayPath }
+      : {}),
     ...(input.previousPath === undefined
       ? {}
       : { previousPath: string(input.previousPath) }),
@@ -141,6 +150,9 @@ export function parseEvent(value: unknown): RunnerEvent {
         partNumber: integer(update.partNumber),
         partCount: integer(update.partCount),
         baseBranch: string(update.baseBranch),
+        ...(typeof update.displayBaseBranch === 'string'
+          ? { displayBaseBranch: update.displayBaseBranch }
+          : {}),
         files: array(update.files, (value) => ({
           ...changed(value),
           uncommitted: boolean(object(value).uncommitted),

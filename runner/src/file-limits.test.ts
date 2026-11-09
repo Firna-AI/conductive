@@ -74,8 +74,11 @@ it('sends captured full trees and changes as bounded parts after filtering', asy
     [1, 3, 3],
   ])
   const expectedEntries = entries(
-    Array.from({ length: 6 }, (_, index) => '[redacted]'.repeat(9_000) + index),
-  )
+    Array.from({ length: 6 }, (_, index) => 'x'.repeat(9_000) + index),
+  ).map((entry, index) => ({
+    ...entry,
+    displayPath: '[redacted]'.repeat(9_000) + index,
+  }))
   expect(trees.flatMap((part) => part.entries)).toEqual(expectedEntries)
   expect(changes.map((part) => [part.baseBranch, part.summary])).toEqual(
     Array.from({ length: 3 }, () => [
@@ -91,7 +94,7 @@ it('sends captured full trees and changes as bounded parts after filtering', asy
         ...snapshot.changes,
         files: snapshot.changes.files.map((file, index) => ({
           ...file,
-          path: expectedEntries[index]?.path,
+          displayPath: expectedEntries[index]?.displayPath,
         })),
       },
     },

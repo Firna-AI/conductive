@@ -7,7 +7,8 @@ import {
 import { warnWorker } from '../warnings'
 import { lifecycleCommand } from './command-intents'
 import { workspacePhaseCommand } from './start-command'
-import { workspaceEnvironment } from './settings-data'
+import { workspaceEnvironmentSettings } from './settings-data'
+import { environmentSecrets } from './org-environment'
 import { readWorkspaceToken } from './tokens'
 import type {
   StartJobStorage,
@@ -40,14 +41,14 @@ export async function advanceStartCommand(
     throw new WorkspaceStartError(null)
   await provider.setAutoStop(row.sandboxId, 1_800)
   if (job.processId === null) {
-    const values = await workspaceEnvironment(
+    const values = await workspaceEnvironmentSettings(
       env,
       job.orgId,
       job.environmentCiphertext,
     )
     await storage.secrets([
       await readWorkspaceToken(env, job.workspaceId),
-      ...Object.values(values),
+      ...environmentSecrets(values),
     ])
     if (job.phase !== 'terminal')
       await endpoint.lifecycleStep(job.phase, label, 'running')

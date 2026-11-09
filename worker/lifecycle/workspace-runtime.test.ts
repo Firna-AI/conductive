@@ -163,6 +163,8 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     startupPrepared: true,
     pendingFirstMessage: FIRST_MESSAGE,
   })
+  // Finish the restore watch before checking the idle alarm.
+  await restored.tick()
   const ready = await restored.readLifecycle()
   await restored.tick((ready?.lastActivityAt ?? 0) + IDLE_MS - 1)
   expect(await restored.alarmAt()).toBe((ready?.lastActivityAt ?? 0) + IDLE_MS)

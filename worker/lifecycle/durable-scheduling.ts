@@ -16,6 +16,14 @@ export async function writeLifecycleState(
   now: () => number,
   publish?: LifecyclePublisher,
 ): Promise<void> {
+  if (
+    state.restoreWatchAt !== undefined &&
+    (state.state === 'stopped' ||
+      state.state === 'error' ||
+      state.state === 'archived' ||
+      state.startStop !== undefined)
+  )
+    state = { ...state, restoreWatchAt: undefined }
   await storage.put(LIFECYCLE_STATE_KEY, state)
   await scheduleLifecycleState(storage, hooks, state, now)
   await publishLifecycleState(storage, hooks, state, now, publish)
@@ -63,10 +71,14 @@ export async function scheduleLifecycleState(
         : state.lastActivityAt + IDLE_MS
   if (alarm === null || state.state === 'archived') await storage.deleteAlarm()
   else {
+    const next = Math.min(
+      alarm,
+      hooks.checkRestore ? (state.restoreWatchAt ?? Infinity) : Infinity,
+    )
     await storage.setAlarm(
       !state.runnerConnected && !isConfirmedStopped(state) && hooks.reconcile
-        ? Math.min(alarm, now() + 5_000)
-        : alarm,
+        ? Math.min(next, now() + 5_000)
+        : next,
     )
   }
 }

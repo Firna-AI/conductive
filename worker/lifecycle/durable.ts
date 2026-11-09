@@ -5,6 +5,7 @@ import {
   initialLifecycle,
   beginningLifecycleStart,
   readyLifecycle,
+  withPreparedStart,
 } from './durable-start'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
@@ -106,19 +107,7 @@ export class DurableLifecycle {
   }
 
   prepared(): Promise<void> {
-    return this.update((state) =>
-      state.state === 'stopped' || state.state === 'archived'
-        ? state
-        : {
-            ...state,
-            startupPrepared: true,
-            state: state.runnerConnected
-              ? state.runningSessions.length
-                ? 'working'
-                : 'ready'
-              : 'starting',
-          },
-    )
+    return this.update((state) => withPreparedStart(state, this.now()))
   }
 
   activity(): Promise<void> {
@@ -155,6 +144,15 @@ export class DurableLifecycle {
     return this.update((state) =>
       reconciledLifecycle(state, 'stopped', this.now()),
     )
+  }
+
+  /** An access stop ends the restore watch, because its sandbox stops. */
+  endRestoreWatch(): Promise<void> {
+    return this.serial(async () => {
+      const state = await this.read()
+      if (state?.restoreWatchAt !== undefined)
+        await this.write({ ...state, restoreWatchAt: undefined })
+    })
   }
 
   fail(error: DurableLifecycleState['error']): Promise<void> {

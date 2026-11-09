@@ -14,6 +14,7 @@ import type {
 export const IDLE_MS = 30 * 60 * 1_000
 export const DISK_KEEPALIVE_MS = 13 * 24 * 60 * 60 * 1_000
 export const TURN_HEARTBEAT_MS = 5 * 60 * 1_000
+export const RESTORE_POLL_MS = 5_000
 export const LIFECYCLE_STATE_KEY = 'lifecycle:state'
 
 export interface LifecycleStorage {
@@ -35,6 +36,7 @@ export interface DurableLifecycleState {
   runningSessions: readonly string[]
   runnerConnected: boolean
   startupPrepared?: boolean
+  restoreWatchAt?: number
   startStop?: 'pending' | 'stopped' | 'error'
   stoppedAt: number | null
   nextDiskKeepaliveAt: number | null
@@ -74,6 +76,7 @@ export interface LifecycleHooks {
     request?: LifecycleDeadlineRequest,
   ): Promise<LifecycleReconciliation | void>
   reconcile?(): Promise<LifecycleReconciliation>
+  checkRestore?(): Promise<LifecycleRestoreResult>
   startPending?(): Promise<boolean>
   recoverTurns?(workspaceId: string): Promise<LifecycleTurnRecovery | undefined>
   lastTurnEndedAt?(workspaceId: string): Promise<number | null>
@@ -85,4 +88,5 @@ export interface LifecycleTurnRecovery {
 }
 
 export type LifecycleReconciliation = 'stopped' | 'error' | undefined
+export type LifecycleRestoreResult = 'pending' | 'done' | 'stopped' | 'error'
 export type LifecycleStopResult = 'stopped' | 'error' | 'pending'

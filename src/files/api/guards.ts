@@ -42,3 +42,18 @@ export function parseItems<T>(
   }
   return parsed
 }
+
+/**
+ * An optional display label as an object to spread into a record, or an
+ * empty object when the label is missing, empty, or not text. A reader
+ * refuses nothing because of a label.
+ */
+export function readLabel<K extends string>(
+  object: JsonObject,
+  key: K,
+): Partial<Record<K, string>> {
+  const value = readString(object, key)
+  const label: Partial<Record<K, string>> = {}
+  if (value) label[key] = value
+  return label
+}

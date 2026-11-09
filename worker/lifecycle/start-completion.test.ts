@@ -69,7 +69,7 @@ it('restores the running runner step before waiting without preparing an unready
   expect(await start.job()).toMatchObject({ phase: 'runner' })
 })
 
-it('schedules the lifecycle idle deadline immediately after start completion', async () => {
+it('replaces the completion alarm and schedules the restore watch before the idle deadline', async () => {
   const fixture = fixtureForTest()
   const start = await startRetryFixture(fixture)
   const job = await start.job()
@@ -82,10 +82,11 @@ it('schedules the lifecycle idle deadline immediately after start completion', a
   await fixture.advanceTo(completedAt, job.workspaceId)
   expect(await start.job()).toBeUndefined()
   const completed = await platform.endpoint().readLifecycle()
-  expect(platform.storage.alarmAt).toBe(
-    (completed?.lastActivityAt ?? 0) + IDLE_MS,
-  )
+  expect(completed).toMatchObject({ restoreWatchAt: completedAt + 5_000 })
+  expect(platform.storage.alarmAt).toBe(completedAt + 5_000)
   await fixture.advanceTo(completedAt + 1_000, job.workspaceId)
+  expect(platform.storage.alarmAt).toBe(completedAt + 5_000)
+  await fixture.advanceTo(completedAt + 5_000, job.workspaceId)
   const state = await platform.endpoint().readLifecycle()
   expect(platform.storage.alarmAt).toBe((state?.lastActivityAt ?? 0) + IDLE_MS)
   expect(state).toMatchObject({ state: 'ready', startupPrepared: true })

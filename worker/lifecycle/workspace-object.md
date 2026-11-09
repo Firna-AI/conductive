@@ -51,6 +51,9 @@ command start. For a workspace object, it:
 - applies the state in each deadline reply, even when the saved runner
   flag says connected
 - reads the sandbox state from Boat while the runner is not connected
+- watches the restore after each create and resume until Boat reports its
+  end, or until a stop, an error, an archive, or a new start, as
+  [Creates and resumes](#creates-and-resumes) says
 - runs the disk retention restart 13 days after each confirmed stop
 - retries the sandbox delete of a failed create
 - retries a failed `changed` hook, as
@@ -183,6 +186,33 @@ create and resume. The workspace object runs that start:
 - While a start job exists, the start keeps its own due time, and the
   lifecycle state keeps none. After the start ends, the alarm run sets the
   lifecycle due time from the saved state.
+- The first lifecycle prepare of each create and resume also starts the
+  restore watch. After a start from a saved snapshot, Boat downloads the
+  file content in the background. The
+  [terminal backend](../terminal/README.md) moves an early shell only after
+  that restore ends. The alarm reads the sandbox with
+  `checkWorkspaceRestore` 5 seconds after the prepare, and then every
+  5 seconds. `restoreWatchAt` in the lifecycle state keeps the time of the
+  next read. When the watch is due, its read takes the place of the Boat
+  state read of that alarm.
+  - A reply with `hydrated: false` keeps the watch.
+  - A reply with `hydrated: true`, or without `hydrated`, ends the watch.
+    The watch then writes the restore marker of the terminal with
+    `markTerminalRestoreEnded`. Boat's schema makes the field optional,
+    and Boat says that a sandbox that restored nothing is hydrated from
+    the start.
+  - A stopped or error state ends the watch, and the alarm applies that
+    state as the Boat state read does. A stopping state, such as
+    `archiving`, also ends the watch. Neither writes the marker.
+  - A Boat error or a failed marker command keeps the watch. The alarm
+    error handling tries again in 30 seconds.
+  - A stop, an error, an archive, or a new start ends the watch. An access
+    stop, such as at an org suspension, also ends it when Boat still runs
+    the sandbox and the stop waits for a retry. The watch has no deadline
+    of its own, so it can last until a stop, such as the idle stop after 30
+    minutes without activity.
+  - A disk retention restart starts no watch, because it starts no
+    terminal.
 - The end of a create stores its result in the object, with the first
   retry time of its D1 publication. The create then writes that result to
   D1. A failed write retries at the publication's own due time, also while

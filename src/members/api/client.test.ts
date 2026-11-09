@@ -128,18 +128,26 @@ describe('createMembersApi', () => {
     ).rejects.toMatchObject({ status: 200, code: 'invalid_response' })
   })
 
-  it('keeps_only_the_names_of_the_env_vars', async () => {
+  it('keeps_only_the_names_and_the_marks_of_the_env_vars_and_reads_a_missing_mark_as_secret', async () => {
     const server = new FakeApiServer({ role: 'member' })
     server.json('GET', orgSettingsPaths.settings(org), {
       settings: {
         installScript: '',
         startupScript: '',
-        envVars: [{ name: 'DATABASE_URL', value: 'postgres://secret' }],
+        envVars: [
+          { name: 'DATABASE_URL', secret: true, value: 'postgres://secret' },
+          { name: 'SITE_URL', secret: false },
+          { name: 'LEGACY_TOKEN' },
+        ],
         updatedAt: 1,
         needsBuild: false,
       },
     })
     const settings = await createMembersApi(server.fetch).settings(org)
-    expect(settings.envVars).toEqual([{ name: 'DATABASE_URL' }])
+    expect(settings.envVars).toEqual([
+      { name: 'DATABASE_URL', secret: true },
+      { name: 'SITE_URL', secret: false },
+      { name: 'LEGACY_TOKEN', secret: true },
+    ])
   })
 })

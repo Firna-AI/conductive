@@ -108,5 +108,5 @@ in the commands of the workspace Durable Object.
   environment and the custom spawn.
 - `src/providers/codex.ts`: the Codex adapter, its model provider settings,
   and the login request.
-- `src/output-sanitizer.ts`: `OutputSanitizer`, which keeps each login for
-  the output filter.
+- [`output-sanitizer.ts`](../src/shared/output-sanitizer.ts):
+  `OutputSanitizer`, which keeps each login for the output filter.
