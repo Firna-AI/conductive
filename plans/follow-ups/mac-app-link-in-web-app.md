@@ -8,8 +8,8 @@
 
 - **Terms:**
   - **Mac command:** a request from an agent to run a shell command on the Mac of the person who sent the turn. Only the Mac app can allow it.
-  - **Release repository:** the public repository `Firna-AI/conductive-desktop`. Each Mac app version is a GitHub release there, with a DMG for each chip under a fixed name.
-- **Background:** When an agent asks to run a command on the Mac, the web app in a browser shows the request without the choices, because only the Mac app can allow it. When no Mac app runs, the command card says "The Mac is asleep, or the Mac app is closed." The marketing site at `conductive.build` links the Mac app downloads from the release repository, through one module under `docs/mockups/src/` that holds the fixed addresses.
+  - **Latest release:** the newest published release of the public repository `Firna-AI/remote-code`. It holds a notarized DMG for each chip.
+- **Background:** When an agent asks to run a command on the Mac, the web app in a browser shows the request without the choices, because only the Mac app can allow it. When no Mac app runs, the command card says "The Mac is asleep, or the Mac app is closed." The marketing site at `conductive.build` links the DMG of each chip from the latest release. `src/marketing/links.ts` holds those download addresses.
 - **Problem:** A user of the web app who has never installed the Mac app learns that a Mac app exists, but the web app gives no way to get it.
 - **Impact if no action:** The user must find the download on the marketing site alone, so a Mac command request stays without an answer.
 - **Root question:** How does a user of the web app who meets a Mac command get the Mac app?
