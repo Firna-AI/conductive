@@ -49,6 +49,12 @@ Checked on 8 November 2026. The notes give each source.
   Conductor, also writes. A user key belongs to one Conductor org.
 - The API also knows workspace keys and sign-in tokens. Some routes
   refuse them. Nobody has checked which read routes accept a sign-in token.
+- Checked on 9 November 2026 with no credentials: only the MCP server
+  publishes OAuth metadata. That metadata offers self-service client
+  registration, PKCE, refresh tokens, and public clients with no secret.
+  The REST routes answer with 401 and no OAuth challenge, and their
+  OpenAPI document names only a bearer token. So the REST routes probably
+  do not accept the MCP sign-in token.
 - The read routes give projects with their Git remote, workspaces with
   their name, repository, state, and creator, personal sections with
   their workspace IDs, sessions with their name and model, and full
