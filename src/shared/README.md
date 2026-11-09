@@ -78,7 +78,7 @@ They count omitted files. The complete Changes response has no summary cap.
 It identifies the lost runner event without copying its data.
 Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
 Only the workspace sets that flag.
-[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the rules of the request and of a failed repair.
 
 `events.ts` defines the browser stream. Its event numbers span all sessions

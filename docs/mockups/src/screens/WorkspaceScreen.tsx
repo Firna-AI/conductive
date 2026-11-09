@@ -88,6 +88,7 @@ export function WorkspaceScreen(props: {
           title="New session"
         />
       }
+      fold={state.fold}
       items={
         fresh
           ? []

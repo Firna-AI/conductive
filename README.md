@@ -248,6 +248,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Create a workspace](docs/protocol/create-a-workspace.md)
   - [Repository folders](docs/protocol/repository-folders.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
+  - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
   - [GitHub banner](docs/protocol/github-banner.md)
   - [Agent tools](docs/protocol/agent-tools.md)
@@ -256,6 +257,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Operator actions](docs/protocol/operator-actions.md)
   - [Operator section](docs/protocol/operator-section.md)
   - [Command palette](docs/protocol/command-palette.md)
+  - [Command palette: empty and unavailable states](docs/protocol/command-palette-states.md)
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): licenses for copied icons
   and the bundled font.
