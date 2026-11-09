@@ -69,8 +69,9 @@ Installed copies update themselves from these releases.
 [Releases](../docs/protocol/desktop-app.md#releases) in the Mac app protocol states the requirements.
 
 `.github/workflows/release.yml` holds the whole release.
-Reusable workflows hold the Mac checks and the signing steps.
+The reusable workflow `desktop-mac-checks.yml` holds the Mac checks, and `desktop-sign.yml` holds the signing steps.
 The Desktop workflow and the release workflow run the same Mac checks.
+`desktop/scripts/publish.ts` checks the files and publishes the draft.
 A release happens in these steps:
 
 1. On each push to `main`, release-please keeps one release pull request up to date.
@@ -107,15 +108,17 @@ That run keeps the updater off and publishes nothing.
 Use it to test signing.
 
 release-please uses the `RELEASE_PLEASE_TOKEN` secret when it exists, and the built-in token otherwise.
-GitHub starts no workflow for a pull request that the built-in token opens or updates.
-So CI does not run on the release pull request.
-A token in the `RELEASE_PLEASE_TOKEN` Actions secret turns that CI on, with no code change.
+With the built-in token, `github-actions[bot]` opens the release pull request.
+GitHub then runs CI on it only after a person with write access approves the runs.
+The built-in token also needs "Allow GitHub Actions to create and approve pull requests" in the repository's Actions settings.
+A token in the `RELEASE_PLEASE_TOKEN` Actions secret runs CI on the release pull request with no approval, and needs no code change.
 
 One root release-please component covers the whole product, so the web app and the Mac app share one version.
 Versions have the form `0.x.y`.
 With `bump-minor-pre-major`, a breaking change raises the minor number before 1.0.
-A commit with the footer `Release-As: X.Y.Z` sets the next version.
-The first release is `0.1.0`, through such a commit.
+The manifest starts at `0.0.0` from the bootstrap commit in `release-please-config.json`.
+The first `feat` commit after that commit makes the first release `0.1.0`.
+A commit with the footer `Release-As: X.Y.Z` sets another next version.
 The signed `0.1.0-alpha.1` build has the updater off.
 People with that build install a newer version by hand once, from the DMG of a release.
 After that, the app updates itself.

@@ -3,14 +3,14 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-09, from the Mac app update plan on branch `calummoore/desktop-app-auto-update`, after the user made the repository public.
-- **Location:** The `on:` path filters and the `matrix.runner` expression of `.github/workflows/desktop-ci.yml`. Lines 209 to 219 of `desktop/README.md`, in the section "Checks and packages".
+- **Location:** The `on:` path filters of `.github/workflows/desktop-ci.yml`, and the `matrix.runner` expression of `.github/workflows/desktop-mac-checks.yml`. The paragraph "Mac CI runs the source and packaged tests" and the path list after it in the section "Checks and packages" of `desktop/README.md`.
 - **Reason:** the cost and the coverage of CI are outside the update change.
 
 - **Terms:**
   - **Standard GitHub-hosted runner:** a runner that GitHub provides, such as `macos-15` or `ubuntu-latest`, as opposed to a larger or a self-hosted runner.
 - **Background:**
-  - The Desktop workflow runs only when a change touches `desktop/**`, `worker/security/desktop-*`, `src/**`, or the workflow file.
-  - Pull requests run only the Apple silicon runner. Pushes to `main`, to the primary branch, and of `v*` tags also run the Intel runner.
+  - The Desktop workflow runs only when a change touches `desktop/**`, `worker/security/desktop-*`, `src/**`, its own file, or `.github/workflows/desktop-mac-checks.yml`.
+  - Pull requests run only the Apple silicon runner. Pushes to `main` and to the primary branch, and manual runs, also run the Intel runner. The release workflow runs both runners before it signs a release.
   - `desktop/README.md` says: "The orchestrator chose these filters because private Mac runner minutes cost about ten times Linux minutes."
   - The user made `Firna-AI/remote-code` public on 9 November 2026. GitHub does not charge for standard GitHub-hosted runners in public repositories. Nobody checked the billing page of the organization.
 - **Problem:** The README gives a cost reason that no longer holds. Pull requests skip the Intel checks to save minutes that are now free.

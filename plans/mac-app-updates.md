@@ -66,10 +66,10 @@ and 3. The options check of the decisions added the calls that say so:
   runs on Linux, because it only uploads files with `gh`. Added on 9
   November 2026.
 - release-please uses `secrets.RELEASE_PLEASE_TOKEN || github.token`, as in
-  Mokly. With the built-in token, CI does not run on the release pull
-  request, because GitHub starts no workflow for a pull request that the
-  built-in token opens. A stored token turns that CI on later, with no code
-  change. Added on 9 November 2026.
+  Mokly. With the built-in token, GitHub runs CI on the release pull request
+  only after a person approves it. A stored token runs CI with no approval,
+  and needs no code change. Decision 7 chooses. Added on 9 November 2026,
+  and corrected on the same day after the options check.
 - Only the signing job of a release turns the updater on. Manual, pull
   request, and local builds keep it off. Reason: macOS installs an update
   only into a Developer ID build, and a test build with the updater on could
@@ -121,9 +121,11 @@ and 3. The options check of the decisions added the calls that say so:
 - The publish step runs the `gh` command through the existing release
   command runner. GitHub's macOS runners have `gh`, so the change adds no
   dependency.
-- The first release is `0.1.0`, through a `Release-As: 0.1.0` commit. People
-  with the `0.1.0-alpha.1` build install it by hand once. Replaces the call
-  of 8 November 2026 for `0.1.0-alpha.2`.
+- The first release is `0.1.0`. The manifest starts at `0.0.0` from a
+  bootstrap commit, and the first `feat` commit after it gives `0.1.0`.
+  People with the `0.1.0-alpha.1` build install it by hand once. Replaces
+  the call of 8 November 2026 for `0.1.0-alpha.2`. Updated on 9 November
+  2026, because no `Release-As` commit is necessary.
 - The change has no mockup work. It adds no screen, and the mockups do not
   draw native dialogs.
 - The first public release waits for the merge. Reason: a release reaches
@@ -319,56 +321,77 @@ reviewers on the environments of a public repository.
 
 ### 6. Answer a failed download after a manual check
 
+The options check of 9 November 2026 added options D, E, and F, widened the
+root question, and changed the recommendation from B to E. Its report is
+`.context/mac-app-updates/options-check-6-7.md`.
+
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation. The docs implementor found it in Milestone 1.
 - **Category:** Docs or spec.
 - **Location:** "Updates in the app" in `docs/protocol/desktop-app.md`, and the manual check in `desktop/src/updates.ts`.
 - **Background:**
   - Decision 5 chose a dialog for each manual check. When a check finds a new version, the app says "Downloading the new version. Conductive tells you when it is ready."
-  - The download takes about a minute. It can fail, for example when the network drops.
+  - The download is about 130 MB. It can fail, for example when the network drops.
+  - After the download, macOS can still refuse the version. It always refuses on a read-only copy, such as a copy that runs from its mounted DMG.
+  - electron-updater reports a failed download and a refusal by macOS through the same download promise. Its own `update-downloaded` event fires between the download and the handoff to macOS, so the app can tell the two apart.
   - The protocol says that a failed check, download, or install shows no error. Only a failed manual check shows one.
-- **Problem:** When the download fails after that message, the app says nothing more. It breaks its promise to tell the person.
-- **Impact if no action:** The person waits for a message that never comes. They learn of the failure only when they check again.
-- **Root question:** How does a person who asked for a check learn that the new version did not download?
+  - After a short failure, the next automatic check, at most 4 hours later, downloads again and shows "The update is ready.".
+- **Problem:** After "Downloading the new version.", a failed download or a refusal by macOS leaves the person without an answer.
+- **Impact if no action:** The person waits for a message that never comes. When the failure lasts, as on a read-only copy, they never learn why.
+- **Root question:** How does a person who chose Check for updates learn the final outcome, also when the new version never becomes ready?
 - **Options:**
   - **A.** Change nothing. The person can choose Check for updates again. Effort: Small.
-  - **B.** When a download that a manual check started fails, show "Conductive could not download the update. Try again later." Automatic downloads stay silent. Effort: Small.
-  - **C.** Change the text for a found version so that it promises nothing, such as "Downloading the new version.". A failure then stays silent. This changes the text that the user chose. Effort: Small.
-- **Left out:** The text of a failed check: it names the wrong failure, and the copy rules say that an error names what failed. B is better on every point.
-- **Wider fix:** None. This is a design question.
+  - **B.** When a download that a manual check started fails, show "Conductive could not download the update. Try again later." A refusal by macOS stays silent. Effort: Small.
+  - **C.** Change the found-version text of decision 5 so that it promises nothing, such as "Downloading the new version.". A failure then stays silent. Effort: Small.
+  - **D.** Answer a manual check once, with its final outcome. After a found version, no dialog shows until macOS accepts the version or a step fails. The person gets no answer during the download. Effort: Small.
+  - **E.** Keep the found-version answer, and follow that version until macOS accepts it. A failed download shows B's text. A refusal by macOS shows "Conductive could not install the update. Try again later." On a read-only copy, it shows "Move Conductive to Applications to install the update." instead. Automatic downloads stay silent. Effort: Small.
+  - **F.** Answer a manual check in a small progress window, as the Mac update framework Sparkle does. The window shows the download, then the ready state or the failure. It needs a new window, a mockup, and a protocol change. Effort: Large.
+- **Left out:**
+  - The text of a failed check: it names the wrong failure, and the copy rules say that an error names what failed. B is better on every point.
+  - A notification, a Help menu label, or a Dock progress bar as the answer: decision 5 rejected an answer that the person can miss.
+- **Wider fix:** E. It ends each manual check with one true answer, whatever step fails after the promise.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/read-only-copies-never-update.md` covers an install that macOS refuses on a read-only copy. This item covers a failed download only.
-- **Recommendation:** B. The person asked and got a promise, so a failure needs an answer too.
-- **Action:** ask the user, because B adds an error dialog that no requirement covers, and C changes text that the user chose.
+- **Related:** `plans/follow-ups/read-only-copies-never-update.md` adds an offer at launch to move a read-only copy into Applications. E's read-only text only explains a refusal after a manual check.
+- **Recommendation:** E. It costs the same as B, and its answer stays true for every failure after the promise, also on a read-only copy, where B's "Try again later." never helps. The first recommendation was B.
+- **Action:** ask the user, because B, D, E, and F add or change answers that no requirement covers, and C changes the found-version text of decision 5.
 
 ### 7. Give the release pull request a green check
+
+The options check of 9 November 2026 moved D to **Left out**, because GitHub
+ignores checks from a `workflow_dispatch` run on a pull request. It added
+options E and F and changed the recommendation from D to A.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation.
 - **Category:** Process.
-- **Location:** The release-please job of `.github/workflows/release.yml`, the triggers of `.github/workflows/ci.yml`, and the section "CI" of `AGENTS.md`.
+- **Location:** The release-please job of `.github/workflows/release.yml`, and the section "CI" of `AGENTS.md`.
 - **Terms:**
   - **`Complete gate`:** the job of `.github/workflows/ci.yml` that runs `npm run check`.
   - **Fine-grained token:** a personal access token that reaches only the repositories and permissions that its owner picks.
 - **Background:**
-  - `AGENTS.md` says that a commit reaches `main` only through a pull request with a green `Complete gate` check. An admin can bypass the rule, and no ruleset enforces it yet.
-  - release-please opens the release pull request. With the built-in token, GitHub starts no workflow for that pull request, so it never gets a `Complete gate` check.
-  - The built-in token can still start a workflow by hand, with `workflow_dispatch`. A check from such a run belongs to its commit, so the pull request of that commit shows it.
-  - Mokly's release workflow reads `secrets.RELEASE_PLEASE_TOKEN || github.token`. With a stored token, the release pull request has a person as its author, and CI runs.
-  - The release pull request changes only versions, lockfile version fields, and the changelog. After its merge, CI runs on `main`, and the release workflow runs the Mac checks before it signs.
-- **Problem:** The release pull request cannot get a green `Complete gate` check, so each release breaks the rule of `AGENTS.md`.
-- **Impact if no action:** Each release needs the admin bypass. A future ruleset on `main` would stop every release.
+  - `AGENTS.md` says that a commit reaches `main` only through a pull request with a green `Complete gate` check. No ruleset enforces it yet, and `main` has no protection.
+  - release-please opens the release pull request. The workflow reads `secrets.RELEASE_PLEASE_TOKEN || github.token`, as Mokly's does.
+  - With the built-in token, the pull request's author is `github-actions[bot]`. Since 11 June 2026, GitHub runs workflows on such a pull request only after a person with write access approves them.
+  - With the built-in token, release-please also needs the repository setting "Allow GitHub Actions to create and approve pull requests".
+  - A check from a `workflow_dispatch` run does not show on a pull request, and it does not count as a required check.
+  - In `mokly-ai/mokly` and `futex-ai/ui`, the release pull requests have `calummoore` as their author, so a stored token opens them, and CI runs without a click.
+  - The release pull request changes only versions and `CHANGELOG.md`. The release workflow runs the Mac checks before it signs. CI on `main` runs beside it and does not block it.
+- **Problem:** With the built-in token, the release pull request gets a green `Complete gate` check only after a manual approval for each update.
+- **Impact if no action:** Each release needs an approval click and a wait of about 10 to 13 minutes, or a merge without the check that `AGENTS.md` requires.
 - **Root question:** How does the release pull request meet the rule that a pull request reaches `main` only with a green check?
 - **Options:**
-  - **A.** A fine-grained token, owned by the user, for `Firna-AI/remote-code` only, with read and write access to contents, issues, and pull requests. The user stores it as the repository secret `RELEASE_PLEASE_TOKEN`. CI then runs on each release pull request. The token expires at least once a year. Effort: Small.
+  - **A.** A fine-grained token, owned by the user, for `Firna-AI/remote-code` only, with read and write access to contents, issues, and pull requests. The user stores it as the repository secret `RELEASE_PLEASE_TOKEN`. CI then runs on each update of the release pull request with no click. The token expires at least once a year. Workflows of any branch in this repository can read it, but agents already act as the user. Effort: Small.
   - **B.** A GitHub App for releases, installed only on this repository. The job makes a one-hour token with `actions/create-github-app-token`. No person owns it, and it does not expire. Effort: Medium.
   - **C.** Exempt the release pull request from the rule in `AGENTS.md`. Effort: Small.
-  - **D.** After release-please updates its pull request, the release workflow starts `ci.yml` and `desktop-ci.yml` on the release branch with `workflow_dispatch`. Their checks then show on the release pull request. It needs no stored token. `ci.yml` gets a `workflow_dispatch` trigger. Effort: Small.
-- **Left out:** Close and reopen the release pull request by hand, which also starts CI: each release needs a manual step, and D does the same without it. D is better on every point.
-- **Wider fix:** None. This is a design question.
+  - **E.** Keep the built-in token. Turn on "Allow GitHub Actions to create and approve pull requests". Before each merge, the user selects the approval for the pending runs, and then waits for CI. No code change and no stored token. Effort: Small.
+  - **F.** C, and the release workflow runs the complete gate on the release commit before it signs, through a `workflow_call` trigger on `ci.yml`. A failed gate leaves the tag and the draft, so the fix ships as the next version. It adds a gate. Effort: Small.
+- **Left out:**
+  - D, starting `ci.yml` with `workflow_dispatch` on the release branch: GitHub ignores its checks on the pull request and for required checks, so D fails the goal.
+  - Close and reopen the release pull request by hand: E needs one click and keeps the pull request open, so E is better on every point.
+- **Wider fix:** F's gate, for the release path. It stops a release whose commit fails the complete gate, whatever the pull request shows.
 - **Previous examples:** `.github/workflows/release.yml` of `mokly-ai/mokly` reads `RELEASE_PLEASE_TOKEN`.
-- **Recommendation:** D. It runs CI on every release pull request with no stored token and no expiry. A is the way Mokly works, and it is the simplest if you prefer a token.
-- **Action:** ask the user, because A and B need a credential that only the user can create, C changes a rule of `AGENTS.md`, and D changes how CI starts.
+- **Recommendation:** A. The user already works this way in `mokly-ai/mokly` and `futex-ai/ui`, and the workflow already reads the secret, so CI runs on every update with no click and no code change. The first recommendation was D, which fails. E is best without a stored token. F best protects the release itself.
+- **Action:** ask the user, because A, B, and E need a credential or a setting that only the user can create, C changes a rule of `AGENTS.md`, and F adds a gate.
 
 ## Milestone 1: Documentation and protocol
 
@@ -405,6 +428,10 @@ repository settings, so the user does this step.
 - [ ] The user changes the deployment rules of the `desktop-release`
       environment to admit only `main`, as decision 2 chose. This can happen
       at once, because no release uses a tag any more.
+- [ ] The user applies the setting or the token of decision 7. Without a
+      `RELEASE_PLEASE_TOKEN` secret, release-please needs "Allow GitHub
+      Actions to create and approve pull requests" in the repository's
+      Actions settings.
 
 ## Milestone 3: Publish pipeline
 
@@ -413,29 +440,29 @@ Depends on: 1
 Publish each signed release to the feed, and turn the updater on in the
 builds that publish.
 
-- [ ] Point the feed at `Firna-AI/remote-code` in `desktop/src/updates.ts`
+- [x] Point the feed at `Firna-AI/remote-code` in `desktop/src/updates.ts`
       and `desktop/electron-builder.yml`. Turn `allowPrerelease` off, and set
       `releaseType: release`.
-- [ ] Set `dmg.writeUpdateInfo: false` in `desktop/electron-builder.yml`.
-- [ ] Add `release-please-config.json` and `.release-please-manifest.json`:
+- [x] Set `dmg.writeUpdateInfo: false` in `desktop/electron-builder.yml`.
+- [x] Add `release-please-config.json` and `.release-please-manifest.json`:
       one root `node` component, extra files for `desktop/package.json` and
       the lockfiles, `draft`, `force-tag-creation`, and a bootstrap commit
       at the current `main`.
-- [ ] Move the signing steps into a reusable workflow for the release
+- [x] Move the signing steps into a reusable workflow for the release
       workflow and for manual runs.
-- [ ] Add `.github/workflows/release.yml`: release-please, the Mac checks,
+- [x] Add `.github/workflows/release.yml`: release-please, the Mac checks,
       signing with the updater on, and the publish job.
-- [ ] Add the publish script: upload to the draft, check, and publish.
-  - [ ] Add unit tests with a fake command runner: a new release, a
+- [x] Add the publish script: upload to the draft, check, and publish.
+  - [x] Add unit tests with a fake command runner: a new release, a
         leftover draft, a published release for the version, a missing
         file, and a failed upload.
-- [ ] Update `.github/workflows/desktop-ci.yml`.
-  - [ ] Remove the tag trigger and the old tag release job, as decision 2
+- [x] Update `.github/workflows/desktop-ci.yml`.
+  - [x] Remove the tag trigger and the old tag release job, as decision 2
         chose. Delete `plans/follow-ups/branch-tags-get-signing-secrets.md`
         in the same commit.
-  - [ ] Keep `latest-mac.yml` and the ZIP block maps in the signed
+  - [x] Keep `latest-mac.yml` and the ZIP block maps in the signed
         artifacts.
-- [ ] Run the desktop typecheck, lint, format check, and unit tests.
+- [x] Run the desktop typecheck, lint, format check, and unit tests.
 
 ## Milestone 4: Update dialog and manual checks
 
@@ -444,12 +471,13 @@ Depends on: 1
 Show the update dialog only for an update that can install, and answer
 each manual check.
 
-- [ ] Show "The update is ready." only after Squirrel.Mac accepts the
+- [x] Show "The update is ready." only after Squirrel.Mac accepts the
       update.
-- [ ] Apply decision 5: the dialogs that answer a manual check. Decision 4
+- [x] Apply decision 5: the dialogs that answer a manual check. Decision 4
       chose no change in this branch.
-- [ ] Add unit tests in `desktop/src/updates.test.ts` for each new outcome.
-- [ ] Run the desktop typecheck, lint, format check, and unit tests.
+- [ ] Apply decision 6, when the user answers it.
+- [x] Add unit tests in `desktop/src/updates.test.ts` for each new outcome.
+- [x] Run the desktop typecheck, lint, format check, and unit tests.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
@@ -457,7 +485,8 @@ Depends on: 1, 2, 3, 4
 
 Check the whole change, review it, and open the pull request.
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      Evidence: `.context/mac-app-updates/gate.log`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-release
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Create or update release pull request
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+  mac:
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.release_created == 'true') }}
+    needs: release-please
+    uses: ./.github/workflows/desktop-mac-checks.yml
+    with:
+      ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
+  sign:
+    if: ${{ !cancelled() && needs.mac.result == 'success' && github.ref == 'refs/heads/main' }}
+    needs: [release-please, mac]
+    uses: ./.github/workflows/desktop-sign.yml
+    with:
+      ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
+      updates: ${{ needs.release-please.outputs.release_created == 'true' }}
+  publish:
+    if: needs.release-please.outputs.release_created == 'true'
+    needs: [release-please, sign]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v6
+        with:
+          name: desktop-signed-packages
+          path: desktop/dist/release
+      - name: Verify and publish signed files
+        run: node desktop/scripts/publish.ts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+          RELEASE_VERSION: ${{ needs.release-please.outputs.version }}

@@ -1,0 +1,57 @@
+name: Mac app checks
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  mac:
+    name: Mac app ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ github.event_name == 'pull_request' && fromJSON('["macos-15"]') || fromJSON('["macos-15", "macos-15-intel"]') }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            desktop/package-lock.json
+      - run: npm ci
+      - run: npm --prefix desktop ci
+      - run: npm --prefix desktop run typecheck
+      - run: npm --prefix desktop run lint
+      - run: npm --prefix desktop run format:check
+      - run: npm --prefix desktop run test:logic
+      - run: npm --prefix desktop run build
+      - run: npm --prefix desktop run test:electron
+      - run: npm --prefix desktop run package
+      - run: npm --prefix desktop run test:packaged
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: desktop-evidence-${{ matrix.runner }}
+          path: |
+            .context/boat-native-remote-workspaces/desktop-*.json
+            .context/boat-native-remote-workspaces/desktop-*.png
+            desktop/dist/test-results/
+          retention-days: 14
+      - uses: actions/upload-artifact@v6
+        with:
+          name: desktop-packages-${{ matrix.runner }}
+          path: |
+            desktop/dist/release/*.dmg
+            desktop/dist/release/*.zip
+          retention-days: 14

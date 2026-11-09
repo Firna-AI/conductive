@@ -215,6 +215,7 @@ Mac jobs run only when changed files match these paths:
 - `worker/security/desktop-*`
 - `src/**`
 - `.github/workflows/desktop-ci.yml`
+- `.github/workflows/desktop-mac-checks.yml`
 
 The orchestrator chose these filters because private Mac runner minutes cost about ten times Linux minutes.
 The Linux gate installs desktop dependencies without downloading the Electron binary.
