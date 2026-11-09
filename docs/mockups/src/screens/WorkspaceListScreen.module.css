@@ -119,6 +119,18 @@ a.sheetRow:hover {
   color: var(--ui-muted);
 }
 
+/* The mark of Operator, which only an operator sees. */
+.operatorTile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+}
+
 .sheetDivider {
   height: 1px;
   margin: 6px 12px;

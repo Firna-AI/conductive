@@ -1,0 +1,7 @@
+/* The tiles share one box with a full outline, as a settings section has. */
+.band {
+  padding: 16px 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+}

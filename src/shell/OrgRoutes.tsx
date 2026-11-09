@@ -20,7 +20,10 @@ import { useViewport } from './ui/viewport'
 import { WorkspaceScreen } from './workspace/WorkspaceScreen'
 import { inFirstRun } from '../app/get-started'
 
-/** The desktop frame with the rail of the user's orgs. */
+/**
+ * The desktop frame with the rail of the user's orgs. The rail of an
+ * operator also leads to the operator section.
+ */
 export function RailFrame(props: {
   user: User
   current: RailCurrent
@@ -30,12 +33,14 @@ export function RailFrame(props: {
   const app = useApp()
   const orgs = useStore(app.orgs)
   const getStarted = useStore(app.getStarted)
+  const operator = useStore(app.account.account)?.operator === true
   return (
     <AppFrame
       rail={
         <OrgRail
           current={props.current}
           firstRun={inFirstRun(getStarted)}
+          operator={operator}
           orgs={orgs}
           user={props.user}
         />
