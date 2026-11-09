@@ -1,6 +1,6 @@
 /**
- * The page of one org and of one user, as the operator opens them, in
- * each state of the pages.
+ * The page of one org, as the operator opens it, in each state of the
+ * page. The pages of a user are in `operatorUserPages.ts`.
  */
 import type { StateCounts } from './operator'
 import type {
@@ -74,60 +74,3 @@ export const orgPages: Readonly<Record<TargetStatus, OrgPage>> = {
     deleted: { on: '5 Nov', purge: '12 Nov' },
   },
 }
-
-/** An org of a user, with the role of the user in it. */
-export type UserOrg = {
-  name: string
-  initials: string
-  role: 'Admin' | 'Member'
-}
-
-/** The page of a user: their details, workspaces, and orgs. */
-export type UserPage = {
-  login: string
-  name: string
-  initials: string
-  githubId: number
-  joined: string
-  owned: number
-  running: number
-  orgs: readonly UserOrg[]
-  suspension?: SuspensionNote
-}
-
-const dana = {
-  login: 'dana-k',
-  name: 'Dana Kim',
-  initials: 'DK',
-  githubId: 58201734,
-  joined: '21 Oct 2026',
-  owned: 14,
-  orgs: [
-    { name: 'Hexwave', initials: 'HW', role: 'Member' },
-    { name: 'Dana’s Lab', initials: 'DL', role: 'Admin' },
-  ],
-} as const
-
-/** The pages of a user: in use, suspended, and the operator's own. */
-export const userPages = {
-  active: { ...dana, running: 1 },
-  suspended: {
-    ...dana,
-    running: 0,
-    suspension: { since: '6 Nov at 09:12', by: account.login, stopping: 0 },
-  },
-  self: {
-    login: account.login,
-    name: account.name,
-    initials: account.initials,
-    githubId: 4412907,
-    joined: '2 Sep 2026',
-    owned: 41,
-    running: 2,
-    orgs: [
-      { name: 'Acme', initials: 'AC', role: 'Admin' },
-      { name: 'Futex', initials: 'FX', role: 'Admin' },
-      { name: 'Firna', initials: 'FI', role: 'Admin' },
-    ],
-  },
-} as const satisfies Record<string, UserPage>
