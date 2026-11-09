@@ -35,12 +35,17 @@ says.
 - The product is free, with no limits (decisions 45 and 81). It has no
   plans, no billing, and no limits of its own on workspaces, minutes, or
   members.
-- Limits for each user, billing, and an invite-only sign-up were rejected
-  for now. Billing can come later (decision 81).
+- Limits for each user and billing were rejected for now. Billing can come
+  later (decision 81).
+- A waitlist stands in front of the app (decision 160). A new account
+  waits for app access, as [Waitlist](waitlist.md) says.
 
 ## Get started
 
 - Get started is the only first run.
+- Get started opens only after app access. A person who waits sees the
+  [waitlist screen](waitlist.md#the-waitlist-screen) instead. Reason: the
+  steps of Get started need app access.
 - It has three steps, in this order (decisions 33 and 80):
   1. Install the GitHub App.
   2. Create the first org.
@@ -80,6 +85,9 @@ says.
   person accepts each matching invitation.
 - Reason: a GitHub login can be renamed and taken by another account. A
   verified email proves the inbox.
+- An accepted invitation also gives app access to a person who waits, with
+  no count (decision 163).
+  [Org invitations](waitlist.md#org-invitations) states the rule.
 - Only an admin invites and removes members, changes a role, reassigns a
   workspace, and deletes the org.
 - Only an admin changes the repositories, the install script, the startup

@@ -209,6 +209,9 @@ limits, their results, and what the chat shows.
 
 - While the Mac app runs and is signed in, it registers its Mac as a
   device of its signed-in user (decision 62).
+- The Mac app registers the Mac only while its user has app access. When
+  app access arrives, it opens its device connection again, with no new
+  launch, as [The waitlist screen](waitlist.md#the-waitlist-screen) says.
 - The Mac app holds one device connection to the Worker, on
   `app.conductive.build`. The connection proves its user with the sign-in
   session of the Mac app.
