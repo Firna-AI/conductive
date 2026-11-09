@@ -24,6 +24,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       stale: ${{ steps.commit.outputs.stale }}
+      attempt: ${{ steps.commit.outputs.attempt }}
     steps:
       - name: Check the head of main
         id: commit
@@ -31,6 +32,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          echo "attempt=$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
           if head=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha) &&
             [[ "$head" =~ ^[[:xdigit:]]{40}$ ]]; then
             if [[ "$head" != "$GITHUB_SHA" ]]; then
@@ -43,19 +45,19 @@ jobs:
           fi
           echo 'stale=false' >> "$GITHUB_OUTPUT"
 
-  deploy:
-    name: Deploy
+  settings:
+    name: Check the deploy settings
     needs: check
+    if: >-
+      needs.check.outputs.stale == 'false' &&
+      needs.check.outputs.attempt == github.run_attempt
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    if: needs.check.outputs.stale == 'false'
+    timeout-minutes: 5
     environment:
       name: production
-      url: https://app.conductive.build
-    env:
-      RUNNER_BASE_URL: https://runner.conductive.build/
-      RUNNER_BUCKET: conductive-runner
-      HEALTH_URL: https://app.conductive.build/api/health
+      deployment: false
+    outputs:
+      deploy: ${{ steps.decide.outputs.deploy }}
     steps:
       # Check settings before a build or a change to the deployment.
       - name: Decide whether to deploy
@@ -82,22 +84,35 @@ jobs:
           fi
           echo 'deploy=true' >> "$GITHUB_OUTPUT"
 
+  deploy:
+    name: Deploy
+    needs: [check, settings]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: >-
+      needs.settings.outputs.deploy == 'true' &&
+      needs.check.outputs.attempt == github.run_attempt
+    environment:
+      name: production
+      url: https://app.conductive.build
+    env:
+      RUNNER_BASE_URL: https://runner.conductive.build/
+      RUNNER_BUCKET: conductive-runner
+      HEALTH_URL: https://app.conductive.build/api/health
+    steps:
       - name: Check out repository
-        if: steps.decide.outputs.deploy == 'true'
         uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       # The deploy job skips the npm cache.
       - name: Set up Node
-        if: steps.decide.outputs.deploy == 'true'
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           package-manager-cache: false
 
       - name: Install dependencies
-        if: steps.decide.outputs.deploy == 'true'
         run: |
           set -euo pipefail
           npm ci
@@ -105,7 +120,6 @@ jobs:
 
       # Build before any change to the live deployment.
       - name: Build app
-        if: steps.decide.outputs.deploy == 'true'
         run: |
           set -euo pipefail
           npm run build
@@ -113,7 +127,6 @@ jobs:
       # Name the archive by the digest of its contents.
       - name: Package runner
         id: runner
-        if: steps.decide.outputs.deploy == 'true'
         run: |
           set -euo pipefail
           node image/package-runner.mjs --base-url "$RUNNER_BASE_URL"
@@ -134,7 +147,6 @@ jobs:
       # Keep the derived S3 credentials in this step only.
       - name: Publish runner
         id: publish
-        if: steps.decide.outputs.deploy == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -190,7 +202,6 @@ jobs:
 
       # Use the source config so migrations do not follow the build redirect.
       - name: Apply migrations
-        if: steps.decide.outputs.deploy == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -200,7 +211,6 @@ jobs:
 
       # Wrangler follows the build redirect to the built Worker.
       - name: Deploy Worker
-        if: steps.decide.outputs.deploy == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -214,7 +224,6 @@ jobs:
             --tag "${GITHUB_SHA:0:7}" --message "main at $GITHUB_SHA"
 
       - name: Check health
-        if: steps.decide.outputs.deploy == 'true'
         run: |
           set -euo pipefail
           for attempt in {1..12}; do
@@ -230,7 +239,6 @@ jobs:
           exit 1
 
       - name: Write deploy summary
-        if: steps.decide.outputs.deploy == 'true'
         env:
           ARCHIVE_URL: ${{ steps.runner.outputs.url }}
           PUBLISH_RESULT: ${{ steps.publish.outputs.result }}
@@ -242,10 +250,14 @@ jobs:
             printf 'Archive publish result: %s\n' "$PUBLISH_RESULT"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # Older commits and partial re-runs start a new run on main.
+  # A re-run keeps the outputs of jobs that passed.
   redeploy:
     name: Start a deploy of the head
-    needs: check
-    if: needs.check.outputs.stale == 'true'
+    needs: [check, deploy]
+    if: >-
+      ${{ !cancelled() && needs.check.result == 'success' &&
+      (needs.check.outputs.stale == 'true' || needs.check.outputs.attempt != github.run_attempt) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

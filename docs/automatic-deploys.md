@@ -24,6 +24,13 @@ fails. [CI](../AGENTS.md#ci) says how a commit reaches `main`.
   and that run deploys the head with the head's own steps.
 - When a run cannot look up the head of `main`, it warns and deploys its
   own commit.
+- A re-run of only some jobs, such as Re-run failed jobs, also deploys
+  nothing. It starts a new run on `main`, because a re-run keeps the
+  outputs of the jobs that passed. Re-run all jobs retries the deploy in
+  the same run.
+- GitHub sends a failure alert to the person who starts a run. A run that
+  the workflow starts has no such person. So after a re-run, look at the
+  new run in GitHub Actions.
 
 ## GitHub settings
 
@@ -44,6 +51,9 @@ its own secrets and variables.
 - When neither setting exists, the run warns and deploys nothing. The run
   succeeds. So you can add the secret and the variable after you create
   the environment.
+- The settings check runs in its own job, which makes no deployment
+  record. So the history of `production` lists only the runs that
+  deployed.
 - When only one of the two settings exists, the run fails.
 
 ## The deploy token

@@ -191,6 +191,15 @@ so.
   waiting run replaces the older waiting run. Changed on 9 November 2026
   by review finding 1, after the options check had already changed it
   once.
+- The job `check` also outputs its run attempt. The jobs `settings` and
+  `deploy` run only when that output is from the current attempt. The job
+  `redeploy` also runs for a re-run of only some jobs. So a partial re-run
+  deploys nothing in place, and it starts a new run on `main`. Reason: a
+  re-run keeps the outputs of the jobs that passed, so an old head check
+  could select old code. Added on 9 November 2026 by review finding 4.
+- A run that `redeploy` starts sends its failure alert to no person, because
+  GitHub alerts the user that starts a run. The docs say so.
+  `plans/follow-ups/deploy-alerts-for-started-runs.md` holds the decision.
 - `ci.yml` does not change. Reason: decision 1 B does not wait for the
   gate.
 
@@ -208,6 +217,12 @@ so.
   only one exists, the run fails. Reason: the always-on rules ask to warn
   and continue when input is recoverable. A half setup is a mistake that
   must show.
+- The settings check runs in a job `settings` whose environment has
+  `deployment: false`. The job `deploy` runs only when it deploys. Reason:
+  a job that names an environment writes a deployment record with the
+  status of the job, so a skip in the job `deploy` recorded a false
+  success. Added on 9 November 2026 by review finding 3.
+  `plans/follow-ups/deploy-records-through-api.md` holds its wider fix.
 - The deploy sets only the two runner variables. Every other variable and
   secret stays on the Worker, as `keep_vars` in `wrangler.jsonc` intends.
 - Only the steps that use the token get it in their environment.
