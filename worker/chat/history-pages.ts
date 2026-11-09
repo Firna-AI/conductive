@@ -2,7 +2,7 @@ import type {
   ChatHistoryResponse,
   WorkspaceEventEnvelope,
   WorkspaceEvent,
-} from '../../src/shared/events'
+} from './workspace-events'
 import { HistoryCompaction } from './history-compaction'
 import {
   deleteHistoryEvent,

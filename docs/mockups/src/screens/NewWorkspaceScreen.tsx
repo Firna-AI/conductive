@@ -67,6 +67,8 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const building = state.org === 'new' && state.firstBuild !== 'succeeded'
   const failed = !suspended && state.result === 'error'
   const draft = newWorkspaceDrafts[state.draft]
+  // Send leads to the create flow, which draws the task of Saved carts.
+  const linked = state.draft === 'workspace-link'
   const text =
     state.org === 'new' && state.draft !== 'empty' ? page.draft : draft.text
   const notices = formNotices(state, failed, !building)
@@ -91,7 +93,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
-          failed || state.org === 'new' || text === ''
+          failed || linked || state.org === 'new' || text === ''
             ? undefined
             : paths.creating,
       }}

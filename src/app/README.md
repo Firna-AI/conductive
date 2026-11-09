@@ -80,6 +80,10 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The production build uses `live-services.ts`: the Worker on the origin of
   the page, and its event socket.
 
+The development fake keeps each org's workspace number counter.
+A create gets the next number and a web link on the fake API origin.
+Workspace readers keep the number and link that the Worker supplies.
+
 ## Composition
 
 `App` in `src/App.tsx` takes three props:
@@ -330,7 +334,10 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   gives the status part, which stands in place of the workspace groups
   while the list or the repository names load or after a read failed,
   and the reads that its Try again does again. `matcher.ts`
-  ranks the matches. `commands.ts` holds the labels and the search words.
+  ranks the matches. `rowTexts` includes the workspace number label, such
+  as `W-395`, in the search texts. `withNumberLabel` adds that label when
+  a query word matches it. `../shell/palette/PaletteList.tsx` draws it
+  before the name. `commands.ts` holds the labels and the search words.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
   `palette-keys.ts` the palette key and what it does, and `controller.ts`
@@ -364,9 +371,11 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
   and the dialog share: the repository, the notices, the readiness, and
   the send. `parts.tsx`: their repository menu and files.
-  `useCursorAtEnd.ts`: `useCursorAtEnd`, the handle of their message
-  field. It puts the cursor at the end of a kept message once, as the
-  field mounts.
+  The model of each form is the `owner` of its chip field. The shared chip
+  field supplies their focus handle. `CaretAtEndPlugin`
+  restores the saved caret position when keyboard focus enters. Without a
+  saved position, it puts the caret at the end. It lives in
+  `../chat/components/chip-field/focus-plugins.tsx`.
 - `../chat/components/send-key.ts`: `useSendKey`, the send key of every
   composer.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.

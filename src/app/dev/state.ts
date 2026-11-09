@@ -28,6 +28,7 @@ export interface OrgState {
   sections: readonly Section[]
   /** In the order of the workspace list. */
   workspaces: readonly Workspace[]
+  workspaceNumberCount: number
   starts: Map<string, StartRecord>
   /** The workspaces that the fake made. The recorded server has no replies for them. */
   created: Set<string>
@@ -123,6 +124,7 @@ export function freshOrg(
     org,
     sections: [{ ...general, orgId: org.id, position: 0, collapsed: false }],
     workspaces: [],
+    workspaceNumberCount: 0,
     starts: new Map(),
     created: new Set(),
     running: new Map(),

@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from '../chat/workspace-events'
 import { TEST_TIME } from '../test-support/harness'
 import type {
   GitHubRefreshRequest,

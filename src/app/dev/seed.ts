@@ -64,6 +64,10 @@ function acme(
     },
     sections: core.sectionList.sections,
     workspaces: workspaces.workspaces,
+    workspaceNumberCount: Math.max(
+      0,
+      ...workspaces.workspaces.map(({ number }) => number),
+    ),
     starts: new Map(workspaces.workspaces.map(startOf)),
     created: new Set(),
     running: new Map(),

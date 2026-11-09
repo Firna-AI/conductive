@@ -11,6 +11,7 @@ import {
 } from '../device/device-actions'
 import { createDeviceApi } from '../device/device-api'
 import {
+  browserTimers,
   WorkspaceStream,
   type StreamTimers,
   type SubscribeToWorkspace,
@@ -39,6 +40,7 @@ import {
 import { chooseModel } from './model-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
+import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
 import {
   confirmClose,
   newSession,
@@ -59,7 +61,8 @@ export interface ChatControllerOptions {
   newId?: () => string
   /**
    * The inputs that app models own, as `ChatSources` says. Without them,
-   * the chat reads the account, the org, the models, and the members itself.
+   * the chat reads the account, the org, the models, the members, and the
+   * workspace list itself.
    */
   sources?: ChatSources
   /**
@@ -83,6 +86,13 @@ const changesWorkspace = (envelopes: readonly StreamEnvelope[]) =>
  * calls `hide` and `show` instead, as `show` says.
  */
 export class ChatController {
+  /** The org and the workspace of the chat. */
+  readonly target: WorkspaceTarget
+  /**
+   * The workspaces whose links show as chips. The chat watches them while
+   * it shows, from `start` or `show` to `hide` or `stop`.
+   */
+  readonly workspaceList: WorkspaceList
   private readonly options: ChatControllerOptions
   private readonly store = new ChatStore()
   private context: ChatContext
@@ -90,10 +100,19 @@ export class ChatController {
   private started = false
   private unwatch: (() => void) | null = null
   private unfollow: (() => void) | null = null
+  private unlist: (() => void) | null = null
 
   constructor(options: ChatControllerOptions) {
     this.options = options
+    this.target = options.target
     this.context = this.createContext(this.run)
+    const { sources, client, target } = options
+    this.workspaceList = sources
+      ? { workspaces: sources.workspaces, watch: sources.watchWorkspaces }
+      : ownWorkspaceList(
+          createChatApi(client, target),
+          options.timers ?? browserTimers,
+        )
   }
 
   readonly subscribe = (listener: () => void) => this.store.subscribe(listener)
@@ -114,6 +133,7 @@ export class ChatController {
     )
     this.unfollow = sources ? followSources(this.store, sources) : null
     this.unwatch = watchShownSession(this.context)
+    this.unlist = this.workspaceList.watch()
     return loadChat(this.context)
   }
 
@@ -123,6 +143,8 @@ export class ChatController {
     this.unwatch = null
     this.unfollow?.()
     this.unfollow = null
+    this.unlist?.()
+    this.unlist = null
     this.context.stream.stop()
   }
 
@@ -138,6 +160,7 @@ export class ChatController {
       return
     }
     this.context.stream.release()
+    this.unlist ??= this.workspaceList.watch()
   }
 
   /**
@@ -147,6 +170,8 @@ export class ChatController {
    */
   readonly hide = (): void => {
     this.context.stream.hold()
+    this.unlist?.()
+    this.unlist = null
   }
 
   private createContext(run: number): ChatContext {

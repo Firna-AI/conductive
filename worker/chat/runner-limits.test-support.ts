@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { MemoryChatStorage } from './memory-storage.test-support'
 import type { SessionLoginMetadata } from './login-availability'

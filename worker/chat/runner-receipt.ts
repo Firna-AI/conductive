@@ -1,5 +1,5 @@
 import type { RunnerEventEnvelope } from '../../src/shared/runner'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { HttpError } from '../http'
 import { InvalidRunnerReport, RunnerFileReports } from '../files/runner-reports'
 import {

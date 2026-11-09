@@ -1,4 +1,5 @@
 import { API_PATHS, type Org, type User } from '../../src/shared/api'
+import { workspaceLink } from '../data/workspace-link'
 import type { Workspace } from '../../src/shared/workspaces'
 import type { AppDependencies } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
@@ -189,7 +190,7 @@ async function readWorkspace(
   id: string,
 ): Promise<Workspace> {
   const row = await harness.env.DB.prepare(
-    `SELECT w.id, w.org_id AS orgId, w.repository_id AS repositoryId, w.section_id AS sectionId,
+    `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId, w.section_id AS sectionId,
      ${workspaceNameColumn('w')}, w.branch, w.state, w.created_at AS createdAt, w.updated_at AS updatedAt,
      w.archived_at AS archivedAt, u.id AS userId, u.github_login AS githubLogin,
      u.display_name AS displayName, u.avatar_url AS avatarUrl
@@ -197,7 +198,7 @@ async function readWorkspace(
   )
     .bind(orgId, id)
     .first<
-      Omit<Workspace, 'owner' | 'choice'> & {
+      Omit<Workspace, 'owner' | 'choice' | 'link'> & {
         userId: string
         githubLogin: string
         displayName: string | null
@@ -212,6 +213,8 @@ async function readWorkspace(
     )
   return {
     id: row.id,
+    number: row.number,
+    link: workspaceLink(harness.env.APP_ORIGIN, orgId, id),
     orgId: row.orgId,
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,

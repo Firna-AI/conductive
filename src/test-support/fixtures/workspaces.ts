@@ -15,7 +15,8 @@ import type {
   WorkspaceState,
   WorkspacesResponse,
 } from '../../shared/workspaces'
-import { FAKE_IDS, FAKE_TIME, fakeUser, fakeUsers } from './core'
+import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME, fakeUser, fakeUsers } from './core'
+import { routes } from '../../app/router'
 
 /**
  * The snapshot of a person that a session keeps as its starter: the member
@@ -33,6 +34,9 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
   const workspaces: WorkspacesResponse = {
     workspaces: workspaceList.map((workspace, index) => ({
       id: workspace.key,
+      number: workspace.number,
+      link: new URL(routes.workspace(FAKE_IDS.org, workspace.key), FAKE_ORIGIN)
+        .href,
       orgId: FAKE_IDS.org,
       repositoryId: workspace.repository,
       sectionId: workspace.section,
@@ -136,6 +140,9 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
   const createdWorkspace: Workspace = {
     ...workspace,
     id: 'saved-carts',
+    number: Math.max(...workspaces.workspaces.map(({ number }) => number)) + 1,
+    link: new URL(routes.workspace(FAKE_IDS.org, 'saved-carts'), FAKE_ORIGIN)
+      .href,
     name: null,
     branch: 'calummoore/lisbon-7k2q',
     sectionId: 'general',

@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
@@ -12,6 +13,7 @@ import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
+import { LinksProvider, type ChatLinks } from './links/LinksContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import { sessionState, type ChatSnapshot } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
@@ -43,6 +45,12 @@ export interface ChatViewProps {
   onViewChange?: (view: WorkspaceView) => void
   /** A file chip of a finished turn opens its diff. */
   onOpenDiff?: (path: string) => void
+  /**
+   * A plain click on a workspace chip in a message or an answer opens the
+   * page of its link, such as through the navigation of the app. Without
+   * it, a chip is a plain link that the browser opens.
+   */
+  onOpenPage?: (to: string) => void
   /** The notice of an agent with no login leads to its Connect form. */
   onConnectAgent?: (agent: Agent) => void
   /** The start steps and the sandbox bar that the app draws, as `ChatHost` says. */
@@ -64,6 +72,21 @@ function useReport<T>(value: T | null, report?: (value: T) => void): void {
   }, [value, report])
 }
 
+/**
+ * The workspaces that the chips of the chat find, as the list of the org has
+ * them now, and the way that a chip opens its page.
+ */
+function useLinks(
+  controller: ChatController,
+  open: ((to: string) => void) | undefined,
+): ChatLinks {
+  const list = controller.workspaceList.workspaces
+  const workspaces = useSyncExternalStore(list.subscribe, list.get, list.get)
+  const { orgId } = controller.target
+  const links = useMemo(() => ({ orgId, workspaces }), [orgId, workspaces])
+  return useMemo(() => ({ links, open }), [links, open])
+}
+
 /** The session tabs, the chat of the open session, and the overlays. */
 function ChatBody(
   props: ChatViewProps & { controller: ChatController; snapshot: ChatSnapshot },
@@ -80,6 +103,7 @@ function ChatBody(
     snapshot.workspace?.state === 'starting' ||
     snapshot.overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
+  const links = useLinks(controller, props.onOpenPage)
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
   const reopen = useCallback(
@@ -138,11 +162,19 @@ function ChatBody(
       />
     </>
   )
-  if (!mobile) return <div className={styles.column}>{body}</div>
+  if (!mobile) {
+    return (
+      <LinksProvider value={links}>
+        <div className={styles.column}>{body}</div>
+      </LinksProvider>
+    )
+  }
   return (
-    <TouchScreen>
-      <div className={styles.phone}>{body}</div>
-    </TouchScreen>
+    <LinksProvider value={links}>
+      <TouchScreen>
+        <div className={styles.phone}>{body}</div>
+      </TouchScreen>
+    </LinksProvider>
   )
 }
 

@@ -3,7 +3,7 @@ import type { BrowserAccess } from './browser-authorization'
 import type { BrowserTabs } from './browser-tabs'
 import type { ChatOperation } from './operation'
 import type { ChatStore } from './store'
-import type { BrowserPeer } from './types'
+import type { WorkspaceEventPeer } from './workspace-events'
 
 interface BrowserSubscriptionOptions {
   store: ChatStore
@@ -11,7 +11,7 @@ interface BrowserSubscriptionOptions {
   operation: ChatOperation
   access: BrowserAccess
   after: number
-  peer: BrowserPeer
+  peer: WorkspaceEventPeer
 }
 
 export function subscribeBrowser({

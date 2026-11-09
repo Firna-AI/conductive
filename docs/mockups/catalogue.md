@@ -14,12 +14,12 @@ how a screen is built, and links to the other pages.
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
-| `app/command-palette` | The command palette over the list: the All tab, then the other tabs and a search |
+| `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -27,18 +27,19 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
+| `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -103,7 +104,8 @@ failed to save, with its saved value and the cause beside the switch.
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its variants show a
 draft with an attached file and the notice of a missing agent login, a
-create request that failed, and an org without chosen repositories. A phone
+create request that failed, an org without chosen repositories, and a
+pasted workspace link as a chip. A phone
 always opens the page, so each phone view shows the New workspace page in
 the same state. `user-flows/create-workspace-dialog` goes from Preferences
 through the dialog to the new workspace. The `first-build` variant shows
@@ -254,6 +256,10 @@ list of Acme. Its child pages:
   With an empty field, the All tab needs only the list. While the list
   loads, or after it did not load, the status part stands before Actions,
   in place of Recent workspaces.
+- `app/command-palette/number-search` has a search that finds a workspace
+  by its label, `W-395`, from decision 212. Its `number-part` variant
+  finds each workspace whose label holds `39`, with the label before the
+  name in each row.
 
 In `search/unavailable` and `workspaces/unavailable`, the list behind the
 palette on desktop shows the same failure, because it reads the same
@@ -292,3 +298,23 @@ the cloud computer could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
+
+`app/workspace-links` draws the workspace numbers and the chips of
+decisions 211 and 212. Its canonical screen has a message and an answer
+with chips in Checkout address autocomplete, `W-395`. Its child pages:
+
+- `app/workspace-links/copy-link` has the header of Saved carts, `W-402`,
+  just after a press on the label, with the note "Link copied". Its
+  `failed` variant has a copy that failed, with the note "The link didn't
+  copy. Try again." in the danger colour.
+- `app/workspace-links/messages` has a pasted link as a chip in the
+  message box. Its `sent` variant has the sent message while the agent
+  works, and its `other-org` variant has a link of another org as plain
+  text.
+
+The message box of New workspace shows a pasted link as a chip in
+`app/new-workspace/workspace-link`, a child page of `app/new-workspace`,
+and in the `workspace-link` variant of `app/new-workspace/dialog`.
+The flow `user-flows/link-a-workspace` goes from the copy to the answer,
+and ends with a press on the chip, which opens
+`app/new-workspace/first-turn`.

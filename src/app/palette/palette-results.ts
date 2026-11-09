@@ -1,7 +1,7 @@
 import { valueOf } from '../store'
 import { rankRows, searchWords } from './matcher'
 import { tabGroups } from './palette-groups'
-import { rowTexts, type PaletteGroup } from './palette-rows'
+import { rowTexts, withNumberLabel, type PaletteGroup } from './palette-rows'
 import type {
   PaletteQuery,
   PaletteSource,
@@ -69,7 +69,8 @@ function repositoryChoices(source: PaletteSource): RepositoryChoice[] {
  * What the palette shows for a query: the status part of data that did
  * not load, then the groups of its tab with the rows that match, ranked,
  * and the groups without a match left out. "Nothing matches" and the empty
- * line show only when the tab has no row and no status part.
+ * line show only when the tab has no row and no status part. A workspace
+ * row shows the label of its number when a word of the query is in it.
  */
 export function paletteResults(
   query: PaletteQuery,
@@ -84,7 +85,9 @@ export function paletteResults(
   })
     .map((group) => ({
       label: group.label,
-      rows: rankRows(group.rows, words, rowTexts),
+      rows: rankRows(group.rows, words, rowTexts).map((row) =>
+        withNumberLabel(row, words),
+      ),
     }))
     .filter((group) => group.rows.length > 0)
   const shows = groups.length > 0 || status !== null
