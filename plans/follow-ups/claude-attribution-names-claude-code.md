@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-09, from the options check of the plan for agent instructions on the branch `conductor/conductor-prompts`.
-- **Location:** `runner/src/providers/claude.ts:52`.
+- **Location:** `runner/src/providers/claude.ts:59`.
 - **Reason:** The change that found it adds the agent instructions, and the attribution of commits and pull requests is a separate setting with its own naming choice.
 
 - **Terms:**
@@ -19,8 +19,8 @@
   or of its features.
 - **Problem:** Commits and pull request descriptions that Claude agents
   write can carry the standard Claude Code attribution. Nobody has checked
-  whether Claude adds it with the empty system prompt that the runner sends
-  today.
+  whether Claude adds it with the short custom system prompt that the
+  runner now sends.
 - **Impact if no action:** The repositories of users can show "Claude Code"
   in the commits and pull requests that Conductive agents make.
 - **Root question:** What attribution should the commits and pull requests
