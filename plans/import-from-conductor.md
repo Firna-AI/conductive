@@ -11,6 +11,12 @@ A new workspace can continue a branch that already exists on GitHub. A
 user can import their Conductor Cloud workspaces, with their names,
 sections, branches, and chats, through the Conductor API.
 
+The answers of 9 November 2026 change the scope. Each workspace imports
+only when the user is ready, with its files: the files that Git sees and
+`.context`, from the copy that Conductor's Sync files keeps on the user's
+Mac. Decisions 3, 6, and 7 decide how the files and the chats get there.
+Until they are answered, the paragraph below is the scope of 8 November.
+
 The import works only until 20 November 2026, because the Conductor API
 then has no data to read. So the import must ship well before that date.
 A user who has work that is not pushed must push it in Conductor, or use
@@ -76,6 +82,25 @@ Checked on 8 November 2026. The notes give each source.
   computer.
 - The runner gives the agent no instructions of its own. Claude reads only
   the project settings of the repository.
+- Checked on 9 November 2026: Conductor's own advice for the shutdown is
+  Transfer to local, to keep working on the Mac, and Export data, for a
+  copy of all data. It names no format for the archive, and it does not
+  name the API.
+- Conductor's Sync files keeps a copy of each cloud workspace on the
+  user's Mac, under `~/conductor/remote-workspace-sync/`. A copy holds the
+  files that Git sees, `.context`, and Git data with the newest commit,
+  but no branch name and no ignored folders. The user's copies total 34 GB.
+- All eight repositories of the user's open Conductor workspaces are
+  public on GitHub.
+- The Files tool of Conductive shows only the files that Git sees, so it
+  does not show `.context`.
+- Nobody has checked if Sync files removes the Mac copies when Conductor
+  deletes the cloud workspaces on 20 November.
+- A Mac command returns at most 64 KiB of output, and each message on the
+  device connection holds at most 1,000,000 bytes. The page of the Mac app
+  has no bridge to its main process.
+- The GitHub token that a cloud computer gets for a turn reaches every
+  repository where the sender installed the GitHub App and has access.
 
 ## Decisions
 
@@ -161,64 +186,92 @@ Checked on 8 November 2026. The notes give each source.
   first recommended C. The options check showed that more than one create
   path gives a workspace its branch.
 - **Action:** ask the user, because C and D add a new rejection.
+- **Chosen:** A, by the user on 9 November 2026. Two open workspaces can
+  use one branch, and the app shows nothing. The agent recommended D.
 
-### 3. How the user connects Conductive to Conductor
+### 3. How the chats stay available until the import
 
-- **Severity:** Medium. **Effort:** Medium.
+Changed on 9 November 2026: decision 4 imports each workspace only when
+the user is ready, also after 20 November. So this item now asks how the
+chats stay available, and it adds options F and G. The options check of
+the same day added H and I.
+
+- **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
 - **Location:** None.
 - **Background:** The chosen option said that the user signs in with
-  Conductor, or pastes an API key when that sign-in does not work. The
-  sign-in is the OAuth of Conductor's MCP server, and the MCP server has
-  no tool for sections. The REST API with a personal key returns the
-  sections. A user key belongs to one Conductor org.
-- **Problem:** The MCP sign-in cannot give the sections, and decision 1
-  asks that the user can select whole sections.
-- **Impact if no action:** A user who signs in cannot select a section.
-  The app then needs both ways, and the import takes longer to build.
-- **Root question:** How does the user give Conductive read access to
-  their Conductor workspaces, sections, and chats?
+  Conductor, or pastes an API key. The MCP sign-in has no tool for
+  sections, and only the REST API with a personal key returns them. A user
+  key belongs to one Conductor org. From 20 November, Conductor deletes the
+  cloud data, so every way through the API stops then. Conductor's own
+  advice is Transfer to local and Export data, and Export data also works
+  only until 20 November. Sync files copies each cloud workspace and its
+  `.context` to the user's Mac.
+- **Problem:** Options A to E read the chats through the API at the time of
+  the import. Decision 4 lets the import wait until the user is ready,
+  which can be after 20 November.
+- **Impact if no action:** A workspace that the user imports after
+  20 November arrives with no chats, and the agent has no transcript to
+  start from.
+- **Root question:** How do the chats, names, and sections of a Conductor
+  workspace stay available until the user imports it?
 - **Options:**
-  - **A.** The user pastes a Conductor API key. The app reaches every read
-    route, also the sections. A key has full access to the user's
-    Conductor account, so the Worker only reads with it, uses it only for
-    the request that carries it, and does not store it. A closed tab stops
-    the import, and the user pastes the key again to resume it. Effort:
-    Medium.
+  - **A.** The user pastes a Conductor API key. The Worker reads with it
+    only for the request that carries it, and does not store it. It works
+    only until 20 November. Effort: Medium.
   - **B.** The user signs in with Conductor through the OAuth of its MCP
-    server, as the chosen option first said. No key moves. A pasted key
-    then adds the sections. Nobody has checked that Conductor accepts a
-    return address on `app.conductive.build`. Effort: Large.
+    server, and pastes a key for the sections. It works only until
+    20 November. Effort: Large.
   - **C.** The browser calls the Conductor read routes with the pasted key
-    and sends each page to the Worker. The key never reaches the Worker.
-    The content security policy must allow `https://api.conductor.build`.
-    It works only if Conductor accepts calls from `app.conductive.build`,
-    and nobody has checked that. The Worker cannot prove that a page came
-    from Conductor. Effort: Medium.
-  - **D.** The Worker stores the key encrypted and runs the import in the
-    background, until the import ends and never after 20 November. A
-    closed tab does not stop the import. The app then holds a key that can
-    also write to the user's Conductor account. Effort: Large.
-  - **E.** The user signs in with Conductor through OAuth, and the Worker
-    calls the REST read routes with that sign-in, also the sections. No
-    key moves. It works only if the REST routes accept the sign-in token.
-    The check registers a client on Conductor's server, so it needs the
-    user's approval. Effort: Large.
+    and sends each page to the Worker. Nobody has checked that Conductor
+    accepts calls from the browser. It works only until 20 November.
+    Effort: Medium.
+  - **D.** The Worker stores the key encrypted and imports in the
+    background. The app then holds a key that can also write to the user's
+    Conductor account. It works only until 20 November. Effort: Large.
+  - **E.** The user signs in through OAuth, and the Worker calls the REST
+    routes with that sign-in. The REST routes probably refuse the token.
+    It works only until 20 November. Effort: Large.
+  - **F.** The import reads Conductor's Export data archive. The user must
+    download the archive before 20 November. It needs no key. The archive
+    format is not documented, so one sample archive must first show the
+    chats, names, and sections. Effort: Large.
+  - **G.** A one-off save now, for the user's own workspaces. A script in
+    this Conductor workspace reads, with the user's key, every transcript,
+    also of the archived sessions, and the name, repository, and sections
+    of each open Conductor workspace. It writes them as files to
+    `.context/conductor-export/` of this workspace, and Sync files copies
+    them to the Mac. The import of this workspace skips that folder. It
+    must finish before 13 November. Only this user gets it. Effort: Small.
+  - **H.** G, but the user runs the script on the Mac, and it saves into a
+    plain folder outside the Sync folder. It can run until 20 November,
+    and Sync files cannot change or remove the saved files. The Mac needs
+    Node or curl, and the key is on the Mac during the run. Effort: Small.
+  - **I.** A Save step in Conductive copies the names, sections, and
+    transcripts into the app's own storage before 20 November, with a
+    pasted key. It creates no workspace, and a later import reads the copy.
+    It must ship before 20 November. The app then keeps raw transcripts of
+    workspaces that the user may never import. Effort: Large.
 - **Left out:** OAuth only through the MCP server, because the user asked
   to select sections, and the MCP server has no tool for them. A command in
-  each Conductor workspace that uses that workspace's own key, because it
-  must run before 13 November.
+  each Conductor workspace that uses its own key, because G reads the same
+  data from one place. Transfer to local, because G is better on every
+  point: Transfer to local puts the chats into Conductor's own files on the
+  Mac, one workspace at a time, and may stop on 13 November. Change
+  nothing, because Conductor deletes the chats from 20 November.
 - **Wider fix:** None.
 - **Previous examples:** None found.
-- **Related:** None.
-- **Recommendation:** A. It uses only checked facts, it reaches the
-  sections that the user asked for, and every Conductor Cloud plan
-  includes the API. When one network check shows that Conductor accepts
-  calls from the browser, C keeps the key out of the Worker for about the
-  same effort.
-- **Action:** ask the user, because A drops the sign-in that the chosen
-  option first offered.
+- **Related:** Decision 6 reads the work from the same Mac copies, or from
+  the private repository of its option E, which can also hold these files.
+- **Recommendation:** G. A small script saves every chat now, so the user
+  can import at any time. Copy the saved files out of the Sync folder
+  before 20 November, because nobody has checked what Sync files does when
+  Conductor deletes the cloud workspaces. Download Export data too, as a
+  backup. If G cannot run before 13 November, H can run until 20 November.
+  The plan first recommended A.
+- **Action:** ask the user, because G reads all of the user's Conductor
+  chats with their key, and it replaces the API reads of the chosen option.
 
 ### 4. How the user continues an imported workspace
 
@@ -280,6 +333,15 @@ Checked on 8 November 2026. The notes give each source.
 - **Action:** ask the user, because the options trade cost against a
   wait and against one workspace for each task, and no requirement covers
   a workspace that has never started.
+- **Chosen:** a new option, by the user on 9 November 2026: download the
+  files of each workspace, by the rule of the files that Git sees plus
+  `.context`, and import a workspace only when the user is ready. Checked
+  the same day: Conductor's Sync files already keeps such a copy on the
+  user's Mac. The Conductor API cannot read files. All eight repositories
+  of the user's open workspaces are public, so a snapshot branch on GitHub
+  would publish `.context` and the chats. The import of a workspace creates
+  it through the create path, as D does. Decision 6 says how the files
+  move from the Mac.
 
 ### 5. How the agent learns the context of the old chats
 
@@ -331,11 +393,160 @@ Checked on 8 November 2026. The notes give each source.
   20 November, and it keeps the rules of the workspace token.
 - **Action:** ask the user, because the options trade effort against the
   agent's context, and no requirement covers it.
+- **Chosen:** B, by the user on 9 November 2026: the agent starts from the
+  transcript. The user allowed the chat to skip a copy of the old
+  messages if that copy is too hard. Decision 7 asks about that copy.
+- **Agent call, 9 November 2026:** the transcript files go into `.context`
+  of the repository folder, not into the home folder. Reason: decision 4
+  brings `.context` along, and the runner and the file routes read only
+  inside the repository folder. The import adds `.context/` to the local
+  exclude file of the clone, so that Git ignores it in every repository
+  and no push sends it.
+
+### 6. How the work that GitHub does not hold reaches the cloud computer
+
+New on 9 November 2026. The options check of the same day changed its
+root question, added options D to G, and changed the recommendation from
+A to E.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:** Sync files copies each Conductor cloud workspace to
+  `~/conductor/remote-workspace-sync/<repository>/<workspace ID>/` on the
+  user's Mac. Checked on 9 November 2026: the copies hold the files that
+  Git sees, `.context`, and Git data that reaches the newest commit. They
+  hold no ignored folders, and they total 34 GB. A copy sits on its commit
+  with no branch name. The copies stop changing on 13 November, and nobody
+  has checked that they stay after 20 November. A Mac command returns at
+  most 64 KiB of output. The page of the Mac app has no bridge to its main
+  process. The GitHub token of a turn reaches every repository where its
+  sender installed the GitHub App.
+- **Problem:** The work that GitHub does not hold exists only in the Mac
+  copies: commits that are not pushed, changed and untracked files, and
+  `.context`. No product path brings that work into a cloud computer in
+  bulk.
+- **Impact if no action:** Decision 4 cannot bring that work, and it stays
+  behind.
+- **Root question:** How does the Conductor work that GitHub does not hold
+  reach the cloud computer of an imported workspace?
+- **Options:**
+  - **A.** The Conductive Mac app gets an Import from Conductor screen. Git
+    on the Mac finds the difference, and the Mac app sends it at the first
+    start through a new device operation of the Worker, in parts of at
+    most 1,000,000 bytes. The Mac app has no release yet, no product
+    screens, and no bridge to its main process. Effort: Large.
+  - **B.** The web app takes a folder upload. The user picks a copy folder
+    in the browser, and the browser sends the files that differ from the
+    branch on GitHub. Commits that are not on GitHub become uncommitted
+    changes. It needs a new path into the cloud computer. Effort: Large.
+  - **C.** A command-line tool on the Mac does what A does. It needs a new
+    sign-in of its own. Effort: Large.
+  - **D.** The agent of the new workspace pulls the work with Mac commands.
+    Git on the Mac makes a bundle of the commits that are not on GitHub,
+    and tar packs the changed files and `.context`. The agent reads them in
+    parts of 64 KiB. It needs no new product code. The Mac app must run and
+    be signed in, and a large difference is slow. Effort: Small.
+  - **E.** A private GitHub repository holds the work. Before 20 November,
+    a script on the Mac turns each copy into a snapshot commit with its
+    uncommitted files and `.context`, in a separate folder so that the
+    copy does not change. It pushes each snapshot to its own branch of one
+    private repository. At the import, the agent's first turn fetches that
+    branch through the git credential helper, and restores the commits and
+    the uncommitted files. Git moves any size and keeps the commits. GitHub
+    then holds `.context`. The GitHub App must be installed on that
+    repository. Effort: Medium.
+  - **F.** The agent serves an upload page in the cloud computer, and the
+    user opens it as a port preview and picks the copy folder there. The
+    page sends the files in parts. It needs no product code. Commits that
+    are not on GitHub become uncommitted changes. Effort: Medium.
+  - **G.** The import screen shows one Terminal command with a one-time
+    upload address. Git, tar, and curl on the Mac send a bundle and an
+    archive of the difference. It needs a new upload route, a new kind of
+    credential, and a new path into the cloud computer. Effort: Large.
+- **Left out:** Snapshot branches in the workspaces' own repositories,
+  because all eight are public and would publish `.context` and the chats.
+  A lasting copy in the app's own storage, because Stop and resume already
+  rejected a copy of user code in the app's storage. A push from Conductor
+  only, because it leaves `.context` behind, and decision 4 brings it.
+- **Wider fix:** None.
+- **Previous examples:** None found.
+- **Related:** Decision 3. With its option G, the saved chats can go to the
+  same private repository.
+- **Recommendation:** E. Git moves a difference of any size and keeps the
+  commits, and the import then needs no Mac and no new path into the cloud
+  computer. After the push, the work no longer depends on the Mac copies.
+  If GitHub must not hold `.context`, D is the smallest path. A stays the
+  product form for a later release of the Mac app. The plan first
+  recommended A.
+- **Action:** ask the user, because E puts `.context` in a private GitHub
+  repository, and the options trade that against product code and the
+  Mac app.
+
+### 7. Where the user reads the old chats
+
+New on 9 November 2026. The options check of the same day changed its
+root question, added options D and E, graded B as Large, and changed the
+recommendation from B to D.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:** Decision 5 gives the agent the transcript as its starting
+  point, as files in `.context` of the repository folder. The Files tool
+  shows only the files that Git sees, so it does not show `.context`. A
+  copy of the old messages into the chat needs a conversion of Conductor's
+  raw events, a way to store events that no runner sent, and read-only
+  session screens. The runner maps Codex App Server notifications, and
+  nobody has checked Conductor's Codex items against that form.
+- **Problem:** With files only, the user cannot read the old chats in
+  Conductive. The user asked to skip the copy if it is too hard.
+- **Impact if no action:** The user reads the old work only through the
+  agent, or outside Conductive.
+- **Root question:** Where does the user read the old chats of an imported
+  workspace after Conductor shuts down?
+- **Options:**
+  - **A.** Not in Conductive. The agent reads the transcript files, and the
+    user asks the agent. Effort: Small.
+  - **B.** The import copies the old messages into read-only sessions in
+    the session history of the workspace. Effort: Large.
+  - **C.** The Files tool also shows the transcript files, so the user can
+    open them as Markdown. Effort: Medium.
+  - **D.** A, and the save of decision 3 also writes each chat as a
+    Markdown file beside its raw pages. The user reads the chats on the Mac,
+    or in the private repository of option E of decision 6. The agent reads
+    the same files. It needs no product code. Effort: Small.
+  - **E.** The imported workspace lists its old chats, and each entry opens
+    the Markdown file of that chat in `.context` as a file tab, through the
+    file routes that exist. A chat opens only while the cloud computer
+    runs, and a file over 5 MiB must be split. Effort: Medium.
+- **Left out:** Conductor's own Mac app after Transfer to local, because
+  the move can take the workspace out of the Sync copies, and nobody knows
+  if that app keeps working after the shutdown.
+- **Wider fix:** None.
+- **Previous examples:** An archived workspace already shows its chat
+  read-only. A session with an unknown starter already keeps its history.
+- **Related:** Decision 3 says where the transcripts come from.
+- **Recommendation:** D. It gives the user every old chat now, with no
+  product code, and B stays possible later, because the save keeps the raw
+  pages. If the user wants the chats inside Conductive, E costs less than
+  B. The plan first recommended B.
+- **Action:** ask the user, because the user made the copy depend on its
+  effort, and the options trade product work against reading the chats
+  inside Conductive.
 
 ## Design
 
 Each call below is an agent call of 8 November 2026, unless it names a
 decision.
+
+The answers of 9 November 2026 to decisions 4 and 5 change this design:
+the files come from the Mac copies, and each workspace imports only when
+the user is ready. The rewrite of this design and of the milestones waits
+for decisions 3, 6, and 7. Until then, the sections below that read the
+Conductor API at the time of the import are not in force.
 
 ### Continue a branch in New workspace
 
