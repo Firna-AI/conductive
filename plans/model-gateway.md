@@ -9,15 +9,20 @@ the cloud computer can read that login while the turn runs. This change
 keeps every agent login out of a cloud computer from a newer image. The
 agent programs send their model requests to a new Worker route, the
 gateway, with a turn token. The gateway checks the turn, adds the real
-login, and forwards each request to Anthropic, OpenAI, or the user's own
-endpoint. Cal chose this approach on 8 November 2026, as decision 120 A of
+login, and forwards each request to Anthropic or OpenAI. Cal chose this
+approach on 8 November 2026, as decision 120 A of
 [the main plan](boat-native-remote-workspaces.md).
 
 The change does not cover a runner update for existing cloud computers,
 the own-endpoint login kind itself, or the GitHub token of a turn. The
 own-endpoint login comes from a separate change, the "CLI Proxy Setup"
-workspace on branch `calummoore/cli-proxy-setup`. Milestones 5 to 9 wait
-until that change merges into `origin/main`. The brainstorm report is
+workspace on branch `calummoore/cli-proxy-setup`. Cal chose on 9 November
+2026 to finish this gateway first for the existing login kinds, as
+decision 10 B below records. Milestones 5 to 9 no longer wait for that
+branch. The later own-endpoint feature sends its requests through the
+completed gateway. Its integration work is preserved in
+[Own endpoints through the model gateway](follow-ups/own-endpoints-through-model-gateway.md).
+The brainstorm report is
 `.context/model-gateway/reports/brainstorm.md`, and Cal's answers are in
 `.context/model-gateway/answers.md`.
 
@@ -61,9 +66,10 @@ Replaced ways:
 - The Codex model provider address `https://api.openai.com/v1` in
   `runner/src/providers/codex.ts` → the gateway address of Codex. Moved in
   Milestone 7.
-- The direct route of the own-endpoint login in the runner, after that
-  change merges → the gateway. Consumers: the runner code that the
-  own-endpoint change adds. Moved in Milestone 7.
+
+No own-endpoint route exists on `origin/main`. Decision 10 B moves that
+feature's integration to the follow-up above. This branch does not build
+a direct own-endpoint route in the runner.
 
 ## Decisions
 
@@ -202,6 +208,7 @@ are a record, not a question.
 - **Recommendation:** A. It keeps the goal for every login kind.
 - **Action:** ask the user, because A adds a new rejection and conflicts with an open item of another workspace.
 - **Chosen by Cal on 9 November 2026:** A. Design calls D22 and D28 give the mechanics. The own-endpoint workspace's address item should match.
+- **Change of order on 9 November 2026:** decision 10 B replaces the assumption that own endpoints merge first. The chosen address refusal remains a requirement of the later own-endpoint integration.
 
 ### 5. A fake older runner can get real logins
 
@@ -336,6 +343,44 @@ Added on 9 November 2026 from finding 5 of review round 2.
 - **Recommendation:** A.
 - **Chosen by Cal on 9 November 2026:** A.
 
+### 10. Put the gateway first
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Process.
+- **Location:** the summary and Milestones 5 to 9 of this plan.
+- **Terms:**
+  - **Gateway:** the Worker's model route that adds the real login to each request.
+  - **Own endpoint:** a user's custom model API address and key.
+- **Background:** The original task put the own-endpoint merge first because both changes edit agent login handling. The gateway already handles Anthropic and OpenAI requests.
+- **Problem:** The recorded order holds the remaining gateway work for a feature that the existing login kinds do not use.
+- **Impact if no action:** Credential protection for existing logins continues to wait for the separate endpoint feature.
+- **Root question:** Which delivery order gets both features into `main` while protecting existing logins and preserving the custom-endpoint integration?
+- **Options:**
+  - **A.** Keep own endpoints first. This preserves the current plans but delays the gateway. Effort: Small.
+  - **B.** Finish the gateway first for existing logins. Add custom endpoints through it afterward. This branch owns the Claude endpoint settings. Custom endpoint turns need a gateway-capable runner. Effort: Medium.
+  - **C.** Continue both changes and merge whichever finishes first. Both plans need conditional integration work. Effort: Medium.
+  - **D.** Combine both features in one pull request. This gives one integration review but a larger change. Effort: Large.
+  - **E.** Merge the finished Worker side first. Build the runner cutover and custom-endpoint integration afterward. Cost: another review and a deployed gateway that no runner uses yet. Effort: Medium. Added by the options check for the record only.
+- **Shared assumptions:** Both features ship, as Cal chose in the original gateway and own-endpoint tasks. Older runners keep their existing login support under decision 2 A. New runners receive only turn tokens. Decisions 4 A and 8 B keep their address rules for the later endpoint feature. Separate pull requests are a work choice, not a product requirement. Option D drops it.
+- **Left out:** A temporary direct custom-endpoint route would put real logins in newer sandboxes, against the chosen credential boundary. Shipping its save form alone would accept a login that no supported turn can use. Dropping the custom-endpoint feature would break the choice to deliver both features.
+- **Wider fix:** None. This is a delivery-order choice.
+- **Previous examples:** Design call D25 records the original order to reduce conflicts.
+- **Related:** Decision 4 keeps the private-address refusal. Decision 8 keeps HTTPS for the later endpoint feature.
+- **Recommendation:** B. It delivers the credential boundary first and gives the endpoint feature a stable base.
+- **Action:** ask the user, because B reverses the recorded order and moves required endpoint integration work to the later change.
+- **Chosen by Cal on 9 November 2026:** B, in the words "10 = B". This replaces the original instruction to wait for the own-endpoint merge. The existing login kinds are the Claude subscription token, the Anthropic API key, and the OpenAI API key.
+- **Options check on 9 November 2026:** B stays recommended and chosen. E is a record, not a new question. The task transfer and completed milestone history passed. Report: `.context/model-gateway/merge-order/decision-10-options-check.md`.
+
+The later feature owns the custom upstream, its shared save and request
+address rule, dispatch checks, unusable-login handling, and tests. The
+follow-up named in the summary holds each task and its requirements. No
+approved feature or address rule is dropped.
+
+Completed milestones keep their original words as history. Their
+references to a later own-endpoint merge or integration describe the old
+order. The remaining milestones follow decision 10 B.
+
 ## Design
 
 The gateway is a Worker route on the machine hostname. Each running turn
@@ -346,6 +391,10 @@ gateway asks the Durable Object whether the turn still runs and which
 login it uses. Then it forwards the request to the upstream of that login
 and streams the answer back. Older runners keep their real login, and
 each workspace pins the runner version of its image.
+
+This release covers the existing Anthropic and OpenAI login kinds.
+Custom endpoints join the gateway in the later feature, as decision 10 B
+says. Its tasks do not block this branch.
 
 Open checks:
 
@@ -372,7 +421,8 @@ Open checks:
 8. The effect of `global_fetch_strictly_public` on the Worker's other
    fetches. Milestone 6 checks it.
 9. Which ports a Worker fetch reaches on a host outside Cloudflare, for
-   decision 8 B. Milestone 6 checks it.
+   decision 8 B. The own-endpoint follow-up checks it before that feature
+   merges. The fixed Anthropic and OpenAI upstreams do not need this check.
 
 ### Design calls
 
@@ -413,10 +463,9 @@ more approaches of each call.
   and `POST /v1/messages/count_tokens`. Codex: `POST /responses`. Add the
   routes that open checks 3 and 4 find. The gateway refuses
   `HEAD /api/hello` without an upstream call, as Anthropic's guide allows.
-  It serves no local model list. `GET /v1/models` joins the list only if
-  the own-endpoint change turns on model discovery, and then goes to the
-  upstream of the turn. Rejected: every path, which reaches every provider
-  API.
+  It serves no local model list. Any model discovery for an own endpoint
+  belongs to that later feature. Rejected: every path, which reaches
+  every provider API.
 - **D8. Headers and bodies.** Request headers pass by a fixed name
   pattern, such as `anthropic-*` and `x-claude-code-*`, and the headers
   that open check 4 lists. The gateway removes credentials, cookies,
@@ -427,8 +476,12 @@ more approaches of each call.
   fields as open lists, and error bodies as they are.
 - **D9. Address.** One base address for each agent under `/v1/` on
   `api.conductive.build`. The turn picks the upstream.
-- **D10. Endpoint in the runner.** Claude: the SDK flag settings that the
-  own-endpoint change sets for every login kind. Codex: `base_url` of the
+- **D10. Endpoint in the runner.** This branch supplies the gateway
+  endpoint itself. Claude uses SDK flag settings. Milestone 7 ports the
+  endpoint and transport settings from own-endpoint commits `e6948b66`
+  and `978941df`, with no custom login kind or form. It checks the effect
+  on tool environments, because an inherited `ANTHROPIC_BASE_URL` can
+  redirect a project's own model requests. Codex uses `base_url` of the
   model provider. Model discovery stays off. Rejected:
   `CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST`, because open check 3 showed that
   it makes the program ignore the flag-settings endpoint. This also closes a path on `origin/main`: the runner reads the
@@ -439,7 +492,9 @@ more approaches of each call.
   So today a repository file can send the starter's real login to any host.
   On a newer runner the gateway endpoint wins. An older runner keeps the
   path, and Milestone 5 states it with the old risk of decision 2 A.
-- **D11. Address rule.** Before each fetch, the gateway refuses an IP
+- **D11. Address rule.** The later own-endpoint integration owns this
+  rule, recorded in its follow-up. Before each custom upstream fetch,
+  the gateway refuses an IP
   address in a non-public range, `localhost`, single-label and internal
   names, and the app's own zones. It follows no redirect. Decision 8 B
   allows only `https`, on any port that the Worker can reach.
@@ -484,7 +539,9 @@ more approaches of each call.
   No new app text.
 - **D21. Exact limit.** 100,000,000 bytes, so the Worker's own HTTP 413
   answer comes before Cloudflare's refusal, whichever unit Cloudflare uses.
-- **D22. Private own endpoint.** The Durable Object checks the address
+- **D22. Private own endpoint.** The later own-endpoint integration owns
+  these dispatch and request checks, recorded in its follow-up. The
+  Durable Object checks the address
   with the rule of D11 when it dispatches the turn. A turn on a private
   address fails at once and names the cause, and no agent starts. The
   gateway checks again at each request. When the fetch of an own endpoint
@@ -500,15 +557,17 @@ more approaches of each call.
   legal mockup renders `src/marketing/privacy.ts` itself, and the new
   failure cause shows in the existing failed-turn line.
 - **D25. Two documentation milestones.** Milestone 1 writes the
-  requirements that no other branch edits. Milestone 5 writes the login
-  sections after the own-endpoint merge, because that change edits them.
+  initial requirements. Under decision 10 B, Milestone 5 writes the login
+  sections for the existing login kinds without an own-endpoint merge.
+  The later feature adapts its own documentation to the gateway.
 - **D26. A new protocol page.** The gateway gets
   `docs/protocol/model-gateway.md`, so the long access doc grows little.
 - **D27. Doc split.** The documentation skill splits a doc over about 250
   lines when a change touches it. Milestone 9 splits the three such docs
-  of this change after the own-endpoint merge, so the split does not
-  conflict with that change.
-- **D28. Private endpoint as an unusable login.** A login with a private
+  of this change before this branch's pull request. It does not wait for
+  the own-endpoint change.
+- **D28. Private endpoint as an unusable login.** The later own-endpoint
+  integration owns this rule, recorded in its follow-up. A login with a private
   address counts as a login that cannot be used. So the linked-session
   rules of the chat protocol apply to the messages of other members.
 - **D29. No login in an answer.** The gateway removes the real login from
@@ -681,12 +740,12 @@ version 2.
       workspace without a version accepts version 1. A refresh keeps the
       version of its image.
 
-## Milestone 5: Login docs after the own-endpoint merge
+## Milestone 5: Login docs for the gateway
 
-Depends on: 1, and the merge of the own-endpoint change into `origin/main`
+Depends on: 1
 
-The own-endpoint change edits the same login sections, so they change
-after its merge (D25).
+Write the remaining gateway requirements for the existing Anthropic and
+OpenAI login kinds. Decision 10 B removes the own-endpoint dependency.
 
 - [ ] Merge `origin/main` into the primary branch with the `git-merge`
       skill.
@@ -702,9 +761,9 @@ after its merge (D25).
       confirmed the gateway for OpenAI keys on the same day.
 - [ ] Same doc: the risk of decision 124 gives turn tokens of later turns
       on a newer runner, and real logins on an older runner.
-- [ ] `docs/protocol/model-gateway.md`: the own endpoint as an upstream,
-      the address rule of D11, the `https` rule of decision 8 B, the failed
-      turn of decision 4 A, and the unusable login of D28.
+- [ ] Confirm that `docs/protocol/model-gateway.md` states the current
+      Anthropic and OpenAI upstreams. The own-endpoint protocol work
+      moves with that feature to its follow-up.
 - [ ] `docs/architecture.md`: "Sandbox software", the chat flow,
       "External services", "Trust boundaries", and the
       `api.conductive.build` row of the hostname table.
@@ -715,7 +774,7 @@ after its merge (D25).
 Depends on: 3, 4, 5
 
 The Worker serves runner protocol versions 1 and 2. Version 2 gets turn
-tokens. The own endpoint goes through the gateway.
+tokens for the existing Anthropic and OpenAI login kinds.
 
 - [ ] `src/shared/runner.ts`: version 2, as D16 says. Keep the version 1
       types for older runners (decision 2 A).
@@ -725,20 +784,6 @@ tokens. The own endpoint goes through the gateway.
       as now, and the turn token of Milestone 2 to version 2.
 - [ ] Move the Worker tests that build runner commands with a login.
       Keep every assertion. Add the version 2 cases.
-- [ ] The gateway forwards a turn on an own endpoint to its address, with
-      the address rule of D11 and the `https` rule of decision 8 B.
-- [ ] Find which ports a Worker fetch reaches on a host outside
-      Cloudflare, and state them in `docs/protocol/model-gateway.md`
-      (open check 9). Save the check under `.context/model-gateway/`.
-- [ ] Make the own-endpoint save refuse the addresses that the gateway
-      refuses, with the same rule, unless the merged change already does.
-      This is the wider fix of decision 4 A.
-- [ ] Check the own-endpoint address when the turn is dispatched (D22).
-      Fail a turn on a private address and name the cause, for example
-      "Priya's Claude login uses a private address. Change it on the
-      account page." Name an unreachable endpoint in the same way (D22).
-      Word each cause with the copy rules of the `product-ui` skill.
-- [ ] Count such a login as a login that cannot be used (D28).
 - [ ] Move `RunnerDelivery.failLogin` to the failure entry of
       `TurnLifecycle`, and make `finish` private. This completes review
       finding 3, which kept the shared runner delivery file unchanged.
@@ -753,8 +798,8 @@ tokens. The own endpoint goes through the gateway.
       `global_fetch_strictly_public` in `wrangler.jsonc` (open check 8).
       Save the check under `.context/model-gateway/`.
 - [ ] Tests: a version 1 runner gets the real login. A version 2 runner
-      gets a token. A private own endpoint fails the turn with its cause.
-      The gateway forwards a public own endpoint.
+      gets a token. Each existing login kind reaches its provider
+      through the gateway with the correct authentication mode.
 
 ## Milestone 7: Runner on the gateway
 
@@ -764,14 +809,26 @@ The runner speaks version 2 only. Its agent programs send their model
 requests to the gateway with the turn token.
 
 - [ ] The provider adapters take an endpoint and a credential (D23).
-- [ ] Claude: put the gateway address in the SDK flag settings that the
-      own-endpoint change uses (D10). Give the turn token through the
-      descriptor pipe of its login kind (D2), in the format of D3.
+- [ ] Before porting the settings, check the pinned Claude program's
+      available transport mechanisms and tool environments. Select a
+      mechanism that preserves the existing tool behavior. Keep the
+      gateway address from overriding a project's own model settings
+      through inherited `ANTHROPIC_BASE_URL`. Keep the turn credential
+      on its private route. A change of merge order does not choose an
+      exception for tool commands, hooks, or MCP servers. If a proposed
+      mechanism needs such an exception, present that requirement change
+      to Cal before applying it.
+- [ ] Claude: port the endpoint and transport settings from commits
+      `e6948b66` and `978941df` on `calummoore/cli-proxy-setup`, with their
+      focused tests, without its endpoint login kind or UI (D10).
+      Put the gateway address in those settings. Give the turn token
+      through the descriptor pipe of its login kind (D2), in the format
+      of D3.
 - [ ] Codex: put the gateway in `base_url` of the model provider. Send the
       turn token with `account/login/start` (D2, D10).
 - [ ] The output filter hides the turn token (D16).
 - [ ] Move each runner consumer of the replaced ways. Remove the runner's
-      real-login handling and the direct route of the own endpoint.
+      real-login handling from its production version 2 turn path.
 - [ ] Move `runner/src/providers/claude-login.test.ts` and
       `codex-login.test.ts` to the turn token and the gateway address,
       with every assertion.
