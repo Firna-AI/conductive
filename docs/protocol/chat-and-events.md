@@ -253,12 +253,27 @@ says.
 - The runner opens one outbound WebSocket to the Durable Object of its
   workspace, at `/v1/runner` on `api.conductive.build`, the hostname for
   machines. It proves itself with the workspace token.
-- The runner connection carries a protocol version. The Durable Object
-  serves each version that a live org image or sandbox can hold.
-- Each build of the org image installs the newest runner. Reason: a stopped
-  sandbox can resume weeks later with an old runner.
 - A connection to the runner through a Boat port address was rejected,
   because it ties the runner to Boat.
+- The runner connection carries a protocol version. The Durable Object
+  serves each version that a live org image or sandbox can hold, within
+  the version pin of its workspace.
+- Each build of the org image installs the newest runner. Reason: a stopped
+  sandbox can resume weeks later with an old runner.
+- Each build of the org image records the runner protocol version that it
+  installs. A refresh keeps the version of the image that it refreshes,
+  because a refresh keeps the installed runner.
+- A new workspace takes the runner version of its org image as its version
+  pin, and keeps it. A workspace or an org image without a recorded version
+  counts as version 1 (gateway decisions 2 and 5).
+- The workspace refuses a runner connection whose protocol version is below
+  its pin. It closes that connection before the `welcome` and before any
+  command.
+- Reason: a runner of version 1 gets the agent login itself with each turn.
+  Any process with the workspace token can open a runner connection and
+  claim version 1.
+- A pin by the first connection was rejected, because a program that the
+  org image or the startup script starts can connect first.
 - The runner numbers each event, and keeps it until the Durable Object
   confirms it.
 - A dropped connection loses no event. A resent event shows once.
@@ -315,9 +330,11 @@ says.
   It remains retryable. It never becomes a permanent refusal.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model or the effort to the runner.
-- Each turn also brings the agent login of the starter of its session, as
+- Each turn also brings a credential of the starter of its session. A
+  runner of protocol version 1 gets the agent login itself, as
   [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
-  says.
+  says. A runner of version 2 or later gets a turn token in its place, as
+  [The turn token](model-gateway.md#the-turn-token) says.
 - Each turn that the runner accepts gets exactly one end: `turn.completed`
   or `turn.failed`. This holds also when Stop, a shutdown, or a crash of
   the runner comes before the agent starts.

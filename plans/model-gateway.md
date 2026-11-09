@@ -16,7 +16,7 @@ endpoint. Cal chose this approach on 8 November 2026, as decision 120 A of
 The change does not cover a runner update for existing cloud computers,
 the own-endpoint login kind itself, or the GitHub token of a turn. The
 own-endpoint login comes from a separate change, the "CLI Proxy Setup"
-workspace on branch `calummoore/bootstrap-v17`. Milestones 5 to 9 wait
+workspace on branch `calummoore/cli-proxy-setup`. Milestones 5 to 9 wait
 until that change merges into `origin/main`. The brainstorm report is
 `.context/model-gateway/reports/brainstorm.md`, and Cal's answers are in
 `.context/model-gateway/answers.md`.
@@ -353,7 +353,7 @@ Open checks:
 ### Design calls
 
 Each call is an agent call. D1 to D20 are from 8 and 9 November 2026,
-D21 to D30 from 9 November 2026. The brainstorm report gives the three or
+D21 to D31 from 9 November 2026. The brainstorm report gives the three or
 more approaches of each call.
 
 - **D1. The turn token.** One random token for each turn. The Durable
@@ -419,8 +419,9 @@ more approaches of each call.
 - **D12. Refusals.** The gateway answers with an error in the provider's
   shape and a stable code. The body limit keeps the HTTP 413 answer with
   `body_too_large` that the access doc requires. When decision 7 ends a
-  turn, the Durable Object ends it with `agent_login_required` and the
-  existing text of `unavailableLoginMessage`.
+  turn, the Durable Object ends it with `agent_login_required`. A removed
+  login or a lost access uses the existing text of
+  `unavailableLoginMessage`. A changed login uses the cause of D30.
 - **D13. No other limits.** No model filter, no rate limit, and no extra
   time or byte limit on an answer. Provider and client limits apply, and
   a closed client connection cancels the upstream request. Each new limit
@@ -491,6 +492,11 @@ more approaches of each call.
   a cause. A changed login gets its own cause, for example "Priya's
   Claude login changed. Try again to use the new login." Reason: decision
   7 D, with no copy of the login.
+- **D31. Citations of this plan's decisions.** The docs cite them as
+  "gateway decision N", because the main plan's decisions 1 to 8 mean
+  other things. `docs/architecture.md`, "Decision numbers", defines the
+  form. Rejected: new numbers after the main plan's last decision, which
+  parallel plans would compete for.
 
 ## Milestone 1: Documentation and protocol
 
@@ -499,43 +505,43 @@ Depends on: none
 Write the requirements of the gateway, the turn token, the body limit,
 and the runner version pin. The login sections wait for Milestone 5 (D25).
 
-- [ ] Create `docs/protocol/model-gateway.md` (D26). State these
+- [x] Create `docs/protocol/model-gateway.md` (D26). State these
       requirements, each with its decision:
-  - [ ] A cloud computer from a newer image holds no agent login. Its
+  - [x] A cloud computer from a newer image holds no agent login. Its
         agent programs send each model request to the gateway, on
         `api.conductive.build` under `/v1/`.
-  - [ ] A turn token works only for the gateway, only while its turn runs,
+  - [x] A turn token works only for the gateway, only while its turn runs,
         and only for the login of its session starter.
-  - [ ] Each request checks the turn, the workspace, and the starter's
+  - [x] Each request checks the turn, the workspace, and the starter's
         access. Any change of the login or of that access ends the turn
         at its next request and names the cause (decision 7 D).
-  - [ ] The gateway forwards only a fixed list of model routes for each
+  - [x] The gateway forwards only a fixed list of model routes for each
         agent and only allowed headers. It passes bodies unchanged.
-  - [ ] An answer streams without delay. An answer that still streams
+  - [x] An answer streams without delay. An answer that still streams
         when its turn ends stops within 30 seconds (decision 6 B).
-  - [ ] The gateway keeps no copy of a model request or an answer. No
+  - [x] The gateway keeps no copy of a model request or an answer. No
         answer and no error carries the real login (D29).
-  - [ ] The upstream is Anthropic or OpenAI for an API key or a
+  - [x] The upstream is Anthropic or OpenAI for an API key or a
         subscription token. Milestone 5 adds the own endpoint.
-  - [ ] Risk: while a turn runs, each process in the cloud computer can
+  - [x] Risk: while a turn runs, each process in the cloud computer can
         read its turn token and spend the starter's login through the
         gateway.
-  - [ ] Risk: a deploy or a runtime update can end a long answer, and the
+  - [x] Risk: a deploy or a runtime update can end a long answer, and the
         agent program then retries.
-  - [ ] The rejected options of decision 120, each with its reason.
-- [ ] `docs/protocol/access-and-security.md`, "Hostnames and gates": the
+  - [x] The rejected options of decision 120, each with its reason.
+- [x] `docs/protocol/access-and-security.md`, "Hostnames and gates": the
       machine hostname also accepts a turn token, only on the gateway
       route.
-- [ ] Same doc, "Request bodies": the gateway limit of 100,000,000 bytes,
+- [x] Same doc, "Request bodies": the gateway limit of 100,000,000 bytes,
       with its reason (decision 3 B, D21).
-- [ ] `docs/protocol/chat-and-events.md`, "The agent runner": each image
+- [x] `docs/protocol/chat-and-events.md`, "The agent runner": each image
       build records the runner protocol version that it installed. A
       workspace refuses a runner below the version of its image. An image
       and a workspace from before this change keep version 1 (decisions
       2 A and 5 A).
-- [ ] Add the new page to the protocol doc lists of `docs/architecture.md`
+- [x] Add the new page to the protocol doc lists of `docs/architecture.md`
       and `README.md`.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 - [ ] Read OpenAI's published terms about a user's own API key behind a
       proxy, and its request size limit. Save the text and the address
       under `.context/model-gateway/`. Report the result to Cal before
@@ -562,8 +568,9 @@ runner.
 - [ ] In the same check, apply decision 7 D with D30. Reuse
       `senderLoginAccess` and `readAgentLogin` from
       `worker/chat/queries.ts`.
-- [ ] When decision 7 ends a turn, end it with `agent_login_required` and
-      the text of `unavailableLoginMessage` (D12).
+- [ ] When decision 7 ends a turn, end it with `agent_login_required`.
+      Use the text of `unavailableLoginMessage` for a removed login or a
+      lost access (D12), and the cause of D30 for a changed login.
 - [ ] Tests, as the `testing` skill says: a token works while its turn
       runs. It fails after the end, during Stop, and for another
       workspace. It ends the turn after a change or a removal of the
@@ -658,7 +665,8 @@ after its merge (D25).
       the address rule of D11, the `https` rule of decision 8 B, the failed
       turn of decision 4 A, and the unusable login of D28.
 - [ ] `docs/architecture.md`: "Sandbox software", the chat flow,
-      "External services", and "Trust boundaries".
+      "External services", "Trust boundaries", and the
+      `api.conductive.build` row of the hostname table.
 - [ ] Check each relative link of the changed Markdown files.
 
 ## Milestone 6: Runner protocol version 2 in the Worker

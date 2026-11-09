@@ -210,6 +210,9 @@ decision. The plan of the change that wrote these docs keeps the records
 while the change is open. The pull request of that change keeps them after
 the merge.
 
+A decision of a later change carries the short name of that change, such
+as gateway decision 6. The doc that cites it defines the name.
+
 ## Protocol docs
 
 - [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
@@ -218,6 +221,8 @@ the merge.
   agent runner, and the events.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
+- [Model gateway](protocol/model-gateway.md): the turn token, and the
+  Worker routes that add the agent login to each model request.
 - [GitHub banner](protocol/github-banner.md): the pull request bar and its
   events.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a

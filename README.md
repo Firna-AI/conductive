@@ -244,6 +244,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
   - [Access and security](docs/protocol/access-and-security.md)
+  - [Model gateway](docs/protocol/model-gateway.md)
   - [GitHub banner](docs/protocol/github-banner.md)
   - [Agent tools](docs/protocol/agent-tools.md)
   - [Orgs and members](docs/protocol/orgs-and-members.md)
