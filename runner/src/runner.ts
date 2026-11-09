@@ -11,6 +11,7 @@ import {
   filterFileResponse,
 } from '../../src/shared/output-fields'
 import { FileReporter } from './files'
+import { agentInstructions, type WorkspaceContext } from './instructions'
 import { RunnerLink } from './link'
 import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 import { Repository } from './repository'
@@ -19,14 +20,12 @@ import { workspaceToolRuntime } from './providers/workspace-tools'
 import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
 
-export interface RunnerOptions {
+export interface RunnerOptions extends WorkspaceContext {
   workspaceId: string
   request: RunnerConnectionRequest
   connect: RunnerConnector
   store: EventStore
-  cwd: string
   home: string
-  defaultBranch: string
   providers: EngineOptions['providers']
   warm: () => Promise<unknown>
   now: () => number
@@ -65,6 +64,7 @@ export class Runner {
     )
     this.engine = new AgentEngine({
       ...options,
+      instructions: agentInstructions(options),
       tools: workspaceToolRuntime(options.request),
       checkpoint: (signal) =>
         checkpoint(new Repository(options.cwd, options.warn, signal)),

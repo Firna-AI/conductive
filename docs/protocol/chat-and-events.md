@@ -14,6 +14,9 @@ says.
 
 - [Agents](agents-and-sessions.md#agents) says which agents the app
   offers, where they run, and whose agent login each session uses.
+- [Agent instructions](agent-instructions.md) states the text that each
+  session gets apart from the messages, and the sender line of each
+  message.
 
 ## Names in the product
 
