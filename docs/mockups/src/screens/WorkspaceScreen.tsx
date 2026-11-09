@@ -40,6 +40,7 @@ import {
 import { workspaceOverlay } from './workspaceOverlays'
 import { activityOf, drawnState, sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
+import { tabRowOf } from './workspaceTabRow'
 import { tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
@@ -128,14 +129,31 @@ export function WorkspaceScreen(props: {
       workspace={workspace}
     />
   )
+  // A phone and an archived workspace show only the session tabs.
+  const tabs = tabsFor(state, workspace).filter(
+    (tab) => tab.kind === 'session' || (!archived && viewport === 'desktop'),
+  )
+  const row = tabRowOf(state, tabs, viewport, readOnly)
   const overlay = (
     <ChatWorkspaces rows={rows}>
-      {props.overlay ?? workspaceOverlay(state, workspace, viewport)}
+      {props.overlay ??
+        workspaceOverlay(state, workspace, viewport, {
+          tabs,
+          menuTab: row.menuTab,
+        })}
     </ChatWorkspaces>
   )
-  const historyOpen = state.overlay === 'history'
-  const tabs = tabsFor(state, workspace).filter(
-    (tab) => !archived || tab.kind === 'session',
+  const tabRow = (
+    <WorkspaceTabs
+      drag={row.drag}
+      full={row.full}
+      historyOpen={state.overlay === 'history'}
+      menuTab={row.menuTab}
+      readOnly={readOnly}
+      renaming={row.renaming}
+      tabs={tabs}
+      viewport={viewport}
+    />
   )
   const { header, files } = placeLostUpdate(state, {
     header: workspaceHeader,
@@ -156,16 +174,10 @@ export function WorkspaceScreen(props: {
         </MobileFrame>
       )
     }
-    const sessions = tabs.filter((tab) => tab.kind === 'session')
     const body = {
       chat: (
         <>
-          <WorkspaceTabs
-            historyOpen={historyOpen}
-            readOnly={readOnly}
-            tabs={sessions}
-            viewport={viewport}
-          />
+          {tabRow}
           {chat}
         </>
       ),
@@ -231,14 +243,7 @@ export function WorkspaceScreen(props: {
         }
         rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
-        tabs={
-          <WorkspaceTabs
-            historyOpen={historyOpen}
-            readOnly={readOnly}
-            tabs={tabs}
-            viewport={viewport}
-          />
-        }
+        tabs={tabRow}
         tools={
           archived ? undefined : (
             <ToolsPanel tool={state.tool}>{tool}</ToolsPanel>

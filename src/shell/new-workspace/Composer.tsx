@@ -16,7 +16,8 @@ import { AttachButton, AttachmentList, UploadError } from './parts'
  * the message can go, as the screen decides for Send and Try again. Enter
  * sends as in every composer: on a computer, Enter sends and Shift+Enter
  * adds a line. While the create runs, the text and the attach button are
- * off. A pasted workspace link shows as a chip, which `OrgLinks` finds.
+ * off. A kept message shows with the cursor at its end. A pasted workspace
+ * link shows as a chip, which `OrgLinks` finds.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
@@ -41,6 +42,7 @@ export function Composer(props: {
           />
         ) : null}
         <ChipTextField
+          caretAtEnd
           editable={!sending}
           label="Message"
           lines={2}

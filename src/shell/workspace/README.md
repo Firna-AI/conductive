@@ -23,7 +23,7 @@ for each workspace that it showed, and what a return reads again.
 
 [The chat of the workspace](screen-parts.md#the-chat-of-the-workspace)
 gives how `ChatArea` draws the kept chat in the centre, with its file
-tabs.
+tabs at their places in the tab row.
 
 ## The Files part
 
@@ -32,8 +32,8 @@ of the shell, their addresses, and the saved view.
 
 ## The tools part
 
-[The tools part](screen-parts.md#the-tools-part) gives the Terminal,
-Preview, and Desktop tools of the shell, and their addresses.
+[The tools part](screen-parts.md#the-tools-part) gives the Terminal and
+Preview tools of the shell, the hidden Desktop tool, and their addresses.
 
 ## The GitHub part
 
@@ -139,8 +139,9 @@ fake API, with its address options, its controls, and the test command.
   of the chat of the session, or the shell's own column for the chat slots.
 - `files/files-features.tsx`: the Files part, which connects the kept
   files, and the file or diff page of the centre.
-- `files/chat-files.tsx`: the file tabs, named by the labels of the kept
-  files, and the diff links of the kept chat, and the way back to the chat
+- `files/chat-files.tsx`: the file tabs of the kept chat, named by the
+  labels of the kept files, at their places in the tab row with the props
+  that the row gives each tab, the diff links, and the way back to the chat
   when a session becomes active.
 - `files/files-navigation.ts`: the navigation of the Files screens, and
   the changes of the saved view that the address and the pages make.

@@ -7,7 +7,7 @@ import { useNavigation } from '../../app/navigation'
 import { defaultSection } from '../../app/sections'
 import { useStore, valueOf } from '../../app/store'
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
-import type { FieldHandle } from '../../chat/components/chip-field/field-plugins'
+import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useSendKey } from '../../chat/components/send-key'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
@@ -69,10 +69,11 @@ function CreateButton(props: {
 /**
  * The card of the dialog. While the create runs, Escape and a press outside
  * leave it open. An action that opens another page closes it first. The
- * message takes the focus as it opens. As it closes, the focus goes back to
- * the control that opened it. When another screen opened, the main area of
- * that screen takes the focus. In a suspended org, the refused bar takes
- * the place of the composer.
+ * message takes the focus as it opens, with the cursor at the end of a
+ * kept message. As it closes, the focus goes back to the control that
+ * opened it. When another screen opened, the main area of that screen
+ * takes the focus. In a suspended org, the refused bar takes the place of
+ * the composer.
  */
 function DialogCard(props: {
   org: OrgSummary
@@ -104,7 +105,11 @@ function DialogCard(props: {
   )
   const sendKey = useSendKey(form.ready, form.send)
   const unchosen = form.repositories?.length === 0
-  const notices = form.failure !== null || form.notice !== null || unchosen
+  const notices =
+    form.failure !== null ||
+    form.buildNotice !== null ||
+    form.notice !== null ||
+    unchosen
   return (
     <section
       aria-label="New workspace"
@@ -143,6 +148,7 @@ function DialogCard(props: {
             ) : null}
             <OrgLinks orgId={org.id}>
               <ChipTextField
+                caretAtEnd
                 editable={!sending}
                 handle={message}
                 label="Message"
@@ -159,6 +165,7 @@ function DialogCard(props: {
           {notices ? (
             <div className={styles.notices}>
               {form.failure}
+              {form.buildNotice}
               {form.notice}
               {unchosen ? (
                 <ChooseRepositoriesNotice open={leave} org={org} />

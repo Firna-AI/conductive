@@ -61,8 +61,6 @@ says.
 - A workspace holds one or more sessions. Each session is a closable tab in
   the centre column, beside the open files and diffs (decision 19).
 - "+" starts a new session on the same branch and in the same sandbox.
-- The open session tabs show in the order of creation. A new session
-  opens as the last tab (decision 77).
 - The tab of a session shows the title of the session.
 - A new session has no title, and its tab shows "Untitled".
   [Workspace and session names](#workspace-and-session-names) says when
@@ -81,7 +79,8 @@ says.
   Unicode code points. The app cuts a longer line after its last whole
   word that fits the limit. When the first word does not fit, the app cuts
   the line at the limit.
-- The user can rename a session.
+- The user renames a session from its tab menu, as
+  [The tab row](#the-tab-row) says.
 - Reason: the first session does the task of the workspace, and each other
   session does the task of its own first message. A title request for each
   session was rejected, because the first message names that task with no
@@ -101,6 +100,62 @@ says.
   shows the agent of its last message, the title, and the time since it
   closed.
 - An entry of the history reopens its session as a tab, with its chat.
+
+### The tab row
+
+- The tab row of the centre column shows the session tabs and the file and
+  diff tabs in one order (decision 186).
+- Each member has their own order in each workspace. The order stays after
+  a reload. The other devices of that member load the same order.
+- A new tab of any kind opens at the end of the row. This holds also for a
+  session that the history reopens.
+- The user can drag any tab to any place in the row.
+- A row that keeps the sessions and the files in two groups was rejected,
+  because a file could then never go before a session.
+- A drag does not change the shown tab. Escape cancels a drag and keeps the
+  order.
+- On a phone, the row shows only the session tabs. A long press lifts a
+  tab there.
+- A move on a phone changes only the place of the moved session tab. Each
+  file tab keeps its place.
+- When the tabs do not fit at their minimum width, the row scrolls
+  sideways (decision 187).
+- The row scrolls a tab into view when the tab opens, when it becomes the
+  shown tab, and after it moves.
+- When the row gets narrower, it scrolls the shown tab back into view.
+- A tab that opens without showing, such as a session that another member
+  starts, does not push the shown tab out of view.
+- A vertical turn of the mouse wheel over the row scrolls the row sideways.
+  A sideways swipe, on a trackpad or with a finger, also scrolls it.
+- A fade marks each end of the row that clips tabs.
+- During a drag, the pointer near an end of the row scrolls the row, so a
+  drop can reach every place.
+- A menu of the hidden tabs was rejected, because the shown tab and the
+  drop places could still hide. A row that wraps onto more lines was
+  rejected, because the chat would move down when a tab opens.
+- A right click on a tab opens its tab menu (decision 188).
+- On a focused tab, Shift and F10, or the Menu key, also opens the tab
+  menu. This holds on every system.
+- On a phone, a long press that ends without a move opens the tab menu as
+  a sheet.
+- The tab menu of a session tab holds Rename session, then Move left and
+  Move right. The tab menu of a file or diff tab holds Move left and Move
+  right.
+- Move left and Move right move the tab one place in the row. On the first
+  tab, Move left is off. On the last tab, Move right is off.
+- After a move from the tab menu, a screen reader user hears the name of
+  the tab and its new place, such as "Address autocomplete moves to place
+  2 of 4". The focus then goes back to the tab.
+- Rename session opens a field for the title in that tab. The shown tab
+  does not change.
+- The tab menu is the one way to rename a session. A Rename button on the
+  shown session tab was rejected, because the tab menu already holds
+  Rename session.
+- Keys that move a tab were rejected, because the user chose the menu. Alt
+  with Left or Right also goes Back and Forward in browsers on Windows and
+  Linux.
+- A read-only workspace, such as an archived workspace or a workspace of a
+  suspended org, moves no tab and opens no tab menu.
 
 ## Workspace and session names
 

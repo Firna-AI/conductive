@@ -55,6 +55,23 @@ export function typeMessage(field: HTMLElement, text: string): void {
 }
 
 /**
+ * Moves the focus into the field as Tab does in Chrome, with no press of
+ * the pointer. When the caret of the page is outside the field, Chrome
+ * first puts it at the start of the field, before the focus event. Then
+ * the change that the focus makes commits.
+ */
+export function focusMessage(field: HTMLElement): void {
+  act(() => {
+    const selection = field.ownerDocument.getSelection()
+    if (selection && !field.contains(selection.anchorNode)) {
+      selection.collapse(field, 0)
+    }
+    field.focus()
+    commit(field)
+  })
+}
+
+/**
  * Pastes plain text into the field at its caret, as the paste event of a
  * browser gives it. The result is the event, whose `defaultPrevented` says
  * whether the field took the paste.

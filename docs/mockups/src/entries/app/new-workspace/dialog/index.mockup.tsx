@@ -20,6 +20,13 @@ export const newWorkspaceDialog = defineScreen({
   ),
   variants: [
     {
+      slug: 'first-build',
+      title: 'First build',
+      description:
+        'Firna has no good image yet. The dialog keeps the written task and shows the first build above its footer. Create stays off until a build succeeds. The phone shows the same notice on the New workspace page.',
+      props: { draft: 'message', org: 'new', firstBuild: 'running' },
+    },
+    {
       slug: 'no-login',
       title: 'Agent not connected',
       description:

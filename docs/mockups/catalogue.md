@@ -6,12 +6,12 @@ how a screen is built, and links to the other pages.
 | Path                | What it shows                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, and sign-up                 |
-| `marketing/terms`   | The Terms of use, a draft for lawyer review, with suspension and abuse reports |
-| `marketing/privacy` | The Privacy notice, a draft for lawyer review                                 |
+| `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
+| `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
-| `app/sign-in`       | The GitHub sign-in with the agreement to the Terms, the page before GitHub, the invitations that wait after it, Get started, the only first run, in three steps, and the page back from a GitHub App install in the Mac app |
+| `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
@@ -19,8 +19,8 @@ how a screen is built, and links to the other pages.
 | `app/account`       | General with the GitHub sign-in, the GitHub App, and the agent logins, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, and Users tabs, the page of an org and of a user with Suspend and Lift, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
-| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
+| `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
@@ -29,25 +29,28 @@ how a screen is built, and links to the other pages.
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
-| `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
+| `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
+| `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
 | `user-flows`        | Sign up, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
-`app/sign-in`, `app/shell`, `app/command-palette`, `app/orgs`, `app/orgs/suspended`,
-`app/account`, `app/new-workspace`, `app/org-settings`,
+`app/sign-in`, `app/sign-in/get-started`, `app/shell`, `app/command-palette`, `app/orgs`,
+`app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/banner`, `app/chat`,
 and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
-`app/account`, `app/new-workspace`, and `app/org-settings/cloud-computer` moved
-into their own folders and kept their paths, so that each of those pages shows
-only its canonical screen. `app/sign-in/get-started`
-moved into its own folder and kept its path. Get started is the only first
+`app/account`, `app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
+folders and kept their paths, so that each of those pages shows only its
+canonical screen. `app/sign-in/get-started` moved into its own folder and
+kept its path. Its saved states `installed`, `org-created`, `connected`,
+and `no-org` moved into their own folders and kept their paths, so that
+the page shows only its canonical screen. Get started is the only first
 run, so the first run of `app/shell` and the not-connected state of
 `app/orgs/new` are gone, and their links lead to Get started. Its second
 step opens `app/orgs/new/first`, whose Create org and Cancel return to Get
@@ -56,6 +59,37 @@ of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
 own folders and kept their paths, so `app/orgs` shows only its canonical
 screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
+
+The first build of a new org shows in three places, from decision 150.
+Create org starts it, and Create org needs at least one repository, from
+decision 151. The mockups draw it for Firna, the first org of the sign-up:
+
+- `app/orgs/new` draws the rule on Create org. The hint under Repositories
+  says to add at least one, in each state. Its `no-repository` variant has
+  the first org with a name and no repository chosen, and Create org is
+  off. Its `no-access` variant has a GitHub App that reaches no
+  repository: the list asks for access with Manage access, and Create org
+  is off.
+- Get started shows it in the org step. `app/sign-in/get-started/org-created`
+  has the build that runs, with its time, while the person connects an
+  agent. `preparing` has every step done while the build runs: Open Firna
+  stays on, and the finish says that the cloud computer is still being
+  prepared. `connected` has the good build, and the finish says that Firna
+  is ready. `build-failed` has the saved message of a failed build, with
+  Try again and a link to its log, and the finish does not say ready.
+  `no-build` has an org with repositories and no build, such as after a
+  first build that did not start, with Build computer.
+- `app/new-workspace/first-build` has a notice over the composer with the
+  time of the build, and Send is off. The notice shows only while the org
+  has no good image. Its `ready` variant has the good build, without a
+  notice. `failed` and `no-build` link an admin to the Cloud computer tab,
+  and `member` shows a failed build to a member, without the link.
+- `app/org-settings/cloud-computer/first-build` has the Cloud computer tab
+  of Firna: the first build with its log, then its `failed` and `no-build`
+  variants. A new org has empty scripts and no env vars, and its history
+  shows once a build has ended. Its `script-changed` variant has an install
+  script that Cal saved during the first build. One more build runs it
+  when the first build succeeds, so its notice has no Build computer.
 
 `app/account` shows the General tab of the account. Its tabs are links, as
 the tabs of the org settings are. `app/account/preferences` shows the
@@ -75,7 +109,8 @@ create request that failed, an org without chosen repositories, and a
 pasted workspace link as a chip. A phone
 always opens the page, so each phone view shows the New workspace page in
 the same state. `user-flows/create-workspace-dialog` goes from Preferences
-through the dialog to the new workspace.
+through the dialog to the new workspace. The `first-build` variant shows
+Firna before its first good build, with the notice and Create off.
 
 `app/orgs/suspended` shows Acme after the operator suspended it, from
 decision 129. Its notice is at the top of the list, and every workspace
@@ -137,10 +172,7 @@ list of Acme. Its child pages:
   come first.
 - `app/command-palette/settings` has the Settings tab.
 - `app/command-palette/search` has a search that finds a workspace and an
-  archived one. Its `number` variant finds a workspace by its label,
-  `W-395`, from decision 212. Its `number-part` variant finds each
-  workspace whose label holds `39`, with the label before the name in each
-  row. Its `no-results` variant has a search without results.
+  archived one. Its `no-results` variant has a search without results.
   Its `loading`, `unavailable`, and `repositories-unavailable` variants
   have a search for "new" while the repository names load, after the
   workspace list did not load, and after the repository names did not
@@ -149,6 +181,10 @@ list of Acme. Its child pages:
   With an empty field, the All tab needs only the list. While the list
   loads, or after it did not load, the status part stands before Actions,
   in place of Recent workspaces.
+- `app/command-palette/number-search` has a search that finds a workspace
+  by its label, `W-395`, from decision 212. Its `number-part` variant
+  finds each workspace whose label holds `39`, with the label before the
+  name in each row.
 
 In `search/unavailable` and `workspaces/unavailable`, the list behind the
 palette on desktop shows the same failure, because it reads the same

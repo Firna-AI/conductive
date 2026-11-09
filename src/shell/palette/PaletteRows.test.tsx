@@ -54,14 +54,10 @@ function rowStarts(): string[][] {
   )
 }
 
-const goTo = [
-  'All files',
-  'Changes',
-  'Checks',
-  'Terminal',
-  'Preview',
-  'Desktop',
-].map((tab) => `Go to ${tab}`)
+// The app hides Desktop, so the palette offers no Go to Desktop.
+const goTo = ['All files', 'Changes', 'Checks', 'Terminal', 'Preview'].map(
+  (tab) => `Go to ${tab}`,
+)
 
 const otherOrgs = ['Create org', 'Switch to Futex', 'Switch to Firna']
 

@@ -102,7 +102,7 @@ says.
     `filesUnavailable: true`.
   - After a connect, a failed scan of the repository does not stop
     `runner.ready`. The runner sends `files.unavailable` first, as
-    [Files and changes](tools-of-a-workspace.md#files-and-changes)
+    [Files and changes](workspace-tools.md#files-and-changes)
     says. It then accepts commands.
 - Reason: one failed read must not leave a turn running with no agent, or
   the chat in its starting state. An exit of the runner after such a
@@ -110,7 +110,7 @@ says.
   failure repeats the exit.
 - The runner also reports the file tree and the changes of its workspace,
   and reads files and diffs on request, as
-  [Files and changes](tools-of-a-workspace.md#files-and-changes) says.
+  [Files and changes](workspace-tools.md#files-and-changes) says.
   File results are not part of the chat history.
 
 ### Lost workspace updates
@@ -141,7 +141,7 @@ says.
   repair of another kind. After the next refusal of that kind, the
   workspace asks for a new report, with a new command ID.
 - A replacement is a later full report of the same kind.
-  [Files and changes](tools-of-a-workspace.md#files-and-changes) says
+  [Files and changes](workspace-tools.md#files-and-changes) says
   which file reports count as replacements.
 - The repair fails when the workspace refuses a replacement too, for any
   reason. Only the marker of such a replacement carries `repairFailed: true`.
@@ -158,4 +158,4 @@ says.
 - The runner answers each request with a full report of its kind, also
   during a running turn. When it cannot read the repository, it answers a
   request for a file tree or a changes list with `files.unavailable`, as
-  [Files and changes](tools-of-a-workspace.md#files-and-changes) says.
+  [Files and changes](workspace-tools.md#files-and-changes) says.

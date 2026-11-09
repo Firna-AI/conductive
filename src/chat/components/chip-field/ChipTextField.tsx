@@ -15,12 +15,15 @@ import {
   CopyPlugin,
   EditablePlugin,
   EnterPlugin,
-  FocusPlugin,
   PastePlugin,
   ReconcilePlugin,
   ValuePlugin,
-  type FieldHandle,
 } from './field-plugins'
+import {
+  CaretAtEndPlugin,
+  FocusPlugin,
+  type FieldHandle,
+} from './focus-plugins'
 
 export interface ChipTextFieldProps {
   /** The spoken name of the field, such as "Message". */
@@ -39,6 +42,12 @@ export interface ChipTextFieldProps {
   onEnter?: (event: KeyboardEvent) => boolean
   /** The handle that moves the focus into the field. */
   handle?: Ref<FieldHandle>
+  /**
+   * The field takes the focus from the keyboard with the caret where it
+   * was, or at the end of the text, as the message of New workspace does
+   * with a kept draft. See `CaretAtEndPlugin`.
+   */
+  caretAtEnd?: boolean
 }
 
 /**
@@ -99,6 +108,7 @@ export function ChipTextField(props: ChipTextFieldProps) {
       <EditablePlugin editable={editable} />
       <ReconcilePlugin />
       <FocusPlugin handle={props.handle} />
+      {props.caretAtEnd ? <CaretAtEndPlugin /> : null}
     </LexicalComposer>
   )
 }

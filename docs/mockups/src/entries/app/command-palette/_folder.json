@@ -1,1 +1,1 @@
-{ "order": ["workspaces", "actions", "settings", "search"] }
+{ "order": ["workspaces", "actions", "settings", "search", "number-search"] }

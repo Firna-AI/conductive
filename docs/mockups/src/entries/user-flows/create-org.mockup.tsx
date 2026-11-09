@@ -21,7 +21,7 @@ export const createOrg = defineUseCase({
       screenPath: 'app/orgs/empty/another',
       title: 'The org opens',
       description:
-        'The rail adds and selects the new org. New workspace starts its first workspace.',
+        'The rail adds and selects the new org, and the first build of its cloud computer starts. New workspace waits for that build, then starts the first workspace.',
     },
   ],
 })

@@ -223,11 +223,11 @@ the merge.
 
 ## Protocol docs
 
-- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
-  image, the life of a workspace, and the number and the link of each
-  workspace.
-- [Tools of a workspace](protocol/tools-of-a-workspace.md): All files and
-  Changes, the terminal, port previews, and the desktop.
+- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the
+  life of a workspace, and the number and the link of each workspace.
+- [Org image](protocol/org-image.md): the org image, its builds and its
+  refreshes, and the first build of a new org.
+- [Workspace tools](protocol/workspace-tools.md): the tools of a workspace.
 - [Create a workspace](protocol/create-a-workspace.md): New workspace as a
   page or as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](protocol/repository-folders.md): the folder and the

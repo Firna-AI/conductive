@@ -8,6 +8,7 @@ import {
 } from '../components/settings/AccountSections'
 import { Section, SectionText } from '../components/settings/Section'
 import { defaultChoice } from '../fixtures/agents'
+import type { FirstBuildState } from '../fixtures/computer'
 import type { AgentLogins } from '../fixtures/logins'
 import type { PersonKey } from '../fixtures/members'
 import {
@@ -17,6 +18,7 @@ import {
 } from '../fixtures/orgs'
 import { newOrg } from '../fixtures/repositories'
 import { paths } from '../paths'
+import { OrgBuild, orgBuildActions } from './getStartedBuild'
 import { getStartedCopy as copy } from './getStartedCopy'
 import styles from './GetStartedScreen.module.css'
 
@@ -96,16 +98,28 @@ export function InstallStep(props: {
   )
 }
 
-export function OrgStep(props: { step: GetStartedStep }) {
+/**
+ * Create an org. Once the org exists, the step shows its first build, which
+ * Create org started, with Try again after a failure.
+ */
+export function OrgStep(props: {
+  step: GetStartedStep
+  build: FirstBuildState
+}) {
   const { org } = copy
   if (isPast(props.step, 'org')) {
     const used = newOrg.repositories.filter((item) => item.used).length
     return (
-      <Section status={done(org.done)} title={org.title}>
+      <Section
+        actions={orgBuildActions(props.build)}
+        status={done(org.done)}
+        title={org.title}
+      >
         <SectionText>
           <span className={styles.strong}>{newOrg.name}</span>, with {used}{' '}
           repositories.
         </SectionText>
+        <OrgBuild build={props.build} />
       </Section>
     )
   }
@@ -136,19 +150,31 @@ export function OrgStep(props: { step: GetStartedStep }) {
   )
 }
 
+/** The page after Connect, which shows the first build in its state. */
+const connectedPaths: Readonly<Record<FirstBuildState, string>> = {
+  running: paths.getStartedPreparing,
+  succeeded: paths.getStartedConnected,
+  failed: paths.getStartedBuildFailed,
+  none: paths.getStartedNoBuild,
+}
+
 /**
  * Connect Claude or Codex. A connected agent is Claude with a subscription
  * token, and it can come before the org. The default model is Claude's, so
  * the form of Claude opens when the step is next.
  */
-export function AgentStep(props: { step: GetStartedStep; agent: AgentState }) {
+export function AgentStep(props: {
+  step: GetStartedStep
+  agent: AgentState
+  build: FirstBuildState
+}) {
   const connected = props.agent === 'connected'
   const logins: AgentLogins = connected ? { claude: 'token' } : {}
   const form: OpenAgentForm | undefined =
     !connected && props.step === 'done'
       ? {
           agent: defaultChoice.agent,
-          connectTo: paths.getStartedConnected,
+          connectTo: connectedPaths[props.build],
           cancel: false,
         }
       : undefined

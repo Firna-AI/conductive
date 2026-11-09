@@ -79,8 +79,9 @@ decision number names a dated record, as
   also General.
 - The button of the dialog is Create. The button of the page is Send,
   because the page looks like the chat that it becomes.
-- The dialog shows the notices of the page: a missing agent login, a
-  failed create with Try again, and an org without chosen repositories.
+- The dialog shows the notices of the page: the first build, a missing
+  agent login, a failed create with Try again, and an org without chosen
+  repositories.
 - In an org without chosen repositories, the dialog and the page tell a
   member who is not an admin that an admin chooses them. An admin gets
   Choose repositories. Reason: only an admin can choose them.
@@ -93,6 +94,9 @@ decision number names a dated record, as
 - The dialog and the page of the same org and section share one draft.
 - A close of the dialog keeps the draft, with its message and its files,
   as a move away from the page does. So no close loses a message.
+- When the page or the dialog shows a kept message again, the cursor
+  starts at the end of the message. After that, each click and key moves
+  the cursor as usual.
 - When the server accepts the create, the dialog closes, and the app opens
   the new workspace, as after a create from the page. This holds also
   when the dialog closed while the create ran.
@@ -121,6 +125,35 @@ decision number names a dated record, as
 - A different key rule on the page or in the dialog was rejected for that
   reason. Cmd+Enter or Ctrl+Enter in every composer was rejected, because
   it changes the key that users know from the chat.
+
+### Before the first good build
+
+- A new workspace needs a good org image, because it starts from the org
+  image (decision 13). While the org has no good image, such as during its
+  [first build](workspaces-and-sandboxes.md#the-first-build), New workspace
+  shows a notice over the composer. Send and Create then stay off
+  (decision 150).
+- The notice shows the state of the newest build of the org:
+  - While a build runs, it says that the cloud computer is being prepared,
+    with the time since the build began.
+  - After a failed build, it says that the cloud computer did not build.
+  - With no build, it says that the cloud computer needs a build.
+- After a failed build or with no build, an admin gets a link to the Cloud
+  computer tab, which offers Try again or Build computer. A member who is
+  not an admin gets no link, and the notice says that an admin can build.
+  Reason: only an admin builds (decision 57).
+- When a build succeeds, the notice goes, and Send and Create turn on.
+- Once the org has a good image, New workspace shows no such notice, also
+  during a later build or after a failed later build. New workspaces then
+  start from the last good image (decision 9).
+- A create that comes while the org has no good image, such as from an old
+  tab, gets a refusal. While a build runs, the refusal says that the cloud
+  computer is still being prepared. Otherwise, it says that the cloud
+  computer needs a build. The composer keeps the message.
+- Reason: the user learns the state before the send, in place of a refused
+  create. A create that waits for the first build was left out for now
+  (decision 152). Such a wait changes the start limit and the path that
+  creates every workspace.
 
 ## The create
 

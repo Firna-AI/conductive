@@ -170,7 +170,6 @@ describe('ChatController', () => {
     expect(views.at(-1)).toEqual({
       tabs: [
         { kind: 'session', sessionId: 'autocomplete' },
-        { kind: 'session', sessionId: 'debounce' },
         { kind: 'session', sessionId: 'third' },
       ],
       activeTab: { kind: 'session', sessionId: 'third' },

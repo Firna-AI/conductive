@@ -1,12 +1,13 @@
-# Tools of a workspace
+# Workspace tools
 
 This doc holds the requirements and the decisions in force for the tools
-of a workspace: All files and Changes, the terminal, port previews, and
-the desktop. It belongs to
-[Workspaces and sandboxes](workspaces-and-sandboxes.md). The terms are
-those of the [architecture doc](../architecture.md#terms). A decision
-number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+of a workspace: its files and changes, its terminal, its port previews,
+and its desktop. [Workspaces and sandboxes](workspaces-and-sandboxes.md)
+holds the life of a workspace and its sandbox. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
+`app/files` and `app/tools`.
 
 ## Files and changes
 
@@ -25,6 +26,8 @@ number names a dated record, as
   branch. Its summary gives the number of changed files and the lines that
   they add and remove.
 - A changed file opens its diff against the default branch as a tab.
+- Each new file or diff tab opens at the end of the tab row of the centre
+  column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
@@ -125,8 +128,8 @@ number names a dated record, as
 - When the user ends the shell, such as with `exit`, the next connection
   opens a new shell.
 - A stop of the sandbox ends the shell and its commands, as
-  [Stop and resume](workspaces-and-sandboxes.md#stop-and-resume) says. The
-  first connection after the resume opens a new shell.
+  [Stop and resume](workspaces-and-sandboxes.md#stop-and-resume) says. The first connection after the
+  resume opens a new shell.
 - On a phone, a row of keys adds the keys that a phone keyboard lacks.
 
 ## Port previews
@@ -139,8 +142,43 @@ number names a dated record, as
 
 ## Desktop
 
-- The Desktop tab shows the live desktop of the sandbox, where the agents
-  use a browser. The user watches the agents there.
+The Desktop tool shows the live desktop of the sandbox, where the agents
+use a browser. The app hides Desktop for now, and keeps its implementation
+for its return.
+
+- The app offers Desktop to no user, also not to an operator. The tools
+  panel, the tab bar of a phone, and the command palette show no Desktop
+  entry. This holds in the web app and in the Mac app.
+- An address that names Desktop shows Terminal in the same workspace, on
+  both screen sizes. Desktop does not mount, and the app asks for no
+  desktop URL.
+- A saved view that names Desktop shows Terminal too. The app keeps that
+  saved choice. Neither the Desktop address nor the saved view makes the
+  app save Terminal in place of the saved tool.
+- The saved view and the server still accept Desktop as a tool. So an
+  older saved choice stays valid, and Desktop can return without a change
+  of the stored data.
+- The server keeps the desktop URL route and its access rules, as
+  [Desktop](access-and-security.md#desktop) says. The pause adds no
+  refusal at the server.
+- A Mac app build from before the pause keeps its Desktop tab until it
+  updates.
+- Reason: the user found the desktop stream not reliable. The user chose
+  to hide Desktop for every user for now, and to keep its implementation
+  for its return.
+- A deployment flag, a Desktop for operators only, and a switch in the
+  operator section were rejected. Each adds a setting or an access rule
+  for a paused tool. A build setting that shows Desktop again was
+  rejected, because it adds another build mode.
+- A refusal at the server was rejected, because the user asked to hide
+  the tool, not to change the server. Removal of the implementation was
+  rejected, because Desktop comes back later.
+
+These rules hold wherever Desktop shows, such as in a Mac app build from
+before the pause:
+
+- The Desktop tab shows the live desktop of the sandbox. The user watches
+  the agents there.
 - When the [content security policy](access-and-security.md#content-security-policy)
   of the page blocks the stream, the Desktop tab says that the desktop
   couldn't open, with Try again. It never shows a blocked stream as live.

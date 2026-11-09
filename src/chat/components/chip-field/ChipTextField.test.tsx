@@ -7,6 +7,7 @@ import { accessibleName, byRole } from '../../../test-support/dom-queries'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
 import {
+  focusMessage,
   messageText,
   pasteMessage,
   pressInField,
@@ -31,6 +32,7 @@ async function mountField(
     value?: string
     list?: readonly Workspace[] | null
     editable?: boolean
+    caretAtEnd?: boolean
   } = {},
 ) {
   const owner: Partial<Owner> = {}
@@ -47,6 +49,7 @@ async function mountField(
     return (
       <LinksProvider value={{ links }}>
         <ChipTextField
+          caretAtEnd={options.caretAtEnd}
           editable={options.editable}
           label="Message"
           lines={2}
@@ -173,6 +176,28 @@ describe('the chip text field', () => {
         text: `${linked.link} and ${linked.link}`,
       },
       left: { chips: [], text: `${linked.link} and ${linked.link}` },
+    })
+  })
+
+  test('with the caret at the end, a kept draft takes the caret at its end at the first focus, and a focus after a click outside keeps the caret where the user put it', async () => {
+    const view = await mountField({
+      caretAtEnd: true,
+      value: `Compare ${linked.link}`,
+    })
+    focusMessage(view.field)
+    pressInField(view.field, 'ArrowLeft')
+    pasteMessage(view.field, 'X')
+    const first = view.draft()
+    // A click outside the field moves the caret of the page there.
+    act(() => {
+      view.field.blur()
+      document.getSelection()?.collapse(document.body, 0)
+    })
+    focusMessage(view.field)
+    pasteMessage(view.field, 'Y')
+    expect({ first, later: view.draft() }).toEqual({
+      first: `Compare X${linked.link}`,
+      later: `Compare XY${linked.link}`,
     })
   })
 

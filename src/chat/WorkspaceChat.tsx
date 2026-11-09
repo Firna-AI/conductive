@@ -12,6 +12,7 @@ import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
+import { rowOf, shownTab, type RenderTab } from './components/tab-row'
 import { LinksProvider, type ChatLinks } from './links/LinksContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import { sessionState, type ChatSnapshot } from './state/chat-snapshot'
@@ -26,8 +27,12 @@ export interface ChatViewProps {
   viewport: 'desktop' | 'mobile'
   /** The time source for durations and relative times. */
   clock?: Clock
-  /** Tabs that the app adds after the sessions, such as open files. */
-  extraTabs?: ReactNode
+  /**
+   * Names and draws a file or diff tab of the saved view at its place in the
+   * tab row, as `RenderTab` says. Without it, the row shows only the session
+   * tabs, as on a phone.
+   */
+  renderTab?: RenderTab
   /**
    * A page that the app shows in place of the chat of the open session, such
    * as an open file. The session tabs and the overlays stay, and no session
@@ -115,12 +120,12 @@ function ChatBody(
   const body = (
     <>
       <SessionTabs
-        extraTabs={props.extraTabs}
         historyEntries={history}
         historyOpen={overlay.kind === 'history'}
         mobile={mobile}
         onCancelRename={controller.dismissOverlay}
         onClose={controller.requestClose}
+        onMove={controller.moveTab}
         onNew={() => void controller.newSession()}
         onRename={(id, title) => void controller.rename(id, title)}
         onSelect={controller.select}
@@ -128,11 +133,12 @@ function ChatBody(
         onStartRename={controller.startRename}
         readOnly={readOnly}
         renaming={overlay.kind === 'rename' ? overlay.sessionId : null}
-        tabs={tabSessions(snapshot).map((session) => ({
-          id: session.id,
-          title: session.title,
-          selected: content === null && session.id === active,
-        }))}
+        tabs={rowOf(
+          snapshot.view,
+          tabSessions(snapshot),
+          shownTab(snapshot.view, active, content !== null),
+          props.renderTab,
+        )}
       />
       {content ?? (
         <SessionChat

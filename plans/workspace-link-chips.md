@@ -108,6 +108,9 @@ approved.
   that match a part of a number, such as `39`.
 - Agent call, from the updated mockups: matching palette rows show the
   label before the name, so the numbers line up in one column.
+- Agent call, from integration on 9 November 2026: the number-search
+  mockups have their own sibling page. Reason: the combined search page
+  had seven screens, and each page must keep five or fewer.
 - Agent call: the rule of the palette search goes into the protocol doc
   of the palette, in the change that builds it. Reason: a protocol doc
   states only behaviour that the code has, and the palette is not on
@@ -597,6 +600,39 @@ and workspace chips together before the complete gate.
       affected tests and static checks.
 - [x] Refresh the marketing pictures if the merged mockups change them.
 - [x] Audit merge preservation and smoke-test the merged app.
+
+## Milestone 6c: Release and tab integration
+
+Depends on: 6b
+
+Main advanced to `ed88e9b` before delivery. It adds tab moves, draft-focus
+repairs, automatic org builds, signed Mac releases, legal text, and the
+temporary hiding of the Desktop panel. Keep these changes with the chips.
+
+- [x] Resolve the documentation and UI conflicts path by path. Preserve
+      all requirements and current main features.
+- [x] Keep the shared chip editor's focus and caret behavior aligned with
+      the new draft-focus repair. Preserve tab moves and chat list watches.
+- [x] Check the auto-merged backend and release files for preservation.
+- [x] Regenerate the marketing pictures from the combined mockups.
+- [ ] Run affected checks, audit the merge, and run the complete gate on
+      the combined tree before delivery.
+
+## Milestone 6d: Number search catalogue layout
+
+Tags: mockup
+
+Depends on: 6b
+
+The merged palette search entry has seven screens. Move this branch's
+two number-search screens to their own sibling page. Keep main's five
+search screens and their paths.
+
+- [x] Add a number-search page with its full-number and partial-number
+      views. Keep the existing screen component and visual design.
+- [x] Update the catalogue order and live references. Keep each page at
+      five screens or fewer.
+- [x] Check the mockups and inspect the two number-search views.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

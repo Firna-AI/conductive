@@ -1,4 +1,5 @@
 import { HttpError } from '../http'
+import { finishUnscheduledBuild } from './build-admission-data'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
 import { errorSummary, warnWorker } from '../warnings'
@@ -19,6 +20,19 @@ import {
   ProviderRetryExhausted,
   transientProviderError,
 } from './provider-retry'
+
+export async function failUnscheduledBuild(
+  runtime: ImageRuntime,
+  buildId: string,
+): Promise<void> {
+  await failBuild(
+    runtime.env.DB,
+    buildId,
+    'The cloud computer build could not start. Try again.',
+    runtime.dependencies.now(),
+  )
+  await finishUnscheduledBuild(runtime.env.DB, buildId)
+}
 
 export async function handleImageBuildFailure(
   runtime: ImageRuntime,

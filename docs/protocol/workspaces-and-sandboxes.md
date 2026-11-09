@@ -1,10 +1,10 @@
 # Workspaces and sandboxes
 
 This doc holds the requirements and the decisions in force for workspaces
-and their sandboxes. It also covers the org image that every sandbox starts
-from, and the number and the link of each workspace.
-[Tools of a workspace](tools-of-a-workspace.md) covers All files, Changes,
-the terminal, port previews, and the desktop. The terms are those of the
+and their sandboxes. It also covers the number and the link of each
+workspace. [Org image](org-image.md) covers the org image that every
+sandbox starts from, and [Workspace tools](workspace-tools.md) covers the
+tools of a workspace. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -34,38 +34,13 @@ says.
 
 ## The org image
 
-- Each org has one org image that holds a prepared copy of every
-  repository that the org chose (decision 13).
-- One image for each repository was rejected, because each image costs
-  its own saved snapshot and starts.
-- The Repositories tab of the org settings chooses the repositories
-  (decision 10). A change of the repositories takes effect at the next
-  build.
-- The install script prepares the image. It is a script, not a terminal
-  session, and it runs only in a build.
-- Bash runs the install script.
-- The Cloud computer tab lists the operating system and software that the
-  base image includes before the install script runs.
-- "Build computer" starts a build. A build runs the install script on a
-  copy of the image, with every chosen repository cloned (decision 12).
-- A build replaces the org image only when it succeeds. A failed build
-  keeps the last good image (decision 9).
-- While a build runs, its log streams on the Cloud computer tab. New
-  workspaces keep starting from the last good image.
-- A failed build shows the end of its log and Try again. The Settings link
-  of the sidebar then shows a mark.
-- After the user saves a changed install script, the tab asks for a build,
-  because the script runs only in a build.
-- The Cloud computer tab lists the builds, each with its time, its result,
-  and its length.
-- A push to the default branch of a chosen repository refreshes the org
-  image, at most once in 30 minutes. A daily timer refreshes it too. Each
-  automatic refresh needs an admin who is not suspended, as
-  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
-- A refresh fetches the new commits of every chosen repository. It does
-  not run the install script.
-- Reason: a new workspace then needs only a small fetch. The limit of one
-  refresh in 30 minutes saves starts, because each refresh is a start.
+- [The org image](org-image.md#the-org-image) holds the requirements of
+  the org image of an org, its builds, and its refreshes.
+
+### The first build
+
+- [The first build](org-image.md#the-first-build) holds the requirements
+  of the first build of a new org and of its added build.
 
 ## Repository folders
 
@@ -157,7 +132,7 @@ says.
   start steps show the time limit of the start.
 - A build or a refresh that passes its time limit fails in the same way as
   after any other error. So the last good image stays, as
-  [The org image](#the-org-image) says.
+  [The org image](org-image.md#the-org-image) says.
 - A start that passes its time limit fails in the same way as after any
   other error. So a failed create keeps its workspace in the error state,
   as [Create a workspace](create-a-workspace.md#a-failed-first-start) says.
@@ -234,21 +209,25 @@ says.
 
 ## Tools of a workspace
 
-- [Tools of a workspace](tools-of-a-workspace.md) holds the requirements
-  of All files and Changes, the terminal, port previews, and the desktop.
+- [Workspace tools](workspace-tools.md) holds the requirements of the
+  tools of a workspace.
 
 ### Files and changes
 
-- [Files and changes](tools-of-a-workspace.md#files-and-changes)
+- [Files and changes](workspace-tools.md#files-and-changes) holds the
+  requirements of All files, Changes, and the file reports of the runner.
 
 ### Terminal
 
-- [Terminal](tools-of-a-workspace.md#terminal)
+- [Terminal](workspace-tools.md#terminal) holds the requirements of the
+  shell of a workspace.
 
 ### Port previews
 
-- [Port previews](tools-of-a-workspace.md#port-previews)
+- [Port previews](workspace-tools.md#port-previews) holds the
+  requirements of the previews of the ports of a sandbox.
 
 ### Desktop
 
-- [Desktop](tools-of-a-workspace.md#desktop)
+- [Desktop](workspace-tools.md#desktop) holds the requirements of the
+  live desktop of a sandbox, which the app hides for now.

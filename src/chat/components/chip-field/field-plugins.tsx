@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-  type Ref,
-} from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
   $getRoot,
@@ -31,11 +25,6 @@ import {
   $selectedFieldText,
   $setFieldText,
 } from './field-content'
-
-/** Something that takes the focus, such as the handle of the field. */
-export interface FieldHandle {
-  focus(): void
-}
 
 /** Whether the field has the focus, so that a change may place its caret. */
 function focused(editor: LexicalEditor): boolean {
@@ -224,27 +213,5 @@ export function ReconcilePlugin() {
       : [HISTORY_MERGE_TAG, SKIP_DOM_SELECTION_TAG]
     editor.update(() => $reconcileLinks({ orgId, workspaces }), { tag })
   }, [editor, orgId, workspaces])
-  return null
-}
-
-/**
- * The handle of the field. Its focus puts the caret where it was, or at the
- * end of the text, as a text field does.
- */
-export function FocusPlugin(props: { handle?: Ref<FieldHandle> }) {
-  const [editor] = useLexicalComposerContext()
-  useImperativeHandle(
-    props.handle,
-    () => ({
-      focus: () => {
-        editor.focus()
-        const root = editor.getRootElement()
-        if (root && root.ownerDocument.activeElement !== root) {
-          root.focus({ preventScroll: true })
-        }
-      },
-    }),
-    [editor],
-  )
   return null
 }

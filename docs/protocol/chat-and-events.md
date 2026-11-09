@@ -25,6 +25,11 @@ says.
 - [Sessions](agents-and-sessions.md#sessions) says how the sessions of a
   workspace show as tabs, take their titles, and close.
 
+### The tab row
+
+- [The tab row](agents-and-sessions.md#the-tab-row) says how the tabs of
+  the centre column keep their order, move, and open their tab menu.
+
 ## Workspace and session names
 
 - [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)

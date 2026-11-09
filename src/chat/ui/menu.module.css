@@ -1,0 +1,10 @@
+/*
+ * A menu at a point of the window, such as the menu of a tab at the pointer
+ * of a right click. It draws above the page from its own position, and a
+ * long menu scrolls, as a menu beside its trigger does.
+ */
+.point {
+  position: fixed;
+  max-height: 70dvh;
+  overflow-y: auto;
+}

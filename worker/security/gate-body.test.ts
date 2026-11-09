@@ -36,8 +36,10 @@ it('accepts a JSON message at exactly 1 MB of UTF-8 bytes', async () => {
     duplex: 'half',
   }
   const response = await harness.request(API_PATHS.orgs, session, init)
-  expect(response.status).toBe(201)
-  expect(await response.json()).toMatchObject({ org: { name: 'Team' } })
+  expect(response.status).toBe(400)
+  expect(await response.json()).toMatchObject({
+    error: { code: 'repository_required' },
+  })
   expect(stream.observed).toEqual({
     pulled: 2,
     bytes: 1_000_000,
