@@ -64,6 +64,17 @@ export const workspaceSessions: readonly StartedSession[] = [
 export const newSession: Session = { key: 'new', title: null }
 
 /**
+ * More open sessions of the workspace, oldest first, for a row with more
+ * tabs than fit. None of them is in the session history.
+ */
+export const moreSessions: readonly Session[] = [
+  { key: 'keyboard', title: 'Keyboard navigation' },
+  { key: 'no-results', title: 'No results message' },
+  { key: 'loading', title: 'Loading state' },
+  { key: 'analytics', title: 'Autocomplete analytics' },
+]
+
+/**
  * The session that a message of Priya opened from the first session,
  * because the Claude login of Cal, its starter, was not available, or Cal
  * did not let other members use it. It starts empty, runs on the own login
