@@ -1,5 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
-import { joinLink, newCode } from '../../../../../fixtures/operatorCodes'
+import { newCode } from '../../../../../fixtures/operatorCodes'
+import { joinLink } from '../../../../../fixtures/waitlist'
 import {
   OperatorCodesScreen,
   operatorCodesSchema,

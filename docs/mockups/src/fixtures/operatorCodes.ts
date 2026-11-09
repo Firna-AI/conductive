@@ -4,7 +4,6 @@
  * them. Each code has 10 characters without look-alike characters, in two
  * groups of five.
  */
-import { appDomain } from '../brand'
 import { danaReferral } from './operatorAccess'
 import { account } from './orgs'
 
@@ -30,11 +29,6 @@ export type InviteCodeRow = CodeBase & {
 export type ReferralCodeRow = CodeBase & { kind: 'referral'; owner: string }
 
 export type CodeRow = InviteCodeRow | ReferralCodeRow
-
-/** The join link of a code, which carries the code through the sign-in. */
-export function joinLink(code: string): string {
-  return `https://${appDomain}/join/${code}`
-}
 
 /** A disabled code stays disabled. Otherwise its uses decide its state. */
 export function codeState(row: CodeBase): CodeState {

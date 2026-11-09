@@ -505,41 +505,49 @@ Depends on: none
 The waitlist screen, the join link, the referral code, the new words of
 the marketing site, and the operator tabs, on desktop and on a phone.
 
-- [ ] Add `app/sign-in/waitlist`: the screen of a person who waits. It
+- [x] Add `app/sign-in/waitlist`: the screen of a person who waits. It
       shows the GitHub account, a code field, the org invitations of the
       person, and Sign out.
-  - [ ] Add its states: a code that did not work, the pause, and an org
+  - [x] Add its states: a code that did not work, the pause, and an org
         invitation that lets the person in.
-- [ ] Add `app/sign-in/join`: the sign-in page that a join link opens, and
+  - [x] Name the address of the approval email, and add the state of an
+        account with no verified email.
+- [x] Add `app/sign-in/join`: the sign-in page that a join link opens, and
       the waitlist screen when the code of the link did not work.
-- [ ] Change the words "Start free with GitHub" on `marketing` to words
-      that do not promise use at once.
-- [ ] Add the referral code to `app/account`: the code, the join link with
+- [x] Add `mac-app/waitlist`: the waitlist screen in the Mac window, also
+      in full screen.
+- [x] Change the words "Start free with GitHub" on `marketing` to words
+      that do not promise use at once, with its closing line.
+- [x] Add the referral code to `app/account`: the code, the join link with
       Copy, and the uses left. Add its states: the pause, a code that is
       used up, and a disabled code.
-- [ ] Add `app/operator/waitlist`: the Waitlist tab, oldest first, with a
+- [x] Add `app/operator/waitlist`: the Waitlist tab, oldest first, with a
       search, Approve with its question, a failed approval email, and an
       empty waitlist.
-- [ ] Add `app/operator/codes`: the Invite codes tab with each code and
+- [x] Add `app/operator/codes`: the Invite codes tab with each code and
       its uses, New code with its dialog, Disable with its confirm, and a
       search that finds a referral code.
-- [ ] Add the pause to `app/operator/codes`: the switch with its confirm,
+- [x] Add the pause to `app/operator/codes`: the switch with its confirm,
       and the notice on each tab while the pause is on.
-- [ ] Update `app/operator/users` and `app/operator/user`: the waiting
+- [x] Update `app/operator/users` and `app/operator/user`: the waiting
       state, Approve, how and when the user got app access, whether the
       approval email went, the referral code with Disable, and the offer
       to disable it in the Suspend dialog.
-- [ ] Update `app/operator`: the count of the people who wait.
-- [ ] Update the Sign up flow of `user-flows` for the waitlist and the
-      join link.
-- [ ] Split each page that passes five screens, as the `mockups` skill
+- [x] Update `app/operator`: the count of the people who wait.
+- [x] Update the Sign up flow of `user-flows` for the waitlist, and add
+      the flow "Join with an invite link".
+- [x] Split each page that passes five screens, as the `mockups` skill
       says.
-- [ ] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
-- [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+- [x] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
+- [x] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run file-length:check`. Smoke-test the changed pages in
       both schemes and both viewports.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: the logs `combined-mockups-check.log` and
+`combined-source-checks.log`, and the screenshots in `shots-combined/`,
+`shots-user/`, and `shots-operator/`, all in `.context/waitlist/m1/`.
 
 ## Milestone 2: Documentation and protocol
 
