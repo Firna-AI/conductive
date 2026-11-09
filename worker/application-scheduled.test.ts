@@ -3,7 +3,7 @@ import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
 import { createApp } from './application'
 import { SOFTWARE } from './lifecycle/backend-test-support'
 import { readBuildHistory } from './lifecycle/build-data'
-import { heldOperation } from './lifecycle/platform-test-storage'
+import { heldOperation } from './test-support/held-operation'
 import {
   realRuntimeFixture,
   runtimeBundle,

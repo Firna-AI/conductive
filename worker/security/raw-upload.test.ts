@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, expect, it } from 'vitest'
-
 import { attachmentUploadUrl } from '../../src/shared/messages'
 import { createApp } from '../application'
 import {
@@ -14,7 +13,6 @@ import {
 } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from '../chat/harness.test-support'
 import { gate } from './gate'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -22,7 +20,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('checks sign-in, Origin, and org access before pulling a raw upload body', async () => {
   const fixture = await createChatFixture(harness)
   const path = attachmentUploadUrl(
@@ -36,7 +33,7 @@ it('checks sign-in, Origin, and org access before pulling a raw upload body', as
     [fixture.ownerCookie, 'https://elsewhere.test', 403],
     [fixture.ownerCookie, TEST_ORIGIN, 404],
   ] as const) {
-    const body = streamedBody([new Uint8Array(25_000_001)])
+    const body = streamedBody([new Uint8Array(25000001)])
     const url =
       status === 404 ? path.replace(fixture.org.id, 'another-org') : path
     const response = await app.fetch(
@@ -52,7 +49,6 @@ it('checks sign-in, Origin, and org access before pulling a raw upload body', as
     expect(body.observed).toEqual({ pulled: 0, bytes: 0, cancelled: 0 })
   }
 })
-
 it('requires explicit octet-stream and valid known length while leaving authorized bytes unread in the gate', async () => {
   const ownerCookie = await harness.login()
   const org = await harness.createOrg(ownerCookie)

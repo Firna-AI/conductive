@@ -55,7 +55,7 @@ it.each([0, 7])(
         processId: null,
       })
       const checkpointLog = (await readBuild(runtime.env.DB, org.id, id)).log
-      fixture.setTime(runtime.dependencies.now() + 1_000)
+      await fixture.setTime(runtime.dependencies.now() + 1_000)
       const restarted = { ...images, dependencies: { ...images.dependencies } }
       await advanceImageBuild(restarted, org.id, id)
       expect(await local.file('effects')).toBe('once\n')
@@ -138,8 +138,8 @@ it('recovers a running startup after a lost start reply without repeating its si
       processId: null,
     })
     expect((await start.job())?.failure).toBeUndefined()
-    start.restart()
-    fixture.setTime(fixture.runtime.dependencies.now() + 1_000)
+    await start.restart()
+    await fixture.setTime(fixture.runtime.dependencies.now() + 1_000)
     fixture.boat.commandRunning = true
     await start.advance()
     await following

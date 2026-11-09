@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { sessionPaths } from '../../src/shared/sessions'
 import {
   createHarness,
@@ -8,7 +7,6 @@ import {
 } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { readAgentLogin } from './queries'
-
 describe('committed session login observations', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -20,7 +18,6 @@ describe('committed session login observations', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('publishes and keeps unavailable login state when the starter Send is refused', async () => {
     const fixture = await createChatFixture(harness, {
       resolveLogin: async (userId, agent) => {
@@ -82,10 +79,9 @@ describe('committed session login observations', () => {
       await fixture.chat.store.read(WORKSPACE_ID, (view) => view.pending()),
     ).toEqual([])
     expect(JSON.stringify(ownerTab.messages)).not.toContain('secret-')
-    ownerTab.close()
-    memberTab.close()
+    await ownerTab.close()
+    await memberTab.close()
   })
-
   it('returns repeated message IDs without checking any login or publishing an observation', async () => {
     let refuseChecks = false
     let checks = 0
@@ -116,10 +112,9 @@ describe('committed session login observations', () => {
     expect(checks).toBe(0)
     expect(ownerTab.messages).toHaveLength(1)
     expect(memberTab.messages).toEqual(ownerTab.messages)
-    ownerTab.close()
-    memberTab.close()
+    await ownerTab.close()
+    await memberTab.close()
   })
-
   it('keeps the observation but no linked acceptance when an attachment is refused', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -180,7 +175,7 @@ describe('committed session login observations', () => {
     ])
     expect(memberTab.messages).toEqual(ownerTab.messages)
     expect(JSON.stringify(ownerTab.messages)).not.toContain('secret-')
-    ownerTab.close()
-    memberTab.close()
+    await ownerTab.close()
+    await memberTab.close()
   })
 })

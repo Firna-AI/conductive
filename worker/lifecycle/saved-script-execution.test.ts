@@ -124,11 +124,11 @@ it('runs retention startup in Bash with its org environment without marking read
       if (local.contains(command, 'retention'))
         results.push(await local.run(command))
     }
-    fixture.setTime(fixture.runtime.dependencies.now() + 1_123_200_000)
-    await actor.alarm()
-    await actor.alarm()
-    await actor.alarm()
-    await actor.alarm()
+    await fixture.setTime(fixture.runtime.dependencies.now() + 1_123_200_000)
+    await actor.advance()
+    await actor.advance()
+    await actor.advance()
+    await actor.advance()
     expect(results).toEqual([
       {
         exitCode: 0,

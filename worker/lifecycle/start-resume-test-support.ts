@@ -28,7 +28,7 @@ export async function resumedStartup(
   await fixture.run(() => start.wait())
   await actor.lifecycleStopped()
   fixture.boat.states.set('bx_1', 'archived')
-  fixture.setTime(TEST_TIME + 30_000)
+  await fixture.setTime(TEST_TIME + 30_000)
   const resume: WorkspaceStartJob = {
     ...created,
     kind: 'resume',

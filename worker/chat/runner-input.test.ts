@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { parseRunnerEnvelope } from './runner-input'
-import { numberedRunnerInput } from './runner-limits.test-support'
+import { numberedRunnerInput } from './runner-fixtures.test-support'
 
 const context = { sessionId: 'session-1', turnId: 'turn-1' }
 const tool = {

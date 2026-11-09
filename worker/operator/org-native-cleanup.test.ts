@@ -6,7 +6,7 @@ import { boatRoute } from '../sandbox/routes'
 import { SESSION_COOKIE } from '../security/cookies'
 import { sign } from '../security/crypto'
 import { refreshSignal } from '../security/github-test-support'
-import { heldOperation } from '../lifecycle/platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import {
   realRuntimeFixture,
   runtimeBundle,
