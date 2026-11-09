@@ -11,14 +11,21 @@ export const SETTINGS_TABS = [
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
 /**
+ * The tabs of the operator section that list and search: the orgs, the
+ * users, the people who wait, and the codes.
+ */
+const OPERATOR_LISTS = ['orgs', 'users', 'waitlist', 'codes'] as const
+
+type OperatorList = (typeof OPERATOR_LISTS)[number]
+
+/**
  * A page of the operator section: a tab, or the page of one org or one
- * user. A tab of a list keeps its search, which is empty for the newest
- * first.
+ * user. A tab of a list keeps its search, which is empty for the whole
+ * list.
  */
 export type OperatorView =
   | { page: 'overview' }
-  | { page: 'orgs'; search: string }
-  | { page: 'users'; search: string }
+  | { page: OperatorList; search: string }
   | { page: 'org'; id: string }
   | { page: 'user'; githubId: number }
 
@@ -50,7 +57,7 @@ export type Route =
 const encode = encodeURIComponent
 
 /** The address of a list of the operator, with its search in `q`. */
-function operatorList(list: 'orgs' | 'users', search: string): string {
+function operatorList(list: OperatorList, search: string): string {
   const query = new URLSearchParams()
   if (search !== '') query.set('q', search)
   return query.size ? `/operator/${list}?${query}` : `/operator/${list}`
@@ -79,6 +86,8 @@ export const routes = {
   operator: () => '/operator',
   operatorOrgs: (search = '') => operatorList('orgs', search),
   operatorUsers: (search = '') => operatorList('users', search),
+  operatorWaitlist: (search = '') => operatorList('waitlist', search),
+  operatorCodes: (search = '') => operatorList('codes', search),
   operatorOrg: (orgId: string) => `/operator/orgs/${encode(orgId)}`,
   operatorUser: (githubId: number) => `/operator/users/${githubId}`,
 } as const
@@ -107,15 +116,14 @@ function operatorView(
   parts: readonly string[],
   query: URLSearchParams,
 ): OperatorView | null {
-  const [list, id, ...rest] = parts
+  const [first, id, ...rest] = parts
   const search = query.get('q')?.trim() ?? ''
-  if (list === undefined) return { page: 'overview' }
-  if (rest.length > 0) return null
-  if (list === 'orgs') {
-    return id === undefined ? { page: 'orgs', search } : { page: 'org', id }
-  }
+  if (first === undefined) return { page: 'overview' }
+  const list = OPERATOR_LISTS.find((item) => item === first)
+  if (list === undefined || rest.length > 0) return null
+  if (id === undefined) return { page: list, search }
+  if (list === 'orgs') return { page: 'org', id }
   if (list !== 'users') return null
-  if (id === undefined) return { page: 'users', search }
   const githubId = githubIdOf(id)
   return githubId === null ? null : { page: 'user', githubId }
 }

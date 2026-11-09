@@ -39,9 +39,20 @@ const users: DirectoryKind<OperatorUserSummary> = {
 }
 
 /**
+ * The line under a login: the state of a suspended user or of a person who
+ * waits, or else the name.
+ */
+function detailOf(row: OperatorUserSummary) {
+  if (row.status === 'suspended') return <TargetState status="suspended" />
+  if (row.appAccess.state === 'waiting') return <TargetState status="waiting" />
+  return row.name ?? undefined
+}
+
+/**
  * The Users tab of the operator: a search over every user by GitHub login,
  * name, or numeric GitHub ID. With no search, it lists the newest users. The
- * line under a login gives the state of a suspended user, or else the name.
+ * line under a login gives the state of a suspended user or of a person who
+ * waits, or else the name.
  */
 export function UsersTab(props: { search: string }) {
   const app = useApp()
@@ -55,13 +66,7 @@ export function UsersTab(props: { search: string }) {
       case 'user':
         return (
           <NameCell
-            detail={
-              row.status === 'suspended' ? (
-                <TargetState status="suspended" />
-              ) : (
-                (row.name ?? undefined)
-              )
-            }
+            detail={detailOf(row)}
             mark={
               <TargetMark
                 size={22}

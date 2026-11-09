@@ -8,10 +8,7 @@ import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { StatusText } from '../common/StatusText'
 import { Section } from '../settings/Section'
-
-/** The words of the pause, which the question and the notice share. */
-const blocked =
-  'Invite codes, referral codes, and org invitations let nobody in until sign-ups resume.'
+import { pausedTitle, pauseWords } from './codeCopy'
 
 /**
  * The notice at the top of each tab while sign-ups are paused: who paused
@@ -23,12 +20,12 @@ export function PauseNotice() {
     <Notice
       action={
         <ScreenLink asChild to={paths.operatorCodes}>
-          <ActionButton icon={Play}>Resume sign-ups</ActionButton>
+          <ActionButton icon={Play}>{pauseWords.resume}</ActionButton>
         </ScreenLink>
       }
-      body={`${blocked} The waitlist stays open, and Approve still works.`}
+      body={pauseWords.noticeBody}
       icon={CirclePause}
-      title={`Sign-ups paused on ${signUpPause.since} by @${signUpPause.by}`}
+      title={pausedTitle(signUpPause.since, signUpPause.by)}
     />
   )
 }
@@ -43,12 +40,12 @@ export function SignUpsSection() {
     <Section
       actions={
         <ScreenLink asChild to={paths.operatorCodesPause}>
-          <ActionButton icon={Pause}>Pause sign-ups</ActionButton>
+          <ActionButton icon={Pause}>{pauseWords.pause}</ActionButton>
         </ScreenLink>
       }
-      description="Invite codes, referral codes, and org invitations let new people in."
-      status={<StatusText label="Open" tone="success" />}
-      title="Sign-ups"
+      description={pauseWords.openLine}
+      status={<StatusText label={pauseWords.open} tone="success" />}
+      title={pauseWords.box}
     />
   )
 }
@@ -67,16 +64,17 @@ export function PauseDialog(props: { viewport: Viewport }) {
           </ScreenLink>
           <ScreenLink asChild to={paths.operatorCodesPaused}>
             <ActionButton icon={Pause} tone="danger">
-              Pause sign-ups
+              {pauseWords.pause}
             </ActionButton>
           </ScreenLink>
         </>
       }
-      title="Pause sign-ups?"
+      title={pauseWords.question}
       viewport={props.viewport}
     >
-      <DialogText>{blocked} Each code keeps its uses.</DialogText>
-      <DialogText>The waitlist stays open, and Approve still works.</DialogText>
+      {pauseWords.questionText.map((text) => (
+        <DialogText key={text}>{text}</DialogText>
+      ))}
     </ConfirmDialog>
   )
 }

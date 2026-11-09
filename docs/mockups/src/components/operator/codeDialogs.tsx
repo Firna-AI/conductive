@@ -1,7 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { Ban, Plus } from 'lucide-react'
 import { Input } from '@firna/ui/input'
-import { productName } from '../../brand'
 import { newCode } from '../../fixtures/operatorCodes'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
@@ -10,6 +9,7 @@ import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { InlineText } from '../common/InlineText'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
+import { disableCodeWords, newCodeWords } from './codeCopy'
 
 /**
  * New code: the operator gives a label and a use limit, and the app makes
@@ -26,42 +26,32 @@ export function NewCodeDialog(props: { viewport: Viewport }) {
           </ScreenLink>
           <ScreenLink asChild to={paths.operatorCodesMade}>
             <ActionButton icon={Plus} tone="primary">
-              Make code
+              {newCodeWords.make}
             </ActionButton>
           </ScreenLink>
         </>
       }
-      title="New invite code"
+      title={newCodeWords.title}
       viewport={props.viewport}
     >
-      <DialogText>
-        {productName} makes the code at random. Copy it from the list to share
-        it.
-      </DialogText>
+      <DialogText>{newCodeWords.text}</DialogText>
       <Input
-        hint="Only operators see it."
-        label="Label"
+        hint={newCodeWords.labelHint}
+        label={newCodeWords.label}
         onChangeText={noop}
         size={field}
         value={newCode.label}
       />
       <Input
-        hint="How many people the code lets in."
+        hint={newCodeWords.limitHint}
         inputMode="numeric"
-        label="Use limit"
+        label={newCodeWords.limit}
         onChangeText={noop}
         size={field}
         value={String(newCode.limit)}
       />
     </ConfirmDialog>
   )
-}
-
-/** Who keeps their app access after a disable. */
-function keeps(used: number): string {
-  if (used === 0) return 'Nobody has used it yet.'
-  if (used === 1) return 'The person who used it keeps their app access.'
-  return `The ${used} people who used it keep their app access.`
 }
 
 /**
@@ -88,7 +78,7 @@ export function DisableCodeDialog(props: {
           </ScreenLink>
           <ScreenLink asChild to={props.done}>
             <ActionButton icon={Ban} tone="danger">
-              Disable code
+              {disableCodeWords.action}
             </ActionButton>
           </ScreenLink>
         </>
@@ -97,14 +87,10 @@ export function DisableCodeDialog(props: {
       viewport={props.viewport}
     >
       <DialogText>
-        <InlineText text={`\`${props.code}\` stops working now.`} />{' '}
-        {keeps(props.used)}
+        <InlineText text={disableCodeWords.stops(props.code)} />{' '}
+        {disableCodeWords.keeps(props.used)}
       </DialogText>
-      <DialogText>
-        {props.kind === 'invite'
-          ? 'Disable is final. To share a code again, make a new one.'
-          : 'Disable is final.'}
-      </DialogText>
+      <DialogText>{disableCodeWords.final(props.kind)}</DialogText>
     </ConfirmDialog>
   )
 }

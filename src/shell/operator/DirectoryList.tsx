@@ -20,7 +20,7 @@ import { EmptyRows } from './TargetParts'
  */
 export const dayWidth = 100
 
-/** What differs between the Orgs tab and the Users tab. */
+/** What differs between the tabs that list and search. */
 export interface DirectoryKind<Row> {
   /** The title of the box of the rows, such as Orgs. */
   title: string
@@ -33,6 +33,14 @@ export interface DirectoryKind<Row> {
   rowKey: (row: Row) => string
   /** The line that counts the matches of a search, when it differs. */
   matches?: (result: DirectoryResult<Row>) => string | null
+  /** The line that counts the rows, in place of the newest first. */
+  summary?: (result: DirectoryResult<Row>) => string
+  /** The line of a search with no match, when it differs. */
+  noMatch?: (search: string) => string
+  /** The box of a list with no row and no search, when it differs. */
+  nothing?: ReactNode
+  /** What a first read that failed names, when it differs from `many`. */
+  failure?: string
 }
 
 /** The line above the rows that counts them. */
@@ -42,6 +50,7 @@ function summaryOf<Row>(
 ): string {
   const { search, total } = result
   if (total === 0) return kind.keys
+  if (kind.summary) return kind.summary(result)
   const rows = counted(total, kind.one, kind.many)
   if (search === '') return `${rows}, newest first.`
   const verb = total === 1 ? 'matches' : 'match'
@@ -68,7 +77,7 @@ export function DirectoryList<Row>(props: {
       <LoadFailure
         error={failure.error}
         retry={() => model.retry()}
-        title={`The ${kind.many} could not load`}
+        title={`The ${kind.failure ?? kind.many} could not load`}
       />
     )
   }
@@ -84,10 +93,12 @@ export function DirectoryList<Row>(props: {
     />
   )
   if (!result) return <Section title={kind.title}>{table([], true)}</Section>
-  const empty =
-    result.search === ''
-      ? `Each new ${kind.one} shows here.`
-      : `No ${kind.one} matches “${result.search}”.`
+  const listed = result.search === ''
+  if (listed && result.rows.length === 0 && kind.nothing) return kind.nothing
+  const empty = listed
+    ? `Each new ${kind.one} shows here.`
+    : (kind.noMatch?.(result.search) ??
+      `No ${kind.one} matches “${result.search}”.`)
   return (
     <Section description={summaryOf(kind, result)} title={kind.title}>
       {result.rows.length === 0 ? (

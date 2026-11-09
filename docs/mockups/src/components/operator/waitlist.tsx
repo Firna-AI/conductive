@@ -12,6 +12,7 @@ import { EmptyState } from '../common/EmptyState'
 import { ScreenLink } from '../common/ScreenLink'
 import { StatusText } from '../common/StatusText'
 import { Section } from '../settings/Section'
+import { approvedEmailLines, approvedLabel, emptyWaitlist } from './accessCopy'
 import { NameCell } from './directory'
 import { ProfileLink, TargetMark } from './targets'
 import styles from './waitlist.module.css'
@@ -34,12 +35,6 @@ export const waitlistColumns: Readonly<Record<Viewport, TableColumn[]>> = {
   ],
 }
 
-/** The words of the approval email under Approved. */
-const emailWords: Readonly<Record<ApprovalEmail, string>> = {
-  sent: 'Email sent',
-  pending: 'Email not sent yet',
-}
-
 /**
  * Approve, or the result of an approval in this visit: Approved, and
  * whether its email went. The app sends a late email again on its own, so
@@ -49,8 +44,8 @@ function ApprovalCell(props: { person: WaitingPerson; email?: ApprovalEmail }) {
   if (props.email) {
     return (
       <span className={styles.approved}>
-        <StatusText icon={Check} label="Approved" tone="success" />
-        <span className={styles.email}>{emailWords[props.email]}</span>
+        <StatusText icon={Check} label={approvedLabel} tone="success" />
+        <span className={styles.email}>{approvedEmailLines[props.email]}</span>
       </span>
     )
   }
@@ -111,9 +106,9 @@ export function EmptyWaitlist() {
   return (
     <Section title="Waitlist">
       <EmptyState
-        body="People show here after their first sign-in, oldest first."
+        body={emptyWaitlist.body}
         icon={Hourglass}
-        title="Nobody is waiting"
+        title={emptyWaitlist.title}
       />
     </Section>
   )

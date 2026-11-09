@@ -3,16 +3,7 @@ import { Check } from 'lucide-react'
 import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
-
-/**
- * A person who waits, as the question names them, and whether their GitHub
- * account has a primary verified email, which gets the approval email.
- */
-export type ApprovePerson = {
-  login: string
-  name?: string
-  verifiedEmail: boolean
-}
+import { approveQuestion, approveTitle, type ApproveTarget } from './accessCopy'
 
 /**
  * The operator confirms an approval. The question names the person and
@@ -21,14 +12,12 @@ export type ApprovePerson = {
  * that they see the app access at their next visit.
  */
 export function ApproveDialog(props: {
-  person: ApprovePerson
+  person: ApproveTarget
   viewport: Viewport
   /** The page that Cancel returns to, and the page after the approval. */
   cancel: string
   done: string
 }) {
-  const { login, name, verifiedEmail } = props.person
-  const who = name ?? `@${login}`
   return (
     <ConfirmDialog
       actions={
@@ -43,17 +32,12 @@ export function ApproveDialog(props: {
           </ScreenLink>
         </>
       }
-      title={`Approve @${login}?`}
+      title={approveTitle(props.person.login)}
       viewport={props.viewport}
     >
-      <DialogText>
-        {verifiedEmail
-          ? `${who} gets app access now, and an email tells them that they can come in.`
-          : `${who} gets app access now, and sees it at their next visit. No email goes out, because their GitHub account has no verified email.`}
-      </DialogText>
-      <DialogText>
-        An approval is final. You can still suspend the user later.
-      </DialogText>
+      {approveQuestion(props.person).map((text) => (
+        <DialogText key={text}>{text}</DialogText>
+      ))}
     </ConfirmDialog>
   )
 }

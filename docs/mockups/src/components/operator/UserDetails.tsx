@@ -5,6 +5,7 @@ import { Notice } from '../common/Notice'
 import { DetailList } from '../settings/DetailList'
 import { Section } from '../settings/Section'
 import { AppAccessSection, ReferralSection } from './AccessSections'
+import { waitingNotice } from './accessCopy'
 import { suspendedTitle, suspendedUserBody } from './operatorCopy'
 import { TargetList, TargetRow } from './targets'
 
@@ -26,13 +27,8 @@ function UserNotice(props: { user: UserPage }) {
     )
   }
   if (user.access.state === 'waiting') {
-    return (
-      <Notice
-        body={`${name} sees only the waitlist screen until they get app access.`}
-        icon={Hourglass}
-        title={`On the waitlist since ${user.access.since}`}
-      />
-    )
+    const notice = waitingNotice(name, user.access.since)
+    return <Notice body={notice.body} icon={Hourglass} title={notice.title} />
   }
   return null
 }

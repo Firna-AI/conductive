@@ -79,6 +79,21 @@ describe('routes', () => {
         { screen: 'operator', view: { page: 'users', search: 'dan' } },
       ],
       [
+        routes.operatorWaitlist('sam okafor'),
+        {
+          screen: 'operator',
+          view: { page: 'waitlist', search: 'sam okafor' },
+        },
+      ],
+      [
+        routes.operatorCodes(),
+        { screen: 'operator', view: { page: 'codes', search: '' } },
+      ],
+      [
+        routes.operatorCodes('K7QHM-3XP2R'),
+        { screen: 'operator', view: { page: 'codes', search: 'K7QHM-3XP2R' } },
+      ],
+      [
         routes.operatorOrg('org/h3x w4v'),
         { screen: 'operator', view: { page: 'org', id: 'org/h3x w4v' } },
       ],
@@ -99,6 +114,8 @@ describe('routes', () => {
       '/operator/users/dana-k',
       '/operator/users/0',
       '/operator/orgs/acme/members',
+      '/operator/waitlist/58201734',
+      '/operator/codes/K7QHM-3XP2R',
     ]) {
       expect(parse(path), path).toEqual({ screen: 'not-found' })
     }
