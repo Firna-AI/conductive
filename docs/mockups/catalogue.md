@@ -18,6 +18,7 @@ how a screen is built, and links to the other pages.
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
+| `app/routines`      | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
 | `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -29,13 +30,13 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |
 | `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
-| `user-flows`        | Sign up, create a workspace, reopen it, create an org, run a Mac command      |
+| `user-flows`        | Sign up, create a workspace, reopen it, create an org, run a Mac command, create a routine |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/shell`, `app/orgs`, `app/orgs/suspended`,
 `app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
-`app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/banner`, `app/chat`, `app/routines`, and `app/routines/triggers` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -101,3 +102,27 @@ the cloud computer could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
+
+`app/routines` lists the routines of Acme, which the Routines link below
+New workspace opens. Its child pages:
+
+- `app/routines/empty` has an org without routines.
+- `app/routines/routine` has the owner's view of a saved routine. Its
+  `new` variant has a new routine, its `member` variant the view of a
+  member, its `admin` variant the view of an admin with Turn off and
+  Delete, and its `owner-left` variant a routine that turned off because
+  its owner left the org.
+- `app/routines/triggers` has the open Add trigger menu. Its child page
+  `app/routines/triggers/schedules` has the Hourly, Daily, and Weekly
+  editors with the time zone, and a custom cron that the form refuses.
+  Its child page `app/routines/triggers/author-filter` has the author
+  filter of a pull request trigger, with member suggestions and with a
+  login that the save refused.
+- `app/routines/runs` has the runs in each state of their workspaces, a
+  failed run for each cause, and skipped runs. Its `saved` and `run-now`
+  variants have the routine of the flow before and after Run now. On a
+  phone, each of these pages opens at the end of the routine page, where
+  the runs are, except `saved`, which opens at the top of the form.
+- `app/routines/run-workspace` has the workspace of a pull request run,
+  its start, and the workspace of a run of Run now. It draws the workspace
+  screen with its `run` state, which no other workspace page sets.

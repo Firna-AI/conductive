@@ -31,7 +31,7 @@
   background: var(--ui-rose);
 }
 
-.newWorkspace {
+.row {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -44,7 +44,7 @@
   text-decoration: none;
 }
 
-.newWorkspace:hover {
+.row:hover {
   background: var(--ui-soft);
   color: var(--ui-ink);
 }
@@ -56,7 +56,7 @@
 }
 
 /* The icon fills the 12 px column of the status marks below it. */
-.plus {
+.icon {
   flex-shrink: 0;
   width: 12px;
   color: var(--ui-muted);

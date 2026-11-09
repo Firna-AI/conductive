@@ -7,20 +7,20 @@ import type {
   WorkspaceRow,
 } from './sections'
 import { SectionList } from './SectionList'
-import { NewWorkspaceLink, SettingsLink } from './SidebarLinks'
+import { NewWorkspaceLink, RoutinesLink, SettingsLink } from './SidebarLinks'
 import styles from './Sidebar.module.css'
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, and the sections of the org. A suspended org shows
- * its sections without New workspace and without their menus, because
- * nothing in it can change.
+ * link, New workspace, Routines, and the sections of the org. A suspended
+ * org shows its sections without New workspace, Routines, and their menus,
+ * because nothing in it can change.
  */
 export function Sidebar(props: {
   org: Org
   sections: readonly SidebarSection[]
   /** The page that the main area shows, when the sidebar links to it. */
-  current?: 'settings' | 'new-workspace'
+  current?: 'settings' | 'new-workspace' | 'routines'
   /** A build of the org's cloud computer failed. */
   settingsAlert?: boolean
   menu?: ListMenu
@@ -43,10 +43,16 @@ export function Sidebar(props: {
       </div>
       <div className={styles.scroll} data-mokly-scroll="workspace-list">
         {suspended ? null : (
-          <NewWorkspaceLink
-            current={props.current === 'new-workspace'}
-            variant="sidebar"
-          />
+          <div className={styles.links}>
+            <NewWorkspaceLink
+              current={props.current === 'new-workspace'}
+              variant="sidebar"
+            />
+            <RoutinesLink
+              current={props.current === 'routines'}
+              variant="sidebar"
+            />
+          </div>
         )}
         <SectionList
           archived={props.archived}

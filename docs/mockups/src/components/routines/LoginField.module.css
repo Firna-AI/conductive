@@ -1,0 +1,69 @@
+/* The suggestions open below the list, over the content under it. */
+.anchor {
+  position: relative;
+}
+
+/* The chips and the field, in one box with the outline of a Firna input. */
+.box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: max(32px, var(--ui-touch-min));
+  padding: 3px 8px 3px 4px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  box-sizing: border-box;
+}
+
+.invalid {
+  border-color: var(--ui-rose);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: max(22px, calc(var(--ui-touch-min) - 10px));
+  padding: 0 2px 0 7px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  white-space: nowrap;
+}
+
+/* The login that names no GitHub account: a tinted chip with a full outline. */
+.unknown {
+  border-color: var(--ui-danger-border);
+  background: var(--ui-rose-soft);
+  color: var(--ui-rose);
+}
+
+.remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max(18px, calc(var(--ui-touch-min) - 14px));
+  height: max(18px, calc(var(--ui-touch-min) - 14px));
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: transparent;
+  color: var(--ui-muted);
+  cursor: pointer;
+}
+
+.remove:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.entry {
+  flex: 1;
+  min-width: 120px;
+  padding-left: 4px;
+}

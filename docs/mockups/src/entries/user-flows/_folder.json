@@ -5,6 +5,7 @@
     "create-workspace",
     "reopen-stopped-workspace",
     "create-org",
-    "mac-command"
+    "mac-command",
+    "create-routine"
   ]
 }

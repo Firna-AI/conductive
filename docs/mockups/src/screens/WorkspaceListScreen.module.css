@@ -55,6 +55,13 @@
   padding: 10px 8px 24px;
 }
 
+/* New workspace and Routines, as one group above the sections. */
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .choose {
   display: flex;
   flex: 1;

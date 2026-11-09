@@ -1,4 +1,5 @@
-import { Plus } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { Plus, Repeat } from 'lucide-react'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
@@ -30,23 +31,62 @@ export function SettingsLink(props: {
   )
 }
 
-/** The row at the top of the workspace list that starts a new workspace. */
-export function NewWorkspaceLink(props: {
+/** Where a link of the org sits: the desktop sidebar, or the list page. */
+type LinkVariant = 'sidebar' | 'page'
+
+/** A row at the top of the workspace list that opens a page of the org. */
+function OrgPageLink(props: {
+  to: string
+  icon: LucideIcon
+  label: string
   current?: boolean
-  variant: 'sidebar' | 'page'
+  variant: LinkVariant
 }) {
+  const Icon = props.icon
   return (
     <ScreenLink
       aria-current={props.current ? 'page' : undefined}
       className={classes(
-        styles.newWorkspace,
+        styles.row,
         props.variant === 'page' && styles.page,
         props.current && styles.selected,
       )}
-      to={paths.newWorkspace}
+      to={props.to}
     >
-      <Plus aria-hidden className={styles.plus} size={14} />
-      New workspace
+      <Icon aria-hidden className={styles.icon} size={14} />
+      {props.label}
     </ScreenLink>
+  )
+}
+
+/** The row at the top of the workspace list that starts a new workspace. */
+export function NewWorkspaceLink(props: {
+  current?: boolean
+  variant: LinkVariant
+}) {
+  return (
+    <OrgPageLink
+      current={props.current}
+      icon={Plus}
+      label="New workspace"
+      to={paths.newWorkspace}
+      variant={props.variant}
+    />
+  )
+}
+
+/** The row below New workspace that opens the routines of the org. */
+export function RoutinesLink(props: {
+  current?: boolean
+  variant: LinkVariant
+}) {
+  return (
+    <OrgPageLink
+      current={props.current}
+      icon={Repeat}
+      label="Routines"
+      to={paths.routines}
+      variant={props.variant}
+    />
   )
 }

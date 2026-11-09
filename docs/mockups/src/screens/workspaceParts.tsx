@@ -18,9 +18,14 @@ import {
   type StartingLog,
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
-import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
+import { workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import {
+  freshPromptFor,
+  holdsPullRequestWork,
+  runStartingLog,
+} from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -42,6 +47,8 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
 /** The steps of a sandbox start, while the sandbox starts. */
 export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
+  const run = runStartingLog(state)
+  if (run) return run
   return isNew(state) ? creatingLog : resumingLog
 }
 
@@ -78,7 +85,7 @@ export function FilesContent(props: {
   return (
     <FilesPanel
       banner={state.banner}
-      edited={!isNew(state)}
+      edited={!isNew(state) || holdsPullRequestWork(state)}
       open={open}
       placeholder={placeholder}
       tree={state.tree}
@@ -102,7 +109,7 @@ export function ToolContent(props: {
         <TerminalView
           extraKeys={mobile}
           lines={[]}
-          prompt={freshSessionPrompt}
+          prompt={freshPromptFor(state)}
         />
       ) : (
         <TerminalView extraKeys={mobile} lines={workspaceSession} />

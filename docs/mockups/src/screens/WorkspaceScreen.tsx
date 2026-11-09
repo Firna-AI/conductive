@@ -15,11 +15,9 @@ import { ToolsPanel } from '../components/workspace/ToolsPanel'
 import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
-import { conversations } from '../fixtures/conversations'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { suspendedOwner } from '../fixtures/startRefusals'
-import { openableWorkspaceRecords } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
@@ -33,6 +31,7 @@ import {
   workspaceSidebar,
 } from './workspaceParts'
 import { workspaceOverlay } from './workspaceOverlays'
+import { openWorkspace } from './workspaceRun'
 import { activityOf, drawnState, sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabsFor, workspaceName } from './workspaceTabs'
@@ -55,7 +54,8 @@ export function WorkspaceScreen(props: {
   const { viewport } = props
   const state = drawnState(props.state)
   const suspended = state.org === 'suspended'
-  const record = openableWorkspaceRecords[state.workspace]
+  const open = openWorkspace(state)
+  const record = open.record
   // An owner's refused start belongs to a suspended member, whom an active
   // admin sees. A suspended org refuses the start of every owner.
   const ownerRefused = state.sandbox === 'refused' && !suspended
@@ -80,7 +80,7 @@ export function WorkspaceScreen(props: {
           title="New session"
         />
       }
-      items={fresh ? [] : conversations[state.conversation]}
+      items={fresh ? [] : open.items}
       notice={
         // An archived workspace keeps its archived bar, so the notice of a
         // suspended org shows above it.
@@ -103,6 +103,7 @@ export function WorkspaceScreen(props: {
       canReassign={admin && !readOnly}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
+      run={open.run}
       status={status}
       viewport={viewport}
       workspace={workspace}

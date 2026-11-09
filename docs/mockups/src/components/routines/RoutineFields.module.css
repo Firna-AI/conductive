@@ -1,0 +1,73 @@
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Desktop: the name beside the Active switch. */
+.top {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The switch after its label, level with the name field. */
+.switchField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+}
+
+/* Desktop: the repository, the section, and the owner on one line. */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+}
+
+/* A phone stacks the fields, each the width of the screen. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+
+/* A picker keeps the width of its value, as on New workspace. */
+.picker {
+  display: flex;
+  align-self: flex-start;
+}
+
+.chevron {
+  color: var(--ui-muted);
+}
+
+.by {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--ui-control-height);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}
+
+.person {
+  color: var(--ui-ink2);
+  font-weight: 500;
+}

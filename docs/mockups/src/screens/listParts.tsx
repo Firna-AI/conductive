@@ -17,6 +17,7 @@ import type {
 } from '../components/workspaces/sections'
 import {
   NewWorkspaceLink,
+  RoutinesLink,
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
 import { deletedOrg, orgs, type Org } from '../fixtures/orgs'
@@ -58,8 +59,8 @@ export function ListHeader(props: {
 
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
- * suspended org shows its notice first, and no New workspace and no
- * section menus, because nothing in it can change.
+ * suspended org shows its notice first, and no New workspace, no Routines,
+ * and no section menus, because nothing in it can change.
  */
 export function HomeList(props: {
   org: Org
@@ -80,7 +81,10 @@ export function HomeList(props: {
         {suspended ? (
           <SuspendedOrgNotice org={props.org} />
         ) : (
-          <NewWorkspaceLink variant="page" />
+          <div className={styles.links}>
+            <NewWorkspaceLink variant="page" />
+            <RoutinesLink variant="page" />
+          </div>
         )}
         <SectionList
           drag={props.drag}

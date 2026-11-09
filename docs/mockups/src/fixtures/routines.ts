@@ -1,0 +1,218 @@
+/**
+ * The routines of Acme: saved prompts that run an agent without a person,
+ * on a schedule or on a pull request event. Each run opens a new workspace
+ * (decision 201). A run acts as the person who created the routine, with
+ * the agent login and the GitHub access of that person (decision 202).
+ */
+
+import { defaultChoice, type AgentChoice } from './agents'
+import { people, type Person, type PersonKey } from './members'
+import type { RepositoryKey } from './repositories'
+import type { SectionKey } from './sections'
+
+export type Weekday =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday'
+
+/** A time of day on the 24-hour clock, in the time zone of the routine. */
+export type ClockTime = { hour: number; minute: number }
+
+/**
+ * A schedule: a preset, or a custom cron. Each runs at most once an hour,
+ * so the minute field of a custom cron names one minute (decision 203).
+ */
+export type ScheduleTrigger =
+  | { kind: 'hourly'; minute: number }
+  | { kind: 'daily'; time: ClockTime }
+  | { kind: 'weekdays'; time: ClockTime }
+  | { kind: 'weekly'; day: Weekday; time: ClockTime }
+  | { kind: 'custom'; cron: string }
+
+export type PullRequestEvent = 'opened' | 'pushed' | 'merged'
+
+/**
+ * The author filter of a pull request trigger (decision 206 C). An author
+ * passes "is" when the list names the author, and "is not" when it does
+ * not. An account outside the org starts runs only when "is" names it.
+ */
+export type AuthorFilter = { is: readonly string[]; isNot: readonly string[] }
+
+type PullRequestTrigger = {
+  kind: 'pull-request'
+  event: PullRequestEvent
+  authors?: AuthorFilter
+}
+
+export type Trigger = ScheduleTrigger | PullRequestTrigger
+
+/** The person who created a routine: a member, or a member who left. */
+type RoutineOwner = Omit<Person, 'key'> & {
+  key: PersonKey | 'lena'
+  /** The person left the org, so the routine turned off. */
+  left?: true
+}
+
+/** A member of Acme who left it after creating a routine. */
+const lena: RoutineOwner = {
+  key: 'lena',
+  name: 'Lena Park',
+  login: 'lenapark',
+  initials: 'LP',
+  left: true,
+}
+
+export type Routine = {
+  key: string
+  /** The name. A new routine has none, and saves as "Untitled routine". */
+  name: string
+  repository: RepositoryKey
+  /** The section that the run workspaces join (decision 204). */
+  section: SectionKey
+  owner: RoutineOwner
+  active: boolean
+  /** The one time zone of every schedule of the routine. */
+  timeZone: string
+  triggers: readonly Trigger[]
+  /** The first message of each run, before the facts of its trigger. */
+  prompt: string
+  choice: AgentChoice
+  /** The routine exists. A new routine is not saved yet. */
+  saved: boolean
+}
+
+/** The routines that the routine page draws. */
+export const routineKeys = [
+  'review-prs',
+  'new',
+  'morning-draft',
+  'morning-summary',
+  'dependency-updates',
+  'copy-review',
+] as const
+
+export type RoutineKey = (typeof routineKeys)[number]
+
+const london = 'Europe/London'
+
+const opened: Trigger = { kind: 'pull-request', event: 'opened' }
+const pushed: Trigger = { kind: 'pull-request', event: 'pushed' }
+
+/** The routine that the flow creates and starts with Run now. */
+const morningSummary: Routine = {
+  key: 'morning-summary',
+  name: 'Morning summary',
+  repository: 'storefront',
+  section: 'general',
+  owner: people.cal,
+  active: true,
+  timeZone: london,
+  triggers: [{ kind: 'weekdays', time: { hour: 9, minute: 0 } }],
+  prompt:
+    'List the pull requests merged into main since the last workday, with one line on each. Name each one that changed the checkout.',
+  choice: defaultChoice,
+  saved: true,
+}
+
+export const routines: Readonly<Record<RoutineKey, Routine>> = {
+  'review-prs': {
+    key: 'review-prs',
+    name: 'Review pull requests',
+    repository: 'storefront',
+    section: 'general',
+    owner: people.cal,
+    active: true,
+    timeZone: london,
+    triggers: [opened, pushed],
+    prompt:
+      'Review this pull request for bugs, missing tests, and unclear names. Post your findings as one review on the pull request, and push no commits.',
+    choice: defaultChoice,
+    saved: true,
+  },
+  new: {
+    key: 'new',
+    name: '',
+    repository: 'storefront',
+    section: 'general',
+    owner: people.cal,
+    active: true,
+    timeZone: london,
+    triggers: [],
+    prompt: '',
+    choice: defaultChoice,
+    saved: false,
+  },
+  'morning-draft': {
+    ...morningSummary,
+    key: 'morning-draft',
+    triggers: [],
+    saved: false,
+  },
+  'morning-summary': morningSummary,
+  'dependency-updates': {
+    key: 'dependency-updates',
+    name: 'Weekly dependency updates',
+    repository: 'storefront',
+    section: 'infra',
+    owner: people.priya,
+    active: true,
+    timeZone: london,
+    triggers: [{ kind: 'weekly', day: 'monday', time: { hour: 8, minute: 0 } }],
+    prompt:
+      'Update the npm packages that have new minor or patch versions. Run the tests, and open one pull request with the updates.',
+    choice: { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'medium' },
+    saved: true,
+  },
+  'copy-review': {
+    key: 'copy-review',
+    name: 'Check the site copy',
+    repository: 'marketing-site',
+    section: 'general',
+    owner: lena,
+    active: false,
+    timeZone: london,
+    triggers: [
+      { kind: 'weekly', day: 'friday', time: { hour: 16, minute: 0 } },
+    ],
+    prompt:
+      'Read the pages that changed this week. Fix typos, broken links, and words that break the style guide, and open one pull request.',
+    choice: defaultChoice,
+    saved: true,
+  },
+}
+
+/** A routine of Jonas that runs each hour, which only the list shows. */
+export const errorTriage: Routine = {
+  key: 'error-triage',
+  name: 'Triage new errors',
+  repository: 'billing-service',
+  section: 'infra',
+  owner: people.jonas,
+  active: true,
+  timeZone: london,
+  triggers: [{ kind: 'hourly', minute: 15 }],
+  prompt:
+    'Read the errors of the last hour. Group them by cause, and open an issue for each new cause.',
+  choice: defaultChoice,
+  saved: true,
+}
+
+/** A routine that Jonas turned off, which only the list shows. */
+export const changelog: Routine = {
+  key: 'changelog',
+  name: 'Update the changelog',
+  repository: 'marketing-site',
+  section: 'general',
+  owner: people.jonas,
+  active: false,
+  timeZone: london,
+  triggers: [{ kind: 'pull-request', event: 'merged' }],
+  prompt:
+    'Add a line for this pull request to the changelog page, and open a pull request with it.',
+  choice: defaultChoice,
+  saved: true,
+}

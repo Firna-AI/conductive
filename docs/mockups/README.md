@@ -48,7 +48,7 @@ share.
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages, the entries that moved,
-and the child pages of `app/banner` and `app/chat`.
+and the child pages of `app/banner`, `app/chat`, and `app/routines`.
 
 ## Folder layout
 
@@ -73,7 +73,9 @@ and the child pages of `app/banner` and `app/chat`.
 - An entry module in `src/entries/` exports one `defineScreen` with a named
   export. Its props and saved states (`variants`) choose the state. The
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
-  `mockups:serve` offers a control for each part of the state.
+  `mockups:serve` offers a control for each part of the state. The routine
+  screen declares its states in `src/screens/routineState.ts` in the same
+  way.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from

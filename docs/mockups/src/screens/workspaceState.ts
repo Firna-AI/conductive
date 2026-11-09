@@ -3,6 +3,7 @@ import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversations'
 import { bannerStates } from '../fixtures/pullRequests'
+import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
 
@@ -131,6 +132,15 @@ export const workspaceStateSchema = {
      * refusal, and nothing in the workspace can change.
      */
     org: { enum: ['active', 'suspended'] },
+    /**
+     * The run of a routine that made the workspace (decision 201): a run of
+     * a pull request, or a run that Run now started. A run workspace is a
+     * normal workspace, whose header links to its routine, and for a pull
+     * request run to the pull request. It shows the chat of its run at the
+     * stage of `conversation`: `queued` while the sandbox starts, or else
+     * its first turn. A workspace that a person created has none.
+     */
+    run: { enum: runWorkspaceKeys },
   },
 } as const
 

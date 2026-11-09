@@ -11,18 +11,19 @@ light scheme uses the same cool greys and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, and
-the sections that the user made. Each workspace is one line: a dot-matrix
-status mark, the name, and the time, and it moves to another section by
-drag and drop. The centre column has a slim header that names the
+The sidebar shows the org name with its Settings link, New workspace,
+Routines, and the sections that the user made. Each workspace is one line:
+a dot-matrix status mark, the name, and the time, and it moves to another
+section by drag and drop. The centre column has a slim header that names the
 repository, the branch, and the owner of the workspace, and ends with
 Archive. Then come a tab for each agent session and each open file or diff,
 + for a new session, and a clock that opens the session history. The right
 column has the pull request bar on top, the All files, Changes, and Checks
 lists below it, and the Terminal, Preview, and Desktop tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list, and the
-workspace with a compact pull request row, the sessions as tabs above the
-chat, and five tabs at the bottom.
+It shows no file content. A phone shows an org switcher at the top of the
+list, then New workspace and Routines. It shows the workspace with a compact
+pull request row, the sessions as tabs above the chat, and five tabs at the
+bottom.
 
 - The tokens live in `src/design/`: the colours of each scheme in
   `palette.ts`, and the type, density, sizes, radii, and fonts in
@@ -66,6 +67,9 @@ chat, and five tabs at the bottom.
   square, and ready is one bright cell on a faint green grid. A workspace
   whose agent waits for the user, such as for the approval of a command,
   shows Needs input: a middle column in the accent colour that pulses.
+  A routine run takes the mark of its workspace, and has three marks of its
+  own: an hourglass while it waits for its workspace, a slash in rose when
+  it failed before it had one, and a chevron when a rule skipped it.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
@@ -83,6 +87,14 @@ chat, and five tabs at the bottom.
     place of the line on the chat history, as the `files` variants of
     `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
     keeps its short panels beside the bar.
+- The parts of routines live in `src/components/routines/`. The routine
+  page puts its form beside the Runs column on desktop, and the runs below
+  the form on a phone. A phone opens the Add trigger menu and the author
+  filter of a pull request trigger in a sheet. `RunLinks` in
+  `src/components/workspace/` draws the line under the header of a run
+  workspace, which links to its routine and to its pull request. The
+  bubble of a message keeps its line breaks, as in the app, so the first
+  message of a run shows the facts of its trigger on their own lines.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of

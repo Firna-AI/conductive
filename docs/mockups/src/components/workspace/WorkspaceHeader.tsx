@@ -9,6 +9,7 @@ import { IconButton } from '../common/actions'
 import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import { OwnerPicker } from './OwnerPicker'
+import { RunLinks, type RunSource } from './RunLinks'
 import styles from './WorkspaceHeader.module.css'
 
 function State(props: { status: ActivityStatus }) {
@@ -24,7 +25,8 @@ function State(props: { status: ActivityStatus }) {
  * The name, repository, branch, owner, and state of the open workspace,
  * and Archive. The list groups workspaces by section, so the header names
  * the repository. For an admin of the org, the owner opens the menu that
- * reassigns the workspace.
+ * reassigns the workspace. The header of a run workspace also links to its
+ * routine, and to the pull request that started the run.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
@@ -40,6 +42,8 @@ export function WorkspaceHeader(props: {
   archivable: boolean
   /** The list that Back opens on a phone, such as that of a suspended org. */
   back?: string
+  /** The routine of a run workspace, and the pull request of its run. */
+  run?: RunSource
 }) {
   const { workspace, name } = props
   const repository = repositories[workspace.repository].name
@@ -56,8 +60,8 @@ export function WorkspaceHeader(props: {
       <IconButton icon={Archive} label="Archive workspace" />
     </ScreenLink>
   ) : null
-  if (props.viewport === 'mobile') {
-    return (
+  const header =
+    props.viewport === 'mobile' ? (
       <header className={styles.mobile}>
         <ScreenLink asChild to={props.back ?? paths.shell}>
           <IconButton icon={ChevronLeft} label="All workspaces" />
@@ -72,23 +76,28 @@ export function WorkspaceHeader(props: {
         <State status={props.status} />
         {archive}
       </header>
+    ) : (
+      <header className={styles.bar}>
+        <h1 className={styles.title}>{name}</h1>
+        <span className={styles.meta}>
+          <FolderGit2 aria-hidden className={styles.icon} size={13} />
+          <span className={styles.branch}>{repository}</span>
+        </span>
+        <span className={styles.meta}>
+          <GitBranch aria-hidden className={styles.icon} size={13} />
+          <span className={styles.branch}>{workspace.branch}</span>
+        </span>
+        <span className={styles.spacer} />
+        {owner}
+        <State status={props.status} />
+        {archive}
+      </header>
     )
-  }
+  if (!props.run) return header
   return (
-    <header className={styles.bar}>
-      <h1 className={styles.title}>{name}</h1>
-      <span className={styles.meta}>
-        <FolderGit2 aria-hidden className={styles.icon} size={13} />
-        <span className={styles.branch}>{repository}</span>
-      </span>
-      <span className={styles.meta}>
-        <GitBranch aria-hidden className={styles.icon} size={13} />
-        <span className={styles.branch}>{workspace.branch}</span>
-      </span>
-      <span className={styles.spacer} />
-      {owner}
-      <State status={props.status} />
-      {archive}
-    </header>
+    <>
+      {header}
+      <RunLinks run={props.run} />
+    </>
   )
 }

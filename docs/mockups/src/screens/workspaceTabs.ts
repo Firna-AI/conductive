@@ -8,9 +8,12 @@ import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 
-/** A workspace that the create flow made has no edits and one session. */
+/**
+ * A workspace that the create flow or a routine run made has one session,
+ * and no edits of its own.
+ */
 export function isNew(state: WorkspaceState): boolean {
-  return state.workspace === 'saved-carts'
+  return state.workspace === 'saved-carts' || state.run !== undefined
 }
 
 /**
