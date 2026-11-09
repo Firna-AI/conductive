@@ -23,8 +23,10 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## No login in the sandbox
 
-- A sandbox from an org image with a runner of protocol version 2 or
-  later holds no agent login (decision 120).
+- A sandbox with a version pin of 2 or later holds no agent login
+  (decision 120). The version pin of a sandbox is the lowest runner
+  protocol version that its workspace accepts, as
+  [The agent runner](agent-runner.md#the-agent-runner) says.
 - Its agent programs send each model request to the gateway, with the
   turn token of their turn.
 - A settings file in the repository, such as `.claude/settings.json`,
@@ -171,7 +173,7 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## Risks
 
-- [A sandbox with a newer runner](sandbox-credentials.md#a-sandbox-with-a-newer-runner)
+- [A sandbox with a version pin of 2 or later](sandbox-credentials.md#a-sandbox-with-a-version-pin-of-2-or-later)
   states what the processes of a sandbox and the members of its org can
   do with a turn token.
 - Risk: a deploy of the Worker or an update of the Cloudflare runtime can

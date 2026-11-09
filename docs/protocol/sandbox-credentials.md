@@ -44,8 +44,17 @@ decision number names a decision of the change that adds the
   [The agent runner](agent-runner.md#the-agent-runner) states which runner
   versions a workspace accepts.
 - A newer runner gets a turn token as the credential of each turn. An
-  older runner gets the agent login itself. The two sections below give
-  the rules and the risks of each.
+  older runner gets the agent login itself. This rule holds for each
+  runner connection.
+- The version pin of a workspace is the lowest runner protocol version that
+  it accepts. The workspace takes the pin from the org image that its
+  cloud computer starts from. A stop and a resume keep the pin. A
+  workspace or an org image with no recorded version counts as version 1.
+  The version pin of a sandbox is the version pin of its workspace.
+- The version pin decides whether an agent login can reach a sandbox. A
+  runner connection does not change the version pin. So a newer runner
+  does not keep the agent logins out of a sandbox with a version pin of 1.
+  The two sections below give the rules and the risks of each version pin.
 - The workspace gives the credential of a turn to the runner only while
   the starter is a member of the org.
   [Messages](messages-and-turns.md#messages) says what a message of another
@@ -90,26 +99,27 @@ decision number names a decision of the change that adds the
   keeps the runner connection, the git credential route, and the agent
   tools after the member who copied it is removed from the org or
   suspended. So that member can get the credentials and the GitHub tokens
-  of later turns (decision 124). With a newer runner, these credentials
-  are turn tokens. With an older runner, they are the agent logins
-  themselves.
+  of later turns (decision 124). In a sandbox with a version pin of 2 or
+  later, these credentials are turn tokens. In a sandbox with a version
+  pin of 1, they can be the agent logins themselves, because that member
+  can connect as an older runner.
 - A suspension revokes the workspace tokens of the workspaces that the
   suspended user owns. It revokes no token of another member's workspace,
   as
   [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)
   says.
 
-### A sandbox with a newer runner
+### A sandbox with a version pin of 2 or later
 
-- A sandbox with a newer runner holds no agent login. The
+- A sandbox with a version pin of 2 or later holds no agent login. The
   [model gateway](model-gateway.md) keeps each login in the Worker, and
   adds it to each model request of a turn (decision 120).
   [No login in the sandbox](model-gateway.md#no-login-in-the-sandbox)
   gives the approaches that were rejected.
 - No process in such a sandbox can get a login when it connects as an
-  older runner. The workspace refuses a runner below the version of its
-  org image, as [The agent runner](agent-runner.md#the-agent-runner) says
-  (gateway decision 5).
+  older runner. The workspace refuses a runner below its version pin, as
+  [The agent runner](agent-runner.md#the-agent-runner) says (gateway
+  decision 5).
 - Risk: while a turn runs, each process in the sandbox can read its turn
   token. A member with a terminal in the sandbox can read it too.
 - Such a process or member can spend the login of the starter through the
@@ -130,14 +140,24 @@ decision number names a decision of the change that adds the
   from them. No other member and no process in the sandbox can get the
   login itself.
 
-### A sandbox with an older runner
+### A sandbox with a version pin of 1
 
-- An older runner gets the agent login itself with each turn (gateway
-  decision 2).
+- The workspace of a sandbox with a version pin of 1 accepts an older
+  runner and a newer runner. An older runner gets the agent login itself
+  with each turn (gateway decision 2).
 - Reason: an older runner cannot use a turn token, and a sandbox keeps the
   runner of its org image. A refusal of each turn of an older runner was
   rejected, because each workspace with an older runner would then lose
   its agent turns.
+- A newer runner in such a sandbox gets a turn token for each of its
+  turns. The turn token risks of
+  [A sandbox with a version pin of 2 or later](#a-sandbox-with-a-version-pin-of-2-or-later)
+  then apply to those turns.
+- A newer runner does not keep the agent logins out of such a sandbox.
+  Any process with the workspace token can still connect as an older
+  runner, and then get the agent logins of later turns.
+- The login rules and risks below apply to turns that use an older
+  runner.
 - No process that the agent starts inherits the login of its turn. The
   login is not in the environment, the arguments, or an inherited open file
   of such a process. The agent program writes no copy of the login to disk.
@@ -159,8 +179,8 @@ decision number names a decision of the change that adds the
   address of the model requests of Claude. The agent program then sends
   the real login of the starter to that address.
 - With a change of that file, a commit, the agent, or other code in the
-  sandbox can send the login to any host. A newer runner closes this path,
-  as
+  sandbox can send the login to any host. A newer runner closes this path
+  for its own turns, as
   [No login in the sandbox](model-gateway.md#no-login-in-the-sandbox) says.
 - So the members of one org trust each other with their logins, also after
   a turn ends. The share setting does not keep a login away from them.

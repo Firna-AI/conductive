@@ -10,10 +10,10 @@
   - **Length target:** the `documentation` skill keeps each doc near 250 lines, and splits a longer doc into linked pages in the change that touches it. The always-on rules also split any file that passes 300 lines.
   - **Landing page:** the original page of a split doc. It keeps its introduction and some topics, and it links to the new pages.
 - **Background:**
-  - On 9 November 2026, the model gateway change split the three named long docs. Each moved section kept its words. Only headings, navigation, and link destinations changed.
-  - `docs/protocol/access-and-security.md` went from 570 to 253 lines. Its moved topics are in `docs/protocol/sandbox-credentials.md`, with 220 lines, and `docs/protocol/terminal-and-previews.md`, with 130 lines.
+  - On 9 November 2026, the model gateway change split the three named long docs. In the split, each moved section kept its words, and only headings, navigation, and link destinations changed. A separate correction then named the two sandbox categories of `docs/protocol/sandbox-credentials.md` by the version pin of the workspace. It also clarified the same rule in `docs/protocol/model-gateway.md` and `docs/architecture.md`.
+  - `docs/protocol/access-and-security.md` went from 570 to 253 lines. Its moved topics are in `docs/protocol/sandbox-credentials.md`, with 240 lines, and `docs/protocol/terminal-and-previews.md`, with 130 lines.
   - `docs/protocol/chat-and-events.md` went from 402 to 206 lines. Its moved topics are in `docs/protocol/messages-and-turns.md`, with 215 lines.
-  - `docs/architecture.md` went from 289 to 184 lines. Its components are in `docs/architecture/components.md`, with 135 lines.
+  - `docs/architecture.md` went from 289 to 189 lines. Its components are in `docs/architecture/components.md`, with 135 lines.
   - Each landing page links to its new pages. The protocol doc list of `docs/architecture.md` names each new protocol page. A landing page keeps no heading only to hold an old anchor.
   - Four docs still pass the target. The counts below are from 9 November 2026.
   - `docs/protocol/desktop-app.md` has 431 lines. "Mac commands", with five subsections, fills lines 214 to 313. "Packages and updates", with "Packages", "Releases", and "Updates in the app", fills lines 314 to 431. The other sections hold the scope, the page, the window, the navigation, and the previews. They also hold the sign-in, the GitHub App install, the sign-in session, the desktop origin, and the permissions.
