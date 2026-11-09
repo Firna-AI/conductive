@@ -73,7 +73,7 @@ it('limits the read token to one repository and consumes its private build grant
         await release.promise
       }
     }
-    starting = fixture.prepare()
+    starting = fixture.prepare(() => TEST_TIME + 60_000)
     await started.promise
     const grant = fixture.provider.commands
       .at(-1)
@@ -184,8 +184,8 @@ it('limits the read token to one repository and consumes its private build grant
     })
     expect(JSON.parse(Buffer.from(claims, 'base64url').toString())).toEqual({
       iss: 'github-client-id',
-      iat: 1_799_999_940,
-      exp: 1_800_000_540,
+      iat: 1_800_000_000,
+      exp: 1_800_000_600,
     })
     expect(
       await crypto.subtle.verify(

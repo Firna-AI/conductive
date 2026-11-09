@@ -67,6 +67,8 @@ turn repair from the committed chat and the one writer of the shown state.
   when the copy ends, as
   [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens)
   says.
+- Repository copies use the [shared GitHub App credential flow](../github/app-credentials.ts).
+  The [source loader](repository-layout.md#the-source-loader) gives the token and revocation steps.
 
 [Image builds](image-builds.md) gives the build entry points, the build steps, the provider retries,
 the log limits, the snapshot leases, and the refresh timers.
