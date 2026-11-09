@@ -4,13 +4,15 @@ The [mockups README](README.md) gives the commands, the folder layout,
 how a screen is built, and links to the other pages.
 
 The home page follows the calm structure of a Conductor-style home page: a
-header, a hero with a short headline, one sentence, and a large picture of
-the app, then one section for each feature, the smaller features, a last
-call to action, and a footer. Both actions, "Join the waitlist" and "Sign
-in", lead to `app/sign-in`. A new person waits for app access, so the
-main action promises a place on the waitlist, not use at once. The title
-of the last call to action, "Give your next task its own cloud computer.",
-promises no use at once either.
+header, a hero with a short link, a short headline, one sentence, and a
+large picture of the app, then one section for each feature, the smaller
+features, a last call to action, and a footer. The short link above the
+headline, "From Conductor Cloud? Compare the features", leads to the page
+for people who move from Conductor Cloud. Both actions, "Join the waitlist"
+and "Sign in", lead to `app/sign-in`. A new person waits for app access,
+so the main action promises a place on the waitlist, not use at once.
+The title of the last call to action, "Give your next task its own cloud
+computer.", promises no use at once either.
 `startLabel` in `src/components/marketing/SiteActions.tsx` holds its words
 for the header, the hero, the last call to action, and the footer. The
 parts live in `src/components/marketing/`.
@@ -72,6 +74,20 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   has only the wordmark in its header, and no footer.
 - `marketing/not-found` keeps the header and the footer of the site, with a
   link to the home page.
+- `marketing/from-conductor/one-table` draws the page for people who move
+  from Conductor Cloud, at `from-conductor` on the product domain. The page
+  lists Conductor Cloud features only, in one table with a merged cell for
+  each area on a computer. Each feature shows its status in the product,
+  and a due date only when the team commits to one. Each status has a word,
+  an icon, and an icon colour: green for Available and Works differently,
+  amber for In progress, blue for Planned, grey for Under consideration,
+  and red for Not planned. The rows, the statuses, the dates, and the words
+  come from `src/marketing/from-conductor/`, the modules that the site also
+  reads. `src/components/parity/` holds the parts. One table serves both
+  layouts: each row also has an area cell of its own, and CSS shows the
+  merged cell on a computer and the cell of each row on a phone. The short
+  link of the hero and the Product column of the footer lead to the page,
+  with the words of the same modules.
 - `app/sign-in/terms` draws the page that the Worker shows before GitHub
   when a sign-in starts without the agreement, such as the browser sign-in
   of the Mac app. It has the words of the sign-in page from

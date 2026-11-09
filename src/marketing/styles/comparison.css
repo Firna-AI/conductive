@@ -1,0 +1,264 @@
+/*
+ * The page for people who move from Conductor Cloud: its column, its top,
+ * the legend, and the marks of the statuses and the due days. The values
+ * follow the mockup marketing/from-conductor/one-table in
+ * docs/mockups/src/components/parity/. comparison-table.css styles the
+ * table.
+ */
+
+/* One column centred on the page, as wide as the site header. */
+.parity-page {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  width: 100%;
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 72px 32px 112px;
+  box-sizing: border-box;
+}
+
+.parity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.parity-footnote {
+  margin: -24px 0 40px;
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* The top of the page uses the type of the text pages of the site. */
+.parity-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.parity-label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.parity-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 40px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.parity-lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 17px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* The scope note is a quiet box with a full outline and no coloured edge. */
+.parity-scope {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xxl);
+  background: var(--ui-sidebar);
+}
+
+.parity-scope-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ui-primary);
+}
+
+.parity-scope-text {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 14px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.parity-scope-title {
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-heading);
+}
+
+.parity-facts {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* A day never breaks across two lines. */
+.parity-facts time {
+  white-space: nowrap;
+}
+
+/* The legend: a quiet box with a full outline. No edge has its own colour. */
+.parity-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 22px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-xxl);
+  background: var(--ui-sidebar);
+}
+
+.parity-legend-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 15px;
+  font-weight: var(--ui-weight-heading);
+}
+
+.parity-legend-items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+}
+
+.parity-legend-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.parity-legend-meaning {
+  margin: 0 0 0 22px;
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.parity-legend-rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--ui-border);
+  color: var(--ui-ink2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.parity-legend-rule-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--ui-primary);
+}
+
+/* A status as its icon and its word. Only the icon takes the colour. */
+.status-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  color: var(--ui-ink2);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.status-icon {
+  align-self: flex-start;
+  flex-shrink: 0;
+  margin-top: calc((1lh - 15px) / 2);
+}
+
+.status-success .status-icon {
+  color: var(--ui-success);
+}
+
+.status-warning .status-icon {
+  color: var(--ui-amber);
+}
+
+.status-active .status-icon {
+  color: var(--ui-primary);
+}
+
+.status-danger .status-icon {
+  color: var(--ui-rose);
+}
+
+.status-muted .status-icon {
+  color: var(--ui-muted);
+}
+
+/* A due day reads as a time of the app: the label font, in capitals. */
+.due-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+.due-day-icon {
+  flex-shrink: 0;
+  color: var(--ui-primary);
+}
+
+.due-day-none {
+  color: var(--ui-muted);
+}
+
+@media (max-width: 759.98px) {
+  .parity-page {
+    gap: 44px;
+    padding: 40px 20px 72px;
+  }
+
+  .parity-list {
+    gap: 40px;
+  }
+
+  .parity-footnote {
+    margin: -16px 0 24px;
+  }
+
+  .parity-title {
+    font-size: 30px;
+  }
+
+  .parity-lead {
+    font-size: 16px;
+  }
+
+  .parity-legend {
+    padding: 16px;
+  }
+
+  .parity-legend-items {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px 16px;
+  }
+
+  .parity-legend-meaning {
+    margin-left: 0;
+  }
+}
