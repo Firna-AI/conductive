@@ -6,6 +6,11 @@ They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
 
 Each area owns its paths and payloads. Import from that area directly.
+`OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
+Its `set` change carries a value and an optional mark. An omitted mark
+keeps the stored mark inside each compare-and-swap attempt. A missing or
+deleted name starts secret. An explicit mark changes it with the value.
+Its `classify` change carries only a name and a mark, so it keeps the value.
 `api.ts` keeps the existing sign-in and org paths and common records.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
@@ -25,7 +30,13 @@ Runner commands carry the agent login of the session starter, whoever sent the m
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 
 `files.ts` defines full trees, tree updates, and branch changes.
-A full tree contains paths relative to the repository root.
+A full tree contains real paths relative to the repository root.
+Real `path`, `previousPath`, and `baseBranch` fields stay unchanged for
+keys, joins, reads, and diffs. Their optional `displayPath`,
+`previousDisplayPath`, and `displayBaseBranch` fields carry masked labels
+when those labels differ. `FileEntry.name` stays the basename label.
+Content and diff replies carry the same optional labels for direct opens.
+The field policy in `output-fields.ts` fills these labels on both runtimes.
 A move names its old path and its new entry.
 A directory move includes updates for its descendants.
 `FileEvent` contains complete browser reports and unavailable-tree marks.
@@ -39,6 +50,23 @@ Branch changes include committed, staged, unstaged, and untracked work.
 `runner-files.ts` defines file read and diff commands and their matching results.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.
+
+`output-sanitizer.ts` holds possible secret suffixes across answer events.
+A completion or a turn end releases the held text of its answer.
+The filter then keeps an answer context: the shown answer end that can still start a secret.
+After a completion, it keeps the context of the earlier text and of the completion text.
+A refused completion leaves the earlier text on the screen.
+Later text of the same answer masks the part that completes a secret from a context.
+
+The filter does not cap the number of answer contexts.
+Its snapshot holds the held text, the answer contexts, and the secret values that still apply to them.
+A snapshot without answer contexts also stays valid.
+The Worker keeps the held text in the encrypted state of its runner stream.
+It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
+It saves both before it confirms the corresponding raw event.
+
+`event-limits.ts` applies the same excerpt caps after either filter.
+Its UTF-8 byte count works in the Worker and Node.
 
 `chat-events.ts` caps serialized tool detail at 64 KiB.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.
@@ -68,7 +96,10 @@ Each other message of the session gets HTTP 409 with the code `retry_not_availab
 It is null only for an older record whose starter is not known.
 `Session.sourceSessionId` names the session where a message opened this linked session, and null otherwise.
 `Session.loginAvailable` is the result of the last server check of the starter's login.
-Each member reads the same value. None of these fields holds a login.
+It stays true when the starter does not share that login.
+`Session.loginShared` says whether the starter lets other members use that login, from the same check.
+Each member reads the same values. None of these fields holds a login.
+[Messages](../../docs/protocol/chat-and-events.md#messages) states how the composer uses both values.
 `SendMessageResponse.session` in `messages.ts` is the record of the session that took the message.
 It can differ from the session of the request.
 [Agents](../../docs/protocol/chat-and-events.md#agents) states the starter rule.
@@ -105,7 +136,7 @@ The git credential payload is not defined yet.
 
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
-- [Account contracts](account.ts) include the repository list available before an org exists.
+- [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.

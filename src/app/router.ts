@@ -9,6 +9,18 @@ export const SETTINGS_TABS = [
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
+/**
+ * A page of the operator section: a tab, or the page of one org or one
+ * user. A tab of a list keeps its search, which is empty for the newest
+ * first.
+ */
+export type OperatorView =
+  | { page: 'overview' }
+  | { page: 'orgs'; search: string }
+  | { page: 'users'; search: string }
+  | { page: 'org'; id: string }
+  | { page: 'user'; githubId: number }
+
 /** The screen that an address shows. */
 export type Route =
   | { screen: 'home' }
@@ -25,9 +37,18 @@ export type Route =
       view: readonly string[]
     }
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
+  /** The operator section. The shell shows it only to an operator. */
+  | { screen: 'operator'; view: OperatorView }
   | { screen: 'not-found' }
 
 const encode = encodeURIComponent
+
+/** The address of a list of the operator, with its search in `q`. */
+function operatorList(list: 'orgs' | 'users', search: string): string {
+  const query = new URLSearchParams()
+  if (search !== '') query.set('q', search)
+  return query.size ? `/operator/${list}?${query}` : `/operator/${list}`
+}
 
 /** The address of each screen. Tabs are links, so each tab has its own. */
 export const routes = {
@@ -49,6 +70,11 @@ export const routes = {
     tab === 'general'
       ? `/orgs/${encode(orgId)}/settings`
       : `/orgs/${encode(orgId)}/settings/${tab}`,
+  operator: () => '/operator',
+  operatorOrgs: (search = '') => operatorList('orgs', search),
+  operatorUsers: (search = '') => operatorList('users', search),
+  operatorOrg: (orgId: string) => `/operator/orgs/${encode(orgId)}`,
+  operatorUser: (githubId: number) => `/operator/users/${githubId}`,
 } as const
 
 function settingsTab(value: string | undefined): SettingsTab | null {
@@ -60,12 +86,44 @@ function agentParam(value: string | null): Agent | null {
   return value === 'claude' || value === 'codex' ? value : null
 }
 
+/** A numeric GitHub user ID, as the address of a user writes it. */
+function githubIdOf(segment: string): number | null {
+  if (!/^[1-9]\d*$/.test(segment)) return null
+  const id = Number(segment)
+  return Number.isSafeInteger(id) ? id : null
+}
+
+/**
+ * The page of an address under `/operator`, from the parts after it. A
+ * search of only spaces is no search.
+ */
+function operatorView(
+  parts: readonly string[],
+  query: URLSearchParams,
+): OperatorView | null {
+  const [list, id, ...rest] = parts
+  const search = query.get('q')?.trim() ?? ''
+  if (list === undefined) return { page: 'overview' }
+  if (rest.length > 0) return null
+  if (list === 'orgs') {
+    return id === undefined ? { page: 'orgs', search } : { page: 'org', id }
+  }
+  if (list !== 'users') return null
+  if (id === undefined) return { page: 'users', search }
+  const githubId = githubIdOf(id)
+  return githubId === null ? null : { page: 'user', githubId }
+}
+
 function decode(segment: string): string | null {
   try {
     return decodeURIComponent(segment)
   } catch {
     return null
   }
+}
+
+function isText(segment: string | null): segment is string {
+  return segment !== null
 }
 
 /** Reads the screen of an address. An unknown address is `not-found`. */
@@ -76,10 +134,13 @@ export function parseRoute(pathname: string, search: string): Route {
   if (segments.some((segment) => segment === null)) {
     return { screen: 'not-found' }
   }
-  const [first, orgId, area, id, ...rest] = segments.filter(
-    (segment): segment is string => segment !== null,
-  )
+  const decoded = segments.filter(isText)
+  const [first, orgId, area, id, ...rest] = decoded
   if (first === undefined) return { screen: 'home' }
+  if (first === 'operator') {
+    const view = operatorView(decoded.slice(1), query)
+    return view ? { screen: 'operator', view } : { screen: 'not-found' }
+  }
   if (first === 'get-started' && orgId === undefined) {
     return { screen: 'get-started' }
   }
@@ -104,7 +165,7 @@ export function parseRoute(pathname: string, search: string): Route {
   return { screen: 'not-found' }
 }
 
-/** The org that a screen belongs to, for the rail and the sidebar. */
+/** The org that a screen belongs to, such as the org of the command palette. */
 export function routeOrgId(route: Route): string | null {
   return 'orgId' in route ? route.orgId : null
 }

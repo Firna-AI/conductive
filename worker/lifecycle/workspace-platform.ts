@@ -14,7 +14,7 @@ export interface WorkspaceEventPublication {
   occurredAt: number
 }
 
-export interface WorkspaceChatRecovery {
+interface WorkspaceChatRecovery {
   runningTurns: readonly PendingTurn[]
   lastTurnEndedAt: number | null
   title: { name: string; occurredAt: number } | null

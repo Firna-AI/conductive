@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, PanelLeft } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/mac/WindowControls.module.css'
 import { useStore } from '../../app/store'
+import { usePaletteOffer } from '../palette/palette-context'
 import { IconButton } from '../ui/actions'
 import { useMacApp, type MacChrome } from './mac-app'
 import mac from './mac.module.css'
@@ -16,12 +17,26 @@ export type SidebarToggle = 'hide' | 'show' | 'off'
 /**
  * The window controls of the Mac app: the space of the native window
  * buttons, the sidebar toggle, and Back and Forward. In full screen macOS
- * hides the window buttons, so the page gets their space back.
+ * hides the window buttons, so the page gets their space back. Where the
+ * sidebar can show, the toggle offers itself to the command palette.
  */
 function Controls(props: { chrome: MacChrome; toggle?: SidebarToggle }) {
   const macWindow = props.chrome.window
   const state = useStore(macWindow.state)
   const toggle = props.toggle
+  usePaletteOffer(
+    toggle === 'hide' || toggle === 'show'
+      ? {
+          scope: { kind: 'window' },
+          actions: [
+            {
+              id: toggle === 'show' ? 'show-sidebar' : 'hide-sidebar',
+              run: props.chrome.toggleSidebar,
+            },
+          ],
+        }
+      : null,
+  )
   return (
     <nav
       aria-label="Window controls"

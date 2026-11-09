@@ -39,7 +39,7 @@ export const EFFORTS = [
   'xhigh',
   'max',
 ] as const satisfies readonly Effort[]
-const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
+export const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
 export function readUser(value: unknown): User {
   const user = record(value, 'user')
@@ -123,11 +123,13 @@ export function readLogin(value: unknown): AgentLoginStatus {
   const agent = choice(login, 'agent', AGENTS)
   if (!flag(login, 'connected')) return { agent, connected: false }
   const updatedAt = count(login, 'updatedAt')
+  const noReuse = flag(login, 'noReuse')
   if (agent === 'codex') {
     return {
       agent,
       connected: true,
       kind: choice(login, 'kind', ['api-key']),
+      noReuse,
       updatedAt,
     }
   }
@@ -135,6 +137,7 @@ export function readLogin(value: unknown): AgentLoginStatus {
     agent,
     connected: true,
     kind: choice(login, 'kind', ['token', 'api-key']),
+    noReuse,
     updatedAt,
   }
 }
@@ -145,6 +148,7 @@ export function readAccount(value: unknown): AccountResponse {
     user: nested(account, 'user', readUser),
     defaultChoice: nested(account, 'defaultChoice', readChoice),
     agentLogins: items(account, 'agentLogins', readLogin),
+    operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),
   }
 }

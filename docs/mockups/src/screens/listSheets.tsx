@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Check, Plus } from 'lucide-react'
+import { Check, Gauge, Plus } from 'lucide-react'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
@@ -38,9 +38,13 @@ function SheetRow(props: {
 
 /**
  * The org switcher of a phone, which has no rail: every org, a way to
- * create one, and the account.
+ * create one, and the account. An operator also gets Operator under the
+ * account.
  */
-export function OrgSwitcherSheet(props: { current: OrgKey }) {
+export function OrgSwitcherSheet(props: {
+  current: OrgKey
+  operator?: boolean
+}) {
   return (
     <Sheet title="Orgs">
       <nav aria-label="Orgs">
@@ -74,6 +78,14 @@ export function OrgSwitcherSheet(props: { current: OrgKey }) {
           <AccountAvatar size={26} />
           <span className={styles.sheetLabel}>Account</span>
         </SheetRow>
+        {props.operator ? (
+          <SheetRow to={paths.operator}>
+            <span className={styles.operatorTile}>
+              <Gauge aria-hidden size={15} />
+            </span>
+            <span className={styles.sheetLabel}>Operator</span>
+          </SheetRow>
+        ) : null}
       </nav>
     </Sheet>
   )

@@ -1,9 +1,12 @@
 import type { WorkspaceTab } from '../components/workspace/TabItem'
+import { conversations } from '../fixtures/conversations'
 import {
   linkedSession,
   newSession,
   workspaceSessions,
 } from '../fixtures/sessions'
+import { splitPath } from '../fixtures/files'
+import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
@@ -22,8 +25,10 @@ export function workspaceName(
   state: WorkspaceState,
   workspace: Workspace,
 ): string {
-  const waiting = state.conversation === 'queued'
-  return waiting && workspace.generatedName
+  const answered = conversations[state.conversation].some(
+    (item) => item.kind === 'agent',
+  )
+  return !answered && workspace.generatedName
     ? workspace.generatedName
     : workspace.name
 }
@@ -33,9 +38,12 @@ export function workspaceName(
  * open, and the file, the diff, or the new session that the state opens.
  * Each new tab opens at the end of the row, as the linked session does. A
  * full row holds more sessions and files before the tab that the state
- * opens, and a move puts the code file between the two sessions. While the
- * login of the starter of the first session is not available, that first
- * session leads to its view for the member, beside the linked session.
+ * opens, and a move puts the code file between the two sessions. A tab
+ * whose file name the app does not know shows "File". While the login of
+ * the starter of the first session is not available, that first session
+ * leads to its view for the member, beside the linked session. While the
+ * starter keeps the login for their own messages, the first session leads
+ * to that view.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -48,12 +56,14 @@ export function tabsFor(
   const [first, second] = workspaceSessions
   const linked =
     state.tab === 'linked-session' || state.composer === 'no-starter-login'
+  let firstPath: string = linked ? paths.noStarterLogin : paths.app
+  if (state.composer === 'not-shared') firstPath = paths.loginNotShared
   const tabs: WorkspaceTab[] = [
     {
       key: first.key,
       kind: 'session',
       title: first.title,
-      to: linked ? paths.noStarterLogin : paths.app,
+      to: firstPath,
       selected: state.tab === 'session',
     },
     { key: second.key, kind: 'session', title: second.title, selected: false },
@@ -77,12 +87,21 @@ export function tabsFor(
     })
   }
   if (state.tab === 'diff') {
-    const to = paths.diff
+    const masked = state.paths === 'masked'
     tabs.push({
       key: 'diff',
       kind: 'diff',
-      title: 'AddressForm.tsx',
-      to,
+      title: masked ? splitPath(maskedDiffPath).name : 'AddressForm.tsx',
+      to: masked ? paths.maskedPaths : paths.diff,
+      selected: true,
+    })
+  }
+  if (state.tab === 'unnamed-file') {
+    tabs.push({
+      key: 'unnamed',
+      kind: 'code',
+      title: 'File',
+      to: paths.maskedPathsUnnamed,
       selected: true,
     })
   }

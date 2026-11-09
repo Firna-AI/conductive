@@ -2,7 +2,9 @@ import type { ReactNode } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import type { RenderTab, TabDraw } from '../../../chat/components/tab-row'
+import { listLabel } from '../../../files/model/file-labels'
 import type { FilesNavigation, FilesTab } from '../../../files/navigation'
+import { useFilesSnapshot } from '../../../files/panel/FilesPanel'
 import { FileTabItem, LiftedFileTab } from '../../../files/tabs/FileTabItem'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
 import type { WorkspaceContext } from '../features'
@@ -10,11 +12,19 @@ import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
 import { useFilesNavigation, useLeaveForSession } from './files-navigation'
 import { filesTabsOf, sameFilesTab, withoutTab } from './view-tabs'
+import { useKeptFiles } from './workspace-files'
+
+/** The label of the path of a tab, from the kept files, or null. */
+function useTabLabel(context: WorkspaceContext, tab: FilesTab): string | null {
+  const snapshot = useFilesSnapshot(useKeptFiles(context))
+  return listLabel(snapshot, tab.path, tab.kind)
+}
 
 /**
  * A file or diff tab of the saved view, at the place in the tab row that
- * the chat gives it. Close of the shown tab shows the next file tab, else
- * the one before, else the chat with its session.
+ * the chat gives it. It shows the label of its path from the kept files.
+ * Close of the shown tab shows the next file tab, else the one before, else
+ * the chat with its session.
  */
 function FileTab(props: {
   context: WorkspaceContext
@@ -24,6 +34,7 @@ function FileTab(props: {
   draw: Extract<TabDraw, { kind: 'row' }>
 }) {
   const { context, navigation, shown, tab } = props
+  const label = useTabLabel(context, tab)
   const go = useNavigation()
   const tabs = filesTabsOf(useSavedView(context.savedView))
   const isShown = (open: FilesTab) =>
@@ -50,6 +61,7 @@ function FileTab(props: {
   }
   return (
     <FileTabItem
+      label={label}
       close={props.draw.close}
       item={props.draw.item}
       link={props.draw.link}
@@ -59,6 +71,12 @@ function FileTab(props: {
       tab={tab}
     />
   )
+}
+
+/** The copy of a file or diff tab that a drag lifts, with its label. */
+function LiftedFile(props: { context: WorkspaceContext; tab: FilesTab }) {
+  const label = useTabLabel(props.context, props.tab)
+  return <LiftedFileTab label={label} tab={props.tab} />
 }
 
 /** What the kept chat gets from the Files screens. */
@@ -88,7 +106,7 @@ export function useChatFiles(
         ? undefined
         : (tab, draw) =>
             draw.kind === 'lifted' ? (
-              <LiftedFileTab tab={tab} />
+              <LiftedFile context={context} tab={tab} />
             ) : (
               <FileTab
                 context={context}

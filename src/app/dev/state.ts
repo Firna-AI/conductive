@@ -16,6 +16,7 @@ import type { OrgSummary } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
 import type { Workspace, WorkspaceResponse } from '../../shared/workspaces'
 import { coreFixtures } from '../../test-support/fixtures/core'
+import type { OperatorRecords } from '../../test-support/fixtures/operator'
 
 /** The start steps and the start error of one workspace. */
 export type StartRecord = Pick<WorkspaceResponse, 'start' | 'error'>
@@ -52,6 +53,13 @@ export interface DevState {
   attachments: Map<string, Attachment>
   /** The wait before an open workspace stops, from `stop=<seconds>`. */
   stopAfterMs: number | null
+  /**
+   * The suspensions and deletions of the sample orgs and users of the
+   * operator section, which Suspend and Lift change.
+   */
+  operator: OperatorRecords
+  /** Each change of a share setting fails, from `shareSave=fail`. */
+  shareSaveFails: boolean
 }
 
 /**

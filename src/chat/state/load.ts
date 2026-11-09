@@ -1,12 +1,10 @@
 import type { SessionsResponse } from '../../shared/sessions'
 import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { refreshDevices } from '../device/device-actions'
-import type { ChatSnapshot } from './chat-snapshot'
-import { logOf, messageOf, withTranscript, type ChatContext } from './context'
+import { messageOf, type ChatContext } from './context'
 import { hydrate } from './history'
-import { confirmWorkspace, shownRecord } from './session-records'
-import { orderSessions, pickActive, sortHistory } from './sessions'
-import { withSessionPlaces } from './tab-order'
+import { confirmSessions } from './session-records'
+import { confirmWorkspace } from './workspace-records'
 
 const orNull = <T>(request: Promise<T>): Promise<T | null> =>
   request.catch(() => null)
@@ -65,20 +63,18 @@ export async function loadChat(context: ChatContext): Promise<void> {
     fail(error)
     return
   }
-  const [savedView, models, account, org, members] = await extras
+  const [view, models, account, org, members] = await extras
   if (!context.live()) return
-  const view = withSessionPlaces(savedView, first.sessions)
-  const active = pickActive(orderSessions(first.sessions, view), view)
   // An input that an app model owns keeps the value of its source.
   const read = owned
     ? {}
     : { models: models ?? [], account, members: members ?? [], org }
-  store.update((snapshot) => ({
+  confirmSessions(context, first, (snapshot) => ({
     ...snapshot,
     ...read,
     view,
-    activeSessionId: active,
   }))
+  const active = store.get().activeSessionId
   let through: number | null = 0
   if (active) {
     through = await hydrate(context, active, true)
@@ -93,33 +89,11 @@ export async function loadChat(context: ChatContext): Promise<void> {
     return
   }
   if (!context.live()) return
-  const listed = [...sessions.sessions, ...sessions.history]
-  for (const session of listed) {
-    logOf(context, session.id).offer(session, sessions.eventNumber)
-  }
   confirmWorkspace(context, detail)
-  store.update((snapshot) => {
-    const records = listed.map((item) => shownRecord(context, item.id) ?? item)
-    const openRecords = records.filter((item) => item.closedAt === null)
-    const view = withSessionPlaces(snapshot.view, openRecords)
-    const open = orderSessions(openRecords, view)
-    const shown = open.some((item) => item.id === snapshot.activeSessionId)
-    let next: ChatSnapshot = {
-      ...snapshot,
-      load: { state: 'ready' },
-      view,
-      sessions: open,
-      history: sortHistory(records.filter((item) => item.closedAt !== null)),
-      activeSessionId: shown
-        ? snapshot.activeSessionId
-        : pickActive(open, view),
-    }
-    for (const { id } of listed) {
-      const log = logOf(context, id)
-      next = withTranscript(next, id, log.transcript, log.times)
-    }
-    return next
-  })
+  confirmSessions(context, sessions, (snapshot) => ({
+    ...snapshot,
+    load: { state: 'ready' },
+  }))
   const after = through ?? Math.min(detail.eventNumber, sessions.eventNumber)
   context.stream.start(after)
   await refreshDevices(context)

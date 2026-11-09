@@ -12,7 +12,7 @@ import controls from './controls.module.css'
 import { useFocusInside } from './dismiss'
 import local from './menu.module.css'
 
-export type MenuItem = {
+type MenuItem = {
   kind: 'item'
   key: string
   label: string

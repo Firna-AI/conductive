@@ -103,8 +103,7 @@ says.
   can show the live start steps.
 - Reason: the new workspace then follows its start steps on its own
   events, as a resume does. A stream of the progress in the create request
-  was rejected, and so was a failed create that stays as a workspace in
-  the error state, because each is a larger build.
+  was rejected, because it is a larger build.
 - A new workspace starts from the newest good org image. It then creates
   its branch in the folder of its repository.
 - When the GitHub repository has no refs, such as branches or tags, the
@@ -132,21 +131,21 @@ says.
 - The workspace name starts as the city name.
   [Chat and events](chat-and-events.md#messages) says how the agent's title
   then renames it.
-- When the sandbox of a new workspace does not start, the workspace does
-  not stay. The events of the workspace first show the failed start and
-  the error state. The app then removes the workspace and its token.
-- The first message then goes back to the composer of the tab that sent
-  it, and Try again sends it again. No failure loses the message or its
-  attachments.
-- Try again creates the workspace with a new workspace ID. The message
-  keeps its message ID.
-- The first message is the only message that a new workspace accepts
-  before its first start succeeds, as
-  [Messages](chat-and-events.md#messages) says (decision 130). So the
-  removal of a failed workspace loses no accepted message.
-- After the removal, only the member who sent the first message can still
-  get the events of the failed workspace. That member gets the stored
-  events once, and the connection then closes.
+- When the sandbox of a new workspace does not start, the workspace stays
+  in the error state with Try again (decision 130).
+- Every member of the org sees the failed workspace, the cause of the
+  failure, its chat, and its queued messages. No failure loses an accepted
+  message or its attachments.
+- Reason: every member then keeps the cause and each accepted message. A
+  removal of the failed workspace was rejected, because it gave back only
+  the first message, and only to the tab that sent it.
+- When the start fails, its workspace token stops working. The app deletes
+  the sandbox of the failed start.
+- Try again starts a new sandbox for the same workspace and branch, with a
+  new workspace token (decision 130). The sandbox starts from the newest
+  good org image, with the current startup script and env vars.
+- When that sandbox is ready, the agent gets the queued messages, as
+  [Messages](chat-and-events.md#messages) says.
 
 ## Start steps
 
@@ -178,11 +177,11 @@ says.
   after any other error. So the last good image stays, as
   [The org image](#the-org-image) says.
 - A start that passes its time limit fails in the same way as after any
-  other error. So after a failed create, the first message goes back to
-  the composer, as [Create a workspace](#create-a-workspace) says. A failed
-  resume shows the error state, as [Stop and resume](#stop-and-resume)
-  says. After a failed restart near day 14, the app stops the sandbox
-  again. The workspace stays stopped.
+  other error. So a failed create keeps its workspace in the error state,
+  as [Create a workspace](#create-a-workspace) says. A failed resume shows
+  the error state, as [Stop and resume](#stop-and-resume) says. After a
+  failed restart near day 14, the app stops the sandbox again. The
+  workspace stays stopped.
 - Each such failed build, create, or resume says that it passed its time
   limit.
 
@@ -353,6 +352,22 @@ says.
   or when Cloudflare updates the runtime of the Worker. A shell that ends
   with its connection was rejected, because the user then loses a running
   command, such as a dev server.
+- After a start from a saved snapshot, the sandbox provider restores the
+  disk in the background. A shell that starts after the restore ends opens
+  in the live repository folder. A shell that started earlier moves to the
+  live copy of its own folder once, at its first prompt after the app sees
+  the end of the restore (decisions 147 and 149).
+- Reason: when the restore ends, a running program keeps an old view of
+  the disk at another path. A restart of the shell was rejected, because it
+  ends running commands. A terminal that waits for the end of the restore
+  was rejected, because the Terminal tab then waits too.
+- Apart from that one move, the terminal never moves a running shell by
+  itself. The app learns the end of the restore from a signal that the
+  sandbox provider documents (decision 149).
+- Reason: a move each time that the real folder of a shell differs from
+  the path in its prompt was rejected, because it also moves a shell
+  outside a restore. A check of the provider's path of the old view was
+  rejected, because the provider does not document that path.
 - When the user ends the shell, such as with `exit`, the next connection
   opens a new shell.
 - A stop of the sandbox ends the shell and its commands, as
@@ -372,6 +387,9 @@ says.
 
 - The Desktop tab shows the live desktop of the sandbox, where the agents
   use a browser. The user watches the agents there.
+- When the [content security policy](access-and-security.md#content-security-policy)
+  of the page blocks the stream, the Desktop tab says that the desktop
+  couldn't open, with Try again. It never shows a blocked stream as live.
 
 [Access and security](access-and-security.md) states how the terminal, the
 previews, and the desktop stay safe.

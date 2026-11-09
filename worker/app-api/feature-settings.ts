@@ -3,7 +3,7 @@ import type { AppDependencies, AppEnv } from '../env'
 import { isRecord, requiredString } from '../http'
 import {
   orgEnvironmentContext,
-  workspaceEnvironment,
+  workspaceEnvironmentSettings,
 } from '../lifecycle/settings-data'
 import {
   assertCanChangeSharedSettings,
@@ -27,9 +27,17 @@ function environmentChanges(value: unknown): EnvChange[] | undefined {
     if (!isRecord(entry)) throw invalidShellInput()
     const name = requiredString(entry.name)
     if (entry.operation === 'remove') return { operation: 'remove', name }
+    const secret = entry.secret !== false
+    if (entry.operation === 'classify')
+      return { operation: 'classify', name, secret }
     if (entry.operation !== 'set' || typeof entry.value !== 'string')
       throw invalidShellInput()
-    return { operation: 'set', name, value: entry.value }
+    return {
+      operation: 'set',
+      name,
+      value: entry.value,
+      ...(entry.secret === undefined ? {} : { secret }),
+    }
   })
 }
 
@@ -50,14 +58,34 @@ export async function featureSettings(
     for (;;) {
       await assertCanChangeSharedSettings(env.DB, orgId, userId)
       const before = await readShellSettings(env.DB, orgId)
-      let environment = await workspaceEnvironment(
+      let environment = await workspaceEnvironmentSettings(
         env,
         orgId,
         before.envVarsCiphertext,
       )
       for (const change of changes ?? []) {
         if (change.operation === 'remove') delete environment[change.name]
-        else environment = { ...environment, [change.name]: change.value }
+        else if (change.operation === 'classify') {
+          const previous = Object.hasOwn(environment, change.name)
+            ? environment[change.name]
+            : undefined
+          if (previous)
+            environment = {
+              ...environment,
+              [change.name]: { ...previous, secret: change.secret },
+            }
+        } else {
+          const previous = Object.hasOwn(environment, change.name)
+            ? environment[change.name]
+            : undefined
+          environment = {
+            ...environment,
+            [change.name]: {
+              value: change.value,
+              secret: change.secret ?? previous?.secret ?? true,
+            },
+          }
+        }
       }
       const envVarsCiphertext =
         changes === undefined
@@ -83,7 +111,7 @@ export async function featureSettings(
   return Response.json({
     settings: shellSettingsView(
       row,
-      await workspaceEnvironment(env, orgId, row.envVarsCiphertext),
+      await workspaceEnvironmentSettings(env, orgId, row.envVarsCiphertext),
     ),
   })
 }

@@ -63,7 +63,7 @@ export function viewShowing(
 }
 
 /** The view without the session's tab. The next session takes its place. */
-export function viewWithout(
+function viewWithout(
   view: WorkspaceView,
   sessionId: string,
   next: string | null,

@@ -1,6 +1,7 @@
 import { API_PATHS } from '../src/shared/api'
 import { MACHINE_PATHS } from '../src/shared/agent-tools'
 import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
+import { SITE_FOLDER } from '../src/shared/site-build'
 import type { AppDependencies, AppEnv } from './env'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
@@ -16,7 +17,8 @@ import {
   handleImageSourceCredential,
   IMAGE_SOURCE_CREDENTIAL_PATH,
 } from './lifecycle/image-sources/credential'
-import { workspaceRuntime } from './lifecycle/runtime'
+import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
+import { repairLifecycleAlarms } from './lifecycle/repair'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -31,7 +33,8 @@ import { cleanupDeletedOrgs } from './members/cleanup'
 import { routePreview, routeWorkspaceFeatures } from './features/router'
 import { productionAgentTools } from './tools/composition'
 import { productionGitHubWebhook } from './github/composition'
-import { appFrameSources } from './configuration'
+import { appFrameSources, runnerSoftware } from './configuration'
+import { appSiteResponse } from './marketing/assets'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -80,7 +83,9 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             if (preflight) return privateResponse(preflight)
           }
           if (!path.startsWith('/api/') && env.ASSETS) {
-            const asset = await env.ASSETS.fetch(request)
+            const asset = path.startsWith(`/${SITE_FOLDER}/`)
+              ? await appSiteResponse(request, env.ASSETS)
+              : await env.ASSETS.fetch(request)
             const response = new Response(asset.body, asset)
             response.headers.set(
               'Content-Security-Policy',
@@ -167,6 +172,11 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         env,
         dependencies,
         productionMembersHooks(env, dependencies),
+      )
+      await repairLifecycleAlarms(
+        workspaceRuntime(env, dependencies),
+        imageRuntime(env, dependencies),
+        () => runnerSoftware(env),
       )
     },
   }

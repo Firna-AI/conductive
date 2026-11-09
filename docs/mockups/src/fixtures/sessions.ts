@@ -34,10 +34,11 @@ export const moreSessions: readonly Session[] = [
 ]
 
 /**
- * The session that a message of Priya opened from the first session, after
- * the Claude login of Cal, its starter, became unavailable. It starts empty,
- * runs on the own login of Priya, and links to the first session, which
- * stays as it was. It opens as the last tab.
+ * The session that a message of Priya opened from the first session,
+ * because the Claude login of Cal, its starter, was not available, or Cal
+ * did not let other members use it. It starts empty, runs on the own login
+ * of Priya, and links to the first session, which stays as it was. It
+ * opens as the last tab.
  */
 export const linkedSession: StartedSession & { from: StartedSession } = {
   key: 'linked',

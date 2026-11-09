@@ -1,0 +1,27 @@
+---
+import { sitePaths } from '../links'
+import { featuresHref, signInHref } from '../request-values'
+import StartButton from './StartButton.astro'
+import Wordmark from './Wordmark.astro'
+
+/*
+ * The top of each page: the lockup, the features, Sign in, and the main
+ * action. A phone keeps the lockup and Sign in, because the main action
+ * follows at once in the hero.
+ */
+---
+
+<header class="header">
+  <div class="header-inner">
+    <Wordmark home={sitePaths.home} />
+    <nav aria-label="Site" class="header-nav">
+      <a class="header-link header-wide" href={featuresHref}>
+        Features
+      </a>
+      <a class="header-link" href={signInHref}>
+        Sign in
+      </a>
+      <StartButton size="md" class="header-wide" />
+    </nav>
+  </div>
+</header>

@@ -15,6 +15,32 @@ const failure = {
 }
 
 describe('records that arrive out of order', () => {
+  it('keeps the confirmed newer rename while an older rename still waits', async () => {
+    const chat = chatFor({
+      conversation: 'history',
+      hold: (request) => request.method === 'PATCH',
+    })
+    await chat.controller.start()
+    const [session] = chat.controller.getSnapshot().sessions
+    const title = () => chat.controller.getSnapshot().sessions[0].title
+    const after = chat.nextEventNumber()
+    const answer = (name: string, eventNumber: number) =>
+      chat.server.json('PATCH', sessionPath(org, ws, id), {
+        session: { ...session, title: name },
+        eventNumber,
+      })
+    const first = chat.controller.rename(id, 'Lookups')
+    const second = chat.controller.rename(id, 'Postcode lookups')
+    answer('Postcode lookups', after + 1)
+    chat.held.splice(1, 1)[0]()
+    await second
+    expect(title()).toBe('Postcode lookups')
+    answer('Lookups', after)
+    chat.held.splice(0, 1)[0]()
+    await first
+    expect(title()).toBe('Postcode lookups')
+  })
+
   it('takes back each failed rename to the newest record, also when two fail', async () => {
     const chat = chatFor({
       conversation: 'history',

@@ -4,6 +4,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { API_PATHS, orgPath } from '../../src/shared/api'
 import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
+import { fakeSite } from '../test-support/fake-site'
 import {
   createHarness,
   TEST_ORIGIN,
@@ -172,7 +173,7 @@ it('routes site, app, and machine hosts before dispatch', async () => {
     }
     const site = await app.fetch(
       new Request(`${env.MARKETING_ORIGIN}/api/session`),
-      env,
+      { ...env, ASSETS: fakeSite() },
     )
     expect(site.status).toBe(404)
     expect(site.headers.get('Content-Type')).toBe('text/html; charset=utf-8')

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, ChevronDown, Plus } from 'lucide-react'
+import { Check, ChevronDown, Gauge, Plus } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import styles from '../../../docs/mockups/src/screens/WorkspaceListScreen.module.css'
@@ -9,6 +9,7 @@ import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
 import { useMacBar } from '../mac/mac-app'
+import { SearchRow } from '../palette/SearchRow'
 import { AppLink } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
 import { Sheet } from '../ui/Sheet'
@@ -16,13 +17,18 @@ import ui from '../ui/ui.module.css'
 import { NewWorkspaceLink, SettingsLink } from './Sidebar'
 import { OrgList } from './OrgList'
 
-/** The org switcher of a phone, which has no rail. */
+/**
+ * The org switcher of a phone, which has no rail: every org, Create org,
+ * and the account. An operator also gets Operator under the account.
+ */
 function OrgSwitcherSheet(props: {
   current: string
   user: User
   close: () => void
 }) {
-  const orgs = useStore(useApp().orgs)
+  const app = useApp()
+  const orgs = useStore(app.orgs)
+  const operator = useStore(app.account.account)?.operator === true
   return (
     <Sheet close={props.close} title="Orgs">
       <nav aria-label="Orgs">
@@ -71,6 +77,18 @@ function OrgSwitcherSheet(props: {
           <PersonAvatar person={props.user} size={26} />
           <span className={styles.sheetLabel}>Account</span>
         </AppLink>
+        {operator ? (
+          <AppLink
+            className={styles.sheetRow}
+            onClick={props.close}
+            to={routes.operator()}
+          >
+            <span className={styles.operatorTile}>
+              <Gauge aria-hidden size={15} />
+            </span>
+            <span className={styles.sheetLabel}>Operator</span>
+          </AppLink>
+        ) : null}
       </nav>
     </Sheet>
   )
@@ -117,25 +135,33 @@ export function ListHeader(props: {
 
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
- * suspended org shows its notice in place of New workspace, and its list
- * read-only.
+ * suspended org shows its notice first, and its list read-only, without
+ * New workspace. Search opens the command palette. `shown` says that the
+ * page shows the list, so that it offers New section to the palette.
  */
-export function HomeList(props: { org: OrgSummary; user: User }) {
+export function HomeList(props: {
+  org: OrgSummary
+  user: User
+  shown?: boolean
+}) {
   const { suspended } = useOrgAccess(props.org)
   return (
     <>
       <ListHeader org={props.org} settings user={props.user} />
       <div className={styles.scroll}>
-        {suspended ? (
-          <SuspendedOrgNotice org={props.org} />
-        ) : (
-          <NewWorkspaceLink
-            current={false}
-            orgId={props.org.id}
-            variant="page"
-          />
-        )}
+        {suspended ? <SuspendedOrgNotice org={props.org} /> : null}
+        <div className={styles.links}>
+          {suspended ? null : (
+            <NewWorkspaceLink
+              current={false}
+              orgId={props.org.id}
+              variant="page"
+            />
+          )}
+          <SearchRow variant="page" />
+        </div>
         <OrgList
+          offerActions={props.shown ?? true}
           orgId={props.org.id}
           readOnly={suspended}
           selectedId={null}

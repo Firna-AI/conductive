@@ -7,9 +7,12 @@ import {
   scheduleConnectionCheck,
 } from '../security/connection-access'
 import { loginResolver } from './login-access'
-import { readLoginAvailability } from './login-availability'
-import { firstStartIncomplete } from './queries'
+import {
+  readLoginMetadata,
+  type SessionLoginMetadata,
+} from './login-availability'
 import type { ChatDependencies } from './types'
+import { filterRunnerOutput } from './runner-output'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -22,6 +25,8 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    filterRunnerOutput: (transaction, workspace, input) =>
+      filterRunnerOutput(env, transaction, workspace, input),
     now: Date.now,
     scheduleBrowserCheck: scheduleConnectionCheck,
     scheduleRunnerCheck: scheduleConnectionCheck,
@@ -29,14 +34,13 @@ export function chatDependencies(
       runnerTokenAllowed(env.DB, id, tokenHash),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
-    firstStartIncomplete: (id) => firstStartIncomplete(env.DB, id),
     randomId: randomToken,
     randomConnectionId: randomToken,
-    readLoginAvailability: (targets) => {
+    readLoginMetadata: (targets) => {
       const id = workspaceId()
       return id === null
-        ? Promise.resolve(new Set<string>())
-        : readLoginAvailability(env.DB, id, targets)
+        ? Promise.resolve(new Map<string, SessionLoginMetadata>())
+        : readLoginMetadata(env.DB, id, targets)
     },
     resolveAttachments: async (_userId, _workspaceId, ids) => {
       if (ids.length)

@@ -4,7 +4,7 @@ import { Check } from 'lucide-react'
 import { classes } from './classes'
 import styles from './Menu.module.css'
 
-export type MenuItem = {
+type MenuItem = {
   kind: 'item'
   label: string
   icon?: LucideIcon
