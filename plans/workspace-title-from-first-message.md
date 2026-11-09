@@ -114,6 +114,36 @@ assume its recommended option, and wait for its answer.
   asks once. Reason: Send waits during the first start, so only the first
   message can give the title during the start, as the mockups show.
 
+### Untitled names (decisions 144 G and 147 B)
+
+These calls are agent calls of 9 November 2026.
+
+- A new workspace and each new session have no name. The app shows
+  "Untitled" for a name that is not set. The branch name keeps the city.
+  Reason: the user's decisions 144 G and 147 B.
+- One rule fills every automatic name: the Worker writes an automatic name
+  only while the name is empty, and never on an archived workspace. The
+  workspace title from Workers AI, a `workspace.title` from the runner, the
+  title of the first session, and the first line of a later session's first
+  message all follow it. A name that a member or the app set never changes.
+  Reason: the rule replaces the text comparisons, so a member's name can
+  never match a default by chance. The archive check closes the follow-up
+  item `late-title-after-archive.md`.
+- The Worker applies the rule before it stores a `workspace.title` event,
+  so a title that the rule refuses reaches no tab and no read. Reason: then
+  the tabs, the detail read, and the repair write need no rule of their own.
+- D1 keeps the column `workspaces.name` as `TEXT NOT NULL`. An empty string
+  in that column means "no name", and the Worker sends `null` for it. The
+  API types become `Workspace.name: string | null` and
+  `Session.title: string | null`. Reason: a nullable column would rebuild
+  the `workspaces` table, which ten foreign keys with `ON DELETE CASCADE`
+  reference.
+- Existing workspaces and sessions keep the names that they have, because
+  those names are set. Reason: the project is not in production, and the
+  rule never replaces a set name.
+- The agent tools list a workspace with no name as `null`, and their text
+  output shows "Untitled". Reason: one label everywhere.
+
 ### The title request in the runner (decision 142 B, replaced)
 
 These calls of 8 November 2026 applied to the runner request that decision
@@ -458,6 +488,11 @@ Options check reports: `.context/workspace-title-from-first-message/`.
 - **Action:** ask the user, because B adds a rule at the boundary that no
   requirement covers, and A and C each override or remove a feature of the
   route on `origin/main`.
+- **Decision:** The user chose a new option G on 9 November 2026: "can we
+  just make new threads be "Untitled" (which is null for the name), and
+  then we never replace a name if its already set?" So a new workspace has
+  no name and shows "Untitled", an automatic title fills a name only while
+  it is empty, and a set name never changes. Decision 147 sets the scope.
 
 ### 145. The protocol sets no limits on the hidden title request
 
@@ -580,6 +615,32 @@ Options check reports: `.context/workspace-title-from-first-message/`.
   train on prompts or outputs, and does not keep them after the request.
   Notes: `.context/workspace-title-from-first-message/brainstorm-operator-title.md`.
 
+### 147. Which names start empty
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Design. The user's answer G to decision 144, on 9 November
+  2026.
+- **Category:** Docs or spec.
+- **Location:** `worker/lifecycle/create-request.ts`, which set the city as
+  the name, and `worker/chat/sessions.ts`, which set the session titles.
+- **Background:** A workspace started with its city name, the first session
+  tab with the city name, and each later tab with "New session". The app
+  decided whether it could replace a name by comparing its text, so a
+  member who typed "New session" could lose that name.
+- **Problem:** The user's answer to decision 144 says "threads", which can
+  mean workspaces only, or workspaces and their session tabs.
+- **Root question:** Which names start empty and show "Untitled"?
+- **Options:**
+  - **A.** Workspaces only. Effort: Medium.
+  - **B.** Workspaces and session tabs, under one rule and one label.
+    Effort: Medium.
+  - **C.** One rule for both, with "New session" for an empty tab. Effort:
+    Medium.
+- **Left out:** None.
+- **Recommendation:** B. It follows the user's words, uses one rule and one
+  label, and closes three follow-up items.
+- **Decision:** The user chose B on 9 November 2026.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -629,7 +690,7 @@ Evidence: `.context/workspace-title-from-first-message/reports/m2-docs.md`.
       the name of each later session tab (decision 143).
 - [x] Not needed: decision 146 C removed the hidden request in the
       sandbox, so decision 145 closed.
-- [ ] Waits for decision 144. In the same doc, state which name a
+- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). In the same doc, state which name a
       workspace keeps when a member names it and the agent also titles it.
       Give the rule in
       [Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates),
@@ -683,12 +744,12 @@ Evidence: `.context/workspace-title-from-first-message/reports/m4-worker-full.md
 - [x] Add Worker tests: the title renames the first session, a session
       that a member renamed keeps its name, and a later session takes its
       first message.
-- [ ] Waits for decision 144. Apply the title to the workspace only while
+- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). Apply the title to the workspace only while
       the workspace still has its city name, which the creation record
       keeps. Guard the title write, the repair write, and the detail read.
-- [ ] Waits for decision 144. After each stored title, send the workspace
+- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). After each stored title, send the workspace
       record with the name that the Worker kept to each open tab.
-- [ ] Waits for decision 144. Add a Worker test: a name from the workspace
+- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). Add a Worker test: a name from the workspace
       route stays after the title and after the next change of the state.
 - [x] Update the [Worker chat README](../worker/chat/README.md).
 
@@ -706,7 +767,7 @@ Evidence: `.context/workspace-title-from-first-message/dev-page/`.
       [chat README](../src/chat/README.md).
 - [x] Make the fake API of the app tests give the first session of a
       created workspace the workspace name, as the Worker does.
-- [ ] Waits for decision 144. Make open tabs take the workspace name from
+- [x] Replaced by Milestones 12 to 15 (decisions 144 G and 147 B). Make open tabs take the workspace name from
       the workspace record, not from the `workspace.title` event, so that
       a title that the Worker skips never shows. Add a test for a skipped
       title.
@@ -812,6 +873,92 @@ Evidence: `.context/workspace-title-from-first-message/gate-3.log`.
       Rounds 3 and 4 ran. Finding 6 is fixed in `48c7f70`. Finding 5 is
       the follow-up item `plans/follow-ups/late-title-after-archive.md`.
       The re-review found nothing new.
+- [x] The plan deletion and the pull request moved to Milestone 16,
+      because decisions 144 G and 147 B added work.
+
+## Milestone 12: Mockups for untitled names
+
+Tags: mockup
+
+Depends on: none
+
+- [ ] Show "Untitled" for a new workspace before its title, in place of
+      the city name, in the list, the header, and the first tab.
+- [ ] Show "Untitled" on a session tab and a history row whose session
+      has no title yet, in place of "New session" as a title. Keep "New
+      session" where it names the action of "+".
+- [ ] Change each text and comment that says a workspace starts with its
+      city name, or a session with "New session".
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages. Capture
+      the site pictures again when a captured screen changed.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 13: Documentation for untitled names
+
+Depends on: 12
+
+- [ ] In [Create a workspace](../docs/protocol/workspaces-and-sandboxes.md#create-a-workspace),
+      state that a new workspace has no name and shows "Untitled".
+- [ ] In [Sessions](../docs/protocol/chat-and-events.md#sessions) and
+      [Messages](../docs/protocol/chat-and-events.md#messages), state the
+      one rule: an automatic name fills only an empty name, never on an
+      archived workspace, and a set name never changes (decisions 144 and
+      147).
+- [ ] In [Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates),
+      give the rule that a later full report replaces the workspace name
+      the same exception.
+- [ ] Delete the follow-up items that this change fixes:
+      `city-name-in-lower-case.md`, `session-name-source.md`, and
+      `late-title-after-archive.md`.
+
+## Milestone 14: The contract and the Worker for untitled names
+
+Depends on: 13
+
+- [ ] Change `Workspace.name` and `Session.title` to `string | null`, with
+      one shared helper that gives the label "Untitled". Make each reader
+      in `src/` compile through that helper.
+- [ ] Store an empty name at the create, and start each new session with no
+      title. Map the empty D1 name to `null` in one place.
+- [ ] Apply the one rule to every automatic name, with the archive check,
+      before the Worker stores the event. Remove the text comparisons with
+      the city name and "New session".
+- [ ] Make the repair write and the detail read use the rule.
+- [ ] Keep a name from the workspace route for good.
+- [ ] Make the agent tools list a workspace with no name.
+- [ ] Add Worker tests: an empty workspace and session take their first
+      automatic name; a set name never changes, also one that equals an old
+      default; a name from the route stays after a title; a title after
+      Archive changes nothing.
+- [ ] Update the Worker chat README and the guides that name the defaults.
+
+## Milestone 15: The web app for untitled names
+
+Tags: ui
+
+Depends on: 12, 14
+
+- [ ] Show "Untitled" in the list, the header, the tabs, and the history,
+      as the mockups show, in the web app and the Mac app.
+- [ ] Make the development page and the fake API of the app tests start
+      with empty names.
+- [ ] Update the [chat README](../src/chat/README.md) and the development
+      page README.
+
+## Milestone 16: Verification, review, and pull request
+
+Depends on: every other milestone
+
+- [ ] Run the targeted tests and the complete gate `npm run check`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the fix rule: fix the `fix now` findings, record
+      follow-up items under `plans/follow-ups/` for the rest, re-review
+      once, and report.
+- [ ] Merge `origin/main` into the branch with the `git-merge` skill, and
+      run the complete gate again.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
