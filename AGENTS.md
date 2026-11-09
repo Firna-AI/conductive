@@ -96,8 +96,8 @@ pull request, and on each push to `main` and to the primary branch of the
 plan. A push to another branch runs no CI until its pull request opens.
 
 A commit reaches `main` only through a pull request with a green
-`Complete gate` check. A ruleset on `main` enforces this rule. An admin can
-bypass it.
+`Complete gate` check. An admin can bypass this rule. No ruleset on `main`
+enforces it yet.
 
 `.github/workflows/deploy.yml` deploys each push to `main` to the test
 deployment at `conductive.build`. It does not wait for CI, as

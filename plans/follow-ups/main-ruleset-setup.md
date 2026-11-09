@@ -11,7 +11,7 @@
 - **Background:**
   - Each push to `main` deploys the test deployment at `conductive.build`, with no wait for CI, as `docs/automatic-deploys.md` says. So a commit that fails the tests still goes live.
   - The user chose on 8 November 2026 that a ruleset on `main` requires a pull request and the `Complete gate` check, and that an admin can bypass it. The agents act on GitHub as the admin `calummoore`, so they can also bypass it.
-  - The section "CI" of `AGENTS.md` already states this rule. No ruleset exists yet, so the rule is not enforced.
+  - The section "CI" of `AGENTS.md` states this rule, and it says that no ruleset enforces it yet. Change that sentence when the ruleset exists.
   - `Complete gate` is the job name in `.github/workflows/ci.yml`. The workflow `.github/workflows/desktop-ci.yml` runs only on some paths, so it must not be a required check.
 - **Task:**
   1. Open the settings of the repository, then Rules, then Rulesets, and add a branch ruleset for `main`.
