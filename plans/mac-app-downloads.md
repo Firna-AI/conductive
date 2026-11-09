@@ -1,6 +1,6 @@
 # Mac app downloads
 
-Status: Active. On branch `calummoore/desktop-app-website-mention`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #128](https://github.com/Firna-AI/remote-code/pull/128) is open. It is the first of two pull requests, and it keeps this plan. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The marketing site at `conductive.build` does not mention the Mac app, and
 it links no download. Its spec still says that the page shows no desktop
@@ -240,7 +240,8 @@ Depends on: 1, 2, 3
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report. The first review found no findings.
-- [ ] Open the first pull request. It keeps this plan.
+- [x] Open the first pull request. It keeps this plan. It is
+      [PR #128](https://github.com/Firna-AI/remote-code/pull/128).
 - [ ] The user merges it, and then the next release pull request.
 - [ ] Check that both fixed addresses of the latest release give their DMG.
 
