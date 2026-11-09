@@ -95,8 +95,8 @@ says.
 
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
-- Each section collapses, and has a menu with Rename, New workspace, New
-  section, and Delete section.
+- Each section collapses, and has a menu with New workspace, Rename section,
+  New section, and Delete section, in that order.
 - New workspace at the top of the list puts the workspace in General, the
   default section. New workspace in the menu of a section puts it in that
   section.

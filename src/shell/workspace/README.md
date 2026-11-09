@@ -205,6 +205,16 @@ fake API, with its address options, its controls, and the test command.
   columns, the toggle of the right column, and the tab bar of a phone.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
+- `CopyLink.tsx`: the label of the number, such as `W-395`, as the Copy
+  link button of the header, as
+  [Copy link](../../../docs/protocol/workspace-links.md#copy-link) says.
+  It copies `workspace.link` through `AppServices.copy`, so the copy holds
+  no tab path. "Link copied" shows for 2 seconds through
+  `AppServices.delay`. A failed copy asks to try again until the next
+  press, as the file page does. On desktop the button follows the name,
+  and the repository and the branch share the `.metas` group. On a phone
+  it leads the line under the name. `CopyLink.test.tsx` mounts the whole
+  app and presses the button for a copy and for a failed copy.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
@@ -219,6 +229,9 @@ fake API, with its address options, its controls, and the test command.
   the repair, and the notice of a failed repair.
 - [Start steps](../../../docs/protocol/workspaces-and-sandboxes.md#start-steps)
   and [Workspace states](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-states).
+- [Workspace numbers and links](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-numbers-and-links)
+  and [Workspace links](../../../docs/protocol/workspace-links.md): the
+  number, the link, and Copy link.
 - [Web app: data and composition](../../app/README.md): the models, the
   event stream, and the features.
 - [The chat](../../chat/README.md): the chat that fills the centre.

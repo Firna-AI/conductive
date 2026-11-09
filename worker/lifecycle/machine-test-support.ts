@@ -114,6 +114,7 @@ export async function machineCredentialFixture(bundle: string) {
       return {
         workspace: workspaceView(
           await readWorkspace(active.env.DB, OUTER_ORG, OUTER_WORKSPACE),
+          active.env.APP_ORIGIN,
         ),
         first: active.first,
       }

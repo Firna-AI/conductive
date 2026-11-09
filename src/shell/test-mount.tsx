@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { onTestFinished, vi } from 'vitest'
 import type { AppModel } from '../app/app-model'
 import { flushMicrotasks } from '../app/test-kit'
+import { asMessageField, typeMessage } from '../test-support/message-field'
 import { AppProviders, type ScreenOptions } from './test-render'
 
 /**
@@ -74,12 +75,20 @@ export function click(target: HTMLElement): void {
 
 /**
  * Types text into a field, as the keyboard does: the field takes the focus,
- * and its value becomes `text`, so that React sees the change.
+ * and its value becomes `text`, so that React sees the change. A message
+ * field takes the text as `typeMessage` types it.
  */
 export function typeText(
-  field: HTMLInputElement | HTMLTextAreaElement,
+  field: HTMLInputElement | HTMLTextAreaElement | HTMLElement,
   text: string,
 ): void {
+  if (
+    !(field instanceof HTMLInputElement) &&
+    !(field instanceof HTMLTextAreaElement)
+  ) {
+    typeMessage(asMessageField(field), text)
+    return
+  }
   const prototype =
     field instanceof HTMLTextAreaElement
       ? HTMLTextAreaElement.prototype

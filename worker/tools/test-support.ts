@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import { routes } from '../../src/app/router'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AgentChoice, AgentModel } from '../../src/shared/agents'
@@ -147,6 +148,8 @@ export async function toolFixture(harness: TestHarness) {
   const createWorkspace = vi.fn(async (input: ToolWorkspaceCreation) => ({
     workspace: {
       id: 'created-workspace',
+      number: 4,
+      link: `${harness.env.APP_ORIGIN}${routes.workspace(input.orgId, 'created-workspace')}`,
       orgId: input.orgId,
       repositoryId: input.repositoryId,
       sectionId: input.sectionId,

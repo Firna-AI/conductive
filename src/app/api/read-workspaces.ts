@@ -38,6 +38,8 @@ export function readWorkspace(value: unknown): Workspace {
   const workspace = record(value, 'workspace')
   return {
     id: text(workspace, 'id'),
+    number: count(workspace, 'number'),
+    link: text(workspace, 'link'),
     orgId: text(workspace, 'orgId'),
     repositoryId: text(workspace, 'repositoryId'),
     sectionId: text(workspace, 'sectionId'),

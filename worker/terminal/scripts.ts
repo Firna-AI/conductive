@@ -110,6 +110,6 @@ set -a
 . ${shellArgument(options.environmentFile)}
 set +a
 cd "$CONDUCTIVE_REPOSITORY_DIR"
-exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-option -g mouse on ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
 `
 }

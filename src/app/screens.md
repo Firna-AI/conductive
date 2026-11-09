@@ -209,6 +209,14 @@ what the palette does.
   says. Enter does nothing while the message cannot go, and it belongs to
   an input method that composes a word. In the phone layout, Enter adds a
   line.
+- The page and the dialog of New workspace use the chip text field of the
+  chat as their message field, as
+  [The message field](../../docs/protocol/workspace-links.md#the-message-field)
+  says. `OrgLinks` gives its chips the workspaces of the org, which the
+  form watches while it shows. The page shows 2 to 8 lines, as the chat
+  does, and the dialog shows 7 to 14 lines. The field of the dialog takes
+  the focus through the handle of the field. While a create runs, the
+  field takes no change, and it keeps the focus.
 - A create request that fails keeps the message in the form, with "The
   workspace wasn't created". Try again sends the same message ID. A failed
   first start keeps its workspace instead, as

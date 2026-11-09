@@ -53,6 +53,7 @@ export async function listFromTool(
   db: D1Database,
   caller: CallingWorkspace,
   services: AgentToolServices,
+  origin: string,
 ): Promise<
   | AgentListWorkspacesResponse
   | AgentListRepositoriesResponse
@@ -85,6 +86,6 @@ export async function listFromTool(
         defaultChoice: await defaultChoice(db, caller, services),
       }
     default:
-      return { workspaces: await orgWorkspaces(db, caller.orgId) }
+      return { workspaces: await orgWorkspaces(db, caller.orgId, origin) }
   }
 }

@@ -45,7 +45,10 @@ it.each(['reassign', 'remove'] as const)(
     const hooks = {
       workspaceOwnerChanged: workspaceOwnerChangedHook(runtime),
       readWorkspace: async (orgId: string, id: string) =>
-        workspaceView(await readWorkspace(fixture.env.DB, orgId, id)),
+        workspaceView(
+          await readWorkspace(fixture.env.DB, orgId, id),
+          fixture.env.APP_ORIGIN,
+        ),
     }
     const requests = fixture.requests.length
     if (change === 'reassign') {
