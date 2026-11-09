@@ -7,11 +7,18 @@ export class MaskedStartLog {
   }
 
   static mask(value: string, secrets: readonly string[]): MaskedStartLog {
-    let result = value
-    for (const secret of [...secrets]
+    const ordered = [...secrets]
       .filter(Boolean)
-      .sort((a, b) => b.length - a.length))
-      result = result.replaceAll(secret, '[hidden]')
+      .sort((a, b) => b.length - a.length)
+    let result = ''
+    let index = 0
+    while (index < value.length) {
+      const secret = ordered.find((entry) => value.startsWith(entry, index))
+      if (secret) {
+        result += '[hidden]'
+        index += secret.length
+      } else result += value[index++]
+    }
     return new MaskedStartLog(result)
   }
 

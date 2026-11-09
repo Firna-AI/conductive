@@ -17,6 +17,7 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { conversations } from '../fixtures/conversations'
+import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { suspendedOwner } from '../fixtures/startRefusals'
@@ -81,7 +82,11 @@ export function WorkspaceScreen(props: {
           title="New session"
         />
       }
-      items={fresh ? [] : conversations[state.conversation]}
+      items={
+        fresh
+          ? []
+          : chatItemsFor(conversations[state.conversation], state.paths)
+      }
       notice={
         // An archived workspace keeps its archived bar, so the notice of a
         // suspended org shows above it.

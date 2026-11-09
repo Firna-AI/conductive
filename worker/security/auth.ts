@@ -1,6 +1,6 @@
 import { API_PATHS } from '../../src/shared/api'
 import { productDomain } from '../../docs/mockups/src/brand'
-import { termsConsentPage } from '../../src/marketing/sign-in-consent'
+import { termsConsentResponse } from '../marketing/consent'
 import {
   TERMS_VERSION,
   TERMS_VERSION_PARAMETER,
@@ -38,9 +38,10 @@ export async function startSignIn(
   if (termsVersion !== TERMS_VERSION) {
     const continuation = new URL(acceptedTermsSignInPath(), env.APP_ORIGIN)
     if (challenge) continuation.searchParams.set('desktop_challenge', challenge)
-    return await termsConsentPage(
+    return await termsConsentResponse(
       continuation.pathname + continuation.search,
       env.MARKETING_ORIGIN ?? `https://${productDomain}`,
+      env.ASSETS,
     )
   }
   const state = dependencies.randomToken()

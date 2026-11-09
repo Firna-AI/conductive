@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { CircleSlash } from 'lucide-react'
-import { changedFiles, fileTree } from '../../fixtures/files'
+import { filesFor, type PathState } from '../../fixtures/maskedFiles'
 import type { BannerState } from '../../fixtures/pullRequests'
 import { checksPaths, paths } from '../../paths'
 import { allFilesUnavailable } from '../chat/lostCopy'
@@ -26,8 +26,13 @@ export const treeStates = ['latest', 'saved', 'none'] as const
 
 export type TreeState = (typeof treeStates)[number]
 
-/** The kinds of file that open as a tab in the centre column. */
-export type FileTabView = 'code' | 'markdown' | 'diff'
+/**
+ * The kinds of file that open as a tab in the centre column: a code file,
+ * a Markdown file, a diff, the diff of a file whose label hides a secret
+ * value, and a file whose name the app does not know.
+ */
+export type FileTabView =
+  'code' | 'markdown' | 'diff' | 'masked-diff' | 'unnamed'
 
 /** The All files, Changes, and Checks tabs, as links. */
 function FileTabs(props: {
@@ -69,7 +74,7 @@ function FileTabs(props: {
  * state of a sandbox that starts, replaces the file lists. The checks come
  * from GitHub and still show. When the cloud computer could not read the
  * files, `tree` keeps the saved list under a notice, or says that no list
- * is available.
+ * is available. `paths` adds two files whose labels hide a secret value.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -78,12 +83,15 @@ export function FilesPanel(props: {
   tree: TreeState
   open?: FileTabView
   placeholder?: ReactNode
+  paths?: PathState
 }) {
   const { view, open } = props
-  const changes = props.edited ? changedFiles : []
+  const masked = props.paths === 'masked'
+  const files = filesFor(props.paths ?? 'plain')
+  const changes = props.edited ? files.changes : []
   const tree = props.edited
-    ? fileTree
-    : fileTree.map((entry) => ({ ...entry, change: undefined }))
+    ? files.tree
+    : files.tree.map((entry) => ({ ...entry, change: undefined }))
   const treeOpen = open === 'code' || open === 'markdown' ? open : undefined
   const lists = !props.placeholder
   return (
@@ -104,7 +112,11 @@ export function FilesPanel(props: {
         </div>
       ) : null}
       {view === 'changes' && lists ? (
-        <ChangeList diffOpen={open === 'diff'} files={changes} />
+        <ChangeList
+          diffOpen={open === 'diff' || open === 'masked-diff'}
+          diffTo={masked ? paths.maskedPaths : paths.diff}
+          files={changes}
+        />
       ) : null}
       {props.tree === 'saved' ? (
         <LostUpdateRow repair={{ data: 'all-files' }} />

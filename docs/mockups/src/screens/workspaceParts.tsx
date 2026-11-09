@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { FilePage } from '../components/files/FilePage'
 import { FilesPanel, type FileTabView } from '../components/files/FilesPanel'
+import type { BackLink } from '../components/layout/Page'
 import { DesktopView } from '../components/tools/DesktopView'
 import { PortPreview, PreviewEmpty } from '../components/tools/PortPreview'
 import { TerminalView } from '../components/tools/TerminalView'
@@ -25,17 +26,38 @@ import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
-/** The file that the centre tab shows, when the tab is a file. */
+/**
+ * The file that the centre tab shows, when the tab is a file. With masked
+ * paths, a diff opens the masked seed script.
+ */
 export function openFile(state: WorkspaceState): FileTabView | undefined {
   switch (state.tab) {
     case 'code':
     case 'markdown':
-    case 'diff':
       return state.tab
+    case 'diff':
+      return state.paths === 'masked' ? 'masked-diff' : 'diff'
+    case 'unnamed-file':
+      return 'unnamed'
     case 'session':
     case 'new-session':
     case 'linked-session':
       return undefined
+  }
+}
+
+/** The way back from a file page on a phone: to its list. */
+function backFrom(open: FileTabView): BackLink {
+  switch (open) {
+    case 'diff':
+      return { label: 'Changes', to: paths.filesChanges }
+    case 'masked-diff':
+      return { label: 'Changes', to: paths.maskedPathsChanges }
+    case 'unnamed':
+      return { label: 'All files', to: paths.maskedPathsAllFiles }
+    case 'code':
+    case 'markdown':
+      return { label: 'All files', to: paths.filesAll }
   }
 }
 
@@ -65,11 +87,7 @@ export function FilesContent(props: {
   }
   const open = openFile(state)
   if (phone && open) {
-    const back =
-      open === 'diff'
-        ? { label: 'Changes', to: paths.filesChanges }
-        : { label: 'All files', to: paths.filesAll }
-    return <FilePage back={back} view={open} />
+    return <FilePage back={backFrom(open)} view={open} />
   }
   const placeholder =
     panel && (panel.problem === 'starting' || panel.problem === 'refused') ? (
@@ -80,6 +98,7 @@ export function FilesContent(props: {
       banner={state.banner}
       edited={!isNew(state)}
       open={open}
+      paths={state.paths}
       placeholder={placeholder}
       tree={state.tree}
       view={state.files}

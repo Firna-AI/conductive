@@ -18,7 +18,7 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, or `?suspended=1`. `dev/options.ts` lists
+  `?login=none`, `?deleted=1`, `?suspended=1`, or `?paths=masked`. `dev/options.ts` lists
   them. A new org
   of the dev fake gets every repository of the account's list, and keeps
   its custom initials through rename, delete, and restore.
@@ -192,7 +192,17 @@ clicks, types, and lets the answers of the fake API settle.
 - `new-workspace-model.ts`: the first message that creates a workspace.
   `creations.ts`: `Creations`, the admitted creates of an org in this tab,
   and `failedCreate`, which tells a create whose start failed.
-- `computer-model.ts`: the scripts, the env vars, the builds, and the log.
+- `computer-model.ts`: the scripts, the env vars with their Secret marks,
+  the builds, and the log. `classifyEnvVar` changes only the mark of a
+  variable, and sends no value. `replaceEnvVar` changes only the value,
+  and sends no mark, so the Worker keeps the stored mark. `setEnvVar`
+  sends a value and a mark, for Add variable.
+- `../shell/settings/EnvVarsSection.tsx`, `EnvVarForms.tsx`, and
+  `EnvVarMark.tsx`: the env var editor of an admin. The Secret switch of a
+  row saves its mark at once, and Add variable starts secret. A new value
+  sends no mark, so it keeps the stored mark, also a mark that a save of
+  the switch changed after its form opened. The switch, Change, and Delete
+  of a row wait while one of them saves.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.
 - `events.ts`: the ordered event stream, the event socket, and

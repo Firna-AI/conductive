@@ -222,7 +222,8 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 
 - `api/client.ts`: `createMembersApi`, the calls, and `ApiRequestError`.
 - `api/parseCore.ts` and `api/parseSettings.ts`: the parsers of the replies.
-  The settings parser keeps only the names of the env vars.
+  The settings parser keeps only the names and the Secret marks of the env
+  vars.
 - `membersStore.ts`: the state of the Members tab and each change.
 - `actionOwners.ts`: the owner of each action, and `keepExistingOwners`,
   the owner rule that the store applies after each state change.

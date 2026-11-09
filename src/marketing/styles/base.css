@@ -2,7 +2,7 @@
  * The document, the buttons, and the shared text of the site. The values
  * follow the marketing mockup in docs/mockups/src/components/marketing/ and
  * the Firna button that it uses. The phone layout starts below 760px, as
- * `phoneMedia` in pictures.ts says.
+ * `phoneMedia` in picture-styles.ts says.
  */
 html {
   -webkit-text-size-adjust: 100%;
