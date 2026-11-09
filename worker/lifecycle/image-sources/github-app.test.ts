@@ -2,7 +2,6 @@ import { generateKeyPairSync } from 'node:crypto'
 
 import { afterEach, expect, it, vi } from 'vitest'
 
-import { appSigningKey } from '../../github/private-key'
 import { StreamedBody } from '../../github/streamed-body'
 import { installationToken, revokeInstallationToken } from './github-app'
 
@@ -19,13 +18,13 @@ const repository = {
   installationId: 701,
 }
 const accessFailure = new Error('Installation access is not available')
+const now = () => 1_800_000_000_000
 
 afterEach(() => {
   vi.restoreAllMocks()
 })
 
 it('uses the supplied clock and bounded shared request policy for image credentials', async () => {
-  const key = await appSigningKey(privateKey)
   const timeouts = vi.spyOn(AbortSignal, 'timeout')
   const requests: Request[] = []
   await expect(
@@ -35,9 +34,9 @@ it('uses the supplied clock and bounded shared request policy for image credenti
         return Response.json({ token: 'image-read-token' }, { status: 200 })
       },
       'github-client-id',
-      key,
+      privateKey,
       repository,
-      () => 1_800_000_000_000,
+      now,
     ),
   ).resolves.toBe('image-read-token')
   expect(timeouts.mock.calls).toEqual([[30_000]])
@@ -78,14 +77,14 @@ it('uses the supplied clock and bounded shared request policy for image credenti
 })
 
 it('cancels oversized image token replies and returns the safe image credential error', async () => {
-  const key = await appSigningKey(privateKey)
   const body = new StreamedBody(28 * 1024 * 1024)
   await expect(
     installationToken(
       async () => new Response(body.stream, { status: 201 }),
       'github-client-id',
-      key,
+      privateKey,
       repository,
+      now,
     ),
   ).rejects.toEqual(accessFailure)
   expect(body.cancelled).toBe(true)
@@ -100,8 +99,9 @@ it('cancels oversized image token replies and returns the safe image credential 
       installationToken(
         async () => response,
         'github-client-id',
-        key,
+        privateKey,
         repository,
+        now,
       ),
     ).rejects.toEqual(accessFailure)
 })

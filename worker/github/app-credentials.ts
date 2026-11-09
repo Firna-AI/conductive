@@ -6,7 +6,7 @@ import { githubJson, githubRequest } from './transport'
 
 interface GitHubAppIdentity {
   clientId: string
-  privateKey: string | CryptoKey
+  privateKey: string
 }
 
 interface InstallationAccess {
@@ -23,8 +23,7 @@ interface CredentialDependencies {
 
 let imported: { pem: string; key: Promise<CryptoKey> } | undefined
 
-function signingKey(privateKey: string | CryptoKey): Promise<CryptoKey> {
-  if (typeof privateKey !== 'string') return Promise.resolve(privateKey)
+function signingKey(privateKey: string): Promise<CryptoKey> {
   if (imported?.pem !== privateKey)
     imported = { pem: privateKey, key: appSigningKey(privateKey) }
   return imported.key

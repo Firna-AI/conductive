@@ -8038,6 +8038,29 @@ Design calls by the implementor, checked by the orchestrator on 9 November
 
 Evidence: `.context/boat-native-remote-workspaces/13c/orchestrator-checks.md`.
 
+Fix round 1, 9 November 2026. The user selected:
+
+- Finding 1, option D: keep the push-decision tests and add one native
+  push case. Prove retry storage, its due alarm, real eviction, and the
+  alarm's committed result before a browser read.
+- Finding 2, option C: use PEM text and a required clock in every image
+  credential caller and test. This replaces the earlier imported-key
+  compatibility call.
+- Finding 1, option E after the merge: move the GitHub tests to the one
+  native workspace harness. The
+  [follow-up item](follow-ups/github-tests-on-real-object.md) records that
+  wider move.
+
+Continuation on 9 November 2026. The user approved one bounded native
+case diagnostic round. That round did not produce a concrete fix. Under
+the user's fallback, keep the unfinished native case and its helper
+additions out of this branch. Record the wait markers and remaining
+uncertainty in the native-harness follow-up. Option E uses the one native
+harness from Milestone 5f, pull request #102. Finding 2 option C proceeds
+through the gate and CI. No further answer is needed for this case.
+
+Fix-round evidence: `.context/boat-native-remote-workspaces/13c/fix-round-1/summary.md`.
+
 ## Milestone 15t: Typed Worker warnings
 
 Depends on: 5e, 8o. They change the start and the failed start, where

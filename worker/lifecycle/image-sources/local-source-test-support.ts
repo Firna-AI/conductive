@@ -162,7 +162,7 @@ export async function localSourceFixture(
       ...input,
       commands: new SourceCommandPort(provider, input.sandboxId),
     }
-    const prepare = (now?: () => number) =>
+    const prepare = (now = () => TEST_TIME) =>
       createGitHubImageSourceMaterializer(env, { fetch: access.fetch, now })(
         fullInput,
       )

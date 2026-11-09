@@ -42,8 +42,7 @@ export function imageSourceFailure(missingKey = false): HttpError {
 /** Each call starts or polls one native command. Token ownership survives actor restarts. */
 export function createGitHubImageSourceMaterializer(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
-  dependencies: Pick<AppDependencies, 'fetch'> &
-    Partial<Pick<AppDependencies, 'now'>>,
+  dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
 ): PrepareImageSources {
   return async (input) => {
     let missingKey = false

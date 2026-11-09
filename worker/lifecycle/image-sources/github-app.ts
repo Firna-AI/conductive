@@ -8,12 +8,12 @@ import type { SourceRepository } from './data'
 export function installationToken(
   fetch: HttpFetch,
   clientId: string,
-  key: string | CryptoKey,
+  privateKey: string,
   repository: SourceRepository,
-  now: () => number = Date.now,
+  now: () => number,
 ): Promise<string> {
   return installationAccessToken(
-    { clientId, privateKey: key },
+    { clientId, privateKey },
     {
       installationId: repository.installationId,
       repositoryIds: [repository.githubRepositoryId],
