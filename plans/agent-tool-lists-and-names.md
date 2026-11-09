@@ -297,13 +297,17 @@ Depends on: every other milestone
       `.context/agent-tool-lists-and-names/smoke/cli-mcp.log`. A create
       needs an active turn and a cloud computer, so the smoke test
       covers the lists, and the route tests cover the create.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      The gate passed on the merged tree `8746bb6`. Evidence:
+      `.context/agent-tool-lists-and-names/gate-6.log`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Round 1 found nothing in the scope, so no fix
+      round and no re-review ran. Findings file:
+      `.context/reviews/calummoore/mcps-for-agents/findings.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
@@ -313,4 +317,5 @@ Depends on: every other milestone
 ## Post-merge follow-up (non-blocking)
 
 - [ ] After the deploy, run a full image build for each org, so that its
-      cloud computers get the new tools.
+      cloud computers get the new tools. Follow-up item:
+      `plans/follow-ups/full-image-build-for-agent-tools.md`.
