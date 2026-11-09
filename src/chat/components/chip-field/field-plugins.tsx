@@ -42,20 +42,29 @@ function useLatest<T>(value: T) {
 }
 
 /**
+ * The owner of the draft that a field shows, such as its `Draft.id`. The
+ * field compares owners by identity.
+ */
+export type FieldOwner = string | object
+
+/**
  * Keeps the field and the plain text of its owner in step. Each change of
  * the field gives its plain text. A new value from the owner, such as an
  * empty draft after a send or a draft that comes back, replaces the content
- * and clears the undo history, as a new value of a text field does. The
- * owner's echo of the field's own text changes nothing, so the caret and
- * the history stay.
+ * and clears the undo history, as a new value of a text field does. A new
+ * owner does the same, also when its text is equal, so undo never gives the
+ * text of one draft to another. The owner's echo of the field's own text
+ * changes nothing, so the caret and the history stay.
  */
 export function ValuePlugin(props: {
+  owner: FieldOwner
   value: string
   onChangeText: (text: string) => void
 }) {
   const [editor] = useLexicalComposerContext()
   const { links } = useChatLinks()
-  const last = useRef(props.value)
+  // The owner and the text that the field shows now.
+  const shown = useRef({ owner: props.owner, text: props.value })
   const onChange = useLatest(props.onChangeText)
   const latestLinks = useLatest(links)
   useEffect(
@@ -65,15 +74,16 @@ export function ValuePlugin(props: {
           return
         }
         const text = update.editorState.read($fieldText)
-        if (text === last.current) return
-        last.current = text
+        if (text === shown.current.text) return
+        shown.current = { ...shown.current, text }
         onChange.current(text)
       }),
     [editor, onChange],
   )
   useLayoutEffect(() => {
-    if (props.value === last.current) return
-    last.current = props.value
+    const { owner, text } = shown.current
+    if (props.owner === owner && props.value === text) return
+    shown.current = { owner: props.owner, text: props.value }
     const caret = focused(editor)
     editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined)
     editor.update(
@@ -84,7 +94,7 @@ export function ValuePlugin(props: {
       },
       { discrete: true, tag: caret ? [] : [SKIP_DOM_SELECTION_TAG] },
     )
-  }, [editor, props.value, latestLinks])
+  }, [editor, props.owner, props.value, latestLinks])
   return null
 }
 

@@ -316,7 +316,8 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
   and the dialog share: the repository, the notices, the readiness, and
   the send. `parts.tsx`: their repository menu and files.
-  The shared chip field supplies their focus handle. `CaretAtEndPlugin`
+  The model of each form is the `owner` of its chip field. The shared chip
+  field supplies their focus handle. `CaretAtEndPlugin`
   restores the saved caret position when keyboard focus enters. Without a
   saved position, it puts the caret at the end. It lives in
   `../chat/components/chip-field/focus-plugins.tsx`.

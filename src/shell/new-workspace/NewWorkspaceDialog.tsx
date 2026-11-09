@@ -156,6 +156,7 @@ function DialogCard(props: {
                 maxLines={14}
                 onChangeText={(text) => model.setText(text)}
                 onEnter={sendKey}
+                owner={model}
                 placeholder="Describe the task"
                 value={form.draft.text}
               />

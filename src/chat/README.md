@@ -313,8 +313,14 @@ members, and the workspace list of the org from the models of the app.
   list now holds becomes a chip, with no new step of undo. A new draft from
   the owner, such as an empty one after a send, clears the undo history,
   and the owner's echo of the field's own text changes nothing. The field
-  stays a focusable textbox while it takes no change, such as during a
-  create. Its chips find their workspaces through `LinksProvider`.
+  also takes an identity for its draft as `owner`: `Draft.id` in the chat,
+  and the model of each form in New workspace. A new owner replaces the
+  content, the selection, and the undo history, also when its text is
+  equal, so undo never takes the text of one draft into another. A draft
+  that moves to another session keeps its identity, so its undo moves with
+  it. The field stays mounted, so it keeps the focus. The field stays a
+  focusable textbox while it takes no change, such as during a create. Its
+  chips find their workspaces through `LinksProvider`.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as
@@ -451,9 +457,16 @@ title and its rename field.
 steps over a chip, removes it with Backspace and Delete, restores a draft,
 copies, follows the list, and checks a field that takes no change. It
 also checks that a focus puts the caret at the end of a kept draft, and
-later back where the user put it.
+later back where the user put it. It checks that undo stays with its
+draft after a switch to another draft with equal text, with the focus as
+it was, and moves with a draft that moves.
+`components/chip-field/chip-field-test-kit.tsx` mounts the field with an
+owner that keeps the draft of each session, as the chat does.
+`components/ComposerDrafts.dom.test.tsx` switches the sessions of the
+chat after a delete, and moves the draft of a composer with its identity.
+Undo stays with its draft in both.
 `components/chip-field/field-text.test.ts` checks the separator rule. The
-DOM tests focus, type, paste, and read the field through
+DOM tests focus, type, paste, clear, and read the field through
 `src/test-support/message-field.ts`.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins

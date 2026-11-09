@@ -1,82 +1,16 @@
 // @vitest-environment happy-dom
 
-import { act, useEffect, useState } from 'react'
+import { act } from 'react'
 import { describe, expect, test } from 'vitest'
-import type { Workspace } from '../../../shared/workspaces'
-import { accessibleName, byRole } from '../../../test-support/dom-queries'
-import { FAKE_IDS } from '../../../test-support/fixtures/core'
-import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
 import {
+  clearMessage,
   focusMessage,
   messageText,
   pasteMessage,
   pressInField,
   typeMessage,
 } from '../../../test-support/message-field'
-import { mount } from '../../../test-support/mount'
-import { LinksProvider } from '../../links/LinksContext'
-import { ChipTextField } from './ChipTextField'
-
-const listed = workspaceFixtures().workspaces.workspaces
-const linked = listed[0] as Workspace
-const chipName = `W-${linked.number} ${linked.name}, Starting`
-
-/** The owner of the field, which keeps its draft, as a composer does. */
-interface Owner {
-  setValue: (value: string) => void
-  setList: (list: readonly Workspace[] | null) => void
-}
-
-async function mountField(
-  options: {
-    value?: string
-    list?: readonly Workspace[] | null
-    editable?: boolean
-    caretAtEnd?: boolean
-  } = {},
-) {
-  const owner: Partial<Owner> = {}
-  function Field() {
-    const [value, setValue] = useState(options.value ?? '')
-    const [list, setList] = useState(
-      options.list === undefined ? listed : options.list,
-    )
-    useEffect(() => {
-      owner.setValue = setValue
-      owner.setList = setList
-    }, [])
-    const links = { orgId: FAKE_IDS.org, workspaces: list }
-    return (
-      <LinksProvider value={{ links }}>
-        <ChipTextField
-          caretAtEnd={options.caretAtEnd}
-          editable={options.editable}
-          label="Message"
-          lines={2}
-          maxLines={8}
-          onChangeText={setValue}
-          placeholder="Message the agent"
-          value={value}
-        />
-        <output>{value}</output>
-      </LinksProvider>
-    )
-  }
-  const { container } = await mount(<Field />)
-  const field = byRole('textbox', 'Message', container)
-  return {
-    field,
-    draft: () => container.querySelector('output')?.textContent,
-    chips: () =>
-      Array.from(field.querySelectorAll('[contenteditable="false"]'), (chip) =>
-        accessibleName(chip),
-      ),
-    /** A change of the owner, and the work of the field that follows it. */
-    set: async (change: (owner: Owner) => void) => {
-      await act(async () => change(owner as Owner))
-    },
-  }
-}
+import { chipName, linked, listed, mountField } from './chip-field-test-kit'
 
 describe('the chip text field', () => {
   test('a paste turns each workspace link into a chip at once, keeps plain text, and the draft keeps the link', async () => {
@@ -132,6 +66,56 @@ describe('the chip text field', () => {
       chips: [chipName],
       text: `Back to ${linked.link} now`,
       draft: `Back to ${linked.link} now`,
+    })
+  })
+
+  test('undo stays with its draft: after a switch to another draft with equal text, undo gives it no text of the last draft, and the focus stays as it was', async () => {
+    const view = await mountField()
+    typeMessage(view.field, 'Only for the first session')
+    clearMessage(view.field)
+    pressInField(view.field, 'z', { ctrlKey: true })
+    const undone = view.draft()
+    clearMessage(view.field)
+    await view.set((owner) => owner.show('second'))
+    const handoff = {
+      focused: document.activeElement === view.field,
+      sameField: view.fieldNow() === view.field,
+    }
+    pressInField(view.field, 'z', { ctrlKey: true })
+    const second = view.draft()
+    typeMessage(view.field, 'For the second session')
+    clearMessage(view.field)
+    pressInField(view.field, 'z', { ctrlKey: true })
+    act(() => view.field.blur())
+    await view.set((owner) => owner.show('first'))
+    expect({
+      undone,
+      handoff,
+      second,
+      toSecond: view.changes
+        .filter((change) => change.session === 'second')
+        .map((change) => change.text),
+      first: view.draft(),
+      takesFocus: document.activeElement === view.field,
+    }).toEqual({
+      undone: 'Only for the first session',
+      handoff: { focused: true, sameField: true },
+      second: '',
+      toSecond: ['For the second session', '', 'For the second session'],
+      first: '',
+      takesFocus: false,
+    })
+  })
+
+  test('a draft that moves to another session with its identity keeps its undo, which then goes to that session', async () => {
+    const view = await mountField()
+    typeMessage(view.field, 'Moves with its draft')
+    clearMessage(view.field)
+    await view.set((owner) => owner.moveTo('third'))
+    pressInField(view.field, 'z', { ctrlKey: true })
+    expect({ draft: view.draft(), last: view.changes.at(-1) }).toEqual({
+      draft: 'Moves with its draft',
+      last: { session: 'third', text: 'Moves with its draft' },
     })
   })
 

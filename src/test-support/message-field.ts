@@ -115,6 +115,15 @@ export function pressInField(
 }
 
 /**
+ * Deletes all the text of the field, as Ctrl+A and then Backspace do. The
+ * delete is one step of undo.
+ */
+export function clearMessage(field: HTMLElement): void {
+  pressInField(field, 'a', { ctrlKey: true })
+  pressInField(field, 'Backspace')
+}
+
+/**
  * The plain text that the field holds, as its draft and a send take it:
  * each chip is its link.
  */

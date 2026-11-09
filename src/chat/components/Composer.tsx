@@ -84,6 +84,7 @@ export function Composer(props: ComposerProps) {
           maxLines={8}
           onChangeText={props.onChangeText}
           onEnter={sendKey}
+          owner={draft.id}
           placeholder={
             steers ? 'Steer the agent while it works' : 'Message the agent'
           }

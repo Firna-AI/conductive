@@ -18,6 +18,7 @@ import {
   PastePlugin,
   ReconcilePlugin,
   ValuePlugin,
+  type FieldOwner,
 } from './field-plugins'
 import {
   CaretAtEndPlugin,
@@ -31,6 +32,13 @@ export interface ChipTextFieldProps {
   placeholder: string
   /** The plain text of the draft, with the link of each chip. */
   value: string
+  /**
+   * The owner of the draft that the field shows: `Draft.id` in the chat, or
+   * the model of a New workspace form. A new owner replaces the content,
+   * the selection, and the undo history, also when its text is equal. A
+   * draft that moves with its identity keeps them. See `ValuePlugin`.
+   */
+  owner: FieldOwner
   onChangeText: (text: string) => void
   /** The least number of lines that the field shows. */
   lines: number
@@ -57,7 +65,8 @@ export interface ChipTextFieldProps {
  * text stays text. The draft stays plain text, with the link of each chip.
  * The field has the type and the line heights of the plain text field, and
  * it grows from `lines` to `maxLines`, then scrolls. On a phone its text is
- * larger. The chips find their workspaces through `LinksProvider`.
+ * larger. The chips find their workspaces through `LinksProvider`. The
+ * field stays mounted when its owner changes, so it keeps the focus.
  */
 export function ChipTextField(props: ChipTextFieldProps) {
   const { links } = useChatLinks()
@@ -101,7 +110,11 @@ export function ChipTextField(props: ChipTextFieldProps) {
         />
       </div>
       <HistoryPlugin />
-      <ValuePlugin onChangeText={props.onChangeText} value={props.value} />
+      <ValuePlugin
+        onChangeText={props.onChangeText}
+        owner={props.owner}
+        value={props.value}
+      />
       <PastePlugin />
       <CopyPlugin />
       <EnterPlugin onEnter={props.onEnter} />

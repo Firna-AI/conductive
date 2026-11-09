@@ -230,6 +230,10 @@ approved.
   typed text keeps its existing behaviour. Paste and restored drafts
   create chips. Reason: automatic conversion of manually typed URLs is
   outside the approved paste feature and is not needed to complete it.
+- Agent call, from review on 9 November 2026: each message field receives
+  a stable owner identity. An owner change resets content, selection, and
+  history even when text is equal. Reason: undo must not cross drafts.
+  Chat uses Draft.id, so a draft move keeps its identity and undo.
 - Agent call: Enter, Shift+Enter, the input methods of other languages,
   the touch keyboard, the placeholder, the limit of eight lines in the
   chat and page, and the focus keep their rules of today. The New
@@ -647,6 +651,9 @@ Depends on: every other milestone
       sent messages and answers. Preserve existing code, bold, and editor
       text behaviour.
 - [x] Run the complete gate after the review fix.
+- [x] Isolate editor history by draft identity, including equal-text owner
+      changes. Preserve focus and same-draft moves.
+- [ ] Run the complete gate after the final ownership fix.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

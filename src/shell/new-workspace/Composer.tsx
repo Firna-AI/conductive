@@ -49,6 +49,7 @@ export function Composer(props: {
           maxLines={8}
           onChangeText={(text) => props.model.setText(text)}
           onEnter={sendKey}
+          owner={props.model}
           placeholder="Describe the task"
           value={draft.text}
         />
