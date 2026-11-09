@@ -18,8 +18,9 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`, or
-  `?paths=masked`. `dev/options.ts` lists them. A new org
+  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
+  `?waiting=1`, `?paused=1`, or `?paths=masked`. `dev/options.ts` lists
+  them. A new org
   of the dev fake gets every repository of the account's list, and keeps
   its custom initials through rename, delete, and restore.
 - `?operator=1` makes the dev user an operator, so the rail and the org
@@ -31,6 +32,24 @@ pull request bar, and the owner picker. A host can give its own parts, as
   of that org show the suspension only after such a refusal. Without the
   option, each operator request gets `operator_required`, as the Worker
   does.
+- `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
+  app access with a verified email, so the app shows only the
+  [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
+  account without a verified email. Sam starts as a new account, as
+  `?firstRun=github-app` does. With `?operator=1` nobody waits, because
+  an operator gets app access. With `?waiting`, `?invited=1` adds an
+  invitation of Acme, whose Accept makes Sam a member with app access. A
+  join link, such as `/join/V7MKC-2QDXH?waiting=1`, uses its code at once.
+  `?paused=1` pauses
+  sign-ups: each use of a code, and the Accept of a person who waits, get
+  `signups_paused`, and the Account page shows the pause.
+  `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
+  invite code of a user with app access. The codes of the dev fake are
+  those of the operator mockups. For example, `V7MKC-2QDXH` works,
+  `9PTXC-4WHMN` is used up, `HM3PE-7KWQT` is disabled, and a code that
+  the mockups do not list is not found. A code that works gives app
+  access and a new invite code, so Get started opens. The fake keeps its
+  state in the page, so a reload starts Sam on the waitlist again.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -109,7 +128,8 @@ the workspace stores, and the raw event streams of feature stores.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the command palette, the focus, saved drafts, and New workspace.
+layers, the command palette, the focus, saved drafts, New workspace, and
+the waitlist.
 
 ## Rules for this code
 
@@ -142,6 +162,10 @@ layers, the command palette, the focus, saved drafts, and New workspace.
   passive, so the palette key stops the browser's own action.
   `AppServices.platform` says whether the keyboard is a Mac, which
   chooses the palette key and its hint.
+- An address that people share, such as the invite link, starts with
+  `AppServices.appOrigin`: the origin of the page in a browser. The Mac
+  app loads the page from its own origin, so it names the app host of the
+  brand.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
@@ -169,8 +193,25 @@ clicks, types, and lets the answers of the fake API settle.
 - `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
   store over the event source of the app, with the reconnect rules of
   [Data lifecycle](data-lifecycle.md).
-- `app-model.ts`: the session, the orgs, the models list, Get started, and
-  `putOrg`, which takes a confirmed org record.
+- `app-model.ts`: the session, the orgs, the models list, Get started,
+  `putOrg`, which takes a confirmed org record, and `admit`, which opens
+  the app when app access arrives. `boot.ts`: `Boot`, the states of the
+  first load, and `readShared`, what every screen of the app shares.
+- `waitlist-model.ts`: `WaitlistModel`, the screen of a person who waits:
+  the use of a code from the field or a join link, the invitations with
+  Accept, and the read of the app access at each return to the page.
+  `waitlist-state.ts`: what the screen shows, and the reason of each
+  refused code. `api/read-waitlist.ts`: the readers of the session and the
+  waitlist state.
+- `../shell/waitlist/`: `Waiting`, which runs a join link and the read at
+  each return, `WaitlistScreen`, the code field, and the invitations.
+  `../shell/auth/SignInFrame.tsx`: the frame that the sign-in, the sign-in
+  of a join link, and the waitlist share. `../shell/layout/Alone.tsx`: a
+  page without the rail, and the wait of the first load.
+- [waitlistCopy.ts](../../docs/mockups/src/screens/waitlistCopy.ts) and
+  [inviteCodeCopy.ts](../../docs/mockups/src/components/settings/inviteCodeCopy.ts):
+  the words of the waitlist and of the invite code that the app and the
+  mockups share.
 - `invitations-model.ts`: `InvitationsModel`, the pending invitations,
   Continue to workspaces, and Accept invitation.
   `api/read-invitations.ts`: their readers.
@@ -182,8 +223,9 @@ clicks, types, and lets the answers of the fake API settle.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   and computer settings of one org, with `watch` and the wait of each part.
 - `account-model.ts`: the agent logins with their share setting, the
-  default model, the GitHub App installations, and the repositories that
-  Create org offers.
+  default model, the GitHub App installations, the repositories that
+  Create org offers, and the waitlist state for the invite code of the
+  account. `../shell/account/InviteCodeSection.tsx`: that invite code.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and

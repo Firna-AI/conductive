@@ -1,7 +1,7 @@
 import type { AccountResponse } from '../../shared/account'
 import type { User } from '../../shared/api'
 import { BASE_IMAGE } from '../../shared/base-image'
-import type { MembersResponse } from '../../shared/members'
+import type { MembersResponse, PendingOrgInvite } from '../../shared/members'
 import type { Attachment } from '../../shared/messages'
 import type {
   GetStartedResponse,
@@ -41,6 +41,30 @@ export interface OrgState {
   members: MembersResponse
 }
 
+/** A code of the dev fake, with its uses. */
+export interface DevCode {
+  useLimit: number
+  uses: number
+  disabled: boolean
+}
+
+/**
+ * The waitlist of the dev fake: the app access of the user, the pause,
+ * the codes, and the org invitations that wait for the user.
+ */
+export interface DevWaitlist {
+  appAccess: boolean
+  /** The primary verified email of the user, or `null`. */
+  approvalEmail: string | null
+  paused: boolean
+  /** Each code by its text in capitals, without the hyphen. */
+  codes: Map<string, DevCode>
+  /** The key of the invite code of the user in `codes`, once the user has app access. */
+  ownCode: string | null
+  /** Each invitation, with the state of the org that an Accept joins. */
+  invitations: { invite: PendingOrgInvite; org: OrgState }[]
+}
+
 /** Everything that the writes of the dev fake change. */
 export interface DevState {
   account: AccountResponse
@@ -60,6 +84,7 @@ export interface DevState {
   operator: OperatorRecords
   /** Each change of a share setting fails, from `shareSave=fail`. */
   shareSaveFails: boolean
+  waitlist: DevWaitlist
 }
 
 /**

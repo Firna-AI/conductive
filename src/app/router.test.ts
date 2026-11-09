@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { INVITE_CODE_ERROR_PARAMETER, joinPath } from '../shared/waitlist'
 import { parseRoute, routes, SETTINGS_TABS, type Route } from './router'
 
 function parse(path: string): Route {
@@ -35,6 +36,27 @@ describe('routes', () => {
     }
     expect(parse('/orgs/acme/settings/billing')).toEqual({
       screen: 'not-found',
+    })
+  })
+
+  test('a join link names its code, and the reason that the sign-in put in it', () => {
+    const failed = new URLSearchParams({
+      [INVITE_CODE_ERROR_PARAMETER]: 'invite_code_used_up',
+    })
+    expect({
+      link: parse(joinPath('W9TFC-4MJ6D')),
+      failed: parse(`${joinPath('w9tfc 4mj6d')}?${failed}`),
+      none: parse('/join'),
+      deeper: parse(`${joinPath('W9TFC-4MJ6D')}/more`),
+    }).toEqual({
+      link: { screen: 'join', code: 'W9TFC-4MJ6D', error: null },
+      failed: {
+        screen: 'join',
+        code: 'w9tfc 4mj6d',
+        error: 'invite_code_used_up',
+      },
+      none: { screen: 'not-found' },
+      deeper: { screen: 'not-found' },
     })
   })
 

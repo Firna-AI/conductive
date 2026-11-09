@@ -1,4 +1,5 @@
 import type { Agent } from '../shared/agents'
+import { INVITE_CODE_ERROR_PARAMETER } from '../shared/waitlist'
 
 export const SETTINGS_TABS = [
   'general',
@@ -39,6 +40,11 @@ export type Route =
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
   /** The operator section. The shell shows it only to an operator. */
   | { screen: 'operator'; view: OperatorView }
+  /**
+   * The join link of an invite code. `error` is the error code of the API
+   * when the code of the link did not work at the sign-in.
+   */
+  | { screen: 'join'; code: string; error: string | null }
   | { screen: 'not-found' }
 
 const encode = encodeURIComponent
@@ -140,6 +146,15 @@ export function parseRoute(pathname: string, search: string): Route {
   if (first === 'operator') {
     const view = operatorView(decoded.slice(1), query)
     return view ? { screen: 'operator', view } : { screen: 'not-found' }
+  }
+  if (first === 'join') {
+    return orgId === undefined || area !== undefined
+      ? { screen: 'not-found' }
+      : {
+          screen: 'join',
+          code: orgId,
+          error: query.get(INVITE_CODE_ERROR_PARAMETER),
+        }
   }
   if (first === 'get-started' && orgId === undefined) {
     return { screen: 'get-started' }

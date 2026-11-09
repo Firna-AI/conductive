@@ -63,7 +63,13 @@ describe('This Mac in the account', () => {
       state: queryByText('Available', view)?.textContent,
       requests: macRequests(server),
     }).toEqual({
-      sections: ['This Mac', 'GitHub', 'Agents', 'New workspaces'],
+      sections: [
+        'This Mac',
+        'GitHub',
+        'Agents',
+        'New workspaces',
+        'Invite code',
+      ],
       state: 'Available',
       requests: [`GET ${DEVICE_CURRENT_PATH}`, `GET ${DEVICE_SETTINGS_PATH}`],
     })
@@ -82,7 +88,7 @@ describe('This Mac in the account', () => {
       sections: sections(view),
       requests: macRequests(server),
     }).toEqual({
-      sections: ['GitHub', 'Agents', 'New workspaces'],
+      sections: ['GitHub', 'Agents', 'New workspaces', 'Invite code'],
       requests: [],
     })
   })

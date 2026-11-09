@@ -88,8 +88,9 @@ it('sends every sign-in to the app and shows the request year', async () => {
   expect(response.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
   const html = await response.text()
   expect(html).toContain('Give every coding task its own cloud computer.')
+  expect(html).toContain('Give your next task its own cloud computer.')
   const signIns = links(html).filter((link) =>
-    ['Start free with GitHub', 'Sign in'].includes(link.text),
+    ['Join the waitlist', 'Sign in'].includes(link.text),
   )
   expect(signIns).toHaveLength(8)
   for (const link of signIns) expect(link.href).toBe(`${APP_ORIGIN}/`)
