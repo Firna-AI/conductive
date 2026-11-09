@@ -26,10 +26,7 @@ function SidebarPanel(props: {
   return (
     <aside
       aria-label="Workspaces"
-      className={classes(
-        frame.sidebar,
-        props.hidden !== undefined && mac.sidebar,
-      )}
+      className={frame.sidebar}
       hidden={props.hidden}
       ref={sidebar}
       style={widths.sidebar === null ? undefined : { width: widths.sidebar }}
