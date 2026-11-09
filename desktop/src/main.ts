@@ -3,6 +3,7 @@ import { readFile, realpath, stat } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import {
   app,
+  autoUpdater,
   BrowserWindow,
   dialog,
   protocol,
@@ -149,6 +150,7 @@ startDesktop({
       app.setAsDefaultProtocolClient('conductive')
     const updates = startUpdates({
       updater: electronUpdater.autoUpdater,
+      nativeUpdater: autoUpdater,
       packaged: app.isPackaged,
       enabled: configuration.updates === 'enabled',
       choose: async (message, action) =>
@@ -161,6 +163,14 @@ startDesktop({
             cancelId: 1,
           })
         ).response === 0,
+      inform: async (message) => {
+        await dialog.showMessageBox({
+          type: 'info',
+          title: productName,
+          message,
+          buttons: ['OK'],
+        })
+      },
       every: (callback, milliseconds) => {
         const timer = setInterval(callback, milliseconds)
         return () => clearInterval(timer)
