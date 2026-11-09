@@ -28,7 +28,9 @@ const deleteButton = (
  * bottom of a phone (decision 202). The owner saves, uses Run now, and
  * deletes, and a new routine has only Save. An admin turns a routine off
  * and deletes it. Every other member has none. Run now works while the
- * routine is off, and also without a trigger.
+ * routine is off, and also without a trigger. It does not show on a
+ * routine whose triggers are all pull request triggers (decision 210 C).
+ * With no action, the page has no bar of actions.
  */
 export function routineActions(props: {
   routine: Routine
@@ -37,6 +39,8 @@ export function routineActions(props: {
   viewport: Viewport
   /** The form is on the screen, so Save shows. The Runs tab of a phone has none. */
   withForm: boolean
+  /** The triggers of the routine offer Run now. */
+  runNow: boolean
   /** The screen after Save, when the mockups draw it. */
   saveTo?: string
   /** The screen after Run now, when the mockups draw it. */
@@ -63,13 +67,17 @@ export function routineActions(props: {
         changed ? props.saveTo : undefined,
       )
       if (!props.routine.saved) return save
+      const runNow = props.runNow
+        ? linked(
+            <ActionButton icon={Play}>Run now</ActionButton>,
+            props.runNowTo,
+          )
+        : null
+      if (!runNow && !props.withForm) return null
       return (
         <>
           {props.viewport === 'desktop' ? deleteButton : null}
-          {linked(
-            <ActionButton icon={Play}>Run now</ActionButton>,
-            props.runNowTo,
-          )}
+          {runNow}
           {props.withForm ? save : null}
         </>
       )

@@ -3,6 +3,7 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
 import { RunsPanel } from '../components/routines/RunsPanel'
+import { offersRunNow } from '../components/routines/triggerCopy'
 import {
   suspendedSections,
   workspaceSections,
@@ -83,6 +84,7 @@ export function RoutineScreen(props: {
         save: saveStateOf(state, routine),
         viewport,
         withForm: !runsTab,
+        runNow: offersRunNow(edits.map((edit) => edit.trigger)),
         ...flowLinks(state, routine),
       })}
       back={{

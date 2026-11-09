@@ -37,46 +37,45 @@ export function titleOf(routine: Routine): string {
   return routine.name === '' ? 'Untitled routine' : routine.name
 }
 
-/**
- * Why the person signed in reads the routine without fields. A routine
- * whose owner left the org stays off, because its runs used the logins of
- * that person.
- */
+/** Why the person signed in reads the routine without fields. */
 function ReadOnlyNote(props: { routine: Routine; access: RoutineAccess }) {
   const { routine, access } = props
-  const owner = routine.owner
-  const admin = access === 'admin'
-  if (owner.left) {
-    return (
-      <Notice
-        body={`${owner.name} left ${orgs.acme.name}, and its runs used ${owner.name}'s logins.${admin ? ' You can delete it.' : ''}`}
-        icon={UserX}
-        title="This routine stays off"
-      />
-    )
-  }
   let actions = ''
-  if (admin) {
+  if (access === 'admin') {
     actions = routine.active
       ? ' You can turn it off or delete it.'
       : ' You can delete it.'
   }
   return (
     <SectionText muted>
-      {`Only ${owner.name} can change this routine.${actions}`}
+      {`Only ${routine.owner.name} can change this routine.${actions}`}
     </SectionText>
   )
 }
 
-/** Why the routine shows without fields: the org, or the access of the person. */
+/**
+ * The note above the routine: the notice of a suspended org, the reason
+ * why the person signed in reads it without fields, or, for its owner, the
+ * notice of a routine that moved from a member who left (decision 208 E).
+ */
 function Note(props: {
   routine: Routine
   access: RoutineAccess
   suspended: boolean
 }) {
+  const { routine } = props
   if (props.suspended) return <SuspendedOrgNotice org={orgs[suspendedOrg]} />
-  if (props.access === 'owner') return null
-  return <ReadOnlyNote access={props.access} routine={props.routine} />
+  if (props.access !== 'owner') {
+    return <ReadOnlyNote access={props.access} routine={routine} />
+  }
+  if (!routine.movedFrom) return null
+  return (
+    <Notice
+      body={`${routine.movedFrom} left ${orgs.acme.name}. It stays off until you turn it on.`}
+      icon={UserX}
+      title="This routine moved to you"
+    />
+  )
 }
 
 /**
@@ -98,7 +97,7 @@ export function RoutineForm(props: {
   const schedules = hasSchedule(props.edits.map((edit) => edit.trigger))
   let whose: string | undefined = `${routine.owner.name}'s`
   if (access === 'owner') whose = 'your'
-  if (routine.owner.left || props.suspended) whose = undefined
+  if (props.suspended) whose = undefined
   return (
     <>
       <Note access={access} routine={routine} suspended={props.suspended} />

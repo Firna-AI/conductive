@@ -8,9 +8,9 @@ import {
 export const routine = defineScreen({
   title: 'Routine',
   description:
-    "Cal's routine that reviews pull requests, as Cal sees it: the name, the Active switch, the repository, the section of the run workspaces, and By Cal. Then the triggers, PR opened and PR pushed, and the prompt with the model picker inside its box. Delete, Run now, and Save sit in the header, and the Runs list fills the column at the right. A phone shows the routine in two tabs, Routine and Runs, with Run now and Save at the bottom and Delete at the end of the form.",
+    "Cal's routine that reviews pull requests, as Cal sees it: the name, the Active switch, the repository, the section of the run workspaces, and By Cal. Then the triggers, PR opened and PR pushed, and the prompt with the model picker inside its box. Delete and Save sit in the header, and the Runs list fills the column at the right. The routine has only pull request triggers, so it has no Run now. A phone shows the routine in two tabs, Routine and Runs, with Save at the bottom and Delete at the end of the form.",
   rationale:
-    'Each run uses the agent login and the GitHub access of the person who created the routine, so the line under the prompt names them. Only that person changes the routine, turns it on, and uses Run now, as the user chose in decision 202 B. A run workspace is a normal workspace in the section that the routine chooses, from decision 204 A. Save stays off until something changes.',
+    'Each run uses the agent login and the GitHub access of the owner of the routine, so the line under the prompt names them. Only the owner changes the routine, turns it on, and uses Run now, as the user chose in decision 202 B. Run now does not show on a routine whose triggers are all pull request triggers, because such a run needs a pull request, as the user chose in decision 210 C. A run workspace is a normal workspace in the section that the routine chooses, from decision 204 A. Save stays off until something changes.',
   relatedDocs: [],
   propSchema: routineStateSchema,
   props: ownerRoutine,
@@ -22,9 +22,9 @@ export const routine = defineScreen({
       slug: 'new',
       title: 'New routine',
       description:
-        'New routine opens an empty routine. Its name says Untitled routine, it is active, and it uses the first repository and the General section. It has no trigger yet, and the prompt asks what the routine should do. Save is the only action. The Runs list says No runs yet, and a phone shows no tabs until the first save.',
+        'New routine opens an empty routine. Its name says Untitled routine, it is active, and it uses the first repository and the General section. It has no trigger yet, and the prompt asks what the routine should do. Save is the only action, and it stays off until the prompt has text. The Runs list says No runs yet, and a phone shows no tabs until the first save.',
       rationale:
-        'An empty name saves as Untitled routine, as in Conductor. A routine can have no trigger, because Run now still starts it. Run now and Delete come after the first save.',
+        'An empty name saves as Untitled routine, as in Conductor. A routine can have no trigger, because Run now still starts it. A run without a prompt has no task, so Save stays off until the prompt has text, as the user chose in decision 211 B. Run now and Delete come after the first save.',
       props: { routine: 'new', runs: 'none' },
       useCasePaths: ['user-flows/create-routine'],
     },
@@ -48,11 +48,11 @@ export const routine = defineScreen({
     },
     {
       slug: 'owner-left',
-      title: 'Owner left the org',
+      title: 'Moved from a member who left',
       description:
-        'Lena Park created this routine and then left Acme, so the routine turned off. A notice says why it stays off. Cal, an admin, can delete it, and its runs stay in the list.',
+        'Lena Park created this routine and then left Acme. The routine moved, turned off, to Cal, the admin who got the workspaces of Lena. A notice tells Cal that it moved and stays off until Cal turns it on. Cal now owns it, so Cal can change it, turn it on, use Run now, and delete it. Its runs stay in the list.',
       rationale:
-        'A routine stays, turned off, after its owner leaves. The owner never changes, and only the owner turns a routine on, so it cannot run again. Its run workspaces are normal workspaces, so they stay.',
+        'The user chose option E of decision 208 on 9 November 2026: at the leave, a routine moves to the admin who gets the workspaces of the member who left. It stays off, because its runs would now use the logins of that admin. Its run workspaces are normal workspaces, so they stay.',
       props: { routine: 'copy-review', runs: 'owner-left' },
     },
   ],

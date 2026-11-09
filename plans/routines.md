@@ -540,7 +540,7 @@ Added on 9 November 2026 from the mockups of Milestone 1.
 
 Added on 9 November 2026 from the mockups of Milestone 1.
 
-- **Severity:** Low. **Effort:** Medium.
+- **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation.
 - **Category:** Docs or spec.
 - **Location:** The mockup `app/routines/routine/owner-left`.
@@ -580,8 +580,9 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   first recommendation was B. E keeps the routine and its runs in one
   place at the lowest cost, and it follows the rule that already moves
   the workspaces. B can come later as a general Duplicate.
-- **Action:** ask the user, because B, D, and E add behaviour that no
-  requirement covers.
+- **Action:** asked the user, because B, D, and E add behaviour that no
+  requirement covered.
+- **Chosen:** E, by the user on 9 November 2026.
 
 ### 209. Choose how the owner runs a failed event again
 
@@ -626,8 +627,16 @@ Added on 9 November 2026 from the mockups of Milestone 1.
 - **Recommendation:** D, from the options check of 9 November 2026. The
   first recommendation was B. A review needs the pull request as it is
   now, and D shares one start path with decision 210 B.
-- **Action:** ask the user, because B, C, D, and E add behaviour that no
-  requirement covers.
+- **Action:** asked the user, because B, C, D, and E add behaviour that
+  no requirement covered.
+- **Chosen:** F, an option of the user on 9 November 2026: "can we create
+  the workspace, but then have a manual retry in it". A failed run keeps
+  its workspace, and the owner retries inside it. A failed start keeps
+  the workspace in its error state with Try again, as option D of
+  decision 130 says for every workspace. A run whose owner has no agent
+  login still creates its workspace, and its first turn fails with that
+  cause and Try again. Decisions 212 and 213 ask when this comes and how
+  repeated failures stop.
 
 ### 210. Choose how the owner tests a pull request routine
 
@@ -666,12 +675,15 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   It shows the text, not the work of the agent.
 - **Wider fix:** None, because this decision changes one action.
 - **Previous examples:** None found.
-- **Related:** Decision 209 B would reuse the start of a pull request run
-  in the same way.
+- **Related:** Decision 209 D would reuse the start of B.
 - **Recommendation:** B. The owner tests the real case before the first
   event. The options check kept B.
-- **Action:** ask the user, because B adds behaviour that no requirement
-  covers.
+- **Action:** asked the user, because B and D add behaviour that no
+  requirement covered.
+- **Chosen:** C now and B as a follow-up, by the user on 9 November 2026.
+  Run now does not show on a routine whose triggers are all pull request
+  triggers. The follow-up item `run-now-for-pull-request-routines.md`
+  holds B.
 
 ### 211. Choose whether a routine may save without a prompt
 
@@ -699,11 +711,98 @@ Added on 9 November 2026 from the mockups of Milestone 1.
 - **Previous examples:** Send of the composer waits for text or a file.
 - **Recommendation:** B. A run without a prompt has no task. The options
   check kept B.
+- **Action:** asked the user, because B and C add a refusal, and the
+  user's rules keep each new refusal for the user.
+- **Chosen:** B, by the user on 9 November 2026.
 
-- **Action:** ask the user, because B and C add a refusal, and the user's
-  rules keep each new refusal for the user.
+### 212. Choose when a failed run keeps its workspace
+
+Added on 9 November 2026 from the user's choice of decision 209 F.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Process.
+- **Location:** None.
+- **Background:** Decision 209 F keeps the workspace of a failed run, with
+  Try again inside it. A failed first start removes its workspace today.
+  Option D of decision 130, which the user chose on 8 November 2026 as a
+  later follow-up, keeps that workspace in its error state for every
+  workspace. The follow-up item `failed-first-start-keeps-workspace.md`
+  holds that work, and grades it Large. A run whose owner has no agent
+  login also needs its first message accepted, so that its first turn
+  fails in the chat with Try again.
+- **Problem:** Runs cannot keep their workspaces before that Large change
+  lands, and Conductor Cloud shuts down on 20 November 2026.
+- **Impact if no action:** The plan cannot order its run milestones.
+- **Root question:** When do failed runs get their workspace and its
+  retry?
+- **Options:**
+  - **A.** In this plan. A new milestone builds option D of decision 130
+    for every workspace before the run milestones, and deletes the
+    follow-up item. Effort: Large.
+  - **B.** After this plan. Runs first fail as the mockups show now: a
+    failed row with its cause and a link that fixes it, and no workspace.
+    When the follow-up of decision 130 D lands, failed runs keep their
+    workspaces. Effort: Small.
+  - **C.** In this plan, for run workspaces only. A failed first start of
+    a run keeps its workspace with Try again, and every other workspace
+    keeps today's removal. The app then has two rules for a failed first
+    start. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** A. One rule then covers every workspace.
+- **Previous examples:** Decision 130 chose A now and D later. Decision
+  210 chose C now and B later.
+- **Related:** Decision 213 matters once failed runs keep workspaces.
+- **Recommendation:** B. Routines ship sooner, and the follow-up of
+  decision 130 D then gives every workspace the same retry. A best
+  protects the codebase, at the cost of a Large milestone first.
+- **Action:** ask the user, because the options trade the launch of
+  routines against the behaviour that the user chose.
+
+### 213. Choose how a routine stops after repeated failed runs
+
+Added on 9 November 2026 from the user's choice of decision 209 F.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:** Under decision 209 F, each failed run keeps a
+  workspace, and its cloud computer starts before its first turn fails. A
+  cause such as a removed agent login stays until the owner acts.
+  Decision 204 A keeps run workspaces as normal workspaces.
+- **Problem:** Nothing stops a routine whose runs all fail for one cause
+  that only the owner can fix.
+- **Impact if no action:** An hourly routine with a lost login adds 24
+  workspaces and 24 starts a day, from the shared starts of all orgs,
+  until the owner notices.
+- **Root question:** How does a routine stop spending starts on runs that
+  fail for a cause that only the owner can fix?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** The routine turns off after three runs in a row fail. The
+    routine page says why, and the owner turns it on again. Effort:
+    Small.
+  - **C.** While a failed run waits for its retry, later triggers of the
+    same routine are skipped, with a link to the workspace of that run.
+    Effort: Medium.
+  - **D.** Keep the check before the create for a missing agent login and
+    expired GitHub access. Such a run creates no workspace and fails with
+    a link that fixes the cause. Only a failed start keeps its workspace.
+    It narrows decision 209 F. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** B. It covers each cause that repeats.
+- **Previous examples:** Claude's cloud routines turn off after 72 hours
+  without a GitHub connection.
+- **Related:** Decision 212. Under 212 B, runs keep no workspace until the
+  follow-up of decision 130 D lands, so this rule matters from then on.
+- **Recommendation:** B. It stops the waste after three runs, whatever the
+  cause, and the owner sees why.
+- **Action:** ask the user, because B and C add a rule that stops runs,
+  and D narrows the user's choice of decision 209 F.
 
 ## Design
+
 
 The design below is the agent's, of 9 November 2026, unless a decision
 number names the user's choice. The user can override any part of it.
@@ -762,9 +861,11 @@ number names the user's choice. The user can override any part of it.
   - `message_id` is the stable ID of the first message. A retry passes the
     same ID, so `createWorkspace` joins the first create, as its key of
     org, sender, and message ID already does.
-- A D1 trigger `AFTER DELETE ON org_members` turns off the routines of
-  that owner in that org with the reason `owner_left`, as
-  `202611071402_departed_member_invites.sql` does for invitations.
+- The leave batch of `worker/members/member-data.ts`, which moves the
+  workspaces of a member who leaves, also moves that member's routines in
+  that org to the same new owner (decision 208 E). Each moved routine
+  turns off with the reason `owner_left`, and it keeps the name of the
+  member who left for the routine page.
 - `workspace_creation_attempts` gets nullable `error_code` and
   `error_message` columns. The start failure writes them when it marks the
   attempt failed. Reason: the workspace object clears its result after a
@@ -944,8 +1045,14 @@ number names the user's choice. The user can override any part of it.
 
 - Every member sees every routine of the org and its runs (decision 202).
 - Every member who can create a workspace can create a routine. The
-  creator is its owner, and the owner never changes.
-- Only the owner changes a routine, turns it on, and uses Run now.
+  creator is its owner. The owner changes only when the owner leaves the
+  org: the routine then moves, turned off, to the admin who gets the
+  workspaces of that member (decision 208 E).
+- Only the owner changes a routine, turns it on, and uses Run now. Run now
+  does not show on a routine whose triggers are all pull request triggers
+  (decision 210 C).
+- Save stays off until the prompt has text, and the Worker refuses a
+  routine whose prompt is empty or holds only spaces (decision 211 B).
 - An admin can turn a routine off and delete it. The owner can also
   delete it.
 - The org gate already refuses each write in a suspended org.
@@ -1000,7 +1107,7 @@ answered the decisions of that report and changed none of the calls.
 - The first message of a run is the prompt and the trigger facts.
 - A failed run shows its cause, and the routine stays on.
 - A suspended owner or org gets no runs. When the owner leaves the org,
-  the routine turns off.
+  the routine turns off. Decision 208 E later moved it to an admin too.
 - A Routines link goes in the sidebar, as in Conductor. The mockups come
   before any code.
 - A new protocol doc, `docs/protocol/routines.md`, holds the requirements.
@@ -1023,7 +1130,8 @@ These calls of 9 November 2026 come from the code searches of this plan:
 - Only the owner uses Run now. Reason: a run spends the owner's logins.
 - Run now works while the routine is off. Reason: the owner can test a
   routine before its triggers start runs.
-- A routine can have no trigger. Run now still works.
+- A routine can have no trigger. Run now still works, because decision
+  210 C hides Run now only when every trigger is a pull request trigger.
 - An empty name saves as "Untitled routine", as in Conductor.
 - The owner's GitHub connection and agent login are checked before each
   create, so a run fails before it spends a start.
@@ -1163,8 +1271,10 @@ the code milestones can follow them.
       restates a fact that this milestone changes, such as how agents run
       on a member's logins.
 - [ ] Update `docs/protocol/orgs-and-members.md` and
-      `docs/protocol/operator-actions.md`: a member who leaves turns off
-      their routines, and a suspended user or org gets no runs.
+      `docs/protocol/operator-actions.md`: the routines of a member who
+      leaves move, turned off, with the workspaces (decision 208 E), and a
+      suspended user or org gets no runs.
+
 - [ ] Update `docs/architecture.md`: the terms, the minute Cron Trigger,
       a flow for routine runs, routines in "Where data lives", and the new
       protocol doc in the list.
@@ -1178,8 +1288,8 @@ Depends on: 2
 Store routines and serve their routes with the access rules. Nothing runs
 yet.
 
-- [ ] Add the migration with `routines`, `routine_runs`, and the
-      owner-left trigger, in the range `202611090000`–`202611090059`. Add
+- [ ] Add the migration with `routines` and `routine_runs`, in the range
+      `202611090000`–`202611090059`. Add
       the row to the range table of `migrations/README.md`. Add the new
       tables to the reset list of `worker/test-support/harness.ts`.
 - [ ] Add `src/shared/routines.ts` with the paths and the routine,
@@ -1199,8 +1309,13 @@ yet.
       workspace does. Apply the access rules of decision 202.
   - [ ] Test that a member reads, that only the owner changes a routine
         and turns it on, and that an admin turns it off and deletes it.
-  - [ ] Test that a leave turns off that owner's routines in that org
-        only.
+  - [ ] Test that a leave moves that owner's routines in that org, turned
+        off, to the member who gets the workspaces.
+  - [ ] Test that a save with an empty prompt, or a prompt of only
+        spaces, gets the refusal.
+- [ ] Add the routines of the member who leaves to the leave batch of
+      `worker/members/member-data.ts` (decision 208 E).
+
 - [ ] Add the routines area to the Worker README.
 
 ## Milestone 4: Runs and Run now

@@ -73,10 +73,15 @@ export function accessOf(state: RoutineState, routine: Routine): RoutineAccess {
   return routine.owner.key === viewerOf(state) ? 'owner' : state.viewer
 }
 
-/** Whether Save has changes to save, or a value that the form refuses. */
+/**
+ * Whether Save has changes to save, or a value that the form refuses: a
+ * prompt without text (decision 211 B), or a cron that runs more than once
+ * an hour.
+ */
 export type SaveState = 'unchanged' | 'changed' | 'refused'
 
 export function saveStateOf(state: RoutineState, routine: Routine): SaveState {
+  if (routine.prompt.trim() === '') return 'refused'
   if (!routine.saved) return 'changed'
   switch (state.triggers) {
     case 'saved':

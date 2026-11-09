@@ -6,7 +6,7 @@
  */
 
 import { defaultChoice, type AgentChoice } from './agents'
-import { people, type Person, type PersonKey } from './members'
+import { people, type Person } from './members'
 import type { RepositoryKey } from './repositories'
 import type { SectionKey } from './sections'
 
@@ -57,22 +57,6 @@ type PullRequestTrigger = {
 
 export type Trigger = ScheduleTrigger | PullRequestTrigger
 
-/** The person who created a routine: a member, or a member who left. */
-type RoutineOwner = Omit<Person, 'key'> & {
-  key: PersonKey | 'lena'
-  /** The person left the org, so the routine turned off. */
-  left?: true
-}
-
-/** A member of Acme who left it after creating a routine. */
-const lena: RoutineOwner = {
-  key: 'lena',
-  name: 'Lena Park',
-  login: 'lenapark',
-  initials: 'LP',
-  left: true,
-}
-
 export type Routine = {
   key: string
   /** The name. A new routine has none, and saves as "Untitled routine". */
@@ -80,7 +64,16 @@ export type Routine = {
   repository: RepositoryKey
   /** The section that the run workspaces join (decision 204). */
   section: SectionKey
-  owner: RoutineOwner
+  /**
+   * The member whose logins the runs use: the creator, or the admin who
+   * got the routine when its creator left the org (decision 208 E).
+   */
+  owner: Person
+  /**
+   * The name of the member who left the org, from whom the routine moved,
+   * turned off, to its owner (decision 208 E).
+   */
+  movedFrom?: string
   active: boolean
   /** The one time zone of every schedule of the routine. */
   timeZone: string
@@ -179,7 +172,8 @@ export const routines: Readonly<Record<RoutineKey, Routine>> = {
     name: 'Check the site copy',
     repository: 'marketing-site',
     section: 'general',
-    owner: lena,
+    owner: people.cal,
+    movedFrom: 'Lena Park',
     active: false,
     timeZone: london,
     triggers: [
