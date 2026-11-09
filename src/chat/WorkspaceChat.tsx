@@ -36,7 +36,7 @@ export interface ChatViewProps {
    * tab shows as the current one.
    */
   content?: ReactNode
-  /** The workspace record, its state, and the title that the agent writes. */
+  /** The workspace record, its state, and the title from its first message. */
   onWorkspaceChange?: (workspace: Workspace) => void
   /** The open tabs, as the chat saves them through the view route. */
   onViewChange?: (view: WorkspaceView) => void

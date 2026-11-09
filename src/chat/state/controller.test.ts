@@ -139,7 +139,7 @@ describe('ChatController', () => {
     const fresh = {
       id: 'third',
       workspaceId: ws,
-      title: 'New session',
+      title: null,
       choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
       createdAt: FAKE_TIME,
       closedAt: null,

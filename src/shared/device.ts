@@ -86,7 +86,7 @@ export interface DeviceCommandRecord {
   requestKey: string
   orgId: string
   workspaceId: string
-  workspaceName: string
+  workspaceName: string | null
   sessionId: string
   turnId: string
   sender: DeviceSender
@@ -128,7 +128,7 @@ export interface DeviceApprovalRequest extends DevicePairing {
 }
 export interface DeviceWorkspaceWindow {
   workspaceId: string
-  workspaceName: string
+  workspaceName: string | null
   expiresAt: number
 }
 /** The Worker relays this value. Only the Mac stores or applies these rules. */

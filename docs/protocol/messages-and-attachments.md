@@ -115,10 +115,33 @@ says.
 - Reason: a tab that missed newer events can still show an older Try again.
   A check in the chat alone was rejected, because such a tab could send an
   older message again. The agent would then answer out of order.
-- After the first answer of the agent in a new workspace, the app asks the
-  agent for a title of three to five words. The chat does not show that
-  request.
-- The workspace then takes the title as its name.
+- When the app accepts the first message of a new workspace, it asks a
+  small model of Workers AI for a title (decision 184). The request asks
+  for three to five words. Workers AI is the model service of Cloudflare,
+  on the account that hosts the app.
+- The model writes the title from the text of that message. The request
+  holds no other data of the workspace. It uses no agent login of a
+  member. The chat does not show it.
+- The reply to the message does not wait for the title. The workspace
+  then takes the title as its name, as
+  [Workspace and session names](chat-and-events.md#workspace-and-session-names) says.
+- When the request fails, the name of the workspace does not change. The
+  app then asks again when it accepts the next message with text in the
+  workspace. It asks only while the workspace has no name.
+- A later request also uses the text of the first message. Only when the
+  first message has no text does it use the text of the message that
+  starts it.
+- A first message with no text starts no request. The next message with
+  text in the workspace then starts it.
+- Reason: the name shows within seconds, while the sandbox starts, and the
+  operator chooses the model and its speed.
+- A request in the sandbox on the agent login of the member was rejected.
+  The name then waits for the sandbox, and each title spends the
+  subscription of the member.
+- A Claude model with an API key of the operator was rejected, because it
+  sends each first message to another company. A name from the first
+  words of the message, with no model, was rejected, because such names
+  are weaker.
 
 ## Attachments
 
