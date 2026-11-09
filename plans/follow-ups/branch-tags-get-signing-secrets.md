@@ -13,7 +13,9 @@
 - **Background:**
   - The Desktop workflow runs the `release` job for each tag that starts with `v`, and for manual runs.
   - The job uses the `desktop-release` environment. Its deployment rules admit `main` and every `v*` tag, on any commit.
-  - The user approved these rules on 8 November 2026. GitHub refused required reviewers on the current plan, so branch and tag rules replaced them.
+  - The user approved these rules on 8 November 2026. GitHub refused required reviewers while the repository was private, so branch and tag rules replaced them.
+  - The user made the repository public on 9 November 2026. GitHub's Team plan allows required reviewers on the environments of a public repository.
+  - Approving a waiting run needs the GitHub permission "Deployments: write". The Conductor app has only read access to deployments, so agents cannot approve a run.
   - A tag run uses the workflow file and the scripts of the tagged commit. The step "Sign and notarize both Mac architectures" gives the secrets to `npm --prefix desktop run package:release`.
   - The tag `v0.1.0-alpha.1` points to a commit of a branch that had not merged. Its run, Actions run 42519666993, signed and notarized the app.
   - Agents push branches and tags with the user's account. The Conductor app has write access to contents, workflows, and Actions on all Firna-AI repositories. `main` has no branch protection.
@@ -25,9 +27,10 @@
   - **B.** Admit only `main` in `desktop-release`. Signing then runs only from `main`, on pushes and manual runs. Tag runs stop signing, and a signing test of a branch needs a merge first. Effort: Small.
   - **C.** Sign in a second workflow that GitHub always runs from `main`, through the `workflow_run` trigger. It signs a tag only when the commit of the tag is on `main`. Effort: Medium.
   - **D.** A GitHub tag rule lets only the user create `v*` tags. Agents push with the user's account, so the rule may not stop them. Effort: Small.
-- **Left out:** Required reviewers on `desktop-release`: the Team plan refuses them in private repositories, so the approach fails the goal.
-- **Wider fix:** B. GitHub's environment rule keeps the secrets from every run outside `main`, whatever the branch changes.
+  - **E.** Require the user's approval for each run that uses `desktop-release`, and turn off the administrator bypass of that environment. GitHub then pauses each run that signs, shows its branch or tag, and waits for the user. Agents cannot approve. Tags keep working. Cost: one click for each signing run. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** E. GitHub's settings keep the secrets from every run that the user did not approve, whatever the branch changes.
 - **Previous examples:** The tag `v0.1.0-alpha.1` and Actions run 42519666993.
-- **Related:** The Mac app update change decides which runs may publish a release to the update feed. When it publishes only from `main`, B makes signing follow the same rule.
-- **Recommendation:** B. It closes the path in GitHub's settings. It costs nothing more when releases already publish only from `main`.
-- **Action:** ask the user, because B changes the tag rule that the user approved on 8 November 2026.
+- **Related:** The Mac app update change decides which runs may publish a release to the update feed. If it chooses the same approval as E, that change fixes this item. If it publishes only from `main`, B makes signing follow the same rule.
+- **Recommendation:** E. One setting keeps the secrets from every run that the user did not approve, and tags keep working. The first recommendation was B, before the repository became public.
+- **Action:** ask the user, because E and B change the environment rules that the user approved on 8 November 2026.
