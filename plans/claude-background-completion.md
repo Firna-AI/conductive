@@ -53,9 +53,9 @@ Evidence: `.context/session-completion-fix/implementation-report.md` and `repeat
 Depends on: 1 and 2
 
 - [x] Run the early checks and complete repository gate.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete diff against `origin/main` with the implementation-review skill after the push.
-- [ ] Apply confirmed findings and complete the required review rounds.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete diff against `origin/main` with the implementation-review skill after the push.
+- [x] Apply confirmed findings and complete the required review rounds. The review found no issues.
 - [ ] Delete this plan after the preceding work completes.
 - [ ] Open a pull request with the dated design call and a permalink to this plan.
 
