@@ -15,6 +15,9 @@ Contract owners:
 
 Design call, 9 November 2026: distinguish Claude SDK background-task results at the provider adapter.
 The SDK already identifies the origin of a result.
+Ignore a background result unless its explicit message UUIDs identify outstanding sent user input.
+An acknowledged background result can legitimately answer user input that the SDK folded into that task.
+Previously consumed UUIDs do not acknowledge pending input.
 This preserves the existing requirement that an answer belongs to the user messages it answers.
 The internal provider result and the browser event formats stay compatible.
 The fix must keep normal user results, genuine provider errors, Stop, and queued messages working.
@@ -29,24 +32,27 @@ The regression reproduces its observed event order with the documented backgroun
 
 Depends on: none
 
-- [ ] Confirm the existing chat requirements cover message ownership and synthetic SDK messages.
-- [ ] Update the runner README with the adapter's handling of background-task results.
+- [x] Confirm the existing chat requirements cover message ownership and synthetic SDK messages. The fix needs no protocol change.
 
 ## Milestone 2: Completion handling
 
 Depends on: 1
 
-- [ ] Add a regression through the runner and the fake Claude SDK for a resumed session with a background result before the user's answer.
-- [ ] Observe its assertion fail before the fix.
-- [ ] Handle background-task results without ending or acknowledging the active user message.
-- [ ] Keep normal completion, failures, and queued input working.
-- [ ] Run the focused checks and repeat the new asynchronous regression ten times.
+- [x] Add a regression through the runner and the fake Claude SDK for a resumed session with a background result before the user's answer.
+- [x] Observe its assertion fail before the fix.
+- [x] Ignore unassociated background-task results before changing message associations or answer state.
+- [x] Preserve background results that explicitly acknowledge outstanding user input.
+- [x] Keep normal completion, failures, and queued input working.
+- [x] Update the runner README with the adapter's handling of background-task results.
+- [x] Run the focused checks and repeat the new asynchronous regression ten times.
+
+Evidence: `.context/session-completion-fix/implementation-report.md` and `repeat-summary.json`.
 
 ## Milestone 3: Verification and review
 
 Depends on: 1 and 2
 
-- [ ] Run the early checks and complete repository gate.
+- [x] Run the early checks and complete repository gate.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete diff against `origin/main` with the implementation-review skill after the push.
 - [ ] Apply confirmed findings and complete the required review rounds.
