@@ -75,6 +75,13 @@ it('cancels an in-flight allocation and cleans its delayed computer after actor 
     )
       .bind(id)
       .first('count'),
+  ).toBe(1)
+  expect(
+    await fixture.runtime.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM workspace_tokens WHERE workspace_id = ? AND revoked_at IS NULL',
+    )
+      .bind(id)
+      .first('count'),
   ).toBe(0)
 })
 

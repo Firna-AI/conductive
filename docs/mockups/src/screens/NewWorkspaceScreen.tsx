@@ -14,11 +14,10 @@ import {
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { lastBuild } from '../fixtures/computer'
-import { savedCartsMessage } from '../fixtures/conversations'
 import { you } from '../fixtures/members'
+import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { repositories } from '../fixtures/repositories'
-import { startErrors } from '../fixtures/starting'
 import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import styles from './NewWorkspaceScreen.module.css'
@@ -29,10 +28,10 @@ export const newWorkspaceSchema = {
   required: ['result', 'org'],
   properties: {
     /**
-     * The empty form, or a create whose first start failed: a failure, or
-     * the 20-minute limit of a start.
+     * The empty form, or a create request that failed, whose message stays
+     * for Try again. A failed first start keeps its workspace instead.
      */
-    result: { enum: ['form', 'error', 'time-limit'] },
+    result: { enum: ['form', 'error'] },
     /**
      * The org: in use, or suspended by the operator. A suspended org
      * refuses every create, so the page shows the refused bar of a
@@ -50,16 +49,11 @@ export const newWorkspaceForm: NewWorkspaceState = {
   org: 'active',
 }
 
-type CreateFailure = Exclude<NewWorkspaceState['result'], 'form'>
-
 /**
- * The body of a create whose first start failed. A start that passed its
- * limit shows the message that the app saved for it.
+ * The body of a create request that failed, such as when the app could
+ * not reach the server.
  */
-const failureBodies: Readonly<Record<CreateFailure, string>> = {
-  error: "Its sandbox didn't start. Your message is kept.",
-  'time-limit': `${startErrors['time-limit']} Your message is kept.`,
-}
+const requestFailed = "The app can't reach the server. Your message is kept."
 
 const repository = repositories[savedCarts.repository]
 
@@ -92,19 +86,19 @@ function Start() {
 
 /**
  * The empty chat and its composer. The first message creates the workspace.
- * In a suspended org the refused bar takes the place of the composer, and
- * the chat invites no first message, because the org refuses the create.
+ * When the create request fails, the message stays in the composer, and
+ * Try again sends it again. In a suspended org the refused bar takes the
+ * place of the composer, and the chat invites no first message, because the
+ * org refuses the create.
  */
 function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const suspended = props.state.org === 'suspended'
-  const { result } = props.state
   // A suspended org refuses each create, so no create of it failed.
-  const failure = suspended || result === 'form' ? null : result
-  const failed = failure !== null
-  const notice = failure ? (
+  const failed = !suspended && props.state.result === 'error'
+  const notice = failed ? (
     <Notice
       action={<ActionButton tone="primary">Try again</ActionButton>}
-      body={failureBodies[failure]}
+      body={requestFailed}
       icon={CircleAlert}
       title="The workspace wasn't created"
       tone="danger"

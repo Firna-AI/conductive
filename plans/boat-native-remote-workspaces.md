@@ -6329,15 +6329,72 @@ Tags: ui
 
 Depends on: 15i, 15o. Both change the failed-start path.
 
+Status: Complete on `conductor/boat-native-remote-workspaces-milestone-8o`.
+
 Apply decision 130 D, which the user chose as a later follow-up on 8
 November 2026. Added on 8 November 2026.
 
-- [ ] Draw the kept workspace in the mockups: its start error, its chat,
+Scope approvals, 8 November 2026: the user chose A for scope items 1 and 2.
+The scope includes only the replay imports, draft methods, and replay
+fallback in `worker/workspace-lifecycle.ts`, with their tests. It also
+includes only the stale first-start paragraph in `docs/mockups/design.md`,
+the `app/new-workspace` row in `docs/mockups/catalogue.md`, and the
+failed-create draft sentence in `worker/members/README.md`.
+
+Implementation calls of the orchestrator, 8 November 2026:
+
+- Put the failed first-start notice above the enabled composer. Show its
+  saved cause and "Your chat is saved." A failed first start has no saved
+  files. Other sandbox notices keep their existing layout.
+- Keep the `error` and `time-limit` mockup paths. Add `not-created` for a
+  failed create request and `retrying` for the restart. A flow links the
+  states, so every new state stays reachable.
+- Keep accepted messages in the existing chat queue and event history.
+  Repeated create requests return the kept workspace. This preserves
+  message order and deduplication without a second replay queue.
+- Store first-message admission in the chat transaction. This keeps
+  accepted chat when the first lifecycle checkpoint fails.
+- Use the existing Resume route for Try again. Preserve the workspace,
+  branch, repository, message, session, turn, and creation date. Use the
+  newest good image and current start settings, so configuration repair
+  can take effect.
+- Keep the original preparation sender. Read the current workspace owner
+  and retain the retry requester separately. This preserves the access,
+  login, and reassignment rules.
+- Revoke the failed token at failure. Give the replacement a fresh token,
+  allocation identity, command journal, and 20-minute budget. Finish old
+  cleanup before replacement allocation, because each workspace has one
+  cleanup owner.
+- Keep pending cleanup and publication alarms. Stop the normal alarm of
+  an idle failed first start after that work ends. This preserves cleanup
+  without polling a workspace that has no computer.
+- Mark every active create failure with a failed step, including failures
+  before the first step and after the last step. The UI uses those
+  existing fields. Publish the failed step before the error state, so the
+  composer stays mounted. Later errors keep their completed create steps
+  and their existing layout.
+- Wait for Try again when a failed first start opens or returns. The app
+  previously resumed every error workspace at open. The exception keeps
+  the saved cause visible and preserves the other open rules.
+- Share the composer rule through the mockup view type and the Resume
+  action through the feature context. This keeps the shell, standalone
+  chat, Files, and tools consistent without a new browser API field.
+- Keep only the lifetime of create requests in the client. Remove the
+  admitted-draft tracking, returned forms, and first-start success memory.
+  This keeps sign-out protection without a second owner of accepted work.
+- Move the new-workspace transcripts into their own fixture file. This
+  keeps the existing conversation fixture below the file-length limit.
+
+- [x] Draw the kept workspace in the mockups: its start error, its chat,
       its queued messages, and Try again. Then build it, and compare it
       with its mockup.
-- [ ] Apply option D of `plans/follow-ups/failed-first-start-keeps-workspace.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8o`.
+- [x] Apply option D of `plans/follow-ups/failed-first-start-keeps-workspace.md`,
       with the changes to `docs/protocol/chat-and-events.md` and
       `docs/protocol/workspaces-and-sandboxes.md`. Delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8o`.
+
+Evidence: `.context/boat-native-remote-workspaces/8o/verification.md`.
 
 ## Milestone 8p: Chat attachments
 

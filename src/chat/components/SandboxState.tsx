@@ -65,6 +65,12 @@ interface Problem {
 
 const saved = 'Your files and chat are saved.'
 
+/**
+ * A failed first start leaves a new workspace with no files yet, so its bar
+ * promises only the chat, with its queued messages.
+ */
+const chatSaved = 'Your chat is saved.'
+
 function problemOf(
   problem: SandboxProblem,
   archivedAt: number | null,
@@ -100,17 +106,26 @@ function problemOf(
 }
 
 /**
- * The bar that takes the place of the composer while the sandbox does not
- * run: Resume when it stopped, Try again when it did not start, and the
- * read-only chat of an archived workspace.
+ * The bar under the chat while the sandbox does not run: Resume when it
+ * stopped, Try again when it did not start, and the read-only chat of an
+ * archived workspace. A failed start shows the message that the workspace
+ * saved for it first. The bar takes the place of the composer, except after
+ * a failed first start, whose composer stays under it.
  */
 export function SandboxBar(props: {
   problem: SandboxProblem
   archivedAt: number | null
+  /** The message that the workspace saved for a failed start, or null. */
+  message: string | null
+  /** The failed first start of a new workspace, which has no files yet. */
+  firstStart: boolean
   busy: boolean
   onResume: () => void
 }) {
   const problem = problemOf(props.problem, props.archivedAt)
+  const failed = props.problem === 'error'
+  const kept = failed && props.firstStart ? chatSaved : problem.body
+  const body = failed && props.message ? `${props.message} ${kept}` : kept
   return (
     <Notice
       action={
@@ -124,7 +139,7 @@ export function SandboxBar(props: {
           </ActionButton>
         ) : undefined
       }
-      body={problem.body}
+      body={body}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}

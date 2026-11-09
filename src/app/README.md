@@ -199,8 +199,9 @@ clicks, types, and lets the answers of the fake API settle.
 - `workspace-read-marks.ts`: `WorkspaceReadMarks`, the read marks of one
   kept workspace model, with its shown and confirmed numbers.
 - `new-workspace-model.ts`: the first message that creates a workspace.
-  `creations.ts`: `Creations`, the admitted creates of an org in this tab,
-  and `failedCreate`, which tells a create whose start failed.
+  `creations.ts`: `Creations`, the life of the create requests of an org in
+  this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
+  which tells a failed first start, and `resumesAtOpen`.
 - `computer-model.ts`: the scripts, the env vars with their Secret marks,
   the builds, and the log. `classifyEnvVar` changes only the mark of a
   variable, and sends no value. `replaceEnvVar` changes only the value,
