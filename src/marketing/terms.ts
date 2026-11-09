@@ -5,7 +5,8 @@ import {
 } from '../../docs/mockups/src/brand'
 import {
   abuseAddress,
-  draft,
+  legalAddress,
+  legalOperator,
   legalTitles,
   list,
   mailLink,
@@ -15,29 +16,30 @@ import {
 } from './legal-text'
 
 /**
- * The terms of use, as a draft for a lawyer, as decision 35 asks. The facts
- * come from the architecture and the protocol docs. The rules of acceptable
- * use pass on the rules of the providers of the service, as decision 28
- * asks, and name no provider. Each fact that the operator or the lawyer
- * must supply is a draft field.
+ * The terms of use. The facts come from the architecture and the protocol
+ * docs. The rules of acceptable use pass on the rules of the providers of
+ * the service and name no provider. Both legal pages share the operator
+ * details and contact address.
  */
 export const termsDocument: LegalDocument = {
   title: legalTitles.terms,
-  description: `The terms of use of ${productName}, as a draft for lawyer review.`,
+  description: `The terms of use of ${productName}.`,
   lead: text`These terms cover your use of ${productName} at ${productDomain}
   and ${appDomain}. You accept their current version each time that you
   continue with GitHub to sign in. ${productName} keeps the latest version
   that you accepted, and the time when you first accepted it. Effective
-  date: ${draft('To confirm: the date when these terms start')}.`,
+  date: 9 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
       blocks: [
-        paragraph`${productName} is run by
-          ${draft('To confirm: the legal name of the operator')},
-          ${draft('To confirm: the registered address')}.`,
-        paragraph`Contact:
-          ${draft('To confirm: the contact address for these terms')}.`,
+        paragraph`${productName} is run by ${legalOperator.name}, a company
+          registered in ${legalOperator.registration}. Company number:
+          ${legalOperator.companyNumber}.`,
+        paragraph`Registered office: ${legalOperator.registeredOffice}.
+          VAT number: ${legalOperator.vatNumber}.`,
+        paragraph`For questions about these terms, contact
+          ${mailLink(legalAddress)}.`,
       ],
     },
     {
@@ -63,8 +65,9 @@ export const termsDocument: LegalDocument = {
           text`The agents run on the Claude or OpenAI login that you connect.
             The model use of each message bills to the account of the member
             who started its session, under the terms of Anthropic or OpenAI.`,
-          text`Keep your keys and logins safe.
-            ${draft('To write: your duties for the use of your keys and logins')}`,
+          text`Keep your keys and logins safe. Connect only accounts that you
+            have permission to use. If a key or login is exposed, revoke it
+            with its provider and remove or replace it in ${productName}.`,
         ),
       ],
     },
@@ -87,8 +90,8 @@ export const termsDocument: LegalDocument = {
             members use it in the sessions that you start. For a Claude
             subscription, the setting starts off. For an API key, it starts
             on. When you replace a login with one of the same kind, the
-            setting stays. You can change it on your account page.
-            ${draft("Do Anthropic's terms let other members use a member's Claude subscription?")}`,
+            setting stays. You can change it on your account page. Share a
+            login only when its provider's terms allow that use.`,
           text`While a turn runs, its agent login and its GitHub token are in
             the cloud computer of the workspace. A member with a terminal in
             that cloud computer can read them. A program that a tool of the
@@ -132,7 +135,6 @@ export const termsDocument: LegalDocument = {
         paragraph`You are responsible for what your cloud computers make
           public, such as a port preview. Public content must be lawful, and
           it must not be abusive.`,
-        paragraph`${draft('To confirm: that these rules give the providers of the service at least the protection of their own rules')}`,
       ],
     },
     {
@@ -155,8 +157,11 @@ export const termsDocument: LegalDocument = {
         paragraph`A stopped cloud computer gets no restart to keep its disk
           while its workspace owner or org is suspended. So its disk can be
           deleted, with any work that is not pushed to GitHub.`,
-        paragraph`To ask about a suspension, write to ${mailLink(abuseAddress)}.`,
-        paragraph`${draft('To write: how the operator tells you about a suspension, how you ask for a review, and what happens to your data')}`,
+        paragraph`To ask about a suspension, write to ${mailLink(legalAddress)}.`,
+        paragraph`When you ask for a review, include your GitHub username,
+          the org name, and why you think the suspension should be lifted.
+          A request for review does not preserve a stopped cloud computer's
+          disk. The org deletion rules below still apply.`,
       ],
     },
     {
@@ -166,8 +171,8 @@ export const termsDocument: LegalDocument = {
           or harmful content in a preview, write to
           ${mailLink(abuseAddress)}. Include the address of the preview or a
           description of what you saw.`,
-        paragraph`The operator also answers notices about security,
-          copyright, and law enforcement at the same address.`,
+        paragraph`Send security reports to the same address. For copyright
+          or law enforcement notices, write to ${mailLink(legalAddress)}.`,
       ],
     },
     {
@@ -177,7 +182,13 @@ export const termsDocument: LegalDocument = {
           cloud computers that ${productName} runs for your org.
           ${productName} keeps the chat history of each workspace, so that
           you can read it while the cloud computer is stopped.`,
-        paragraph`${draft('To write: the rights in your content, and the permission that the operator needs to run the service')}`,
+        paragraph`You keep any rights that you have in your repositories,
+          files, messages, and other content. You give the operator
+          permission to store, copy, process, and transmit that content as
+          needed to provide the service, including through its providers.
+          You must have permission to submit that content.`,
+        paragraph`The terms and licences of third-party code and services
+          still apply. Check agent output before you use or publish it.`,
       ],
     },
     {
@@ -186,13 +197,23 @@ export const termsDocument: LegalDocument = {
         paragraph`An admin can delete an org. ${productName} then stops the
           cloud computers of the org at once. It deletes the org after 7
           days, unless an admin restores it.`,
-        paragraph`${draft('To write: how you close your account, and what the operator deletes then')}`,
+        paragraph`You can stop using ${productName} at any time. You can
+          remove connected agent logins on your account page. To request
+          account deletion, write to ${mailLink(legalAddress)}. Stopping
+          use or removing a login does not delete an org or its chat
+          history. The Privacy notice explains data retention.`,
       ],
     },
     {
       title: 'Availability and liability',
       blocks: [
-        paragraph`${draft('To write: the availability of the service, its warranties, and the limits of liability')}`,
+        paragraph`The service is provided as available. Cloud computers,
+          connections, and agent sessions can stop or fail. Keep your own
+          backups and push important work to your repository.`,
+        paragraph`Agent output can be wrong or incomplete. Review and test
+          it before you rely on it. Nothing in these terms excludes a
+          warranty, right, or liability that applicable law does not allow
+          the operator to exclude.`,
       ],
     },
     {
@@ -207,7 +228,11 @@ export const termsDocument: LegalDocument = {
     {
       title: 'Law and disputes',
       blocks: [
-        paragraph`${draft('To confirm: the law that governs these terms, and the courts for disputes')}`,
+        paragraph`The laws of England and Wales govern these terms.
+          The courts of England and Wales can hear disputes about them.`,
+        paragraph`If you are a consumer, this does not remove any
+          mandatory protection under the law where you live. It does not
+          limit any right to bring a claim in your local courts.`,
       ],
     },
   ],
