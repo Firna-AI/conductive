@@ -1,7 +1,11 @@
+import type { ReactNode } from 'react'
 import styles from './DetailList.module.css'
 
-/** One fact: its term, its value, and whether the value is code. */
-export type Detail = { term: string; value: string; mono?: boolean }
+/**
+ * One fact: its term, its value, and whether the value is code. A value
+ * can hold a link, such as the owner of a referral code.
+ */
+export type Detail = { term: string; value: ReactNode; mono?: boolean }
 
 /**
  * Facts as rows of a term and its value, in a box with a full outline,

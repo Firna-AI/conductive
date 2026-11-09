@@ -16,7 +16,7 @@ how a screen is built, and links to the other pages.
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
-| `app/operator`      | The operator's Overview, Orgs, and Users tabs, the page of an org and of a user with Suspend and Lift, and where an operator opens the section |
+| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
@@ -36,7 +36,8 @@ A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/shell`, `app/orgs`, `app/orgs/suspended`,
 `app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
-`app/operator`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, and
+`app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -76,8 +77,10 @@ shows stopped. Its child pages:
 
 `app/operator` shows the Overview tab of the operator, the person who runs
 the app for everyone, from decision 142. It holds live counts across every
-org, as decision 144 chose for now. The Orgs and Users tabs come from
-decision 147, and they find a suspended org or user. Its child pages:
+org, as decision 144 chose for now. A line under the users counts the
+people on the waitlist, from decision 160. The Orgs and Users tabs come from
+decision 147, and they find a suspended org or user. The Waitlist and
+Invite codes tabs come from decision 160. Its child pages:
 
 - `app/operator/menu` has Operator in the rail, above the account, and in
   the org switcher of a phone, under Account. Only an operator sees it.
@@ -87,14 +90,53 @@ decision 147, and they find a suspended org or user. Its child pages:
   members, and Suspend org. Its variants have the question before the
   suspension, the suspended org with Lift, the question before the lift,
   from decision 145, and a deleted org.
-- `app/operator/users` has the Users tab: the newest users, a search, and
-  a search with no match.
-- `app/operator/user` has the page of a user, with the name, and Suspend
-  user. Its variants have the question before the suspension, the warning
-  before the operator suspends their own account, the suspended user, and
-  the question before the lift.
+- `app/operator/users` has the Users tab: the newest users, with Waiting
+  under a person on the waitlist, a search, and a search with no match.
+- `app/operator/user` has the page of a user, with the name, how and when
+  they got app access, their referral code with who used it, and Suspend
+  user. Its child pages are below.
+- `app/operator/waitlist` has the Waitlist tab: the people who wait, oldest
+  first, a search, the question before Approve, the list after two
+  approvals, one with its email not sent yet, and an empty waitlist.
+- `app/operator/codes` has the Invite codes tab: Sign-ups with Pause
+  sign-ups, the search, and the invite codes with their uses and states.
+  Its child pages are below.
 - `app/operator/error` has the numbers that could not load, with Try
   again. Its `loading` variant has the page while it reads the numbers.
+
+The child pages of `app/operator/user` follow. The first two were variants
+of `app/operator/user` and kept their paths:
+
+- `app/operator/user/suspend` has the question before a suspension, with
+  the offer to disable the referral code of the user. Its `self` variant
+  has the warning before the operator suspends their own account. The
+  variant moved from `app/operator/user/self` and declares `movedFrom`.
+- `app/operator/user/suspended` has the suspended user, whose referral
+  code the suspension disabled. Its `lift` variant has the question before
+  the lift. The variant moved from `app/operator/user/lift` and declares
+  `movedFrom`.
+- `app/operator/user/waiting` has a person on the waitlist, with Approve
+  beside Suspend user. Its variants have the question before Approve, the
+  page after the approval with its email not sent yet, and with its email
+  sent.
+- `app/operator/user/access` has a user who came in with an invite code.
+  Its variants have a user who came in with a referral code, with an org
+  invitation, and as an operator.
+- `app/operator/user/referral` has the question before the disable of a
+  referral code. Its `disabled` variant has the disabled code.
+
+The child pages of `app/operator/codes`:
+
+- `app/operator/codes/new` has New code with its label and use limit. Its
+  `made` variant has the new code at the top of the list.
+- `app/operator/codes/disable` has the question before the disable of an
+  invite code. Its `disabled` variant has the disabled code in the list.
+- `app/operator/codes/search` has a search that finds an invite code by
+  its text. Its variants have a search that finds the referral code of a
+  user, and a search with no match.
+- `app/operator/codes/pause` has the question before Pause sign-ups. Its
+  variants have the Invite codes tab while sign-ups are paused, with
+  Resume sign-ups, and the same notice on the Waitlist and the Overview.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the

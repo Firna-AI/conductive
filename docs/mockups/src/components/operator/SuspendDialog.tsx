@@ -1,6 +1,7 @@
 import type { Viewport } from '@mokly/mokly'
 import { Ban, TriangleAlert } from 'lucide-react'
 import { ActionButton } from '../common/actions'
+import { CheckOption } from '../common/CheckOption'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
@@ -17,12 +18,16 @@ function stops(target: Target): string {
 /**
  * The operator confirms a suspension. The dialog says what stops, what
  * the members keep, and that the files of a stopped workspace can be
- * deleted. For the operator's own account it warns first.
+ * deleted. For the operator's own account it warns first. For a user with
+ * a referral code that still works, it offers to disable that code too,
+ * on by default.
  */
 export function SuspendDialog(props: {
   target: Target
   /** The operator suspends their own account. */
   self?: boolean
+  /** The referral code of the user, when it still lets people in. */
+  referral?: string
   viewport: Viewport
   /** The page that Cancel returns to, and the page after the suspension. */
   cancel: string
@@ -58,6 +63,13 @@ export function SuspendDialog(props: {
         A stopped workspace gets no restart near day 14, so its files can be
         deleted. Lift gives the access back.
       </DialogText>
+      {props.referral ? (
+        <CheckOption
+          checked
+          hint={`${props.referral} then lets nobody in, also after a lift. Disable is final.`}
+          label="Also disable their referral code"
+        />
+      ) : null}
     </ConfirmDialog>
   )
 }

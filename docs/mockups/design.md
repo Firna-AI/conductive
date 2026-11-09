@@ -132,18 +132,37 @@ chat, and five tabs at the bottom.
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
   frame of a picture on the marketing site.
-- The operator section has the tabs Overview, Orgs, and Users, from
-  `OperatorPage` in `src/components/operator/`. The overview uses the stat
-  tiles, the line chart, the table, and the skeletons of `@firna/ui`. A
-  view runs no script, so the chart keeps the width that the page column
-  gives it. The workspaces by state reuse `StatusGlyph`.
+- The operator section has the tabs Overview, Orgs, Users, Waitlist, and
+  Invite codes, from `OperatorPage` in `src/components/operator/`. On a
+  phone the five tabs take three columns, as the org settings do, so that
+  every tab shows also on a phone narrower than 390 px. The overview uses
+  the stat tiles, the line chart, the table, and the skeletons of
+  `@firna/ui`. A view runs no script, so the chart keeps the width that the
+  page column gives it. The workspaces by state reuse `StatusGlyph`. A line
+  under the users tile counts the people on the waitlist and opens the
+  Waitlist tab.
 - A table of the operator keeps fewer columns on a phone, so that each
   name keeps one line. The line under a name gives the state of a
-  suspended or deleted target. A person shows on a disc and an org on a
+  suspended or deleted target, or Waiting for a person on the waitlist. A
+  phone can add a second line for a column that it leaves out, such as the
+  age of a GitHub account. A person shows on a disc and an org on a
   square, with `PersonAvatar` and `InitialsTile` from
   `src/components/orgs/`.
+- The Waitlist tab shows no picture. Each login opens the GitHub profile in
+  a new tab, with a small mark for it. After Approve, the row keeps its
+  place with Approved and the state of its email, in plain words.
+- A code shows in the monospace font, with Copy beside it. Disable on a row
+  is a quiet icon, as in the member list of an org. A code that no longer
+  works keeps the place of Disable empty.
 - Suspend and Lift sit in the header of the page of an org or a user, and
-  in its footer on a phone. Each asks first, with `ConfirmDialog`.
+  in its footer on a phone. A person who waits also has Approve there. Each
+  asks first, with `ConfirmDialog`. The Suspend question of a user offers
+  to disable their referral code with `CheckOption` from
+  `src/components/common/`, the checkbox of the browser in the accent
+  colour, because `@firna/ui` has no checkbox.
+- While sign-ups are paused, `PauseNotice` tops each tab of the section,
+  with Resume sign-ups. On the Invite codes tab it takes the place of the
+  Sign-ups box, which holds Pause sign-ups while sign-ups are open.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its rename and close buttons.
