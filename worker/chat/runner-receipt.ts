@@ -4,6 +4,7 @@ import { HttpError } from '../http'
 import { InvalidRunnerReport, RunnerFileReports } from '../files/runner-reports'
 import {
   parseRunnerEnvelope,
+  parseRunnerOutputEnvelope,
   type IncomingRunnerEnvelope,
 } from './runner-input'
 import { refuseRunnerEvent } from './runner-refusal'
@@ -49,10 +50,11 @@ export async function storeRunnerReceipt(
       return { ready: false, stored: [transaction.emitted[0]] }
     }
   }
-  for (const output of filtered.events) {
+  for (const candidate of filtered.events) {
     const first = transaction.emitted.length
+    let output: RunnerEventEnvelope
     try {
-      parseRunnerEnvelope({ ...message, event: output.event, raw: output })
+      output = parseRunnerOutputEnvelope(candidate)
     } catch (error) {
       await refuseInvalid(transaction, message, error, randomId)
       stored.push(...transaction.emitted.slice(first))

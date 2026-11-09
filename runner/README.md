@@ -57,11 +57,14 @@ These facts belong to this implementation, not to the protocol docs.
   idle `model` command only saves the choice, and the next turn applies it.
 - The shared output filter replaces the workspace token and known logins
   in displayed text with `[redacted]`. It holds possible secret prefixes
-  across answer events. It keeps real file paths and base branches for
-  operations, and masks their separate display labels. The workspace
-  object filters marked org env values before it stores or sends events.
-  The runner receives no private list of org env values. Its local state
-  can therefore hold those values, as agent sessions can.
+  across answer events. After a completion or a turn end, it keeps the
+  shown end of each answer that can still start a secret. Later text of
+  that answer then masks the part that completes a secret.
+- The filter keeps real file paths and base branches for operations, and
+  masks their separate display labels. The workspace object filters marked
+  org env values before it stores or sends events. The runner receives no
+  private list of org env values. Its local state can therefore hold those
+  values, as agent sessions can.
 - Claude text joins across SDK frames and text blocks until `message_stop`,
   or else the next `message_start`, a tool result, or the result. So a split
   login stays in one filtered message, and partial text still streams live.

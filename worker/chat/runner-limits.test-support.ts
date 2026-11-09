@@ -37,7 +37,9 @@ export function numberedRunnerInput(value: unknown) {
   return input
 }
 
-export async function createRunnerLimitsFixture() {
+export async function createRunnerLimitsFixture(
+  overrides: Partial<ChatDependencies> = {},
+) {
   const storage = new MemoryChatStorage()
   const sent: WorkspaceToRunner[] = []
   const published: WorkspaceEventEnvelope[] = []
@@ -80,6 +82,7 @@ export async function createRunnerLimitsFixture() {
     runnerReady: async () => undefined,
     runnerHello: async () => undefined,
     matchesObject: () => true,
+    ...overrides,
   }
   const publish = (events: readonly WorkspaceEventEnvelope[]) => {
     published.push(...structuredClone(events))

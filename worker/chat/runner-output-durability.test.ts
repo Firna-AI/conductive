@@ -18,7 +18,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('commits encrypted held text with the raw cursor and releases it once after restart, replay, and a gap', async () => {
+it('commits encrypted held text with the raw cursor and releases it once after live retry, restart, replay, and a gap', async () => {
   const hooks: WorkspaceEventEnvelope[] = []
   const f = await outputFixture(
     harness,
@@ -51,7 +51,6 @@ it('commits encrypted held text with the raw cursor and releases it once after r
     ),
   ).toBe(2)
   f.storage.beforeCommit = null
-  f.restart()
   await f.connect(f.runner)
   expect(f.runner.pendingEvents()).toEqual([])
   const before = await f.chat.store.read(WORKSPACE_ID, (view) =>

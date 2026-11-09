@@ -52,8 +52,19 @@ The backend sets the read limit. The sample limit in the fixtures is not product
 Read and diff results do not enter the stored chat event stream.
 
 `output-sanitizer.ts` holds possible secret suffixes across answer events.
-Its snapshot contains held text and the secret prefixes that still apply.
-The Worker encrypts that state before it confirms the corresponding raw event.
+A completion or a turn end releases the held text of its answer.
+The filter then keeps an answer context: the shown answer end that can still start a secret.
+After a completion, it keeps the context of the earlier text and of the completion text.
+A refused completion leaves the earlier text on the screen.
+Later text of the same answer masks the part that completes a secret from a context.
+
+The filter does not cap the number of answer contexts.
+Its snapshot holds the held text, the answer contexts, and the secret values that still apply to them.
+A snapshot without answer contexts also stays valid.
+The Worker keeps the held text in the encrypted state of its runner stream.
+It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
+It saves both before it confirms the corresponding raw event.
+
 `event-limits.ts` applies the same excerpt caps after either filter.
 Its UTF-8 byte count works in the Worker and Node.
 

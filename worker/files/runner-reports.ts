@@ -6,10 +6,11 @@ import type {
 import {
   emptySequence,
   loadReportState,
-  partKey,
+  reportPartUpdates,
   REPORT_KEY,
-  reportKeys,
+  storedPart,
   storedParts,
+  storedReportKeys,
   type ReportKind,
   type ReportState,
 } from './report-storage'
@@ -106,8 +107,16 @@ export class RunnerFileReports {
       { [REPORT_KEY]: state },
       previous
         ? [
-            ...reportKeys('tree', previous.tree.report),
-            ...reportKeys('changes', previous.changes.report),
+            ...(await storedReportKeys(
+              this.storage,
+              'tree',
+              previous.tree.report,
+            )),
+            ...(await storedReportKeys(
+              this.storage,
+              'changes',
+              previous.changes.report,
+            )),
           ]
         : [],
     )
@@ -126,7 +135,7 @@ export class RunnerFileReports {
     const report = sequence.report
     const removals =
       report && report.through < report.partCount
-        ? reportKeys(kind, report)
+        ? await storedReportKeys(this.storage, kind, report)
         : []
     if (removals.length) sequence.report = null
     sequence.seen = true
@@ -160,7 +169,7 @@ export class RunnerFileReports {
     if (sameRevision && previous) {
       if (previous.partCount !== part.partCount) invalid()
       if (part.partNumber <= previous.through) {
-        const stored = await this.storage.get(partKey(kind, part.partNumber))
+        const stored = await storedPart(this.storage, kind, part.partNumber)
         if (JSON.stringify(stored) !== JSON.stringify(event)) invalid()
         return null
       }
@@ -187,15 +196,16 @@ export class RunnerFileReports {
       through: part.partNumber,
     }
     if (complete) sequence.appliedRevision = part.revision
+    const updates = {
+      ...reportPartUpdates(kind, part.partNumber, event),
+      [REPORT_KEY]: state,
+    }
     const removals = sameRevision
       ? []
-      : reportKeys(kind, previous).filter(
-          (key) => key !== partKey(kind, part.partNumber),
+      : (await storedReportKeys(this.storage, kind, previous)).filter(
+          (key) => !(key in updates),
         )
-    await this.storage.write(
-      { [partKey(kind, part.partNumber)]: event, [REPORT_KEY]: state },
-      removals,
-    )
+    await this.storage.write(updates, removals)
     if (complete) await this.apply(state, complete)
     return complete
   }

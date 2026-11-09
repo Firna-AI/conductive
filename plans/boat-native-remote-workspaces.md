@@ -7418,6 +7418,103 @@ Design calls for this fix round:
 Fix evidence: `.context/milestone-15r/fix-round-1/` and
 `.context/reviews/conductor/boat-native-remote-workspaces-milestone-15r/findings.md`.
 
+Review round 2 fixes, selected by the user on 8 November 2026:
+
+- [x] Apply E of finding 4: keep answer context after a completion or a
+      turn end, with no cap on the number of contexts. Keep released held
+      text as context. After a completion, also keep the end of its text
+      that can start a secret, because the completion replaces the shown
+      answer. Mask only the part of later text that completes a secret
+      from a context. Apply the contexts to each runner stream of the
+      workspace, also to a new stream. Keep the one shared filter in the
+      runner and the Worker, and keep old encrypted snapshots readable.
+      Prove it after a refused completion, an accepted completion, a turn
+      end, and late text from a new stream. Describe the context in the
+      shared, runner, and chat READMEs and in the chat test guide.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply A of finding 5, with chunked deltas: keep the raw transport
+      byte limits. Parse each filtered file event on a separate path
+      without them. Store each report part as a manifest and chunks of at
+      most 65,536 characters, in the commit of the report state. Read old
+      direct parts. Remove the chunks at a newer revision, a refusal, and a
+      new stream. Also chunk a grown `files.changed` event in the history.
+      Prove that grown tree and changes parts and a grown tree delta store
+      and reload. Describe the chunks in the files and chat READMEs.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+- [x] Apply C of finding 6: add one native case with `createAdapterRuntime`
+      and a small test entry that extends the production `Workspace`. Seed
+      an encrypted env capture in D1. Confirm held text, read the actual
+      native records, close the sockets, evict the object, and check that
+      the hidden continuation shows once. Add no native commit fault. Keep
+      the fast failed-commit, replay, and gap case with all its assertions.
+      Retry its failed receipt on the same live chat before the restart.
+      Describe the native case in the chat test guide. Add the remaining
+      native fault gap to `plans/follow-ups/chat-tests-on-real-object.md`,
+      which Milestone 5f applies.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15r`.
+
+Design calls for fix round 2, by the agent on 8 November 2026:
+
+- Do not cap the number of answer contexts. A completion or a turn end
+  keeps each context that can still start a secret. An entry goes only
+  when neither held text nor a possible prefix remains. Reason: a cap lets
+  a crafted runner complete a secret in an older answer.
+- Keep only an answer end that can still start a known secret, with the
+  secret values that apply to it. Reason: each context stays shorter than
+  the longest secret, and a restored snapshot needs no current secret list.
+- After a completion, keep the context of the earlier text and of the
+  completion text. Reason: the filter runs before the receipt checks the
+  completion, so either text can stay on the screen.
+- Let a context match only at the start of later text. Complete secret
+  values still match at every position. Reason: the screen joins later
+  text to the end of the answer, so only its start can complete a context.
+  The same text at another position completes no secret.
+- Make the contexts of a snapshot optional. Reason: the encrypted snapshots
+  of fix round 1 stay valid.
+- Store each new report part as a manifest and chunks, whatever its size.
+  Reason: one writer avoids a second stored format that depends on size.
+- Use chunks of at most 65,536 characters, as the files projection and the
+  history do. Reason: a chunk stays below the storage value limit, also
+  after UTF-8 expansion.
+- Keep the reader of direct report parts. Reason: an incomplete report
+  that an earlier version stored must stay readable after an update.
+- After the filter, apply the byte limits again to each event except a
+  file report or a tree delta. This narrows the fix round 1 call that
+  applied the existing byte bounds again after the filter. Reason: masked
+  labels can make a valid file event larger, and only file events got the
+  chunked storage.
+- Check the storage growth with a stand-in limit of 2,097,152 JSON bytes on
+  `MemoryChatStorage`. Reason: it shows the growth without a native runtime
+  for each new case.
+- Read the native records through a test-only `/inspect` fetch path of the
+  test entry, and forward each other request to the production object. Add
+  no production route and no fault control. Reason: a direct RPC read kept
+  the eviction waiting, and the GitHub SQLite harness already uses this
+  fetch pattern.
+
+Design calls for fix round 2, by the agent on 9 November 2026:
+
+- Keep the answer contexts in one encrypted workspace record, and apply
+  them to each runner stream. Keep the held text in the encrypted record
+  of its own stream. This replaces the contexts per stream of the first
+  implementation. Reason: a new runner stream can add late text to an
+  answer of an older stream. A receipt regression with contexts per stream
+  showed `private-value` in the browser. Held text is not on the screen,
+  and the held text of two streams has no order.
+- Commit the held text, the workspace record, the emitted events, and the
+  raw cursor of the current stream together. The raw cursors stay separate
+  for each stream. Reason: a failed receipt must change neither the filter
+  state nor the cursor.
+- At the first accepted receipt without a workspace record, move the
+  contexts of each older stream record into it. Leave their held text in
+  place. Save the workspace record also when it holds no context.
+  Reason: an older context must keep its answer safe on every stream. The
+  saved record shows that the move is done, so later receipts do not scan
+  the older stream records again.
+
+Fix evidence: `.context/milestone-15r/fix-round-2/` and the same findings
+file.
+
 ## Milestone 8r: Chat write follow-ups
 
 Depends on: 8p, 8q. They change the chat path and the chat client that
