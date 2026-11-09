@@ -41,7 +41,7 @@ import { workspaceOverlay } from './workspaceOverlays'
 import { activityOf, drawnState, sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { tabsFor, workspaceName } from './workspaceTabs'
+import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
@@ -147,6 +147,7 @@ export function WorkspaceScreen(props: {
     <WorkspaceTabs
       drag={row.drag}
       full={row.full}
+      historyEntries={historyFor(state)}
       historyOpen={state.overlay === 'history'}
       menuTab={row.menuTab}
       readOnly={readOnly}
