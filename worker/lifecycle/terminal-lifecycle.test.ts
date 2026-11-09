@@ -28,8 +28,8 @@ it('starts and caches the terminal after startup at create and resume while rete
   if (!endpoint) throw new Error('Missing workspace controller')
   let terminalStarts = 0
   boat.beforeCommand = async (command, detached) => {
-    if (detached) return
     if (!command.includes('systemctl start conductive-terminal.service')) return
+    expect(detached).toBe(true)
     terminalStarts++
     await endpoint.reportRunnerLifecycle({ type: 'runner.ready' })
     expect(await endpoint.readLifecycle()).toMatchObject({
@@ -66,6 +66,22 @@ it('starts and caches the terminal after startup at create and resume while rete
   expect(boat.fileReads).toEqual([])
   expect((await endpoint.readLifecycle())?.startupPrepared).toBe(false)
   boat.commandRunning = false
+  await coordinator.advance()
+  expect(await coordinator.job()).toMatchObject({
+    phase: 'terminal',
+    processId: null,
+  })
+  expect(terminalStarts).toBe(0)
+  await coordinator.advance()
+  expect(await coordinator.job()).toMatchObject({
+    phase: 'terminal',
+    processId: expect.any(Number),
+  })
+  expect(terminalStarts).toBe(1)
+  expect(boat.fileReads).toEqual([])
+  await coordinator.advance()
+  expect(await coordinator.job()).toMatchObject({ phase: 'terminal-password' })
+  expect(boat.fileReads).toEqual([])
   await coordinator.advance()
   expect((await creation).workspace.state).toBe('starting')
   expect((await endpoint.readLifecycle())?.state).toBe('ready')

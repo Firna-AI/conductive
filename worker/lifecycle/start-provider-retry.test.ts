@@ -41,15 +41,22 @@ it('preserves captured start output and lets cancellation bypass a pending retry
   await start.tick(now)
   fault.recover()
   fixture.boat.commandOutput = 'captured output\n'
-  fixture.boat.beforeCommand = async (_command, detached) => {
-    if (!detached) throw new Error('Temporary terminal start failure')
-  }
   await start.tick(now + 1_000)
-  expect(start.storage.alarmAt).toBe(now + 3_000)
-  expect(await start.job()).toMatchObject({ stdoutOffset: 16, stderrOffset: 0 })
-  await start.endpoint.lifecycleStopped()
-  expect(start.storage.alarmAt).toBe(now + 2_000)
+  expect((await start.endpoint.readLifecycleStartLog()).text).toContain(
+    'captured output\n',
+  )
   await start.tick(now + 2_000)
+  fault.fail('60')
+  await start.tick(now + 3_000)
+  expect(start.storage.alarmAt).toBe(now + 63_000)
+  expect(await start.job()).toMatchObject({
+    phase: 'terminal',
+    stdoutOffset: 0,
+    stderrOffset: 0,
+  })
+  await start.endpoint.lifecycleStopped()
+  expect(start.storage.alarmAt).toBe(now + 4_000)
+  await start.tick(now + 4_000)
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toMatchObject({
     ok: false,

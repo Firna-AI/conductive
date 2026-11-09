@@ -5555,22 +5555,77 @@ path that this milestone changes.
 Apply the `fix after merge` items of the workspace lifecycle. Added on 8
 November 2026.
 
-- [ ] Apply option B of `plans/follow-ups/shared-object-alarm.md`, and
+- [x] Apply option B of `plans/follow-ups/shared-object-alarm.md`, and
       delete that item. The one alarm scheduler stores a due time for each
       pending task, also for each failed `changed` hook. Each write that
       changes a due time sets the alarm to the earliest one.
-- [ ] Apply option B of `plans/follow-ups/terminal-setup-passes-start-limit.md`,
-      and delete that item.
-- [ ] Apply option E of `plans/follow-ups/lifecycle-turn-times-from-chat.md`,
-      and delete that item.
-- [ ] Apply option C of `plans/follow-ups/native-entries-advance-alarms.md`,
-      and delete that item.
-- [ ] Apply option C of `plans/follow-ups/terminal-replies-count-as-activity.md`,
-      and delete that item.
-- [ ] Apply option D of `plans/follow-ups/concurrency-callback-errors.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option B of `plans/follow-ups/terminal-setup-passes-start-limit.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option E of `plans/follow-ups/lifecycle-turn-times-from-chat.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option C of `plans/follow-ups/native-entries-advance-alarms.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option C of `plans/follow-ups/terminal-replies-count-as-activity.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option D of `plans/follow-ups/concurrency-callback-errors.md`,
       and delete that item. Added on 8 November 2026.
-- [ ] Apply option A of `plans/follow-ups/activity-for-suspended-owner.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option A of `plans/follow-ups/activity-for-suspended-owner.md`,
       and delete that item. Added on 8 November 2026.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+
+Completed on 8 November 2026. Agent calls of that date:
+
+- Extend the existing feature scheduler through native and typed storage
+  ports, so all tasks share one scheduling rule.
+- Keep due markers through each handler. A successful device handler
+  clears only its unchanged lease. Check its revision inside the final
+  transaction, so a replacement at the same time survives.
+- Clear each completed access retry, also when no lifecycle state remains.
+  Clear an image retry when a successful run schedules no next task.
+  This keeps completed work out of the next alarm.
+- Keep the first failed `changed` retry during ordinary writes. Move it
+  forward only when that retry starts, so another write cannot delay it.
+  A best-effort title failure returns its outcome and keeps the marker.
+- Let the start own progress while its job exists. Restore the normal
+  lifecycle timer after completion, so the runner wait uses its deadline.
+  Give result publication its own deadline, because it can overlap a
+  resume. A publication retry does not block idle work or an access stop.
+- Store each result publication and its initial due time in one
+  transaction, so a restart cannot lose that retry. Release a removed
+  job or publication deadline when Archive clears its record.
+- Keep the generic alarm marker that member Restore writes. The receiving
+  lifecycle owner gives restored image, start, or cleanup work its task slot.
+  Claim an older publication at that wake only when its new slot is absent,
+  so a current retry keeps its own due time.
+- Run terminal setup and its password read in separate saved phases,
+  within the existing shown startup step. This keeps command polling
+  separate from the later bounded file read.
+- Keep `startWorkspaceTerminal` as the one password-read implementation.
+  This preserves existing setup callers without a compatibility wrapper.
+- Save `startup` as the Restore continuation when a create enters terminal
+  setup, so a retained checkpoint rebuilds its runtime files.
+- Use the same future initial time for the native object and HTTP jobs.
+  Advance the stored records alarm for initial admission, so no fixture
+  depends on automatic alarm delivery at real time.
+- Wait for D1 admission before driving a delegated create. The provider
+  allocation signal cannot arrive before that drive starts.
+- Return an expected D1 failure as plain test-control data. This keeps its
+  exact assertion when native RPC cannot transport the original error.
+- Split the two long lifecycle guides into companion pages. Keep their
+  old section headings as links, so existing incoming anchors still work.
+
+Verification evidence: `.context/boat-native-remote-workspaces/5e/summary.md`.
+
+Fix round 2, 9 November 2026. Agent call:
+
+- Treat any existing lifecycle run lease as recovery at the next lifecycle
+  run. Runs execute one at a time. This keeps an earlier task wake from
+  consuming the lease before recovery. The query of due times stays based
+  on timestamps.
+
+Fix-round evidence: `.context/boat-native-remote-workspaces/5e/fix-round-2/summary.md`.
 
 ## Milestone 5f: Tests on the real workspace object
 

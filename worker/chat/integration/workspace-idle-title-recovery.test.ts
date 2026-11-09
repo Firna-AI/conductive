@@ -73,10 +73,18 @@ it('retries a failed title publication after the original idle stop and then all
       .first(),
   ).toEqual({ state: 'ready', name: 'workspace one' })
   expect(await actor.recoveryAlarmAt()).toBe(idleAt + 30_000)
+  expect(await actor.repeatLifecycleWrite()).toMatchObject({
+    ok: false,
+    message: expect.stringContaining('idle title write failed'),
+  })
+  expect(await actor.recoveryAlarmAt()).toBe(idleAt + 30_000)
+  await active.restart()
+  const restored = await active.actor()
+  expect(await restored.recoveryAlarmAt()).toBe(idleAt + 30_000)
   await active.env.DB.prepare('DROP TRIGGER fail_idle_title').run()
-  await actor.advanceStartAlarm(idleAt + 30_000)
-  expect(await actor.recoveryAdvanceRuns()).toBe(1)
-  expect(await actor.recoveryAlarmAt()).toBe(idleAt + 1_123_200_000)
+  await restored.advanceStartAlarm(idleAt + 30_000)
+  expect(await restored.recoveryAdvanceRuns()).toBe(1)
+  expect(await restored.recoveryAlarmAt()).toBe(idleAt + 1_123_200_000)
   expect(
     await active.env.DB.prepare(
       'SELECT state, name FROM workspaces WHERE id = ?',
@@ -84,7 +92,7 @@ it('retries a failed title publication after the original idle stop and then all
       .bind(OUTER_WORKSPACE)
       .first(),
   ).toEqual({ state: 'stopped', name: 'The idle title' })
-  expect(await actor.readLifecycle()).toMatchObject({
+  expect(await restored.readLifecycle()).toMatchObject({
     lastActivityAt: DEVICE_TEST_NOW,
     stoppedAt: idleAt,
   })
@@ -103,5 +111,5 @@ it('retries a failed title publication after the original idle stop and then all
   expect(await resuming.json()).toMatchObject({
     workspace: { state: 'starting' },
   })
-  expect(await actor.readStartCheckpoint()).toMatchObject({ kind: 'resume' })
+  expect(await restored.readStartCheckpoint()).toMatchObject({ kind: 'resume' })
 })

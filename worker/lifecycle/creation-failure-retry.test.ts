@@ -20,7 +20,31 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
   const id = created.workspace.id
   const oldToken = await readWorkspaceToken(runtime.env, id)
   const start = fixture.starts.get(id)
-  if (!start) throw new Error('Missing start actor')
+  const platform = fixture.actors.get(id)
+  if (!start || !platform) throw new Error('Missing start actor')
+  let observed:
+    { claim: unknown; publicRows: unknown; cleanupRows: unknown } | undefined
+  platform.observePublication(async ({ event }) => {
+    if (event.type !== 'workspace.updated' || event.workspace.state !== 'error')
+      return
+    observed = {
+      claim: await runtime.env.DB.prepare(
+        'SELECT state FROM workspace_creation_attempts WHERE workspace_id = ?',
+      )
+        .bind(id)
+        .first('state'),
+      publicRows: await runtime.env.DB.prepare(
+        'SELECT COUNT(*) AS count FROM workspaces WHERE id = ?',
+      )
+        .bind(id)
+        .first('count'),
+      cleanupRows: await runtime.env.DB.prepare(
+        'SELECT COUNT(*) AS count FROM lifecycle_sandbox_cleanup WHERE workspace_id = ?',
+      )
+        .bind(id)
+        .first('count'),
+    }
+  })
   boat.commandExitCode = 1
   boat.deleteFailures = 2
   for (let step = 0; step < 16 && (await start.job()); step++)
@@ -29,6 +53,7 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
     ok: false,
     error: { code: 'workspace_start_failed' },
   })
+  expect(observed).toEqual({ claim: 'failed', publicRows: 1, cleanupRows: 1 })
   expect(
     (await createWorkspace(runtime, org.id, user, input)).workspace,
   ).toMatchObject({ id, state: 'error' })

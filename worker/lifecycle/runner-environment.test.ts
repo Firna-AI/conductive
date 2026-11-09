@@ -84,7 +84,7 @@ it('supplies each start its repository branch and encrypted org settings without
   const actor = fixture.actors.get(id)?.endpoint()
   if (!actor) throw new Error('Missing workspace controller')
   expect((await actor.readLifecycleStartLog()).text).toBe(
-    'configured [hidden]\n'.repeat(3),
+    'configured [hidden]\n'.repeat(4),
   )
   const captured = await runningEnvironment(runtime.env.DB, id)
   expect(captured).not.toContain(initialSecret)
@@ -118,7 +118,7 @@ it('supplies each start its repository branch and encrypted org settings without
   })
   expect(JSON.stringify(resumed)).not.toContain(resumedSecret)
   expect((await actor.readLifecycleStartLog()).text).toBe(
-    'settings [hidden] production 1 [hidden]\n',
+    'settings [hidden] production 1 [hidden]\n'.repeat(2),
   )
   const secrets = await fixture.actors
     .get(id)
@@ -130,7 +130,7 @@ it('supplies each start its repository branch and encrypted org settings without
   await fixture.run(() => resumeWorkspace(runtime, org.id, id, user.id))
   expect(resumes).toHaveLength(1)
   expect((await actor.readLifecycleStartLog()).text).toBe(
-    'settings [hidden] production 1 [hidden]\n',
+    'settings [hidden] production 1 [hidden]\n'.repeat(2),
   )
 
   await actor.lifecycleStopped()

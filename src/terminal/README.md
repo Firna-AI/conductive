@@ -40,7 +40,6 @@ change can move the shared parts to the app's shared components.
 ```tsx
 <TerminalTool
   connect={connectTerminal}
-  onActivity={countTerminalInput}
   touch={phone}
   workspace={{ orgId, workspaceId, fetch, subscribe }}
 />
@@ -56,9 +55,13 @@ change can move the shared parts to the app's shared components.
   Reconnect. A source without `openSocket`, as in the development fake,
   throws. The transport takes text only, so the tool does not send the
   mouse reports that xterm.js sends as binary data, in the old X10 format.
-- `onActivity` runs for each input of the user: keys, text, paste, and mouse
-  reports. It does not run for the replies of xterm.js. The shell can count
-  it as activity with the source `terminal`, at the rate that it chooses.
+- `onActivity` is optional. It runs for each input of the user: keys, text,
+  paste, and mouse reports. It does not run for the replies of xterm.js.
+  The development page shows the number of these inputs.
+- The workspace screen passes no `onActivity`. The input listener of the
+  app page already counts the user's input in the terminal as activity, as
+  [the web app](../app/README.md#rules-for-this-code) says. The Worker
+  counts no terminal frame as activity.
 - `workspace.fetch` is the app's fetch. `workspace.subscribe` is required.
   It delivers the events of the workspace in order. Keep both stable.
 - `touch` selects the phone layout: 44px controls and the key row.

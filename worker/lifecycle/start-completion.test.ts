@@ -6,6 +6,7 @@ import type { backendFixture } from './backend-test-support'
 import { IDLE_MS } from './durable-types'
 import { startRetryFixture } from './retry-test-support'
 import { START_JOB_KEY } from './start-storage'
+import { advanceToRunner } from './start-resume-test-support'
 
 const fixtureForTest = setupBackendTests()
 
@@ -75,15 +76,14 @@ it('replaces the completion alarm and schedules the restore watch before the idl
   if (!job) throw new Error('Missing start job')
   const platform = fixture.actors.get(job.workspaceId)
   if (!platform) throw new Error('Missing start controller')
-  await fixture.advanceTo(
-    fixture.runtime.dependencies.now() + 1_000,
-    job.workspaceId,
-  )
+  await advanceToRunner(start)
   await platform.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
   const completedAt = fixture.runtime.dependencies.now()
   await fixture.advanceTo(completedAt, job.workspaceId)
   expect(await start.job()).toBeUndefined()
-  expect(platform.storage.alarmAt).toBe(completedAt + 1_000)
+  const completed = await platform.endpoint().readLifecycle()
+  expect(completed).toMatchObject({ restoreWatchAt: completedAt + 5_000 })
+  expect(platform.storage.alarmAt).toBe(completedAt + 5_000)
   await fixture.advanceTo(completedAt + 1_000, job.workspaceId)
   expect(platform.storage.alarmAt).toBe(completedAt + 5_000)
   await fixture.advanceTo(completedAt + 5_000, job.workspaceId)
@@ -109,10 +109,7 @@ it('does not expose readiness when the deadline is reached after startup progres
     )
       fixture.setTime(TEST_TIME + 1_200_000)
   })
-  await fixture.advanceTo(
-    fixture.runtime.dependencies.now() + 1_000,
-    job.workspaceId,
-  )
+  await fixture.run(() => start.wait())
   const states = platform.events.flatMap(({ event }) =>
     event.type === 'workspace.updated' ? [event.workspace.state] : [],
   )

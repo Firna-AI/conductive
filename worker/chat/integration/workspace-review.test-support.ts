@@ -12,6 +12,7 @@ import { requestRunner, OuterFakeRunner } from './runner-socket.test-support'
 import { createLifecycleChatFixture } from './workspace-lifecycle.test-support'
 import type { Workspace } from './workspace-review-entry.test-support'
 import { OUTER_ORG, OUTER_WORKSPACE } from './outer-seed.test-support'
+import { advanceNextWorkspaceAlarm } from './workspace-start.test-support'
 
 export async function reviewWorkspaceFixture(bundle: string) {
   const fixture = await createLifecycleChatFixture(bundle)
@@ -93,12 +94,13 @@ export async function driveToRunningStartup(actor: {
     { phase: string; processId: number | null } | undefined
   >
   advanceStartAlarm(): Promise<void>
+  readStartAlarm(): Promise<number | null>
 }): Promise<void> {
   while (true) {
     const job = await actor.readStartCheckpoint()
     if (!job) throw new Error('The queued start is missing.')
     if (job.phase === 'startup' && job.processId !== null) return
-    await actor.advanceStartAlarm()
+    await advanceNextWorkspaceAlarm(actor)
   }
 }
 

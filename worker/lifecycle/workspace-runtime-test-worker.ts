@@ -14,6 +14,8 @@ import type { UserMessage } from '../../src/shared/messages'
 import {
   failAfterFirstMessageAdmission,
   holdMachineCheckpoint,
+  holdResumeCompletionCheckpoint,
+  readCompletionCheckpoint,
 } from './runtime-checkpoint-test-support'
 import type { ImageCoordinatorState } from './image-timers'
 import { ManualChatClock } from '../chat/chat-clock.test-support'
@@ -26,6 +28,8 @@ import { exerciseRepairBudget } from './repair-budget-native-test-support'
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
   private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
+  private heldCompletion:
+    ReturnType<typeof holdResumeCompletionCheckpoint> | undefined
   private readonly clock: ManualChatClock
   private readonly chatIds: string[]
 
@@ -71,6 +75,19 @@ export class WorkspaceRuntimeFixture extends Workspace {
   async machineCheckpointReached(): Promise<void> {
     if (!this.heldMachine) throw new Error('No held machine checkpoint')
     await this.heldMachine.entered
+  }
+  holdResumeCompletion(attempt: string): void {
+    this.heldCompletion = holdResumeCompletionCheckpoint(
+      this.ctx.storage,
+      attempt,
+    )
+  }
+  async resumeCompletionReached(): Promise<void> {
+    if (!this.heldCompletion) throw new Error('No held resume completion')
+    await this.heldCompletion.entered
+  }
+  completionCheckpoint() {
+    return readCompletionCheckpoint(this.ctx.storage, this.clock.now())
   }
   async acceptFirstFixtureMessage(
     first: FirstWorkspaceMessage,

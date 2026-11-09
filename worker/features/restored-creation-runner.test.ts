@@ -73,7 +73,10 @@ it('rebuilds a restored runner-phase runtime after losing /run without repeating
       .slice(before)
       .filter((request) => request.detached)
       .map((request) => request.command),
-  ).toEqual([expect.stringContaining('/run/conductive/startup.sh')])
+  ).toEqual([
+    expect.stringContaining('/run/conductive/startup.sh'),
+    expect.stringContaining('systemctl start conductive-terminal.service'),
+  ])
   expect(results.map((result) => result.exitCode)).toEqual([0, 0])
   expect(await sandbox.file('startup-calls')).toBe('startup\nstartup\n')
   expect(await sandbox.ready()).toBe('')

@@ -1,7 +1,7 @@
 import { HttpError } from '../http'
 import { WorkspaceFiles } from '../files/workspace'
 import { durableFilesStorage } from '../files/storage'
-import { WorkspaceAlarms } from '../features/alarms'
+import { WorkspaceAlarms, nativeAlarmStorage } from '../features/alarms'
 import { nativeWorkspaceStorage } from '../lifecycle/platform-storage'
 import {
   assertReceiverActive,
@@ -63,7 +63,7 @@ export function createWorkspaceIntegration(
       return response
     },
   }
-  const alarms = new WorkspaceAlarms(storage)
+  const alarms = new WorkspaceAlarms(nativeAlarmStorage(storage))
   const stoppedHooks: ((id: string) => Promise<void>)[] = []
   const files = new WorkspaceFiles(
     durableFilesStorage(storage),
@@ -126,22 +126,14 @@ export function createWorkspaceIntegration(
             (event.runnerEventType === 'turn.completed' ||
               event.runnerEventType === 'turn.failed')
           )
-            await controller.finishLifecycleTurn(
-              event.turnId,
-              lifecyclePublish,
-              envelope.occurredAt,
-            )
+            await controller.finishLifecycleTurn(event.turnId, lifecyclePublish)
         } else if (
           event.type === 'turn.started' ||
           event.type === 'turn.completed' ||
           event.type === 'turn.failed' ||
           event.type === 'start.updated'
         ) {
-          await controller.reportRunnerLifecycle(
-            event,
-            lifecyclePublish,
-            envelope.occurredAt,
-          )
+          await controller.reportRunnerLifecycle(event, lifecyclePublish)
         }
         if (event.type === 'workspace.title')
           await updateWorkspaceTitle(
@@ -196,7 +188,6 @@ export function createWorkspaceIntegration(
     ({ workspaceId, event, occurredAt }) =>
       chat.commitWorkspaceEvent(workspaceId, event, occurredAt),
     nativeWorkspaceStorage(storage, {
-      lifecycleAlarms: true,
       guarded: true,
       generation: () => generation,
     }),

@@ -72,7 +72,7 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     expect(fixture.boat.starts).toHaveLength(1)
     expect(fixture.boat.commands).toHaveLength(4)
     expect(fixture.boat.commandRequests.at(-1)).toMatchObject({
-      detached: false,
+      detached: true,
       command: expect.stringContaining(
         'systemctl start conductive-terminal.service',
       ),

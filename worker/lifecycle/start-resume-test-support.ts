@@ -3,6 +3,16 @@ import type { backendFixture } from './backend-test-support'
 import { startRetryFixture } from './retry-test-support'
 import type { WorkspaceStartJob } from './start-types'
 
+export async function advanceToRunner(
+  start: Pick<Awaited<ReturnType<typeof startRetryFixture>>, 'job' | 'advance'>,
+): Promise<void> {
+  for (let step = 0; step < 16; step++) {
+    if ((await start.job())?.phase === 'runner') return
+    await start.advance()
+  }
+  throw new Error('The start did not reach runner readiness')
+}
+
 export async function resumedStartup(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
   requestedByUserId = fixture.user.id,
@@ -15,7 +25,7 @@ export async function resumedStartup(
   const actor = platform.endpoint()
   await start.tick(fixture.runtime.dependencies.now() + 1_000)
   await actor.reportRunnerLifecycle({ type: 'runner.ready' })
-  await start.tick(fixture.runtime.dependencies.now())
+  await fixture.run(() => start.wait())
   await actor.lifecycleStopped()
   fixture.boat.states.set('bx_1', 'archived')
   fixture.setTime(TEST_TIME + 30_000)
