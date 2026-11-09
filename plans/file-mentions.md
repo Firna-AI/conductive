@@ -9,8 +9,8 @@ without typing its whole path. This change adds a list of the files and
 folders of the workspace to the composer of a workspace chat. Typing `@`
 opens the list, and the text after `@` filters it, as in Conductor. A pick
 puts a chip with an icon and the name of the entry into the message. The
-agent gets the absolute path of each entry on the cloud computer. A press
-on a file chip opens the file, as a press in All files does. Each chip of
+agent gets the path of each entry inside the repository, in the text of the
+message. A press on a file chip opens the file, as a press in All files does. Each chip of
 the composer, also a workspace chip and an attached file, swaps its icon
 for a × under the pointer, and a press on the × removes the chip.
 
@@ -25,9 +25,8 @@ Contract owners:
   chip in the message field.
 - [Chat and events](../docs/protocol/chat-and-events.md), for the attached
   files of the composer.
-- The [chat README](../src/chat/README.md), the
-  [Files README](../src/files/README.md), and the
-  [chat backend README](../worker/chat/README.md).
+- The [chat README](../src/chat/README.md) and the
+  [Files README](../src/files/README.md).
 - The [mockup catalogue](../docs/mockups/catalogue.md).
 
 ## Decisions
@@ -46,7 +45,8 @@ says.
 - **C.** A file reference in the row of attached files. Not chosen.
 - The changes of the user to B:
   - The chip shows only an icon and the name of the entry.
-  - The agent gets the absolute path of the entry.
+  - The agent gets the absolute path of the entry. Later on 9 November
+    2026, the user made this a preference, as decision 216 says.
   - A press on a file chip shows the file, as a press on the file in All
     files does.
 - Reason: the chip keeps the file in the sentence with a short name, as
@@ -77,7 +77,19 @@ says.
 
 ### 216. Where the absolute path of a mention is made
 
-Open. Item 3 of the message of 9 November 2026.
+Answered on 9 November 2026 with D. It was item 3 of the message of
+9 November 2026.
+
+- **Answer of the user:** "absolute path is not a strict requirement, if
+  relative is better we could go with that". The user also asked for my
+  view.
+- **My view:** the path inside the repository is better, so the plan
+  follows D, which the answer added. Both agents start in the repository
+  folder, and their instructions name that folder. So the agent reads
+  `@src/app.ts` as one exact file. D needs no Worker change, keeps the
+  stored text, the agent's text, and the titles short and equal, and works
+  with every runner, also while the kept tree is out of date.
+- The fields below are the record of the item as it was asked.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
@@ -115,6 +127,10 @@ Open. Item 3 of the message of 9 November 2026.
     after it checks the path on the disk. A workspace keeps its runner
     until it starts from a new build of its org image. So each existing
     workspace gives the agent the repository path. Effort: Medium.
+  - **D.** Added by the answer of the user. The draft, the stored message,
+    and the agent all keep the path inside the repository, such as
+    `@src/app.ts`. Nothing turns it into an absolute path. Chosen. Effort:
+    Small.
 - **Left out:**
   - A list of mentions beside the text. The text form already names each
     entry and its kind, so B and C give the same result from the text
@@ -132,15 +148,17 @@ Open. Item 3 of the message of 9 November 2026.
   as [Agent instructions](../docs/protocol/agent-instructions.md) says.
   The runner also adds an `Attached file: <path>` line for each attached
   file.
-- **Recommendation:** B. The stored text, the titles, and the copies stay
-  short, and every runner gets absolute paths. A keeps the text of the
-  agent equal to the stored text. The options check kept B.
-- **Action:** ask the user, because A and B have real trade-offs. A always
-  gives the absolute path, and B keeps the stored text short.
+- **Recommendation:** D, after the answer. It was B while the absolute
+  path was a requirement. The options check kept B before the answer.
+- **Action:** the user's answer chose D, on the condition that it is
+  better. The plan follows D.
 
 ### 217. How a chip is removed on a device without hover
 
-Open. Item 4 of the message of 9 November 2026.
+Answered on 9 November 2026: the user chose D, "on mobile, show the x
+always at the end". It was item 4 of the message of 9 November 2026. The
+recommendation was E. The fields below are the record of the item as it
+was asked.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -194,16 +212,15 @@ Open. Item 4 of the message of 9 November 2026.
   - A taller chip in the text on a phone, with a 44 px ×. It breaks the
     rule that a chip keeps the height of its line, as
     [Workspace links](../docs/protocol/workspace-links.md) says.
-- **Wider fix:** None. The shared icon part of a chip in Milestone 4 holds
-  the touch rule for every kind of chip.
+- **Wider fix:** None. The shared icon part of a chip holds the touch rule
+  for every kind of chip.
 - **Previous examples:** Attached files show a × at their end on every
   device today. A workspace chip in the text of a phone has no × today.
 - **Recommendation:** E. It was A before the options check. E keeps the
   icons and the live state mark, which decision 211 requires also on a
   phone. It gives an attached file a × of full touch size, where Backspace
   cannot reach.
-- **Action:** ask the user, because each option trades the icons against a
-  visible ×, and no option is clearly best.
+- **Action:** the user chose D.
 
 ## Design
 
@@ -256,6 +273,9 @@ Open. Item 4 of the message of 9 November 2026.
 - For an attached file, the button of the icon also shows the × while it
   has the keyboard focus. In the text, a keyboard user removes a chip with
   Backspace or Delete.
+- Where no pointer hovers, each chip of the composer keeps its icon and
+  shows a × at its end at all times, as decision 217 says. There the icon
+  is not a button, and a tap on it acts as a tap on the name.
 
 ### The text form
 
@@ -264,10 +284,10 @@ Open. Item 4 of the message of 9 November 2026.
 - A path with a space goes in quotes, as in `@"docs/My notes.md"`. An
   entry whose path holds a quote or a line break stays out of the list.
 - A mention in inline code or in a code block stays code.
-- The path inside the repository or the absolute path follows decision
-  216.
-- One shared module in `src/shared/` reads and writes the form, so the
-  browser and the Worker read it in the same way.
+- The path is the path inside the repository, as decision 216 says. The
+  agent gets the text of the message unchanged.
+- One module of the chat reads and writes the form. Only the browser reads
+  it, because the Worker and the runner pass the text on unchanged.
 
 ### The data
 
@@ -298,6 +318,13 @@ Each call is my own, made on 9 November 2026.
   composer and its messages only.
 - The chat connects the kept files while it shows. Reason: a phone shows
   the chat without the Files part.
+- Decision 217 applies wherever no pointer hovers, as a `hover: none`
+  media rule finds it, not only in the phone layout. Reason: a touch
+  tablet in the desktop layout has no hover either, so the × under the
+  pointer would never show there.
+- The agent instructions get no line about mentions. Reason: both agents
+  read `@` and a path as a file, and their instructions already name the
+  repository folder that the path starts from.
 
 ## Milestone 1: Mockups
 
@@ -306,7 +333,6 @@ Tags: mockup
 Depends on: none
 
 Draw the list, the file chips, and the × of each chip of the composer.
-The phone variants wait for decision 217.
 
 - [ ] Add a child page of `app/composer` for the list, with at most five
       screens: a query with matches, the list without a query, nothing
@@ -316,7 +342,8 @@ The phone variants wait for decision 217.
 - [ ] Show the × under the pointer on a workspace chip and on an attached
       file. Remove the × at the end of each attached file in
       `app/composer`.
-- [ ] Draw the phone variant of each screen after decision 217.
+- [ ] Draw the phone variant of each screen, with the × at the end of
+      each chip, as decision 217 says.
 - [ ] Update `docs/mockups/catalogue.md`.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -339,16 +366,7 @@ Depends on: 1
       restates a changed fact.
 - [ ] Check each relative link of the changed Markdown files.
 
-## Milestone 3: The absolute path for the agent
-
-Depends on: 2, and decision 216
-
-- [ ] Add the shared module of the text form in `src/shared/`, with
-      tests.
-- [ ] Make the absolute path as decision 216 says, with tests.
-- [ ] Update `worker/chat/README.md`.
-
-## Milestone 4: The × of the existing chips
+## Milestone 3: The × of the existing chips
 
 Tags: ui
 
@@ -363,15 +381,17 @@ keeps both changes.
 - [ ] Use it in the workspace chip of the message field. The × removes
       the chip as one step of undo.
 - [ ] Use it in the attached files. Remove the × at the end.
-- [ ] Apply decision 217 on devices without hover.
+- [ ] Where no pointer hovers, show the × at the end of each chip, as
+      decision 217 says.
 - [ ] Add DOM tests for the removal from the field and from the files.
 
-## Milestone 5: The list
+## Milestone 4: The list
 
 Tags: ui
 
-Depends on: 3
+Depends on: 2
 
+- [ ] Add the module of the text form to the chat, with unit tests.
 - [ ] Give the chat the kept files of the workspace, connected while the
       chat shows.
 - [ ] Add the match and the order of the rows, with unit tests.
@@ -382,11 +402,11 @@ Depends on: 3
       states.
 - [ ] Update `src/chat/README.md`.
 
-## Milestone 6: File chips
+## Milestone 5: File chips
 
 Tags: ui
 
-Depends on: 4, 5
+Depends on: 3, 4
 
 - [ ] Add the file chip and the folder chip to the message field: a pick,
       the draft, a paste, a copy, and the ×.
@@ -395,7 +415,7 @@ Depends on: 4, 5
 - [ ] Add DOM tests for the chip, the draft, and the press.
 - [ ] Update `src/chat/README.md` and `src/files/README.md`.
 
-## Milestone 7: Verification, commit, review, and pull request
+## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
@@ -416,4 +436,4 @@ Depends on: every other milestone
 ## Post-merge follow-up (non-blocking)
 
 - [ ] On `conductive.build`, pick a file and a folder with `@`, send the
-      message, and check that the agent got their absolute paths.
+      message, and check that the agent reads that file and that folder.
