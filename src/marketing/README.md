@@ -201,6 +201,32 @@ The footer and the Report abuse section use `abuseAddress` from
 links use `legalAddress`: `legal@` and the product domain.
 No code or setup in this repository creates those mailboxes.
 
+## The comparison page
+
+[Conductor Cloud comparison](../../docs/protocol/conductor-cloud-comparison.md)
+states the requirements of the page at `/from-conductor`. The site does not
+build that page yet. Its visual spec is
+[`FromConductorScreen.tsx`](../../docs/mockups/src/screens/FromConductorScreen.tsx),
+with the parts in
+[`components/parity/`](../../docs/mockups/src/components/parity/), at
+`marketing/from-conductor/one-table` in the catalogue.
+[AGENTS.md](../../AGENTS.md) says when a change must update a row.
+
+Keep each row true:
+
+- Check each status with the claim rules of the protocol doc. A mockup or
+  a plan alone never proves Available.
+- Write each note in one or two plain sentences, with at most 25 words.
+  Say what Conductive does, or what to do instead. Name a limit only with
+  the way around it.
+- Name no sandbox provider, internal name, or decision number in a note.
+  Copy no Conductor text.
+- Give a due date only for a dated commitment that the team recorded.
+  Never add an example date.
+- Keep the evidence of each status and the scope audit out of the rows and
+  out of the page.
+- After a full check of every row, set the check date that the page shows.
+
 ## Development
 
 The pages are in `pages/`, with layouts in `layouts/` and parts in

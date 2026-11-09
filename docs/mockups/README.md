@@ -132,8 +132,11 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the Terms, Privacy, and not-found pages, and the page before
-GitHub. The pictures are captures of real screens, such as the workspace
-screen with its chat and composer. A change to a screen or a shared part
-that a picture shows needs a new capture, with the
+pictures, the Terms, Privacy, and not-found pages, the comparison page,
+and the page before GitHub. The comparison page is the chosen design at
+`marketing/from-conductor/one-table`.
+[Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)
+states its requirements. The pictures are captures of real screens, such
+as the workspace screen with its chat and composer. A change to a screen or
+a shared part that a picture shows needs a new capture, with the
 [capture steps](../../src/marketing/README.md#pictures).
