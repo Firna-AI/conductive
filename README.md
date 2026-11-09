@@ -273,6 +273,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [GitHub banner](docs/protocol/github-banner.md)
   - [GitHub tokens](docs/protocol/github-tokens.md): git and CLI account scope.
   - [Agent tools](docs/protocol/agent-tools.md)
+  - [Agent instructions](docs/protocol/agent-instructions.md)
   - [Orgs and members](docs/protocol/orgs-and-members.md)
   - [Mac app](docs/protocol/desktop-app.md)
   - [Operator actions](docs/protocol/operator-actions.md)

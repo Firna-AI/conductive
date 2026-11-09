@@ -15,6 +15,14 @@
   outline: none;
 }
 
+.field [contenteditable='false'] {
+  display: inline-block;
+  max-width: 100%;
+  padding-inline: 2px;
+  vertical-align: top;
+  box-sizing: border-box;
+}
+
 .touch {
   font-size: 16px;
   line-height: 22px;
