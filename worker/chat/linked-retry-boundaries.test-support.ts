@@ -72,6 +72,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
       },
       sourceSessionId: 'source',
       loginAvailable: true,
+      loginShared: true,
     },
     message: {
       id: 'retry-message',
@@ -125,6 +126,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
       },
       sourceSessionId: null,
       loginAvailable: false,
+      loginShared: false,
     },
     messageSource: 'source',
     messageTurn: 'linked-turn',

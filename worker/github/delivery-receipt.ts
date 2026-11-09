@@ -1,7 +1,7 @@
 import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type { GitHubSnapshot, GitHubUpdate } from './contracts'
 
-export type GitHubEnvelopeIdentity = Pick<
+type GitHubEnvelopeIdentity = Pick<
   WorkspaceEventEnvelope,
   'workspaceId' | 'eventNumber' | 'occurredAt'
 >

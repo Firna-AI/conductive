@@ -14,6 +14,7 @@ import {
 } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
+import { MASKED_SEED_PATH } from '../../../test-support/fixtures/masked-paths'
 import { FAKE_FILE_PATH } from '../../../test-support/fixtures/tools'
 import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
 import {
@@ -88,6 +89,27 @@ describe('the Files screens in the workspace', () => {
       activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
       fileList: 'all',
       tool: 'terminal',
+    })
+  })
+
+  test('name the tab and the page of a file by the label of its path, and keep its address on the real path', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ paths: 'masked' })
+    const tab: FilesTab = { kind: 'diff', path: MASKED_SEED_PATH }
+    const href = filesHref(org, id, tab)
+    const { view } = await openTab(server, href)
+    await settle()
+    const link = linkTo(byLabel('Sessions and files', view), href)
+    expect({
+      tab: link.textContent,
+      tooltip: link.getAttribute('title'),
+      page: queryByRole('region', 'seed-[redacted].sql', view) !== null,
+      address: href.includes(MASKED_SEED_PATH),
+    }).toEqual({
+      tab: 'seed-[redacted].sql',
+      tooltip: 'scripts/seed-[redacted].sql',
+      page: true,
+      address: true,
     })
   })
 

@@ -82,6 +82,12 @@ gives each binding, variable, and secret that it reads, such as
 `WORKSPACES`, `MACHINE_ORIGIN`, `BOAT_API_KEY`, `BOAT_ORG_ID`,
 `GITHUB_APP_PRIVATE_KEY`, and the runner archive variables.
 
+Each provider start captures the encrypted org env values and their secret
+marks. The start-log masker and the workspace object output filter use
+that capture. No private org-value list goes into the runner environment.
+A running sandbox keeps its capture after later org setting changes.
+Disk retention resumes also replace the saved capture.
+
 ## Development
 
 Run the lifecycle tests with `npm run test -- worker/lifecycle`. They run in
@@ -103,6 +109,11 @@ object holds the lifecycle state, the turn records, and the events.
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+- [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
+  workspace record. In the `records` phase of a create, `insertWorkspace`
+  writes the new row and its runtime record in one D1 batch. The new row
+  lists first in its section, as
+  [List order](../app-api/README.md#list-order) says.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):
@@ -134,6 +145,11 @@ object holds the lifecycle state, the turn records, and the events.
   `readStartJob`, which convert the start job for storage and internal RPC.
 - [`start-logs.ts`](start-logs.ts): `releasedStartLog`, which masks the
   decrypted log as a [`MaskedStartLog`](masked-start-log.ts).
+- [`org-environment.ts`](org-environment.ts): parses stored env values and
+  secret marks. It treats older plain values as secret. `environmentSecrets`
+  selects marked values without a length rule.
+- [`output-secrets.ts`](output-secrets.ts): reads the actual start capture
+  for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
 - [`failed-creations.ts`](failed-creations.ts): the hidden drafts of failed
@@ -159,7 +175,8 @@ object holds the lifecycle state, the turn records, and the events.
 - [`durable-alarm.ts`](durable-alarm.ts): `advanceLifecycleAlarm`, the
   lifecycle step of the alarm. It advances stop cleanup before normal
   lifecycle work. It runs the turn repair before its deadline and idle
-  decisions.
+  decisions. When the restore watch is due, it runs the restore check in
+  place of the Boat state read.
 - [`create-workspace-lifecycle.ts`](create-workspace-lifecycle.ts):
   `createWorkspaceLifecycle`, the lifecycle with its hooks and the shared
   state writer. Its `recoverTurns` hook reads the committed chat through
@@ -168,8 +185,12 @@ object holds the lifecycle state, the turn records, and the events.
   physical stop classification across lifecycle maintenance. A saved public
   error stays separate. `finishRetentionAttempt` clears an ended attempt
   and renews dates only when its owner supplies a stop-request time.
-- [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline, and
-  state read actions on the sandbox.
+- [`workspace-actions.ts`](workspace-actions.ts): the stop, deadline,
+  state read, and restore check actions on the sandbox.
+  `checkWorkspaceRestore` reads `hydrated`, and it writes the restore
+  marker of the [terminal backend](../terminal/README.md) when the restore
+  ends, as the [restore watch](workspace-object.md#creates-and-resumes)
+  says.
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
   path to a Boat call that creates a sandbox or a snapshot. It stores the
   request first, so the lifecycle finds the resource after a lost reply.

@@ -30,6 +30,23 @@ function parentOf(path: string): string {
   return splitPath(path).folder
 }
 
+/** The name of a folder row when no record names the folder. */
+const unknownFolderName = 'Folder'
+
+/**
+ * The name of a folder that the tree lacks, from an entry inside it. An
+ * entry without a display path holds no secret value, so the real name
+ * shows. Else the name is the part of the entry's label at the depth of the
+ * folder, when the label has as many parts as the path.
+ */
+function folderName(folder: string, inside: FileEntry): string {
+  if (inside.displayPath === undefined) return splitPath(folder).name
+  const parts = inside.displayPath.split('/')
+  const depth = folder.split('/').length
+  if (parts.length !== inside.path.split('/').length) return unknownFolderName
+  return parts[depth - 1] ?? unknownFolderName
+}
+
 const indexes = new WeakMap<FileTree, TreeIndex>()
 
 function indexOf(tree: FileTree): TreeIndex {
@@ -50,7 +67,7 @@ function indexOf(tree: FileTree): TreeIndex {
     for (let folder = parentOf(entry.path); folder !== '';) {
       if (known.has(folder)) break
       known.add(folder)
-      const { name } = splitPath(folder)
+      const name = folderName(folder, entry)
       add({ path: folder, name, kind: 'directory', change: null })
       folder = parentOf(folder)
     }
