@@ -919,7 +919,7 @@ Depends on: every other milestone
       operator tabs.
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -928,7 +928,10 @@ Depends on: every other milestone
         one owner for confirmed rows, read ordering, and the waiting count.
   - [x] Record the deferred approval-email origin and account-age fixes
         as follow-up items.
-  - [ ] Re-review the combined result, including Mac invite-link origins.
+  - [x] Re-review the combined result, including Mac invite-link origins.
+  - [x] Record the checked Mac link-origin and search-change count
+        defects as follow-ups. Record the unconfirmed approval-feedback
+        observation as a separate post-merge check.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
