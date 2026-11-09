@@ -3,13 +3,7 @@
  * one of them.
  */
 
-export const repositoryKeys = [
-  'storefront',
-  'billing-service',
-  'marketing-site',
-] as const
-
-export type RepositoryKey = (typeof repositoryKeys)[number]
+export type RepositoryKey = 'storefront' | 'billing-service' | 'marketing-site'
 
 export type Repository = {
   key: RepositoryKey

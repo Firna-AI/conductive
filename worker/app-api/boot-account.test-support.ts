@@ -40,16 +40,40 @@ export function isolationAccountStates(
     { agent: 'codex', connected: false },
   ]
   const firstLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'token', updatedAt: TEST_TIME },
+    {
+      agent: 'claude',
+      connected: true,
+      kind: 'token',
+      noReuse: true,
+      updatedAt: TEST_TIME,
+    },
     { agent: 'codex', connected: false },
   ]
   const otherClaudeLogin: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
+    {
+      agent: 'claude',
+      connected: true,
+      kind: 'api-key',
+      noReuse: false,
+      updatedAt: TEST_TIME,
+    },
     { agent: 'codex', connected: false },
   ]
   const otherLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
+    {
+      agent: 'claude',
+      connected: true,
+      kind: 'api-key',
+      noReuse: false,
+      updatedAt: TEST_TIME,
+    },
+    {
+      agent: 'codex',
+      connected: true,
+      kind: 'api-key',
+      noReuse: false,
+      updatedAt: TEST_TIME,
+    },
   ]
   const empty: AccountState = {
     defaultChoice: choice,

@@ -44,6 +44,7 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   routes.json('POST', ACCOUNT_PATHS.deleteAccount, { deleted: true })
   for (const login of data.account.agentLogins) {
     routes.json('PUT', agentLoginPath(login.agent), login)
+    routes.json('PATCH', agentLoginPath(login.agent), login)
     routes.empty('DELETE', agentLoginPath(login.agent))
   }
   routes.json('GET', GET_STARTED_PATH, data.getStarted)

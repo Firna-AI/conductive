@@ -52,8 +52,9 @@ export const privacyDocument: LegalDocument = {
             team make. They run the service.`,
           text`Keys and logins: the env var values of each org, and your
             Claude or OpenAI logins. ${productName} stores them encrypted. It
-            uses your login only for the turns of the sessions that you start,
-            also for the messages of other members.`,
+            uses your login only for the turns of the sessions that you start.
+            The messages of other members in those sessions use it only when
+            you let other members use that login.`,
           text`Your work: ${productName} keeps your messages and the answers
             of the agents as the chat history of each workspace. It also
             keeps the last file list and the last summary of changes of each
@@ -83,8 +84,11 @@ export const privacyDocument: LegalDocument = {
             sends the provider the requests that start, stop, and use them.`,
           text`Anthropic and OpenAI get your messages, your files, and your
             code when an agent works on them. Each session uses the login of
-            the member who started it, also for your messages. The terms of
-            that provider apply.`,
+            the member who started it. Your messages in another member's
+            session use that member's login only when that member lets other
+            members use it. When that member does not share the login, your
+            message starts a new session on your own login. The terms of that
+            provider apply.`,
           text`The members of your orgs see the workspaces of the org and
             their chats. A member with a terminal in a cloud computer can read
             the agent login and the GitHub token of a turn that runs there. A
@@ -92,7 +96,8 @@ export const privacyDocument: LegalDocument = {
             keep the agent login after the turn ends. A member with a terminal
             can read it there too.`,
           text`The members of your orgs also see who started each session,
-            whose login it uses, and whether it can use that login.`,
+            whose login it uses, and whether it can use that login. They also
+            see whether its starter lets other members use that login.`,
           text`If the operator suspends your account, the members of your orgs
             learn that it is suspended. A workspace that you own then says
             that its owner is suspended.`,

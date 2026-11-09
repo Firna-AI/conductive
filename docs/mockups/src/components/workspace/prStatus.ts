@@ -18,7 +18,7 @@ import {
   type BannerState,
 } from '../../fixtures/pullRequests'
 
-export type PrTone = 'neutral' | 'success' | 'warning' | 'danger'
+type PrTone = 'neutral' | 'success' | 'warning' | 'danger'
 
 export type PrStatus = {
   /** A spinner shows while checks run. */

@@ -17,7 +17,7 @@ export interface TerminalScriptOptions {
   multiplexerCommand: readonly string[]
 }
 
-export const terminalScriptDefaults: TerminalScriptOptions = {
+const terminalScriptDefaults: TerminalScriptOptions = {
   runtimeDirectory: TERMINAL_RUNTIME,
   environmentFile: '/run/ascii-secrets/env.sh',
   owner: 'user',

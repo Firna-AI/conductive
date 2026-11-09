@@ -36,6 +36,13 @@ drafts, and New workspace as a page or a dialog.
   [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
 - The account of the Mac app shows This Mac after the sign-in section. A
   browser shows none and asks no Mac.
+- Each connected login of the account shows its share switch, "Let other
+  members use this login", and Get started shows none. The switch saves
+  at once through `AccountModel.setNoReuse`. While it saves, it shows the
+  new value and takes no other change. A failed save shows its cause under
+  the switch until the next change, and the switch shows the saved value.
+  A share reply that a later save or remove of the same login overtook does
+  not show, so a removed login stays removed.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the

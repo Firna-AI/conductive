@@ -35,6 +35,7 @@ export function whyInoperable(element: Element): string | null {
 /**
  * Whether a person can use the element now: it is shown, it is not inert,
  * and it is inside the open dialog whenever a dialog is open.
+ * @public The DOM test support API exposes this predicate.
  */
 export function isOperable(element: Element): boolean {
   return whyInoperable(element) === null

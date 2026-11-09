@@ -9,7 +9,7 @@
  */
 
 /** The layouts of the marketing site, which are the views of the mockups. */
-export const pictureLayouts = ['desktop', 'mobile'] as const
+const pictureLayouts = ['desktop', 'mobile'] as const
 
 export type PictureLayout = (typeof pictureLayouts)[number]
 
@@ -52,10 +52,10 @@ export type PictureFrame = 'window-or-phone' | 'excerpt' | 'phone'
  * Whether each layout has its own file, or one file serves both layouts
  * because both show the same part of the same screen.
  */
-export type PictureFiles = 'per-layout' | 'shared'
+type PictureFiles = 'per-layout' | 'shared'
 
 /** A picture in one layout of the site. */
-export type PictureView = {
+type PictureView = {
   /** What the picture shows: its alt text, and its label in the mockups. */
   readonly label: string
   /** The viewport of the screen that the picture shows. */

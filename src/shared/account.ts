@@ -29,12 +29,14 @@ export type AgentLoginStatus =
       agent: 'claude'
       connected: true
       kind: 'token' | 'api-key'
+      noReuse: boolean
       updatedAt: Timestamp
     }
   | {
       agent: 'codex'
       connected: true
       kind: 'api-key'
+      noReuse: boolean
       updatedAt: Timestamp
     }
 
@@ -69,11 +71,11 @@ export interface AccountResponse {
   githubAppUrl: string
 }
 
-export interface SessionResponse {
-  user: User
-}
-
 export type SaveAgentLoginResponse = AgentLoginStatus
+export interface UpdateAgentLoginRequest {
+  noReuse: boolean
+}
+export type UpdateAgentLoginResponse = AgentLoginStatus
 export interface SetDefaultModelRequest {
   choice: AgentChoice
 }
@@ -88,8 +90,4 @@ export interface GitHubInstallationsResponse {
 }
 export interface GitHubRepositoriesResponse {
   repositories: readonly GitHubRepository[]
-}
-
-export interface DeleteAccountResponse {
-  deleted: true
 }

@@ -74,6 +74,7 @@ it('boots from operator models and persists account preferences and encrypted se
     agent: 'claude',
     connected: true,
     kind: 'token',
+    noReuse: true,
     updatedAt: TEST_TIME,
   })
   expect(await readAgentLogin(harness.env, initial.user.id, 'claude')).toEqual({
@@ -102,7 +103,13 @@ it('boots from operator models and persists account preferences and encrypted se
   expect(reloadedBody).toMatchObject({
     defaultChoice: otherChoice,
     agentLogins: [
-      { agent: 'claude', connected: true, kind: 'token', updatedAt: TEST_TIME },
+      {
+        agent: 'claude',
+        connected: true,
+        kind: 'token',
+        noReuse: true,
+        updatedAt: TEST_TIME,
+      },
       { agent: 'codex', connected: false },
     ],
   })

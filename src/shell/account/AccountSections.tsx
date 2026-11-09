@@ -32,9 +32,9 @@ export function SignInSection(props: { user: User }) {
 
 /**
  * The agents that every org uses, Claude and Codex: each connected login
- * with its kind and Remove, or Connect, which opens the form of the agent.
- * `connect` opens the form of that agent at first, as the link of a
- * missing login does.
+ * with its kind, Remove, and its share setting, or Connect, which opens
+ * the form of the agent. `connect` opens the form of that agent at first,
+ * as the link of a missing login does.
  */
 export function AgentsSection(props: { connect: Agent | null }) {
   return (
@@ -44,6 +44,7 @@ export function AgentsSection(props: { connect: Agent | null }) {
         initial={props.connect}
         key={props.connect ?? 'none'}
         removable
+        shares
       />
     </Section>
   )

@@ -7,11 +7,7 @@ import { join } from 'node:path'
 import { readReleaseCredentials } from './release-credentials.ts'
 
 /** Do not include command arguments: some security commands contain passwords. */
-export function runReleaseTool(
-  program: string,
-  args: string[],
-  env = process.env,
-) {
+function runReleaseTool(program: string, args: string[], env = process.env) {
   const result = spawnSync(program, args, { encoding: 'utf8', env })
   if (result.error || result.status !== 0)
     throw new Error(

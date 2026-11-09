@@ -11,7 +11,7 @@ import { parseChanges } from './parse-changes'
 import { parseFileTree, parseTreeDelta } from './parse-tree'
 
 /** A file event of the workspace stream, or null for any other event. */
-export function parseFileEvent(value: unknown): FileEvent | null {
+function parseFileEvent(value: unknown): FileEvent | null {
   if (!isObject(value)) return null
   switch (value.type) {
     case 'files.snapshot': {
@@ -46,7 +46,7 @@ export type FileReportKind = Extract<
  * gives no failed repair. A file list belongs to no session, so a marker
  * with a session is never a failed repair of a file list.
  */
-export interface FailedFileRepair {
+interface FailedFileRepair {
   report: FileReportKind
   /** When the workspace refused the fresh report, in Unix milliseconds. */
   at: number

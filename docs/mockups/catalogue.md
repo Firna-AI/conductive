@@ -61,6 +61,8 @@ page or a dialog. Its `not-saved` variant shows a save that failed, which
 keeps the saved choice. `app/account/setup`, `app/account/connect-claude`,
 and `app/account/connect-codex` show General before the first connections,
 and with the Connect form of each agent open.
+`app/account/share-not-saved` shows General after a login share setting
+failed to save, with its saved value and the cause beside the switch.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its variants show a

@@ -18,14 +18,6 @@ export interface Section {
 export interface SectionsResponse {
   sections: readonly Section[]
 }
-export interface CreateSectionRequest {
-  name: string
-}
 export interface SectionResponse {
   section: Section
-}
-export interface UpdateSectionRequest {
-  name?: string
-  collapsed?: boolean
-  position?: number
 }

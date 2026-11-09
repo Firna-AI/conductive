@@ -123,8 +123,3 @@ export function parseRoute(pathname: string, search: string): Route {
   }
   return { screen: 'not-found' }
 }
-
-/** The org that a screen belongs to, for the rail and the sidebar. */
-export function routeOrgId(route: Route): string | null {
-  return 'orgId' in route ? route.orgId : null
-}

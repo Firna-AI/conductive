@@ -36,6 +36,11 @@ as a Worker secret.
 Both fields start empty. The operator API keeps their first values.
 Members receive only the suspension time.
 
+`202611080100_agent_login_reuse.sql` adds the `agent_logins.no_reuse` preference.
+Existing Claude subscription tokens refuse re-use by default.
+Existing API keys allow re-use by default.
+The migration keeps the encrypted secret and its timestamps.
+
 `202611082300_new_workspace_view.sql` rebuilds `user_preferences` and keeps every existing row and value.
 The three default model columns can be all set or all unset.
 The nullable `new_workspace_view` column holds `page` or `dialog`.

@@ -25,7 +25,7 @@ export interface DevView {
 }
 
 /** A list whose fresh full report the stored history lost: `?repair=`. */
-export type DevRepair = 'all-files' | 'changes'
+type DevRepair = 'all-files' | 'changes'
 
 const repairs: readonly DevRepair[] = ['all-files', 'changes']
 

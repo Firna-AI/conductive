@@ -27,7 +27,7 @@ const choiceNotSaved = "The choice wasn't saved. Try again."
  * that a phone always opens the page. `error` shows under the choice when
  * its save failed.
  */
-export function NewWorkspaceViewChoice(props: {
+function NewWorkspaceViewChoice(props: {
   value: NewWorkspaceView
   error?: string
 }) {

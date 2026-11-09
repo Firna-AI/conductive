@@ -26,7 +26,7 @@ import { paths } from '../paths'
 export const accountSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'connections', 'form', 'view', 'save'],
+  required: ['tab', 'connections', 'form', 'view', 'save', 'shareChange'],
   properties: {
     /**
      * The tab: General, with the sign-in and the connections, or
@@ -47,6 +47,11 @@ export const accountSchema = {
      * save shows its error, and the choice keeps its saved value.
      */
     save: { enum: ['saved', 'failed'] },
+    /**
+     * The last change of a share setting: none, or a change of the Claude
+     * login that the app did not save.
+     */
+    shareChange: { enum: ['none', 'not-saved'] },
   },
 } as const
 
@@ -59,6 +64,7 @@ export const accountGeneral: AccountState = {
   form: 'none',
   view: 'page',
   save: 'saved',
+  shareChange: 'none',
 }
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -93,7 +99,13 @@ function GeneralTab(props: { state: AccountState }) {
       <SignInSection />
       {mac ? <ThisMacSection /> : null}
       <GitHubSection connected={props.state.connections === 'connected'} />
-      <AgentsSection form={openForm} logins={loginsFor(props.state)} />
+      <AgentsSection
+        form={openForm}
+        logins={loginsFor(props.state)}
+        shares={{
+          notSaved: props.state.shareChange === 'not-saved' ? 'claude' : null,
+        }}
+      />
     </>
   )
 }

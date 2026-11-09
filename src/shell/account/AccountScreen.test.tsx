@@ -104,7 +104,7 @@ async function mountPreferences(server: FakeApiServer) {
 }
 
 describe('AccountScreen', () => {
-  test('a connect link opens the Codex form, and a connected Claude login shows its kind and Remove', async () => {
+  test('a connect link opens the Codex form, and a connected Claude login shows its kind, Remove, and its share setting', async () => {
     const server = new FakeApiServer()
     server.json('GET', ACCOUNT_PATHS.account, {
       ...coreFixtures().account,
@@ -113,6 +113,7 @@ describe('AccountScreen', () => {
           agent: 'claude',
           connected: true,
           kind: 'token',
+          noReuse: true,
           updatedAt: FAKE_TIME,
         },
         { agent: 'codex', connected: false },
@@ -125,7 +126,9 @@ describe('AccountScreen', () => {
     )
     await settle()
     const [claude, codex] = listItems(view.innerHTML, 'Agents')
-    expect(textOf(claude)).toBe('Claude Connected Subscription token Remove')
+    expect(textOf(claude)).toBe(
+      'Claude Connected Subscription token Remove Let other members use this login Their messages in your sessions start a new session on their own login.',
+    )
     expect(buttonsOf(claude)).toEqual([
       { label: 'Remove Claude', disabled: false },
     ])

@@ -47,7 +47,7 @@ export function chooseRepositoriesFirst(org: string): string {
  * What a member who is not an admin reads in an org without chosen
  * repositories, as on the empty page of the org: only an admin chooses them.
  */
-export function adminChoosesRepositories(org: string): string {
+function adminChoosesRepositories(org: string): string {
   return `An admin of ${org} chooses its repositories first`
 }
 
