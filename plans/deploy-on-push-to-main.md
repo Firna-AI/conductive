@@ -426,19 +426,25 @@ Depends on: 2
 
 Depends on: 1, 2, 3
 
-- [ ] Run the targeted checks and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted checks and the complete gate named in `AGENTS.md`.
+      Done on 9 November 2026: the complete gate passed on `528f4ff`,
+      `d511c05`, and `7b9868d`. Evidence: `.context/deploy-on-main/checks/`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] The user creates the environment `production` with its `main` rule
       before the merge, as `docs/automatic-deploys.md` says. The secret and the
       variable can follow later, because the run skips without them.
 - [ ] The user creates the ruleset of decision 3 B on `main` before the
       merge: require a pull request and the `Complete gate` check, with
       the admin role on the bypass list.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Done on 9 November 2026: two rounds found four
+      findings. `d511c05` fixes findings 1 and 2, and `7b9868d` fixes
+      findings 3 and 4. Two follow-up items record the wider fix of finding
+      3 and a new problem of the last check. Evidence:
+      `.context/reviews/calummoore/deployment-on-merge-to-main/findings.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
