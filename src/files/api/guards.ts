@@ -11,7 +11,7 @@ export function readString(object: JsonObject, key: string): string | null {
 }
 
 /** A finite number, or null. */
-export function readNumber(object: JsonObject, key: string): number | null {
+function readNumber(object: JsonObject, key: string): number | null {
   const value = object[key]
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }

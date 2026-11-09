@@ -78,6 +78,3 @@ export const touchControl: ControlSizes = {
   labelWeight: 500,
   field: 'lg',
 }
-
-/** The least height of a touch target on a phone. */
-export const touchMin = '44px'

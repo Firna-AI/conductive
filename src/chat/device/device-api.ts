@@ -27,11 +27,10 @@ import {
 /** A change that the Mac makes to its own settings. */
 export type SettingsChange = DeviceSettingsRequest['operation']
 
-export const readDeviceCommands: Reader<readonly DeviceCommandRecord[]> = (
-  value,
-) => list(readDeviceRecord)(record(value).requests)
+const readDeviceCommands: Reader<readonly DeviceCommandRecord[]> = (value) =>
+  list(readDeviceRecord)(record(value).requests)
 
-export const readDeviceCurrent: Reader<DevicePairing | null> = (value) =>
+const readDeviceCurrent: Reader<DevicePairing | null> = (value) =>
   nullable(readDevicePairing)(record(value).device)
 
 /** The Worker took the answer, to pass it to the Mac. It is not the result. */

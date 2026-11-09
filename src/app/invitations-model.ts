@@ -17,7 +17,7 @@ import {
 } from './store'
 
 /** An acceptance that failed. It shows until the next acceptance starts. */
-export interface AcceptFailure {
+interface AcceptFailure {
   invite: PendingOrgInvite
   error: ApiError
 }

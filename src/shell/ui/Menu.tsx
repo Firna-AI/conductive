@@ -9,7 +9,7 @@ import { Sheet } from './Sheet'
 import { useViewport } from './viewport'
 import ui from './ui.module.css'
 
-export type MenuAction = {
+type MenuAction = {
   kind: 'item'
   label: string
   onSelect: () => void
@@ -89,7 +89,7 @@ function Item(props: { entry: MenuAction; close: () => void }) {
 }
 
 /** An open menu. The arrow keys move between its items. */
-export function MenuList(props: {
+function MenuList(props: {
   label: string
   entries: readonly MenuEntry[]
   placement: MenuPlacement

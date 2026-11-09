@@ -1,7 +1,7 @@
 import { activeAdminPredicate } from './org-data'
 import { CLEANUP_LEASE_MS, lifecycleWritePredicate } from './lifecycle-data'
 
-export const RESTORE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+const RESTORE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
 export function authorizedCleanup(
   db: D1Database,
