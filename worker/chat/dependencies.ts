@@ -12,6 +12,7 @@ import {
   type SessionLoginMetadata,
 } from './login-availability'
 import type { ChatDependencies } from './types'
+import { filterRunnerOutput } from './runner-output'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -24,6 +25,8 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    filterRunnerOutput: (transaction, workspace, input) =>
+      filterRunnerOutput(env, transaction, workspace, input),
     now: Date.now,
     scheduleBrowserCheck: scheduleConnectionCheck,
     scheduleRunnerCheck: scheduleConnectionCheck,

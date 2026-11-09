@@ -36,6 +36,9 @@ function fileEntry(value: unknown): FileEntry {
     throw invalidFileResponse()
   return {
     path: value.path,
+    ...(typeof value.displayPath === 'string'
+      ? { displayPath: value.displayPath }
+      : {}),
     name: value.name,
     kind: value.kind,
     change: value.change,
@@ -88,10 +91,16 @@ function changedFile(value: unknown): BranchChangedFile {
     throw invalidFileResponse()
   return {
     path: value.path,
+    ...(typeof value.displayPath === 'string'
+      ? { displayPath: value.displayPath }
+      : {}),
     change: value.change,
     added: value.added,
     removed: value.removed,
     uncommitted: value.uncommitted,
+    ...(typeof value.previousDisplayPath === 'string'
+      ? { previousDisplayPath: value.previousDisplayPath }
+      : {}),
     ...(value.previousPath === undefined
       ? {}
       : { previousPath: value.previousPath }),
@@ -111,6 +120,9 @@ export function parseChanges(value: unknown): ChangesResponse {
     throw invalidFileResponse()
   return {
     baseBranch: value.baseBranch,
+    ...(typeof value.displayBaseBranch === 'string'
+      ? { displayBaseBranch: value.displayBaseBranch }
+      : {}),
     files: value.files.map(changedFile),
     summary: {
       files: value.summary.files,

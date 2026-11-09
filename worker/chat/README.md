@@ -222,10 +222,23 @@ tests through the production Worker entry.
   requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
-  chunks of large file reports.
+  chunks of large file reports and tree deltas.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event.
+- `runner-output.ts` and `runner-output-state.ts`: the filter from the
+  actual start capture, and its encrypted state. Each runner stream keeps
+  its held answer text. One workspace record keeps each shown answer end
+  that can still start a secret, so a new stream cannot complete such a
+  secret. That state, the filtered events, and the raw cursor of the
+  stream commit in one transaction. The shared field policy keeps
+  operational paths and masks display labels.
+- `runner-output.ts` also moves the answer ends of older stream records
+  into the workspace record, at the first accepted receipt without that
+  record. Held text stays with its own stream, because the held text of
+  two streams has no order. A workspace record with no answer ends still
+  marks the move as done, so later receipts do not scan older stream
+  records again.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
   runner connection before each message and while it is idle.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
@@ -238,6 +251,10 @@ tests through the production Worker entry.
 - `delivery-state.ts`: dispatch state before sending and queued-state restoration.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
+  `parseRunnerEnvelope` applies the byte limits to the raw message.
+  `parseRunnerOutputEnvelope` checks each filtered event again. It skips
+  the byte limits only for file events, because masked labels can make
+  them larger.
 - `turn-lifecycle.ts`, `turn-events.ts`, `turn-context.ts`, and
   `continuation.ts`: active and waiting turns, the dispatch rule of each
   command, the retry message of a turn end, safe turn context, late data,

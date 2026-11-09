@@ -37,7 +37,9 @@ export function numberedRunnerInput(value: unknown) {
   return input
 }
 
-export async function createRunnerLimitsFixture() {
+export async function createRunnerLimitsFixture(
+  overrides: Partial<ChatDependencies> = {},
+) {
   const storage = new MemoryChatStorage()
   const sent: WorkspaceToRunner[] = []
   const published: WorkspaceEventEnvelope[] = []
@@ -48,6 +50,10 @@ export async function createRunnerLimitsFixture() {
   let connectionSequence = 0
   let store = new ChatStore(storage, () => 25)
   const dependencies: ChatDependencies = {
+    filterRunnerOutput: async (_transaction, _workspace, input) => ({
+      events: [input],
+      save: async () => undefined,
+    }),
     runnerAttached: () => undefined,
     runnerDetached: () => undefined,
     waitUntil: (promise) => {
@@ -75,6 +81,7 @@ export async function createRunnerLimitsFixture() {
     runnerReady: async () => undefined,
     runnerHello: async () => undefined,
     matchesObject: () => true,
+    ...overrides,
   }
   const publish = (events: readonly WorkspaceEventEnvelope[]) => {
     published.push(...structuredClone(events))

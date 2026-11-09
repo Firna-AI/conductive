@@ -139,8 +139,9 @@ fake API, with its address options, its controls, and the test command.
   of the chat of the session, or the shell's own column for the chat slots.
 - `files/files-features.tsx`: the Files part, which connects the kept
   files, and the file or diff page of the centre.
-- `files/chat-files.tsx`: the file tabs and the diff links of the kept
-  chat, and the way back to the chat when a session becomes active.
+- `files/chat-files.tsx`: the file tabs, named by the labels of the kept
+  files, and the diff links of the kept chat, and the way back to the chat
+  when a session becomes active.
 - `files/files-navigation.ts`: the navigation of the Files screens, and
   the changes of the saved view that the address and the pages make.
 - `files/files-address.ts` and `files/view-tabs.ts`: the addresses of the

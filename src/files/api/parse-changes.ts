@@ -10,6 +10,7 @@ import {
   parseItems,
   readArray,
   readCount,
+  readLabel,
   readString,
 } from './guards'
 
@@ -35,7 +36,10 @@ function parseChangedFile(value: unknown): BranchChangedFile | null {
   const previousPath = readString(value, 'previousPath')
   return {
     path,
-    ...(previousPath ? { previousPath } : {}),
+    ...readLabel(value, 'displayPath'),
+    ...(previousPath
+      ? { previousPath, ...readLabel(value, 'previousDisplayPath') }
+      : {}),
     change,
     added,
     removed,
@@ -56,6 +60,7 @@ export function parseChanges(value: unknown): ChangesResponse | null {
   if (count === null || added === null || removed === null) return null
   return {
     baseBranch,
+    ...readLabel(value, 'displayBaseBranch'),
     files: parseItems(files, parseChangedFile),
     summary: { files: count, added, removed },
   }
@@ -72,7 +77,14 @@ export function parseFileResponse(value: unknown): FileResponse | null {
     return null
   }
   if (encoding !== 'utf-8' && encoding !== 'base64') return null
-  return { path, mediaType, sizeBytes, encoding, content }
+  return {
+    path,
+    ...readLabel(value, 'displayPath'),
+    mediaType,
+    sizeBytes,
+    encoding,
+    content,
+  }
 }
 
 function readText(value: unknown): string | null | undefined {
@@ -92,7 +104,9 @@ export function parseDiffResponse(value: unknown): DiffResponse | null {
   if (typeof value.binary !== 'boolean') return null
   return {
     path,
+    ...readLabel(value, 'displayPath'),
     baseBranch,
+    ...readLabel(value, 'displayBaseBranch'),
     oldContent,
     newContent,
     patch,

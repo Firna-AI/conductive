@@ -51,9 +51,17 @@ export function parseRepositories(value: unknown): RepositoriesResponse {
   return { repositories: list(source, 'repositories', repository) }
 }
 
-/** Keeps only the name of each env var. A value never reaches the screen. */
-function envVarName(value: unknown): { name: string } {
-  return { name: text(object(value, 'env var'), 'name') }
+/**
+ * Keeps only the name and the Secret mark of each env var. A value never
+ * reaches the screen. A reply without a mark counts as secret, the safe
+ * side, as the Worker reads an old variable.
+ */
+function envVar(value: unknown): OrgSettings['envVars'][number] {
+  const source = object(value, 'env var')
+  return {
+    name: text(source, 'name'),
+    secret: source.secret === undefined ? true : flag(source, 'secret'),
+  }
 }
 
 export function parseSettings(value: unknown): OrgSettings {
@@ -61,7 +69,7 @@ export function parseSettings(value: unknown): OrgSettings {
   return {
     installScript: text(source, 'installScript'),
     startupScript: text(source, 'startupScript'),
-    envVars: list(source, 'envVars', envVarName),
+    envVars: list(source, 'envVars', envVar),
     updatedAt: count(source, 'updatedAt'),
     needsBuild: flag(source, 'needsBuild'),
   }

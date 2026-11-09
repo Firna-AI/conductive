@@ -4,6 +4,7 @@ import { activeAdminMemberPredicate } from '../data/active-admin'
 import { HttpError, isRecord } from '../http'
 import { decrypt } from '../security/crypto'
 import { readSavedScript, type SavedScript } from './saved-script'
+import { parseOrgEnvironment, type OrgEnvironment } from './org-environment'
 
 export interface ImageSettings {
   orgId: string
@@ -114,11 +115,11 @@ export async function workspaceRepository(
   return row
 }
 
-export async function workspaceEnvironment(
+export async function workspaceEnvironmentSettings(
   env: AppEnv,
   orgId: string,
   ciphertext?: string | null,
-): Promise<Record<string, string>> {
+): Promise<OrgEnvironment> {
   const stored =
     ciphertext === undefined
       ? (await readImageSettings(env.DB, orgId)).envVarsCiphertext
@@ -131,21 +132,7 @@ export async function workspaceEnvironment(
       env.BOAT_KEY_ENCRYPTION_KEY,
     ),
   )
-  if (
-    !isRecord(value) ||
-    !Object.values(value).every((entry) => typeof entry === 'string')
-  ) {
-    throw new HttpError(
-      409,
-      'org_environment_unavailable',
-      'The cloud computer settings could not load. Ask an org admin to save them again.',
-    )
-  }
-  const result: Record<string, string> = {}
-  for (const [name, entry] of Object.entries(value)) {
-    if (typeof entry === 'string') result[name] = entry
-  }
-  return result
+  return parseOrgEnvironment(value)
 }
 
 export function firstOrgAdmin(

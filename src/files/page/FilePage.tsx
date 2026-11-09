@@ -1,14 +1,11 @@
 import type { ReactNode } from 'react'
 import type { FilesClient } from '../api/files-client'
+import { labelName, pageLabel } from '../model/file-labels'
 import type { WorkspaceFiles } from '../model/files-store'
 import { fileText, splitLines } from '../model/file-text'
-import {
-  splitPath,
-  type FileTab,
-  type FilesLayout,
-  type FilesNavigation,
-} from '../navigation'
+import type { FileTab, FilesLayout, FilesNavigation } from '../navigation'
 import { isMarkdown } from '../panel/file-icons'
+import { useFilesSnapshot } from '../panel/FilesPanel'
 import { LoadingFile, ReadError } from '../ui/FileStates'
 import { LayoutRoot } from '../ui/layout'
 import type { FileActionTargets } from './file-actions'
@@ -35,6 +32,8 @@ function lineCount(lines: number): string {
  * The view and the line count use the view text. Copy takes the original
  * text, with each byte order mark. Download reads the file with the same
  * limit as the page, so the page offers it only after a read that fits.
+ * The header shows the label of the path, and each read, Copy, and
+ * Download uses the real path.
  */
 export function FilePage(props: {
   files: WorkspaceFiles
@@ -44,9 +43,11 @@ export function FilePage(props: {
   targets?: FileActionTargets
 }) {
   const { files, tab, navigation } = props
+  const snapshot = useFilesSnapshot(files)
   const { state, retry } = useFollowed(files, readFile, tab.path)
   const actions = useFileActions(files.client, tab.path, props.targets)
-  const { name } = splitPath(tab.path)
+  const reply = state?.status === 'ready' ? state.value : null
+  const label = pageLabel(snapshot, tab.path, 'file', reply)
   const markdown = isMarkdown(tab.path)
   const text = state?.status === 'ready' ? fileText(state.value) : null
   const shownAsCode =
@@ -66,7 +67,11 @@ export function FilePage(props: {
     )
   }
   return (
-    <LayoutRoot className={styles.page} label={name} layout={props.layout}>
+    <LayoutRoot
+      className={styles.page}
+      label={labelName(label)}
+      layout={props.layout}
+    >
       <PageHeader
         back={
           props.layout === 'phone'
@@ -83,6 +88,7 @@ export function FilePage(props: {
         onCopy={
           text?.kind === 'text' ? () => actions.copy(text.text) : undefined
         }
+        label={label}
         onDownload={download}
         path={tab.path}
         status={actions.status}

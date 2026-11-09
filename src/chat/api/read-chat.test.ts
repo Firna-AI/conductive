@@ -46,6 +46,30 @@ it('reads exact positive omission counts from browser event envelopes', () => {
   }
 })
 
+it('keeps the label of each changed file of a turn, and reads a file without a text label as before', () => {
+  const file = {
+    path: 'scripts/seed-acme-7f3k.sql',
+    change: 'renamed',
+    added: 6,
+    removed: 0,
+  }
+  const labelled = {
+    ...file,
+    displayPath: 'scripts/seed-[redacted].sql',
+    previousPath: 'seed-acme-7f3k.sql',
+    previousDisplayPath: 'seed-[redacted].sql',
+  }
+  const read = (files: unknown[]) =>
+    readEnvelope(envelope({ ...completed, files })).event
+  expect([
+    read([labelled]),
+    read([{ ...file, displayPath: 7, previousDisplayPath: '' }]),
+  ]).toEqual([
+    { ...completed, files: [labelled] },
+    { ...completed, files: [file] },
+  ])
+})
+
 it('keeps the late mark of the workspace, and only the value true', () => {
   const marked = (late: unknown) => ({ ...envelope(tool), late })
   expect(readEnvelope(marked(true))).toEqual({ ...envelope(tool), late: true })
