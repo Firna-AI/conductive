@@ -460,6 +460,19 @@ The agent's calls from the plan, on 9 November 2026:
   two screens are always different loads, and stored state in a dev tool
   costs more than it gives. This call is from the integration of
   Milestones 5 and 6, which offered a `?keep=1` option instead.
+- The Mac app learns of app access from its existing read of the
+  session, which it repeats with its existing backoff, from 1 second up to
+  30 seconds, while the user waits. The device socket opens only with app
+  access. Reason: it needs no new contract, no cookie change, and no
+  bridge into the page. This call is from Milestone 7.
+- The Mac app keeps the code of a join link only in its own sign-in state,
+  and loads the join address after the handoff, so that the web app uses
+  the code or shows its reason. Reason: the handoff carries only its own
+  code. This call is from Milestone 7.
+- The test harness gives app access to the users that its helpers make,
+  and a test of a person who waits opts out. Reason: the tests of other
+  areas then keep their meaning after the gate. This call is from
+  Milestone 7.
 - The scheduled handler retries the approval emails after its other
   repairs, and a failed retry only warns. Reason: a slow or failed email
   must not hold back the cleanup of deleted orgs or the alarm repairs.
@@ -851,26 +864,29 @@ Evidence: the logs, the mutation report, and the screenshots in
 
 Depends on: 5, 6
 
-- [ ] Make a new account start without app access in the GitHub sign-in.
+- [x] Make a new account start without app access in the GitHub sign-in.
       An operator, or a code of a join link, still gives app access in the
       same sign-in.
-- [ ] Add the app access check to the gate. It reads the method and the
+- [x] Add the app access check to the gate. It reads the method and the
       path that the browser sent. A session without app access reaches
       only the requests of the design. Every other request and WebSocket
       upgrade gets 403 `access_required`.
-- [ ] Make the Mac app connect its device socket again when app access
+- [x] Make the Mac app connect its device socket again when app access
       arrives.
-- [ ] Pass the code of a join link through the sign-in of the Mac app, and
+- [x] Pass the code of a join link through the sign-in of the Mac app, and
       load the join address after it, so that the window uses the code or
       shows its reason. Say in `desktop/README.md` that the waitlist page
       has no controls strip.
-- [ ] Test with local D1: a new account waits, an existing account keeps
+- [x] Test with local D1: a new account waits, an existing account keeps
       app access, a new operator account gets app access, each allowed
       request, a refused request of each kind with an org read and an org
       write among them, the sign-in exchange and the device socket of the
       Mac app, and a suspended user who stays refused.
-- [ ] Update `worker/security/README.md`, `worker/README.md`, and the
+- [x] Update `worker/security/README.md`, `worker/README.md`, and the
       README of the Mac app when its code changes.
+
+Evidence: `.context/waitlist/m7/report.md` and its logs, and the complete
+gate in `.context/waitlist/m7-check/gate.log`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

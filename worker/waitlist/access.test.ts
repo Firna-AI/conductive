@@ -27,7 +27,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('reads the waiting session and its approval address without an app access gate', async () => {
+it('reads the waiting session and its approval address while the app gate refuses other routes', async () => {
   const { member } = await waitlistFixture(harness)
   await harness.env.DB.prepare(
     'UPDATE users SET primary_verified_email = ? WHERE id = ?',
@@ -48,9 +48,11 @@ it('reads the waiting session and its approval address without an app access gat
     user: member.user,
     appAccess: false,
   })
-  expect((await harness.request(API_PATHS.orgs, member.session)).status).toBe(
-    200,
-  )
+  const refused = await harness.request(API_PATHS.orgs, member.session)
+  expect(refused.status).toBe(403)
+  expect(await refused.json()).toMatchObject({
+    error: { code: 'access_required' },
+  })
 })
 
 it('grants access and one referral code once and keeps the original source on repeats', async () => {

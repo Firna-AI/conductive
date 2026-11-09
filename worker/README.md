@@ -1,10 +1,10 @@
 # Worker backend
 
 This Cloudflare Worker serves the browser API for Conductive.
-It checks sign-in and org access before it dispatches protected app requests.
+It checks sign-in, app access, and org access before it dispatches protected app requests.
 It forwards the browser chat routes of a workspace to the Durable Object of that workspace.
 These requests keep the body limit of the Worker entry and the host and `Origin` checks.
-The Worker skips its request gate for them, so it parses no JSON body.
+The Worker runs the session and app access checks for them, without reading the body.
 The Durable Object runs the complete request gate.
 Durable Objects hold workspace state, and D1 holds shared records.
 The [security area](security/README.md) owns the app request gate.
@@ -15,6 +15,11 @@ The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
 The [operator area](operator/README.md) owns the operator's app-wide numbers,
 suspensions, waitlist approvals, invite codes, and sign-up pause.
+New accounts wait for app access unless an operator identity or a valid join
+code grants it at sign-in. The [app access gate](security/README.md#app-access-gate)
+admits only session, waitlist, sign-out, and personal invitation requests
+while the user waits. It refuses other API requests and upgrades with
+403 `access_required`, including operator and org requests.
 
 ## Routes
 

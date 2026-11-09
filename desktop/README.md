@@ -48,6 +48,10 @@ The main process holds its verifier and installs a separate desktop session cook
 The renderer never receives that cookie or verifier.
 The browser keeps its existing session cookie.
 The Worker accepts desktop exchanges and credentials from the desktop origin.
+Sign-in from an invite link keeps its `invite_code` in the browser sign-in.
+After the handoff, the window loads that code's join address.
+A working code opens the app. A failed code shows its reason on the waitlist.
+The handoff and exchange carry only their existing code and verifier.
 
 Other web addresses open in the browser.
 The bundled main page opens its app popups in the same window.
@@ -69,6 +73,12 @@ The Dock can reopen the window.
 
 The main process connects the signed-in, awake Mac to the Worker.
 It reads the desktop cookie from the Chromium session.
+Its authenticated session read checks app access before opening the device socket.
+While the user waits, it repeats that read with the existing backoff:
+1, 2, 4, 8, 16, then at most 30 seconds between attempts.
+It connects after access arrives with the same cookie and no new launch.
+Sleep, sign-out, cookie expiry, and app exit cancel the pending attempt.
+Unauthorized and replaced sockets keep their existing stop behavior.
 The renderer sends approval and settings choices through the Worker relay.
 It receives no cookie or local command bridge.
 
@@ -132,7 +142,8 @@ Back and Forward use the browser history.
 The [web entry](../src/main.tsx) renders no `MacApp`.
 In a browser, the app shows no window controls and no drag regions.
 
-The app shell draws one 34px `Window controls` bar on each page of the Mac app.
+The app shell draws one 34px `Window controls` bar on the usual pages of the Mac app.
+The waitlist page uses its own header with space for the window buttons and has no controls strip.
 In a normal window, the bar keeps 64px free for the window buttons.
 In full screen, it gives that space back.
 The sidebar toggle sits beside that space.
@@ -147,7 +158,8 @@ Then the bar keeps its own width at the top left of the window.
 The top bar of the main area starts after the bar.
 
 The app disables the toggle in a window narrower than 900px and on a page without a sidebar.
-A page without the org rail, such as sign-in, shows the bar without the toggle in a 34px strip.
+Other pages without the org rail, such as sign-in, show the bar in a 34px strip.
+That strip has no sidebar toggle.
 On the account page, the Mac app shows the sidebar of the last org that the user opened.
 The app does not save the toggle state or that org.
 

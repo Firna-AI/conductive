@@ -1,8 +1,10 @@
 # Sign-in and request gate
 
-This area checks browser sign-in, request origins, and org membership.
+This area checks browser sign-in, app access, request origins, and org membership.
 Protected app requests pass through `gate` before route dispatch.
 The gate checks access before it reads a write body.
+`sessionGate` owns the host, Origin, session, and app access checks.
+The chat and feature routers use it before forwarding an unread request to a workspace object.
 Open chat tabs and terminal sockets check their access again through the [shared connection reader](#open-connections).
 Sign-in also asks for the [terms consent](#terms-consent) and refuses [suspended users](#suspended-users).
 
@@ -111,11 +113,35 @@ user without app access. A failed code still creates a sign-in session.
 Its browser redirect keeps the code and the reason on the join path.
 The Mac handoff follows the same access grant before its session exchange.
 
-Open sign-up remains active. Each new account that needs no other grant
-gets the `existing` source. An existing account without app access keeps
-waiting unless an operator sign-in or a join code grants access.
-The request gate does not check app access yet.
+Each new account starts without app access unless its operator identity or
+signed join code grants access. A repeat sign-in preserves existing access.
+Accounts migrated from before the waitlist keep the `existing` source.
 [Waitlist](../../docs/protocol/waitlist.md) states the complete access rules.
+
+## App access gate
+
+[`app-access.ts`](app-access.ts) owns the single allow list for a session
+without app access:
+
+- `GET /api/session`
+- `POST /api/auth/logout`
+- `GET /api/waitlist`
+- `POST /api/waitlist/code`
+- `GET /api/invites`
+- `POST /api/invites/<inviteId>/accept`
+
+The invitation route still checks that the pending invitation belongs to
+the signed-in user. Every other method or path gets HTTP 403
+`access_required`. Every upgrade gets the same refusal, including an
+upgrade of an allowed read. Public sign-in, its callback and Mac exchange,
+health, and desktop preflights keep their own entry rules.
+An upgrade outside the API also runs the session gate before asset dispatch.
+
+The check follows the active session read. It precedes membership checks,
+operator checks, route dispatch, and JSON reads. `gate` accepts the original
+request separately when a caller changes the request for its later checks.
+The members gate and the body-free device gate supply that original
+request, so its method, path, and Upgrade header govern app access.
 
 ## Development
 
@@ -131,10 +157,13 @@ After a change to the reader, run `npm run test -- worker/chat/tab-access.test.t
 
 After a change to the terms consent or to the suspension checks of sign-in, run `npm run test -- worker/security/terms.test.ts worker/security/auth.test.ts worker/operator/route.test.ts`.
 Run `npm run test -- worker/security/waitlist-auth.test.ts worker/security/waitlist-join.test.ts` for the access grants, primary email, and signed join codes.
+Run `npm run test -- worker/security/waitlist-gate.test.ts worker/security/waitlist-desktop.test.ts worker/devices/waitlist.test.ts` for the waiting-session gate and Mac access transitions.
 
 ### Key Code
 
 - [gate.ts](gate.ts) checks the host, origin, session, membership, and JSON body.
+- [app-access.ts](app-access.ts) checks the original request against the waiting-session allow list.
+- [waitlist-gate.test.ts](waitlist-gate.test.ts) checks waiting sessions, allowed requests, default refusals, and suspensions.
 - [connection-access.ts](connection-access.ts) exports `readConnectionAccess`, the identity and grant types, `CONNECTION_CHECK_MS`, and `scheduleConnectionCheck`.
 - [gate-body.test.ts](gate-body.test.ts) checks the exact body limit and early cancellation through HTTP routes.
 - [gate.test.ts](gate.test.ts) checks access, dispatch order, and JSON errors.

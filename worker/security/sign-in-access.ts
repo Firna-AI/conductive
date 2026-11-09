@@ -14,7 +14,6 @@ import { redeemInviteCode } from '../waitlist/use-code'
 export async function signInAppAccess(
   env: AppEnv,
   user: User,
-  isNew: boolean,
   inviteCode: unknown,
   now: number,
 ): Promise<string> {
@@ -34,11 +33,6 @@ export async function signInAppAccess(
       destination.searchParams.set(INVITE_CODE_ERROR_PARAMETER, error.code)
       location = destination.href
     }
-  }
-  // Open sign-up stays active until the app access gate is enabled.
-  if (isNew) {
-    await grantAppAccess(env.DB, user.id, { source: 'existing' }, now)
-    location = env.APP_ORIGIN
   }
   return location
 }

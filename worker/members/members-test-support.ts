@@ -9,6 +9,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { membersGate } from './gate'
+import { seedAppAccess } from '../test-support/app-access'
 import { membersSeed } from './fixture-data.test-support'
 import { maintainDisksForTests } from './maintenance-test-support'
 import { workspaceCreator } from './ownership'
@@ -102,9 +103,22 @@ export async function signIn(
   return { session, user: value.user }
 }
 
-export async function memberFixture(harness: TestHarness) {
+export async function memberFixture(
+  harness: TestHarness,
+  { appAccess = true } = {},
+) {
   const seed = await membersSeed(harness)
   await harness.env.DB.batch(seed.statements)
+  if (appAccess)
+    await seedAppAccess(
+      harness.env.DB,
+      [
+        seed.fixture.admin.user.id,
+        seed.fixture.member.user.id,
+        seed.fixture.other.user.id,
+      ],
+      TEST_TIME,
+    )
   harness.github.profile = seed.profile
   return seed.fixture
 }

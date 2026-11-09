@@ -7,7 +7,7 @@ import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import { grantAppAccess } from './grant'
 
 export async function waitlistFixture(harness: TestHarness) {
-  const fixture = await memberFixture(harness)
+  const fixture = await memberFixture(harness, { appAccess: false })
   await grantAppAccess(
     harness.env.DB,
     fixture.admin.user.id,

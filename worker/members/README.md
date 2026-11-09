@@ -9,7 +9,9 @@ Its production hooks use the real workspace and image coordinator objects.
 ## Integration
 
 Run `membersGate` before feature dispatch on the app hostname.
-It calls the existing gate for sign-in, hostname, Origin, and JSON checks.
+It calls the existing gate for sign-in, app access, hostname, Origin, and JSON checks.
+It supplies the original request when it substitutes the session path.
+The waiting-session allow list therefore checks the actual method and org path.
 It then reads current membership from D1.
 It permits a deleted org only for its admins on its detail, Delete retry,
 and Restore paths.

@@ -1,10 +1,12 @@
 import { Miniflare } from 'miniflare'
 
 import { API_PATHS, type Org } from '../../src/shared/api'
+import type { SessionResponse } from '../../src/shared/account'
 import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
 import type { AppEnv } from '../env'
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
+import { seedAppAccess } from './app-access'
 import { FakeBoat } from './fake-boat'
 import { FakeGitHub } from './fake-github'
 import { applyMigrations } from './migrations'
@@ -80,7 +82,7 @@ export async function createHarness() {
       cookie: responseCookie(response, OAUTH_COOKIE),
     }
   }
-  const login = async () => {
+  const login = async ({ appAccess = true } = {}) => {
     const start = await beginSignIn()
     const response = await fetch(
       `${API_PATHS.githubCallback}?state=${start.state}&code=good-code`,
@@ -90,7 +92,15 @@ export async function createHarness() {
       throw new Error(
         `Callback returned ${response.status}: ${await response.text()}`,
       )
-    return responseCookie(response, SESSION_COOKIE)
+    const session = responseCookie(response, SESSION_COOKIE)
+    if (appAccess) {
+      const current = await request(API_PATHS.session, session)
+      if (current.status !== 200)
+        throw new Error('Sign-in did not save the session')
+      const { user }: SessionResponse = await current.json()
+      await seedAppAccess(db, [user.id], now)
+    }
+    return session
   }
   const createOrg = async (
     session: string,

@@ -139,13 +139,7 @@ export async function finishSignIn(
   )
   await saveGitHubTokens(env, user.id, tokens, now)
   await saveVerifiedEmails(env.DB, user.id, profile.verifiedEmails)
-  const location = await signInAppAccess(
-    env,
-    user,
-    !existing,
-    stored.inviteCode,
-    now,
-  )
+  const location = await signInAppAccess(env, user, stored.inviteCode, now)
   if (typeof stored.desktopChallenge === 'string') {
     return new Response(null, {
       status: 302,

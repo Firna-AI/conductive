@@ -3,8 +3,10 @@
 This area owns app access, invite codes, referral codes, and the sign-up
 pause. The [waitlist protocol](../../docs/protocol/waitlist.md) and
 [code protocol](../../docs/protocol/waitlist-codes.md) state the rules.
-The request gate does not check app access yet. New GitHub accounts still
-get access through [sign-in](../security/README.md#app-access-at-sign-in).
+New GitHub accounts wait unless an operator identity or signed join code
+grants app access through [sign-in](../security/README.md#app-access-at-sign-in).
+The [app access gate](../security/README.md#app-access-gate) admits these
+routes while the user waits. A grant applies to the existing session at once.
 
 ## Routes
 

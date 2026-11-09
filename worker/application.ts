@@ -26,7 +26,7 @@ import { randomToken } from './security/crypto'
 import { finishDesktopSignIn } from './security/desktop-auth'
 import { DESKTOP_EXCHANGE_PATH } from './security/desktop-contract'
 import { desktopCors, desktopPreflight } from './security/desktop-origin'
-import { checkOrigin } from './security/gate'
+import { checkOrigin, sessionGate } from './security/gate'
 import { membersGate } from './members/gate'
 import { productionMembersHooks } from './members/composition'
 import { cleanupDeletedOrgs } from './members/cleanup'
@@ -84,6 +84,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             const preflight = desktopPreflight(request)
             if (preflight) return privateResponse(preflight)
           }
+          if (upgrade && !appApi)
+            await sessionGate(request, env, dependencies.now())
           if (!path.startsWith('/api/') && env.ASSETS) {
             const asset = path.startsWith(`/${SITE_FOLDER}/`)
               ? await appSiteResponse(request, env.ASSETS)
@@ -150,9 +152,13 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         }
         if (isDeviceAppPath(path))
           return respond(await routeDevice(request, env))
-        const chatResponse = await routeChat(request, env)
+        const chatResponse = await routeChat(request, env, dependencies.now())
         if (chatResponse) return respond(chatResponse)
-        const featureResponse = await routeWorkspaceFeatures(request, env)
+        const featureResponse = await routeWorkspaceFeatures(
+          request,
+          env,
+          dependencies.now(),
+        )
         if (featureResponse) return respond(featureResponse)
         const context = await membersGate(request, env, dependencies.now())
         return respond(

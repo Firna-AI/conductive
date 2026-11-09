@@ -43,6 +43,22 @@ afterAll(async () => {
   await harness.dispose()
 })
 
+it('gives a new account app access from its signed join code in the same sign-in', async () => {
+  const code = await addInviteCode(harness)
+  const callback = await joinSignIn(harness, code)
+  expect(callback.status).toBe(302)
+  const state = await sessionState(
+    harness,
+    responseCookie(callback, SESSION_COOKIE),
+  )
+  expect(state.appAccess).toBe(true)
+  expect(await accessRecord(harness, state.user.id)).toMatchObject({
+    source: 'invite_code',
+    code,
+  })
+  expect(await uses(harness, code)).toBe(1)
+})
+
 it.each(['browser', 'desktop'] as const)(
   'carries the signed join code through Terms and %s sign-in and ignores a callback replacement',
   async (mode) => {

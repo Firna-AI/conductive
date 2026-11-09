@@ -12,6 +12,7 @@ import {
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
+import { seedAppAccess } from '../test-support/app-access'
 import { operatorWaitlistFixture, operatorWrite } from './waitlist.test-support'
 
 let harness: TestHarness
@@ -25,6 +26,7 @@ afterAll(async () => harness.dispose())
 
 it('refuses every waitlist operator route for another user and with no configured operator', async () => {
   const client = await operatorWaitlistFixture(harness)
+  await seedAppAccess(harness.env.DB, [client.member.user.id], TEST_TIME)
   const routes: readonly [string, RequestInit][] = [
     [operatorWaitlistPath(), {}],
     [operatorApprovalPath(11), operatorWrite()],
@@ -58,6 +60,7 @@ it('refuses every waitlist operator route for another user and with no configure
 
 it('reads, pauses and resumes sign-ups and retains the actor and time on repeats', async () => {
   const client = await operatorWaitlistFixture(harness)
+  await seedAppAccess(harness.env.DB, [client.member.user.id], TEST_TIME)
   const path = operatorSignupPausePath()
   const read = await client.request(path)
   expect(read.status).toBe(200)

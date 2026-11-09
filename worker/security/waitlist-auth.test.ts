@@ -40,7 +40,7 @@ it('updates the primary verified email and GitHub creation date at each sign-in'
     ],
     [{ email: 'PRIMARY@example.com', verified: true, primary: true }],
   ]
-  const session = await harness.login()
+  const session = await harness.login({ appAccess: false })
   expect(
     await harness.env.DB.prepare(
       'SELECT primary_verified_email AS email, github_created_at AS createdAt FROM users WHERE id = ?',
@@ -64,7 +64,7 @@ it('updates the primary verified email and GitHub creation date at each sign-in'
   harness.github.emails = [
     { email: 'unverified@example.com', verified: false, primary: true },
   ]
-  await harness.login()
+  await harness.login({ appAccess: false })
   expect(
     await harness.env.DB.prepare(
       'SELECT primary_verified_email AS email, github_created_at AS createdAt FROM users WHERE id = ?',
@@ -86,7 +86,7 @@ it.each(['new', 'waiting'] as const)(
     else harness.github.profile = { id: 7, login: 'new-operator' }
     harness.env.OPERATOR_GITHUB_IDS = ` 99, ${githubId} `
     await setPaused(harness)
-    const session = await harness.login()
+    const session = await harness.login({ appAccess: false })
     const state = await sessionState(harness, session)
     expect(state.appAccess).toBe(true)
     expect(await accessRecord(harness, state.user.id)).toMatchObject({
@@ -96,7 +96,7 @@ it.each(['new', 'waiting'] as const)(
     const before = await readWaitlistState(harness.env.DB, state.user.id)
     expect(before.referralCode).toMatchObject({ useLimit: 5, uses: 0 })
     harness.setTime(TEST_TIME + 1000)
-    await harness.login()
+    await harness.login({ appAccess: false })
     expect(await accessRecord(harness, state.user.id)).toMatchObject({
       source: 'operator',
       grantedAt: TEST_TIME,
