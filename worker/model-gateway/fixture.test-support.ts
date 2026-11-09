@@ -1,5 +1,5 @@
 import type { AgentChoice } from '../../src/shared/agents'
-import type { ChatHistoryResponse } from '../../src/shared/events'
+import type { ChatHistoryResponse } from '../chat/workspace-events'
 import {
   CLAUDE,
   createChatFixture,
