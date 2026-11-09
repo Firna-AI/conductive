@@ -90,6 +90,38 @@
   margin-top: 10px;
 }
 
+/*
+ * A short link above the headline: a quiet pill with a full outline and no
+ * coloured edge. Its fill hides the dot grid behind it.
+ */
+.notice {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--ui-touch-min);
+  padding: 5px 12px;
+  border: 1px solid var(--ui-border2);
+  border-radius: 999px;
+  box-sizing: border-box;
+  background: var(--ui-surface);
+  color: var(--ui-ink2);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.notice:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.noticeIcon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
 .picture {
   display: flex;
   justify-content: center;

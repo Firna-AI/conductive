@@ -2,9 +2,9 @@
 
 The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the Terms page, the Privacy page,
-and a page for an unknown address. Visitors need no sign-in. The pages run
-no script and set no cookie. Every sign-in link leads to the app, on the
-`app.` host.
+the Conductor Cloud comparison page, and a page for an unknown address.
+Visitors need no sign-in. The pages run no script and set no cookie.
+Every sign-in link leads to the app, on the `app.` host.
 
 The main action and Sign in lead to the same sign-in. The words of the
 main action promise only what that sign-in gives, as
@@ -24,8 +24,10 @@ The marketing mockups are the visual spec:
 [`MarketingScreen.tsx`](../../docs/mockups/src/screens/MarketingScreen.tsx),
 [`LegalScreen.tsx`](../../docs/mockups/src/screens/LegalScreen.tsx),
 [`NotFoundScreen.tsx`](../../docs/mockups/src/screens/NotFoundScreen.tsx),
+[`FromConductorScreen.tsx`](../../docs/mockups/src/screens/FromConductorScreen.tsx),
 and the parts in
-[`components/marketing/`](../../docs/mockups/src/components/marketing/).
+[`components/marketing/`](../../docs/mockups/src/components/marketing/) and
+[`components/parity/`](../../docs/mockups/src/components/parity/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
 site uses the lockups and favicons from that folder unchanged.
 
@@ -171,6 +173,15 @@ The footer and the Report abuse section use `abuseAddress` from
 links use `legalAddress`: `legal@` and the product domain.
 No code or setup in this repository creates those mailboxes.
 
+## The comparison page
+
+The page at `/from-conductor` shows people who move from Conductor Cloud
+the status of each Conductor Cloud feature in Conductive.
+[Conductor Cloud comparison](../../docs/protocol/conductor-cloud-comparison.md)
+states its requirements. [Comparison rows](from-conductor/README.md)
+gives the one source of its rows, how to change a row, and the rules
+that keep each row true.
+
 ## Development
 
 The pages are in `pages/`, with layouts in `layouts/` and parts in
@@ -225,7 +236,18 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - [`worker/marketing/assets.ts`](../../worker/marketing/assets.ts): site
   asset reads and the app host's handling of other site paths.
 - `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
+- `pages/from-conductor.astro`: the comparison page. `ParityIntro.astro`,
+  `ParityLegend.astro`, and `ParityTable.astro` in `components/` draw its
+  top, its legend, and its one table.
+- `components/StatusMark.astro`, `DueDay.astro`, `CopyText.astro`, and
+  `ClosingCall.astro`: a status as its icon and word, a due day or "No date
+  yet", a sentence of shared copy as markup, and the last call to action of
+  a page.
 - `features.ts`: the home page's feature copy.
+- `from-conductor/`: the one source of the comparison page and its mockup.
+  [Its README](from-conductor/README.md) names each module.
+- `access-copy.ts`: the sentence under the last call to action of each
+  page, which fits both states of sign-up.
 - `links.ts`: the source repository address, site paths, and `pageHrefs`
   for links from another origin.
 - `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
@@ -237,6 +259,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,
   icon, marker, and file-list names and types, and the two start labels.
 - `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
+- `styles/comparison.css`, `styles/comparison-table.css`: the comparison
+  page and its table, in the cascade that `layouts/Document.astro` keeps.
 - `icon-shapes.ts`: lucide icons as shapes for the Astro pages.
 - `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
   queries, frame classes, and picture-size CSS.
@@ -251,7 +275,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   capture pages, browser control, Chrome connection, and lossless encoding.
 - `picture-capture.test.ts`: capture pages, bounds, and file names.
 - [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
-  real builds served through the Worker, including their policy and files.
+  real builds served through the Worker, including their policy, their
+  files, and the comparison page with its two entry links.
 - [`worker/marketing/start-label.test.ts`](../../worker/marketing/start-label.test.ts):
   both labels, the 60-second copy, the pause, a failed read, and site files
   without D1.

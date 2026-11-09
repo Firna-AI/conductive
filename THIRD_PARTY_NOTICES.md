@@ -1,20 +1,17 @@
 # Third-party notices
 
 Each upstream license applies to the third-party materials listed with it.
-The file lists cover the HTML and Astro marketing site layouts.
-Some paths exist only in one layout.
 
 ## Lucide icons
 
 The marketing site includes SVG shapes from
 [Lucide 0.577.0](https://github.com/lucide-icons/lucide/blob/0.577.0/LICENSE).
 The copied icons are `cloud`, `users`, `list-tree`, `square-plus`,
-`panels-top-left`, and `archive`.
+`panels-top-left`, `archive`, `circle-check`, `contrast`, `circle-dashed`,
+`arrow-right-left`, `circle-ellipsis`, `circle-minus`, `calendar-check`, and
+`arrow-right`.
 
-Files:
-
-- HTML layout: `src/marketing/icons.ts`.
-- Astro layout: `src/marketing/icon-shapes.ts`.
+File: `src/marketing/icon-shapes.ts`.
 
 The [complete upstream notice](licenses/lucide-0.577.0-LICENSE.txt)
 includes the ISC notice for Lucide and the MIT notice for portions from
@@ -28,8 +25,7 @@ Its SVG path matches
 
 Files:
 
-- HTML layout: `src/marketing/icons.ts`.
-- Astro layout: `src/marketing/components/GitHubMark.astro`.
+- Marketing site: `src/marketing/components/GitHubMark.astro`.
 - Shared app and mockups: `docs/mockups/src/components/common/GitHubMark.tsx`.
 
 The [complete upstream MIT notice](licenses/octicons-v19.21.0-LICENSE.txt)

@@ -1,5 +1,6 @@
 ---
 import { productName } from '../../../docs/mockups/src/brand'
+import { parityLinkCopy } from '../from-conductor/copy'
 import { abuseAddress } from '../legal-text'
 import { sitePaths } from '../links'
 import { featuresHref, requestValues, signInHref } from '../request-values'
@@ -7,10 +8,9 @@ import FooterColumn from './FooterColumn.astro'
 import Wordmark from './Wordmark.astro'
 
 /*
- * The foot of each page: the lockup, the sections, the main action and the
- * sign-in, the address for abuse reports, and the legal pages beside the
- * copyright. The main action has the words of the request, as each main
- * action of the site does.
+ * The foot of each page: the lockup, sections, comparison link, main
+ * action, sign-in, abuse contact, and legal pages beside the copyright.
+ * The main action uses the label of the request.
  */
 ---
 
@@ -26,6 +26,11 @@ import Wordmark from './Wordmark.astro'
       <li>
         <a class="footer-link" href={featuresHref}>
           Features
+        </a>
+      </li>
+      <li>
+        <a class="footer-link" href={sitePaths.fromConductor}>
+          {parityLinkCopy.footer}
         </a>
       </li>
     </FooterColumn>

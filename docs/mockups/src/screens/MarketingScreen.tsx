@@ -1,5 +1,7 @@
 import type { Viewport } from '@mokly/mokly'
+import { waitlistText } from '../../../../src/marketing/access-copy'
 import { features, smallerFeatures } from '../../../../src/marketing/features'
+import { parityLinkCopy } from '../../../../src/marketing/from-conductor/copy'
 import { classes } from '../components/common/classes'
 import { ClosingCall } from '../components/marketing/ClosingCall'
 import { FeatureGrid } from '../components/marketing/FeatureGrid'
@@ -31,6 +33,7 @@ export function MarketingScreen(props: {
     <SitePage signUp={props.signUp} viewport={viewport}>
       <Hero
         device={hero.device}
+        notice={{ text: parityLinkCopy.home, to: paths.fromConductor }}
         picture={hero.picture}
         signIn={paths.signIn}
         text="Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser."
@@ -57,7 +60,7 @@ export function MarketingScreen(props: {
         />
         <ClosingCall
           signIn={paths.signIn}
-          text="Sign up with GitHub, connect your repositories, and send the first task."
+          text={waitlistText}
           title="Give your next task its own cloud computer."
           viewport={viewport}
         />

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { parityLinkCopy } from '../../../../../src/marketing/from-conductor/copy'
 import { abuseAddress } from '../../../../../src/marketing/legal-text'
 import { productName } from '../../brand'
 import { ScreenLink } from '../common/ScreenLink'
@@ -21,9 +22,9 @@ function Column(props: { title: string; children: ReactNode }) {
 }
 
 /**
- * The foot of the site: the wordmark, the sections, the main action and the
- * sign-in, the address for abuse reports, and the legal pages beside the
- * copyright. The main action has the words of the state of sign-up.
+ * The foot of the site: the wordmark, sections, comparison link, main
+ * action, sign-in, abuse contact, and legal pages beside the copyright.
+ * The main action follows the state of sign-up.
  */
 export function SiteFooter(props: {
   links: SiteLinks
@@ -48,6 +49,11 @@ export function SiteFooter(props: {
               to={props.links.home}
             >
               Features
+            </ScreenLink>
+          </li>
+          <li>
+            <ScreenLink className={styles.link} to={props.links.fromConductor}>
+              {parityLinkCopy.footer}
             </ScreenLink>
           </li>
         </Column>
