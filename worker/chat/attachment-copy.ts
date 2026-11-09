@@ -40,7 +40,7 @@ export async function prepareMessageAttachments(
       record.uploaderUserId !== userId ||
       record.state !== 'claimed' ||
       record.claimedWorkspaceId !== workspaceId ||
-      attachment.path !== (await attachmentPath(record.id, messageId))
+      attachment.path !== (await attachmentPath(record, messageId))
     )
       throw attachmentNotFound()
     const object = await bucket.get(record.objectKey)

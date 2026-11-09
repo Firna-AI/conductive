@@ -4338,8 +4338,36 @@ otherwise. The user can override any of them.
 - Copy the files of a message that joins a running turn before its command
   goes out. Reason: that message can arrive after the turn starts. A turn
   that cannot start after a failed copy uses the existing failed-turn and
-  Try again behaviour. A copy failure during a running turn keeps the
-  pending message.
+  Try again behaviour.
+- Fix round 1 of PR #71, finding 2, option B, 8 November 2026: check the
+  pending commands in stored order for send, wait, or skip. A message that
+  waits for its copy holds the later messages of its turn, in accepted
+  order. Stop and other turns do not wait. A failed copy fails its own
+  turn, queued or running, through the existing failed-turn and Try again
+  behaviour. The failure adds no wait for later messages. Reason: a later
+  message can correct an earlier one. A rule that holds all work of the
+  workspace during a copy was rejected, because it blocks Stop and
+  unrelated turns.
+- Agent call of 8 November 2026, needed for the failure rule of finding 2:
+  when a failed copy ends a running turn, the same commit saves the
+  existing `interrupt` command for that turn. That interrupt goes out
+  although the turn has ended, also again after a reconnect. The late end
+  of that turn from the runner removes only that interrupt. The interrupt
+  changes no public turn or session state. Reason: a failure in the Worker
+  alone leaves the agent running, so Try again gets `turn_running` from the
+  runner. This adds no Worker wait, runner command, message format, or
+  runner change. The protocol now sends no turn or message command after a
+  stored turn end, but lets this Stop cancel the agent after a copy
+  failure. The approved immediate failure with no new wait is the reason.
+  The reconnect and cleanup mechanics stay in the Worker guides.
+- Fix round 1 of PR #71, finding 3, option D, 8 November 2026: one shared
+  description gives both agents the original name, media type, and copied
+  path of each file. Codex keeps its local image input. Each copy path
+  ends in the safe extension of the immutable stored filename: 1 to 10
+  ASCII letters or digits, in lowercase. Other filenames get no extension.
+  Reason: a digest path alone hides the name and the type, and the
+  extension lets the agent choose its local reader. A wrong extension in a
+  filename can make the agent choose the wrong reader.
 - A draft whose stored file is gone uses the failed file chip and Try
   again. Try again uploads its kept local file. Reason: this keeps the
   approved draft expiry and the existing file recovery in one flow.

@@ -275,6 +275,7 @@ tools that time the first agent start after a resume.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
+  `attachment-description.ts` describes each attached file to both agents.
   The [tool entry points](agent-tools.md#key-code) cover both MCP servers.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of

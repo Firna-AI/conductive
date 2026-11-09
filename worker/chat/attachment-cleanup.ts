@@ -104,15 +104,9 @@ export async function purgeOrgAttachments(
   }
 }
 
-export type AttachmentExpiry = (
-  record: AttachmentRecord,
-  now: number,
-) => Promise<void>
-
 export async function cleanupDraftAttachments(
   env: AppEnv,
   now: number,
-  expire?: AttachmentExpiry,
 ): Promise<void> {
   let after = ''
   while (true) {
@@ -120,8 +114,7 @@ export async function cleanupDraftAttachments(
     for (const record of records) {
       try {
         if (record.state === 'claimed' && record.claimedWorkspaceId) {
-          if (expire) await expire(record, now)
-          else if (env.WORKSPACES)
+          if (env.WORKSPACES)
             await env.WORKSPACES.getByName(
               record.claimedWorkspaceId,
             ).expireChatAttachment(

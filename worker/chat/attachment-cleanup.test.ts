@@ -39,44 +39,15 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('expires unsent drafts at seven days and keeps accepted queued files of surviving workspaces', async () => {
+it('expires unclaimed drafts at seven days', async () => {
   const fixture = await attachmentFixture(harness)
   const draft = await fixture.upload()
-  const accepted = await fixture.upload()
-  const session = await fixture.createSession()
-  expect(
-    (await fixture.sendAttachment(session.id, 'accepted-file', [accepted.id]))
-      .status,
-  ).toBe(202)
-  const expire = (
-    record: { orgId: string; id: string; revision: number },
-    now: number,
-  ) =>
-    fixture.chat.runLifecycle(() =>
-      expireClaimedAttachment(
-        harness.env,
-        fixture.chat.store,
-        WORKSPACE_ID,
-        record.orgId,
-        record.id,
-        record.revision,
-        now,
-      ),
-    )
-  await cleanupDraftAttachments(harness.env, TEST_TIME + 604_799_999, expire)
+  await cleanupDraftAttachments(harness.env, TEST_TIME + 604_799_999)
   expect(await readAttachment(harness.env.DB, draft.id)).toMatchObject({
     state: 'ready',
   })
-  await cleanupDraftAttachments(harness.env, TEST_TIME + 604_800_000, expire)
+  await cleanupDraftAttachments(harness.env, TEST_TIME + 604_800_000)
   expect(await readAttachment(harness.env.DB, draft.id)).toBeNull()
-  expect(await fixture.bytes(accepted.id)).toEqual(
-    new Uint8Array([0, 255, 128, 13, 10, 65]),
-  )
-  expect(
-    await fixture.chat.store.read(WORKSPACE_ID, (view) =>
-      view.message('accepted-file'),
-    ),
-  ).toMatchObject({ state: 'queued' })
 })
 
 it('queues expiry behind message acceptance and removes a claim after a rolled back acceptance', async () => {
@@ -93,21 +64,18 @@ it('queues expiry behind message acceptance and removes a claim after a rolled b
     first.id,
   ])
   await entered.promise
-  const expiry = cleanupDraftAttachments(
-    harness.env,
-    TEST_TIME + 604_800_000,
-    (record, now) =>
-      fixture.chat.runLifecycle(() =>
-        expireClaimedAttachment(
-          harness.env,
-          fixture.chat.store,
-          WORKSPACE_ID,
-          record.orgId,
-          record.id,
-          record.revision,
-          now,
-        ),
-      ),
+  const firstClaim = await readAttachment(harness.env.DB, first.id)
+  if (!firstClaim) throw new Error('The claim is missing.')
+  const expiry = fixture.chat.runLifecycle(() =>
+    expireClaimedAttachment(
+      harness.env,
+      fixture.chat.store,
+      WORKSPACE_ID,
+      firstClaim.orgId,
+      firstClaim.id,
+      firstClaim.revision,
+      TEST_TIME + 604_800_000,
+    ),
   )
   fixture.storage.beforeCommit = null
   release.resolve()
@@ -130,21 +98,18 @@ it('queues expiry behind message acceptance and removes a claim after a rolled b
       view.attachmentUse(abandoned.id),
     ),
   ).toBeUndefined()
-  await cleanupDraftAttachments(
-    harness.env,
-    TEST_TIME + 604_800_000,
-    (record, now) =>
-      fixture.chat.runLifecycle(() =>
-        expireClaimedAttachment(
-          harness.env,
-          fixture.chat.store,
-          WORKSPACE_ID,
-          record.orgId,
-          record.id,
-          record.revision,
-          now,
-        ),
-      ),
+  const abandonedClaim = await readAttachment(harness.env.DB, abandoned.id)
+  if (!abandonedClaim) throw new Error('The claim is missing.')
+  await fixture.chat.runLifecycle(() =>
+    expireClaimedAttachment(
+      harness.env,
+      fixture.chat.store,
+      WORKSPACE_ID,
+      abandonedClaim.orgId,
+      abandonedClaim.id,
+      abandonedClaim.revision,
+      TEST_TIME + 604_800_000,
+    ),
   )
   expect(await readAttachment(harness.env.DB, abandoned.id)).toBeNull()
   expect(await readAttachment(harness.env.DB, first.id)).toMatchObject({

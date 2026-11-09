@@ -4,6 +4,7 @@ import type {
   RunnerMessageDuringTurn,
 } from '../../src/shared/runner'
 import { HttpError } from '../http'
+import type { DispatchState } from './ordered-dispatch'
 import type { ChatStore } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ActiveRunner, ChatDependencies } from './types'
@@ -34,14 +35,14 @@ export class AttachmentPreparation {
     this.resume = resume
   }
 
-  async ready(
+  async check(
     active: ActiveRunner,
     command: MessageCommand,
     isCurrent: () => boolean,
-  ): Promise<boolean> {
-    if (command.attachments.length === 0) return true
+  ): Promise<DispatchState> {
+    if (command.attachments.length === 0) return 'send'
     const previous = this.pending.get(command.commandId)
-    if (previous && !previous.ready) return false
+    if (previous && !previous.ready) return 'wait'
     if (
       previous?.runner === active &&
       previous.ready &&
@@ -52,7 +53,7 @@ export class AttachmentPreparation {
             command.message.sender.id,
           )))
     )
-      return true
+      return 'send'
     const preparation: Preparation = {
       runner: active,
       ready: false,
@@ -100,7 +101,7 @@ export class AttachmentPreparation {
               await this.resume()
               return
             }
-            if (await this.failQueued(active.workspace.id, command, error))
+            if (await this.failTurn(active.workspace.id, command, error))
               await this.resume()
           }),
       )
@@ -116,22 +117,24 @@ export class AttachmentPreparation {
         throw error
       }),
     )
-    return false
+    return 'wait'
   }
 
-  private async failQueued(
+  private async failTurn(
     workspaceId: string,
     outbound: MessageCommand,
     error: unknown,
   ): Promise<boolean> {
-    return this.store.change(
+    const failed = await this.store.change(
       workspaceId,
       async (view) => {
         const turn = await view.turn(outbound.turnId)
-        if (!turn || turn.state !== 'queued') return false
+        if (!turn || (turn.state !== 'queued' && turn.state !== 'running'))
+          return undefined
         const session = await view.session(outbound.sessionId)
-        if (!session || session.activeTurnId !== turn.id) return false
-        await view.emit({
+        if (!session || session.activeTurnId !== turn.id) return undefined
+        const running = turn.state === 'running'
+        const failed = await view.emit({
           type: 'turn.failed',
           sessionId: session.id,
           turnId: turn.id,
@@ -144,15 +147,37 @@ export class AttachmentPreparation {
                     'The attached files could not reach the cloud computer. Try again.',
                 },
           retryMessageId: outbound.message.id,
-          durationMs: 0,
+          durationMs:
+            turn.startedAt === undefined
+              ? 0
+              : Math.max(0, view.now - turn.startedAt),
         })
         await new TurnLifecycle(view, session).finish(turn, {
           state: 'failed',
           retryMessageId: outbound.message.id,
         })
-        return true
+        if (running)
+          await view.saveCommand({
+            type: 'interrupt',
+            commandId: this.dependencies.randomId(),
+            sessionId: session.id,
+            turnId: turn.id,
+          })
+        return failed
       },
       this.publish,
     )
+    if (!failed) return false
+    await this.dependencies.runnerEventStored(
+      failed,
+      async (event, occurredAt) => {
+        await this.store.change(
+          workspaceId,
+          (view) => view.emit(event, occurredAt),
+          this.publish,
+        )
+      },
+    )
+    return true
   }
 }

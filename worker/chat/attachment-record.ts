@@ -62,9 +62,10 @@ export function publicAttachment(record: AttachmentRecord): Attachment {
 }
 
 export async function attachmentPath(
-  id: string,
+  record: AttachmentRecord,
   messageId: string,
 ): Promise<string> {
-  const safe = await hash(JSON.stringify([messageId, id]))
-  return `/home/user/.conductive-attachment-${safe}`
+  const safe = await hash(JSON.stringify([messageId, record.id]))
+  const extension = record.name.match(/\.([A-Za-z0-9]{1,10})$/)?.[1]
+  return `/home/user/.conductive-attachment-${safe}${extension ? `.${extension.toLowerCase()}` : ''}`
 }

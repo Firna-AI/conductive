@@ -158,7 +158,8 @@ says.
 - While the login of the starter can be used, a message that the starter
   sends during a turn joins that turn. A message of another member joins it
   too while the starter shares the login. Such a message goes to the agent
-  at once, and the agent reads it at its next tool call.
+  at once, unless files must reach the cloud computer first, as
+  [Attachments](#attachments) says. The agent reads it at its next tool call.
 - In a turn without tool calls, the agent reads such a message when the
   turn ends.
 - A message that the workspace accepted stays in its session, also when the
@@ -225,13 +226,21 @@ says.
   message into the cloud computer of the workspace (decision 132).
 - The agent gets a message only after each of its files is in the cloud
   computer. This holds also for a message that joins a running turn.
+- While the files of a message copy, each later message of the same turn
+  waits. The agent then gets the messages of that turn in the order that
+  the workspace accepted them.
+- Stop and the turns of other sessions do not wait for a copy.
+- Reason: a later message can correct an earlier one. A rule that holds all
+  work of the workspace during a copy was rejected, because it would hold
+  Stop and the other sessions.
 - With the message, the agent gets the path, the name, and the media type
   of each file. The copy holds the exact bytes of the upload.
 - A turn cannot start when a file of its message cannot reach the cloud
   computer. That turn fails and names the cause. Try again copies the
   files again.
-- A copy that fails during a running turn does not end that turn. The
-  workspace keeps the message, and the message waits.
+- A copy that fails for a message that joins a running turn fails that
+  turn in the same way. The workspace also stops the agent of that turn, as
+  [The agent runner](#the-agent-runner) says.
 - The chat shows the name and the size of each file of a sent message.
 - The app deletes the files of a workspace with the workspace, also in the
   purge of a deleted org (decision 132).
@@ -368,7 +377,12 @@ says.
   the runner comes before the agent starts.
 - The runner keeps a record of each accepted turn across a crash and a
   restart, until the workspace confirms the end of the turn. The workspace
-  sends no command for a turn after it stores the end of that turn.
+  sends no turn or message command for a turn after it stores the end of
+  that turn.
+- After a failed file copy ends a running turn, the workspace can still
+  send Stop for that turn, to cancel the agent. That turn still shows as
+  failed. Reason: the failure in [Attachments](#attachments) ends the turn
+  at once, with no new wait for the agent.
 - At a shutdown, the runner sends a stopped end for each accepted turn that
   has no end. After a restart, it does the same for each turn that it
   accepted before the restart. It starts no agent for such a turn.

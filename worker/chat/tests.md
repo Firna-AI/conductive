@@ -1,9 +1,17 @@
 # Chat backend tests
 
 The `attachment-*.test.ts` files use local R2 and D1 through the internal storage boundary.
-They cover exact bytes, ownership, first-message recovery, expiry races, copy proof, and Stop during a held transfer.
+They cover exact bytes, ownership, first-message recovery, expiry races, copy proof, path extensions, and Stop during a held transfer.
 `attachment.test-support.ts` supplies the shared fixture and explicit fake preparation seams.
+`delivery-order.test.ts` holds a copy during a running turn.
+It checks that the later messages of that turn keep their order, and that Stop and another session do not wait.
+It also checks that a failed copy fails only its own turn.
+`attachment-cancellation.test.ts` connects the real runner `AgentEngine` through `attachment-engine.test-support.ts`.
+It checks that a failed copy stops the running agent, and that Try again starts after the old agent process exits, with no Worker wait.
+It also checks that a restart sends the stored interrupts again, and that each late end removes only the interrupt of its turn.
 `integration/attachment-raw.test.ts` checks native fixed-length R2 writes, raw metadata and ownership, interrupted transfers, and desktop admission.
+`integration/attachment-cleanup.test.ts` runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
+An expired claim without an accepted message loses its record and its object. An accepted file keeps both.
 The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
 
 This guide belongs to the [chat backend](README.md). Run the tests from

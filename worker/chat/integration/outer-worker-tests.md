@@ -152,4 +152,7 @@ CHAT_HARNESS_ASSETS=path/to/client CHAT_HARNESS_PORT=5181 \
   admission. It holds the start, leaves, fails the start, and waits for the
   result and a `404`. Then it returns through history, and retries with the
   same message ID and a new workspace ID.
-- The Worker routes no attachment upload yet, so such a check sends text.
+- The Worker routes raw attachment uploads, and `attachment-raw.test.ts`
+  checks them with native R2. The fake provider of the harness gives no
+  file upload address, so a file copy into its fake sandbox fails. So such
+  a check sends text.

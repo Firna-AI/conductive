@@ -9,9 +9,14 @@ import {
 } from 'vitest'
 
 import { retryMessagePath, sessionPaths } from '../../src/shared/sessions'
-import { createHarness, type TestHarness } from '../test-support/harness'
+import {
+  createHarness,
+  TEST_TIME,
+  type TestHarness,
+} from '../test-support/harness'
 import { attachmentFixture, FILE_BYTES, held } from './attachment.test-support'
 import { prepareMessageAttachments } from './attachment-copy'
+import { storeAttachment } from './attachment-storage'
 import { WORKSPACE_ID } from './harness.test-support'
 import { messageCommands, startTurn } from './turn-lifecycle.test-support'
 
@@ -76,19 +81,38 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   )
     .bind('sandbox-one', WORKSPACE_ID)
     .run()
-  const file = await fixture.upload()
+  const upload = (id: string, name: string) =>
+    storeAttachment(
+      harness.env,
+      {
+        orgId: fixture.org.id,
+        uploaderUserId: fixture.owner.id,
+        target: fixture.target,
+        name,
+        kind: 'file',
+        mediaType: 'application/pdf',
+      },
+      FILE_BYTES,
+      { now: () => TEST_TIME, newId: () => id },
+    )
+  const file = await upload('pdf-file', 'Project plan.PDF')
+  const unsafe = await upload('unsafe-file', 'Project plan.pdf/notes')
+  const fileIds = [file.id, unsafe.id]
   const session = await fixture.createSession()
   const runner = await fixture.connect()
   runner.emit({ type: 'runner.ready' })
   await fixture.drain()
-  const sending = fixture.sendAttachment(session.id, longMessageId, [file.id])
+  const sending = fixture.sendAttachment(session.id, longMessageId, fileIds)
   await entered.promise
   expect(runner.commands).toEqual([])
   release.resolve()
   expect((await sending).status).toBe(202)
   await fixture.drainAttachments()
-  expect(provider.copies).toEqual([FILE_BYTES])
+  expect(provider.copies).toEqual([FILE_BYTES, FILE_BYTES])
   expect(provider.paths[0]).toMatch(
+    /^\/home\/user\/\.conductive-attachment-[A-Za-z0-9_-]{43}\.pdf$/,
+  )
+  expect(provider.paths[1]).toMatch(
     /^\/home\/user\/\.conductive-attachment-[A-Za-z0-9_-]{43}$/,
   )
   expect(messageCommands(runner, longMessageId)[0]?.attachments[0]?.path).toBe(
@@ -97,7 +121,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   runner.disconnect()
   await fixture.connect(runner)
   await fixture.drainAttachments()
-  expect(provider.copies).toHaveLength(1)
+  expect(provider.copies).toHaveLength(2)
   runner.disconnect()
   await harness.env.DB.prepare(
     'UPDATE workspaces SET sandbox_id = ? WHERE id = ?',
@@ -106,17 +130,27 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     .run()
   await fixture.connect(runner)
   await fixture.drainAttachments()
-  expect(provider.copies).toEqual([FILE_BYTES, FILE_BYTES])
+  expect(provider.copies).toEqual([
+    FILE_BYTES,
+    FILE_BYTES,
+    FILE_BYTES,
+    FILE_BYTES,
+  ])
+  expect(provider.paths.slice(2)).toEqual(provider.paths.slice(0, 2))
   expect(
-    (
-      await fixture.sendAttachment(session.id, 'another-file-message', [
-        file.id,
-      ])
-    ).status,
+    (await fixture.sendAttachment(session.id, 'another-file-message', fileIds))
+      .status,
   ).toBe(202)
   await fixture.drainAttachments()
-  expect(provider.copies).toEqual([FILE_BYTES, FILE_BYTES, FILE_BYTES])
-  expect(provider.paths[2]).not.toBe(provider.paths[0])
+  expect(provider.copies).toEqual([
+    FILE_BYTES,
+    FILE_BYTES,
+    FILE_BYTES,
+    FILE_BYTES,
+    FILE_BYTES,
+    FILE_BYTES,
+  ])
+  expect(provider.paths[4]).not.toBe(provider.paths[0])
   runner.disconnect()
 })
 
@@ -162,7 +196,7 @@ it('keeps the accepted message and exposes Try again after a copy prevents its t
   runner.disconnect()
 })
 
-it('keeps a failed file copy pending without ending an active turn', async () => {
+it('ends a running turn after copy failure and lets Try again copy its message', async () => {
   let fail = true
   const fixture = await attachmentFixture(harness, {
     attachmentSandboxId: async () => 'sandbox-one',
@@ -187,16 +221,28 @@ it('keeps a failed file copy pending without ending an active turn', async () =>
     await fixture.chat.store.read(WORKSPACE_ID, (view) =>
       view.turn(turn.turnId),
     ),
-  ).toMatchObject({ state: 'running' })
+  ).toMatchObject({ state: 'failed' })
+  expect(
+    await fixture.chat.store.read(WORKSPACE_ID, (view) =>
+      view.session(session.id),
+    ),
+  ).toMatchObject({ activeTurnId: null, retryMessageId: 'waiting-file' })
   fail = false
-  await fixture.chat.runLifecycle(() => fixture.chat.flushRunner())
+  const retry = await fixture.fetch(
+    retryMessagePath(fixture.org.id, WORKSPACE_ID, session.id, 'waiting-file'),
+    {},
+  )
+  expect(retry.status).toBe(202)
   await fixture.drainAttachments()
-  expect(messageCommands(runner, 'waiting-file')).toHaveLength(1)
+  expect(messageCommands(runner, 'waiting-file')).toEqual([])
+  expect(
+    runner.commands.filter((command) => command.type === 'turn'),
+  ).toHaveLength(2)
   expect(
     await fixture.chat.store.read(WORKSPACE_ID, (view) =>
       view.turn(turn.turnId),
     ),
-  ).toMatchObject({ state: 'running' })
+  ).toMatchObject({ state: 'failed' })
   runner.disconnect()
 })
 
