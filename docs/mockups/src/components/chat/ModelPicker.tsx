@@ -8,17 +8,9 @@ import {
 import { noop } from '../../noop'
 import { Menu, type MenuPlacement } from '../common/Menu'
 import { useControlSizes } from '../common/touch'
+import { pickerButtonStyle } from './pickerButton'
 import { pickerMenu } from './pickers'
 import styles from './ModelPicker.module.css'
-
-/**
- * The style of the button of each model picker. In a narrow bar the button
- * shrinks with its container, so that it never runs under the control after
- * it. Its text then gives way: the effort first, then the model.
- */
-export function pickerButtonStyle(height: number) {
-  return { height, minWidth: 0, flexShrink: 1, paddingHorizontal: 8 }
-}
 
 /**
  * One picker for the model and the effort of the next message, such as

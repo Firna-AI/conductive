@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import composerStyles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import type { OrgRole } from '../../shared/api'
 import { membersPath } from '../../shared/members'
@@ -17,6 +18,20 @@ function beforeSend(markup: string): string {
   return textOf(markup.slice(0, markup.indexOf('aria-label="Send"')))
 }
 
+/**
+ * The words of the whole composer: the box, its bar, and the hint under it.
+ * It fails when the chat shows no composer, so no check of it can pass on a
+ * chat without one.
+ */
+function composerText(markup: string): string {
+  const start = markup.indexOf(`class="${composerStyles.wrap}"`)
+  expect(start).toBeGreaterThan(-1)
+  return textOf(markup.slice(markup.lastIndexOf('<', start)))
+}
+
+/** Any name of a login, in any words, such as "Uses your Claude login". */
+const anyLogin = /login/i
+
 /** The account of the reader of a role, with no agent login. */
 function noLogins(role: OrgRole) {
   return { ...coreFixtures(role).account, agentLogins: [] }
@@ -29,11 +44,13 @@ describe('the login of a session', () => {
   it("names the starter's login inside the composer box to another member, also after the starter left the org, and no login to the starter, also a private one", async () => {
     const own = await renderChat({})
     expect(own.text()).not.toContain(loginLabel)
+    expect(composerText(own.markup())).not.toMatch(anyLogin)
     const ownPrivate = await renderChat({
       setup: (server) => withSessions(server, loginPrivate),
     })
     ownPrivate.chat.controller.setDraft(id, 'Add tests.')
     expect(ownPrivate.text()).not.toContain(loginLabel)
+    expect(composerText(ownPrivate.markup())).not.toMatch(anyLogin)
     expect(ownPrivate.text()).not.toContain('Your message starts a new session')
     expect(ownPrivate.markup()).not.toMatch(sendOff)
     const member = await renderChat({ role: 'member' })
@@ -97,6 +114,7 @@ describe('the login of a session', () => {
         case: reason,
         notice: text.includes(`Your message starts a new session ${reason}`),
         label: text.includes(loginLabel),
+        composerLogin: anyLogin.test(composerText(member.markup())),
         stop: text.includes('Stop'),
         steer: text.includes('The agent reads this at its next step.'),
         placeholder: member
@@ -107,6 +125,7 @@ describe('the login of a session', () => {
         case: reason,
         notice: true,
         label: false,
+        composerLogin: false,
         stop: true,
         steer: false,
         placeholder: true,
@@ -129,6 +148,7 @@ describe('the login of a session', () => {
       'Your message starts a new session The login for this session is not available.',
     )
     expect(older.text()).not.toContain(loginLabel)
+    expect(composerText(older.markup())).not.toMatch(anyLogin)
     const noLogin = await renderChat({
       role: 'member',
       setup: (server) => {
@@ -150,6 +170,7 @@ describe('the login of a session', () => {
     privateNoLogin.chat.controller.setDraft(id, 'Add tests.')
     expect(privateNoLogin.text()).toContain('Connect Claude to use Opus 5.5')
     expect(privateNoLogin.text()).not.toContain(loginLabel)
+    expect(composerText(privateNoLogin.markup())).not.toMatch(anyLogin)
     expect(privateNoLogin.markup()).toMatch(sendOff)
   })
 })
