@@ -1,7 +1,7 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
+import { writeFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { ModuleKind, ScriptTarget, transpileModule } from 'typescript'
+import { build } from 'vite'
 
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
 
@@ -13,27 +13,22 @@ export async function previewHost(
   const desktop = resolve(import.meta.dirname, '..')
   const repository = resolve(desktop, '..')
   const web = resolve(directory, 'web')
-  const modules = [
-    'desktop/renderer/navigation.ts',
-    'desktop/src/navigation.ts',
-    'worker/security/desktop-contract.ts',
-    'worker/security/preview-launch-path.ts',
-    'src/shared/api.ts',
-  ]
-  for (const name of modules) {
-    const output = resolve(web, name.replace(/\.ts$/, '.js'))
-    await mkdir(dirname(output), { recursive: true })
-    const source = await readFile(resolve(repository, name), 'utf8')
-    await writeFile(
-      output,
-      transpileModule(source, {
-        compilerOptions: {
-          target: ScriptTarget.ES2023,
-          module: ModuleKind.ESNext,
-        },
-      }).outputText,
-    )
-  }
+  await build({
+    root: repository,
+    configFile: false,
+    publicDir: false,
+    logLevel: 'silent',
+    build: {
+      outDir: resolve(web, 'desktop/renderer'),
+      emptyOutDir: false,
+      minify: false,
+      lib: {
+        entry: resolve(desktop, 'renderer/navigation.ts'),
+        formats: ['es'],
+        fileName: () => 'navigation.js',
+      },
+    },
+  })
   await writeFile(
     resolve(web, 'index.html'),
     `<!doctype html><h1>Preview fixture</h1><p role="status">Starting.</p><a href="${input.launcher}" target="_blank">Open in new tab</a><iframe title="Port preview" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" src="${input.launcher}"></iframe><script type="module" src="/ready.js"></script>`,
