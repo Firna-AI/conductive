@@ -1,10 +1,10 @@
 # Worker backend
 
 This Cloudflare Worker serves the browser API for Conductive.
-It checks sign-in and org access before it dispatches protected app requests.
+It checks sign-in, app access, and org access before it dispatches protected app requests.
 It forwards the browser chat routes of a workspace to the Durable Object of that workspace.
 These requests keep the body limit of the Worker entry and the host and `Origin` checks.
-The Worker skips its request gate for them, so it parses no JSON body.
+The Worker runs the session and app access checks for them, without reading the body.
 The Durable Object runs the complete request gate.
 Durable Objects hold workspace state, and D1 holds shared records.
 The [security area](security/README.md) owns the app request gate.
@@ -15,7 +15,13 @@ The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
 The [lifecycle](lifecycle/README.md) records each image's runner version and copies it before each new computer allocation.
 The chat backend refuses a runner below that pin before the welcome or any command.
-The [operator area](operator/README.md) owns the operator's app-wide numbers and suspension of users and orgs.
+The [operator area](operator/README.md) owns the operator's app-wide numbers,
+suspensions, waitlist approvals, invite codes, and sign-up pause.
+New accounts wait for app access unless an operator identity or a valid join
+code grants it at sign-in. The [app access gate](security/README.md#app-access-gate)
+admits only session, waitlist, sign-out, and personal invitation requests
+while the user waits. It refuses other API requests and upgrades with
+403 `access_required`, including operator and org requests.
 
 ## Routes
 
@@ -34,6 +40,7 @@ On the app hostname, the Worker serves these API routes:
 
 - The health check, GitHub sign-in and its callback, and the sign-in exchange of the Mac app.
 - The session, sign-out, the org list, a new org, and one org.
+- The waitlist state and code use, through the [waitlist backend](waitlist/README.md).
 - The account, its default model, its agent logins, the model list, and Get started.
 - The sections, the repositories, the members, and the workspace list of an org.
 - Leave org, under the existing last-active-admin rule.
@@ -45,6 +52,8 @@ On the app hostname, the Worker serves these API routes:
 - `GET /api/operator/users`, the user search and cursor pages for operators.
 - `GET /api/operator/orgs/<orgId>`, the org page for operators.
 - `GET /api/operator/users/<githubId>`, the user page for operators.
+- The operator's waitlist list and approval, invite code list, creation and
+  disable, and sign-up pause, as the [operator area](operator/README.md#waitlist-codes-and-sign-ups) says.
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
 - `DELETE /api/operator/users/<githubId>/suspension`, the operator's lift of a user suspension.
 - `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
@@ -83,6 +92,9 @@ The preview domain forwards each private preview to its workspace object.
 Its authorizer redeems the one-use viewer grant before any sandbox request.
 The object owns preview expiry and revocation beside its other alarm sources.
 A Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
+It also retries pending approval emails until delivery or 24 hours from
+approval. [Approval delivery](operator/README.md#approval-email-delivery)
+describes the saved messages and delivery keys.
 It also repairs overdue workspace disk alarms and org image refreshes after a 15-minute grace period.
 The repair checks at most 50 workspaces and 50 orgs per run.
 It defers failed calls and logs counts when either limit leaves work pending.
@@ -112,6 +124,8 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
+- [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
+- [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
@@ -122,6 +136,8 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [features/alarms.ts](features/alarms.ts) keeps separate durable alarm deadlines for lifecycle, devices, previews, and GitHub.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
+- [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
+- [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between approval and invitation emails.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.
 - [http/json-body.ts](http/json-body.ts) owns the shared JSON object parsing policy.
@@ -133,6 +149,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [Architecture](../docs/architecture.md)
 - [Deployment inputs](../docs/deployment.md)
 - [Access and security](../docs/protocol/access-and-security.md)
+- [Waitlist](../docs/protocol/waitlist.md)
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)

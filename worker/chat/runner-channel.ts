@@ -1,5 +1,5 @@
 import { errorSummary, warnWorker } from '../warnings'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import { HttpError } from '../http'

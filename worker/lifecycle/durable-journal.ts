@@ -1,6 +1,14 @@
 import type { WorkspaceStorage } from './platform-storage'
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import type { WorkspacePlatform } from './workspace-platform'
+import type { WorkspaceSnapshot } from '../data/workspace-link'
+
+export interface LifecyclePublication extends Omit<
+  WorkspaceResponse,
+  'workspace'
+> {
+  workspace: WorkspaceSnapshot
+}
 
 const LAST_PUBLISHED = 'lifecycle:last-published'
 
@@ -19,7 +27,7 @@ export class WorkspaceEventJournal {
   }
 
   publishLifecycle(
-    response: WorkspaceResponse,
+    response: LifecyclePublication,
     now: number,
     publish = this.publish,
   ): Promise<void> {

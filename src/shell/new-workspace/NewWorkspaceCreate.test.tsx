@@ -14,6 +14,7 @@ import {
 } from '../../test-support/dom-queries'
 import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { messageText } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { click, press, settle, typeText } from '../test-mount'
 import { away, bodiesOf, headerName, org } from '../workspace/kept-test-kit'
@@ -62,7 +63,7 @@ describe('a create from the New workspace dialog', () => {
     expect({
       title: queryByText("The workspace wasn't created", dialog) !== null,
       body: queryByText(unreachable, dialog) !== null,
-      text: messageIn(dialog).value,
+      text: messageText(messageIn(dialog)),
       tryAgain: queryByRole('button', 'Try again', dialog) !== null,
     }).toEqual({ title: true, body: true, text: task, tryAgain: true })
     reachable = true
@@ -175,27 +176,35 @@ describe('the send key of New workspace', () => {
       const tab = await openTab(server)
       const root = await open(tab)
       const field = messageIn(root)
+      // The field adds the line of Shift+Enter itself, so it keeps the key
+      // from the browser. The text shows each line that a key added.
       const keys = async (init: KeyboardEventInit) => {
         const kept = keyDown(field, { key: 'Enter', ...init })
         await settle()
-        return { kept, creates: createCount(server) }
+        const text = field.isConnected ? messageText(field) : null
+        return { kept, creates: createCount(server), text }
       }
       const empty = await keys({})
       typeText(field, task)
       const shift = await keys({ shiftKey: true })
       const composing = await keys({ isComposing: true })
       const enter = await keys({})
+      const [sent] = await bodiesOf(server, 'POST', workspacesPath(org), 0)
       expect({
         empty,
         shift,
         composing,
         enter,
+        sent,
         address: tab.address(),
       }).toEqual({
-        empty: { kept: true, creates: 0 },
-        shift: { kept: false, creates: 0 },
-        composing: { kept: false, creates: 0 },
-        enter: { kept: true, creates: 1 },
+        empty: { kept: true, creates: 0, text: '' },
+        shift: { kept: true, creates: 0, text: `${task}\n` },
+        composing: { kept: false, creates: 0, text: `${task}\n` },
+        enter: { kept: true, creates: 1, text: null },
+        sent: expect.objectContaining({
+          firstMessage: expect.objectContaining({ text: `${task}\n` }),
+        }),
         address: createdAt,
       })
     },

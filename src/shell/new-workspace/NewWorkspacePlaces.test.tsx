@@ -4,6 +4,7 @@ import { act } from 'react'
 import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { byLabel, byRole } from '../../test-support/dom-queries'
+import { messageText } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { click, press, settle, typeText } from '../test-mount'
 import { here, org } from '../workspace/kept-test-kit'
@@ -82,17 +83,20 @@ describe('the places of New workspace', () => {
     click(newWorkspaceRow(tab.view))
     await settle()
     typeText(messageIn(tab.view), 'Let shoppers save their cart.')
+    // The field adds the line itself, so it keeps the key from the browser.
     const kept = keyDown(messageIn(tab.view), { key: 'Enter' })
     await settle()
     expect({
       dialog: dialogIn(tab.view),
       address: tab.address(),
       kept,
+      text: messageText(messageIn(tab.view)),
       creates: createCount(server),
     }).toEqual({
       dialog: null,
       address: routes.newWorkspace(org),
-      kept: false,
+      kept: true,
+      text: 'Let shoppers save their cart.\n',
       creates: 0,
     })
   })

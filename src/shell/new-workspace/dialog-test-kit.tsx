@@ -12,6 +12,7 @@ import { workspacesPath } from '../../shared/workspaces'
 import { byLabel, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { coreFixtures } from '../../test-support/fixtures/core'
+import { asMessageField } from '../../test-support/message-field'
 import { holdAnimationFrames } from '../../test-support/mount'
 import { Shell } from '../Shell'
 import { mountScreen, settle } from '../test-mount'
@@ -117,12 +118,8 @@ export function newWorkspaceRow(root: HTMLElement): HTMLElement {
 }
 
 /** The message field of a form: in the dialog, or in the main area. */
-export function messageIn(root: HTMLElement): HTMLTextAreaElement {
-  const field = byLabel('Message', root)
-  if (!(field instanceof HTMLTextAreaElement)) {
-    throw new Error('The form has no message field.')
-  }
-  return field
+export function messageIn(root: HTMLElement): HTMLElement {
+  return asMessageField(byLabel('Message', root))
 }
 
 /** The main area of the tab, beside the sidebar. */

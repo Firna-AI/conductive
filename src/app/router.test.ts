@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { INVITE_CODE_ERROR_PARAMETER, joinPath } from '../shared/waitlist'
 import {
   ACCOUNT_TABS,
   parseRoute,
@@ -51,6 +52,27 @@ describe('routes', () => {
     })
   })
 
+  test('a join link names its code, and the reason that the sign-in put in it', () => {
+    const failed = new URLSearchParams({
+      [INVITE_CODE_ERROR_PARAMETER]: 'invite_code_used_up',
+    })
+    expect({
+      link: parse(joinPath('W9TFC-4MJ6D')),
+      failed: parse(`${joinPath('w9tfc 4mj6d')}?${failed}`),
+      none: parse('/join'),
+      deeper: parse(`${joinPath('W9TFC-4MJ6D')}/more`),
+    }).toEqual({
+      link: { screen: 'join', code: 'W9TFC-4MJ6D', error: null },
+      failed: {
+        screen: 'join',
+        code: 'w9tfc 4mj6d',
+        error: 'invite_code_used_up',
+      },
+      none: { screen: 'not-found' },
+      deeper: { screen: 'not-found' },
+    })
+  })
+
   test('each page of the operator section has an address that leads back to it, with the search in the query', () => {
     const cases: readonly [string, Route][] = [
       [routes.operator(), { screen: 'operator', view: { page: 'overview' } }],
@@ -68,6 +90,21 @@ describe('routes', () => {
       [
         routes.operatorUsers('dan'),
         { screen: 'operator', view: { page: 'users', search: 'dan' } },
+      ],
+      [
+        routes.operatorWaitlist('sam okafor'),
+        {
+          screen: 'operator',
+          view: { page: 'waitlist', search: 'sam okafor' },
+        },
+      ],
+      [
+        routes.operatorCodes(),
+        { screen: 'operator', view: { page: 'codes', search: '' } },
+      ],
+      [
+        routes.operatorCodes('K7QHM-3XP2R'),
+        { screen: 'operator', view: { page: 'codes', search: 'K7QHM-3XP2R' } },
       ],
       [
         routes.operatorOrg('org/h3x w4v'),
@@ -90,6 +127,8 @@ describe('routes', () => {
       '/operator/users/dana-k',
       '/operator/users/0',
       '/operator/orgs/acme/members',
+      '/operator/waitlist/58201734',
+      '/operator/codes/K7QHM-3XP2R',
     ]) {
       expect(parse(path), path).toEqual({ screen: 'not-found' })
     }

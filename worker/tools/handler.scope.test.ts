@@ -1,7 +1,12 @@
+import { routes } from '../../src/app/router'
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import { createHarness, type TestHarness } from '../test-support/harness'
+import {
+  createHarness,
+  TEST_ORIGIN,
+  type TestHarness,
+} from '../test-support/harness'
 import { toolFixture, TOOL_TEST_ORIGIN, type ToolFixture } from './test-support'
 
 let harness: TestHarness
@@ -40,18 +45,24 @@ it('lists every workspace of the authenticated org, including other owners and a
     workspaces: [
       {
         id: 'calling-workspace',
+        number: 1,
+        link: `${TEST_ORIGIN}${routes.workspace('org-a', 'calling-workspace')}`,
         name: 'Lisbon',
         branch: 'owner-login/lisbon-ab12',
         state: 'working',
       },
       {
         id: 'teammate-workspace',
+        number: 2,
+        link: `${TEST_ORIGIN}${routes.workspace('org-a', 'teammate-workspace')}`,
         name: null,
         branch: 'teammate-login/paris-cd34',
         state: 'input',
       },
       {
         id: 'archived-workspace',
+        number: 3,
+        link: `${TEST_ORIGIN}${routes.workspace('org-a', 'archived-workspace')}`,
         name: 'Rome',
         branch: 'owner-login/rome-ef56',
         state: 'archived',

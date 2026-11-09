@@ -3,12 +3,21 @@ import {
   operatorOrgPath,
   operatorOrgsPath,
   operatorOverviewPath,
+  operatorUserPath,
   orgSuspensionPath,
 } from '../../shared/operator'
+import {
+  operatorApprovalPath,
+  operatorCodeDisablePath,
+  operatorCodesPath,
+  operatorSignupPausePath,
+  operatorWaitlistPath,
+} from '../../shared/operator-waitlist'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { SAMPLE_IDS } from '../../test-support/fixtures/operator-samples'
+import { readAccessCode, readWaitlistPage } from '../api/read-operator-waitlist'
 import { createBackend, guardScope } from './backend'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
@@ -28,8 +37,8 @@ function devFetch(search: string) {
     (path, method) => guardScope(backend.state, path, method),
     new FakeApiServer().fetch,
   )
-  const send = async (method: string, path: string) => {
-    const request = method === 'GET' ? undefined : '{}'
+  const send = async (method: string, path: string, fields: object = {}) => {
+    const request = method === 'GET' ? undefined : JSON.stringify(fields)
     const response = await fetch(path, { method, body: request })
     const body: unknown = await response.json()
     return { status: response.status, body }
@@ -98,6 +107,88 @@ describe('the operator routes of the dev fake', () => {
       lifted: { orgId: id, liftedAt: FAKE_TIME + 60_000 },
       repeat: { orgId: id, liftedAt: null },
       acme: { suspendedAt: FAKE_TIME + 60_000 },
+    })
+  })
+
+  test('approve a person who waits, who leaves the waitlist with a referral code, make and disable a code, and pause sign-ups, as the Worker does', async () => {
+    const { send } = devFetch('?operator=1')
+    const sam = SAMPLE_IDS.waitingUser
+    const approved = await send('POST', operatorApprovalPath(sam))
+    const repeat = await send('POST', operatorApprovalPath(sam))
+    const suspended = await send(
+      'POST',
+      operatorApprovalPath(SAMPLE_IDS.suspendedUser),
+    )
+    const waitlist = await send('GET', operatorWaitlistPath())
+    const page = await send('GET', operatorUserPath(sam))
+    const made = await send('POST', operatorCodesPath(), {
+      label: ' Meetup Porto ',
+      useLimit: 40,
+    })
+    const refused = await send('POST', operatorCodesPath(), {
+      label: ' ',
+      useLimit: 0,
+    })
+    const { code } = readAccessCode(made.body)
+    const found = await send('GET', operatorCodesPath({ q: 'meetup' }))
+    const disabled = await send('POST', operatorCodeDisablePath(code))
+    const paused = await send('POST', operatorSignupPausePath())
+    const resumed = await send('DELETE', operatorSignupPausePath())
+    expect({
+      approved,
+      repeat: repeat.body,
+      suspended: suspended.status,
+      waitlist: readWaitlistPage(waitlist.body).rows.map((row) => row.login),
+      page: page.body,
+      made,
+      refused: refused.status,
+      found: found.body,
+      disabled: disabled.body,
+      paused: paused.body,
+      resumed: resumed.body,
+    }).toMatchObject({
+      approved: {
+        status: 200,
+        body: {
+          githubId: sam,
+          changed: true,
+          approvalEmail: { state: 'pending', updatedAt: FAKE_TIME + 60_000 },
+          emailFailed: true,
+        },
+      },
+      repeat: { changed: false, emailFailed: false },
+      suspended: 409,
+      waitlist: [
+        'jules-m',
+        'pkwan',
+        'kenji-w',
+        'nadia-q',
+        'ovi-dev',
+        'lena-h',
+        'samir-h',
+        'bram-v',
+        'zed-k',
+      ],
+      page: {
+        appAccess: {
+          state: 'granted',
+          grantedAt: FAKE_TIME + 60_000,
+          source: { kind: 'approval', operator: { login: 'calummoore' } },
+        },
+        referralCode: { kind: 'referral', uses: 0, state: 'active' },
+      },
+      made: {
+        status: 201,
+        body: { kind: 'invite', label: 'Meetup Porto', useLimit: 40 },
+      },
+      refused: 400,
+      found: {
+        total: 2,
+        codes: [{ label: 'Meetup Porto' }, { label: 'Meetup Lisbon' }],
+      },
+      disabled: { code, state: 'disabled', disabledAt: FAKE_TIME + 60_000 },
+      paused: { paused: true, operator: { login: 'calummoore' } },
+      resumed: { paused: false },
     })
   })
 })

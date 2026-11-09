@@ -18,6 +18,8 @@ export const openPaletteViews = [
   'actions',
   'settings',
   'search',
+  'number',
+  'number-part',
   'no-results',
   'search-loading',
   'search-unavailable',
@@ -77,6 +79,8 @@ export const viewTabs: Readonly<Record<OpenPaletteView, PaletteTab>> = {
   actions: 'actions',
   settings: 'settings',
   search: 'all',
+  number: 'all',
+  'number-part': 'all',
   'no-results': 'all',
   'search-loading': 'all',
   'search-unavailable': 'all',
@@ -85,13 +89,16 @@ export const viewTabs: Readonly<Record<OpenPaletteView, PaletteTab>> = {
 
 /**
  * The text that the person typed. The search finds the Checkout workspace
- * and an archived one. Nothing in Acme matches "refund". "new" matches
- * actions and a setting.
+ * and an archived one. The number finds the workspace of `W-395`, and the
+ * part of a number finds each workspace whose label holds it. Nothing in
+ * Acme matches "refund". "new" matches actions and a setting.
  */
 export const paletteQueries: Readonly<
   Partial<Record<OpenPaletteView, string>>
 > = {
   search: 'check',
+  number: 'W-395',
+  'number-part': '39',
   'no-results': 'refund',
   'search-loading': 'new',
   'search-unavailable': 'new',

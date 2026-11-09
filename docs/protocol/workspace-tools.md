@@ -27,7 +27,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   they add and remove.
 - A changed file opens its diff against the default branch as a tab.
 - Each new file or diff tab opens at the end of the tab row of the centre
-  column, as [The tab row](chat-and-events.md#the-tab-row) says.
+  column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
