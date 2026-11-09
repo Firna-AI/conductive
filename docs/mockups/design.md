@@ -55,6 +55,13 @@ chat, and five tabs at the bottom.
   `src/components/common/` beside its button, or in a `Sheet` on a phone.
   Firna's own menu rows are taller than the dense design. A row can lead with
   a mark, such as an avatar, and end with a muted detail and an icon.
+- `CommandPalette` in `src/components/palette/` draws the command palette:
+  a dialog near the top of the window over a light dim on desktop, and a
+  page in place of the list on a phone. It has the search field, the tabs
+  All, Workspaces, Actions, and Settings, the filters of the Workspaces
+  tab, the groups of results, and the empty state. The list and the
+  workspace screens own it as their `palette` state. The Search row under
+  New workspace opens it, and on desktop that row shows ⌘K.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.

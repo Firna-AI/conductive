@@ -92,6 +92,21 @@ and the child pages of `app/banner` and `app/chat`.
 screens show of orgs and members: the roles, the logins of the sessions,
 the owners of the workspaces, Archive, and Delete org.
 
+No screen shows the value of an env var. Each env var of an org has a
+Secret mark: an admin switches it in the row, and a new variable starts
+secret. A member sees the mark as a word, without a control.
+`src/components/settings/EnvVarParts.tsx` gives the switch and the mark,
+and `envVarCopy.ts` beside it gives the note under the list. The app shares
+both.
+`app/org-settings/cloud-computer`, its `add-variable` and `change-value`
+pages, and its `member` page show them.
+
+A file path can hold a secret value. The lists, the tabs, the page
+headers, and the files of a finished turn then show "[redacted]" in place
+of the value, and each file still opens by its real path. A tab whose file
+name the app does not know shows "File". The `paths` state of the
+workspace screen draws them, as `app/chat/masked-paths` shows.
+
 ## Logins
 
 [Logins](orgs-and-logins.md#logins) gives the agent logins of the account,

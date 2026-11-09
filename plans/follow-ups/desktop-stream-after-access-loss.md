@@ -19,6 +19,7 @@
 - **Left out:** A shorter desktop URL, because an open stream keeps playing after its URL expires.
 - **Wider fix:** C.
 - **Previous examples:** finding 1 of PR #6, and finding 4 of PR #9.
+- **Related:** `plans/follow-ups/desktop-stream-on-own-domain.md`: the same replacement transport. Its option B serves the viewer and all desktop data through the Worker on the app's own domain. The gateway build can close both items. The user deferred that build on 8 November 2026.
 - **Recommendation:** C when the user starts the work. A Worker-managed media path lets the shared access check end the stream.
 - **Action:** ask the user later, because the user deferred it on 8 November 2026 (decision 146).
 

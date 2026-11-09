@@ -4,6 +4,8 @@
     "build-failed",
     "first-build",
     "script-changed",
+    "add-variable",
+    "change-value",
     "member"
   ]
 }

@@ -94,6 +94,7 @@ export function TabBody(props: { state: OrgSettingsState }) {
         <ComputerTab
           build={state.build}
           computer={settings.computer}
+          envForm={state.envForm}
           org={org.name}
           readOnly={readOnly}
           script={state.script}

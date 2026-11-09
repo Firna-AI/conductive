@@ -4,7 +4,8 @@ import { type EnvVar, includedSoftware } from '../../fixtures/computer'
 import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { BuildSection, type BuildState, type OrgBuilds } from './BuildSection'
-import { EnvVarsSection, ScriptSection } from './EnvironmentSections'
+import { ScriptSection } from './EnvironmentSections'
+import { EnvVarsSection, type EnvVarForm } from './EnvVarsSection'
 import type { ReadOnlyCause } from './OrgSections'
 import { TabIntro } from './TabIntro'
 
@@ -64,6 +65,7 @@ function changedNotice(props: {
  * The org's cloud computer: its builds, its scripts, and its env vars.
  * `readOnly` shows them without edit fields and actions, for a member who
  * is not an admin (decision 57), and for everyone in a suspended org.
+ * `envForm` opens a form of the env vars.
  */
 export function ComputerTab(props: {
   org: string
@@ -72,6 +74,7 @@ export function ComputerTab(props: {
   script: 'built' | 'changed'
   computer: OrgComputer
   readOnly?: ReadOnlyCause
+  envForm?: EnvVarForm
 }) {
   const { computer } = props
   const changed = props.script === 'changed'
@@ -113,6 +116,7 @@ export function ComputerTab(props: {
         title="Startup script"
       />
       <EnvVarsSection
+        form={props.envForm}
         org={props.org}
         readOnly={readOnly}
         vars={computer.envVars}

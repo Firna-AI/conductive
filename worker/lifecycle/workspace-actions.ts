@@ -8,9 +8,11 @@ import type { DurableLifecycle } from './durable'
 import type {
   LifecycleReconciliation,
   LifecycleStopResult,
+  LifecycleRestoreResult,
 } from './durable-types'
 import type { Sandbox, SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
+import { markTerminalRestoreEnded } from '../terminal/service'
 
 export interface WorkspaceActionContext {
   env: AppEnv
@@ -116,6 +118,19 @@ export async function reconcileWorkspaceSandbox(
 ): Promise<LifecycleReconciliation> {
   const { provider, sandboxId } = await actionResources(context)
   return reconcileReply(context, await provider.get(sandboxId))
+}
+
+export async function checkWorkspaceRestore(
+  context: WorkspaceActionContext,
+): Promise<LifecycleRestoreResult> {
+  const { provider, sandboxId } = await actionResources(context)
+  const sandbox = await provider.get(sandboxId)
+  const status = await reconcileReply(context, sandbox)
+  if (status) return status
+  if (providerState(sandbox.state) === 'stopping') return 'done'
+  if (sandbox.hydrated === false) return 'pending'
+  await markTerminalRestoreEnded(provider, sandboxId)
+  return 'done'
 }
 
 /** A refused control operation can mean the computer already stopped. Read once. */

@@ -1,3 +1,4 @@
+import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import { desktopPath } from '../shared/desktop'
 import { filePaths } from '../shared/files'
 import { githubPaths, type BannerState } from '../shared/github'
@@ -6,13 +7,34 @@ import { previewPath, previewsPath } from '../shared/previews'
 import { terminalPaths } from '../shared/terminal'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { FAKE_IDS } from './fixtures/core'
+import {
+  MASKED_GONE_PATH,
+  MASKED_SEED_PATH,
+  maskedSeedDiff,
+  maskedSeedFile,
+} from './fixtures/masked-paths'
 import { FAKE_FILE_PATH, toolFixtures } from './fixtures/tools'
 
-export function fakeToolRoutes(routes: FakeRouteWriter, banner: BannerState) {
-  const data = toolFixtures(banner)
+export function fakeToolRoutes(
+  routes: FakeRouteWriter,
+  banner: BannerState,
+  paths: PathState = 'plain',
+) {
+  const data = toolFixtures(banner, paths)
   const org = FAKE_IDS.org
   const id = FAKE_IDS.workspace
   routes.json('GET', filePaths.tree(org, id), data.files)
+  if (paths === 'masked') {
+    const seed = MASKED_SEED_PATH
+    routes.json('GET', filePaths.content(org, id, seed), maskedSeedFile())
+    routes.json('GET', filePaths.diff(org, id, seed), maskedSeedDiff())
+    routes.json(
+      'GET',
+      filePaths.content(org, id, MASKED_GONE_PATH),
+      { error: { code: 'file_not_found', message: 'The file is not there.' } },
+      404,
+    )
+  }
   routes.json('GET', filePaths.content(org, id, FAKE_FILE_PATH), data.content)
   routes.response(
     'GET',

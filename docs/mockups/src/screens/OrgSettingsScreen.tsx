@@ -17,7 +17,7 @@ import { settingsOrg } from './settingsOrgs'
 export const orgSettingsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'build', 'script', 'dialog', 'viewer', 'org'],
+  required: ['tab', 'build', 'script', 'envForm', 'dialog', 'viewer', 'org'],
   properties: {
     tab: { enum: ['general', 'repositories', 'computer', 'members'] },
     /**
@@ -32,6 +32,12 @@ export const orgSettingsSchema = {
      * build runs.
      */
     script: { enum: ['built', 'changed'] },
+    /**
+     * The open form of the environment variables, which the cloud computer
+     * tab of an admin shows: none, Add variable, or the new value of
+     * DATABASE_URL.
+     */
+    envForm: { enum: ['none', 'add', 'change'] },
     /**
      * A dialog over the page: Delete org, the removal of a member, or the
      * leave of a suspended org.
@@ -62,6 +68,7 @@ export const acmeSettings: OrgSettingsState = {
   tab: 'general',
   build: 'ready',
   script: 'built',
+  envForm: 'none',
   dialog: 'none',
   viewer: 'admin',
   org: 'active',

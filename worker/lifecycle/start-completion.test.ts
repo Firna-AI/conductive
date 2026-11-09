@@ -68,7 +68,7 @@ it('restores the running runner step before waiting without preparing an unready
   expect(await start.job()).toMatchObject({ phase: 'runner' })
 })
 
-it('replaces the consumed completion alarm and then schedules the real idle deadline', async () => {
+it('replaces the completion alarm and schedules the restore watch before the idle deadline', async () => {
   const fixture = fixtureForTest()
   const start = await startRetryFixture(fixture)
   const job = await start.job()
@@ -85,6 +85,8 @@ it('replaces the consumed completion alarm and then schedules the real idle dead
   expect(await start.job()).toBeUndefined()
   expect(platform.storage.alarmAt).toBe(completedAt + 1_000)
   await fixture.advanceTo(completedAt + 1_000, job.workspaceId)
+  expect(platform.storage.alarmAt).toBe(completedAt + 5_000)
+  await fixture.advanceTo(completedAt + 5_000, job.workspaceId)
   const state = await platform.endpoint().readLifecycle()
   expect(platform.storage.alarmAt).toBe((state?.lastActivityAt ?? 0) + IDLE_MS)
   expect(state).toMatchObject({ state: 'ready', startupPrepared: true })

@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
@@ -51,6 +51,30 @@ export function NewWorkspaceLink(props: {
     >
       <Plus aria-hidden className={styles.plus} size={14} />
       New workspace
+    </ScreenLink>
+  )
+}
+
+/**
+ * The row under New workspace that opens the command palette. A desktop
+ * shows its key, so the row teaches it. A phone has no key to show.
+ */
+export function SearchLink(props: {
+  variant: 'sidebar' | 'page'
+  /** Show ⌘K, the key that opens the palette. */
+  keys: boolean
+}) {
+  return (
+    <ScreenLink
+      className={classes(
+        styles.newWorkspace,
+        props.variant === 'page' && styles.page,
+      )}
+      to={paths.palette}
+    >
+      <Search aria-hidden className={styles.plus} size={14} />
+      Search
+      {props.keys ? <kbd className={styles.keys}>⌘K</kbd> : null}
     </ScreenLink>
   )
 }

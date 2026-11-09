@@ -1,8 +1,9 @@
 import type { StreamEnvelope } from '../api/read-workspace'
-import { logOf, withTranscript, type ChatContext } from './context'
+import type { ChatContext } from './context'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
 import { asSessionEvent, sessionOf, type ChatEnvelope } from './session-log'
-import { placeShown, withWorkspaceChange } from './session-records'
+import { mergeSession } from './session-records'
+import { withWorkspaceChange } from './workspace-records'
 
 /**
  * Applies workspace stream events in order: chat events to the log of their
@@ -27,24 +28,17 @@ export function applyEnvelopes(
     events.push({ eventNumber, occurredAt, event: chat, late })
     bySession.set(sessionOf(chat), events)
   }
-  const changed: string[] = []
-  const recorded: string[] = []
-  for (const [id, events] of bySession) {
-    const log = logOf(context, id)
-    const before = log.record
-    if (!log.merge(events)) continue
-    changed.push(id)
-    if (log.record !== before) recorded.push(id)
-  }
-  // The sessions whose newest record changed, in the order of those records.
-  recorded.sort(
+  const changes = [...bySession].map(([id, events]) =>
+    mergeSession(context, id, events),
+  )
+  // The newest records show in order, after changes of only a transcript.
+  changes.sort(
     (left, right) =>
-      (logOf(context, left).record?.eventNumber ?? 0) -
-      (logOf(context, right).record?.eventNumber ?? 0),
+      (left.record?.eventNumber ?? 0) - (right.record?.eventNumber ?? 0),
   )
   const moves = claimMoves(
     context,
-    recorded.flatMap((id) => logOf(context, id).record?.session ?? []),
+    changes.flatMap((change) => change.record?.session ?? []),
   )
   context.store.update((snapshot) => {
     let next = snapshot
@@ -57,13 +51,8 @@ export function applyEnvelopes(
         next = withWorkspaceChange(context, next, event, eventNumber)
       }
     }
-    for (const id of recorded) next = placeShown(context, next, id)
-    next = applyMoves(next, moves)
-    for (const id of changed) {
-      const log = logOf(context, id)
-      next = withTranscript(next, id, log.transcript, log.times)
-    }
-    return next
+    for (const change of changes) next = change.apply(next)
+    return applyMoves(next, moves)
   })
   saveMovedView(context, moves)
 }
