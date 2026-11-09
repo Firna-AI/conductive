@@ -8,6 +8,9 @@ import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
+import { useSidebarShown } from '../mac/mac-app'
+import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
+import { SearchRow } from '../palette/SearchRow'
 import { AppLink } from '../ui/AppLink'
 import ui from '../ui/ui.module.css'
 import { OrgList } from './OrgList'
@@ -42,12 +45,18 @@ export function SettingsLink(props: { orgId: string; current: boolean }) {
   )
 }
 
-/** The row at the top of the list that starts a new workspace in General. */
+/**
+ * The row at the top of the list that starts a new workspace in General. It
+ * links to the page. A plain click opens the dialog in its place when the
+ * user chose the dialog, and a click with a modifier key opens the page in
+ * a new tab.
+ */
 export function NewWorkspaceLink(props: {
   orgId: string
   current: boolean
   variant: RowVariant
 }) {
+  const newWorkspace = useNewWorkspace()
   return (
     <AppLink
       aria-current={props.current ? 'page' : undefined}
@@ -56,6 +65,9 @@ export function NewWorkspaceLink(props: {
         props.variant === 'page' && links.page,
         props.current && links.selected,
       )}
+      onClick={(event) =>
+        newWorkspace.click(event, { orgId: props.orgId, sectionId: null })
+      }
       to={routes.newWorkspace(props.orgId)}
     >
       <Plus aria-hidden className={links.plus} size={14} />
@@ -66,12 +78,14 @@ export function NewWorkspaceLink(props: {
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, and the sections of the org. A suspended org shows
- * its sections read-only, without New workspace.
+ * link, New workspace, Search, and the sections of the org. A suspended
+ * org shows its sections read-only, without New workspace. While the
+ * sidebar shows, its list offers New section to the command palette.
  */
 export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
   const { org, current } = props
   const { suspended } = useOrgAccess(org)
+  const shown = useSidebarShown()
   return (
     <>
       <div className={styles.top}>
@@ -79,14 +93,18 @@ export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
         <SettingsLink current={current?.screen === 'settings'} orgId={org.id} />
       </div>
       <div className={styles.scroll}>
-        {suspended ? null : (
-          <NewWorkspaceLink
-            current={current?.screen === 'new-workspace'}
-            orgId={org.id}
-            variant="sidebar"
-          />
-        )}
+        <div className={styles.links}>
+          {suspended ? null : (
+            <NewWorkspaceLink
+              current={current?.screen === 'new-workspace'}
+              orgId={org.id}
+              variant="sidebar"
+            />
+          )}
+          <SearchRow variant="sidebar" />
+        </div>
         <OrgList
+          offerActions={shown}
           orgId={org.id}
           readOnly={suspended}
           selectedId={

@@ -8,6 +8,7 @@ import styles from '../../../docs/mockups/src/components/workspace/WorkspaceHead
 import { personName } from '../../app/people'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
+import { nameLabel } from '../../shared/name-label'
 import type { Workspace } from '../../shared/workspaces'
 import { useOrgModel } from '../context'
 import { useMacBar } from '../mac/mac-app'
@@ -16,6 +17,7 @@ import { useGo } from '../ui/AppLink'
 import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import type { WorkspaceContext } from './features'
+import { RightColumnToggle } from './WorkspaceColumns'
 
 /** The owner of the workspace, without the menu that reassigns it. */
 function Owner(props: { workspace: Workspace; compact: boolean }) {
@@ -42,8 +44,10 @@ function State(props: { workspace: Workspace }) {
 
 /**
  * The name, repository, branch, owner, and state of the open workspace,
- * and Archive for its owner and the org's admins (decision 42). The list
- * groups workspaces by section, so the header names the repository.
+ * and Archive for its owner and the org's admins (decision 42). A workspace
+ * with no name yet shows Untitled. The list groups workspaces by section,
+ * so the header names the repository. On desktop the header ends with the
+ * toggle of the right column.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -59,6 +63,7 @@ export function WorkspaceHeader(props: {
   const repository =
     repositories?.find((item) => item.id === workspace.repositoryId)
       ?.fullName ?? workspace.repositoryId
+  const name = nameLabel(workspace.name)
   const phone = props.context.viewport === 'phone'
   const ownerView = props.ownerControl ?? (
     <Owner compact={phone} workspace={workspace} />
@@ -75,7 +80,7 @@ export function WorkspaceHeader(props: {
           onPress={() => go(routes.org(org.id))}
         />
         <div className={styles.titles}>
-          <h1 className={styles.title}>{workspace.name}</h1>
+          <h1 className={styles.title}>{name}</h1>
           <span className={styles.branch}>
             {repository} · {workspace.branch}
           </span>
@@ -88,7 +93,7 @@ export function WorkspaceHeader(props: {
   }
   return (
     <header className={classes(styles.bar, bar)}>
-      <h1 className={styles.title}>{workspace.name}</h1>
+      <h1 className={styles.title}>{name}</h1>
       <span className={styles.meta}>
         <FolderGit2 aria-hidden className={styles.icon} size={13} />
         <span className={styles.branch}>{repository}</span>
@@ -101,6 +106,7 @@ export function WorkspaceHeader(props: {
       {ownerView}
       <State workspace={workspace} />
       {archiveButton}
+      <RightColumnToggle />
     </header>
   )
 }

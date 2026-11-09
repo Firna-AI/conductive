@@ -6,7 +6,6 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
-import { failedCreate } from '../../app/creations'
 import { mayArchive } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
@@ -14,6 +13,7 @@ import {
   useWorkspaceStore,
   type WorkspaceIdentity,
 } from '../../app/workspace-store'
+import { failedFirstStart } from '../../app/first-start'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
@@ -33,12 +33,13 @@ import { ToolsPart } from './tools/ToolsPart'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
+import { WorkspacePaletteActions } from './WorkspacePaletteActions'
 import type { WorkspaceView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
 
 /**
- * A workspace that the app cannot show: a 404, or a create whose sandbox did
- * not start, which the server removes. The way out is the list of the org.
+ * A workspace that the app cannot show, such as after a 404. The way out is
+ * the list of the org.
  */
 function Unavailable(props: { orgId: string; body: string }) {
   const go = useGo()
@@ -137,26 +138,17 @@ export function WorkspaceScreen(props: {
       />
     )
   }
-  // The server removes a create whose sandbox did not start: it has no
-  // Resume, and no files stay. The tab that sent it shows its form instead.
-  // Another tab shows the message that the start saved, when it has one.
-  if (failedCreate(detail.value)) {
-    const saved = detail.value.error?.message
-    return (
-      <Unavailable
-        body={saved ? saved : "Its sandbox didn't start."}
-        orgId={props.org.id}
-      />
-    )
-  }
   const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   const { suspended } = access
+  // A failed first start keeps the workspace, its chat, and its queue for
+  // every member, with its saved cause and Try again.
   const sandboxParts = sandboxView({
     sandbox,
     suspended,
     startError,
     savedError: error?.message ?? null,
+    firstStart: failedFirstStart(workspace, start),
   })
   const context: WorkspaceContext = {
     org: props.org,
@@ -165,6 +157,7 @@ export function WorkspaceScreen(props: {
     sandbox,
     readOnly: suspended || sandbox === 'archived',
     panel: sandboxParts.panel,
+    resume,
     viewport,
     view: props.view,
     stream: model.stream,
@@ -197,8 +190,8 @@ export function WorkspaceScreen(props: {
     <ToolsPart context={context} placeholder={down} />
   )
   // The Files part keeps the lists of a stopped sandbox, from the copy that
-  // the workspace keeps, and shows a start or a refusal in their place. An
-  // archived workspace has no lists.
+  // the workspace keeps. It shows a start, a refusal, or a failed first
+  // start in their place. An archived workspace has no lists.
   const files = sandbox === 'archived' ? panel(null) : features.files?.(context)
   const chatArea = (
     <ChatArea
@@ -218,7 +211,13 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  const dialog = <ArchiveDialog archive={model.archive} workspace={workspace} />
+  // The Archive question, and the actions of the screen for the palette.
+  const dialog = (
+    <>
+      <ArchiveDialog archive={model.archive} workspace={workspace} />
+      <WorkspacePaletteActions chat={chat} context={context} />
+    </>
+  )
   if (phone) {
     const view = phoneView(props.view)
     const archived = sandbox === 'archived'

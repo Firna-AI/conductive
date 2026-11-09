@@ -10,6 +10,8 @@ export interface AppEnv {
   CONDUCTIVE_FRAME_SOURCES?: string
   ASSETS?: { fetch(request: Request): Promise<Response> }
   WORKSPACES?: DurableObjectNamespace<Workspace>
+  AI?: Ai
+  CONDUCTIVE_TITLE_MODEL?: string
   CONDUCTIVE_MODELS?: string
   CONDUCTIVE_DEFAULT_CHOICE?: string
   CONDUCTIVE_RUNNER_ARCHIVE_URL?: string

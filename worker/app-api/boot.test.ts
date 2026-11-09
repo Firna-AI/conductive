@@ -1,10 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import {
-  ACCOUNT_PATHS,
-  agentLoginPath,
-  type AgentLoginStatus,
-} from '../../src/shared/account'
+import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
 import { MODELS_PATH, type AgentChoice } from '../../src/shared/agents'
 import { API_PATHS } from '../../src/shared/api'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
@@ -17,6 +13,11 @@ import {
 } from '../test-support/harness'
 import {
   expectAccountState,
+  expectIndependentPreferences,
+  expectInvalidWorkspaceView,
+  harnessGitHubAppUrl,
+  isolationAccountStates,
+  operatorModels,
   putAccountValue,
   type AccountState,
 } from './boot-account.test-support'
@@ -31,23 +32,13 @@ const otherChoice: AgentChoice = {
   model: 'operator-codex',
   effort: 'low',
 }
-const models = [
-  {
-    agent: 'claude',
-    model: 'operator-claude',
-    label: 'Claude',
-    efforts: ['high'],
-  },
-  { agent: 'codex', model: 'operator-codex', label: 'Codex', efforts: ['low'] },
-]
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
 })
 beforeEach(async () => {
   await harness.reset()
-  harness.env.CONDUCTIVE_MODELS = JSON.stringify(models)
+  harness.env.CONDUCTIVE_MODELS = JSON.stringify(operatorModels)
   harness.env.CONDUCTIVE_DEFAULT_CHOICE = JSON.stringify(choice)
 })
 afterAll(async () => harness.dispose())
@@ -60,14 +51,16 @@ it('boots from operator models and persists account preferences and encrypted se
   const initial = readAccount(await account.json())
   expect(initial).toMatchObject({
     defaultChoice: choice,
+    newWorkspaceView: 'page',
     agentLogins: [
       { agent: 'claude', connected: false },
       { agent: 'codex', connected: false },
     ],
+    githubAppUrl: harnessGitHubAppUrl,
   })
   const catalog = await harness.request(MODELS_PATH, cookie)
   expect(catalog.status).toBe(200)
-  expect(await catalog.json()).toEqual({ models })
+  expect(await catalog.json()).toEqual({ models: operatorModels })
   const saved = await harness.request(agentLoginPath('claude'), cookie, {
     method: 'PUT',
     body: JSON.stringify({
@@ -81,6 +74,7 @@ it('boots from operator models and persists account preferences and encrypted se
     agent: 'claude',
     connected: true,
     kind: 'token',
+    noReuse: true,
     updatedAt: TEST_TIME,
   })
   expect(await readAgentLogin(harness.env, initial.user.id, 'claude')).toEqual({
@@ -109,7 +103,13 @@ it('boots from operator models and persists account preferences and encrypted se
   expect(reloadedBody).toMatchObject({
     defaultChoice: otherChoice,
     agentLogins: [
-      { agent: 'claude', connected: true, kind: 'token', updatedAt: TEST_TIME },
+      {
+        agent: 'claude',
+        connected: true,
+        kind: 'token',
+        noReuse: true,
+        updatedAt: TEST_TIME,
+      },
       { agent: 'codex', connected: false },
     ],
   })
@@ -174,22 +174,6 @@ it('keeps account data and Get started isolated from other users and deleted org
       ],
     },
   )
-  const noLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: false },
-    { agent: 'codex', connected: false },
-  ]
-  const firstLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'token', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: false },
-  ]
-  const otherClaudeLogin: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: false },
-  ]
-  const otherLogins: readonly AgentLoginStatus[] = [
-    { agent: 'claude', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-    { agent: 'codex', connected: true, kind: 'api-key', updatedAt: TEST_TIME },
-  ]
   const expectBoth = async (
     firstState: AccountState,
     otherState: AccountState,
@@ -205,29 +189,8 @@ it('keeps account data and Get started isolated from other users and deleted org
       githubComplete: false,
     })
   }
-  const empty: AccountState = {
-    defaultChoice: choice,
-    agentLogins: noLogins,
-    agentLoginComplete: false,
-  }
-  const firstConnected: AccountState = {
-    defaultChoice: choice,
-    agentLogins: firstLogins,
-    agentLoginComplete: true,
-  }
-  const firstSaved: AccountState = {
-    ...firstConnected,
-    defaultChoice: otherChoice,
-  }
-  const otherConnected: AccountState = {
-    defaultChoice: choice,
-    agentLogins: otherClaudeLogin,
-    agentLoginComplete: true,
-  }
-  const otherSaved: AccountState = {
-    ...otherConnected,
-    agentLogins: otherLogins,
-  }
+  const { empty, firstConnected, firstSaved, otherConnected, otherSaved } =
+    isolationAccountStates(choice, otherChoice)
   await expectBoth(empty, empty)
   await putAccountValue(harness, first, agentLoginPath('claude'), {
     agent: 'claude',
@@ -253,12 +216,27 @@ it('keeps account data and Get started isolated from other users and deleted org
   await expectBoth(firstSaved, otherSaved)
   await putAccountValue(harness, other, ACCOUNT_PATHS.defaultModel, { choice })
   await expectBoth(firstSaved, otherSaved)
+  await putAccountValue(harness, first, ACCOUNT_PATHS.newWorkspaceView, {
+    view: 'dialog',
+  })
+  const firstDialog: AccountState = {
+    ...firstSaved,
+    newWorkspaceView: 'dialog',
+  }
+  await expectBoth(firstDialog, otherSaved)
+  await putAccountValue(harness, other, ACCOUNT_PATHS.newWorkspaceView, {
+    view: 'page',
+  })
+  await expectBoth(firstDialog, otherSaved)
   const removed = await harness.request(agentLoginPath('claude'), first, {
     method: 'DELETE',
     body: '{}',
   })
   expect(removed.status).toBe(204)
-  await expectBoth({ ...empty, defaultChoice: otherChoice }, otherSaved)
+  await expectBoth(
+    { ...empty, defaultChoice: otherChoice, newWorkspaceView: 'dialog' },
+    otherSaved,
+  )
   await harness.env.DB.prepare('UPDATE orgs SET deleted_at = 1 WHERE id = ?')
     .bind(org.id)
     .run()
@@ -266,6 +244,14 @@ it('keeps account data and Get started isolated from other users and deleted org
     await (await harness.request(GET_STARTED_PATH, first)).json(),
   ).toMatchObject({ orgId: null })
   expect((await harness.request(ACCOUNT_PATHS.account, '')).status).toBe(401)
+})
+
+it('keeps workspace view and model preferences independent of each other and app defaults', async () => {
+  await expectIndependentPreferences(harness, choice, otherChoice)
+})
+
+it('rejects an unknown workspace view with invalid_input', async () => {
+  await expectInvalidWorkspaceView(harness)
 })
 
 it('reports missing operator model configuration without blocking unrelated routes', async () => {

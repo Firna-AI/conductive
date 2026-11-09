@@ -19,12 +19,6 @@ export async function send(
     existingMessage(view, sessionId, input, context.user),
   )
   if (existing) return existing
-  if (await dependencies.firstStartIncomplete(operation.workspaceId))
-    throw new HttpError(
-      409,
-      'workspace_starting',
-      'Wait for the workspace to start before sending another message.',
-    )
   const source = await operation.read((view) => sessionFor(view, sessionId))
   sameAgent(source, input.choice)
   if (source.closedAt !== null)
@@ -76,6 +70,7 @@ export async function send(
       context.user,
       attachments,
       dependencies.randomId,
+      dependencies.readAutomaticTitleWorkspace,
     )
     if (target.id !== source.id) {
       await transaction.saveMessageSource(input.id, source.id)

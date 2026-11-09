@@ -11,7 +11,7 @@ export function readString(object: JsonObject, key: string): string | null {
 }
 
 /** A finite number, or null. */
-export function readNumber(object: JsonObject, key: string): number | null {
+function readNumber(object: JsonObject, key: string): number | null {
   const value = object[key]
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
@@ -41,4 +41,19 @@ export function parseItems<T>(
     if (value !== null) parsed.push(value)
   }
   return parsed
+}
+
+/**
+ * An optional display label as an object to spread into a record, or an
+ * empty object when the label is missing, empty, or not text. A reader
+ * refuses nothing because of a label.
+ */
+export function readLabel<K extends string>(
+  object: JsonObject,
+  key: K,
+): Partial<Record<K, string>> {
+  const value = readString(object, key)
+  const label: Partial<Record<K, string>> = {}
+  if (value) label[key] = value
+  return label
 }

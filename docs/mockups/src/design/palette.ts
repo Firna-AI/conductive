@@ -1,7 +1,7 @@
 import type { SharedUiColors } from '@firna/ui/theme'
 
 /** Colours that the local layout reads, beside the Firna colours. */
-export type AppColors = {
+type AppColors = {
   /** The workspace list column. */
   sidebar: string
   /** The icon rail beside the workspace list. */

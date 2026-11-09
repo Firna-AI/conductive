@@ -8,6 +8,7 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from 'react'
+import { useModalLayer } from '../../shell/ui/layers'
 
 /**
  * Asks a dialog, a sheet, or a menu to close. While its action runs, the
@@ -40,13 +41,15 @@ export const DialogClose = createContext<() => boolean>(() => false)
  * again, with the focus where it was. An unmount is no request to close.
  *
  * The dialog element must have no padding of its own, so that a press on
- * its content never counts as a press on the dimmed page.
+ * its content never counts as a press on the dimmed page. While it is
+ * open, the key of the command palette of the app does nothing.
  */
 export function useModalDialog(
   ref: RefObject<HTMLDialogElement | null>,
   onDismiss: () => void,
   busy = false,
 ) {
+  useModalLayer()
   const latest = useRef({ onDismiss, busy })
   // A layout effect, so a request after this render sees its busy state.
   useLayoutEffect(() => {

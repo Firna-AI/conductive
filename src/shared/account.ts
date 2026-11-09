@@ -4,11 +4,15 @@ import type { Timestamp, User } from './api'
 export const ACCOUNT_PATHS = {
   account: '/api/account',
   defaultModel: '/api/account/default-model',
+  newWorkspaceView: '/api/account/new-workspace-view',
   agentLogins: '/api/account/agent-logins',
   githubInstallations: '/api/account/github-installations',
   githubRepositories: '/api/account/github-repositories',
   deleteAccount: '/api/account/delete',
 } as const
+
+export const NEW_WORKSPACE_VIEWS = ['page', 'dialog'] as const
+export type NewWorkspaceView = (typeof NEW_WORKSPACE_VIEWS)[number]
 
 export function agentLoginPath(agent: Agent): string {
   return `${ACCOUNT_PATHS.agentLogins}/${agent}`
@@ -25,12 +29,14 @@ export type AgentLoginStatus =
       agent: 'claude'
       connected: true
       kind: 'token' | 'api-key'
+      noReuse: boolean
       updatedAt: Timestamp
     }
   | {
       agent: 'codex'
       connected: true
       kind: 'api-key'
+      noReuse: boolean
       updatedAt: Timestamp
     }
 
@@ -53,27 +59,36 @@ export interface GitHubRepository {
 
 export interface AccountResponse {
   user: User
+  operator: boolean
   defaultChoice: AgentChoice
+  newWorkspaceView: NewWorkspaceView
   agentLogins: readonly AgentLoginStatus[]
-}
-
-export interface SessionResponse {
-  user: User
+  /**
+   * The page of the shared GitHub App on GitHub. It lists the GitHub
+   * accounts of the person. An account with the app opens the settings
+   * of its installation, where the person chooses the repositories that
+   * the app reaches. Another account installs the app.
+   */
+  githubAppUrl: string
 }
 
 export type SaveAgentLoginResponse = AgentLoginStatus
+export interface UpdateAgentLoginRequest {
+  noReuse: boolean
+}
+export type UpdateAgentLoginResponse = AgentLoginStatus
 export interface SetDefaultModelRequest {
   choice: AgentChoice
 }
 export type SetDefaultModelResponse = SetDefaultModelRequest
+export interface SetNewWorkspaceViewRequest {
+  view: NewWorkspaceView
+}
+export type SetNewWorkspaceViewResponse = SetNewWorkspaceViewRequest
 export interface GitHubInstallationsResponse {
   installations: readonly GitHubInstallation[]
   installUrl: string
 }
 export interface GitHubRepositoriesResponse {
   repositories: readonly GitHubRepository[]
-}
-
-export interface DeleteAccountResponse {
-  deleted: true
 }

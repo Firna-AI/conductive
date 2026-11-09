@@ -1,0 +1,17 @@
+---
+import { signInHref } from '../request-values'
+import StartButton from './StartButton.astro'
+
+/*
+ * The two actions of a section: start free with GitHub, and sign in. Both
+ * go to the GitHub sign-in of the app, which also signs up a new user. A
+ * phone puts them under each other at full width.
+ */
+---
+
+<div class="actions">
+  <StartButton size="lg" />
+  <a class="button" href={signInHref}>
+    <span>Sign in</span>
+  </a>
+</div>

@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { nameLabel } from '../../../shared/name-label'
 import { routes } from '../../../app/router'
 import type { FilesTab } from '../../../files/navigation'
 import { sessionsPath } from '../../../shared/sessions'
@@ -14,6 +15,7 @@ import {
 } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
+import { MASKED_SEED_PATH } from '../../../test-support/fixtures/masked-paths'
 import { FAKE_FILE_PATH } from '../../../test-support/fixtures/tools'
 import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
 import {
@@ -68,17 +70,21 @@ describe('the Files screens in the workspace', () => {
     expect(queryByRole('region', 'Chat', view)).toBeNull()
     expect(currents(tabs, fileHref)).toEqual(['page'])
     expect(
-      byRole('button', session.title, tabs).getAttribute('aria-current'),
+      byRole('button', nameLabel(session.title), tabs).getAttribute(
+        'aria-current',
+      ),
     ).toBeNull()
 
-    click(byRole('button', session.title, tabs))
+    click(byRole('button', nameLabel(session.title), tabs))
     await settle()
 
     expect(navigation.href()).toBe(routes.workspace(org, id))
     expect(queryByRole('region', 'Chat', view)).not.toBeNull()
     expect(queryByRole('region', fileName, view)).toBeNull()
     expect(
-      byRole('button', session.title, tabs).getAttribute('aria-current'),
+      byRole('button', nameLabel(session.title), tabs).getAttribute(
+        'aria-current',
+      ),
     ).toBe('page')
     expect(currents(tabs, fileHref)).toEqual([null])
     // The last save is the chat's own, when it showed the session again.
@@ -88,6 +94,27 @@ describe('the Files screens in the workspace', () => {
       activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
       fileList: 'all',
       tool: 'terminal',
+    })
+  })
+
+  test('name the tab and the page of a file by the label of its path, and keep its address on the real path', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ paths: 'masked' })
+    const tab: FilesTab = { kind: 'diff', path: MASKED_SEED_PATH }
+    const href = filesHref(org, id, tab)
+    const { view } = await openTab(server, href)
+    await settle()
+    const link = linkTo(byLabel('Sessions and files', view), href)
+    expect({
+      tab: link.textContent,
+      tooltip: link.getAttribute('title'),
+      page: queryByRole('region', 'seed-[redacted].sql', view) !== null,
+      address: href.includes(MASKED_SEED_PATH),
+    }).toEqual({
+      tab: 'seed-[redacted].sql',
+      tooltip: 'scripts/seed-[redacted].sql',
+      page: true,
+      address: true,
     })
   })
 

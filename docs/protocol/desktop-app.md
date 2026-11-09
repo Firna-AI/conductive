@@ -316,10 +316,18 @@ limits, their results, and what the chat shows.
 - The electron-builder tool packages a DMG and a ZIP for each processor
   type, arm64 and x64 (decision 62).
 - Each package carries the app icon of the [brand files](../brand/README.md).
-- Each build has an ad-hoc signature and no notarization, because no Apple
-  Developer ID exists yet. A Developer ID signature and notarization follow
-  when the user has one.
-- Risk: macOS refuses to open a downloaded build without notarization until
+- Development and pull request packages have an ad-hoc signature and no
+  notarization. They need no Apple signing credentials.
+- Release packages use a Developer ID Application signature and Hardened
+  Runtime. Apple notarizes the app before ZIP packaging. Each DMG is also
+  signed and notarized. Each app and DMG has a stapled notarization ticket.
+- Release packaging fails if credentials are missing, the signing team is
+  wrong, or signature, ticket, or Gatekeeper verification fails.
+- GitHub builds release packages on version tags and manual runs, after the
+  normal Mac checks. Signing credentials belong to the protected
+  `desktop-release` environment. Its branch rules permit `main` and `v*` tags.
+  Each runner uses a temporary Keychain and removes its temporary credentials.
+- Risk: macOS refuses to open a downloaded ad-hoc build until
   the user allows it.
 - The Mac app updates itself with electron-updater, from the GitHub
   releases of a public repository. Reason: this repository is private, and

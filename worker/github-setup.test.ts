@@ -2,7 +2,9 @@ import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import { routes } from '../src/app/router'
 import { GITHUB_SETUP_PATH } from '../src/shared/github-setup'
+import { GITHUB_SETUP_PAGES, SITE_FOLDER } from '../src/shared/site-build'
 import { createApp } from './application'
+import { fakeSite, FILE_LIST_PATH } from './test-support/fake-site'
 import {
   createHarness,
   TEST_ORIGIN,
@@ -19,25 +21,22 @@ afterAll(async () => {
 
 /**
  * The request of a browser that GitHub sends back after an install. It
- * carries no session. The pages of the app record each request that
- * reaches them.
+ * carries no session. The assets binding records each file request.
  */
 async function backFromGitHub(query: string) {
-  const pages: string[] = []
+  const assets = fakeSite()
   const env = {
     ...harness.env,
-    ASSETS: {
-      fetch: async (request: Request) => {
-        pages.push(request.url)
-        return new Response('<main>Conductive</main>')
-      },
-    },
+    ASSETS: assets,
   }
   const response = await createApp().fetch(
     new Request(`${TEST_ORIGIN}${GITHUB_SETUP_PATH}?${query}`),
     env,
   )
-  return { response, pages }
+  return {
+    response,
+    pages: assets.requests.map((request) => new URL(request.url).pathname),
+  }
 }
 
 it('returns an install from a browser to the screen where it started, without the query of GitHub', async () => {
@@ -72,14 +71,20 @@ it('sends an install from the Mac app back to the Mac app, on a page with no scr
     [
       'installation_id=7&setup_action=install&state=mac',
       'The GitHub App is installed',
+      GITHUB_SETUP_PAGES.installed,
     ],
     [
       'installation_id=7&setup_action=update&state=mac',
       'The GitHub App is installed',
+      GITHUB_SETUP_PAGES.installed,
     ],
-    ['setup_action=request&state=mac', 'Install request sent'],
+    [
+      'setup_action=request&state=mac',
+      'Install request sent',
+      GITHUB_SETUP_PAGES.requested,
+    ],
   ] as const
-  for (const [query, title] of cases) {
+  for (const [query, title, page] of cases) {
     const { response, pages } = await backFromGitHub(query)
     const body = await response.text()
     expect(
@@ -98,7 +103,10 @@ it('sends an install from the Mac app back to the Mac app, on a page with no scr
       title,
       script: false,
       cookie: null,
-      pages: [],
+      pages: [
+        FILE_LIST_PATH,
+        `/${SITE_FOLDER}/${page.slice(0, -'.html'.length)}`,
+      ],
     })
   }
 })

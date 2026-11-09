@@ -30,6 +30,9 @@ afterAll(async () => {
 })
 
 it('runs CLI create and list through workspace auth and forwards the calling turn', async () => {
+  await fixture.db
+    .prepare("UPDATE workspaces SET name = '' WHERE id = 'teammate-workspace'")
+    .run()
   const output = toolOutput()
   const created = await runToolProcess(
     [
@@ -82,7 +85,7 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
       },
       {
         id: 'teammate-workspace',
-        name: 'Paris',
+        name: null,
         branch: 'teammate-login/paris-cd34',
         state: 'ready',
       },

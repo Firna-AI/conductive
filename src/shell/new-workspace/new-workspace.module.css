@@ -1,0 +1,7 @@
+/*
+ * The refused bar of a suspended org takes the place of the composer of the
+ * dialog, so it ends the card with the bottom space of the footer.
+ */
+.refused {
+  padding-bottom: 10px;
+}

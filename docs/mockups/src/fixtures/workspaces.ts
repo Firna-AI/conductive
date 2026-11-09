@@ -31,6 +31,10 @@ export type OpenableWorkspace = (typeof openableWorkspaces)[number]
 
 export type Workspace = {
   key: string
+  /**
+   * Its name. A new workspace has no name until its title comes, and the
+   * screen then shows the label of `nameLabel` in `src/shared/`.
+   */
   name: string
   branch: string
   repository: RepositoryKey
@@ -46,11 +50,6 @@ export type Workspace = {
    * runs on the agent login of the member who started it.
    */
   owner: PersonKey
-  /**
-   * The name that the app gives a new workspace, a city, until the agent's
-   * first answer names it after the task.
-   */
-  generatedName?: string
 }
 
 /**
@@ -73,11 +72,16 @@ export const checkoutAutocomplete: Workspace = {
   owner: 'cal',
 }
 
-/** The workspace that the create flow makes. */
+/**
+ * The workspace that the create flow makes. It has no name from the send
+ * until its title comes, about a second later, while the sandbox starts.
+ * `name` is that title, from a small model that reads the first message.
+ * A failed title request leaves the workspace without a name until a later
+ * message with text. Its branch keeps a city name with a random suffix.
+ */
 export const savedCarts: Workspace = {
   key: 'saved-carts',
   name: 'Saved carts',
-  generatedName: 'Lisbon',
   branch: branchFor('cal', 'lisbon-7k2q'),
   repository: 'storefront',
   section: 'general',
@@ -177,6 +181,38 @@ export const workspaceList: readonly Workspace[] = [
     updated: '2d',
     owner: 'jonas',
   }),
+]
+
+/**
+ * The archived workspaces of Acme, the last archived first. Their cloud
+ * computers are deleted, and their chats stay read-only.
+ */
+export const archivedWorkspaceList: readonly Workspace[] = [
+  workspace('checkout-redesign', 'Checkout page redesign', {
+    repository: 'storefront',
+    section: 'checkout',
+    status: 'archived',
+    updated: '4d',
+  }),
+  workspace('black-friday-banner', 'Black Friday banner', {
+    repository: 'storefront',
+    section: 'general',
+    status: 'archived',
+    updated: '9d',
+    owner: 'priya',
+  }),
+  workspace(
+    'stripe-sdk',
+    'Stripe SDK upgrade',
+    {
+      repository: 'billing-service',
+      section: 'infra',
+      status: 'archived',
+      updated: '16d',
+      owner: 'jonas',
+    },
+    codex,
+  ),
 ]
 
 /** The workspace that the drag state moves, and where it lands. */

@@ -24,7 +24,7 @@ import { settingsViewer, TabBody } from './orgSettingsTabs'
 export const orgSettingsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'build', 'dialog', 'viewer', 'org'],
+  required: ['tab', 'build', 'envForm', 'dialog', 'viewer', 'org'],
   properties: {
     tab: { enum: ['general', 'repositories', 'computer', 'members'] },
     /**
@@ -32,6 +32,12 @@ export const orgSettingsSchema = {
      * a build that the app stopped at its 60-minute limit.
      */
     build: { enum: ['ready', 'building', 'failed', 'time-limit', 'changed'] },
+    /**
+     * The open form of the environment variables, which the cloud computer
+     * tab of an admin shows: none, Add variable, or the new value of
+     * DATABASE_URL.
+     */
+    envForm: { enum: ['none', 'add', 'change'] },
     /**
      * A dialog over the page: Delete org, the removal of a member, or the
      * leave of a suspended org.
@@ -59,6 +65,7 @@ export type OrgSettingsState = SchemaProps<typeof orgSettingsSchema>
 export const acmeSettings: OrgSettingsState = {
   tab: 'general',
   build: 'ready',
+  envForm: 'none',
   dialog: 'none',
   viewer: 'admin',
   org: 'active',

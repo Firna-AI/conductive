@@ -1,10 +1,10 @@
 import { productDomain } from '../docs/mockups/src/brand'
-import { githubSetupPage } from '../src/marketing/github-setup'
 import {
   GITHUB_SETUP_RETURNS,
   githubInstallSource,
 } from '../src/shared/github-setup'
 import type { AppEnv } from './env'
+import { githubSetupPage } from './marketing/github-setup'
 
 /**
  * The return from GitHub to the Setup URL of the GitHub App, after an
@@ -17,7 +17,7 @@ import type { AppEnv } from './env'
  */
 export async function githubSetupResponse(
   request: Request,
-  env: Pick<AppEnv, 'APP_ORIGIN' | 'MARKETING_ORIGIN'>,
+  env: Pick<AppEnv, 'APP_ORIGIN' | 'MARKETING_ORIGIN' | 'ASSETS'>,
 ): Promise<Response> {
   const query = new URL(request.url).searchParams
   const source = githubInstallSource(query.get('state'))
@@ -25,6 +25,8 @@ export async function githubSetupResponse(
     return githubSetupPage(
       query.get('setup_action') === 'request' ? 'requested' : 'installed',
       env.MARKETING_ORIGIN ?? `https://${productDomain}`,
+      env.ASSETS,
+      request.method === 'HEAD',
     )
   }
   const path = source ? GITHUB_SETUP_RETURNS[source] : '/'

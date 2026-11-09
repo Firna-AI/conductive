@@ -1,3 +1,4 @@
+import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import { chatHistoryPath } from '../shared/events'
 import { workspaceOwnerPath } from '../shared/members'
 import {
@@ -16,6 +17,10 @@ import {
 import type { FakeRouteWriter } from './fake-api-routes'
 import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
 import { workspaceFixtures } from './fixtures/workspaces'
+import {
+  maskedChangedFiles,
+  withMaskedTurnFiles,
+} from './fixtures/masked-paths'
 import { recordedChatEvents, type RecordedChatScenario } from './recorded-chat'
 
 /**
@@ -38,6 +43,7 @@ export function fakeWorkspaceRoutes(
   routes: FakeRouteWriter,
   state: WorkspaceState,
   conversation: RecordedChatScenario,
+  paths: PathState = 'plain',
 ) {
   const data = workspaceFixtures(state)
   const org = FAKE_IDS.org
@@ -68,11 +74,13 @@ export function fakeWorkspaceRoutes(
       })),
     }
     if (workspace.id === data.created.workspace.id) {
+      // The first session of a new workspace has no title until the title of
+      // the workspace comes.
       sessions.sessions = [
         {
           ...sessions.sessions[0],
           id: data.created.sessionId,
-          title: 'New session',
+          title: null,
           activeTurnId: null,
           activeTurnStartedAt: null,
           retryMessageId: null,
@@ -146,7 +154,11 @@ export function fakeWorkspaceRoutes(
         state: 'stopping',
         eventNumber,
       })
-      const events = recordedChatEvents(conversation, id, session.id)
+      const recorded = recordedChatEvents(conversation, id, session.id)
+      const events =
+        paths === 'masked'
+          ? withMaskedTurnFiles(recorded, maskedChangedFiles())
+          : recorded
       routes.json('GET', chatHistoryPath(org, id, session.id), {
         events,
         throughEventNumber: events.at(-1)?.eventNumber ?? 0,

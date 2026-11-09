@@ -27,11 +27,11 @@ The address chooses the state. The first value of each option is the default:
 | Option | Values |
 | --- | --- |
 | `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
-| `workspace` | `existing`, `new` (Lisbon, which starts) |
+| `workspace` | `existing`, `new` (Untitled until its title comes, and it starts) |
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |
 | `login` | `on`, `off` |
-| `starter` | `on`, `off` (the login of each starter is not available), `none` (older records that name no starter), `linked` (the reader's message opened a linked session, whose turn waits) |
+| `starter` | `on`, `off` (the login of each starter is not available), `private` (each starter keeps the login for their own messages), `none` (older records that name no starter), `linked` (the reader's message opened a linked session, whose turn waits) |
 | `replay` | `stored`, `live` (the recorded chat arrives event by event) |
 | `viewport` | `desktop`, `mobile` |
 | `scheme` | `dark`, `light` |
@@ -46,15 +46,16 @@ The address chooses the state. The first value of each option is the default:
 
 The desktop page keeps the mockup's columns, so the chat column is 718 px wide
 in a 1440 px window. The buttons of the page make the sandbox ready, stop it,
-fail its start, write the title, drop the connection, resend the last event,
-send two parts out of order, and connect the Mac again under a new pairing,
-whose next read the page then makes. Writes of the page change the fake's state:
+fail its start, write the title of a workspace with no name, drop the
+connection, resend the last event, send two parts out of order, and connect
+the Mac again under a new pairing, whose next read the page then makes. Writes of the page change the fake's state:
 new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
 changes, uploads, Resume, and the view. As in the Worker, Try again sends the
 message that the session record names again, as a new message. It refuses
 each other message with 409. Each accepted message sets that record's
 `retryMessageId` to null. Send and Try again in a session whose starter's
-login is not available open a linked session, as the Worker does. The page
+login is not available, or private, open a linked session, as the Worker
+does. The page
 sends as the member of the `role` option, who also starts each new
 session. A model change opens its session under the ID that
 the chat chose. Stop and the close of a running tab
@@ -64,6 +65,22 @@ page's Mac acts on each answer: Deny ends the request, and the other choices
 run the command and keep the choice. The bar of the 15 minutes shows above
 the header while they run. The Mac refuses a change of an older pairing, as
 the Worker does.
+
+The names follow the backend. A new workspace and each new session have no
+name, and show "Untitled". The page fills a name only while it is empty,
+and never in an archived workspace, so a name that the reader gave stays.
+
+With `workspace=new`, the workspace and its first session start with no
+name. The create of the workspace accepted its first message before the
+page loaded. About a second after the page loads, the page writes the
+title "Saved carts", whether or not the sandbox is ready. After a first
+message with no text, the next message with text that the page accepts
+gives the title, about a second later. The workspace and its first session
+take the title.
+
+Each other session takes the first line of its first message with text as
+its title, from `sessionTitleFrom` in `src/shared/session-title.ts`, which
+the Worker uses too.
 
 ## Key code
 

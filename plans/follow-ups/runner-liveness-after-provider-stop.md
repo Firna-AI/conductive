@@ -2,8 +2,8 @@
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-08, from the smoke test of the deploy of `18753f9` on the primary branch `calummoore/conductor-alternative-architecture`, before the first pull request into `main` (decision 141).
-- **Location:** the runner connection of the workspace object in `worker/chat/runner-channel.ts`, the alarm rule in `writeLifecycleState` at `worker/lifecycle/durable-scheduling.ts`, `TURN_HEARTBEAT_MS` at `worker/lifecycle/durable-types.ts:16`, the runner's connection in `runner/src/`, and "The agent runner" in `docs/protocol/chat-and-events.md`.
+- **Added:** 2026-11-08, from the smoke test of the deploy of `18753f9` on the primary branch `calummoore/conductor-alternative-architecture`, before the first pull request into `main` (decision 141). An options check on the same day added C to F and changed the recommendation from B to C. Its report is in `.context/options-check/report.md`.
+- **Location:** the provider read before a turn in `registerTrustedTurn` at `worker/lifecycle/runner-lifecycle.ts`, `reconcileReply` at `worker/lifecycle/workspace-actions.ts`, `stopDispatchedTurns` at `worker/chat/workspace-stop.ts`, the idle stop at `worker/lifecycle/durable-alarm.ts:45`, the runner connection of the workspace object in `worker/chat/runner-channel.ts`, the alarm rule in `writeLifecycleState` at `worker/lifecycle/durable-scheduling.ts`, `TURN_HEARTBEAT_MS` at `worker/lifecycle/durable-types.ts:16`, the runner's connection in `runner/src/`, and "The agent runner" in `docs/protocol/chat-and-events.md`.
 - **Reason:** the behaviour existed before the reviewed commits, and option B adds a protocol rule.
 
 - **Terms:**
@@ -12,13 +12,17 @@
   - **Turn heartbeat:** the alarm of the workspace object that checks a running turn every 5 minutes.
 - **Background:** The app stops an idle computer itself after 30 minutes. The provider can also stop it. A stop freezes the computer, so the runner sends no close frame, and the connection looks open to the workspace object. Neither side checks that the connection is still alive. When the connection closes, the workspace object checks the provider within 5 seconds.
 - **Problem:** On 8 November 2026, the smoke test stopped a computer through the provider and sent a message 22 seconds later. The workspace still showed Unread, so the object sent the turn to the frozen runner. No turn started. After 5 minutes, the turn heartbeat found the stopped computer and ended the turn as Stopped, with no reply. A resume and a new message then got a reply at once.
-- **Impact if no action:** After a provider stop, a message waits up to 5 minutes and ends with no reply, and the user must send it again. Until then, the tab shows a running workspace whose computer is stopped.
-- **Root question:** How does the workspace object learn soon that its computer stopped without the app?
+- **Impact if no action:** After a provider stop, a message waits up to 5 minutes and ends with no reply, and the user must send it again. Until then, the tab shows a running workspace whose computer is stopped. A message during the app's own idle stop can wait in the same way, at `worker/lifecycle/durable-alarm.ts:45`.
+- **Root question:** How does the app soon treat a computer that stopped without the app as stopped, so that a new message waits for the resume?
 - **Options:**
   - **A.** When a sent turn has no `turn.started` after 30 seconds, check the provider at once. If the computer stopped, end the turn as Stopped and show the stopped state. Effort: Small.
   - **B.** Add a liveness rule to the runner connection: the runner sends a ping every 15 seconds, and the workspace object closes a connection that is silent for 45 seconds. The close starts the provider check within 5 seconds. State the rule in "The agent runner" of `docs/protocol/chat-and-events.md`. Effort: Medium.
-- **Left out:** A shorter turn heartbeat alone, because it adds a provider call for each running turn and still leaves an idle workspace stale.
-- **Wider fix:** B. It finds every frozen runner, also when no turn runs.
+  - **C.** Treat a stop under way as a stop for new work. When a provider read reports that the computer is stopping, the workspace object sends no turn, keeps the message queued, and closes the runner connection. The provider check then runs every 5 seconds until the stop ends, and the message runs after the resume, as decision 14 says. The reads are the read before a turn, the read at user activity, and the read at the turn heartbeat. It changes no requirement. It needs a one-time check that the provider reports `archiving` during a stop. Effort: Small.
+  - **D.** Receive the provider's signed `archived` and `error` webhook events at a new Worker route. The workspace object then reads the provider state at once, so a forged event causes one read at most. The user registers the webhook and stores its signing secret. D changes the statement "The app does not depend on Boat webhooks" in `docs/architecture.md`, whose reason went away with decision 80. A turn sent during the stop still needs C. Effort: Medium.
+  - **E.** When the workspace object finds a stop, it keeps each turn that the runner never started, and the turn runs after the resume. The runner keeps a record of each accepted turn, so a resent turn does not run twice. E changes the rule "The agent stopped" in "Messages" of `docs/protocol/chat-and-events.md` for a turn that never started. Effort: Medium.
+  - **F.** Set `TURN_HEARTBEAT_MS` to 30 seconds. It also finds a stop during a started turn, but it makes ten times more provider calls for each working workspace. Effort: Small.
+- **Left out:** WebSocket ping frames, because the WebSocket API of Workers cannot send a ping or report a pong. A provider read on a timer while a tab is open, because each activity report of a tab already reads the provider at most once a minute.
+- **Wider fix:** D, in place of B. D finds each stop and error that the provider reports, for every runner version, also with no turn and no open tab. B works only for a runner from a newer image, and it needs a version gate. C stays necessary with B or D.
 - **Previous examples:** None found.
-- **Recommendation:** B. The tab shows the stopped state within about a minute, whatever the runner did.
-- **Action:** ask the user, because B adds a protocol rule for the runner connection.
+- **Recommendation:** C, in place of B. The message of the smoke test then waits and runs after the resume, for every runner version, with no new requirement. D best protects the codebase against later provider stops.
+- **Action:** ask the user later, because the user deferred this choice on 8 November 2026. The options check found that C needs no new rule, so the user can also choose C to apply without a decision.

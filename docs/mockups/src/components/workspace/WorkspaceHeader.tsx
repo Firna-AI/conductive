@@ -1,5 +1,11 @@
 import type { Viewport } from '@mokly/mokly'
-import { Archive, ChevronLeft, FolderGit2, GitBranch } from 'lucide-react'
+import {
+  Archive,
+  ChevronLeft,
+  FolderGit2,
+  GitBranch,
+  PanelRight,
+} from 'lucide-react'
 import { people } from '../../fixtures/members'
 import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
@@ -24,11 +30,12 @@ function State(props: { status: ActivityStatus }) {
  * The name, repository, branch, owner, and state of the open workspace,
  * and Archive. The list groups workspaces by section, so the header names
  * the repository. For an admin of the org, the owner opens the menu that
- * reassigns the workspace.
+ * reassigns the workspace. On desktop the header ends with the toggle that
+ * hides the right column and shows it again.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
-  /** The name to show, such as the city name of a new workspace. */
+  /** The name to show, such as Untitled before the title comes. */
   name: string
   status: ActivityStatus
   viewport: Viewport
@@ -40,6 +47,8 @@ export function WorkspaceHeader(props: {
   archivable: boolean
   /** The list that Back opens on a phone, such as that of a suspended org. */
   back?: string
+  /** The user hid the right column of the desktop with the toggle. */
+  rightHidden?: boolean
 }) {
   const { workspace, name } = props
   const repository = repositories[workspace.repository].name
@@ -89,6 +98,12 @@ export function WorkspaceHeader(props: {
       {owner}
       <State status={props.status} />
       {archive}
+      <IconButton
+        icon={PanelRight}
+        label={
+          props.rightHidden ? 'Show the right column' : 'Hide the right column'
+        }
+      />
     </header>
   )
 }

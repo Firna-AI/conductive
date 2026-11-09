@@ -43,8 +43,12 @@ export const privacyDocument: LegalDocument = {
             each sign-in. ${productName} keeps the latest version that you
             accepted, and the time when you first accepted it. They show that
             you accepted the terms.`,
-          text`A suspension: the time when the operator suspended your
-            account, if that happens. It keeps your cloud computers stopped.`,
+          text`A suspension: if the operator suspends your account,
+            ${productName} records the time and the operator who suspended
+            it. An operator can lift the suspension, and ${productName}
+            records each lift in the same way. It keeps every record. A
+            suspension keeps your cloud computers stopped until an operator
+            lifts it.`,
           text`Your session: a cookie of the app keeps you signed in. A
             second cookie protects the GitHub sign-in while it runs.`,
           text`Your orgs: the orgs, members, roles, invites, sections,
@@ -52,8 +56,9 @@ export const privacyDocument: LegalDocument = {
             team make. They run the service.`,
           text`Keys and logins: the env var values of each org, and your
             Claude or OpenAI logins. ${productName} stores them encrypted. It
-            uses your login only for the turns of the sessions that you start,
-            also for the messages of other members.`,
+            uses your login only for the turns of the sessions that you start.
+            The messages of other members in those sessions use it only when
+            you let other members use that login.`,
           text`Your work: ${productName} keeps your messages and the answers
             of the agents as the chat history of each workspace. It also
             keeps the last file list and the last summary of changes of each
@@ -74,7 +79,9 @@ export const privacyDocument: LegalDocument = {
       title: 'Who gets your data',
       blocks: [
         list(
-          text`Cloudflare runs ${productName} and stores its data.`,
+          text`Cloudflare runs ${productName} and stores its data.
+            Cloudflare's AI model service also writes a short name for each
+            new workspace from the text of its first message.`,
           text`GitHub signs you in, and gives ${productName} access to your
             repositories through its GitHub App.`,
           text`A cloud computer provider runs the cloud computers of every org
@@ -83,8 +90,11 @@ export const privacyDocument: LegalDocument = {
             sends the provider the requests that start, stop, and use them.`,
           text`Anthropic and OpenAI get your messages, your files, and your
             code when an agent works on them. Each session uses the login of
-            the member who started it, also for your messages. The terms of
-            that provider apply.`,
+            the member who started it. Your messages in another member's
+            session use that member's login only when that member lets other
+            members use it. When that member does not share the login, your
+            message starts a new session on your own login. The terms of that
+            provider apply.`,
           text`The members of your orgs see the workspaces of the org and
             their chats. A member with a terminal in a cloud computer can read
             the agent login and the GitHub token of a turn that runs there. A
@@ -92,10 +102,12 @@ export const privacyDocument: LegalDocument = {
             keep the agent login after the turn ends. A member with a terminal
             can read it there too.`,
           text`The members of your orgs also see who started each session,
-            whose login it uses, and whether it can use that login.`,
+            whose login it uses, and whether it can use that login. They also
+            see whether its starter lets other members use that login.`,
           text`If the operator suspends your account, the members of your orgs
             learn that it is suspended. A workspace that you own then says
-            that its owner is suspended.`,
+            that its owner is suspended, until an operator lifts the
+            suspension.`,
         ),
         paragraph`${draft('To confirm: the contracts with these providers, and any other recipient')}`,
       ],
@@ -122,9 +134,26 @@ export const privacyDocument: LegalDocument = {
             encrypted.`,
           text`It does not send the key of its cloud computer provider to
             your browser or into a cloud computer.`,
-          text`Your browser does not get a stored secret back.`,
-          text`An agent can repeat an env var value in its answer. The chat
-            history then shows that value to each member who reads the chat.`,
+          text`The settings never return a stored env var value or agent login
+            to your browser.`,
+          text`An env var is secret until an admin clears its mark. Before
+            ${productName} puts agent output in the chat history or on a
+            screen, it hides each exact copy of a secret value in it. It also
+            hides such a copy in each start log that it shows. It does not
+            hide a changed or encoded value. A change of the mark applies at
+            the next start of a cloud computer.`,
+          text`${productName} keeps the real path of each file, because it
+            needs that path to open the file. It also keeps the real name of
+            the default branch of each repository. Screens hide each exact copy
+            of a secret value in these paths and names. Your browser still gets
+            the real values, so a secret value can show in the data that your
+            browser gets and sends (decision 145).`,
+          text`Agent output and start logs can show the value of an env var
+            that is not secret. Each member who reads them then sees that
+            value. The agents and each member with a terminal can read every
+            env var value in the cloud computers. Secret values can also stay
+            on the disk of a cloud computer, for example in its agent sessions
+            and its agent output.`,
         ),
       ],
     },

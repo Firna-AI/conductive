@@ -43,10 +43,9 @@ of the data that the screens read and write.
   state. An older event without the error keeps the current error. An
   explicit null clears it. Event errors carry no log, so the model keeps
   a null log for them.
-- An admitted create stays in `OrgModel.creations` until its start ends.
-  A failed start takes the workspace out of the list, and gives the first
-  message back in a form of its own. A sign-out, or a sign-in of another
-  person, forgets every create.
+- A create request lives in `OrgModel.creations` until it answers. A
+  sign-out, or a sign-in of another person, ends every request that still
+  runs. A failed first start keeps its workspace in the list.
   [Creation recovery](creation-recovery.md) gives the rules.
 - The invitations of the user read at the first show of `/` for that user,
   through `AppModel.invitations`. The first load and the other addresses
@@ -63,10 +62,11 @@ of the data that the screens read and write.
   event number that it reached. A sign-out, or a sign-in of another user,
   closes and forgets every kept model.
 - An open reads the workspace detail, shows it, and starts the read marks
-  and the event stream. Only then does a stopped or failed workspace get
-  its Resume. So a refused or failed start keeps the detail and the
-  stream, and `startError` of `WorkspaceModel` holds the error. A manual
-  Resume still rejects for its caller.
+  and the event stream. Only then does a stopped workspace, or one whose
+  later start failed, get its Resume. A failed first start waits for Try
+  again. So a refused or failed start keeps the detail and the stream, and
+  `startError` of `WorkspaceModel` holds the error. A manual Resume still
+  rejects for its caller.
 - A `user_suspended` refusal holds only while the owner stays the same. A
   new owner in the detail, or from `reassigned(workspace)`, clears it. A
   late refusal for a former owner sets nothing.

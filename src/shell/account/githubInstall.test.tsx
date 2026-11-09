@@ -113,7 +113,7 @@ describe('the install of the GitHub App', () => {
     await press(await installButton(getStarted))
     const account = mountScreen(
       app,
-      <AccountScreen connect={null} user={fakeUser} />,
+      <AccountScreen connect={null} tab="general" user={fakeUser} />,
     )
     await press(await installButton(account))
     expect(left).toEqual([

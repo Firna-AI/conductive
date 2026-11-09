@@ -5,6 +5,7 @@ import {
   readConfiguration,
 } from '../../desktop/src/config'
 import { createApp } from '../application'
+import { fakeSite } from '../test-support/fake-site'
 import { createHarness, type TestHarness } from '../test-support/harness'
 
 let harness: TestHarness
@@ -126,7 +127,7 @@ it('serves app assets and same-origin local modules with the actual desktop poli
     }
     const marketing = await app.fetch(
       new Request('https://conductive.build/'),
-      { ...env, APP_ORIGIN: harness.env.APP_ORIGIN },
+      { ...env, APP_ORIGIN: harness.env.APP_ORIGIN, ASSETS: fakeSite() },
     )
     expect(marketing.status, binding).toBe(200)
     expect(await marketing.text(), binding).toContain(

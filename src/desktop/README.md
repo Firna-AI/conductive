@@ -13,6 +13,10 @@ screen mounts the tool at each show, so each show reads a new desktop URL.
 - The frame opens the URL exactly as the server sent it, with the token in
   its fragment. It sends no referrer.
 - The bar says Connecting until the frame loads, then Live.
+- When the page's content security policy blocks the stream's origin, the
+  tool shows its error panel with Try again, not Live. The `frame-src` of
+  the policy must list the stream's host, as
+  [Frame sources](../../docs/deployment.md#frame-sources) says.
 - The screen keeps the 16:10 shape of the desktop, inside the width and the
   height of its panel.
 - A failed request shows its message and Try again.

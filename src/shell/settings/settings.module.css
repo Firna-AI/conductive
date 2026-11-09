@@ -4,31 +4,3 @@
   justify-content: center;
   padding: 16px 0;
 }
-
-/*
- * The row of a variable whose value changes. When the row is narrow, as on
- * a phone, the field moves under the name.
- */
-.changing {
-  flex-wrap: wrap;
-}
-
-.changing > :first-child {
-  flex: 1 1 120px;
-  padding: 6px 0;
-}
-
-/* The field of the new value, with Save and Cancel. */
-.edit {
-  display: flex;
-  flex: 2 1 240px;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  padding: 4px 0;
-}
-
-.edit > :first-child {
-  flex: 1;
-  min-width: 0;
-}

@@ -10,7 +10,7 @@ export const GITHUB_SETUP_PATH = '/github/setup'
  * screen in the Mac app. The install link carries it to GitHub as `state`,
  * and GitHub gives it back to the Setup URL.
  */
-export const GITHUB_INSTALL_SOURCES = ['get-started', 'account', 'mac'] as const
+const GITHUB_INSTALL_SOURCES = ['get-started', 'account', 'mac'] as const
 
 export type GitHubInstallSource = (typeof GITHUB_INSTALL_SOURCES)[number]
 

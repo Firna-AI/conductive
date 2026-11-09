@@ -17,20 +17,47 @@ site uses the lockups and favicons from that folder unchanged.
 
 ## How the Worker serves it
 
-- The Worker sends each request of the root domain to `marketingResponse`
-  in `worker/hosts.ts`, which calls `siteResponse` in `routes.ts`.
-- `GET` and `HEAD` get a page. Other methods get `405` with
-  `Allow: GET, HEAD`.
-- The pages are `/`, `/terms`, and `/privacy`. Every other path gets the
-  page for an unknown address with `404`. So the app's API and the app's
-  own files never answer on the root domain.
-- The static assets binding serves only the files that the pages name:
-  the pictures, the lockups, the favicons, and the Inter font.
-  `/favicon.ico` serves the favicon of the brand.
-- Each page carries one inline stylesheet. Its content security policy
-  allows that stylesheet by its hash, and files from the site only.
+Astro builds the pages into `public/_site/`. Vite copies that folder into
+`dist/client/_site/`. The Worker serves those files through its static
+assets binding.
+
+- `marketingResponse` in [`worker/hosts.ts`](../../worker/hosts.ts) calls
+  `siteResponse` in [`worker/marketing/site.ts`](../../worker/marketing/site.ts).
+  `GET` and `HEAD` get a page. Other methods get `405` with
+  `Allow: GET, HEAD`. A `HEAD` response has no body.
+- The build writes `site-files.json` with each file path and the SHA-256
+  hash of each inline style element. The Worker reads it once for each
+  assets binding. A failed read is not cached.
+- A listed page uses its public path, such as `/terms` for `terms.html`.
+  The home page uses `/`. The Worker requests each page without `.html`
+  to avoid the binding's redirects. Every other address gets `404.html`
+  with status `404`. Neither `404.html` nor the agreement folder has a
+  public page path.
+- Listed files other than HTML and the list load under `/_site/`.
+  `/favicon.ico` also serves the fixed brand favicon under that folder.
+  App API paths and app files get the unknown-address page on the root domain.
+- The Worker replaces the exact app-origin and year markers with escaped
+  HTML text. Sign-in links use `APP_ORIGIN`. The footer uses the UTC year
+  of the request.
+- Pages keep `Cache-Control: no-cache`, `Content-Type: text/html; charset=utf-8`,
+  `Referrer-Policy: no-referrer`, and `X-Content-Type-Options: nosniff`.
+  Their content security policy allows each inline style by its build hash.
+  It keeps `default-src 'none'`, images and fonts from `'self'`, and
+  `base-uri`, `form-action`, and `frame-ancestors` set to `'none'`.
+- The app host serves the built agreement page only through sign-in.
+  It also serves the built GitHub install return page at `/github/setup`
+  for an install that started in the Mac app. That page tells the user
+  to go back to the Mac app.
+  The Worker fills the agreement's Continue address and the site-origin markers.
+  It keeps the same page headers, with `Cache-Control: no-store`.
+  The app host also serves listed site files under `/_site/`. Other paths
+  there get the app page, as an unknown app path does.
+- A missing or broken file list, a failed binding response, an HTML asset
+  fallback, or a page without its markers gives `503`. The Worker logs a
+  fixed warning without request data. It never forwards a site redirect
+  or the app page as a site file.
 - The phone layout starts below 760 px. CSS media queries and the sources
-  of each `<picture>` use that width. The site is dark first, and a visitor
+  of each `<picture>` use that width. The site is dark first. A visitor
   who prefers light gets the light scheme.
 
 ## Pictures
@@ -56,9 +83,9 @@ it. For each picture, it gives:
 - the files: one file for each layout, or one file that both layouts share
 - the capture page and the file name of each capture
 
-`frames.ts` reads each picture from the list by its key and its layout,
-and its files from `picture-files.ts`. `picture-files.ts` keeps only the
-bundled files. So the site keeps no label, size, or scale of its own.
+`components/PictureFrame.astro` reads each picture from the list by its
+key and layout. `picture-urls.ts` reads the files with one glob keyed by
+the list. So the site keeps no label, size, or scale of its own.
 [`marketingPictures.tsx`](../../docs/mockups/src/screens/marketingPictures.tsx)
 chooses the screen and the state that each picture shows.
 
@@ -96,7 +123,7 @@ failure, or interruption.
 
 ## Legal drafts
 
-The Terms and Privacy pages are drafts for a lawyer, as decision 35 asks.
+The Terms and Privacy pages are drafts for a lawyer.
 Each page shows "Draft for lawyer review" at the top. Each fact that the
 operator or the lawyer must still give is a marked draft field, such as
 the legal name, the address, the contact, the law, the lawful basis, and
@@ -104,10 +131,17 @@ how long data stays. The other facts come from the
 [architecture doc](../../docs/architecture.md) and the
 [protocol docs](../../docs/protocol/).
 
+When you change a fact in the architecture doc or in a protocol doc, read
+both legal pages in full. The legal pages are the Terms page in
+`src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts`.
+In the same change, update each sentence of the legal pages that restates
+the fact. A search for the old words is not enough, because a legal page
+can restate a fact in other words.
+
 The words of the legal pages, of the page for an unknown address, and of
 the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`,
-and `legal-text.ts` hold them. `legal.ts` renders them as HTML for the
-site. The mockups and the sign-in screen of the app render the same text
+and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
+`components/RunningText.astro` build their HTML for the site. The mockups and the sign-in screen of the app render the same text
 with React. So every surface shows the same words.
 
 Sources for the review:
@@ -139,50 +173,70 @@ this repository creates that mailbox.
 
 ## Development
 
-- Run the tests: `npm run test -- src/marketing`. The test of the capture
-  command uses fake pages, so it needs no browser.
-- Preview the site with `npm run dev`. Set `APP_ORIGIN` to
+The pages are in `pages/`, with layouts in `layouts/` and parts in
+`components/`. Astro builds them before the Worker serves them.
+
+- Run the site tests with `npm run test -- worker/marketing src/marketing`.
+  The built-site test builds Astro once in a temporary folder. The capture
+  test uses fake pages and needs no browser.
+- Work on the pages with `npm run site:dev`. It serves them at
+  `http://localhost:4321` and reloads them after edits. Sign-in links lead
+  to the app of `npm run dev`. The footer shows the current year.
+  The agreement preview is at `/app-host/terms-consent`.
+  The GitHub return previews are at `/app-host/github-setup/installed`
+  and `/app-host/github-setup/requested`.
+- Run `npm run site:build` to write the pages, files, and file list into
+  `public/_site/`, which Git ignores. `npm run dev` and `npm run build`
+  build the site first. Restart the Worker after rebuilding the site so
+  it reads the new file list.
+- Preview through the Worker with `npm run dev`. Set `APP_ORIGIN` to
   `http://127.0.0.1:5173` and `MARKETING_ORIGIN` to
-  `http://localhost:5173` in `.dev.vars`. Then open `http://localhost:5173`
-  for the site, and `http://127.0.0.1:5173` for the app.
+  `http://localhost:5173` in `.dev.vars`. Open `http://localhost:5173` for
+  the site and `http://127.0.0.1:5173` for the app.
+- To preview the production build, use port 5174 in those settings.
+  Run `npm run build`, then `npm run preview`. Open
+  `http://localhost:5174`. The agreement page opens on the app host at
+  `/api/auth/github` without the current `terms_version` value.
 
 ### Key code
 
-- `routes.ts`: `siteResponse`, the response for each request of the root
-  domain.
-- `site.ts`: the pages of the site and their heads.
-- `home.ts`, `features.ts`: the home page and its copy.
-- `chrome.ts`, `actions.ts`: the header, the footer with the address for
-  abuse reports, and the actions. `wordmark(home)` links the lockup to a
-  given home address, for the pages on the app host.
-- `links.ts`: the paths of the site, and `pageHrefs`, which gives each page
-  as a path on the site or as a complete address on another origin.
-- `legal.ts`, `terms.ts`, `privacy.ts`: the legal pages and their drafts.
-- `legal-text.ts`: the model of text without markup, the page titles, the
-  notice of the draft, `abuseAddress`, the words of the page for an
-  unknown address, and `termsAgreement`, the agreement of sign-in.
-- `sign-in-consent.ts`: `termsConsentPage`, the agreement page that the
-  Worker serves on the app host before GitHub.
-- `github-setup.ts`: `githubSetupPage`, the page that the Worker serves on
-  the app host after an install of the GitHub App from the Mac app. It
-  tells the user to go back to the Mac app.
+- [`worker/marketing/site.ts`](../../worker/marketing/site.ts): public
+  page paths, site files, the favicon, and the unknown-address page.
+- [`worker/marketing/files.ts`](../../worker/marketing/files.ts): the
+  file-list parser and cache for each assets binding.
+- [`worker/marketing/page.ts`](../../worker/marketing/page.ts): built-page
+  reads, headers, content security policy, and the safe `503` warning.
+- [`worker/marketing/markers.ts`](../../worker/marketing/markers.ts): exact
+  marker replacement with HTML escaping.
+- [`worker/marketing/consent.ts`](../../worker/marketing/consent.ts): the
+  agreement response for sign-in on the app host.
+- [`worker/marketing/github-setup.ts`](../../worker/marketing/github-setup.ts):
+  the built GitHub install return page for the Mac app.
+- [`worker/marketing/assets.ts`](../../worker/marketing/assets.ts): site
+  asset reads and the app host's handling of other site paths.
+- `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
+- `features.ts`: the home page's feature copy.
+- `links.ts`: site paths and `pageHrefs` for links from another origin.
+- `terms.ts`, `privacy.ts`, `legal-text.ts`: legal drafts and the shared
+  text model, titles, draft notice, abuse address, and sign-in agreement.
+- `request-values.ts`: built-page markers and local Astro preview values.
+- [`astro.config.ts`](../../astro.config.ts): build settings, generated
+  CSS for the font, tokens and picture sizes, and the file list writer.
+- [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,
+  icon, marker, and file-list names and types.
+- `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
+- `icon-shapes.ts`: lucide icons as shapes for the Astro pages.
+- `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
+  queries, frame classes, and picture-size CSS.
 - [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
-  the one list of the pictures, with `pictureCaptures`, `capturePagePath`,
-  and `pictureFileName`.
-- `frames.ts`, `picture-files.ts`: the frames, which read each picture
-  of the list by its key and its layout, and the bundled files.
+  the shared picture list, capture pages, bounds, and file names.
 - [`tools/marketing-pictures/run.ts`](../../tools/marketing-pictures/run.ts):
-  the capture command, its build, and its cleanup.
+  the capture command, build, and cleanup.
 - [`capture-pictures.ts`](../../tools/marketing-pictures/capture-pictures.ts),
   [`page.ts`](../../tools/marketing-pictures/page.ts),
   [`cdp.ts`](../../tools/marketing-pictures/cdp.ts), and
   [`encode-pictures.ts`](../../tools/marketing-pictures/encode-pictures.ts):
-  the captures of the capture pages, the browser page, the Chrome
-  connection, and the lossless encoding.
-- `picture-capture.test.ts`: the test that each capture keeps its page,
-  its bounds, and its file name.
-- `document.ts`, `styles.ts`, `tokens.ts`, `styles/`: the page document,
-  the stylesheet, the design tokens from the mockups, and the CSS.
-- `assets.ts`: the brand files and the font, and the asset paths that the
-  site serves.
-- `html.ts`: the `html` template tag, which escapes each value.
+  capture pages, browser control, Chrome connection, and lossless encoding.
+- `picture-capture.test.ts`: capture pages, bounds, and file names.
+- [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
+  real builds served through the Worker, including their policy and files.

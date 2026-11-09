@@ -7,14 +7,14 @@ import type {
   WorkspaceRow,
 } from './sections'
 import { SectionList } from './SectionList'
-import { NewWorkspaceLink, SettingsLink } from './SidebarLinks'
+import { NewWorkspaceLink, SearchLink, SettingsLink } from './SidebarLinks'
 import styles from './Sidebar.module.css'
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, and the sections of the org. A suspended org shows
- * its sections without New workspace and without their menus, because
- * nothing in it can change.
+ * link, New workspace, Search, and the sections of the org. A suspended org
+ * shows its sections without New workspace and without their menus,
+ * because nothing in it can change.
  */
 export function Sidebar(props: {
   org: Org
@@ -42,12 +42,15 @@ export function Sidebar(props: {
         />
       </div>
       <div className={styles.scroll} data-mokly-scroll="workspace-list">
-        {suspended ? null : (
-          <NewWorkspaceLink
-            current={props.current === 'new-workspace'}
-            variant="sidebar"
-          />
-        )}
+        <div className={styles.links}>
+          {suspended ? null : (
+            <NewWorkspaceLink
+              current={props.current === 'new-workspace'}
+              variant="sidebar"
+            />
+          )}
+          <SearchLink keys variant="sidebar" />
+        </div>
         <SectionList
           archived={props.archived}
           drag={props.drag}
