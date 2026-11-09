@@ -40,7 +40,8 @@ export const integrationsFeatures: readonly ParityFeature[] = [
     id: 'open-in',
     area: 'integrations',
     name: 'Open In',
-    status: 'considering',
-    note: 'Opening a cloud workspace directly in a desktop editor is under consideration.',
+    status: 'planned',
+    note: 'Opening cloud workspaces in desktop editors through SSH is planned for the Mac app.',
+    due: null,
   },
 ]

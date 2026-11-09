@@ -26,8 +26,8 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     id: 'cursor',
     area: 'models-and-providers',
     name: 'Cursor',
-    status: 'not-planned',
-    note: 'Conductive currently offers agents powered by Claude and Codex. Cursor support is outside the current scope.',
+    status: 'considering',
+    note: 'Agents powered by Claude and Codex work today. Cursor support is under consideration.',
   },
   {
     id: 'api-key-mode',
@@ -35,6 +35,14 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     name: 'API key mode',
     status: 'available',
     note: 'Connect an Anthropic or OpenAI API key. The message box identifies another member’s login when you use it.',
+  },
+  {
+    id: 'custom-api-endpoints',
+    area: 'models-and-providers',
+    name: 'Custom API endpoints',
+    status: 'in-progress',
+    note: 'Connecting agent logins to your own API endpoint is in progress.',
+    due: null,
   },
   {
     id: 'model-picker',
@@ -76,6 +84,6 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Model catalogue',
     status: 'available',
-    note: 'The model picker lists the Claude and Codex models available in Conductive.',
+    note: 'The model picker includes Fable 5.2 and the supported Claude and Codex models.',
   },
 ]
