@@ -246,7 +246,7 @@ Depends on: 3a
       1024, and 1440 px. Check links, keyboard order, and Chromium table roles.
       The comparison table adds no horizontal scroll.
 - [x] Update the marketing README's pages, mockups, and Key code.
-- [ ] Commit the public-page checkpoint with the completed test and docs.
+- [x] Commit the public-page checkpoint with the completed test and docs.
 
 Evidence: `.context/conductor-parity/checks/` holds tests and smoke notes.
 
@@ -261,11 +261,11 @@ The branch checks the latest main and opens its PR. Only the user merges.
       than the orchestrator fetches or merges shared Git refs.
 - [x] Check each status again against the merged `main`. Update each row
       whose evidence changed, and the check date.
-- [ ] Run `npm --prefix desktop ci`, `npm ci --prefix runner`, the targeted
+- [x] Run `npm --prefix desktop ci`, `npm ci --prefix runner`, the targeted
       tests, and the complete gate, `npm run check`.
-- [ ] Run the deletion audit of the `git-commit` skill. Commit with
+- [x] Run the deletion audit of the `git-commit` skill. Commit with
       Conventional Commits, and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Add to its focus: the
       claims match the evidence in `.context/conductor-parity/full-data/`,
       with no example date, provider name, or script. Report the findings,
@@ -279,13 +279,14 @@ The branch checks the latest main and opens its PR. Only the user merges.
       decisions, the design calls, and a permalink to this plan. Give the
       removed layouts with Cal's approval, the deleted fixture, and the new
       follow-up items.
-  - [ ] Watch CI with `scripts/ci-wait.sh` of the `finish-work` skill. Act
-        on each failure as that skill says. Do not merge or deploy.
-  - [ ] Give the final report of the `finish-work` skill, with the run
-        time of each added test.
+After the pull request opens, monitor every CI run with the finish-work
+CI script. Resolve failures before the final report. Do not merge or
+deploy. Report the measured test cost and the final-head CI result.
 
-Evidence: the gate log goes in `.context/conductor-parity/checks/`, and
-the reviews in `.context/reviews/calummoore/conductor-feature-parity-list/`.
+Verification: local gate passed 1,831 root and 133 runner tests at
+`8d924d9c`. Native phone-header correction `684a61d3` passed focused checks
+and ten runs. Final review found no issue. Final-head CI will run on the PR.
+Evidence stays under `.context/conductor-parity/checks/` and branch reviews.
 
 ## Post-merge follow-up (non-blocking)
 
