@@ -18,6 +18,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - Keys for other commands were rejected for this version.
 - The palette key opens the palette on each page of the signed-in app.
   [Where the key goes](#where-the-key-goes) gives the exceptions.
+- A person who waits for app access sees only the
+  [waitlist screen](waitlist.md#the-waitlist-screen), which has no palette.
 - The palette opens on the All tab, with an empty search field, each time.
 - The palette key closes the palette. Escape closes it too.
 - On desktop, a press outside the dialog closes the palette, as it closes

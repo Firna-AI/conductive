@@ -36,6 +36,10 @@ them, and this page lists each protocol doc and what it covers.
   reports.
 - [Operator section](../protocol/operator-section.md): the pages of the
   operator in the web app, their counts, and their searches.
+- [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
+  ways in, the pause, and the approval email.
+- [Invite and referral codes](../protocol/waitlist-codes.md): the codes of
+  the waitlist, the join link, and the use of a code.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):

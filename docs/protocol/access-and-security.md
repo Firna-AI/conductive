@@ -14,8 +14,10 @@ says.
   app then gives both the identity and the repository access.
 - Cloudflare Access was rejected. Users sign in with GitHub, and Access
   cannot sign in inside a frame.
-- Anyone with a GitHub account can sign up (decisions 22 and 48). A
-  suspended account cannot sign in, as
+- A new GitHub sign-in creates an account without app access, and the
+  person waits on the waitlist (decision 160).
+  [Waitlist](waitlist.md) states what the person can reach and the ways in.
+  A suspended account cannot sign in, as
   [Operator actions](operator-actions.md#sessions-and-sign-in) says.
 - The sign-up check on the age and the email of a GitHub account was
   dropped (decision 48).
@@ -53,6 +55,9 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
+- The gate of `app.conductive.build` also checks app access, as
+  [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
+  says (decision 161).
 - The health check and GitHub sign-in with its callback need no sign-in.
   The callback checks its `state` value instead.
 - The Mac app's public sign-in exchange also needs no sign-in.
@@ -133,8 +138,8 @@ Later screens add the frame and connection sources that they need.
 - An operator is the one exception. An operator can suspend or lift any
   user or org, as [Operator actions](operator-actions.md) says. In the
   [operator section](operator-section.md#what-the-section-shows), an
-  operator also reads counts, names, IDs, dates, roles, and states across
-  every org (decisions 142, 144, and 147).
+  operator also reads counts, names, IDs, dates, roles, states, and codes
+  across every org (decisions 142, 144, 147, and 160).
 - The operator section shows no chat, file, env value, agent login, or
   email address. Its org search takes the ID of a cloud computer or a
   preview address only to find its org.
