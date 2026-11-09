@@ -9,7 +9,7 @@ import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { memberViewer, people } from '../fixtures/members'
+import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { type Org, orgList } from '../fixtures/orgs'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
 import { settingsOrg } from './settingsOrgs'
@@ -135,6 +135,7 @@ export function OrgSettingsScreen(props: {
       sections={settings.sections}
       settingsAlert={failedBuildOf(state.build) !== undefined}
       suspended={suspended}
+      viewer={viewerMembership(state.viewer)}
     />
   )
   return (

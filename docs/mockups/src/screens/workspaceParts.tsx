@@ -148,7 +148,7 @@ export function workspaceSidebar(
   workspace: Workspace,
   status: ActivityStatus,
   suspended: boolean,
-  viewer?: Membership,
+  viewer: Membership,
 ): ReactNode {
   if (status !== 'archived') {
     const sections = suspended

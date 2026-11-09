@@ -1,12 +1,13 @@
 import { Fragment } from 'react'
 import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react'
-import { you, type Membership } from '../../fixtures/members'
+import type { Membership } from '../../fixtures/members'
 import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { Menu } from '../common/Menu'
 import { ArchivedGroup } from './ArchivedGroup'
 import { sectionMenu } from './menus'
+import { mayArchiveWorkspace } from './permissions'
 import type {
   ListDrag,
   ListMenu,
@@ -117,10 +118,9 @@ export function SectionList(props: {
   drag?: ListDrag
   archived?: readonly WorkspaceRow[]
   readOnly?: boolean
-  viewer?: Membership
+  viewer: Membership
 }) {
-  const { drag } = props
-  const viewer = props.viewer ?? { person: you, role: 'admin' }
+  const { drag, viewer } = props
   const dragged = props.sections
     .flatMap((item) => item.rows)
     .find((row) => row.workspace.key === drag?.workspace)
@@ -157,8 +157,7 @@ export function SectionList(props: {
                       <WorkspaceRowView
                         archivable={
                           !props.readOnly &&
-                          (viewer.role === 'admin' ||
-                            row.workspace.owner === viewer.person)
+                          mayArchiveWorkspace(viewer, row.workspace.owner)
                         }
                         drag={
                           row.workspace.key === drag?.workspace

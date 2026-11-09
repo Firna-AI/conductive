@@ -36,7 +36,7 @@ export function Sidebar(props: {
   suspended?: boolean
   /** The workspace list of the org did not load. */
   failed?: boolean
-  viewer?: Membership
+  viewer: Membership
 }) {
   const suspended = props.suspended ?? false
   return (

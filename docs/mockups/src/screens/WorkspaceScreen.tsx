@@ -17,6 +17,7 @@ import { ToolsPanel } from '../components/workspace/ToolsPanel'
 import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
+import { mayArchiveWorkspace } from '../components/workspaces/permissions'
 import { conversations } from '../fixtures/conversations'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
@@ -73,8 +74,10 @@ export function WorkspaceScreen(props: {
   const readOnly = archived || suspended
   const admin = state.viewer === 'admin'
   const viewer = viewerOf(state)
+  const membership = { person: viewer, role: state.viewer }
   // Decision 42: the workspace's owner and the org's admins archive it.
-  const archivable = !readOnly && (admin || workspace.owner === viewer)
+  const archivable =
+    !readOnly && mayArchiveWorkspace(membership, workspace.owner)
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
@@ -212,10 +215,7 @@ export function WorkspaceScreen(props: {
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
-      sidebar={workspaceSidebar(workspace, status, suspended, {
-        person: viewer,
-        role: admin ? 'admin' : 'member',
-      })}
+      sidebar={workspaceSidebar(workspace, status, suspended, membership)}
     >
       <WorkspaceBody
         center={file ? <FilePage view={file} /> : chat}

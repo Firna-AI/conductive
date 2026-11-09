@@ -21,6 +21,7 @@ import {
   type LoginKind,
 } from '../fixtures/logins'
 import { account, orgList, orgs } from '../fixtures/orgs'
+import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
 
 export const accountSchema = {
@@ -151,6 +152,7 @@ export function AccountScreen(props: {
     <Sidebar
       org={orgs.acme}
       sections={workspaceSections(undefined, mac.needsInput)}
+      viewer={viewerMembership('admin')}
     />
   ) : undefined
   return (

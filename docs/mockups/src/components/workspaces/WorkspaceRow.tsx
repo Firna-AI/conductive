@@ -41,7 +41,7 @@ export function WorkspaceRowView(props: {
     </>
   )
   if (props.drag) return <div className={className}>{content}</div>
-  const archivable = props.archivable !== false && row.status !== 'archived'
+  const archivable = props.archivable === true && row.status !== 'archived'
   return (
     <span
       className={classes(styles.container, archivable && styles.archivable)}
