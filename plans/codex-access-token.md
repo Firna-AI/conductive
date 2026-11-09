@@ -15,7 +15,9 @@ options check: the access token only. No plan covers Sign in with ChatGPT,
 which can reach Plus and Pro plans. The user has applied to OpenAI for it.
 A new Codex access token is not shared with other members, and one typed
 function gives the share default of each login kind, as the user chose for
-decision 171 on the same day.
+decision 171 on the same day. Milestone 4 is blocked by decision 172: the
+only token route of the pinned Codex passes the token to processes that
+Codex starts.
 
 Related work: the plan `plans/own-endpoint-logins.md` on branch
 `calummoore/cli-proxy-setup` adds an own endpoint login to the same connect
@@ -131,6 +133,48 @@ wider fix.
 - **Action:** ask the user, because it adds a share default that no requirement covers.
 - **Chosen by the user on 9 November 2026:** C.
 
+### 172. How Codex gets an access token without passing it on
+
+Added on 9 November 2026 from the blocked Milestone 4. The options check of
+9 November 2026 widened the root question, added options F, G, and H,
+corrected the risks of A, C, D, and E, and kept the recommendation D.
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Implementation.
+- **Category:** Security.
+- **Location:** `runner/src/providers/codex.ts:122` and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
+- **Background:**
+  - Decision 114 requires that no process that the agent starts inherits the login of its turn, and that the agent program writes no copy of the login to disk.
+  - The pinned Codex 0.167.0 reads an access token only from the variable `CODEX_ACCESS_TOKEN` or from a saved login. Its app server has no login request for a token. 0.167.0 is the latest release on 9 November 2026.
+  - Milestone 4 ran the pinned app server with a fake token against a local fake OpenAI server, and traced each program start with `strace`. 37 program starts carried `CODEX_ACCESS_TOKEN`: Git commands, `getconf`, and the shell snapshot of Codex, which runs a login shell of the sandbox user with its profile scripts. The runner had set the shell rule that removes the variable.
+  - The shell command of the model and both MCP servers got no token. No file under the agent home held the token after the turn.
+  - Codex already removes a list of secret variables before it starts its Git helpers, its shell snapshot, and its hooks. `CODEX_ACCESS_TOKEN` is not on that list.
+  - The provider setting `experimental_bearer_token`, sent on standard input, keeps the token out of every environment. But Codex then skips the metadata, workspace policy, and routing requests of the token, and sends no `chatgpt-account-id` header.
+  - With the token in the environment of the app server, a tool command such as `ps e` can print it without sudo, and Codex saves tool output in its session files on disk.
+  - The evidence is in `.context/codex-access-token/runner/report.md`, and the check is in `.context/codex-access-token/options-check-172-report.md`.
+- **Problem:** The only route of the pinned Codex that keeps the access token mode passes the token to processes that Codex starts. That breaks decision 114.
+- **Impact if no action:** A Codex token cannot run a turn, so this branch cannot merge.
+- **Root question:** How does Codex run a turn on a member's access token, under the workspace policy, with no copy in a child process or on disk?
+- **Options:**
+  - **A.** Accept the inheritance for this kind. Use the variable route, and narrow decision 114 for the helper processes of Codex. State the risk in the protocol doc. Effort: Small. Risk: a program that a profile script, a Git command, or a Git filter such as the Git LFS filter starts during the turn can keep the token after it. A tool command can print the token from the environment of the app server, and Codex then saves it in its session files.
+  - **B.** Hold the token kind until Codex takes the token privately. Ask OpenAI for an app server login request for access tokens, and keep this branch unmerged until a Codex release has one. Effort: Small now. Cost: no token for members until then, with no known date, and the branch drifts from `main`.
+  - **C.** A placeholder for each turn and a relay in the runner. Codex gets a random placeholder in `CODEX_ACCESS_TOKEN`. It reaches OpenAI through a relay that the runner serves on the loopback of the sandbox, set as its HTTPS proxy, with a local certificate authority. The relay puts in the real token, and works only while the turn runs. Processes inherit only the placeholder, which stops working when the turn ends. Effort: Large. Risk: the real token stays in the memory of the runner, as today. Each Codex update needs a check of the requests that Codex sends with the token.
+  - **D.** The Codex part of the Worker model proxy of decision 120, now. As C, but the relay forwards to a Worker route that puts in the real token, so the real token never enters the sandbox. Effort: Large. Cost: the model traffic of token turns passes through the servers of the app, so the privacy page changes. Risk: the route must cover each OpenAI host that Codex calls with the token, also after workspace routing. Cloudflare's limits for long streams are unchecked.
+  - **E.** Our own build of Codex that reads the variable once, keeps the token in memory, and clears it from its environment and from its process memory of the environment. Effort: Large. Risk: each Codex release needs our patch, a new build, and a check, and every image runs our build of a program of another company.
+  - **F.** Ask OpenAI in an issue to add `CODEX_ACCESS_TOKEN` to the list of variables that Codex removes before it starts its helpers, or to read it once and remove it. Hold the kind until a release has the fix, then use the variable route with the shell rule. Effort: Small now, and Medium after the release. Cost: no date is known, and OpenAI accepts no outside pull requests. Risk: the token still sits in the environment of the app server, where a tool command can print it.
+  - **G.** A, with the shell snapshot of Codex off for token turns. Then no login shell and no profile script runs with the token, and decision 114 narrows only for the Git commands of Codex and `getconf`. Effort: Small. Risk: a Git filter still gets the token, and a tool command can still print it from the environment of the app server. Cost: each login-shell tool command runs the profile scripts again.
+  - **H.** Wrappers that remove the variable before each helper starts. The runner puts `git` and `getconf` wrappers first on the `PATH` of the app server, and the image sets the login shell of the sandbox user to a `bash` wrapper. Effort: Medium. Cost: it must know each helper, so a new helper in a later Codex release gets past it, and each update needs the trace check again. Risk: the token still sits in the environment of the app server.
+- **Left out:**
+  - The provider setting `experimental_bearer_token`: Codex then skips the metadata, workspace policy, and routing requests of the token, so the settings of the workspace admin and its data routing would not apply.
+  - The login request `chatgptAuthTokens` of the app server: OpenAI marks it "FOR OPENAI INTERNAL USE ONLY - DO NOT USE", which breaks decision 37. It also takes a ChatGPT sign-in token, not an access token.
+  - A saved login of `codex login --with-access-token`: it writes the token to disk, which decision 114 forbids.
+  - A login file with no disk copy, such as a pipe at the path of the login file: Codex reads the login again at each reload, and a pipe gives no data the second time, so it fails the goal.
+  - Drop the token kind for good: it fails the goal.
+- **Wider fix:** D. It keeps the Codex token out of the sandbox whatever helper a later Codex release adds, and the same route can later take the other login kinds of decision 120.
+- **Previous examples:** Option C of decision 114 moved the Claude login to a private pipe and the Codex API key to a private login request. The Claude program removes its descriptor variable after it reads it.
+- **Recommendation:** D. It keeps decision 114, and it builds a part of the proxy that decision 120 already chose, so no work is lost. The issue of F costs little and can go to OpenAI as well.
+- **Action:** ask the user, because each option changes decision 114, waits for OpenAI, or adds a large build, and no option is clearly best.
+
 ## Design
 
 These are the agent's calls of 9 November 2026. Each gives its reason.
@@ -200,6 +244,9 @@ Risks:
 - A model in the model list of a deployment can be missing from a ChatGPT
   plan. The live check runs one turn with each Codex model of the deployed
   app.
+- The open issue openai/codex#25246 reports 401 failures of Business
+  access tokens from May to July 2026. The live check shows whether a token
+  works with the pinned Codex.
 - A ChatGPT workspace admin can enforce Codex settings, such as the
   approval policy, the sandbox mode, the allowed MCP servers, and hooks.
   Such settings can refuse the settings of the runner, which runs with no
@@ -326,12 +373,18 @@ Depends on: 3
 The runner starts Codex on an access token for the turns of the kind
 `token`.
 
-- [ ] Find the model provider settings that the pinned Codex needs for an
+Blocked on 9 November 2026 by decision 172. The variable route passes the
+token to processes that Codex starts, and the bearer setting skips the
+requests of the token mode. The runner holds no change. The evidence is in
+`.context/codex-access-token/runner/report.md`. The TODOs below change
+with the answer.
+
+- [x] Find the model provider settings that the pinned Codex needs for an
       access token. Read its protocol schema with
       `codex app-server generate-json-schema`, and its configuration.
-- [ ] Try the route of `experimental_bearer_token` in the `config` of
+- [x] Try the route of `experimental_bearer_token` in the `config` of
       `thread/start` and `thread/resume`. Use it when Codex accepts the
-      token on it.
+      token on it. Codex skips the requests of the token mode on it.
 - [ ] Otherwise, in `runner/src/providers/codex.ts`, start the app server
       for a token with `CODEX_ACCESS_TOKEN` in its environment only. Send no
       login request, and set the shell environment rule of Codex that
