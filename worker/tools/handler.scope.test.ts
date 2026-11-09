@@ -21,7 +21,7 @@ afterAll(async () => {
 it('lists every workspace of the authenticated org, including other owners and archives', async () => {
   await fixture.db
     .prepare(
-      "UPDATE workspaces SET state = 'input' WHERE id = 'teammate-workspace'",
+      "UPDATE workspaces SET state = 'input', name = '' WHERE id = 'teammate-workspace'",
     )
     .run()
   const response = await fixture.request(
@@ -40,7 +40,7 @@ it('lists every workspace of the authenticated org, including other owners and a
       },
       {
         id: 'teammate-workspace',
-        name: 'Paris',
+        name: null,
         branch: 'teammate-login/paris-cd34',
         state: 'input',
       },

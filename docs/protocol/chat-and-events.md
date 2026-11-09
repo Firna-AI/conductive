@@ -67,7 +67,28 @@ These docs belong to this doc:
 - "+" starts a new session on the same branch and in the same sandbox.
 - The open session tabs show in the order of creation. A new session
   opens as the last tab (decision 77).
+- The tab of a session shows the title of the session.
+- A new session has no title, and its tab shows "Untitled".
+  [Workspace and session names](#workspace-and-session-names) says when
+  the app gives it a title.
+- When the workspace takes a title as its name, as [Messages](messages-and-attachments.md#messages)
+  says, the first session takes the title too (decision 181).
+- Each other session takes its title from the first message with text that
+  the workspace accepts in that session (decision 181). The title is the
+  first line with text of that message.
+- A message with no text, such as a message with only a screenshot, gives
+  no title.
+- In a title from a message, each run of spaces becomes one space. The app
+  removes one final full stop, but it keeps an ellipsis.
+- A title from a message holds at most 60 characters. The limit counts
+  Unicode code points. The app cuts a longer line after its last whole
+  word that fits the limit. When the first word does not fit, the app cuts
+  the line at the limit.
 - The user can rename a session.
+- Reason: the first session does the task of the workspace, and each other
+  session does the task of its own first message. A title request for each
+  session was rejected, because the first message names that task with no
+  model call.
 - Each session has its own model picker.
 - When one tab sends two edits of the same field of a session, the edit
   that the server commits last wins (decision 142).
@@ -83,6 +104,32 @@ These docs belong to this doc:
   shows the agent of its last message, the title, and the time since it
   closed.
 - An entry of the history reopens its session as a tab, with its chat.
+
+## Workspace and session names
+
+- In this section, a name is the name of a workspace or the title of a
+  session.
+- A new workspace has no name (decision 182). Each new session has no name
+  either (decision 185).
+- The app shows "Untitled" in place of a missing name.
+- In the workspace record, a missing name is null in `name`. In the session
+  record, a missing name is null in `title`.
+- An automatic name is a name that the app gives on its own. These names
+  are automatic:
+  - the title of a workspace, as [Messages](messages-and-attachments.md#messages) says
+  - a workspace name that the agent runner reports, as
+    [Lost workspace updates](agent-runner.md#lost-workspace-updates) says
+  - the title that a session takes, as [Sessions](#sessions) says
+- The app gives an automatic name only to a workspace or a session that has
+  no name (decision 182). So no automatic name replaces a name that a
+  member or the app gave.
+- The app gives no automatic name in an archived workspace, or in a
+  workspace of a deleted org.
+- Reason: a missing name shows that no one named the workspace or the
+  session yet. A text comparison with "New session" or the city name of
+  the branch was rejected. A member can type the same text and then lose
+  that name.
+- Reason: an archived workspace shows its chat read-only (decision 16).
 
 ## What the chat shows
 

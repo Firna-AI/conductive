@@ -71,7 +71,13 @@ export async function orderedHistoryFixture() {
     13,
   )
   for (let part = 0; part < 30; part++)
-    await receive({ type: 'workspace.title', name: `Metadata ${part}` }, 13)
+    await receive(
+      {
+        type: 'start.updated',
+        start: { kind: 'create', startedAt: part, steps: [] },
+      },
+      13,
+    )
   await receive(
     {
       ...context,

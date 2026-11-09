@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { Square } from 'lucide-react'
+import { nameLabel } from '../../../../src/shared/name-label'
 import { ActionButton } from '../components/common/actions'
 import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
@@ -36,8 +37,8 @@ function CloseSessionDialog(props: { viewport: Viewport }) {
       viewport={props.viewport}
     >
       <DialogText>
-        The agent is working in {session.title}. The session moves to the
-        session history, where you can reopen it.
+        The agent is working in {nameLabel(session.title)}. The session moves to
+        the session history, where you can reopen it.
       </DialogText>
     </ConfirmDialog>
   )

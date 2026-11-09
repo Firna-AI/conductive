@@ -50,6 +50,7 @@ export async function createRunnerLimitsFixture(
   let connectionSequence = 0
   let store = new ChatStore(storage, () => 25)
   const dependencies: ChatDependencies = {
+    readAutomaticTitleWorkspace: async () => ({ name: null }),
     filterRunnerOutput: async (_transaction, _workspace, input) => ({
       events: [input],
       save: async () => undefined,

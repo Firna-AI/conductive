@@ -11,6 +11,8 @@ It has no imports and works in the Mac app's NodeNext build.
 [device-read.ts](../../src/shared/device-read.ts) validates unknown wire values.
 `DeviceSender` contains the stored sender's ID and display labels.
 The Worker never reads these fields from a sandbox request.
+`workspaceName` is null for a workspace with no name, in command records and
+saved permission windows. Displays use the shared `nameLabel` helper.
 
 - Machine POST `/v1/tools/mac-command` creates a command request.
 - Machine GET `/v1/tools/mac-command/:requestKey` reads that request.

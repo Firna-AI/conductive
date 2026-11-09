@@ -35,8 +35,6 @@ export class DevAgent {
   private readonly clock: Clock
   private readonly turns = new Map<string, Turn>()
   private count = 0
-  /** Called after the first answer of a turn, as the title request is. */
-  onAnswer: (sessionId: string) => void = () => {}
   /**
    * Called when a turn of a session starts, with its start time, and after
    * its end, with null, so the session record names its active turn.
@@ -176,10 +174,7 @@ export class DevAgent {
       )
     }
     turn.timers.push(
-      window.setTimeout(() => {
-        this.turns.delete(sessionId)
-        this.onAnswer(sessionId)
-      }, 8_000),
+      window.setTimeout(() => this.turns.delete(sessionId), 8_000),
     )
     return turnId
   }
