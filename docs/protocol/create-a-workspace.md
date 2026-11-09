@@ -56,8 +56,7 @@ decision number names a dated record, as
   as the page, and only the page has an address.
 - The dialog has no address. The address of New workspace always shows
   the page.
-- Reason: links, a reload, a new tab, and the return of the message after
-  a failed start then keep working.
+- Reason: links, a reload, and a new tab then keep working.
 - On a computer, with the dialog chosen, New workspace opens the dialog
   from each of its places: the row at the top of the list, the button of
   an org without workspaces, the item in the menu of a section, and the
@@ -98,8 +97,8 @@ decision number names a dated record, as
 - A create in the background was rejected, because it needs a new notice
   for a create that finished.
 - The dialog shows a failed create only when the create request fails.
-  When the sandbox of the new workspace then does not start, the first
-  message goes back to the composer of the page, not to the dialog, as
+  When the sandbox of the new workspace then does not start, the workspace
+  keeps its queued messages and shows Try again, as
   [A failed first start](#a-failed-first-start) says.
 - When the dialog opens, the message field gets the focus. When the dialog
   closes and the screen stays, the focus goes back to the control that
@@ -131,8 +130,7 @@ decision number names a dated record, as
   can show the live start steps.
 - Reason: the new workspace then follows its start steps on its own
   events, as a resume does. A stream of the progress in the create request
-  was rejected, and so was a failed create that stays as a workspace in
-  the error state, because each is a larger build.
+  was rejected, because it is a larger build.
 
 ## The branch and the name
 
@@ -157,27 +155,30 @@ decision number names a dated record, as
 - The branch name starts with the GitHub login that the workspace owner has
   at the create (decision 53).
 - A city name and four random characters follow, such as
-  `calummoore/lisbon-7k2q`.
+  `calummoore/lisbon-7k2q`. The branch keeps the city name when the
+  workspace gets a name.
 - Reason: a GitHub login is unique, so the branches of each person stay
   together. A first name was rejected, because two people can share one.
-- The workspace name starts as the city name.
-  [Chat and events](chat-and-events.md#messages) says how the agent's title
-  then renames it.
+- A new workspace has no name, and the app shows "Untitled" in its place,
+  as [Workspace and session names](chat-and-events.md#workspace-and-session-names)
+  says (decision 182).
+- [Messages](chat-and-events.md#messages) says how a title from the first
+  message then names the workspace.
 
 ## A failed first start
 
-- When the sandbox of a new workspace does not start, the workspace does
-  not stay. The events of the workspace first show the failed start and
-  the error state. The app then removes the workspace and its token.
-- The first message then goes back to the composer of the tab that sent
-  it, and Try again sends it again. No failure loses the message or its
-  attachments.
-- Try again creates the workspace with a new workspace ID. The message
-  keeps its message ID.
-- The first message is the only message that a new workspace accepts
-  before its first start succeeds, as
-  [Messages](chat-and-events.md#messages) says (decision 130). So the
-  removal of a failed workspace loses no accepted message.
-- After the removal, only the member who sent the first message can still
-  get the events of the failed workspace. That member gets the stored
-  events once, and the connection then closes.
+- When the sandbox of a new workspace does not start, the workspace stays
+  in the error state with Try again (decision 130).
+- Every member of the org sees the failed workspace, the cause of the
+  failure, its chat, and its queued messages. No failure loses an accepted
+  message or its attachments.
+- Reason: every member then keeps the cause and each accepted message. A
+  removal of the failed workspace was rejected, because it gave back only
+  the first message, and only to the tab that sent it.
+- When the start fails, its workspace token stops working. The app deletes
+  the sandbox of the failed start.
+- Try again starts a new sandbox for the same workspace and branch, with a
+  new workspace token (decision 130). The sandbox starts from the newest
+  good org image, with the current startup script and env vars.
+- When that sandbox is ready, the agent gets the queued messages, as
+  [Messages](chat-and-events.md#messages) says.

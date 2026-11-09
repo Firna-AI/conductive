@@ -85,10 +85,8 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
 - The snapshot is the `detail` of the model, or `loading` while a kept
   failure waits for the open of this view.
 - The hook connects the view after the render. The first connect of a
-  workspace reads the members when they are not ready. It also starts the
-  subscriptions between the kept parts and the creates of the org. They
-  stay until the tab forgets the workspace. The first connect in the tab
-  makes the memory follow the sign-in.
+  workspace reads the members when they are not ready. The first connect
+  in the tab makes the memory follow the sign-in.
 - Each connect calls `notices.newView()`, makes the notices and the tool
   events follow the stream of the model, and calls `model.open()` and
   `chat.show()`, in this order. The follows come before the open. So at a
@@ -125,12 +123,12 @@ fake API, with its address options, its controls, and the test command.
 - `WorkspaceScreen.tsx`: the screen of one open workspace. It takes a view
   of the kept workspace through `useWorkspaceStore`, and places the header,
   the notices, the columns, and the features. Its `Unavailable` view shows
-  a 404 and a failed create.
+  a 404. A failed first start keeps the screen, and `failedFirstStart`
+  marks its sandbox view.
 - `shown-workspaces.ts`: `ShownWorkspaces`, the kept workspaces of one tab
-  and one user. It gives the events and a 404 of each kept
-  workspace to the creates of its org, and forgets a failed create.
-  `ShownWorkspaces.view` gives a view of a workspace, and makes its parts
-  at the first view.
+  and one user. It keeps a workspace whose first start failed, as it keeps
+  any other. `ShownWorkspaces.view` gives a view of a workspace, and makes
+  its parts at the first view.
 - `tab-memory.ts`: `shownWorkspaces`, which clears them at a sign-out or a
   sign-in of another user.
 - `workspace-view.ts`: `WorkspaceView`, the store of one mounted view over

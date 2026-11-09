@@ -26,9 +26,9 @@ export const newWorkspaceDialogSchema = {
     /**
      * The form, or a create request that did not reach the server. The
      * dialog closes when the create succeeds, so the message of a failed
-     * start comes back in the New workspace page of its workspace instead.
+     * start stays in its workspace instead.
      */
-    result: { enum: ['form', 'unreachable'] },
+    result: { enum: ['form', 'error'] },
   },
 } as const
 
@@ -66,9 +66,9 @@ export function NewWorkspaceDialogScreen(props: {
     )
   }
   const chosen = state.repositories === 'chosen'
-  const failure = state.result === 'form' ? undefined : state.result
+  const failed = state.result === 'error'
   const draft = newWorkspaceDrafts[state.draft]
-  const notices = formNotices(state, failure)
+  const notices = formNotices(state, failed)
   if (!chosen) {
     notices.push(
       <ChooseRepositoriesNotice admin key="repositories" org={org.name} />,

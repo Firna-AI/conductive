@@ -34,8 +34,8 @@ export const newWorkspaceDialog = defineScreen({
       description:
         'The create request did not reach the server. The dialog stays open with the message, and the notice says that the workspace was not created, with Try again.',
       rationale:
-        'The dialog closes when the create succeeds, and the new workspace opens, as from the page. A first start that fails after that returns the message to the New workspace page of its workspace, as the Not created page shows. So the dialog shows only a create request that failed.',
-      props: { draft: 'message', result: 'unreachable' },
+        'The dialog closes when the create succeeds, and the new workspace opens, as from the page. A first start that fails after that keeps the workspace with its queued message and Try again. So the dialog shows only a create request that failed.',
+      props: { draft: 'message', result: 'error' },
     },
     {
       slug: 'no-repositories',

@@ -9,6 +9,7 @@ import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { ActivityStatus } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -34,9 +35,24 @@ export function drawnState(state: WorkspaceState): WorkspaceState {
 }
 
 /**
- * The bar in place of the composer while the sandbox is not running. A
- * refused start shows the words of its cause: the org or the owner. A
- * failed start carries the message that the app saved for it.
+ * The new workspace of the create flow before its first successful start:
+ * each of its messages still waits in the queue. Its error is a failed
+ * first start. A later error is a failed resume.
+ */
+function beforeFirstStart(state: WorkspaceState): boolean {
+  return (
+    isNew(state) &&
+    conversations[state.conversation].every(
+      (item) => item.kind === 'user' && item.queued === true,
+    )
+  )
+}
+
+/**
+ * The bar under the chat while the sandbox is not running. A refused start
+ * shows the words of its cause: the org or the owner. A failed start
+ * carries the message that the app saved for it. A failed first start
+ * keeps the composer under its bar.
  */
 export function sandboxNotice(
   state: WorkspaceState,
@@ -51,7 +67,11 @@ export function sandboxNotice(
             : ownerSuspendedRefusal,
       }
     case 'error':
-      return { problem: 'error', message: startErrors[state.startError] }
+      return {
+        problem: 'error',
+        message: startErrors[state.startError],
+        firstStart: beforeFirstStart(state),
+      }
     case 'stopped':
     case 'archived':
       return { problem: state.sandbox }

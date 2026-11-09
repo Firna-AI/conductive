@@ -50,4 +50,48 @@ describe('routes', () => {
       screen: 'not-found',
     })
   })
+
+  test('each page of the operator section has an address that leads back to it, with the search in the query', () => {
+    const cases: readonly [string, Route][] = [
+      [routes.operator(), { screen: 'operator', view: { page: 'overview' } }],
+      [
+        routes.operatorOrgs(),
+        { screen: 'operator', view: { page: 'orgs', search: '' } },
+      ],
+      [
+        routes.operatorOrgs('north wind & co'),
+        {
+          screen: 'operator',
+          view: { page: 'orgs', search: 'north wind & co' },
+        },
+      ],
+      [
+        routes.operatorUsers('dan'),
+        { screen: 'operator', view: { page: 'users', search: 'dan' } },
+      ],
+      [
+        routes.operatorOrg('org/h3x w4v'),
+        { screen: 'operator', view: { page: 'org', id: 'org/h3x w4v' } },
+      ],
+      [
+        routes.operatorUser(58201734),
+        { screen: 'operator', view: { page: 'user', githubId: 58201734 } },
+      ],
+    ]
+    for (const [path, route] of cases) {
+      expect(parse(path), path).toEqual(route)
+    }
+    expect(parse('/operator/orgs?q=%20%20')).toEqual({
+      screen: 'operator',
+      view: { page: 'orgs', search: '' },
+    })
+    for (const path of [
+      '/operator/settings',
+      '/operator/users/dana-k',
+      '/operator/users/0',
+      '/operator/orgs/acme/members',
+    ]) {
+      expect(parse(path), path).toEqual({ screen: 'not-found' })
+    }
+  })
 })

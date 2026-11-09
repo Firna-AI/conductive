@@ -186,7 +186,6 @@ describe('session parts', () => {
           running={false}
           sending={false}
           stopping={false}
-          waits={false}
         />,
       )
     expect(composer(true)).toMatch(/aria-label="Send" aria-disabled="true"/)

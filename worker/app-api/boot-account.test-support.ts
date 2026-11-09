@@ -76,6 +76,7 @@ export function isolationAccountStates(
     },
   ]
   const empty: AccountState = {
+    operator: false,
     defaultChoice: choice,
     newWorkspaceView: 'page',
     githubAppUrl: harnessGitHubAppUrl,
@@ -83,6 +84,7 @@ export function isolationAccountStates(
     agentLoginComplete: false,
   }
   const firstConnected: AccountState = {
+    operator: false,
     defaultChoice: choice,
     newWorkspaceView: 'page',
     githubAppUrl: harnessGitHubAppUrl,
@@ -94,6 +96,7 @@ export function isolationAccountStates(
     defaultChoice: otherChoice,
   }
   const otherConnected: AccountState = {
+    operator: false,
     defaultChoice: choice,
     newWorkspaceView: 'page',
     githubAppUrl: harnessGitHubAppUrl,

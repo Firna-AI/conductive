@@ -1,8 +1,11 @@
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
+import { sessionPath, sessionsPath } from '../../../src/shared/sessions'
 import { workspacePath } from '../../../src/shared/workspaces'
+import { closeSockets } from '../adapter-sockets.test-support'
 import { array } from '../agent-events'
-import { record } from '../inputs'
+import { CLAUDE } from '../harness.test-support'
+import { number, record, string } from '../inputs'
 import { outerWorkerBundle } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_WORKSPACE } from './outer-seed.test-support'
 import {
@@ -84,4 +87,91 @@ it('keeps hello and live text available during a title write failure and repairs
       }),
     ]),
   )
+})
+
+it('renames only the first session on the first workspace title and publishes ordered updates to both tabs', async () => {
+  const active = (fixture = await recoveryWorkspaceFixture(bundle))
+  const created = await active.request(
+    sessionsPath(OUTER_ORG, OUTER_WORKSPACE),
+    {
+      method: 'POST',
+      body: JSON.stringify({ choice: CLAUDE }),
+    },
+  )
+  expect(created.status).toBe(201)
+  const later = record(record(await created.json()).session)
+  await active.restart()
+  const connected = await active.connect('session-title-stream')
+  await (await active.actor()).readLifecycle()
+  const before = number(
+    (await active.history(active.first.sessionId)).throughEventNumber,
+  )
+  const ownerTab = await active.browser(before)
+  const memberTab = await active.browser(before, active.cookies.memberCookie)
+  const title = connected.runner.emit({
+    type: 'workspace.title',
+    name: 'Fix chat titles',
+  })
+  expect(await connected.runner.inbox.next()).toMatchObject({
+    type: 'confirm',
+    throughEventNumber: 1,
+  })
+  expect((await active.session(active.first.sessionId)).title).toBe(
+    'Fix chat titles',
+  )
+  expect((await active.session(string(later.id))).title).toBeNull()
+  await ownerTab.inbox.next()
+  await ownerTab.inbox.next()
+  await memberTab.inbox.next()
+  await memberTab.inbox.next()
+  const live = () =>
+    ownerTab.messages.filter((message) => message.type === 'event')
+  const events = live()
+  expect(
+    events.map((message) => {
+      const envelope = record(message.envelope)
+      return [envelope.eventNumber, record(envelope.event).type]
+    }),
+  ).toEqual([
+    [before + 1, 'workspace.title'],
+    [before + 2, 'session.updated'],
+  ])
+  expect(record(events[1].envelope).event).toMatchObject({
+    type: 'session.updated',
+    session: { id: active.first.sessionId, title: 'Fix chat titles' },
+  })
+  expect(memberTab.messages).toEqual(ownerTab.messages)
+  const history = await active.history(active.first.sessionId)
+  connected.runner.resend(title)
+  expect(await connected.runner.inbox.next()).toMatchObject({
+    type: 'confirm',
+    throughEventNumber: 1,
+  })
+  expect(await active.history(active.first.sessionId)).toEqual(history)
+  expect(live()).toEqual(events)
+  const renamed = await active.request(
+    sessionPath(OUTER_ORG, OUTER_WORKSPACE, active.first.sessionId),
+    {
+      method: 'PATCH',
+      headers: { Cookie: active.cookies.memberCookie },
+      body: JSON.stringify({ title: OUTER_WORKSPACE }),
+    },
+  )
+  expect(renamed.status).toBe(200)
+  await closeSockets(ownerTab.socket, memberTab.socket)
+  await active.restart()
+  const reconnected = await active.connect('later-title-stream')
+  reconnected.runner.emit({ type: 'workspace.title', name: 'A later title' })
+  expect(await reconnected.runner.inbox.next()).toMatchObject({
+    type: 'confirm',
+    throughEventNumber: 1,
+  })
+  expect((await active.session(active.first.sessionId)).title).toBe(
+    OUTER_WORKSPACE,
+  )
+  expect(
+    await active.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')
+      .bind(OUTER_WORKSPACE)
+      .first('name'),
+  ).toBe('Fix chat titles')
 })

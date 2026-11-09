@@ -1,5 +1,9 @@
 import { expect, it } from 'vitest'
 import type { RunnerEventRefused } from '../../shared/chat-events'
+import {
+  senderSnapshot,
+  workspaceFixtures,
+} from '../../test-support/fixtures/workspaces'
 import { readEnvelope } from './read-workspace'
 
 const turn = { sessionId: 'session-1', turnId: 'turn-1' }
@@ -44,6 +48,19 @@ it('reads exact positive omission counts from browser event envelopes', () => {
       late: false,
     })
   }
+})
+
+it('reads a workspace with no name, as a new workspace has until its title comes', () => {
+  const { workspace } = workspaceFixtures().created
+  const owner = senderSnapshot(workspace.owner)
+  const event = {
+    type: 'workspace.updated',
+    workspace: { ...workspace, owner, name: null },
+  }
+  expect(readEnvelope(envelope(event))).toEqual({
+    ...envelope(event),
+    late: false,
+  })
 })
 
 it('keeps the label of each changed file of a turn, and reads a file without a text label as before', () => {

@@ -43,8 +43,12 @@ export const privacyDocument: LegalDocument = {
             each sign-in. ${productName} keeps the latest version that you
             accepted, and the time when you first accepted it. They show that
             you accepted the terms.`,
-          text`A suspension: the time when the operator suspended your
-            account, if that happens. It keeps your cloud computers stopped.`,
+          text`A suspension: if the operator suspends your account,
+            ${productName} records the time and the operator who suspended
+            it. An operator can lift the suspension, and ${productName}
+            records each lift in the same way. It keeps every record. A
+            suspension keeps your cloud computers stopped until an operator
+            lifts it.`,
           text`Your session: a cookie of the app keeps you signed in. A
             second cookie protects the GitHub sign-in while it runs.`,
           text`Your orgs: the orgs, members, roles, invites, sections,
@@ -75,7 +79,9 @@ export const privacyDocument: LegalDocument = {
       title: 'Who gets your data',
       blocks: [
         list(
-          text`Cloudflare runs ${productName} and stores its data.`,
+          text`Cloudflare runs ${productName} and stores its data.
+            Cloudflare's AI model service also writes a short name for each
+            new workspace from the text of its first message.`,
           text`GitHub signs you in, and gives ${productName} access to your
             repositories through its GitHub App.`,
           text`A cloud computer provider runs the cloud computers of every org
@@ -100,7 +106,8 @@ export const privacyDocument: LegalDocument = {
             see whether its starter lets other members use that login.`,
           text`If the operator suspends your account, the members of your orgs
             learn that it is suspended. A workspace that you own then says
-            that its owner is suspended.`,
+            that its owner is suspended, until an operator lifts the
+            suspension.`,
         ),
         paragraph`${draft('To confirm: the contracts with these providers, and any other recipient')}`,
       ],

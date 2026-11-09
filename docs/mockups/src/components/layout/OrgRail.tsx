@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Plus } from 'lucide-react'
+import { Gauge, Plus } from 'lucide-react'
 import type { Person } from '../../fixtures/members'
 import { account, orgList, type Org, type OrgKey } from '../../fixtures/orgs'
 import { paths } from '../../paths'
@@ -13,10 +13,10 @@ import styles from './OrgRail.module.css'
 
 export type RailState = {
   orgs: readonly Org[]
-  /** The current org, or the create and account pages. */
-  current?: OrgKey | 'create' | 'account'
-  /** The org whose name shows beside it, as on hover. */
-  hint?: OrgKey
+  /** The current org, or the create, account, and operator pages. */
+  current?: OrgKey | 'create' | 'account' | 'operator'
+  /** The org, or Operator, whose name shows beside it, as on hover. */
+  hint?: OrgKey | 'operator'
   /** An org that an admin deleted, which waits for its restore. */
   deleted?: OrgKey
   /**
@@ -26,6 +26,11 @@ export type RailState = {
   suspended?: OrgKey
   /** No org exists yet, and nothing is connected. */
   firstRun?: boolean
+  /**
+   * The person signed in runs the app for everyone, so Operator shows
+   * above the account. Nobody else sees it.
+   */
+  operator?: boolean
   /**
    * The person signed in. Without it, the rail shows the account of the
    * mockups.
@@ -116,9 +121,26 @@ function OrgItem(props: {
   )
 }
 
+/** The link of an operator to the operator page, above the account. */
+function OperatorItem(props: { current: boolean; hint: boolean }) {
+  return (
+    <div className={classes(styles.item, styles.operator)}>
+      <RailLink current={props.current} label="Operator" to={paths.operator}>
+        <Gauge size={16} />
+      </RailLink>
+      {props.hint ? (
+        <span aria-hidden className={styles.hint}>
+          Operator
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 /**
  * The narrow rail beside the sidebar: the logo, the orgs of the user, a
- * way to create another, and the account at the bottom.
+ * way to create another, and the account at the bottom. An operator also
+ * gets Operator above the account.
  */
 export function OrgRail(props: RailState) {
   return (
@@ -148,6 +170,12 @@ export function OrgRail(props: RailState) {
           </RailLink>
         </li>
       </ul>
+      {props.operator ? (
+        <OperatorItem
+          current={props.current === 'operator'}
+          hint={props.hint === 'operator'}
+        />
+      ) : null}
       <RailLink
         current={props.current === 'account'}
         label="Account"

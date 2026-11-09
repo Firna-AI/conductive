@@ -5,42 +5,48 @@ import type {
 } from '../../shared/workspaces'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
-import { noteFirstStart, withFirstStart } from './first-start'
 
 /**
- * Shows the workspace record and the start steps of a read or a reply when
- * no newer state of them has shown, and says whether they showed. An older
- * one still counts for the first start, whose success the chat remembers.
+ * Shows the workspace record, its start steps, and its saved error of a
+ * read or a reply when no newer state of them has shown, and says whether
+ * they showed.
  */
 export function confirmWorkspace(
   context: ChatContext,
-  reply: Pick<OrderedWorkspaceResponse, 'workspace' | 'start' | 'eventNumber'>,
+  reply: Pick<
+    OrderedWorkspaceResponse,
+    'workspace' | 'start' | 'error' | 'eventNumber'
+  >,
 ): boolean {
   if (!context.live()) return false
   const newer = reply.eventNumber >= context.workspaceOrder.through
-  if (newer) context.workspaceOrder.through = reply.eventNumber
-  context.store.update((snapshot) =>
-    newer
-      ? withFirstStart({
-          ...snapshot,
-          workspace: reply.workspace,
-          start: reply.start,
-        })
-      : noteFirstStart(snapshot, reply.workspace, reply.start),
-  )
-  return newer
+  if (!newer) return false
+  context.workspaceOrder.through = reply.eventNumber
+  context.store.update((snapshot) => ({
+    ...snapshot,
+    workspace: reply.workspace,
+    start: reply.start,
+    savedError: reply.error?.message ?? null,
+  }))
+  return true
 }
 
-/** A change of the workspace record from the stream, at its number. */
+/**
+ * A change of the workspace record from the stream, at its number. An
+ * update without `error` keeps the saved error, and null clears it.
+ */
 type WorkspaceChange =
-  | { type: 'workspace.updated'; workspace: Workspace }
+  | {
+      type: 'workspace.updated'
+      workspace: Workspace
+      error?: { message: string } | null
+    }
   | { type: 'workspace.title'; name: string }
   | { type: 'start.updated'; start: WorkspaceStart }
 
 /**
  * The snapshot after a change of the workspace record from the stream. A
- * change that is not newer than the record that shows changes nothing but
- * the success of the first start.
+ * change that is not newer than the record that shows changes nothing.
  */
 export function withWorkspaceChange(
   context: ChatContext,
@@ -48,19 +54,20 @@ export function withWorkspaceChange(
   change: WorkspaceChange,
   eventNumber: number,
 ): ChatSnapshot {
-  if (eventNumber <= context.workspaceOrder.through) {
-    return change.type === 'workspace.updated'
-      ? noteFirstStart(snapshot, change.workspace, null)
-      : change.type === 'start.updated'
-        ? noteFirstStart(snapshot, null, change.start)
-        : snapshot
-  }
+  if (eventNumber <= context.workspaceOrder.through) return snapshot
   context.workspaceOrder.through = eventNumber
   switch (change.type) {
     case 'workspace.updated':
-      return withFirstStart({ ...snapshot, workspace: change.workspace })
+      return {
+        ...snapshot,
+        workspace: change.workspace,
+        savedError:
+          change.error === undefined
+            ? snapshot.savedError
+            : (change.error?.message ?? null),
+      }
     case 'start.updated':
-      return withFirstStart({ ...snapshot, start: change.start })
+      return { ...snapshot, start: change.start }
     case 'workspace.title':
       return snapshot.workspace
         ? {

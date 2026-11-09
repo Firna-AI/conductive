@@ -15,10 +15,12 @@ requirements of each feature.
 - **Admin** and **member:** the two roles in an org. Each person in an org
   has one of them.
 - **Operator:** the person who runs the app, as opposed to the admin of an
-  org. Only an operator can suspend a user.
-- **Suspension:** the block of one user by the operator. It ends the
-  sign-in sessions of the user, stops the sandboxes of the workspaces that
-  the user owns, and blocks new starts.
+  org. Only an operator can suspend a user or an org, or lift a
+  suspension. Only an operator opens the operator section.
+- **Suspension:** the block of one user or one org by an operator, until
+  an operator lifts it. It stops the sandboxes of the workspaces that the
+  user owns, or of every workspace of the org, and blocks new starts. A
+  user suspension also ends the sign-in sessions of the user.
 - **Workspace:** one task in an org. It has one repository, one branch,
   one sandbox, and one or more sessions.
 - **Workspace owner:** the person who is responsible for a workspace. It is
@@ -73,6 +75,10 @@ requirements of each feature.
 - It shows the orgs, the workspaces, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](mockups/README.md) (decision 15).
+- For an operator, it also shows the operator section at `/operator`. The
+  section gives counts across every org. It finds any org or user, and it
+  suspends or lifts it.
+  [Operator section](protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
   the Worker. A tab keeps the chats that it showed in memory, as
@@ -148,6 +154,9 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
   Claude or OpenAI account of the starter of its session.
+- **Workers AI:** the Cloudflare model service writes the title of each new
+  workspace from its first message. Its use bills to the Cloudflare account
+  of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. The app is free, with no limits (decision 81).
 
@@ -173,21 +182,23 @@ GitHub events, and stops.
 
 ## Where data lives
 
-| Data                                                     | Home                                     |
-| -------------------------------------------------------- | ---------------------------------------- |
-| Users, orgs, members, sections, workspaces, and settings | D1                                       |
-| The org of each sandbox and each saved snapshot          | D1                                       |
-| Env var values and agent logins                          | The Worker's storage, encrypted          |
-| The Boat key and the other keys of the Worker            | Worker secrets                           |
-| Chat history and banner state                            | The workspace Durable Object             |
-| The repository, the files, and the agent sessions        | The home folder of the sandbox           |
-| The prepared repositories and the installed software     | The org image, in the app's Boat account |
-| Panel widths                                             | The browser, or the Mac app              |
+| Data                                                                         | Home                                     |
+| ---------------------------------------------------------------------------- | ---------------------------------------- |
+| Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
+| The org of each sandbox and each saved snapshot                              | D1                                       |
+| Env var values and agent logins                                              | The Worker's storage, encrypted          |
+| The Boat key and the other keys of the Worker                                | Worker secrets                           |
+| Chat history and banner state                                                | The workspace Durable Object             |
+| The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
+| The prepared repositories and the installed software                         | The org image, in the app's Boat account |
+| Panel widths                                                                 | The browser, or the Mac app              |
 
 ## Trust boundaries
 
 - The org is the boundary between tenants. A request reaches an org only
-  for a member of that org.
+  for a member of that org. An operator is the one exception, as
+  [Orgs and workspaces](protocol/access-and-security.md#orgs-and-workspaces)
+  says.
 - The one Boat key reaches the sandboxes and the saved snapshots of every
   org (decision 80). So the Worker's own records keep the orgs apart, as
   [Access and security](protocol/access-and-security.md#orgs-and-workspaces)
@@ -230,6 +241,9 @@ the merge.
   roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
 - [Operator actions](protocol/operator-actions.md): the operator, the
-  suspension of a user, and abuse reports.
+  suspension of a user or an org, the lift of a suspension, and abuse
+  reports.
+- [Operator section](protocol/operator-section.md): the pages of the
+  operator in the web app, their counts, and their searches.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.

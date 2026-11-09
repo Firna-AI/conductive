@@ -28,7 +28,7 @@ export const createWorkspaceDialog = defineUseCase({
       screenPath: 'app/new-workspace/creating',
       title: 'The workspace opens',
       description:
-        'The dialog closes, and the new workspace opens as Lisbon, on a new branch, in General. The first message waits for the sandbox.',
+        'The dialog closes, and the new workspace opens as Untitled, on a new branch, in General. About a second later, the title from the first message names it Saved carts. The first message waits for the sandbox.',
     },
   ],
 })

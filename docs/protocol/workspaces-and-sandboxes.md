@@ -127,12 +127,11 @@ says.
   after any other error. So the last good image stays, as
   [The org image](#the-org-image) says.
 - A start that passes its time limit fails in the same way as after any
-  other error. So after a failed create, the first message goes back to
-  the composer, as
-  [Create a workspace](create-a-workspace.md#a-failed-first-start) says. A
-  failed resume shows the error state, as
-  [Stop and resume](#stop-and-resume) says. After a failed restart near
-  day 14, the app stops the sandbox again. The workspace stays stopped.
+  other error. So a failed create keeps its workspace in the error state,
+  as [Create a workspace](create-a-workspace.md#a-failed-first-start) says.
+  A failed resume shows the error state, as
+  [Stop and resume](#stop-and-resume) says. After a failed restart near day
+  14, the app stops the sandbox again. The workspace stays stopped.
 - Each such failed build, create, or resume says that it passed its time
   limit.
 

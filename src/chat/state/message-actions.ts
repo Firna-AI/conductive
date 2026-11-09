@@ -3,7 +3,6 @@ import { sendBlock } from './blockers'
 import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
-import { waitsForFirstStart } from './first-start'
 import { showTarget, takeReply } from './linked-replies'
 import { confirmWorkspace } from './workspace-records'
 import { toUpload } from './uploads'
@@ -82,11 +81,11 @@ export function removeAttachment(
 }
 
 /**
- * Sends the draft of a session. During a resume the workspace queues it
- * until the sandbox is ready, and during a turn it steers the turn. Until
- * the first start of the workspace succeeds, nothing sends, and the draft
- * stays, as `first-start.ts` says. A failed send keeps the draft and its
- * client ID, so that Send again is the same message. The send finishes on
+ * Sends the draft of a session. While the sandbox is not ready, such as
+ * during the first start, after a failed first start, or during a resume,
+ * the workspace queues it until the sandbox is ready, and during a turn it
+ * steers the turn. A failed send keeps the draft and its client ID, so that
+ * Send again is the same message. The send finishes on
  * its draft, also after the draft moved to another session. When the reply
  * names a linked session, the message shows there, and the tab that sent
  * shows that session, as `linked-replies.ts` says.
@@ -101,7 +100,6 @@ export async function sendDraft(
   const empty = draft.text.trim() === '' && draft.attachments.length === 0
   const busy = draft.sending || draft.uploads > 0
   if (!session || busy || empty || sendBlock(snapshot, sessionId)) return
-  if (waitsForFirstStart(snapshot)) return
   const request: SendMessageRequest = {
     id: draft.sendId ?? context.newId(),
     text: draft.text,

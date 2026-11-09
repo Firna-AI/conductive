@@ -13,7 +13,6 @@ import {
 import { DeviceRuntime } from './devices/runtime'
 import { activeStoredTurn } from './devices/access'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
-import type { FailedCreationDraft } from './lifecycle/failed-creations'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type {
   PendingTurn,
@@ -31,7 +30,7 @@ import {
   type WorkspaceLifecycleTransport,
 } from './lifecycle/workspace-transport'
 import type { WorkspaceController } from './lifecycle/workspace-controller-types'
-import { failedCreationEvents } from './lifecycle/failed-creation-events'
+import type { WorkspaceStartIntent } from './lifecycle/start-types'
 import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
@@ -85,9 +84,12 @@ export class WorkspaceLifecycle
     )
   }
 
-  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
+  async queueLifecycleStart(
+    job: StoredWorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean> {
     const parsed = readStartJob(job)
-    return this.run(() => this.controller.queueLifecycleStart(parsed))
+    return this.run(() => this.controller.queueLifecycleStart(parsed, intent))
   }
 
   async acceptLifecycleFirstMessage(
@@ -130,22 +132,6 @@ export class WorkspaceLifecycle
     return readEncryptedStartLog(
       nativeWorkspaceStorage(this.integration.storage),
     )
-  }
-
-  async retainLifecycleFailedCreation(
-    error: FailedCreationDraft['error'],
-    fallback?: Omit<FailedCreationDraft, 'error'>,
-  ): Promise<void> {
-    return this.run(() =>
-      this.controller.retainLifecycleFailedCreation(error, fallback),
-    )
-  }
-
-  async failedLifecycleCreation(
-    orgId: string,
-    senderUserId: string,
-  ): Promise<FailedCreationDraft | undefined> {
-    return this.controller.failedLifecycleCreation(orgId, senderUserId)
   }
 
   async initializeLifecycle(
@@ -277,20 +263,6 @@ export class WorkspaceLifecycle
     const response = await this.chat.fetch(request)
     if (request.method !== 'GET' && request.method !== 'HEAD')
       this.context.waitUntil(this.devices.reconcile())
-    if (response.status !== 404) return response
-    return (
-      (await failedCreationEvents(
-        request,
-        this.env,
-        this.controller,
-        (id) => this.env.WORKSPACES.idFromName(id).equals(this.ctx.id),
-        (id, work) =>
-          this.chat.store.run(() =>
-            work((after, through) =>
-              this.chat.store.read(id, (view) => view.history(after, through)),
-            ),
-          ),
-      )) ?? response
-    )
+    return response
   }
 }

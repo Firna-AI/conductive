@@ -80,9 +80,9 @@ export function NewWorkspaceHost(props: { children: ReactNode }) {
 }
 
 /**
- * Marks a screen that shows a New workspace form: the page, or the form
- * that a failed start gives back. While it shows, New workspace opens the
- * page, because a dialog over it would show a second message field.
+ * Marks a screen that shows the New workspace page. While it shows, New
+ * workspace opens the page, because a dialog over it would show a second
+ * message field.
  */
 export function useShownForm(): void {
   const dialog = useContext(DialogContext)

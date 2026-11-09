@@ -41,7 +41,7 @@ export const EFFORTS = [
   'xhigh',
   'max',
 ] as const satisfies readonly Effort[]
-const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
+export const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
 export function readUser(value: unknown): User {
   const user = record(value, 'user')
@@ -151,6 +151,7 @@ export function readAccount(value: unknown): AccountResponse {
     defaultChoice: nested(account, 'defaultChoice', readChoice),
     newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
     agentLogins: items(account, 'agentLogins', readLogin),
+    operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),
   }
 }

@@ -59,8 +59,11 @@ export const workspaceListSchema = {
         'deleted-suspended',
       ],
     },
-    /** The menu of a section, a workspace dragged, or the org switcher. */
-    menu: { enum: ['none', 'section', 'drag', 'orgs'] },
+    /**
+     * The menu of a section, a workspace dragged, the org switcher, or
+     * the org switcher of an operator, which adds Operator.
+     */
+    menu: { enum: ['none', 'section', 'drag', 'orgs', 'operator'] },
     /** The command palette, closed or open on one of its views. */
     palette: { enum: paletteViews },
   },
@@ -97,7 +100,18 @@ const sheets: Readonly<Record<WorkspaceListState['menu'], ReactNode>> = {
   section: <SectionSheet />,
   drag: null,
   orgs: <OrgSwitcherSheet current="acme" />,
+  operator: <OrgSwitcherSheet current="acme" operator />,
 }
+
+/**
+ * The rail of the list: the name of Futex beside the open org switcher,
+ * and Operator with its name for an operator.
+ */
+const rails: Readonly<Partial<Record<WorkspaceListState['menu'], RailState>>> =
+  {
+    orgs: { ...acmeRail, hint: 'futex' },
+    operator: { ...acmeRail, operator: true, hint: 'operator' },
+  }
 
 /**
  * The new orgs before their first workspace: the first org of the sign-up,
@@ -226,8 +240,7 @@ export function WorkspaceListScreen(props: {
   const sections = workspaceSections()
   const open = listMenu(menu)
   const drag = listDrag(menu)
-  const rail: RailState =
-    menu === 'orgs' ? { ...acmeRail, hint: 'futex' } : acmeRail
+  const rail = rails[menu] ?? acmeRail
   return (
     <AppFrame
       overlay={listPalette(palette, props.viewport)}

@@ -71,6 +71,14 @@ These facts belong to this implementation, not to the protocol docs.
 - The Claude adapter holds new input while 64 sent messages wait for a
   result that lists them. Each result frees only the messages that it
   lists. Closing discards held input. The engine matches result lists exactly.
+- A Claude SDK result with the origin `task-notification` belongs to a
+  background task, such as a background command or subagent. The adapter
+  ignores such a result when it lists no sent message that still waits. An
+  ignored result does not take the message list of an earlier SDK frame. It
+  does not end the active turn, and it frees no sent message. When such a
+  result lists sent messages that still wait, it answers them as usual. So
+  each result stays with the
+  [messages that it answers](../docs/protocol/chat-and-events.md#what-the-chat-shows).
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, the

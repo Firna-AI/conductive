@@ -61,20 +61,22 @@ A cross-agent model change uses the client's `newSessionId`. A repeated
 request gets the same session. An unrelated occupied ID is refused. A
 same-agent change ignores this field.
 
+## Session names
+
+[Workspace and session names](workspace-titles.md) gives the background
+model request, the shared title writer, the first session name, and the
+names of later sessions. It also gives the local development setup.
+New workspaces and sessions have null names. The shared `nameLabel` helper
+in `src/shared/name-label.ts` gives their display label, "Untitled".
+
 ## Message admission
 
-The public Send and Retry routes check the workspace creation attempt
-before login checks or message writes. A pending or failed attempt gets
-`409 workspace_starting` in every session. A repeat of an accepted
-message request returns its stored acceptance before this check.
-
-The creation attempt stays successful during later stops and resumes.
-Messages on a resume still enter the stored queue. A workspace without
-a creation attempt keeps its existing send behaviour.
-
-The check reads the creation result published in D1. A delayed success
-publication can keep new sends waiting after the native start succeeds.
-The separate trusted first-message path does not use this public route.
+Send and Retry use the normal login and session checks during a first start.
+Accepted messages enter the durable queue while the computer starts or its first start is failed.
+Repeats return the stored acceptance and add no message or history.
+The same queue also serves later resumes.
+Lifecycle readiness controls delivery to the runner.
+Try again replaces the failed first computer without accepting the stored messages again.
 
 ## Access
 
@@ -213,12 +215,20 @@ tests through the production Worker entry.
   lifecycle events.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
+- `session-titles.ts`: the empty-name rule for the first session's workspace
+  title and each later session's first message with text.
+- `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
+  background model request and the shared title storage and D1 projection.
+  The shared writer checks the empty name and workspace access before it
+  stores either a Worker title or a runner title.
 - `workspace-summary.ts`: `WorkspaceSummaryProjection`, the summary that
   `readChatWorkspaceSummary` returns.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
   turns as stopped when the lifecycle state becomes stopped or error.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object.
+- `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
+  token checks before the runner connection opens.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
   a browser tab: the login refresh, the tab registration, the close after
   a failed start, and the grant check before the history.

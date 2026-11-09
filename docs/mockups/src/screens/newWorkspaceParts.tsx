@@ -1,14 +1,11 @@
 import type { ReactNode } from 'react'
 import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
-import {
-  CreateFailedNotice,
-  type CreateFailure,
-} from '../components/new-workspace/notices'
+import { CreateFailedNotice } from '../components/new-workspace/notices'
 import {
   newWorkspaceAttachments,
   type Attachment,
 } from '../fixtures/attachments'
-import { savedCartsMessage } from '../fixtures/conversations'
+import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
 import { savedCarts } from '../fixtures/workspaces'
 
 /**
@@ -71,11 +68,11 @@ export function waits(state: NewWorkspaceFormState): boolean {
  */
 export function formNotices(
   state: NewWorkspaceFormState,
-  failure: CreateFailure | undefined,
+  failed: boolean,
 ): ReactNode[] {
   const notices: ReactNode[] = []
-  if (failure) {
-    notices.push(<CreateFailedNotice failure={failure} key="failed" />)
+  if (failed) {
+    notices.push(<CreateFailedNotice key="failed" />)
   }
   if (state.login === 'missing') {
     notices.push(<ConnectAgentNotice choice={newWorkspaceChoice} key="login" />)

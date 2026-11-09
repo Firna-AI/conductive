@@ -1,36 +1,18 @@
 import { CircleAlert, FolderGit2 } from 'lucide-react'
-import { startErrors } from '../../fixtures/starting'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 
 /**
- * Why a create failed: the first start of its sandbox failed, or passed the
- * 20-minute limit of a start, or the create request did not reach the
- * server.
- */
-export type CreateFailure = 'error' | 'time-limit' | 'unreachable'
-
-/**
- * The body of each failed create. A start that passed its limit shows the
- * message that the app saved for it.
- */
-const failureBodies: Readonly<Record<CreateFailure, string>> = {
-  error: "Its sandbox didn't start. Your message is kept.",
-  'time-limit': `${startErrors['time-limit']} Your message is kept.`,
-  unreachable: "The app can't reach the server. Your message is kept.",
-}
-
-/**
  * A create that failed, over the composer of the New workspace page or in
  * the New workspace dialog. The message stays, and Try again sends it again.
  */
-export function CreateFailedNotice(props: { failure: CreateFailure }) {
+export function CreateFailedNotice() {
   return (
     <Notice
       action={<ActionButton tone="primary">Try again</ActionButton>}
-      body={failureBodies[props.failure]}
+      body="The app can't reach the server. Your message is kept."
       icon={CircleAlert}
       title="The workspace wasn't created"
       tone="danger"

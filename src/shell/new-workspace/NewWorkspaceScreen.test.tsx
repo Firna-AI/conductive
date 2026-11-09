@@ -204,7 +204,7 @@ describe('NewWorkspaceScreen', () => {
     })
   })
 
-  test('a create whose first start failed shows the message that the Worker saved for it, and other server errors keep the fixed text', async () => {
+  test('a create request that fails before the server takes the message shows the message that the Worker saved for its start, and other server errors keep the fixed text', async () => {
     const cases = [
       {
         name: 'a start that passed its limit',

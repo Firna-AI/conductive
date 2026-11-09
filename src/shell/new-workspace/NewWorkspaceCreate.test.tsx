@@ -83,7 +83,7 @@ describe('a create from the New workspace dialog', () => {
       }),
       dialog: null,
       address: createdAt,
-      header: created.workspace.name,
+      header: 'Untitled',
       focusBack: false,
       focusInMain: true,
     })
@@ -126,7 +126,7 @@ describe('a create from the New workspace dialog', () => {
       running: true,
       closed: { dialog: null, address: away, focusInMain: true },
       address: createdAt,
-      header: created.workspace.name,
+      header: 'Untitled',
       creates: 1,
     })
     // Create org stands alone, without the rail, as after Back to it.

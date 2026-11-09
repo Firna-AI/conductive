@@ -53,6 +53,9 @@ what the palette does.
   org. An org without them shows the initials of its name.
 - A suspended org shows its notice, and no action that it refuses, as
   [A suspended org](suspended-org.md) says.
+- Only an operator gets the operator section, from the rail and the org
+  switcher. Anyone else gets the not-found page at its addresses, as
+  [Operator section](../shell/operator/README.md) says.
 - The Cloud computer tab names the software of the base image from the
   settings reply. An older reply without it names no software.
 - A step of a panel, by a key or a drag, starts from the width that the
@@ -175,7 +178,7 @@ what the palette does.
   says. Enter does nothing while the message cannot go, and it belongs to
   an input method that composes a word. In the phone layout, Enter adds a
   line.
-- A create whose sandbox did not start gets its own New workspace form in
-  the tab that sent it. The address of that workspace shows the form, with
-  "The workspace wasn't created". Try again sends the same message ID, as
-  [Creation recovery](creation-recovery.md#the-returned-form) says.
+- A create request that fails keeps the message in the form, with "The
+  workspace wasn't created". Try again sends the same message ID. A failed
+  first start keeps its workspace instead, as
+  [Creation recovery](creation-recovery.md#a-failed-first-start) says.

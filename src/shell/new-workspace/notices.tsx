@@ -1,11 +1,8 @@
 import type { ReactNode } from 'react'
 import { CircleAlert, FolderGit2, Plug } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { ApiError } from '../../app/api/client'
-import type {
-  CreateState,
-  CreationStartError,
-} from '../../app/new-workspace-model'
+import type { ApiError } from '../../app/api/client'
+import type { CreateState } from '../../app/new-workspace-model'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
@@ -91,26 +88,19 @@ export function ChooseRepositoriesNotice(props: {
 }
 
 /**
- * The code of a first start that failed. Its message is the one that the
- * Worker saved for the start, such as its time limit.
+ * The code of a start that failed before the server took the message. Its
+ * message is the one that the Worker saved for the start, such as its time
+ * limit.
  */
 const startFailed = 'workspace_start_failed'
 
 const notStarted = "Its sandbox didn't start. Your message is kept."
 
 /**
- * `null`: the server took the message, and its sandbox did not start, with
- * no saved error. A saved error of the start, which has no HTTP status,
- * shows its message when the start failed. An `ApiError` of the create
- * request keeps its text by status.
+ * The text of a create request that failed, by its status and code. The
+ * form keeps the message, and Try again sends it with the same ID.
  */
-function failureBody(error: ApiError | CreationStartError | null): string {
-  if (error === null) return notStarted
-  if (!(error instanceof ApiError)) {
-    return error.code === startFailed
-      ? `${error.message} Your message is kept.`
-      : notStarted
-  }
+function failureBody(error: ApiError): string {
   if (error.status === 0) {
     return "The app can't reach the server. Your message is kept."
   }
@@ -121,13 +111,13 @@ function failureBody(error: ApiError | CreationStartError | null): string {
 }
 
 /**
- * A create that failed. The draft stays, and Try again sends it again. Try
- * again is off while the message cannot go, as Send is. `error` is `null`
- * when the server took the message and its sandbox then did not start. A
- * first start that failed shows the message that the Worker saved for it.
+ * A create request that failed. The draft stays, and Try again sends it
+ * again. Try again is off while the message cannot go, as Send is. A start
+ * that failed before the server took the message shows the message that
+ * the Worker saved for it.
  */
 function CreateFailed(props: {
-  error: ApiError | CreationStartError | null
+  error: ApiError
   ready: boolean
   retry: () => void
 }) {
@@ -156,12 +146,6 @@ export function createFailure(
   ready: boolean,
   retry: () => void,
 ): ReactNode {
-  if (create.state !== 'failed' && create.state !== 'not-started') return null
-  return (
-    <CreateFailed
-      error={create.state === 'failed' ? create.error : (create.error ?? null)}
-      ready={ready}
-      retry={retry}
-    />
-  )
+  if (create.state !== 'failed') return null
+  return <CreateFailed error={create.error} ready={ready} retry={retry} />
 }

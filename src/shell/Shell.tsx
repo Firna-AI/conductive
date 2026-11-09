@@ -17,6 +17,7 @@ import { PhoneFrame, StandaloneFrame } from './layout/frames'
 import { Sidebar } from './list/Sidebar'
 import { useKeptOrg } from './mac/mac-app'
 import { GetStartedScreen } from './onboarding/GetStartedScreen'
+import { OperatorRoutes } from './operator/OperatorRoutes'
 import { CreateOrgScreen } from './orgs/CreateOrgScreen'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
 import { ActionButton } from './ui/actions'
@@ -141,6 +142,8 @@ function Signed(props: { route: Route; user: User }) {
           <CreateOrgScreen first={route.first} />
         </Alone>
       )
+    case 'operator':
+      return <OperatorRoutes user={user} view={route.view} />
     case 'not-found':
       return inRail(<NotAvailable title="This page is not available" />, null)
     default:

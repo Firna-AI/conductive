@@ -39,11 +39,10 @@ export const newWorkspaceSchema = {
   properties: {
     ...newWorkspaceFormProperties,
     /**
-     * The form, or a create that failed: its first start failed, or passed
-     * the 20-minute limit of a start, or the create request did not reach
-     * the server.
+     * The empty form, or a create request that failed, whose message stays
+     * for Try again. A failed first start keeps its workspace instead.
      */
-    result: { enum: ['form', 'error', 'time-limit', 'unreachable'] },
+    result: { enum: ['form', 'error'] },
     /**
      * The org: in use, or suspended by the operator. A suspended org
      * refuses every create, so the page shows the refused bar of a
@@ -107,15 +106,16 @@ function Start(props: { chosen: boolean }) {
 
 /**
  * The empty chat and its composer. The first message creates the workspace.
- * In a suspended org the refused bar takes the place of the composer, and
- * the chat invites no first message, because the org refuses the create.
+ * When the create request fails, the message stays in the composer, and
+ * Try again sends it again. In a suspended org the refused bar takes the
+ * place of the composer, and the chat invites no first message, because the
+ * org refuses the create.
  */
 function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const { state } = props
   const suspended = state.org === 'suspended'
   // A suspended org refuses each create, so no create of it failed.
-  const failure =
-    suspended || state.result === 'form' ? undefined : state.result
+  const failed = !suspended && state.result === 'error'
   const draft = newWorkspaceDrafts[state.draft]
   return (
     <ChatPane
@@ -126,7 +126,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
         draft: draft.text,
         placeholder: taskPlaceholder,
         running: false,
-        sendTo: failure || draft.text === '' ? undefined : paths.creating,
+        sendTo: failed || draft.text === '' ? undefined : paths.creating,
       }}
       empty={
         suspended ? undefined : (
@@ -134,7 +134,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
         )
       }
       items={[]}
-      notice={suspended ? undefined : formNotices(state, failure)}
+      notice={suspended ? undefined : formNotices(state, failed)}
       problem={
         suspended
           ? { problem: 'refused', reason: orgSuspendedReason }
