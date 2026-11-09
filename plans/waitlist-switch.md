@@ -319,6 +319,19 @@ call within the approved design.
   Reason: the user page then shows the new source without changing the
   default user counts.
 
+The final merge of `origin/main` on 9 November 2026 adds these agent
+calls within the approved signup behavior.
+
+- **Keep main's architecture split.** The marketing and data pages now
+  own the switch facts that moved from the root architecture page.
+  Reason: each fact keeps one home.
+- **Use a neutral sentence under the final site action.** The button
+  names the signup state. Reason: a shared sentence must stay true while
+  the waitlist is on or off.
+- **Move the comparison developer guide into its own README.** Keep its
+  old parent anchor. Reason: both feature guides must stay short without
+  losing any fact or link.
+
 ### Mechanics
 
 - **Data.** A migration adds `waitlist_on` (default on),
@@ -563,12 +576,16 @@ Depends on: every other milestone
 - [x] Smoke-test the operator section and the Account page in
       `npm run dev` with `?waitlist=off`, on desktop and on a phone. Save
       the screenshots under `.context/waitlist-switch/`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [ ] Integrate the latest `origin/main`, check the affected areas, and
+      review the combined result in a fresh read-only pass.
+  - [x] Split the merged site test setup by responsibility to keep the
+        test module within 300 lines, with every assertion preserved.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives decision 230 and the
@@ -577,6 +594,9 @@ Depends on: every other milestone
 
 Evidence: `.context/waitlist-switch/full-gate.log` and
 `.context/waitlist-switch/root-visual-check.md`.
+Integration evidence: `.context/waitlist-switch/reports/final-main-docs.md`,
+`.context/waitlist-switch/final-main-targeted.json`, and
+`.context/waitlist-switch/reports/final-site-test-split.md`.
 
 ## Post-merge follow-up (non-blocking)
 

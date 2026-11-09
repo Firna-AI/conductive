@@ -1,10 +1,7 @@
-import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join, relative } from 'node:path'
-import process from 'node:process'
-import { promisify } from 'node:util'
+import { join } from 'node:path'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
@@ -23,8 +20,8 @@ import {
   SITE_START_LABELS,
 } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
-import { isolatedProcessEnvironment } from '../test-support/process-environment'
-import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
+import type { SiteBinding } from '../test-support/site-binding'
+import { buildSiteAssets } from './built-site.test-support'
 import { termsConsentResponse } from './consent'
 import {
   decodeHtml,
@@ -43,36 +40,7 @@ let assets: SiteBinding
 
 beforeAll(async () => {
   folder = await mkdtemp(join(tmpdir(), 'conductive-site-'))
-  await promisify(execFile)(
-    'node_modules/.bin/astro',
-    ['build', '--outDir', folder],
-    {
-      env: isolatedProcessEnvironment({ PATH: process.env.PATH, CI: 'true' }),
-    },
-  )
-  const files = new Map<string, SiteAssetFile>()
-  const types: Readonly<Record<string, string>> = {
-    html: 'text/html',
-    json: 'application/json',
-    webp: 'image/webp',
-    svg: 'image/svg+xml',
-    ico: 'image/x-icon',
-    png: 'image/png',
-    woff2: 'font/woff2',
-  }
-  for (const entry of await readdir(folder, {
-    recursive: true,
-    withFileTypes: true,
-  })) {
-    if (!entry.isFile()) continue
-    const path = join(entry.parentPath, entry.name)
-    files.set(`/${SITE_FOLDER}/${relative(folder, path)}`, {
-      body: new Uint8Array(await readFile(path)),
-      contentType:
-        types[entry.name.split('.').at(-1) ?? ''] ?? 'application/octet-stream',
-    })
-  }
-  assets = new SiteBinding(files)
+  assets = await buildSiteAssets(folder)
 }, 30_000)
 
 afterAll(async () => {

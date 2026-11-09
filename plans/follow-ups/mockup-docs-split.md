@@ -13,7 +13,7 @@
   - **Line rule:** an always-on rule of the shared agent rules from `futex-ai/skills`, which `AGENTS.md` names. It says: "Keep files short. Target about 200 lines and split a file that passes 300. Do not remove blank lines or compact code to stay under a limit."
 - **Background:**
   - On `origin/main` at commit `c02744f0` of 9 November 2026, `docs/mockups/catalogue.md` has 326 lines and `docs/mockups/design.md` has 360. `design.md` had 358 lines before that commit.
-  - The waitlist switch adds the pages of open sign-up. After its merge, `catalogue.md` has 344 lines and `design.md` has 368.
+  - The waitlist switch adds the pages of open sign-up. After its merge with the comparison-page work from `origin/main`, `catalogue.md` has 348 lines and `design.md` has 368.
   - Each page has one heading only, its title. So no link points to a part of either page.
   - These live files link to the pages: `docs/mockups/README.md`, `docs/mockups/orgs-and-logins.md`, `docs/protocol/chat-markdown.md`, `docs/protocol/command-palette.md`, `docs/protocol/command-palette-states.md`, `docs/protocol/sign-ups.md`, `docs/protocol/waitlist.md`, `docs/protocol/workspace-links.md`, `docs/protocol/workspace-tools.md`, and `src/shell/operator/README.md`. The active plan `plans/boat-native-remote-workspaces.md` also names both pages in its text.
   - `npm run file-length:check` checks only JavaScript, TypeScript, and Astro files, and Prettier ignores Markdown. So no command reports a long Markdown page.
