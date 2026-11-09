@@ -8,6 +8,7 @@ import {
 import { noop } from '../../noop'
 import { Menu, type MenuPlacement } from '../common/Menu'
 import { useControlSizes } from '../common/touch'
+import { pickerButtonStyle } from './pickerButton'
 import { pickerMenu } from './pickers'
 import styles from './ModelPicker.module.css'
 
@@ -44,7 +45,7 @@ export function ModelPicker(props: {
         hasPopup="menu"
         onPress={noop}
         size="sm"
-        style={{ height: control.height, paddingHorizontal: 8 }}
+        style={pickerButtonStyle(control.height)}
         tone="plain"
       />
       {props.open ? (

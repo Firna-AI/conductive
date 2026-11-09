@@ -23,7 +23,7 @@ export const chatTurns = defineScreen({
       slug: 'steer',
       title: 'Steer while running',
       description:
-        'The user types more guidance while the turn runs. Send adds it to the running turn.',
+        'The user types more guidance while the turn runs. Send adds it to the running turn. No hint appears below the message box, so it keeps its place.',
       movedFrom: 'app/chat/steer',
       props: { conversation: 'steer' },
     },
