@@ -1,0 +1,33 @@
+# Older runners keep real agent logins
+
+- **Severity:** High. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-09, the wider fix of the decision about older runners in the brainstorm of the Worker model gateway, on branch `conductor/model-gateway-worker-model-proxy-decision-120`.
+- **Location:** the section "The runner archive" of `docs/deployment.md`, `image/install.sh`, `runner/service/README.md`, `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts`, and the section "The agent runner" of `docs/protocol/chat-and-events.md`.
+- **Reason:** a runner update for existing cloud computers is a new mechanism outside the gateway change, and it changes a choice that the user made on 9 November 2026.
+
+- **Terms:**
+  - **Runner:** Conductive's program in each cloud computer. It runs the agents and connects to the workspace Durable Object.
+  - **Runner protocol version:** the number that the runner sends when it connects. Version 1 gets the real agent login with each turn.
+  - **Turn token:** the value that a runner of version 2 gets in place of the real login. It works only at the Worker's model gateway, and only while its turn runs.
+- **Background:**
+  - Each build of an org image installs the newest runner archive. A refresh keeps the installed runner (`docs/deployment.md`).
+  - A workspace keeps the runner of the image that it started from, also after a stop and a resume. Nothing updates that runner later.
+  - The Worker model gateway gives turn tokens to runners of version 2, so their cloud computers hold no agent login.
+  - On 9 November 2026 the user chose that a runner of version 1 keeps getting the real login, and that the access doc states the risk. The user also chose that each workspace refuses a runner below the version of its image.
+  - So each workspace that started from an image with a version 1 runner keeps the old risk for its whole life. Each process and each member's terminal there can read the real login of a running turn.
+  - A version 1 runner also reads the repository's `.claude/settings.json` (`settingSources: ['project']` in `runner/src/providers/claude.ts`). A check on 8 November 2026 with the pinned `claude` program 2.1.318 and a fake key showed that such a file can replace the endpoint. So in an older cloud computer, a repository file can send the real login to any host.
+  - The start command of each workspace already runs with `sudo -n` at each create and each resume, and restarts the runner service (`workspaceStartupCommand` in `worker/lifecycle/image-software.ts`).
+- **Problem:** Older cloud computers keep real agent logins, with no end date.
+- **Impact if no action:** The old risk stays in each older workspace until a member archives it. The Worker keeps the version 1 code for as long as one such workspace lives.
+- **Root question:** How does an existing cloud computer get the newest runner?
+- **Options:**
+  - **A.** Update the runner at each start. The Worker gives each cloud computer the address and the digest of the current runner archive when it starts it. The start script installs the archive before the runner service starts. Cost: each start downloads and checks the archive, and a failed install must keep the old runner working. Effort: Large.
+  - **B.** A one-time move. Each org image gets a new build. Members replace their older workspaces. Then the Worker refuses version 1. Cost: members must move their work to new workspaces. Effort: Medium.
+  - **C.** Refuse version 1 after a fixed date, with a notice in each older workspace before that date. Cost: as B, on a schedule. Effort: Medium.
+- **Left out:** Change nothing, because it fails the goal of keeping every agent login out of every cloud computer.
+- **Wider fix:** A. It also closes each later gap between the runner of a cloud computer and the Worker.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/agent-login-in-tool-processes.md` covers the tool processes of runners of version 1, which keep the real login.
+- **Recommendation:** A. It removes the old risk from every cloud computer, and no member loses a workspace.
+- **Action:** ask the user, because each option changes how a cloud computer gets its software, or refuses older runners against the user's choice of 9 November 2026.
