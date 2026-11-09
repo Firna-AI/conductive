@@ -3,7 +3,7 @@
 This guide belongs to the [chat backend](README.md). It describes how the
 workspace Durable Object asks the runner again for a full report after a
 refused report event.
-[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the rules. A report repair is the stored `report.refresh` command of
 one `RunnerReportKind`.
 

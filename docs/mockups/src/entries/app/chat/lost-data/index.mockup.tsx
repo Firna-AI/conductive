@@ -8,7 +8,7 @@ import {
 export const lostData = defineScreen({
   title: 'Output left out',
   description:
-    'A second turn ran the whole test suite, which printed more output than the runner keeps. The folded tool calls say "1.2 MB of output left out", so the turn shows that it lacks output before anyone opens it.',
+    'A second turn ran the whole test suite, which printed more output than the runner keeps. The folded work of the turn says "1.2 MB of output left out", so the turn shows that it lacks output before anyone opens it.',
   rationale:
     'Decision 76 keeps at most 64 KB of the output of each tool call and 200 files of each turn, and the chat counts the rest. The count uses the units of file sizes, and names no limit, because the user cannot change it. The runner never writes a notice into the output, so the count is the only sign.',
   relatedDocs: [],
@@ -42,16 +42,16 @@ export const lostData = defineScreen({
       slug: 'refused',
       title: 'Lost runner events',
       description:
-        'The workspace refused three events, one for each reason: an update of a tool call that was too large and part of a reply that it could not read, both of this turn, and a tool update of a turn that never started. Each one shows as one line at its place, which names what was lost and why. It never shows the lost data. The stopped turn changed more files than the runner lists, so its line ends with "5 changed files not listed", because a stopped turn shows no file list.',
+        'The workspace refused three events, one for each reason: an update of a tool call that was too large and part of a reply that it could not read, both of this turn, and a tool update of a turn that never started. Each one shows as one line at its place, which names what was lost and why. It never shows the lost data. The first line is among the work before the last message of the agent, so it folds with that work, and the line of the fold shows no mark for it. The stopped turn changed more files than the runner lists, so its line ends with "5 changed files not listed", because a stopped turn shows no file list.',
       rationale:
-        'The lines use the style of "You stopped the agent": centred, muted, and with an icon. A phone wraps a line into balanced lines. A resent event shows no second line.',
+        'The lines use the style of "You stopped the agent": centred, muted, and with an icon. A phone wraps a line into balanced lines. A resent event shows no second line. The user chose A of decision 151 on 9 November 2026: a lost line of a turn folds with the work of the turn at its place, as the open fold of `app/chat/work/mac-command` shows. The line of the turn that never started belongs to no turn, so it stays in view.',
       props: { conversation: 'lost-lines', banner: 'none' },
     },
     {
       slug: 'turn-end',
       title: 'Lost end of a turn',
       description:
-        'The event that ends the turn could not be read. The turn still ends, so the composer is ready, but its time and files are missing, and one line says so. A failed turn whose error is lost shows "The error of a turn was lost because it could not be read" in place of the error and Try again.',
+        'The event that ends the turn could not be read. The turn still ends, so its work folds and the composer is ready, but its time and files are missing, and one line says so. A failed turn whose error is lost shows "The error of a turn was lost because it could not be read" in place of the error and Try again.',
       props: { conversation: 'lost-turn-end', banner: 'checks-running' },
     },
   ],

@@ -209,6 +209,10 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   requests waits.
 - After its result, the command shows at its place in the chat: denied,
   done with its output, or Mac not available.
+- When its turn ends, the result folds with the work of the turn, at its
+  place, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
+  says (decision 151). A result that stays in view between two folds was
+  rejected, because the work then does not fold into one line.
 
 ## Computer tools
 

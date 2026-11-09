@@ -1,6 +1,7 @@
 {
   "order": [
     "turns",
+    "work",
     "lost-data",
     "lost-updates",
     "unavailable-files",

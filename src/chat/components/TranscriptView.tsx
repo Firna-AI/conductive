@@ -8,8 +8,8 @@ import { retryItemId } from '../state/known-turns'
 import type { RunningTurn, Transcript } from '../state/transcript'
 import { ToolGroup } from './ToolGroup'
 import { ItemView, UserBubble, type ChatReaders } from './TranscriptItem'
-
 import { groupEntries, type TranscriptInsert } from './transcript-entries'
+import { WorkFold } from './WorkFold'
 
 /** The running turn: thinking until the agent writes, and the time since it started. */
 function WorkingRow(props: { turn: RunningTurn; now: number }) {
@@ -27,9 +27,10 @@ function WorkingRow(props: { turn: RunningTurn; now: number }) {
 
 /**
  * The parts of a session's chat in order: messages, answers, folded tool
- * calls, the end of each turn, and the line of each lost event. Sent
- * messages that the stream has not shown yet follow, then the running turn,
- * then `children`, such as the steps of a sandbox start.
+ * calls, the folded work of each ended turn, the end of each turn, and the
+ * line of each lost event. Sent messages that the stream has not shown yet
+ * follow, then the running turn, then `children`, such as the steps of a
+ * sandbox start.
  */
 export function TranscriptView(props: {
   transcript: Transcript
@@ -49,26 +50,33 @@ export function TranscriptView(props: {
   const retryable = props.readOnly ? null : retryItemId(transcript)
   return (
     <>
-      {groupEntries(transcript.items, props.inserts ?? []).map((entry) =>
-        entry.kind === 'insert' ? (
-          <Fragment key={entry.insert.key}>{entry.insert.node}</Fragment>
-        ) : entry.kind === 'tools' ? (
-          <ToolGroup calls={entry.calls} key={entry.id} />
-        ) : (
-          <ItemView
-            actions={{
-              canRetry: entry.item.id === retryable,
-              retrying: props.retrying,
-              onRetry: props.onRetry,
-              onOpenDiff: props.onOpenDiff,
-            }}
-            item={entry.item}
-            key={entry.item.id}
-            readers={props.readers}
-            transcript={transcript}
-          />
-        ),
-      )}
+      {groupEntries(transcript, props.inserts ?? []).map((entry) => {
+        switch (entry.kind) {
+          case 'insert':
+            return (
+              <Fragment key={entry.insert.key}>{entry.insert.node}</Fragment>
+            )
+          case 'tools':
+            return <ToolGroup calls={entry.calls} key={entry.id} />
+          case 'work':
+            return <WorkFold key={entry.id} steps={entry.steps} />
+          case 'item':
+            return (
+              <ItemView
+                actions={{
+                  canRetry: entry.item.id === retryable,
+                  retrying: props.retrying,
+                  onRetry: props.onRetry,
+                  onOpenDiff: props.onOpenDiff,
+                }}
+                item={entry.item}
+                key={entry.item.id}
+                readers={props.readers}
+                transcript={transcript}
+              />
+            )
+        }
+      })}
       {props.pending.map((message) => (
         <UserBubble key={`pending:${message.id}`} message={message} />
       ))}

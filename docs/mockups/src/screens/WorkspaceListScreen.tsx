@@ -47,7 +47,8 @@ export const workspaceListSchema = {
     /**
      * The workspaces of Acme, the first org of a new user or another new
      * org, both without workspaces, a deleted org, Acme after the operator
-     * suspended it, or a deleted org that the operator suspended.
+     * suspended it, a deleted org that the operator suspended, or Acme
+     * after its list did not load.
      */
     list: {
       enum: [
@@ -57,6 +58,7 @@ export const workspaceListSchema = {
         'deleted',
         'suspended',
         'deleted-suspended',
+        'failed',
       ],
     },
     /**
@@ -162,6 +164,7 @@ function MobileList(props: { state: WorkspaceListState }) {
     <MobileFrame>
       <HomeList
         drag={listDrag(menu)}
+        failed={list === 'failed'}
         menu={listMenu(menu)}
         menuStyle="sheet"
         org={fresh ? fresh.org : orgs.acme}
@@ -246,7 +249,13 @@ export function WorkspaceListScreen(props: {
       overlay={listPalette(palette, props.viewport)}
       rail={rail}
       sidebar={
-        <Sidebar drag={drag} menu={open} org={orgs.acme} sections={sections} />
+        <Sidebar
+          drag={drag}
+          failed={list === 'failed'}
+          menu={open}
+          org={orgs.acme}
+          sections={sections}
+        />
       }
     >
       <div className={`${responsive.wideOnly} ${styles.choose}`}>
@@ -255,6 +264,7 @@ export function WorkspaceListScreen(props: {
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
           drag={drag}
+          failed={list === 'failed'}
           keys
           menu={open}
           menuStyle="anchored"
