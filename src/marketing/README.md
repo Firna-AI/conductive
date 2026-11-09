@@ -145,7 +145,9 @@ can restate a fact in other words.
 
 The words of the legal pages, of the page for an unknown address, and of
 the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`,
-and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
+and `legal-text.ts` hold them. `terms.ts` takes its "Working in an org"
+section from `terms-org.ts`, and `privacy.ts` takes its "Who gets your
+data" section from `privacy-recipients.ts`. `layouts/LegalPage.astro` and
 `components/RunningText.astro` build their HTML for the site. The mockups and the sign-in screen of the app render the same text
 with React. So every surface shows the same words.
 
@@ -243,6 +245,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   for links from another origin.
 - `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
   text model, titles, contact addresses, and sign-in agreement.
+- `terms-org.ts`, `privacy-recipients.ts`: the "Working in an org" section
+  of the Terms and the "Who gets your data" section of the Privacy page.
 - `request-values.ts`: built-page markers and local Astro preview values.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
   CSS for the font, tokens and picture sizes, and the file list writer.
