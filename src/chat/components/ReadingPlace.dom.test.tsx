@@ -142,7 +142,9 @@ function layOut(scroller: HTMLElement, transcript: HTMLElement) {
         this === transcript
           ? rows()[0]
           : rows().find((element) => element.contains(this))
-      if (!own) return DOMRect.fromRect()
+      // Any other part of the page, such as the tab row, gets an empty box,
+      // as a browser gives each element one.
+      if (!own) return new DOMRect()
       const y = top + height - position - below(own)
       return DOMRect.fromRect({
         y,

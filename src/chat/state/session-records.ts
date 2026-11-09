@@ -9,6 +9,7 @@ import {
   placeSession,
   sortHistory,
 } from './sessions'
+import { withSessionPlaces } from './tab-order'
 
 /**
  * The order of the session records that a reply and the stream both write. Each
@@ -131,18 +132,18 @@ export function confirmSessions(
   context.store.update((snapshot) => {
     const current = change(snapshot)
     const records = listed.map((item) => shownRecord(context, item.id) ?? item)
-    const open = orderSessions(
-      records.filter((item) => item.closedAt === null),
-      current.view,
-    )
+    const openRecords = records.filter((item) => item.closedAt === null)
+    // The complete list gives each open session a place in the saved order,
+    // and drops the places of sessions that are not open.
+    const view = withSessionPlaces(current.view, openRecords)
+    const open = orderSessions(openRecords, view)
     const shown = open.some((item) => item.id === current.activeSessionId)
     let next: ChatSnapshot = {
       ...current,
+      view,
       sessions: open,
       history: sortHistory(records.filter((item) => item.closedAt !== null)),
-      activeSessionId: shown
-        ? current.activeSessionId
-        : pickActive(open, current.view),
+      activeSessionId: shown ? current.activeSessionId : pickActive(open, view),
     }
     for (const { id } of listed) {
       const log = logOf(context, id)

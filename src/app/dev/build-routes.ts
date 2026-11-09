@@ -8,7 +8,7 @@ import {
 } from '../../shared/org-settings'
 import { requireOrg, type DevBackend } from './backend'
 import { ID, json, RouteError, type Params, type Route } from './router'
-import { uniqueId, type OrgState } from './state'
+import { uniqueId, updateNeedsBuild, type OrgState } from './state'
 
 /** A build adds one log line at each tick, and it ends at the fourth tick. */
 const TICK_MS = 1_500
@@ -56,7 +56,7 @@ function putBuild(org: OrgState, build: BuildResponse): void {
 /** What a build does: the script that it runs, its log, and its result. */
 interface BuildPlan {
   id: string
-  script: string
+  revision: number
   fails: boolean
   /** The log lines after the first one. */
   lines: readonly string[]
@@ -84,12 +84,11 @@ function endBuild(
     },
   })
   if (plan.fails) return
+  const firstImage = org.currentImageBuildId === null
   org.currentImageBuildId = plan.id
-  // A script that changed while the build ran still needs a build.
-  org.settings = {
-    ...org.settings,
-    needsBuild: org.settings.installScript !== plan.script,
-  }
+  updateNeedsBuild(org)
+  if (firstImage && org.settingsRevision > plan.revision && !org.org.suspension)
+    startBuild(backend, org)
 }
 
 /** Adds one log line at each tick, and ends the build at the last tick. */
@@ -118,7 +117,7 @@ function runBuild(
  * good build becomes the image of new workspaces. While a build runs, a
  * second start gets the build that runs.
  */
-function startBuild(backend: DevBackend, org: OrgState): BuildResponse {
+export function startBuild(backend: DevBackend, org: OrgState): BuildResponse {
   const busy = org.builds.find((item) => item.build.state === 'running')
   if (busy) return busy
   const script = org.settings.installScript
@@ -127,7 +126,7 @@ function startBuild(backend: DevBackend, org: OrgState): BuildResponse {
       `build-${org.builds.length + 1}`,
       org.builds.map((item) => item.build.id),
     ),
-    script,
+    revision: org.settingsRevision,
     fails: script.includes('exit 1'),
     lines: [
       'Running the install script',
@@ -153,6 +152,8 @@ function startBuild(backend: DevBackend, org: OrgState): BuildResponse {
     startedAt,
   )
   org.builds = [build, ...org.builds]
+  org.buildRevisions.set(plan.id, plan.revision)
+  updateNeedsBuild(org)
   runBuild(backend, org, plan)
   return build
 }

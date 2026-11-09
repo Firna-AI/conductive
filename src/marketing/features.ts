@@ -43,8 +43,8 @@ export const features: readonly Feature[] = [
   },
   {
     label: 'Tools',
-    title: 'A terminal, port previews, and a live desktop.',
-    text: 'Run commands on the cloud computer, open any port in a preview, and watch the agent use a browser on the desktop.',
+    title: 'A terminal and port previews.',
+    text: 'Run commands on the cloud computer, and open any port in a preview.',
     picture: 'tools',
   },
   {

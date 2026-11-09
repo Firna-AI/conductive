@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { FolderGit2, Sparkles } from 'lucide-react'
 import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
@@ -105,7 +105,6 @@ export function NewWorkspaceScreen(props: {
   const sections = valueOf(useStore(orgModel.sections))
   const phone = useViewport() === 'phone'
   const { suspended } = useOrgAccess(org)
-  useEffect(() => orgModel.watch('builds'), [orgModel])
   useShownForm()
   const section = sections?.find((item) => item.id === props.sectionId)
   return (
@@ -134,6 +133,7 @@ export function NewWorkspaceScreen(props: {
           ) : (
             <>
               {form.failure}
+              {form.buildNotice}
               {form.notice}
               <Composer
                 choice={form.choice}

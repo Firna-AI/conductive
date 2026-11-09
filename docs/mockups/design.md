@@ -18,13 +18,14 @@ drag and drop. The centre column has a slim header that names the
 repository, the branch, and the owner of the workspace, and ends with
 Archive and the toggle of the right column. The toggle hides the right
 column, so the centre column takes its width, and shows it again. Then
-come a tab for each agent session and each open file or diff,
-+ for a new session, and a clock that opens the session history. The right
-column has the pull request bar on top, the All files, Changes, and Checks
-lists below it, and the Terminal, Preview, and Desktop tabs at the bottom.
+come a tab for each agent session and each open file or diff, in the order
+that the user gives them by drag, + for a new session, and a clock that
+opens the session history. The right column has the pull request bar on
+top, the All files, Changes, and Checks lists below it, and the Terminal
+and Preview tabs at the bottom.
 It shows no file content. A phone shows an org switcher at the top of the list, and the
 workspace with a compact pull request row, the sessions as tabs above the
-chat, and five tabs at the bottom.
+chat, and four tabs at the bottom.
 
 - The tokens live in `src/design/`: the colours of each scheme in
   `palette.ts`, and the type, density, sizes, radii, and fonts in
@@ -60,9 +61,28 @@ chat, and five tabs at the bottom.
   can still queue messages, as `app/new-workspace/error` shows. Every
   other bar of the sandbox takes the place of the composer.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
-  `src/components/common/` beside its button, or in a `Sheet` on a phone.
-  Firna's own menu rows are taller than the dense design. A row can lead with
-  a mark, such as an avatar, and end with a muted detail and an icon.
+  `src/components/common/` beside its button or its tab, or in a `Sheet` on
+  a phone. Firna's own menu rows are taller than the dense design. A row can
+  lead with a mark, such as an avatar, and end with a muted detail and an
+  icon. An item that is off keeps its place, greyed.
+- `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
+  centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
+  moves to any place in the row by drag, or by a long press on a phone, and
+  a new tab opens at the end of the row. A drag looks like the drag of a
+  workspace row: the tab lifts as a raised card, a faint copy stays at its
+  place, and a line in the accent colour marks where it lands. The line
+  stands between two tabs and takes no space. When the tabs do not fit at
+  their minimum width, the row scrolls sideways with no scrollbar, keeps the
+  shown tab in view, and fades each end that clips tabs. A right click on a
+  tab opens its menu at the pointer: Rename session, a line, then Move left
+  and Move right. A file or diff tab has only the moves. The menu is the one
+  way to rename a session, so no tab shows a rename button. Rename session
+  opens a field in place of the title of that tab, also when the tab does
+  not show. The field marks that tab, which takes no fill, so only the shown
+  tab is filled. On a phone, a long press that ends without a move opens the
+  menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
+  `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
+  `TabRename.module.css` the rename field. The app shares these modules.
 - `CommandPalette` in `src/components/palette/` draws the command palette:
   a dialog near the top of the window over a light dim on desktop, and a
   page in place of the list on a phone. It has the search field, the tabs
@@ -115,7 +135,7 @@ chat, and five tabs at the bottom.
     `app/orgs/suspended/workspace` shows. The New workspace page of such an
     org shows the same bar in place of the composer.
   - A phone shows the bar only on the Chat tab. So the panels of its Files,
-    Terminal, Preview, and Desktop tabs show the words of the refusal in
+    Terminal, and Preview tabs show the words of the refusal in
     place of the line on the chat history, as the `files` variants of
     `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
     keeps its short panels beside the bar.
@@ -136,6 +156,11 @@ chat, and five tabs at the bottom.
   passed its limit names that limit, as
   `app/org-settings/cloud-computer/build-failed/time-limit`,
   `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show.
+- A new org has no image until its first build succeeds. Until then New
+  workspace keeps Send off under a notice with the state of that build, as
+  `app/new-workspace/first-build` shows. A notice of work that runs, such
+  as that build, shows a spinner in place of its icon: `Notice` in
+  `src/components/common/` takes `busy`.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
@@ -222,4 +247,5 @@ chat, and five tabs at the bottom.
   Firna chart cannot name its first column.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
-  of its title beside its rename and close buttons.
+  of its title beside its close button. When the session tabs still do not
+  fit, their row scrolls sideways.

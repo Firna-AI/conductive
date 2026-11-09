@@ -1,7 +1,7 @@
 import type { ApiClient } from '../../app/api/client'
 import type { AgentChoice } from '../../shared/agents'
 import type { DeviceApprovalAction } from '../../shared/device'
-import type { WorkspaceView } from '../../shared/workspace-view'
+import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import {
@@ -37,6 +37,8 @@ import {
   setDraftText,
 } from './message-actions'
 import { chooseModel } from './model-actions'
+import { moveTab } from './tab-actions'
+import type { TabPlace } from './tab-order'
 import {
   confirmClose,
   newSession,
@@ -256,6 +258,9 @@ export class ChatController {
    */
   readonly updateView = (change: (view: WorkspaceView) => WorkspaceView) =>
     updateView(this.context, change, !this.readOnly())
+  readonly moveTab = (tab: WorkspaceTab, place: TabPlace): void => {
+    if (!this.readOnly()) moveTab(this.context, tab, place)
+  }
   readonly dismissNotice = () =>
     this.store.update((snapshot) => ({ ...snapshot, notice: null }))
 }

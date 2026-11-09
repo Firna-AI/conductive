@@ -123,6 +123,16 @@
   color: var(--ui-rose);
 }
 
+/*
+ * An item that is off keeps its place, greyed as a Firna control that is
+ * off, and takes no hover.
+ */
+.disabled,
+.disabled:hover {
+  background: none;
+  opacity: 0.5;
+}
+
 .group {
   padding: 6px 8px 3px;
   color: var(--ui-muted);

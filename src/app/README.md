@@ -19,9 +19,12 @@ pull request bar, and the owner picker. A host can give its own parts, as
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`, or
-  `?paths=masked`. `dev/options.ts` lists them. A new org
-  of the dev fake gets every repository of the account's list, and keeps
-  its custom initials through rename, delete, and restore.
+  `?paths=masked`. `dev/options.ts` lists them. Create org of the dev fake
+  requires at least one repository and starts a simulated build. Its
+  repository catalogue keeps the saved choices, and its custom initials
+  stay through rename, delete, and restore. Settings changes during the
+  first good build start one added build. The fake compares settings
+  revisions with builds as the Worker does.
 - `?operator=1` makes the dev user an operator, so the rail and the org
   switcher show Operator. The [operator section](../shell/operator/README.md)
   then shows the sample orgs and users of the mockups, and Suspend and Lift
@@ -82,7 +85,7 @@ feature leaves its place empty.
 | `composer`    | The composer of that column while the sandbox runs or starts |
 | `center`      | A part in place of the whole chat. Without it, the chat shows the file or diff tab of the address |
 | `files`       | All files, Changes, and Checks. The shell gives its own |
-| `tools`       | Terminal, Preview, and Desktop. The shell gives its own |
+| `tools`       | Terminal and Preview. The shell gives its own |
 | `pullRequest` | The pull request bar, or the row on a phone. The shell gives its own |
 | `owner`       | The owner picker that reassigns a workspace. The shell gives its own |
 
@@ -166,6 +169,9 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 
 ## Key code
 
+- `dev/org-routes.ts` creates orgs and starts their first simulated build.
+  `dev/build-routes.ts` runs builds and the added build after the first image.
+  `dev/settings-routes.ts` saves settings and repository choices.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. `api/read-*.ts`: the readers.
@@ -184,6 +190,13 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   and computer settings of one org, with `watch` and the wait of each part.
+  `OrgModel.startBuild` sends Build computer and Try again for each screen
+  that offers them.
+- `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
+  first build of an org from its builds, which Get started and New
+  workspace show until the org has a good image. `changedScriptNotice`
+  gives the words of the notice of a changed install script, which the
+  Cloud computer tab of an admin and of a member show.
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the New workspace view, the GitHub App installations,
   and the repositories that Create org offers. A screen watches the
@@ -230,6 +243,22 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   unmount. It checks that a switch stops the old store before the new one
   connects, and shows only the new store. It also checks when the hook keeps
   a store, connects it again, or makes a new one.
+- `pointer-drag.ts`: `usePointerDrag`, the drag and drop of any pointer
+  that the tab row of the chat and the workspace list use: the press, the
+  start after a move of a mouse or a long press of a finger, Escape, the
+  click after a drag, the scroll lock of touch, and a new drop place after a
+  scroll under a still pointer. `ownPress` keeps a press on a control
+  inside a dragged element, such as Close, for that control.
+  `next-click.ts`: `stopNextClick`, which stops the click that ends a drag
+  wherever it lands, also the late click of a finger.
+  `pointer-drag.test.tsx` mounts the hook in happy-dom.
+  `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
+  a section, on `usePointerDrag`.
+- `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
+  vertical wheel turn over a row that scrolls sideways into a sideways
+  scroll of the row. A sideways swipe and a turn with Ctrl stay with the
+  browser, and so does a turn past an end of the row. The tab row of the
+  chat uses it, and any row that scrolls sideways can.
 - `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
   the Overview and the pages of the operator section, its searches, and
   Suspend and Lift. A refusal with `operator_required` marks the account
