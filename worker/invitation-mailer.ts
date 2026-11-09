@@ -15,6 +15,12 @@ export interface InvitationMailer {
   send(invitation: InvitationEmail): Promise<void>
 }
 
+/**
+ * Resend sends only from a domain that it verified. The deployment
+ * verifies this subdomain, as `docs/deployment.md` says.
+ */
+const senderAddress = `invites@mail.${productDomain}`
+
 export function invitationLink(appOrigin: string, inviteId: string): string {
   const url = new URL('/', appOrigin)
   url.searchParams.set('invite', inviteId)
@@ -48,7 +54,7 @@ export function createInvitationMailer(
         if (!env.RESEND_API_KEY)
           throw new Error('Invitation mailer is not configured')
         const body = JSON.stringify({
-          from: `${productName} <invites@${productDomain}>`,
+          from: `${productName} <${senderAddress}>`,
           to: [invitation.email],
           subject: `Join ${invitation.orgName} on ${productName}`,
           text: `${invitation.invitedBy} invited you to join ${invitation.orgName} on ${productName}.\n\nSign in with GitHub and accept your invitation:\n${invitation.link}`,
