@@ -1,7 +1,7 @@
 import type { RunnerEvent, RunnerReportRefresh } from '../../src/shared/runner'
 import type {
   RunnerConnectionRequest,
-  RunnerConnector,
+  RunnerConnectorV1 as RunnerConnector,
 } from '../../src/shared/runner-transport'
 import { checkpoint, changedSince } from './checkpoint'
 import { AgentEngine } from './engine'

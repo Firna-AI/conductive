@@ -27,6 +27,7 @@ import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
+import { reportTurnEnd } from './turn-end-reports'
 import {
   runWorkspaceOperation,
   type WorkspaceOperation,
@@ -93,7 +94,9 @@ export class WorkspaceChat {
       overrides.matchesObject ?? (() => true),
     )
     this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
-    this.store = new ChatStore(storage, this.dependencies.now)
+    this.store = new ChatStore(storage, this.dependencies.now, (report) =>
+      reportTurnEnd(this.store, this.dependencies, this.publish, report),
+    )
     this.titles = new WorkspaceTitles(
       env,
       this.store,
@@ -101,14 +104,17 @@ export class WorkspaceChat {
       (events) => this.publish(events),
     )
     this.browsers = new BrowserTabs(this.dependencies)
-    this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
-      this.publish(events),
-    )
     this.turnTokens = new WorkspaceTurnTokens(
       this,
       env,
       (id) => this.operation(id),
       this.dependencies.randomId,
+    )
+    this.runner = new RunnerChannel(
+      this.store,
+      this.dependencies,
+      (events) => this.publish(events),
+      (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
     )
     this.operations = new WorkspaceOperations({
       env,

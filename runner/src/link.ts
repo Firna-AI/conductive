@@ -1,15 +1,15 @@
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type {
-  RunnerCommand,
+  RunnerCommandV1 as RunnerCommand,
   RunnerEvent,
   RunnerEventEnvelope,
-  WorkspaceToRunner,
+  WorkspaceToRunnerV1 as WorkspaceToRunner,
 } from '../../src/shared/runner'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
 import type {
-  RunnerConnection,
+  RunnerConnectionV1 as RunnerConnection,
   RunnerConnectionRequest,
-  RunnerConnector,
+  RunnerConnectorV1 as RunnerConnector,
 } from '../../src/shared/runner-transport'
 import type { EventStore } from './state'
 import type { RetainedReport, RetainedReportKind } from './report-state'

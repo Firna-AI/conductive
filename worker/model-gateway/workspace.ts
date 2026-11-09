@@ -1,4 +1,5 @@
 import type { Session } from '../../src/shared/sessions'
+import type { RunnerLoginKind } from '../../src/shared/runner'
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatOperation } from '../chat/operation'
 import { unavailableLoginMessage } from '../chat/session-login'
@@ -7,7 +8,12 @@ import { activeStoredTurn } from '../devices/access'
 import type { AppEnv } from '../env'
 import { randomToken } from '../security/crypto'
 import { decryptGatewayLogin, gatewayLogin } from './login'
-import { deriveTurnToken, turnTokenRoute, verifyTurnToken } from './token'
+import {
+  deriveTurnToken,
+  turnTokenMatchesKind,
+  turnTokenRoute,
+  verifyTurnToken,
+} from './token'
 import type { TurnTokenCheck } from './types'
 
 /** The token and decrypted login remain local to the current trusted call. */
@@ -33,21 +39,38 @@ export class WorkspaceTurnTokens {
   async forRunningTurn(
     workspaceId: string,
     turnId: string,
+    expectedKind?: RunnerLoginKind,
   ): Promise<string | null> {
     const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
     if (!turn) return null
+    const session = await this.chat.store.read(workspaceId, (view) =>
+      view.session(turn.sessionId),
+    )
+    if (!session) return null
+    const login = await gatewayLogin(
+      this.env,
+      workspaceId,
+      session.startedBy?.id ?? null,
+      session.choice.agent,
+    )
+    if (
+      !login ||
+      (turn.gateway && login.updatedAt !== turn.gateway.loginVersion) ||
+      (expectedKind &&
+        (expectedKind.agent !== login.loginKind.agent ||
+          expectedKind.kind !== login.loginKind.kind))
+    ) {
+      await this.fail(
+        this.operation(workspaceId),
+        turn.id,
+        login
+          ? changedLoginMessage(session)
+          : unavailableLoginMessage({ ...session, loginAvailable: false }),
+        false,
+      )
+      return null
+    }
     if (!turn.gateway) {
-      const session = await this.chat.store.read(workspaceId, (view) =>
-        view.session(turn.sessionId),
-      )
-      if (!session) return null
-      const login = await gatewayLogin(
-        this.env,
-        workspaceId,
-        session.startedBy?.id ?? null,
-        session.choice.agent,
-      )
-      if (!login) return null
       turn.gateway = { nonce: randomToken(), loginVersion: login.updatedAt }
       await this.operation(workspaceId).change((transaction) =>
         transaction.saveTurn(turn),
@@ -57,6 +80,7 @@ export class WorkspaceTurnTokens {
       { workspaceId, turnId },
       turn.gateway,
       this.env.BOAT_KEY_ENCRYPTION_KEY,
+      login.loginKind,
     )
   }
 
@@ -99,6 +123,8 @@ export class WorkspaceTurnTokens {
         await this.fail(operation, turn.id, message)
         return { ok: false, reason }
       }
+      if (!turnTokenMatchesKind(token, login.loginKind))
+        return { ok: false, reason: 'turn_token_invalid' }
       return { ok: true, login: await decryptGatewayLogin(this.env, login) }
     })
   }
@@ -107,6 +133,7 @@ export class WorkspaceTurnTokens {
     operation: ChatOperation,
     turnId: string,
     message: string,
+    flush = true,
   ): Promise<void> {
     await operation.change(async (transaction) => {
       const turn = await transaction.turn(turnId)
@@ -118,7 +145,7 @@ export class WorkspaceTurnTokens {
         this.randomId,
       )
     })
-    await this.chat.flushRunner()
+    if (flush) await this.chat.flushRunner()
   }
 }
 

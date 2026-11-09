@@ -2,7 +2,10 @@ import { randomUUID } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
 import { homedir } from 'node:os'
 
-import type { RunnerLogin, RunnerTurn } from '../../src/shared/runner'
+import type {
+  RunnerLogin,
+  RunnerTurnV1 as RunnerTurn,
+} from '../../src/shared/runner'
 import { oneOf } from './parse'
 import { warmClaude } from './providers/binaries'
 import { createClaudeFactory } from './providers/claude'

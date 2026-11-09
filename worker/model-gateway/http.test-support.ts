@@ -1,5 +1,6 @@
 import type { AgentChoice } from '../../src/shared/agents'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import {
   CLAUDE,
   MACHINE_ORIGIN,
@@ -24,16 +25,13 @@ export async function gatewayHttp(
   harness: TestHarness,
   choice: AgentChoice = CLAUDE,
   kind: 'api-key' | 'token' = 'api-key',
+  protocolVersion: RunnerProtocolVersion = 1,
 ) {
-  const turn = await runningGatewayTurn(harness, choice)
+  const turn = await runningGatewayTurn(harness, choice, {
+    kind,
+    protocolVersion,
+  })
   const { fixture } = turn
-  if (kind === 'token') {
-    await fixture.env.DB.prepare(
-      'UPDATE agent_logins SET kind = ? WHERE user_id = ? AND agent = ?',
-    )
-      .bind(kind, fixture.member.id, choice.agent)
-      .run()
-  }
   const anthropic = new FakeAnthropic()
   const openai = new FakeOpenAI()
   const checks: string[] = []

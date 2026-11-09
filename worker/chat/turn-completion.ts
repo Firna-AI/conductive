@@ -18,7 +18,11 @@ export class TurnCompletion {
     this.session = session
   }
 
-  async finish(turn: StoredTurn, end: TurnEnd): Promise<void> {
+  async finish(
+    turn: StoredTurn,
+    end: TurnEnd,
+    occurredAt = this.transaction.now,
+  ): Promise<void> {
     turn.started ??= turn.state === 'running' || turn.state === 'stopping'
     if (turn.loginFailure) {
       const retryMessageId = turn.messageIds[0]
@@ -73,6 +77,7 @@ export class TurnCompletion {
       await this.unlink(turn.id, following)
     }
     await this.saveSession()
+    this.transaction.endedTurns.push({ turnId: turn.id, occurredAt })
   }
 
   async stopped(turn: StoredTurn): Promise<void> {

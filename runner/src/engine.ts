@@ -1,4 +1,4 @@
-import type { RunnerCommand } from '../../src/shared/runner'
+import type { RunnerCommandV1 as RunnerCommand } from '../../src/shared/runner'
 import { SessionEngine } from './engine-runtime'
 import type { EngineOptions } from './engine-session'
 import { EngineTurns } from './engine-turns'

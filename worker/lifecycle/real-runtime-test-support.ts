@@ -62,6 +62,7 @@ export async function realRuntimeFixture(bundle: string) {
           config: {
             name: 'workspace-runtime-test',
             compatibilityDate: '2026-11-06',
+            compatibilityFlags: ['global_fetch_strictly_public'],
             exports: {
               WorkspaceRuntimeFixture: {
                 type: 'durable-object',

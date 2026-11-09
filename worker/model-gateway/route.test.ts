@@ -215,6 +215,7 @@ it('refuses an unknown workspace before calling its Durable Object', async () =>
       { workspaceId: 'unknown-workspace', turnId: client.turn.turnId },
       { nonce: 'made-up', loginVersion: 0 },
       btoa('f'.repeat(32)),
+      { agent: 'claude', kind: 'api-key' },
     )
     const response = await client.request(undefined, {
       headers: { 'x-api-key': token },

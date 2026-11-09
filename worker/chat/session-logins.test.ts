@@ -37,6 +37,7 @@ describe('session starter logins', () => {
     const initial = messageCommands(runner, 'first')[0]
     if (initial?.type !== 'turn') throw new Error('The turn is missing.')
     expect(initial.message.sender.id).toBe(fixture.member.id)
+    if (!initial.login) throw new Error('The version 1 turn has no login.')
     expect(initial.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     await fixture.send(session.id, 'steer', fixture.memberCookie)
     const steer = messageCommands(runner, 'steer')[0]

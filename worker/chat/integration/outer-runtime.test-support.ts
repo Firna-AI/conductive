@@ -93,6 +93,7 @@ export async function createOuterRuntime(
           config: {
             name: 'outer-chat-tests',
             compatibilityDate: '2026-11-06',
+            compatibilityFlags: ['global_fetch_strictly_public'],
             exports: {
               Workspace: { type: 'durable-object', storage: 'sqlite' },
             },

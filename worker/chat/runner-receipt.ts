@@ -75,8 +75,6 @@ export async function storeRunnerReceipt(
       .find(
         (envelope) =>
           envelope.event.type === output.event.type ||
-          (output.event.type === 'turn.completed' &&
-            envelope.event.type === 'turn.failed') ||
           envelope.event.type === 'runner.event-refused',
       )
     if (emitted) stored.push(emitted)

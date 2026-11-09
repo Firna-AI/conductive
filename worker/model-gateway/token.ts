@@ -1,3 +1,4 @@
+import type { RunnerLoginKind } from '../../src/shared/runner'
 import { base64Url } from '../security/crypto'
 
 export interface TurnTokenState {
@@ -13,6 +14,26 @@ export interface TurnTokenRoute {
 const encoder = new TextEncoder()
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
 
+function nativeTokenPrefix(login: RunnerLoginKind): string {
+  if (login.agent === 'codex') return 'sk-'
+  return login.kind === 'api-key' ? 'sk-ant-api-' : 'sk-ant-oat01-'
+}
+
+function tokenPrefix(token: string): string {
+  return (
+    ['sk-ant-api-', 'sk-ant-oat01-', 'sk-'].find((prefix) =>
+      token.startsWith(prefix),
+    ) ?? ''
+  )
+}
+
+export function turnTokenMatchesKind(
+  token: string,
+  login: RunnerLoginKind,
+): boolean {
+  return tokenPrefix(token) === nativeTokenPrefix(login)
+}
+
 function decode(value: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(
     atob(value.replaceAll('-', '+').replaceAll('_', '/')),
@@ -27,7 +48,9 @@ function routingPart(route: TurnTokenRoute): string {
 }
 
 export function turnTokenRoute(token: string): TurnTokenRoute | null {
-  const [version, routing, signature, extra] = token.split('.')
+  const [version, routing, signature, extra] = token
+    .slice(tokenPrefix(token).length)
+    .split('.')
   if (
     version !== 'gt1' ||
     !routing ||
@@ -78,13 +101,18 @@ async function tokenKey(secret: string) {
   )
 }
 
-function tokenInput(route: TurnTokenRoute, state: TurnTokenState) {
+function tokenInput(
+  route: TurnTokenRoute,
+  state: TurnTokenState,
+  prefix: string,
+) {
   return encoder.encode(
     JSON.stringify([
       'conductive:model-gateway:turn:v1',
       routingPart(route),
       state.nonce,
       state.loginVersion,
+      prefix,
     ]),
   )
 }
@@ -93,13 +121,15 @@ export async function deriveTurnToken(
   route: TurnTokenRoute,
   state: TurnTokenState,
   secret: string,
+  login: RunnerLoginKind,
 ): Promise<string> {
+  const prefix = nativeTokenPrefix(login)
   const signature = await crypto.subtle.sign(
     'HMAC',
     await tokenKey(secret),
-    tokenInput(route, state),
+    tokenInput(route, state, prefix),
   )
-  return `gt1.${routingPart(route)}.${base64Url(new Uint8Array(signature))}`
+  return `${prefix}gt1.${routingPart(route)}.${base64Url(new Uint8Array(signature))}`
 }
 
 export async function verifyTurnToken(
@@ -115,6 +145,6 @@ export async function verifyTurnToken(
     'HMAC',
     await tokenKey(secret),
     bytes,
-    tokenInput(route, state),
+    tokenInput(route, state, tokenPrefix(token)),
   )
 }

@@ -1,8 +1,15 @@
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { FakeRunner } from '../test-support/fake-runner'
-import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import {
+  createChatFixture,
+  MACHINE_ORIGIN,
+  WORKSPACE_ID,
+  WORKSPACE_TOKEN,
+} from './harness.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -60,4 +67,45 @@ it('accepts a version 1 runner and delivers queued commands when the workspace h
   expect(runner.commands).toMatchObject([
     { type: 'turn', message: { id: 'message-1' } },
   ])
+})
+
+it('closes an unsupported runner version before welcome or queued commands', async () => {
+  const fixture = await createChatFixture(harness)
+  const session = await fixture.createSession()
+  await fixture.send(session.id)
+  const sent: WorkspaceToRunner[] = []
+  let closed = 0
+  const peer = {
+    send: (message: WorkspaceToRunner) => {
+      sent.push(message)
+    },
+    close: () => {
+      closed++
+    },
+  }
+  await fixture.chat.connectRunner(
+    new Request(`${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`, {
+      headers: { Authorization: `Bearer ${WORKSPACE_TOKEN}` },
+    }),
+    peer,
+  )
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  try {
+    await expect(
+      fixture.chat.receiveRunner(peer, {
+        type: 'hello',
+        protocolVersion: 3,
+        workspaceId: WORKSPACE_ID,
+        streamId: 'unsupported-stream',
+      }),
+    ).rejects.toMatchObject({ status: 400, code: 'invalid_input' })
+    expect(closed).toBe(1)
+    expect(sent).toEqual([])
+    expect(
+      await fixture.chat.readWorkspace(WORKSPACE_ID, (view) => view.pending()),
+    ).toMatchObject([{ type: 'turn', messageId: 'message-1' }])
+  } finally {
+    warning.mockRestore()
+    fixture.chat.closeConnections()
+  }
 })
