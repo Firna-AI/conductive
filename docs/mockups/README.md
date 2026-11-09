@@ -107,7 +107,7 @@ invite code on the Account page.
 ## The Mac app
 
 [The Mac app](mac-app.md) gives the screens of the Mac app: its window, the
-commands that an agent runs on the Mac, and This Mac.
+waitlist, the commands that an agent runs on the Mac, and This Mac.
 
 ## The marketing site
 

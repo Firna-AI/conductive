@@ -17,8 +17,11 @@ export const waitingPerson = {
   initials: 'SO',
 } as const
 
-/** The verified email of Sam's GitHub account, which Acme invited. */
-const waitingEmail = 'sam@example.com'
+/**
+ * The primary verified email of Sam's GitHub account. The approval email
+ * goes to it, and Acme invited it.
+ */
+export const waitingEmail = 'sam@example.com'
 
 /** The org invitation that waits for Sam on the waitlist screen. */
 export const waitingInvites: readonly PendingInvite[] = [

@@ -3,6 +3,7 @@ import type { Viewport } from '@mokly/mokly'
 import { classes } from '../components/common/classes'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { MobileFrame } from '../components/layout/AppFrame'
+import { useMacApp } from '../components/mac/MacApp'
 import { LegalLinks } from '../components/marketing/LegalLinks'
 import { Wordmark } from '../components/marketing/Wordmark'
 import { paths } from '../paths'
@@ -10,6 +11,30 @@ import { signInCopy } from './signInCopy'
 import forms from './forms.module.css'
 import styles from './SignInScreen.module.css'
 import frame from './signInFrame.module.css'
+
+/** The height of the lockup in the top bar of the Mac app, in px. */
+const macLockup = 22
+
+/**
+ * The header of the page. In the Mac app the window has no title bar, so
+ * the header is the top bar of the window. It is as high as the top bars
+ * of the app, it moves the window, and in a window it keeps the space of
+ * the window buttons free. In full screen it gives that space back.
+ */
+function Header() {
+  const mac = useMacApp()
+  return (
+    <header
+      className={classes(
+        styles.header,
+        mac && frame.macBar,
+        mac?.mode === 'window' && frame.windowButtons,
+      )}
+    >
+      <Wordmark height={mac ? macLockup : undefined} to={paths.marketing} />
+    </header>
+  )
+}
 
 /**
  * The page of the app before the app opens: the wordmark, one card in the
@@ -29,9 +54,7 @@ export function SignInFrame(props: {
   const mobile = props.viewport === 'mobile'
   const page = (
     <div className={classes(styles.page, mobile && styles.mobile)}>
-      <header className={styles.header}>
-        <Wordmark to={paths.marketing} />
-      </header>
+      <Header />
       <div className={styles.body}>
         <section
           aria-label={props.label}

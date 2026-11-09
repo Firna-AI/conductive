@@ -7,7 +7,12 @@ import { ScreenLink } from '../components/common/ScreenLink'
 import { useControlSizes } from '../components/common/touch'
 import { PendingInviteList } from '../components/members/PendingInvites'
 import { PersonAvatar } from '../components/orgs/OrgTile'
-import { typedCode, waitingInvites, waitingPerson } from '../fixtures/waitlist'
+import {
+  typedCode,
+  waitingEmail,
+  waitingInvites,
+  waitingPerson,
+} from '../fixtures/waitlist'
 import { noop } from '../noop'
 import { paths } from '../paths'
 import { inviteRows } from './inviteRows'
@@ -20,8 +25,13 @@ import styles from './WaitlistScreen.module.css'
 export const waitlistSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['code', 'from', 'invitations'],
+  required: ['email', 'code', 'from', 'invitations'],
   properties: {
+    /**
+     * Whether the GitHub account has a primary verified email, which gets
+     * the approval email. An org invitation needs a verified email too.
+     */
+    email: { enum: ['verified', 'none'] },
     /** No code tried yet, or why the last code did not let the person in. */
     code: { enum: ['none', ...codeFailures] },
     /** Where that code came from: the field of the screen, or a join link. */
@@ -134,18 +144,23 @@ function AccountRow() {
  * The only screen of a person who is signed in without app access. It
  * says that they wait, and it offers the ways in that the person can take
  * now: an invite code, and the org invitations that wait for them. An
- * approval of an operator sends an email. The screen has no place in line
- * and no Delete account. With an invitation, Accept is the main action.
+ * approval of an operator sends an email to the primary verified email of
+ * the GitHub account, which the screen names. Without one, the screen
+ * promises no email. It has no place in line and no Delete account. With
+ * an invitation, Accept is the main action.
  */
 export function WaitlistScreen(props: {
   state: WaitlistState
   viewport: Viewport
 }) {
   const invited = props.state.invitations === 'pending'
+  const verified = props.state.email === 'verified'
   return (
     <SignInFrame label={copy.title} viewport={props.viewport} wide>
       <h1 className={signIn.title}>{copy.title}</h1>
-      <p className={signIn.text}>{copy.text}</p>
+      <p className={signIn.text}>
+        {verified ? copy.email(waitingEmail) : copy.noEmail}
+      </p>
       {invited ? <Invitations stacked={props.viewport === 'mobile'} /> : null}
       <CodeNotice state={props.state} />
       <CodeField state={props.state} />

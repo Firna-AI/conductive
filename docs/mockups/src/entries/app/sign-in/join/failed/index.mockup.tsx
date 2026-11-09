@@ -14,7 +14,12 @@ export const signInJoinFailed = defineScreen({
   relatedDocs: [],
   address: appDomain,
   propSchema: waitlistSchema,
-  props: { code: 'used-up', from: 'link', invitations: 'none' },
+  props: {
+    email: 'verified',
+    code: 'used-up',
+    from: 'link',
+    invitations: 'none',
+  },
   render: (props, context) => (
     <WaitlistScreen state={props} viewport={context.viewport} />
   ),

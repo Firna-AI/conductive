@@ -1,3 +1,5 @@
+import { productName } from '../brand'
+
 /**
  * Why a code did not let a person in: no code has its text, an operator
  * disabled it, its uses are gone, or sign-ups are paused. A code that the
@@ -49,7 +51,11 @@ const link: Readonly<Record<CodeProblem, NoticeText>> = {
  */
 export const waitlistCopy = {
   title: "You're on the waitlist",
-  text: "You'll get an email when your account is approved.",
+  /** The approval email, to the primary verified email on GitHub. */
+  email: (address: string) =>
+    `You'll get an email at ${address} when you're approved.`,
+  /** No verified email on GitHub, so no email goes out at the approval. */
+  noEmail: `${productName} opens here once you're approved.`,
   invitations: 'Accept an invitation to join its org and skip the waitlist.',
   codeLabel: 'Invite code',
   codePlaceholder: 'XXXXX-XXXXX',

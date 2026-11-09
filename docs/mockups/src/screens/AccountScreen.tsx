@@ -63,11 +63,12 @@ function loginsFor(state: AccountState): AgentLogins {
 }
 
 /**
- * The account: the GitHub sign-in, the invite code of the user, and what
- * every org shares. The GitHub App, the agents, and the model of new
- * workspaces. The product is free, so the page shows no plan and no
- * billing, and the sandbox provider stays out of sight. The Mac app adds
- * the This Mac section.
+ * The account: the GitHub sign-in, what every org shares, and at the end
+ * the invite code of the user. The GitHub App, the agents, and the model
+ * of new workspaces come first, so a phone shows the form of an agent near
+ * the top. The product is free, so the page shows no plan and no billing,
+ * and the sandbox provider stays out of sight. The Mac app adds the This
+ * Mac section.
  */
 export function AccountScreen(props: {
   state: AccountState
@@ -93,10 +94,10 @@ export function AccountScreen(props: {
     >
       <SignInSection />
       {mac ? <ThisMacSection /> : null}
-      <InviteCodeSection fresh={!connected} state={props.state.invites} />
       <GitHubSection connected={connected} />
       <AgentsSection form={openForm} logins={loginsFor(props.state)} />
       <DefaultsSection />
+      <InviteCodeSection fresh={!connected} state={props.state.invites} />
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>

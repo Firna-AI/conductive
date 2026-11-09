@@ -29,7 +29,7 @@ how a screen is built, and links to the other pages.
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |
-| `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
+| `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
 | `user-flows`        | Sign up, join with an invite link, create a workspace, reopen it, create an org, run a Mac command |
 
 A folder page shows at most five screens, saved states included. A folder
@@ -60,17 +60,21 @@ an account without app access, and the person waits until an operator
 approves them, or a code or an org invitation lets them in. Its pages:
 
 - `app/sign-in/waitlist` has the only screen of a person who waits, Sam
-  Okafor. Its variants have a typed code that was not found, a code that
-  the pause of sign-ups stopped, and an org invitation that lets Sam in.
-  The code control of `mockups:serve` shows each reason that a code does
-  not work: unknown, disabled, used up, and the pause.
+  Okafor, with the address that gets the approval email. Its variants
+  have a typed code that was not found, a code that the pause of sign-ups
+  stopped, an org invitation that lets Sam in, and an account with no
+  verified email. The code control of `mockups:serve` shows each reason
+  that a code does not work: unknown, disabled, used up, and the pause.
+- `mac-app/waitlist` has the same waitlist in a window of the Mac app, and
+  its `full-screen` variant has it without the window buttons.
 - `app/sign-in/join` has the sign-in page that an invite link opens, with
   its code. Its child page `app/sign-in/join/failed` has the waitlist after
   the code of the link did not work, here a used-up code, and its `paused`
   variant has the pause.
-- `app/account` shows the invite code of the user, with 3 of 5 invites
-  left. Its child page `app/account/invites` has the pause, and its
-  variants have every invite used and a code that an operator turned off.
+- `app/account` shows the invite code of the user at the end of the page,
+  with 3 of 5 invites left. Its child page `app/account/invites` has the
+  pause, and its variants have every invite used and a code that an
+  operator turned off.
 - The Sign up flow ends on the waitlist. The Join with an invite link flow
   goes from the link through Get started, so the people of each flow stay
   the same.

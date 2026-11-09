@@ -109,7 +109,13 @@ code, an invite link, or an org invitation gives app access.
   `app/sign-in/waitlist` shows. It stands alone, as the sign-in does, and
   it names the GitHub account with Sign out. It shows no place in line,
   because operators approve people in any order, and no Delete account.
-  An approval sends one email.
+  The Mac app shows the same screen in its window, as `mac-app/waitlist`
+  shows.
+- An approval sends one email, to the primary verified email of the
+  GitHub account. The screen names that address. An account without a
+  verified email gets no email, so the screen promises none. It says that
+  the app opens there once the person is approved, as
+  `app/sign-in/waitlist/no-email` shows.
 - The screen takes an invite code. A typed code that does not work names
   its reason under the field: not found, disabled, or used up. A code that
   the pause stopped stays unused, and a notice asks the person to try it
@@ -121,8 +127,10 @@ code, an invite link, or an org invitation gives app access.
   as `app/sign-in/join/failed` shows. A person who already has app access
   uses no code, and the app opens as usual.
 - Each user with app access has an invite code with 5 invites. The
-  Account page shows it under the sign-in: the invite link with Copy, the
-  code alone, and how many invites are left, as `app/account` shows.
+  Account page shows it at the end, after what every org shares, so that
+  the form of an agent stays near the top on a phone. It gives the invite
+  link with Copy, the code alone, and how many invites are left, as
+  `app/account` shows.
   During the pause, the link stays under a notice. A code that is used up
   or turned off shows no link, as `app/account/invites` shows. The page
   names nobody who used an invite.

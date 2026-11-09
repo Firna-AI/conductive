@@ -59,7 +59,9 @@ chat, and five tabs at the bottom.
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without
   the rail. A phone draws the card without its outline. The waitlist uses
-  the wider card, for its invitations and its code field.
+  the wider card, for its invitations and its code field. In the Mac app
+  its header is the top bar of the window, as [the Mac app](mac-app.md)
+  gives.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.

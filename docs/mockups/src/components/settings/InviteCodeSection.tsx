@@ -44,7 +44,7 @@ function Share() {
 }
 
 /**
- * The invite code of the user, beside the GitHub sign-in: the invite link
+ * The invite code of the user, at the end of the account: the invite link
  * with Copy, the code, and how many of the invites are left. During the
  * pause the link stays, and a notice says when it works again. A code
  * that is used up or turned off shows no link, because it lets nobody in.
