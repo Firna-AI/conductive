@@ -17,14 +17,19 @@ build reads Git and `origin/main` to find what changed. The root `.npmrc`
 sets `legacy-peer-deps`, because npm cannot meet the optional React Native
 peer range of `@firna/ui`.
 
-| Command                     | What it does                                                    |
-| --------------------------- | --------------------------------------------------------------- |
-| `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
-| `npm run mockups:build`     | Validate every view in strict mode, and write `mokly-static/`   |
-| `npm run mockups:typecheck` | Type-check the catalogue sources                                |
-| `npm run mockups:check`     | Run the type check, then the strict build                       |
-| `npm run lint`              | Run ESLint                                                      |
-| `npm run format:check`      | Check the formatting with Prettier                              |
+| Command                      | What it does                                                    |
+| ---------------------------- | --------------------------------------------------------------- |
+| `npm run mockups:serve`      | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
+| `npm run mockups:build`      | Validate every view in strict mode, and write `mokly-static/`   |
+| `npm run mockups:typecheck`  | Type-check the catalogue sources                                |
+| `npm run mockups:check`      | Run the type check, then the strict build                       |
+| `npm run marketing:pictures` | Capture the pictures of the marketing site again                |
+| `npm run lint`               | Run ESLint                                                      |
+| `npm run format:check`       | Check the formatting with Prettier                              |
+
+A change to a screen that a picture of the marketing site shows needs a
+new capture with `npm run marketing:pictures`.
+[Pictures](../../src/marketing/README.md#pictures) gives the steps.
 
 Git ignores the build output, `mokly-static/` and
 `.mokly-export-reservations/`. Each built view is at

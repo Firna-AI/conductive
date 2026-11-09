@@ -55,7 +55,11 @@ export type PaletteContent = {
  * first, or over a page without one. Only the owner of the workspace and
  * the admins of the org can archive it.
  */
-export type PaletteContext = { open?: OpenWorkspace; archivable: boolean }
+export type PaletteContext = {
+  open?: OpenWorkspace
+  archivable: boolean
+  rightColumn?: boolean
+}
 
 /**
  * The workspaces with the latest activity, the latest first, as decision
@@ -88,7 +92,9 @@ function commandRows(
 }
 
 function actionsOf(context: PaletteContext): Command[] {
-  const own = context.open ? workspaceActions(context.archivable) : []
+  const own = context.open
+    ? workspaceActions(context.archivable, context.rightColumn)
+    : []
   return [...own, ...orgActions, ...appActions]
 }
 
@@ -218,7 +224,9 @@ function groupsOf(
         ? [
             {
               label: open.workspace.name,
-              rows: commandRows(workspaceActions(context.archivable)),
+              rows: commandRows(
+                workspaceActions(context.archivable, context.rightColumn),
+              ),
             },
           ]
         : []

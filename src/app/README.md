@@ -175,8 +175,8 @@ clicks, types, and lets the answers of the fake API settle.
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the GitHub App installations, and the repositories that
   Create org offers.
-- `panels.ts`: `PanelWidths`, the widths of the panels, and `next`, the
-  one rule of their steps.
+- `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
+  column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
   its waiting writes. `refresh.ts`: `Refresher`, the shared reads of a part
   while screens show it.
