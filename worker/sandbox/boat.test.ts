@@ -71,6 +71,38 @@ it('uses fixed lifecycle routes and confirms deletion with the sandbox id', asyn
   expect(await server.requests[2].json()).toEqual({ ttlSeconds: 1800 })
 })
 
+it.each([true, false, undefined])(
+  'reads hydrated as %s from the sandbox reply',
+  async (hydrated) => {
+    const server = new FakeBoat()
+    server.responseOverride = Response.json({
+      ok: true,
+      type: 'sandbox.info',
+      sandbox: { id: 'bx_one', state: 'ready', hydrated },
+    })
+    const client = new BoatClient('boat-first', server.fetch, 'app-org')
+    expect(await client.get('bx_one')).toEqual({
+      id: 'bx_one',
+      state: 'ready',
+      ...(hydrated === undefined ? {} : { hydrated }),
+    })
+  },
+)
+
+it('rejects a sandbox reply with a nonboolean hydrated field', async () => {
+  const server = new FakeBoat()
+  server.responseOverride = Response.json({
+    ok: true,
+    type: 'sandbox.info',
+    sandbox: { id: 'bx_one', state: 'ready', hydrated: 'false' },
+  })
+  const client = new BoatClient('boat-first', server.fetch, 'app-org')
+  await expect(client.get('bx_one')).rejects.toMatchObject({
+    kind: 'invalid_response',
+    status: 502,
+  })
+})
+
 it('reads typed snapshots and command results through their fixed routes', async () => {
   const server = new FakeBoat()
   const client = new BoatClient('boat-first', server.fetch, 'app-org')

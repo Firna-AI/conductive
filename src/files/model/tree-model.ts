@@ -3,6 +3,7 @@ import type {
   FileTreeDelta,
   FileTreeResponse,
 } from '../../shared/files'
+import { pathLabel } from './file-labels'
 
 /** The files of the branch at one revision, by repository path. */
 export interface FileTree {
@@ -37,7 +38,12 @@ function removePath(
   }
 }
 
-/** Moves an entry. A folder takes the entries inside it along. */
+/**
+ * Moves an entry. A folder takes the entries inside it along: their real
+ * paths change at once, and each keeps the label that the server gave it,
+ * until an update of the entry gives a new one. The browser never joins two
+ * labels, because two safe parts can form a secret value.
+ */
 function movePath(
   entries: Map<string, FileEntry>,
   from: string,
@@ -52,7 +58,7 @@ function movePath(
       if (!isInside(key, from)) continue
       const path = entry.path + key.slice(from.length)
       entries.delete(key)
-      entries.set(path, { ...value, path })
+      entries.set(path, { ...value, path, displayPath: pathLabel(value) })
       touched.add(key)
       touched.add(path)
     }

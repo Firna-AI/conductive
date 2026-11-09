@@ -10,7 +10,7 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, and `PUT` and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
@@ -35,6 +35,12 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- A new login or a change of kind sets `noReuse` to true for a Claude
+  subscription token and false for an API key. Replacing a secret of the
+  same kind keeps its preference. A `PATCH` changes only that login's
+  preference for the signed-in account. It needs no secret and keeps `updatedAt` as the
+  last secret-save time. It returns the current metadata, including a
+  disconnected status when the login was removed.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
 - `getStartedGitHubComplete` owns the `github-app` step in every org state.
   The step is complete when an org of the user that is not deleted has a
@@ -65,6 +71,34 @@ Org suspension keeps shell reads available.
 The common browser gate refuses every org write except Leave.
 The view, read-mark, shared-shell, settings, repository, and archive SQL writes also check stored org state, so an earlier permission read cannot admit a later write.
 
+### List order
+
+- The list read orders the sections by `position`, then ID. In each
+  section, it orders the workspaces by `position`, then creation time,
+  then ID.
+- Each insert and each move computes its positions from the current rows,
+  inside the D1 write transaction that saves them. No route computes a
+  saved position from an earlier list read. So two overlapping moves give
+  the same order as the two moves one after the other.
+- `insertWorkspace` in [`workspace-data.ts`](../lifecycle/workspace-data.ts)
+  gives a new workspace the lowest `position` of the active workspaces in
+  its section, minus 1. In a section without active workspaces, the new
+  workspace takes 0. So it lists first, as the
+  [mockups](../../docs/mockups/src/components/workspaces/sections.ts)
+  show. A position can be negative.
+- The [app](../../src/app/list-changes.ts) and its
+  [dev fake](../../src/app/dev/create-routes.ts) also show a new workspace
+  first.
+- A workspace move request holds `sectionId` and `position`, the index in
+  that section. It can omit `sectionId`. Then the move uses the stored
+  section of the workspace, inside the transaction. Without `position`,
+  the index is 0.
+- A section move request holds `position`, the index in the section list.
+  Each index counts the rows without the moved row.
+- A move ranks the current rows of its target from an `AS MATERIALIZED`
+  snapshot, then puts the moved row at the index. That keyword makes
+  SQLite compute the snapshot once, before the update changes a row.
+
 ## Development
 
 Run `npm run test -- worker/app-api worker/chat/integration` from the
@@ -78,6 +112,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   `boot-account.test-support.ts` holds the account helpers of that test.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
+- `agent-login-reuse.test.ts` checks the login-kind defaults, the private
+  preference update, and unchanged secret data and timestamps.
 - `feature-github-install.test.ts` checks the install link of the GitHub
   App, and the default app when the slug is missing or not valid.
 - `shell-resources.test.ts` and `chat-read-state.test.ts` check the lists,
@@ -87,9 +123,22 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   delivers the first message through a Stop and a resume.
 - `machine-credentials.test.ts` checks the two machine credential routes.
 - `feature-shell-settings.test.ts` checks shared scripts, encrypted env
-  values, member reads, and refused member writes through the Worker.
+  values, secret marks, mark changes without replacement values, member
+  reads, and refused member writes through the Worker.
 - `feature-shell-sections.test.ts` checks section order, private collapse,
   workspace moves, section deletion, and workspace event publication.
+- `feature-workspaces-data.test.ts` and `feature-sections-data.test.ts`
+  commit a second move just before the batch of a first move. They check
+  that the order keeps both moves: a move out of the target section, two
+  moves in one section, and two section moves. They also check refused
+  moves when an org suspension commits before the batch, and a move
+  without `sectionId` after the workspace moved to another section.
+- [`workspace-data.test.ts`](../lifecycle/workspace-data.test.ts) in the
+  lifecycle folder checks that a new workspace lists first, before and
+  after a move. It runs with the lifecycle tests.
+- `shell-list.test-support.ts` gives these three test files their org,
+  sections, and rows. Its D1 wrapper commits the second move of the move
+  tests.
 - `feature-shell-github.test.ts` checks the user's GitHub access, paginated
   repository reads, saved org initials, and admin repository selection.
 
@@ -110,9 +159,15 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
-  values and returns their names. [`feature-sections.ts`](feature-sections.ts)
+  values and their secret marks. Replies return names and marks only.
+  [`feature-sections.ts`](feature-sections.ts)
   and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
   publish workspace metadata through the workspace object.
+- [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
+  `updateShellWorkspace`, the rename and the move of a workspace in one D1
+  batch. [`feature-sections-data.ts`](feature-sections-data.ts): the
+  section writes `insertShellSection`, `updateShellSection`, and
+  `deleteShellSection`. [List order](#list-order) gives their rules.
 - [`feature-github.ts`](feature-github.ts): account installations and
   repositories read with the fresh GitHub user token.
   [`feature-org.ts`](feature-org.ts) creates an org with its chosen

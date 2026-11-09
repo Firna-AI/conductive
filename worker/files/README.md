@@ -45,8 +45,13 @@ A reconnect of the same stream keeps its revisions and pending parts.
 
 Each new file event that passes the event checks goes to `accept(event)`.
 It checks each part against the stored parts of its report before it writes anything.
-It stores each tree or changes part as its own value, together with the assembly state.
-After the last part, it joins the entries in part order.
+It stores each tree or changes part as a part manifest and JSON chunks, together with the assembly state.
+Each chunk has at most 65,536 JavaScript string characters.
+The chat backend applies the byte limits to the raw runner event.
+Its filter can then add masked display labels, so a stored part can be larger than those limits.
+A part stored as one value, without a manifest, stays readable.
+A newer revision, a refusal, and a new stream remove each obsolete part with its chunks.
+After the last part, `accept` joins the entries in part order.
 A complete changes report must have a summary that counts its files and the sum of their added and removed lines.
 `accept` then applies the complete report to the projection and returns it for the history and the browser tabs.
 It returns `null` while parts are pending and for an identical repeated part.
@@ -97,6 +102,12 @@ In both integrations, the `send` callback sends a `RunnerFileCommand` over the o
 Pass each file or diff result to `files.runner.receive(connectionId, payload)` with the ID of its socket.
 In the combined integration, these results reach the owner through the chat backend's `receiveFileResult` hook.
 These results use request IDs and bypass the numbered chat event history.
+Real file paths and base branches stay unchanged for every operation.
+Separate masked display labels come from the shared output field policy.
+The gated handler fills those labels from the actual start capture for
+runner results, direct opens, cached reports, and provider fallback.
+The browser receives no secret list. Raw operational paths can therefore
+contain marked values; the access protocol states this exposure.
 The broker checks the response type, connection, requested path, default branch, and file byte count.
 Pending reads fail when their connection closes or when their request signal aborts.
 The owner must handle socket health and detach a connection that has failed.
@@ -154,10 +165,15 @@ Chat history remains readable through its separate access path.
 ## Development
 
 Run `npm run test -- worker/files` from the repository root with Node 24.
-The storage tests use SQLite Durable Object storage in Miniflare and evict the object before reload.
+The tests that use `createFilesStorage` in `test-support/storage.ts` run SQLite Durable Object storage in Miniflare.
+Its `evict` evicts the object, so that a test can check a reload.
+`report-storage.test.ts` runs on the in-memory chat store.
+It checks that a part stored as one value stays readable, and that each removal also removes the chunks.
 The API tests use local D1, the existing fake runner, and FakeBoat.
 The part joining and report repair tests run through the chat backend:
-`npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts`.
+`npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
+`runner-grown-reports.test.ts` checks tree and changes parts that masking makes larger than one storage value.
+It runs on the in-memory chat store with a stand-in for the storage value limit.
 No migration is required.
 
 ### Key Code
@@ -167,7 +183,7 @@ No migration is required.
 - [handlers.ts](handlers.ts) exposes the gated HTTP handler and its required options.
 - [state.ts](state.ts) applies snapshots and tree updates and keeps branch changes.
 - [runner-reports.ts](runner-reports.ts) joins runner report parts and applies each complete report in the caller's transaction.
-- [report-storage.ts](report-storage.ts) keeps the assembly state and the stored parts of each report kind.
+- [report-storage.ts](report-storage.ts) keeps the assembly state and the stored parts of each report kind, as part manifests and chunks. Its `storedReportKeys` lists each part key and chunk key that a removal needs.
 - [report-generation.ts](report-generation.ts) reads the newest stored revision and the incomplete revision of a report kind for repair checks.
 - [runner-input.ts](runner-input.ts) parses a runner file event with its revision and part fields.
 - [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically.

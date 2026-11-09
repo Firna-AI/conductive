@@ -8,6 +8,10 @@ node_modules/
 mokly-static/
 .mokly-export-reservations/
 
+# Marketing site build output and the types that Astro generates
+public/_site/
+.astro/
+
 # App build output: Vite, Wrangler, TypeScript, and test coverage
 dist/
 .wrangler/

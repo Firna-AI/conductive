@@ -18,7 +18,8 @@ archive packager and the live check.
 - Make the git credential helper the system credential helper of git.
 - Start no runner in a build sandbox. The service runs it only in a
   workspace sandbox.
-- Package the runner archive and its digest on a developer machine.
+- Package the runner archive and its digest on a developer machine or in
+  the deploy workflow.
 - Check the chat path and time the first agent start in a real sandbox.
 
 The [terminal backend](../worker/terminal/README.md) owns ttyd, tmux, their
@@ -48,11 +49,16 @@ Put no credential in the URL or in the archive. Each saved snapshot keeps
 the unpacked archive.
 
 [`package-runner.mjs`](package-runner.mjs) makes the archive on a
-developer machine, as
+developer machine or in the deploy workflow, as
 [Developer scripts](developer-scripts.md#package-the-archive) says. It
-writes the URL and the digest of the archive to `<archive>.json`.
+writes the URL and the digest of the archive to `<archive>.json`. Its
+`--base-url` option names the URL after the digest of the archive. The
+deploy workflow uses that option.
 
-To supply an archive:
+Each deploy from `main` publishes the archive of its commit when the
+archive is new. It sets both variables to that archive, as
+[Deployment inputs](../docs/deployment.md#the-archive-in-each-deploy)
+says. To supply an archive by hand:
 
 1. Publish the exact archive at its URL, on a public HTTPS host.
 2. Set the Worker variables `CONDUCTIVE_RUNNER_ARCHIVE_URL` and
@@ -193,8 +199,14 @@ The Worker serves that route on the machine hostname, as the
   says. The software step and the install script run only after that.
 - The workspace object keeps the env values and output chunks of a start
   only in encrypted form. Before it returns a start log, it masks the
-  complete joined stdout and stderr with the saved env values. This hides
-  a value across chunks and across the stdout and stderr boundary.
+  complete joined stdout and stderr with the marked env values and workspace
+  token. This hides a value across chunks and across the stdout and stderr boundary.
+- The workspace object filters runner events with the marked env values
+  from the actual start capture before it checks their meaning, stores
+  them, or sends them. This applies to older installed runners too.
+  The runner masks workspace tokens and logins. It receives no separate
+  org-value list, so its local state can keep raw org values. Real paths
+  and base refs stay available for operations. Separate labels are masked.
 - The terminal password stays in `/run/conductive-terminal/password`, with
   mode 600. The terminal backend checks that it has 64 lowercase
   hexadecimal characters.

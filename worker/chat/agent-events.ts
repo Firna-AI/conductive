@@ -11,7 +11,7 @@ import {
   strings,
 } from './inputs'
 
-export function changeKind(value: unknown): ChangeKind {
+function changeKind(value: unknown): ChangeKind {
   if (
     value === 'added' ||
     value === 'modified' ||
@@ -23,13 +23,19 @@ export function changeKind(value: unknown): ChangeKind {
   return invalidInput()
 }
 
-export function changedFile(value: unknown): ChangedFile {
+function changedFile(value: unknown): ChangedFile {
   const input = record(value)
   return {
     path: string(input.path),
+    ...(typeof input.displayPath === 'string'
+      ? { displayPath: input.displayPath }
+      : {}),
     change: changeKind(input.change),
     added: number(input.added),
     removed: number(input.removed),
+    ...(typeof input.previousDisplayPath === 'string'
+      ? { previousDisplayPath: input.previousDisplayPath }
+      : {}),
     ...(input.previousPath === undefined
       ? {}
       : { previousPath: string(input.previousPath) }),

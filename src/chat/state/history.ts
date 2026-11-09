@@ -1,6 +1,7 @@
 import { withSession } from './chat-snapshot'
-import { logOf, withTranscript, type ChatContext } from './context'
+import type { ChatContext } from './context'
 import { chatEventsOf } from './session-log'
+import { mergeSession } from './session-records'
 
 /** A page of the history that leaves the read where it was. */
 class NoProgress extends Error {}
@@ -14,7 +15,6 @@ async function readPages(
   context: ChatContext,
   sessionId: string,
 ): Promise<number | null> {
-  const log = logOf(context, sessionId)
   let after = 0
   let page = await context.api.history(sessionId)
   const through = page.throughEventNumber
@@ -23,7 +23,12 @@ async function readPages(
     const own = page.envelopes.filter(
       (envelope) => envelope.workspaceId === context.target.workspaceId,
     )
-    log.merge(chatEventsOf(sessionId, own))
+    const change = mergeSession(
+      context,
+      sessionId,
+      chatEventsOf(sessionId, own),
+    )
+    context.store.update(change.apply)
     const next = page.nextAfterEventNumber
     if (next === null) return through
     if (next <= after) throw new NoProgress()
@@ -48,18 +53,10 @@ async function loadHistory(
   try {
     const through = await readPages(context, sessionId)
     if (through === null || !context.live()) return null
-    const log = logOf(context, sessionId)
-    context.store.update((snapshot) =>
-      withTranscript(snapshot, sessionId, log.transcript, log.times),
-    )
     mark('ready')
     return through
   } catch {
     if (!context.live()) return null
-    const log = logOf(context, sessionId)
-    context.store.update((snapshot) =>
-      withTranscript(snapshot, sessionId, log.transcript, log.times),
-    )
     mark('failed')
     return null
   }

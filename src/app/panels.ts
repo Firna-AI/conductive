@@ -48,12 +48,20 @@ function readWidth(storage: KeyValueStorage | null, panel: Panel) {
 }
 
 /**
- * The widths of the sidebar and the right column. The browser keeps them,
- * as the only state that does not come from the Worker. When the browser
- * refuses its storage, the widths last until the page closes.
+ * The layout of the panels that the user chooses: the widths of the
+ * sidebar and the right column, and whether the right column shows. The
+ * browser keeps the widths, as the only state that does not come from the
+ * Worker. When the browser refuses its storage, the widths last until the
+ * page closes. Whether the right column shows always lasts until the page
+ * closes.
  */
-export class PanelWidths {
+export class PanelLayout {
   readonly widths: Store<PanelState>
+  /**
+   * The right column shows. The toggle at the end of the workspace header
+   * hides it and shows it again, for every workspace of the tab.
+   */
+  readonly rightShown = new Store(true)
   private readonly storage: KeyValueStorage | null
 
   constructor(storage: KeyValueStorage | null) {
@@ -67,6 +75,11 @@ export class PanelWidths {
   /** The width now: the user's, or the default of the panel. */
   width(panel: Panel): number {
     return this.widths.get()[panel] ?? panelRanges[panel].value
+  }
+
+  /** Hides the right column, or shows it again. */
+  toggleRight = (): void => {
+    this.rightShown.change((shown) => !shown)
   }
 
   /**

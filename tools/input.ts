@@ -34,12 +34,12 @@ export function text(value: unknown): string {
   return value
 }
 
-export function agent(value: unknown): Agent {
+function agent(value: unknown): Agent {
   if (value === 'claude' || value === 'codex') return value
   throw new ToolInputError('Choose Claude or Codex for the workspace.')
 }
 
-export function effort(value: unknown): Effort {
+function effort(value: unknown): Effort {
   switch (value) {
     case 'none':
     case 'low':

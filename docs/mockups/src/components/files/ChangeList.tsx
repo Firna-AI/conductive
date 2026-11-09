@@ -8,7 +8,7 @@ import { paths } from '../../paths'
 import { classes } from '../common/classes'
 import styles from './ChangeList.module.css'
 
-function Row(props: { file: ChangedFile; open: boolean }) {
+function Row(props: { file: ChangedFile; open: boolean; diffTo: string }) {
   const { file } = props
   const { folder, name } = splitPath(file.path)
   const content = (
@@ -26,7 +26,7 @@ function Row(props: { file: ChangedFile; open: boolean }) {
     <ScreenLink
       aria-current={props.open ? 'page' : undefined}
       className={classes(styles.row, props.open && styles.open)}
-      to={paths.diff}
+      to={props.diffTo}
     >
       {content}
     </ScreenLink>
@@ -51,11 +51,12 @@ function Summary(props: { files: readonly ChangedFile[] }) {
 /**
  * The files that the workspace branch changes, against the default branch,
  * under a summary of the whole change. A file opens its diff as a tab, and
- * the row of the open diff is marked.
+ * the row of the open diff is marked. `diffTo` is the page of that diff.
  */
 export function ChangeList(props: {
   files: readonly ChangedFile[]
   diffOpen: boolean
+  diffTo?: string
 }) {
   if (props.files.length === 0) {
     return (
@@ -73,7 +74,11 @@ export function ChangeList(props: {
         <ul aria-label="Changed files" className={styles.list}>
           {props.files.map((file) => (
             <li key={file.path}>
-              <Row file={file} open={props.diffOpen && file.diff === true} />
+              <Row
+                diffTo={props.diffTo ?? paths.diff}
+                file={file}
+                open={props.diffOpen && file.diff === true}
+              />
             </li>
           ))}
         </ul>

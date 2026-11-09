@@ -5,8 +5,8 @@ import type {
 } from 'electron'
 import { productName } from '../../docs/mockups/src/brand.js'
 
-export const BAR_HEIGHT = 34
-export const TRAFFIC_LIGHT_POSITION = { x: 14, y: (BAR_HEIGHT - 12) / 2 }
+const BAR_HEIGHT = 34
+const TRAFFIC_LIGHT_POSITION = { x: 14, y: (BAR_HEIGHT - 12) / 2 }
 
 export interface WindowDependencies {
   create(options: BrowserWindowConstructorOptions): BrowserWindow
