@@ -43,7 +43,9 @@ The migration keeps the encrypted secret and its timestamps.
 
 `202611081300_workspace_creation_name.sql` adds the nullable `workspace_creation_plans.name` column.
 The agent create tool stores its cleaned workspace name there for creation retries.
-Existing plans keep `NULL` and use their city name.
+Existing plans keep `NULL`.
+[Workspace and session names](../docs/protocol/chat-and-events.md#workspace-and-session-names)
+states how the app shows a missing name.
 The `city` column and branch keep their city value.
 
 ## Reserved ranges
