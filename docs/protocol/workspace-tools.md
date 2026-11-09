@@ -102,6 +102,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 
 - The Terminal tab opens a shell in the sandbox, in the folder of the
   workspace's repository (decision 94).
+- The default shell prompt shows only the current folder name, such as
+  `mokly`, in place of the full path.
 - The Terminal shell of a workspace keeps running when its connection
   drops. Each new connection attaches to that shell, with its running
   commands and its current screen (decision 118).

@@ -76,6 +76,9 @@ it('admits native app actions only from the trusted main initiator', () => {
   trusted.url = `${DESKTOP_ORIGIN}/api/auth/github`
   contents.emit('will-navigate', trusted)
   expect(dependencies.signIn).toHaveBeenCalledTimes(1)
+  trusted.url = `${DESKTOP_ORIGIN}/api/auth/github?invite_code=K7QHM-3XP2R`
+  contents.emit('will-navigate', trusted)
+  expect(dependencies.signIn).toHaveBeenLastCalledWith('K7QHM-3XP2R')
   popup({ url: 'https://example.com/review' })
   expect(dependencies.external).toHaveBeenCalledExactlyOnceWith(
     'https://example.com/review',

@@ -2,6 +2,7 @@
   "title": "User flows",
   "order": [
     "sign-up",
+    "join",
     "create-workspace",
     "create-workspace-dialog",
     "retry-first-start",

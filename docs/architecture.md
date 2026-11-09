@@ -21,6 +21,16 @@ requirements of each feature.
   an operator lifts it. It stops the sandboxes of the workspaces that the
   user owns, or of every workspace of the org, and blocks new starts. A
   user suspension also ends the sign-in sessions of the user.
+- **App access:** the right of a user to use the app: to create or join an
+  org, and to start cloud computers. A new account starts without it.
+- **Waitlist:** the users without app access. Each of them sees only the
+  waitlist screen until an approval, a code, or an org invitation gives
+  app access.
+- **Invite code:** a code that an operator makes, with a use limit. Each
+  use gives app access to one person who waits.
+- **Referral code:** the personal code of each user with app access. It
+  gives app access to up to 5 people who wait. The screens of users call
+  it an invite code.
 - **Workspace:** one task in an org. It has one repository, one branch,
   one sandbox, and one or more sessions.
 - **Workspace owner:** the person who is responsible for a workspace. It is
@@ -65,8 +75,9 @@ requirements of each feature.
 - The same build also makes the page that asks for the
   [agreement to the Terms](protocol/access-and-security.md#sign-in) before
   the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
-- The main action is "Start free with GitHub". The site does not name
-  Boat, and users need no Boat account (decision 80).
+- The main action is "Join the waitlist", because a new account waits for
+  app access. The site does not name Boat, and users need no Boat account
+  (decision 80).
 - The home page has a Mac app section. It links the DMG for Apple silicon
   first, then the DMG for Intel, from the latest release of the public
   source repository on GitHub. It names the oldest macOS version that the
@@ -84,7 +95,8 @@ requirements of each feature.
   [mockups](mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
-  suspends or lifts it.
+  suspends or lifts it. It also approves people who wait, makes and
+  disables codes, and pauses sign-ups.
   [Operator section](protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
@@ -115,7 +127,9 @@ requirements of each feature.
 ### D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, and the active preview hostnames.
+  repositories, workspaces, settings, and the active preview hostnames. It
+  also holds the app access of each user, the codes and their uses, the
+  pause, and the state of each approval email.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -196,6 +210,7 @@ GitHub events, and stops.
 | Data                                                                         | Home                                     |
 | ---------------------------------------------------------------------------- | ---------------------------------------- |
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
+| App access, the codes and their uses, the pause, and approval email states   | D1                                       |
 | The org of each sandbox and each saved snapshot                              | D1                                       |
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
@@ -258,6 +273,9 @@ the merge.
   events.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a
   sandbox.
+- [Agent instructions](protocol/agent-instructions.md): the text that each
+  agent session gets, the sender line of each message, and the base
+  prompt of Claude agents.
 - [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
@@ -266,6 +284,10 @@ the merge.
   reports.
 - [Operator section](protocol/operator-section.md): the pages of the
   operator in the web app, their counts, and their searches.
+- [Waitlist](protocol/waitlist.md): app access, the waitlist screen, the
+  ways in, the pause, and the approval email.
+- [Invite and referral codes](protocol/waitlist-codes.md): the codes of
+  the waitlist, the join link, and the use of a code.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](protocol/command-palette-states.md):

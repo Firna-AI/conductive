@@ -7,8 +7,14 @@ The home page follows the calm structure of a Conductor-style home page: a
 header, a hero with a short headline, one sentence, and a large picture of
 the app, then one section for each feature, the Mac app with its downloads,
 the smaller features, a last call to action, and a footer. Both actions,
-"Start free with GitHub" and "Sign in", lead to `app/sign-in`. The parts
-live in `src/components/marketing/`.
+"Join the waitlist" and "Sign in", lead to `app/sign-in`. A new person
+waits for app access, so the main action promises a place on the waitlist,
+not use at once. The title
+of the last call to action, "Give your next task its own cloud computer.",
+promises no use at once either.
+`startLabel` in `src/components/marketing/SiteActions.tsx` holds its words
+for the header, the hero, the last call to action, and the footer. The
+parts live in `src/components/marketing/`.
 
 The header links to the public source repository on GitHub in both layouts.
 On desktop, it also has Features and Download, which lead to the features

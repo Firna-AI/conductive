@@ -1,7 +1,7 @@
 import type { AccountResponse } from '../../shared/account'
 import type { User } from '../../shared/api'
 import { BASE_IMAGE } from '../../shared/base-image'
-import type { MembersResponse } from '../../shared/members'
+import type { MembersResponse, PendingOrgInvite } from '../../shared/members'
 import type { Attachment } from '../../shared/messages'
 import type {
   GetStartedResponse,
@@ -44,6 +44,20 @@ export interface OrgState {
   members: MembersResponse
 }
 
+/**
+ * The waitlist of the person signed in: their app access, the address of
+ * their approval email, and the org invitations that wait for them. The
+ * pause and the codes, with the referral code of the person, are those of
+ * the operator section, in `DevState.operator`.
+ */
+export interface DevWaitlist {
+  appAccess: boolean
+  /** The primary verified email of the user, or `null`. */
+  approvalEmail: string | null
+  /** Each invitation, with the state of the org that an Accept joins. */
+  invitations: { invite: PendingOrgInvite; org: OrgState }[]
+}
+
 /** Everything that the writes of the dev fake change. */
 export interface DevState {
   account: AccountResponse
@@ -58,11 +72,15 @@ export interface DevState {
   stopAfterMs: number | null
   /**
    * The suspensions and deletions of the sample orgs and users of the
-   * operator section, which Suspend and Lift change.
+   * operator section, which Suspend and Lift change, and the records of
+   * the waitlist: the approvals, the codes, and the pause. The operator
+   * section and the waitlist of the person signed in share them, as they
+   * share the database of the Worker.
    */
   operator: OperatorRecords
   /** Each change of a share setting fails, from `shareSave=fail`. */
   shareSaveFails: boolean
+  waitlist: DevWaitlist
 }
 
 /**

@@ -6,7 +6,7 @@
 }
 
 /*
- * The label has the type of the repository and the branch beside it, and
+ * The label has the type of the repository beside it, and
  * it never breaks at its hyphen.
  */
 .label {

@@ -48,6 +48,7 @@ it('closes Codex startup and in-flight requests when their session signal is can
       login: turn().login,
       choice: turn().message.choice,
       conversationId: null,
+      instructions: '',
       tools: fakeToolContext,
       event: () => {},
       warn: () => {},

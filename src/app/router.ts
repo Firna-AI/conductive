@@ -1,4 +1,5 @@
 import type { Agent } from '../shared/agents'
+import { INVITE_CODE_ERROR_PARAMETER } from '../shared/waitlist'
 
 export const SETTINGS_TABS = [
   'general',
@@ -14,14 +15,21 @@ export const ACCOUNT_TABS = ['general', 'preferences'] as const
 export type AccountTab = (typeof ACCOUNT_TABS)[number]
 
 /**
+ * The tabs of the operator section that list and search: the orgs, the
+ * users, the people who wait, and the codes.
+ */
+const OPERATOR_LISTS = ['orgs', 'users', 'waitlist', 'codes'] as const
+
+type OperatorList = (typeof OPERATOR_LISTS)[number]
+
+/**
  * A page of the operator section: a tab, or the page of one org or one
- * user. A tab of a list keeps its search, which is empty for the newest
- * first.
+ * user. A tab of a list keeps its search, which is empty for the whole
+ * list.
  */
 export type OperatorView =
   | { page: 'overview' }
-  | { page: 'orgs'; search: string }
-  | { page: 'users'; search: string }
+  | { page: OperatorList; search: string }
   | { page: 'org'; id: string }
   | { page: 'user'; githubId: number }
 
@@ -44,12 +52,17 @@ export type Route =
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
   /** The operator section. The shell shows it only to an operator. */
   | { screen: 'operator'; view: OperatorView }
+  /**
+   * The join link of an invite code. `error` is the error code of the API
+   * when the code of the link did not work at the sign-in.
+   */
+  | { screen: 'join'; code: string; error: string | null }
   | { screen: 'not-found' }
 
 const encode = encodeURIComponent
 
 /** The address of a list of the operator, with its search in `q`. */
-function operatorList(list: 'orgs' | 'users', search: string): string {
+function operatorList(list: OperatorList, search: string): string {
   const query = new URLSearchParams()
   if (search !== '') query.set('q', search)
   return query.size ? `/operator/${list}?${query}` : `/operator/${list}`
@@ -81,6 +94,8 @@ export const routes = {
   operator: () => '/operator',
   operatorOrgs: (search = '') => operatorList('orgs', search),
   operatorUsers: (search = '') => operatorList('users', search),
+  operatorWaitlist: (search = '') => operatorList('waitlist', search),
+  operatorCodes: (search = '') => operatorList('codes', search),
   operatorOrg: (orgId: string) => `/operator/orgs/${encode(orgId)}`,
   operatorUser: (githubId: number) => `/operator/users/${githubId}`,
 } as const
@@ -113,15 +128,14 @@ function operatorView(
   parts: readonly string[],
   query: URLSearchParams,
 ): OperatorView | null {
-  const [list, id, ...rest] = parts
+  const [first, id, ...rest] = parts
   const search = query.get('q')?.trim() ?? ''
-  if (list === undefined) return { page: 'overview' }
-  if (rest.length > 0) return null
-  if (list === 'orgs') {
-    return id === undefined ? { page: 'orgs', search } : { page: 'org', id }
-  }
+  if (first === undefined) return { page: 'overview' }
+  const list = OPERATOR_LISTS.find((item) => item === first)
+  if (list === undefined || rest.length > 0) return null
+  if (id === undefined) return { page: list, search }
+  if (list === 'orgs') return { page: 'org', id }
   if (list !== 'users') return null
-  if (id === undefined) return { page: 'users', search }
   const githubId = githubIdOf(id)
   return githubId === null ? null : { page: 'user', githubId }
 }
@@ -152,6 +166,15 @@ export function parseRoute(pathname: string, search: string): Route {
   if (first === 'operator') {
     const view = operatorView(decoded.slice(1), query)
     return view ? { screen: 'operator', view } : { screen: 'not-found' }
+  }
+  if (first === 'join') {
+    return orgId === undefined || area !== undefined
+      ? { screen: 'not-found' }
+      : {
+          screen: 'join',
+          code: orgId,
+          error: query.get(INVITE_CODE_ERROR_PARAMETER),
+        }
   }
   if (first === 'get-started' && orgId === undefined) {
     return { screen: 'get-started' }

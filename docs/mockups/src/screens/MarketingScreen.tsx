@@ -70,7 +70,7 @@ export function MarketingScreen(props: { viewport: Viewport }) {
         <ClosingCall
           signIn={paths.signIn}
           text="Sign up with GitHub, connect your repositories, and send the first task."
-          title="Try it on your next task."
+          title="Give your next task its own cloud computer."
           viewport={viewport}
         />
       </div>

@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { HeldRequests, requestLines } from '../../app/test-kit'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import type { AgentChoice } from '../../shared/agents'
-import { API_PATHS, orgPath } from '../../shared/api'
+import { orgPath } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { sessionsPath } from '../../shared/sessions'
 import { workspacePath, workspacePaths } from '../../shared/workspaces'
@@ -191,7 +191,7 @@ describe('a workspace that the tab showed', () => {
     expect(draftOf(view)).toBe('')
     expect(socket.opens.slice(signedOut)).toContain(0)
     typeText(messageField(view), 'A draft before another person')
-    server.json('GET', API_PATHS.session, { user: fakeUsers[1] })
+    server.signIn(fakeUsers[1])
     await act(() => app.start())
     await settle()
     expect(draftOf(view)).toBe('')
@@ -254,7 +254,7 @@ describe('a workspace that the tab showed', () => {
     const [cal, priya] = fakeUsers
     // The card of a waiting Mac command names the org of its workspace.
     const { workspaceName } = fakeMacRequest()
-    server.json('GET', API_PATHS.session, { user: priya })
+    server.signIn(priya)
     server.json('GET', ACCOUNT_PATHS.account, { ...account, user: priya })
     const app = await startedApp(server, {
       events: recordingSocket(server).source,

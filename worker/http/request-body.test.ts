@@ -205,10 +205,12 @@ it('keeps the existing webhook capacity and rejects its first extra byte at the 
 })
 
 it('gives no body to a WebSocket upgrade', async () => {
+  const session = await harness.login()
   const stream = streamedBody([new Uint8Array(1_000_001)])
   const response = await appRequest(
     streamedRequest(assetUrl, stream.body, {
       Origin: TEST_ORIGIN,
+      Cookie: session,
       Upgrade: 'websocket',
     }),
     async (request) => Response.json({ body: request.body === null }),
