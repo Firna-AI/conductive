@@ -634,9 +634,10 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   its workspace, and the owner retries inside it. A failed start keeps
   the workspace in its error state with Try again, as option D of
   decision 130 says for every workspace. A run whose owner has no agent
-  login still creates its workspace, and its first turn fails with that
-  cause and Try again. Decisions 212 and 213 ask when this comes and how
-  repeated failures stop.
+  login keeps its workspace with its first message, its cause, and Try
+  again. The create refuses such a first message before any cloud
+  computer starts, so that run spends no start. Decisions 212 and 213 ask
+  when this comes and how repeated failures stop.
 
 ### 210. Choose how the owner tests a pull request routine
 
@@ -734,8 +735,11 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
 - **Problem:** Runs cannot keep their workspaces before that Large change
   lands, and Conductor Cloud shuts down on 20 November 2026.
 - **Impact if no action:** The plan cannot order its run milestones.
-- **Root question:** When do failed runs get their workspace and its
-  retry?
+- **Root question:** When, compared with the launch of routines, does
+  every failed run keep its workspace with a retry in it, whatever made it
+  fail? The options check of 9 November 2026 wrote this question. Decision
+  209 F also covers a run whose first message the create refuses, which
+  option D of decision 130 does not change.
 - **Options:**
   - **A.** In this plan. A new milestone builds option D of decision 130
     for every workspace before the run milestones, and deletes the
@@ -747,15 +751,36 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
   - **C.** In this plan, for run workspaces only. A failed first start of
     a run keeps its workspace with Try again, and every other workspace
     keeps today's removal. The app then has two rules for a failed first
-    start. Effort: Medium.
-- **Left out:** None.
-- **Wider fix:** A. One rule then covers every workspace.
+    start. Effort: Medium, and the options check found it closer to Large.
+  - **D.** Added by the options check: as B, and the follow-up of decision
+    130 D also covers a create that fails its checks before the start: the
+    agent login check of today, and a new check of the sender's GitHub
+    access. Such a run keeps its workspace with its first message, its
+    cause, and Try again, and spends no start. When the follow-up lands,
+    the run starter drops its own checks. Effort: Small now, and the
+    follow-up grows by a Medium part.
+  - **E.** Added by the options check: as D, and until the follow-up lands,
+    the owner gets Try again on a failed run in the Runs list. It starts
+    the same run again in a new workspace. Effort: Medium.
+  - **F.** Added by the options check: as D, and the follow-up starts now in
+    its own workspace, beside the run milestones, as Milestone 8n ran
+    beside Milestone 8i. Routines do not wait for it. Effort: Large, with
+    no delay of the launch.
+- **Left out:**
+  - Failed rows forever, with no workspace. It breaks the user's choice of
+    decision 209 F.
+  - Archive the workspace of a failed run, and retry in a new one. The
+    archived chat is read-only, so the retry is not in that workspace.
+- **Wider fix:** F, from the options check. One rule then covers every
+  workspace, also a create that its checks refuse, and the launch does not
+  wait.
 - **Previous examples:** Decision 130 chose A now and D later. Decision
   210 chose C now and B later.
 - **Related:** Decision 213 matters once failed runs keep workspaces.
-- **Recommendation:** B. Routines ship sooner, and the follow-up of
-  decision 130 D then gives every workspace the same retry. A best
-  protects the codebase, at the cost of a Large milestone first.
+- **Recommendation:** D, from the options check of 9 November 2026. The
+  first recommendation was B. D ships routines as soon as B does, and the
+  follow-up then delivers all of decision 209 F, also for a run without an
+  agent login. F best protects the codebase.
 - **Action:** ask the user, because the options trade the launch of
   routines against the behaviour that the user chose.
 
@@ -763,7 +788,7 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
 
 Added on 9 November 2026 from the user's choice of decision 209 F.
 
-- **Severity:** Medium. **Effort:** Small.
+- **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
 - **Location:** None.
@@ -776,8 +801,11 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
 - **Impact if no action:** An hourly routine with a lost login adds 24
   workspaces and 24 starts a day, from the shared starts of all orgs,
   until the owner notices.
-- **Root question:** How does a routine stop spending starts on runs that
-  fail for a cause that only the owner can fix?
+- **Root question:** How do runs that keep failing for one cause stop
+  costing starts and workspaces until a person fixes the cause? The
+  options check of 9 November 2026 wrote this question. The first question
+  named only the owner, but only an admin can fix a failing startup
+  script.
 - **Options:**
   - **A.** Change nothing. Effort: Small.
   - **B.** The routine turns off after three runs in a row fail. The
@@ -790,14 +818,32 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
     expired GitHub access. Such a run creates no workspace and fails with
     a link that fixes the cause. Only a failed start keeps its workspace.
     It narrows decision 209 F. Effort: Small.
-- **Left out:** None.
-- **Wider fix:** B. It covers each cause that repeats.
-- **Previous examples:** Claude's cloud routines turn off after 72 hours
-  without a GitHub connection.
-- **Related:** Decision 212. Under 212 B, runs keep no workspace until the
-  follow-up of decision 130 D lands, so this rule matters from then on.
-- **Recommendation:** B. It stops the waste after three runs, whatever the
-  cause, and the owner sees why.
+  - **E.** Added by the options check: as B, but a failure that clears by
+    itself does not count, such as a rate limit or a cloud computer that
+    the provider still prepared. A failed first turn counts, through the
+    design call that tells each run how its first turn ended. It needs a
+    mockup of a routine that turned off. Effort: Medium.
+- **Left out:**
+  - A wait that grows after each failed run, up to one day. A forgotten
+    routine still adds a workspace each day.
+  - A daily cap of routine starts, option E of decision 203. It breaks the
+    user's choice of decision 203 B.
+  - A notice to the owner alone. The cost goes on while the owner is away,
+    and a notice can join any option later.
+- **Wider fix:** E, from the options check. It counts each cause that
+  repeats, also one that no check finds, and it does not turn a routine
+  off for a provider outage.
+- **Previous examples:** Claude's cloud routines skip runs while GitHub
+  access is missing, start again by themselves after a reconnect, and turn
+  off after 72 hours.
+- **Related:** Decision 212. Its option D keeps the checks before the
+  start, so a failed check costs no start, and this rule then counts the
+  other causes. The design call "A failed run shows its cause, and the
+  routine stays on" changes when B or E is chosen.
+- **Recommendation:** E, from the options check of 9 November 2026. The
+  first recommendation was B. E stops a cause that repeats, also a login
+  that the provider refuses, and it does not stop a routine for a passing
+  failure.
 - **Action:** ask the user, because B and C add a rule that stops runs,
   and D narrows the user's choice of decision 209 F.
 
@@ -918,6 +964,12 @@ number names the user's choice. The user can override any part of it.
     unread, ready, stopped, error, or archived.
   - The creation attempt: a failed start that removed its workspace gives
     `failed` with the stored code and message.
+  - The first turn: the workspace tells the run how its first turn ended.
+    A failed first turn shows the run as `failed` with its cause, not as
+    unread or ready. Reason: a failed turn counts as output for the
+    workspace state today, so the run would hide the failure. The options
+    check of decisions 212 and 213 found this.
+
 - Run now posts a run with a request ID from the page. The route waits for
   the run starter and returns the run.
 - The workspace view gets `routine`: the ID and the name of the routine of
@@ -1105,7 +1157,9 @@ answered the decisions of that report and changed none of the calls.
   "Daily at 9:00" must mean the owner's 9:00.
 - A late schedule starts one run, not one for each missed time.
 - The first message of a run is the prompt and the trigger facts.
-- A failed run shows its cause, and the routine stays on.
+- A failed run shows its cause, and the routine stays on. Decision 213 can
+  change the second part.
+
 - A suspended owner or org gets no runs. When the owner leaves the org,
   the routine turns off. Decision 208 E later moved it to an admin too.
 - A Routines link goes in the sidebar, as in Conductor. The mockups come
