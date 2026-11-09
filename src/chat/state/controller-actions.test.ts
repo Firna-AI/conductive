@@ -186,6 +186,7 @@ describe('ChatController actions', () => {
     answer(fable, after + 1)
     chat.held.splice(1, 1)[0]()
     await second
+    expect(chat.controller.getSnapshot().sessions[0].choice).toEqual(fable)
     answer(sonnet, after)
     chat.held.splice(0, 1)[0]()
     await first

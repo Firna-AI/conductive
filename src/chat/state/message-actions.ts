@@ -11,7 +11,7 @@ import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
 import { waitsForFirstStart } from './first-start'
 import { showTarget, takeReply } from './linked-replies'
-import { confirmWorkspace } from './session-records'
+import { confirmWorkspace } from './workspace-records'
 
 function change(
   context: ChatContext,
