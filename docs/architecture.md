@@ -264,6 +264,9 @@ the merge.
   events.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a
   sandbox.
+- [Agent instructions](protocol/agent-instructions.md): the text that each
+  agent session gets, the sender line of each message, and the base
+  prompt of Claude agents.
 - [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
