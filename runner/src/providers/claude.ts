@@ -11,6 +11,7 @@ import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
+import { providerMessage } from './message'
 import type { ProviderFactory } from './types'
 
 export interface ClaudeQuery extends AsyncIterable<unknown> {
@@ -55,6 +56,7 @@ export function createClaudeFactory(
         prompt: input,
         options: {
           cwd: options.cwd,
+          systemPrompt: options.instructions,
           env: providerEnvironment(options.home, options.tools),
           pathToClaudeCodeExecutable: binary(),
           model: options.choice.model,
@@ -135,7 +137,10 @@ export function createClaudeFactory(
           uuid,
           session_id: options.conversationId ?? '',
           parent_tool_use_id: null,
-          message: { role: 'user', content: command.message.text + attached },
+          message: {
+            role: 'user',
+            content: providerMessage(command.message) + attached,
+          },
           priority: 'next',
         })
       },

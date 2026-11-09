@@ -343,15 +343,15 @@ Depends on: 1
 
 Give the runner the branch that the app tracks.
 
-- [ ] Add `CONDUCTIVE_WORKSPACE_BRANCH` to the environment that
+- [x] Add `CONDUCTIVE_WORKSPACE_BRANCH` to the environment that
       `worker/lifecycle/start-machine.ts` sets at each start. Check
       `worker/lifecycle/disk-retention.ts`, which also sets
       `CONDUCTIVE_DEFAULT_BRANCH`, and add the branch there too.
-- [ ] Read the optional variable in `runner/src/config.ts`. Warn and
+- [x] Read the optional variable in `runner/src/config.ts`. Warn and
       continue when it is missing, without guessing the workspace branch.
 - [x] Add the variable to the lists in `image/README.md`,
       `runner/configuration.md`, and `docs/deployment.md`.
-- [ ] Add the new value to the existing tests of the start environment and
+- [x] Add the new value to the existing tests of the start environment and
       of the runner configuration.
 
 ## Milestone 3: Instructions, sender line, and Codex
@@ -361,32 +361,35 @@ Depends on: 1, 2
 Build the instructions and the sender line, and send the instructions to
 Codex.
 
-- [ ] Add a runner module that builds the instructions from the runner
+- [x] Add a runner module that builds the instructions from the runner
       configuration and the repository folder variables.
-- [ ] Add a required `instructions` field to `ProviderOptions`. Fill it
+- [x] Add a required `instructions` field to `ProviderOptions`. Fill it
       where the engine starts a provider.
-- [ ] Save each session's chosen instruction text before starting its
+- [x] Save each session's chosen instruction text before starting its
       provider. Reuse it after a runner restart, even if the current
       workspace configuration or base text has changed. Read older saved
       sessions without this field and choose their text once.
-- [ ] Send the instructions as `developerInstructions` on the Codex
+- [x] Send the instructions as `developerInstructions` on the Codex
       `thread/start` and `thread/resume` requests.
 - [x] Check once with the real Codex App Server that a thread that resumes
       with the same `developerInstructions` keeps one copy of the text. Save
       the output under `.context/agent-instructions/`.
       Evidence: `.context/agent-instructions/codex-probe/verification.json`.
-- [ ] Start the text of each message to Claude and to Codex with the sender
+- [x] Start the text of each message to Claude and to Codex with the sender
       line, from `message.sender`. Keep the attachments as they are.
-- [ ] Tests, at the provider entry points:
-  - [ ] The instructions name the workspace branch, the target branch, and
+- [x] Tests, at the provider entry points:
+  - [x] The instructions name the workspace branch, the target branch, and
         the repository folder of the configuration.
-  - [ ] A Codex thread start and a thread resume carry the instructions.
-  - [ ] Each message to Claude and to Codex starts with the sender line of
+  - [x] A Codex thread start and a thread resume carry the instructions.
+  - [x] Each message to Claude and to Codex starts with the sender line of
         its sender.
-  - [ ] A runner restart with changed configuration preserves the saved
+  - [x] A runner restart with changed configuration preserves the saved
         session's instructions, while a new session uses the current text.
-- [ ] Update the runner README: the new module under its key code, and a
+- [x] Update the runner README: the new module under its key code, and a
       link to the protocol doc.
+
+Evidence: `.context/agent-instructions/runner-implementation-report.md` and
+`.context/agent-instructions/runner-documentation-report.md`.
 
 ## Milestone 4: Claude instructions
 
@@ -400,18 +403,21 @@ decision 2 C.
       `runner/src/providers/claude.ts`. Keep its options when it has merged.
       Main was merged at `b4dd1cf` without conflicts. The preservation
       evidence is `.context/agent-instructions/pre-implementation-merge-review.txt`.
-- [ ] Write the seven base rules in Conductive's own wording. Keep the
+- [x] Write the seven base rules in Conductive's own wording. Keep the
       text short and fixed. Follow it with the workspace instructions.
-- [ ] Pass the combined text as the custom `systemPrompt` string in
+- [x] Pass the combined text as the custom `systemPrompt` string in
       `runner/src/providers/claude.ts` on each start and resume.
-- [ ] Run two turns of one real Claude session. Check the cache reads in
+- [x] Run two turns of one real Claude session. Check the cache reads in
       the second result's usage. Save the output under
       `.context/agent-instructions/` and report any failure or limit. A
       fixed custom prompt does not by itself prove a cache hit.
-- [ ] Check that the final base prompt meets the seven rules in
+- [x] Check that the final base prompt meets the seven rules in
       `docs/protocol/agent-instructions.md`.
-- [ ] Test that a Claude session start and resume pass the same base rules
+- [x] Test that a Claude session start and resume pass the same base rules
       and workspace instructions as the custom system prompt.
+
+Evidence: `.context/agent-instructions/claude-probe/final-generated-opus-pipe/report.json`
+and `.context/agent-instructions/final-prompt-hash.json`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
@@ -419,7 +425,11 @@ Depends on: every other milestone
 
 Prove the combined change, review it, and open the pull request.
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Integrate the later GitHub CLI authentication fix from main before
+      the final gate. Merge `e8e16e7` preserves main `7e23773` and the
+      instruction work without conflicts. Evidence:
+      `.context/agent-instructions/final-main-merge-review.txt`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -431,6 +441,9 @@ Prove the combined change, review it, and open the pull request.
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Evidence: `.context/agent-instructions/complete-gate.log`. The combined
+tree includes main `7e23773`.
 
 ## Post-merge follow-up (non-blocking)
 

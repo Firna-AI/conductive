@@ -33,6 +33,7 @@ export interface SavedSession {
   sessionId: string
   agent: Agent
   providerSessionId: string | null
+  instructions?: string
 }
 
 export interface RunnerState {
@@ -96,6 +97,9 @@ function parseState(value: unknown): RunnerState {
       return {
         sessionId: string(session.sessionId),
         agent: oneOf(session.agent, ['claude', 'codex']),
+        ...(session.instructions === undefined
+          ? {}
+          : { instructions: string(session.instructions) }),
         providerSessionId:
           session.providerSessionId === null
             ? null
