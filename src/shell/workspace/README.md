@@ -212,7 +212,7 @@ fake API, with its address options, its controls, and the test command.
   no tab path. "Link copied" shows for 2 seconds through
   `AppServices.delay`. A failed copy asks to try again until the next
   press, as the file page does. On desktop the button follows the name,
-  and the repository and the branch share the `.metas` group. On a phone
+  and the repository fills the `.metas` group. On a phone
   it leads the line under the name. `CopyLink.test.tsx` mounts the whole
   app and presses the button for a copy and for a failed copy.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the

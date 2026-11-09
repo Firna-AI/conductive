@@ -74,6 +74,7 @@ async function measure(): Promise<void> {
       login,
       choice,
       conversationId: null,
+      instructions: '',
       tools: {
         machineOrigin: process.env.CONDUCTIVE_MACHINE_ORIGIN ?? '',
         workspaceToken: process.env.CONDUCTIVE_WORKSPACE_TOKEN ?? '',

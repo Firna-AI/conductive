@@ -269,6 +269,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Access and security](docs/protocol/access-and-security.md)
   - [GitHub banner](docs/protocol/github-banner.md)
   - [Agent tools](docs/protocol/agent-tools.md)
+  - [Agent instructions](docs/protocol/agent-instructions.md)
   - [Orgs and members](docs/protocol/orgs-and-members.md)
   - [Mac app](docs/protocol/desktop-app.md)
   - [Operator actions](docs/protocol/operator-actions.md)
