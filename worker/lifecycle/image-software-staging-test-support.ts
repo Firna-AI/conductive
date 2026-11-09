@@ -10,6 +10,7 @@ const credentialRoots = ['/opt/conductive', '/run/ascii-secrets']
 const softwareRoots = [
   ...credentialRoots,
   '/usr/local/bin',
+  '/usr/bin',
   '/etc/systemd/system',
   '/run/conductive',
 ]

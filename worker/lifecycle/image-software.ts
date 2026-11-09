@@ -1,5 +1,6 @@
 import credentialScript from '../../image/git-credential-helper.mjs?raw'
 import credentialStart from '../../image/git-credential-helper.sh?raw'
+import githubCli from '../../image/github-cli.sh?raw'
 import runtimeInstall from '../../image/install-runtime.sh?raw'
 import installScript from '../../image/install.sh?raw'
 import runnerService from '../../image/conductive-runner.service?raw'
@@ -65,6 +66,7 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
     ),
     'git-credential-helper.sh': credentialStart,
     'git-credential-helper.mjs': credentialScript,
+    'github-cli.sh': githubCli,
     'conductive-runner.service': runnerService,
   }
   return [
