@@ -816,7 +816,7 @@ Depends on: 1, 2, 3, 4, 5
         tab in view, and a drag near an end.
   - [x] Save the screenshots under `.context/move-tabs-by-drag/`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -830,15 +830,17 @@ Depends on: 1, 2, 3, 4, 5
       `plans/follow-ups/read-only-session-click-over-file.md`, and
       `plans/follow-ups/sideways-tab-rows-ignore-vertical-wheel.md`.
 
+Review: two rounds. Round 1 found five findings, and round 2 found one.
+All six are fixed. The wider fixes of findings 5 and 6 add a gate, so they
+wait for the user, and the wider fix of finding 3 waits for after the
+merge. The findings file is `.context/reviews/calummoore/tab-drag-and-drop/findings.md`.
+
 Evidence: the gate logs `.context/move-tabs-by-drag/gate-*.log`, the merge
 audit `.context/move-tabs-by-drag/audit-merge.log`, and the smoke results in
 `.context/move-tabs-by-drag/m6/smoke/`.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] On `conductive.build`, drag a file tab before a session tab, then
-      reload. Open the same workspace on a phone. The order stays, and the
-      phone shows the sessions in the new order.
-- [ ] On a Mac, in Chrome, Safari, and the Mac app, check that Shift and
-      F10, with Fn on a laptop keyboard, opens the tab menu, also with
-      VoiceOver on.
+- The deletion of this plan turned both tasks into follow-up items:
+  `plans/follow-ups/tab-order-on-the-deployment.md` and
+  `plans/follow-ups/tab-menu-keys-on-a-mac.md`.
