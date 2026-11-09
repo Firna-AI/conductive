@@ -153,6 +153,12 @@ says.
   (decision 42).
 - Archive by every member was rejected, because a member could then delete
   the sandbox and the unpushed work of another member.
+- Every member can continue each workspace of the org after its merge
+  (decision 224). [Who may continue](continue.md#who-may-continue) gives
+  the reason.
+- The role does not decide Merge or the agent actions of the pull request
+  bar. The GitHub access of each member decides them, as
+  [GitHub banner](github-banner.md#merge) says.
 
 ## Workspace owners
 

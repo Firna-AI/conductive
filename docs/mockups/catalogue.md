@@ -19,7 +19,7 @@ how a screen is built, and links to the other pages.
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
-| `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
+| `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lost data, lost updates, and unread files |
@@ -34,7 +34,7 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace, merge and continue |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
@@ -269,15 +269,47 @@ In `search/unavailable` and `workspaces/unavailable`, the list behind the
 palette on desktop shows the same failure, because it reads the same
 workspace list.
 
-`app/banner` shows a branch with commits and no pull request. Its child
-pages show the other states of decision 18: `app/banner/checks` has the
-running, failed, and passed checks and the merge, which moved from
-`app/banner/checks-running`, `checks-failed`, `ready-to-merge`, and `merged`
-and declare `movedFrom`. `app/banner/blocked` has a merge conflict, requested
-changes, a draft, and a pull request closed without a merge. A conflict and
-requested changes tint the bar amber. `app/banner/no-commits` has a branch
-without commits, whose bar offers no Create pull request, as in
-`app/new-workspace/creating` and `first-turn`.
+`app/banner` shows a branch with commits and no pull request. Its bar
+offers Create pull request, which asks the agent to open the pull request,
+and Create on GitHub. Each state shows one main action, from decisions 220
+to 228, and keeps its links to GitHub. The agent gets a fixed prompt for
+each step that changes code, and the app merges, continues, and archives.
+On a phone the row opens the Checks tab, whose top holds the actions and
+the link to GitHub. The `localWork`, `access`, `appAction`, and `branch`
+states of the workspace screen draw them. The child pages:
+
+- `app/banner/checks` has the running, failed, and passed checks and the
+  merge, which moved from `app/banner/checks-running`, `checks-failed`,
+  `ready-to-merge`, and `merged` and declare `movedFrom`. Checks failed
+  offers Fix checks, and Ready to merge offers Squash and merge. After the
+  merge, every member sees Continue, and the owner and the admins also see
+  Archive.
+- `app/banner/blocked` has a merge conflict with Resolve conflicts,
+  requested changes with Address review, a draft, a pull request closed
+  without a merge, and Blocked. A conflict, requested changes, and Blocked
+  tint the bar amber.
+- `app/banner/no-commits` has a branch without commits, whose bar offers no
+  Create pull request, as in `app/new-workspace/creating` and `first-turn`.
+  Its `local-work` variant has changed files that are not committed, so
+  the bar offers Create pull request, without a link to GitHub.
+- `app/banner/merge` has the merge that runs, a refusal for new commits, a
+  refusal for a missing right, another refusal with Open on GitHub, and
+  Ready to merge for a member with read access, without Merge.
+- `app/banner/local-work` has Commit and push in the place of Merge, Fix
+  checks, Resolve conflicts, and Address review, and in a state without an
+  action of its own.
+- `app/banner/sent` has the message of each agent action in the chat, as a
+  message of the member who clicked, while the agent works on it.
+- `app/banner/continue` has the question of Continue with local work, the
+  branch change that runs, a Continue that stopped, Continue while a turn
+  runs, and Continue for a member who may not archive.
+- `app/banner/continued` has the bar after Continue on the new branch, with
+  the note of Continue in the session. Its variants have the changed files
+  that moved to the new branch, and the note of a Continue by another
+  member.
+
+The flow `user-flows/merge-and-continue` goes from Ready to merge through
+the merge and Continue to the next task.
 
 `app/chat` shows a finished turn, whose work folds into one line. Its child
 pages: `app/chat/turns` has the running turn, steer, interrupt, and a

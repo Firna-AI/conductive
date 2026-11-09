@@ -3,8 +3,9 @@
 This doc holds the requirements and the decisions in force for workspaces
 and their sandboxes. It also covers the number and the link of each
 workspace. [Org image](org-image.md) covers the org image that every
-sandbox starts from, and [Workspace tools](workspace-tools.md) covers the
-tools of a workspace. The terms are those of the
+sandbox starts from, [Workspace tools](workspace-tools.md) covers the
+tools of a workspace, and [Continue](continue.md) covers the next task of
+a workspace after a merge. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -196,18 +197,29 @@ says.
 
 - Archive deletes the sandbox of a workspace, and keeps its chat read-only
   in the Archived group (decision 16).
-- Before it archives, the app checks the sandbox for changed files that
-  are not committed and for commits that are not pushed.
+- Before it archives, the app checks the sandbox for local work: changed
+  files that are not committed, also untracked files, and commits that no
+  remote branch holds, on every local branch.
 - When the check finds such work, the question lists it. The user can then
   archive anyway or cancel.
 - Reason: an archive without the check can delete work that was never
-  pushed.
+  pushed. After [Continue](continue.md), an earlier branch can still hold
+  such commits.
 - The pull request bar offers Archive after the merge, as
-  [GitHub banner](github-banner.md#banner-states) says.
+  [After the merge](github-banner.md#after-the-merge) says.
 - An archived workspace has no file lists and no tools. A phone shows only
   its chat.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may
   archive a workspace.
+
+## Continue
+
+- After the merge of its pull request, Continue moves a workspace to a new
+  branch from the latest default branch. The workspace keeps its sandbox
+  and its sessions (decision 223).
+- [Continue](continue.md) holds its requirements: who may continue, when
+  Continue runs, its check for local work, the new branch, and the
+  sessions after it.
 
 ## Tools of a workspace
 

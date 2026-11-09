@@ -30,6 +30,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
+- The report of the branch changes also gives the number of commits of
+  the current branch that no remote branch holds. The pull request bar
+  counts them as local work, as [Actions](github-banner.md#actions) says.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
   This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
 - The complete runner envelope also meets the

@@ -18,7 +18,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 ## Chat
 
 1. A tab sends a message to the Worker. The Durable Object forwards it to
-   the agent runner, with the agent login of the starter of its session.
+   the agent runner, with the agent login of the starter of its session
+   and the current branches of the workspace. An action of the pull
+   request bar sends its fixed prompt in the same way.
 2. The runner gives it to the agent through the SDK. It numbers each agent
    event and sends it to the Durable Object.
 3. The Durable Object stores each event, confirms it to the runner, and
@@ -37,9 +39,32 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 ## GitHub events
 
 - GitHub sends pull request, check, status, and push webhooks. The Worker
-  routes each event to the workspace of its branch.
+  routes each event to the workspace whose current branch it names.
 - A push to the default branch of a chosen repository can also start a
   refresh of the org image.
+
+## Merge
+
+1. A member presses Merge in the pull request bar. The Worker starts the
+   merge on GitHub with the GitHub token of that member, and with the head
+   commit that the bar showed.
+2. The bar asks the Worker for the result until GitHub reports it.
+3. GitHub sends the event of the merge. The Worker routes it to the
+   workspace, and the Durable Object pushes the merged state to every open
+   tab.
+
+## Continue
+
+1. A member presses Continue after the merge. The Durable Object starts the
+   sandbox when it is stopped.
+2. The Durable Object runs a trusted Continue job in the sandbox. Its fetch
+   of the default branch gets the GitHub token of that member through the
+   credential helper, only while the fetch runs.
+3. The job creates the new branch with the changed files. The Worker
+   stores the new branch in D1 and in the Durable Object, and reads the
+   GitHub state of the new branch.
+4. The Durable Object pushes the new state and the note of Continue to
+   every open tab. Each later message carries the new branch to the agent.
 
 ## Stops
 

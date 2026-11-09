@@ -46,8 +46,9 @@ export const termsDocument: LegalDocument = {
       title: 'The service',
       blocks: [
         paragraph`${productName} is a coding tool in the browser. Each
-          workspace is one task with its own branch and its own cloud
-          computer, where agents powered by Claude and Codex work.`,
+          workspace has its own cloud computer, where agents powered by
+          Claude and Codex work. A workspace can hold one task after another,
+          with one branch at a time.`,
         paragraph`${productName} is free for now. It has no plans and no
           billing.`,
       ],
@@ -58,7 +59,9 @@ export const termsDocument: LegalDocument = {
         list(
           text`You sign in with GitHub, through the GitHub App of
             ${productName}. The app can reach each repository where you
-            install its GitHub App and have access.`,
+            install its GitHub App and have access. It reads your repository
+            rights and merge method from GitHub. It shows Merge only when
+            your GitHub rights let you merge.`,
           text`${productName} runs the cloud computers of every org in its
             own account with its cloud computer provider. You need no
             account or key of your own for them.`,
@@ -76,15 +79,18 @@ export const termsDocument: LegalDocument = {
       blocks: [
         list(
           text`Every member of an org sees all of its workspaces, and can send
-            messages in each of them.`,
+            messages in each of them. After a pull request merges, every
+            member can use Continue to start the next task in that workspace.`,
           text`Each session runs on the agent login of the member who started
             it. The messages of other members use that login only when its
             owner allows it. Otherwise, the message of another member starts a
             new session on the login of that member. Each turn's git calls use
             a GitHub token of the member whose message started the turn.
-            Pushes and pull requests show as that member. Outside an agent
-            turn, the GitHub CLI uses the workspace owner's account.
-            Each terminal connection uses that same account.`,
+            Pushes and pull requests show as that member. A merge from the app
+            uses the GitHub token of the member who clicks. GitHub shows that
+            member as the merger and checks their rights and the branch rules.
+            Outside an agent turn, the GitHub CLI uses the workspace owner's
+            account. Each terminal connection uses that same account.`,
           text`That GitHub token reaches every repository where that person
             installed the GitHub App and has access, not only the
             repositories of the org.`,
@@ -96,13 +102,16 @@ export const termsDocument: LegalDocument = {
             login only when its provider's terms allow that use.`,
           text`While a turn runs, its agent login and its GitHub token are in
             the cloud computer of the workspace. A member with a terminal in
-            that cloud computer can read them. A program that a tool of the
-            agent starts, such as a dev server, can keep the agent login after
-            the turn ends. A member with a terminal can read it there too. The
+            that cloud computer can read them. During Continue, the cloud
+            computer fetches the latest default branch with the GitHub token
+            of the member who clicks. A member with a terminal can also read
+            that token while the fetch runs. A program that a tool of the agent
+            starts, such as a dev server, can keep the agent login after the
+            turn ends. A member with a terminal can read it there too. The
             setting of your login does not change this. A member with a
             terminal can also get the workspace owner's GitHub token without
-            a running turn. Work in an org only
-            with people whom you trust with your logins.`,
+            a running turn. Work in an org only with people whom you trust
+            with your logins.`,
           text`Admins manage the members, the repositories, the scripts, and
             the env vars of the org.`,
         ),
@@ -186,6 +195,13 @@ export const termsDocument: LegalDocument = {
           cloud computers that ${productName} runs for your org.
           ${productName} keeps the chat history of each workspace, so that
           you can read it while the cloud computer is stopped.`,
+        paragraph`Continue starts a new branch from the latest default branch
+          of the repository. It keeps the cloud computer and its sessions.
+          Changed files move to the new branch. Commits that are not pushed
+          stay on their local branches.`,
+        paragraph`The agent actions in the pull request bar send messages as
+          the member who clicks. The chat history keeps these messages and a
+          note that names who used Continue and the branches.`,
         paragraph`You keep any rights that you have in your repositories,
           files, messages, and other content. You give the operator
           permission to store, copy, process, and transmit that content as

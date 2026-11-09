@@ -54,7 +54,10 @@ export const privacyDocument: LegalDocument = {
             token for your account. ${productName} stores it encrypted, for
             every account, also while you wait for app access. It uses the
             token to read GitHub for you, and for the git calls of your
-            turns.`,
+            turns. It reads your repository rights and merge method. A merge
+            uses the token of the member who clicks. Continue fetches the
+            latest default branch with the token of the member who clicks
+            Continue.`,
           text`The waitlist: a new account waits for app access, and sees only
             the waitlist until then. ${productName} records when and how you
             got app access. The record names the operator who approved you,
@@ -90,9 +93,11 @@ export const privacyDocument: LegalDocument = {
             uses your login only for the turns of the sessions that you start.
             The messages of other members in those sessions use it only when
             you let other members use that login.`,
-          text`Your work: ${productName} keeps your messages and the answers
-            of the agents as the chat history of each workspace. It also
-            keeps the last file list and the last summary of changes of each
+          text`Your work: ${productName} keeps your messages, including those
+            sent by pull request bar actions, and the answers of the agents as
+            the chat history of each workspace. It also records who used
+            Continue, the new branch, and the branch it starts from. It keeps
+            the last file list and the last summary of changes of each
             workspace. The files that you attach go to the cloud computer of
             the workspace.`,
           text`Your code: it stays in the cloud computers that ${productName}
@@ -130,9 +135,11 @@ export const privacyDocument: LegalDocument = {
             sends the provider the requests that start, stop, and use them.`,
           text`Anthropic and OpenAI get your messages, your files, and your
             code when an agent works on them. With each message, they also get
-            the GitHub login and the display name of its sender. They also get
-            the name of the workspace branch, which starts with the GitHub
-            login of the first owner of the workspace. Each session uses the
+            the GitHub login and the display name of its sender. They get the
+            names of the workspace branch and the branch that a pull request
+            targets. Later messages give the current names when either branch
+            changes. Each workspace branch starts with the GitHub login of the
+            workspace owner when that branch is created. Each session uses the
             login of the member who started it. Your messages in another
             member's session use that member's login only when that member
             lets other members use it. When that member does not share the
@@ -140,10 +147,12 @@ export const privacyDocument: LegalDocument = {
             terms of that provider apply.`,
           text`The members of your orgs see the workspaces of the org and
             their chats. A member with a terminal in a cloud computer can read
-            the agent login and the GitHub token of a turn that runs there. A
-            program that a tool of the agent starts, such as a dev server, can
-            keep the agent login after the turn ends. A member with a terminal
-            can read it there too. Outside an agent turn, the GitHub CLI uses
+            the agent login and the GitHub token of a turn that runs there.
+            During Continue, they can also read the GitHub token of the member
+            who clicked, while the branch fetch runs. A program that a tool of
+            the agent starts, such as a dev server, can keep the agent login
+            after the turn ends. A member with a terminal can read it there
+            too. Outside an agent turn, the GitHub CLI uses
             the workspace owner's account. Each member with a terminal can
             get that owner's GitHub token without a running turn.`,
           text`The members of your orgs also see who started each session,

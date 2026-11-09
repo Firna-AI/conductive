@@ -564,21 +564,24 @@ Added on 9 November 2026 from the options check.
 
 Each line marked "Design call" is a call of the agent that wrote this
 plan, on 9 November 2026, under the decision test of the
-`decisions-and-findings` skill.
+`decisions-and-findings` skill. Each line marked "Mockup design call" is a
+call of the agent that drew the mockups of Milestone 1, on the same day,
+under the same test.
 
 ### Actions by state
 
 The bar shows one main action. "Open on GitHub" stays in each state that
-has a pull request. The labels are drafts for the mockups.
+has a pull request. The mockups settled the labels, as
+[Labels and messages](#labels-and-messages) gives them.
 
 | Bar state | Main action | Done by |
 | --- | --- | --- |
-| No pull request, with commits on GitHub or local work | Create PR | Agent |
+| No pull request, with commits on GitHub or local work | Create pull request | Agent |
 | Checks failed | Fix checks | Agent |
 | Merge conflict | Resolve conflicts | Agent |
 | Changes requested | Address review | Agent |
 | Open pull request with local work, in any state | Commit and push | Agent |
-| Ready to merge, for a member who may merge | Merge | App |
+| Ready to merge, for a member who may merge | Merge, named by its method | App |
 | Merged | Continue and Archive | App |
 | No commits and no local work | None: "No commits yet" | None |
 | Checks running, draft, blocked, and closed | None | None |
@@ -590,8 +593,22 @@ has a pull request. The labels are drafts for the mockups.
   remote branch holds, in the sandbox. Today the runner marks only the
   changed files. Milestone 3 adds the count of commits.
 - Design call: the state without a pull request keeps the link that
-  creates the pull request on GitHub, beside Create PR. Reason: no current
-  link goes away.
+  creates the pull request on GitHub, beside Create pull request. Reason:
+  no current link goes away.
+- Mockup design call: that link reads "Create on GitHub". Reason: the
+  agent action takes the name "Create pull request", and two buttons must
+  not share one name. The product writes "pull request" in full, never
+  "PR".
+- Mockup design call: no commits on GitHub with local work offers Create
+  pull request without the link to GitHub. Reason: GitHub has nothing to
+  compare yet.
+- Mockup design call: the main action takes the primary tone. Archive and
+  the links to GitHub stay secondary. Reason: the design gives its accent
+  to the main action.
+- Mockup design call: beside an action, a bar narrower than 520 px drops
+  its detail, and its GitHub link keeps only the GitHub mark, with its
+  name as a tooltip. Reason: the state, two actions, and the words of the
+  link do not fit in the right column of 440 px.
 - Design call: checks running, draft, blocked, and closed get no new
   action, so decision 64 stays. Reason: the user's list names no action
   for these states.
@@ -626,23 +643,44 @@ has a pull request. The labels are drafts for the mockups.
   its buttons.
 - Design call: the prompts ask for no replies on GitHub. Reason: a reply
   posts as the sender, and the member did not ask for one.
-- Draft prompts, to settle in the mockups:
-  - Create PR: "Commit any changes that are not committed, push this
-    branch, and open a pull request into `<base>` with `gh pr create`.
-    Write a short title and a description of what changed and why."
+- Mockup design call: each prompt that needs `gh` gives the fallback that
+  fits its step. Create pull request pushes the branch, Fix checks runs
+  the failed checks locally, and Address review stops. Each then says that
+  `gh` failed. Reason: without `gh`, the agent can still run the checks,
+  but it cannot read the review comments.
+- Mockup design call: Address review says "Don't reply on GitHub." The
+  other prompts ask for nothing on GitHub other than the pull request of
+  Create pull request. Reason: an agent that addresses review comments
+  tends to answer them, and a reply posts as the member.
+- Mockup design call: the chat shows the message of an action as a plain
+  message of the member, with no mark of the action. Reason: an action is
+  a message, and a mark would need a new field in the message record.
+- Mockup design call: the labels, the messages, and the prompts live in
+  one copy module of the mockups,
+  `docs/mockups/src/components/workspace/barCopy.ts`, which imports no
+  fixture. The app takes its words from there. Reason: the app already
+  takes the words of other shared parts from such modules.
+- The prompts, settled in the mockups. `<base>` is the default branch of
+  the repository. A list of names reads "a and b", or "a, b, and c".
+  - Create pull request: "Commit the changes that are not committed, push
+    this branch, and open a pull request into `<base>` with `gh pr
+    create`. Write a short title, and describe what changed and why. If
+    `gh` is missing or fails, push the branch and say that `gh` failed."
   - Commit and push: "Commit the changes that are not committed, with a
     clear message, and push this branch."
-  - Fix checks: "These checks failed on pull request #<number>:
-    <names>. Find out why with `gh pr checks <number>`. Read the logs of
-    failed GitHub Actions jobs with `gh run view --log-failed`. For a
-    check from another service, read its details, or run it locally.
-    Fix the cause, then commit and push."
+  - Fix checks: "These checks failed on pull request #<number>: <names>.
+    Find out why with `gh pr checks <number>`, and read the logs of failed
+    GitHub Actions jobs with `gh run view --log-failed`. For a check from
+    another service, read its details, or run it locally. Fix the cause,
+    then commit and push. If `gh` is missing or fails, run the failed
+    checks locally, and say that `gh` failed."
   - Resolve conflicts: "Pull request #<number> has conflicts with
-    `<base>`. Merge `origin/<base>` into this branch, resolve each
-    conflict, run the tests, then commit and push."
-  - Address review: "<Reviewers> requested changes on pull request
+    `<base>`. Fetch `origin/<base>` and merge it into this branch. Resolve
+    each conflict, run the tests, then commit and push."
+  - Address review: "<@logins> requested changes on pull request
     #<number>. Read the open review comments with `gh`, make the changes,
-    then commit and push."
+    then commit and push. Don't reply on GitHub. If `gh` is missing or
+    fails, stop and say that `gh` failed."
 
 ### Merge
 
@@ -676,6 +714,16 @@ has a pull request. The labels are drafts for the mockups.
   a merge queue gets GitHub's refusal. Reason: the user's list names none
   of them.
 - Merge runs on one click, with no confirmation, as decision 228 chose.
+- Mockup design call: while the merge runs, Merge shows a spinner and
+  "Merging", and the bar keeps Ready to merge. Reason: the state on GitHub
+  changes only when GitHub reports the merge.
+- Mockup design call: a refusal shows as one line under the bar, in the
+  danger tint, until the bar reads the state again. Another refusal has
+  its own Open on GitHub in that line. Reason: the bar has one line, and
+  the reason needs more words than the bar holds.
+- Mockup design call: after a moved head, Merge stays. After a missing
+  right, the bar hides Merge. Reason: a merge of the new head can work
+  after a review, and a merge without the right fails again.
 
 ### Continue
 
@@ -706,6 +754,22 @@ has a pull request. The labels are drafts for the mockups.
 - Design call: each session shows one note where Continue happened, with
   the member, the new branch, and the base. Reason: members see why the
   branch changed.
+- Mockup design call: the note reads "<member> continued on <branch>, a
+  new branch from <base>", and says "You" to the member who pressed
+  Continue. Reason: the line of a stopped turn names its member in the
+  same way.
+- Mockup design call: the question of Continue lists the local work in
+  the list of the Archive question, with "not committed" and "not pushed".
+  One sentence under the list says that the changed files move to the new
+  branch, and that the commits stay on their local branches. Reason: the
+  check counts the commits of every local branch, so they need not be on
+  the current branch.
+- Mockup design call: while Continue runs, it shows a spinner and
+  "Continuing", and Archive is off. Reason: an archive during the branch
+  change would delete the sandbox under it.
+- Mockup design call: a Continue that stopped, and the wait for a turn,
+  show as one line under the bar, as a refusal of a merge does. Continue
+  stays after a stop, so the member can try again.
 - Design call: after Continue, the bar starts again at the state without
   a pull request, and GitHub events follow the new branch. The old branch
   stays on GitHub. Reason: the merged pull request belongs to the old
@@ -732,11 +796,51 @@ has a pull request. The labels are drafts for the mockups.
   current branches. Reason: the fixed text of a session, from pull
   request #112, keeps the branches of its start.
 
+### Labels and messages
+
+The mockups settled these words on 9 November 2026 with the copy rules of
+the `product-ui` skill. `barCopy.ts` of the mockups holds them.
+
+- Agent actions: "Create pull request", "Commit and push", "Fix checks",
+  "Resolve conflicts", and "Address review".
+- Merge, named by the method: "Squash and merge", "Rebase and merge", or
+  "Merge" for a merge commit. While it runs: "Merging".
+- After the merge: "Continue", and "Continuing" while it runs, and
+  "Archive".
+- Links: "Open on GitHub", and "Create on GitHub" for a branch without a
+  pull request. The phone row of such a branch reads "Create pull
+  request".
+- A moved head: "Not merged: the branch has new commits. Review them, then
+  merge again."
+- A missing right: "Not merged: your GitHub access doesn't allow merges
+  into <base>."
+- Another refusal: "GitHub refused the merge.", with Open on GitHub.
+- Continue during a turn: "Continue waits for the agent to finish."
+- A failed Continue: "Continue stopped: the changed files clash with the
+  latest <base>. The workspace stays on <branch>."
+- The question of Continue: "Continue with work that is not pushed?",
+  then "Continue starts a new branch from the latest <base>. This work is
+  not on GitHub:", the list, and "The changed files move to the new
+  branch. The commits stay on their local branches." Its buttons are
+  "Cancel" and "Continue anyway". One commit "stays on its local branch".
+- The note of Continue: "<member> continued on <branch>, a new branch from
+  <base>".
+
 ### Layouts
 
 - Design call: on a phone, the actions show at the top of the Checks tab.
   The row keeps its one link to the Checks tab. Reason: a button cannot
   sit inside the link of the row, and two states have two actions.
+- Mockup design call: the top of the Checks tab on a phone also holds the
+  link to GitHub, so Open on GitHub shows in each state with a pull
+  request, and the line under the bar. Reason: a phone had no other way to
+  the pull request on GitHub, and a refusal of a merge sends the member
+  there.
+- Mockup design call: the phone row of a branch without a pull request
+  opens the Checks tab too, when the bar has an action or a link. It no
+  longer links to GitHub itself. The link to GitHub moves to the top of
+  that tab. Reason: the row then leads to Create pull request, and the
+  link stays one tap away.
 
 ### Out of scope
 
@@ -756,29 +860,31 @@ Draw the actions of the bar for each state, on desktop and on a phone,
 with Merge, Continue, and the chat parts that the actions add. The
 current mockups say that the app merges nothing. Change that text.
 
-- [ ] Draw the main action of each state in the mockup
+- [x] Draw the main action of each state in the mockup
       `PullRequestBar`, as "Actions by state" lists it. Keep "Open on
       GitHub" and the link that creates the pull request on GitHub.
-- [ ] Draw Merge with its method, the merge that runs, a moved head, a
+- [x] Draw Merge with its method, the merge that runs, a moved head, a
       missing right, and another refusal. Draw Ready to merge for a member
       who may not merge.
-- [ ] Draw Commit and push in the place of Merge and of the fix actions
+- [x] Draw Commit and push in the place of Merge and of the fix actions
       while local work exists, as decision 228 chose.
-- [ ] Draw Continue beside Archive, its question with local work, the
+- [x] Draw Continue beside Archive, its question with local work, the
       branch change that runs, a failed Continue, Continue while a turn
       runs, and the bar after Continue, for every member, as decision 224
       chose.
-- [ ] Draw the message that an agent action sends, in the chat, and the
+- [x] Draw the message that an agent action sends, in the chat, and the
       note of Continue in a session.
-- [ ] Draw the actions at the top of the Checks tab on a phone.
-- [ ] Settle the labels and the prompt texts with the copy rules of the
+- [x] Draw the actions at the top of the Checks tab on a phone.
+- [x] Settle the labels and the prompt texts with the copy rules of the
       `product-ui` skill. Record them in this plan.
-- [ ] Update the descriptions and the rationale of the `app/banner`
+- [x] Update the descriptions and the rationale of the `app/banner`
       pages, `docs/mockups/catalogue.md`, and the mockups README.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/pull-request-bar-actions/milestone-1/report.md`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -787,35 +893,38 @@ Depends on: 1
 State the requirements of decisions 220 to 223 in the protocol docs, and
 the answers of decisions 224 to 228 when they come.
 
-- [ ] Update `docs/protocol/github-banner.md`: the actions by state, local
+- [x] Update `docs/protocol/github-banner.md`: the actions by state, local
       work, the agent actions, Merge and who sees it, Continue and Archive,
       and the actions on a phone. Remove the rules that every action links
       to GitHub and that the app merges nothing.
-- [ ] Update `docs/protocol/chat-and-events.md`: an action is a message of
+- [x] Update `docs/protocol/chat-and-events.md`: an action is a message of
       the member who clicks, and the note of Continue.
-- [ ] Update `docs/protocol/agent-instructions.md`: a workspace can hold
+- [x] Update `docs/protocol/agent-instructions.md`: a workspace can hold
       one task after another, Continue changes the workspace branch, and
       the branch line of decision 227 names the current branches.
-- [ ] Update `docs/protocol/workspaces-and-sandboxes.md` with a Continue
+- [x] Update `docs/protocol/workspaces-and-sandboxes.md` with a Continue
       section beside Archive. State in
       `docs/protocol/orgs-and-members.md`, "Members and roles", that every
       member may continue a workspace (decision 224).
-- [ ] Update `docs/protocol/create-a-workspace.md`: the branch rule also
+- [x] Update `docs/protocol/create-a-workspace.md`: the branch rule also
       names the branch of Continue.
-- [ ] Update `docs/protocol/github-tokens.md`: the Worker reads a member's
+- [x] Update `docs/protocol/github-tokens.md`: the Worker reads a member's
       merge right and merges with that member's own token. Record the
       Actions permission of the App and its reason (decision 225), and
       the trusted Continue job with the token of the member who pressed
       Continue (decision 226).
-- [ ] Update `docs/architecture.md` and `docs/architecture/flows.md`: a
+- [x] Update `docs/architecture.md` and `docs/architecture/flows.md`: a
       workspace has one branch at a time, and it can hold one task after
       another. Update the same words in `AGENTS.md` and `README.md`.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact, such as who a merge shows as, the
       repository access that the app reads for each member, and whose
       GitHub token the fetch of Continue uses under decision 226.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: `.context/pull-request-bar-actions/milestone-2/docs-report.md`.
+Legal audit and checks: `.context/pull-request-bar-actions/milestone-2/legal-report.md`.
 
 ## Milestone 3: Local work in the changes report
 
@@ -871,7 +980,11 @@ Depends on: 1, 4
       it, as decision 228 chose.
 - [ ] Show the merge that runs, and each refusal, as the mockups draw
       them.
-- [ ] Show the actions at the top of the Checks tab on a phone.
+- [ ] Show the actions at the top of the Checks tab on a phone, with the
+      line under the bar and the link to GitHub, as the mockups draw them.
+- [ ] Take the layout of a bar with an action from the mockups: beside an
+      action, a column narrower than 520 px drops the detail, and the
+      GitHub link keeps only the GitHub mark.
 - [ ] Test the bar for each right, each refusal, and the phone.
 - [ ] Smoke-test Merge in the development page of the GitHub banner.
 - [ ] Update `src/github/README.md` and `src/shell/workspace/screen-parts.md`.
@@ -884,11 +997,17 @@ Depends on: 1, 3, 4
 
 - [ ] Give the bar a way to send a prompt to the session that the member
       saw last, with the send rules of the composer.
-- [ ] Add the fixed prompts in one module, with the pull request number,
-      the base, the failed checks, and the reviewers.
+- [ ] Take the fixed prompts and the labels from
+      `docs/mockups/src/components/workspace/barCopy.ts`, which imports no
+      fixture. Give them the pull request number, the base, the failed
+      checks, and the reviewers.
 - [ ] Show the agent action of each state, as "Actions by state" lists
       it, to a member with write access. Show Commit and push in the
       place of the main action while local work exists (decision 228).
+- [ ] Open the Checks tab from the phone row also when the branch has no
+      pull request and the bar has an action or a link. Move the link that
+      creates the pull request on GitHub to the top of that tab, as the
+      mockups draw it.
 - [ ] Test each state, local work, a member without write access, a
       blocked send, and a send during a turn.
 - [ ] Smoke-test each action in the development page of the GitHub
@@ -935,7 +1054,8 @@ Depends on: 1, 7
 - [ ] Show the question with local work, the branch change that runs, a
       failed Continue, and Continue while a turn runs, as the mockups draw
       them.
-- [ ] Show the note of Continue in each session.
+- [ ] Show the note of Continue in each session, with `ContinuedLine` of
+      the mockups, which takes no fixtures.
 - [ ] Test the action, the question, a failure, and the bar after
       Continue.
 - [ ] Smoke-test Continue in the development page.
@@ -945,6 +1065,13 @@ Depends on: 1, 7
 
 Depends on: every other milestone
 
+- [ ] Update the listed feature statuses on the Conductor Cloud comparison
+      page for the completed Merge, agent actions, and Continue behavior.
+      The repository rule from pull request #129 requires this update.
+
+- [ ] Capture the marketing pictures again with `npm run marketing:pictures`.
+      The `hero` and `review` pictures show the bar of Ready to merge, which
+      now offers Squash and merge.
 - [ ] Run the targeted tests and the complete gate, `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the

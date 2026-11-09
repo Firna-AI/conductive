@@ -66,8 +66,8 @@ says.
   [Workspace and session names](#workspace-and-session-names) says when
   the app gives it a title.
 - When the workspace takes a title as its name, as
-  [Messages](chat-and-events.md#messages) says, the first session takes the
-  title too (decision 181).
+  [The title of a new workspace](#the-title-of-a-new-workspace) says, the
+  first session takes the title too (decision 181).
 - Each other session takes its title from the first message with text that
   the workspace accepts in that session (decision 181). The title is the
   first line with text of that message.
@@ -170,7 +170,8 @@ says.
   record, a missing name is null in `title`.
 - An automatic name is a name that the app gives on its own. These names
   are automatic:
-  - the title of a workspace, as [Messages](chat-and-events.md#messages) says
+  - the title of a workspace, as
+    [The title of a new workspace](#the-title-of-a-new-workspace) says
   - a workspace name that the agent runner reports, as
     [Lost workspace updates](agent-runner.md#lost-workspace-updates) says
   - the title that a session takes, as [Sessions](#sessions) says
@@ -184,3 +185,33 @@ says.
   the branch was rejected. A member can type the same text and then lose
   that name.
 - Reason: an archived workspace shows its chat read-only (decision 16).
+
+### The title of a new workspace
+
+- When the app accepts the first message of a new workspace, it asks a
+  small model of Workers AI for a title (decision 184). The request asks
+  for three to five words. Workers AI is the model service of Cloudflare,
+  on the account that hosts the app.
+- The model writes the title from the text of that message. The request
+  holds no other data of the workspace. It uses no agent login of a
+  member. The chat does not show it.
+- The reply to the message does not wait for the title. The workspace
+  then takes the title as its name, as
+  [Workspace and session names](#workspace-and-session-names) says.
+- When the request fails, the name of the workspace does not change. The
+  app then asks again when it accepts the next message with text in the
+  workspace. It asks only while the workspace has no name.
+- A later request also uses the text of the first message. Only when the
+  first message has no text does it use the text of the message that
+  starts it.
+- A first message with no text starts no request. The next message with
+  text in the workspace then starts it.
+- Reason: the name shows within seconds, while the sandbox starts, and the
+  operator chooses the model and its speed.
+- A request in the sandbox on the agent login of the member was rejected.
+  The name then waits for the sandbox, and each title spends the
+  subscription of the member.
+- A Claude model with an API key of the operator was rejected, because it
+  sends each first message to another company. A name from the first
+  words of the message, with no model, was rejected, because such names
+  are weaker.

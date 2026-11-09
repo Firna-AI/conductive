@@ -15,6 +15,7 @@ import {
   type OpenWorkspace,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { unpushedWork } from '../fixtures/archive'
 import {
   creatingLog,
   firstSecondLog,
@@ -76,6 +77,15 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 }
 
 /**
+ * The changed paths of the branch after Continue: the changed files that
+ * moved to the new branch, or none. Any other branch shows every change.
+ */
+function changedPaths(state: WorkspaceState): readonly string[] | undefined {
+  if (state.branch !== 'continued') return undefined
+  return state.localWork === 'changes' ? unpushedWork.files : []
+}
+
+/**
  * The files panel. After a stop or a failed resume, All files and Changes
  * keep the lists that the workspace saved. Otherwise, while the sandbox is
  * not running, the sandbox state takes the place of the lists. On a phone,
@@ -85,6 +95,8 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 export function FilesContent(props: {
   state: WorkspaceState
   viewport: Viewport
+  /** What a phone shows at the top of the Checks tab: the bar's actions. */
+  checksTop?: ReactNode
 }) {
   const { state } = props
   const phone = props.viewport === 'mobile'
@@ -103,7 +115,9 @@ export function FilesContent(props: {
   return (
     <FilesPanel
       banner={state.banner}
+      checksTop={props.checksTop}
       edited={!isNew(state)}
+      only={changedPaths(state)}
       open={open}
       paths={state.paths}
       placeholder={placeholder}

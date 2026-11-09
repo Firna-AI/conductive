@@ -1,11 +1,11 @@
 # Architecture
 
-Conductive is a coding tool at `conductive.build`. Each workspace is one
-task with its own branch and its own cloud computer, a Boat sandbox.
-Agents powered by Claude and Codex work only in the sandbox. The user
-follows them in the browser or in the Mac app, which shows the web app.
-This doc describes the components, their responsibilities, and the
-boundaries between them. The [protocol docs](#protocol-docs) hold the
+Conductive is a coding tool at `conductive.build`. Each workspace has its
+own cloud computer, a Boat sandbox, and one branch at a time. It can hold
+one task after another. Agents powered by Claude and Codex work only in
+the sandbox. The user follows them in the browser or in the Mac app, which
+shows the web app. This doc describes the components, their
+responsibilities, and the boundaries between them. The [protocol docs](#protocol-docs) hold the
 requirements of each feature.
 
 ## Terms
@@ -31,10 +31,17 @@ requirements of each feature.
 - **Referral code:** the personal code of each user with app access. It
   gives app access to up to 5 people who wait. The screens of users call
   it an invite code.
-- **Workspace:** one task in an org. It has one repository, one branch,
-  one sandbox, and one or more sessions.
+- **Workspace:** the work of an org on one repository, one task at a time.
+  It has one repository, one sandbox, one or more sessions, and one branch
+  at a time. After a merge, Continue moves it on to its next task.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
+- **Continue:** the action after a merge that moves a workspace to a new
+  branch from the latest default branch. The workspace keeps its sandbox
+  and its sessions.
+- **Local work:** work in the sandbox of a workspace that GitHub does not
+  have: changed files that are not committed, also untracked files, and
+  commits that no remote branch holds.
 - **Sender:** the person who sent the message of a turn. The GitHub token
   and the Mac requests of the turn belong to its sender. The agent login
   belongs to the starter of the session, the member who started it.
@@ -102,6 +109,10 @@ requirements of each feature.
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](protocol/access-and-security.md)
   states the gates.
+- It writes to GitHub only as a member. A merge from the pull request bar
+  uses the GitHub token of the member who clicks, as
+  [Merge as the member](protocol/github-tokens.md#merge-as-the-member)
+  says.
 
 ### D1
 
@@ -119,6 +130,8 @@ requirements of each feature.
 - It holds the open tabs, the connection of the agent runner, and the
   messages that wait for the sandbox.
 - It also holds the start steps, the stop timer, and the banner state.
+- It runs the trusted jobs of its sandbox: the fetch of a create, and the
+  branch change of Continue.
 - Its storage keeps the chat history, so a stopped or archived workspace
   still shows its chat.
 - It revokes the preview hostnames of its workspace.
@@ -182,7 +195,7 @@ the app (decision 6).
 
 The [flows page](architecture/flows.md) describes how the components work
 together for a new workspace, chat, the terminal, previews, the desktop,
-GitHub events, and stops.
+GitHub events, a merge, Continue, and stops.
 
 ## Where data lives
 
@@ -203,52 +216,5 @@ the merge.
 
 ## Protocol docs
 
-- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the
-  life of a workspace, and the number and the link of each workspace.
-- [Org image](protocol/org-image.md): the org image, its builds and its
-  refreshes, and the first build of a new org.
-- [Workspace tools](protocol/workspace-tools.md): the tools of a workspace.
-- [Create a workspace](protocol/create-a-workspace.md): New workspace as a
-  page or as a dialog, the create, the branch, and a failed first start.
-- [Repository folders](protocol/repository-folders.md): the folder and the
-  shell variable of each repository in a sandbox.
-- [Chat and events](protocol/chat-and-events.md): messages, what the chat
-  shows, and the events.
-- [Agents and sessions](protocol/agents-and-sessions.md): the agents and
-  their logins, the sessions, and the names of workspaces and sessions.
-- [Workspace links](protocol/workspace-links.md): Copy link, and the chips
-  that show workspace links in chat.
-- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
-  messages in the chat, with their tables.
-- [Agent runner](protocol/agent-runner.md): the connection of the runner,
-  its events and their limits, its turns, and the repair of lost workspace
-  updates.
-- [Access and security](protocol/access-and-security.md): sign-in, the
-  gates, the secrets, and the isolation of sandboxes and previews.
-- [GitHub banner](protocol/github-banner.md): the pull request bar and its
-  events.
-- [GitHub tokens](protocol/github-tokens.md): git and CLI account scope.
-- [Agent tools](protocol/agent-tools.md): the tools that agents use in a
-  sandbox.
-- [Agent instructions](protocol/agent-instructions.md): the text that each
-  agent session gets, the sender line of each message, and the base
-  prompt of Claude agents.
-- [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
-  roles, the first run, and the end of an org.
-- [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
-- [Operator actions](protocol/operator-actions.md): the operator, the
-  suspension of a user or an org, the lift of a suspension, and abuse
-  reports.
-- [Operator section](protocol/operator-section.md): the pages of the
-  operator in the web app, their counts, and their searches.
-- [Waitlist](protocol/waitlist.md): app access, the waitlist screen, the
-  ways in, the pause, and the approval email.
-- [Invite and referral codes](protocol/waitlist-codes.md): the codes of
-  the waitlist, the join link, and the use of a code.
-- [Command palette](protocol/command-palette.md): the key and the search
-  that finds the workspaces, the actions, and the settings.
-- [Command palette: empty and unavailable states](protocol/command-palette-states.md):
-  what the palette shows while its workspace data loads or did not load,
-  and when a tab or a search has no row.
-- [Conductor Cloud comparison](protocol/conductor-cloud-comparison.md): the
-  public page with the status of each Conductor Cloud feature.
+The [protocol docs](protocol/README.md) hold the requirements of each
+feature. Their index lists each doc and what it covers.

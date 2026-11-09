@@ -1,0 +1,6 @@
+/* The new branch, in the font of the branch in the pull request bar. */
+.branch {
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+}

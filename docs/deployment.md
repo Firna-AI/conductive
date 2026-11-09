@@ -160,8 +160,9 @@ The shape of the two values, with placeholders in place of real values:
 ## The title model
 
 `CONDUCTIVE_TITLE_MODEL` names the model that writes the title of each new
-workspace, as [Messages](protocol/chat-and-events.md#messages) says. It is
-operator data. The Worker has no built-in title model.
+workspace, as
+[The title of a new workspace](protocol/agents-and-sessions.md#the-title-of-a-new-workspace)
+says. It is operator data. The Worker has no built-in title model.
 
 - The value is the model ID of a text generation model of Workers AI, the
   model service of Cloudflare. The

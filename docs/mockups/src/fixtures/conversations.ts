@@ -4,6 +4,11 @@
 
 import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
+import {
+  barConversationKeys,
+  barConversations,
+  type ContinuedItem,
+} from './barConversations'
 import { changedFiles, type ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
 import { lostConversations } from './lostConversations'
@@ -105,6 +110,7 @@ export type ChatItem =
       id: string
       from: string
     }
+  | ContinuedItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -145,6 +151,7 @@ export const conversationKeys = [
   'table-short-row',
   'table-wide',
   'tables-in-work',
+  ...barConversationKeys,
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -286,4 +293,5 @@ export const conversations: Readonly<
     steer: steerDraft,
   }),
   ...tableConversations,
+  ...barConversations({ history, cutOff: cutOffTurn }),
 }

@@ -31,6 +31,8 @@ export function ActionButton(
     icon?: LucideIcon
     tone?: ActionTone
     disabled?: boolean
+    /** The action runs: a spinner takes the place of the icon. */
+    busy?: boolean
     trailing?: ReactNode
   },
 ) {
@@ -39,6 +41,7 @@ export function ActionButton(
     <Button
       {...triggerProps(props)}
       accessibilityLabel={props.accessibilityLabel}
+      busy={props.busy}
       disabled={props.disabled}
       icon={props.icon}
       labelStyle={{

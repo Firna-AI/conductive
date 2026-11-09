@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { API_PATHS } from '../../src/shared/api'
-import { acceptedTermsSignInPath } from '../../src/shared/terms'
+import { acceptedTermsSignInPath, TERMS_VERSION } from '../../src/shared/terms'
 import { saveOAuthState } from '../data/users'
 import {
   createHarness,
@@ -80,14 +80,14 @@ it('requires consent at OAuth start before it creates a new account', async () =
     await harness.env.DB.prepare(
       'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
     ).first(),
-  ).toEqual({ version: '2026-11-09-legal-github-cli', acceptedAt: TEST_TIME })
+  ).toEqual({ version: TERMS_VERSION, acceptedAt: TEST_TIME })
   harness.setTime(TEST_TIME + 1_000)
   expect((await authorize(acceptedTermsSignInPath())).status).toBe(302)
   expect(
     await harness.env.DB.prepare(
       'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
     ).first(),
-  ).toEqual({ version: '2026-11-09-legal-github-cli', acceptedAt: TEST_TIME })
+  ).toEqual({ version: TERMS_VERSION, acceptedAt: TEST_TIME })
 })
 
 it('records explicit consent for an existing account and keeps its identity', async () => {
@@ -123,7 +123,7 @@ it('records explicit consent for an existing account and keeps its identity', as
     id: 'existing-user',
     login: 'octocat',
     createdAt: 0,
-    version: '2026-11-09-legal-github-cli',
+    version: TERMS_VERSION,
     acceptedAt: TEST_TIME + 1_000,
   })
 })
@@ -154,7 +154,7 @@ it('replaces an old consent revision only after explicit current consent', async
       'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
     ).first(),
   ).toEqual({
-    version: '2026-11-09-legal-github-cli',
+    version: TERMS_VERSION,
     acceptedAt: TEST_TIME + 1_000,
   })
 })

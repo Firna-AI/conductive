@@ -1,5 +1,6 @@
 import type { ComposerState } from '../components/chat/Composer'
 import { attachmentDraft, draftAttachments } from '../fixtures/attachments'
+import { barRunningConversations } from '../fixtures/barConversations'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
@@ -16,6 +17,7 @@ const runningConversations = new Set([
   'output-left-out-running',
   'linked',
   'link-sent',
+  ...barRunningConversations,
 ])
 
 /** An agent turn runs on a ready sandbox. */

@@ -110,6 +110,28 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- The pull request bar shows one main action in each state, beside its
+  links to GitHub, from decisions 220 to 228. `barModel.ts` in
+  `src/components/workspace/` holds the rule: the action of each state, with
+  the local work, the GitHub access of the viewer, and an action of the app
+  that runs. `barCopy.ts` beside it holds the labels, the messages under the
+  bar, and the fixed prompts of the agent actions. Both import no fixture,
+  so the app can use them too.
+  - The main action takes the primary tone. An agent action sends its fixed
+    prompt, so the chat shows it as a message of the member who clicked.
+    Merge names its method, such as "Squash and merge", and a spinner shows
+    while the merge or Continue runs.
+  - A refusal of GitHub, a Continue that stopped, and the wait of Continue
+    for a turn show as one line under the bar. The line takes the tint of
+    its state, and its bottom border stays neutral.
+  - On a phone the row opens the Checks tab. `ChecksActions` in
+    `BarActions.tsx` draws the actions, the line, and the link to GitHub at
+    the top of that tab, at touch size.
+  - `ContinueDialog` asks before Continue when the sandbox has local work,
+    with the list of the Archive question. `ContinuedLine` in
+    `src/components/chat/` draws the note of Continue in each session,
+    centred and muted, as the first line of a linked session. It takes no
+    fixtures.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim

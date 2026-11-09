@@ -8,6 +8,7 @@ import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -41,6 +42,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     'copyLink',
+    ...barStateKeys,
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -137,8 +139,9 @@ export const workspaceStateSchema = {
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the
-     * question of Archive, with work that is not pushed or with none, or
-     * the tab menu of the first session.
+     * question of Archive, with work that is not pushed or with none, the
+     * tab menu of the first session, or the question of Continue with work
+     * that is not pushed.
      */
     overlay: {
       enum: [
@@ -149,6 +152,7 @@ export const workspaceStateSchema = {
         'archive-unpushed',
         'archive-pushed',
         'tab-menu',
+        'continue-unpushed',
       ],
     },
     /** The person signed in: an admin of the org, or a member who is not. */
@@ -193,6 +197,7 @@ export const workspaceStateSchema = {
      * shows for a moment that the copy worked or failed.
      */
     copyLink: { enum: ['none', 'copied', 'failed'] },
+    ...barStateProperties,
   },
 } as const
 
@@ -224,6 +229,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   copyLink: 'none',
+  ...barStateDefaults,
 }
 
 /**
