@@ -232,6 +232,8 @@ the merge.
   shell variable of each repository in a sandbox.
 - [Chat and events](protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
+- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
+  messages in the chat, with their tables.
 - [Agent runner](protocol/agent-runner.md): the connection of the runner,
   its events and their limits, its turns, and the repair of lost workspace
   updates.

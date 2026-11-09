@@ -116,13 +116,15 @@ Agent design calls, dated 9 November 2026:
   Add no dependency, input rejection, validation rule, or new gate.
 - The source-preserving row-reader extraction can follow the mockups independently of documentation.
   Behavioral chat changes still depend on the requirements milestone.
+- Keep the chat and files README entry points short and move their detail into topic guides.
+  Preserve their old anchors as linked sections so existing readers keep working links.
 
 ## Replaced ways
 
 - Mockup message `paragraphs` become ordered `blocks` in Milestone 1.
   All fixtures, `ChatItemView`, and the mockup work-fold message line use the new field.
   The old keys and the inline work-fold helper are removed after their consumers move.
-- File-local row reading becomes shared row reading in Milestone 3.
+- File-local row reading becomes shared row reading in Milestone 2a.
   Consumers: the file table parser and the new chat table parser.
   Remove the original row-reading helpers after both consumers use the shared reader.
 - File-local table markup becomes a shared table view in Milestone 3.
@@ -161,21 +163,23 @@ Evidence: `.context/markdown-table-support/milestone-1-report.md`.
 
 Depends on: 1
 
-Status: Blocked before edits. The prescribed Claude model rejected both the
-initial request and one retry with HTTP 429. A user model override is required
-to use another model for this work.
+Status: Completed on 9 November 2026. The user requested another attempt
+with the prescribed Claude model after its capacity returned. No model
+override was given.
 
 Document the chosen table behavior without changing unrelated Markdown requirements.
 
-- [ ] Add `docs/protocol/chat-markdown.md` with table syntax, short rows, streaming, safety, and scrolling requirements.
-- [ ] State the native span maximum and readable incomplete-input behavior. Keep border mechanics in code documentation.
-- [ ] Record the chosen approach and its reason beside the requirements.
-- [ ] Link the protocol from `src/chat/README.md` and the relevant mockup entry.
-- [ ] Update the chat and files READMEs for the shared table entry points as those entry points land.
-- [ ] Move long README details into linked guides where needed. Preserve live content and links.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
-- [ ] Update each legal sentence that restates a changed fact.
-- [ ] Check every relative link in changed Markdown.
+- [x] Add `docs/protocol/chat-markdown.md` with table syntax, short rows, streaming, safety, and scrolling requirements.
+- [x] State the native span maximum and readable incomplete-input behavior. Keep border mechanics in code documentation.
+- [x] Record the chosen approach and its reason beside the requirements.
+- [x] Link the protocol from `src/chat/README.md` and the relevant mockup entry.
+- [x] Update the chat and files READMEs for the shared table entry points as those entry points land.
+- [x] Move long README details into linked guides where needed. Preserve live content and links.
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
+- [x] Update each legal sentence that restates a changed fact.
+- [x] Check every relative link in changed Markdown.
+
+Evidence: `.context/markdown-table-support/milestone-2-report.md` and `m2-parent-check.md`.
 
 ## Milestone 2a: Shared table row reader
 

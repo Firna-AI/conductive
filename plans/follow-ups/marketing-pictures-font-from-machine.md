@@ -16,5 +16,6 @@
 - **Left out:** A note in the docs, because a person can miss it.
 - **Wider fix:** A, because the font then comes with the repository.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/marketing-pictures-unstable-capture.md` records a digit shift between two runs on one machine. Its cause is unknown.
 - **Recommendation:** A.
 - **Action:** fix after merge, apply A, because the branch that found it changed no font.
