@@ -15,15 +15,14 @@ import {
 } from './legal-text'
 
 /**
- * The terms of use, as a draft for a lawyer, as decision 35 asks. The facts
- * come from the architecture and the protocol docs. The rules of acceptable
- * use pass on the rules of the providers of the service, as decision 28
- * asks, and name no provider. Each fact that the operator or the lawyer
- * must supply is a draft field.
+ * The terms of use. The facts come from the architecture and the protocol
+ * docs. The rules of acceptable use pass on the rules of the providers of
+ * the service and name no provider. Each fact that the operator must supply
+ * is a draft field.
  */
 export const termsDocument: LegalDocument = {
   title: legalTitles.terms,
-  description: `The terms of use of ${productName}, as a draft for lawyer review.`,
+  description: `The terms of use of ${productName}.`,
   lead: text`These terms cover your use of ${productName} at ${productDomain}
   and ${appDomain}. You accept their current version each time that you
   continue with GitHub to sign in. ${productName} keeps the latest version

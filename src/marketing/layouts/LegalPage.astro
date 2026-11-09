@@ -1,12 +1,11 @@
 ---
 import { productName } from '../../../docs/mockups/src/brand'
 import RunningText from '../components/RunningText.astro'
-import { draftNotice, legalLabel, type LegalDocument } from '../legal-text'
+import { legalLabel, type LegalDocument } from '../legal-text'
 import SiteLayout from './SiteLayout.astro'
 
 /**
- * A legal page of the site: its title, the notice that a lawyer reviews
- * the text, and its sections.
+ * A legal page of the site: its title, its introduction, and its sections.
  */
 type Props = { legalDocument: LegalDocument }
 
@@ -26,10 +25,6 @@ const { legalDocument } = Astro.props
           <RunningText text={legalDocument.lead} />
         </p>
       </header>
-      <div class="draft-notice" role="note">
-        <p class="draft-notice-title">{draftNotice.title}</p>
-        <p class="draft-notice-text">{draftNotice.text}</p>
-      </div>
       {legalDocument.sections.map((section) => (
         <section class="legal-section">
           <h2 class="legal-heading">{section.title}</h2>

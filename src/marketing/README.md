@@ -118,13 +118,12 @@ direct development dependency `sharp` to write lossless WebP files in
 its server and browser and removes its temporary files on success,
 failure, or interruption.
 
-## Legal drafts
+## Legal pages
 
-The Terms and Privacy pages are drafts for a lawyer.
-Each page shows "Draft for lawyer review" at the top. Each fact that the
-operator or the lawyer must still give is a marked draft field, such as
-the legal name, the address, the contact, the law, the lawful basis, and
-how long data stays. The other facts come from the
+The Terms and Privacy pages show their title, introduction, and sections.
+Each fact that the operator must still give is a marked draft field, such
+as the legal name, the address, the contact, the law, the lawful basis,
+and how long data stays. The other facts come from the
 [architecture doc](../../docs/architecture.md) and the
 [protocol docs](../../docs/protocol/).
 
@@ -210,8 +209,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
 - `features.ts`: the home page's feature copy.
 - `links.ts`: site paths and `pageHrefs` for links from another origin.
-- `terms.ts`, `privacy.ts`, `legal-text.ts`: legal drafts and the shared
-  text model, titles, draft notice, abuse address, and sign-in agreement.
+- `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
+  text model, titles, abuse address, and sign-in agreement.
 - `request-values.ts`: built-page markers and local Astro preview values.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
   CSS for the font, tokens and picture sizes, and the file list writer.

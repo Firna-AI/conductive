@@ -49,14 +49,14 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   page links to the same pages in its text.
 - The Terms, Privacy, and not-found pages draw the documents that the site
   serves: `termsDocument`, `privacyDocument`, and `notFoundText` from the
-  code of the [marketing site](../../src/marketing/README.md#legal-drafts).
+  code of the [marketing site](../../src/marketing/README.md#legal-pages).
   Their words are text without markup, in the model of
   [`legal-text.ts`](../../src/marketing/legal-text.ts). Astro builds
   that text as HTML. The Worker serves the built pages and fills their
   request values. The mockups render the text with `LegalDocumentView` and
   `CatalogueText`, through `RunningText`, which the app also uses. So the
-  site, the app, and the mockups show the same words. Each legal page keeps
-  the notice of the draft and its marked draft fields.
+  site, the app, and the mockups show the same words. Each legal page marks
+  facts that still need confirmation from the operator.
 - The footer has a Report abuse column with `abuseAddress` from
   [`legal-text.ts`](../../src/marketing/legal-text.ts), which is `abuse@`
   and the product domain. The Terms page gives the same address.

@@ -114,15 +114,6 @@ export const legalTitles = {
 /** The label above the title of each legal page. */
 export const legalLabel = 'Legal'
 
-/**
- * The notice at the top of each legal page, as decision 35 asks: a lawyer
- * reviews the text before the app opens to other people.
- */
-export const draftNotice = {
-  title: 'Draft for lawyer review',
-  text: `A lawyer reviews this text before ${productName} opens to other people. Each marked field waits for a fact that the operator confirms.`,
-} as const
-
 /** The address for reports of abuse, in the footer and the terms. */
 export const abuseAddress = `abuse@${productDomain}`
 

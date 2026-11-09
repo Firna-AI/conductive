@@ -9,15 +9,14 @@ import {
 } from './legal-text'
 
 /**
- * The privacy notice, as a draft for a lawyer, as decision 35 asks. It
- * follows the list of privacy information in the ICO guidance that the
- * README names. The facts come from the architecture and the protocol
- * docs. Each fact that the operator or the lawyer must supply is a draft
- * field.
+ * The privacy notice follows the list of privacy information in the ICO
+ * guidance that the README names. The facts come from the architecture
+ * and the protocol docs. Each fact that the operator must supply is a
+ * draft field.
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
-  description: `The privacy notice of ${productName}, as a draft for lawyer review.`,
+  description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
   it uses it, and who gets it. Effective date:
   ${draft('To confirm: the date when this notice starts')}.`,

@@ -38,31 +38,6 @@
   line-height: 1.6;
 }
 
-/* The draft notice tints the whole box. No edge of the box has its own colour. */
-.draft-notice {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 16px 18px;
-  border: 1px solid var(--ui-warning-border);
-  border-radius: var(--ui-radius-xxl);
-  background: var(--ui-amber-soft);
-}
-
-.draft-notice-title {
-  margin: 0;
-  color: var(--ui-ink);
-  font-size: 15px;
-  font-weight: var(--ui-weight-heading);
-}
-
-.draft-notice-text {
-  margin: 0;
-  color: var(--ui-ink2);
-  font-size: 14px;
-  line-height: 1.55;
-}
-
 .legal-section {
   display: flex;
   flex-direction: column;

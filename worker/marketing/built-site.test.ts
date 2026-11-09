@@ -96,7 +96,7 @@ it('sends every sign-in to the app and shows the request year', async () => {
   expect(html).toContain(`© 2027 ${productName}`)
 })
 
-it('opens the Terms and Privacy footer links as drafts for lawyer review', async () => {
+it('opens the Terms and Privacy footer links without a lawyer review notice', async () => {
   const home = await (await get('/')).text()
   const footer = home.slice(home.indexOf('<footer'))
   for (const name of ['Terms', 'Privacy']) {
@@ -109,7 +109,7 @@ it('opens the Terms and Privacy footer links as drafts for lawyer review', async
     const response = await get(address.pathname)
     expect(response.status, name).toBe(200)
     const page = await response.text()
-    expect(page, name).toContain('Draft for lawyer review')
+    expect(page, name).not.toMatch(/lawyer review|A lawyer reviews/)
     expect(page, name).toContain('<mark class="draft-field">')
   }
 })
