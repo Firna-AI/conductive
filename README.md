@@ -221,6 +221,7 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
+  - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
   - [GitHub banner](docs/protocol/github-banner.md)
   - [Agent tools](docs/protocol/agent-tools.md)

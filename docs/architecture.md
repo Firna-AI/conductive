@@ -249,8 +249,11 @@ the merge.
 
 - [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
   image, the life of a workspace, and the tools of a workspace.
-- [Chat and events](protocol/chat-and-events.md): sessions, messages, the
-  agent runner, and the events.
+- [Chat and events](protocol/chat-and-events.md): sessions, messages, what
+  the chat shows, and the events.
+- [Agent runner](protocol/agent-runner.md): the connection of the runner,
+  its events and their limits, its turns, and the repair of lost workspace
+  updates.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
 - [GitHub banner](protocol/github-banner.md): the pull request bar and its

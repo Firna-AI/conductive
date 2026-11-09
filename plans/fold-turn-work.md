@@ -248,6 +248,29 @@ date, and the user can override it:
   and its left-out total come from the line of a run of tool calls.
 - The decision numbers are 150 and 151. Branches in flight already use
   142 to 149.
+- The docs milestone made these calls on 9 November 2026, and I keep
+  them:
+  - `agent-runner.md` keeps the moved headings as they were, under the
+    title "Agent runner". Reason: the move stays exact, and each link
+    changes only its file name.
+  - The fold rules are the subsection "The work of a turn" under "What
+    the chat shows". Reason: other docs link to one anchor.
+  - The protocol doc gives decision 151 the reason of its option text:
+    the turn stays as short as in Conductor. The user gave no reason.
+  - The protocol doc leaves out the details that the code, the mockups,
+    and the tests hold: a turn that a newer turn ends, the words
+    "1 tool call" and "1 message", the look of a card and a lost line in
+    an open fold, and the scroll rule at the end of a turn.
+  - An insert between two agent messages ends the answer, as a card item
+    ends it in the mockups. Reason: the answer is the agent messages
+    directly before the last one.
+- `chat-and-events.md` keeps 263 lines after the split, and about 281
+  after a merge with `main`. Its next split waits for
+  `plans/follow-ups/protocol-docs-split.md`, which splits the long
+  protocol docs after the open branches merge.
+- `src/chat/README.md` passes 300 lines: 323 on `main` before this
+  change. Its split waits for `plans/follow-ups/chat-readme-split.md`,
+  because other branches edit the same README.
 - `chat-and-events.md` has 378 lines, past the target of about 250 lines.
   The `documentation` skill asks for a split when a change touches such a
   doc. So "The agent runner", with "Lost workspace updates", moves into a
@@ -303,23 +326,24 @@ Depends on: 1
 The protocol docs state the fold as a requirement, with decisions 150
 and 151. The chat docs give its rules for the code.
 
-- [ ] Move "The agent runner" and "Lost workspace updates" from
+- [x] Move "The agent runner" and "Lost workspace updates" from
       `docs/protocol/chat-and-events.md` into a new
       `docs/protocol/agent-runner.md`. Update each link to their anchors
       in the docs, the READMEs, and the code comments. Add the new doc to
       the list of protocol docs in `docs/architecture.md`.
-- [ ] Add the fold to "What the chat shows" in `chat-and-events.md`, with
+- [x] Add the fold to "What the chat shows" in `chat-and-events.md`, with
       decision 150, the rejected alternative, and the reason. State what
       folds, when, the words of its line, and what stays in view.
-- [ ] Apply decision 151. Say in "What the chat shows" of
+- [x] Apply decision 151. Say in "What the chat shows" of
       `chat-and-events.md` that a lost line among the work of a turn folds
       with that work. Say in "What the chat shows" of
       `docs/protocol/agent-tools.md` that the result of a command folds
       with the work of its turn when the turn ends.
-- [ ] Update `src/chat/README.md` and `src/chat/transcript.md` with the
-      fold: the summary of the chat, the rules for this code, and the key
-      code.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Update `src/chat/README.md` and `src/chat/transcript.md` with the
+      fold: the summary of the chat and the rules for this code.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: the link check in `.context/fold-turn-work/m2/`.
 
 ## Milestone 3: Fold the work in the chat
 
@@ -335,6 +359,8 @@ mockups show.
 - [ ] Add the fold component. Share the call line and the icons of
       `ToolGroup`, and use the mockup styles.
 - [ ] Draw the fold entry in `TranscriptView.tsx`.
+- [ ] Name the fold entry and the fold component under "Key code" in
+      `src/chat/README.md`.
 - [ ] Keep the line of each fold in place when the user opens or closes
       it, as the design says: the work folds and the runs of tool calls.
 - [ ] Test the requirements of the fold. See each test fail first:

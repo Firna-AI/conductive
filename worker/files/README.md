@@ -177,6 +177,6 @@ No migration is required.
 
 See the [shared contracts](../../src/shared/README.md),
 [backend fakes](../test-support/README.md),
-[runner event rules](../../docs/protocol/chat-and-events.md#the-agent-runner),
-[lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates), and
+[runner event rules](../../docs/protocol/agent-runner.md#the-agent-runner),
+[lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates), and
 [file requirements](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).

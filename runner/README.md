@@ -8,7 +8,7 @@ repository.
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It sends numbered events. It gets turns, messages, interrupts, model
 changes, file requests, and report requests.
-[Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner)
+[Agent runner](../docs/protocol/agent-runner.md)
 states its requirements, and the
 [shared contracts](../src/shared/README.md) define its messages.
 
@@ -123,7 +123,7 @@ the outbox size check.
 
 The workspace sends a `report.refresh` command when it needs a fresh full
 report of one kind.
-[Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the requirements.
 
 - The runner takes a request without a session or a login. The agents never
@@ -289,8 +289,9 @@ tools that time the first agent start after a resume.
 ## Related docs
 
 - [Architecture: sandbox software](../docs/architecture.md#sandbox-software)
-- [Chat and events: the agent runner](../docs/protocol/chat-and-events.md#the-agent-runner)
-- [Chat and events: lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
+- [Agent runner](../docs/protocol/agent-runner.md)
+- [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Chat and events: agents](../docs/protocol/chat-and-events.md#agents)
 - [Access and security: agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)

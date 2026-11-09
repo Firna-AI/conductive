@@ -95,4 +95,5 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [Deployment inputs](../docs/deployment.md)
 - [Access and security](../docs/protocol/access-and-security.md)
 - [Chat and events](../docs/protocol/chat-and-events.md)
+- [Agent runner](../docs/protocol/agent-runner.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)

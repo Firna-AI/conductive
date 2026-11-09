@@ -81,7 +81,7 @@ The workspace can refuse an update of a file list. After such a first
 loss, it asks the runner for a fresh full report of that list, and the
 screens show nothing. When the workspace refuses that report too, the
 repair failed.
-[Lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 gives the rules. `FilesSnapshot.failedRepairs` holds the failed repairs of
 the two lists:
 

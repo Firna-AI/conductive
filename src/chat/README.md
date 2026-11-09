@@ -1,11 +1,12 @@
 # Chat
 
 The chat of a workspace: the session tabs with the session history, and the
-chat of the open session with its composer. It shows messages, folded tool
-calls, the running turn, steer, Stop, failures with Try again, the start
-steps of the sandbox, the wait of Send during the first start of a new
-workspace, the Mac commands of each turn, and the bar that takes the
-composer's place while the sandbox does not run. The workspace screen
+chat of the open session with its composer. It shows messages, folded runs
+of tool calls, the folded work of each ended turn above its answer, the
+running turn, steer, Stop, failures with Try again, the start steps of the
+sandbox, the wait of Send during the first start of a new workspace, the
+Mac commands of each turn, and the bar that takes the composer's place
+while the sandbox does not run. The workspace screen
 of the app shell mounts it by default, as
 [the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
 says. It builds against the fake API and the recorded chat events of
@@ -130,7 +131,10 @@ members from the models of the app.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
-  and Try again.
+  the work fold of each ended turn, and Try again.
+- [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
+  says what folds when a turn ends. It also says that the line of each fold
+  stays in place when the user opens or closes it, also for a run of calls.
 - The chat loads the history of each session that becomes the shown session,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
@@ -303,6 +307,8 @@ check in the Mac app.
 ### Related docs
 
 - [Chat and events](../../docs/protocol/chat-and-events.md)
+- [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
+  runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):
   start steps, stop and resume, and archive.
 - [Architecture](../../docs/architecture.md)
