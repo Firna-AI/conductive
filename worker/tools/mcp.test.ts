@@ -54,6 +54,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
         model: { agent: 'claude', model: 'mcp-model' },
         effort: 'max',
         sectionId: 'chosen-a',
+        name: 'MCP workspace',
       }),
       call(3, 'list_workspaces'),
     ]),
@@ -82,6 +83,9 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
             inputSchema: { required: ['repositoryId', 'firstMessage'] },
           },
           { name: 'list_workspaces' },
+          { name: 'list_repositories' },
+          { name: 'list_sections' },
+          { name: 'list_models' },
         ],
       },
     },
@@ -121,6 +125,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
   expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
     expect.objectContaining({
       firstMessage: 'Delegate this task.',
+      name: 'MCP workspace',
       sender: expect.objectContaining({ id: 'teammate' }),
     }),
   )

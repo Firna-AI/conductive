@@ -28,6 +28,7 @@ it('inherits the org, owner, and owner defaults while the calling sender starts 
   const response = await fixture.create({
     repositoryId: 'repo-a',
     firstMessage: '  Keep this text.\nThen continue.  ',
+    name: 42,
     orgId: 'org-b',
     ownerUserId: 'outsider',
   })

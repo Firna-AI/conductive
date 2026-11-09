@@ -92,6 +92,7 @@ export async function insertWorkspace(
     user: User
     senderUserId?: string
     city: string
+    name?: string
     branch: string
     sessionId: string
     turnId: string
@@ -137,7 +138,7 @@ export async function insertWorkspace(
         input.repositoryId,
         input.user.id,
         section.id,
-        input.city,
+        input.name ?? input.city,
         input.branch,
         input.now,
         input.now,

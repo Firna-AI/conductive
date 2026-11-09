@@ -1,4 +1,7 @@
-import type { AgentWorkspaceSummary } from '../../src/shared/agent-tools'
+import type {
+  AgentListSectionsResponse,
+  AgentWorkspaceSummary,
+} from '../../src/shared/agent-tools'
 import type { AgentChoice } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
 import { choice, record, text } from '../../tools/input'
@@ -11,6 +14,7 @@ export interface CallingWorkspace {
   workspaceId: string
   orgId: string
   ownerUserId: string
+  repositoryId: string
 }
 
 export async function callingWorkspace(
@@ -20,7 +24,7 @@ export async function callingWorkspace(
   const row = await db
     .prepare(
       `SELECT w.id AS workspaceId, w.org_id AS orgId,
-       w.owner_user_id AS ownerUserId
+       w.owner_user_id AS ownerUserId, w.repository_id AS repositoryId
        FROM workspace_tokens t
        JOIN workspaces w ON w.id = t.workspace_id
        JOIN org_members m ON m.org_id = w.org_id AND m.user_id = w.owner_user_id
@@ -35,7 +39,26 @@ export async function callingWorkspace(
     workspaceId: text(fields.workspaceId),
     orgId: text(fields.orgId),
     ownerUserId: text(fields.ownerUserId),
+    repositoryId: text(fields.repositoryId),
   }
+}
+
+export async function orgSections(
+  db: D1Database,
+  orgId: string,
+): Promise<AgentListSectionsResponse['sections']> {
+  const { results } = await db
+    .prepare(
+      `SELECT id, name, is_default AS isDefault FROM sections
+       WHERE org_id = ? ORDER BY position, id`,
+    )
+    .bind(orgId)
+    .all<{ id: string; name: string; isDefault: number }>()
+  return results.map((row) => ({
+    id: row.id,
+    name: row.name,
+    default: row.isDefault === 1,
+  }))
 }
 
 export async function orgWorkspaces(

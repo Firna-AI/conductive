@@ -110,6 +110,11 @@ The answers:
 - Each ID field of `create_workspace` names the list tool that gives its
   values. Reason: the agent learns where an ID comes from without a
   prompt.
+- The copy of `src/shared/session-title.ts` keeps the content of the
+  title branch, except that `withoutFinalFullStop` is not exported. Agent
+  call, 9 November 2026. Reason: the export check of the gate rejects an
+  export that nothing imports, and only the title branch imports it. The
+  later merge takes the line of the title branch.
 - An image refresh does not install the workspace tools again. So a cloud
   computer gets the new tools only from the next full image build. The
   Worker serves the new routes to older tools too, and older tools drop the

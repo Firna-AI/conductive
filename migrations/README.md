@@ -41,6 +41,11 @@ Existing Claude subscription tokens refuse re-use by default.
 Existing API keys allow re-use by default.
 The migration keeps the encrypted secret and its timestamps.
 
+`202611081300_workspace_creation_name.sql` adds the nullable `workspace_creation_plans.name` column.
+The agent create tool stores its cleaned workspace name there for creation retries.
+Existing plans keep `NULL` and use their city name.
+The `city` column and branch keep their city value.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -72,6 +77,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 15e Mac app | `202611072000`–`202611072059` |
 | 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
 | 15o Org suspension | `202611080000`–`202611080059` |
+| Agent tool lists and names | `202611081300`–`202611081359` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 

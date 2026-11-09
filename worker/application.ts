@@ -30,6 +30,7 @@ import { productionMembersHooks } from './members/composition'
 import { cleanupDeletedOrgs } from './members/cleanup'
 import { routePreview, routeWorkspaceFeatures } from './features/router'
 import { productionAgentTools } from './tools/composition'
+import { isAgentToolPath } from './tools/lists'
 import { productionGitHubWebhook } from './github/composition'
 import { appFrameSources } from './configuration'
 
@@ -93,7 +94,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await routeMacCommand(request, env))
         }
         if (surface === 'machine') {
-          if (path === MACHINE_PATHS.workspaces)
+          if (isAgentToolPath(path))
             return respond(
               await productionAgentTools(request, env, dependencies),
             )
