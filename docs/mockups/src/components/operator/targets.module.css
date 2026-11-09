@@ -43,6 +43,47 @@
   text-decoration: underline;
 }
 
+/* A login that opens its GitHub profile, with a small mark for a new tab. */
+.profileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.profileName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileIcon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.profileLink:hover {
+  color: var(--ui-link);
+}
+
+.profileLink:hover .profileName {
+  text-decoration: underline;
+}
+
+.inlineLink {
+  color: var(--ui-link);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.inlineLink:hover {
+  text-decoration: underline;
+}
+
 .detail {
   color: var(--ui-muted);
   font-size: var(--ui-text-sm);

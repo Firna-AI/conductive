@@ -15,15 +15,16 @@
   - The same day the user put Suspend and Lift on the page of each org and user. Those are write actions.
   - The suspend routes already accept the normal session, also before this change.
   - The `sessions` table stores no sign-in time, only `expires_at`.
-- **Problem:** One stolen operator session cookie gives up to 7 days of operator power: it can suspend or lift any user or org, and read the names and roles of every user.
-- **Impact if no action:** A stolen cookie of an operator can lift the suspension of an abuser, or suspend a whole org.
+  - On 9 November 2026 the user chose a waitlist, which the operator controls from the section. It adds more operator writes: Approve a person who waits, make and disable invite codes with any use limit, and pause every way in. An approval or an invite code lets new people use the app, which pays for their cloud computers.
+- **Problem:** One stolen operator session cookie gives up to 7 days of operator power: it can suspend or lift any user or org, let any number of people in, pause sign-ups, and read the names and roles of every user.
+- **Impact if no action:** A stolen cookie of an operator can lift the suspension of an abuser, suspend a whole org, or make an invite code with a large use limit.
 - **Root question:** How much operator power does one long-lived session cookie give?
 - **Options:**
   - **A.** Keep the normal session for every operator request, as now. Effort: Small.
-  - **B.** Ask for a fresh GitHub sign-in before Suspend and Lift only. The app must store the sign-in time of each session. Effort: Medium.
+  - **B.** Ask for a fresh GitHub sign-in before each operator write only: Suspend, Lift, Approve, the invite codes, and the pause. The app must store the sign-in time of each session. Effort: Medium.
   - **C.** Ask for a fresh GitHub sign-in before every operator request, the reads included. Effort: Medium.
 - **Left out:** A separate hostname behind Cloudflare Access, because the user chose the section inside the web app on 8 November 2026.
 - **Wider fix:** C. Every later operator request then needs a fresh sign-in too.
 - **Previous examples:** None found.
-- **Recommendation:** B. It guards the two actions that change other people's access, and the reads stay quick. C protects the codebase best.
+- **Recommendation:** B. It guards the actions that change other people's access, and the reads stay quick. C protects the codebase best.
 - **Action:** ask the user, because B and C add a new gate, and the options trade effort against the risk of a stolen session.

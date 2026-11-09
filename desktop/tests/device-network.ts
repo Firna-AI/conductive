@@ -61,7 +61,7 @@ export async function deviceSessionEndpoint(page: Page, appOrigin: string) {
     }, appOrigin + API_PATHS.session)
     expect(result).toEqual({
       status: signedIn ? 200 : 401,
-      body: signedIn ? { user: fakeUser } : signedOut,
+      body: signedIn ? { user: fakeUser, appAccess: true } : signedOut,
     })
     const outgoing = requests.at(-1)
     expect(outgoing).toEqual({
@@ -128,7 +128,7 @@ export async function installDeviceNetwork(
             `${input.cookieName}=session.signature`
         )
           return new Response(null, { status: 401 })
-        return Response.json({ user: { id: 'user-one' } })
+        return Response.json({ user: { id: 'user-one' }, appAccess: true })
       }
     },
     {

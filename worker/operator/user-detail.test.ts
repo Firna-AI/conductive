@@ -62,6 +62,11 @@ it('reads only owned workspace counts, all org roles, the name, and the suspensi
     login: 'dana-k',
     name: 'Dana Kim',
     joinedAt: TEST_TIME - 1,
+    appAccess: { state: 'waiting', waitingSince: TEST_TIME - 1 },
+    approvalEmail: { state: 'none', updatedAt: null },
+    hasVerifiedEmail: false,
+    githubCreatedAt: null,
+    referralCode: null,
     workspaces: { total: 6, running: 2 },
     orgs: [
       { id: 'deleted', name: 'Deleted', initials: null, role: 'admin' },

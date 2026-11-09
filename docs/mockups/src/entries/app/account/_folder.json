@@ -4,6 +4,7 @@
     "setup",
     "connect-claude",
     "connect-codex",
-    "share-not-saved"
+    "share-not-saved",
+    "invites"
   ]
 }

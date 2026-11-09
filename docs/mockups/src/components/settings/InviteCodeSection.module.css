@@ -1,0 +1,17 @@
+/* How many invites are left, beside the title, as a quiet fact. */
+.count {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+/* The invite link, read-only, beside Copy. */
+.link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.link > :first-child {
+  flex: 1;
+  min-width: 0;
+}

@@ -36,6 +36,14 @@ export interface SampleUser {
   running: number
 }
 
+const HOUR = 3_600_000
+const DAY = 24 * HOUR
+
+/** A time some days before `now`, earlier in that day, so day 0 is past. */
+export function daysBefore(now: number, days: number): number {
+  return now - days * DAY - 2 * HOUR
+}
+
 function user(
   githubId: number,
   login: string,
@@ -88,17 +96,38 @@ function org(
 
 const [cal, priya, jonas] = fakeUsers
 
+/** A person on the waitlist, who owns no workspace yet. */
+function waiting(
+  githubId: number,
+  login: string,
+  name: string | null,
+  joinedDaysAgo: number,
+): SampleUser {
+  return user(githubId, login, name, joinedDaysAgo, [0, 0])
+}
+
 /**
  * The users, newest first. A tie on one day goes by GitHub ID, as the
- * Worker orders it. The people of the other fixtures come last.
+ * Worker orders it. The people on the waitlist have the names of the
+ * waitlist mockups. The people of the other fixtures come last.
  */
 export const sampleUsers: readonly SampleUser[] = [
   user(81234567, 'rho-9', 'Rhea Okafor', 0, [2, 1]),
+  waiting(91827677, 'zed-k', null, 0),
   user(80555121, 'tide-sam', 'Sam Ortiz', 1, [3, 0]),
+  waiting(91827610, 'bram-v', 'Bram Visser', 4),
   user(61000001, 'ana-p', 'Ana Pereira', 5, [3, 0]),
   user(61000002, 'joe-q', 'Joe Quinn', 5, [1, 0]),
+  waiting(91827588, 'samir-h', 'Samir Haddad', 7),
+  waiting(91827560, 'lena-h', 'Lena Hart', 8),
+  waiting(91827533, 'ovi-dev', 'Ovidiu Pop', 9),
+  waiting(91827502, 'nadia-q', 'Nadia Qureshi', 10),
   user(66213409, 'kt-null', 'Kai Tanaka', 11, [2, 0]),
+  waiting(70214398, 'kenji-w', 'Kenji Watanabe', 11),
   user(77120345, 'vex-ops', null, 11, [6, 2]),
+  waiting(91827455, 'pkwan', null, 12),
+  waiting(91827401, 'jules-m', 'Jules Martin', 13),
+  waiting(91827364, 'sam-okafor', 'Sam Okafor', 14),
   user(58201734, 'dana-k', 'Dana Kim', 18, [14, 0]),
   user(52230011, 'mira-s', 'Mira Santos', 36, [23, 1]),
   user(50400999, 'li-wei', 'Li Wei', 110, [31, 2]),
@@ -201,8 +230,12 @@ export const SAMPLE_IDS = {
   activeOrg: 'org_n0rthw1nd',
   /** Dana Kim, whom the operator suspended 2 days ago. */
   suspendedUser: 58201734,
-  /** Mira Santos, a user in use. */
+  /** Mira Santos, a user in use, whose referral code let Sam Ortiz in. */
   activeUser: 52230011,
+  /** Sam Okafor, the first person on the waitlist, with a verified email. */
+  waitingUser: 91827364,
+  /** Kenji Watanabe, who waits with no verified email on GitHub. */
+  waitingNoEmail: 70214398,
   /** The person signed in, whose own page warns before a suspension. */
   self: cal.githubId,
 } as const

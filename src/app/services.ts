@@ -73,6 +73,11 @@ export interface AppServices {
   newId: () => string
   /** Opens a page that the Worker or another site serves, such as sign-in. */
   leave: (url: string) => void
+  /**
+   * The origin of the app host, such as `https://app.conductive.build`. An
+   * address that people share, such as an invite link, starts with it.
+   */
+  appOrigin: string
   /** Copies text, such as a command to paste elsewhere. */
   copy: (text: string) => Promise<void>
 }

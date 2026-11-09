@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Ban, Search, Trash2 } from 'lucide-react'
+import { Ban, Hourglass, Search, Trash2 } from 'lucide-react'
 import { InputFrame } from '@firna/ui/input'
 import { Table, type TableColumn } from '@firna/ui/table'
 import type { TargetStatus } from '../../fixtures/operatorDirectory'
+import type { UserStatus } from '../../fixtures/operatorUsers'
 import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
 import { StatusText } from '../common/StatusText'
@@ -11,8 +12,11 @@ import { useControlSizes } from '../common/touch'
 import { Section } from '../settings/Section'
 import styles from './directory.module.css'
 
-/** The state of a suspended or deleted target. A target in use shows none. */
-export function TargetState(props: { status: TargetStatus }) {
+/**
+ * The state of a suspended or deleted target, or of a user who waits on
+ * the waitlist. A target in use shows none.
+ */
+export function TargetState(props: { status: TargetStatus | UserStatus }) {
   switch (props.status) {
     case 'active':
       return null
@@ -20,14 +24,20 @@ export function TargetState(props: { status: TargetStatus }) {
       return <StatusText icon={Ban} label="Suspended" tone="danger" />
     case 'deleted':
       return <StatusText icon={Trash2} label="Deleted" tone="muted" />
+    case 'waiting':
+      return <StatusText icon={Hourglass} label="Waiting" tone="warning" />
   }
 }
 
-/** A name cell: the mark, the name as a link, and a muted line under it. */
+/**
+ * A name cell: the mark, the name as a link, and a muted line under it.
+ * A phone can add a second muted line for the columns that it leaves out.
+ */
 export function NameCell(props: {
   mark: ReactNode
   name: ReactNode
   detail?: ReactNode
+  more?: ReactNode
 }) {
   return (
     <span className={styles.nameCell}>
@@ -37,12 +47,15 @@ export function NameCell(props: {
         {props.detail ? (
           <span className={styles.nameDetail}>{props.detail}</span>
         ) : null}
+        {props.more ? (
+          <span className={styles.nameDetail}>{props.more}</span>
+        ) : null}
       </span>
     </span>
   )
 }
 
-/** The search field at the top of the Orgs and Users tabs. */
+/** The search field at the top of the Orgs, Users, Waitlist, and Invite codes tabs. */
 export function DirectorySearch(props: {
   label: string
   placeholder: string

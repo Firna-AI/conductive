@@ -1,6 +1,4 @@
 import { useEffect, type ReactNode } from 'react'
-import { Spinner } from '@firna/ui/spinner'
-import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
 import { EmptyState } from '../../docs/mockups/src/components/common/EmptyState'
 import { inFirstRun } from '../app/get-started'
@@ -13,7 +11,8 @@ import { AccountScreen } from './account/AccountScreen'
 import { SignInScreen } from './auth/SignInScreen'
 import { useApp } from './context'
 import { InvitationsScreen } from './invitations/InvitationsScreen'
-import { PhoneFrame, StandaloneFrame } from './layout/frames'
+import { Alone, Loading } from './layout/Alone'
+import { PhoneFrame } from './layout/frames'
 import { Sidebar } from './list/Sidebar'
 import { useKeptOrg } from './mac/mac-app'
 import { GetStartedScreen } from './onboarding/GetStartedScreen'
@@ -22,33 +21,7 @@ import { CreateOrgScreen } from './orgs/CreateOrgScreen'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
 import { ActionButton } from './ui/actions'
 import { useViewport } from './ui/viewport'
-import ui from './ui/ui.module.css'
-
-/**
- * A page alone in the window: a phone frame, or a desktop page without the
- * rail.
- */
-function Alone(props: { children: ReactNode }) {
-  if (useViewport() === 'phone')
-    return <PhoneFrame>{props.children}</PhoneFrame>
-  return <StandaloneFrame>{props.children}</StandaloneFrame>
-}
-
-/** The wait of the first load, as the app shows it. */
-function Loading() {
-  const theme = useSharedUiTheme()
-  return (
-    <Alone>
-      <div className={ui.center}>
-        <Spinner
-          accessibilityLabel="Loading"
-          color={theme.colors.muted}
-          size={16}
-        />
-      </div>
-    </Alone>
-  )
-}
+import { Waiting } from './waitlist/Waiting'
 
 /**
  * The app opens as usual: Get started, or the org of Get started. That is
@@ -66,6 +39,16 @@ function OpenApp() {
       ? routes.getStarted()
       : routes.org(first.id)
   useEffect(() => navigation.replace(target), [navigation, target])
+  return null
+}
+
+/**
+ * The join link of a person with app access: the app uses no code, and it
+ * opens as usual at `/`, with no notice.
+ */
+function Joined() {
+  const navigation = useNavigation()
+  useEffect(() => navigation.replace(routes.home()), [navigation])
   return null
 }
 
@@ -144,6 +127,8 @@ function Signed(props: { route: Route; user: User }) {
       )
     case 'operator':
       return <OperatorRoutes user={user} view={route.view} />
+    case 'join':
+      return <Joined />
     case 'not-found':
       return inRail(<NotAvailable title="This page is not available" />, null)
     default:
@@ -153,7 +138,8 @@ function Signed(props: { route: Route; user: User }) {
 
 /**
  * The web app: the first load, the sign-in, and the screen of the address.
- * Get started is the only first run.
+ * A person without app access sees only the waitlist, at every address.
+ * Get started is the only first run, and it opens only after app access.
  */
 export function Shell() {
   const app = useApp()
@@ -166,7 +152,9 @@ export function Shell() {
     case 'signed-out':
       return (
         <Alone>
-          <SignInScreen />
+          <SignInScreen
+            code={route.screen === 'join' ? route.code : undefined}
+          />
         </Alone>
       )
     case 'failed':
@@ -184,6 +172,8 @@ export function Shell() {
           />
         </Alone>
       )
+    case 'waiting':
+      return <Waiting route={route} user={boot.user} />
     case 'ready':
       return <Signed route={route} user={boot.user} />
   }
