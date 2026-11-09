@@ -31,7 +31,8 @@ The first message runs as the sender of the calling turn.
 `--name` gives an optional workspace name.
 The Worker keeps its first line with text, makes white space single, removes a final full stop, and cuts at 60 Unicode code points.
 It keeps whole words when possible and keeps an ellipsis.
-A blank result uses the city name. The name does not change the branch.
+A blank result counts as no name, and the app shows "Untitled".
+The name does not change the branch.
 The create answer holds the stored name.
 `workspaces list` returns every workspace in the org, including archived workspaces.
 `repositories list` returns the repositories that a create accepts, with IDs and the current repository mark.

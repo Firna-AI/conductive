@@ -48,7 +48,7 @@ It preserves the first message text.
 It cleans an optional name with `sessionTitleFrom` in the [shared title helper](../../src/shared/session-title.ts).
 It keeps the first line with text, makes white space single, and removes one final full stop while keeping an ellipsis.
 It cuts at 60 Unicode code points, at a whole word when possible.
-A blank result counts as no name and uses the city name.
+A blank result counts as no name, and the app shows "Untitled".
 The create answer gives the stored name. The branch and stored city keep the city.
 The tools preserve string names, including blank names, and ignore names of other types.
 It reads saved owner preferences when the request omits model or effort.

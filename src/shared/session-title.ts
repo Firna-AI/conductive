@@ -18,6 +18,6 @@ export function sessionTitleFrom(text: string): string | null {
   return points.slice(0, boundary > 0 ? boundary : limit).join('')
 }
 
-function withoutFinalFullStop(text: string): string {
+export function withoutFinalFullStop(text: string): string {
   return text.replace(/(?<!\.)\.$/, '').trimEnd()
 }

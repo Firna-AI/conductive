@@ -18,10 +18,19 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, `?suspended=1`, or `?paths=masked`. `dev/options.ts` lists
-  them. A new org
+  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`, or
+  `?paths=masked`. `dev/options.ts` lists them. A new org
   of the dev fake gets every repository of the account's list, and keeps
   its custom initials through rename, delete, and restore.
+- `?operator=1` makes the dev user an operator, so the rail and the org
+  switcher show Operator. The [operator section](../shell/operator/README.md)
+  then shows the sample orgs and users of the mockups, and Suspend and Lift
+  change them. A suspension of Acme, Futex, or Firna also suspends that org
+  in the state of the fake, so the fake refuses each write of that org with
+  `org_suspended`. The open app does not read its orgs again, so its pages
+  of that org show the suspension only after such a refusal. Without the
+  option, each operator request gets `operator_required`, as the Worker
+  does.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -216,6 +225,12 @@ clicks, types, and lets the answers of the fake API settle.
   unmount. It checks that a switch stops the old store before the new one
   connects, and shows only the new store. It also checks when the hook keeps
   a store, connects it again, or makes a new one.
+- `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
+  the Overview and the pages of the operator section, its searches, and
+  Suspend and Lift. A refusal with `operator_required` marks the account
+  as not an operator. `api/read-operator.ts` and
+  `api/read-operator-pages.ts`: their readers. The
+  [operator section](../shell/operator/README.md) gives the screens.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
   the tab opened last, from `AppModel.lastOrg`, or else the first org that

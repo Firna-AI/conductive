@@ -16,6 +16,7 @@ import ui from '../ui/ui.module.css'
 import local from './palette.module.css'
 import { PaletteEmpty } from './PaletteEmpty'
 import { RowLead } from './RowLead'
+import { nameLabel } from '../../shared/name-label'
 
 /** A press in the list keeps the focus in the search field. */
 function keepFieldFocus(event: MouseEvent) {
@@ -54,7 +55,7 @@ function RowContent(props: { row: PaletteRow; now: number }) {
       <span className={styles.lead}>
         <StatusGlyph status={workspace.state} />
       </span>
-      <span className={styles.label}>{workspace.name}</span>
+      <span className={styles.label}>{nameLabel(workspace.name)}</span>
       <span className={styles.repository}>{row.repository}</span>
       <span className={styles.end}>
         {formatAgo(props.now, workspace.updatedAt)}

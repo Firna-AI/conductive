@@ -35,7 +35,7 @@ function isWindow(value: unknown): value is DeviceWorkspaceWindow {
     'workspaceId' in value &&
     typeof value.workspaceId === 'string' &&
     'workspaceName' in value &&
-    typeof value.workspaceName === 'string' &&
+    (value.workspaceName === null || typeof value.workspaceName === 'string') &&
     'expiresAt' in value &&
     typeof value.expiresAt === 'number' &&
     Number.isFinite(value.expiresAt)
@@ -153,7 +153,7 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       commands.delete(command)
       return saveRevocation()
     },
-    allowWorkspace(workspaceId: string, workspaceName: string): void {
+    allowWorkspace(workspaceId: string, workspaceName: string | null): void {
       if ((windows.get(workspaceId)?.expiresAt ?? 0) > clock.now()) return
       const window = {
         workspaceId,

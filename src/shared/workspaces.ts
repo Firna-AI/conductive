@@ -35,7 +35,7 @@ export interface Workspace {
   repositoryId: string
   sectionId: string
   owner: MessageSender
-  name: string
+  name: string | null
   branch: string
   choice: AgentChoice
   state: WorkspaceState

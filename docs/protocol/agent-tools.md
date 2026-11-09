@@ -52,8 +52,8 @@ says.
      the limit. When the first word is longer than the limit, it cuts the
      name at the limit.
 - The answer of the create call holds the stored name.
-- A name that is blank after this rule counts as no name. The workspace
-  then gets the city name, as
+- A name that is blank after this rule counts as no name. The app then
+  shows "Untitled", as
   [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
   says.
 - The name does not change the branch. The branch keeps its rule: the
