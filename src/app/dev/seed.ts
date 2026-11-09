@@ -131,5 +131,6 @@ export function seedState(options: DevOptions): DevState {
     attachments: new Map(),
     stopAfterMs: options.stopAfterMs,
     operator: operatorRecords(options),
+    shareSaveFails: options.shareSaveFails,
   }
 }

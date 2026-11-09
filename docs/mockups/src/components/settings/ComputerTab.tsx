@@ -8,7 +8,8 @@ import {
 import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { BuildSection, type BuildState } from './BuildSection'
-import { EnvVarsSection, ScriptSection } from './EnvironmentSections'
+import { ScriptSection } from './EnvironmentSections'
+import { EnvVarsSection, type EnvVarForm } from './EnvVarsSection'
 import type { ReadOnlyCause } from './OrgSections'
 import { TabIntro } from './TabIntro'
 
@@ -16,11 +17,13 @@ import { TabIntro } from './TabIntro'
  * The org's cloud computer: its builds, its scripts, and its env vars.
  * `readOnly` shows them without edit fields and actions, for a member who
  * is not an admin (decision 57), and for everyone in a suspended org.
+ * `envForm` opens a form of the env vars.
  */
 export function ComputerTab(props: {
   org: string
   build: BuildState
   readOnly?: ReadOnlyCause
+  envForm?: EnvVarForm
 }) {
   const changed = props.build === 'changed'
   const readOnly = props.readOnly !== undefined
@@ -64,7 +67,11 @@ export function ComputerTab(props: {
         script={startupScript}
         title="Startup script"
       />
-      <EnvVarsSection org={props.org} readOnly={readOnly} />
+      <EnvVarsSection
+        form={props.envForm}
+        org={props.org}
+        readOnly={readOnly}
+      />
     </>
   )
 }

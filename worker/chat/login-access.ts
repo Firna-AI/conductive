@@ -7,6 +7,9 @@ import type { ChatDependencies } from './types'
 /** This failure closes the runner and leaves its commands queued. */
 export class RunnerAccessDenied extends Error {}
 
+/** Reuse can be refused while the starter's own login stays available. */
+export class LoginReuseDenied extends Error {}
+
 export class SenderAccessDenied extends HttpError {
   constructor() {
     super(
@@ -51,6 +54,7 @@ export function loginResolver(
       env.DB,
       id,
       userId,
+      agent,
       runnerTokenHash,
       senderId,
     )
@@ -59,6 +63,7 @@ export function loginResolver(
     if (senderId !== undefined && !access.senderAllowed)
       throw new SenderAccessDenied()
     if (!access.loginOwnerAllowed || userId === null) return null
+    if (!access.reuseAllowed) throw new LoginReuseDenied()
     return read(userId, agent, runnerTokenHash, senderId)
   }
 }

@@ -2,7 +2,7 @@ import type { HttpFetch } from '../env'
 import { readBoundedBody } from '../http/bounded-body'
 import { githubFailure, object } from './parsers'
 
-export const GITHUB_API_VERSION = '2026-03-10'
+const GITHUB_API_VERSION = '2026-03-10'
 const BODY_BUDGET = 26 * 1024 * 1024
 
 export function githubRequest(

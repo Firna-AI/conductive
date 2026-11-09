@@ -8,12 +8,13 @@ import {
 } from '../../app/workspace-store'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { listLabel } from '../model/file-labels'
 import type { WorkspaceFiles } from '../model/files-store'
 import type { FilesNavigation, FilesTab, FilesTarget } from '../navigation'
 import { DiffPage } from '../page/DiffPage'
 import type { FileActionTargets } from '../page/file-actions'
 import { FilePage } from '../page/FilePage'
-import { FilesPanel } from '../panel/FilesPanel'
+import { FilesPanel, useFilesSnapshot } from '../panel/FilesPanel'
 import { FileTabItem } from '../tabs/FileTabItem'
 import { editOpenTab, playRecordedUpdates } from './dev-events'
 import { devNow, RepairControls } from './RepairControls'
@@ -110,6 +111,7 @@ export function DevApp(props: {
     }),
     [view],
   )
+  const snapshot = useFilesSnapshot(files)
   const close = (tab: FilesTab) => {
     const rest = tabs.filter((open) => !sameTab(open, tab))
     setTabs(rest)
@@ -150,6 +152,7 @@ export function DevApp(props: {
                 {tabs.map((tab) => (
                   <FileTabItem
                     key={`${tab.kind}:${tab.path}`}
+                    label={listLabel(snapshot, tab.path, tab.kind)}
                     navigation={navigation}
                     onClose={() => close(tab)}
                     selected={view.active !== null && sameTab(view.active, tab)}

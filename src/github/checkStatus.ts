@@ -12,7 +12,7 @@ import {
 import type { GitHubCheck } from '../shared/github'
 
 export type CheckState = GitHubCheck['state']
-export type CheckTone = 'success' | 'danger' | 'warning' | 'muted'
+type CheckTone = 'success' | 'danger' | 'warning' | 'muted'
 
 export interface CheckLook {
   /** The words of the state. */

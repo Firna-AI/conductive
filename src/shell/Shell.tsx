@@ -22,6 +22,7 @@ import { GetStartedScreen } from './onboarding/GetStartedScreen'
 import { OperatorRoutes } from './operator/OperatorRoutes'
 import { CreateOrgScreen } from './orgs/CreateOrgScreen'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
+import { PaletteLayer } from './palette/PaletteLayer'
 import { ActionButton } from './ui/actions'
 import { OverlayHost } from './ui/Overlay'
 import { useViewport } from './ui/viewport'
@@ -39,6 +40,7 @@ function Alone(props: { children: ReactNode }) {
       <OverlayHost>
         <WindowStrip />
         {props.children}
+        <PaletteLayer />
       </OverlayHost>
     </div>
   )

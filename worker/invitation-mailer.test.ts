@@ -47,7 +47,7 @@ it('sends a plain text invitation through Resend with the secret and a stable de
     requests[2].headers.get('Idempotency-Key'),
   )
   expect(await request.json()).toEqual({
-    from: 'Conductive <invites@conductive.build>',
+    from: 'Conductive <invites@mail.conductive.build>',
     to: ['mira@example.com'],
     subject: 'Join Example org on Conductive',
     text: 'Cal invited you to join Example org on Conductive.\n\nSign in with GitHub and accept your invitation:\nhttps://app.conductive.build/?invite=invite-1',

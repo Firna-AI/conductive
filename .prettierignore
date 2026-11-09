@@ -5,5 +5,7 @@ mokly-static
 dist
 .wrangler
 coverage
+.astro
+public/_site
 package-lock.json
 *.md

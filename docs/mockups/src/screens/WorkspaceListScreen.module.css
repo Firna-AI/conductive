@@ -55,6 +55,13 @@
   padding: 10px 8px 24px;
 }
 
+/* New workspace and Search, one under the other. */
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
 .choose {
   display: flex;
   flex: 1;

@@ -148,7 +148,8 @@ is suspended.
 
 An active admin is an admin who is not suspended. One rule of active
 admins decides who gets the workspaces of a member who leaves, and who
-must stay an admin (decision 123).
+must stay an admin (decision 123). The same rule decides whether a Restore
+of a deleted org takes effect.
 
 - When a member leaves the org alone, their workspaces move to the
   earliest active admin.
@@ -162,6 +163,12 @@ must stay an admin (decision 123).
 - A manual move of a workspace to a suspended member fails with HTTP 409
   and the code `owner_suspended`, and nothing changes. The owner picker
   shows the error.
+- A [Restore](orgs-and-members.md#delete-org) brings a deleted org back
+  only while the admin who asked for it is an active admin. When that admin
+  is suspended before the org comes back, the org stays deleted.
+- Reason: a suspension stops each other write of that admin. A Restore that
+  still takes effect after the suspension of its admin was rejected for
+  that reason.
 - [When a member leaves](orgs-and-members.md#when-a-member-leaves) states
   the other rules of a leave.
 

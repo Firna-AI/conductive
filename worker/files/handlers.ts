@@ -1,7 +1,15 @@
 import { filePaths } from '../../src/shared/files'
+import {
+  filterChanges,
+  filterDiffResponse,
+  filterFileResponse,
+  filterTree,
+} from '../../src/shared/output-fields'
+import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 import type { AppEnv, HttpFetch } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { gate } from '../security/gate'
+import { runningOutputSecrets } from '../lifecycle/output-secrets'
 import { filesWorkspace } from './access'
 import type { FilesWorkspace } from './data'
 import { readBoatFile } from './boat'
@@ -50,17 +58,21 @@ export function createFilesHandler(options: FilesHandlerOptions) {
         )
       }
       const workspace = await filesWorkspace(env, context, workspaceId)
+      const output = new OutputSanitizer()
+      for (const secret of await runningOutputSecrets(env, workspace))
+        output.add(secret)
+      const text = (value: string) => output.text(value)
       const files = await options.workspaceFiles(workspace)
       const paths = filePaths
       let response: Response
       if (url.pathname === paths.tree(context.org.id, workspaceId)) {
         const tree = await files.tree()
         if (!tree) throw fileUnavailable()
-        response = Response.json(tree)
+        response = Response.json(filterTree(tree, text))
       } else if (url.pathname === paths.changes(context.org.id, workspaceId)) {
         const changes = await files.changes()
         if (!changes) throw fileUnavailable()
-        response = Response.json(changes)
+        response = Response.json(filterChanges(changes, text))
       } else {
         const path = readFilePath(url.searchParams.get('path'))
         if (
@@ -85,7 +97,7 @@ export function createFilesHandler(options: FilesHandlerOptions) {
             if (size > options.maxFileBytes)
               throw new FileTooLargeError(size, options.maxFileBytes)
           }
-          response = Response.json(diff)
+          response = Response.json(filterDiffResponse(diff, text))
         } else {
           const contentPath = new URL(
             paths.content(context.org.id, workspaceId, path),
@@ -103,7 +115,7 @@ export function createFilesHandler(options: FilesHandlerOptions) {
             options.maxFileBytes,
             request.signal,
           )
-          const file =
+          const rawFile =
             pending ??
             (await readBoatFile(
               env,
@@ -114,6 +126,7 @@ export function createFilesHandler(options: FilesHandlerOptions) {
               options.maxFileBytes,
               options.fetch,
             ))
+          const file = filterFileResponse(rawFile, text)
           response =
             url.pathname === contentPath
               ? Response.json(file)

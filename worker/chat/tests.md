@@ -26,7 +26,30 @@ npm run typecheck
   So an acceptance crash test first makes the stored `loginAvailable` current,
   then sets `crashAfterCommit`. The fault then hits the acceptance commit.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
-  `RunnerChannel` for the refusal, cap, and file part tests.
+  `RunnerChannel` for the refusal, cap, and file part tests. It takes
+  optional `ChatDependencies` overrides.
+- `createGrownReportsFixture` in `runner-grown-reports.test-support.ts`
+  gives that fixture a `filterRunnerOutput` that runs the shared filter
+  with the secret `a`. So the display labels of valid report parts grow.
+  Its `capStorageValues` sets `beforeCommit` to refuse a stored value over
+  2,097,152 JSON bytes. That check stands in for the native value limit.
+- `runner-grown-reports.test.ts` uses both helpers for tree and changes
+  parts. `history-grown-delta.test.ts` uses `capStorageValues` for a grown
+  tree delta in the history.
+- `outputFixture` in `runner-output.test-support.ts` seeds an encrypted env
+  capture in D1 and starts a turn for the output filter tests.
+  `runner-output-durability.test.ts` fails the commit of held text on
+  `MemoryChatStorage`. It retries that receipt on the same live chat, then
+  checks a restart, a replay, and a gap.
+- `runner-output-context.test.ts` refuses a completion and ends the turn.
+  After a restart, a new runner stream sends later text of that answer,
+  split by a second restart. The filter masks only the part that completes
+  a secret. Each stream keeps its own raw cursor.
+- `runner-output-legacy.test.ts` starts from two older stream records, one
+  with an answer end and one with held text, and no workspace record. The
+  first receipt moves the answer end into the workspace record, and the
+  older stream keeps no copy. The held text stays with its own stream. No
+  record holds a raw secret prefix.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a
@@ -41,9 +64,15 @@ npm run typecheck
   refused Send, and that a repeated message ID observes nothing.
   `linked-retry.test.ts` also restarts after a crash at the acceptance of a
   linked Retry. It checks each stored record, and a stale Retry gets 409.
+- `login-reuse.test.ts` tests a starter who does not share the login.
+  Another member gets an empty linked session, and the first session keeps
+  `loginAvailable: true` with `loginShared: false`. A queued message of
+  another member fails with the cause before the runner gets it, and its
+  Retry opens a linked session.
 - `login-availability.test.ts` tests the metadata path. One query serves one
-  or four sessions and reads no credential. Reads check no login and flush
-  no runner. The list and a new tab still work with a damaged starter
+  or four sessions and reads no credential. `loginShared` follows the share
+  setting, and an open tab gets the changed value. Reads check no login and
+  flush no runner. The list and a new tab still work with a damaged starter
   ciphertext. Closed sessions and archived workspaces stay unchanged.
   `login-queries.test-support.ts` records its D1 login queries.
 - `turn-dispatch.test.ts` checks that a runner disconnect during the
@@ -56,10 +85,22 @@ npm run typecheck
   keeps SQLite history, queued messages, and the runner cursor. Event numbers
   continue. The resumed queued turn fails. Its message can retry after a
   second eviction.
-- `createAdapterRuntime` can bundle another Durable Object entry for
+- `createAdapterRuntime` can bundle another Durable Object entry, also for
   another workspace ID. The [GitHub store tests](../github/README.md#verification)
   use it to run `WorkspaceChat` with the GitHub state on SQLite.
-- The tests in `integration/` run the production Worker entry in
+- `integration/runner-output-durability.test.ts` bundles
+  `integration/runner-output-entry.test-support.ts` with it. That entry
+  extends the production `Workspace`. It answers a test-only `/inspect`
+  fetch with the stored records, and forwards each other request. The test
+  seeds an encrypted env capture in D1, and finds no raw held text in the
+  records. After an eviction, the hidden continuation shows once.
+- Read stored records through a fetch path before an eviction, as the
+  GitHub store tests do. A direct RPC read of the records can keep the
+  eviction waiting.
+- No native test fails or interrupts the commit of held text. Only the
+  fast `runner-output-durability.test.ts` fails that commit, on
+  `MemoryChatStorage`.
+- Most tests in `integration/` run the production Worker entry in
   Miniflare. They check the forwarding, the runner socket, the workspace
   lifecycle, and the app API. `integration/run-browser-harness.mjs` serves
   a production app build through that entry.

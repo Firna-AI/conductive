@@ -3,7 +3,7 @@ import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import type { FetchLike } from '../api/client'
 import { count, items, ParseError, text, type JsonObject } from '../api/parse'
 
-export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 /** The ID parts of route paths. A route reads each one by its name. */
 export const ID = {
@@ -18,7 +18,7 @@ export const ID = {
 /** The IDs in a path, by name, such as `params.org` for `:org`. */
 export type Params = Readonly<Record<string, string>>
 
-export interface RouteRequest {
+interface RouteRequest {
   params: Params
   /** The query of the address, such as the search of a list. */
   query: URLSearchParams

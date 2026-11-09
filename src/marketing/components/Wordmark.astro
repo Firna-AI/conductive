@@ -1,0 +1,30 @@
+---
+import { productName } from '../../../docs/mockups/src/brand'
+import lockupDark from '../../../docs/brand/conductive-lockup-dark.svg?url'
+import lockupLight from '../../../docs/brand/conductive-lockup-light.svg?url'
+import { lightMedia } from '../picture-styles'
+
+/**
+ * The lockup of the brand, as a link to the home page at `home`. The
+ * browser picks the lockup for the colour scheme. The files stay as the
+ * brand made them.
+ */
+type Props = { home: string }
+
+/** The intrinsic size of the lockups, from their SVG files. */
+const lockupSize = { width: 682, height: 127 }
+
+const { home } = Astro.props
+---
+
+<a class="wordmark" href={home}>
+  <picture>
+    <source media={lightMedia} srcset={lockupLight} />
+    <img
+      src={lockupDark}
+      alt={productName}
+      width={lockupSize.width}
+      height={lockupSize.height}
+    />
+  </picture>
+</a>

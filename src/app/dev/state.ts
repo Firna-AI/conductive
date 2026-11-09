@@ -58,6 +58,8 @@ export interface DevState {
    * operator section, which Suspend and Lift change.
    */
   operator: OperatorRecords
+  /** Each change of a share setting fails, from `shareSave=fail`. */
+  shareSaveFails: boolean
 }
 
 /**

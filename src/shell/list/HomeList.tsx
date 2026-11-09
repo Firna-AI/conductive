@@ -9,6 +9,7 @@ import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
 import { useMacBar } from '../mac/mac-app'
+import { SearchRow } from '../palette/SearchRow'
 import { AppLink } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
 import { Sheet } from '../ui/Sheet'
@@ -134,25 +135,33 @@ export function ListHeader(props: {
 
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
- * suspended org shows its notice in place of New workspace, and its list
- * read-only.
+ * suspended org shows its notice first, and its list read-only, without
+ * New workspace. Search opens the command palette. `shown` says that the
+ * page shows the list, so that it offers New section to the palette.
  */
-export function HomeList(props: { org: OrgSummary; user: User }) {
+export function HomeList(props: {
+  org: OrgSummary
+  user: User
+  shown?: boolean
+}) {
   const { suspended } = useOrgAccess(props.org)
   return (
     <>
       <ListHeader org={props.org} settings user={props.user} />
       <div className={styles.scroll}>
-        {suspended ? (
-          <SuspendedOrgNotice org={props.org} />
-        ) : (
-          <NewWorkspaceLink
-            current={false}
-            orgId={props.org.id}
-            variant="page"
-          />
-        )}
+        {suspended ? <SuspendedOrgNotice org={props.org} /> : null}
+        <div className={styles.links}>
+          {suspended ? null : (
+            <NewWorkspaceLink
+              current={false}
+              orgId={props.org.id}
+              variant="page"
+            />
+          )}
+          <SearchRow variant="page" />
+        </div>
         <OrgList
+          offerActions={props.shown ?? true}
           orgId={props.org.id}
           readOnly={suspended}
           selectedId={null}
