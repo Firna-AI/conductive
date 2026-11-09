@@ -51,6 +51,12 @@ The environment has no required reviewer.
 Its five secrets have the names in the table above, except that the public
 `CONDUCTIVE_APPLE_TEAM_ID` is an environment variable.
 
+The release workflow explicitly passes `CSC_LINK`, `CSC_KEY_PASSWORD`,
+`APPLE_API_KEY`, `APPLE_API_KEY_ID`, and `APPLE_API_ISSUER` to the reusable signing workflow.
+The signing job receives their values from the protected `desktop-release` environment.
+[GitHub's reusable workflow guide](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-inputs-and-secrets-in-a-reusable-workflow)
+explains why the caller must pass environment secrets too.
+
 Use `gh secret set --repo Firna-AI/remote-code --env desktop-release NAME`
 to enter a secret without printing it.
 For a key file, pipe `openssl base64 -A -in FILE` into that command.
