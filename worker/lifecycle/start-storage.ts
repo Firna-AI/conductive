@@ -100,7 +100,7 @@ export function durableStartStorage(
           await transaction.put('job', JOB, { ...current, cancelled: true })
         return Boolean(current)
       }),
-    begin: async (job, epoch) => {
+    begin: async (job, epoch, intent) => {
       const old = await storage.list('text', { prefix: LOG })
       return storage.transaction(async (transaction) => {
         if (
@@ -110,7 +110,7 @@ export function durableStartStorage(
           return false
         for (const key of old.keys()) await transaction.delete(key)
         await transaction.delete(RESULT)
-        if (job.replaceFailedCreation) {
+        if (intent?.kind === 'retry-failed-create') {
           await transaction.delete(CREATE_RESULT)
           await transaction.delete(PUBLICATION)
         }

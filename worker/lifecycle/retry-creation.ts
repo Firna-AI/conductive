@@ -29,16 +29,18 @@ export async function retryFailedCreation(
   )
   const admission = await endpoint.waitCreationAdmission()
   if (!original?.creation || !admission.ok) return false
-  await endpoint.queueLifecycleStart({
-    ...original,
-    creation: { ...original.creation, user: identity.owner },
-    kind: 'create',
-    phase: 'machine',
-    admission: admission.created,
-    requestedByUserId,
-    replaceFailedCreation: true,
-    attempt: `retry-${row.id}-${runtime.dependencies.randomToken()}`,
-    deadlineAt: runtime.dependencies.now() + WORKSPACE_START_TIME_LIMIT_MS,
-  })
+  await endpoint.queueLifecycleStart(
+    {
+      ...original,
+      creation: { ...original.creation, user: identity.owner },
+      kind: 'create',
+      phase: 'machine',
+      admission: admission.created,
+      requestedByUserId,
+      attempt: `retry-${row.id}-${runtime.dependencies.randomToken()}`,
+      deadlineAt: runtime.dependencies.now() + WORKSPACE_START_TIME_LIMIT_MS,
+    },
+    { kind: 'retry-failed-create' },
+  )
   return true
 }

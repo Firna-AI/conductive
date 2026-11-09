@@ -37,9 +37,11 @@ interface WorkspaceStartData {
   requestedByUserId?: string
   providerRetry?: ProviderRetryState | null
   deadlineAt?: number
-  /** A deliberate first-start replacement keeps the existing chat admission. */
-  replaceFailedCreation?: boolean
 }
+
+/** Admission intent is transient. Saved starts always continue their progress. */
+export type WorkspaceStartIntent =
+  { kind: 'continue' } | { kind: 'retry-failed-create' }
 
 export type WorkspaceMachinePhase =
   'machine' | 'ready' | 'fetch' | 'branch' | 'startup' | 'runner'
@@ -95,7 +97,11 @@ export interface CreationPublication {
 export interface StartJobStorage {
   job(): Promise<WorkspaceStartJob | undefined>
   epoch(): Promise<number>
-  begin(job: WorkspaceStartJob, epoch: number): Promise<boolean>
+  begin(
+    job: WorkspaceStartJob,
+    epoch: number,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean>
   stop(): Promise<boolean>
   update(job: WorkspaceStartJob): Promise<void>
   retry(

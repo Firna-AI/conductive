@@ -2,7 +2,11 @@ import type { AppDependencies, AppEnv } from '../env'
 import { pinRetryCreation } from './retry-creation-data'
 import { requireActiveStartUsers } from './start-access'
 import { startDeadlineAt } from './start-provider-retry'
-import type { StartJobStorage, WorkspaceStartJob } from './start-types'
+import type {
+  StartJobStorage,
+  WorkspaceStartIntent,
+  WorkspaceStartJob,
+} from './start-types'
 import { readWorkspace } from './workspace-data'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 
@@ -13,26 +17,21 @@ export async function enqueueWorkspaceStart(
   endpoint: WorkspaceLifecycleEndpoint,
   storage: StartJobStorage,
   job: WorkspaceStartJob,
+  intent: WorkspaceStartIntent,
 ): Promise<boolean> {
+  const retry = intent.kind === 'retry-failed-create'
   const completed = await storage.creationResult()
-  if (
-    job.kind === 'create' &&
-    completed &&
-    (completed.ok || !job.replaceFailedCreation)
-  )
+  if (job.kind === 'create' && completed && (completed.ok || !retry))
     return false
   if (await storage.job()) return false
   await requireActiveStartUsers(env.DB, job)
   const epoch = await storage.epoch()
   const state = await endpoint.readLifecycle()
   if (state?.startStop === 'pending') return false
-  if (
-    job.replaceFailedCreation &&
-    (!state || !['stopped', 'error'].includes(state.state))
-  )
+  if (retry && (!state || !['stopped', 'error'].includes(state.state)))
     return false
   if (
-    job.replaceFailedCreation &&
+    retry &&
     (await readWorkspace(env.DB, job.orgId, job.workspaceId)).archivedAt !==
       null
   )
@@ -44,9 +43,7 @@ export async function enqueueWorkspaceStart(
   )
     return false
   if (job.kind === 'resume') await endpoint.finishDiskMaintenance()
-  const prepared = job.replaceFailedCreation
-    ? await pinRetryCreation(env.DB, job)
-    : job
+  const prepared = retry ? await pinRetryCreation(env.DB, job) : job
   if (
     !(await storage.begin(
       {
@@ -54,6 +51,7 @@ export async function enqueueWorkspaceStart(
         deadlineAt: startDeadlineAt(job, dependencies.now()),
       },
       epoch,
+      intent,
     ))
   )
     return false

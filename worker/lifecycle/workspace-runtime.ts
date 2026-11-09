@@ -6,6 +6,7 @@ import type { DurableLifecycleState } from './durable-types'
 import type { MaskedStartLog } from './masked-start-log'
 import type {
   WorkspaceStartJob,
+  WorkspaceStartIntent,
   WorkspaceStartResult,
   WorkspaceCreationAdmission,
 } from './start-types'
@@ -49,7 +50,10 @@ export interface WorkspaceLifecycleEndpoint {
   credentialSender(turnId: string): Promise<string | null>
   retryFailedCreateCleanup(workspaceId: string): Promise<void>
   finishDiskMaintenance(): Promise<void>
-  queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean>
+  queueLifecycleStart(
+    job: WorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean>
   waitLifecycleStart(): Promise<WorkspaceStartResult>
   waitCreationLifecycle(): Promise<WorkspaceStartResult>
   waitCreationAdmission(): Promise<WorkspaceCreationAdmission>

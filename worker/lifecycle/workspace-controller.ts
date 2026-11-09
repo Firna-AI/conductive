@@ -10,7 +10,7 @@ import type { ImageCoordinatorState } from './image-timers'
 import { TurnScopes } from './turns'
 import { applyRunnerLifecycle, registerTrustedTurn } from './runner-lifecycle'
 import { WorkspaceStartCoordinator } from './start-coordinator'
-import type { WorkspaceStartJob } from './start-types'
+import type { WorkspaceStartIntent, WorkspaceStartJob } from './start-types'
 import {
   durableStartStorage,
   readStartLog,
@@ -67,8 +67,11 @@ export function createWorkspaceController(
       accessStop.cancelPending(id, ownerId),
     projectDeviceState: (id, choice, now, publish) =>
       projection.deviceChanged(id, choice, now, publish),
-    async queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean> {
-      const enqueued = starts.enqueue(job)
+    async queueLifecycleStart(
+      job: WorkspaceStartJob,
+      intent?: WorkspaceStartIntent,
+    ): Promise<boolean> {
+      const enqueued = starts.enqueue(job, intent)
       platform.waitUntil(enqueued)
       return enqueued
     },

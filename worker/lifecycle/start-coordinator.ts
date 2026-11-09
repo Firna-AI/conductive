@@ -1,5 +1,6 @@
 import type {
   WorkspaceStartJob,
+  WorkspaceStartIntent,
   WorkspaceStartResult,
   StartJobStorage,
   WorkspaceCreationAdmission,
@@ -66,7 +67,10 @@ export class WorkspaceStartCoordinator {
     this.finishResumeFailure = finishResumeFailure
   }
 
-  enqueue(job: WorkspaceStartJob): Promise<boolean> {
+  enqueue(
+    job: WorkspaceStartJob,
+    intent: WorkspaceStartIntent = { kind: 'continue' },
+  ): Promise<boolean> {
     const accepted = this.accepting.then(() =>
       enqueueWorkspaceStart(
         this.env,
@@ -74,6 +78,7 @@ export class WorkspaceStartCoordinator {
         this.endpoint,
         this.storage,
         job,
+        intent,
       ),
     )
     this.accepting = accepted.catch(() => undefined)

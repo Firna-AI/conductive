@@ -95,7 +95,6 @@ export async function pinRetryCreation(
     phase: 'machine',
     admission: job.admission,
     requestedByUserId: job.requestedByUserId,
-    replaceFailedCreation: true,
     deadlineAt: job.deadlineAt,
   }
 }

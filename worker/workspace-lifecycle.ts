@@ -30,6 +30,7 @@ import {
   type WorkspaceLifecycleTransport,
 } from './lifecycle/workspace-transport'
 import type { WorkspaceController } from './lifecycle/workspace-controller-types'
+import type { WorkspaceStartIntent } from './lifecycle/start-types'
 import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
@@ -83,9 +84,12 @@ export class WorkspaceLifecycle
     )
   }
 
-  async queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean> {
+  async queueLifecycleStart(
+    job: StoredWorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean> {
     const parsed = readStartJob(job)
-    return this.run(() => this.controller.queueLifecycleStart(parsed))
+    return this.run(() => this.controller.queueLifecycleStart(parsed, intent))
   }
 
   async acceptLifecycleFirstMessage(

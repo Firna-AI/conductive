@@ -70,8 +70,8 @@ it('keeps the accepted first message and failed start readable to every member a
           )
           return {
             ...endpoint,
-            queueLifecycleStart: async (job) => {
-              const accepted = await endpoint.queueLifecycleStart(job)
+            queueLifecycleStart: async (job, intent) => {
+              const accepted = await endpoint.queueLifecycleStart(job, intent)
               notifyQueued(id)
               return accepted
             },
