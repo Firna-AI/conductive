@@ -6,7 +6,7 @@ import { useNavigation } from '../../app/navigation'
 import { useServices } from '../../app/services'
 
 /** The pause after the last key before the search runs, in ms. */
-export const SEARCH_PAUSE_MS = 300
+const SEARCH_PAUSE_MS = 300
 
 /**
  * The search field of the Orgs and Users tabs. The search lives in the

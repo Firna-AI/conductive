@@ -11,7 +11,7 @@ export interface DirectoryResult<Row> extends DirectoryReply<Row> {
 }
 
 /** A read of a list: the first page of a search, or the next page. */
-export type DirectoryRead = 'first' | 'more'
+type DirectoryRead = 'first' | 'more'
 
 export interface DirectoryState<Row> {
   /** The rows of the last search that answered, or `null` before. */

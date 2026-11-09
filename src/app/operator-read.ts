@@ -12,7 +12,7 @@ import {
 /**
  * The refusal of an operator request: the person signed in is not an operator.
  */
-export function isOperatorRefusal(error: ApiError): boolean {
+function isOperatorRefusal(error: ApiError): boolean {
   return error.status === 403 && error.code === 'operator_required'
 }
 

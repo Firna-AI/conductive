@@ -32,7 +32,7 @@ const withYear = new Intl.DateTimeFormat('en-GB', {
  * no time zone and no locale of the browser or of the build machine
  * changes them. A date that does not read stays as it is.
  */
-export function dayLabel(date: string, year = false): string {
+function dayLabel(date: string, year = false): string {
   const time = Date.parse(`${date}T00:00:00Z`)
   if (Number.isNaN(time)) return date
   return (year ? withYear : withoutYear).format(time)
