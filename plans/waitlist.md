@@ -903,7 +903,7 @@ Depends on: every other milestone
       `.context/waitlist/merge-justifications.md`.
 - [x] Merge the latest `main` again before the review and the pull
       request.
-- [ ] Smoke-test in `npm run dev`: a person who waits, a code, a join
+- [x] Smoke-test in `npm run dev`: a person who waits, a code, a join
       link, an org invitation, the referral code, the pause, and the
       operator tabs.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
@@ -918,6 +918,11 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Verification evidence: `.context/waitlist/m8/smoke-run-2.log`,
+`.context/waitlist/m8/links.json`, and
+`.context/waitlist/m8/mockups-after-recovery.log`. The complete-gate
+rerun continues after an interrupted shell.
 
 ## Post-merge follow-up (non-blocking)
 
