@@ -4,3 +4,9 @@
   min-height: var(--ui-touch-min);
   text-decoration: none;
 }
+
+.wordmark:focus-visible {
+  border-radius: var(--ui-radius-sm);
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}

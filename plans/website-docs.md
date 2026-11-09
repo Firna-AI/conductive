@@ -1,6 +1,6 @@
 # Public website docs
 
-Status: Active. On branch `calummoore/docs-section-brainstorm`, no pull request yet. The pull request that completes the work deletes this plan. Implementation waits for the user's approval of this plan.
+Status: Active. On branch `calummoore/docs-section-brainstorm`, no pull request yet. The pull request that completes the work deletes this plan. Cal approved implementation of Milestone 1 on 2026-11-09. Milestone 1 is complete. Later milestones are not yet authorized.
 
 Conductive has a public Astro website, but no product guides. Add guides
 written in Markdown at `conductive.build/docs`. Readers need no sign-in.
@@ -108,6 +108,28 @@ These are agent calls dated 2026-11-09. They implement the selected approach.
 - Keep one Astro build and the existing Worker file list. Listed nested HTML pages already have public paths.
   Reusing that route avoids another host, service, database, or build command.
 
+These agent calls are also dated 2026-11-09. The Milestone 1 mockups showed the need for them.
+
+- Title the org-image guide "Cloud computer", at `/docs/cloud-computer`.
+  This matches the app's Cloud computer tab and the finished mockup. The old title and address have not shipped.
+- Show the guides, the page, and its contents list as three columns on a wide desktop.
+  Both side columns stay in view while the page scrolls, so a reader can move on at any point.
+  Below 1120 px, put the contents in a box under the lead, so the page keeps a readable width.
+  On a phone, put the contents in a second native disclosure, closed at first. It needs no script, and the body stays near the top.
+- Show the group above the title, and the front-matter description under it as the lead. An empty description shows no lead.
+  The contents box sits between the lead and the body, so the body cannot supply the lead.
+- Link only level-two headings in the contents. Guides begin at that level, and a short list fits the phone box.
+- Style the plain elements of the rendered body under one class. Markdown gives its headings, lists, and tables no classes.
+  A table wraps its words first and then scrolls by itself, so it needs no wrapper or plugin.
+- On a phone, show Docs, the GitHub mark alone in a 44 px square named GitHub, and Sign in.
+  The links then fit beside the wordmark on a 360 px phone.
+  On docs pages, mark Docs in the header as the current section. This also orients the reader.
+- Give each link and disclosure of the docs pages the site's 2 px focus ring. Draw it inside menu rows and phone bars.
+  An outer ring would be clipped there.
+- The mockup guides put each guide action, such as a page to open next, alone in a list item.
+  On a phone, that link is then a 44 px target that covers no other text.
+  The author steps describe this pattern. It adds no check, and links in sentences stay allowed.
+
 The Mac downloads plan on `calummoore/desktop-app-website-mention` changes
 the same header, footer, and maintenance guidance. Merge its changes through
 `main` before implementation when available. Preserve both sets of links.
@@ -137,7 +159,7 @@ The source paths below remain internal. Public guides link to other public pages
 | Files and changes | `/docs/files-and-changes` | [Workspace tools](../docs/protocol/workspace-tools.md#files-and-changes) |
 | Terminal and previews | `/docs/terminal-and-previews` | [Workspace tools](../docs/protocol/workspace-tools.md) |
 | Pull requests | `/docs/pull-requests` | [GitHub banner](../docs/protocol/github-banner.md) |
-| Org image | `/docs/org-image` | [Org image](../docs/protocol/workspaces-and-sandboxes.md#the-org-image) |
+| Cloud computer | `/docs/cloud-computer` | [Org image](../docs/protocol/workspaces-and-sandboxes.md#the-org-image) |
 | Orgs and members | `/docs/orgs-and-members` | [Orgs and members](../docs/protocol/orgs-and-members.md) |
 | Mac app | `/docs/mac-app` | [Mac app](../docs/protocol/desktop-app.md), [Releases](../desktop/RELEASES.md) |
 | Security | `/docs/security` | [Access and security](../docs/protocol/access-and-security.md), [Agent tools](../docs/protocol/agent-tools.md) |
@@ -147,7 +169,7 @@ The live sandbox desktop is currently hidden. Do not describe it as an available
 The security guide must explain the access that agents have to repository
 code and credentials, in product language that matches the current requirements.
 
-## Milestone 1: Docs mockups
+## Milestone 1: Docs mockups completed
 
 Tags: mockup
 
@@ -155,16 +177,18 @@ Depends on: none
 
 The `ui implementor` creates the visual spec before any implementation.
 
-- [ ] Add a docs overview and a representative guide under the marketing catalogue.
+- [x] Add a docs overview and a representative guide under the marketing catalogue.
       Show a sidebar, page contents, heading links, lists, a table, code, and adjacent-page links.
-- [ ] Add phone variants with the docs menu closed and open. Check keyboard use and visible focus.
+- [x] Add phone variants with the docs menu closed and open. Check keyboard use and visible focus.
       Show light and dark schemes. Keep each catalogue page within the five-screen limit.
-- [ ] Update the shared marketing header and footer with the Docs link.
+- [x] Update the shared marketing header and footer with the Docs link.
       Preserve the Mac download links if present. Check the combined phone header.
       Connect the new mockups through real catalogue navigation.
-- [ ] Run `npm run mockups:check`. Open the changed pages and compare both layouts.
+- [x] Run `npm run mockups:check`. Open the changed pages and compare both layouts.
       Save screenshots under `.context/website-docs/`.
-- [ ] Update this plan's design and TODOs for each problem that the mockups show.
+- [x] Update this plan's design and TODOs for each problem that the mockups show.
+
+Evidence: `.context/website-docs/milestone-1/` holds `ui-report.md`, `parent-smoke/report.json`, and `link-check.md`.
 
 ## Milestone 2: Requirements and maintenance docs
 
@@ -201,8 +225,13 @@ The site stays usable with a complete overview and Get started guide.
       Match the mockups, including heading links and the native phone menu.
 - [ ] Add Docs to both site navigation areas and the shared path helpers.
       Preserve existing links, request markers, legal pages, and the unknown-address page.
+      Match the phone header of the mockups. In the mockups, it has 33 px to spare at 390 px.
+      If the Mac downloads header is on `main`, first check the combined phone header in the mockups.
 - [ ] Add code styles with Prism classes. Check long code, tables, and URLs on a phone.
+      Let a keyboard focus and scroll each code block or table that scrolls.
+      Give it a visible ring and a name, as the mockup's install script has.
 - [ ] The `docs implementor` updates the marketing README's author steps and code entry points.
+      Describe the guide-action list item from the design calls.
       Check `npm run site:build` and open the pages through the Worker.
 
 ## Milestone 4: Complete the public guides

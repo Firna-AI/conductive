@@ -6,6 +6,7 @@ how a screen is built, and links to the other pages.
 | Path                | What it shows                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, and sign-up                 |
+| `marketing/docs`    | The overview of the public docs, then a guide, with its Docs menu or its contents open on a phone |
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
@@ -35,7 +36,7 @@ how a screen is built, and links to the other pages.
 | `user-flows`        | Sign up, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command |
 
 A folder page shows at most five screens, saved states included. A folder
-with child folders shows only its canonical screen, as `marketing`, `app`,
+with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/shell`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
@@ -57,6 +58,14 @@ of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
 own folders and kept their paths, so `app/orgs` shows only its canonical
 screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
+
+`marketing/docs` shows the overview of the public docs, at `/docs`. Its
+child page `marketing/docs/get-started` shows the Get started guide, with
+each part of a guide: lists, two guide actions, a table, and code. Its
+`menu` variant has the Docs menu of a phone open, and its `contents`
+variant has "On this page" open. A desktop always shows the guides and
+the contents, so its view of each variant is the guide.
+[The docs](marketing-site.md#the-docs) gives the layout and its parts.
 
 The first build of a new org shows in three places, from decision 150.
 Create org starts it, and Create org needs at least one repository, from

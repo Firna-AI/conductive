@@ -1,0 +1,133 @@
+/*
+ * Three columns at the width of the header: the guides, the page, and its
+ * contents. The guides and the contents stay in view while the page
+ * scrolls.
+ */
+.docs {
+  display: grid;
+  grid-template-areas:
+    'side head contents'
+    'side body contents'
+    'side pager contents';
+  grid-template-columns: var(--ui-sidebar-width) minmax(0, 1fr) 184px;
+  grid-template-rows: auto auto 1fr;
+  column-gap: 48px;
+  width: 100%;
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+  box-sizing: border-box;
+}
+
+.side {
+  position: sticky;
+  top: 24px;
+  grid-area: side;
+  align-self: start;
+  max-height: calc(var(--ui-screen-height) - 48px);
+  overflow-y: auto;
+}
+
+.head {
+  display: flex;
+  grid-area: head;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 32px;
+}
+
+.label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 36px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.contents {
+  position: sticky;
+  top: 24px;
+  grid-area: contents;
+  align-self: start;
+}
+
+.body {
+  grid-area: body;
+}
+
+.pager {
+  grid-area: pager;
+  align-self: start;
+  margin-top: 56px;
+}
+
+/* A narrower window keeps the guides, and puts the contents under the lead. */
+@media (max-width: 1119.98px) {
+  .docs {
+    grid-template-areas:
+      'side head'
+      'side contents'
+      'side body'
+      'side pager';
+    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: 40px;
+  }
+
+  .contents {
+    position: static;
+    margin-bottom: 32px;
+    padding: 16px 18px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+  }
+}
+
+/* A phone: one column, under the docs menu. */
+.docs.mobile {
+  display: flex;
+  flex-direction: column;
+  padding: 32px 20px 72px;
+}
+
+.mobile .head {
+  padding-bottom: 24px;
+}
+
+.mobile .title {
+  font-size: 30px;
+}
+
+.mobile .lead {
+  font-size: 16px;
+}
+
+.mobile .contents {
+  position: static;
+  align-self: stretch;
+  margin-bottom: 28px;
+  padding: 0;
+  border: none;
+}
+
+.mobile .pager {
+  align-self: stretch;
+  margin-top: 48px;
+}

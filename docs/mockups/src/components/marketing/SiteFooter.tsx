@@ -20,8 +20,9 @@ function Column(props: { title: string; children: ReactNode }) {
 }
 
 /**
- * The foot of the site: the wordmark, the sections, the sign-in, the
- * address for abuse reports, and the legal pages beside the copyright.
+ * The foot of the site: the wordmark, the sections with the docs, the
+ * sign-in, the address for abuse reports, and the legal pages beside the
+ * copyright.
  */
 export function SiteFooter(props: {
   links: SiteLinks
@@ -45,6 +46,11 @@ export function SiteFooter(props: {
               to={props.links.home}
             >
               Features
+            </ScreenLink>
+          </li>
+          <li>
+            <ScreenLink className={styles.link} to={props.links.docs}>
+              Docs
             </ScreenLink>
           </li>
         </Column>

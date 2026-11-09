@@ -1,1 +1,1 @@
-{ "order": ["terms", "privacy", "not-found", "pictures"] }
+{ "order": ["docs", "terms", "privacy", "not-found", "pictures"] }

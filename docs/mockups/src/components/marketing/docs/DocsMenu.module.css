@@ -1,0 +1,45 @@
+.menu {
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-sidebar);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 20px;
+  color: var(--ui-ink);
+  font-size: 14px;
+  font-weight: 500;
+  list-style: none;
+  cursor: pointer;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--ui-muted);
+}
+
+.menu[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.panel {
+  padding: 4px 12px 20px;
+}

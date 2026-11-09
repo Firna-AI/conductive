@@ -1,0 +1,202 @@
+/*
+ * The body of a guide. Markdown gives plain elements without classes, so
+ * these rules style the elements inside the body, in the type of the text
+ * pages of the site.
+ */
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: var(--ui-ink2);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* A contents link scrolls its heading to just below the top of the window. */
+.prose h2 {
+  margin: 28px 0 -4px;
+  color: var(--ui-ink);
+  font-size: 22px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  scroll-margin-top: 24px;
+}
+
+.prose h2:first-child {
+  margin-top: 0;
+}
+
+.prose p {
+  margin: 0;
+}
+
+.prose strong {
+  color: var(--ui-ink);
+  font-weight: 600;
+}
+
+/* A link of the text, underlined as the links of the legal pages are. */
+.prose a {
+  color: var(--ui-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ui-border2);
+  text-underline-offset: 3px;
+}
+
+.prose a:hover {
+  text-decoration-color: currentColor;
+}
+
+.prose a:focus-visible {
+  border-radius: var(--ui-radius-sm);
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+
+.prose ul,
+.prose ol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.prose li {
+  padding-left: 4px;
+}
+
+.prose li::marker {
+  color: var(--ui-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * A list item that holds only a link is a guide action, such as a page to
+ * open next. On a phone its link is a touch target of 44px on a line of its
+ * own, so it covers no other text.
+ */
+.prose li > a:only-child {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-touch-min);
+}
+
+.prose :not(pre) > code {
+  padding: 1px 5px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: 0.86em;
+}
+
+/* A long line scrolls inside the block, so the page keeps its width. */
+.prose pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+.prose pre code {
+  font: inherit;
+  white-space: pre;
+}
+
+/* Scrollable code and tables keep a visible keyboard focus ring. */
+.prose pre:focus-visible,
+.prose table:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+
+/*
+ * The colours of code, named after the token classes of Prism, which the
+ * site uses: a comment, a string, a function (the command of a shell
+ * line), and an operator.
+ */
+.comment {
+  color: var(--ui-code-comment);
+  font-style: italic;
+}
+
+.string {
+  color: var(--ui-code-string);
+}
+
+.function {
+  color: var(--ui-code-type);
+}
+
+.operator {
+  color: var(--ui-code-keyword);
+}
+
+/*
+ * A table takes the width of its words, and wraps them to fit the body. It
+ * scrolls on its own only when its words cannot wrap, so the page keeps its
+ * width. The block display needs no wrapper around the table that Markdown
+ * gives.
+ */
+.prose table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.prose th {
+  padding: 0 20px 8px 0;
+  border-bottom: 1px solid var(--ui-border2);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+.prose td {
+  padding: 10px 20px 10px 0;
+  vertical-align: top;
+}
+
+.prose th:last-child,
+.prose td:last-child {
+  padding-right: 0;
+}
+
+.prose tbody tr + tr td {
+  border-top: 1px solid var(--ui-border);
+}
+
+/*
+ * Code in a cell keeps one line, so a command never splits. The table
+ * scrolls when the line is wider than the body.
+ */
+.prose td code {
+  white-space: nowrap;
+}
+
+/* The first column names the row, so it keeps its words on one line. */
+.prose td:first-child {
+  color: var(--ui-ink);
+  font-weight: 500;
+  white-space: nowrap;
+}

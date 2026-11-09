@@ -52,8 +52,8 @@ share.
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages, the entries that moved,
-the child pages of `app/account`, `app/orgs/suspended`, `app/banner`, and
-`app/chat`, and the New workspace dialog.
+the child pages of `marketing/docs`, `app/account`, `app/orgs/suspended`,
+`app/banner`, and `app/chat`, and the New workspace dialog.
 
 ## Folder layout
 
@@ -126,8 +126,9 @@ commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the Terms, Privacy, and not-found pages, and the page before
-GitHub. The pictures are captures of real screens, such as the workspace
-screen with its chat and composer. A change to a screen or a shared part
-that a picture shows needs a new capture, with the
+pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs),
+the Terms, Privacy, and not-found pages, and the page before GitHub. The
+pictures are captures of real screens, such as the workspace screen with
+its chat and composer. A change to a screen or a shared part that a
+picture shows needs a new capture, with the
 [capture steps](../../src/marketing/README.md#pictures).
