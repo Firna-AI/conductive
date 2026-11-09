@@ -10,7 +10,23 @@ same sign-in. A new person waits there for app access, as the
 promise a place on the waitlist, not use at once.
 
 The shared header links to the public source repository on GitHub.
-The link appears on phones and desktops.
+The link appears on phones and desktops. On desktops, the header also has
+Features and Download, which lead to the features and to the Mac app
+section of the home page. The Product column of the footer links the same
+two sections, so a phone reaches the downloads from the footer. The header
+links never wrap.
+
+The Mac app section follows the features. It links the DMG for Apple
+silicon first, then the DMG for Intel, and names the oldest macOS version
+that the app runs on. Each download is the file with a fixed name in the
+latest release of the source repository on GitHub, as
+[Releases](../../docs/protocol/desktop-app.md#releases) states, so its
+address always gives the newest DMG. Like the GitHub link of the header,
+the downloads are plain links that leave the site.
+
+The hero sentence names the browser and the Mac app. It is also the
+description of the home page. The footer tagline names both too. The site
+and the mockups read both lines from `productSummary` in `features.ts`.
 
 The marketing mockups are the visual spec:
 [`MarketingScreen.tsx`](../../docs/mockups/src/screens/MarketingScreen.tsx),
@@ -251,12 +267,15 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - [`worker/marketing/assets.ts`](../../worker/marketing/assets.ts): site
   asset reads and the app host's handling of other site paths.
 - `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
-- `features.ts`: the home page's feature copy.
-- `links.ts`: the source repository address, site paths, and `pageHrefs`
-  for links from another origin.
+- `features.ts`: the words that the site and the mockups share: the hero
+  sentence and the footer tagline, the features, the Mac app section with
+  its downloads, and the smaller features.
+- `links.ts`: the source repository address, the Mac app download
+  addresses, site paths, and `pageHrefs` for links from another origin.
 - `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
   text model, titles, contact addresses, and sign-in agreement.
-- `request-values.ts`: built-page markers and local Astro preview values.
+- `request-values.ts`: built-page markers, local Astro preview values,
+  the sign-in address, and the links to the sections of the home page.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
   CSS for the font, tokens and picture sizes, and the file list writer.
 - [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,

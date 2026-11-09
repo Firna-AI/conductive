@@ -15,14 +15,16 @@ name holds its version, such as `Conductive-0.2.0-mac-arm64.dmg`, so no
 address always gives the newest DMG.
 
 This change gives each DMG a fixed name, adds a Mac app section to the
-home page, and links the DMG of each chip. It also adds the data of the
-Mac app to the legal drafts. It does not cover builds for other systems.
+home page, and links the DMG of each chip. It also adds the data of Mac
+commands to the Privacy page. It does not cover builds for other systems.
 It also leaves three things to follow-up items:
 
 - [a link to the Mac app in the web app](follow-ups/mac-app-link-in-web-app.md)
 - [old copies that call a changed Worker API](follow-ups/old-mac-app-copies-and-api-changes.md)
 - [copies that run from a read-only volume](follow-ups/read-only-copies-never-update.md),
   for which the user chose option D on 9 November 2026
+- [the Mac app in the Terms](follow-ups/terms-name-the-mac-app.md), which
+  waits for the user
 
 Contract owners:
 
@@ -103,12 +105,10 @@ Agent calls on 8 November 2026, kept on 9 November 2026:
 - Oldest macOS version: the section and the protocol name the oldest macOS
   version that a release build accepts. Reason: a visitor on an older
   version must not download a DMG that does not open.
-- Legal drafts: the Privacy draft adds the data of Mac commands. The Terms
-  draft names the Mac app in its description of the service, and adds a
-  draft field for Mac commands. Reason: decision 35 makes the drafts
-  restate the facts of the protocol docs. Since pull request #97, the
-  Privacy draft names the update checks of the Mac app, but not its
-  commands.
+- Legal pages: the Privacy page adds the data of Mac commands. Reason: the
+  Privacy page restates the facts of the protocol docs, and since pull
+  request #97 it names the update checks of the Mac app, but not its
+  commands. The Terms stay unchanged in this plan, as Milestone 6 says.
 - Copy: the words of the section go into `src/marketing/features.ts`,
   which the site and the mockups both read. Reason: that module is the one
   source of the feature texts.
@@ -142,7 +142,7 @@ Agent calls on 9 November 2026:
   the `Info.plist` of the app of release `v0.2.0`, read on 9 November
   2026.
 - Two pull requests. The first holds the mockups, the docs, and the fixed
-  names. The second holds the site and the legal drafts, and it merges
+  names. The second holds the site and the Privacy page, and it merges
   only after a release with the fixed names is published. Reason: each
   push to `main` deploys the site, so the links of the site must work at
   its merge.
@@ -254,37 +254,43 @@ Depends on: 1, 2
 Build the Mac app section and its links on the site, as Milestone 1 draws
 them.
 
-- [ ] Build the Mac app section, both downloads, the oldest macOS version,
+- [x] Build the Mac app section, both downloads, the oldest macOS version,
       the header and footer links, and the new copy, in the Astro
       components of `src/marketing/`.
-- [ ] Move the hero sentence and the footer tagline into one shared export
+- [x] Move the hero sentence and the footer tagline into one shared export
       that the site and the mockups both read. Today `index.astro` holds
       the hero sentence twice, and `SiteFooter.astro` holds the tagline.
-- [ ] Keep the header links on one line, as the mockup header does with
+- [x] Keep the header links on one line, as the mockup header does with
       `nowrap`. Without it, "Sign in" wraps between 760 and 776 px.
-- [ ] Capture the pictures again with `npm run marketing:pictures` when a
-      screen of a picture changed after Milestone 1.
-- [ ] Add or change the tests that the `testing` skill asks for.
-- [ ] Update `src/marketing/README.md`.
-- [ ] Compare each changed page with its mockup at desktop and phone
+- [x] Capture the pictures again with `npm run marketing:pictures` when a
+      screen of a picture changed after Milestone 1. Pull request #122 on
+      `main` removed the branch name from the top bar of the Mac window,
+      so both Mac pictures changed. The 26 other pictures kept their bytes.
+- [x] Add or change the tests that the `testing` skill asks for.
+- [x] Update `src/marketing/README.md`.
+- [x] Compare each changed page with its mockup at desktop and phone
       sizes, in light and dark.
 
 ## Milestone 6: Legal drafts
 
 Depends on: 2
 
-- [ ] Read both legal pages in full, as the rule of `AGENTS.md` says,
-      because Milestone 2 changes facts of a protocol doc. Update each
-      sentence that restates a changed fact.
-- [ ] In `src/marketing/privacy.ts`, add the data of Mac commands: the
-      name of the Mac in each command request, the commands and their
-      output that go to the agent and so to Anthropic or OpenAI, the
-      always-allowed commands that stay on the Mac, and the session cookie
-      of the Mac app.
-- [ ] In `src/marketing/terms.ts`, name the Mac app in the opening
-      paragraph and in "The service". Add a draft field for the commands
-      that a user allows on their Mac.
-- [ ] Check that the Terms and Privacy mockups show the new text.
+Since pull request #97, the Terms and Privacy pages are final legal text,
+not drafts. Agent call on 9 November 2026: this milestone keeps the
+factual Privacy additions, and it leaves the Terms to the user, in
+[the item for the Terms](follow-ups/terms-name-the-mac-app.md). Reason: a
+change of the Terms changes the contract with each user.
+
+- [x] Read both legal pages in full, as the rule of `AGENTS.md` says,
+      because Milestone 2 changes facts of a protocol doc. No sentence
+      restates a changed fact.
+- [x] In `src/marketing/privacy.ts`, add the data of Mac commands: the
+      request, its result, and the name of the Mac, which go to the agent
+      and so to Anthropic or OpenAI, and which the members of the org see.
+      Add that always-allowed commands stay on the Mac, how long the
+      records stay, and the session cookie of the Mac app.
+- [x] Leave the Terms unchanged, and record the follow-up item for them.
+- [x] Check that the Privacy mockup shows the new text.
 
 ## Milestone 7: Second pull request
 

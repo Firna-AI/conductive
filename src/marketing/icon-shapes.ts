@@ -33,11 +33,13 @@ function rect(
   return { kind: 'rect', x, y, width: size[0], height: size[1], rx }
 }
 
+type IconShapes = Readonly<Record<string, readonly IconShape[]>>
+
 /**
- * The lucide icons of the site, as lucide-react 0.577.0 draws them, under
- * the ISC licence. The site runs no script, so it writes the SVG itself.
+ * The icons that the smaller features of the home page can name. The
+ * mockups draw each of them too, with lucide-react.
  */
-export const lucideIcons = {
+const featureIcons = {
   cloud: [path('M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z')],
   users: [
     path('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'),
@@ -63,6 +65,24 @@ export const lucideIcons = {
     path('M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8'),
     path('M10 12h4'),
   ],
-} as const satisfies Readonly<Record<string, readonly IconShape[]>>
+} as const satisfies IconShapes
+
+/** The icons of actions, such as the downloads of the Mac app. */
+const actionIcons = {
+  download: [
+    path('M12 15V3'),
+    path('M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'),
+    path('m7 10 5 5 5-5'),
+  ],
+} as const satisfies IconShapes
+
+/**
+ * Every lucide icon of the site, as lucide-react 0.577.0 draws it, under the
+ * ISC licence. The site runs no script, so it writes the SVG itself.
+ */
+export const lucideIcons = { ...featureIcons, ...actionIcons }
+
+/** An icon that a smaller feature can name. */
+export type FeatureIconName = keyof typeof featureIcons
 
 export type IconName = keyof typeof lucideIcons

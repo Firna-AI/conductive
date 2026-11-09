@@ -7,8 +7,9 @@ import process from 'node:process'
 import { promisify } from 'node:util'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 
-import { productName } from '../../docs/mockups/src/brand'
-import { sitePaths } from '../../src/marketing/links'
+import { macDmgNames, productName } from '../../docs/mockups/src/brand'
+import { macAppSection } from '../../src/marketing/features'
+import { sitePaths, sourceRepositoryHref } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
@@ -115,6 +116,37 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
     expect(page, name).not.toMatch(
       /lawyer review|A lawyer reviews|To confirm:|To write:|draft-field/,
     )
+  }
+})
+
+/** The address that always gives the file `name` of the latest release. */
+const latestRelease = (name: string) =>
+  `${sourceRepositoryHref}/releases/latest/download/${name}`
+
+it('leads the header Download and footer Mac app links to both chip downloads', async () => {
+  const home = await (await get('/')).text()
+  const cases = [
+    ['header', home.slice(0, home.indexOf('</header>')), 'Download'],
+    ['footer', home.slice(home.indexOf('<footer')), 'Mac app'],
+  ] as const
+  for (const [part, html, text] of cases) {
+    const href = links(html).find((link) => link.text === text)?.href
+    const address = new URL(href ?? '/missing', SITE)
+    expect(address.pathname, part).toBe(sitePaths.home)
+    const start = home.indexOf(` id="${address.hash.slice(1)}"`)
+    expect(start, part).toBeGreaterThan(-1)
+    const section = home.slice(start, home.indexOf('</section>', start))
+    expect(links(section), part).toEqual([
+      {
+        href: latestRelease(macDmgNames.arm64),
+        text: 'Download for Mac (Apple silicon)',
+      },
+      {
+        href: latestRelease(macDmgNames.x64),
+        text: 'Download for Mac (Intel)',
+      },
+    ])
+    expect(section, part).toContain(macAppSection.requirement)
   }
 })
 
