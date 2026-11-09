@@ -46,6 +46,40 @@
   text-overflow: ellipsis;
 }
 
+/*
+ * The list of agents is a size container. In a narrow list, as on a phone,
+ * the row of a connected login puts its state and its kind on a second line
+ * under the name of the agent, so that the kind shows in full. The action,
+ * such as Remove, stays at the end beside both lines. A row without a login
+ * keeps one line.
+ */
+.agentList {
+  container: agents / inline-size;
+}
+
+@container agents (max-width: 439px) {
+  .agentRow:has(> .detail:not(:empty)) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 2px;
+  }
+
+  .agentRow > .name {
+    grid-area: 1 / 1;
+  }
+
+  /* On a very narrow list the kind moves under the state. */
+  .agentRow > .detail {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    grid-area: 2 / 1;
+  }
+
+  .agentRow > :not(.name, .detail) {
+    grid-area: 1 / 2 / 3 / 3;
+  }
+}
+
 .defaults {
   display: flex;
   align-items: center;

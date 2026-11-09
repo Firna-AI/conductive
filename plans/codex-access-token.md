@@ -141,12 +141,14 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
 - The switch and the account row name the kind "Access token", and the
   field names it "Codex access token". These are OpenAI's names, so members
   find the token in ChatGPT's admin console.
-- The help text says what to paste and where to make it, and links to
-  `https://chatgpt.com/admin/access-tokens`. It names Business and
-  Enterprise workspaces, personal and service-account tokens, and the
-  workspace permissions that a member needs. It asks for the Codex scope
-  and an expiry. Reason: a Plus or Pro member cannot make a token, and must
-  learn that before a failed turn.
+- The help text says to paste an access token from a ChatGPT Business or
+  Enterprise workspace, with the Codex scope. It says that the owner of
+  that workspace must allow access tokens and local Codex use, and links
+  to `https://chatgpt.com/admin/access-tokens`. Reason: a Plus or Pro
+  member cannot make a token, and must learn that before a failed turn.
+  The text leaves out the token types and the expiry, because ChatGPT's
+  own dialog asks for them. This call changed on 9 November 2026, from
+  item 2 of the mockup report.
 - The Codex form lists "API key" first and selects it. "Access token" comes
   second. Reason: most members have an API key, and a token needs a
   Business or Enterprise workspace.
@@ -202,30 +204,38 @@ Depends on: none
 
 The account page shows the Codex form with its switch, the access token
 field with its help text and link, and a Codex login connected with an
-access token. The account page already renders five screens, so its connect
-forms move to a child page. A new access token starts not shared, as
-decision 171 says.
+access token. The account page already rendered five screens, so it now
+renders only its canonical screen, and its states moved to child pages. A
+new access token starts not shared, as decision 171 says. The screenshots
+are in `.context/codex-access-token/mockups/`.
 
-- [ ] Add the per-agent kind labels and the page
+- [x] Add the per-agent kind labels and the page
       `https://chatgpt.com/admin/access-tokens` to
       `docs/mockups/src/fixtures/logins.ts`.
-- [ ] Give Codex the switch in
+- [x] Give Codex the switch in
       `docs/mockups/src/components/settings/AgentConnectForm.tsx`, with
       "API key" first and selected. Add the access token field, its help
       text, and its link.
-- [ ] Show the per-agent kind label in the login rows of
+- [x] Show the per-agent kind label in the login rows of
       `docs/mockups/src/components/settings/AccountSections.tsx`.
-- [ ] Move the connect forms of `app/account` to a child page, so that no
-      page renders more than five screens. The child page shows Claude,
-      Codex with an API key, and Codex with an access token.
-- [ ] Add a screen with Codex connected by an access token. Its share switch
-      shows the default of decision 171.
-- [ ] Remove the claim that the app offers no ChatGPT plan sign-in from the
+- [x] Move the states of `app/account` to child pages, so that no page
+      renders more than five screens: `setup`, `connect`, `codex-token`, and
+      `share-not-saved`. The `connect` page shows Claude with a subscription
+      token, Claude with an API key, Codex with an API key, and Codex with
+      an access token.
+- [x] Add a screen with Codex connected by an access token,
+      `app/account/codex-token`. Its share switch shows the default of
+      decision 171.
+- [x] Remove the claim that the app offers no ChatGPT plan sign-in from the
       account entries. Update the section "Logins" of
       `docs/mockups/orgs-and-logins.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at phone and
+- [x] On a phone, show "Connected" and the kind of a connected agent row on
+      a second line, so that the kind name shows in full.
+- [x] Add the search word "token" to the Agents command of the palette
+      mockup.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at phone and
       desktop sizes.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -338,6 +348,11 @@ it.
       the link in `src/shell/account/AgentConnectForm.tsx`. The save sends
       the chosen kind.
 - [ ] Show the per-agent kind label in `src/shell/account/AgentList.tsx`.
+- [ ] Add `styles.agentList` to the agent list and `styles.agentRow` to each
+      agent row in `src/shell/account/AgentList.tsx`, so that a phone shows
+      the kind on a second line, as the mockup does.
+- [ ] Add the search word "token" to the Agents command in
+      `src/app/palette/commands.ts`, as the palette mockup does.
 - [ ] Add tests: the Codex form selects "API key" first, a token save sends
       the kind `token`, and a Codex row connected by a token shows "Access
       token" and its share switch.

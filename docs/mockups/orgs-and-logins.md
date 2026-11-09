@@ -87,15 +87,27 @@ plan limits.
   key for its cloud computers, and no screen asks for one or for another
   account.
 - The account connects Claude with a subscription token from
-  `claude setup-token` or an API key, and Codex with an OpenAI API key.
-  `AgentConnectForm` opens under the row of the agent. A connected login
-  shows its kind and Remove.
+  `claude setup-token` or an API key. It connects Codex with an OpenAI API
+  key or with a Codex access token from a ChatGPT Business or Enterprise
+  workspace, from decision 170. `AgentConnectForm` opens under the row of
+  the agent, as `app/account/connect` shows. Its switch chooses the kind of
+  the login, and the first kind starts selected: Subscription token, then
+  API key, for Claude, and API key, then Access token, for Codex. The words
+  above the field say what to paste and where to make it.
+- A connected login shows its kind and Remove. The name of the kind
+  depends on the agent: a Claude token is a "Subscription token", a Codex
+  token is an "Access token", and a key is an "API key". `loginLabels` in
+  `src/fixtures/logins.ts` holds the names. On a phone, the state and the
+  kind go on a second line under the name of the agent, so that the kind
+  shows in full.
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude
-  subscription and on for an API key, as `app/account` shows. It saves at
-  once. A change that the app did not save shows its cause beside the
-  switch, as `app/account/share-not-saved` shows. The part lives in
+  subscription token and on for an API key, as `app/account` shows. A
+  Codex access token starts off too, from decision 171, as
+  `app/account/codex-token` shows. The switch saves at once. A change that
+  the app did not save shows its cause beside the switch, as
+  `app/account/share-not-saved` shows. The part lives in
   `src/components/settings/LoginShare.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.

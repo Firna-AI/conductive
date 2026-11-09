@@ -16,7 +16,7 @@ how a screen is built, and links to the other pages.
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs and a search |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
-| `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
+| `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model, then the first run, the Connect forms, a Codex access token, and a share not saved |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, its errors, the start, a held second message, the first turn   |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
@@ -35,7 +35,7 @@ how a screen is built, and links to the other pages.
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/shell`, `app/command-palette`, `app/orgs`, `app/orgs/suspended`,
-`app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
+`app/account`, `app/new-workspace`, `app/org-settings`, `app/org-settings/cloud-computer`,
 `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
@@ -88,6 +88,26 @@ list of Acme. Its child pages:
 - `app/command-palette/settings` has the Settings tab.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its `no-results` variant has a search without results.
+
+`app/account` shows the account with Claude connected by a subscription
+token and Codex by an API key. Its child pages:
+
+- `app/account/setup` has the account of the first run, with nothing
+  connected.
+- `app/account/connect` has the Connect form of Claude, and its
+  `claude-api-key` variant has that form with API key selected. Its `codex`
+  variant has the form of Codex, whose switch starts on API key. Its
+  `codex-token` variant has the same form with Access token selected, and
+  its Connect opens `app/account/codex-token`. The form of Claude and the
+  `codex` variant moved from `app/account/connect-claude` and
+  `app/account/connect-codex`, and declare `movedFrom`.
+- `app/account/codex-token` has Codex connected by an access token, whose
+  share switch starts off.
+- `app/account/share-not-saved` has a change of the share switch of Claude
+  that the app did not save.
+
+The states `setup` and `share-not-saved` moved into their own folders and
+kept their paths, so that `app/account` shows only its canonical screen.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the

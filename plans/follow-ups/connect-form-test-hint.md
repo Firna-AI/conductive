@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-09, from the plan `plans/codex-access-token.md` on branch `calummoore/openai-subscription-token-support`, while its mockup work was planned.
-- **Location:** `docs/mockups/src/components/settings/AgentConnectForm.tsx:18` and `src/shell/account/AgentConnectForm.tsx:24`.
+- **Location:** `docs/mockups/src/components/settings/AgentConnectForm.tsx:22`, the rationale at `docs/mockups/src/entries/app/account/connect/index.mockup.tsx:13`, and `src/shell/account/AgentConnectForm.tsx:24`.
 - **Reason:** the change that found it adds a login kind and does not own this hint, and only the user decides which side of a mismatch between a mockup and the app is right.
 
 - **Terms:**
@@ -11,6 +11,7 @@
 - **Background:**
   - The mockups in `docs/mockups/` are the visual spec of the app.
   - The hint under the secret field of the connect form differs between them. The mockup says "Conductive tests it once, and never shows it again." The app says "Conductive keeps it encrypted, and never shows it again."
+  - The rationale of the mockup page `app/account/connect` also says "The app tests the login once when the user connects it".
   - The app saves the secret with no test, as the comment at `src/shell/account/AgentConnectForm.tsx:24` says.
   - A note of the options check of decision 33, of 5 November 2026, said "The app tests each key once when the user connects it." No protocol doc requires a test.
 - **Problem:** The mockup promises a test of the login that the app does not run.

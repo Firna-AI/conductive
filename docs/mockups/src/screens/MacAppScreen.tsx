@@ -7,7 +7,7 @@ import { MacScreen } from '../components/mac/MacScreen'
 import { conversations as chats } from '../fixtures/conversations'
 import { safariTest } from '../fixtures/mac'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
-import { AccountScreen } from './AccountScreen'
+import { AccountScreen, connectedAccount } from './AccountScreen'
 import { NewWorkspaceScreen, newWorkspaceForm } from './NewWorkspaceScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
@@ -91,16 +91,7 @@ function pageFor(state: MacAppState): ReactNode {
     case 'new-workspace':
       return <NewWorkspaceScreen state={newWorkspaceForm} viewport="desktop" />
     case 'account':
-      return (
-        <AccountScreen
-          state={{
-            connections: 'connected',
-            form: 'none',
-            shareChange: 'none',
-          }}
-          viewport="desktop"
-        />
-      )
+      return <AccountScreen state={connectedAccount} viewport="desktop" />
   }
 }
 

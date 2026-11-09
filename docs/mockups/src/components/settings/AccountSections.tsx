@@ -11,11 +11,13 @@ import {
   shareNotSavedCause,
   sharedByDefault,
   type AgentLogins,
+  type LoginKind,
 } from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
 import { noop } from '../../noop'
 import { ModelPicker } from '../chat/ModelPicker'
 import { ActionButton } from '../common/actions'
+import { classes } from '../common/classes'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
@@ -79,7 +81,7 @@ export function GitHubSection(props: { connected: boolean }) {
 
 /**
  * The share setting under each connected login, as on the account. Each
- * login shows the value that a new login of its kind starts with.
+ * login shows the value that a new login of its agent and kind starts with.
  * `notSaved` names the agent whose last change the app did not save.
  */
 type LoginShares = { notSaved: AgentKey | null }
@@ -87,6 +89,8 @@ type LoginShares = { notSaved: AgentKey | null }
 /** The Connect form that is open under the row of an agent. */
 export type OpenAgentForm = {
   agent: AgentKey
+  /** The kind that its switch selects, by default the first of the agent. */
+  kind?: LoginKind
   connectTo: string
   /** The form can close, because it did not open as the next step. */
   cancel: boolean
@@ -106,7 +110,7 @@ export function AgentList(props: {
 }) {
   const ids = useId()
   return (
-    <ul aria-label="Agents" className={styles.list}>
+    <ul aria-label="Agents" className={classes(styles.list, styles.agentList)}>
       {agentKeys.map((key) => {
         const login = props.logins[key]
         const form = props.form?.agent === key ? props.form : undefined
@@ -124,7 +128,7 @@ export function AgentList(props: {
         }
         return (
           <li key={key}>
-            <div className={styles.row}>
+            <div className={classes(styles.row, styles.agentRow)}>
               <span className={styles.name} id={nameId}>
                 {agents[key].name}
               </span>
@@ -132,7 +136,9 @@ export function AgentList(props: {
                 {login ? (
                   <>
                     {connected}
-                    <span className={styles.kind}>{loginLabels[login]}</span>
+                    <span className={styles.kind}>
+                      {loginLabels[key][login]}
+                    </span>
                   </>
                 ) : null}
               </span>
@@ -145,7 +151,7 @@ export function AgentList(props: {
                 }
                 nameId={nameId}
                 onChange={noop}
-                shared={sharedByDefault[login]}
+                shared={sharedByDefault[key][login]}
               />
             ) : null}
             {form && !login ? (
@@ -153,6 +159,7 @@ export function AgentList(props: {
                 agent={key}
                 cancel={form.cancel}
                 connectTo={form.connectTo}
+                kind={form.kind}
               />
             ) : null}
           </li>
