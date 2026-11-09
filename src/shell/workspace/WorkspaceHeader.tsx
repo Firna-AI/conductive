@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
-import { Archive, ChevronLeft, FolderGit2 } from 'lucide-react'
+import { ChevronLeft, FolderGit2 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
@@ -45,7 +45,7 @@ function State(props: { workspace: Workspace }) {
 
 /**
  * The name, number, repository, owner, and state of the open
- * workspace, and Archive for its owner and the org's admins. A workspace
+ * workspace. A workspace
  * with no name yet shows Untitled. The label of the number copies the link
  * of the workspace. On desktop it follows the name, and the repository
  * takes the room that the other parts leave. On a phone it leads
@@ -58,7 +58,7 @@ export function WorkspaceHeader(props: {
   /** The owner picker of Milestone 15c. Without it the owner shows read-only. */
   ownerControl?: ReactNode
 }) {
-  const { workspace, org, archive } = props.context
+  const { workspace, org } = props.context
   const model = useOrgModel(org.id)
   const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
@@ -75,9 +75,6 @@ export function WorkspaceHeader(props: {
   const copyLink = (
     <CopyLink inline={phone} key={workspace.link} workspace={workspace} />
   )
-  const archiveButton = archive ? (
-    <IconButton icon={Archive} label="Archive workspace" onPress={archive} />
-  ) : null
   if (phone) {
     return (
       <header className={styles.mobile}>
@@ -95,7 +92,6 @@ export function WorkspaceHeader(props: {
         </div>
         {ownerView}
         <State workspace={workspace} />
-        {archiveButton}
       </header>
     )
   }
@@ -111,7 +107,6 @@ export function WorkspaceHeader(props: {
       </span>
       {ownerView}
       <State workspace={workspace} />
-      {archiveButton}
       <RightColumnToggle />
     </header>
   )
