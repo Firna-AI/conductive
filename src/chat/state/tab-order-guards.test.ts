@@ -119,4 +119,35 @@ describe('the chat tab order guards', () => {
     expect(chat.writes()).toEqual([])
     expect((await chat.savedView()).tabs).toEqual(saved)
   })
+
+  it('reopens archived tabs at the end and closes to the next session in the row without writes', async () => {
+    const saved = [first, second]
+    const chat = tabChat(saved, { workspaceState: 'archived' })
+    await chat.controller.start()
+    await chat.controller.reopen('postcode')
+    expect(chat.row()).toEqual([first, second, closed])
+
+    await chat.controller.requestClose('autocomplete')
+    expect(chat.row()).toEqual([second, closed])
+    await chat.controller.reopen('autocomplete')
+    expect(chat.row()).toEqual([second, closed, first])
+
+    await chat.controller.requestClose('autocomplete')
+    expect(chat.controller.getSnapshot().view?.tabs).toEqual([second, closed])
+    chat.controller.updateView((view) => ({
+      ...view,
+      tabs: [first, ...view.tabs],
+    }))
+    expect(chat.row()).toEqual([second, closed])
+    await chat.controller.reopen('autocomplete')
+    expect(chat.row()).toEqual([second, closed, first])
+
+    await chat.controller.select('debounce')
+    expect(chat.row()).toEqual([second, closed, first])
+    await chat.controller.requestClose('debounce')
+    expect(chat.row()).toEqual([closed, first])
+    expect(chat.controller.getSnapshot().activeSessionId).toBe('postcode')
+    expect(chat.writes()).toEqual([])
+    expect((await chat.savedView()).tabs).toEqual(saved)
+  })
 })
