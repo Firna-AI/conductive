@@ -14,6 +14,10 @@ say. A host can give its own parts instead, as
 states of the cloud computer are in `app/shell`, and the notices are in
 `app/chat/lost-updates`.
 
+The workspace list offers Archive over the time of each permitted row.
+The header has no Archive button. The list uses the same Archive question
+as the command palette and the pull request bar.
+
 ## The kept workspace
 
 [The kept workspace](kept-workspace.md) gives the parts that the tab keeps

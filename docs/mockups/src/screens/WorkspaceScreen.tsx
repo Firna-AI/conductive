@@ -111,7 +111,6 @@ export function WorkspaceScreen(props: {
   )
   const workspaceHeader = (
     <WorkspaceHeader
-      archivable={archivable}
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
       name={workspace.name}
@@ -213,7 +212,10 @@ export function WorkspaceScreen(props: {
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
-      sidebar={workspaceSidebar(workspace, status, suspended)}
+      sidebar={workspaceSidebar(workspace, status, suspended, {
+        person: viewer,
+        role: admin ? 'admin' : 'member',
+      })}
     >
       <WorkspaceBody
         center={file ? <FilePage view={file} /> : chat}

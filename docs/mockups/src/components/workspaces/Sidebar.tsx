@@ -1,4 +1,5 @@
 import type { Org } from '../../fixtures/orgs'
+import type { Membership } from '../../fixtures/members'
 import { paths } from '../../paths'
 import { LoadFailure } from '../common/LoadFailure'
 import type {
@@ -35,6 +36,7 @@ export function Sidebar(props: {
   suspended?: boolean
   /** The workspace list of the org did not load. */
   failed?: boolean
+  viewer?: Membership
 }) {
   const suspended = props.suspended ?? false
   return (
@@ -68,6 +70,7 @@ export function Sidebar(props: {
             readOnly={suspended}
             sections={props.sections}
             variant="sidebar"
+            viewer={props.viewer}
           />
         )}
       </div>

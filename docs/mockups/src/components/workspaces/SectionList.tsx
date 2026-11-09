@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { you, type Membership } from '../../fixtures/members'
 import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
@@ -116,8 +117,10 @@ export function SectionList(props: {
   drag?: ListDrag
   archived?: readonly WorkspaceRow[]
   readOnly?: boolean
+  viewer?: Membership
 }) {
   const { drag } = props
+  const viewer = props.viewer ?? { person: you, role: 'admin' }
   const dragged = props.sections
     .flatMap((item) => item.rows)
     .find((row) => row.workspace.key === drag?.workspace)
@@ -152,6 +155,11 @@ export function SectionList(props: {
                     ) : null}
                     <li>
                       <WorkspaceRowView
+                        archivable={
+                          !props.readOnly &&
+                          (viewer.role === 'admin' ||
+                            row.workspace.owner === viewer.person)
+                        }
                         drag={
                           row.workspace.key === drag?.workspace
                             ? 'placeholder'

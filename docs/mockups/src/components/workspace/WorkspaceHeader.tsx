@@ -1,11 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
-import {
-  Archive,
-  ChevronLeft,
-  FolderGit2,
-  GitBranch,
-  PanelRight,
-} from 'lucide-react'
+import { ChevronLeft, FolderGit2, GitBranch, PanelRight } from 'lucide-react'
 import { people } from '../../fixtures/members'
 import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
@@ -27,8 +21,8 @@ function State(props: { status: ActivityStatus }) {
 }
 
 /**
- * The name, repository, branch, owner, and state of the open workspace,
- * and Archive. The list groups workspaces by section, so the header names
+ * The name, repository, branch, owner, and state of the open workspace.
+ * The list groups workspaces by section, so the header names
  * the repository. For an admin of the org, the owner opens the menu that
  * reassigns the workspace. On desktop the header ends with the toggle that
  * hides the right column and shows it again.
@@ -43,8 +37,6 @@ export function WorkspaceHeader(props: {
   ownerOpen?: boolean
   /** The person signed in is an admin of the org, who can reassign. */
   canReassign: boolean
-  /** The workspace can be archived: it is not archived yet. */
-  archivable: boolean
   /** The list that Back opens on a phone, such as that of a suspended org. */
   back?: string
   /** The user hid the right column of the desktop with the toggle. */
@@ -60,11 +52,6 @@ export function WorkspaceHeader(props: {
       readOnly={!props.canReassign}
     />
   )
-  const archive = props.archivable ? (
-    <ScreenLink asChild to={paths.archive}>
-      <IconButton icon={Archive} label="Archive workspace" />
-    </ScreenLink>
-  ) : null
   if (props.viewport === 'mobile') {
     return (
       <header className={styles.mobile}>
@@ -79,7 +66,6 @@ export function WorkspaceHeader(props: {
         </div>
         {owner}
         <State status={props.status} />
-        {archive}
       </header>
     )
   }
@@ -97,7 +83,6 @@ export function WorkspaceHeader(props: {
       <span className={styles.spacer} />
       {owner}
       <State status={props.status} />
-      {archive}
       <IconButton
         icon={PanelRight}
         label={

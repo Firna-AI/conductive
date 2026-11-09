@@ -69,6 +69,7 @@ export function SectionList(props: {
   selectedId: string | null
   now: number
   actions: SectionActions
+  archiveAction?: (workspace: Workspace) => (() => void) | undefined
   move: (workspaceId: string, target: DropTarget) => void
   readOnly: boolean
 }) {
@@ -142,6 +143,7 @@ export function SectionList(props: {
                         }
                         linkRef={rows.linkRef(workspace.id)}
                         now={props.now}
+                        onArchive={props.archiveAction?.(workspace)}
                         onKeyDown={
                           props.readOnly
                             ? undefined

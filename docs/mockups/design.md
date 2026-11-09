@@ -14,9 +14,11 @@ as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
-drag and drop. The centre column has a slim header that names the
+drag and drop. Archive covers the time on hover or keyboard focus without
+moving the row content. Touch screens show the icon without a hover.
+The centre column has a slim header that names the
 repository, the branch, and the owner of the workspace, and ends with
-Archive and the toggle of the right column. The toggle hides the right
+the toggle of the right column. The toggle hides the right
 column, so the centre column takes its width, and shows it again. Then
 come a tab for each agent session and each open file or diff, in the order
 that the user gives them by drag, + for a new session, and a clock that
