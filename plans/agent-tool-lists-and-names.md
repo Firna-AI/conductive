@@ -114,7 +114,7 @@ The answers:
   name. Reason: the tools are part of the image, and this change does not
   change how an image gets them.
 
-## Open decisions
+## Decisions of this plan
 
 ### 1. Names from sandbox code have no rules
 
@@ -199,6 +199,7 @@ The answers:
 - **Options check:** A fresh check on 9 November 2026 added D and E,
   widened the impact, and changed the recommendation from C to D. Its
   report is in `.context/agent-tool-lists-and-names/`.
+- **Chosen:** D, by the user on 9 November 2026.
 
 ## Milestone 1: Documentation and protocol
 
@@ -208,8 +209,8 @@ State the new requirements before the code changes.
 
 - [ ] In `docs/protocol/agent-tools.md`, add the three lists with their
       contents, their order, and their errors. Add the optional name with
-      the rule of open decision 1. Change "only these three calls" to the
-      six calls, and give the new routes.
+      the name rule of decision 1, D. Change "only these three calls" to
+      the six calls, and give the new routes.
 - [ ] In `docs/protocol/access-and-security.md`, add the three lists to
       what the workspace token can do.
 - [ ] In `docs/protocol/workspaces-and-sandboxes.md`, say that the name
@@ -250,19 +251,23 @@ Depends on: 2
 
 ## Milestone 4: Workspace name at create
 
-Depends on: 3, and the answer to open decision 1
+Depends on: 3
 
 - [ ] Reserve a migration range in `migrations/README.md`. Add the
       migration with the nullable `workspace_creation_plans.name`.
       Describe it in the README.
 - [ ] Carry the optional name from the tool call through the creation
       plan to the new workspace row. Keep the branch rule and the city.
-- [ ] Apply the name rule of open decision 1 in the Worker.
+- [ ] Copy `src/shared/session-title.ts` from branch
+      `calummoore/chat-title-rename` without change, with its test, and
+      clean the name with `sessionTitleFrom` in the Worker, as decision 1,
+      D, says. A blank result counts as no name.
 - [ ] Add `name` to the shared request, the input reader, the CLI, and
       the MCP tool.
 - [ ] Test: a create with a name gives that name and the normal branch,
-      also after a creation retry reads the stored plan. Test the name
-      rule of open decision 1.
+      also after a creation retry reads the stored plan. A name with line
+      breaks or over 60 code points comes back cleaned, and a blank name
+      gives the city name.
 - [ ] Update `tools/README.md` and `worker/tools/README.md`.
 
 ## Milestone 5: Verification, commit, review, and pull request
