@@ -32,6 +32,7 @@ On the app hostname, the Worker serves these API routes:
 
 - The health check, GitHub sign-in and its callback, and the sign-in exchange of the Mac app.
 - The session, sign-out, the org list, a new org, and one org.
+- The waitlist state and code use, through the [waitlist backend](waitlist/README.md).
 - The account, its default model, its agent logins, the model list, and Get started.
 - The sections, the repositories, the members, and the workspace list of an org.
 - Leave org, under the existing last-active-admin rule.
@@ -99,6 +100,8 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
+- [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
+- [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
@@ -118,5 +121,6 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [Architecture](../docs/architecture.md)
 - [Deployment inputs](../docs/deployment.md)
 - [Access and security](../docs/protocol/access-and-security.md)
+- [Waitlist](../docs/protocol/waitlist.md)
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)

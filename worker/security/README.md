@@ -77,9 +77,10 @@ Each GitHub sign-in starts after an agreement to the current Terms.
   `termsConsentResponse` in [`marketing/consent.ts`](../marketing/consent.ts) reads it from the Astro build.
   It fills the Continue address and site origin as escaped text.
   It keeps the site's security headers and `Cache-Control: no-store`.
-  Its Continue with GitHub link adds the current revision and keeps the `desktop_challenge` of the Mac app.
+  Its Continue with GitHub link adds the current revision and keeps the `desktop_challenge` of the Mac app and the `invite_code` of a join link.
   Its links lead to the Terms and Privacy pages on `MARKETING_ORIGIN`, or on the product domain without that setting.
 - The signed OAuth state cookie carries the revision to the callback. A `terms_version` value in the callback address counts for nothing.
+- The signed state also carries the join code. A code in the callback address counts for nothing.
 - The callback creates a new account only when its signed state carries the current revision.
   Otherwise it answers 403 `terms_acceptance_required`, and it saves no user and no session.
 - Each sign-in whose signed state carries the current revision saves that revision in the `terms_version` column of `users`.
@@ -100,6 +101,22 @@ After that, each entry of this area refuses that user:
 - `sessionUser` finds no user for a suspended account. So the gate answers 401 `sign_in_required` to each session of that user.
 - `readConnectionAccess` gives a suspended user no grant. So their open chat tabs and terminal sockets close at the next refresh, and their preview requests and preview data stop at the next check.
 
+## App access at sign-in
+
+Each sign-in saves the GitHub account creation time and its primary verified
+email. A missing primary verified email saves no address.
+`signInAppAccess` grants access to operators through the shared
+[grant step](../waitlist/README.md). It uses a signed join code only for a
+user without app access. A failed code still creates a sign-in session.
+Its browser redirect keeps the code and the reason on the join path.
+The Mac handoff follows the same access grant before its session exchange.
+
+Open sign-up remains active. Each new account that needs no other grant
+gets the `existing` source. An existing account without app access keeps
+waiting unless an operator sign-in or a join code grants access.
+The request gate does not check app access yet.
+[Waitlist](../../docs/protocol/waitlist.md) states the complete access rules.
+
 ## Development
 
 Run `npm run test -- worker/security/gate.test.ts worker/security/gate-body.test.ts worker/http/bounded-body.test.ts` from the repository root.
@@ -113,6 +130,7 @@ The tests of its callers check it.
 After a change to the reader, run `npm run test -- worker/chat/tab-access.test.ts worker/chat/tab-deadlines.test.ts worker/chat/security.test.ts worker/terminal/access.test.ts`.
 
 After a change to the terms consent or to the suspension checks of sign-in, run `npm run test -- worker/security/terms.test.ts worker/security/auth.test.ts worker/operator/route.test.ts`.
+Run `npm run test -- worker/security/waitlist-auth.test.ts worker/security/waitlist-join.test.ts` for the access grants, primary email, and signed join codes.
 
 ### Key Code
 
@@ -121,6 +139,8 @@ After a change to the terms consent or to the suspension checks of sign-in, run 
 - [gate-body.test.ts](gate-body.test.ts) checks the exact body limit and early cancellation through HTTP routes.
 - [gate.test.ts](gate.test.ts) checks access, dispatch order, and JSON errors.
 - [auth.ts](auth.ts) starts and finishes GitHub sign-in, with the terms consent and the suspension check.
+- [sign-in-access.ts](sign-in-access.ts) applies operator and join-code grants before either session flow.
+- [github.ts](github.ts) reads the GitHub identity, creation time, and verified emails with their primary flag.
 - [terms.test.ts](terms.test.ts) checks the consent at the start of sign-in and the consent record of new and existing accounts.
 - [cookies.ts](cookies.ts) builds and reads the session cookies.
 - [crypto.ts](crypto.ts) signs and verifies tokens.

@@ -105,7 +105,7 @@ It can differ from the session of the request.
 [Agents](../../docs/protocol/chat-and-events.md#agents) states the starter rule.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
-`acceptedTermsSignInPath()` gives the sign-in path that carries that revision.
+`acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.
 [Terms consent](../../worker/security/README.md#terms-consent) gives the rules of sign-in.
 `operator.ts` defines the paths and replies of the operator's user and org suspensions.
 `OrgSummary.suspension` in `orgs.ts` exposes only the org suspension time to its members.
@@ -137,6 +137,7 @@ The git credential payload is not defined yet.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
+- [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.

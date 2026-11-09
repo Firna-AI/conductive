@@ -210,6 +210,11 @@ Call `acceptOrgInvite` after an explicit acceptance by a signed-in user.
 It accepts only an invitation that names one of that user's current verified emails.
 A durable match alone does not permit acceptance.
 Sign-in alone does not accept an invitation.
+Acceptance also includes the [app access grant](../waitlist/README.md) in
+its D1 batch. The record retains the org, invitation ID, and inviting
+admin after the invitation row is deleted. Invitations use no code count.
+The batch preserves the invitation while sign-ups are paused for a user
+without app access. It still accepts for a user who already has access.
 A membership-delete trigger cancels each invitation of the membership's org that has a durable match to the departing user.
 It runs in the same statement as the membership delete, so the removal and the cancellation apply together.
 
@@ -256,6 +261,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `errors.ts` defines `lastActiveAdminError` and `suspendedOwnerRecipientError`.
 - [`active-admin.ts`](../data/active-admin.ts) defines `activeAdminMemberPredicate`, the shared SQL rule of an active admin.
 - `invites.ts` manages pending invitations and explicit acceptance.
+- `invite-data.ts` batches membership, app access, the referral code, and invitation deletion under the current pause and identity checks.
 - `ownership.ts` supplies creation ownership and workspace reassignment.
 - `deletion.ts` implements Delete, suspension, and provider stops.
 - `maintenance.ts` runs lifecycle maintenance and validates schedules.

@@ -141,10 +141,18 @@ export async function createHarness() {
           'org_members',
           'orgs',
           'sessions',
+          'access_code_uses',
+          'user_app_access',
+          'access_codes',
           'users',
           'oauth_states',
         ].map((table) => db.prepare(`DELETE FROM ${table}`)),
       )
+      await db
+        .prepare(
+          'UPDATE signup_settings SET paused = 0, updated_at = NULL, updated_by_user_id = NULL WHERE id = 1',
+        )
+        .run()
       github.reset()
       boat.reset()
       now = TEST_TIME

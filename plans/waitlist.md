@@ -672,47 +672,50 @@ Depends on: 2
 The record of app access, the codes, and every way in except the
 approval. A new account still gets app access at once, until Milestone 7.
 
-- [ ] Add a migration:
-  - [ ] the app access record of each user: the time, the source, and the
+- [x] Add a migration:
+  - [x] the app access record of each user: the time, the source, and the
         operator, the code, or the org invitation of the source
-  - [ ] the invite codes and the referral codes: the code, the kind, the
+  - [x] the invite codes and the referral codes: the code, the kind, the
         label, the use limit, the owner, the maker, and the time of a
         disable
-  - [ ] each use of a code: the code, the user, and the time, with a
+  - [x] each use of a code: the code, the user, and the time, with a
         unique key on the user
-  - [ ] the pause: on or off, with the time and the operator of the last
+  - [x] the pause: on or off, with the time and the operator of the last
         change
-  - [ ] the primary verified email and the creation date of the GitHub
+  - [x] the primary verified email and the creation date of the GitHub
         account of each user
-  - [ ] app access with the source "existing account", and a referral
+  - [x] app access with the source "existing account", and a referral
         code, for each user who exists
-- [ ] Save the primary verified email and the creation date of the GitHub
+- [x] Save the primary verified email and the creation date of the GitHub
       account at each sign-in.
-- [ ] Add one grant step. It gives app access, records the source, and
+- [x] Add one grant step. It gives app access, records the source, and
       makes the referral code, in one D1 batch. A repeat changes nothing.
-- [ ] Give app access to each operator at each sign-in.
-- [ ] Add the waitlist routes: read the app access state, the pause, the
+- [x] Give app access to each operator at each sign-in.
+- [x] Add the waitlist routes: read the app access state, the pause, the
       address of the approval email, and the referral code of the
       signed-in user, and use a code. One D1 batch checks the code, the
       pause, and the user, takes the use, and runs the grant. Reply with
       the codes of the design.
-- [ ] Carry the code of a join link through the Terms page and the signed
+- [x] Carry the code of a join link through the Terms page and the signed
       sign-in state. The sign-in uses it for an account without app
       access.
-- [ ] Give app access to a person without app access who accepts an org
+- [x] Give app access to a person without app access who accepts an org
       invitation, in the same batch as the membership. Invitations have no
       count, as decision 163 chose. The record holds the org and the admin
       who sent the invitation.
-- [ ] Apply the pause to codes and org invitations. A code is not used up
+- [x] Apply the pause to codes and org invitations. A code is not used up
       while the pause is on.
-- [ ] Add the app access state to the session reply.
-- [ ] Test with local D1: each way in, an operator, each reason that a
+- [x] Add the app access state to the session reply.
+- [x] Test with local D1: each way in, an operator, each reason that a
       code does not work, the use limit under two parallel uses, a double
       submit, a code use at the moment of an org invitation, the pause, a
       repeat grant, the migration of existing users, and the join link
       through the sign-in.
-- [ ] Update `worker/security/README.md`, `worker/members/README.md`,
+- [x] Update `worker/security/README.md`, `worker/members/README.md`,
       `worker/README.md`, and the path helpers and types in `src/shared/`.
+
+Evidence: `.context/waitlist/m3/report.md`, the logs in `.context/waitlist/m3/`,
+and the complete gate in `.context/waitlist/m3/gate.log`.
 
 ## Milestone 4: Operator routes and the approval email in the Worker
 

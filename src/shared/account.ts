@@ -1,6 +1,11 @@
 import type { Agent, AgentChoice } from './agents'
 import type { Timestamp, User } from './api'
 
+export interface SessionResponse {
+  user: User
+  appAccess: boolean
+}
+
 export const ACCOUNT_PATHS = {
   account: '/api/account',
   defaultModel: '/api/account/default-model',

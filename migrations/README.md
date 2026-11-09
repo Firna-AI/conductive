@@ -41,6 +41,12 @@ Existing Claude subscription tokens refuse re-use by default.
 Existing API keys allow re-use by default.
 The migration keeps the encrypted secret and its timestamps.
 
+`202611091200_waitlist.sql` adds app access, invite and referral codes, code
+uses, and the sign-up pause. Each existing account gets app access from
+its join time and one referral code with five uses. The user record also
+gets the primary verified email and the GitHub account creation time.
+[The waitlist backend](../worker/waitlist/README.md) owns these records.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

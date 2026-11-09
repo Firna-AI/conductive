@@ -3,6 +3,8 @@
 `createHarness` creates a local D1 database.
 It supplies fake GitHub and Boat servers, a fixed clock, sign-in, org creation, and cleanup.
 Backend tests use it without an external account or cloud computer.
+`FakeGitHub.profile` accepts GitHub's `created_at`. Its email pages accept
+the `primary` flag beside `verified`.
 
 Every harness uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
 It applies migrations in filename order with Wrangler's SQL splitter.
@@ -11,6 +13,9 @@ The splitter keeps each trigger body in one statement.
 Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
 Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
 The reset also restores the clock, token sequence, and fake services.
+It deletes code uses, app access, and codes before users. It resets the
+sign-up pause and its change record. Tests can make waiting users directly
+in D1, because a new account through sign-in still gets app access.
 Each test creates its own members client and lifecycle hooks.
 The harness gives the Worker a test `BOAT_API_KEY` and `BOAT_ORG_ID`.
 `FakeBoat` serves only requests for its `orgId`. A request without
