@@ -62,12 +62,13 @@ export function isRunning(state: WorkspaceState): boolean {
  * Try again or Remove. A file over the size limit stays out, and Send takes
  * the message with the files that the composer attached.
  *
- * A session runs on the login of its starter, and a line under the box
- * names that login. When the starter is another member, the own login of
- * the viewer does not matter. When the login of that starter is not
+ * A session runs on the login of its starter. When the starter is another
+ * member, a label in the bar names that login, and the own login of the
+ * viewer does not matter. When the login of that starter is not
  * available, or that starter keeps it for their own messages, Send opens a
- * new linked session on the own login of the viewer. Such a message does
- * not steer a running turn of the session, and Stop still ends that turn.
+ * new linked session on the own login of the viewer, and the bar has no
+ * login label. Such a message does not steer a running turn of the
+ * session, and Stop still ends that turn.
  *
  * While the sandbox is not ready, Send queues the message in the
  * workspace, also during the first start and after a failed first start of
@@ -110,6 +111,6 @@ export function composerFor(
     sendTo,
     startsSession: opensLinked,
     blocked: needsLogin,
-    sessionLogin: sessionLoginFor(workspace, opensLinked ? undefined : starter),
+    sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),
   }
 }

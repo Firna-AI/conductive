@@ -102,6 +102,11 @@ These docs belong to this doc:
 - [Access and security](tokens-and-secrets.md#secrets-that-users-enter)
   says how the app keeps the values.
 
+## Create a workspace
+
+- [Create a workspace](create-a-workspace.md) holds the requirements of the
+  page, the dialog, the create, the branch, and a failed first start.
+
 ## Files and changes
 
 - [Files and changes](workspace-tools.md#files-and-changes) states the

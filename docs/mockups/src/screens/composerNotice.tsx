@@ -62,8 +62,8 @@ function tooLargeNotice() {
  * starter, so the own login of the viewer does not matter there. When the
  * login of the starter is not available, or the starter keeps it for their
  * own messages, the notice says that the message starts a new session, and
- * why. The login line then names the own login of the viewer. The starter
- * whose login is not available sees the notice that asks to connect.
+ * why. The starter whose login is not available sees the notice that asks
+ * to connect.
  */
 export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   if (state.composer === 'too-large' && state.tab !== 'new-session') {

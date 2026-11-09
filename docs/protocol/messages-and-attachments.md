@@ -48,11 +48,15 @@ says.
   member says before the send that the message starts a new session. When
   that member has no login for the agent, the composer shows the notice of
   a missing login instead.
-- Reason: the composer names the login of each message before the send. A
+- Reason: the composer shows before the send which login a message uses. A
   record without the share setting was rejected, because the composer then
   names the login of the starter until the send.
-- The composer names the member whose login its message runs on, such as
-  "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
+- When a message runs on the login of another member, the composer names
+  that member inside the message box, such as "Priya's login". A line under
+  the box was rejected, because the box then moved between sessions.
+- The composer names no login when a message runs on the user's own login.
+  A name for the own login was rejected, because it tells the user nothing
+  new.
 - The composer attaches files to a message, as [Attachments](#attachments)
   says.
 - [The send key](create-a-workspace.md#the-send-key) gives the key that
@@ -82,6 +86,9 @@ says.
   too while the starter shares the login. Such a message goes to the agent
   at once, unless files must reach the cloud computer first, as
   [Attachments](#attachments) says. The agent reads it at its next tool call.
+- The composer uses its placeholder to show that a message steers the
+  running turn. It shows no steer hint under the message box.
+  Reason: a hint under the box moves it when the user starts to type.
 - In a turn without tool calls, the agent reads such a message when the
   turn ends.
 - A message that the workspace accepted stays in its session, also when the

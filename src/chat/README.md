@@ -271,7 +271,7 @@ the archive, the session history still opens.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
 on one fake stream. `components/SessionLogin.test.tsx` renders the login
-line and its notices. `components/SourceLink.dom.test.tsx` presses the link
+label and its notices. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
@@ -298,6 +298,9 @@ check in the Mac app.
   state and its actions, with `show` and `hide` for a kept chat.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
+- `components/Composer.tsx`: the message box and its controls, with the
+  steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
+  states.
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
@@ -332,7 +335,7 @@ check in the Mac app.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, and the words of the line under the composer.
+  record and the reader, and the login label in the composer.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its

@@ -9,7 +9,7 @@ import { ActionButton, IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import { AttachmentChips } from './AttachmentChips'
 import { ModelPicker } from './ModelPicker'
-import { SessionLoginLine, type SessionLogin } from './SessionLogin'
+import { SessionLoginLabel, type SessionLogin } from './SessionLogin'
 import styles from './Composer.module.css'
 
 export type ComposerState = {
@@ -45,8 +45,9 @@ export type ComposerState = {
   /** The agent of the chosen model is not connected, so Send is off. */
   blocked?: boolean
   /**
-   * Whose agent login the session uses: the login of its starter. The line
-   * under the box names it.
+   * The agent login of another member that the session uses: the login of
+   * its starter. A label in the bar names it. A message on the own login of
+   * the viewer has no label.
    */
   sessionLogin?: SessionLogin
 }
@@ -72,11 +73,11 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
  * steers the turn unless it starts a new linked session. Stop ends the
- * running turn. While the sandbox is not ready, also
- * during and after a failed first start, Send queues the message in the
- * workspace. Send waits for the uploads of the files, whose chips show
- * their state. A line under the box names whose agent login the session
- * uses.
+ * running turn. While the sandbox is not ready, also during and after a
+ * failed first start, Send queues the message in the workspace. Send waits
+ * for the uploads of the files, whose chips show their state. When a
+ * message spends the agent login of another member, a label after the
+ * model picker names that login, so the box keeps its place.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const { field } = useControlSizes()
@@ -118,6 +119,9 @@ export function Composer(props: ComposerState & { lines?: number }) {
             open={props.picker}
             sessionAgent={props.sessionAgent}
           />
+          {props.sessionLogin ? (
+            <SessionLoginLabel {...props.sessionLogin} />
+          ) : null}
           <span className={styles.spacer} />
           {props.running ? (
             <ActionButton icon={Square}>Stop</ActionButton>
@@ -131,12 +135,6 @@ export function Composer(props: ComposerState & { lines?: number }) {
           )}
         </div>
       </div>
-      {props.sessionLogin ? <SessionLoginLine {...props.sessionLogin} /> : null}
-      {steers && props.draft !== '' ? (
-        <span className={styles.hint}>
-          The agent reads this at its next step.
-        </span>
-      ) : null}
     </div>
   )
 }
