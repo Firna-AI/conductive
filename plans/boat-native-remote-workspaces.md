@@ -8038,8 +8038,56 @@ member actions that read the computers.
 
 Apply option F of finding 10 of PR #52. Added on 8 November 2026.
 
-- [ ] Apply option F of `plans/follow-ups/computer-ledger.md`, and delete
-      that item.
+- [x] Apply option F of `plans/follow-ups/computer-ledger.md`, and delete
+      that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15u`.
+
+Scope approved by the user on 9 November 2026:
+
+- Include the operator org search and its tests.
+- Include the Archive Delete call and its tests. Include each other Delete
+  helper caller that needs the same database access.
+
+Design calls by the implementor, checked by the orchestrator on 9 November
+2026:
+
+- Record each allocation key before create. Attach the provider ID after
+  the reply, because the provider chooses that ID.
+- Keep owner and parent IDs without foreign keys. Computer history must
+  survive account, workspace, and build removal until the org purge.
+- Keep unknown legacy owners and purposes explicit. Backfill every stored
+  computer ID, including image source jobs and deletion journals.
+- Retain assigned identities through guarded SQL triggers. Imports and
+  repairs then keep their earlier computer IDs too.
+- Use guarded inserts in those triggers. An outer upsert or replacement
+  can override an inner `INSERT OR IGNORE` policy.
+- Keep live workspace ownership current in the same owner write. During
+  recovery, prefer the current or retained owner before the saved request
+  owner, so an old request cannot undo a reassignment.
+- Merge an imported computer with its allocation intent before removing
+  the duplicate intent. Keep one record of that physical computer.
+- Give each computer its own cleanup flag. Keep the workspace cleanup
+  pointer for native scheduling, and read every flagged live computer.
+- Keep cleanup pending after Stop until Delete succeeds or returns not
+  found. Keep the deleted computer record until the org purge.
+- Keep current workspace and unfinished build work with their lifecycle
+  handlers. Stop detached and retained computers through the ledger.
+- Keep existing pending-list order and remove duplicate IDs. Use the
+  computer ID when no parent ID survives, because the browser only counts
+  these entries.
+- Mark a definite first create refusal separately. A refused replay keeps
+  an earlier uncertain allocation live, also when its job predates the
+  ledger.
+- Start the operator test fixture without a placeholder computer. Its
+  later provider allocation then creates its first computer identity.
+- Supply the fake provider to native operator calls from Node. The native
+  object's outbound fake does not cover those direct calls.
+- Move the two native image-build suspension tests to their own file.
+  Keep every assertion and the 300-line limit.
+- Keep unresolved allocation recovery in the existing follow-up
+  `plans/follow-ups/org-deletion-lost-build-allocation.md`. It already
+  selects option B and is outside this milestone.
+
+Evidence: `.context/boat-native-remote-workspaces/15u/`.
 
 ## Milestone 2c: Doc follow-ups
 

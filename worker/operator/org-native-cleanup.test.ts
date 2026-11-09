@@ -47,7 +47,7 @@ it('keeps a failed workspace pending in repeated org suspension until native Del
     },
   )
   try {
-    const app = createApp()
+    const app = createApp({ fetch: fixture.boat.fetch })
     const session = await sign(
       {
         sessionId: 'runtime-browser-session',
@@ -108,7 +108,7 @@ it('keeps a failed workspace pending in repeated org suspension until native Del
     expect(
       await fixture.actor('runtime-state-workspace').alarmAt(),
     ).not.toBeNull()
-    expect(fixture.boat.stopIds).toEqual([])
+    expect(fixture.boat.stopIds).toEqual(['bx_1'])
     refuseDelete = false
     await fixture.restart()
     expect(
@@ -127,7 +127,7 @@ it('keeps a failed workspace pending in repeated org suspension until native Del
       pendingWorkspaceIds: [],
       pendingBuildIds: [],
     })
-    expect(fixture.boat.stopIds).toEqual([])
+    expect(fixture.boat.stopIds).toEqual(['bx_1'])
   } finally {
     allocation.release()
     await Promise.allSettled([creating, failed])

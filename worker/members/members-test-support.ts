@@ -116,6 +116,7 @@ export async function seedWorkspace(
   owner: User,
   id = 'workspace-one',
   repositoryId = `repository-${org.id}`,
+  sandboxId: string | null = `sandbox-${id}`,
 ) {
   const db = harness.env.DB
   const creator = await workspaceCreator(db, org.id, owner.id)
@@ -144,7 +145,7 @@ export async function seedWorkspace(
         repositoryId,
         creator.id,
         `general-${org.id}`,
-        `sandbox-${id}`,
+        sandboxId,
         TEST_TIME,
         TEST_TIME,
       ),

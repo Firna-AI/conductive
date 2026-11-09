@@ -16,10 +16,18 @@ import {
   repositoryEnvironment,
 } from './repository-locations'
 import { readRepositories } from './settings-data'
+import {
+  attachComputer,
+  recordComputerIntent,
+  rejectComputerIntent,
+  type ComputerOwnership,
+} from './computer-ledger'
 
 export interface SandboxResourceIntent {
   kind: 'sandbox'
   input: SandboxStart
+  ownership: ComputerOwnership
+  mayHaveAllocated: boolean
   persist(input: SandboxStart): Promise<void>
 }
 
@@ -38,21 +46,54 @@ export interface SnapshotResourceIntent {
 export type ResourceIntent = SandboxResourceIntent | SnapshotResourceIntent
 
 export function createResource(
+  db: D1Database,
   provider: SandboxProvider,
   intent: SandboxResourceIntent,
 ): Promise<Sandbox>
 export function createResource(
+  db: D1Database,
   provider: SandboxProvider,
   intent: SnapshotResourceIntent,
 ): Promise<SavedSnapshot>
 /** Persist the dispatched request's ownership before the provider can create it. */
 export async function createResource(
+  db: D1Database,
   provider: SandboxProvider,
   intent: ResourceIntent,
 ): Promise<Sandbox | SavedSnapshot> {
   if (intent.kind === 'sandbox') {
     await intent.persist(intent.input)
-    return provider.create(intent.input)
+    const firstDispatch = await recordComputerIntent(
+      db,
+      intent.input.idempotencyKey,
+      intent.ownership,
+      intent.mayHaveAllocated,
+    )
+    let sandbox: Sandbox
+    try {
+      sandbox = await provider.create(intent.input)
+    } catch (error) {
+      if (
+        firstDispatch &&
+        error instanceof ProviderError &&
+        [
+          'unauthorized',
+          'forbidden',
+          'payment_required',
+          'not_found',
+          'invalid_request',
+        ].includes(error.kind)
+      )
+        await rejectComputerIntent(db, intent.input.idempotencyKey)
+      throw error
+    }
+    await attachComputer(
+      db,
+      intent.input.idempotencyKey,
+      sandbox.id,
+      intent.ownership,
+    )
+    return sandbox
   }
   if (intent.recorded) {
     try {
@@ -87,9 +128,17 @@ export async function createResource(
 export function buildSandboxIntent(
   db: D1Database,
   job: BuildJob,
+  mayHaveAllocated: boolean,
 ): SandboxResourceIntent {
   return {
     kind: 'sandbox',
+    mayHaveAllocated,
+    ownership: {
+      orgId: job.orgId,
+      ownerUserId: job.startedByUserId,
+      purpose: 'build',
+      purposeId: job.buildId,
+    },
     input: {
       snapshotName: job.previousImageName ?? undefined,
       name: `image-${job.buildId}`,

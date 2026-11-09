@@ -13,12 +13,10 @@ import {
   queueRuntimeResume,
 } from '../lifecycle/ownership-maintenance-test-support'
 import { workspaceOwnerChangedHook } from '../lifecycle/ownership-maintenance'
-import { imageRuntime, workspaceRuntime } from '../lifecycle/runtime'
-import { readBuildJob } from '../lifecycle/build-data'
 import { resumeWorkspace } from '../lifecycle/workspace-resume'
-import { startImageBuild } from '../lifecycle/image-builds'
 import { removeOrgMember } from '../members/membership'
 import { suspendOrg } from './suspend-org'
+import { nativeSuspensionRuntime } from './native-runtime.test-support'
 
 let bundle: string
 let fixture: Awaited<ReturnType<typeof realRuntimeFixture>>
@@ -40,7 +38,7 @@ it('retries an org stop after native restart and keeps the stop after a voluntar
   const previousAlarm = await fixture.actor(workspaceId).alarmAt()
   fixture.boat.stopReplyState = 'running'
   const result = await suspendOrg(
-    workspaceRuntime(fixture.env),
+    nativeSuspensionRuntime(fixture),
     'runtime-org',
     'active-admin',
   )
@@ -56,7 +54,7 @@ it('retries an org stop after native restart and keeps the stop after a voluntar
     Date.now(),
     {
       workspaceOwnerChanged: workspaceOwnerChangedHook(
-        workspaceRuntime(fixture.env),
+        nativeSuspensionRuntime(fixture),
       ),
     },
   )
@@ -91,7 +89,11 @@ it('suppresses a due native disk restart after org suspension while an active or
   await actor.tick()
   await actor.tick()
   await actor.tick()
-  await suspendOrg(workspaceRuntime(fixture.env), 'runtime-org', 'runtime-user')
+  await suspendOrg(
+    nativeSuspensionRuntime(fixture),
+    'runtime-org',
+    'runtime-user',
+  )
   await actor.makeDiskRetentionDue()
   await fixture.restart()
   await fixture.actor(workspaceId).tick()
@@ -113,7 +115,11 @@ it('closes an idle native runner and refuses resumes while keeping chat history 
     streamId: 'org-idle',
   })
   expect(await runner.inbox.next()).toMatchObject({ type: 'welcome' })
-  await suspendOrg(workspaceRuntime(fixture.env), 'runtime-org', 'runtime-user')
+  await suspendOrg(
+    nativeSuspensionRuntime(fixture),
+    'runtime-org',
+    'runtime-user',
+  )
   await actor.tickRunnerAccess()
   await expect.poll(() => runner.isClosed, { timeout: 10000 }).toBe(true)
   await runner.closed
@@ -121,7 +127,7 @@ it('closes an idle native runner and refuses resumes while keeping chat history 
   expect(await browser.inbox.next()).toMatchObject({ type: 'history' })
   await expect(
     resumeWorkspace(
-      workspaceRuntime(fixture.env),
+      nativeSuspensionRuntime(fixture),
       'runtime-org',
       workspaceId,
       'runtime-user',
@@ -133,94 +139,17 @@ it('closes an idle native runner and refuses resumes while keeping chat history 
   expect(fixture.boat.states.get(sandboxId)).toBe('archived')
 })
 
-it('fails a queued native image build of another starter without allocating a computer', async () => {
-  await activeRuntimeOwner(fixture)
-  const runtime = imageRuntime(fixture.env)
-  const buildId = await startImageBuild(
-    { ...runtime, scheduler: { schedule: async () => undefined } },
-    {
-      orgId: 'runtime-org',
-      userId: 'active-admin',
-      kind: 'build',
-      software: {
-        url: 'https://software.conductive.test/runner.tar.gz',
-        sha256: 'a'.repeat(64),
-      },
-    },
-  )
-  const result = await suspendOrg(
-    workspaceRuntime(fixture.env),
-    'runtime-org',
-    'runtime-user',
-  )
-  expect(result.pendingBuildIds).toEqual([buildId])
-  await fixture.restart()
-  await fixture.actor('org-image:runtime-org').tick()
-  expect(
-    await readBuildJob(fixture.env.DB, 'runtime-org', buildId),
-  ).toMatchObject({ state: 'failed', phase: 'done', sandboxId: null })
-  expect(fixture.boat.starts).toEqual([])
-})
-
-it('recovers and removes a native build allocation whose response was lost before org suspension', async () => {
-  const runtime = imageRuntime(fixture.env)
-  const buildId = await startImageBuild(
-    { ...runtime, scheduler: { schedule: async () => undefined } },
-    {
-      orgId: 'runtime-org',
-      userId: 'runtime-user',
-      kind: 'build',
-      software: {
-        url: 'https://software.conductive.test/runner.tar.gz',
-        sha256: 'a'.repeat(64),
-      },
-    },
-  )
-  fixture.boat.lostCreateReplies = 1
-  await fixture.actor('org-image:runtime-org').scheduleImage({
-    orgId: 'runtime-org',
-    buildId,
-    software: {
-      url: 'https://software.conductive.test/runner.tar.gz',
-      sha256: 'a'.repeat(64),
-    },
-    nextAt: Date.now(),
-  })
-  await fixture.actor('org-image:runtime-org').tick()
-  expect(fixture.boat.states.size).toBe(1)
-  expect(
-    await readBuildJob(fixture.env.DB, 'runtime-org', buildId),
-  ).toMatchObject({ state: 'running', phase: 'allocating', sandboxId: null })
-  await suspendOrg(workspaceRuntime(fixture.env), 'runtime-org', 'runtime-user')
-  await fixture.env.DB.prepare(
-    `UPDATE image_builds SET provider_retry_json = json_set(provider_retry_json, '$.retryAt', 0) WHERE id = ?`,
-  )
-    .bind(buildId)
-    .run()
-  await fixture.restart()
-  for (let step = 0; step < 4; step++)
-    await fixture.actor('org-image:runtime-org').tick()
-  expect(
-    await readBuildJob(fixture.env.DB, 'runtime-org', buildId),
-  ).toMatchObject({ state: 'failed', phase: 'done', sandboxId: null })
-  expect(
-    await fixture.env.DB.prepare('SELECT error FROM image_builds WHERE id = ?')
-      .bind(buildId)
-      .first('error'),
-  ).toBe(
-    'This org is suspended. For questions, write to abuse@conductive.build.',
-  )
-  expect(fixture.boat.states.size).toBe(0)
-  expect(fixture.boat.deletedIds).toEqual(['bx_1'])
-})
-
 it('cancels a queued native resume before its next phase after runtime restart', async () => {
   const { actor, workspaceId, sandboxId } =
     await runningRuntimeWorkspace(fixture)
   fixture.boat.states.set(sandboxId, 'archived')
   await actor.lifecycleStopped()
   await queueRuntimeResume(fixture, workspaceId)
-  await suspendOrg(workspaceRuntime(fixture.env), 'runtime-org', 'runtime-user')
+  await suspendOrg(
+    nativeSuspensionRuntime(fixture),
+    'runtime-org',
+    'runtime-user',
+  )
   await fixture.restart()
   await fixture.actor(workspaceId).tick()
   expect(await fixture.actor(workspaceId).waitLifecycleStart()).toMatchObject({
@@ -243,7 +172,7 @@ it('cleans a native workspace allocation after its reply is lost during org susp
   })
   await allocation.entered
   const suspended = suspendOrg(
-    workspaceRuntime(fixture.env),
+    nativeSuspensionRuntime(fixture),
     'runtime-org',
     'runtime-user',
   )

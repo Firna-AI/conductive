@@ -47,6 +47,16 @@ The uploader ID is opaque, so retained files do not block account deletion.
 The org reference remains until external file purge succeeds.
 Chat attachment queries live in `worker/chat/attachment-data.ts` and `attachment-claim-data.ts`.
 
+`202611091127_computer_ledger.sql` adds the retained computer ledger.
+It copies known IDs from workspaces, builds, cleanup records, preview listeners,
+terminal credentials, image source jobs, and the deleted-org resource journal.
+An allocation starts with its request key and no provider ID.
+The lifecycle attaches the ID after the provider reply.
+Confirmed deletions keep their entries until the org purge.
+An owner or parent ID has no foreign key, so its removal keeps the computer record.
+Identity-write triggers also retain assigned IDs from imports and repairs.
+A workspace owner trigger keeps its live computer records with the current owner.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

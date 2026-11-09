@@ -99,7 +99,12 @@ export async function cleanupBuild(
     await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
   }
   if (job.sandboxId) {
-    await deleteSandboxIfPresent(provider, job.sandboxId)
+    await deleteSandboxIfPresent(
+      runtime.env.DB,
+      provider,
+      job.sandboxId,
+      runtime.dependencies.now(),
+    )
     await runtime.env.DB.prepare(
       'UPDATE image_builds SET sandbox_id = NULL WHERE id = ?',
     )

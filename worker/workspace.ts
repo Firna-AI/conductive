@@ -266,7 +266,9 @@ export class Workspace extends AttachmentWorkspace {
               orgId,
               dependencies.fetch,
             )
-            await deleteSandboxIfPresent(provider, row.sandboxId)
+            const db = this.env.DB
+            const now = this.now()
+            await deleteSandboxIfPresent(db, provider, row.sandboxId, now)
           }
           await archiveWorkspaceAccess(this.env, orgId, workspaceId, userId)
           await markWorkspaceArchived(

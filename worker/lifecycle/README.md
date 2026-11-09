@@ -111,6 +111,16 @@ for. Do not call the alarm handler of a native entry directly.
 
 D1 holds the workspace, token, build, and log records. The storage of each
 object holds the lifecycle state, the turn records, and the events.
+The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs.
+It keeps deleted computer IDs until their org is purged.
+Assigned identity writes also retain older IDs, including imports and repairs.
+Workspace owner changes update each live ledger entry of that workspace.
+The retained owner survives removal of the workspace row.
+Allocation recovery keeps that retained owner when it merges an imported computer.
+Definite first create refusals stay as rejected allocation records.
+A refused replay keeps an earlier uncertain request live.
+Each failed computer has its own cleanup flag.
+The native cleanup pointer can therefore change without losing an older failed computer.
 
 ### Key Code
 
@@ -229,6 +239,11 @@ object holds the lifecycle state, the turn records, and the events.
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
   path to a Boat call that creates a sandbox or a snapshot. It stores the
   request first, so the lifecycle finds the resource after a lost reply.
+  It records a computer allocation before create and attaches the returned ID.
+- [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
+  confirmed deletions, and the live computers that still need cleanup.
+- [`cleanup.ts`](cleanup.ts): retries every failed computer of a workspace.
+  `deleteSandboxIfPresent` marks the ledger after Delete succeeds or returns not found.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`, the
   maintenance resume, startup, and stop phases. Its D1 progress retains a
   failure while stop cleanup retries.
