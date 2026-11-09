@@ -65,9 +65,7 @@ it('limits each repair kind to fifty, logs its counts, and advances failed attem
   })
   expect(report.firstWorkspaces).toHaveLength(50)
   expect(report.firstOrgs).toHaveLength(50)
-  expect(
-    report.firstWarnings.map(([warning]): unknown => JSON.parse(warning)),
-  ).toEqual([
+  expect(report.firstWarnings).toEqual([
     {
       kind: 'lifecycle_repair_limited',
       message: 'Lifecycle repair limited its checks.',

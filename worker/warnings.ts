@@ -1,6 +1,8 @@
 import { SIMPLE_WARNINGS, type WorkerWarning } from './warning-types'
 import type { ErrorSummary } from './warning-values'
 
+export type WarningRecord = ReturnType<typeof warningFields>
+
 /** A failed command keeps its state and numbers, with no captured output. */
 export class CommandFailed extends Error {
   readonly state: string
