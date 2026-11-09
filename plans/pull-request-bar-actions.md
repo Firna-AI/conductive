@@ -28,6 +28,7 @@ Contract owners:
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md).
 - [Orgs and members](../docs/protocol/orgs-and-members.md).
 - [Chat and events](../docs/protocol/chat-and-events.md).
+- [Agent instructions](../docs/protocol/agent-instructions.md).
 - [GitHub tokens](../docs/protocol/github-tokens.md).
 - The [architecture doc](../docs/architecture.md).
 - The [GitHub banner UI README](../src/github/README.md).
@@ -495,7 +496,9 @@ recommendation from A to D.
 - **Action:** asked the user, because the options conflict with the rules of
   open pull request #112, and no rule settles which side wins.
 - **Chosen:** D, by the user on 9 November 2026. The plan also applies
-  the wider fix: the same line names a changed target branch.
+  the wider fix: the same line names a changed target branch. Pull
+  request #112 merged later the same day, so its rules are now in
+  `docs/protocol/agent-instructions.md` on `main`.
 
 ### 228. Choose how the bar guards a merge
 
@@ -724,10 +727,10 @@ has a pull request. The labels are drafts for the mockups.
   line in each message, after the line that names its sender. The line
   names the current workspace branch and the current target branch. A new
   session gets the current branches in its fixed text.
-- Design call: when pull request #112 has not merged first, the branch
-  line stands at the start of the input, and the Worker records the
-  branch of each session when the session starts. Reason: the line must
-  work with and without the fixed text of #112.
+- Design call: the Worker records the branches of each session when the
+  session starts, and adds the branch line while they differ from the
+  current branches. Reason: the fixed text of a session, from pull
+  request #112, keeps the branches of its start.
 
 ### Layouts
 
@@ -789,8 +792,10 @@ the answers of decisions 224 to 228 when they come.
       and the actions on a phone. Remove the rules that every action links
       to GitHub and that the app merges nothing.
 - [ ] Update `docs/protocol/chat-and-events.md`: an action is a message of
-      the member who clicks, the note of Continue, and the branch line of
-      decision 227.
+      the member who clicks, and the note of Continue.
+- [ ] Update `docs/protocol/agent-instructions.md`: a workspace can hold
+      one task after another, Continue changes the workspace branch, and
+      the branch line of decision 227 names the current branches.
 - [ ] Update `docs/protocol/workspaces-and-sandboxes.md` with a Continue
       section beside Archive. State in
       `docs/protocol/orgs-and-members.md`, "Members and roles", that every
@@ -911,8 +916,8 @@ and 227.
       GitHub state of the new branch, and publish the change to each tab.
 - [ ] Add the note of Continue to the chat events. Send the current
       workspace branch with each message, and add the branch line of
-      decision 227 in the runner. Check first whether pull request #112
-      has merged.
+      decision 227 in the runner, after the sender line of pull request
+      #112.
 - [ ] Test the route rules, the count of every local branch, the branch
       change, a refused move, the routing of GitHub events to the new
       branch, and the note.
