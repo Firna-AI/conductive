@@ -349,8 +349,9 @@ Apply option B of decision 3. Added on 9 November 2026.
       that pin it.
 - [x] Delete `plans/follow-ups/terms-name-the-mac-app.md` in the same
       commit.
-- [ ] Run the targeted tests and the complete gate, commit, push, and
-      review the change with the `implementation-review` skill.
+- [x] Run the targeted tests and the complete gate, commit, push, and
+      review the change with the `implementation-review` skill. The second
+      review of the branch found no findings.
 
 ## Post-merge follow-up (non-blocking)
 
