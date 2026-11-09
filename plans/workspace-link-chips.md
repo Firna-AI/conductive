@@ -229,8 +229,8 @@ approved.
 - **Terms:**
   - **Short number:** a number for each workspace in its org, such as 395 in `W-395`. Conductive has none today.
 - **Background:** A workspace has a long random ID, a name, and a branch such as `calummoore/lisbon-7k2q`. The agent renames a workspace after its first answer, and two workspaces can have the same name. Conductor shows a short ID such as `W-395` in its header.
-- **Problem:** People cannot name a workspace in a few characters, when they speak or write.
-- **Impact if no action:** Option C of decision 150 cannot work. The chip and the header can show only the name.
+- **Problem:** People cannot name a workspace in a few characters, when they speak or write. With B alone, a person who hears or reads a number has no place to look it up.
+- **Impact if no action:** Option C of decision 150 cannot work. The chip and the header can show only the name. With B alone, people find a workspace by its name, not by its number.
 - **Root question:** How can people name one workspace in a few characters, so that a person who hears or reads the name can find that workspace? The options check widened the question, because under B nobody can look a number up.
 - **Options:**
   - **A.** Add no short number. The chip and the header show the name. Cost: workspaces with the same name look the same, and nobody can type a workspace from memory. Effort: Small.
