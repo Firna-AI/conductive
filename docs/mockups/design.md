@@ -14,7 +14,8 @@ as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
-drag and drop. The centre column has a slim header that names the
+drag and drop. A right click on a row, or its More, opens the menu of the
+workspace. The centre column has a slim header that names the
 repository, the branch, and the owner of the workspace, and ends with
 Archive and the toggle of the right column. The toggle hides the right
 column, so the centre column takes its width, and shows it again. Then
@@ -61,10 +62,29 @@ chat, and four tabs at the bottom.
   can still queue messages, as `app/new-workspace/error` shows. Every
   other bar of the sandbox takes the place of the composer.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
-  `src/components/common/` beside its button or its tab, or in a `Sheet` on
-  a phone. Firna's own menu rows are taller than the dense design. A row can
-  lead with a mark, such as an avatar, and end with a muted detail and an
-  icon. An item that is off keeps its place, greyed.
+  `src/components/common/` beside its button or its tab, at the pointer of
+  a right click, or in a `Sheet` on a phone. Firna's own menu rows are
+  taller than the dense design. A row can lead with a mark, such as an
+  avatar, and end with a muted detail and an icon. An item that is off
+  keeps its place, greyed. An item with choices ends with an arrow, and
+  its submenu opens beside the menu, level with the item.
+- The menu of a workspace row has Move to section, Reassign to, Rename, a
+  line, then Archive, as `app/workspace-menu` shows. It lists only the
+  actions that the person can use, from `workspaceMenu.ts` in
+  `src/components/workspaces/`, and a row with none has no menu. More,
+  from `RowMenu.tsx` beside it, sits at the end of the row beside its
+  link, in place of the time. It shows under the pointer, on the row with
+  the focus, on the current row, and while the menu is open. A right click
+  opens the menu at the pointer, and More opens it below itself. The row
+  of the open menu keeps the fill of a hover. A phone shows More on every
+  row, after the time, and opens the menu and its choices in a sheet. A
+  long press on a phone still lifts the row for a drag. Rename puts a
+  field in place of the name and the time, with the name selected.
+  `RowMenu.module.css` styles More, the field, and the menu at the pointer.
+- `FailureToast` in `src/components/common/` draws the toast that names a
+  change of the list that failed, with the message of the server, at the
+  bottom right of a desktop and at the bottom of a phone, as
+  `app/workspace-menu/rename/failed` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and

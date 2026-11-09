@@ -1,0 +1,117 @@
+/*
+ * A workspace row with More, the button of its menu. The link fills the
+ * row, and More sits over the end of the row, beside the link.
+ */
+.item {
+  position: relative;
+}
+
+/*
+ * More shows on hover, on focus, on the current row, and while the menu is
+ * open. It takes the place of the time.
+ */
+.more {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 2px;
+  bottom: 0;
+  align-items: center;
+  border-radius: var(--ui-radius-md);
+}
+
+.item:hover .more,
+.item:focus-within .more,
+.current .more,
+.open .more,
+.hovered .more,
+.touch .more {
+  display: flex;
+}
+
+.item:hover .time,
+.item:focus-within .time,
+.current .time,
+.open .time,
+.hovered .time {
+  visibility: hidden;
+}
+
+/*
+ * A screen without hover shows More on every row. The row keeps its time
+ * and makes room for More.
+ */
+.item.touch .time {
+  visibility: visible;
+}
+
+.touch .link {
+  padding-right: calc(max(var(--ui-control-height), var(--ui-touch-min)) + 4px);
+}
+
+/* More while its menu is open. */
+.moreOpen {
+  background: var(--ui-selected);
+}
+
+/*
+ * The row whose menu is open keeps the fill of a hover. A view runs no
+ * script, so it draws a hover with the same fill.
+ */
+.held {
+  background: var(--ui-soft);
+}
+
+/*
+ * A view runs no script, so it draws the menu of a right click at a pointer
+ * over the name. The top left corner of the menu takes the point, and an
+ * open submenu sits beside the menu, level with its item. The app draws
+ * the menu above the page, at the pointer.
+ */
+.pointer {
+  display: flex;
+  position: absolute;
+  z-index: 20;
+  top: calc(50% + 6px);
+  left: 96px;
+  align-items: flex-start;
+  gap: 4px;
+  width: max-content;
+}
+
+/* The submenu of the second item starts one row lower. */
+.second {
+  margin-top: calc(var(--ui-row-height) + 1px);
+}
+
+/*
+ * The field of Rename, in place of the name and the time of the row. A
+ * view runs no script, so a span stands for the field, which opens
+ * focused, and it draws the selected name in the colours of a selection.
+ */
+.field {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  overflow: hidden;
+  min-width: 0;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--ui-primary);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* A row of the list page is taller, and so is its field. */
+.fieldPage {
+  height: 28px;
+}
+
+.selection {
+  background: Highlight;
+  color: HighlightText;
+}

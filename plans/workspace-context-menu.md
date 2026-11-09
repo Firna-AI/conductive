@@ -1,6 +1,8 @@
 # Workspace context menu
 
-Status: Active. On branch `calummoore/workspace-context-menu`, no pull request yet. The pull request that completes the work deletes this plan. The user chose the menu scope on 9 November 2026. This first change records the plan only. Implementation waits for approval of this written plan.
+Status: Active. On branch `calummoore/workspace-context-menu`, no pull request yet. The pull request that completes the work deletes this plan.
+
+The user chose the menu scope on 9 November 2026. The user approved implementation of Milestone 1 on 9 November 2026. Milestone 1 is complete. Milestones 2 to 5 wait for a further instruction.
 
 Conductive lists each task as a workspace in the desktop sidebar and the
 phone list. A workspace already moves between sections, gets a new owner,
@@ -54,7 +56,8 @@ This number refers to item 1 of the workspace menu discussion.
   uses `src/chat/components/useTabMenu.ts` and `src/chat/ui/Menu.tsx`.
 - **Recommendation:** D. The user chose D on 9 November 2026. The first
   recommendation was B.
-- **Action:** Apply D after approval of this written plan.
+- **Action:** Apply D in Milestone 1, as the user instructed on 9 November
+  2026. The remaining implementation milestones wait for a further instruction.
 - **Chosen:** D, by the user on 9 November 2026: "1 = A + rename".
 
 All options assume a menu on a workspace row. The task message requires it.
@@ -120,6 +123,29 @@ These are agent design calls from 9 November 2026.
   Reuse a suitable existing menu surface. Keep any extraction limited to
   the consumers this change needs. Do not migrate every app menu here.
 
+### Mockup design calls, 9 November 2026
+
+These are agent calls from the completed mockup milestone.
+
+- Desktop More replaces the time while it shows. A phone keeps the time,
+  then More. An open menu keeps its row marked and More pressed.
+- Right-click puts the menu at the pointer. More aligns the menu below its
+  button, at its end. Menu keys open it below the row.
+- Desktop section and owner choices open beside their parent item. A phone
+  replaces the sheet choices under the workspace name. Dismissal returns
+  to the list. Another action starts from More again.
+- Rename replaces the name and time with the selected field. More stays
+  hidden during Rename. A failed save keeps the draft and shows a toast.
+- Archive from an unopened row shows the existing question over the current
+  page. Cancel keeps that page. A completed archive leaves the Archived
+  group collapsed with its count. A failed check offers Cancel and Try again.
+- A lifted row has no More. Its faint phone placeholder keeps More so its
+  time stays aligned. Phone views draw no hover state.
+- The Archive flow derives its final rows from its initial snapshot. It
+  adds only the workspace that the action archived.
+- The General-only case uses Acme after deletion of its custom sections,
+  which moves their workspaces to General. It keeps the shared fixture model.
+
 ## Milestone 1: Workspace menu mockups
 
 Tags: mockup
@@ -132,17 +158,20 @@ Show the chosen menu in the workspace list and the sidebar. Use the current
 Mokly catalogue and shared parts. Every new view has desktop and phone
 variants. A screen-spec page holds at most five screens.
 
-- [ ] Add the four-action menu and More button to the relevant mockups.
-- [ ] Show section choices, member choices, and inline Rename with its
+- [x] Add the four-action menu and More button to the relevant mockups.
+- [x] Show section choices, member choices, and inline Rename with its
       failure and retry state.
-- [ ] Show the role, archived, and read-only variants without unavailable
+- [x] Show the role, archived, and read-only variants without unavailable
       actions. Include a list with only the General section.
-- [ ] Reuse the Archive screens for confirmation and failure. Show their
+- [x] Reuse the Archive screens for confirmation and failure. Show their
       route from the list without a new archive design.
-- [ ] Run `npm run mockups:check`. View the changed pages in light and dark.
+- [x] Run `npm run mockups:check`. View the changed pages in light and dark.
       Save screenshots under `.context/workspace-context-menu/`.
-- [ ] Refresh marketing captures only where the changed mockups affect them.
-- [ ] Update this plan's design and TODOs for problems found in the mockups.
+- [x] Refresh marketing captures only where the changed mockups affect them.
+- [x] Update this plan's design and TODOs for problems found in the mockups.
+
+Evidence: `.context/workspace-context-menu/milestone1/ui-report.md`,
+with screenshots, check logs, and the parent browser measurements beside it.
 
 ## Milestone 2: Document the chosen behavior
 
@@ -200,6 +229,12 @@ Reuse the existing move, member, rename, and Archive actions.
       Reuse suitable parts and avoid a second workspace menu definition.
 - [ ] Add right-click and More entry points with keyboard focus, Escape,
       outside-press dismissal, window bounds, and no sidebar clipping.
+- [ ] Add submenus to the reused app menu. Cover pointer hover, the right
+      and left arrow keys, Escape, and choices that replace a phone sheet.
+- [ ] Reuse the row-control styles for More and Rename. Draw the real menu
+      above the page. The mockup point offsets only place static examples.
+- [ ] Show More on hoverless screens as well as phone layouts, including
+      touch screens that use the desktop layout.
 - [ ] Add the existing local menu keys. Use `ownPress` on More. Let the
       shared drag context handler end mouse presses and keep touch presses.
       Cover that shared change in the existing pointer-drag tests.

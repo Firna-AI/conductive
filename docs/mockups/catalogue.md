@@ -14,6 +14,7 @@ how a screen is built, and links to the other pages.
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
+| `app/workspace-menu` | The menu of a workspace row from a right click or More: its section and owner choices, Rename, Archive from the list, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs and a search |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, and the agent logins, then Preferences with the model and how New workspace opens |
@@ -32,11 +33,11 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, its device commands, and This Mac                    |
-| `user-flows`        | Sign up, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command |
+| `user-flows`        | Sign up, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
-`app/sign-in`, `app/sign-in/get-started`, `app/shell`, `app/command-palette`, `app/orgs`,
+`app/sign-in`, `app/sign-in/get-started`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/banner`, and `app/chat` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
@@ -153,6 +154,33 @@ decision 147, and they find a suspended org or user. Its child pages:
   the question before the lift.
 - `app/operator/error` has the numbers that could not load, with Try
   again. Its `loading` variant has the page while it reads the numbers.
+
+`app/workspace-menu` shows the menu of Apple Pay button, a row of the list
+of Acme, at the pointer of a right click: Move to section, Reassign to,
+Rename, and Archive. A phone opens it from More as a sheet. The user chose
+these four actions on 9 November 2026. The More of that row in every list
+opens `app/workspace-menu/more`. Its child pages:
+
+- `app/workspace-menu/more` has the menu below More, which shows at the
+  end of a row in place of the time.
+- `app/workspace-menu/move` has the sections beside the menu, with the
+  current one checked. Its `general-only` variant has Acme with General
+  only, whose menu has no Move to section.
+- `app/workspace-menu/reassign` has the members beside the menu, with the
+  owner checked. Its `archived` variant has the archived row of an admin,
+  whose menu has only Reassign to.
+- `app/workspace-menu/rename` has the field of Rename in the row, with the
+  name selected. Its `failed` variant keeps the draft in the field, under
+  the toast of the list that names the failure.
+- `app/workspace-menu/archive` has the question of Archive over the list,
+  which `app/archive` asks from the header. Its `check-failed` variant has
+  a check that a stopped cloud computer refused, and its `archived`
+  variant has the list after the archive.
+  `user-flows/archive-from-list` goes from the list through the menu and
+  the question to that list.
+- `app/workspace-menu/roles` has the menu of a member who is not an
+  admin, then her own workspace, her archived rows without More, and a
+  suspended org, whose rows have no More and no menu.
 
 `app/command-palette` shows the All tab of the command palette over the
 list of Acme. Its child pages:

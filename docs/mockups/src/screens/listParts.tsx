@@ -9,12 +9,14 @@ import {
   SuspendedOrgAbove,
   SuspendedOrgNotice,
 } from '../components/orgs/SuspendedOrgNotice'
+import type { ListRows } from '../components/workspaces/rowControls'
 import type { MenuStyle } from '../components/workspaces/SectionList'
 import { SectionList } from '../components/workspaces/SectionList'
 import type {
   ListDrag,
   ListMenu,
   SidebarSection,
+  WorkspaceRow,
 } from '../components/workspaces/sections'
 import {
   NewWorkspaceLink,
@@ -70,7 +72,8 @@ export function ListHeader(props: {
  * command palette. Its key shows only in a desktop window. A list that did
  * not load shows its failure in place of the sections.
  * `newWorkspaceTo` is the New workspace page of the org, such as that
- * of a new org.
+ * of a new org. `rows` names the person who looks at the list, and the
+ * row whose menu, field, or hover the view draws.
  */
 export function HomeList(props: {
   org: Org
@@ -84,6 +87,11 @@ export function HomeList(props: {
   keys?: boolean
   /** The workspace list of the org did not load. */
   failed?: boolean
+  rows?: ListRows
+  /** The archived workspaces, in the Archived group at the end. */
+  archived?: readonly WorkspaceRow[]
+  /** The Archived group shows collapsed, with its count. */
+  archivedCollapsed?: boolean
 }) {
   const suspended = props.suspended ?? false
   return (
@@ -104,10 +112,13 @@ export function HomeList(props: {
           <LoadFailure title="The workspaces didn't load" />
         ) : (
           <SectionList
+            archived={props.archived}
+            archivedCollapsed={props.archivedCollapsed}
             drag={props.drag}
             menu={props.menu}
             menuStyle={props.menuStyle}
             readOnly={suspended}
+            rows={props.rows}
             sections={props.sections}
             variant="page"
           />
