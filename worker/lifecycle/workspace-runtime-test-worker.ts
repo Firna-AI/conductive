@@ -63,8 +63,8 @@ export class WorkspaceRuntimeFixture extends Workspace {
   holdMachineCheckpoint(): void {
     this.heldMachine = holdMachineCheckpoint(this.ctx.storage)
   }
-  failAfterFirstMessageAdmission(): void {
-    failAfterFirstMessageAdmission(this.ctx.storage)
+  failAfterFirstMessageAdmission(afterLifecycleWrite = false): void {
+    failAfterFirstMessageAdmission(this.ctx.storage, afterLifecycleWrite)
   }
   async machineCheckpointReached(): Promise<void> {
     if (!this.heldMachine) throw new Error('No held machine checkpoint')

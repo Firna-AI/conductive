@@ -41,33 +41,51 @@ it('fails the start of a refused first message on the native object without a re
   ).toBe(0)
 })
 
-it('keeps accepted chat when the first lifecycle write fails before its admission checkpoint', async () => {
-  const id = 'runtime-admitted-before-checkpoint'
-  await fixture.actor(id).failAfterFirstMessageAdmission()
-  const { actor } = await queueRuntimeCreate(fixture, id)
-  for (let step = 0; step < 16 && (await actor.checkpoint()); step++)
-    await actor.tick()
-  expect(await actor.waitCreationAdmission()).toMatchObject({
-    ok: true,
-    created: { workspace: { id } },
-  })
-  expect(await actor.waitCreationLifecycle()).toMatchObject({
-    ok: false,
-    error: { code: 'workspace_start_failed' },
-  })
-  expect(await actor.readLifecycle()).toMatchObject({ state: 'error' })
-  await fixture.restart()
-  const events = await fixture.openEvents(id)
-  const history = await publicHistory(events.inbox)
-  expect(
-    history.events.filter((envelope) => {
-      const event = envelope.event
-      return (
-        typeof event === 'object' &&
-        event !== null &&
-        'type' in event &&
-        event.type === 'message.accepted'
-      )
-    }),
-  ).toHaveLength(1)
-})
+it.each([
+  { fault: 'before the lifecycle write', afterLifecycleWrite: false },
+  { fault: 'after the lifecycle write', afterLifecycleWrite: true },
+])(
+  'keeps accepted chat and a failed create step when admission fails $fault',
+  async ({ afterLifecycleWrite }) => {
+    const id = 'runtime-admitted-before-checkpoint'
+    await fixture.actor(id).failAfterFirstMessageAdmission(afterLifecycleWrite)
+    const { actor } = await queueRuntimeCreate(fixture, id)
+    for (let step = 0; step < 16 && (await actor.checkpoint()); step++)
+      await actor.tick()
+    expect(await actor.waitCreationAdmission()).toMatchObject({
+      ok: true,
+      created: { workspace: { id } },
+    })
+    expect(await actor.waitCreationLifecycle()).toMatchObject({
+      ok: false,
+      error: { code: 'workspace_start_failed' },
+    })
+    expect(await actor.readLifecycle()).toMatchObject({
+      state: 'error',
+      start: {
+        kind: 'create',
+        steps: [
+          {
+            id: 'start',
+            label: 'Starting the cloud computer',
+            state: 'failed',
+          },
+        ],
+      },
+    })
+    await fixture.restart()
+    const events = await fixture.openEvents(id)
+    const history = await publicHistory(events.inbox)
+    expect(
+      history.events.filter((envelope) => {
+        const event = envelope.event
+        return (
+          typeof event === 'object' &&
+          event !== null &&
+          'type' in event &&
+          event.type === 'message.accepted'
+        )
+      }),
+    ).toHaveLength(1)
+  },
+)

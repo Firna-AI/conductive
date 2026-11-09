@@ -10,8 +10,12 @@ import {
   workspacePaths,
   workspacesPath,
 } from '../../../src/shared/workspaces'
-import { readWorkspaceToken } from '../../lifecycle/tokens'
+import { lifecycleCommandBody } from '../../lifecycle/command-test-support'
+import { seedPublishedImage } from '../../lifecycle/published-image-test-support'
+import { orgEnvironmentContext } from '../../lifecycle/settings-data'
 import type { WorkspaceStartResult } from '../../lifecycle/start-types'
+import { readWorkspaceToken } from '../../lifecycle/tokens'
+import { encrypt } from '../../security/crypto'
 import { closeSockets } from '../adapter-sockets.test-support'
 import { CLAUDE } from '../harness.test-support'
 import { record } from '../inputs'
@@ -22,7 +26,11 @@ import {
   outerWorkerBundle,
   type OuterRuntime,
 } from './outer-runtime.test-support'
-import { OUTER_ORG, OUTER_REPOSITORY } from './outer-seed.test-support'
+import {
+  OUTER_ORG,
+  OUTER_REPOSITORY,
+  OUTER_SOFTWARE,
+} from './outer-seed.test-support'
 import { requestRunner } from './runner-socket.test-support'
 import { connectShellRunner } from './shell-runner.test-support'
 import {
@@ -51,6 +59,19 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   const active = (fixture = await createOuterRuntime(bundle, {
     persistencePath: await mkdtemp(`${directory}/retry-runtime-`),
   }))
+  const saveSetup = async (script: string, value: string) => {
+    const ciphertext = await encrypt(
+      JSON.stringify({ RETRY_SETUP: value }),
+      orgEnvironmentContext(OUTER_ORG),
+      active.env.BOAT_KEY_ENCRYPTION_KEY,
+    )
+    await active.env.DB.prepare(
+      'UPDATE settings SET startup_script = ?, env_vars_ciphertext = ? WHERE org_id = ?',
+    )
+      .bind(script, ciphertext, OUTER_ORG)
+      .run()
+  }
+  await saveSetup('echo initial-startup', 'initial-value')
   const input = {
     repositoryId: OUTER_REPOSITORY,
     firstMessage: {
@@ -137,6 +158,23 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   expect(active.boat.starts).toHaveLength(1)
   expect((await requestRunner(active, oldToken)).status).toBe(401)
 
+  await seedPublishedImage(active.env.DB, {
+    orgId: OUTER_ORG,
+    buildId: 'repaired-image-build',
+    imageName: 'repaired-image',
+    repositories: [
+      {
+        id: OUTER_REPOSITORY,
+        orgId: OUTER_ORG,
+        fullName: 'owner/repository',
+        defaultBranch: 'main',
+      },
+    ],
+    software: OUTER_SOFTWARE,
+    now: Date.now(),
+  })
+  await saveSetup('echo repaired-startup', 'repaired-value')
+  const previousCommands = active.boat.commandRequests.length
   active.boat.commandExitCode = 0
   const retry = () =>
     active.request(workspacePaths.resume(OUTER_ORG, id), {
@@ -153,6 +191,16 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   }
   await prepareWorkspaceStart(actor())
   expect(active.boat.starts).toHaveLength(2)
+  expect(active.boat.starts[1]).toMatchObject({ from: 'repaired-image' })
+  expect(active.boat.starts[1]).toMatchObject({
+    env: { RETRY_SETUP: 'repaired-value' },
+  })
+  const replacementCommands = active.boat.commandRequests
+    .slice(previousCommands)
+    .map(({ command }) => lifecycleCommandBody(command))
+    .join('\n')
+  expect(replacementCommands).toContain(btoa('echo repaired-startup'))
+  expect(replacementCommands).not.toContain(btoa('echo initial-startup'))
   expect(active.boat.deletedIds).toHaveLength(1)
   const token = await readWorkspaceToken(active.env, id)
   expect(token).not.toBe(oldToken)

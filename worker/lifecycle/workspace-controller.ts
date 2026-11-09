@@ -122,22 +122,8 @@ export function createWorkspaceController(
           orgId: job.orgId,
           firstMessage: first.request,
         })
-        await lifecycle.beginStart('create')
       }
-      const state = await lifecycle.read()
-      if (job?.kind === 'create' && state?.start) {
-        const running = state.start.steps.filter(
-          (step) => step.state === 'running',
-        )
-        for (const step of running)
-          await lifecycle.step(step.id, step.label, 'failed')
-        if (
-          !running.length &&
-          !state.start.steps.some((step) => step.state === 'failed')
-        )
-          await lifecycle.step('start', 'Starting the cloud computer', 'failed')
-      }
-      await lifecycle.fail(error)
+      await lifecycle.fail(error, job?.kind === 'create')
     },
     async lifecycleActivity(checkOnly) {
       try {

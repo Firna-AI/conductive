@@ -1,6 +1,7 @@
 import {
   withStartStep,
   withStartFailure,
+  withCreateFailure,
   withReportedStart,
 } from './durable-start'
 import type { SendMessageRequest } from '../../src/shared/messages'
@@ -197,8 +198,9 @@ export class DurableLifecycle {
     )
   }
 
-  fail(error: DurableLifecycleState['error']): Promise<void> {
-    return this.update((state) => withStartFailure(state, error, this.now()))
+  fail(error: DurableLifecycleState['error'], create = false): Promise<void> {
+    const failure = create ? withCreateFailure : withStartFailure
+    return this.update((state) => failure(state, error, this.now()))
   }
 
   stopFailedStart(
