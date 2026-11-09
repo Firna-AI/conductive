@@ -189,7 +189,7 @@ No migration is required.
 - [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically.
 - [runner.ts](runner.ts) matches file and diff commands to their results.
 - [boat.ts](boat.ts) converts the provider's file read result for the browser.
-- [data.ts](data.ts) reads the workspace and repository relationship from D1.
+- [data.ts](data.ts) reads the workspace and repository relationship from D1, with the sandbox ID and its provider account.
 
 See the [shared contracts](../../src/shared/README.md),
 [backend fakes](../test-support/README.md),

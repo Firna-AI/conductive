@@ -53,6 +53,7 @@ export async function prepareCreationRequest(
     workspaceId: id,
     orgId,
     kind: 'create',
+    providerAccount: image.providerAccount,
     imageName: image.imageName,
     startupScript: image.startupScript,
     environmentCiphertext: image.environmentCiphertext,

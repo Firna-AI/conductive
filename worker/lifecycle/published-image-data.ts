@@ -61,6 +61,7 @@ export async function readCreationImage(
   repositoryId: string,
 ): Promise<{
   imageName: string
+  providerAccount: string
   startupScript: SavedScript
   environmentCiphertext: string | null
   repository: SelectedRepository
@@ -68,7 +69,8 @@ export async function readCreationImage(
 }> {
   const image = await db
     .prepare(
-      `SELECT b.snapshot_name AS imageName, j.repositories_json AS repositoriesJson,
+      `SELECT b.snapshot_name AS imageName, b.provider_account AS providerAccount,
+       j.repositories_json AS repositoriesJson,
        j.repository_locations_json AS repositoryLocationsJson,
        s.startup_script AS startupScript, s.env_vars_ciphertext AS environmentCiphertext
        ${publishedImageSource} WHERE s.org_id = ?`,
@@ -76,6 +78,7 @@ export async function readCreationImage(
     .bind(orgId)
     .first<{
       imageName: string
+      providerAccount: string
       repositoriesJson: string
       repositoryLocationsJson: string | null
       startupScript: string

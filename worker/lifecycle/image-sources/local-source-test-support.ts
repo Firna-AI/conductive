@@ -114,6 +114,7 @@ export async function localSourceFixture(
       orgId: org.id,
       buildId: 'build-one',
       sandboxId: 'builder-one',
+      providerAccount: 'boat',
       repositories: [repository],
       repositoryLocations: locations,
       previousRepositoryLocations: locations,

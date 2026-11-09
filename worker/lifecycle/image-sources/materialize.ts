@@ -54,6 +54,7 @@ export function createGitHubImageSourceMaterializer(
         input.orgId,
         input.buildId,
         input.sandboxId,
+        input.providerAccount,
       )
       if (JSON.stringify(repositories) !== JSON.stringify(input.repositories))
         throw new Error('Captured repositories changed')
@@ -62,7 +63,9 @@ export function createGitHubImageSourceMaterializer(
       let job = await readSourceJob(env.DB, input.buildId)
       if (
         job &&
-        (job.orgId !== input.orgId || job.sandboxId !== input.sandboxId)
+        (job.orgId !== input.orgId ||
+          job.sandboxId !== input.sandboxId ||
+          job.providerAccount !== input.providerAccount)
       )
         throw new Error('Source ownership changed')
       ownsBuild = true
@@ -78,6 +81,7 @@ export function createGitHubImageSourceMaterializer(
           input.orgId,
           input.buildId,
           input.sandboxId,
+          input.providerAccount,
         )
         await writeBuildLog(
           env.DB,

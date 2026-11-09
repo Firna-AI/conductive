@@ -74,6 +74,26 @@ and body for stable delivery retries. A missing verified email saves the
 disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
 owns email delivery and code management.
 
+`202611092100_provider_accounts.sql` adds `provider_account` to each table
+that holds a sandbox ID or a saved snapshot name: `workspaces`,
+`image_builds`, `image_build_jobs`, `lifecycle_sandbox_cleanup`,
+`image_leases`, `workspace_creation_plans`, `image_source_jobs`,
+`org_deletion_resources`, `terminal_credentials`, and `preview_hostnames`.
+The column defaults to `boat`, the one production account. The default
+fills the existing rows and the rows that the previous Worker writes during
+a deploy. Name the account in each new write, and do not rely on the default.
+In `image_build_jobs`, the column holds the account of `previous_image_name`.
+In `preview_hostnames`, it holds the account of `listener_sandbox_id`.
+`settings` gets no column. The org image takes the account of the build
+that `settings.image_build_id` names.
+The migration rebuilds `workspaces`, so that a unique index on
+`(provider_account, sandbox_id)` replaces the unique `sandbox_id`.
+D1 keeps cascading deletes active while it defers foreign keys. So the
+migration copies each child table of `workspaces` aside and back. It keeps
+each workspace number and the org counters, and it recreates both triggers.
+It also rebuilds `org_deletion_resources` with the account in its primary
+key, and it adds the account to the `image_leases_snapshot` index.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

@@ -460,6 +460,16 @@ These are agent calls of 9 November 2026. The user can change each one.
 - Tests configure a second Boat account, on a second organization of the
   fake Boat server. Reason: each lookup, routing, and cleanup test can then
   fail, also while production has one account.
+- Agent call, 9 November 2026: the trusted Worker environment can add
+  accounts through a readonly `SANDBOX_PROVIDER_ACCOUNTS` map. It cannot
+  replace the built-in `boat` account. Reason: tests can use a second real
+  account boundary while production still reads its one Boat account from
+  `BOAT_API_KEY` and `BOAT_ORG_ID`.
+- Agent call, 9 November 2026: resource identity includes both the account
+  and the sandbox ID or snapshot name. The migration keeps all workspace
+  rows, child rows, numbers, counters, and triggers when it replaces the
+  global sandbox uniqueness with account-scoped uniqueness. Reason: two
+  accounts can return the same resource ID.
 - Each table that holds a sandbox ID or a saved snapshot name gets its own
   `provider_account` column. Existing rows get `boat` from the column
   default, and so do the rows that the old Worker writes during a deploy.
@@ -470,11 +480,12 @@ These are agent calls of 9 November 2026. The user can change each one.
 - A stored account that the Worker does not configure fails the call with a
   typed error. A cleanup never counts such a record as removed. Reason:
   otherwise a sandbox whose account is lost would leak as "already gone".
-- New creates, builds, and refreshes use the default account, `boat`. Each
-  new sandbox, also one from Try again of a failed first start, is a new
-  create. Every other call uses the stored account. Reason: a workspace
-  stays on the provider of its first start, because its files exist only on
-  that disk.
+- Agent call, clarified 9 November 2026: new builds and refreshes use the
+  default account, `boat`. A new workspace, also Try again of a failed first
+  start, takes the account of its selected org image's published build.
+  Production has only the `boat` account. Every later sandbox call uses
+  the workspace's stored account. Reason: an image can create a sandbox
+  only in its own account, and a workspace's files stay on that disk.
 - The workspace Durable Object stores the account with the image name and
   the allocated sandbox of each start job. Reason: a start resumes from that
   storage after a restart.
@@ -513,7 +524,7 @@ stay as they are, because the behaviour stays the same.
       changes.
 - [x] Check each relative link of each changed Markdown file.
 
-## Milestone 2: Provider account of each sandbox and saved snapshot
+## Milestone 2: Provider account of each sandbox and saved snapshot — completed
 
 Depends on: 1
 
@@ -521,22 +532,26 @@ Each record that holds a sandbox ID or a saved snapshot name also holds its
 provider account. Boat stays the only provider, and the behaviour stays the
 same.
 
-- [ ] Read the `databases` skill and `migrations/README.md`.
-- [ ] Search `migrations/` for every column that holds a sandbox ID or a
+- [x] Read the `databases` skill and `migrations/README.md`.
+- [x] Search `migrations/` for every column that holds a sandbox ID or a
       saved snapshot name. Today these tables have one: `workspaces`,
       `image_builds`, `image_build_jobs`, `lifecycle_sandbox_cleanup`,
       `image_leases`, `workspace_creation_plans`, `image_source_jobs`,
       `org_deletion_resources`, `terminal_credentials`, and
       `preview_hostnames`. Decision 217 sets what happens to `settings`.
-- [ ] Add one D1 migration with a `provider_account` column on each such
+- [x] Add one D1 migration with a `provider_account` column on each such
       table, as the design says.
-- [ ] Each writer sets the account of the sandbox or snapshot that it
+- [x] Each writer sets the account of the sandbox or snapshot that it
       records, and each reader returns it.
-- [ ] Store the account in each start job of the workspace Durable Object,
+- [x] Store the account in each start job of the workspace Durable Object,
       beside the image name and the allocated sandbox.
-- [ ] Keep every existing test green. Add the tests that a create, a build,
+- [x] Keep every existing test green. Add the tests that a create, a build,
       and a cleanup record store the account of a second test account.
-- [ ] Update the lifecycle, members, and migrations READMEs.
+- [x] Update the lifecycle, members, and migrations READMEs.
+
+Evidence: `.context/sandbox-provider-groundwork/reports/lifecycle-accounts.md`,
+`reports/tool-member-accounts.md`, `reports/account-readmes.md`, and
+`migration-proof.log` in that evidence directory.
 
 ## Milestone 3: One org image for each org and provider account
 

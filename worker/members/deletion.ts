@@ -102,7 +102,13 @@ export async function stopDeletedOrg(
       continue
     }
     await keepCleanupLease(env, orgId, token, dependencies)
-    await markResourceStopped(env.DB, orgId, resource.id, dependencies.now())
+    await markResourceStopped(
+      env.DB,
+      orgId,
+      resource.id,
+      resource.providerAccount,
+      dependencies.now(),
+    )
   }
   if (failures.length > 0) throw failures[0]
 }

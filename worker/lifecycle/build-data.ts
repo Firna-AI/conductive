@@ -29,6 +29,7 @@ export interface BuildJob {
   startedAt: number
   buildId: string
   orgId: string
+  providerAccount: string
   kind: ImageBuild['kind']
   state: ImageBuild['state']
   sandboxId: string | null
@@ -45,17 +46,20 @@ export interface BuildJob {
   previousRepositoryLocationsJson: string | null
   softwareJson: string
   previousImageName: string | null
+  previousProviderAccount: string
 }
 
 const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.started_at AS startedAt,
   b.sandbox_id AS sandboxId, b.snapshot_name AS snapshotName,
+  b.provider_account AS providerAccount,
   b.settings_revision AS settingsRevision, b.started_by_user_id AS startedByUserId,
   j.phase, j.process_id AS processId, j.stdout_offset AS stdoutOffset,
   j.stderr_offset AS stderrOffset, j.install_script AS installScript,
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,
   j.repository_locations_json AS repositoryLocationsJson,
   j.previous_repository_locations_json AS previousRepositoryLocationsJson,
-  j.previous_image_name AS previousImageName, b.provider_retry_json AS providerRetryJson`
+  j.previous_image_name AS previousImageName, j.provider_account AS previousProviderAccount,
+  b.provider_retry_json AS providerRetryJson`
 
 const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,
   completed_at AS completedAt, CASE WHEN completed_at IS NULL THEN NULL
@@ -109,10 +113,13 @@ export async function assignBuildSandbox(
   db: D1Database,
   buildId: string,
   sandboxId: string,
+  providerAccount: string,
 ): Promise<void> {
   await db
-    .prepare('UPDATE image_builds SET sandbox_id = ? WHERE id = ?')
-    .bind(sandboxId, buildId)
+    .prepare(
+      'UPDATE image_builds SET sandbox_id = ?, provider_account = ? WHERE id = ?',
+    )
+    .bind(sandboxId, providerAccount, buildId)
     .run()
 }
 
@@ -120,10 +127,13 @@ export async function assignBuildSnapshot(
   db: D1Database,
   buildId: string,
   snapshotName: string,
+  providerAccount: string,
 ): Promise<void> {
   await db
-    .prepare('UPDATE image_builds SET snapshot_name = ? WHERE id = ?')
-    .bind(snapshotName, buildId)
+    .prepare(
+      'UPDATE image_builds SET snapshot_name = ?, provider_account = ? WHERE id = ?',
+    )
+    .bind(snapshotName, providerAccount, buildId)
     .run()
 }
 

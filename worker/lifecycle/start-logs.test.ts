@@ -10,6 +10,7 @@ it('masks split and short secrets without changing an inserted start-log marker'
   const storage = new MemoryWorkspaceStorage()
   const starts = durableStartStorage(storage, () => 0, env)
   const job: WorkspaceStartJob = {
+    providerAccount: 'boat',
     workspaceId: 'log-workspace',
     orgId: 'log-org',
     kind: 'resume',

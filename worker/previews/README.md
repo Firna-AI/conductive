@@ -23,8 +23,10 @@ so it never matches `authorize`.
 
 Each hostname holds 128 random bits. D1 stores its workspace, port, and expiry.
 The server keeps private port descriptors in memory for each workspace,
-sandbox, and port. It sends each token only in its upstream `_port_auth` cookie.
-D1 stores the listener mode and sandbox ID. D1 stores no plaintext port token.
+provider account, sandbox, and port. It sends each token only in its upstream
+`_port_auth` cookie. D1 stores the listener mode, the listener sandbox ID, and
+the provider account of that sandbox. A saved mode applies only while the
+workspace has that sandbox in that account. D1 stores no plaintext port token.
 
 `Preview.url` is the absolute app address from `previewPath`. It holds no secret.
 Each frame load, reload, and new tab starts there, because a frame under the
@@ -94,7 +96,7 @@ ID that launched the preview, with the org and workspace IDs and the expiry.
 So each credential belongs to one viewer session. It seals no sandbox ID, so it
 keeps working after the workspace gets a new sandbox. Each access read still
 needs a sandbox in a running state and an owner who is not suspended. An open
-stream closes when the sandbox that it reached changes.
+stream closes when the sandbox or the provider account that it reached changes.
 
 Each grant works once.
 `launchGrant` saves a SHA-256 hash of `preview:<grant>` with `saveOAuthState`
@@ -209,7 +211,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [headers.ts](headers.ts) builds private upstream requests and safe responses.
 - [origins.ts](origins.ts) maps request Origins and private redirects.
 - [socket.ts](socket.ts) selects binary frames and drains queued data before forwarding a normal close with its code and reason.
-- [types.ts](types.ts) defines the fetch, activity, and socket boundaries.
+- [types.ts](types.ts) defines the fetch, activity, and socket boundaries. Its `WorkspaceTarget` holds the sandbox ID with its provider account.
 - [launch-test-support.ts](launch-test-support.ts) runs the real launch GET and authorizer POST in tests.
 
 The feature adapter checks workspace access before each provider operation.

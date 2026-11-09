@@ -8,6 +8,7 @@ import {
   userSuspended,
 } from '../data/user-access'
 import { orgSandboxProvider, sandboxProvider } from '../sandbox/client'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import type { SandboxProvider } from '../sandbox/provider'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
 import {
@@ -60,6 +61,7 @@ export type PrepareImageSources = (input: {
   orgId: string
   buildId: string
   sandboxId: string
+  providerAccount: string
   repositories: readonly SelectedRepository[]
   repositoryLocations?: readonly RepositoryLocation[]
   previousRepositoryLocations?: readonly RepositoryLocation[]
@@ -130,6 +132,9 @@ export async function startImageBuild(
     await insertBuild(env.DB, {
       id,
       orgId: input.orgId,
+      providerAccount: DEFAULT_PROVIDER_ACCOUNT,
+      previousProviderAccount:
+        previous?.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT,
       userId: input.userId,
       kind: input.kind,
       settingsRevision:

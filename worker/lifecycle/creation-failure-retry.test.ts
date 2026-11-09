@@ -137,6 +137,7 @@ it('keeps a later cleanup owner when an old delete completes for the same worksp
     workspaceId: id,
     orgId: org.id,
     sandboxId: 'bx_old',
+    providerAccount: 'boat',
   })
   const pending = retrySandboxCleanup(runtime.env, runtime.dependencies, id)
   await deletion.entered
@@ -146,6 +147,7 @@ it('keeps a later cleanup owner when an old delete completes for the same worksp
       workspaceId: id,
       orgId: org.id,
       sandboxId: 'bx_later',
+      providerAccount: 'boat',
     })
   } finally {
     deletion.release()

@@ -84,6 +84,7 @@ export class WorkspaceAccessStop {
             checked.input.env.DB,
             workspaceId,
             checked.row.sandboxId,
+            checked.row.providerAccount,
           )),
         )
       if (checked.result === undefined && !checked.startPending && allowed)

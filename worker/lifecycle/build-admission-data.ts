@@ -34,6 +34,8 @@ export async function insertBuild(
   input: {
     id: string
     orgId: string
+    providerAccount: string
+    previousProviderAccount: string
     kind: ImageBuild['kind']
     userId: string | null
     settingsRevision: number
@@ -51,8 +53,8 @@ export async function insertBuild(
     db
       .prepare(
         `INSERT INTO image_builds (id, org_id, kind, state, settings_revision,
-       runner_protocol_version, started_by_user_id, started_at)
-       SELECT ?, ?, ?, 'running', ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}`,
+       runner_protocol_version, started_by_user_id, started_at, provider_account)
+       SELECT ?, ?, ?, 'running', ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}`,
       )
       .bind(
         input.id,
@@ -62,13 +64,14 @@ export async function insertBuild(
         RUNNER_PROTOCOL_VERSION,
         input.userId,
         input.now,
+        input.providerAccount,
         input.orgId,
       ),
     db
       .prepare(
         `INSERT INTO image_build_jobs (build_id, phase, install_script, repositories_json, software_json, previous_image_name,
-          repository_locations_json, previous_repository_locations_json)
-       SELECT ?, 'create', ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM image_builds WHERE id = ?)`,
+          repository_locations_json, previous_repository_locations_json, provider_account)
+       SELECT ?, 'create', ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM image_builds WHERE id = ?)`,
       )
       .bind(
         input.id,
@@ -78,6 +81,7 @@ export async function insertBuild(
         input.previousImageName,
         JSON.stringify(input.repositoryLocations),
         JSON.stringify(input.previousRepositoryLocations),
+        input.previousProviderAccount,
         input.id,
       ),
     ...(input.nextImageRefreshAt === undefined

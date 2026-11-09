@@ -133,7 +133,10 @@ it('leases the image and captured branch from the same publication at claim admi
       .prepare('SELECT COUNT(*) AS count FROM image_leases')
       .first('count'),
   ).toBe(1)
-  expect(await leasedImage(db, org.id, id)).toBe('next-image')
+  expect(await leasedImage(db, org.id, id)).toEqual({
+    imageName: 'next-image',
+    providerAccount: 'boat',
+  })
   expect(actor.lastAccepted()).toMatchObject({
     imageName: 'next-image',
     defaultBranch: 'published-next',
@@ -206,7 +209,10 @@ it('releases a failed claim lease before records exist and allows a fresh retry'
       'SELECT COUNT(*) AS count FROM image_leases',
     ).first('count'),
   ).toBe(1)
-  expect(await leasedImage(runtime.env.DB, org.id, id)).toBe('last-good-image')
+  expect(await leasedImage(runtime.env.DB, org.id, id)).toEqual({
+    imageName: 'last-good-image',
+    providerAccount: 'boat',
+  })
   await actor.advance()
   await expect(failed).rejects.toMatchObject({ code: 'section_not_found' })
   expect(

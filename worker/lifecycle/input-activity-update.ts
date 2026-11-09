@@ -42,6 +42,7 @@ export function inputActivityUpdate(options: {
         at,
         target.sandboxId,
         captured.generation,
+        target.providerAccount,
       ))
     )
       return
@@ -52,6 +53,7 @@ export function inputActivityUpdate(options: {
       const current = await readInputActivityTarget(options.env.DB, workspaceId)
       if (
         current?.sandboxId !== target.sandboxId ||
+        current.providerAccount !== target.providerAccount ||
         current.generation !== captured.generation
       )
         return new Response(null, { status: 404 })
@@ -72,6 +74,7 @@ export function inputActivityUpdate(options: {
       const current = await readInputActivityTarget(options.env.DB, workspaceId)
       if (
         current?.sandboxId === target.sandboxId &&
+        current.providerAccount === target.providerAccount &&
         current.generation === captured.generation
       )
         await options.reconcile(captured, target.sandboxId, remote)

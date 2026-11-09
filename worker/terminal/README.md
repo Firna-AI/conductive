@@ -145,7 +145,8 @@ through the provider's bounded file API, with a 64-byte limit. The password
 stays in memory, and the disk holds only the empty mount point. It refuses a password that is not
 exactly 64 lowercase hexadecimal characters. It caches that password
 encrypted in D1. The cache update checks that the workspace still owns the
-same sandbox.
+same sandbox in the same provider account. A read returns the password only
+for that sandbox ID and account.
 
 The app supplies no extra terminal secret at start. The workspace token
 keeps its existing scope and does not authenticate terminal access.
@@ -158,7 +159,7 @@ The initial handshake, window changes, output, and idle sockets do not count.
 `TerminalConnections` owns each authenticated session and workspace/sandbox
 registration. Each registration holds a `sandbox` identity of the
 [shared connection reader](../security/README.md#open-connections).
-That kind binds the grant to the current sandbox of a running workspace that is not archived.
+That kind binds the grant to the current sandbox ID and provider account of a running workspace that is not archived.
 The owner of that workspace must not be suspended, as [Sandbox access](../operator/README.md#sandbox-access) says.
 So an open socket closes at the next access check after that suspension.
 Chat tabs use the `workspace` kind, which has no sandbox check.
@@ -203,7 +204,7 @@ Terminal status reads remain available.
 - [service.ts](service.ts) exports `terminalInstallCommand`, which installs both packages, the three programs, and both units. It also exports the image and start hooks, the marker writer `markTerminalRestoreEnded`, and `TERMINAL_PORT`.
 - [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the folder hook with `terminalPromptCommand`.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
-- [store.ts](store.ts) binds each cached password to its current sandbox.
+- [store.ts](store.ts) binds each cached password to its current sandbox ID and provider account.
 - [privileged.ts](privileged.ts) quotes installation and service control commands.
 - [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message.
 - [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the programs and the install command with fakes.

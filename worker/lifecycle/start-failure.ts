@@ -103,11 +103,15 @@ export async function finishFailedStart(
       admission: await creationAdmissionResponse(env, endpoint, job, first),
     })
   const row = await env.DB.prepare(
-    'SELECT sandbox_id AS sandboxId FROM workspaces WHERE id = ? AND org_id = ?',
+    'SELECT sandbox_id AS sandboxId, provider_account AS providerAccount FROM workspaces WHERE id = ? AND org_id = ?',
   )
     .bind(job.workspaceId, job.orgId)
-    .first<{ sandboxId: string | null }>()
+    .first<{ sandboxId: string | null; providerAccount: string }>()
   let sandboxId = job.allocatedSandboxId ?? row?.sandboxId
+  const providerAccount =
+    job.allocatedSandboxId || !row?.sandboxId
+      ? job.providerAccount
+      : row.providerAccount
   let cleanupPending = false
   if (!sandboxId && job.createPayloadCiphertext) {
     const canDefer = () =>
@@ -135,6 +139,7 @@ export async function finishFailedStart(
       workspaceId: job.workspaceId,
       orgId: job.orgId,
       sandboxId,
+      providerAccount,
     })
   await revokeWorkspaceToken(env.DB, job.workspaceId, now())
   await detachFailedSandbox(
@@ -142,6 +147,7 @@ export async function finishFailedStart(
     job.orgId,
     job.workspaceId,
     sandboxId ?? null,
+    providerAccount,
   )
   await markCreationFailed(env.DB, job.workspaceId)
   if (accepted)
@@ -158,7 +164,12 @@ export async function finishFailedStart(
     try {
       if (!provider) throw new Error('Provider unavailable')
       await deleteSandboxIfPresent(provider, sandboxId)
-      await clearSandboxCleanup(env.DB, job.workspaceId, sandboxId)
+      await clearSandboxCleanup(
+        env.DB,
+        job.workspaceId,
+        sandboxId,
+        providerAccount,
+      )
     } catch {
       cleanupPending = true
     }

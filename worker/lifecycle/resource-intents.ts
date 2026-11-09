@@ -125,6 +125,7 @@ export function buildSnapshotIntent(
       sandboxId: job.sandboxId,
       name: job.snapshotName ?? savedImageName(job.buildId),
     },
-    persist: ({ name }) => assignBuildSnapshot(db, job.buildId, name),
+    persist: ({ name }) =>
+      assignBuildSnapshot(db, job.buildId, name, job.providerAccount),
   }
 }

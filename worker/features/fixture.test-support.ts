@@ -8,6 +8,7 @@ import {
 } from '../chat/integration/outer-seed.test-support'
 import { insertBuild } from '../lifecycle/build-admission-data'
 import { readSavedScript } from '../lifecycle/saved-script'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { array } from '../chat/agent-events'
 import { string } from '../chat/inputs'
 
@@ -48,6 +49,8 @@ export async function seedFeatureBuild(
   await insertBuild(fixture.env.DB, {
     id,
     orgId: OUTER_ORG,
+    providerAccount: DEFAULT_PROVIDER_ACCOUNT,
+    previousProviderAccount: DEFAULT_PROVIDER_ACCOUNT,
     kind: 'build',
     userId: 'owner',
     settingsRevision: 1,

@@ -106,7 +106,7 @@ Production also supplies `deleteOrgState` to remove the image coordinator payloa
 - `suspendOrg` stops org access before resource enumeration.
   It must reject new starts and writes for the deleted org.
   It must drain pending workspace starts and image builds.
-  It must retain their sandbox IDs and snapshot names in D1.
+  It must retain their sandbox IDs and snapshot names in D1, each with its provider account.
   It must close existing browser and runner access.
   It must disable normal idle, refresh, and disk keepalive timers.
   It must handle builds even when the workspace list is empty.
@@ -164,6 +164,8 @@ The test policy uses that margin. Production uses the lifecycle's own policy.
 After seven days, it removes all recorded org-image and build snapshots
 before any sandbox deletion. It then removes workspace state and D1 rows.
 The resource journal keeps completed steps after a failure.
+Each journal resource holds its kind, its ID, and its provider account. So equal IDs in two accounts stay two resources.
+The org image takes the account of the build that `settings.image_build_id` names. Without a matching build, it takes `DEFAULT_PROVIDER_ACCOUNT`.
 The result names purged orgs and orgs that need another attempt.
 D1 ownership records stay until every external cleanup succeeds.
 A cleanup lease separates Restore from cleanup calls.
@@ -174,6 +176,7 @@ It checks the current lease before every operation.
 The disk lists of maintenance, retention, and Restore leave out each workspace whose owner the [operator suspended](../operator/README.md).
 The capability also refuses to restart such a workspace, so retention starts no cloud computer of a suspended user.
 A restart must be due at its stored keepalive date.
+Each stop, keepalive date, and restart write matches its sandbox by the sandbox ID and the provider account together.
 It resumes with `noEnv` and empty env vars, then stops the sandbox.
 It supplies no workspace token, agent login, or org secret.
 Keep runner, preview, user startup, and agent access suspended in retention mode.
@@ -256,7 +259,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - [workspace-receiver.ts](workspace-receiver.ts) preserves the receiver fence while it removes workspace payloads.
 - [receiver-fence.ts](receiver-fence.ts) checks generations in storage transactions.
 - [receiver-storage.ts](receiver-storage.ts) prevents normal data and alarm writes after purge.
-- [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access and token checks. A create without a sandbox also needs its image pin.
+- [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access and token checks. A create without a sandbox also needs its image pin, with the same image name and provider account. A create with a retained sandbox takes the account of the workspace record.
 - `gate.ts` extends the request gate for deleted-org access and shared writes.
 - `route.ts` defines HTTP dispatch and the required integration hooks.
 - `membership.ts` manages roles, removal, leave, and the last-admin rule.

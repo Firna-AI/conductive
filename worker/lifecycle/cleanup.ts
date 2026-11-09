@@ -8,6 +8,7 @@ export interface SandboxCleanup {
   workspaceId: string
   orgId: string
   sandboxId: string
+  providerAccount: string
 }
 
 export async function recordSandboxCleanup(
@@ -16,9 +17,14 @@ export async function recordSandboxCleanup(
 ): Promise<void> {
   await db
     .prepare(
-      'INSERT OR REPLACE INTO lifecycle_sandbox_cleanup (workspace_id, org_id, sandbox_id) VALUES (?, ?, ?)',
+      'INSERT OR REPLACE INTO lifecycle_sandbox_cleanup (workspace_id, org_id, sandbox_id, provider_account) VALUES (?, ?, ?, ?)',
     )
-    .bind(cleanup.workspaceId, cleanup.orgId, cleanup.sandboxId)
+    .bind(
+      cleanup.workspaceId,
+      cleanup.orgId,
+      cleanup.sandboxId,
+      cleanup.providerAccount,
+    )
     .run()
 }
 
@@ -28,10 +34,10 @@ export async function retrySandboxCleanup(
   workspaceId: string,
 ): Promise<boolean> {
   const cleanup = await env.DB.prepare(
-    'SELECT org_id AS orgId, sandbox_id AS sandboxId FROM lifecycle_sandbox_cleanup WHERE workspace_id = ?',
+    'SELECT org_id AS orgId, sandbox_id AS sandboxId, provider_account AS providerAccount FROM lifecycle_sandbox_cleanup WHERE workspace_id = ?',
   )
     .bind(workspaceId)
-    .first<{ orgId: string; sandboxId: string }>()
+    .first<{ orgId: string; sandboxId: string; providerAccount: string }>()
   if (!cleanup) return true
   const admin = await firstOrgAdmin(env.DB, cleanup.orgId)
   if (!admin) return false
@@ -42,7 +48,12 @@ export async function retrySandboxCleanup(
     dependencies.fetch,
   )
   await deleteSandboxIfPresent(provider, cleanup.sandboxId)
-  await clearSandboxCleanup(env.DB, workspaceId, cleanup.sandboxId)
+  await clearSandboxCleanup(
+    env.DB,
+    workspaceId,
+    cleanup.sandboxId,
+    cleanup.providerAccount,
+  )
   return true
 }
 
@@ -50,12 +61,13 @@ export async function clearSandboxCleanup(
   db: D1Database,
   workspaceId: string,
   sandboxId: string,
+  providerAccount: string,
 ): Promise<void> {
   await db
     .prepare(
-      'DELETE FROM lifecycle_sandbox_cleanup WHERE workspace_id = ? AND sandbox_id = ?',
+      'DELETE FROM lifecycle_sandbox_cleanup WHERE workspace_id = ? AND sandbox_id = ? AND provider_account = ?',
     )
-    .bind(workspaceId, sandboxId)
+    .bind(workspaceId, sandboxId, providerAccount)
     .run()
 }
 

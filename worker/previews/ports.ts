@@ -12,6 +12,7 @@ interface Descriptor {
 interface CachedPort {
   workspaceId: string
   sandboxId: string | null
+  providerAccount: string
   descriptor: Promise<Descriptor>
   pending: boolean
 }
@@ -28,7 +29,12 @@ export class PrivatePorts {
   }
 
   private key(target: WorkspaceTarget, port: number): string {
-    return JSON.stringify([target.workspaceId, target.sandboxId, port])
+    return JSON.stringify([
+      target.workspaceId,
+      target.providerAccount,
+      target.sandboxId,
+      port,
+    ])
   }
 
   invalidateWorkspace(workspaceId: string): void {
@@ -52,7 +58,8 @@ export class PrivatePorts {
     const descriptor = await this.resolve(
       row,
       row.port,
-      row.listenerSandboxId === row.sandboxId
+      row.listenerSandboxId === row.sandboxId &&
+        row.listenerProviderAccount === row.providerAccount
         ? (row.listenerMode ?? undefined)
         : undefined,
       refresh,
@@ -70,7 +77,8 @@ export class PrivatePorts {
     for (const [key, value] of this.cache) {
       if (
         value.workspaceId === target.workspaceId &&
-        value.sandboxId !== target.sandboxId
+        (value.sandboxId !== target.sandboxId ||
+          value.providerAccount !== target.providerAccount)
       )
         this.cache.delete(key)
     }
@@ -92,6 +100,7 @@ export class PrivatePorts {
     const entry = {
       workspaceId: target.workspaceId,
       sandboxId: target.sandboxId,
+      providerAccount: target.providerAccount,
       descriptor,
       pending: true,
     }

@@ -34,7 +34,10 @@ it('keeps a leased image until its workspace starts across a replacement publica
     const actor = fixture.starts.get(workspaceId)
     if (!actor || !imageA) throw new Error('Missing queued image start')
     await actor.advance()
-    expect(await leasedImage(runtime.env.DB, org.id, workspaceId)).toBe(imageA)
+    expect(await leasedImage(runtime.env.DB, org.id, workspaceId)).toEqual({
+      imageName: imageA,
+      providerAccount: 'boat',
+    })
     const replacement = await startImageBuild(images, {
       orgId: org.id,
       userId: user.id,

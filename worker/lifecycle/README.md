@@ -91,6 +91,24 @@ that capture. No private org-value list goes into the runner environment.
 A running sandbox keeps its capture after later org setting changes.
 Disk retention resumes also replace the saved capture.
 
+## Provider accounts
+
+Each D1 record of a sandbox or a saved snapshot also stores its provider
+account in `provider_account`. Each reader returns it as `providerAccount`.
+Write the account with each sandbox ID or snapshot name. Compare a sandbox
+or a snapshot by its account and its ID or name together, also in leases,
+cleanup records, and image pins.
+
+- A create takes the account of the published build of its org image.
+  `settings` stores no account.
+- A resume takes the account of the workspace record.
+- A new build takes `DEFAULT_PROVIDER_ACCOUNT`, `boat`, from
+  [`account-identity.ts`](../sandbox/account-identity.ts). Its job row keeps
+  the account of the previous org image, which `BuildJob` reads as
+  `previousProviderAccount`. The two can differ.
+- A saved start job keeps its account. `readStartJob` reads an older job
+  without one as `DEFAULT_PROVIDER_ACCOUNT`.
+
 ## Development
 
 Run the lifecycle tests with `npm run test -- worker/lifecycle`. They run in

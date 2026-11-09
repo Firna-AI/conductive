@@ -139,6 +139,7 @@ it('closes idle terminals when the workspace or org no longer permits sandbox ac
   for (const change of [
     "UPDATE workspaces SET state = 'stopped'",
     "UPDATE workspaces SET sandbox_id = 'bx_replaced'",
+    "UPDATE workspaces SET provider_account = 'boat-second'",
     'UPDATE workspaces SET archived_at = 1',
     'UPDATE orgs SET deleted_at = 1',
     'UPDATE orgs SET suspended_at = 1',
@@ -150,7 +151,7 @@ it('closes idle terminals when the workspace or org no longer permits sandbox ac
     expect(setup.clock.scheduledCount).toBe(0)
     await harness.env.DB.batch([
       harness.env.DB.prepare(
-        "UPDATE workspaces SET state = 'ready', sandbox_id = 'bx_one', archived_at = NULL",
+        "UPDATE workspaces SET state = 'ready', sandbox_id = 'bx_one', provider_account = 'boat', archived_at = NULL",
       ),
       harness.env.DB.prepare(
         'UPDATE orgs SET deleted_at = NULL, suspended_at = NULL',

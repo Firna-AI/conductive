@@ -57,6 +57,7 @@ export function createTerminalHandler(
           env,
           target.workspaceId,
           target.sandboxId,
+          target.providerAccount,
         )
         if (tail === null) {
           const stopped = ['stopped', 'error'].includes(target.state)
@@ -104,6 +105,7 @@ export function createTerminalHandler(
           orgId: target.orgId,
           workspaceId: target.workspaceId,
           sandboxId: target.sandboxId,
+          providerAccount: target.providerAccount,
         })
         const auth = btoa(`conductive:${password}`)
         let upstream: Response

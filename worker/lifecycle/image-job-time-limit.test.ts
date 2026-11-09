@@ -117,7 +117,13 @@ it('publishes the build limit while retaining source cleanup until its encrypted
   const fixture = await backendFixture()
   const image = await imageRetryFixture(fixture, { steps: 1 })
   const { env, dependencies } = fixture.runtime
-  const source = await insertSourceJob(env.DB, fixture.org.id, image.id, 'bx_1')
+  const source = await insertSourceJob(
+    env.DB,
+    fixture.org.id,
+    image.id,
+    'bx_1',
+    'boat',
+  )
   await setSourcePhase(env.DB, image.id, 'ready')
   await storeSourceGrant(
     env.DB,
