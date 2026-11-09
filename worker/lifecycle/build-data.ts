@@ -33,6 +33,7 @@ export interface BuildJob {
   sandboxId: string | null
   snapshotName: string | null
   settingsRevision: number
+  runnerProtocolVersion: number
   startedByUserId: string | null
   phase: BuildPhase
   processId: number | null
@@ -48,7 +49,8 @@ export interface BuildJob {
 
 const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.started_at AS startedAt,
   b.sandbox_id AS sandboxId, b.snapshot_name AS snapshotName,
-  b.settings_revision AS settingsRevision, b.started_by_user_id AS startedByUserId,
+  b.settings_revision AS settingsRevision, b.runner_protocol_version AS runnerProtocolVersion,
+  b.started_by_user_id AS startedByUserId,
   j.phase, j.process_id AS processId, j.stdout_offset AS stdoutOffset,
   j.stderr_offset AS stderrOffset, j.install_script AS installScript,
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,

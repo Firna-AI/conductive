@@ -156,6 +156,7 @@ export interface ChatDependencies {
   scheduleBrowserCheck: ConnectionScheduler
   scheduleRunnerCheck: ConnectionScheduler
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
+  readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   readConnectionAccess: (
     identities: readonly ConnectionIdentity[],
     now: number,

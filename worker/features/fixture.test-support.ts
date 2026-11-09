@@ -57,6 +57,7 @@ export async function seedFeatureBuild(
     previousRepositoryLocations: [],
     software: OUTER_SOFTWARE,
     previousImageName: 'outer-image',
+    previousRunnerProtocolVersion: null,
     now: Date.now(),
   })
   await fixture.env.DB.batch([

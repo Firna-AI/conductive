@@ -22,6 +22,7 @@ export async function insertBuild(
     previousRepositoryLocations: readonly RepositoryLocation[]
     software: ImageSoftwareArtifact
     previousImageName: string | null
+    previousRunnerProtocolVersion: number | null
     now: number
     nextImageRefreshAt?: number
   },
@@ -38,7 +39,9 @@ export async function insertBuild(
         input.orgId,
         input.kind,
         input.settingsRevision,
-        RUNNER_PROTOCOL_VERSION,
+        input.kind === 'refresh'
+          ? (input.previousRunnerProtocolVersion ?? 1)
+          : RUNNER_PROTOCOL_VERSION,
         input.userId,
         input.now,
         input.orgId,

@@ -55,6 +55,7 @@ it('mounts build history, logs and admin starts and installs workspace tools in 
     previousRepositoryLocations: [],
     software: OUTER_SOFTWARE,
     previousImageName: 'outer-image',
+    previousRunnerProtocolVersion: null,
     now: Date.now(),
   })
   await active.env.DB.batch([

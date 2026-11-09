@@ -115,6 +115,19 @@ export class RunnerChannel {
           'The connection is not available.',
         )
       }
+      const requiredVersion = await this.dependencies.readRunnerProtocolVersion(
+        active.workspace.id,
+      )
+      if (
+        requiredVersion === null ||
+        message.protocolVersion < requiredVersion
+      ) {
+        warnWorker(
+          `The runner of workspace ${active.workspace.id} closes because its protocol version does not meet the workspace version pin.`,
+        )
+        active.peer.close()
+        return
+      }
       const welcome = await this.store.change(
         active.workspace.id,
         async (transaction) => {

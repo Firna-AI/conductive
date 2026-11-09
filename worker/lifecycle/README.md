@@ -56,6 +56,10 @@ the git credential sender, and the turn recovery.
 
 ### Builds and refreshes
 
+- A full build records the Worker's runner protocol version.
+  A refresh copies the version of the image that it refreshes.
+- A new workspace stores the runner version of its reserved image.
+  A missing image version counts as version 1.
 - A build sandbox starts from the current org image, or as a new default
   sandbox for the first build. Its env holds only the folder variables.
 - Risk: a program with root access that an earlier install left in that
@@ -109,6 +113,7 @@ object holds the lifecycle state, the turn records, and the events.
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+- [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name, branch, and runner version.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. In the `records` phase of a create, `insertWorkspace`
   writes the new row and its runtime record in one D1 batch. The new row
@@ -218,7 +223,7 @@ object holds the lifecycle state, the turn records, and the events.
 - [`durable-scheduling.ts`](durable-scheduling.ts): `writeLifecycleState`,
   the shared lifecycle state and alarm write.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
-- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
+- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.

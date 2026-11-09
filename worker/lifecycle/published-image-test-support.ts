@@ -16,6 +16,7 @@ export async function seedPublishedImage(
     repositories: readonly SelectedRepository[]
     software: ImageSoftwareArtifact
     now: number
+    runnerProtocolVersion?: number
     locations?: readonly RepositoryLocation[] | null
   },
 ): Promise<void> {
@@ -30,7 +31,7 @@ export async function seedPublishedImage(
         input.buildId,
         input.orgId,
         input.imageName,
-        RUNNER_PROTOCOL_VERSION,
+        input.runnerProtocolVersion ?? RUNNER_PROTOCOL_VERSION,
         input.now,
         input.now,
       ),

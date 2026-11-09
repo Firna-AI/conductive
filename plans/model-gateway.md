@@ -631,25 +631,25 @@ Each workspace refuses a runner below the version of its image (decision
 5 A). This milestone lands before any image build installs a runner of
 version 2.
 
-- [ ] Use the existing columns `image_builds.runner_protocol_version` and
+- [x] Use the existing columns `image_builds.runner_protocol_version` and
       `workspaces.runner_protocol_version` of
       `migrations/202611060100_contracts.sql`. No migration is needed. A
       workspace with no value means version 1 (D19).
-- [ ] A full build keeps recording `RUNNER_PROTOCOL_VERSION`, as
+- [x] A full build keeps recording `RUNNER_PROTOCOL_VERSION`, as
       `insertBuild` in `worker/lifecycle/build-admission-data.ts` does. A
       refresh copies the version of the image that it refreshes, in place
       of the Worker's version (D18).
-- [ ] A new workspace copies the version of its image build, which the
+- [x] A new workspace copies the version of its image build, which the
       create path already reads in
       `worker/lifecycle/published-image-data.ts` (D19).
-- [ ] Check the version in the runner's first message, in
+- [x] Check the version in the runner's first message, in
       `worker/chat/runner-input.ts` and `worker/chat/runner-channel.ts`,
       before the welcome and before any command. Refuse a lower version
       as a refused token is refused, and log a warning for the operator
       (D20).
-- [ ] `docs/deployment.md`: publish the runner archive from the same
+- [x] `docs/deployment.md`: publish the runner archive from the same
       commit as the Worker, before any build (D18).
-- [ ] Tests: a workspace with version 2 refuses a version 1 runner. A
+- [x] Tests: a workspace with version 2 refuses a version 1 runner. A
       workspace without a version accepts version 1. A refresh keeps the
       version of its image.
 
