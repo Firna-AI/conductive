@@ -33,6 +33,10 @@ export class ClaudeInputWindow implements AsyncIterable<SDKUserMessage> {
     this.release()
   }
 
+  hasOutstanding(uuid: string): boolean {
+    return this.outstanding.has(uuid)
+  }
+
   discard(): void {
     this.closed = true
     this.held.length = 0

@@ -51,12 +51,27 @@ stops its own controller:
   Stop, and names that member to the others. When the members do not load,
   it names nobody but the reader.
 - `onWorkspaceChange` gets the workspace record after each change: its state,
-  and the title that the agent writes through `workspace.title` and
+  and the title that the backend gives it through `workspace.title` and
   `workspace.updated` events. The header and the list of the app show it.
+- A new workspace and each new session have no name: the `name` of the
+  workspace record and the `title` of the session record are null. The
+  tabs, the session history, the line of a linked session, and the header
+  and the list of the app then show "Untitled", from `nameLabel` in
+  `src/shared/name-label.ts`, as
+  [Workspace and session names](../../docs/protocol/chat-and-events.md#workspace-and-session-names)
+  says. "New session" names only the action of +: its label, the heading
+  of the empty chat, and the detail in the model picker.
 - Each tab shows the `title` of its session record. The backend provides
-  the titles that the mockups show: the first session of a new workspace
-  has the workspace name, and the agent's title renames both. The
-  development page does the same.
+  the titles that the mockups show. The title from the first message names
+  the workspace and its first session, as
+  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says. Each
+  other session takes the first line of its first message with text as its
+  title, as [Sessions](../../docs/protocol/chat-and-events.md#sessions)
+  says. A name that a member set never changes. The development page does
+  the same.
+- The rename field of a session with no title starts empty, with
+  "Untitled" as its hint, so the label never becomes the name of the
+  session. An empty field keeps the old name.
 - `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The
   chip of the file shows the label of its path, `displayPath`, which hides
@@ -261,6 +276,8 @@ refuses. `components/FirstStart.dom.test.tsx` mounts the chat without a
 host, sends with Enter and Send during the first start and after it failed,
 and checks the saved message on the bar of a failed first start and of a
 failed resume.
+`components/SessionTabs.test.tsx` renders the tab of a session with no
+title and its rename field.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.

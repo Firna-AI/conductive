@@ -3,6 +3,7 @@ import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { updateWorkspaceTitle } from '../chat/queries'
+import { canFillWorkspaceTitle } from '../chat/workspace-title'
 import type { DurableLifecycleState, LifecyclePublisher } from './durable-types'
 import type { WorkspaceEventJournal } from './durable-journal'
 import {
@@ -61,7 +62,7 @@ export class WorkspaceStateProjection {
       before.updatedAt,
     )
     const title = await this.options.latestTitle(current.workspaceId)
-    if (title && before.name !== title.name) {
+    if (title && canFillWorkspaceTitle(workspaceView(before))) {
       try {
         await updateWorkspaceTitle(
           env.DB,

@@ -97,7 +97,7 @@ export function readDeviceSettings(value: unknown): DeviceSettings {
       const window = deviceObject(value)
       return {
         workspaceId: deviceRequired(window.workspaceId),
-        workspaceName: deviceText(window.workspaceName),
+        workspaceName: nullableText(window.workspaceName),
         expiresAt: deviceNumber(window.expiresAt),
       }
     }),
@@ -188,7 +188,7 @@ export function readDeviceRecord(value: unknown): DeviceCommandRecord {
         : deviceText(input.longerTimeoutReason),
     orgId: deviceRequired(input.orgId),
     workspaceId: deviceRequired(input.workspaceId),
-    workspaceName: deviceText(input.workspaceName),
+    workspaceName: nullableText(input.workspaceName),
     sessionId: deviceRequired(input.sessionId),
     turnId: deviceRequired(input.turnId),
     sender: {

@@ -5,6 +5,7 @@ import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow
 import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
 import { routes } from '../../app/router'
 import { formatAgo } from '../../app/time'
+import { nameLabel } from '../../shared/name-label'
 import type { Workspace } from '../../shared/workspaces'
 import { AppLink } from '../ui/AppLink'
 import ui from '../ui/ui.module.css'
@@ -20,7 +21,7 @@ function RowContent(props: { workspace: Workspace; now: number }) {
   return (
     <>
       <StatusGlyph status={workspace.state} />
-      <span className={styles.name}>{workspace.name}</span>
+      <span className={styles.name}>{nameLabel(workspace.name)}</span>
       <span className={styles.time}>
         {formatAgo(props.now, workspace.updatedAt)}
       </span>
@@ -33,8 +34,9 @@ function RowContent(props: { workspace: Workspace; now: number }) {
 
 /**
  * One workspace on one line: its state as a dot-matrix square, its name,
- * and the time since its last activity. Bold marks unread output. A drag
- * lifts the row, and a faint copy stays where it was.
+ * or Untitled before it has one, and the time since its last activity. Bold
+ * marks unread output. A drag lifts the row, and a faint copy stays where
+ * it was.
  */
 export function WorkspaceRow({
   rowRef,

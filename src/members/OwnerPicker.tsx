@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { nameLabel } from '../shared/name-label'
 import type { OrgMember } from '../shared/members'
 import type { Workspace } from '../shared/workspaces'
 import { errorMessage, type MembersApi } from './api/client'
@@ -146,7 +147,7 @@ function ScopedOwnerPicker(props: OwnerPickerProps) {
         onSelect={(userId) => void select(userId)}
         open={open}
         selected={workspace.owner.id}
-        sheetTitle={workspace.name}
+        sheetTitle={nameLabel(workspace.name)}
         status={statusText(members)}
         trigger={(trigger) => (
           <OwnerButton

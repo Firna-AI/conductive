@@ -17,9 +17,9 @@ import type { StreamTimers } from '../stream/workspace-stream'
 import { ChatController } from './controller'
 
 /**
- * The record of a new session of the workspace, as the backend writes it.
- * The admin of the fake, who reads the chat by default, started it, unless
- * `more` says otherwise.
+ * The record of a new session of the workspace, as the backend writes it,
+ * with no title yet. The admin of the fake, who reads the chat by default,
+ * started it, unless `more` says otherwise.
  */
 export function newSessionRecord(
   sessionId: string,
@@ -30,7 +30,7 @@ export function newSessionRecord(
   return {
     id: sessionId,
     workspaceId: FAKE_IDS.workspace,
-    title: 'New session',
+    title: null,
     choice,
     createdAt: FAKE_TIME,
     closedAt,

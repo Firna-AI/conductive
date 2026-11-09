@@ -1,10 +1,18 @@
 import type { WebSocket } from 'miniflare'
 
 import { DEVICE_COMMAND_PATH } from '../../../src/shared/device'
+import { chatHistoryPath } from '../../../src/shared/events'
+import { sessionsPath } from '../../../src/shared/sessions'
 import { TOOL_TURN_HEADER } from '../../../tools/context'
 import { closeSockets } from '../adapter-sockets.test-support'
+import { array } from '../agent-events'
+import { record } from '../inputs'
 import { OUTER_MACHINE_ORIGIN } from './outer-runtime.test-support'
-import { OUTER_TOKEN, OUTER_WORKSPACE } from './outer-seed.test-support'
+import {
+  OUTER_ORG,
+  OUTER_TOKEN,
+  OUTER_WORKSPACE,
+} from './outer-seed.test-support'
 import { requestRunner, OuterFakeRunner } from './runner-socket.test-support'
 import { reviewWorkspaceFixture } from './workspace-review.test-support'
 import type { Workspace } from './workspace-recovery-entry.test-support'
@@ -33,6 +41,27 @@ export async function recoveryWorkspaceFixture(bundle: string) {
         WORKSPACES: DurableObjectNamespace<Workspace>
       }>()
       return bindings.WORKSPACES.getByName(OUTER_WORKSPACE)
+    },
+    session: async (id: string) => {
+      const response = await fixture.request(
+        sessionsPath(OUTER_ORG, OUTER_WORKSPACE),
+      )
+      if (response.status !== 200)
+        throw new Error('The session list is unavailable.')
+      const body = record(await response.json())
+      return record(
+        [...array(body.sessions, record), ...array(body.history, record)].find(
+          (session) => session.id === id,
+        ),
+      )
+    },
+    history: async (sessionId: string) => {
+      const response = await fixture.request(
+        chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, sessionId),
+      )
+      if (response.status !== 200)
+        throw new Error('The chat history is unavailable.')
+      return record(await response.json())
     },
     connect: async (streamId: string) => {
       const response = await requestRunner(fixture)

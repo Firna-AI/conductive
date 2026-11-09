@@ -71,7 +71,7 @@ it('retries a failed title publication after the original idle stop and then all
     )
       .bind(OUTER_WORKSPACE)
       .first(),
-  ).toEqual({ state: 'ready', name: 'workspace one' })
+  ).toEqual({ state: 'ready', name: '' })
   expect(await actor.recoveryAlarmAt()).toBe(idleAt + 30_000)
   expect(await actor.repeatLifecycleWrite()).toMatchObject({
     ok: false,

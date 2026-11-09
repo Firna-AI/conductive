@@ -5,11 +5,25 @@ import { normalizeSession, type StoredSession } from './session-storage'
 import { CHAT_ROOT, chatKey } from './storage-keys'
 import type { ChatData, ModelSessionCreation, StoredTurn } from './types'
 
+const FIRST_SESSION_KEY = `${CHAT_ROOT}first-session`
+
+interface FirstSession {
+  id: string
+  messageId?: string
+}
+
 export class ChatRecords {
   protected readonly data: ChatData
 
   constructor(data: ChatData) {
     this.data = data
+  }
+
+  firstSession(): Promise<FirstSession | undefined> {
+    return this.data.get(FIRST_SESSION_KEY)
+  }
+  saveFirstSession(session: FirstSession): Promise<void> {
+    return this.data.put(FIRST_SESSION_KEY, session)
   }
 
   async session(id: string): Promise<Session | undefined> {

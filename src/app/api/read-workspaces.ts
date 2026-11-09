@@ -42,7 +42,7 @@ export function readWorkspace(value: unknown): Workspace {
     repositoryId: text(workspace, 'repositoryId'),
     sectionId: text(workspace, 'sectionId'),
     owner: nested(workspace, 'owner', readSender),
-    name: text(workspace, 'name'),
+    name: maybeText(workspace, 'name'),
     branch: text(workspace, 'branch'),
     choice: nested(workspace, 'choice', readChoice),
     state: choice(workspace, 'state', WORKSPACE_STATES),

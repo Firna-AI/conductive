@@ -39,9 +39,15 @@ describe('empty linked sessions', () => {
     await harness.env.DB.prepare('DELETE FROM agent_logins WHERE user_id = ?')
       .bind(fixture.owner.id)
       .run()
-    const reply = await fixture.send(source.id, 'linked', fixture.memberCookie)
+    const reply = await fixture.send(
+      source.id,
+      'linked',
+      fixture.memberCookie,
+      CLAUDE,
+      'Name this linked session.\nKeep the source conversation separate',
+    )
     expect(reply.session).toMatchObject({
-      title: 'New session',
+      title: 'Name this linked session',
       startedBy: { id: fixture.member.id },
       sourceSessionId: source.id,
       loginAvailable: true,

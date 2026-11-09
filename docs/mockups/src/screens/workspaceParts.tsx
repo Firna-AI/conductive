@@ -16,6 +16,7 @@ import {
 import { Sidebar } from '../components/workspaces/Sidebar'
 import {
   creatingLog,
+  firstSecondLog,
   resumingLog,
   type StartingLog,
 } from '../fixtures/starting'
@@ -62,10 +63,14 @@ function backFrom(open: FileTabView): BackLink {
   }
 }
 
-/** The steps of a sandbox start, while the sandbox starts. */
+/**
+ * The steps of a sandbox start, while the sandbox starts. A new workspace
+ * that still shows Untitled is in the first second of its start.
+ */
 export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
-  return isNew(state) ? creatingLog : resumingLog
+  if (!isNew(state)) return resumingLog
+  return state.name === 'untitled' ? firstSecondLog : creatingLog
 }
 
 /**

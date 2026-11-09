@@ -52,7 +52,11 @@ async function runningFixture() {
   const { message } = await fixture.send(session.id, 'original')
   const turn = messageCommands(runner, 'original')[0]
   if (turn?.type !== 'turn') throw new Error('The original turn is missing.')
-  const failedSession = { ...session, retryMessageId: 'original' }
+  const failedSession = {
+    ...session,
+    title: 'Check this code',
+    retryMessageId: 'original',
+  }
   const failedTurn = {
     id: 'original-turn',
     sessionId: session.id,
@@ -169,7 +173,11 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
   expect(runner.commands).toEqual([turn])
   runner.disconnect()
   fixture.restart()
-  const retrySession = { ...session, activeTurnId: 'retry-turn' }
+  const retrySession = {
+    ...session,
+    title: 'Check this code',
+    activeTurnId: 'retry-turn',
+  }
   expect(await sessionRecord(fixture, session.id)).toEqual(retrySession)
   const retryMessage = { ...sentMessage, id: 'retry-message', state: 'queued' }
   const retryTurn = {
