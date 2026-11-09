@@ -113,9 +113,12 @@ In a deployment, the client secret and both keys are Worker secrets, as
 `/api/auth/github/callback` on the same app origin. The GitHub App must
 accept that callback address, for example
 `http://127.0.0.1:5174/api/auth/github/callback` for `npm run preview`. The
-GitHub App is "Conductive", in the Firna-AI organization. It sends its
-webhooks to the address in
+GitHub App is "Conductive Build", with the slug `conductive-build`, in the
+Firna-AI organization. It sends its webhooks to the address in
 [The GitHub App](docs/protocol/github-banner.md#the-github-app).
+[The GitHub App](docs/deployment.md#the-github-app) in the deployment guide
+gives each setting of the GitHub App, with the address where GitHub returns
+the user after an install.
 Automated tests use fakes and need no credentials.
 
 Every cloud computer of every org runs in the app's own Boat organization.

@@ -70,6 +70,7 @@ interface WorkspaceCreation {
   repositoryId: string
   sectionId?: string
   city: string
+  name?: string
   branch: string
   sessionId: string
   request: SendMessageRequest

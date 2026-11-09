@@ -8,18 +8,25 @@ import { runMacCli } from './device-cli.ts'
 export const CLI_HELP = `Conductive workspace tools
 
 conductive workspaces list
+conductive repositories list
+conductive sections list
+conductive models list
 conductive workspaces create --repository ID --message TEXT
-  [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID]
+  [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID] [--name TEXT]
 conductive mcp
 conductive mac run --command TEXT --folder PATH --reason TEXT
   [--timeout-seconds SECONDS] [--longer-timeout-reason TEXT] [--request-id ID]
 
 Create starts a workspace in the calling workspace's org, with its owner.
 Omitted options use the owner's model and effort, and the default section.
+The lists return the org's workspaces, repositories, sections, or the app's models.
 List returns every workspace in the org, with its number and web link.
 A workspace link in a message names that workspace.
 A workspace link in an answer shows as a chip.
 `
+
+const commandHelp =
+  'Use workspaces create, workspaces list, repositories list, sections list, or models list.'
 
 export interface ToolOutput {
   stdout(text: string): void
@@ -38,21 +45,42 @@ export async function runWorkspaceCli(
   try {
     if (args[0] === 'mac') return await runMacCli(args, client, output)
     const { values, positionals } = parseArguments(args)
-    if (positionals[0] !== 'workspaces' || positionals.length !== 2) {
-      throw new ToolInputError('Use workspaces create or workspaces list.')
+    if (
+      positionals.length !== 2 ||
+      !['workspaces', 'repositories', 'sections', 'models'].includes(
+        positionals[0],
+      )
+    ) {
+      throw new ToolInputError(commandHelp)
     }
     let result: unknown
     if (positionals[1] === 'list') {
       if (Object.values(values).some((value) => value !== undefined)) {
-        throw new ToolInputError('Use workspaces list without options.')
+        throw new ToolInputError(`Use ${positionals[0]} list without options.`)
       }
-      result = await client.list()
-    } else if (positionals[1] === 'create') {
+      switch (positionals[0]) {
+        case 'workspaces':
+          result = await client.list()
+          break
+        case 'repositories':
+          result = await client.listRepositories()
+          break
+        case 'sections':
+          result = await client.listSections()
+          break
+        case 'models':
+          result = await client.listModels()
+          break
+        default:
+          throw new ToolInputError(commandHelp)
+      }
+    } else if (positionals[0] === 'workspaces' && positionals[1] === 'create') {
       const hasModel = values.agent !== undefined || values.model !== undefined
       result = await client.create(
         createWorkspaceInput({
           repositoryId: values.repository,
           firstMessage: values.message,
+          name: values.name,
           ...(hasModel && {
             model: { agent: values.agent, model: values.model },
           }),
@@ -61,7 +89,7 @@ export async function runWorkspaceCli(
         }),
       )
     } else {
-      throw new ToolInputError('Use workspaces create or workspaces list.')
+      throw new ToolInputError(commandHelp)
     }
     output.stdout(`${JSON.stringify(result)}\n`)
     return 0
@@ -83,6 +111,7 @@ function parseArguments(args: readonly string[]) {
         model: { type: 'string' },
         effort: { type: 'string' },
         section: { type: 'string' },
+        name: { type: 'string' },
       },
     })
   } catch {

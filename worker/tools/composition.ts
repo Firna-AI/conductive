@@ -1,6 +1,6 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { workspaceBinding } from '../app-api/workspace-state'
-import { configuredDefaultChoice } from '../app-api/models'
+import { configuredDefaultChoice, configuredModels } from '../app-api/models'
 import { workspaceRuntime } from '../lifecycle/runtime'
 import { createWorkspace } from '../lifecycle/workspaces'
 import { workspaceStartFailure } from '../lifecycle/workspace-start'
@@ -20,6 +20,7 @@ export function productionAgentTools(
       APP_ORIGIN: env.APP_ORIGIN,
     },
     {
+      models: async () => configuredModels(env),
       callingTurn: (id, turnId) =>
         workspaceBinding(env).getByName(id).callingToolTurn(id, turnId),
       ownerDefaultChoice: async () => configuredDefaultChoice(env),
@@ -35,6 +36,7 @@ export function productionAgentTools(
           {
             repositoryId: input.repositoryId,
             sectionId: input.sectionId,
+            name: input.name,
             firstMessage: {
               id: dependencies.randomToken(),
               text: input.firstMessage,

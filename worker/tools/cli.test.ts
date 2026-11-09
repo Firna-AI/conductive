@@ -1,6 +1,6 @@
-import { routes } from '../../src/app/router'
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { routes } from '../../src/app/router'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
 import { runToolProcess } from '../../tools/main'
@@ -9,6 +9,7 @@ import {
   TEST_ORIGIN,
   type TestHarness,
 } from '../test-support/harness'
+import { publishToolImage, TOOL_MODELS } from './list-test-support'
 import {
   inputLines,
   toolFixture,
@@ -35,6 +36,8 @@ afterAll(async () => {
 })
 
 it('runs CLI create and list through workspace auth and forwards the calling turn', async () => {
+  await publishToolImage(fixture.db)
+  fixture.services.models.mockResolvedValue(TOOL_MODELS)
   await fixture.db
     .prepare("UPDATE workspaces SET name = '' WHERE id = 'teammate-workspace'")
     .run()
@@ -55,6 +58,8 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
       'max',
       '--section',
       'chosen-a',
+      '--name',
+      'CLI workspace',
     ],
     TOOL_TEST_ENVIRONMENT,
     inputLines(),
@@ -68,10 +73,22 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
     output.output,
     fixture.send,
   )
+  const lists: number[] = []
+  for (const resource of ['repositories', 'sections', 'models']) {
+    lists.push(
+      await runToolProcess(
+        [resource, 'list'],
+        TOOL_TEST_ENVIRONMENT,
+        inputLines(),
+        output.output,
+        fixture.send,
+      ),
+    )
+  }
 
-  expect([created, listed]).toEqual([0, 0])
+  expect([created, listed, ...lists]).toEqual([0, 0, 0, 0, 0])
   expect(output.stderr).toEqual([])
-  expect(output.stdout).toHaveLength(2)
+  expect(output.stdout).toHaveLength(5)
   expect(JSON.parse(output.stdout[0])).toMatchObject({
     workspace: {
       orgId: 'org-a',
@@ -108,9 +125,42 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
       },
     ],
   })
-  expect(fixture.requests).toHaveLength(2)
+  expect(output.stdout.slice(2).map((line) => JSON.parse(line))).toEqual([
+    {
+      repositories: [
+        {
+          id: 'repo-a',
+          fullName: 'example/alpha',
+          defaultBranch: 'main',
+          current: true,
+        },
+      ],
+    },
+    {
+      sections: [
+        { id: 'general-a', name: 'General', default: true },
+        { id: 'chosen-a', name: 'Chosen', default: false },
+      ],
+    },
+    {
+      models: TOOL_MODELS,
+      defaultChoice: {
+        agent: 'codex',
+        model: 'owner-default-model',
+        effort: 'high',
+      },
+    },
+  ])
+  expect(fixture.requests.map((request) => request.url)).toEqual(
+    [
+      MACHINE_PATHS.workspaces,
+      MACHINE_PATHS.workspaces,
+      MACHINE_PATHS.repositories,
+      MACHINE_PATHS.sections,
+      MACHINE_PATHS.models,
+    ].map((path) => `${TOOL_TEST_ORIGIN}${path}`),
+  )
   for (const request of fixture.requests) {
-    expect(request.url).toBe(`${TOOL_TEST_ORIGIN}${MACHINE_PATHS.workspaces}`)
     expect(request.headers.get('Authorization')).toBe(
       `Bearer ${TOOL_TEST_TOKEN}`,
     )
@@ -120,6 +170,7 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
   expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
     expect.objectContaining({
       firstMessage: '  Build this.\nKeep spacing.  ',
+      name: 'CLI workspace',
       sender: expect.objectContaining({ id: 'teammate' }),
     }),
   )

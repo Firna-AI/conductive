@@ -474,11 +474,23 @@ of the app and of the agent tools.
 - [x] Update `tools/README.md`, `worker/tools/README.md`, and
       `worker/lifecycle/README.md`.
 
+## Milestone 3a: Current agent tools integration
+
+Depends on: 3
+
+Main added repository, section, and model discovery for agents while
+Milestone 3 ran. This merge keeps those tools and the workspace-link fields.
+
+- [x] Resolve the agent tool, help, README, and migration reservation
+      conflicts path by path. Preserve both approved features.
+- [x] Check the merged tool contracts, readers, and create/list replies.
+- [ ] Run the affected tests and typecheck. Audit merge preservation.
+
 ## Milestone 4: Copy link in the header
 
 Tags: ui
 
-Depends on: 3
+Depends on: 3, 3a
 
 - [ ] Add the `W-395` button to `src/shell/workspace/WorkspaceHeader.tsx`,
       on desktop and on a phone, as the mockups draw it. Reuse the pure
@@ -502,7 +514,7 @@ Depends on: 3
 
 Tags: ui
 
-Depends on: 3
+Depends on: 3, 3a
 
 - [ ] Add a pure function that splits text into plain text, code, and
       workspace links, with the URL parser and `parseRoute`. Test a link

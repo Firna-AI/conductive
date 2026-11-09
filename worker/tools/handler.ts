@@ -1,7 +1,6 @@
 import {
   MACHINE_PATHS,
   type AgentCreateWorkspaceRequest,
-  type AgentListWorkspacesResponse,
 } from '../../src/shared/agent-tools'
 import { TOOL_TURN_HEADER } from '../../tools/context'
 import { createWorkspaceInput, ToolInputError } from '../../tools/input'
@@ -9,8 +8,9 @@ import { createdWorkspace } from '../../tools/responses'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { readJsonObject } from '../http/json-body'
 import { createFromTool } from './create'
+import { isAgentToolPath, listFromTool } from './lists'
 import type { AgentToolServices } from './services'
-import { callingWorkspace, orgWorkspaces } from './store'
+import { callingWorkspace } from './store'
 
 export interface AgentToolsEnvironment {
   DB: D1Database
@@ -26,25 +26,22 @@ export function createAgentToolsHandler(
   return async (request: Request): Promise<Response> => {
     try {
       const url = new URL(request.url)
-      if (
-        url.origin !== env.MACHINE_ORIGIN ||
-        url.pathname !== MACHINE_PATHS.workspaces
-      ) {
+      if (url.origin !== env.MACHINE_ORIGIN || !isAgentToolPath(url.pathname)) {
         throw new HttpError(404, 'not_found', 'The page is not available.')
       }
-      if (
-        !['GET', 'POST'].includes(request.method) ||
-        request.headers.has('Upgrade')
-      ) {
+      const methods =
+        url.pathname === MACHINE_PATHS.workspaces ? ['GET', 'POST'] : ['GET']
+      const allow = methods.join(', ')
+      if (!methods.includes(request.method) || request.headers.has('Upgrade')) {
         return privateResponse(
           Response.json(
             {
               error: {
                 code: 'method_not_allowed',
-                message: 'Use GET or POST.',
+                message: methods.length === 1 ? 'Use GET.' : 'Use GET or POST.',
               },
             },
-            { status: 405, headers: { Allow: 'GET, POST' } },
+            { status: 405, headers: { Allow: allow } },
           ),
         )
       }
@@ -60,13 +57,15 @@ export function createAgentToolsHandler(
       }
       if (request.method === 'GET') {
         return privateResponse(
-          Response.json({
-            workspaces: await orgWorkspaces(
+          Response.json(
+            await listFromTool(
+              url.pathname,
               env.DB,
-              caller.orgId,
+              caller,
+              services,
               env.APP_ORIGIN,
             ),
-          } satisfies AgentListWorkspacesResponse),
+          ),
         )
       }
       let input: AgentCreateWorkspaceRequest
