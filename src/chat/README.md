@@ -273,6 +273,12 @@ check in the Mac app.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+- `state/attachment-actions.ts`: attach, Try again, and Remove for the files
+  of a draft. Each upload goes through the app's `uploadAttachment`, ends
+  on its draft after a move, and stops with Remove and with the chat.
+- `components/AttachmentChips.tsx`: the file chips of both composers, with
+  the measured share of an upload, the sent files, and the notice for files
+  over the size limit, from the mockups' `attachmentCopy.ts`.
 - `state/archive-view.ts`: the tabs and the session history of a
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot

@@ -28,6 +28,7 @@ export type WorkspaceChatResolvers = Partial<
   Pick<
     ChatDependencies,
     | 'resolveAttachments'
+    | 'prepareAttachments'
     | 'scheduleRunnerCheck'
     | 'scheduleBrowserCheck'
     | 'randomId'

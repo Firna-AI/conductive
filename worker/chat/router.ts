@@ -2,6 +2,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { tokenWorkspace } from './queries'
+import { attachmentRoute } from './attachment-routes'
 
 export async function routeRunner(
   request: Request,
@@ -24,7 +25,11 @@ export async function routeRunner(
 export async function routeChat(
   request: Request,
   env: AppEnv,
+  now: () => number = Date.now,
+  newId?: () => string,
 ): Promise<Response | null> {
+  const attachment = await attachmentRoute(request, env, now, newId)
+  if (attachment) return attachment
   const match = new URL(request.url).pathname.match(
     /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:events|history|sessions(?:\/.*)?)$/,
   )

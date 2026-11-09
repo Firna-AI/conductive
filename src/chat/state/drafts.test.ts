@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readyIds } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
 import { filePaths } from '../../shared/files'
 import { sessionPaths } from '../../shared/sessions'
@@ -17,7 +18,8 @@ const codex: AgentChoice = {
 const shortly = { timeout: 10_000 }
 const file = () => new File(['png'], 'overlap.png', { type: 'image/png' })
 const isUpload = (request: Request) =>
-  request.method === 'POST' && request.url.endsWith('/attachments')
+  request.method === 'POST' &&
+  new URL(request.url).pathname === filePaths.attachments(org, ws)
 const isSend = (request: Request) =>
   request.method === 'POST' && request.url.endsWith('/messages')
 
@@ -52,10 +54,10 @@ describe('a draft that moves to another session', () => {
     expect(chat.requests('POST', messages)).toHaveLength(0)
     chat.held.splice(0, 1)[0]()
     await uploading
-    expect(chat.draftOf(created)?.attachments.map((item) => item.id)).toEqual([
+    expect(readyIds(chat.draftOf(created)?.files ?? [])).toEqual([
       'attachment-1',
     ])
-    expect(chat.draftOf(id)?.attachments).toEqual([])
+    expect(chat.draftOf(id)?.files).toEqual([])
     chat.server.json(
       'POST',
       messages,
@@ -85,7 +87,7 @@ describe('a draft that moves to another session', () => {
     ])
   })
 
-  it('shows the failure of a moved upload in the session that holds the draft', async () => {
+  it('shows a moved upload that fails as a failed file in the session that holds the draft', async () => {
     const chat = await chatWithCodex(isUpload)
     chat.controller.setDraft(id, 'See the screenshot.')
     const uploading = chat.controller.attachFiles(id, [file()])
@@ -100,10 +102,20 @@ describe('a draft that moves to another session', () => {
     )
     chat.held.splice(0, 1)[0]()
     await uploading
-    expect(chat.controller.getSnapshot().notice).toEqual({
-      sessionId: created,
-      title: "The file didn't attach",
-      message: 'The file is too large.',
+    expect({
+      moved: chat
+        .draftOf(created)
+        ?.files.map((item) =>
+          item.state === 'failed'
+            ? `${item.file.name}: ${item.error.message}`
+            : item.state,
+        ),
+      left: chat.draftOf(id)?.files,
+      notice: chat.controller.getSnapshot().notice,
+    }).toEqual({
+      moved: ['overlap.png: The file is too large.'],
+      left: [],
+      notice: null,
     })
   })
 
@@ -131,8 +143,6 @@ describe('a draft that moves to another session', () => {
     chat.held.splice(0, 1)[0]()
     await sending
     expect(chat.draftOf(id)?.text).toBe('')
-    expect(chat.draftOf(id)?.attachments.map((item) => item.id)).toEqual([
-      'attachment-1',
-    ])
+    expect(readyIds(chat.draftOf(id)?.files ?? [])).toEqual(['attachment-1'])
   })
 })

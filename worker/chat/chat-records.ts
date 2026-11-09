@@ -1,5 +1,6 @@
 import type { UserMessage } from '../../src/shared/messages'
 import type { Session } from '../../src/shared/sessions'
+import { attachmentCopyKey } from './attachment-record'
 import { normalizeSession, type StoredSession } from './session-storage'
 import { CHAT_ROOT, chatKey } from './storage-keys'
 import type { ChatData, ModelSessionCreation, StoredTurn } from './types'
@@ -69,7 +70,50 @@ export class ChatRecords {
     return this.data.put(chatKey('model-session', id), creation)
   }
   saveMessage(message: UserMessage): Promise<void> {
-    return this.data.put(chatKey('message', message.id), message)
+    return this.saveMessageWithAttachments(message)
+  }
+  private async saveMessageWithAttachments(
+    message: UserMessage,
+  ): Promise<void> {
+    await this.data.put(chatKey('message', message.id), message)
+    for (const attachment of message.attachments)
+      await this.data.put(chatKey('attachment-use', attachment.id), {
+        messageId: message.id,
+        userId: message.sender.id,
+      })
+  }
+  attachmentUse(
+    id: string,
+  ): Promise<{ messageId: string; userId: string } | undefined> {
+    return this.data.get(chatKey('attachment-use', id))
+  }
+  async usedAttachments(
+    ids: readonly string[],
+    userId: string,
+  ): Promise<string[]> {
+    const used: string[] = []
+    for (const id of ids)
+      if ((await this.attachmentUse(id))?.userId === userId) used.push(id)
+    return used
+  }
+  async attachmentCopy(messageId: string, sandboxId: string): Promise<boolean> {
+    return (
+      (await this.data.get<boolean>(
+        chatKey(
+          'attachment-copy',
+          await attachmentCopyKey(messageId, sandboxId),
+        ),
+      )) === true
+    )
+  }
+  async saveAttachmentCopy(
+    messageId: string,
+    sandboxId: string,
+  ): Promise<void> {
+    await this.data.put(
+      chatKey('attachment-copy', await attachmentCopyKey(messageId, sandboxId)),
+      true,
+    )
   }
   messageSource(messageId: string): Promise<string | undefined> {
     return this.data.get(chatKey('message-source', messageId))

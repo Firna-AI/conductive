@@ -6,15 +6,6 @@
   background: var(--ui-soft);
 }
 
-/* The files of a sent message, under its bubble. */
-.sentFiles {
-  justify-content: flex-end;
-}
-
-.sentFiles li {
-  padding-right: 8px;
-}
-
 /* A hidden file input that the paperclip opens. */
 .fileInput {
   display: none;

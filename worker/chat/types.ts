@@ -172,7 +172,20 @@ export interface ChatDependencies {
     userId: string,
     workspaceId: string,
     ids: readonly string[],
+    messageId: string,
+    usedIds: readonly string[],
   ) => Promise<ResolvedAttachments>
+  prepareAttachments: (
+    workspaceId: string,
+    userId: string,
+    messageId: string,
+    attachments: readonly RunnerAttachment[],
+    sandboxId: string | null,
+  ) => Promise<string | null>
+  attachmentSandboxId: (
+    workspaceId: string,
+    userId: string,
+  ) => Promise<string | null>
   /** File owners validate results here. Results never enter history. */
   receiveFileResult: (value: unknown, connectionId: string) => Promise<void>
   /** The supplied publisher preserves the callback's place in the serial task. */

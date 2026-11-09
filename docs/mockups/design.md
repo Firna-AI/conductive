@@ -109,6 +109,20 @@ chat, and five tabs at the bottom.
   The mockups, chat, and composer of a new workspace share it.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
+- `AttachmentChips` in `src/components/chat/` draws each attached file as a
+  chip: a glyph, the name, a label, and its actions. While a file uploads,
+  a ring takes the place of its icon, and the share of the file that the
+  browser sent, such as "64%", the place of its size. Before the first
+  measurement, the spinner of a working agent and "Uploading" show, so no
+  chip shows a made-up share. A failed upload tints the whole chip
+  rose and offers Try again and Remove. Send waits for both states.
+  `AttachmentStates.module.css` holds the styles of the states, and
+  `attachmentCopy.ts` holds their words. A file over 25 MB never becomes a
+  chip: a notice over the composer names it, gives the limit, and offers
+  "Attach a smaller file", as `app/attachments/too-large` shows. The files
+  of a sent message show under it, at the right, without Remove. The New
+  workspace composer uses the same chips before the workspace exists, as
+  `app/new-workspace/files` shows.
 - Data that the chat does not have shows in plain words, from decision 76.
   `lostCopy.ts` in `src/components/chat/` holds the words. A tool call whose
   output the runner shortened shows the size that it left out, such as "1.2 MB left out", and

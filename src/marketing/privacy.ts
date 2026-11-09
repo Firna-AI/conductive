@@ -14,6 +14,7 @@ import {
  * README names. The facts come from the architecture and the protocol
  * docs. Each fact that the operator or the lawyer must supply is a draft
  * field.
+ * Attached file storage and retention follow the chosen rules (decision 132).
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
@@ -58,8 +59,10 @@ export const privacyDocument: LegalDocument = {
           text`Your work: ${productName} keeps your messages and the answers
             of the agents as the chat history of each workspace. It also
             keeps the last file list and the last summary of changes of each
-            workspace. The files that you attach go to the cloud computer of
-            the workspace.`,
+            workspace. The files that you attach to a message stay in the
+            storage of ${productName} at Cloudflare. When the agent starts
+            work on the message, ${productName} copies them to the cloud
+            computer of the workspace.`,
           text`Your code: it stays in the cloud computers that ${productName}
             runs for your org. ${productName} reads a file or a diff when you
             open it, to show it to you.`,
@@ -116,6 +119,9 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         paragraph`When an admin deletes an org, ${productName} deletes the data
           of the org after 7 days, unless an admin restores it.`,
+        paragraph`${productName} keeps each file that you send with a message
+          until it deletes the workspace of the message. It deletes an unsent
+          file 7 days after you upload it.`,
         paragraph`${draft('To confirm: how long each kind of data stays, also after you stop using the service')}`,
       ],
     },

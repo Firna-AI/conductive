@@ -22,7 +22,10 @@ export async function createHarness() {
         config: {
           name: 'worker-core-tests',
           compatibilityDate: '2026-11-06',
-          env: { DB: { type: 'd1', id: 'test-db' } },
+          env: {
+            DB: { type: 'd1', id: 'test-db' },
+            CHAT_ATTACHMENTS: { type: 'r2', name: 'test-chat-attachments' },
+          },
           manifest: {
             mainModule: 'index.js',
             modules: {
@@ -38,9 +41,13 @@ export async function createHarness() {
     ],
   })
   const db = await runtime.getD1Database('DB')
+  const { CHAT_ATTACHMENTS: attachments } = await runtime.getBindings<{
+    CHAT_ATTACHMENTS: R2Bucket
+  }>()
   await applyMigrations(db)
   const env: AppEnv = {
     DB: db,
+    CHAT_ATTACHMENTS: attachments,
     APP_ORIGIN: TEST_ORIGIN,
     GITHUB_CLIENT_ID: 'github-client-id',
     GITHUB_CLIENT_SECRET: 'github-client-secret',
@@ -117,6 +124,7 @@ export async function createHarness() {
     reset: async () => {
       await db.batch(
         [
+          'chat_attachments',
           'github_webhook_deliveries',
           'github_connections',
           'github_installations',
@@ -145,6 +153,13 @@ export async function createHarness() {
           'oauth_states',
         ].map((table) => db.prepare(`DELETE FROM ${table}`)),
       )
+      let cursor: string | undefined
+      do {
+        const objects = await attachments.list({ cursor })
+        if (objects.objects.length)
+          await attachments.delete(objects.objects.map((object) => object.key))
+        cursor = objects.truncated ? objects.cursor : undefined
+      } while (cursor)
       github.reset()
       boat.reset()
       now = TEST_TIME

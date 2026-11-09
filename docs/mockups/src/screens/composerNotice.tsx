@@ -1,4 +1,9 @@
-import { MessageSquarePlus, Plug } from 'lucide-react'
+import { CircleAlert, MessageSquarePlus, Paperclip, Plug } from 'lucide-react'
+import {
+  notAttachedTitle,
+  smallerFileLabel,
+  tooLargeBody,
+} from '../components/chat/attachmentCopy'
 import {
   linkedReasonText,
   linkedTitle,
@@ -8,6 +13,7 @@ import { ActionButton } from '../components/common/actions'
 import { Notice } from '../components/common/Notice'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { agents, type AgentKey } from '../fixtures/agents'
+import { largeRecording } from '../fixtures/attachments'
 import { people } from '../fixtures/members'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -30,8 +36,32 @@ function linkedReason(
 }
 
 /**
+ * The notice for a file over the size limit. The composer does not attach
+ * the file, and the other files of the message stay. The notice names the
+ * file and the limit, and its action opens the file picker again. It gives
+ * no size of the file, as `tooLargeBody` says.
+ */
+function tooLargeNotice() {
+  return (
+    <Notice
+      action={
+        // The mockups draw one upload, which the chosen file leads to.
+        <ScreenLink asChild to={paths.attachments}>
+          <ActionButton icon={Paperclip}>{smallerFileLabel}</ActionButton>
+        </ScreenLink>
+      }
+      body={tooLargeBody}
+      icon={CircleAlert}
+      title={notAttachedTitle(largeRecording.name)}
+      tone="danger"
+    />
+  )
+}
+
+/**
  * The notice over the composer when the agent of the chosen model is not
  * connected. Its action opens the Connect form of that agent in the account.
+ * A file over the size limit has its own notice.
  *
  * A message in the session of another member runs on the login of that
  * starter, so the own login of the viewer does not matter there. When the
@@ -41,6 +71,9 @@ function linkedReason(
  * whose login is not available sees the notice that asks to connect.
  */
 export function composerNotice(state: WorkspaceState, workspace: Workspace) {
+  if (state.composer === 'too-large' && state.tab !== 'new-session') {
+    return tooLargeNotice()
+  }
   const { choice } = workspace
   const agent = agents[choice.agent].name
   const starter = otherStarter(state, workspace)

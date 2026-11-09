@@ -23,14 +23,13 @@ import {
 } from './chat-snapshot'
 import { closeLocally, isArchived, showLocally } from './archive-view'
 import { applyEnvelopes } from './apply-events'
+import { attachFiles, removeFile, retryFile } from './attachment-actions'
 import { viewWriter, type ChatContext } from './context'
 import { hydrate, watchShownSession } from './history'
 import { loadChat } from './load'
 import { followSources, withSources, type ChatSources } from './sources'
 import {
-  attachFiles,
   interruptTurn,
-  removeAttachment,
   resumeWorkspace,
   retryTurn,
   sendDraft,
@@ -117,6 +116,8 @@ export class ChatController {
 
   readonly stop = (): void => {
     this.run += 1
+    for (const upload of this.context.uploads.values()) upload.abort()
+    this.context.uploads.clear()
     this.unwatch?.()
     this.unwatch = null
     this.unfollow?.()
@@ -152,6 +153,7 @@ export class ChatController {
     const api = createChatApi(this.options.client, target)
     const live = () => this.run === run
     let drafts = 0
+    let files = 0
     const context: ChatContext = {
       target,
       api,
@@ -166,6 +168,11 @@ export class ChatController {
         drafts += 1
         return `draft-${drafts}`
       },
+      newFileId: () => {
+        files += 1
+        return `file-${files}`
+      },
+      uploads: new Map(),
       saveView: viewWriter((view) => api.saveView(view)),
       live,
       owned: this.options.sources !== undefined,
@@ -232,8 +239,11 @@ export class ChatController {
     setDraftText(this.context, sessionId, text)
   readonly attachFiles = (sessionId: string, files: readonly File[]) =>
     this.write(() => attachFiles(this.context, sessionId, files))
-  readonly removeAttachment = (sessionId: string, attachmentId: string) =>
-    removeAttachment(this.context, sessionId, attachmentId)
+  /** Try again on a file whose upload failed. */
+  readonly retryFile = (sessionId: string, fileId: string) =>
+    this.write(() => retryFile(this.context, sessionId, fileId))
+  readonly removeFile = (sessionId: string, fileId: string) =>
+    removeFile(this.context, sessionId, fileId)
   readonly send = (sessionId: string) =>
     this.write(() => sendDraft(this.context, sessionId))
   readonly retry = (sessionId: string, messageId: string) =>

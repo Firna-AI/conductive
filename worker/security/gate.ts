@@ -11,12 +11,14 @@ import { verify } from './crypto'
 import { DESKTOP_ORIGIN, DESKTOP_SESSION_COOKIE } from './desktop-contract'
 import { trustedOrigin } from './desktop-origin'
 import { isPreviewLaunchPath } from './preview-launch-path'
+import { rawUploadLength, rawUploadRoute } from '../http/raw-upload-routes'
 
 export interface RequestContext {
   user: User
   sessionId: string
   org: Org | null
   body: Record<string, unknown> | null
+  rawUploadBytes?: number
 }
 
 function sessionCookie(request: Request): string {
@@ -89,6 +91,15 @@ export async function gate(
       throw new HttpError(404, 'org_not_found', 'The org is not available.')
   }
   if (org) await requireWritableOrgRequest(request, env.DB, org.id)
+  const raw = rawUploadRoute(request)
+  if (raw)
+    return {
+      user,
+      sessionId,
+      org,
+      body: null,
+      rawUploadBytes: rawUploadLength(request, raw.maxBytes),
+    }
   const body = ['GET', 'HEAD', 'OPTIONS'].includes(request.method)
     ? null
     : await readJsonObject(request)

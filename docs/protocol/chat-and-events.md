@@ -84,7 +84,7 @@ says.
 - A change to another model of the same agent stays in the session
   (decision 51).
 - A model of the other agent opens a new session with that agent, and the
-  draft moves there.
+  draft moves there with its files.
 - Reason: neither SDK can switch agents inside one session. A hand-over of
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
@@ -122,7 +122,8 @@ says.
   names the login of the starter until the send.
 - The composer names the member whose login its message runs on, such as
   "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
-- The composer attaches files to a message.
+- The composer attaches files to a message, as [Attachments](#attachments)
+  says.
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.
@@ -146,7 +147,8 @@ says.
 - While the login of the starter can be used, a message that the starter
   sends during a turn joins that turn. A message of another member joins it
   too while the starter shares the login. Such a message goes to the agent
-  at once, and the agent reads it at its next tool call.
+  at once, unless files must reach the cloud computer first, as
+  [Attachments](#attachments) says. The agent reads it at its next tool call.
 - In a turn without tool calls, the agent reads such a message when the
   turn ends.
 - A message that the workspace accepted stays in its session, also when the
@@ -186,6 +188,60 @@ says.
   agent for a title of three to five words. The chat does not show that
   request.
 - The workspace then takes the title as its name.
+
+## Attachments
+
+- Each file of a message can contain at most 25 MB, or 25,000,000 bytes
+  (decision 132).
+- The composer refuses a larger file before its upload, and names the
+  limit. The Worker refuses a larger file too, with HTTP 413 and the error
+  code `attachment_too_large`.
+- The composer shows each upload while it runs. A failed upload offers Try
+  again and Remove. Send waits while a file uploads, and while a failed
+  upload waits for Try again or Remove.
+- An upload works also before the cloud computer of its workspace exists,
+  and while that cloud computer starts or is stopped (decision 132).
+- The Worker stores each uploaded file in one R2 bucket of the app, outside
+  the cloud computer (decision 132).
+- Storage in the object of each workspace was rejected, because each file
+  must then go in chunks. Uploads only into a running cloud computer were
+  rejected, because a message to a new or stopped workspace could then not
+  carry files at once.
+- [Orgs and workspaces](access-and-security.md#orgs-and-workspaces) states
+  which messages can use an uploaded file.
+  [Attachment uploads](access-and-security.md#attachment-uploads) states
+  how the browser sends a file (decision 144).
+- When the turn of a message starts, the Worker copies each file of the
+  message into the cloud computer of the workspace (decision 132).
+- The agent gets a message only after each of its files is in the cloud
+  computer. This holds also for a message that joins a running turn.
+- While the files of a message copy, each later message of the same turn
+  waits. The agent then gets the messages of that turn in the order that
+  the workspace accepted them.
+- Stop and the turns of other sessions do not wait for a copy.
+- Reason: a later message can correct an earlier one. A rule that holds all
+  work of the workspace during a copy was rejected, because it would hold
+  Stop and the other sessions.
+- With the message, the agent gets the path, the name, and the media type
+  of each file. The copy holds the exact bytes of the upload.
+- A turn cannot start when a file of its message cannot reach the cloud
+  computer. That turn fails and names the cause. Try again copies the
+  files again.
+- A copy that fails for a message that joins a running turn fails that
+  turn in the same way. The workspace also stops the agent of that turn, as
+  [The agent runner](#the-agent-runner) says.
+- The chat shows the name and the size of each file of a sent message.
+- The app deletes the files of a workspace with the workspace, also in the
+  purge of a deleted org (decision 132).
+- A failed first start deletes no file of the first message. The files stay
+  with the accepted message in the failed workspace, as
+  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  says. Try again uses them in the same workspace.
+- The app deletes an unsent file 7 days after its upload (decision 132). A
+  file is unsent while no accepted message uses it.
+- When a send names a draft file that the app deleted, the composer shows
+  that file as a failed upload. Its Try again uploads the file again from
+  the device.
 
 ## What the chat shows
 
@@ -310,7 +366,12 @@ says.
   the runner comes before the agent starts.
 - The runner keeps a record of each accepted turn across a crash and a
   restart, until the workspace confirms the end of the turn. The workspace
-  sends no command for a turn after it stores the end of that turn.
+  sends no turn or message command for a turn after it stores the end of
+  that turn.
+- After a failed file copy ends a running turn, the workspace can still
+  send Stop for that turn, to cancel the agent. That turn still shows as
+  failed. Reason: the failure in [Attachments](#attachments) ends the turn
+  at once, with no new wait for the agent.
 - At a shutdown, the runner sends a stopped end for each accepted turn that
   has no end. After a restart, it does the same for each turn that it
   accepted before the restart. It starts no agent for such a turn.

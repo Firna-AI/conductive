@@ -8,9 +8,9 @@ import {
 export const composer = defineScreen({
   title: 'Composer',
   description:
-    'A message with two attached files. The paperclip uploads files, which show as chips above the text. One picker sets the model and the effort of the next message, such as "Opus 5.5 High". The line under the box names the agent login that the session uses.',
+    'A message with two uploaded files. The paperclip uploads files, which show as chips above the text, and Send takes the message with its files. The Attachments page shows an upload that runs or fails, a file over the size limit, and sent files. One picker sets the model and the effort of the next message, such as "Opus 5.5 High". The line under the box names the agent login that the session uses.',
   rationale:
-    'The picker names the model and shows the effort in a muted colour, without the names of the agents, so it stays short. The app offers the Claude and Codex models only for now. Each session has its own picker, as the user chose in decision 19. The sandbox keeps each file, and an image also goes to the model. Every composer uses the same controls, also the one of a new workspace.',
+    'The picker names the model and shows the effort in a muted colour, without the names of the agents, so it stays short. The app offers the Claude and Codex models only for now. Each session has its own picker, as the user chose in decision 19. The app stores each file until the turn starts, then copies it into the cloud computer, and an image also goes to the model. Every composer uses the same controls, also the one of a new workspace.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, composer: 'attachments' },

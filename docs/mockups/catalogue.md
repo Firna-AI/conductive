@@ -17,7 +17,7 @@ how a screen is built, and links to the other pages.
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | The GitHub sign-in, the GitHub App, the agent logins, and the default model   |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, its error, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, its error, files on the first message, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer, and Members       |
 | `app/chat`          | A finished turn, then running turns, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -25,6 +25,7 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
+| `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tools`         | The terminal, a port preview, no preview, and the desktop                     |
 | `app/panels`        | The right column, widened by the handle on its inner edge                     |

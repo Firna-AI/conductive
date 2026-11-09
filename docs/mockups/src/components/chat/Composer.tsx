@@ -23,7 +23,14 @@ export type ComposerState = {
    */
   startsSession?: boolean
   draft: string
+  /**
+   * The attached files. Send waits while a file uploads, and while a failed
+   * upload waits for Try again or Remove, so a message goes with all of its
+   * files.
+   */
   attachments: readonly Attachment[]
+  /** The screen that the attach button leads to, when the mockups draw it. */
+  attachTo?: string
   /** The model picker is open. */
   picker?: boolean
   /**
@@ -67,7 +74,8 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
  * steers the turn unless it starts a new linked session. Stop ends the
  * running turn. While the sandbox is not ready, also
  * during and after a failed first start, Send queues the message in the
- * workspace. A line under the box names whose agent login the session
+ * workspace. Send waits for the uploads of the files, whose chips show
+ * their state. A line under the box names whose agent login the session
  * uses.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
@@ -76,7 +84,9 @@ export function Composer(props: ComposerState & { lines?: number }) {
   const placeholder = steers
     ? 'Steer the agent while it works'
     : (props.placeholder ?? 'Message the agent')
-  const off = props.blocked === true
+  const uploads = props.attachments.some((file) => file.state !== undefined)
+  const off = props.blocked === true || uploads
+  const attach = <IconButton icon={Paperclip} label="Attach files" />
   return (
     <div className={styles.wrap}>
       <div className={styles.composer}>
@@ -96,7 +106,13 @@ export function Composer(props: ComposerState & { lines?: number }) {
           variant="seamless"
         />
         <div className={styles.bar}>
-          <IconButton icon={Paperclip} label="Attach files" />
+          {props.attachTo ? (
+            <ScreenLink asChild to={props.attachTo}>
+              {attach}
+            </ScreenLink>
+          ) : (
+            attach
+          )}
           <ModelPicker
             choice={props.choice}
             open={props.picker}

@@ -14,7 +14,7 @@ examples.
 ## How to set the inputs
 
 - Declare the bindings in `wrangler.jsonc`. It already holds `DB`,
-  `ASSETS`, and `WORKSPACES`.
+  `ASSETS`, `WORKSPACES`, and `CHAT_ATTACHMENTS`.
 - Set each public variable in the `vars` of `wrangler.jsonc`, or in the
   settings of the Worker in the Cloudflare dashboard.
 - `wrangler.jsonc` sets `keep_vars`. So each deploy keeps the variables
@@ -27,7 +27,7 @@ examples.
 - `wrangler.jsonc` turns on Workers Logs, which keeps each warning of the
   Worker and of its Durable Objects. It removes the query string of each
   request URL from the logs, because a query string can hold a sign-in
-  code or a preview credential.
+  code, a preview credential, or the name of an attached file.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
@@ -43,6 +43,7 @@ examples.
 | `DB` | D1 database | Every route that reads users, orgs, or workspaces | The production database. Apply the migrations with `npx wrangler d1 migrations apply DB --remote`. |
 | `ASSETS` | Static assets | The pages of the web app | The client build of `npm run build`. |
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
+| `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion | The bucket `conductive-chat-attachments`, as [The attachment bucket](#the-attachment-bucket) says. |
 
 ## Public variables
 
@@ -87,6 +88,34 @@ examples.
   encrypts the start logs, the credentials of each image source copy, and
   the terminal and preview credentials. It encrypts no Boat key. A new key cannot read the values
   that the old key encrypted.
+
+## The attachment bucket
+
+`CHAT_ATTACHMENTS` holds the files that users attach to chat messages, as
+[Attachments](protocol/chat-and-events.md#attachments) says. One bucket
+serves every org.
+
+- Create the private bucket once, before the first deploy that declares
+  the binding:
+  `npx wrangler r2 bucket create conductive-chat-attachments --location weur`.
+  The primary orchestrator does this at the next deployment.
+- The location hint puts the bucket in Western Europe, near the production
+  database and the workspace objects. A bucket keeps the location of its
+  first creation.
+- Without the bucket, `wrangler deploy` creates it with no location hint.
+  So create it first.
+- Keep public access off. Add no custom domain, no `r2.dev` address, and
+  no CORS rule. Only the Worker reads and writes the bucket, as
+  [Orgs and workspaces](protocol/access-and-security.md#orgs-and-workspaces)
+  says.
+- Add no lifecycle rule that deletes files by age. Such a rule would also
+  delete the files of sent messages, which stay until the app deletes their
+  workspace.
+- The copy of each file into a sandbox also needs the `file.write` action
+  on the Boat key, as [The app's Boat account](#the-apps-boat-account)
+  says.
+- Local development and the Worker tests use local R2 storage. They need no
+  Cloudflare account and no bucket.
 
 ## Models
 
@@ -207,3 +236,6 @@ No org has a Boat key, and the Worker stores no Boat key in D1.
   says.
 - [The app's Boat account](../worker/sandbox/README.md#the-apps-boat-account)
   says how to make the organization and the key.
+- The key must also allow the `file.write` action. The Worker uses it to
+  copy each attached file into a sandbox. The primary orchestrator
+  supplies that action at the next deployment.

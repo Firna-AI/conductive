@@ -13,6 +13,7 @@ import {
 } from '../components/workspaces/sections'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { firstMessageDrafts } from '../fixtures/attachments'
 import { lastBuild } from '../fixtures/computer'
 import { you } from '../fixtures/members'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
@@ -25,13 +26,19 @@ import styles from './NewWorkspaceScreen.module.css'
 export const newWorkspaceSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['result', 'org'],
+  required: ['result', 'org', 'files'],
   properties: {
     /**
      * The empty form, or a create request that failed, whose message stays
      * for Try again. A failed first start keeps its workspace instead.
      */
     result: { enum: ['form', 'error'] },
+    /**
+     * The files of the first message: none, a file that still uploads
+     * beside an uploaded one, or all uploaded. The app stores each upload
+     * until the turn starts, so no cloud computer is needed yet.
+     */
+    files: { enum: ['none', 'uploading', 'ready'] },
     /**
      * The org: in use, or suspended by the operator. A suspended org
      * refuses every create, so the page shows the refused bar of a
@@ -47,6 +54,7 @@ export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
 export const newWorkspaceForm: NewWorkspaceState = {
   result: 'form',
   org: 'active',
+  files: 'none',
 }
 
 /**
@@ -86,6 +94,7 @@ function Start() {
 
 /**
  * The empty chat and its composer. The first message creates the workspace.
+ * Its files upload before the workspace exists, and Send waits for them.
  * When the create request fails, the message stays in the composer, and
  * Try again sends it again. In a suspended org the refused bar takes the
  * place of the composer, and the chat invites no first message, because the
@@ -93,6 +102,9 @@ function Start() {
  */
 function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const suspended = props.state.org === 'suspended'
+  const { files } = props.state
+  // A first message with files leads to the screen of its queued files.
+  const sendTo = files === 'ready' ? paths.attachmentsQueued : paths.creating
   // A suspended org refuses each create, so no create of it failed.
   const failed = !suspended && props.state.result === 'error'
   const notice = failed ? (
@@ -107,12 +119,14 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   return (
     <ChatPane
       composer={{
-        attachments: [],
+        attachments: firstMessageDrafts[files],
+        attachTo:
+          files === 'none' && !failed ? paths.newWorkspaceFiles : undefined,
         choice: savedCarts.choice,
         draft: savedCartsMessage,
         placeholder: 'Describe the task',
         running: false,
-        sendTo: failed ? undefined : paths.creating,
+        sendTo: failed ? undefined : sendTo,
       }}
       empty={suspended ? undefined : <Start />}
       items={[]}
