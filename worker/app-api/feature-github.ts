@@ -27,10 +27,7 @@ const GITHUB_APP_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 export function githubInstallUrl(env: Pick<AppEnv, 'GITHUB_APP_SLUG'>): string {
   const configured = env.GITHUB_APP_SLUG?.trim()
   const valid = configured && GITHUB_APP_SLUG.test(configured)
-  if (configured && !valid)
-    warnWorker(
-      'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',
-    )
+  if (configured && !valid) warnWorker({ kind: 'github_app_slug_invalid' })
   const slug = valid ? configured : DEFAULT_GITHUB_APP_SLUG
   return `https://github.com/apps/${slug}/installations/new`
 }

@@ -8085,8 +8085,35 @@ most warnings live.
 Apply the wider fix of findings 1 and 6 of the review of the deploy fixes.
 Added on 8 November 2026.
 
-- [ ] Apply option D of `plans/follow-ups/typed-worker-warnings.md`, and
+- [x] Apply option D of `plans/follow-ups/typed-worker-warnings.md`, and
       delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15t`.
+
+Design calls by the implementor, checked by the orchestrator on 9 November
+2026:
+
+- Use a structured warning union. Each kind selects fixed text and typed
+  metadata. Select every logged field explicitly, including nested error
+  fields, because structural assignment can retain extra caller fields.
+- Check IDs against the canonical base64url format of `randomToken`.
+  Other values become `unknown` in logs only. Do not widen the check for
+  short fixture IDs or UUIDs that production does not use.
+- Use allowlists for HTTP codes, provider codes, and command states.
+  Unknown HTTP codes and command states become `unknown`. Unknown provider
+  codes become `null`. Keep numeric status and outcome fields.
+- Use the fixed kind `error` for generic errors. A custom constructor name
+  can hold private text, as an error message can.
+- Keep warning kinds and checked values in separate modules. This keeps
+  the logger short and gives callers the types and checks that they need.
+  Keep `CommandFailed` in its existing module, so its other caller needs
+  no import change.
+- Keep the current detached terminal path. Its warning and integration
+  regression moved to the lifecycle code. The named terminal service test
+  now checks the current command path directly, with markers in both
+  stdout and stderr. Keep the existing lifecycle failure and password-read
+  assertions.
+
+Evidence: `.context/boat-native-remote-workspaces/15t/orchestrator-checks.md`.
 
 ## Milestone 15u: One record of every cloud computer
 

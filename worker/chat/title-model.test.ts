@@ -49,7 +49,7 @@ it.each([
     await requestWorkspaceTitle('operator-model', answer, 'Fix the chat'),
   ).toBeNull()
   expect(warning).toHaveBeenCalledTimes(1)
-  expect(warning.mock.calls.flat().join(' ')).not.toContain('private message')
+  expect(JSON.stringify(warning.mock.calls)).not.toContain('private message')
 })
 
 it.each(['model', 'binding'] as const)(
