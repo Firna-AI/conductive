@@ -248,6 +248,9 @@ start, a stop before its success, and a resume whose workspace record comes
 first. It also checks a send that the Worker refuses during the first start.
 `components/FirstStart.dom.test.tsx` mounts the chat during the first start,
 presses Enter, and then sends after the start succeeds.
+`components/WorkFold.dom.test.tsx` reads the folds of ended turns from the
+rendered chat. `components/OpenFold.dom.test.tsx` opens a fold and a message
+line, and checks that each line keeps its place.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -300,6 +303,18 @@ check in the Mac app.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
   event from the mockups' `lostCopy.ts`.
+- `components/turn-work.ts` and `components/transcript-entries.ts`:
+  `foldedWork` finds the work of each ended turn that folds, as the
+  [transcript rules](transcript.md) say. `groupEntries` makes the entries
+  that the chat draws, and puts each insert at its place, also in a fold.
+- `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
+  of an ended turn with its steps, and the message line that grows to the
+  full text.
+- `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
+  `CallLine`, which the work fold shares.
+- `components/useFold.ts`: `useFold` opens and closes a fold on a click on
+  its line, and keeps the line in place through the `ChatScroll` of
+  `ChatPane`.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,

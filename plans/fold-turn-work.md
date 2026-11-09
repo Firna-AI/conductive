@@ -168,7 +168,8 @@ Rules:
 - While a turn runs, the chat does not change. Each message shows, and
   each run of tool calls folds on its own.
 - When a turn ends while the user reads its work higher up, the work
-  still folds. The chat keeps its distance from the bottom.
+  still folds. The browser keeps what the user reads in place, and the
+  chat adds no scroll for it.
 
 Code of the web app:
 
@@ -264,6 +265,26 @@ date, and the user can override it:
   - An insert between two agent messages ends the answer, as a card item
     ends it in the mockups. Reason: the answer is the agent messages
     directly before the last one.
+- The chat milestone made these calls on 9 November 2026, and I keep
+  them:
+  - A message line keeps its place too when it opens or closes, with the
+    same shared code as the folds. Reason: every line that opens behaves
+    the same, as for the runs of tool calls.
+  - The line of a fold takes the click first and cancels the toggle of
+    the browser. Reason: the line is measured before it moves, and the
+    state alone opens or closes the fold.
+  - The chat gives the folds a scroll callback through React context.
+    Reason: no fold finds the element of the chat by a selector.
+  - The lost line of the end of a turn never folds, because it is the row
+    where the turn ended.
+  - A code block takes the look of the code of an answer only while its
+    message line is open.
+  - Closing a fold at the bottom of the chat moves its line down, because
+    the chat cannot scroll past its end. Opening a fold always keeps its
+    line.
+  - The desktop picture of the agents on the marketing site keeps its new
+    crop, with empty space above the model picker. Reason: the picker is
+    the subject of the picture, and its label still holds.
 - `chat-and-events.md` keeps 263 lines after the split, and about 281
   after a merge with `main`. Its next split waits for
   `plans/follow-ups/protocol-docs-split.md`, which splits the long
@@ -354,39 +375,42 @@ Depends on: 2
 The chat of the web app folds the work of each ended turn, as the
 mockups show.
 
-- [ ] Add the fold entry to `src/chat/components/transcript-entries.ts`,
+- [x] Add the fold entry to `src/chat/components/transcript-entries.ts`,
       with the rules of the design.
-- [ ] Add the fold component. Share the call line and the icons of
+- [x] Add the fold component. Share the call line and the icons of
       `ToolGroup`, and use the mockup styles.
-- [ ] Draw the fold entry in `TranscriptView.tsx`.
-- [ ] Name the fold entry and the fold component under "Key code" in
+- [x] Draw the fold entry in `TranscriptView.tsx`.
+- [x] Name the fold entry and the fold component under "Key code" in
       `src/chat/README.md`.
-- [ ] Keep the line of each fold in place when the user opens or closes
+- [x] Keep the line of each fold in place when the user opens or closes
       it, as the design says: the work folds and the runs of tool calls.
-- [ ] Test the requirements of the fold. See each test fail first:
-  - [ ] A finished turn folds its work before its answer, and the line
+- [x] Test the requirements of the fold. See each test fail first:
+  - [x] A finished turn folds its work before its answer, and the line
         counts the calls and the messages.
-  - [ ] A running turn keeps each message and each run of tool calls as
+  - [x] A running turn keeps each message and each run of tool calls as
         today.
-  - [ ] A stopped turn keeps its last message and the calls that the
+  - [x] A stopped turn keeps its last message and the calls that the
         stop cut off in view.
-  - [ ] A member's message during the turn starts a new part, and each
+  - [x] A member's message during the turn starts a new part, and each
         part keeps its answer in view.
-  - [ ] Two agent messages at the end of a turn both stay in view.
-  - [ ] A card and a lost line of the turn fold at their place. A run
+  - [x] Two agent messages at the end of a turn both stay in view.
+  - [x] A card and a lost line of the turn fold at their place. A run
         of lost lines alone does not fold.
-  - [ ] The open fold lists its steps in order, and a message line opens
+  - [x] The open fold lists its steps in order, and a message line opens
         to its full text.
-  - [ ] The line of a fold keeps its place when the user opens it.
-- [ ] Update the tests whose expected text changes on purpose, such as
+  - [x] The line of a fold keeps its place when the user opens it.
+- [x] Update the tests whose expected text changes on purpose, such as
       `LostData.test.tsx` and `PendingCommands.test.tsx`. Name each one in
       the report.
-- [ ] Capture the pictures of the marketing site again with
+- [x] Capture the pictures of the marketing site again with
       `npm run marketing:pictures`. The hero picture and the desktop
       picture of the agents show the chat of a finished turn, whose work
       now folds.
-- [ ] Smoke-test a finished turn on the development page of the chat.
+- [x] Smoke-test a finished turn on the development page of the chat.
       Save the screenshots under `.context/fold-turn-work/`.
+
+Evidence: the screenshots, the smoke-test logs, the test breaks, the ten
+runs, and the checks in `.context/fold-turn-work/m3/`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
