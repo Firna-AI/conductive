@@ -128,4 +128,7 @@ commands that an agent runs on the Mac, and This Mac.
 
 [The marketing site](marketing-site.md) gives the home page and its
 pictures, the Terms, Privacy, and not-found pages, and the page before
-GitHub.
+GitHub. The pictures are captures of real screens, such as the workspace
+screen with its chat and composer. A change to a screen or a shared part
+that a picture shows needs a new capture, with the
+[capture steps](../../src/marketing/README.md#pictures).
