@@ -308,42 +308,9 @@ Later screens add the frame and connection sources that they need.
 
 ## GitHub tokens
 
-- The git credential helper asks the Worker for a fresh GitHub token for
-  each git operation, at `/v1/git/credential` on `api.conductive.build`.
-  It proves itself with the workspace token.
-- Reason: a GitHub App user token expires after 8 hours, and the secrets
-  of a sandbox change only at a resume.
-- The token is a GitHub App user token of the person who sent the current
-  turn, so pushes and pull requests show as that person (decision 50).
-  The helper gets it fresh for each call, and the sandbox never stores
-  it.
-- A user token reaches every repository where that person installed the
-  GitHub App and has access.
-- A build or a refresh copies each repository of the image with Git in the
-  build sandbox (decision 90). Each copy uses its own GitHub App
-  installation token, which can only read the contents of that one
-  repository.
-- The Worker gives the token only to the Git command of that copy. The
-  Worker and Git do not write it to command text, command history, a
-  remote URL, a Git config, a file, or a saved snapshot.
-- The Git command gets the token with a one-use build grant. The grant
-  works once, and only for its own build and repository.
-- The Worker revokes the token as soon as the Git command ends, also when
-  the command fails. The build goes on only after GitHub confirms the
-  revocation. The build starts no checkout, software step, install script,
-  snapshot, or other repository code before that.
-- Risk: a build sandbox starts from the last org image. A program with root
-  access that an earlier install left in that image can read the clone
-  token of a later copy. That token can only read its own repository, which
-  the image already holds. The Worker revokes it when the copy ends.
-- Reason: Git in the build sandbox copies a repository of any size, and the
-  Git data does not pass through the Worker. Larger uploads and stored
-  progress were rejected, because one repository or one Git response must
-  still fit in one Worker job. A Git proxy in the Worker and a Workflow
-  were rejected, because each puts a new service in the path of the Git
-  data.
-- A workspace sandbox never gets an installation token. Its Git gets
-  GitHub tokens only from the git credential helper.
+[GitHub tokens](github-tokens.md) states the rules for Git, the GitHub CLI,
+and repository copies in image builds and refreshes.
+The GitHub CLI works outside an agent turn with the workspace owner's account.
 
 ## Secrets that users enter
 

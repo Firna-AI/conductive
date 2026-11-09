@@ -26,6 +26,7 @@ gives the create, read, resume, and activity routes of a workspace to
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
   the current turn.
+- Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
 
