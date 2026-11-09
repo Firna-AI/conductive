@@ -615,7 +615,7 @@ temporary hiding of the Desktop panel. Keep these changes with the chips.
       the new draft-focus repair. Preserve tab moves and chat list watches.
 - [x] Check the auto-merged backend and release files for preservation.
 - [x] Regenerate the marketing pictures from the combined mockups.
-- [ ] Run affected checks, audit the merge, and run the complete gate on
+- [x] Run affected checks, audit the merge, and run the complete gate on
       the combined tree before delivery.
 
 ## Milestone 6d: Number search catalogue layout
@@ -646,7 +646,7 @@ Depends on: every other milestone
 - [x] Fix the checked Markdown-label defect with one chat tokenizer for
       sent messages and answers. Preserve existing code, bold, and editor
       text behaviour.
-- [ ] Run the complete gate after the review fix.
+- [x] Run the complete gate after the review fix.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
