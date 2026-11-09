@@ -9,7 +9,7 @@
 - **Source:** Implementation. **Category:** Product bug.
 - **Terms:**
   - **User bubble:** the grey box in the chat that shows the text of a message that a person sent, with its attached files below it.
-- **Background:** The composer can send a message with files and no text, such as one screenshot. `UserBubble` always draws the text box, and draws the files under it. The development page smoke test of 8 November 2026 showed such a message, in the screenshots `03-image-only-keeps-new-session.png` and `06-no-text-turn-keeps-lisbon.png` under `.context/workspace-title-from-first-message/dev-page/` of that workspace.
+- **Background:** The composer can send a message with files and no text, such as one screenshot. `UserBubble` always draws the text box, and draws the files under it. A smoke test of the development page on 8 November 2026 showed such a message: an empty grey box above one screenshot.
 - **Problem:** A message with no text shows an empty grey box above its files.
 - **Impact if no action:** The chat shows a small empty box for each message with only files. No mockup shows such a message.
 - **Root question:** How does the chat show a message that has files and no text?

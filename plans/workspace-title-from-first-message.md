@@ -998,8 +998,9 @@ Evidence: `.context/workspace-title-from-first-message/gate-5.log`.
       once, and report.
       Round 5 ran on `1cb4aa0`. Its one finding was removed by its check,
       because an existing native test covers it.
-- [ ] Merge `origin/main` into the branch with the `git-merge` skill, and
+- [x] Merge `origin/main` into the branch with the `git-merge` skill, and
       run the complete gate again.
+      Merge commit `d3593f4`. The gate passed on it: `gate-6.log`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
@@ -1008,7 +1009,7 @@ Evidence: `.context/workspace-title-from-first-message/gate-5.log`.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Turn on Workers AI for the Cloudflare account, set
+- [x] Moved to `plans/follow-ups/workspace-title-smoke-test.md`: turn on Workers AI for the Cloudflare account, set
       `CONDUCTIVE_TITLE_MODEL`, and deploy the Worker. Then create one
       workspace with Claude and one with Codex. Check that each takes a
       name from its first message within a few seconds.

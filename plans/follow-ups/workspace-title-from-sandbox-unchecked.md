@@ -18,7 +18,7 @@
   - **A.** Accept each name, as now. Effort: Small.
   - **B.** Refuse an empty name and a name over a limit, such as 100 characters, as an invalid runner event. The refusal marker and the repair request already exist for such events. Effort: Small.
   - **C.** Keep the old name for an empty name, and cut a long name to the limit, with a warning in the Worker log. The workspace still gets a name from a long title. Effort: Small.
-  - **D.** The Worker ignores each `workspace.title` from a sandbox, because the Worker now writes the titles itself: the user chose on 8 November 2026, with decision 184 C of the workspace title plan, that the Worker asks a Workers AI model for the title. No runner sends a title any more. This removes the runner title path of the Worker, its repair request of the kind `workspace.title`, and their tests, which are on `origin/main`, so it needs the user's approval. Effort: Medium.
+  - **D.** The Worker ignores each `workspace.title` from a sandbox, because the Worker now writes the titles itself: the user chose on 8 November 2026, that the Worker asks a Workers AI model for the title when it accepts the first message (decision 184 C). No runner sends a title any more. This removes the runner title path of the Worker, its repair request of the kind `workspace.title`, and their tests, which are on `origin/main`, so it needs the user's approval. Effort: Medium.
 - **Left out:** None.
 - **Wider fix:** D. It removes the case, while B and C only limit it.
 - **Previous examples:** None found.
