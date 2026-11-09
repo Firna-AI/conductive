@@ -1,0 +1,46 @@
+# Protocol docs
+
+The protocol docs hold the requirements of each feature. The
+[architecture doc](../architecture.md) describes the components that meet
+them, and this page lists each protocol doc and what it covers.
+
+- [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the
+  life of a workspace, and the number and the link of each workspace.
+- [Org image](../protocol/org-image.md): the org image, its builds and its
+  refreshes, and the first build of a new org.
+- [Workspace tools](../protocol/workspace-tools.md): the tools of a workspace.
+- [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
+  page or as a dialog, the create, the branch, and a failed first start.
+- [Repository folders](../protocol/repository-folders.md): the folder and the
+  shell variable of each repository in a sandbox.
+- [Chat and events](../protocol/chat-and-events.md): messages, what the chat
+  shows, and the events.
+- [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
+  their logins, the sessions, and the names of workspaces and sessions.
+- [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
+  that show workspace links in chat.
+- [Agent runner](../protocol/agent-runner.md): the connection of the runner,
+  its events and their limits, its turns, and the repair of lost workspace
+  updates.
+- [Access and security](../protocol/access-and-security.md): sign-in, the
+  gates, the secrets, and the isolation of sandboxes and previews.
+- [GitHub banner](../protocol/github-banner.md): the pull request bar and its
+  events.
+- [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
+  sandbox.
+- [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
+  roles, the first run, and the end of an org.
+- [Mac app](../protocol/desktop-app.md): the shell for macOS and its sign-in.
+- [Operator actions](../protocol/operator-actions.md): the operator, the
+  suspension of a user or an org, the lift of a suspension, and abuse
+  reports.
+- [Operator section](../protocol/operator-section.md): the pages of the
+  operator in the web app, their counts, and their searches.
+- [Command palette](../protocol/command-palette.md): the key and the search
+  that finds the workspaces, the actions, and the settings.
+- [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
+  what the palette shows while its workspace data loads or did not load,
+  and when a tab or a search has no row.
+- [Website docs](../protocol/website-docs.md): the public guides of the
+  marketing site, their addresses and navigation, and the rules for their
+  words.

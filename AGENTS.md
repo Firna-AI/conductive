@@ -134,6 +134,15 @@ deployment at `conductive.build`. It does not wait for CI, as
   `src/marketing/privacy.ts`. In the same change, update each sentence of
   the legal pages that restates the fact. A search for the old words is
   not enough, because a legal page can restate a fact in other words.
+- The public guides of the marketing site are docs too. Their Markdown
+  files go in `src/marketing/docs/`. A change that makes a guide wrong
+  updates that guide in the same change. When you change a fact in the
+  architecture doc or in a protocol doc, also read each public guide in
+  full. In the same change, update each guide sentence that restates the
+  fact. A search for the old words is not enough, because a guide can
+  restate a fact in other words.
+  [Website docs](docs/protocol/website-docs.md) gives the rules for the
+  words of a guide.
 
 ## Product
 

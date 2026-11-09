@@ -1,6 +1,6 @@
 # Public website docs
 
-Status: Active. On branch `calummoore/docs-section-brainstorm`, no pull request yet. The pull request that completes the work deletes this plan. Cal approved implementation of Milestone 1 on 2026-11-09. Milestone 1 is complete. Later milestones are not yet authorized.
+Status: Active. On branch `calummoore/docs-section-brainstorm`, no pull request yet. The pull request that completes the work deletes this plan. Cal approved implementation of Milestone 1 on 2026-11-09. Milestone 1 is complete. Cal approved all remaining milestones on 2026-11-09.
 
 Conductive has a public Astro website, but no product guides. Add guides
 written in Markdown at `conductive.build/docs`. Readers need no sign-in.
@@ -20,7 +20,7 @@ Contract owners:
 - [The provider](../docs/protocol/workspaces-and-sandboxes.md#the-provider).
 - The [marketing README](../src/marketing/README.md).
 - The [marketing mockups](../docs/mockups/marketing-site.md).
-- Milestone 2 adds the public docs protocol under `docs/protocol/`.
+- [Website docs](../docs/protocol/website-docs.md) owns the public guide requirements.
 
 ## Decision 1: Choose how the website builds its docs
 
@@ -83,14 +83,15 @@ These are agent calls dated 2026-11-09. They implement the selected approach.
   Author IDs in lowercase ASCII kebab-case, as the existing Worker file list requires.
 - Keep title, description, group, and order in front matter. Derive navigation and adjacent pages from those entries.
   This keeps one page list. Use metadata defaults instead of adding custom schema failures or build validation.
-  Use the ID for a missing title, an empty description, the first group, and last position for missing metadata.
+  Use the ID for a missing or empty title, an empty description, the first group, and last position for missing metadata.
 - Order groups as Start, Work, and Manage. Sort by group, then numeric order, then ASCII ID.
   This keeps navigation stable across builds. Overview, Get started, and Agent logins form Start.
   Workspaces through Pull requests form Work. The last four guides form Manage.
 - Use Astro's content rendering and generated heading IDs. Use those headings for the page contents links.
   Interpret heading links as option G. This avoids a second parser and custom self-link plugins.
+  Omit the contents when no level-two heading exists, so readers see no empty list.
 - Put the title in the layout. Begin the Markdown body at heading level two.
-  This gives each page one main heading and its own description.
+  This gives each page one main heading and its own description. The browser title names the guide and the product.
 - Use native `details` and `summary` for the phone docs menu.
   It works without script. Reuse the site's 760 px phone breakpoint and its colour schemes for visual consistency.
 - Use the sorted navigation for previous and next links, so all navigation has the same order.
@@ -190,21 +191,23 @@ The `ui implementor` creates the visual spec before any implementation.
 
 Evidence: `.context/website-docs/milestone-1/` holds `ui-report.md`, `parent-smoke/report.json`, and `link-check.md`.
 
-## Milestone 2: Requirements and maintenance docs
+## Milestone 2: Requirements and maintenance docs completed
 
 Depends on: 1
 
 The `docs implementor` records the selected public behaviour before implementation.
 
-- [ ] Add a public docs protocol under `docs/protocol/`.
+- [x] Add a public docs protocol under `docs/protocol/`.
       Record public paths, navigation, script-free access, naming, and content accuracy.
       Record B and the rejected Starlight alternative with their reason.
-- [ ] Link that protocol from the architecture doc and the root README.
+- [x] Link that protocol from the architecture doc and the root README.
       Describe public guides as a responsibility of the existing website.
-- [ ] Update the marketing README and mockup docs for the new pages and author workflow.
+- [x] Update the marketing README and mockup docs for the new pages and author workflow.
       Keep planned code entry points aligned as later milestones add them.
-- [ ] Keep the legal-page rule unchanged. Add separate public-guide maintenance guidance in `AGENTS.md` and the marketing README.
+- [x] Keep the legal-page rule unchanged. Add separate public-guide maintenance guidance in `AGENTS.md` and the marketing README.
       Read the Terms and Privacy pages in full when changing facts in the protocol or architecture.
+
+Evidence: `.context/website-docs/implementation/m2-docs-report.md` and `m2-markdown-check.md`.
 
 ## Milestone 3: Markdown collection and docs layout
 

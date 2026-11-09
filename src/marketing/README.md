@@ -66,63 +66,10 @@ assets binding.
 ## Pictures
 
 Each product picture is a still image of a real screen of the mockups.
-One list defines every picture:
-[`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts),
-beside the marketing mockup. The marketing mockup, the site, and the
-capture command all read it, so no copy of a picture can go stale. The
-list imports nothing, so the browser, the Worker, and Node can all import
-it. For each picture, it gives:
-
-- the key, such as `hero`, in the order of the home page
-- the label in each layout, which is the alt text on the site and the
-  label in the mockups
-- the screen of each layout: 1440 × 900 on desktop, or 390 × 800 on a
-  phone
-- the crop of each layout: the part of the screen that the picture shows,
-  in CSS px of the screen
-- the scale at which the page shows the crop in each layout
-- the frame: a window that becomes a phone in the phone layout, a quiet
-  excerpt, or a phone
-- the files: one file for each layout, or one file that both layouts share
-- the capture page and the file name of each capture
-
-`components/PictureFrame.astro` reads each picture from the list by its
-key and layout. `picture-urls.ts` reads the files with one glob keyed by
-the list. So the site keeps no label, size, or scale of its own.
-[`marketingPictures.tsx`](../../docs/mockups/src/screens/marketingPictures.tsx)
-chooses the screen and the state that each picture shows.
-
-Each picture has a file for each layout and each colour scheme, in
-`pictures/`, as `<picture>-<layout>-<scheme>.webp`. The phone picture
-shows the same phone screen in both layouts. So it has one file for each
-scheme, `phone-<scheme>.webp`, which both layouts share. That gives 13
-captures and 26 files, and each file keeps its name on each run.
-
 When a screen of the app or a picture of the list changes, capture the
-pictures again with `npm run marketing:pictures` from the repository root.
-The command needs Node 24, the packages from `npm install`, and Chrome
-available as `google-chrome`. It builds the current mockups and serves
-them on a free local port.
-
-Each picture has a capture page in the catalogue, at
-`marketing/pictures/<picture>`. Its desktop and mobile views show the
-crop of each layout at its own size, at scale 1 and without a frame, from
-the top left corner of the page. For each capture and each colour scheme,
-the command opens that view with the browser viewport at the size of the
-screen that the picture shows, from the list. So a size that follows the
-viewport, such as the height of a menu, is the same as in the app. The
-command then captures a rectangle of the size of the crop from the top
-left corner, and names the file from the list. So the command reads no
-markup of the mockups, changes no style, and does not depend on the order
-of the pictures on the page.
-
-The command captures at two device pixels for each CSS pixel of the
-screen. The site then shows each file at the scale of the list. The
-command freezes animations at the same phase on each run. It uses the
-direct development dependency `sharp` to write lossless WebP files in
-`pictures/`, so each pixel stays as the mockup draws it. The command stops
-its server and browser and removes its temporary files on success,
-failure, or interruption.
+pictures again with `npm run marketing:pictures` from the repository
+root. [Pictures](pictures.md) gives the picture list, the files, and the
+capture command.
 
 ## Legal pages
 
@@ -193,6 +140,24 @@ The footer and the Report abuse section use `abuseAddress` from
 `legal-text.ts`: `abuse@` and the product domain. Legal and privacy contact
 links use `legalAddress`: `legal@` and the product domain.
 No code or setup in this repository creates those mailboxes.
+
+## Public docs
+
+The public docs are guides to the product at `/docs`.
+[Website docs](../../docs/protocol/website-docs.md) states their
+requirements, and [The docs](../../docs/mockups/marketing-site.md#the-docs)
+of the marketing mockups is their visual spec. The site does not serve
+them yet: no route, docs layout, or guide file exists.
+[Writing the public guides](docs-authoring.md) gives the rules and the
+steps for their authors.
+
+The guides are docs too. A change that makes a guide wrong updates that
+guide in the same change. When you change a fact in the architecture doc
+or in a protocol doc, also read each public guide in full. In the same
+change, update each guide sentence that restates the fact. A search for
+the old words is not enough, because a guide can restate a fact in other
+words. This rule is separate from the rule for the legal pages above, and
+both apply.
 
 ## Development
 

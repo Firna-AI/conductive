@@ -5,8 +5,8 @@ task with its own branch and its own cloud computer, a Boat sandbox.
 Agents powered by Claude and Codex work only in the sandbox. The user
 follows them in the browser or in the Mac app, which shows the web app.
 This doc describes the components, their responsibilities, and the
-boundaries between them. The [protocol docs](#protocol-docs) hold the
-requirements of each feature.
+boundaries between them. The [protocol docs](architecture/protocol-docs.md)
+hold the requirements of each feature.
 
 ## Terms
 
@@ -55,8 +55,11 @@ requirements of each feature.
 
 ### Marketing site
 
-- A few static pages at the root of `conductive.build`, with the Terms and
-  Privacy pages. Visitors see them without a sign-in.
+- Static pages at the root of `conductive.build`, with the public docs and
+  the Terms and Privacy pages. Visitors see them without a sign-in.
+- The public docs are guides to the product, at `/docs`. The team writes
+  them in Markdown, and the site builds them with a docs layout of its own.
+  [Website docs](protocol/website-docs.md) states their requirements.
 - Astro builds these pages ahead of time. The Worker serves the built files
   on `conductive.build`. It fills in the values of each request, such as
   the app address in the sign-in links and the year in the footer.
@@ -164,7 +167,7 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
 
 | Hostname                | What it serves                                                              |
 | ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms and Privacy pages                        |
+| `conductive.build`      | The marketing site, with the public docs and the Terms and Privacy pages    |
 | `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
 | `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
 | `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
@@ -223,40 +226,5 @@ the merge.
 
 ## Protocol docs
 
-- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the
-  life of a workspace, and the number and the link of each workspace.
-- [Org image](protocol/org-image.md): the org image, its builds and its
-  refreshes, and the first build of a new org.
-- [Workspace tools](protocol/workspace-tools.md): the tools of a workspace.
-- [Create a workspace](protocol/create-a-workspace.md): New workspace as a
-  page or as a dialog, the create, the branch, and a failed first start.
-- [Repository folders](protocol/repository-folders.md): the folder and the
-  shell variable of each repository in a sandbox.
-- [Chat and events](protocol/chat-and-events.md): messages, what the chat
-  shows, and the events.
-- [Agents and sessions](protocol/agents-and-sessions.md): the agents and
-  their logins, the sessions, and the names of workspaces and sessions.
-- [Workspace links](protocol/workspace-links.md): Copy link, and the chips
-  that show workspace links in chat.
-- [Agent runner](protocol/agent-runner.md): the connection of the runner,
-  its events and their limits, its turns, and the repair of lost workspace
-  updates.
-- [Access and security](protocol/access-and-security.md): sign-in, the
-  gates, the secrets, and the isolation of sandboxes and previews.
-- [GitHub banner](protocol/github-banner.md): the pull request bar and its
-  events.
-- [Agent tools](protocol/agent-tools.md): the tools that agents use in a
-  sandbox.
-- [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
-  roles, the first run, and the end of an org.
-- [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
-- [Operator actions](protocol/operator-actions.md): the operator, the
-  suspension of a user or an org, the lift of a suspension, and abuse
-  reports.
-- [Operator section](protocol/operator-section.md): the pages of the
-  operator in the web app, their counts, and their searches.
-- [Command palette](protocol/command-palette.md): the key and the search
-  that finds the workspaces, the actions, and the settings.
-- [Command palette: empty and unavailable states](protocol/command-palette-states.md):
-  what the palette shows while its workspace data loads or did not load,
-  and when a tab or a search has no row.
+[Protocol docs](architecture/protocol-docs.md) lists each protocol doc
+and what it covers.

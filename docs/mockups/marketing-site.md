@@ -90,6 +90,8 @@ The docs pages draw the layout of the public guides of the site, at
 mockups draw two pages: the overview and the Get started guide. Their
 words are an example, not the final guides. [The catalogue](catalogue.md)
 gives their paths and their views.
+[Website docs](../protocol/website-docs.md) states the requirements of the
+guides.
 
 - `DocsScreen` in `src/screens/DocsScreen.tsx` draws a page of the docs in
   `SitePage`, with the header and the footer of the site. It sets the
