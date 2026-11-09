@@ -16,15 +16,14 @@ address always gives the newest DMG.
 
 This change gives each DMG a fixed name, adds a Mac app section to the
 home page, and links the DMG of each chip. It also adds the data of Mac
-commands to the Privacy page. It does not cover builds for other systems.
+commands to the Privacy page, and the Mac app and its commands to the
+Terms. It does not cover builds for other systems.
 It also leaves three things to follow-up items:
 
 - [a link to the Mac app in the web app](follow-ups/mac-app-link-in-web-app.md)
 - [old copies that call a changed Worker API](follow-ups/old-mac-app-copies-and-api-changes.md)
 - [copies that run from a read-only volume](follow-ups/read-only-copies-never-update.md),
   for which the user chose option D on 9 November 2026
-- [the Mac app in the Terms](follow-ups/terms-name-the-mac-app.md), which
-  waits for the user
 
 Contract owners:
 
@@ -82,6 +81,27 @@ updates answered it: the app offers Restart now only after Squirrel.Mac
 accepts the update, and the user chose option D of
 [the item for read-only copies](follow-ups/read-only-copies-never-update.md)
 as a follow-up.
+
+### 3. What the Terms say about the Mac app
+
+- **Chosen by the user on 9 November 2026:** B.
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation, from Milestone 6.
+- **Category:** Docs or spec.
+- **Location:** the lead, the section "The service", and a new section of `src/marketing/terms.ts`, and `TERMS_VERSION` in `src/shared/terms.ts`.
+- **Background:** Since pull request #97, the Terms are final legal text. They covered the product domain and the app domain, and they called the product "a coding tool in the browser". Each sign-in accepts the current revision of the Terms, and a new revision applies at each user's next sign-in.
+- **Problem:** The Terms named neither the Mac app nor the commands that it runs on a user's Mac with the user's permission.
+- **Impact if no action:** A user of the Mac app can read the Terms as covering only the browser, and the Terms do not say who answers for a command that the user allows.
+- **Root question:** What do the Terms say about the Mac app and the commands that it runs on a user's Mac?
+- **Options:**
+  - **A.** Name the Mac app in the lead and in "The service", and change the revision. Effort: Small.
+  - **B.** Do A, and add a clause: the user decides which commands run on their Mac, and answers for what they allow. Effort: Small.
+  - **C.** Change nothing. Effort: Small.
+- **Left out:** A visible draft field on the live page, because the Terms are final.
+- **Wider fix:** None. The rule of `AGENTS.md` already sends each changed protocol fact to the legal pages.
+- **Previous examples:** Pull request #110 changed the Terms and the revision for the GitHub CLI.
+- **Recommendation:** B. A command that runs on the user's own computer is the main new risk of the Mac app.
+- **Action:** the user chose B on 9 November 2026. Milestone 8 applies it.
 
 ## Design calls
 
@@ -278,7 +298,7 @@ Depends on: 2
 Since pull request #97, the Terms and Privacy pages are final legal text,
 not drafts. Agent call on 9 November 2026: this milestone keeps the
 factual Privacy additions, and it leaves the Terms to the user, in
-[the item for the Terms](follow-ups/terms-name-the-mac-app.md). Reason: a
+[the item for the Terms](https://github.com/Firna-AI/remote-code/blob/49856b63d5d22e77de40e5c627bc2f7db66203e3/plans/follow-ups/terms-name-the-mac-app.md). Reason: a
 change of the Terms changes the contract with each user.
 
 - [x] Read both legal pages in full, as the rule of `AGENTS.md` says,
@@ -294,7 +314,7 @@ change of the Terms changes the contract with each user.
 
 ## Milestone 7: Second pull request
 
-Depends on: 4, 5, 6
+Depends on: 4, 5, 6, 8
 
 - [ ] Merge `main` into the branch, as the `git-merge` skill says.
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
@@ -307,11 +327,30 @@ Depends on: 4, 5, 6
 - [x] Open the second pull request as a draft, stacked on the first. It
       keeps this plan until Milestone 4 ends. It is
       [PR #130](https://github.com/Firna-AI/remote-code/pull/130).
+- [ ] When the merge comes on a later day than 9 November 2026, change the
+      effective date of the Terms and of the Privacy page, and the date
+      in `TERMS_VERSION`, to that day.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Mark the second pull request ready. Its description gives the decisions
       and the design calls of this plan with their dates, a permalink to
       this plan, and the follow-up items that the change adds.
+
+## Milestone 8: The Terms and the Mac app
+
+Depends on: 6
+
+Apply option B of decision 3. Added on 9 November 2026.
+
+- [x] Name the Mac app in the lead and in "The service" of
+      `src/marketing/terms.ts`, and add the section for commands on the
+      user's Mac.
+- [x] Change `TERMS_VERSION` to `2026-11-09-mac-app`, and update the tests
+      that pin it.
+- [x] Delete `plans/follow-ups/terms-name-the-mac-app.md` in the same
+      commit.
+- [ ] Run the targeted tests and the complete gate, commit, push, and
+      review the change with the `implementation-review` skill.
 
 ## Post-merge follow-up (non-blocking)
 
