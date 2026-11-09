@@ -582,7 +582,7 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Integrate the latest `origin/main`, check the affected areas, and
+- [x] Integrate the latest `origin/main`, check the affected areas, and
       review the combined result in a fresh read-only pass.
   - [x] Split the merged site test setup by responsibility to keep the
         test module within 300 lines, with every assertion preserved.
@@ -594,6 +594,7 @@ Depends on: every other milestone
 
 Evidence: `.context/waitlist-switch/full-gate.log` and
 `.context/waitlist-switch/root-visual-check.md`.
+Review evidence: `.context/reviews/calummoore/waitlist-global-toggle-brainstorm/round-2-review.md`.
 Integration evidence: `.context/waitlist-switch/reports/final-main-docs.md`,
 `.context/waitlist-switch/final-main-targeted.json`, and
 `.context/waitlist-switch/reports/final-site-test-split.md`.
