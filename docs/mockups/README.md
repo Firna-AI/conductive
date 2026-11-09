@@ -53,7 +53,8 @@ share.
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages, the entries that moved,
-and the child pages of `app/banner` and `app/chat`.
+the child pages of `app/account`, `app/orgs/suspended`, `app/banner`, and
+`app/chat`, and the New workspace dialog.
 
 ## Folder layout
 

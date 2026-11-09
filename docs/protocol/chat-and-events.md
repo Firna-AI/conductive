@@ -174,11 +174,13 @@ says.
   A name for the own login was rejected, because it tells the user nothing
   new.
 - The composer attaches files to a message.
+- [The send key](create-a-workspace.md#the-send-key) gives the key that
+  sends a message from the composer (decision 143).
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.
 - The first message of a new workspace creates the workspace, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  [Create a workspace](create-a-workspace.md)
   says. The app accepts that message before the sandbox is ready
   (decision 14).
 - The app also accepts a later message while the sandbox is not ready
@@ -190,7 +192,7 @@ says.
 - A message that waits for the sandbox shows that it waits. A queue in the
   browser was rejected, because a closed tab would lose the message.
 - Reason: a failed first start keeps its workspace and its queued messages,
-  as [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  as [Create a workspace](create-a-workspace.md#a-failed-first-start)
   says. So members can add work at once, and an accepted message survives
   a reload of the tab. A hold of later messages in the composer until the
   first start succeeds was rejected for these reasons.

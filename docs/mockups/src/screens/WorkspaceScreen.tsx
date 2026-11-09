@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
@@ -48,11 +49,14 @@ const widenedRight = 560
  * request, the file lists, and the tools. Desktop shows them side by side; a
  * phone shows one at a time, with tabs to switch. In a suspended org the
  * chat history stays, and nothing in the workspace can change: no message,
- * no new session, no rename, no owner change, and no Archive.
+ * no new session, no rename, no owner change, and no Archive. `overlay`
+ * lies over the workspace in place of the overlay of its state, such as a
+ * dialog that another screen opens over it.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
   viewport: Viewport
+  overlay?: ReactNode
 }) {
   const { viewport } = props
   const state = drawnState(props.state)
@@ -116,7 +120,7 @@ export function WorkspaceScreen(props: {
       workspace={workspace}
     />
   )
-  const overlay = workspaceOverlay(state, workspace, viewport)
+  const overlay = props.overlay ?? workspaceOverlay(state, workspace, viewport)
   const historyOpen = state.overlay === 'history'
   const tabs = tabsFor(state, workspace).filter(
     (tab) => !archived || tab.kind === 'session',

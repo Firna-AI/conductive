@@ -1,82 +1,71 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
+import { FolderGit2, Sparkles } from 'lucide-react'
 import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/screens/NewWorkspaceScreen.module.css'
-import { draftReady } from '../../app/new-workspace-model'
 import { currentBuild } from '../../app/org-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { whenOf, type When } from '../../app/time'
 import type { OrgSummary } from '../../shared/orgs'
-import type { Repository } from '../../shared/org-settings'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { Page } from '../layout/Page'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
-import { MenuButton } from '../ui/Menu'
 import { useViewport } from '../ui/viewport'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
 import { Composer } from './Composer'
-import { CreateFailed, useBlockingNotice } from './notices'
+import { useShownForm } from './NewWorkspaceHost'
+import { repositoriesFirst } from './notices'
+import { RepositoryMenu } from './parts'
+import {
+  useNewWorkspaceForm,
+  type NewWorkspaceForm,
+} from './useNewWorkspaceForm'
 
 /** "built 8 hours ago", "built yesterday", or "built on 3 Nov". */
 function builtWhen(when: When): string {
   return when.kind === 'date' ? `on ${when.text}` : when.text
 }
 
-/** The start of the empty chat, with the repository of the new workspace. */
+/**
+ * The start of the empty chat, with the repository of the new workspace. An
+ * org without chosen repositories asks for them first: an admin gets Choose
+ * repositories, and a member reads that an admin chooses them. It asks only
+ * after the repositories load, as the dialog does.
+ */
 function Start(props: {
   org: OrgSummary
-  repositories: readonly Repository[]
-  repositoryId: string | undefined
+  form: NewWorkspaceForm
   choose: (id: string) => void
 }) {
-  const { org } = props
+  const { org, form } = props
   const app = useApp()
   const go = useGo()
   const builds = valueOf(useStore(useOrgModel(org.id).builds))
   const build = builds ? currentBuild(builds) : undefined
-  const chosen = props.repositories.find(
-    (item) => item.id === props.repositoryId,
-  )
+  const chosen = form.repository
+  const unchosen = form.repositories?.length === 0
   const { now, timeZone } = app.services
   const builtAt = build ? (build.completedAt ?? build.startedAt) : null
+  const body = chosen
+    ? 'Your first message creates it, on a new branch of the repository.'
+    : unchosen
+      ? `${repositoriesFirst(org)}.`
+      : null
   return (
     <div className={styles.start}>
       <Sparkles aria-hidden className={styles.icon} size={26} />
       <h2 className={styles.title}>Start a workspace</h2>
-      <p className={styles.body}>
-        {chosen
-          ? 'Your first message creates it, on a new branch of the repository.'
-          : `Choose the repositories of ${org.name} first.`}
-      </p>
+      {body === null ? null : <p className={styles.body}>{body}</p>}
       {chosen ? (
-        <MenuButton
-          entries={props.repositories.map((item) => ({
-            kind: 'item',
-            label: item.fullName,
-            checked: item.id === chosen.id,
-            onSelect: () => props.choose(item.id),
-          }))}
-          label="Repository"
-          placement="below-start"
-          trigger={({ open, toggle }) => (
-            <ActionButton
-              accessibilityLabel={`Repository: ${chosen.fullName}`}
-              expanded={open}
-              icon={FolderGit2}
-              menu
-              onPress={toggle}
-              trailing={
-                <ChevronDown aria-hidden className={styles.chevron} size={13} />
-              }
-            >
-              {chosen.fullName}
-            </ActionButton>
-          )}
+        <RepositoryMenu
+          chevron={styles.chevron}
+          choose={props.choose}
+          chosen={chosen}
+          repositories={form.repositories ?? []}
         />
-      ) : org.role === 'admin' ? (
+      ) : unchosen && org.role === 'admin' ? (
         <ActionButton
           icon={FolderGit2}
           onPress={() => go(routes.settings(org.id, 'repositories'))}
@@ -98,49 +87,26 @@ function Start(props: {
  * New workspace: an empty chat with the repository, and the composer with
  * its files and its model. The first message creates the workspace, and the
  * app names it and its branch. A create request that fails keeps the
- * message in the form of the section, with Try again. Once the server
- * takes the message, the workspace exists, also when its first start
- * fails. A suspended org refuses each create, so its page shows the
- * refused bar in place of the composer, and the empty chat invites no first
- * message.
+ * message in the form of the section, which the dialog shares, with Try
+ * again. Once the server takes the message, the workspace exists, also
+ * when its first start fails. A suspended org refuses each create, so its
+ * page shows the refused bar in place of the composer, and the empty chat
+ * invites no first message.
  */
 export function NewWorkspaceScreen(props: {
   org: OrgSummary
   sectionId: string | null
 }) {
   const { org } = props
-  const app = useApp()
   const go = useGo()
   const orgModel = useOrgModel(org.id)
   const [model] = useState(() => orgModel.newWorkspace(props.sectionId))
-  const account = useStore(app.account.account)
-  const models = useStore(app.models)
-  const repositories = valueOf(useStore(orgModel.repositories))
+  const form = useNewWorkspaceForm(org, model, go)
   const sections = valueOf(useStore(orgModel.sections))
-  const draft = useStore(model.draft)
-  const create = useStore(model.create)
   const phone = useViewport() === 'phone'
   const { suspended } = useOrgAccess(org)
-  useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
-  const chosen = (repositories ?? []).filter((item) => item.selected)
-  const repositoryId = draft.repositoryId ?? chosen[0]?.id
-  const choice = draft.choice ?? account?.defaultChoice
-  const notice = useBlockingNotice(choice, models)
-  // One readiness for Send and Try again: the text and the files of the
-  // draft, the agent login of the notice, the repository, and the model.
-  const ready =
-    notice === null &&
-    repositoryId !== undefined &&
-    choice !== undefined &&
-    draftReady(draft)
-      ? { repositoryId, choice }
-      : null
-  const send = async () => {
-    if (!ready) return
-    await model.send(ready, (created) =>
-      go(routes.workspace(org.id, created.workspace.id)),
-    )
-  }
+  useEffect(() => orgModel.watch('builds'), [orgModel])
+  useShownForm()
   const section = sections?.find((item) => item.id === props.sectionId)
   return (
     <Page
@@ -157,9 +123,8 @@ export function NewWorkspaceScreen(props: {
           {suspended ? null : (
             <Start
               choose={(id) => model.setRepository(id)}
+              form={form}
               org={org}
-              repositories={chosen}
-              repositoryId={repositoryId}
             />
           )}
         </div>
@@ -168,20 +133,14 @@ export function NewWorkspaceScreen(props: {
             <RefusedBar reason={orgRefusal.reason} />
           ) : (
             <>
-              {create.state === 'failed' ? (
-                <CreateFailed
-                  error={create.error}
-                  ready={ready !== null}
-                  retry={() => void send()}
-                />
-              ) : null}
-              {notice}
+              {form.failure}
+              {form.notice}
               <Composer
-                choice={choice}
+                choice={form.choice}
                 model={model}
-                models={models}
-                ready={ready !== null}
-                send={() => void send()}
+                models={form.models}
+                ready={form.ready}
+                send={form.send}
               />
             </>
           )}
