@@ -594,6 +594,12 @@ more approaches of each call.
   and document-split work can use separate checkouts with disjoint file
   scopes. The runner cutover follows the Worker contract. The workspace
   ledger is `.context/model-gateway/workspaces.md`.
+- **D33. Documentation homes, 9 November 2026.** The access doc defines
+  newer and older runners and owns the sandbox credential risks and the
+  provider confirmations. The gateway page links to those facts. The
+  existing runner-auth gate protects delivery of either credential kind.
+  Reason: one home for each fact, with the current access rules applied
+  to the credential that replaces the login.
 
 ## Milestone 1: Documentation and protocol
 
@@ -775,25 +781,27 @@ OpenAI login kinds. Decision 10 B removes the own-endpoint dependency.
       The sync at `819f4605` preserved the gateway rules in the extracted
       `docs/protocol/agent-runner.md`. Audit:
       `.context/model-gateway/integration/main-sync-audit.log`.
-- [ ] `docs/protocol/access-and-security.md`, "Agent logins in a sandbox":
+- [x] `docs/protocol/access-and-security.md`, "Agent logins in a sandbox":
       a cloud computer with a newer runner holds a turn token and no login.
       Remove the rejection of a login proxy (decision 120). State what
       sandbox code can do with a turn token during a turn. State that a
       cloud computer with an older runner keeps the old risk and the rule
       against inheritance (decision 2 A). Name the repository settings
       path of D10 in that risk.
-- [ ] Same doc, "Agent logins": Anthropic confirmed the gateway for
+- [x] Same doc, "Agent logins": Anthropic confirmed the gateway for
       subscription tokens on 9 November 2026 (decision 1). OpenAI
       confirmed the gateway for OpenAI keys on the same day.
-- [ ] Same doc: the risk of decision 124 gives turn tokens of later turns
+- [x] Same doc: the risk of decision 124 gives turn tokens of later turns
       on a newer runner, and real logins on an older runner.
-- [ ] Confirm that `docs/protocol/model-gateway.md` states the current
+- [x] Confirm that `docs/protocol/model-gateway.md` states the current
       Anthropic and OpenAI upstreams. The own-endpoint protocol work
       moves with that feature to its follow-up.
-- [ ] `docs/architecture.md`: "Sandbox software", the chat flow,
+- [x] `docs/architecture.md`: "Sandbox software", the chat flow,
       "External services", "Trust boundaries", and the
       `api.conductive.build` row of the hostname table.
-- [ ] Check each relative link of the changed Markdown files.
+      The chat flow is on its flows page, `docs/architecture/flows.md`.
+- [x] Check each relative link of the changed Markdown files.
+      Report: `.context/model-gateway/reports/m5-docs.md`.
 
 ## Milestone 6: Runner protocol version 2 in the Worker
 

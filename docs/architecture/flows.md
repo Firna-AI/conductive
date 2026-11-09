@@ -18,10 +18,17 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 ## Chat
 
 1. A tab sends a message to the Worker. The Durable Object forwards it to
-   the agent runner, with the agent login of the starter of its session.
-2. The runner gives it to the agent through the SDK. It numbers each agent
-   event and sends it to the Durable Object.
-3. The Durable Object stores each event, confirms it to the runner, and
+   the agent runner, with the turn token of its turn. A runner of protocol
+   version 1 gets the agent login of the starter of the session in place
+   of the token.
+2. The runner gives the message to the agent through the SDK. It numbers
+   each agent event and sends it to the Durable Object.
+3. The agent sends each model request to the model gateway of the Worker,
+   with the turn token. The gateway checks the token with the Durable
+   Object, adds the agent login of the starter, and streams the answer of
+   Anthropic or OpenAI back. With a runner of version 1, the agent sends
+   its model requests to the provider itself.
+4. The Durable Object stores each event, confirms it to the runner, and
    pushes it to every open tab of the workspace.
 
 ## Terminal, previews, and desktop

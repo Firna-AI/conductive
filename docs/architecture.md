@@ -95,6 +95,11 @@ requirements of each feature.
 - It holds the GitHub App key, the Boat key, the key that signs the session
   cookies, and the key that encrypts the stored secrets. The browser never
   holds them.
+- It runs the model gateway. The gateway takes the model requests of the
+  agent programs in a sandbox, with the
+  [turn token](protocol/model-gateway.md#terms) of their turn. It adds the
+  agent login of the turn, and forwards each request to Anthropic or
+  OpenAI. [Model gateway](protocol/model-gateway.md) states its rules.
 - It reaches Boat through one provider adapter, so that a later change can
   add another provider. It calls only a fixed list of Boat routes.
 - It runs one gate for each hostname before every route and every
@@ -114,6 +119,9 @@ requirements of each feature.
   Boat's machines.
 - It holds the open tabs, the connection of the agent runner, and the
   messages that wait for the sandbox.
+- It gives each turn its turn token. For each model request, it tells the
+  model gateway whether the token still works and which login the turn
+  uses.
 - It also holds the start steps, the stop timer, and the banner state.
 - Its storage keeps the chat history, so a stopped or archived workspace
   still shows its chat.
@@ -145,15 +153,27 @@ Every org image holds the app's own sandbox software:
 
 The agent runner runs Claude through the Claude Agent SDK, with the agent
 program that the SDK bundles at its own version. A pinned version guards
-against a change in how the agent program reads logins. The runner runs
-Codex through the Codex SDK or the Codex App Server (decision 36).
+against a change in how the agent program reads its credential and its
+model address. The runner runs Codex through the Codex SDK or the Codex
+App Server (decision 36).
+
+A runner of protocol version 2 or later makes both agent programs send
+their model requests to the [model gateway](protocol/model-gateway.md). It
+gives each agent program the turn token of its turn, and no agent login. A
+runner of protocol version 1 gives the agent programs the agent login
+itself. Each sandbox keeps the runner of the org image that it starts
+from.
 
 ### External services
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
-  Claude or OpenAI account of the starter of its session.
+  Claude or OpenAI account of the starter of its session. With a runner of
+  protocol version 2 or later, the model requests of a turn reach them
+  through the model gateway of the Worker. The gateway keeps no copy of a
+  request or an answer. With a runner of version 1, the agent programs
+  send their model requests from the sandbox to the provider.
 - **Workers AI:** the Cloudflare model service writes the title of each new
   workspace from its first message. Its use bills to the Cloudflare account
   of the app (decision 184).
@@ -162,12 +182,12 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
 
 ## Hostnames
 
-| Hostname                | What it serves                                                              |
-| ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms and Privacy pages                        |
-| `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
-| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
-| `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
+| Hostname                | What it serves                                                                                 |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| `conductive.build`      | The marketing site, with the Terms and Privacy pages                                           |
+| `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                                       |
+| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, the credential helper, and the model gateway |
+| `*.conductive.page`     | One random hostname for each open port preview, one level deep                                 |
 
 `api.conductive.build` is the hostname for machines. Each of its routes has
 a path under `/v1/` (decision 102). The preview domain, `conductive.page`,
@@ -209,8 +229,16 @@ GitHub events, and stops.
   only on the preview domain.
 - A sandbox gets none of the secrets of the app's Boat account. At a
   start, it gets only the secrets of its workspace and its org.
-- During a turn, the sandbox also holds the agent login of the starter of
-  its session. The members of one org can reach that login, as
+- For a sandbox with a runner of protocol version 2 or later, the model
+  gateway is the boundary between the sandbox and the model providers.
+  During a turn, such a sandbox holds a turn token, not an agent login.
+  The token spends the login of the starter of its session only through
+  the gateway, and only while the turn runs. The agent logins stay in the
+  Worker.
+- During a turn, a sandbox with a runner of protocol version 1 holds the
+  agent login of the starter itself.
+- The members of one org can reach the turn token or the login in a
+  sandbox, as
   [Access and security](protocol/access-and-security.md#agent-logins-in-a-sandbox)
   says.
 

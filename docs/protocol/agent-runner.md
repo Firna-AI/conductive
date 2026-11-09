@@ -6,7 +6,8 @@ runner, its events and their limits, its turns, and the repair of lost
 workspace updates. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A gateway decision number names a decision of the change that adds
+the [model gateway](model-gateway.md), as that doc says.
 
 ## The agent runner
 

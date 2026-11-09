@@ -27,10 +27,15 @@ while the change is open. Its pull request keeps them after the merge.
   later holds no agent login (decision 120).
 - Its agent programs send each model request to the gateway, with the
   turn token of their turn.
+- A settings file in the repository, such as `.claude/settings.json`,
+  cannot send these requests to another address. Reason: such a request
+  gives the turn token to that address.
 - The gateway adds the agent login of the turn, and sends the request on
   to the upstream.
 - A runner of protocol version 1 gets the agent login itself with each
-  turn (gateway decision 2).
+  turn, as
+  [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
+  says (gateway decision 2).
   [The agent runner](agent-runner.md#the-agent-runner) states which
   runner versions a workspace accepts.
 - An HTTPS proxy on a new server was rejected. Reason: it is one more
@@ -98,8 +103,8 @@ while the change is open. Its pull request keeps them after the merge.
 
 - The upstream is Anthropic for a Claude subscription token or an
   Anthropic API key. It is OpenAI for an OpenAI API key.
-- Anthropic confirmed on 9 November 2026 that the gateway can carry
-  subscription tokens (gateway decision 1).
+- [Agent logins](access-and-security.md#agent-logins) states that both
+  providers confirmed this use of their logins.
 - The gateway forwards only a fixed list of model routes for each agent.
   Examples are the Messages API of Anthropic and the Responses API of
   OpenAI.
@@ -166,9 +171,8 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## Risks
 
-- Risk: while a turn runs, each process in the sandbox can read its turn
-  token. A member with a terminal in the sandbox can read it too.
-- Such a process or member can spend the login of the starter through the
-  gateway while the turn runs.
+- [A sandbox with a newer runner](access-and-security.md#a-sandbox-with-a-newer-runner)
+  states what the processes of a sandbox and the members of its org can
+  do with a turn token.
 - Risk: a deploy of the Worker or an update of the Cloudflare runtime can
   end a long answer. The agent program then sends the request again.
