@@ -253,6 +253,9 @@ and checks the saved message on the bar of a failed first start and of a
 failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
 turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
 fold and a message line, and checks that each line keeps its place.
+`components/ReadingPlace.dom.test.tsx` lays the chat out as a browser lays
+out its reversed scroll box. It ends a long turn while the reader reads
+higher up, and checks the read row and the newest message at the bottom.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -312,9 +315,14 @@ check in the Mac app.
   full text.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
+- `components/reading-place.ts`: the keeper of the reader's place, which
+  `ChatPane` gives through `ChatKeeper`. While the reader is scrolled up, it
+  keeps the top row in view in place for every change of size of the
+  transcript. When that row folds away, the fold that took it keeps its
+  place.
 - `components/useFold.ts`: `useFold` opens and closes a fold on a click on
-  its line, and keeps the line in place through the `ChatScroll` of
-  `ChatPane`.
+  its line, and gives the line to the keeper, also at the bottom of the
+  chat, so the line keeps its place.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,

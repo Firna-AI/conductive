@@ -167,9 +167,9 @@ Rules:
   line shows as the lost line, at the left edge of the list.
 - While a turn runs, the chat does not change. Each message shows, and
   each run of tool calls folds on its own.
-- When a turn ends while the user reads its work higher up, the work
-  still folds. The browser keeps what the user reads in place, and the
-  chat adds no scroll for it.
+- When a turn ends while the user reads higher up, the work still folds.
+  The chat keeps the row that the user reads in place, for every change
+  of size below or above it.
 
 Code of the web app:
 
@@ -239,8 +239,21 @@ date, and the user can override it:
   both kinds of fold share one line, so one behaviour is easy to learn,
   and the fix is small in files that this change edits. Rejected: only
   the work folds keep their line, which leaves the two kinds of fold
-  different. Rejected: the chat keeps what the user reads in place for
-  every change of size, which changes all scrolling of the chat.
+  different. Rejected at first: the chat keeps what the user reads in
+  place for every change of size, which changes all scrolling of the
+  chat. The next call reverses this rejection.
+- The chat keeps the row that the user reads in place for every change of
+  size of the transcript, and the folds use the same operation. My call
+  of 9 November 2026, from finding 1 of review round 1 and its check.
+  Reason: Chrome keeps the row only while a shrink below the reader is
+  smaller than the reader's distance from the top of the chat. A larger
+  fold at the end of a turn moved an older message from 180 px to 957 px.
+  Where Chrome already keeps the row, the correction is zero. Rejected: a
+  keeper only for the fold transitions, which must know each kind of
+  change. Rejected: a fold that waits until the reader comes back to the
+  bottom, which changes when the work folds and needs the user. Rejected:
+  a chat in normal flow, which must rebuild what the reversed layout
+  gives and needs a scroll style for the app only.
 - The work folds when the turn ends, also while the user reads it higher
   up. Reason: Conductor folds at the end of the turn, and one click opens
   the fold again. Rejected: a fold that waits until the user scrolls to
@@ -423,6 +436,10 @@ Depends on: 1, 2, 3
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+  - [x] Fix finding 1 of round 1 with option D: the chat keeps the row
+        that the reader reads in place for every change of size, and the
+        folds use the same operation. Add the regression test for the end
+        of a long turn while the reader is scrolled up.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives decisions 150 and 151
