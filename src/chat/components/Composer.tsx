@@ -6,7 +6,7 @@ import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import {
-  SessionLoginLine,
+  SessionLoginLabel,
   type SessionLogin,
 } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import type { Draft } from '../state/chat-snapshot'
@@ -31,7 +31,10 @@ export interface ComposerProps {
   attaching: boolean
   /** A notice says why a message cannot go yet, so Send is off. */
   blocked: boolean
-  /** Whose agent login the session uses, which a line under the box names. */
+  /**
+   * The agent login of another member that the session uses, which a label
+   * in the bar names. A message on the reader's own login has no label.
+   */
   login?: SessionLogin
   /**
    * A message starts a new linked session, so it does not steer a running
@@ -50,10 +53,11 @@ export interface ComposerProps {
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. While a turn runs, a message
  * steers the turn, and Stop sits beside Send. While the sandbox is not
- * ready, Send still sends, and the workspace queues the message. A line
- * under the box names whose agent login the session uses. Enter sends as
- * the shared rule of `useSendKey` says: on desktop, Enter sends and
- * Shift+Enter starts a new line.
+ * ready, Send still sends, and the workspace queues the message. When a
+ * message spends the agent login of another member, a label after the
+ * model picker names that login, so the box keeps its place. Enter follows
+ * the shared rule of `useSendKey`: on desktop, Enter sends and Shift+Enter
+ * starts a new line.
  * The composer reads Enter before the text field does, so Enter never adds
  * a line to a message that it sends.
  */
@@ -112,6 +116,7 @@ export function Composer(props: ComposerProps) {
             onChoose={props.onChooseModel}
             sessionAgent={props.sessionAgent}
           />
+          {props.login ? <SessionLoginLabel {...props.login} /> : null}
           <span className={styles.spacer} />
           {props.running ? (
             <ActionButton
@@ -135,12 +140,6 @@ export function Composer(props: ComposerProps) {
           />
         </div>
       </div>
-      {props.login ? <SessionLoginLine {...props.login} /> : null}
-      {steers && draft.text !== '' ? (
-        <span className={styles.hint}>
-          The agent reads this at its next step.
-        </span>
-      ) : null}
     </div>
   )
 }
