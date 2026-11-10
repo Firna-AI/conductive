@@ -1267,6 +1267,8 @@ Depends on: every other milestone
       reported as local work without changing earlier count assertions.
 - [x] Preserve main's public product guides and protocol index during
       integration. Read every guide and align each changed feature fact.
+- [x] Preserve main's computer ledger and durable Stop task with Continue.
+      Keep both lifecycle RPC methods and verify the combined boundaries.
 - [ ] Run the affected tests and the complete gate on the combined review
       fixes. Re-review the fix once under the same review workflow.
 
