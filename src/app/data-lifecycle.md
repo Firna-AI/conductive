@@ -54,8 +54,8 @@ of the data that the screens read and write.
 - A list write shows its change at once, and a failure takes back that
   change only. An answer confirms only the fields of its write: a move
   answer sets the section of the workspace, not its state. A workspace
-  record from an event, an open, or Archive keeps the place of its row,
-  because only a read of the list and a move change the place.
+  record from an event, an open, Archive, or Restore keeps the place of its
+  row, because only a read of the list and a move change the place.
 - A save can answer with the whole value, such as the repositories or
   computer settings. Its answer counts from its arrival. A read that
   started before it changes nothing.
@@ -69,12 +69,30 @@ of the data that the screens read and write.
 - A read or a Resume reply carries the event number of its state. It shows
   only when no newer state has shown, from the stream or another reply.
   After it, an older stream event changes nothing. A new owner, an
-  Archive, or a cleared unread state carries no number. Each shows at once
-  and stays over the reply of a pending Resume. A reply after close
-  changes no workspace state.
-- An open workspace follows confirmed archived records in the org list,
-  so Archive does not wait for the event stream. It also checks the list
-  when it opens. A known archive stays over an older open or Resume reply.
+  Archive, a Restore, or a cleared unread state carries no number. Each
+  shows at once and stays over the reply of a pending Resume. A reply
+  after close changes no workspace state.
+- Archive and Restore raise `updatedAt`, also at the same clock, and
+  `archivedAt` can repeat. So a record from the other side of an Archive
+  or a Restore shows only when its `updatedAt` is newer, whatever its
+  source. A reply of Archive or Restore changes only its own fields, and
+  only when it is newer, so a later Archive, Restore, or Resume stays.
+- A record below the `updatedAt` of the newest Archive or Restore that
+  shows changes nothing, also on the same side of the boundary. So a
+  replay of an older active record cannot open the way for the older
+  Archive after it. The Worker never lowers `updatedAt`, so each newer
+  record passes.
+- An open workspace follows the Archive and Restore records that the org
+  list confirmed, in both directions, and a newer record of an archived
+  workspace, such as the end of its Restore. So none of them waits for the
+  event stream. It also checks the list when it opens, and before a read
+  or a Resume reply shows. A known Archive or Restore stays over an older
+  open or Resume reply. An Archive or a Restore while the first read of an
+  open waits makes that open resume nothing. A failed read then keeps the
+  detail of that change, and the visit follows the event stream. With no
+  read before it, the stream replays from the last number that the model
+  applied. A first read that fails with no such change shows its failure
+  and follows nothing.
 - A workspace event applies its saved public error with the workspace
   state. An older event without the error keeps the current error. An
   explicit null clears it. Event errors carry no log, so the model keeps
@@ -172,10 +190,11 @@ of the data that the screens read and write.
   the page shows again, the mark goes through the current shown number. A
   page without the focus still shows its output, so the focus does not
   count.
-- An archived detail stops the marks for the rest of its visit, also while
-  the history replays records from before the archive. A replay in pages
-  moves `last` only after its final page, so a mark never passes output
-  that a later page holds.
+- An archived detail stops the marks until a Restore shows, also while the
+  history replays records from before the archive. After a Restore, the
+  next mark covers the output that came while the workspace was archived.
+  A replay in pages moves `last` only after its final page, so a mark never
+  passes output that a later page holds.
 - Known limit: a request that never answers holds back each later mark,
   because the API client has no timeout.
 - The chat, the GitHub views, the terminal tool, the preview tool, the

@@ -61,17 +61,19 @@ export function workspaceReassigned(
   return workspaceChanged(workspaceId, { owner })
 }
 
-export function workspaceArchived(workspace: Workspace): ListChange {
+/**
+ * A confirmed Archive or Restore changes only its own fields, so a newer
+ * name, owner, or section stays. Each one raises `updatedAt`, so it changes
+ * nothing over a record that is not older, such as a later Restore that a
+ * read brought.
+ */
+export function workspaceLifecycle(workspace: Workspace): ListChange {
+  const { state, archivedAt, restoreUntil, updatedAt } = workspace
   return (list) => ({
     ...list,
     workspaces: list.workspaces.map((current) =>
-      current.id === workspace.id
-        ? {
-            ...current,
-            state: workspace.state,
-            archivedAt: workspace.archivedAt,
-            updatedAt: Math.max(current.updatedAt, workspace.updatedAt),
-          }
+      current.id === workspace.id && current.updatedAt < updatedAt
+        ? { ...current, state, archivedAt, restoreUntil, updatedAt }
         : current,
     ),
   })

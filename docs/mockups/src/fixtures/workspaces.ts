@@ -10,8 +10,9 @@ import type { SectionKey } from './sections'
  * `unread` means a turn ended with output that the user has not seen.
  * `input` means that the turn waits for the user, such as for the
  * approval of a command on a Mac. All three run on a ready sandbox.
- * `archived` means that its cloud computer is deleted and its chat is
- * read-only. The other values are the sandbox states.
+ * `archived` means that Archive stopped its cloud computer, which the app
+ * deletes 14 days later, and that its chat is read-only. The other values
+ * are the sandbox states.
  */
 export type ActivityStatus =
   | 'working'

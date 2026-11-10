@@ -135,6 +135,7 @@ export function startWorkspace(
     createdAt: at,
     updatedAt: at,
     archivedAt: null,
+    restoreUntil: null,
   }
   org.workspaces = [workspace, ...org.workspaces]
   org.created.add(id)

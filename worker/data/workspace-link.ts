@@ -2,8 +2,11 @@ import { routes } from '../../src/app/router'
 import type { Workspace } from '../../src/shared/workspaces'
 
 /** Saved records from before workspace links have neither field. */
-export type WorkspaceSnapshot = Omit<Workspace, 'number' | 'link'> &
-  Partial<Pick<Workspace, 'number' | 'link'>>
+export type WorkspaceSnapshot = Omit<
+  Workspace,
+  'number' | 'link' | 'restoreUntil'
+> &
+  Partial<Pick<Workspace, 'number' | 'link' | 'restoreUntil'>>
 
 export interface WorkspaceLinkContext {
   orgId: string
@@ -26,6 +29,7 @@ export function presentWorkspace(
 ): Workspace {
   return {
     ...snapshot,
+    restoreUntil: snapshot.restoreUntil ?? null,
     number: context.number,
     link: workspaceLink(context.origin, context.orgId, context.workspaceId),
   }

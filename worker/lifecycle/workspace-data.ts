@@ -5,6 +5,7 @@ import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
+import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
 import { leasedImage, type LeasedImage } from './image-leases'
 import type { RepositoryLocation } from './repository-locations'
@@ -28,6 +29,8 @@ export interface WorkspaceRow {
   createdAt: number
   updatedAt: number
   archivedAt: number | null
+  stoppedAt: number | null
+  nextDiskKeepaliveAt: number | null
   agent: Workspace['choice']['agent']
   model: string
   effort: Workspace['choice']['effort']
@@ -43,6 +46,7 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   w.sandbox_id AS sandboxId,
   w.provider_account AS providerAccount, w.state,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
+  w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
   r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
 export async function readWorkspace(
@@ -97,6 +101,7 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
+    restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
   }
 }
 
@@ -242,7 +247,7 @@ export async function persistLifecycleState(
   await db
     .prepare(
       `UPDATE workspaces SET state = ?, last_activity_at = ?, stopped_at = ?,
-     next_disk_keepalive_at = ?, last_error_code = ?, last_error_message = ?, updated_at = ?
+     next_disk_keepalive_at = ?, last_error_code = ?, last_error_message = ?, updated_at = MAX(updated_at, ?)
      WHERE id = ? AND org_id = ? AND archived_at IS NULL AND state != 'archived'
        AND EXISTS (SELECT 1 FROM orgs WHERE orgs.id = workspaces.org_id AND orgs.deleted_at IS NULL)`,
     )

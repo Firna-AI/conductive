@@ -1,10 +1,10 @@
 # Workspace screen
 
 The workspace screen shows one open workspace: its header, the start
-steps, the states of its cloud computer, the Archive question, and its
-chat. On desktop the chat column sits beside the right column. A phone
-shows one view at a time, with a tab bar. The chat fills the centre by
-default, as [The chat of the workspace](#the-chat-of-the-workspace) says.
+steps, the states of its cloud computer, and its chat. On desktop the chat
+column sits beside the right column. A phone shows one view at a time,
+with a tab bar. The chat fills the centre by default, as
+[The chat of the workspace](#the-chat-of-the-workspace) says.
 The shell gives its own parts: the Files screens, the tools, the pull
 request bar, and the owner picker, as [The Files part](#the-files-part),
 [The tools part](#the-tools-part), and [The GitHub part](#the-github-part)
@@ -15,9 +15,15 @@ states of the cloud computer are in `app/shell`, and the notices are in
 `app/chat/lost-updates`.
 
 The workspace list offers Archive over the time of each permitted row on
-hover only. Selection and keyboard focus alone keep the time visible.
-The header has no Archive button. The list uses the same Archive question
-as the command palette and the pull request bar.
+hover only, and Restore over the time of each row of the Archived group
+until its last day. Selection and keyboard focus alone keep the time
+visible. The header has no Archive button. The shortcut and the menu of a
+row, the command palette, and the pull request bar archive in the same
+way, at once and with one request, as
+[Archive](../../../docs/protocol/workspace-life.md#archive) says. A toast
+then offers Restore. The archived bar, the row of the Archived group, and
+the palette offer Restore to each member until the last day, as
+[Restore](../../../docs/protocol/workspace-life.md#restore) says.
 
 ## The kept workspace
 
@@ -189,7 +195,7 @@ fake API, with its address options, its controls, and the test command.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right
-  column, or Archive.
+  column, Archive, or Restore.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream. It keeps the revokes of previews, the latest report of the
   listening ports, and the first failed repair of that report since it. A
@@ -233,16 +239,19 @@ fake API, with its address options, its controls, and the test command.
   it leads the line under the name. `CopyLink.test.tsx` mounts the whole
   app and presses the button for a copy and for a failed copy.
 - `RunLine.tsx`: the line under the header of a run workspace, which links to its routine and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
-- `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
-  states of the cloud computer, the start steps, and the Archive question.
-  The screen draws its Archive question in each of its states, also during
-  the first read, with the name from the list. So Archive from the row of
-  the open workspace, by its shortcut or its menu, shows one question. The
-  list draws the question of another row, for the shortcut and the menu
-  alike.
+- `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
+  states of the cloud computer, their words, and the start steps. The bar
+  of an archived workspace offers Restore until its last day, then says
+  when Restore ended. `useArchiveActions.ts` runs Archive and Restore for
+  each control, with their toasts. Archive from the row of the open
+  workspace, by its shortcut or its menu, acts once, also during the first
+  read, as [Archive](../../../docs/protocol/workspace-menu.md#archive)
+  says. An Archive and a Restore during the first read resume nothing.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
   the refused notice. `sandbox-view.ts` chooses the bar and the panels,
-  also for a suspended org and for the saved message of a failed start.
+  also for a suspended org, for the saved message of a failed start, and
+  for the end of Restore. `ArchivedRestore.test.tsx` mounts the whole app
+  for Restore by a member and for its end at the last day.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
 
@@ -252,6 +261,8 @@ fake API, with its address options, its controls, and the test command.
   the repair, and the notice of a failed repair.
 - [Start steps](../../../docs/protocol/workspace-life.md#start-steps)
   and [Workspace states](../../../docs/protocol/workspace-life.md#workspace-states).
+- [Archive](../../../docs/protocol/workspace-life.md#archive) and
+  [Restore](../../../docs/protocol/workspace-life.md#restore).
 - [Workspace numbers and links](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-numbers-and-links)
   and [Workspace links](../../../docs/protocol/workspace-links.md): the
   number, the link, and Copy link.

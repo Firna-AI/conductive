@@ -74,7 +74,11 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 ## Stops
 
 - The Durable Object stops a sandbox when the stop rule of
-  [Workspaces and sandboxes](../protocol/workspace-life.md#stop-and-resume)
-  says so.
+  [Stop and resume](../protocol/workspace-life.md#stop-and-resume) says
+  so.
 - Near day 14 of a stop, the app starts the sandbox briefly and stops it
   again, so that Boat keeps its disk (decision 43).
+- Archive stops a running sandbox at once, and keeps the sandbox. The
+  Durable Object deletes it 14 days after the Archive, unless a member
+  restores the workspace first, as
+  [Archive](../protocol/workspace-life.md#archive) says.

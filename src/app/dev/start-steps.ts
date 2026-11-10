@@ -160,10 +160,12 @@ export function resumeWorkspace(
     return
   }
   runStart(backend, org, workspaceId, 'resume', resumePlan)
+  // The time of a change keeps the last one as its minimum, as the Worker
+  // does, so a Resume orders after the Restore of the same tick.
   changeWorkspace(backend, org, {
     ...current,
     state: 'starting',
-    updatedAt: backend.now(),
+    updatedAt: Math.max(backend.now(), current.updatedAt),
   })
 }
 

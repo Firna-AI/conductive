@@ -9,6 +9,7 @@ import {
 } from '../shared/sessions'
 import { workspaceViewPath } from '../shared/workspace-view'
 import {
+  WORKSPACE_RESTORE_MS,
   workspacePath,
   workspacePaths,
   workspacesPath,
@@ -101,16 +102,29 @@ export function fakeWorkspaceRoutes(
     routes.json('POST', workspacePaths.resume(org, id), ordered)
     routes.empty('POST', workspacePaths.activity(org, id))
     routes.empty('PUT', workspacePaths.read(org, id))
-    routes.json('GET', workspacePaths.archiveCheck(org, id), {
-      uncommittedFiles: ['src/app/checkout/AddressForm.tsx'],
-      unpushedCommits: 1,
-    })
+    // Archive keeps the cloud computer for the days of Restore. Archive and
+    // Restore raise the time of the record past the time of each record
+    // before them, as the Worker does, so the app orders each one after the
+    // state before it, and a Restore after the Archive.
+    const changedAt = Math.max(FAKE_TIME, workspace.updatedAt)
     routes.json('POST', workspacePaths.archive(org, id), {
-      ...reply,
       workspace: {
         ...workspace,
         state: 'archived',
-        archivedAt: workspace.updatedAt,
+        archivedAt: FAKE_TIME,
+        restoreUntil: FAKE_TIME + WORKSPACE_RESTORE_MS,
+        updatedAt: changedAt + 1,
+      },
+      start: null,
+      error: null,
+    })
+    routes.json('POST', workspacePaths.restore(org, id), {
+      workspace: {
+        ...workspace,
+        state: 'stopped',
+        archivedAt: null,
+        restoreUntil: null,
+        updatedAt: changedAt + 2,
       },
       start: null,
       error: null,

@@ -7,7 +7,7 @@ import {
   type MouseEvent,
   type Ref,
 } from 'react'
-import { Archive } from 'lucide-react'
+import { Archive, ArchiveRestore } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
@@ -55,7 +55,8 @@ function setRef<T>(ref: Ref<T> | undefined, value: T | null): void {
 /**
  * One workspace on one line: its state as a dot-matrix square, its name,
  * or Untitled before it has one, and the time since its last activity. Bold
- * marks unread output. Archive covers the time on hover only. A drag
+ * marks unread output. Its shortcut, Archive or Restore on an archived row,
+ * covers the time on hover only, and stays while it runs. A drag
  * lifts the row, and a faint copy stays where it was. With `menu`, a right
  * click or the menu keys open the menu of the row, which keeps the fill of
  * a hover while it is open. The row has no button for the menu. The field
@@ -75,6 +76,10 @@ export function WorkspaceRow({
   bind?: HTMLAttributes<HTMLElement>
   onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void
   onArchive?: () => void
+  /** Restore of an archived row, in the place of Archive. */
+  onRestore?: () => void
+  /** The Archive or the Restore of the row runs. */
+  acting?: boolean
   /** The row's box, which a drag measures. */
   rowRef?: Ref<HTMLSpanElement>
   /** The row's link, which keeps the focus after a move by keys. */
@@ -159,14 +164,20 @@ export function WorkspaceRow({
     }
     props.onKeyDown?.(event)
   }
-  const onArchive = props.drag ? undefined : props.onArchive
+  const archived = workspace.state === 'archived'
+  const action = props.drag
+    ? undefined
+    : archived
+      ? props.onRestore
+      : props.onArchive
   return (
     <span
       {...props.bind}
       className={classes(
         list.dragSurface,
         styles.container,
-        onArchive && styles.archivable,
+        action && styles.archivable,
+        action && props.acting && styles.acting,
         menu?.open && styles.held,
       )}
       onBlur={props.onBlur}
@@ -186,12 +197,13 @@ export function WorkspaceRow({
       >
         <RowContent now={props.now} workspace={workspace} />
       </AppLink>
-      {onArchive ? (
+      {action ? (
         <span {...ownPress} className={styles.archive}>
           <IconButton
-            icon={Archive}
-            label="Archive workspace"
-            onPress={onArchive}
+            busy={props.acting}
+            icon={archived ? ArchiveRestore : Archive}
+            label={archived ? 'Restore workspace' : 'Archive workspace'}
+            onPress={action}
             quiet
           />
         </span>

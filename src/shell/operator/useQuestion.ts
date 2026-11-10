@@ -2,7 +2,7 @@ import { useAction } from '../ui/useAction'
 
 /**
  * The write of a question, and the dismissal of the question. While the
- * write runs, nothing closes the question, as the Archive question does:
+ * write runs, nothing closes the question:
  * Cancel is off, and Escape and a press outside do nothing, on desktop and
  * in the sheet of a phone. A dismissal cannot stop the write, and a failure
  * shows in the question. The rest of the page is inert while the question

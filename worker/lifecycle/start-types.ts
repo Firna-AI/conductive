@@ -44,7 +44,9 @@ interface WorkspaceStartData {
 
 /** Admission intent is transient. Saved starts always continue their progress. */
 export type WorkspaceStartIntent =
-  { kind: 'continue' } | { kind: 'retry-failed-create' }
+  | { kind: 'continue' }
+  | { kind: 'retry-failed-create' }
+  | { kind: 'resume-retained-create' }
 
 export type WorkspaceMachinePhase =
   | 'machine'

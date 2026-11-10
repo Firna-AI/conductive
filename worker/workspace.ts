@@ -18,7 +18,6 @@ import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
 import { activeStoredTurn } from './devices/access'
 import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
-import { readArchiveCheck } from './app-api/archive'
 import { featureResult } from './features/result'
 import { archiveWorkspace } from './lifecycle/archive-workspace'
 import { orgLifecycleActive } from './members/composition-data'
@@ -209,25 +208,10 @@ export class Workspace extends AttachmentWorkspace {
     return this.fetchChat(request)
   }
 
-  checkWorkspaceArchive(orgId: string, workspaceId: string, userId: string) {
-    return featureResult(() =>
-      this.run(() =>
-        readArchiveCheck(
-          this.env,
-          { ...lifecycleDependencies(), now: this.now },
-          orgId,
-          workspaceId,
-          userId,
-        ),
-      ),
-    )
-  }
-
   archiveWorkspace(
     orgId: string,
     workspaceId: string,
     userId: string,
-    discard: boolean,
     origin: string,
   ) {
     return featureResult(() =>
@@ -238,27 +222,26 @@ export class Workspace extends AttachmentWorkspace {
           orgId,
           workspaceId,
           userId,
-          discard,
           origin,
           {
-            revokePreviews: () =>
-              this.features.revokeWorkspace(workspaceId, true),
-            stopChat: () => this.chat.stopWorkspace(workspaceId),
-            clearLifecycle: async () => {
-              await this.integration.storage.delete([
-                'lifecycle:start-job',
-                'lifecycle:create-publication',
-              ])
-              this.controller.cancelLifecycleWaiters()
-              await this.controller.clearLifecycle()
-            },
-            publish: (workspace) =>
-              this.chat.commitWorkspaceEvent(workspaceId, {
-                type: 'workspace.updated',
-                workspace,
-              }),
+            archiveLifecycle: () =>
+              this.controller.archiveLifecycle(workspaceId),
+            reserveArchive: () => this.controller.reserveArchive(workspaceId),
           },
         ),
+      ),
+    )
+  }
+
+  restoreWorkspace(
+    orgId: string,
+    workspaceId: string,
+    userId: string,
+    origin: string,
+  ) {
+    return featureResult(() =>
+      this.run(() =>
+        this.controller.restoreWorkspace(orgId, workspaceId, userId, origin),
       ),
     )
   }
