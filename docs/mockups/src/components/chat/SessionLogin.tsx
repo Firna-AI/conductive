@@ -10,8 +10,9 @@ export type SessionLogin = {
   starter: string
   /**
    * The host of the endpoint of an own endpoint login, such as
-   * "proxy.example.com". Without it, the login goes to the agent's own
-   * provider.
+   * "proxy.example.com". The session record carries it only while the
+   * starter shares a login that works. Without it, the login goes to the
+   * agent's own provider.
    */
   endpoint?: string
 }
@@ -21,18 +22,26 @@ export type SessionLogin = {
  * the login of another member, such as "Cal's login". So a member sees that
  * a message spends the login of the starter. On an own endpoint it also
  * names the host, such as "Cal's endpoint at proxy.example.com", so that the
- * sender sees where the message goes. The label sits inside the box, so the
- * box keeps its place and its height. A message on the own login of the
- * viewer gets no label.
+ * sender sees where the message goes. In a narrow bar the words before the
+ * host give way first, so that the host stays visible. The label sits inside
+ * the box, so the box keeps its place and its height. A message on the own
+ * login of the viewer gets no label.
  */
 export function SessionLoginLabel(props: SessionLogin) {
-  const words = props.endpoint
-    ? `${props.starter}'s endpoint at ${props.endpoint}`
-    : `${props.starter}'s login`
+  const { endpoint, starter } = props
   return (
-    <span className={styles.label}>
+    <span
+      className={endpoint ? `${styles.label} ${styles.endpoint}` : styles.label}
+    >
       <Plug aria-hidden className={styles.icon} size={12} />
-      <span className={styles.text}>{words}</span>
+      {endpoint ? (
+        <>
+          <span className={styles.text}>{`${starter}'s endpoint at`}</span>{' '}
+          <span className={styles.text}>{endpoint}</span>
+        </>
+      ) : (
+        <span className={styles.text}>{`${starter}'s login`}</span>
+      )}
     </span>
   )
 }

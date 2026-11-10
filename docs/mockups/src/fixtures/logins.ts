@@ -72,9 +72,10 @@ export const claudeTokenCommand = 'claude setup-token'
 export const openAiKeyPage = 'https://platform.openai.com/api-keys'
 
 /**
- * How each agent program calls an own endpoint. Claude takes the base
- * address without `/v1`, and Codex takes it with `/v1`, as `basePath` says.
- * Each program adds `requestPath` to the address.
+ * How the gateway calls an own endpoint for each agent. The base address of
+ * Claude has no `/v1`, and the base address of Codex ends with `/v1`, as
+ * `basePath` says. The gateway adds `requestPath` of the agent program to
+ * the base address.
  */
 export const endpointApis: Readonly<
   Record<AgentKey, { name: string; basePath: string; requestPath: string }>
@@ -95,14 +96,35 @@ export const endpointApis: Readonly<
 export const exampleEndpointOrigin = 'https://gateway.example.com'
 
 /**
- * The origin of an address that the save refuses: `http://` with a host
- * that is not `localhost`, `127.0.0.1`, or `[::1]`. The refusal names the
- * fix.
+ * The address of Cal's proxy as Cal types it for each agent, and the base
+ * address that the form saves from it. One shared rule checks the address
+ * and builds each request address from it. It keeps a query, and it drops
+ * a fragment, a trailing slash, and a final `/v1` of a Claude address.
+ */
+export const typedEndpoints: Readonly<
+  Record<AgentKey, { typed: string; saved: string }>
+> = {
+  claude: {
+    typed: `https://${endpointHost}/v1/`,
+    saved: `https://${endpointHost}`,
+  },
+  codex: {
+    typed: `https://${endpointHost}/v1/`,
+    saved: `https://${endpointHost}/v1`,
+  },
+}
+
+/**
+ * The origin of an address that the rule refuses: a proxy on Cal's own
+ * computer, on `http://`. The gateway calls each endpoint over the internet,
+ * so the rule accepts only an `https://` address with a public host and no
+ * user name or password. It refuses `localhost` and each IP address that is
+ * not public, names of one label, internal names, and the names of the app
+ * and of its previews. The refusal names the rule in plain words.
  */
 export const refusedEndpoint = {
-  origin: `http://${endpointHost}:8317`,
-  cause:
-    'Use an https:// address. Only localhost, 127.0.0.1, and [::1] can use http://.',
+  origin: 'http://localhost:8317',
+  cause: 'Use a public https:// address, without a user name or a password.',
 } as const
 
 /** A key in its field, which shows only as dots. */

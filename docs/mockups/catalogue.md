@@ -158,10 +158,12 @@ and with the Connect form of each agent open, on its first kind.
 `app/account/share-not-saved` shows General after a login share setting
 failed to save, with its saved value and the cause beside the switch.
 `app/account/own-endpoint` shows the form of Claude on the own endpoint
-kind, while Codex runs on an own endpoint. Its `codex` variant has the
-form of Codex on that kind. Its `refused` variant has an `http://`
-address that the save refused. Its `connected` variant has both agents
-on an own endpoint, each with its host and its share switch on.
+kind, while Codex runs on an own endpoint. Its `typed` variant has a
+typed address, and the hint names the address that the form saves from
+it. Its `codex` variant has the form of Codex on that kind. Its `refused`
+variant has an `http://localhost` address that the shared address rule
+refused. Its `connected` variant has both agents on an own endpoint, each
+with its host and its share switch on.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its states are child
@@ -213,8 +215,8 @@ agent that is not connected, and `app/composer/login` has a session on the
 login of another member. `app/composer/not-shared` has a session whose
 starter does not share the login. `app/composer/own-endpoint` has a
 session on the own endpoint of another member, whose label in the bar
-names the host. Its `yours` variant has a session on the own endpoint of
-the viewer, whose bar names no login.
+names the host and keeps it visible on a phone. Its `yours` variant has a
+session on the own endpoint of the viewer, whose bar names no login.
 
 `app/command-palette` shows the All tab of the command palette over the
 list of Acme. Its child pages:

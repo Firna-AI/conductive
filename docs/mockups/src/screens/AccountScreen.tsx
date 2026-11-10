@@ -10,6 +10,7 @@ import {
   SignInSection,
   type OpenAgentForm,
 } from '../components/settings/AccountSections'
+import type { EndpointEntry } from '../components/settings/EndpointFields'
 import { inviteStates } from '../components/settings/inviteCodeCopy'
 import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
@@ -72,11 +73,12 @@ export const accountSchema = {
     shareChange: { enum: ['none', 'not-saved'] },
     /**
      * The own endpoint login: none, the open form on the own endpoint kind
-     * with an empty address or with an `http://` address that the save
-     * refused, or the logins after the connect. Except for `none`, every
-     * connected login runs on Cal's proxy.
+     * with an empty address, with a typed address that the shared rule
+     * changes before the save, or with an address that the rule refused, or
+     * the logins after the connect. Except for `none`, every connected login
+     * runs on Cal's proxy.
      */
-    ownEndpoint: { enum: ['none', 'form', 'refused', 'connected'] },
+    ownEndpoint: { enum: ['none', 'form', 'typed', 'refused', 'connected'] },
   },
 } as const
 
@@ -111,6 +113,11 @@ function loginsFor(state: AccountState): AgentLogins {
   return logins
 }
 
+/** What the address field of the open own endpoint form holds in a state. */
+const endpointEntries: Partial<
+  Record<AccountState['ownEndpoint'], EndpointEntry>
+> = { form: 'empty', typed: 'typed', refused: 'refused' }
+
 /**
  * The Connect form that is open in a state. On the own endpoint kind, the
  * form leads to the logins on the proxy.
@@ -118,12 +125,13 @@ function loginsFor(state: AccountState): AgentLogins {
 function formFor(state: AccountState): OpenAgentForm | undefined {
   const { form, ownEndpoint } = state
   if (form === 'none') return undefined
-  if (ownEndpoint === 'form' || ownEndpoint === 'refused') {
+  const endpoint = endpointEntries[ownEndpoint]
+  if (endpoint) {
     return {
       agent: form,
       connectTo: paths.ownEndpointConnected,
       cancel: true,
-      endpoint: ownEndpoint === 'form' ? 'empty' : 'refused',
+      endpoint,
     }
   }
   return { agent: form, connectTo: paths.account, cancel: true }

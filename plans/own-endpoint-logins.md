@@ -706,13 +706,15 @@ them.
 - One function in `src/shared/` holds the address rule of decision 2 B.
   The save route and the form both call it, so the form shows a refusal
   at the endpoint field before the save. Agent call of 9 November 2026,
-  from the mockups.
+  from the mockups. Changed on 10 November 2026: the function holds the
+  builder of decision 9 E, which the gateway also uses.
 - The protocol says that the agent program on the cloud computer calls
   the endpoint. So a loopback address reaches only a proxy on the cloud
   computer. Agent call of 9 November 2026, from the mockups. Superseded on
   10 November 2026: the gateway in the Worker calls the endpoint.
-- The hint of an own endpoint key promises no test, because the app never
-  calls the endpoint. The hints of the other kinds stay as they are. On a
+- The hint of an own endpoint key promises no test, because the save
+  sends no request to the endpoint. The hints of the other kinds stay as
+  they are. On a
   phone, the kind choice wraps onto two lines. Agent call of 9 November
   2026, from the mockups. Waits for decision 10: an option that reads the
   model list at the save also tests the key.
@@ -777,16 +779,20 @@ Depends on: 1. Its states wait for decisions 5, 6, and 7.
 
 The mockups show the answers to the questions that Milestone 1 raised.
 
-- [ ] Change the login label of the composer bar as decision 5 says.
-- [ ] Change the hint of the endpoint field and the own endpoint text of
+- [x] Change the login label of the composer bar as decision 5 says.
+- [x] Change the hint of the endpoint field and the own endpoint text of
       `docs/mockups/orgs-and-logins.md`: the gateway in the Worker sends
       each request, not the cloud computer. Show the refused state of
       decision 9.
 - [ ] Show the model list in the form as decision 10 says.
-- [ ] Change the text of the agent step in
+- [x] Change the text of the agent step in
       `docs/mockups/src/screens/getStartedCopy.ts` as decision 7 says. The
       app reads the same file.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Settle how the label shows the host in a full phone bar, as
+      decision 11 says.
+
+Screenshots: `.context/own-endpoint-logins/m1b/screens/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -1028,6 +1034,9 @@ the tasks of `plans/follow-ups/own-endpoints-through-model-gateway.md`.
 - [ ] Check whether an own endpoint that pools subscriptions should get the
       1-hour prompt cache of gateway decision 13, which today applies only
       to a subscription token. Raise a decision if it should.
+- [ ] Replace the rule in `src/shared/endpoint-address.ts` with the builder
+      of decision 9 E, and its refusal text with the mockup's: "Use a
+      public https:// address, without a user name or a password."
 
 ## Milestone 6: Account and Get started
 

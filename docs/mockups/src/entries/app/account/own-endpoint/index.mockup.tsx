@@ -1,4 +1,5 @@
 import { defineScreen } from '@mokly/mokly'
+import { productName } from '../../../../brand'
 import {
   AccountScreen,
   accountGeneral,
@@ -7,10 +8,9 @@ import {
 
 export const ownEndpoint = defineScreen({
   title: 'Own endpoint',
-  description:
-    'Cal chose Own endpoint in the form of Claude, to run Claude on a gateway or a proxy. The form says that the endpoint must serve the Anthropic Messages API and the Claude models that the picker offers: Opus 5.5, Sonnet 5.5, and Fable 5.1. The Endpoint field shows the example https://gateway.example.com, without /v1. Its hint says where the requests go, https://gateway.example.com/v1/messages, and it follows the address that Cal types. The API key field takes the key of the endpoint. Codex already runs on Cal\'s proxy, so the line under its row says "Own endpoint at proxy.example.com", and its share switch is on.',
+  description: `Cal chose Own endpoint in the form of Claude, to run Claude on a gateway or a proxy. The form says that the endpoint must serve the Anthropic Messages API and the Claude models that the picker offers: Opus 5.5, Sonnet 5.5, and Fable 5.1. The Endpoint field shows the example https://gateway.example.com, without /v1. Its hint says "Requests go through ${productName} to https://gateway.example.com/v1/messages", and it follows the address that Cal types. The API key field takes the key of the endpoint. Codex already runs on Cal's proxy, so the line under its row says "Own endpoint at proxy.example.com", and its share switch is on.`,
   rationale:
-    'Decision 1 A of the own endpoint plan, which Cal chose on 8 November 2026: each agent gets an own endpoint login, with an address and a key that the app stores encrypted. The claude program sends its requests to the address with /v1/messages added, so the address has no /v1. The form asks for no query and no fragment, because the claude program cannot call such an address, and the save does not refuse one (decision 2 B). The app keeps its own model list and never calls the endpoint (decision 3 A), so the form names the models that the endpoint must serve, and the key hint promises no test. The hint names the cloud computer as the sender, because a loopback address reaches only a proxy on the cloud computer.',
+    'Decision 1 A of the own endpoint plan, which Cal chose on 8 November 2026: each agent gets an own endpoint login, with an address and a key that the app stores encrypted. The gateway of the app, not the cloud computer, sends each model request of a turn to the endpoint with the key (gateway decision 10 B), so the hint says that the requests go through the app. One shared rule checks the address and builds the exact address of each request (decision 9 E), and the hint names that address: the base address with /v1/messages added. The app keeps its own model list and does not read the models of the endpoint (decision 3 A), so the form names the models that the endpoint must serve. The save sends no request to the endpoint, so the key hint promises no test.',
   relatedDocs: [],
   propSchema: accountSchema,
   props: { ...accountGeneral, form: 'claude', ownEndpoint: 'form' },
@@ -19,21 +19,28 @@ export const ownEndpoint = defineScreen({
   ),
   variants: [
     {
+      slug: 'typed',
+      title: 'Address that the form saves',
+      description: `Cal typed https://proxy.example.com/v1/, with a final /v1 and a trailing slash, and pasted the key. The hint says "Saves as https://proxy.example.com", without the /v1 and the slash, then "Requests go through ${productName} to https://proxy.example.com/v1/messages". Connect saves the login.`,
+      rationale:
+        'Decision 9 E, which Cal chose on 10 November 2026: one shared rule checks each address and builds the exact address that the gateway calls. It keeps a query, and it drops a fragment, a trailing slash, and a final /v1 of a Claude address, because each request path of Claude already starts with /v1. The form shows the address that it saves after these changes, so Cal sees it before Connect. When the rule keeps the typed address as it is, the hint names only where the requests go.',
+      props: { ownEndpoint: 'typed' },
+    },
+    {
       slug: 'codex',
       title: 'Codex on an own endpoint',
-      description:
-        "Claude runs on Cal's proxy, and Connect opened the form of Codex on its own endpoint kind. The form says that the endpoint must serve the OpenAI Responses API and the Codex models that the picker offers: GPT-6.1 Sol and GPT-6 Astra. The example address ends with /v1, and the hint says that the requests go to https://gateway.example.com/v1/responses.",
+      description: `Claude runs on Cal's proxy, and Connect opened the form of Codex on its own endpoint kind. The form says that the endpoint must serve the OpenAI Responses API and the Codex models that the picker offers: GPT-6.1 Sol and GPT-6 Astra. The example address ends with /v1, and the hint says "Requests go through ${productName} to https://gateway.example.com/v1/responses".`,
       rationale:
-        'Codex sends its requests to the address with /responses added, and it refuses the Chat Completions API. So the endpoint must serve the Responses API, and the address ends with /v1, as the design calls of the own endpoint plan say.',
+        'Codex sends its requests to the address with /responses added, and it refuses the Chat Completions API. So the endpoint must serve the Responses API, and the address ends with /v1, as the design calls of the own endpoint plan say. The shared rule keeps the /v1 of a Codex address.',
       props: { form: 'codex' },
     },
     {
       slug: 'refused',
       title: 'Address refused',
       description:
-        'Cal typed http://proxy.example.com:8317 and pressed Connect. The save refused the address, so the Endpoint field says why in place of its hint: an https:// address is needed, and only localhost, 127.0.0.1, and [::1] can use http://. The key stays in its field, so Cal changes only the address.',
+        'Cal typed http://localhost:8317, the address of a proxy on Cal\'s own computer, and pressed Connect. The form refused the address, so the Endpoint field says why in place of its hint: "Use a public https:// address, without a user name or a password." The key stays in its field, so Cal changes only the address.',
       rationale:
-        'Decision 2 B, which Cal chose on 9 November 2026: the save refuses an http:// address unless its host is localhost, 127.0.0.1, or [::1], because an http:// address on the internet sends the key, the messages, and the files as plain text. A loopback address reaches a proxy on the cloud computer. The refusal shows at the field that needs the change, and the form keeps the key, as a failed save does.',
+        'Decision 9 E, which Cal chose on 10 November 2026, in place of decision 2 B, which accepted http:// for localhost, 127.0.0.1, and [::1]. The gateway calls each endpoint over the internet, so the shared rule accepts only an https:// address with a public host. It refuses localhost and each IP address that is not public, names of one label, internal names, the names of the app and of its previews, and a user name or a password in the address. The form and the save use the same rule, so the refusal shows at the field that needs the change before the save. It names the rule in plain words, and the form keeps the key, as a failed save does.',
       props: { ownEndpoint: 'refused' },
     },
     {

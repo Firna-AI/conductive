@@ -121,41 +121,57 @@ plan limits.
   row of the agent, with a choice of the kinds of that agent. On a phone
   the three kinds of Claude wrap onto two lines. The hint of a token or an
   API key says that the app tests it once and never shows it again. The
-  hint of an own endpoint key promises no test, because the app never
-  calls the endpoint. A connected login shows its kind and Remove.
+  hint of an own endpoint key promises no test, because the save sends no
+  request to the endpoint. A connected login shows its kind and Remove.
 - An own endpoint login sends the turns of its agent to a gateway or a
   proxy that the user chose, from decision 1 A of the own endpoint plan.
-  Its form asks for the address of the endpoint and its key, and the app
-  stores both encrypted. `EndpointFields` in `src/components/settings/`
-  draws the fields, as `app/account/own-endpoint` and its `codex` variant
-  show.
+  The model gateway in the Worker, not the cloud computer, sends each model
+  request of those turns to the endpoint, with the key, so the cloud
+  computer gets neither. Its form asks for the address of the endpoint and
+  its key, and the app stores both encrypted. `EndpointFields` in
+  `src/components/settings/` draws the fields, as `app/account/own-endpoint`
+  and its `codex` variant show.
   - The form says that the endpoint must serve the Anthropic Messages API
     for Claude, or the OpenAI Responses API for Codex. It names the models
     that the picker offers, which the endpoint must serve too, because the
-    app keeps its own model list and never calls the endpoint (decision
-    3 A of that plan).
-  - The address is the base address, without a query or a fragment. It has
-    no `/v1` for Claude, and it ends with `/v1` for Codex. The placeholder
-    gives an example. The hint names where the requests go, from the
-    address in the field, such as "Requests go from the cloud computer to
-    https://gateway.example.com/v1/messages". It names the cloud computer,
-    because a loopback address reaches only a proxy on the cloud computer.
-  - The save refuses an `http://` address unless its host is `localhost`,
-    `127.0.0.1`, or `[::1]` (decision 2 B of that plan). The refusal takes
-    the place of the hint under the address, and the key stays in its
-    field, as `app/account/own-endpoint/refused` shows.
+    app keeps its own model list and does not read the models of the
+    endpoint (decision 3 A of that plan).
+  - The address is the base address of the endpoint. The placeholder gives
+    an example, without `/v1` for Claude, and with `/v1` for Codex. One
+    shared rule checks the address and builds the exact address of each
+    request from it (decision 9 E of that plan). It keeps a query, and it
+    drops a fragment, a trailing slash, and a final `/v1` of a Claude
+    address. The hint names where the requests go, through the app, from
+    the address in the field, such as https://gateway.example.com/v1/messages.
+    When the rule changes the typed address, the hint first names the
+    address that the form saves, such as "Saves as
+    https://proxy.example.com", as `app/account/own-endpoint/typed` shows.
+  - The rule accepts only an `https://` address with a public host, because
+    the gateway calls the endpoint over the internet. It refuses
+    `localhost` and each IP address that is not public, names of one label,
+    internal names, the names of the app and of its previews, and a user
+    name or a password in the address. The form and the save use the same
+    rule. Its refusal names the rule in plain words: "Use a public https://
+    address, without a user name or a password." The refusal takes the
+    place of the hint under the address, and the key stays in its field,
+    as `app/account/own-endpoint/refused` shows.
   - A connected own endpoint login shows its kind with the host of its
     endpoint under its row, such as "Own endpoint at proxy.example.com", so
     that a phone shows both in full. It never shows the key or the full
     address, as `app/account/own-endpoint/connected` shows. The part lives
     in `src/components/settings/LoginEndpoint.tsx`.
-  - The label in the bar of the composer of a session on the own endpoint
-    of another member names the host, such as "Cal's endpoint at
-    proxy.example.com" in `app/composer/own-endpoint`, so that the sender
-    sees where the message goes. A narrow bar ends the label with an
-    ellipsis, so on a phone and beside the right column of a desktop the
-    host is cut. A session on the own endpoint of the viewer gets no
-    label, as for every own login, as its `yours` variant shows.
+  - The session record carries the host of the endpoint of the starter
+    only while the starter shares a login that works (decision 5 C of that
+    plan). Then the label in the bar of the composer of another member
+    names the host, such as "Cal's endpoint at proxy.example.com" in
+    `app/composer/own-endpoint`, so that the sender sees where the message
+    goes. In a narrow bar the words before the host give way first, with
+    an ellipsis, so the host stays visible on a phone and beside the right
+    column of a desktop. When the starter does not share the login, or the
+    login does not work, a message of another member starts a new session,
+    as for every login, and nothing names the host. A session on the own
+    endpoint of the viewer gets no label, as for every own login, as its
+    `yours` variant shows.
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude
@@ -169,7 +185,9 @@ plan limits.
   connect Claude or Codex, from decision 33. The next step opens its form.
   It opens only after app access, so a person who waits sees the
   waitlist instead. The agent step offers the kinds of the account, also
-  the own endpoint, and it shows no share switch.
+  the own endpoint, and it shows no share switch. Its text says that the
+  agents run on the own Claude or OpenAI account of the person, or on
+  their own endpoint (decision 7 B of the own endpoint plan).
 - Create org starts the first build of the cloud computer of the org, from
   decision 150. The org step shows that build under the org: preparing
   with its time, then ready, or the failure with its saved message, Try

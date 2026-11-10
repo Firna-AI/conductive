@@ -15,6 +15,19 @@
   line-height: 16px;
 }
 
+/*
+ * The label of an own endpoint: the icon, the words before the host, and the
+ * host. The host column takes its full width before the words get any room,
+ * so in a narrow bar the words give way first, and the host stays visible.
+ * Only a bar without room for the host cuts the host too. The columns of the
+ * words and the host start at zero, so the label still gives up width with
+ * the picker, as for every login.
+ */
+.endpoint {
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, auto);
+}
+
 .icon {
   flex-shrink: 0;
   color: var(--ui-faint);
