@@ -20,12 +20,10 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { mayArchiveWorkspace } from '../components/workspaces/permissions'
-import { conversations } from '../fixtures/conversations'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { suspendedOwner } from '../fixtures/startRefusals'
-import { openableWorkspaceRecords } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
@@ -46,6 +44,7 @@ import {
   workspaceOverlay,
   workspaceToast,
 } from './workspaceOverlays'
+import { openWorkspace } from './workspaceRun'
 import {
   activityOf,
   archiveRestore,
@@ -79,7 +78,8 @@ export function WorkspaceScreen(props: {
   const { viewport } = props
   const state = drawnState(props.state)
   const suspended = state.org === 'suspended'
-  const record = openableWorkspaceRecords[state.workspace]
+  const open = openWorkspace(state)
+  const record = open.record
   // An owner's refused start belongs to a suspended member, whom an active
   // admin sees. A suspended org refuses the start of every owner.
   const ownerRefused = state.sandbox === 'refused' && !suspended
@@ -118,11 +118,7 @@ export function WorkspaceScreen(props: {
           />
         }
         fold={state.fold}
-        items={
-          fresh
-            ? []
-            : chatItemsFor(conversations[state.conversation], state.paths)
-        }
+        items={fresh ? [] : chatItemsFor(open.items, state.paths)}
         notice={
           // An archived workspace keeps its archived bar, so the notice of a
           // suspended org shows above it.
@@ -146,6 +142,7 @@ export function WorkspaceScreen(props: {
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
+      run={open.run}
       rightHidden={rightHidden}
       status={status}
       viewport={viewport}

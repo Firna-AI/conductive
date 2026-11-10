@@ -24,7 +24,11 @@ The bar can ask the agent to create a pull request with files not committed or c
 4. Read the agent's result in that session.
 
 The action asks the agent to commit the changes, push this branch, and open a pull request.
-It uses the repository's default branch as the target when no pull request exists.
+It targets the workspace's base branch, which is the branch this work will merge into.
+A workspace you create uses the repository's default branch.
+For a pull request run, its first message names the initial target under **Your work goes to**.
+The pull request bar names the current target.
+After **Continue**, the workspace targets the latest default branch of its repository.
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
 
@@ -41,7 +45,7 @@ You can also create the pull request on GitHub:
 3. Select **Create on GitHub** in the pull request bar.
 4. Complete the pull request on GitHub.
 
-This link appears when the branch has commits on GitHub and no pull request.
+This link appears when the branch has commits on GitHub that its base branch does not have, and no pull request.
 You can also ask the agent to create a pull request with the GitHub CLI.
 The CLI is authenticated on computers with the current software.
 
@@ -64,7 +68,7 @@ The actions and GitHub links sit at the top of that view.
 
 | State | Useful next action |
 | --- | --- |
-| No pull request, with local work or commits on GitHub | **Create pull request** asks the agent to prepare it. |
+| No pull request, with local work or commits on GitHub that its base branch does not have | **Create pull request** asks the agent to prepare it. |
 | Checks running | Wait for the checks to finish. |
 | Checks failed | **Fix checks** asks the agent to investigate, fix, commit, and push. |
 | Merge conflict | **Resolve conflicts** asks the agent to merge the latest target branch, fix conflicts, test, commit, and push. |
@@ -145,6 +149,7 @@ Ask the org admin to check the GitHub App's repository access when needed.
 
 Every org member can select **Continue** after the workspace's pull request merges.
 It starts a branch from the latest default branch in the same workspace.
+That default branch becomes the workspace's new base branch.
 It keeps the computer, files, sessions, and workspace name.
 Your GitHub account supplies the repository access for that fetch.
 Continue waits while an agent turn runs in any session of the workspace.

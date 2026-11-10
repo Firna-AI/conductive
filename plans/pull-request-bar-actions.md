@@ -1127,6 +1127,21 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: Keep main's Worker chat key-code page and add the branch-data entry fact there. Reason: The README retains its old heading as a pointer and the entry list stays complete.
 - Design call on 10 November 2026: Correct the existing Continue-note test import to the moved shared transcript module. Reason: The typecheck exposed a stale branch-only path; no converter or assertion change is needed.
 
+### Routines integration calls
+
+- Design call on 10 November 2026: Use main's workspace-specific base and merge-base comparison contract. Reason: Decision 507 G now distinguishes PR-run targets and prevents moved base commits from appearing as reverted; earlier tip-only calls remain history.
+- Design call on 10 November 2026: Read the active branch's gh-merge-base before the retained runner startup base. Reason: Continue can change the target while the same runner stays alive, and explicit routine targets must not be hidden by origin/HEAD.
+- Design call on 10 November 2026: Save Continue's fresh repository default as the new workspace base at publication. Reason: Later resumes, retention, GitHub refreshes and pull request creation must target the completed move's base.
+- Design call on 10 November 2026: Set the new branch's gh-merge-base during the move and lost-result reconciliation. Reason: The retained runner and GitHub CLI need the same current target before and after recovery.
+- Design call on 10 November 2026: Keep workspace base data in both branch-input and member-merge reads. Reason: Those direct consumers must preserve routine targets and the newly published Continue base instead of silently using a repository fallback.
+- Design call on 10 November 2026: Keep the remaining NULL and legacy shared-default policy unchanged. Reason: Incoming explicit routine and Continue bases narrow the deferred rename issue but do not resolve it for every existing workspace.
+- Design call on 10 November 2026: Use the combined Terms revision 2026-11-10-gateway-actions-archive-restore-routines. Reason: Main adds actual unattended-run, ownership, visibility and suspension disclosures beside the existing complete notice.
+- Design call on 10 November 2026: Keep all 16 consent assertions and the source's historical unsigned-callback literals. Reason: Current accepted expectations use TERMS_VERSION while earlier inputs remain historical fixtures.
+- Design call on 10 November 2026: Audit the existing 12 public guides without adding a routine guide. Reason: Captured main has no public routine guide; correcting the prompt assumption preserves the authorized public scope.
+- Design call on 10 November 2026: Keep Create pull request guidance aligned with the workspace base. Reason: Ordinary work uses the repository default while a PR run uses its recorded Your work goes to target.
+- Design call on 10 November 2026: Capture the current marketing pictures from the combined mockups. Reason: Both main's run links and the branch's action controls must appear in the resolved images.
+- Design call on 10 November 2026: Clarify current base targets in the protocols and existing public guides. Reason: The run message keeps its initial target, while the bar and successful Continue record the current workspace base under existing approved rules.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1583,16 +1598,16 @@ Depends on: 10, 10a, 10b, 10c, 10d, 10e, and 10f
 
 Depends on: 11
 
-- [ ] Integrate captured main `d39e64eb1ee3949f4ddd905f890adce3a544169a`.
+- [x] Integrate captured main `d39e64eb1ee3949f4ddd905f890adce3a544169a`.
       Preserve routines, scheduled and pull-request runs, run links,
       workspace creation/base metadata, current legal facts, and release 0.6.0.
-- [ ] Keep all member actions, Continue work counts, branch input, account
+- [x] Keep all member actions, Continue work counts, branch input, account
       identity, native recovery, notes, copied transcripts, queued-turn
       behavior, one Files owner, and current Archive/Restore.
-- [ ] Resolve each conflict against both fixed parents. Audit automatic
+- [x] Resolve each conflict against both fixed parents. Audit automatic
       runtime and UI seams, shared contracts, schema consumers, docs,
       mockups, all public guides, and full legal facts.
-- [ ] Run bounded affected checks, meaningful proofs and ten runs for
+- [x] Run bounded affected checks, meaningful proofs and ten runs for
       materially changed async regressions. Keep every active assertion.
       Smoke-test changed action/run links and preserve drafts and uploads.
 - [ ] Audit the two-parent merge and every resolution. Commit and push

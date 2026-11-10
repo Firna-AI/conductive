@@ -20,6 +20,7 @@ export async function publishContinue(
     ...job.binding,
     branch: job.branch,
     defaultBranch: job.baseBranch,
+    baseBranch: job.baseBranch,
   }
   await options.chat.authorizedWorkspaceOperation(
     job.binding.id,

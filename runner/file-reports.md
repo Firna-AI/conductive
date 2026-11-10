@@ -10,37 +10,46 @@ each report, and the [runner README](README.md) gives the rest of the runner.
 
 `comparisonBase` gives the base of each comparison: the snapshot of each
 scan, the Changes list of each report and of each turn, and each file diff.
-It reads Git references only. It fetches nothing, and it moves, resets, or
-writes no branch and no tracking setting. It takes the first of these that
-exists:
+It reads Git references and the local Git settings only. It fetches
+nothing, and it moves, resets, or writes no branch, reference, or setting.
+It takes the base branch from the first of these that has a value:
 
-1. The target of `refs/remotes/origin/HEAD`. That reference gives the base
-   commit and the branch name.
-2. `refs/remotes/origin/<name>`, where `<name>` is the configured default
-   branch, or the base branch that a diff request names.
-3. The name alone, as Git resolves it. An older repository can have only a
-   local default branch.
+1. The `branch.<name>.gh-merge-base` local Git setting of the current
+   branch. The branch step of a create sets it to the base branch of the
+   workspace. Continue sets it on the new branch.
+2. The configured base branch, `CONDUCTIVE_DEFAULT_BRANCH`, or the base
+   branch that a diff request names.
 
-- An `origin/HEAD` that exists but does not resolve fails the scan or the
-  diff. The runner then does not fall back to an older local branch. A
+The base commit is the merge base of `HEAD` and that branch, as
+[The base branch of a workspace](../docs/protocol/base-branches.md#the-base-branch-of-a-workspace)
+says (decision 507 G). The branch resolves to
+`refs/remotes/origin/<branch>` when that reference exists. Otherwise Git
+resolves the name alone, because an older repository can have only a local
+branch.
+
+- A setting that names a branch that does not resolve fails the scan or the
+  diff. The runner then does not fall back to the configured name. A
   failed scan sends `files.unavailable`, and a failed diff returns
   `file_unavailable`.
 - A repository without a commit has no base yet. Its scans send only
   `files.unavailable` until a base exists.
-- The base is the tip of the selected reference, not its merge base with
-  the current branch. So after a fetch without a merge, Changes also shows
-  the differences that the newer tip brings.
+- The merge base keeps the newer commits of the base branch out of Changes.
+  So a fetch that moves the base branch, without a merge into the current
+  branch, changes no report.
+- `refs/remotes/origin/HEAD` does not select the base. So the default
+  branch of the repository does not replace the base branch of a pull
+  request run.
 - The changes report and the diff reply name the selected branch in
-  `baseBranch`. So when `origin/HEAD` names a renamed default branch, as
-  after Continue, they name the new branch.
-- The file reporter keeps the configured name only for steps 2 and 3. Each
-  scan resolves the base again, so the base follows Continue and each later
-  fetch. A new base commit sends a new changes report, also when the files
-  stay the same.
-- The trusted commands of the Worker keep `origin/HEAD` current: the fetch
-  step of a create, as
-  [The default branch at a create](../worker/lifecycle/default-branch.md)
-  says, and the move of
+  `baseBranch`. So after Continue, they name the base branch of the new
+  branch.
+- Each scan resolves the base again. So the base follows Continue while the
+  runner stays up, and a merge of a newer base commit into the branch. A
+  new base commit sends a new changes report, also when the files stay the
+  same.
+- The trusted commands of the Worker write the setting: the branch step of
+  a create, as
+  [Browser routes](../worker/lifecycle/README.md#browser-routes) says, and
+  the move and its recovery in
   [Continue](../worker/lifecycle/continue.md#the-move).
 
 ## The counts of a changes report
@@ -84,8 +93,15 @@ exists:
   once each.
 - `src/file-limits.test.ts`: both counts through the output filter, the
   parts, the saved events, and the parts that the fake endpoint joins.
-- `src/file-content.test.ts`: a remote default branch that moved sends a
-  new report, also when the files and the line counts stay the same.
+- `src/file-content.test.ts`: a remote base branch that moved without a
+  merge sends no report. A merge of that base moves the merge base, and
+  sends a new report, also when the files and the line counts stay the
+  same.
+- `src/merge-base.test.ts`: newer commits of the base branch stay out of
+  Changes, file marks, and diffs. The fetched remote base comes before a
+  local base branch that is behind. The `gh-merge-base` setting comes
+  before the configured name, also while `origin/HEAD` names another
+  branch.
 - The Worker runs one file reporter through Continue and a rename of the
   default branch, as the [Continue tests](../worker/lifecycle/continue.md#tests)
   say.
@@ -96,7 +112,8 @@ exists:
   queue, the file tree, the branch changes, bounded reads, and the files of
   one turn.
 - `src/comparison-base.ts`: `comparisonBase`, the one base of the scans,
-  the Changes lists, and the diffs.
+  the Changes lists, and the diffs. It reads the `gh-merge-base` setting
+  of the current branch before the configured name.
 - `src/repository-changes.ts`: changed files against the base, the raw
   status count, and current-branch commits that no remote branch holds.
 - `src/file-parts.ts`: full report parts and bounded tree deltas.
@@ -104,4 +121,5 @@ exists:
   the check for a new changes report.
 - `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
   indexes and objects for Git comparisons. The real index stays unchanged.
+- `src/git.ts`: Git commands and merge-base selection, which prefers the fetched remote-tracking base over a local branch.
 - `src/git-paths.ts`: shared Git namespace states for paths and parents.

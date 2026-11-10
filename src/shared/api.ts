@@ -27,7 +27,15 @@ export interface Org {
 }
 
 export interface ApiErrorBody {
-  error: { code: string; message: string }
+  error: {
+    code: string
+    message: string
+    details?: {
+      login: string
+      triggerIndex: number
+      list: 'is' | 'isNot'
+    }
+  }
 }
 
 /** Wire dates are Unix milliseconds. IDs and model names are opaque strings. */

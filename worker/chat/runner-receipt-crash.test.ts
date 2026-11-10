@@ -29,6 +29,10 @@ it.each(['turn.completed', 'turn.failed'])(
       senderId: 'sender',
       messageIds: [],
       state: 'failed',
+      error: {
+        code: 'runner_event_refused',
+        message: 'The agent could not finish. Try again in the workspace.',
+      },
       closeAfterStop: false,
       started: true,
       nextTurnId: null,

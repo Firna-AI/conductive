@@ -23,8 +23,10 @@ says.
 - **Workspace branch:** the branch that the Worker's record of the
   workspace names. The app tracks this branch. Continue changes it after a
   merge.
-- **Target branch:** the default branch of the workspace's repository. The
-  workspace branch starts from it, and the Changes list compares with it.
+- **Target branch:** the base branch of the workspace, as
+  [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
+  says. For a workspace that a member creates, it is the default branch of
+  the repository.
 - **Branch line:** one line after the sender line of a message. It names
   the current workspace branch and the current target branch.
 - **Base prompt:** the general rules for work that a Claude agent gets

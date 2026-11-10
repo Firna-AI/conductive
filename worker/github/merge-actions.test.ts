@@ -62,6 +62,11 @@ it('reads the clicking member capability without publishing it', async () => {
 
 it('starts and polls a direct member merge with the displayed head and publishes the completed state', async () => {
   const { orgId, session } = await fixture.seed()
+  await fixture.env.DB.prepare(
+    'UPDATE workspaces SET base_branch = ? WHERE id = ?',
+  )
+    .bind('feature/review', 'workspace-1')
+    .run()
   const response = await fixture.start(orgId, session, {
     headSha: HEAD_SHA,
     method: 'squash',
@@ -99,7 +104,11 @@ it('starts and polls a direct member merge with the displayed head and publishes
     fixture.harness.memory('workspace-1').published.at(-1)?.event,
   ).toMatchObject({
     type: 'github.updated',
-    banner: { state: 'merged', pullRequest: { headSha: HEAD_SHA } },
+    banner: {
+      state: 'merged',
+      baseBranch: 'feature/review',
+      pullRequest: { headSha: HEAD_SHA },
+    },
   })
   expect(
     JSON.stringify(fixture.harness.memory('workspace-1').published),

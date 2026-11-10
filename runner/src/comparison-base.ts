@@ -1,12 +1,8 @@
 import type { Git } from './git'
 
-async function remoteHead(git: Git): Promise<string | null> {
+async function optional(git: Git, args: string[]): Promise<string | null> {
   try {
-    return (
-      await git.run(['symbolic-ref', '--quiet', 'refs/remotes/origin/HEAD'])
-    )
-      .toString()
-      .trim()
+    return (await git.run(args)).toString().trim()
   } catch (error) {
     if (
       error instanceof Error &&
@@ -19,21 +15,20 @@ async function remoteHead(git: Git): Promise<string | null> {
   }
 }
 
-/** Resolve the current fetched default tip without moving any local branch. */
+/** Continue can change the active branch target while the runner stays up. */
 export async function comparisonBase(
   git: Git,
   fallbackBranch: string,
 ): Promise<{ branch: string; sha: string }> {
-  const prefix = 'refs/remotes/origin/'
-  const head = await remoteHead(git)
-  if (head?.startsWith(prefix))
-    return { branch: head.slice(prefix.length), sha: await git.resolve(head) }
-  const remote = `${prefix}${fallbackBranch}`
-  const refs = (await git.run(['for-each-ref', '--format=%(refname)', remote]))
-    .toString()
-    .split('\n')
-  return {
-    branch: fallbackBranch,
-    sha: await git.resolve(refs.includes(remote) ? remote : fallbackBranch),
-  }
+  const head = await optional(git, ['symbolic-ref', '--quiet', 'HEAD'])
+  const target = head?.startsWith('refs/heads/')
+    ? await optional(git, [
+        'config',
+        '--local',
+        '--get',
+        `branch.${head.slice('refs/heads/'.length)}.gh-merge-base`,
+      ])
+    : null
+  const branch = target || fallbackBranch
+  return { branch, sha: await git.mergeBase(branch) }
 }

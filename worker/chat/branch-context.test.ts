@@ -132,6 +132,17 @@ async function checkBranches(protocolVersion: RunnerProtocolVersion) {
       email: '7+octocat@users.noreply.github.com',
     },
   })
+  await f.env.DB.prepare('UPDATE workspaces SET base_branch = ? WHERE id = ?')
+    .bind('feature/review', WORKSPACE_ID)
+    .run()
+  await f.send(fresh.id, 'routine-target')
+  expect(runner.commands.at(-1)).toMatchObject({
+    type: 'message',
+    branches: {
+      workspaceBranch: 'octocat/next',
+      targetBranch: 'feature/review',
+    },
+  })
   expect(JSON.stringify((await f.history(session.id)).events)).not.toContain(
     'Current branches:',
   )

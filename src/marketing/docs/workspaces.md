@@ -160,6 +160,7 @@ Your GitHub account needs read access to fetch the repository's latest default b
 On a phone, open **Checks** from the pull request row to find **Continue**.
 The computer starts first if it is stopped.
 The new branch starts from the repository's latest default branch.
+That default branch becomes the workspace's base branch for its new task.
 
 Continue keeps the same cloud computer, files, installed software, running servers, sessions, and workspace name.
 Changed files move to the new branch.

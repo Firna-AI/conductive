@@ -54,6 +54,8 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   routes each event to the workspace whose current branch it names.
 - A push to the default branch of a chosen repository can also start a
   refresh of the org image.
+- A pull request event can also start the runs of routines, as
+  [Routine runs](#routine-runs) says.
 
 ## Merge
 
@@ -72,11 +74,27 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 2. The Durable Object runs a trusted Continue job in the sandbox. Its fetch
    of the default branch gets the GitHub token of that member through the
    credential helper, only while the fetch runs.
-3. The job creates the new branch with the changed files. The Worker
-   stores the new branch in D1 and in the Durable Object, and reads the
-   GitHub state of the new branch.
+3. The job creates the new branch with the changed files. The default
+   branch becomes the base branch of the workspace. The Worker stores the
+   new branch and its base branch in D1 and in the Durable Object, and
+   reads the GitHub state of the new branch.
 4. The Durable Object pushes the new state and the note of Continue to
    every open tab. Each later message carries the new branch to the agent.
+
+## Routine runs
+
+1. A trigger fires: the minute Cron Trigger finds a due schedule, a pull
+   request webhook matches a trigger, or the owner uses Run now.
+2. The Worker stores the run in D1, once for each schedule time, delivery,
+   or Run now request. It checks the owner, the org, and the owner's
+   logins. A failed check creates no workspace.
+3. The Worker creates a workspace as the owner, with the run text as its
+   first message. The workspace starts as in
+   [Create a workspace](#create-a-workspace).
+4. The Durable Object of the workspace reports how the first turn ended,
+   so that a failed first turn shows as a failed run.
+
+[Routines](../protocol/routines.md) and its linked pages state the rules.
 
 ## Stops
 

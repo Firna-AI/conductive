@@ -12,8 +12,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   title: 'Working in an org',
   blocks: [
     list(
-      text`Every member of an org sees all of its workspaces. In an active
-        org, members can send messages in workspaces that are not archived.
+      text`Every member of an org sees all of its workspaces and routines.
+        In an active org, members can send messages in workspaces that are
+        not archived.
         After a pull request merges, every member can use Continue to start
         the next task in that workspace.`,
       text`Each session runs on the agent login of the member who started
@@ -68,6 +69,19 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         change those settings.`,
       text`The setting of your login does not change these risks. Work in
         an org only with people whom you trust with your logins.`,
+      text`A routine runs an agent without a person, on a schedule or when
+        a pull request opens, gets new commits, or merges. Each run starts
+        a new workspace as the member who owns the routine. The run uses
+        the agent login and the GitHub token of that member, so its pushes
+        and pull requests show as that member.`,
+      text`Only the owner of a routine changes it or turns it on. An admin
+        can turn it off or delete it. When the owner leaves the org, the
+        routine moves to the member who gets their workspaces. It stays
+        off until that member turns it on, with their own logins.`,
+      text`The run of a routine for a pull request reads that pull request,
+        also the comments, reviews, and descriptions of other GitHub
+        accounts. Such text can steer the agent while the run uses the
+        owner's agent login and GitHub token, and the env vars of the org.`,
       text`Admins manage the members, the repositories, the scripts, and
         the env vars of the org.`,
     ),

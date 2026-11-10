@@ -57,7 +57,9 @@ it('isolates the member fetch from malicious working settings and preserves loca
   expect(await f.read('staged.txt')).toBe('staged content\n')
   expect(await f.read('untracked.txt')).toBe('untracked content\n')
   expect(await f.read('ignored.txt')).toBe('installed content\n')
-  expect(await f.read('.git/config')).toBe(config)
+  expect(await f.read('.git/config')).toBe(
+    `${config}[branch "owner/new"]\n\tgh-merge-base = main\n`,
+  )
   await expect(readFile(stolen)).rejects.toMatchObject({ code: 'ENOENT' })
   expect(await f.work()).toEqual({
     uncommittedFiles: ['carry.txt', 'staged.txt', 'untracked.txt'],

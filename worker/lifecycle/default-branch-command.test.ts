@@ -91,10 +91,9 @@ it('fetches normal history without a push', async () => {
     const older = await fixture.createRemoteCommit()
     expect((await fixture.execute()).exitCode).toBe(0)
     await fixture.git('branch', 'main', 'refs/remotes/origin/main')
-    const commit = await fixture.createRemoteCommit(
-      'refs/heads/main',
-      'Updated remote commit',
-    )
+    const commit = await fixture.createRemoteCommit('refs/heads/main', {
+      message: 'Updated remote commit',
+    })
     const result = await fixture.execute()
     expect(result.exitCode, result.stderr).toBe(0)
     expect(await fixture.git('rev-parse', 'FETCH_HEAD')).toBe(`${commit}\n`)

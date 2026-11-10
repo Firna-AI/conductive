@@ -8,7 +8,7 @@ import { Repository } from '../../runner/src/repository'
 import type { RunnerFileEvent } from '../../src/shared/files'
 import { continueNativeFixture } from './continue-native.test-support'
 
-it('keeps the retained reporter and diffs on the fetched tip after Continue and a remote-only default rename', async () => {
+it('keeps the retained reporter and diffs on the current workspace base after Continue and its default rename', async () => {
   for (const baseBranch of ['main', 'trunk']) {
     const f = await continueNativeFixture()
     await f.git('branch', 'main', 'origin/main')
@@ -17,6 +17,7 @@ it('keeps the retained reporter and diffs on the fetched tip after Continue and 
       'refs/remotes/origin/HEAD',
       'refs/remotes/origin/main',
     )
+    await f.git('config', 'branch.owner/old.gh-merge-base', 'main')
     const old = await f.git('rev-parse', 'main')
     const repository = new Repository(f.directory)
     const events: RunnerFileEvent[] = []
@@ -24,22 +25,21 @@ it('keeps the retained reporter and diffs on the fetched tip after Continue and 
       events.push(event)
     })
     await reporter.refresh(true)
+    const beforeFetch = events.length
     await f.git('fetch', '--quiet', 'origin')
     await reporter.refresh()
+    expect(events).toHaveLength(beforeFetch)
     expect(events.at(-1)).toMatchObject({
       type: 'changes.updated',
       changes: {
         baseBranch: 'main',
-        summary: { files: 2, added: 1, removed: 2 },
-        files: [
-          { path: 'base.txt', change: 'deleted', added: 0, removed: 1 },
-          { path: 'clash.txt', change: 'modified', added: 1, removed: 1 },
-        ],
+        summary: { files: 0, added: 0, removed: 0 },
+        files: [],
       },
     })
     expect(await repository.diff('clash.txt', 'main')).toMatchObject({
       baseBranch: 'main',
-      oldContent: 'new base content\n',
+      oldContent: 'original\n',
       newContent: 'original\n',
     })
     if (baseBranch === 'trunk') {
@@ -71,9 +71,14 @@ it('keeps the retained reporter and diffs on the fetched tip after Continue and 
     })
     expect(await f.git('rev-parse', 'main')).toBe(old)
     expect(await f.git('branch', '--show-current')).toBe('owner/new\n')
-    expect(await f.git('config', '--local', '--list')).not.toContain(
-      'branch.owner/new.',
-    )
+    expect(
+      await f.git(
+        'config',
+        '--local',
+        '--get-regexp',
+        '^branch\\.owner/new\\.',
+      ),
+    ).toBe(`branch.owner/new.gh-merge-base ${baseBranch}\n`)
   }
 })
 
@@ -88,6 +93,7 @@ it('repairs default metadata after a switched move loses its result without anot
   f.job.baseBranch = 'trunk'
   expect((await f.fetch()).exitCode).toBe(0)
   await f.write('.git/refs/remotes/origin/HEAD.lock', 'held metadata lock\n')
+  await f.write('.git/config.lock', 'held target metadata lock\n')
   expect((await f.move()).exitCode).not.toBe(0)
   expect(await f.git('branch', '--show-current')).toBe('owner/new\n')
   expect((await f.branch()).exitCode).not.toBe(0)
@@ -100,6 +106,8 @@ it('repairs default metadata after a switched move loses its result without anot
     'refs/heads/',
   )
   await rm(join(f.directory, '.git/refs/remotes/origin/HEAD.lock'))
+  expect((await f.branch()).exitCode).not.toBe(0)
+  await rm(join(f.directory, '.git/config.lock'))
   expect(await f.branch()).toEqual({
     exitCode: 0,
     stdout: 'owner/new\n',
@@ -108,6 +116,9 @@ it('repairs default metadata after a switched move loses its result without anot
   })
   expect(await f.git('symbolic-ref', 'refs/remotes/origin/HEAD')).toBe(
     'refs/remotes/origin/trunk\n',
+  )
+  expect(await f.git('config', 'branch.owner/new.gh-merge-base')).toBe(
+    'trunk\n',
   )
   expect(
     await f.git(

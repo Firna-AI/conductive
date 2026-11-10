@@ -90,6 +90,11 @@ These docs belong to this doc:
 - [Create a workspace](create-a-workspace.md) holds the requirements of the
   page, the dialog, the create, the branch, and a failed first start.
 
+## Base branch
+
+- [Base branches](base-branches.md) states the base branch of each
+  workspace and the branch of a pull request run (decisions 505 A and 507 G).
+
 ## Workspace numbers and links
 
 - The workspace header omits the branch name on desktop and on a phone.

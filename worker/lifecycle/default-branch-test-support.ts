@@ -126,12 +126,18 @@ export async function defaultBranchFixture(
       })
     const createRemoteCommit = async (
       ref = 'refs/heads/main',
-      message = 'Existing remote commit',
+      options: { parent?: string; message?: string } = {},
     ) => {
       const tree = (await checked(remote, ['mktree'])).trim()
       const result = await run(
         'git',
-        ['commit-tree', tree, '-m', message],
+        [
+          'commit-tree',
+          tree,
+          ...(options.parent ? ['-p', options.parent] : []),
+          '-m',
+          options.message ?? 'Existing remote commit',
+        ],
         remote,
         {
           ...environment,
@@ -157,8 +163,8 @@ export async function defaultBranchFixture(
       remoteGit,
       command,
       createRemoteCommit,
-      execute: () =>
-        run('/bin/sh', ['-c', command()], directory, {
+      execute: (script = command()) =>
+        run('/bin/sh', ['-c', script], directory, {
           ...environment,
           LOCAL_CREDENTIAL_ORIGIN: origin,
         }),

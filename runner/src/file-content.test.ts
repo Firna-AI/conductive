@@ -150,7 +150,7 @@ it('reports a second binary edit when tree fields and zero line counts stay equa
   expect(h.warnings).toEqual([])
 })
 
-it('reports a moved default branch when working files and line counts stay equal', async () => {
+it('reports a moved merge base when working files and line counts stay equal', async () => {
   const h = await runnerHarness()
   await h.write('README.md', 'first\ntask\n')
   await h.git('add', 'README.md')
@@ -164,6 +164,9 @@ it('reports a moved default branch when working files and line counts stay equal
   await h.git('update-ref', 'refs/remotes/origin/main', 'main')
   await h.git('checkout', 'task')
   await h.runner.files.refresh()
+  expect(h.endpoint.runnerEvents.slice(before)).toEqual([])
+  await h.git('merge', '--strategy=ours', '--no-edit', 'main')
+  await h.runner.files.refresh()
   expect(
     h.endpoint.runnerEvents.slice(before).map(({ event }) => event),
   ).toEqual([
@@ -172,7 +175,7 @@ it('reports a moved default branch when working files and line counts stay equal
       changes: {
         ...textChanges,
         files: [{ ...textChanges.files[0], uncommitted: false }],
-        unpushedCommits: 1,
+        unpushedCommits: 2,
         uncommittedFileCount: 0,
         revision: 3,
         partNumber: 1,

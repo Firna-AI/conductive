@@ -29,6 +29,16 @@ export const repositories: Readonly<Record<RepositoryKey, Repository>> = {
   },
 }
 
+/**
+ * A repository that Acme chose before. An admin removed it from the chosen
+ * repositories, so it is not in `repositories`, and the Repositories tab
+ * lists it as not used. A routine can still name it.
+ */
+export const formerRepository = {
+  key: 'admin-dashboard',
+  name: 'acme/admin-dashboard',
+} as const
+
 /** A repository that the shared GitHub App can reach. */
 export type ReachableRepository = {
   name: string

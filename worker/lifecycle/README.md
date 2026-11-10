@@ -41,6 +41,15 @@ gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest` serves, the options of its caller, and the rules
 of a create.
 
+The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
+Its provider account argument selects the published org image independently of those branch fields.
+The creation claim keeps them in its saved plan.
+The fetch updates `refs/remotes/origin/<base branch>`.
+The branch phase uses the event commit when it exists, or the fetched head otherwise.
+It sets the branch's `gh-merge-base` Git setting to the workspace base.
+Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
+A null stored base uses the repository default branch.
+
 ### Input activity
 
 [Input activity](routes.md#input-activity) gives how one

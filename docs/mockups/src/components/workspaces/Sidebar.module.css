@@ -41,7 +41,7 @@
   overflow: visible;
 }
 
-/* New workspace and Search, one under the other. */
+/* New workspace, Routines, and Search above the sections. */
 .links {
   display: flex;
   flex-direction: column;

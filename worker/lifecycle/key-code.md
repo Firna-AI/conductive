@@ -9,6 +9,10 @@ points of each part.
   input time and its D1 and provider update.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
   workspace and queues its start.
+- [`creation-attempt-data.ts`](creation-attempt-data.ts) keeps the public failure code and message after a failed create.
+  [`start-failure.ts`](start-failure.ts) writes that cause and reports a run failure.
+  Accepted first starts keep the workspace in its error state for Try again.
+  The saved attempt cause repairs a run outcome after an interrupted report.
 - [`creation-claims.ts`](creation-claims.ts): `claimCreation`, which records
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
@@ -56,6 +60,7 @@ points of each part.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.
+- [`creation-fetch-label.ts`](creation-fetch-label.ts) names the pull request or base branch in the fetch step from saved run facts.
 - [`start-progress.ts`](start-progress.ts): the command steps, the
   terminal setup and its password read, and the move into the saved runner
   readiness phase.

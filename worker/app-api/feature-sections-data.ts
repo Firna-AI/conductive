@@ -144,6 +144,15 @@ export async function deleteShellSection(
       ),
     db
       .prepare(
+        `UPDATE routines SET
+         section_id = (SELECT id FROM sections WHERE org_id = ? AND is_default = 1),
+         updated_at = ?
+       WHERE org_id = ? AND section_id = ? AND ${activeShellMemberPredicate}
+         AND ${sectionExists}`,
+      )
+      .bind(orgId, now, orgId, sectionId, orgId, userId, sectionId, orgId),
+    db
+      .prepare(
         `DELETE FROM sections WHERE id = ? AND org_id = ? AND is_default = 0
        AND ${activeShellMemberPredicate}`,
       )
@@ -161,7 +170,7 @@ export async function deleteShellSection(
       .bind(orgId, orgId, orgId, userId),
   ])
   return {
-    deleted: moved[1].meta.changes > 0,
+    deleted: moved[2].meta.changes > 0,
     workspaceIds: moved[0].results.map((row) => row.id),
   }
 }

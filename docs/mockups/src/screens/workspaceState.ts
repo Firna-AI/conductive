@@ -7,9 +7,15 @@ import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
+import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
+import {
+  feedbackStateDefaults,
+  feedbackStateKeys,
+  feedbackStateProperties,
+} from './feedbackState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -37,15 +43,13 @@ export const workspaceStateSchema = {
     'rightColumn',
     'overlay',
     'archive',
-    'toast',
     'viewer',
     'lostUpdate',
     'tree',
     'paths',
     'org',
     'palette',
-    'copyLink',
-    'copyTranscript',
+    ...feedbackStateKeys,
     ...barStateKeys,
   ],
   properties: {
@@ -194,11 +198,6 @@ export const workspaceStateSchema = {
      * workspace.
      */
     archive: { enum: ['kept', 'ended', 'deleted'] },
-    /**
-     * A toast at the bottom of the screen: none, or the toast just after
-     * Archive, which names the workspace and offers Restore.
-     */
-    toast: { enum: ['none', 'archived'] },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -230,23 +229,23 @@ export const workspaceStateSchema = {
      */
     org: { enum: ['active', 'suspended'] },
     /**
+     * The run of a routine that made the workspace (decision 501): a run of
+     * a pull request, a run that Run now started, or a failed run that kept
+     * its workspace, whose first start or first turn failed. A run
+     * workspace is a normal workspace, whose header links to its routine,
+     * and for a pull request run to the pull request. It shows the chat of
+     * its run at the stage of `conversation`: `queued` while the sandbox
+     * starts or after a failed first start, or else its first turn. A
+     * workspace that a person created has none.
+     */
+    run: { enum: runWorkspaceKeys },
+    /**
      * The command palette, closed or open on one of its views. Over an
      * open workspace it offers the actions of the workspace first. A phone
      * opens it from the list, so a phone shows the palette of the list.
      */
     palette: { enum: paletteViews },
-    /**
-     * The label of the workspace number in the header, which copies the
-     * link of the workspace: as it is, or just after a press, while it
-     * shows for a moment that the copy worked or failed.
-     */
-    copyLink: { enum: ['none', 'copied', 'failed'] },
-    /**
-     * The toast after a copy of a session transcript from the tab menu: none,
-     * after a copy that worked, or after a request or a clipboard write that
-     * failed. The menu closed on the press, and the shown tab stays.
-     */
-    copyTranscript: { enum: ['none', 'copied', 'failed'] },
+    ...feedbackStateProperties,
     ...barStateProperties,
   },
 } as const
@@ -273,15 +272,13 @@ export const readyWorkspace: WorkspaceState = {
   rightColumn: 'shown',
   overlay: 'none',
   archive: 'kept',
-  toast: 'none',
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
   paths: 'plain',
   org: 'active',
   palette: 'closed',
-  copyLink: 'none',
-  copyTranscript: 'none',
+  ...feedbackStateDefaults,
   ...barStateDefaults,
 }
 

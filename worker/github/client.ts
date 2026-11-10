@@ -91,7 +91,7 @@ export class GitHubReader {
   async dependenciesForBranch(): Promise<GitHubBranchDependencies> {
     let headSha: string | null = null
     let fullName = this.workspace.fullName
-    let baseBranch = this.workspace.defaultBranch
+    let baseBranch = this.workspace.baseBranch ?? this.workspace.defaultBranch
     for (const states of [['OPEN'], ['MERGED', 'CLOSED']]) {
       let after: string | null = null
       do {
@@ -103,6 +103,7 @@ export class GitHubReader {
         })
         fullName = text(repository.nameWithOwner)
         baseBranch =
+          this.workspace.baseBranch != null ||
           repository.defaultBranchRef === null
             ? baseBranch
             : text(object(repository.defaultBranchRef).name)
@@ -124,7 +125,7 @@ export class GitHubReader {
               headBranch: this.workspace.branch,
               headSha,
               fullName,
-              baseBranch: text(pull.baseRefName),
+              baseBranch: this.workspace.baseBranch ?? text(pull.baseRefName),
             }
           }
         }

@@ -35,9 +35,15 @@ it('continues as another member, keeps workspace identity, and publishes one not
   )
     .bind(f.owner.id)
     .run()
+  await f.env.DB.prepare('UPDATE workspaces SET base_branch = ? WHERE id = ?')
+    .bind('feature/review', WORKSPACE_ID)
+    .run()
   const pending = await f.start()
   expect(pending.state).toBe('pending')
   expect(await f.start()).toEqual(pending)
+  expect(await f.active()).toMatchObject({
+    binding: { baseBranch: 'feature/review' },
+  })
   await f.finish()
   if (pending.state !== 'pending') throw new Error('Expected pending Continue.')
   const result = await f.result(pending.continueId)
@@ -50,11 +56,17 @@ it('continues as another member, keeps workspace identity, and publishes one not
     owner: { id: f.owner.id },
     branch: expect.stringMatching(/^current-owner\/[a-z]+-[a-z0-9]{4}$/),
   })
-  expect(
-    (await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).sandboxId,
-  ).toBe('bx_continue')
+  expect(await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).toMatchObject({
+    sandboxId: 'bx_continue',
+    baseBranch: 'main',
+  })
   expect(f.refreshed).toMatchObject([
-    { id: WORKSPACE_ID, branch: result.workspace.branch },
+    {
+      id: WORKSPACE_ID,
+      branch: result.workspace.branch,
+      baseBranch: 'main',
+      defaultBranch: 'main',
+    },
   ])
   for (const session of [open, closed]) {
     const notes = (await f.history(session.id)).events.filter(
@@ -147,6 +159,9 @@ it('repairs publication after a committed transaction loses its reply without a 
   const pending = await f.start()
   if (pending.state !== 'pending') throw new Error('Expected pending Continue.')
   await f.advanceTo('publish')
+  await f.env.DB.prepare('UPDATE workspaces SET base_branch = ? WHERE id = ?')
+    .bind('feature/review', WORKSPACE_ID)
+    .run()
   await f.failNextCommit('after', 'The committed Continue reply was lost.')
   await f.coordinator.advance()
   expect(await f.active()).toMatchObject({
@@ -182,6 +197,10 @@ it('repairs publication after a committed transaction loses its reply without a 
     state: 'continued',
     workspace: { restoreUntil: null },
   })
+  expect(await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).toMatchObject({
+    baseBranch: 'main',
+  })
+  expect(f.refreshed).toMatchObject([{ baseBranch: 'main' }])
   expect(
     (await f.history(session.id)).events.filter(
       ({ event }) => event.type === 'workspace.continued',

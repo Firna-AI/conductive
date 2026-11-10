@@ -18,6 +18,12 @@ keeps the stored mark inside each compare-and-swap attempt. A missing or
 deleted name starts secret. An explicit mark changes it with the value.
 Its `classify` change carries only a name and a mark, so it keeps the value.
 `api.ts` keeps the existing sign-in and org paths and common records.
+Its `ApiErrorBody` carries the error code and message.
+The optional `error.details` identifies an unknown routine author login.
+It carries `login`, `triggerIndex`, and `list`.
+`triggerIndex` is zero-based in the routine's complete trigger list.
+`list` uses the author-filter request key, `is` or `isNot`.
+Errors without details keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
@@ -247,6 +253,18 @@ The git credential payload is not defined yet.
 - [Workspace contracts](workspaces.ts) give `workspacePaths.continue` and `workspacePaths.continueResult`. `ContinueWorkspaceRequest` sends the `expectedBranch` that the caller shows, and an optional `allowLocalWork`. `ContinueWorkspaceResponse` is a pending job with its `continueId`, a `confirmation-required` reply with the `branch`, the `baseBranch`, and the `LocalWork` that the check of Continue found, or a `continued` reply with the `workspace` and its `eventNumber`. [Continue routes](../../worker/lifecycle/continue-routes.md) gives the routes and the errors.
 - [GitHub contracts](github.ts) give the five `githubPaths` routes of a workspace: the banner and checks reads, the member capability, the merge start, and the merge result. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
+- [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
+  Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
+  Run now takes a page request ID and returns its run after workspace admission.
+  Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
+  Each run carries its own `agent` and `owner`, independent of later routine edits or owner moves.
+  An unknown historical agent or owner is null.
+  Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
+  A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
+  Older runs and skips without an account omit it.
+- [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.
+  The routine's `pullRequest` holds the run's pull request number and URL, or null for scheduled and Run now runs.
+  Replies also carry `baseBranch`, resolved by the Worker. View writes cannot change it.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.
 - [Runner fakes](../../worker/test-support/README.md) use these message types.

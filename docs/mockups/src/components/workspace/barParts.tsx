@@ -3,7 +3,7 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { ArrowRight, ArrowUpRight, GitBranch } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
-import type { Workspace } from '../../fixtures/workspaces'
+import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
 import { GitHubMark } from '../common/GitHubMark'
 import { useOutsideHref } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
@@ -12,10 +12,10 @@ import type { GitHubLinkKind } from './barModel'
 import type { PrStatus } from './prStatus'
 import styles from './PullRequestBar.module.css'
 
-/** The page of GitHub that compares the branch with its target. */
+/** The page of GitHub that opens a pull request into the base branch. */
 function compareUrl(workspace: Workspace): string {
   const repository = repositories[workspace.repository]
-  return `https://github.com/${repository.name}/compare/${repository.defaultBranch}...${workspace.branch}`
+  return `https://github.com/${repository.name}/compare/${baseBranchOf(workspace)}...${workspace.branch}`
 }
 
 /**
@@ -59,15 +59,22 @@ export function BarGitHubLink(props: {
   )
 }
 
-/** The branch and the branch that it merges into. */
+/**
+ * The branch and its base branch, which its work goes to. A long base
+ * branch, such as the head branch of a pull request, takes at most half of
+ * the line, so both names show their start.
+ */
 export function Branches(props: { workspace: Workspace }) {
   const { workspace } = props
+  const base = baseBranchOf(workspace)
   return (
     <span className={styles.branches}>
       <GitBranch className={styles.muted} size={13} />
       <span className={styles.branch}>{workspace.branch}</span>
       <ArrowRight className={styles.muted} size={12} />
-      {repositories[workspace.repository].defaultBranch}
+      <span className={styles.base} title={base}>
+        {base}
+      </span>
     </span>
   )
 }

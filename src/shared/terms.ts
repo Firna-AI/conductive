@@ -1,7 +1,8 @@
 import { API_PATHS } from './api'
 import { INVITE_CODE_PARAMETER } from './waitlist'
 
-export const TERMS_VERSION = '2026-11-10-gateway-actions-archive-restore'
+export const TERMS_VERSION =
+  '2026-11-10-gateway-actions-archive-restore-routines'
 export const TERMS_VERSION_PARAMETER = 'terms_version'
 
 export function acceptedTermsSignInPath(inviteCode?: string): string {

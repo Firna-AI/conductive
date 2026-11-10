@@ -25,6 +25,15 @@ The [Continue route](continue.ts) starts a Continue job and reads its result in 
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
+The [routine routes](../routines/README.md) serve routine records after the same app gate.
+Section deletion moves routines to General in its workspace-move batch.
+Repository deselection turns matching routines off in its repository-write batch.
+Run now and run history use the same app gate.
+Workspace view replies include `routine`, the run's routine ID and name, or null.
+A join from the run record supplies the routine without a new lifecycle field.
+Deleting the routine removes that link and keeps its normal run workspaces.
+Workspace view replies also include the resolved `baseBranch`.
+View writes cannot change this branch.
 
 ## Rules
 

@@ -16,7 +16,7 @@ On a computer, the file lists sit beside the chat.
 On a phone, open the workspace's **Files** view.
 
 - **All files** shows the repository as a tree.
-- **Changes** lists changes against its default branch.
+- **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 
 An archived workspace keeps read-only chat, with no file lists or tools.
@@ -47,14 +47,22 @@ Ask the agent to change a file, or use **Terminal**.
 
 1. Open **Changes**.
 2. Select a changed file.
-3. Review its diff against the default branch.
+3. Review its diff against the workspace's base branch.
+
+The base branch is the branch that the workspace's work targets.
+A workspace you create uses the repository's default branch.
+A run for an opened or pushed pull request uses that pull request's head branch.
+A run for a merged pull request uses that pull request's base branch.
+After **Continue**, the workspace's base branch is the repository's latest default branch.
+The comparison starts at the common commit of the workspace branch and its base branch.
+Newer commits on the base branch therefore stay out of **Changes**.
 
 The list includes the branch's committed changes, uncommitted changes, and untracked files.
 It covers the workspace branch's work, including work from other sessions.
 It is broader than the changed-file summary of one agent turn.
 
 Use the list to check the agent's result before you commit or open a pull request.
-A committed file can remain in **Changes** while the branch differs from the default branch.
+A committed file can remain in **Changes** while the branch differs from its base branch.
 
 On an open pull request, files not committed or commits not pushed give **Commit and push** priority in the bar.
 It replaces Merge and the fix actions until that work is pushed.

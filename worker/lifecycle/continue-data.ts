@@ -52,13 +52,14 @@ export async function storeContinuedBranch(
   await db.batch([
     db
       .prepare(
-        `UPDATE workspaces SET branch = ?, updated_at = MAX(updated_at, ?)
+        `UPDATE workspaces SET branch = ?, base_branch = ?, updated_at = MAX(updated_at, ?)
       WHERE id = ? AND org_id = ? AND repository_id = ? AND sandbox_id = ? AND provider_account = ? AND branch = ?
       AND archived_at IS NULL AND state != 'archived'
       AND EXISTS (SELECT 1 FROM orgs o WHERE o.id = workspaces.org_id AND ${activeOrgPredicate('o')})`,
       )
       .bind(
         job.branch,
+        job.baseBranch,
         options.dependencies.now(),
         job.binding.id,
         job.binding.orgId,
@@ -85,6 +86,7 @@ export async function storeContinuedBranch(
   const row = await readWorkspace(db, job.binding.orgId, job.binding.id)
   if (
     row.branch !== job.branch ||
+    row.baseBranch !== job.baseBranch ||
     row.sandboxId !== job.sandboxId ||
     row.providerAccount !== job.providerAccount
   )
