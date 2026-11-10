@@ -27,6 +27,7 @@ export interface FakeDurableObjectOptions {
 
 /**
  * Runner tests inject connect in place of their WebSocket connector.
+ * This endpoint accepts only runner protocol version 2.
  * This endpoint stores normalized events and confirms only contiguous numbers.
  * State stays on this instance when a test drops and reconnects a socket.
  */

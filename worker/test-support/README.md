@@ -58,21 +58,8 @@ The harness reset clears factories.
 The runner boundary uses plain TypeScript types.
 Tests need no Cloudflare Durable Object or real WebSocket.
 
-```ts
-import { FakeDurableObjectEndpoint } from './fake-durable-object'
-import { FakeRunner } from './fake-runner'
-
-const endpoint = new FakeDurableObjectEndpoint({
-  workspaceId: 'workspace-1',
-  workspaceToken: 'fake-token',
-})
-const runner = new FakeRunner({ workspaceId: 'workspace-1' })
-await runner.connect(endpoint.connect, {
-  url: endpoint.url,
-  workspaceToken: 'fake-token',
-})
-runner.emit({ type: 'runner.ready' })
-```
+[runnerHarness](../../runner/test-support/harness.ts) connects a `Runner` to `FakeDurableObjectEndpoint`.
+[connectFilesRunner](../files/test-support/runner.ts) connects `FakeRunner` to a backend handler.
 
 The runner implementation injects `endpoint.connect` as its `RunnerConnector`.
 A backend test uses `FakeRunner` with its own connector.

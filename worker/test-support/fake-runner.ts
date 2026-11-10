@@ -16,6 +16,7 @@ export interface FakeRunnerOptions {
   workspaceId: string
   streamId?: string
   now?: () => number
+  /** Defaults to protocol version 1 for legacy runner fixtures. */
   protocolVersion?: RunnerProtocolVersion
 }
 
