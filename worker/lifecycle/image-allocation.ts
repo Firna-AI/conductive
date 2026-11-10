@@ -7,8 +7,9 @@ export async function allocateImageBuild(
   db: D1Database,
   provider: SandboxProvider,
   job: BuildJob,
+  mayHaveAllocated: boolean,
 ): Promise<void> {
-  await recoverImageBuildAllocation(db, provider, job)
+  await recoverImageBuildAllocation(db, provider, job, mayHaveAllocated)
   await completeBuildPhase(db, job.buildId, 'sources')
 }
 
@@ -16,8 +17,13 @@ export async function recoverImageBuildAllocation(
   db: D1Database,
   provider: SandboxProvider,
   job: BuildJob,
+  mayHaveAllocated = true,
 ): Promise<string> {
-  const sandbox = await createResource(provider, buildSandboxIntent(db, job))
+  const sandbox = await createResource(
+    db,
+    provider,
+    buildSandboxIntent(db, job, mayHaveAllocated),
+  )
   await assignBuildSandbox(db, job.buildId, sandbox.id, job.providerAccount)
   return sandbox.id
 }

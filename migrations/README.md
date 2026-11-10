@@ -119,6 +119,30 @@ page gives the readers and the rules of these records.
 `202611100000_codex_access_token.sql` rebuilds `agent_logins` to accept a Codex access token with the kind `token`.
 It keeps every row, column, and other rule, including `no_reuse`, the primary key, and the user deletion cascade.
 
+`202611100900_computer_ledger.sql` adds the retained computer ledger. Each
+entry names its computer by the provider account and the sandbox ID
+together, so equal IDs in two accounts stay two entries.
+It copies known IDs from workspaces, builds, cleanup records, preview
+listeners, terminal credentials, image source jobs, and the deleted-org
+resource journal. Each copy takes the account of its source row. The copy
+also keeps an account that the Worker does not configure. Such an entry
+stays pending, with no provider request and no deletion mark.
+Identity-write triggers copy the account of the source row in the same way.
+They also retain assigned IDs from imports and repairs.
+A workspace owner trigger keeps its live computer records with the current owner.
+An allocation starts with its request key, its account, and no provider ID.
+The lifecycle attaches the ID after the provider reply.
+Confirmed deletions keep their entries until the org purge.
+An owner or parent ID has no foreign key, so its removal keeps the computer record.
+The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#the-computer-ledger)
+page gives the rules of these entries.
+
+The ledger migration runs after `202611092100_provider_accounts.sql` and
+`202611092305_org_images.sql`. The first of these rebuilds `workspaces` and
+`org_deletion_resources`. SQLite drops the triggers of a table when it drops
+the table. This order puts the ledger triggers on the rebuilt tables, so
+they stay.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -155,6 +179,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Chat attachment metadata | `202611081800`–`202611081859` |
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
 | Codex access tokens | `202611100000`–`202611100059` |
+| Computer ledger account merge | `202611100900`–`202611100959` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 

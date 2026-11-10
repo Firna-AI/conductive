@@ -53,7 +53,7 @@ of [the operator section](design-operator.md).
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
-moved. It gives the child pages of `app/command-palette`, `app/account`,
+moved. It gives the child pages of `app/command-palette`, `marketing/docs`, `app/account`,
 `app/banner`, `app/chat`, `app/workspace-menu`, and `app/workspace-links`,
 and the New workspace dialog. Its linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
@@ -145,7 +145,8 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the Terms, Privacy, and not-found pages, the comparison page,
+pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
+It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
 [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)

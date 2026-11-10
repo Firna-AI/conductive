@@ -15,6 +15,7 @@ one role:
 
 - The workspace ID names the workspace object of one workspace.
 - `org-image:<orgId>` names the image coordinator of one org.
+- `org-computer-stops:<orgId>` names the detached Stop task of one org.
 
 Its public methods are internal RPC, not HTTP routes. This folder uses the
 `WorkspaceLifecycleEndpoint` interface of
@@ -38,7 +39,13 @@ says:
 - `acknowledgeLifecycleFirstMessage` clears the pending first message of
   the create. The admission keeps its own copy for repeats.
 
-The `alarm` of the class serves both roles. For an image coordinator, it
+The `alarm` of the class serves these roles. The detached Stop task keeps
+concrete computer IDs and retries every 30 seconds until each Stop is confirmed.
+A successful reply that still runs keeps its retry.
+The task checks its org's live ledger before each dispatch.
+An owner change or suspension lift keeps its queued work.
+An absent or deleted ledger entry ends that work.
+For an image coordinator, the alarm
 advances the running build or refresh by one step, or starts the daily
 refresh. A transient Boat error keeps the job step for the next alarm,
 within the [retry window](image-builds.md#provider-retries), except a source
