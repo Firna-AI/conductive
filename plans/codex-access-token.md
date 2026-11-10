@@ -22,7 +22,7 @@ Codex starts.
 On 10 November 2026 the user asked to stack this branch on Conductor
 workspace 400, the Worker model proxy of decision 120 on branch
 `conductor/model-gateway-worker-model-proxy-decision-120`, with its plan
-`plans/model-gateway.md`. This branch merged that branch on the same day.
+[`plans/model-gateway.md`](https://github.com/Firna-AI/remote-code/blob/5399faaa/plans/model-gateway.md), which that branch deleted when its work completed. This branch merged that branch on the same day.
 The plan reads the request as option D of decision 172. Decision 173 asks
 how the gateway runs Codex on an access token.
 
@@ -194,7 +194,7 @@ D to G, corrected option B, and kept the recommendation B.
 - **Category:** Security.
 - **Location:** the Codex route in `worker/model-gateway/route.ts`, `worker/model-gateway/paths.ts`, `worker/model-gateway/headers.ts`, `worker/model-gateway/token.ts`, `parseCredential` in `runner/src/commands.ts`, `runner/src/providers/codex.ts`, and `docs/protocol/model-gateway.md`.
 - **Terms:**
-  - **Gateway:** the Worker route of the plan `plans/model-gateway.md`. It checks the turn token of a turn, adds the real login, and forwards each model request to Anthropic or OpenAI.
+  - **Gateway:** the Worker route of the plan [`plans/model-gateway.md`](https://github.com/Firna-AI/remote-code/blob/5399faaa/plans/model-gateway.md). It checks the turn token of a turn, adds the real login, and forwards each model request to Anthropic or OpenAI.
   - **Token mode:** the way that Codex works with `CODEX_ACCESS_TOKEN`. It asks OpenAI who owns the token, loads the workspace rules, the routing, and the model list, and sends model requests to the ChatGPT Codex backend.
   - **Rule bundle:** the Codex rules that a ChatGPT workspace admin sets. Codex loads them in the token mode, from `/backend-api/wham/config/bundle`.
 - **Background:**
