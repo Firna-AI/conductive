@@ -47,8 +47,13 @@ it('keeps the image account through a creation claim, workspace, and stored star
     { repositoryId, firstMessage: FIRST_MESSAGE },
     undefined,
     'boat-secondary',
+    { branch: 'feature/review', startSha: 'a'.repeat(40) },
   )
-  expect(job).toMatchObject({ providerAccount: 'boat-secondary' })
+  expect(job).toMatchObject({
+    providerAccount: 'boat-secondary',
+    baseBranch: 'feature/review',
+    startSha: 'a'.repeat(40),
+  })
   const key = {
     orgId: org.id,
     senderUserId: user.id,
@@ -61,7 +66,11 @@ it('keeps the image account through a creation claim, workspace, and stored star
     job.workspaceId,
     FIRST_MESSAGE.text,
   )
-  expect(saved).toMatchObject({ providerAccount: 'boat-secondary' })
+  expect(saved).toMatchObject({
+    providerAccount: 'boat-secondary',
+    baseBranch: 'feature/review',
+    startSha: 'a'.repeat(40),
+  })
   expect(
     await leasedCreationImage(db, org.id, job.workspaceId, repositoryId),
   ).toMatchObject({
@@ -76,6 +85,7 @@ it('keeps the image account through a creation claim, workspace, and stored star
     user,
     city: 'Lisbon',
     branch: 'account-owner/lisbon',
+    baseBranch: job.baseBranch,
     sessionId: 'account-session',
     turnId: job.turnId,
     message: FIRST_MESSAGE,
@@ -91,10 +101,13 @@ it('keeps the image account through a creation claim, workspace, and stored star
   expect(await readWorkspace(db, org.id, job.workspaceId)).toMatchObject({
     sandboxId: 'same-sandbox-id',
     providerAccount: 'boat-secondary',
+    baseBranch: 'feature/review',
   })
   const stored = serializeStartJob(job)
   expect(readStartJob(stored)).toMatchObject({
     providerAccount: 'boat-secondary',
+    baseBranch: 'feature/review',
+    startSha: 'a'.repeat(40),
   })
   const legacyStored = { ...stored, providerAccount: undefined }
   const legacy = readStartJob(legacyStored)

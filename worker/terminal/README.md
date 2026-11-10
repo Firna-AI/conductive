@@ -191,6 +191,10 @@ Frame checks use only the live registration. They run no D1 access query.
 Cleanup removes the registration and its scheduled work.
 Inject `dependencies.terminalSchedule` and `now` to test these deadlines.
 
+Each terminal socket is a bridge. `bridgeSocket` joins the browser socket to an outbound socket to the ttyd port.
+Such a bridge keeps its workspace object active, also while it is idle, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
+So the access timers of the terminal stay in memory.
+
 `scripts.ts` builds the exact password program, launcher, and shell server
 installed in the image. Its trusted options select paths, account names,
 and executables, such as ttyd and tmux. The password program captures

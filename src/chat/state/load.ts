@@ -14,7 +14,8 @@ const none = Promise.resolve(null)
 /**
  * Loads the chat of a workspace, then starts its event stream.
  *
- * 1. The session list and the view choose the session to show.
+ * 1. The session list and the view choose the session to show. The read
+ *    of the view also names the routine whose run made the workspace.
  * 2. Its full history gives the event number that the stream starts after.
  * 3. The workspace and the session list load again after that number, so no
  *    change between the reads and the stream gets lost. Each read carries
@@ -63,8 +64,9 @@ export async function loadChat(context: ChatContext): Promise<void> {
     fail(error)
     return
   }
-  const [view, models, account, org, members] = await extras
+  const [viewReply, models, account, org, members] = await extras
   if (!context.live()) return
+  const view = viewReply?.view ?? null
   // An input that an app model owns keeps the value of its source.
   const read = owned
     ? {}
@@ -73,6 +75,7 @@ export async function loadChat(context: ChatContext): Promise<void> {
     ...snapshot,
     ...read,
     view,
+    routine: viewReply?.routine ?? null,
   }))
   const active = store.get().activeSessionId
   let through: number | null = 0

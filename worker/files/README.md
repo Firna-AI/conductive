@@ -4,6 +4,8 @@ This module serves the Files and Changes API for Conductive.
 It keeps the runner's last tree and branch changes in workspace Durable Object storage.
 It joins the numbered parts of each full runner report before it stores the complete report.
 It also sends file and diff requests to the connected runner.
+Diff requests use the stored workspace base branch, with the repository default as a fallback.
+The runner compares from the merge base with the current workspace branch.
 A disconnected file read uses the shared sandbox provider on the server.
 
 The workspace Durable Object owns one `WorkspaceFiles` over the chat storage.
@@ -71,6 +73,7 @@ It must not apply a file report again.
 On this path, `files` serves the API from the same Durable Object storage.
 Its `tree` and `changes` methods read the complete projection.
 For each accepted runner socket, call `files.runner.attach(physicalConnectionId, send)` with a fresh ID.
+A ready runner socket that the workspace object restores after a wake attaches again with the same ID.
 Call `files.runner.detach(physicalConnectionId)` when that socket closes.
 Do not call `WorkspaceFiles.connect` on this path.
 It moves the projection from the runner stream to the physical connection.
@@ -108,8 +111,9 @@ The gated handler fills those labels from the actual start capture for
 runner results, direct opens, cached reports, and provider fallback.
 The browser receives no secret list. Raw operational paths can therefore
 contain marked values; the access protocol states this exposure.
-The broker checks the response type, connection, requested path, default branch, and file byte count.
+The broker checks the response type, connection, requested path, requested base branch, and file byte count.
 Pending reads fail when their connection closes or when their request signal aborts.
+A pending read is a live request, so it keeps the workspace object active until it ends.
 The owner must handle socket health and detach a connection that has failed.
 
 ## HTTP handler
@@ -135,7 +139,8 @@ The outer Worker forwards its request through `fetch`, with its cancellation sig
 Its `read` and `diff` methods return `null` when the runner is disconnected.
 An adapter must preserve that result.
 It must carry request cancellation to the object or detach pending requests when its connection ends.
-The handler gets the default branch from the workspace's repository record in D1.
+The handler reads the stored workspace base from D1.
+A null base uses the repository default branch.
 It does not use a browser-supplied base branch.
 
 The repository root is required because lifecycle and runner code own the checkout folder.
@@ -174,7 +179,8 @@ The part joining and report repair tests run through the chat backend:
 `npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
 `runner-grown-reports.test.ts` checks tree and changes parts that masking makes larger than one storage value.
 It runs on the production workspace object with the native SQLite value limit.
-No migration is required.
+File reports remain in Durable Object storage.
+The D1 workspace schema holds the base branch.
 
 ### Key Code
 

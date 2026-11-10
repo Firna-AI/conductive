@@ -26,7 +26,7 @@ export function SearchRow(props: { variant: RowVariant }) {
       aria-haspopup="dialog"
       aria-keyshortcuts={phone ? undefined : paletteKeyShortcut(platform)}
       className={classes(
-        links.newWorkspace,
+        links.row,
         props.variant === 'page' && links.page,
         ui.plainButton,
         ui.focusable,
@@ -34,7 +34,7 @@ export function SearchRow(props: { variant: RowVariant }) {
       onClick={() => palette.show()}
       type="button"
     >
-      <Search aria-hidden className={links.plus} size={14} />
+      <Search aria-hidden className={links.icon} size={14} />
       Search
       {phone ? null : (
         <kbd aria-hidden className={links.keys}>

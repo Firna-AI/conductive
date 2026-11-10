@@ -4,6 +4,7 @@ import { NativeAlarmWorkspace } from '../lifecycle/native-alarm-workspace.test-s
 import type { ReceiverOwnership } from '../members/workspace-receiver'
 import type { AppEnv } from '../env'
 import { featureResult } from './result'
+import { scheduleWorkspaceAlarm } from './alarms'
 import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 
 const app = createApp({ now: () => DEVICE_TEST_NOW })
@@ -33,6 +34,10 @@ export class Workspace extends NativeAlarmWorkspace {
       if (this.suspensions >= count) resolve()
       else this.observers.set(count, resolve)
     })
+  }
+
+  async runSecurityAlarmAt(at: number): Promise<void> {
+    await this.advanceStartAlarm(at)
   }
 
   async inspectFeatureState() {
@@ -69,7 +74,9 @@ export class Workspace extends NativeAlarmWorkspace {
           Math.max(this.testAlarmTime(), image.nextAt),
         )
     }
-    await this.integration.alarms.schedule()
+    await this.ctx.storage.transaction((transaction) =>
+      scheduleWorkspaceAlarm(transaction),
+    )
   }
 }
 

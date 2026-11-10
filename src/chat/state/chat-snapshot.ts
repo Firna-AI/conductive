@@ -8,9 +8,13 @@ import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
+  RunRoutine,
 } from '../api/read-responses'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
-import { emptyTranscript, type Transcript } from './transcript'
+import {
+  emptyTranscript,
+  type Transcript,
+} from '../../shared/transcript/transcript'
 
 /**
  * The message that a user writes in a session. Its identity stays when the
@@ -89,6 +93,11 @@ export interface ChatSnapshot {
    */
   archiveTabs: readonly string[] | null
   view: WorkspaceView | null
+  /**
+   * The routine whose run made the workspace, from the read of the view.
+   * Null for a workspace that a person created, and until the view reads.
+   */
+  routine: RunRoutine | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
@@ -132,6 +141,7 @@ export const initialSnapshot: ChatSnapshot = {
   history: [],
   archiveTabs: null,
   view: null,
+  routine: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },

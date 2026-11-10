@@ -215,6 +215,9 @@ decision number names a dated record, as
 
 - A new workspace starts from the newest good org image. It then creates
   its branch in the folder of its repository.
+- The run of a pull request creates its branch from that pull request, as
+  [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
+  says (decision 505 A).
 - When the GitHub repository has no refs, such as branches or tags, the
   start first pushes an empty first commit to the default branch of the
   repository (decision 89). It then fetches that branch and creates the
@@ -263,3 +266,5 @@ decision number names a dated record, as
   good org image, with the current startup script and env vars.
 - When that sandbox is ready, the agent gets the queued messages, as
   [Messages](messages-and-attachments.md#messages) says.
+- A routine run keeps its failed workspace and its cause, as
+  [Failed runs](routine-runs.md#failed-runs) says (decision 512 B).

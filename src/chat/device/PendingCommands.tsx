@@ -5,7 +5,7 @@ import type {
 } from '../../shared/device'
 import pane from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import styles from '../../../docs/mockups/src/components/chat/PendingCommand.module.css'
-import { macLabel } from './command-text'
+import { macLabel } from '../../shared/transcript/command-words'
 import { CommandChoices } from './CommandChoices'
 import {
   CommandLine,

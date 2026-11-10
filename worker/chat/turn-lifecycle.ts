@@ -90,6 +90,14 @@ export class TurnLifecycle {
         : {
             state: 'failed',
             ...(event ? { retryMessageId: event.retryMessageId } : {}),
+            error:
+              event?.type === 'turn.failed'
+                ? event.error
+                : {
+                    code: 'runner_event_refused',
+                    message:
+                      'The agent could not finish. Try again in the workspace.',
+                  },
           },
       occurredAt,
     )

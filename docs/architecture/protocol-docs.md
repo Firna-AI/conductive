@@ -28,6 +28,8 @@ them, and this page lists each protocol doc and what it covers.
     of lost workspace updates.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
+  - [Session transcripts](../protocol/session-transcripts.md): copying a
+    session as concise or full Markdown, and its route.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
@@ -82,3 +84,7 @@ them, and this page lists each protocol doc and what it covers.
 - [Conductor comparison](../protocol/conductor-comparison.md): the public
   page for people who move from Conductor, with the status of each
   Conductor feature.
+- [Routines](../protocol/routines.md): routines and their schedules, with the
+  linked pages [Routine runs](../protocol/routine-runs.md),
+  [Pull request runs](../protocol/pull-request-runs.md), and
+  [Base branches](../protocol/base-branches.md).

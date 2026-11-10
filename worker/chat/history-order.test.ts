@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { SessionLog } from '../../src/chat/state/session-log'
+import { SessionLog } from '../../src/shared/transcript/session-log'
 import { createRunnerLimitsFixture } from './runner-limits.test-support'
 import { choice, context } from './runner-fixtures.test-support'
 import {

@@ -22,12 +22,18 @@ afterEach(async () => {
   await fixture?.dispose()
 })
 
-it('keeps a live lease before its deadline and settles waiting work at its alarm', async () => {
+it('keeps an automatic heartbeat through hibernation and settles waiting work at the renewed lease alarm', async () => {
   const mac = await connected(fixture)
   const clock = deviceClock(fixture)
   await command(fixture, mac)
-  const deadline = DEVICE_TEST_NOW + 30_000
-  expect(await clock.scheduled()).toBe(deadline)
+  const deadline = DEVICE_TEST_NOW + 50_000
+  expect(await clock.scheduled()).toBe(DEVICE_TEST_NOW + 10_000)
+  await clock.set(DEVICE_TEST_NOW + 20_000)
+  const restored = await clock.hibernate(async () => {
+    mac.socket.send(JSON.stringify({ type: 'device.ping' }))
+    expect(await mac.inbox.next()).toEqual({ type: 'device.pong' })
+  })
+  expect(restored.current).toEqual({ ok: true, value: { device: mac.device } })
   await clock.set(deadline - 1)
   await clock.runAlarm()
   expect(await workspaceState(fixture)).toBe('input')
@@ -58,7 +64,9 @@ it('keeps an executing command before its watchdog and times it out at its alarm
     .poll(() => throughEventNumber(fixture), { timeout: 10_000 })
     .toBe(beforeApproval + 1)
   const deadline = DEVICE_TEST_NOW + 11_000
-  await expect.poll(() => clock.scheduled(), { timeout: 10_000 }).toBe(deadline)
+  await expect
+    .poll(() => clock.scheduled(), { timeout: 10_000 })
+    .toBe(DEVICE_TEST_NOW + 10_000)
   expect(await stored(fixture)).toMatchObject({
     state: 'running',
     startedAt: DEVICE_TEST_NOW,

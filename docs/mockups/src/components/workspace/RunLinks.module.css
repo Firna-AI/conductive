@@ -1,0 +1,48 @@
+/* A line under the header, with the outline of the other bars. */
+.line {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 5px;
+  min-height: max(30px, calc(var(--ui-touch-min) - 8px));
+  margin: 0;
+  padding: 0 var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  box-sizing: border-box;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.words {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.routine,
+.pullRequest {
+  color: var(--ui-link);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* A long routine name gives up its room before the number of the pull request. */
+.routine {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.pullRequest {
+  flex-shrink: 0;
+}
+
+.routine:hover,
+.pullRequest:hover {
+  text-decoration: underline;
+}

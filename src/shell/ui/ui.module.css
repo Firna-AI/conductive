@@ -14,9 +14,22 @@
   display: contents;
 }
 
-/* A wrapper without a box, such as the one of a button that keeps its focus. */
+/* A wrapper without a box, such as the one of a suggestion and its divider. */
 .contents {
   display: contents;
+}
+
+/*
+ * The wrapper of a button that keeps the focus. The button takes the flex
+ * that a row of actions gives the wrapper, as a phone footer stretches each
+ * action.
+ */
+.keepFocus {
+  display: contents;
+}
+
+.keepFocus > * {
+  flex: inherit;
 }
 
 .plainButton {

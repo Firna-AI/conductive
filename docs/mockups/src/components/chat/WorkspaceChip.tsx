@@ -1,4 +1,5 @@
-import type { ComponentProps, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import type { ActivityStatus } from '../../fixtures/workspaces'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { activityPresentation } from '../workspaces/status'
@@ -19,7 +20,7 @@ export type ChipWorkspace = {
   /** The current name. */
   name: string
   /** The current state, which the state mark draws. */
-  status: ComponentProps<typeof StatusGlyph>['status']
+  status: ActivityStatus
 }
 
 /** What the element that opens the page of a chip gets from it. */
