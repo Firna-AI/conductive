@@ -20,7 +20,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Mentions',
     status: 'available',
-    note: 'Type @ in the message box to mention a file or a folder of the workspace. Teammate and pull request mentions remain under consideration.',
+    note: 'Type @ to mention workspace files or folders in chat. Teammate and pull request mentions remain under consideration.',
   },
   {
     id: 'attachments',

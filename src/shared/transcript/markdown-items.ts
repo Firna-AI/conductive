@@ -74,7 +74,6 @@ export function itemMarkdown(
               `${turnCopy.attachments}: ${item.message.attachments.map((file) => plainText(file.name)).join(', ')}`,
             ]
           : []),
-        ...(item.message.state === 'queued' ? [note(turnCopy.queued)] : []),
       ]
         .filter((part) => part.length > 0)
         .join('\n\n')

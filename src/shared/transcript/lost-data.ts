@@ -20,6 +20,7 @@ export const lostData: Readonly<
   'files.unavailable': 'all-files',
   'files.changed': 'all-files',
   'changes.updated': 'changes',
+  'ports.updated': 'servers',
   'start.updated': 'start-steps',
   'workspace.title': 'title',
   'runner.ready': 'update',

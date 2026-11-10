@@ -2,10 +2,16 @@ import { describe, expect, it } from 'vitest'
 import type { WorkspaceEvent } from '../shared/events'
 import { previewsPath } from '../shared/previews'
 import { FakeApiServer } from '../test-support/fake-api'
-import { FAKE_IDS } from '../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
+import {
+  fullReport,
+  nextEnvelope,
+  refusedReport,
+} from '../test-support/recorded-repairs'
 import { devSubscribe, emitDevEvent } from '../terminal/dev/devServer'
 import { ToolStore } from '../terminal/tool-parts/toolStore'
 import { listPreviews } from './previewsApi'
+import { createPreviewsStore } from './previewsStore'
 import {
   initialPreviews,
   previewsReducer,
@@ -110,6 +116,37 @@ describe('preview list', () => {
     )
 
     expect(visiblePreviews(state)).toEqual([second, reopened])
+  })
+
+  it('keeps the latest list of servers, the null list of a stop, and the time of the first failed repair until a later report', () => {
+    const server = new FakeApiServer()
+    const store = createPreviewsStore({
+      orgId: FAKE_IDS.org,
+      workspaceId: FAKE_IDS.workspace,
+    })
+    const stop = store.connect({
+      fetch: server.fetch,
+      subscribe: devSubscribe(server),
+    })
+    const emit = (event: WorkspaceEvent, occurredAt: number) =>
+      server.events.emit(nextEnvelope(server.events, event, occurredAt))
+
+    emit(fullReport('ports.updated'), FAKE_TIME - 300_000)
+    expect(store.getSnapshot().ports?.map(({ port }) => port)).toEqual([
+      3000, 4321, 4322, 5173, 6006,
+    ])
+
+    // The first loss asks for a fresh report, and shows nothing.
+    emit(refusedReport('ports.updated', false), FAKE_TIME - 240_000)
+    expect(store.getSnapshot().portsFailedAt).toBeNull()
+    emit(refusedReport('ports.updated', true, 2), FAKE_TIME - 180_000)
+    emit(refusedReport('ports.updated', true, 3), FAKE_TIME - 60_000)
+    expect(store.getSnapshot().portsFailedAt).toBe(FAKE_TIME - 180_000)
+
+    emit({ type: 'ports.updated', ports: null }, FAKE_TIME)
+    stop()
+    expect(store.getSnapshot().ports).toBeNull()
+    expect(store.getSnapshot().portsFailedAt).toBeNull()
   })
 
   it('shows the first tab when the address names a closed preview', () => {

@@ -16,7 +16,6 @@ export const turnCopy = {
   files: 'Files this turn changed',
   working: 'Working',
   thinking: 'Thinking',
-  queued: 'Sends when the sandbox is ready',
 } as const
 
 /** The person who reads the chat, and the members whom it can name. */

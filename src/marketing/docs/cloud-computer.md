@@ -113,7 +113,7 @@ These values also take priority over an author that a script or an agent writes 
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
 It does not hide values in file content, diffs, or Terminal.
 
 ## Apply setup changes
@@ -125,6 +125,7 @@ Existing workspaces keep their files.
 A build also installs the newest Conductive cloud computer software.
 An existing workspace keeps the software of the setup that it started from, also after a resume.
 To get newer software, start a new workspace after an admin runs **Build computer**.
+This also gives the new workspace the server list in **Preview**.
 
 After the first successful build, saved repository and install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build runs.

@@ -1,3 +1,4 @@
+import { TERMINAL_PORT } from '../../src/shared/terminal'
 import { shellArgument } from './privileged'
 
 export const TERMINAL_RUNTIME = '/run/conductive-terminal'
@@ -99,7 +100,7 @@ ${validation}
 valid_password || exit 1
 password=$(cat -- "$password_file")
 [ -n "$password" ] || exit 1
-exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port 7681 --writable --credential "conductive:$password" ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} new-session -A -s workspace -c "$CONDUCTIVE_REPOSITORY_DIR" /bin/bash -l
+exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port ${TERMINAL_PORT} --writable --credential "conductive:$password" ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} new-session -A -s workspace -c "$CONDUCTIVE_REPOSITORY_DIR" /bin/bash -l
 `
 }
 

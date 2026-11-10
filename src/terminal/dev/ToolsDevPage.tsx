@@ -4,7 +4,7 @@ import { SharedUiThemeProvider } from '@firna/ui/theme'
 import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
 import { DesktopTool } from '../../desktop/DesktopTool'
 import { PreviewTool, type PreviewRoute } from '../../previews/PreviewTool'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { TerminalTool } from '../TerminalTool'
 import type { ConnectTerminal } from '../TerminalScreen'
 import type { ToolWorkspace } from '../tool-parts/workspace'
@@ -23,6 +23,9 @@ import styles from './ToolsDevPage.module.css'
 
 const labels = { terminal: 'Terminal', preview: 'Preview', desktop: 'Desktop' }
 
+/** The time of the fake events, so that the age of a notice reads as drawn. */
+const devNow = () => FAKE_TIME
+
 function lastOf<T>(list: readonly T[], item: T): readonly T[] {
   return [...list, item].slice(-50)
 }
@@ -40,10 +43,10 @@ export function ToolsDevPage() {
   const terminals = useRef<EchoTerminal[]>([])
   const { server, hold } = useMemo(
     () => ({
-      server: createDevServer(params.tool, params.state),
+      server: createDevServer(params.tool, params.state, params.ports),
       hold: new DevHold(params.state === 'late'),
     }),
-    [params.tool, params.state],
+    [params.tool, params.state, params.ports],
   )
   const workspace = useMemo<ToolWorkspace>(
     () => ({
@@ -87,7 +90,14 @@ export function ToolsDevPage() {
         workspace={workspace}
       />
     ),
-    preview: <PreviewTool route={route} touch={touch} workspace={workspace} />,
+    preview: (
+      <PreviewTool
+        now={devNow}
+        route={route}
+        touch={touch}
+        workspace={workspace}
+      />
+    ),
     desktop: <DesktopTool touch={touch} workspace={workspace} />,
   }
   return (
