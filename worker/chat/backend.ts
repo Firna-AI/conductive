@@ -9,6 +9,7 @@ import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
+import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
 import {
   authorizeChatBrowser,
@@ -20,11 +21,12 @@ import { BrowserTabs } from './browser-tabs'
 import { authorizeChatRunner } from './runner-authorization'
 import { WorkspaceTitles } from './workspace-titles'
 import { WorkspaceOperations } from './workspace-operations'
+import { ChatWorkspaceBinding } from './workspace-binding'
 import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
-import { ChatStore, type ChatTransaction } from './store'
-import { reportRoutineFirstTurn } from './routine-run'
+import type { ChatStore, ChatTransaction } from './store'
+import { createWorkspaceChatStore } from './workspace-store'
 import {
   runWorkspaceOperation,
   type WorkspaceOperation,
@@ -40,13 +42,14 @@ import type {
 /** The Durable Object and the in-memory runner adapter use this boundary. */
 export class WorkspaceChat {
   readonly store: ChatStore
+  readonly turnTokens: WorkspaceTurnTokens
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
   private readonly runner: RunnerChannel
   private readonly browsers: BrowserTabs
   private readonly operations: WorkspaceOperations
   private readonly titles: WorkspaceTitles
-  private workspaceId: string | null = null
+  private readonly binding: ChatWorkspaceBinding
 
   async workspaceSummary(workspaceId?: string): Promise<ChatWorkspaceSummary> {
     return this.operations.summary(workspaceId)
@@ -86,9 +89,15 @@ export class WorkspaceChat {
     overrides: Partial<ChatDependencies> = {},
   ) {
     this.env = env
-    this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
-    this.store = new ChatStore(storage, this.dependencies.now, (id) =>
-      reportRoutineFirstTurn(env.DB, this.store, id, this.dependencies.now()),
+    this.binding = new ChatWorkspaceBinding(
+      overrides.matchesObject ?? (() => true),
+    )
+    this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
+    this.store = createWorkspaceChatStore(
+      storage,
+      env,
+      this.dependencies,
+      this.publish,
     )
     this.titles = new WorkspaceTitles(
       env,
@@ -97,15 +106,24 @@ export class WorkspaceChat {
       (events) => this.publish(events),
     )
     this.browsers = new BrowserTabs(this.dependencies)
-    this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
-      this.publish(events),
+    this.turnTokens = new WorkspaceTurnTokens(
+      this,
+      env,
+      (id) => this.operation(id),
+      this.dependencies.randomId,
+    )
+    this.runner = new RunnerChannel(
+      this.store,
+      this.dependencies,
+      (events) => this.publish(events),
+      (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
     )
     this.operations = new WorkspaceOperations({
       env,
       store: this.store,
       dependencies: this.dependencies,
-      workspaceId: () => this.workspaceId,
-      bind: (id) => this.bind(id),
+      workspaceId: () => this.binding.id,
+      bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
       closeRunner: () => this.runner.close(),
     })
@@ -157,13 +175,13 @@ export class WorkspaceChat {
       this.env,
       this.dependencies.now(),
     )
-    this.bind(access.workspace.id)
+    this.binding.bind(access.workspace.id)
     return access
   }
 
   async connectRunner(request: Request, peer: RunnerPeer): Promise<void> {
     const workspace = await authorizeChatRunner(this.env, request)
-    this.bind(workspace.id)
+    this.binding.bind(workspace.id)
     await this.runner.open(workspace, peer)
   }
 
@@ -198,7 +216,7 @@ export class WorkspaceChat {
     workspaceId: string,
     work: (view: ChatTransaction) => Promise<T>,
   ): Promise<T> {
-    this.bind(workspaceId)
+    this.binding.bind(workspaceId)
     return this.store.run(() => this.store.read(workspaceId, work))
   }
 
@@ -207,7 +225,7 @@ export class WorkspaceChat {
     workspaceId: string,
     work: (transaction: ChatTransaction) => Promise<T>,
   ): Promise<T> {
-    this.bind(workspaceId)
+    this.binding.bind(workspaceId)
     return this.store.run(() =>
       this.store.change(workspaceId, work, (events) => this.publish(events)),
     )
@@ -218,7 +236,7 @@ export class WorkspaceChat {
     authorize: () => Promise<void>,
     work: (operation: WorkspaceOperation) => Promise<T>,
   ): Promise<T> {
-    this.bind(workspaceId)
+    this.binding.bind(workspaceId)
     return runWorkspaceOperation(
       this.store,
       workspaceId,
@@ -232,7 +250,7 @@ export class WorkspaceChat {
     workspaceId: string,
     command: RunnerFileCommand,
   ): Promise<boolean> {
-    this.bind(workspaceId)
+    this.binding.bind(workspaceId)
     return this.store.run(async () =>
       this.runner.sendFileCommand(workspaceId, command),
     )
@@ -271,20 +289,6 @@ export class WorkspaceChat {
       this.dependencies,
       this.publish,
     )
-  }
-
-  private bind(workspaceId: string): void {
-    if (
-      !this.dependencies.matchesObject(workspaceId) ||
-      (this.workspaceId && this.workspaceId !== workspaceId)
-    ) {
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    }
-    this.workspaceId = workspaceId
   }
 
   private publish = (events: readonly WorkspaceEventEnvelope[]): void => {

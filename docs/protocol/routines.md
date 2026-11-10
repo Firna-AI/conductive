@@ -181,9 +181,13 @@ decision number names a dated record, as
   reach the agent of a pull request run. The rule of
   [Who may start a run](pull-request-runs.md#who-may-start-a-run) checks
   only the author of the pull request and the sender of the event.
-- Risk: such text can steer the agent. The run holds the owner's agent
-  login, the owner's GitHub token, and the env vars of the org. So the
-  agent can copy them, or push them to a branch.
+- Risk: such text can steer the agent. The run uses the owner's agent
+  login and GitHub token, and the env vars of the org. The agent can copy
+  the GitHub token and the env vars, or push them to a branch.
+- The run's access to the agent login follows the sandbox's version pin.
+  With a pin of 2 or later, the sandbox holds only a turn token that
+  spends the owner's login through the gateway. With a pin of 1, an
+  older runner can receive the agent login itself.
 - The owner's GitHub token reaches each repository where the owner
   installed the GitHub App and has access, as
   [GitHub tokens](github-tokens.md) says
@@ -192,7 +196,9 @@ decision number names a dated record, as
   tools, and their first messages also come from the owner. Those
   workspaces spend starts, and the Runs list does not show them.
 - Risk: a member with a terminal in a run workspace can read the owner's
-  logins while a turn runs, as in each workspace.
+  GitHub token and the credential of a running turn, as in each workspace.
+  That credential is a turn token on a newer runner, or the agent login
+  itself on an older runner.
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   states that risk (decision 105).
 - An instruction or a classifier that makes the agent ignore commands in a

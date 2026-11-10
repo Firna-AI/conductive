@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { createChatFixture } from '../chat/harness.test-support'
+import { createChatFixture, WORKSPACE_ID } from '../chat/harness.test-support'
 import { terminalEvent } from '../chat/turn-lifecycle.test-support'
 import { retryRequest } from '../chat/retry.test-support'
 import { createHarness, type TestHarness } from '../test-support/harness'
+import { FakeRunner } from '../test-support/fake-runner'
 import { seedChatRun, twoEarlierFailures } from './first-turn.test-support'
 import { readRoutine } from './routine-data'
 
@@ -130,5 +131,65 @@ it('reports a queued first turn failure when its login disappears before dispatc
       .failedRunsInARow,
   ).toBe(1)
   expect(runner.commands).toEqual([])
+  await fixture.chat.closeConnections()
+})
+
+it('uses the routine owners unshared login through the gateway and reports its loss once after the runner ends', async () => {
+  const fixture = await createChatFixture(harness)
+  await fixture.env.DB.prepare(
+    "UPDATE agent_logins SET no_reuse = 1 WHERE user_id = ? AND agent = 'claude'",
+  )
+    .bind(fixture.owner.id)
+    .run()
+  const session = await fixture.createSession()
+  const accepted = await fixture.send(session.id)
+  await seedChatRun(fixture, accepted.session.activeTurnId!, session.id)
+  const runner = await fixture.connect(
+    new FakeRunner({ workspaceId: WORKSPACE_ID, protocolVersion: 2 }),
+  )
+  runner.emit({ type: 'runner.ready' })
+  await fixture.drain()
+  const turn = runner.commands.find((command) => command.type === 'turn')
+  if (turn?.type !== 'turn' || !turn.credential)
+    throw new Error('Missing gateway turn')
+  expect(
+    await fixture.chat.turnTokens.check(WORKSPACE_ID, turn.credential.token),
+  ).toEqual({
+    ok: true,
+    login: {
+      agent: 'claude',
+      kind: 'api-key',
+      secret: `secret-${fixture.owner.id}-claude`,
+    },
+  })
+  expect(JSON.stringify(runner.received)).not.toContain(
+    `secret-${fixture.owner.id}-claude`,
+  )
+  await fixture.env.DB.prepare(
+    "DELETE FROM agent_logins WHERE user_id = ? AND agent = 'claude'",
+  )
+    .bind(fixture.owner.id)
+    .run()
+  expect(
+    await fixture.chat.turnTokens.check(WORKSPACE_ID, turn.credential.token),
+  ).toEqual({ ok: false, reason: 'agent_login_unavailable' })
+  await fixture.drain()
+  expect(runner.commands.at(-1)).toMatchObject({
+    type: 'interrupt',
+    turnId: turn.turnId,
+  })
+  runner.emit(terminalEvent(turn, 'finished'))
+  await fixture.drain()
+  expect(
+    await fixture.env.DB.prepare(
+      "SELECT state, error_code AS code FROM routine_runs WHERE id = 'first-run'",
+    ).first(),
+  ).toEqual({ state: 'failed', code: 'agent_login_required' })
+  runner.emit(terminalEvent(turn, 'finished'))
+  await fixture.drain()
+  expect(
+    (await readRoutine(fixture.env.DB, fixture.org.id, 'chat-routine'))
+      .failedRunsInARow,
+  ).toBe(1)
   await fixture.chat.closeConnections()
 })

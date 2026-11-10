@@ -38,7 +38,7 @@ says.
   commits or merged the pull request.
 - So a bot, such as Dependabot, starts runs only when the owner names it in
   "Author is".
-- Reason: a run holds the owner's logins and the org's env vars. The author
+- Reason: a run uses the owner's logins and the org's env vars. The author
   can write instructions into the code or the text that the agent reads.
 - Each pull request trigger can have an author filter with two lists of
   GitHub accounts, "Author is" and "Author is not".
@@ -67,14 +67,15 @@ says.
 - The filter decides first. An event whose author the filter leaves out
   gives no row, also when its author or sender is outside the org.
 - Runs for each pull request of the repository were rejected. A
-  collaborator outside the org could then steer a run that holds the
+  collaborator outside the org could then steer a run that uses the
   owner's logins.
 - Trust in the role that GitHub gives an author, such as a member of the
   GitHub organization, was rejected. It trusts accounts that no admin of
   the org invited.
 - Runs without the env vars and with a GitHub token that can only read were
-  rejected. The agent login still reaches the sandbox, and such runs need a
-  new kind of start.
+  rejected. Such a run still spends the owner's agent login, and needs a
+  new kind of start. [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
+  states what its sandbox can read.
 - A run that waits for the approval of the owner was rejected, because it
   needs a new run state.
 - [Risks that stay open](routines.md#risks-that-stay-open) states what this

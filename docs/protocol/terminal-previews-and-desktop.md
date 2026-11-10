@@ -5,6 +5,7 @@ of the terminal, the port previews, and the desktop. It also covers the
 proxies to a sandbox. It belongs to
 [Access and security](access-and-security.md), which covers sign-in, the
 gates of the Worker, the request bodies, and the content security policy.
+[Tools of a workspace](workspace-tools.md) states what these tools show.
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
@@ -96,7 +97,7 @@ decision number names a dated record, as
   states the full rules.
 - A revoked or an unknown hostname gets no answer from any sandbox.
 - The preview relay is the app's own service in the sandbox, as
-  [Sandbox software](../architecture.md#sandbox-software) says. Each preview
+  [Sandbox software](../architecture/components.md#sandbox-software) says. Each preview
   request goes through it to the previewed server, the server on the port
   of the preview.
 - An answer that does not come from the preview relay never reaches the browser.

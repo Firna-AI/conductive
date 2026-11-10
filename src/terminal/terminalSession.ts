@@ -20,6 +20,11 @@ export interface TerminalScreen {
   onReply(listener: (data: string) => void): Disposable
   onResize(listener: (size: { cols: number; rows: number }) => void): Disposable
   focus(): void
+  /**
+   * Turns off the mouse reports that a program turned on, in the screen
+   * only, so that a drag selects text again. The program gets nothing.
+   */
+  releaseMouse(): void
 }
 
 export interface TerminalSessionEvents {
@@ -62,6 +67,8 @@ export class TerminalSession {
       transport.onData((output) => screen.write(output)),
       transport.onClose(() => {
         this.ended = true
+        // The program is gone, so its output stays selectable.
+        screen.releaseMouse()
         this.events.onClosed()
       }),
     )

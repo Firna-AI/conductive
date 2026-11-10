@@ -18,7 +18,7 @@
   - The input owner then moves the idle stop to 30 minutes later. It also sets the auto-stop of the provider to 1,860 seconds, as "Input activity" in `worker/lifecycle/README.md` says.
   - The workspace screen shows a preview in a frame while its Preview tool shows, in `src/previews/PreviewFrame.tsx`. "Open in new tab" opens the same preview in a tab of its own, and the Mac app can open it in the default browser.
   - Input in the frame does not reach the input listener of the app page, because the events of a frame stay in the frame. So the requests of a preview are the only sign of work in it today.
-  - The Worker revokes a preview when its sandbox stops, when the user closes it, and 24 hours after it opens. "Port previews" in `docs/protocol/access-and-security.md` states this. A request of a revoked preview gets 404 and does not count.
+  - The Worker revokes a preview when its sandbox stops, when the user closes it, and 24 hours after it opens. "Port previews" in `docs/protocol/terminal-previews-and-desktop.md` states this. A request of a revoked preview gets 404 and does not count.
   - The proxy already tells a page load from other requests with the `Sec-Fetch-Dest` header, for the refresh of its port listener, at `worker/previews/proxy.ts:99-101`.
 - **Problem:**
   - A page can send requests by itself. Examples are a dashboard that polls its server every few seconds, and a script that retries a lost connection. Each such request or handshake counts as activity.
@@ -48,7 +48,7 @@
     - A page that reloads itself on a timer still counts, as in B.
     - Cost: the proxy changes the HTML of the app of the user for the first time. If the Content Security Policy of an app blocks the script, only its page loads count, unless the proxy also changes that policy.
     - Page code can call the reserved path too. That is no access problem, because activity is not an access check.
-    - D adds a requirement to "Port previews" in `docs/protocol/access-and-security.md`, and it needs a security review.
+    - D adds a requirement to "Port previews" in `docs/protocol/terminal-previews-and-desktop.md`, and it needs a security review.
 - **Left out:**
   - A rule that finds polling by its timing. A timer with a random wait escapes it, and a user who repeats an action looks like a timer. It fails the goal.
   - A report from the app page while the preview frame has the focus and the page shows. It counts focus, not input, so a page left with the focus in the frame keeps counting. It also misses a preview in a tab of its own, so it fails the goal.

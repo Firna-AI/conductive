@@ -8,6 +8,8 @@ import { githubSetupResponse } from './github-setup'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
 import { requestBodyEntry } from './http/request-body'
+import { routeModelGateway } from './model-gateway/route'
+import { gatewayWorkspaceAllowed } from './model-gateway/workspace-access'
 import { route, routeDevice } from './routes'
 import { workspaceBinding } from './app-api/workspace-state'
 import { routeChat, routeRunner } from './chat/router'
@@ -142,6 +144,13 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           }
           if (path === IMAGE_SOURCE_CREDENTIAL_PATH)
             return respond(await handleImageSourceCredential(request, env))
+          const gatewayEnv = env
+          const gatewayResponse = await routeModelGateway(request, {
+            ...workspaceRuntime(gatewayEnv, dependencies),
+            workspaceAllowed: (id) =>
+              gatewayWorkspaceAllowed(gatewayEnv.DB, id),
+          })
+          if (gatewayResponse) return respond(gatewayResponse)
           const runnerResponse = await routeRunner(request, env)
           if (runnerResponse) return respond(runnerResponse)
         }

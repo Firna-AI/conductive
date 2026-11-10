@@ -157,6 +157,7 @@ it('keeps separate accounts for a build, its previous image, and its source job'
     previousRepositoryLocations: [],
     software: SOFTWARE,
     previousImageName: 'last-good-image',
+    previousRunnerProtocolVersion: null,
     now: runtime.dependencies.now(),
   })
   await assignBuildSandbox(

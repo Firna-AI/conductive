@@ -61,10 +61,22 @@ They do not offer a call to read or message another workspace's chat.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
-The cloud computer receives the session's login when a turn needs it.
 
-A program or member with terminal access there can read or copy that login.
-A copied login can remain usable after the turn ends.
+A cloud computer from a new org build gets a credential for each turn instead of the agent login.
+Its model requests pass through Conductive, which adds the session starter's login.
+The agent login stays outside that computer.
+A program or member with terminal access can read or copy the turn credential.
+It works while the turn runs, also from outside the computer.
+After **Stop**, it can start no new request.
+A request that still runs ends within 30 seconds after the turn ends.
+Programs that keep running can read the credentials of later turns too.
+Repository agent settings can send model requests and the turn credential to another address.
+
+An older cloud computer can still receive the agent login itself during a turn.
+A program or member with terminal access there can read or copy it.
+That copy can remain usable after the turn ends.
+Installing newer agent software on that computer does not remove this risk.
+A new org build protects computers that start from that build.
 Removing a login from Account does not revoke a copy held elsewhere.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.

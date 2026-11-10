@@ -151,7 +151,7 @@ says.
   says (decision 502 B).
 - Every member can send messages in every workspace of the org. Each
   session runs on the agent login of its starter, as
-  [Chat and events](agents-and-sessions.md#agents) says.
+  [Agents and sessions](agents-and-sessions.md#agents) says.
 - Every member can move a workspace to another section and rename it,
   while the workspace is not archived.
 - A member who is not an admin sees the Members tab and the owner of each

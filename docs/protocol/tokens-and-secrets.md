@@ -7,7 +7,9 @@ users enter, and the agent logins that users connect. It belongs to
 gates of the Worker, the request bodies, and the content security policy.
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A gateway
+decision number names a decision of the change that adds the
+[model gateway](model-gateway.md), as that doc says.
 
 ## The workspace token
 
@@ -95,12 +97,18 @@ decision number names a dated record, as
   waitlist.
 - Anthropic gave the operator permission to use `claude setup-token`
   tokens (decision 37).
+- Anthropic confirmed to the operator on 9 November 2026 that the
+  [model gateway](model-gateway.md) can carry subscription tokens (gateway
+  decision 1). OpenAI confirmed to the operator on the same day that the
+  gateway can carry OpenAI API keys.
 - Risk: Anthropic plans to make bare mode the default, and bare mode reads
   no subscription login. A later release of the agent program can then
   stop the tokens.
 - A sign-in inside a sandbox was rejected, because the login would stay on
   the disk of one workspace.
 - A user's agent logins serve all of that user's orgs (decision 21).
-- The app gives a user's agent login to a sandbox only for a turn of a
-  session that the user started. The GitHub token of a turn still belongs
-  to its sender, as [GitHub tokens](#github-tokens) says.
+- The app uses a user's agent login only for a turn of a session that the
+  user started. Only an older runner gets the login itself, as
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
+  says. The GitHub token of a turn still belongs to its sender, as
+  [GitHub tokens](#github-tokens) says.
