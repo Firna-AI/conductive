@@ -29,19 +29,6 @@ export async function orgWorkspaces(db: D1Database, orgId: string) {
   ).results
 }
 
-export async function orgCleanupWorkspaceIds(
-  db: D1Database,
-  orgId: string,
-): Promise<string[]> {
-  const { results } = await db
-    .prepare(
-      'SELECT workspace_id AS id FROM lifecycle_sandbox_cleanup WHERE org_id = ? ORDER BY workspace_id',
-    )
-    .bind(orgId)
-    .all<{ id: string }>()
-  return results.map((row) => row.id)
-}
-
 export async function orgBuilds(db: D1Database, orgId: string) {
   return (
     await db
