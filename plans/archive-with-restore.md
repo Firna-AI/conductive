@@ -24,8 +24,8 @@ page that lists every workspace, or a Restore from the branch on GitHub.
 
 Contract owners:
 
-- [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md),
-  sections "Archive" and "Stop and resume".
+- [Workspace life](../docs/protocol/workspace-life.md), sections
+  "Stop and resume" and "Archive".
 - [Orgs and members](../docs/protocol/orgs-and-members.md), the workspace
   list and the roles.
 - [GitHub banner](../docs/protocol/github-banner.md), Archive after the
@@ -97,7 +97,7 @@ Replaced ways:
   later?"
 - **Category:** Product bug.
 - **Location:** `worker/lifecycle/archive-workspace.ts:32` and
-  `docs/protocol/workspaces-and-sandboxes.md:195`.
+  `docs/protocol/workspace-life.md:104`.
 - **Terms:**
   - **Check:** the step before Archive that runs `git status` and counts
     unpushed commits inside the cloud computer. It needs a running cloud
@@ -163,7 +163,7 @@ Replaced ways:
     snapshot costs $0.056 a day, and it uses the count that the org images
     need. Decision 43 also chose restarts over a saved snapshot. The first
     reason, that a saved snapshot can hold the env values of the org, as
-    [What a sandbox holds](../docs/protocol/access-and-security.md#what-a-sandbox-holds)
+    [What a sandbox holds](../docs/protocol/isolation.md#what-a-sandbox-holds)
     forbids, applies to the disk that C keeps too. Scripts and agents can
     write such values into the home folder, which Boat saves.
   - Restore from the branch on GitHub only. It protects no work that is
@@ -335,7 +335,8 @@ workspace after the delete. Remove the drawings of the Archive question.
 - [ ] Draw Restore workspace among the actions of an archived workspace in
       the command palette entries.
 - [ ] Remove the Archive question: the overlays `archive-unpushed` and
-      `archive-pushed` in `workspaceOverlays.tsx` and `workspaceState.ts`,
+      `archive-pushed` in `docs/mockups/src/screens/workspaceOverlays.tsx` and
+      `docs/mockups/src/screens/workspaceState.ts`,
       the component `docs/mockups/src/components/workspace/ArchiveDialog.tsx`,
       and the fixtures of the check in `docs/mockups/src/fixtures/archive.ts`.
       Keep `ArchiveDialog.module.css` until Milestone 4, because the app
@@ -357,7 +358,7 @@ Depends on: 1
 State Archive with no check, Restore, and the delete after 14 days as
 requirements, before the code changes.
 
-- [ ] Rewrite "Archive" in `docs/protocol/workspaces-and-sandboxes.md`:
+- [ ] Rewrite "Archive" in `docs/protocol/workspace-life.md`:
       the stop at Archive, no check and no question, Restore for 14 days,
       the delete after 14 days, the reason, and the rejected options. Keep
       the rule that an archived workspace has no file lists and no tools.
@@ -377,8 +378,12 @@ requirements, before the code changes.
       `src/marketing/from-conductor/areas/workspaces-and-branches.ts`,
       under the claim rules of
       [Statuses](../docs/protocol/conductor-cloud-comparison.md#statuses).
+      Main already shows `workspaces-page-and-restore` as Planned, with
+      Restore within 14 days. Give it the status that holds when this
+      pull request merges, and drop the check from the note of `archive`.
 - [ ] Read the Terms page `src/marketing/terms.ts` and the Privacy page
-      `src/marketing/privacy.ts` in full. Update each sentence that
+      `src/marketing/privacy.ts` in full, with `src/marketing/privacy-uses.ts`
+      and `src/marketing/legal-text.ts`. Update each sentence that
       restates Archive, the delete of a cloud computer, or how long the app
       keeps the files of a workspace. Add the 14 days of an archived cloud
       computer to the section "How long Conductive keeps data" of the
