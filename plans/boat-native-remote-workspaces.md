@@ -616,6 +616,9 @@ Added on 5 November 2026 from the mockups of Milestone 1.
 - **Action:** ask the user, because the option adds a message queue that
   no requirement covers.
 - **Chosen:** A, by the user on 5 November 2026.
+- **Changed on 10 November 2026:** the user removed the label "Sends when
+  the sandbox is ready" under each waiting message. The queue of option A
+  stays.
 
 ### 15. Make the web app work on phones
 
