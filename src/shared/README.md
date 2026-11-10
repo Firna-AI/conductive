@@ -1,6 +1,7 @@
 # Shared contracts
 
-These modules define the browser API and the runner protocol.
+These modules define the browser API, the runner protocol, and the pure
+transcript fold that the browser and the Worker share.
 They use JSON values and plain TypeScript types.
 They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
@@ -152,6 +153,34 @@ The git credential payload is not defined yet.
 [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens) states its rule.
 
 ## Key code
+
+- [Session Markdown](transcript/session-markdown.ts) folds session pages and
+  builds concise or full transcripts. [Markdown items](transcript/markdown-items.ts)
+  format the shared chat words, paths, and commands. [Markdown code](transcript/markdown-code.ts)
+  keeps inline and block fences longer than their content's backticks.
+- [Lost data](transcript/lost-data.ts) maps refusal event types to the same
+  product names for the browser line and the copied transcript.
+- [Agent words](agents.ts) supply the effort labels, model lookup, and model
+  labels for the chat, the new-workspace picker, and the mockups.
+- [Duration](transcript/duration.ts) formats elapsed chat and command times.
+  [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
+  and the rule that starts a run open.
+- [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
+  lines, with omitted-file and unavailable-file data.
+- [Command words](transcript/command-words.ts) supply Mac names, command
+  states, notes, and output text. Browser code supplies icons and colours.
+- [Session events](transcript/session-events.ts) take stored Worker envelopes
+  or parsed browser envelopes and select one session's events.
+- [Session log](transcript/session-log.ts) folds those events and session
+  records in event order. It keeps the transcript and each item's first time.
+- [Transcript](transcript/transcript.ts) defines the items and folds each
+  session event with its [turn helpers](transcript/turn-events.ts).
+- [Item placement](transcript/item-placement.ts) keeps late items in their
+  turn. [Command placement](transcript/command-placement.ts) puts each Mac
+  command after the items that began before it.
+- [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
+  [Transcript entries](transcript/transcript-entries.ts) group the items and
+  generic inserts. Browser callers use React nodes as the insert content.
 
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.

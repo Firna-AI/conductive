@@ -34,6 +34,7 @@ how a screen is built, and links to the other pages.
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
+| `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |

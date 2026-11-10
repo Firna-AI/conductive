@@ -36,9 +36,11 @@ the message field of each composer, and Stop.
   the workspace is read-only, and the server path otherwise. The controller
   reads `readOnly` at each action, because a suspension can start during a
   visit, and it sends no other write then.
-- A read-only chat shows no composer, no +, no tab menu, no Try again, no
-  drag of a tab, and no answer to a Mac command. Its empty state names only
-  the session history.
+- A read-only chat shows no composer, no +, no Try again, no drag of a
+  tab, and no answer to a Mac command. The tab menu of a session tab holds
+  only the two copy items, and a file or diff tab opens no tab menu, as
+  [the tab row](tab-row.md) says. A copy reads the transcript and sends no
+  write. Its empty state names only the session history.
 
 When the chat becomes read-only, it hides an open rename or close question.
 The session history stays open. The tab keeps its old name, and the sandbox bar says why.

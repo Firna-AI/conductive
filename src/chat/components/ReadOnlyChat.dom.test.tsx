@@ -29,7 +29,7 @@ import { ChatController } from '../state/controller'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
 import { WorkspaceChat, WorkspaceChatView } from '../WorkspaceChat'
 import { pointer, rowStatus } from './tab-drag-test-kit'
-import { pressOn, rightClick } from './tab-row-test-kit'
+import { menuItems, pressOn, rightClick } from './tab-row-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -53,7 +53,7 @@ const noResume: Action<[]> = {
 }
 
 describe('a read-only chat', () => {
-  it('shows the refused bar of the host for a suspended org, switches its sessions with no write, shows no control that writes, and opens no tab menu', async () => {
+  it('shows the refused bar of the host for a suspended org, switches its sessions with no write, shows no control that writes, and opens a tab menu with only the copy items', async () => {
     holdAnimationFrames()
     // The cloud computer still runs while its stop waits, so the chat would
     // show its composer without the read-only input.
@@ -108,6 +108,8 @@ describe('a read-only chat', () => {
       browserMenu: rightClick(tab, { clientX: 50, clientY: 15 }),
       keyReachesBrowser: pressOn(tab, 'F10', { shiftKey: true }),
       menus: queryAllByRole('menu', second).length,
+      items: menuItems(second),
+      lines: queryByRole('menu', second)?.querySelectorAll('hr').length,
     }
     expect({
       refused: queryByText("The sandbox can't start") !== null,
@@ -123,7 +125,16 @@ describe('a read-only chat', () => {
       composer: false,
       newSession: false,
       rename: false,
-      tabMenu: { browserMenu: true, keyReachesBrowser: true, menus: 0 },
+      tabMenu: {
+        browserMenu: false,
+        keyReachesBrowser: false,
+        menus: 1,
+        items: [
+          { name: 'Copy concise transcript', off: false },
+          { name: 'Copy full transcript', off: false },
+        ],
+        lines: 0,
+      },
       resume: false,
       drag: '',
       writes: [],

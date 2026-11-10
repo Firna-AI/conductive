@@ -13,6 +13,7 @@ import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
+import { ChatToasts, useTranscriptCopy } from './components/TranscriptCopy'
 import { LinksProvider, type ChatLinks } from './links/LinksContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import {
@@ -21,6 +22,7 @@ import {
   type Overlay,
 } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
+import { browserCopy, type CopyServices } from './transcript-copy'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
 import styles from './WorkspaceChat.module.css'
@@ -31,6 +33,13 @@ export interface ChatViewProps {
   viewport: 'desktop' | 'mobile'
   /** The time source for durations and relative times. */
   clock?: Clock
+  /**
+   * The clipboard, the clock, and the timers of a copy of a transcript, such
+   * as the services of the app. Keep it stable: it keeps the text of a copy
+   * that the clipboard refused, as `copyTranscript` says. Without it, the
+   * chat copies through the clipboard of the browser.
+   */
+  copy?: CopyServices
   /**
    * Names and draws a file or diff tab of the saved view at its place in the
    * tab row, as `RenderTab` says. Without it, the row shows only the session
@@ -119,6 +128,7 @@ function ChatBody(
     overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
   const links = useLinks(controller, props.onOpenPage)
+  const copy = useTranscriptCopy(controller, props.copy ?? browserCopy)
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
   const reopen = useCallback(
@@ -139,6 +149,7 @@ function ChatBody(
         mobile={mobile}
         onCancelRename={controller.dismissOverlay}
         onClose={controller.requestClose}
+        onCopy={copy}
         onMove={controller.moveTab}
         onNew={() => void controller.newSession()}
         onRename={(id, title) => void controller.rename(id, title)}
@@ -203,7 +214,11 @@ export function WorkspaceChat(props: WorkspaceChatProps) {
     props,
     props.readOnly ?? false,
   )
-  return <ChatBody {...props} controller={controller} snapshot={snapshot} />
+  return (
+    <ChatToasts>
+      <ChatBody {...props} controller={controller} snapshot={snapshot} />
+    </ChatToasts>
+  )
 }
 
 /**
@@ -220,5 +235,9 @@ export function WorkspaceChatView(
     controller.getSnapshot,
     controller.getSnapshot,
   )
-  return <ChatBody {...props} snapshot={snapshot} />
+  return (
+    <ChatToasts>
+      <ChatBody {...props} snapshot={snapshot} />
+    </ChatToasts>
+  )
 }

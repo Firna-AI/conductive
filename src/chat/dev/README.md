@@ -67,6 +67,12 @@ run the command and keep the choice. The bar of the 15 minutes shows above
 the header while they run. The Mac refuses a change of an older pairing, as
 the Worker does.
 
+The transcript route gives concise and full Markdown from the fake's stored
+and live events, also for a tab that never showed and for an archived
+workspace. `dev-transcript.ts` uses the same shared `SessionMarkdown` as
+the Worker. It reads the real fixture records and command results rather
+than a canned transcript. `dev-stream.ts` exposes the current event snapshot.
+
 Each turn of the page's scripted agent writes its answer in parts, about
 0.4 seconds apart, and sends the whole answer with the last part. With
 `answer=tables`, each part is one line of the answer, and one row comes in

@@ -68,7 +68,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   a right click, or in a `Sheet` on a phone. Firna's own menu rows are
   taller than the dense design. A row can lead with a mark, such as an
   avatar, and end with a muted detail and an icon. An item that is off
-  keeps its place, greyed. An item with choices ends with an arrow, and
+  keeps its place, greyed, such as a move that the place of a tab rules
+  out. A read-only workspace leaves out each item that it does not allow,
+  from decision 214. An item with choices ends with an arrow, and
   its submenu opens beside the menu, level with the item.
 - The menu of a workspace row has Move to section, Reassign to, Rename, a
   line, then Archive, as `app/workspace-menu` shows. It lists only the
@@ -88,6 +90,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   change of the list that failed, with the message of the server, at the
   bottom right of a desktop and at the bottom of a phone, as
   `app/workspace-menu/rename/failed` shows.
+- `AppToast` in `src/components/common/` draws a toast of the app in place:
+  the toast card of `@firna/ui` at the bottom right of the screen, 16 px
+  from each edge, where the toasts of the app show. A toast gives the result
+  of an action whose control closes, such as a copy from the tab menu. A
+  copy that worked shows the success mark, and a copy that failed shows the
+  error mark with the words "Try again", as `app/transcripts` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -97,15 +105,20 @@ sessions as tabs above the chat, and four tabs at the bottom.
   stands between two tabs and takes no space. When the tabs do not fit at
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, then Move left
-  and Move right. A file or diff tab has only the moves. The menu is the one
-  way to rename a session, so no tab shows a rename button. Rename session
-  opens a field in place of the title of that tab, also when the tab does
-  not show. The field marks that tab, which takes no fill, so only the shown
-  tab is filled. On a phone, a long press that ends without a move opens the
-  menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
-  `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
-  `TabRename.module.css` the rename field. The app shares these modules.
+  tab opens its menu at the pointer: Rename session, a line, Copy concise
+  transcript and Copy full transcript, a line, then Move left and Move
+  right, from decisions 188 and 215. A file or diff tab has only the moves.
+  In a read-only workspace, the menu of a session tab holds only the two
+  copy items, and a file or diff tab opens no menu. A copy keeps the shown
+  tab, and a toast gives its result, as `app/transcripts` shows. The menu
+  is the one way to rename a session, so no tab shows a rename button.
+  Rename session opens a field in place of the title of that tab, also when
+  the tab does not show. The field marks that tab, which takes no fill, so
+  only the shown tab is filled. On a phone, a long press that ends without a
+  move opens the menu as a sheet. `WorkspaceTabs.module.css` styles the row
+  and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
+  a drag, and `TabRename.module.css` the rename field. The app shares these
+  modules.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without

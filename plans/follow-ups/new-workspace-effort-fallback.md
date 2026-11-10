@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-09, from branch `calummoore/session-transcript-copy`, a new problem of the options check of decisions 216 and 217 of the plan `plans/copy-session-transcripts.md`.
-- **Location:** `src/shell/ui/ModelPicker.tsx:26` and `:81`, against `src/chat/state/format.ts:64` and `src/chat/components/model-menu.ts:62`.
+- **Location:** `src/shell/ui/ModelPicker.tsx:19` and `:63`, against `src/chat/state/format.ts:28` and `src/chat/components/model-menu.ts:63`.
 - **Reason:** The two pickers are already on `main`, and the transcript change does not change how either picks an effort.
 
 - **Source:** Review.
@@ -26,6 +26,6 @@
 - **Left out:** A rule that rejects a model list whose efforts are not in order. It adds a new validation, and A works for any order.
 - **Wider fix:** B. Every reader of the list then gets the efforts in order.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/effort-words-copies.md`: the same two pickers also keep two copies of the effort words and of `modelLabel`. This item stays apart, because one copy of the words does not settle how a picker chooses an effort.
+- **Related:** The chat, the new-workspace picker, and the mockups now share the effort words and `modelLabel` in `src/shared/agents.ts`. The fallback and row-order rules still differ. One copy of the words does not settle how a picker chooses an effort.
 - **Recommendation:** B. One sorted read serves both pickers and every later reader.
 - **Action:** fix after merge, apply B, because the problem is outside the scope of the transcript change and is rare.

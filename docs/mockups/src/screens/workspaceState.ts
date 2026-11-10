@@ -41,6 +41,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     'copyLink',
+    'copyTranscript',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -198,6 +199,12 @@ export const workspaceStateSchema = {
      * shows for a moment that the copy worked or failed.
      */
     copyLink: { enum: ['none', 'copied', 'failed'] },
+    /**
+     * The toast after a copy of a session transcript from the tab menu: none,
+     * after a copy that worked, or after a request or a clipboard write that
+     * failed. The menu closed on the press, and the shown tab stays.
+     */
+    copyTranscript: { enum: ['none', 'copied', 'failed'] },
   },
 } as const
 
@@ -229,6 +236,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   copyLink: 'none',
+  copyTranscript: 'none',
 }
 
 /**

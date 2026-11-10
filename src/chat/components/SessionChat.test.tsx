@@ -158,6 +158,7 @@ describe('session parts', () => {
         mobile={false}
         onCancelRename={() => {}}
         onClose={() => {}}
+        onCopy={() => {}}
         onMove={() => {}}
         onNew={() => {}}
         onRename={() => {}}

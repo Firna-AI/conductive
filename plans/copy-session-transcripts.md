@@ -2,6 +2,9 @@
 
 Status: Active. On branch `calummoore/session-transcript-copy`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
+The user approved implementation of all milestones and tasks on
+10 November 2026. All five decisions below have an answer.
+
 The tab menu of a session tab gets two items: Copy concise transcript and
 Copy full transcript. Each item copies the conversation of the session as
 Markdown, so that a member can paste it into another agent, a document, or
@@ -501,6 +504,111 @@ I added the autocomplete to the address field of the form.
 _Finished in 4m 12s. Changed files: `src/checkout/Form.tsx`, `src/checkout/useAddress.ts`_
 ````
 
+The agent made these further calls on 10 November 2026:
+
+- The copy items use `Copy` and `CopyPlus`. Reason: the app uses `Copy`,
+  and the plus marks the copy with more content.
+- Shared item labels and toast words live in the pure mockup module
+  `transcriptCopy.ts`. Milestone 7 imports them. Reason: one copy keeps
+  the mockups and the app aligned.
+- A static `AppToast` draws the Firna toast card at the bottom right,
+  16 px from the edges. Reason: mockup views run no script, and the app
+  uses that placement.
+- The `copyTranscript` state follows `copyLink`. Reason: each gets a
+  separate control in the mockup catalogue.
+- The new page is “Copy a transcript”. Its main screen shows success.
+  Reason: the main entry supplies the page title.
+- The archived screen opens the first session's menu. Reason: the screen
+  explains the two allowed items, and an archive has no new session.
+- Read-only filtering removes empty groups and their lines. Reason: a
+  menu must not start or end with a line.
+
+Further shared-code calls, 10 November 2026:
+
+- `session-events.ts` owns structural envelope selection. Reason: stored
+  and parsed events meet one input and the session log stays short.
+- Generic inserts use `content`. Reason: the same grouping carries data
+  or browser nodes without a React dependency.
+- `findModel` moves with `modelLabel`. Reason: one lookup serves all callers.
+- Command icons and tones stay in browser code. Reason: command words
+  remain pure and available to the Worker.
+- Mockup value consumers import shared effort words directly. Reason:
+  fixtures keep sample data and provide no compatibility re-export.
+- Shared stopped summaries and `workSummary` keep file-note and count
+  rules together. Reason: the browser and formatter must agree.
+
+Further formatter calls, 10 November 2026:
+
+- The pure incremental Markdown builder lives under `src/shared/transcript/`.
+  Reason: the Worker and browser development fake use one formatter.
+- The JSON string is `markdown`. Reason: the reply identifies its format.
+- The route captures the session, metadata, and commands once. Reason:
+  every history page must use the same session context and event cutoff.
+- Stored message Markdown stays intact. Generated metadata is escaped,
+  and tool targets and details become one list line. Reason: names and
+  tool descriptions must not break generated formatting.
+- Renamed files show safe source and target labels with an arrow. Reason:
+  the copied change list stays useful without exposing raw paths.
+- Waiting Mac commands follow the transcript. Reason: the chat keeps
+  those commands above the composer, outside the transcript list.
+- The refusal mapping, device record reader, and linked-session prefix
+  have one owner each. Reason: the formatter reuses the current chat rules.
+
+Further integration calls, 10 November 2026:
+
+- The backend README links to a separate Key code guide and keeps its
+  existing anchor. Reason: the touched README exceeded 300 lines.
+- After the public documentation merged from main, the protocol index
+  keeps the transcript link in `docs/architecture/protocol-docs.md`.
+  Reason: the extracted index is now the owner of those links.
+- The public Sessions and chat guide gains copy instructions with this
+  feature. Reason: the guide now documents the same session menu.
+
+Further UI calls, 10 November 2026:
+
+- The optional chat `copy` prop uses real browser services by default.
+  The app passes its stable `AppServices` object. Reason: both hosts keep
+  clipboard support and the retry cache through a stable service identity.
+- The controller copy action keeps the API private. Reason: the controller
+  owns the session API while the view owns copy services and toasts.
+- Chat toasts use the host provider, else their own provider. Reason:
+  standalone callers work without duplicate providers in the app.
+- The failure toast holds only its approved title. Reason: the mockup
+  adds no server message there.
+- A separate read-only long-press hook shares the existing hold duration,
+  movement slop, press ownership, and click suppression. Reason: it opens
+  the menu without changing writable drag behaviour.
+- A read-only hold ends after movement beyond the existing touch slop.
+  Reason: scrolling must stay available and a moved press opens no menu.
+- The touch style is named `holdSurface`. Reason: both dragging and
+  read-only holding use those unchanged touch rules.
+
+## Replaced ways
+
+The agent recorded these moves on 10 November 2026. They keep the current
+chat behaviour. No consumer outside this repository uses these modules.
+
+- The browser-owned session fold becomes the shared transcript fold.
+  Milestone 3 moves the session log, transcript, item keys, known turns,
+  late events, refusal events, item placement, and turn helpers with their
+  tests. Its consumers are the chat controller state, transcript views,
+  running and source lines, workspace chat slots, development backend,
+  and Worker history test support. Every consumer imports the shared owner.
+- The browser-owned work grouping and command placement become shared
+  transcript modules. Milestone 3 moves their tests and updates the
+  transcript view, work fold, and session command inserts. Inserts carry
+  generic content, so the shared fold imports no React types.
+- The duplicate effort words and model label become shared agent words.
+  Milestone 4 updates chat model controls, the new-workspace picker and
+  notices, the mockup fixture, and their consumers. It deletes the old
+  definitions and the resolved effort-words follow-up item.
+- Browser-owned line words and duration formatting become pure shared
+  words. Milestone 4 updates tool groups, work folds, turn ends, stop and
+  failure rows, Mac command labels, and their consumers. Existing pure
+  mockup word modules stay in place.
+- Each move deletes the old module or definition after every consumer
+  moves. No compatibility wrapper or re-export remains.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -511,36 +619,38 @@ The tab menu of a session tab gets the two copy items. A new mockup page
 draws the copy: the toast after a copy, the failed copy, and the menu of a
 read-only workspace. The Move tabs page keeps its five screens.
 
-- [ ] Add the copy group to the session tab menu in
+- [x] Add the copy group to the session tab menu in
       `docs/mockups/src/components/workspace/TabMenu.tsx`: Rename session,
       a line, Copy concise transcript, Copy full transcript, a line, Move
       left, and Move right. Take the icons from `lucide-react`, as the
       other rows do.
-- [ ] Mark each item of `tabMenuOf` that changes the workspace. Add a
+- [x] Mark each item of `tabMenuOf` that changes the workspace. Add a
       read-only mode that leaves out the marked items, so that a session
       tab gives only the two copy items and a file or diff tab gives none.
-- [ ] Write in `docs/mockups/design.md` that a read-only workspace leaves
+- [x] Write in `docs/mockups/design.md` that a read-only workspace leaves
       out the menu items that it does not allow, while an item that the
       place of a tab rules out stays greyed.
-- [ ] Update the description and the rationale of the "Tab menu" screen in
+- [x] Update the description and the rationale of the "Tab menu" screen in
       `docs/mockups/src/entries/app/tabs/index.mockup.tsx` for decisions
       214 and 215.
-- [ ] Add the page "Copy a transcript" under
+- [x] Add the page "Copy a transcript" under
       `docs/mockups/src/entries/app/transcripts/`, with these screens, each
       on desktop and on a phone:
-  - [ ] "Transcript copied": the toast after Copy full transcript, from
+  - [x] "Transcript copied": the toast after Copy full transcript, from
         the menu of a tab that does not show. The shown tab stays.
-  - [ ] "Copy failed": the toast "The transcript didn't copy. Try again."
-  - [ ] "Archived workspace": the menu of a session tab with only the two
+  - [x] "Copy failed": the toast "The transcript didn't copy. Try again."
+  - [x] "Archived workspace": the menu of a session tab with only the two
         copy items. A phone shows it as a sheet.
-- [ ] Add the workspace state that the toast needs to
+- [x] Add the workspace state that the toast needs to
       `docs/mockups/src/screens/workspaceState.ts`. Use the toast of
       `@firna/ui`, as the copy toasts of the app do.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`. Save the screenshots under
       `.context/copy-session-transcripts/`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/copy-session-transcripts/milestone-1-report.md`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -549,22 +659,28 @@ Depends on: 1
 The protocol docs state the copy items, the text of a copy, the route, and
 decisions 213, 214, and 215.
 
-- [ ] Add `docs/protocol/session-transcripts.md`. State the two copy
+- [x] Add `docs/protocol/session-transcripts.md`. State the two copy
       items, what each copy holds, the rules of the text from "The text"
       above, the copy that keeps the shown tab, the toasts, and the access
       of the route. Give decisions 213, 214, and 215 next to their
       requirements, with the rejected options and the reasons.
-- [ ] Update "The tab row" in `docs/protocol/agents-and-sessions.md`: the
+- [x] Update "The tab row" in `docs/protocol/agents-and-sessions.md`: the
       items of the menu of a session tab, the menu of a read-only
       workspace (decision 214), and a link to the new page.
-- [ ] Add a link to the new page in `docs/protocol/chat-and-events.md`, as
+- [x] Add a link to the new page in `docs/protocol/chat-and-events.md`, as
       for the other sections, and in the list of protocol docs in
       `docs/architecture.md`.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a fact that this milestone changes. Record the result under
       this milestone.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
+
+Legal check, 10 November 2026: the Terms and Privacy pages, with
+`privacy-uses.ts`, were read in full. No sentence restates a fact that
+this milestone changes, so neither page changed.
+
+Evidence: `.context/copy-session-transcripts/milestone-2-report.md`.
 
 ## Milestone 3: Share the fold of the chat
 
@@ -574,25 +690,29 @@ The pure code that folds the events of a session into the items and the
 folds of the chat moves to `src/shared/transcript/`. The behaviour of the
 chat does not change.
 
-- [ ] Move these modules to `src/shared/transcript/`, with their unit
+- [x] Move these modules to `src/shared/transcript/`, with their unit
       tests:
-  - [ ] the session log, the transcript fold, and its helpers in
+  - [x] the session log, the transcript fold, and its helpers in
         `src/chat/state/`
-  - [ ] the work fold and the entry grouping in `src/chat/components/`,
+  - [x] the work fold and the entry grouping in `src/chat/components/`,
         `turn-work.ts` and `transcript-entries.ts`
-  - [ ] the place of each Mac command, `src/chat/device/placement.ts`
-- [ ] Give the two placement modules distinct names, such as
+  - [x] the place of each Mac command, `src/chat/device/placement.ts`
+- [x] Give the two placement modules distinct names, such as
       `item-placement.ts` and `command-placement.ts`.
-- [ ] Make an insert generic over its content, so that the browser keeps
+- [x] Make an insert generic over its content, so that the browser keeps
       its React nodes and the Worker passes data.
-- [ ] Give the session log an envelope input that the stored envelopes of
+- [x] Give the session log an envelope input that the stored envelopes of
       the Worker and the stream envelopes of the browser both meet.
-- [ ] Change no expected value of a moved test.
-- [ ] Update the imports, also in the test support of the Worker, and
+- [x] Change no expected value of a moved test.
+- [x] Update the imports, also in the test support of the Worker, and
       `src/shared/README.md`, the Key code of `src/chat/README.md`, and
       the links of `src/chat/transcript.md`.
-- [ ] Run `npm run typecheck`, `npm run lint`,
+- [x] Run `npm run typecheck`, `npm run lint`,
       `npm run file-length:check`, and the chat tests.
+
+Evidence: `.context/copy-session-transcripts/m3-typecheck.log`,
+`m3-lint.log`, `m3-file-length.log`, `m3-targeted-tests.log`, and
+`m3-test-equivalence.txt` in the same evidence folder.
 
 ## Milestone 4: Share the words of the chat lines
 
@@ -602,29 +722,35 @@ Each word and format that the copy shares with the chat moves to a pure
 module that the Worker can import. The behaviour of the chat does not
 change.
 
-- [ ] Move the effort words and `modelLabel` from
+- [x] Move the effort words and `modelLabel` from
       `src/chat/state/format.ts` to `src/shared/agents.ts`.
-- [ ] Apply decision 217, option C:
-  - [ ] Make `src/shell/ui/ModelPicker.tsx` and
+- [x] Apply decision 217, option C:
+  - [x] Make `src/shell/ui/ModelPicker.tsx` and
         `src/shell/new-workspace/notices.tsx` import the effort words and
         `modelLabel` from `src/shared/agents.ts`. Remove the copies of the
         picker.
-  - [ ] Make `docs/mockups/src/fixtures/agents.ts` import the shared
+  - [x] Make `docs/mockups/src/fixtures/agents.ts` import the shared
         effort words. Run `npm run mockups:check`.
-  - [ ] Delete `plans/follow-ups/effort-words-copies.md`, and name it in the
+  - [x] Delete `plans/follow-ups/effort-words-copies.md`, and name it in the
         commit message. Update the **Related** line of
         `plans/follow-ups/new-workspace-effort-fallback.md`, which names it.
-- [ ] Move `formatDuration` to a pure shared module.
-- [ ] Move the words and rules that sit inside chat components to pure
+- [x] Move `formatDuration` to a pure shared module.
+- [x] Move the words and rules that sit inside chat components to pure
       modules under `src/shared/transcript/`: the tool verbs of
       `ToolGroup.tsx` and its rule that opens a run with a call that is not
       done, the stop line of `TranscriptItem.tsx`, the words of
       `TurnEnd.tsx`, the fold counts, and the failure line.
-- [ ] Keep the pure word modules of the mockup components in place, such
+- [x] Keep the pure word modules of the mockup components in place, such
       as `lostCopy.ts` and `sizes.ts`.
-- [ ] Update the READMEs that name a moved module.
-- [ ] Run `npm run typecheck`, `npm run lint`,
+- [x] Update the READMEs that name a moved module.
+- [x] Run `npm run typecheck`, `npm run lint`,
       `npm run file-length:check`, and the chat tests.
+
+Evidence: `.context/copy-session-transcripts/milestones-3-4-report.md`.
+
+Integration note, 10 November 2026: merged `origin/main` at `2f329f9d`.
+The saved feature work needed two mockup conflict resolutions.
+Evidence and preservation notes: `.context/copy-session-transcripts/main-merge-decisions.md`.
 
 ## Milestone 5: The transcript route
 
@@ -632,34 +758,39 @@ Depends on: 2, 4
 
 The workspace object serves the Markdown of a session, concise or full.
 
-- [ ] Add the path of the route and the type of its reply to
+- [x] Add the path of the route and the type of its reply to
       `src/shared/sessions.ts`.
-- [ ] Build the Markdown in `worker/chat/`:
-  - [ ] Read one page of the stored history of the session in each task
+- [x] Build the Markdown in `worker/chat/`:
+  - [x] Read one page of the stored history of the session in each task
         of the workspace object, through one event number.
-  - [ ] Fold the events with the shared session log. Place the Mac
+  - [x] Fold the events with the shared session log. Place the Mac
         commands of the session. Group the entries.
-  - [ ] Write the concise or the full text, as "The text" above says.
+  - [x] Write the concise or the full text, as "The text" above says.
         Take the member names from D1 and the model names from the
         configured model list.
-- [ ] Serve the route as a read. `worker/chat/backend.ts` runs each other
+- [x] Serve the route as a read. `worker/chat/backend.ts` runs each other
       chat request as one task. Run each page read of this route as its
       own task instead.
-- [ ] Add unit tests of the builder with literal expected Markdown. One
+- [x] Add unit tests of the builder with literal expected Markdown. One
       concise and one full transcript cover the heading lines, the member
       and agent headings, a fold line, the tool lines, a Mac command with
       output, a stop, a failure, a lost line, a path label that hides a
       secret, an attachment, and a running turn.
-- [ ] Add route tests with local D1 and the workspace object:
-  - [ ] A member of the org gets the Markdown.
-  - [ ] A member of another org gets `404 workspace_not_found`.
-  - [ ] A session of another workspace gets `404 session_not_found`.
-  - [ ] An archived workspace gives the Markdown.
-  - [ ] An unknown `detail` gets `400 invalid_input`.
-- [ ] Update the routes, the access, and the Key code in
+- [x] Add route tests with local D1 and the workspace object:
+  - [x] A member of the org gets the Markdown.
+  - [x] A member of another org gets `404 workspace_not_found`.
+  - [x] A session of another workspace gets `404 session_not_found`.
+  - [x] An archived workspace gives the Markdown.
+  - [x] An unknown `detail` gets `400 invalid_input`.
+- [x] Update the routes, the access, and the Key code in
       `worker/chat/README.md`.
-- [ ] Run `npm run typecheck`, `npm run lint`,
+- [x] Split the touched backend README into shorter guides without
+      removing content. Keep its Key code anchor and check the moved links.
+- [x] Run `npm run typecheck`, `npm run lint`,
       `npm run file-length:check`, and the Worker chat tests.
+
+Evidence: `.context/copy-session-transcripts/milestone-5-report.md`
+and `.context/copy-session-transcripts/backend-readme-split-report.md`.
 
 ## Milestone 6: The transcript call of the browser
 
@@ -668,23 +799,25 @@ Depends on: 5
 The chat API asks for a transcript, and the copy service of the app takes
 a text that is still pending.
 
-- [ ] Add `transcript(sessionId, detail)` to the chat API in
+- [x] Add `transcript(sessionId, detail)` to the chat API in
       `src/chat/api/client.ts`, with its reader.
-- [ ] Let `copy` of `AppServices` take a pending text. Write a pending
+- [x] Let `copy` of `AppServices` take a pending text. Write a pending
       clipboard item where the browser supports one. Else write the text
       when it comes.
-- [ ] Keep the text of a refused write for one minute, for its session and
+- [x] Keep the text of a refused write for one minute, for its session and
       its kind of copy. The next press of the same item writes it at once.
-- [ ] Update the fake services in `src/app/test-kit.ts`,
+- [x] Update the fake services in `src/app/test-kit.ts`,
       `src/app/dev/fake-services.ts`, and
       `src/shell/workspace/dev/main.tsx`.
-- [ ] Add unit tests of the copy with a fake `navigator`: a pending item
+- [x] Add unit tests of the copy with a fake `navigator`: a pending item
       where the browser supports one, the text after the reply where it
       does not, a refused write that rejects, and a second press that
       writes the kept text.
-- [ ] Serve the transcript in the fake backend of the chat development
+- [x] Serve the transcript in the fake backend of the chat development
       page, so that a smoke test can copy.
-- [ ] Run `npm run typecheck`, `npm run lint`, and the app tests.
+- [x] Run `npm run typecheck`, `npm run lint`, and the app tests.
+
+Evidence: `.context/copy-session-transcripts/milestone-6-report.md`.
 
 ## Milestone 7: Copy items in the tab menu
 
@@ -695,45 +828,53 @@ Depends on: 1, 6
 The session tab menu copies the transcript, also in a read-only
 workspace.
 
-- [ ] Add Copy concise transcript and Copy full transcript to the menu of
+- [x] Add Copy concise transcript and Copy full transcript to the menu of
       a session tab in `src/chat/components/useTabMenu.ts`, in the order
       and with the icons of the mockup.
-- [ ] Mark each menu item that changes the workspace. In a read-only
+- [x] Mark each menu item that changes the workspace. In a read-only
       workspace, leave out the marked items.
-- [ ] Open the menu of a session tab in a read-only workspace with only
+- [x] Open the menu of a session tab in a read-only workspace with only
       the copy items: on a right click, on Shift and F10, on the Menu key,
       and on a long press on a phone. A file or diff tab there opens no
       menu, and no tab drags.
-- [ ] Add the chat action that asks for the transcript, copies the reply,
+- [x] Add the chat action that asks for the transcript, copies the reply,
       and shows the toast. The shown tab does not change.
-- [ ] Update the expected items of the tab menu tests in
+- [x] Update the expected items of the tab menu tests in
       `TabMenu.dom.test.tsx`, `TabDrag.dom.test.tsx`, and
       `src/shell/workspace/files/FilesWiring.test.tsx`.
-- [ ] Add DOM tests:
-  - [ ] Copy full transcript asks for the full text, copies the reply,
+- [x] Add DOM tests:
+  - [x] Copy full transcript asks for the full text, copies the reply,
         shows "Transcript copied", and keeps the shown tab.
-  - [ ] A failed request shows "The transcript didn't copy. Try again."
-  - [ ] A read-only workspace shows only the copy items, also after a
+  - [x] A failed request shows "The transcript didn't copy. Try again."
+  - [x] A read-only workspace shows only the copy items, also after a
         long press on a phone.
-- [ ] Run each new DOM test 10 times. Save the pass counts under
+- [x] Run each new DOM test 10 times. Save the pass counts under
       `.context/copy-session-transcripts/`.
-- [ ] Update `src/chat/tab-row.md` and `src/chat/README.md`.
-- [ ] Set the row `copy-session-transcripts` in
+- [x] Update `src/chat/tab-row.md`, `src/chat/README.md`, and the
+      read-only menu rule in `src/chat/loads-and-sends.md`.
+- [x] Add the approved copy instructions to the public Sessions and chat
+      guide added by the latest main integration.
+- [x] Set the row `copy-session-transcripts` in
       `src/marketing/from-conductor/areas/agents-and-chat.ts` to
       Available. Give it a note that names the two copy items and the
       archived workspace, under the claim rules of
       `docs/protocol/conductor-cloud-comparison.md`.
-- [ ] Smoke-test in Chrome with the app or the chat development page. Copy
+- [x] Smoke-test in Chrome with the app or the chat development page. Copy
       each kind from a tab that never showed, paste it, and compare it with
       the chat. Do it again in an archived workspace and in the phone
       layout. Save the evidence under `.context/copy-session-transcripts/`.
+
+Evidence: `.context/copy-session-transcripts/milestone-7-report.md`
+and `.context/copy-session-transcripts/public-guide-report.md`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
 Depends on: 1, 2, 3, 4, 5, 6, 7
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Remove the unused `ChatStreamEvent` export left after the shared
+      fold move. The type stays private in its browser reader.
+- [x] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
@@ -746,6 +887,9 @@ Depends on: 1, 2, 3, 4, 5, 6, 7
       and the follow-up items that the change adds and deletes. It adds
       `tool-detail-called-output.md`, `new-workspace-effort-fallback.md`,
       and `copy-closed-session.md`. It deletes `effort-words-copies.md`.
+
+Evidence for verification: `.context/copy-session-transcripts/complete-gate.log`
+and `final-new-test-cost.json` in the same evidence folder.
 
 ## Post-merge follow-up (non-blocking)
 

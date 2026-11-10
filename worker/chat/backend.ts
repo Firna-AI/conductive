@@ -15,7 +15,8 @@ import {
   type BrowserAccess,
 } from './browser-authorization'
 import { subscribeBrowser } from './browser-subscription'
-import { afterNumber, chatRoute } from './http-routes'
+import { afterNumber } from './http-routes'
+import { browserRequest } from './browser-request'
 import { BrowserTabs } from './browser-tabs'
 import { authorizeChatRunner } from './runner-authorization'
 import { WorkspaceTitles } from './workspace-titles'
@@ -38,6 +39,7 @@ import type {
 
 /** The Durable Object and the in-memory runner adapter use this boundary. */
 export class WorkspaceChat {
+  private readonly storage: ChatStorage
   readonly store: ChatStore
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
@@ -84,6 +86,7 @@ export class WorkspaceChat {
     env: AppEnv,
     overrides: Partial<ChatDependencies> = {},
   ) {
+    this.storage = storage
     this.env = env
     this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
     this.store = new ChatStore(storage, this.dependencies.now)
@@ -115,34 +118,16 @@ export class WorkspaceChat {
       const access = await this.authorizeBrowser(request)
       if (access.suffix === '/events')
         return await browserUpgrade(this, request, access)
-      return await this.store.run(async () => {
-        const write = request.method !== 'GET' && request.method !== 'HEAD'
-        const current = write
-          ? await authorizeChatBrowser(
-              request,
-              this.env,
-              this.dependencies.now(),
-              access.context.body,
-            )
-          : access
-        if (write && current.workspace.archivedAt !== null) {
-          throw new HttpError(
-            409,
-            'workspace_archived',
-            'The archived chat is read-only.',
-          )
-        }
-        const response = await chatRoute(
-          request,
-          current.suffix,
-          current.context,
-          this.operation(current.workspace.id),
-          this.dependencies,
-          access.presentation,
-        )
-        if (write) await this.runner.flush()
-        return privateResponse(response)
-      })
+      return await browserRequest(
+        request,
+        access,
+        this.store,
+        this.storage,
+        this.env,
+        this.dependencies,
+        this.operation(access.workspace.id),
+        () => this.runner.flush(),
+      )
     } catch (error) {
       return privateResponse(errorResponse(error))
     }
