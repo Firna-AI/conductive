@@ -88,7 +88,7 @@ says.
 - A resume at once when the tab shows again was rejected. Resume avoids a
   start that the user did not ask for.
 - Opening a file tab or a diff tab also resumes the sandbox, in the same
-  cases as opening the workspace (decision 220). A click on a file, on its
+  cases as opening the workspace (decision 247). A click on a file, on its
   tab, or on a link to it opens the tab. A move back or forward to its
   address opens it too.
 - Reason: the tab can show its file only from a running sandbox, so the

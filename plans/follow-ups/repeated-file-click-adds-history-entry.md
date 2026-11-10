@@ -14,7 +14,7 @@
   - A plain click on a file or a diff, in a list, in the tab row, or in a chat link, calls `navigate` of the Files navigation.
   - For a file or diff target, `navigate` saves the tab as the active tab, then calls `navigation.push` with the address of the tab.
   - In a browser, `push` calls `history.pushState`, which adds an entry to the history, also when the address does not change.
-  - `ResumeOnTabOpen` listens to each visit of the app navigation. A visit to the address of the tab that shows counts as an open, so a second click on that tab resumes a stopped sandbox, as decision 220 requires.
+  - `ResumeOnTabOpen` listens to each visit of the app navigation. A visit to the address of the tab that shows counts as an open, so a second click on that tab resumes a stopped sandbox. The user chose on 10 November 2026 that opening a file or a change starts the sandbox (decision 247 in `docs/protocol/workspace-life.md`).
 - **Problem:** A click on the file or tab that already shows adds a second history entry with the same address. The next Back then goes to the same address, so it seems to do nothing.
 - **Impact if no action:** A member who clicks the shown file again needs two presses of Back to leave it.
 - **Root question:** How does a second click on the file that shows count as an open without a second history entry?
