@@ -10,12 +10,13 @@ files of the image code.
 
 ## Build sandboxes
 
-- A build sandbox starts from the current org image, or as a new default
-  sandbox for the first build. Its env holds only the folder variables.
-- Risk: a program with root access that an earlier install left in that
-  image can read the clone token of a later copy. That token can only read
-  its own repository, which the image already holds. The Worker revokes it
-  when the copy ends, as
+- A build sandbox starts from the software image that its job pins, or as
+  a new default sandbox without a pin. A refresh sandbox starts from the
+  current org image. Each env holds only the folder variables.
+- Risk: in a refresh, an earlier install can leave a program with root
+  access in the image. That program can read the clone token of a later
+  copy. That token can only read its own repository, which the image
+  already holds. The Worker revokes it when the copy ends, as
   [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens)
   says.
 - Repository copies use the [shared GitHub App credential flow](../github/app-credentials.ts).
@@ -67,14 +68,15 @@ D1 keeps at most 4 MiB of each build log: the first and the last output.
 A write that passes that budget removes whole rows from the middle.
 The line `[N output bytes omitted]` takes their place in the event order.
 
-- A build loads the chosen repositories, installs the image software, runs
-  the install script with Bash, and saves a snapshot. A first build that
-  pins a matching ready software image starts from it and skips the
-  software step. Admission records the pin in the job insert. The pin stays
-  until the job reaches `done`, including its cleanup. The
+- Admission of a build pins the ready software image of its software
+  version and provider account, in the job insert. The pin stays until the
+  job reaches `done`, including its cleanup. The
   [software image backend](../software-image/README.md) owns these images.
-  A refresh only loads
-  the repositories of the current image again, and saves a snapshot.
+- A build with a pin starts from that image. It loads the chosen
+  repositories into new folders, runs the install script with Bash, and
+  saves a snapshot. A build without a pin installs the image software
+  between the repository load and the install script. A refresh pins none. It only loads the repositories of
+  the current image again, and saves a snapshot.
 - The org image changes only when the new snapshot is ready. Each job
   deletes every live ledger computer of that org and build, and keeps its history and log.
   A failed Delete keeps cleanup scheduled until each computer is removed.

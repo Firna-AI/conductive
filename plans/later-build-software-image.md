@@ -147,7 +147,7 @@ confirmed both on 10 November 2026. Evidence: `.context/later-build-software-ima
 - **Reason:** a script that always runs on a clean machine gives the same
   image each time, and nothing old stays.
 
-## Milestone 1: Mockups
+## Milestone 1: Mockups, completed
 
 Tags: mockup
 
@@ -156,14 +156,14 @@ Depends on: none
 On the Cloud computer tab, `buildLog` in `docs/mockups/src/fixtures/terminal.ts`
 already shows a later build with no software step.
 
-- [ ] Check `buildLog`, `failedBuildLog`, `timedOutBuildLog`, and their
+- [x] Check `buildLog`, `failedBuildLog`, `timedOutBuildLog`, and their
       comments. Change a fixture only when it is wrong for a later build
       from the software image. Run `npm run mockups:check`, and smoke-test
       each changed page. Branch: `conductor/later-builds-from-software-image`.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show. Branch: `conductor/later-builds-from-software-image`.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. None found. Evidence: `.context/later-build-software-image/mockups.log`. Branch: `conductor/later-builds-from-software-image`.
 
-## Milestone 2: Documentation and protocol
+## Milestone 2: Documentation and protocol, completed
 
 Depends on: 1
 
@@ -172,8 +172,8 @@ change makes false. The docs of the software image build and of the deploy
 keep their words. When another file must change, stop and report it to the
 orchestrator.
 
-- [ ] Merge `origin/main` with the `git-merge` skill. Branch: `conductor/later-builds-from-software-image`.
-- [ ] Update the protocol docs and the terms. In `docs/protocol/org-image.md`,
+- [x] Merge `origin/main` with the `git-merge` skill. Branch: `conductor/later-builds-from-software-image`.
+- [x] Update the protocol docs and the terms. In `docs/protocol/org-image.md`,
       state the start of each build, its fallback to the base image, and the
       start of a refresh. Give decisions 4 and 9 as design item 6 says. In
       `docs/protocol/repository-folders.md`, state that a build copies each
@@ -181,20 +181,20 @@ orchestrator.
       stays. In `docs/protocol/github-tokens.md`, limit the clone token risk
       to a refresh. In `docs/architecture.md`, change the start of a build in
       the terms "Build" and "Software image". Branch: `conductor/later-builds-from-software-image`.
-- [ ] Update the area docs: `image/install.md`, `image/README.md`,
+- [x] Update the area docs: `image/install.md`, `image/README.md`,
       `image/runtime.md`, `worker/software-image/README.md`,
       `worker/lifecycle/README.md`, `worker/lifecycle/image-builds.md`, and
       `worker/lifecycle/repository-layout.md`. In each, change each sentence
       about the start of a build, its software step, its clone token risk, or
       its folders. This covers "So a later build reuses the release from the
       last org image." in `image/runtime.md`. Branch: `conductor/later-builds-from-software-image`.
-- [ ] Read the Terms page in `src/marketing/terms.ts`, the Privacy page in
+- [x] Read the Terms page in `src/marketing/terms.ts`, the Privacy page in
       `src/marketing/privacy.ts`, and each public guide in
       `src/marketing/docs/` in full. Update each sentence that restates a
       changed fact. Change the status of a row in
       `src/marketing/from-conductor/` only when this change ships, starts, or
       drops its feature. Branch: `conductor/later-builds-from-software-image`.
-- [ ] Update the five follow-up items below, which restate the old start.
+- [x] Update the five follow-up items below, which restate the old start.
       Do not change the other branch. Branch: `conductor/later-builds-from-software-image`.
   - `plans/follow-ups/software-image-plan-rebase.md`: this change does the
     later-build half of Milestone 7 of the larger plan, with decisions 4 C
@@ -207,7 +207,7 @@ orchestrator.
     after a deploy gets the tools from the software image, or installs them.
   - `plans/follow-ups/software-image-cleanup-keeps-running-version.md`: a
     missing software image now slows every build, also a later build.
-- [ ] Check each relative link of the changed docs. Branch: `conductor/later-builds-from-software-image`.
+- [x] Check each relative link of the changed docs. Branch: `conductor/later-builds-from-software-image`.
 
 ## Milestone 3: Builds from the software image
 

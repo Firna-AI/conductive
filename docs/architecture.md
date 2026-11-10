@@ -46,12 +46,12 @@ hold the requirements of each feature.
   cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
   from. It holds a prepared copy of each repository that the org chose.
-- **Build:** a run of the install script on a copy of the org image. An org
-  without an org image builds on a copy of the software image. A build
-  replaces the org image only when it succeeds.
+- **Build:** a run of the install script on a clean computer, with a fresh
+  copy of each chosen repository. It starts from a matching ready software
+  image, or from the base image. It replaces the org image only when it succeeds.
 - **Software image:** the saved snapshot of the base image with the app's
   own software, and no org data. Each deploy run builds the one of its
-  version, and a build of an org without an org image starts from it.
+  version. Each build uses it when a matching image is ready.
 - **Refresh:** an update of the org image that fetches the new commits of
   each chosen repository. It does not run the install script.
 - **Agent runner:** our program in each sandbox. It runs the agents through

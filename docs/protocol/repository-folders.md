@@ -41,8 +41,11 @@ number names a dated record, as
 ## Folders over time
 
 - A refresh keeps the folders and the variables of the org image.
-- A build can move a repository folder to a new name. The move keeps every
-  file of the folder, also untracked files such as installed dependencies.
+- A build copies each chosen repository into a new folder, because it
+  starts on a clean machine, as
+  [The software image](org-image.md#the-software-image) says. No file of
+  an earlier org image stays, also no untracked file such as an installed
+  dependency.
 - A workspace keeps the folders and the variables of the org image that it
   starts from. Each resume, and each restart near day 14 of a stop, uses
   them, also after a later build or a change of the chosen repositories.

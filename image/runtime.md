@@ -18,11 +18,12 @@ gives that digest. The module derives these values from `version`:
 - The Node executable: `bin/node` in the version folder.
 
 `install-runtime.sh` downloads nothing when the version folder already
-holds an executable `bin/node`. So a later build reuses the release from
-the last org image. Otherwise it downloads the archive, and checks its
-digest with `sha256sum`. A wrong digest fails the build. It unpacks the
-checked archive into a new folder, which then replaces the version folder.
-It keeps the folders of other releases.
+holds an executable `bin/node`. Otherwise it downloads the archive, and
+checks its digest with `sha256sum`. A wrong digest fails the build. It
+unpacks the checked archive into a new folder, which then replaces the
+version folder. It keeps the folders of other releases. A build from a
+ready software image runs no software step, so it keeps the release of
+that image. A build from the base image downloads the release.
 
 ## Update the Node release
 

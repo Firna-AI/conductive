@@ -64,7 +64,7 @@ turn repair from the committed chat and the one writer of the shown state.
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
 The [software image area](../software-image/README.md) builds the shared
-image that a build of an org without an org image starts from.
+image that each build uses when a matching version is ready.
 
 ## Settings
 
@@ -290,8 +290,8 @@ A confirmed missing archived disk uses that batch too.
   sandbox holds, the workspace token, and GitHub tokens.
 - [Architecture](../../docs/architecture/components.md): the Worker, the workspace
   Durable Object, and Boat.
-- [Sandbox software](../../image/README.md): the software that each build
-  installs.
+- [Sandbox software](../../image/README.md): the software that each org
+  image holds.
 - [Shared contracts](../../src/shared/README.md): the browser and runner
   payloads.
 - [Migrations](../../migrations/README.md): the D1 tables.
