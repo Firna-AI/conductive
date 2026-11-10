@@ -286,33 +286,33 @@ Depends on: 1
 The relay runs in each sandbox of a new org image. No Worker preview code
 uses it yet.
 
-- [ ] Add the relay port and the header name to `src/shared/previews.ts`.
-- [ ] Add the relay under `runner/src/relay/` with its entry point. Add the
+- [x] Add the relay port and the header name to `src/shared/previews.ts`.
+- [x] Add the relay under `runner/src/relay/` with its entry point. Add the
       `relay` entry to `runner/scripts/build.mjs` and to the `runner`
       entries of `knip.jsonc`.
-- [ ] Add `relay.mjs` to the archive in `image/package-runner.mjs`. Check
+- [x] Add `relay.mjs` to the archive in `image/package-runner.mjs`. Check
       the file in `image/install.sh`.
-- [ ] Add `image/conductive-preview-relay.service` and its start script.
+- [x] Add `image/conductive-preview-relay.service` and its start script.
       Stage both in the software step of
       `worker/lifecycle/image-software.ts`. `image/install.sh` installs them,
       enables the unit, and starts nothing. Update the image software test.
-- [ ] Test the relay in `runner/` against real loopback servers:
-  - [ ] Only the Boat `Host` of port 7682 gets an answer. `localhost:7682`
+- [x] Test the relay in `runner/` against real loopback servers:
+  - [x] Only the Boat `Host` of port 7682 gets an answer. `localhost:7682`
         and `evil.example:7682` get 403.
-  - [ ] A missing, invalid, or out-of-range port header, and port 7682,
+  - [x] A missing, invalid, or out-of-range port header, and port 7682,
         get 400.
-  - [ ] The server gets the method, the path, the query, the body, and
+  - [x] The server gets the method, the path, the query, the body, and
         `Host: localhost:<port>`. The port header, `_port_auth`,
         `Forwarded`, and `X-Forwarded-*` are gone. Other cookies and
         `Origin` stay.
-  - [ ] A server-sent event reaches the client before the server ends the
+  - [x] A server-sent event reaches the client before the server ends the
         response.
-  - [ ] A WebSocket upgrade gets the same `Host` rule, and frames pass both
+  - [x] A WebSocket upgrade gets the same `Host` rule, and frames pass both
         ways.
-  - [ ] A server on `::1` only gets the request. With no server, the
+  - [x] A server on `::1` only gets the request. With no server, the
         answer is 502.
-  - [ ] A client that goes away ends the upstream request.
-- [ ] Update `runner/README.md`, `image/README.md`, and `image/install.md`.
+  - [x] A client that goes away ends the upstream request.
+- [x] Update `runner/README.md`, `image/README.md`, and `image/install.md`.
       Say that a workspace gets the relay only from a new image build.
 
 ## Milestone 3: The Worker uses the relay

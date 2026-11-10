@@ -5,6 +5,8 @@ import runtimeInstall from '../../image/install-runtime.sh?raw'
 import installScript from '../../image/install.sh?raw'
 import runnerService from '../../image/conductive-runner.service?raw'
 import runnerStart from '../../image/runner-start.sh?raw'
+import previewRelayService from '../../image/conductive-preview-relay.service?raw'
+import previewRelayStart from '../../image/preview-relay-start.sh?raw'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { HttpError, isRecord } from '../http'
 import { terminalInstallCommand } from '../terminal/service'
@@ -68,6 +70,8 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
     'git-credential-helper.mjs': credentialScript,
     'github-cli.sh': githubCli,
     'conductive-runner.service': runnerService,
+    'preview-relay-start.sh': previewRelayStart,
+    'conductive-preview-relay.service': previewRelayService,
   }
   return [
     'set -eu',

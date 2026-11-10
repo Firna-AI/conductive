@@ -1,6 +1,9 @@
 import type { Timestamp } from './api'
 import { workspacePath } from './workspaces'
 
+export const PREVIEW_RELAY_PORT = 7682
+export const PREVIEW_RELAY_PORT_HEADER = 'X-Conductive-Preview-Port'
+
 export function previewsPath(orgId: string, workspaceId: string): string {
   return `${workspacePath(orgId, workspaceId)}/previews`
 }

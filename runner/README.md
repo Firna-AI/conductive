@@ -14,6 +14,7 @@ states its requirements, and the
 
 This folder is a separate Node 24 package with its own lockfile. The root
 `npm install` does not install it. Tests inject the fake workspace endpoint.
+The package also holds the sandbox's preview relay.
 
 ## What it does
 
@@ -183,22 +184,46 @@ states the requirements.
 - A state file from an older runner has no saved events of these two kinds
   and no saved IDs. The runner still reads it.
 
+## Preview relay
+
+The preview relay connects preview requests to servers in the sandbox.
+It gives each server `Host: localhost:<port>`.
+It streams HTTP bodies and WebSocket traffic.
+The [preview requirements](../docs/protocol/access-and-security.md#port-previews)
+state its access rules.
+
+[`src/relay/main.ts`](src/relay/main.ts) starts the relay on `127.0.0.1:7682`.
+[`startPreviewRelay`](src/relay/server.ts) takes a listen port and target
+addresses for tests.
+The build writes its bundle to `dist/runner/relay.mjs`.
+The archive stores that bundle as `runner/relay.mjs`.
+It uses only built-in Node modules.
+
+The [image installer](../image/install.md) installs a separate relay service.
+A runner restart does not restart the relay.
+A workspace gets the relay only from a new image build.
+A refresh installs no software.
+An existing workspace keeps the software of its image, also after a resume.
+Start a new workspace from the new image to get the relay.
+
 ## Commands
 
 Run these commands from the repository root, with Node 24 from `.nvmrc`.
 
-| Command                             | What it does                                                  |
-| ----------------------------------- | ------------------------------------------------------------- |
-| `npm ci --prefix runner`            | Install the runner packages into `runner/node_modules`        |
-| `npm --prefix runner run build`     | Bundle the runner and its two measurement tools               |
-| `npm --prefix runner run typecheck` | Check the runner, its fakes, and the shared contracts it uses |
-| `npm --prefix runner test`          | Run the runner tests with Vitest                              |
-| `npm --prefix runner start`         | Run the runner bundle with the variables of the current shell |
+| Command                                  | What it does                                                 |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `npm ci --prefix runner`                  | Install the runner packages into `runner/node_modules`        |
+| `npm --prefix runner run build`           | Bundle the runner, relay, and two measurement tools           |
+| `npm --prefix runner run typecheck`       | Check the runner, its fakes, and the shared contracts it uses  |
+| `npm --prefix runner test`                | Run the runner tests with Vitest                             |
+| `npm --prefix runner test -- src/relay`    | Run the relay tests against local servers                     |
+| `npm --prefix runner start`               | Run the runner bundle with the variables of the current shell |
+| `node dist/runner/relay.mjs`               | Run the relay bundle                                         |
 
-The build writes `runner.mjs`, `measure.mjs`, and `compare.mjs` into
-`dist/runner/`. The bundles do not include the npm packages. The build
-links `dist/runner/node_modules` to `runner/node_modules`, so that the
-bundles find them.
+The build writes `runner.mjs`, `relay.mjs`, `measure.mjs`, and `compare.mjs`
+into `dist/runner/`. The runner and measurement bundles load npm packages
+at run time. The build links `dist/runner/node_modules` to
+`runner/node_modules`, so that the bundles find them.
 
 The complete gate, the root `npm run check`, runs the runner typecheck and
 the runner tests. Run `npm ci --prefix runner` once before the gate, as CI
@@ -230,7 +255,9 @@ their defaults, and the startup failure message.
   disk fixture for the recovery tests, and it can hold one chosen write.
   `mockComputerServer` in `computer-mcp.ts` makes `readComputerServer` give
   the fixed test entry `fakeComputerServer`.
-- The tests need Git. They need no network, no agent login, no cloud
+- The relay tests use real local HTTP and WebSocket servers on free ports.
+  They check IPv4, IPv6, streams, headers, and disconnects.
+- The tests need Git. They need no external network, no agent login, no cloud
   account, and no cloud computer. No test starts a real agent program, a
   real Worker, or a real sandbox. So a passing run does not show that a
   real login works, or that the `computer` MCP server answers.
@@ -246,6 +273,8 @@ tools that time the first agent start after a resume.
 
 - `src/main.ts` and `src/config.ts`: the service entry point, the variables
   and their defaults, the state file, and the reconnect after each drop.
+- [`src/relay/server.ts`](src/relay/server.ts): starts the preview relay.
+  The HTTP and upgrade handlers share the header rules and target connection code.
 - `src/runner.ts`: `Runner` joins the connection, agents, file reports,
   and report requests.
 - `src/instructions.ts`: `agentInstructions`, with Claude's base rules.

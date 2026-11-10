@@ -11,7 +11,7 @@ import { shellQuote } from './commands'
 import { imageNodeExecutable } from './image-runtime'
 import { stagedImageSoftware } from './image-software-staging-test-support'
 
-export async function imageSoftwareFixture() {
+export async function imageSoftwareFixture(options: { relay?: boolean } = {}) {
   const root = await mkdtemp(join(tmpdir(), "conductive software's "))
   onTestFinished(() => rm(root, { recursive: true, force: true }))
   const installation = join(root, 'opt/conductive')
@@ -85,6 +85,11 @@ cp ${shellQuote(archive)} "$output"
   configuredNode: process.env.CONDUCTIVE_NODE,
 }))\n`
   await writeFile(join(payload, 'main.mjs'), program)
+  if (options.relay !== false)
+    await writeFile(
+      join(payload, 'relay.mjs'),
+      'process.stdout.write(JSON.stringify({ node: process.execPath, relay: true }))\n',
+    )
   const packed = await imageTestProcess('/usr/bin/tar', [
     '-czf',
     archive,
@@ -105,6 +110,18 @@ cp ${shellQuote(archive)} "$output"
     commands,
     installation,
     credentialHelper: join(root, 'usr/local/bin/conductive-git-credential'),
+    relayStart: () =>
+      imageTestProcess(
+        '/bin/sh',
+        [join(installation, 'preview-relay-start.sh')],
+        '',
+        env,
+      ),
+    relayService: () =>
+      readFile(
+        join(root, 'etc/systemd/system/conductive-preview-relay.service'),
+        'utf8',
+      ),
     githubCli: (args: readonly string[]) =>
       imageTestProcess(
         '/bin/sh',
