@@ -63,12 +63,19 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         second cookie protects the GitHub sign-in while it runs. A third
         cookie keeps the screen that you left for GitHub, for up to 1 hour.`,
       text`Your orgs: the orgs, members, roles, invitations, sections,
-        repositories, workspaces, scripts, and settings that you and your
+        repositories, workspaces, routines, scripts, and settings that you and your
         team make. They run the service. Each org invitation keeps the
         email address that the admin invited.`,
+      text`Routines: the prompt, the triggers, and the author filters of
+        each routine, with the GitHub accounts that a filter names. Each
+        run keeps its owner, its agent, its trigger, its state, and its pull
+        request. A skipped
+        run keeps the GitHub login of the account outside the org whose
+        event it skipped. They run the routines and show their runs.`,
       text`Keys and logins: the env var values of each org, and your
         Claude or OpenAI logins. ${productName} stores them encrypted. It
-        uses your login only for the turns of the sessions that you start.
+        uses your login only for the turns of the sessions that you start,
+        also the sessions that the runs of your routines start.
         The messages of other members in those sessions use it only when
         you let other members use that login. A newer cloud computer starts
         from an org image that requires ${productName} to keep agent logins
@@ -109,7 +116,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of them to its logs. ${productName} still keeps the chat history and
         the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
-        of your branches, which GitHub sends to ${productName}.`,
+        of your branches, which GitHub sends to ${productName}. A routine
+        also uses the GitHub accounts that open, push to, or merge a pull
+        request, to decide whether the event starts a run.`,
       text`Error reports: when ${productName} fails in a way that it does
         not expect, it makes an error report. A report from the app in
         your browser or the Mac app window holds the type of error and

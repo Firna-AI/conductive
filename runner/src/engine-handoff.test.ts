@@ -86,7 +86,6 @@ it('waits for a deferred model close before Stop or shutdown ends the turn', asy
         state: 'stopped',
         durationMs: 0,
         files: [],
-        ...(action === 'Stop' ? { filesUnavailable: true } : {}),
         omittedFileCount: 0,
         userMessageIds: ['message-1'],
       },

@@ -6,7 +6,7 @@ import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
 import type { PendingMove } from './model-moves'
 import type { PendingEdit } from './session-records'
-import type { Transcript } from './transcript'
+import type { Transcript } from '../../shared/transcript/transcript'
 
 /** What the chat's actions share: the API, the store, the logs, and the stream. */
 export interface ChatContext {

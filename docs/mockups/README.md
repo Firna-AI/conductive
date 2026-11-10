@@ -54,13 +54,17 @@ of [the operator section](design-operator.md).
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
 moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/banner`, `app/chat`, `app/workspace-menu`, `app/workspace-links`, and `app/tools`,
-and the New workspace dialog. Its linked page,
+`app/banner`, `app/chat`, `app/routines`, `app/workspace-menu`,
+`app/workspace-links`, and `app/tools`,
+the New workspace dialog, and the repositories that wait for a build. Its
+linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section.
 The [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 page gives their child pages and flows.
+The [chat and routines](catalogue-chat-and-routines.md) page gives their
+child pages and flows.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared
@@ -92,7 +96,9 @@ shows them in the New workspace dialog.
 - An entry module in `src/entries/` exports one `defineScreen` with a named
   export. Its props and saved states (`variants`) choose the state. The
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
-  `mockups:serve` offers a control for each part of the state.
+  `mockups:serve` offers a control for each part of the state. The routine
+  screen declares its states in `src/screens/routineState.ts` in the same
+  way.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from

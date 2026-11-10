@@ -6,6 +6,7 @@ import type { Attachment, MessageDraft } from '../../src/shared/messages'
 import type {
   RunnerAttachment,
   RunnerChangeModel,
+  RunnerCommandV1,
   RunnerInterrupt,
   RunnerLogin,
   WorkspaceToRunnerV1,
@@ -64,6 +65,7 @@ export interface StoredTurn {
   senderId: string
   messageIds: string[]
   state: 'queued' | 'running' | 'stopping' | 'finished' | 'stopped' | 'failed'
+  error?: { code: string; message: string }
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
   startedAt?: number
@@ -81,6 +83,20 @@ export interface ModelSessionCreation {
   draft: MessageDraft
 }
 
+/** Only live runner commands carry absolute attachment paths. */
+export interface StoredAttachment {
+  attachmentId: string
+  relativePath: string
+}
+
+export type PreparedMessageCommand = (
+  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments'>
+  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments'>
+) & { attachments: readonly StoredAttachment[] }
+
+export type PreparedCommand =
+  PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
+
 /** Credentials enter only the live command, after this record is read. */
 export type PendingCommand =
   | {
@@ -89,7 +105,7 @@ export type PendingCommand =
       sessionId: string
       turnId: string
       messageId: string
-      attachments: readonly RunnerAttachment[]
+      attachments: readonly StoredAttachment[]
     }
   | RunnerInterrupt
   | RunnerChangeModel
@@ -115,7 +131,7 @@ export interface BrowserPeer {
 
 export interface ResolvedAttachments {
   attachments: readonly Attachment[]
-  paths: readonly RunnerAttachment[]
+  paths: readonly StoredAttachment[]
 }
 
 /** Await this publisher inside a runner callback. Use appendWorkspaceEvent outside it. */
@@ -198,9 +214,14 @@ export interface ChatDependencies {
     workspaceId: string,
     userId: string,
     messageId: string,
-    attachments: readonly RunnerAttachment[],
+    attachments: readonly StoredAttachment[],
     sandboxId: string | null,
   ) => Promise<string | null>
+  resolveAttachmentPaths: (
+    workspaceId: string,
+    userId: string,
+    attachments: readonly StoredAttachment[],
+  ) => Promise<readonly RunnerAttachment[]>
   attachmentSandboxId: (
     workspaceId: string,
     userId: string,

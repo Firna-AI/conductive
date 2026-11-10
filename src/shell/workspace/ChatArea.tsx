@@ -39,6 +39,7 @@ function KeptChat(props: {
       clock={clock}
       content={props.content}
       controller={props.chat}
+      copy={services}
       host={props.host}
       mentions={files.mentions}
       onConnectAgent={(agent) => go(routes.account(agent))}

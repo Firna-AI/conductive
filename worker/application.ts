@@ -133,7 +133,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             )
           if (path === MACHINE_PATHS.githubWebhook)
             return respond(
-              await productionGitHubWebhook(request, env, dependencies),
+              await productionGitHubWebhook(
+                request,
+                env,
+                dependencies,
+                execution,
+              ),
             )
           if (path === MACHINE_PATHS.gitCredential) {
             const machineEnv = env
@@ -213,11 +218,11 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
   return {
     fetch: workerFetchEntry(requestBodyEntry(application.fetch), dependencies),
     scheduled(
-      _event: ScheduledController,
+      event: ScheduledController,
       env: AppEnv,
       execution?: Pick<ExecutionContext, 'waitUntil'>,
     ): Promise<void> {
-      return scheduledWorker(env, dependencies, execution)
+      return scheduledWorker(env, dependencies, execution, event.cron)
     },
   }
 }

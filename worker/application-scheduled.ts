@@ -10,15 +10,23 @@ import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
 import { runnerSoftware } from './configuration'
 import { retryApprovalEmails } from './operator/approval-email'
 import { warnWorker } from './warnings'
+import { routineRunRuntime } from './routines/run-runtime'
+import { scanRoutineSchedules } from './routines/schedule-scan'
 
 export function scheduledWorker(
   env: AppEnv,
   dependencies: AppDependencies,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
+  cron = '*/15 * * * *',
 ): Promise<void> {
   return runWorkerCron(
     workerErrorRuntime(env, dependencies.errorReporting),
     async () => {
+      if (cron === '* * * * *') {
+        await scanRoutineSchedules(routineRunRuntime(env, dependencies))
+        return
+      }
+      if (cron !== '*/15 * * * *') return
       await cleanupDeletedOrgs(
         env,
         dependencies,

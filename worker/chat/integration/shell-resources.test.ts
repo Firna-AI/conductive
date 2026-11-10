@@ -100,8 +100,16 @@ it('serves real shell lists and keeps workspace views private to each member', a
     body: JSON.stringify(view),
   })
   expect(saved.status).toBe(200)
-  expect(await saved.json()).toEqual({ view })
-  expect(await (await fixture.request(path)).json()).toEqual({ view })
+  expect(await saved.json()).toEqual({
+    view,
+    routine: null,
+    baseBranch: 'main',
+  })
+  expect(await (await fixture.request(path)).json()).toEqual({
+    view,
+    routine: null,
+    baseBranch: 'main',
+  })
   expect(
     await (
       await fixture.request(path, {
@@ -110,6 +118,8 @@ it('serves real shell lists and keeps workspace views private to each member', a
     ).json(),
   ).toEqual({
     view: { tabs: [], activeTab: null, fileList: 'all', tool: 'terminal' },
+    routine: null,
+    baseBranch: 'main',
   })
   const outsider = await fixture.request(path, {
     headers: { Cookie: fixture.cookies.outsiderCookie },

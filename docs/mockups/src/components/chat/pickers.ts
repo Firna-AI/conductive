@@ -1,7 +1,7 @@
+import { effortLabels } from '../../../../../src/shared/agents'
 import {
   agentKeys,
   agents,
-  effortLabels,
   effortsFor,
   type AgentChoice,
   type AgentKey,

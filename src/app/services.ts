@@ -79,7 +79,7 @@ export interface AppServices {
    */
   appOrigin: string
   /** Copies text, such as a command to paste elsewhere. */
-  copy: (text: string) => Promise<void>
+  copy: (text: string | Promise<string>) => Promise<void>
   /** The signed-in account ID for error reports, kept in memory only. */
   errorReporting?: { setUser(userId: string | null): void }
 }

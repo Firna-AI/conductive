@@ -4,6 +4,7 @@ import { TOOL_TURN_HEADER } from '../../tools/context'
 import { configuredDefaultChoice } from '../app-api/models'
 import { HttpError } from '../http'
 import { createHarness, type TestHarness } from '../test-support/harness'
+import { publishToolImage } from './list-test-support'
 import {
   OWNER_CHOICE,
   toolFixture,
@@ -20,6 +21,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await harness.reset()
   fixture = await toolFixture(harness)
+  await publishToolImage(fixture.db)
 })
 afterAll(async () => {
   await harness.dispose()
@@ -114,6 +116,42 @@ it('blocks repositories and sections outside the calling org', async () => {
     expect(response.status).toBe(404)
     expect(await response.json()).toMatchObject({ error: { code } })
   }
+  expect(fixture.services.createWorkspace).not.toHaveBeenCalled()
+})
+
+it('refuses a waiting repository with build guidance and an unchosen repository as unavailable', async () => {
+  await fixture.db
+    .prepare(
+      `INSERT INTO repositories
+    (id, org_id, github_repository_id, full_name, default_branch, selected)
+    VALUES ('waiting', 'org-a', 3, 'example/waiting', 'main', 1)`,
+    )
+    .run()
+  const waiting = await fixture.create({
+    repositoryId: 'waiting',
+    firstMessage: 'Task',
+  })
+  expect(waiting.status).toBe(404)
+  expect(await waiting.json()).toEqual({
+    error: {
+      code: 'repository_not_found',
+      message: 'The repository is ready after the next build.',
+    },
+  })
+  await fixture.db
+    .prepare("UPDATE repositories SET selected = 0 WHERE id = 'waiting'")
+    .run()
+  const removed = await fixture.create({
+    repositoryId: 'waiting',
+    firstMessage: 'Task',
+  })
+  expect(removed.status).toBe(404)
+  expect(await removed.json()).toEqual({
+    error: {
+      code: 'repository_not_found',
+      message: 'The repository is not available.',
+    },
+  })
   expect(fixture.services.createWorkspace).not.toHaveBeenCalled()
 })
 

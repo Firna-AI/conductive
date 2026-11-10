@@ -144,6 +144,11 @@ So a plain object does not type-check as the environment of a child process.
 
 ## Key code
 
+- [Shared session log](../../src/shared/transcript/session-log.ts) folds
+  history in the Worker chat tests. Its
+  [session events](../../src/shared/transcript/session-events.ts) accept
+  stored Worker envelopes and parsed browser envelopes.
+
 - `harness.ts` owns D1 setup and the HTTP test app.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
 - `native-global-setup.ts` builds and provides the current native bundle before tests and watch reruns.
@@ -152,6 +157,7 @@ So a plain object does not type-check as the environment of a child process.
 - `migrations.ts` applies migrations for every test harness.
 - `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
+- Its `accounts` map supplies GitHub user lookups for routine author filters, with 404 for an unknown login.
 - `fake-anthropic.ts` supplies the Messages and token-count upstream.
 - `fake-openai.ts` supplies the Responses upstream.
 - `fake-model-upstream.ts` records model requests and supplies fresh response factories.

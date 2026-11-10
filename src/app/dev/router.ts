@@ -12,6 +12,7 @@ export const ID = {
   section: ':section',
   repository: ':repository',
   build: ':build',
+  routine: ':routine',
   user: ':user',
   invite: ':invite',
 } as const
@@ -42,15 +43,25 @@ export interface Route {
   answer: (request: RouteRequest) => Response | Promise<Response> | null
 }
 
+type ErrorDetails = ApiErrorBody['error']['details']
+
 /** A refused request. The fetch sends it as the error body of the API. */
 export class RouteError extends Error {
   readonly status: number
   readonly code: string
+  /** What the refusal names, such as the trigger of an unknown login. */
+  readonly details: ErrorDetails
 
-  constructor(status: number, code: string, message: string) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    details?: ErrorDetails,
+  ) {
     super(message)
     this.status = status
     this.code = code
+    this.details = details
   }
 }
 
@@ -132,14 +143,22 @@ async function readBody(request: Request): Promise<unknown> {
   }
 }
 
-function failure(status: number, code: string, message: string): Response {
-  return json({ error: { code, message } } satisfies ApiErrorBody, status)
+function failure(
+  status: number,
+  code: string,
+  message: string,
+  details?: ErrorDetails,
+): Response {
+  const body: ApiErrorBody = {
+    error: { code, message, ...(details ? { details } : {}) },
+  }
+  return json(body, status)
 }
 
 /** The error body of the API for a failed route, as the Worker sends it. */
 function errorResponse(error: unknown): Response {
   if (error instanceof RouteError) {
-    return failure(error.status, error.code, error.message)
+    return failure(error.status, error.code, error.message, error.details)
   }
   if (error instanceof ParseError) {
     return failure(400, 'invalid_input', 'Complete the required fields.')

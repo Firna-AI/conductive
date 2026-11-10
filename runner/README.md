@@ -43,17 +43,9 @@ These facts belong to this implementation, not to the protocol docs.
   takes deferred input. Without an author, the process keeps the sandbox values.
   A malformed author gives a local warning and keeps those values. The turn continues.
   A workspace gets this behaviour only from an org image built with this runner.
-- `agentInstructions` builds the agent instructions of each agent from the
-  configuration. Claude gets its seven base rules and that text as
-  `systemPrompt`. Codex keeps its default base instructions and gets the
-  text as `developerInstructions` on `thread/start` and `thread/resume`.
-- The runner saves the text of a session before its first agent start. Later
-  starts reuse it exactly, also after a restart or a change of configuration
-  or wording. A saved session without text takes the current text once.
-- Each message to an agent starts with a sender line, then an empty line:
-  `Sender: <display name> (@<login>)`, or `Sender: @<login>` without a
-  display name. No adapter maps a user message to an event, so the chat
-  never shows the sender line.
+- The [agent input guide](agent-input.md) describes the context folder,
+  the instructions that each session keeps, the sender line, and attached
+  files.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
   process then takes the waiting input on the same conversation and turn
@@ -67,6 +59,11 @@ These facts belong to this implementation, not to the protocol docs.
   closes the agent process of that session, discards its unread input, and
   cancels its pending work. Other sessions keep streaming and can stop. A
   stopped running turn sends one end event, after its `turn.started`.
+- After the agent process of a stopped turn exits, the runner reads the
+  changed files of the turn for its end. This holds for Stop and for a
+  shutdown. A Stop during the file read at the end of a turn cancels that
+  read, and the stopped end reads the files again. A read that takes more
+  than 10 seconds marks the files as unavailable, so the end still goes out.
 - Stop for a pending turn sends one stopped `turn.completed` at once. It
   cancels the start. No `turn.started` follows, also after a held save
   returns. A second Stop sends nothing. A saved end suppresses another end.
@@ -129,8 +126,8 @@ These facts belong to this implementation, not to the protocol docs.
   failed `turn.started` save or start step ends the turn with its cause.
 - At a normal shutdown, the runner sends one stopped end for each running
   turn, before it closes the connection. Each end lists the changed files
-  when the runner can read them. Otherwise, it marks them as unavailable.
-  After a restart, a turn with a saved end never runs again. An
+  when the runner can read them in time. Otherwise, it marks them as
+  unavailable. After a restart, a turn with a saved end never runs again. An
   unfinished turn, such as after a crash, gets one stopped end, and no agent
   starts for it. A recovered started turn marks its changed files as
   unavailable. The state file holds no record of its initial files.
@@ -236,6 +233,8 @@ tools that time the first agent start after a resume.
   The HTTP and upgrade handlers share the header rules and target connection code.
 - `src/runner.ts`: `Runner` joins the connection, agents, file and port
   reports, and report requests.
+- `src/context-folder.ts`: `prepareContextFolder` adds the local exclude
+  rule and makes the context folders before startup reports.
 - `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
 - [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
   [output field policy](../src/shared/output-fields.ts): the one filter
@@ -274,6 +273,7 @@ tools that time the first agent start after a resume.
   one turn.
 - `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
   indexes and objects for Git comparisons. The real index stays unchanged.
+- `src/git.ts`: Git commands and merge-base selection, which prefers the fetched remote-tracking base over a local branch.
 - `src/git-paths.ts`: shared Git namespace states for paths and parents.
 - `src/measure.ts`, `src/compare.ts`, `scripts/`, and `service/`: the
   first-start measurement and its comparison, the build, the install

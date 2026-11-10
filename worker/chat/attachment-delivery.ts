@@ -1,17 +1,18 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
-import type {
-  RunnerTurn,
-  RunnerMessageDuringTurn,
-} from '../../src/shared/runner'
 import { HttpError } from '../http'
 import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { attachmentCopyKey } from './attachment-record'
 import { commandDispatchState, type DispatchState } from './ordered-dispatch'
 import type { ChatStore } from './store'
 import { TurnCompletion } from './turn-completion'
-import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
+import type {
+  ActiveRunner,
+  ChatDependencies,
+  PendingCommand,
+  PreparedMessageCommand,
+} from './types'
 
-type MessageCommand = RunnerTurn | RunnerMessageDuringTurn
+type MessageCommand = PreparedMessageCommand
 interface Preparation {
   runner: ActiveRunner
   isCurrent: () => boolean
@@ -55,7 +56,11 @@ export class AttachmentPreparation {
       previous.isCurrent = isCurrent
       return previous.ready ? 'send' : 'wait'
     }
+    // An old absolute-path command has no proof for the repository destination.
     if (
+      command.attachments.every(
+        (attachment) => typeof attachment.relativePath === 'string',
+      ) &&
       sandboxId !== null &&
       (await this.store.read(active.workspace.id, (view) =>
         view.attachmentCopy(command.message.id, sandboxId),

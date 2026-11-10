@@ -1,16 +1,19 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import { LostEventLine } from './LostEventLine'
 import { MessageLine } from './MessageLine'
 import { CallLine, FoldLine } from './ToolGroup'
-import type { WorkStep } from './transcript-entries'
+import {
+  workSummary,
+  type WorkStep,
+} from '../../shared/transcript/transcript-entries'
 import { useFold } from './useFold'
 
 /** One step of an open work fold, in the list of an open run of tool calls. */
-function Step(props: { step: WorkStep }) {
+function Step(props: { step: WorkStep<ReactNode> }) {
   const { step } = props
   if (step.kind === 'insert') {
-    return <li className={styles.card}>{step.insert.node}</li>
+    return <li className={styles.card}>{step.insert.content}</li>
   }
   const { item } = step
   switch (item.kind) {
@@ -46,17 +49,11 @@ function Step(props: { step: WorkStep }) {
  * line, a message as its first words, a card as the card, and a lost line
  * at the left edge. It keeps that choice, and its line keeps its place.
  */
-export function WorkFold(props: { steps: readonly WorkStep[] }) {
+export function WorkFold(props: { steps: readonly WorkStep<ReactNode>[] }) {
   const { steps } = props
   const [open, setOpen] = useState(false)
   const fold = useFold(open, setOpen)
-  const items = steps.flatMap((step) =>
-    step.kind === 'item' ? [step.item] : [],
-  )
-  const calls = items.flatMap((item) =>
-    item.kind === 'tool' ? [item.tool] : [],
-  )
-  const messages = items.filter((item) => item.kind === 'agent').length
+  const { calls, messages } = workSummary(steps)
   return (
     <details className={styles.group} {...fold.details}>
       <FoldLine calls={calls} line={fold.line} messages={messages} />

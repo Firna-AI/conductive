@@ -7,6 +7,12 @@ import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
 const SIMPLE_WARNINGS = {
   error_tracking_dsn_invalid:
     'Worker error reporting is disabled because its DSN is invalid.',
+  routine_schedule_failed:
+    'A routine schedule could not run. The next scan will try again.',
+  routine_queued_start_failed:
+    'A queued routine run could not start. The next scan will try again.',
+  routine_background_start_failed:
+    'A pull request run could not start in the background.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   github_app_slug_invalid:
     'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',
@@ -16,6 +22,8 @@ const SIMPLE_WARNINGS = {
     'Could not start the first cloud computer build.',
   added_image_build_start_failed:
     'Could not start the added cloud computer build.',
+  repository_image_build_start_failed:
+    'Could not start the cloud computer build for the added repository.',
   approval_email_delivery_failed:
     'Approval email delivery failed. The email remains pending.',
   approval_email_retry_failed:

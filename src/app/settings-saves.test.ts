@@ -20,7 +20,6 @@ const installed = {
   settings: {
     ...saved,
     installScript: `${saved.installScript}\nnpm install -g pnpm`,
-    needsBuild: true,
   },
 }
 /** The settings on the server after that save and a save of the startup script. */

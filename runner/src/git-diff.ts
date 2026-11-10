@@ -37,7 +37,7 @@ export async function readGitDiff(
 ): Promise<DiffResponse> {
   safePath(requestedPath)
   const path = posix.normalize(requestedPath)
-  const sha = await source.resolve(branch)
+  const sha = await source.mergeBase(branch)
   return withGitIndex(
     source,
     async (index) => {

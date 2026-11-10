@@ -45,8 +45,8 @@ describe('the Invite codes tab of the operator section', () => {
     const server = new FakeApiServer()
     serveOperator(server)
     const copied: string[] = []
-    const copy = async (text: string) => {
-      copied.push(text)
+    const copy = async (text: string | Promise<string>) => {
+      copied.push(await text)
     }
     const { view } = await mountShell(server, routes.operatorCodes(), {
       services: { copy },

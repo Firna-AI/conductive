@@ -7,8 +7,9 @@ import {
   type ImageBuild,
 } from '../../shared/org-settings'
 import { requireOrg, type DevBackend } from './backend'
+import { buildChanges } from './build-changes'
 import { ID, json, RouteError, type Params, type Route } from './router'
-import { uniqueId, updateNeedsBuild, type OrgState } from './state'
+import { uniqueId, type OrgState } from './state'
 
 /** A build adds one log line at each tick, and it ends at the fourth tick. */
 const TICK_MS = 1_500
@@ -86,8 +87,11 @@ function endBuild(
   if (plan.fails) return
   const firstImage = org.currentImageBuildId === null
   org.currentImageBuildId = plan.id
-  updateNeedsBuild(org)
-  if (firstImage && org.settingsRevision > plan.revision && !org.org.suspension)
+  if (
+    ((firstImage && org.settingsRevision > plan.revision) ||
+      buildChanges(org).addedRepositories.length > 0) &&
+    !org.org.suspension
+  )
     startBuild(backend, org)
 }
 
@@ -152,8 +156,12 @@ export function startBuild(backend: DevBackend, org: OrgState): BuildResponse {
     startedAt,
   )
   org.builds = [build, ...org.builds]
-  org.buildRevisions.set(plan.id, plan.revision)
-  updateNeedsBuild(org)
+  org.buildInputs.set(plan.id, {
+    installScript: script,
+    repositories: org.repositories
+      .filter((repository) => repository.selected)
+      .map(({ id, fullName }) => ({ id, fullName })),
+  })
   runBuild(backend, org, plan)
   return build
 }
@@ -170,6 +178,7 @@ export function buildRoutes(backend: DevBackend): Route[] {
         return json({
           builds: org.builds.map((item) => item.build),
           currentImageBuildId: org.currentImageBuildId,
+          changes: buildChanges(org),
         } satisfies BuildsResponse)
       },
     },
