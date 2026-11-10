@@ -12,7 +12,12 @@ import {
 } from './ordered-dispatch'
 import type { ChatStore, ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
-import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
+import type {
+  ActiveRunner,
+  ChatDependencies,
+  PendingCommand,
+  PreparedCommand,
+} from './types'
 import { AttachmentPreparation } from './attachment-delivery'
 
 export class RunnerDelivery {
@@ -82,7 +87,7 @@ export class RunnerDelivery {
     detach: () => void,
   ): Promise<DispatchState> {
     if (!isCurrent() || active.delivered.has(command.commandId)) return 'skip'
-    let prepared: DispatchResult<RunnerCommand>
+    let prepared: DispatchResult<PreparedCommand>
     try {
       prepared = await this.command(active, command)
     } catch (error) {
@@ -91,11 +96,22 @@ export class RunnerDelivery {
       return 'skip'
     }
     if (prepared.state !== 'send') return prepared.state
-    const outbound = prepared.command
-    if (outbound.type === 'turn' || outbound.type === 'message') {
-      const state = await this.preparations.check(active, outbound, isCurrent)
+    const checked = prepared.command
+    if (checked.type === 'turn' || checked.type === 'message') {
+      const state = await this.preparations.check(active, checked, isCurrent)
       if (state !== 'send') return state
     }
+    const outbound: RunnerCommand =
+      checked.type === 'turn' || checked.type === 'message'
+        ? {
+            ...checked,
+            attachments: await this.dependencies.resolveAttachmentPaths(
+              active.workspace.id,
+              checked.message.sender.id,
+              checked.attachments,
+            ),
+          }
+        : checked
     const publish = async (
       event: WorkspaceEventEnvelope['event'],
       occurredAt?: number,
@@ -150,7 +166,7 @@ export class RunnerDelivery {
   private async command(
     active: ActiveRunner,
     command: PendingCommand,
-  ): Promise<DispatchResult<RunnerCommand>> {
+  ): Promise<DispatchResult<PreparedCommand>> {
     const state = await this.store.read(active.workspace.id, (view) =>
       commandDispatchState(view, command),
     )
@@ -201,7 +217,7 @@ export class RunnerDelivery {
   private unavailable(
     workspaceId: string,
     command: PendingCommand,
-  ): Promise<DispatchResult<RunnerCommand>> {
+  ): Promise<DispatchResult<PreparedCommand>> {
     return this.store.read(workspaceId, async (view) => ({
       state: (await view.command(command.commandId)) ? 'wait' : 'skip',
     }))

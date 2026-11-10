@@ -4,6 +4,7 @@ import type {
   RunnerConnector,
 } from '../../src/shared/runner-transport'
 import { checkpoint, changedSince } from './checkpoint'
+import { prepareContextFolder } from './context-folder'
 import { AgentEngine } from './engine'
 import { boundChatEvent } from '../../src/shared/event-limits'
 import {
@@ -135,6 +136,7 @@ export class Runner {
 
   async start(watchFiles = true): Promise<void> {
     this.watchFiles = watchFiles
+    await prepareContextFolder(this.options.cwd, this.options.warn)
     await this.connect()
   }
 

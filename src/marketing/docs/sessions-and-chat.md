@@ -32,6 +32,12 @@ On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
 
+Attached files arrive in `.context/attachments/` in the workspace's repository folder.
+New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
+Git ignores the folder's files unless your repository already tracks them.
+Use **Terminal** to find the ignored files.
+**All files** and **Changes** do not list them.
+
 You can send a message while the workspace's computer starts.
 The chat shows that the message waits.
 The workspace keeps accepted messages for the agent.

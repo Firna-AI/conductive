@@ -40,14 +40,15 @@ A D1 claim alone proves no acceptance.
 `ChatRecords.saveMessage` stores the attachment-use marker with the message in the chat transaction.
 A repeated accepted message returns before it attempts a new claim.
 `attachmentPath` in [attachment-record.ts](attachment-record.ts) builds each path from the stored record and the accepted message ID.
-The paths use a fixed-length digest of the attachment and accepted message identities.
-Thus another message gets a separate file without a filename-length restriction on message IDs.
-When the immutable stored filename ends in a dot and 1 to 10 ASCII letters or digits, the path ends in that extension in lowercase.
-Every other filename adds no extension.
-The extension lets the agent choose a reader for the file.
-A wrong extension in the filename can make the agent choose the wrong reader.
-The hidden filename lives directly under `/home/user`, which already exists.
-No copy relies on provider directory creation.
+Each path is relative to the workspace repository: `.context/attachments/<digest>/<safe name>`.
+The digest uses the first 32 lowercase hexadecimal characters of SHA-256 over both identities.
+Thus another message gets a separate folder without a filename-length restriction on message IDs.
+The safe name keeps ASCII letters, digits, dots, underscores, and hyphens.
+One hyphen replaces each run of other characters.
+The name keeps at most 100 characters, with the last extension in lowercase.
+An empty stem or a name made only of dots becomes `file`.
+The stored `StoredAttachment.relativePath` is separate from the runner's absolute `RunnerAttachment.path`.
+Admission needs no repository folder map, so the first message can arrive before that map exists.
 
 ## Dispatch
 
@@ -59,11 +60,16 @@ Stop and the commands of other turns do not wait.
 
 Each copy has one owner: one accepted message on one destination computer.
 Each check first reads the current sandbox ID of the workspace with `attachmentSandboxId`.
-`attachmentCopyKey` in [attachment-record.ts](attachment-record.ts) builds the owner key with the SHA-256 helper of the file paths, from the message ID and that sandbox ID.
+`attachmentCopyKey` in [attachment-record.ts](attachment-record.ts) builds the owner key with SHA-256 over the message ID and that sandbox ID.
 The fixed-length digest keeps the stored proof key short, so message IDs need no new length limit.
 The key holds no command ID and no runner connection.
 `AttachmentPreparation` keeps one owner for each key in memory.
 The owner gives its sandbox ID to `prepareMessageAttachments` in [attachment-copy.ts](attachment-copy.ts).
+That helper reads the current captured folder map with `workspaceRepositoryLocations`.
+`attachmentRepositoryDirectory` in [attachment-paths.ts](attachment-paths.ts) selects the folder of the workspace's own repository.
+Before the first attachment, the Worker writes `.context/attachments/.gitignore` with the single byte `*` under that folder.
+Then it joins each stored relative path to that folder and streams the file there.
+The provider creates missing parent folders, as [File writes](../sandbox/README.md#file-writes) says.
 That helper checks the sandbox before each file and after the last file.
 It fails when the workspace names another sandbox, so an owner never moves to another computer.
 The owner copies through `waitUntil` outside the chat queue.
@@ -83,6 +89,10 @@ It does this also when the first command or the first connection of the owner is
 When no owner is in memory, as after a restart, the check reads that proof with `ChatRecords.attachmentCopy(messageId, sandboxId)`.
 A stored proof lets the command go out with no new copy.
 Dispatch rechecks access, turn eligibility, and the computer identity before it sends the current runner command with paths.
+`resolveAttachmentPaths` in [attachment-paths.ts](attachment-paths.ts) reads the current folder map again for each send.
+It sends absolute paths also after a restart that recovered a stored proof.
+A stored command with the old absolute-path field cannot reuse its proof for the repository destination.
+Its copy fails through the normal failed-turn path, and Try again accepts new relative paths.
 A new computer or a new message gets a new owner key and a new copy.
 A failed proof save closes the runner connection and clears the owner.
 Redelivery reads any proof that committed before the failure.
@@ -107,10 +117,14 @@ The current connection and computer then get their own owner.
 
 ## Agent input
 
-The runner gives the agent the original name, the media type, and the copied path of each file.
+After the member's text, the runner adds one line: "The sender attached these files. Read each file before you answer."
+The runner then gives the agent the original name, media type, copied absolute path, and `sizeBytes` of each file.
+It takes the size from the metadata of the message, with no file read.
 `attachmentDescription` in [attachment-description.ts](../../runner/src/providers/attachment-description.ts) writes that description for the Claude and Codex adapters.
 Each description is one line with a JSON object, so a name with quotes or a line break stays inside its value.
-Codex also gets each image as a local image input.
+Codex also gets each image as a local image input after its file line.
+For a message with an image, its read line adds "Each image is also in this message."
+A message without attached files gets no read line or file lines.
 
 ## Cleanup
 

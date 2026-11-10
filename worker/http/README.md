@@ -149,7 +149,7 @@ Overflow remains `BodyBudgetExceeded`.
 Malformed JSON remains `SyntaxError`.
 Callers keep their budgets, content type checks, object validation, access checks, and error mappings.
 
-The [sandbox transport](../sandbox/README.md#response-byte-limits) uses this function for every Boat response.
+The [sandbox transport](../sandbox/response-limits.md#response-byte-limits) uses this function for every Boat response.
 It owns the response budgets and provider error mapping.
 The successful file content route keeps its dynamic base64 budget and size fallback.
 

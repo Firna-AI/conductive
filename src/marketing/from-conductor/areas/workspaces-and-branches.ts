@@ -107,8 +107,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'context-folder',
     area: 'workspaces-and-branches',
     name: '.context folder',
-    status: 'planned',
-    note: 'A .context folder for notes, screenshots, shared files, and attachments is planned. Git will ignore it.',
-    due: null,
+    status: 'available',
+    note: 'Attached files arrive in .context/attachments, and Git ignores them. In workspaces from a new computer build, Git also ignores agent notes in .context.',
   },
 ]

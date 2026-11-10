@@ -13,7 +13,8 @@ These docs belong to this doc:
 - [Create a workspace](create-a-workspace.md): New workspace as a page or
   as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](repository-folders.md): the folder and the shell
-  variable of each repository in a sandbox.
+  variable of each repository in a sandbox, and the context folder of each
+  workspace.
 - [Life of a workspace](workspace-life.md): the start steps, the time
   limits, the states, the stop and resume, and the archive.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which

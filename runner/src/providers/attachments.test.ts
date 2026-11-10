@@ -39,10 +39,13 @@ function attachedTurn(agent: Agent) {
     },
   ]
   command.attachments = [
-    { attachmentId: 'pdf', path: '/home/user/.conductive-attachment-pdf.pdf' },
+    {
+      attachmentId: 'pdf',
+      path: '/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf',
+    },
     {
       attachmentId: 'image',
-      path: '/home/user/.conductive-attachment-image.png',
+      path: '/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png',
     },
   ]
   const options: ProviderOptions = {
@@ -73,8 +76,9 @@ it('gives Claude original attachment metadata and copied paths', async () => {
   await provider.send(command)
   expect((await sdk.nextUser()).message.content).toBe(
     'Sender: @alice\n\nChange the file.\n' +
-      'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/home/user/.conductive-attachment-pdf.pdf"}\n' +
-      'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/home/user/.conductive-attachment-image.png"}',
+      'The sender attached these files. Read each file before you answer.\n' +
+      'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}\n' +
+      'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":12}',
   )
 })
 
@@ -96,17 +100,52 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
         },
         {
           type: 'text',
-          text: 'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/home/user/.conductive-attachment-pdf.pdf"}',
+          text: 'The sender attached these files. Read each file before you answer. Each image is also in this message.',
           text_elements: [],
         },
         {
           type: 'text',
-          text: 'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/home/user/.conductive-attachment-image.png"}',
+          text: 'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}',
+          text_elements: [],
+        },
+        {
+          type: 'text',
+          text: 'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":12}',
           text_elements: [],
         },
         {
           type: 'localImage',
-          path: '/home/user/.conductive-attachment-image.png',
+          path: '/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png',
+        },
+      ],
+    },
+  })
+  command.message.attachments = command.message.attachments.filter(
+    (attachment) => attachment.kind === 'file',
+  )
+  command.attachments = command.attachments.filter(
+    (attachment) => attachment.attachmentId === 'pdf',
+  )
+  await provider.send(command)
+  expect(
+    servers.latest.writes.find((write) => write.method === 'turn/steer'),
+  ).toMatchObject({
+    params: {
+      input: [
+        {
+          type: 'text',
+          text: 'Sender: @alice\n\nChange the file.',
+          text_elements: [],
+        },
+        {
+          type: 'text',
+          text: 'The sender attached these files. Read each file before you answer.',
+          text_elements: [],
+        },
+        {
+          type: 'text',
+          text: 'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}',
+          text_elements: [],
         },
       ],
     },

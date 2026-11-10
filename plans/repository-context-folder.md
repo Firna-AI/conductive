@@ -2,6 +2,8 @@
 
 Status: Active. On branch `calummoore/repo-context-attachments`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
+The user approved implementation of every milestone and task on 10 November 2026.
+
 Today the Worker copies each attached file of a chat message to a hidden
 file in the home folder of the cloud computer,
 `/home/user/.conductive-attachment-<digest>.<ext>`. It is away from the
@@ -209,78 +211,100 @@ My calls, on 10 November 2026:
   has no mockup milestone.
 - Decisions 242 to 244 took the next free numbers on 10 November 2026.
 
+Implementation calls, on 10 November 2026:
+
+- The extra Codex sentence appears only when the message contains an image.
+  Reason: the sentence describes the image input of that message.
+- A name made only of dots uses the empty-stem fallback, `file`.
+  Reason: a safe file name cannot be the `.` or `..` path component.
+- The final dot separates the extension. An extension keeps at most 96
+  characters. Reason: the `file` fallback must still fit within the
+  100-character name limit.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
 
 State the requirements and the decisions in force for the work below.
 
-- [ ] In [Attachments](../docs/protocol/messages-and-attachments.md#attachments),
+- [x] In [Attachments](../docs/protocol/messages-and-attachments.md#attachments),
       state that the Worker copies each file into `.context/attachments/`
       in the repository folder of the workspace, and that Git ignores each
       copied file. Give decision 242 with its reason and the rejected
       alternatives.
-- [ ] In the same section, state that the agent gets one line that tells
+- [x] In the same section, state that the agent gets one line that tells
       it to read each file before it answers, and the size of each file
       with its path, name, and media type. Give decision 244 with its
       reason, the reason for the size, and the rejected alternatives.
-- [ ] In [Repository folders](../docs/protocol/repository-folders.md), add
+- [x] In [Repository folders](../docs/protocol/repository-folders.md), add
       the section "The context folder" with decision 243: the folder, its
       exclude rule, its creation at each start, the tracked files that stay
       tracked, and the `git clean` limit. Update the first paragraph of the
       doc.
-- [ ] In [Agent instructions](../docs/protocol/agent-instructions.md), add
+- [x] In [Agent instructions](../docs/protocol/agent-instructions.md), add
       the folder to the facts and its use to the guidance.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact, or record that no sentence does.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact, or record that no sentence
       does. Follow [Website docs](../docs/protocol/website-docs.md).
-- [ ] Add a short paragraph to the Sessions and chat guide: attached files
+- [x] Add a short paragraph to the Sessions and chat guide: attached files
       arrive in `.context/attachments/`, agents keep notes in `.context/`,
       and Git ignores that folder, so Changes does not list its files.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: `.context/repository-context-folder/milestone-1-internal-report.md`,
+`.context/repository-context-folder/milestone-1-external-report.md`, and
+`.context/repository-context-folder/milestone-1-links.txt`.
 
 ## Milestone 2: Attached files go into `.context/attachments/`
 
 Depends on: 1
 
-- [ ] `attachmentPath` returns the relative path of the design calls. Add
+- [x] `attachmentPath` returns the relative path of the design calls. Add
       tests for the safe name: spaces, other scripts, a long name, an empty
       stem, and an extension in capitals.
-- [ ] The stored command keeps the relative paths in their own type.
-- [ ] The copy reads the folder of the workspace's repository from its
+- [x] The stored command keeps the relative paths in their own type.
+- [x] The copy reads the folder of the workspace's repository from its
       folder map, writes the `.gitignore`, and then writes each file under
       that folder. Add tests for the paths that the provider gets.
-- [ ] The runner delivery resolves each path from the same folder before
+- [x] The runner delivery resolves each path from the same folder before
       it sends the command. Add a test for the path that the runner gets,
       also after a restart that reads a stored copy proof.
-- [ ] Move the delivery, destination, and integration tests to the new
+- [x] Move the delivery, destination, and integration tests to the new
       path, with every assertion.
-- [ ] Delete the old path builder.
-- [ ] Update `worker/chat/attachments.md`, the comment of
+- [x] Delete the old path builder.
+- [x] Update `worker/chat/attachments.md`, the comment of
       `RunnerAttachment.path`, and the File writes section of
       `worker/sandbox/README.md`.
-- [ ] Run `npm run test -- worker/chat worker/sandbox`.
+- [x] Run `npm run test -- worker/chat worker/sandbox`.
+
+Evidence: `.context/repository-context-folder/milestone-2-worker-report.md` and
+`.context/repository-context-folder/milestone-2-test-cost.md`.
 
 ## Milestone 3: The runner makes the folder
 
 Depends on: 1
 
-- [ ] Add the start step of the design calls, before the first file report.
-- [ ] Name the folder and its use in the agent instructions.
-- [ ] Add the read line and the size of each file to the attached-file
+- [x] Add the start step of the design calls, before the first file report.
+- [x] Name the folder and its use in the agent instructions.
+- [x] Add the read line and the size of each file to the attached-file
       text of both agents, as decision 244 and the design calls say.
-- [ ] Move the sample path of `runner/src/providers/attachments.test.ts` to
+- [x] Move the sample path of `runner/src/providers/attachments.test.ts` to
       the new form. Move the exact attached-file text that
       `runner/src/providers/instructions.test.ts` asserts for both agents.
-- [ ] Add tests: the step in a temporary repository, a repeated start, a
+- [x] Add tests: the step in a temporary repository, a repeated start, a
       `.context` file, a failed step, the instructions, and the
       attached-file text of both agents.
-- [ ] Update the [runner README](../runner/README.md) and the Agent input
+- [x] Update the [runner README](../runner/README.md) and the Agent input
       section of `worker/chat/attachments.md`.
-- [ ] Run `npm --prefix runner run typecheck` and `npm --prefix runner test`.
+      Keep the runner README below 300 lines by moving a complete detail
+      section to a linked runner document.
+- [x] Run `npm --prefix runner run typecheck` and `npm --prefix runner test`.
+
+Evidence: `.context/repository-context-folder/milestone-3-runner-report.md` and
+`.context/repository-context-folder/milestone-3-test-cost.md`.
 
 ## Milestone 4: The comparison row
 
@@ -288,19 +312,26 @@ Tags: ui
 
 Depends on: 2, 3
 
-- [ ] Set the `context-folder` row to Available, with a note that says
+- [x] Set the `context-folder` row to Available, with a note that says
       what Conductive does. Follow the claim rules of the comparison doc and
       the copy rules of the `product-ui` skill.
-- [ ] Run `npm run mockups:check`. Look at the row on the comparison page
+- [x] Run `npm run mockups:check`. Look at the row on the comparison page
       and in its mockup.
+
+Evidence: `.context/repository-context-folder/milestone-4-ui-report.md`,
+`.context/repository-context-folder/milestone-4-mockups-check-final.log`,
+and the site and mockup screenshot checks in that folder.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
+- [x] Split the touched Worker chat and sandbox READMEs below 300 lines.
+      Move complete sections to linked area documents, preserve each fact,
+      and update live links to moved headings.
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       complete gate, `npm run check`.
-- [ ] Check that no other plan on `origin/main` or an open branch uses
+- [x] Check that no other plan on `origin/main` or an open branch uses
       decisions 242 to 244. Renumber them when one does.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
