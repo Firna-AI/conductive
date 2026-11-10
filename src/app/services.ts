@@ -79,7 +79,7 @@ export interface AppServices {
    */
   appOrigin: string
   /** Copies text, such as a command to paste elsewhere. */
-  copy: (text: string) => Promise<void>
+  copy: (text: string | Promise<string>) => Promise<void>
 }
 
 export const ServicesContext = createContext<AppServices | null>(null)

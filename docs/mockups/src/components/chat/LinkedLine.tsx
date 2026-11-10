@@ -1,3 +1,4 @@
+import { turnCopy } from '../../../../../src/shared/transcript/turn-words'
 import type { ReactNode } from 'react'
 import { Link2 } from 'lucide-react'
 import styles from './LinkedLine.module.css'
@@ -13,7 +14,9 @@ export function LinkedLine(props: { link: ReactNode }) {
   return (
     <p className={styles.line}>
       <Link2 aria-hidden className={styles.icon} size={13} />
-      <span>This session started from {props.link}</span>
+      <span>
+        {turnCopy.source} {props.link}
+      </span>
     </p>
   )
 }

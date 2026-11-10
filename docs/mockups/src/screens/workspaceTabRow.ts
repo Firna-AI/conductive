@@ -67,7 +67,7 @@ function dragOf(
  */
 export type TabRow = {
   drag?: TabDrag
-  /** The tab whose menu is open: the first session, which does not show. */
+  /** The tab whose menu is open: the first session. */
   menuTab?: string
   /** The tab that shows the rename field: the first session too. */
   renaming?: string
@@ -77,10 +77,11 @@ export type TabRow = {
 
 /**
  * The tab row of the state, for the tabs that the viewport shows. A
- * read-only workspace moves no tab, opens no tab menu, and renames no
- * session. On a phone, the tab with the rename field and the shown tab do
- * not fit beside each other, so the row is full and keeps the field in
- * view.
+ * read-only workspace moves no tab and renames no session. Its tab menu
+ * leaves out the items that change the workspace, so a session tab opens
+ * only its copy items. On a phone, the tab with the rename field and the
+ * shown tab do not fit beside each other, so the row is full and keeps the
+ * field in view.
  */
 export function tabRowOf(
   state: WorkspaceState,
@@ -88,11 +89,12 @@ export function tabRowOf(
   viewport: Viewport,
   readOnly: boolean,
 ): TabRow {
-  if (readOnly) return { full: state.tabRow === 'full' }
+  const menuTab = state.overlay === 'tab-menu' ? firstSession.key : undefined
+  if (readOnly) return { menuTab, full: state.tabRow === 'full' }
   const renaming = state.tabRow === 'rename' ? firstSession.key : undefined
   return {
     drag: state.tabRow === 'drag' ? dragOf(tabs, viewport) : undefined,
-    menuTab: state.overlay === 'tab-menu' ? firstSession.key : undefined,
+    menuTab,
     renaming,
     full:
       state.tabRow === 'full' ||

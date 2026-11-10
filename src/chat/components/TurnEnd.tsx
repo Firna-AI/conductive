@@ -7,7 +7,8 @@ import {
   turnFilesUnavailable,
 } from '../../../docs/mockups/src/components/chat/lostCopy'
 import styles from '../../../docs/mockups/src/components/chat/TurnEnd.module.css'
-import { formatDuration } from '../state/format'
+import { formatDuration } from '../../shared/transcript/duration'
+import { turnCopy } from '../../shared/transcript/turn-words'
 import controls from '../ui/controls.module.css'
 import local from './chat.module.css'
 
@@ -73,7 +74,7 @@ export function TurnEnd(props: {
         </span>
       ) : null}
       {props.files.length > 0 || more > 0 ? (
-        <ul aria-label="Files this turn changed" className={styles.chips}>
+        <ul aria-label={turnCopy.files} className={styles.chips}>
           {props.files.map((file) => (
             <li key={file.path}>
               <FileChip file={file} onOpenDiff={props.onOpenDiff} />
