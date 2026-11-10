@@ -96,7 +96,7 @@ waitlist, on desktop and on a phone.
 - While the user waits, the device connection of the Mac app gets the
   `access_required` refusal. When app access arrives, the Mac app connects
   it again, with no new launch. Reason: the Mac is then available for
-  [Mac commands](desktop-app.md#mac-commands) without a wake or a new
+  [Mac commands](desktop-commands.md#mac-commands) without a wake or a new
   launch.
 
 ## Ways in

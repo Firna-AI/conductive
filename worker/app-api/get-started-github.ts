@@ -5,12 +5,13 @@ import { githubJson, githubRequest } from '../github/transport'
 import { readGitHubConnection } from '../security/github-connection-store'
 import { freshGitHubUserToken } from '../security/github-tokens'
 import { warnWorker } from '../warnings'
+import type { WorkerWarning } from '../warning-types'
 
 export async function getStartedGitHubComplete(
   env: AppEnv,
   userId: string,
   dependencies: AppDependencies,
-  warn: (message: string) => void = warnWorker,
+  warn: (warning: WorkerWarning) => void = warnWorker,
 ): Promise<boolean> {
   await requireActiveUser(env.DB, userId)
   const saved = await env.DB.prepare(
@@ -45,7 +46,7 @@ export async function getStartedGitHubComplete(
       if (!installations.length) throw githubFailure()
     }
   } catch {
-    warn('Could not read GitHub installation status for Get started.')
+    warn({ kind: 'github_installation_status_failed' })
     return false
   }
 }

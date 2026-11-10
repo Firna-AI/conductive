@@ -6,10 +6,10 @@ import type { PublishDependencies } from './publish-release.ts'
 // Written out, so that the tests do not take the expected files from the
 // code under test. Each release must hold these seven files.
 export const releaseNames = [
-  'Conductive-0.1.0-mac-arm64.dmg',
+  'Conductive-mac-arm64.dmg',
   'Conductive-0.1.0-mac-arm64.zip',
   'Conductive-0.1.0-mac-arm64.zip.blockmap',
-  'Conductive-0.1.0-mac-x64.dmg',
+  'Conductive-mac-x64.dmg',
   'Conductive-0.1.0-mac-x64.zip',
   'Conductive-0.1.0-mac-x64.zip.blockmap',
   'latest-mac.yml',

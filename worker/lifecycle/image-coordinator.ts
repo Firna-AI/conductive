@@ -72,6 +72,7 @@ export class ImageCoordinator {
   async alarm(): Promise<void> {
     const state = await this.read()
     if (!state) return
+    let scheduled = false
     const runtime: ImageRuntime = {
       env: this.env,
       dependencies: this.dependencies,
@@ -80,12 +81,15 @@ export class ImageCoordinator {
         this.dependencies,
       ),
       scheduler: {
-        schedule: (orgId, software, nextAt, buildId) =>
-          this.schedule({ orgId, software, nextAt, buildId }),
+        schedule: async (orgId, software, nextAt, buildId) => {
+          await this.schedule({ orgId, software, nextAt, buildId })
+          scheduled = true
+        },
       },
     }
     try {
       await runImageAlarm(runtime, state)
+      if (!scheduled) await this.storage.deleteAlarm()
     } catch {
       await this.storage.setAlarm(this.dependencies.now() + 30_000)
     }

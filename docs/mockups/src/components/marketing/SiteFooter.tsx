@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { siteActionCopy } from '../../../../../src/marketing/access-copy'
 import { parityLinkCopy } from '../../../../../src/marketing/from-conductor/copy'
 import { abuseAddress } from '../../../../../src/marketing/legal-text'
 import { productName } from '../../brand'
@@ -7,7 +8,6 @@ import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { MailLink } from './CatalogueText'
 import { LegalLinks } from './LegalLinks'
-import { startLabel } from './SiteActions'
 import type { SiteLinks } from './SiteHeader'
 import { Wordmark } from './Wordmark'
 import styles from './SiteFooter.module.css'
@@ -51,6 +51,15 @@ export function SiteFooter(props: {
             </ScreenLink>
           </li>
           <li>
+            <ScreenLink
+              className={styles.link}
+              fragment="mac-app"
+              to={props.links.home}
+            >
+              Mac app
+            </ScreenLink>
+          </li>
+          <li>
             <ScreenLink className={styles.link} to={props.links.fromConductor}>
               {parityLinkCopy.footer}
             </ScreenLink>
@@ -59,7 +68,7 @@ export function SiteFooter(props: {
         <Column title="Account">
           <li>
             <ScreenLink className={styles.link} to={props.links.signIn}>
-              {startLabel}
+              {siteActionCopy.signUp}
             </ScreenLink>
           </li>
           <li>

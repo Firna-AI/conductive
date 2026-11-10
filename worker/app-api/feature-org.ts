@@ -75,7 +75,7 @@ export async function createShellOrg(
       },
     )
   } catch {
-    warnWorker('Could not start the first cloud computer build.')
+    warnWorker({ kind: 'first_image_build_start_failed' })
   }
   const org: OrgSummary = { id, name, role: 'admin' }
   if (initials !== undefined) org.initials = initials

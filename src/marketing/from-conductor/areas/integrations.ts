@@ -12,8 +12,9 @@ export const integrationsFeatures: readonly ParityFeature[] = [
     id: 'github-issues',
     area: 'integrations',
     name: 'GitHub issues',
-    status: 'considering',
-    note: 'Starting from GitHub issues and attaching issues are under consideration. Agents can read and manage issues through the GitHub CLI.',
+    status: 'planned',
+    note: 'Starting workspaces from GitHub issues and attaching their details are planned. Agents can already read and manage issues through the GitHub CLI.',
+    due: null,
   },
   {
     id: 'linear',
@@ -40,7 +41,8 @@ export const integrationsFeatures: readonly ParityFeature[] = [
     id: 'open-in',
     area: 'integrations',
     name: 'Open In',
-    status: 'considering',
-    note: 'Opening a cloud workspace directly in a desktop editor is under consideration.',
+    status: 'planned',
+    note: 'Opening cloud workspaces in desktop editors through SSH is planned for the Mac app.',
+    due: null,
   },
 ]

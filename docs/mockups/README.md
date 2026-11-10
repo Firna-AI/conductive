@@ -55,6 +55,13 @@ shows. It also gives the rules of the folder pages, the entries that moved,
 the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
 `app/chat`, and `app/workspace-links`, and the New workspace dialog.
 
+`app/attachments` shows uploads, failed uploads with Try again, files over
+25 MB, sent files, and the files of a queued first message. Its shared
+words live in [attachmentCopy.ts](src/components/chat/attachmentCopy.ts).
+`app/new-workspace/files` shows the same chips on the first message of a new
+workspace, before the workspace exists, and `app/new-workspace/dialog/files`
+shows them in the New workspace dialog.
+
 ## Folder layout
 
 | Folder or file            | Contents                                                            |
@@ -67,7 +74,7 @@ the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
-| `src/brand.ts`            | The name of the product, "Conductive", and its domains              |
+| `src/brand.ts`            | The product name "Conductive", its domains, and the Mac DMG names   |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 

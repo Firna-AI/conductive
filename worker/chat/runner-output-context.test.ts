@@ -1,12 +1,10 @@
 import { afterAll, beforeAll, expect, it } from 'vitest'
-
 import { agentKey } from '../../src/chat/state/item-keys'
 import { emptyTranscript, foldEvent } from '../../src/chat/state/transcript'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { WORKSPACE_ID } from './harness.test-support'
 import { outputFixture } from './runner-output.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -14,7 +12,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('keeps a refused completion prefix encrypted and masks late text from a new stream', async () => {
   const f = await outputFixture(harness, { TOKEN: 'private-value' })
   const delta = {
@@ -51,13 +48,13 @@ it('keeps a refused completion prefix encrypted and masks late text from a new s
     omittedFileCount: 0,
     userMessageIds: [f.messageId],
   })
-  f.restart()
+  await f.restart()
   const resumed = await f.connect(
     new FakeRunner({ workspaceId: WORKSPACE_ID, streamId: 'resumed-stream' }),
   )
   resumed.emit({ ...delta, text: 'val' })
   await f.drain()
-  f.restart()
+  await f.restart()
   await f.connect(resumed)
   const continuation = resumed.emit({ ...delta, text: 'ue and value' })
   await f.drain()

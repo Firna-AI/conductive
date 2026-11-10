@@ -1,9 +1,16 @@
 ---
 import { productName } from '../../../docs/mockups/src/brand'
+import { siteActionCopy } from '../access-copy'
+import { productSummary } from '../features'
 import { parityLinkCopy } from '../from-conductor/copy'
 import { abuseAddress } from '../legal-text'
 import { sitePaths } from '../links'
-import { featuresHref, requestValues, signInHref } from '../request-values'
+import {
+  featuresHref,
+  macAppHref,
+  requestValues,
+  signInHref,
+} from '../request-values'
 import FooterColumn from './FooterColumn.astro'
 import Wordmark from './Wordmark.astro'
 
@@ -18,14 +25,17 @@ import Wordmark from './Wordmark.astro'
   <div class="footer-inner">
     <div class="footer-brand">
       <Wordmark home={sitePaths.home} />
-      <p class="footer-tagline">
-        Coding agents on cloud computers, in your browser.
-      </p>
+      <p class="footer-tagline">{productSummary.tagline}</p>
     </div>
     <FooterColumn title="Product">
       <li>
         <a class="footer-link" href={featuresHref}>
           Features
+        </a>
+      </li>
+      <li>
+        <a class="footer-link" href={macAppHref}>
+          Mac app
         </a>
       </li>
       <li>
@@ -37,7 +47,7 @@ import Wordmark from './Wordmark.astro'
     <FooterColumn title="Account">
       <li>
         <a class="footer-link" href={signInHref}>
-          Join the waitlist
+          {siteActionCopy.signUp}
         </a>
       </li>
       <li>

@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { checkCommitBoundaries } from './commit-boundary.test-support'
 import { linkedRetryBoundaryFixture } from './linked-retry-boundaries.test-support'
@@ -11,7 +10,6 @@ import {
   retryUnavailable,
   sessionRecord,
 } from './retry.test-support'
-
 describe('linked retry after starter revocation', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -23,7 +21,6 @@ describe('linked retry after starter revocation', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('fails queued input in its original session and consumes its retry only after linked acceptance commits', async () => {
     const fixture = await createChatFixture(harness)
     const source = await fixture.createSession()
@@ -93,10 +90,9 @@ describe('linked retry after starter revocation', () => {
         .map((record) => record.retryMessageId),
     ).toEqual([null, 'queued', null])
     expect(memberTab.messages).toEqual(ownerTab.messages)
-    ownerTab.close()
-    memberTab.close()
+    await ownerTab.close()
+    await memberTab.close()
   })
-
   it('keeps every linked Retry acceptance record across both commit boundaries', async () => {
     await checkCommitBoundaries(() => linkedRetryBoundaryFixture(harness))
   })
