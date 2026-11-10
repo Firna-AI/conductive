@@ -32,6 +32,11 @@ messages of this workspace:
   the list mark before this change. Reason: the list and the pull request
   bar disagreed, and the user wants the checks at a glance.
 
+The user also chose on 10 November 2026 that the pull request bar keeps
+its neutral merge state in this change. The user moves a purple merge in
+the bar to another branch. Rejected for this change: a purple icon and
+purple words in the bar, and a purple tint of the whole bar.
+
 ## Design calls
 
 My calls, on 10 November 2026:
@@ -113,8 +118,6 @@ The mockup milestone added these calls on 10 November 2026:
     its mark shows no colour.
 23. The header keeps its green "Ready" mark also beside a red bar, because
     the user chose to keep the header as it is.
-24. The bar keeps its neutral merge state. A purple merge in the bar waits
-    for the user, in `plans/follow-ups/merged-bar-has-no-purple.md`.
 
 ## Contracts
 
