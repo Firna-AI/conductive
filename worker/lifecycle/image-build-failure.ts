@@ -21,7 +21,7 @@ import {
   ProviderRetryExhausted,
   transientProviderError,
 } from './provider-retry'
-import { liveBuildComputerIds } from './computer-ledger'
+import { liveBuildComputers } from './computer-ledger'
 
 export async function failUnscheduledBuild(
   runtime: ImageRuntime,
@@ -103,7 +103,7 @@ export async function handleImageBuildFailure(
     if (
       job.sandboxId ||
       unresolvedAllocation ||
-      (await liveBuildComputerIds(env.DB, job.orgId, job.buildId)).length > 0
+      (await liveBuildComputers(env.DB, job.orgId, job.buildId)).length > 0
     )
       return false
     await updateBuildJob(env.DB, buildId, 'done')

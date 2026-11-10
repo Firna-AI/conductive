@@ -16,7 +16,7 @@ it('retries cleanup of every live computer of its build and leaves other builds 
   const { runtime, org, user, boat, harness, session } = fixture
   const image = await imageRetryFixture(fixture, { steps: 1 })
   const outside = await harness.createOrg(session, 'Other org')
-  await assignBuildSandbox(runtime.env.DB, image.id, 'current-computer')
+  await assignBuildSandbox(runtime.env.DB, image.id, 'current-computer', 'boat')
   for (const [id, orgId, buildId, deletedAt] of [
     ['other-build-computer', org.id, 'other-build', null],
     ['outside-computer', outside.id, image.id, null],

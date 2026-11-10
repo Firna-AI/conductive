@@ -1,7 +1,11 @@
 import type { AppDependencies, AppEnv } from '../env'
-import { sandboxProvider } from '../sandbox/client'
+import { providerForAccount } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
-import { liveOrgComputer } from './computer-ledger'
+import {
+  computerIdentityKey,
+  liveOrgComputer,
+  type ComputerIdentity,
+} from './computer-ledger'
 import type { WorkspaceStorage } from './platform-storage'
 import { providerState } from './provider-state'
 import { replyOrCurrentState } from './workspace-actions'
@@ -10,7 +14,7 @@ export const COMPUTER_STOP_TASK_KEY = 'lifecycle:computer-stops'
 
 export interface ComputerStopTaskState {
   orgId: string
-  sandboxIds: string[]
+  computers: ComputerIdentity[]
 }
 
 export function computerStopObjectName(orgId: string): string {
@@ -35,8 +39,8 @@ export class ComputerStopTask {
 
   async enqueue(
     orgId: string,
-    sandboxIds: readonly string[],
-  ): Promise<string[]> {
+    computers: readonly ComputerIdentity[],
+  ): Promise<ComputerIdentity[]> {
     await this.storage.transaction(async (transaction) => {
       const prior = await transaction.get(
         'computerStops',
@@ -44,12 +48,19 @@ export class ComputerStopTask {
       )
       await transaction.put('computerStops', COMPUTER_STOP_TASK_KEY, {
         orgId,
-        sandboxIds: [...new Set([...(prior?.sandboxIds ?? []), ...sandboxIds])],
+        computers: [
+          ...new Map(
+            [...(prior?.computers ?? []), ...computers].map((computer) => [
+              computerIdentityKey(computer),
+              computer,
+            ]),
+          ).values(),
+        ],
       })
       await transaction.setAlarm(this.dependencies.now() + 30_000)
     })
     await this.advance()
-    return (await this.read())?.sandboxIds ?? []
+    return (await this.read())?.computers ?? []
   }
 
   read(): Promise<ComputerStopTaskState | undefined> {
@@ -60,13 +71,18 @@ export class ComputerStopTask {
     const work = await this.read()
     if (!work) return
     await this.storage.setAlarm(this.dependencies.now() + 30_000)
-    const provider = sandboxProvider(this.env, this.dependencies.fetch)
-    for (const id of work.sandboxIds) {
+    for (const computer of work.computers) {
+      const id = computer.sandboxId
       let confirmed: boolean
       try {
-        if (!(await liveOrgComputer(this.env.DB, work.orgId, id)))
+        if (!(await liveOrgComputer(this.env.DB, work.orgId, computer)))
           confirmed = true
         else {
+          const provider = providerForAccount(
+            this.env,
+            this.dependencies.fetch,
+            computer.providerAccount,
+          )
           const reply = await replyOrCurrentState(provider, id, () =>
             provider.stop(id),
           )
@@ -75,22 +91,25 @@ export class ComputerStopTask {
       } catch (error) {
         confirmed = error instanceof ProviderError && error.kind === 'not_found'
       }
-      if (confirmed) await this.confirm(id)
+      if (confirmed) await this.confirm(computer)
     }
   }
 
-  private async confirm(id: string): Promise<void> {
+  private async confirm(computer: ComputerIdentity): Promise<void> {
     await this.storage.transaction(async (transaction) => {
       const current = await transaction.get(
         'computerStops',
         COMPUTER_STOP_TASK_KEY,
       )
       if (!current) return
-      const sandboxIds = current.sandboxIds.filter((pending) => pending !== id)
-      if (sandboxIds.length) {
+      const computers = current.computers.filter(
+        (pending) =>
+          computerIdentityKey(pending) !== computerIdentityKey(computer),
+      )
+      if (computers.length) {
         await transaction.put('computerStops', COMPUTER_STOP_TASK_KEY, {
           ...current,
-          sandboxIds,
+          computers,
         })
       } else {
         await transaction.delete(COMPUTER_STOP_TASK_KEY)

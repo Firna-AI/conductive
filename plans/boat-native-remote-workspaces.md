@@ -8206,6 +8206,8 @@ Design calls for the fixes:
 
 Fix-round evidence: `.context/boat-native-remote-workspaces/15u/fix-round-1/`.
 
+Justifications and evidence for the merge of main `2f329f9d`: `.context/boat-native-remote-workspaces/merge-main/code-merge-report.md` and `.context/boat-native-remote-workspaces/merge-main/docs-merge-report.md`.
+
 ## Milestone 2c: Doc follow-ups
 
 Depends on: 8o, 8p, 15q, 15r. They change the protocol docs that this

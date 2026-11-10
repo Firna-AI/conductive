@@ -81,7 +81,7 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
 
 D1 holds the workspace, token, build, and log records. The storage of each
 object holds the lifecycle state, the turn records, and the events.
-The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs.
+The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs with their [provider accounts](provider-accounts.md#the-computer-ledger).
 It keeps deleted computer IDs until their org is purged.
 Assigned identity writes also retain older IDs, including imports and repairs.
 Workspace owner changes update each live ledger entry of that workspace.
@@ -219,7 +219,7 @@ The native cleanup pointer can therefore change without losing an older failed c
 - [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
   confirmed deletions, and the live computers that still need cleanup.
 - [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.
-  The task saves concrete IDs and its alarm before the first provider request.
+  The task saves the account and ID of each computer, and its alarm, before the first provider request.
   Its native RPC and alarm share the lifecycle queue.
 - [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
 - [`cleanup.ts`](cleanup.ts): retries every failed computer of a workspace.

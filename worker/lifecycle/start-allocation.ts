@@ -89,6 +89,7 @@ export async function allocateWorkspace(
         mayHaveAllocated,
         ownership: {
           orgId: job.orgId,
+          providerAccount: job.providerAccount,
           ownerUserId: job.creation?.user.id ?? payload.labels?.user ?? null,
           purpose: 'workspace',
           purposeId: job.workspaceId,

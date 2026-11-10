@@ -22,6 +22,7 @@ it('uses the current owner and stops recorded computers after their workspace is
     workspaceId: workspace.id,
     orgId: org.id,
     sandboxId: 'detached-computer',
+    providerAccount: 'boat',
   })
   await reassignWorkspace(
     runtime.env.DB,

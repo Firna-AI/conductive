@@ -1,6 +1,7 @@
 export interface ComputerRecord {
   allocationKey: string | null
   sandboxId: string | null
+  providerAccount: string
   orgId: string
   ownerUserId: string | null
   purpose: 'workspace' | 'build' | 'retained'
@@ -13,7 +14,7 @@ export async function computerRecords(db: D1Database) {
   return (
     await db
       .prepare(
-        `SELECT allocation_key AS allocationKey, sandbox_id AS sandboxId,
+        `SELECT allocation_key AS allocationKey, sandbox_id AS sandboxId, provider_account AS providerAccount,
          org_id AS orgId, owner_user_id AS ownerUserId, purpose, purpose_id AS purposeId,
          cleanup_pending AS cleanupPending, deleted_at AS deletedAt
          FROM computer_ledger ORDER BY id`,

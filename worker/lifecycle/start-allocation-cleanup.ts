@@ -37,6 +37,7 @@ export async function retryAllocationCleanup(
       mayHaveAllocated: true,
       ownership: {
         orgId: job.orgId,
+        providerAccount: job.providerAccount,
         ownerUserId: job.creation?.user.id ?? input.labels?.user ?? null,
         purpose: 'workspace',
         purposeId: job.workspaceId,
@@ -65,7 +66,7 @@ export async function retryAllocationCleanup(
   await deleteSandboxIfPresent(
     env.DB,
     provider,
-    job.allocatedSandboxId,
+    { sandboxId: job.allocatedSandboxId, providerAccount: job.providerAccount },
     dependencies.now(),
   )
   await clearSandboxCleanup(

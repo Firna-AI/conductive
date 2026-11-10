@@ -1,12 +1,13 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { orgProviderForAccount } from '../sandbox/client'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
 import { firstOrgAdmin } from './settings-data'
 import {
   computerDeletedStatement,
+  computerIdentityKey,
   pendingComputerCleanup,
+  type ComputerIdentity,
 } from './computer-ledger'
 
 export interface SandboxCleanup {
@@ -42,22 +43,15 @@ export async function retrySandboxCleanup(
     'SELECT org_id AS orgId, sandbox_id AS sandboxId, provider_account AS providerAccount FROM lifecycle_sandbox_cleanup WHERE workspace_id = ?',
   )
     .bind(workspaceId)
-    .first<{ orgId: string; sandboxId: string; providerAccount: string }>()
-  const cleanups = (await pendingComputerCleanup(env.DB, workspaceId)).map(
-    (cleanup) => ({
-      ...cleanup,
-      providerAccount:
-        current?.sandboxId === cleanup.sandboxId
-          ? current.providerAccount
-          : DEFAULT_PROVIDER_ACCOUNT,
-    }),
+    .first<ComputerIdentity & { orgId: string }>()
+  const cleanups = new Map(
+    (await pendingComputerCleanup(env.DB, workspaceId)).map((cleanup) => [
+      computerIdentityKey(cleanup),
+      cleanup,
+    ]),
   )
-  if (
-    current &&
-    !cleanups.some((cleanup) => cleanup.sandboxId === current.sandboxId)
-  )
-    cleanups.push(current)
-  for (const cleanup of cleanups) {
+  if (current) cleanups.set(computerIdentityKey(current), current)
+  for (const cleanup of cleanups.values()) {
     const admin = await firstOrgAdmin(env.DB, cleanup.orgId)
     if (!admin) return false
     const provider = await orgProviderForAccount(
@@ -67,12 +61,7 @@ export async function retrySandboxCleanup(
       dependencies.fetch,
       cleanup.providerAccount,
     )
-    await deleteSandboxIfPresent(
-      env.DB,
-      provider,
-      cleanup.sandboxId,
-      dependencies.now(),
-    )
+    await deleteSandboxIfPresent(env.DB, provider, cleanup, dependencies.now())
     await clearSandboxCleanup(
       env.DB,
       workspaceId,
@@ -100,16 +89,16 @@ export async function clearSandboxCleanup(
 export async function deleteSandboxIfPresent(
   db: D1Database,
   provider: SandboxProvider,
-  id: string,
+  computer: ComputerIdentity,
   now: number,
 ): Promise<void> {
   try {
-    await provider.delete(id)
+    await provider.delete(computer.sandboxId)
   } catch (error) {
     if (!(error instanceof ProviderError && error.kind === 'not_found'))
       throw error
   }
-  await computerDeletedStatement(db, id, now).run()
+  await computerDeletedStatement(db, computer, now).run()
 }
 
 export async function deleteSnapshotIfPresent(

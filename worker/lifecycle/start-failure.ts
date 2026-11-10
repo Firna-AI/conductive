@@ -172,7 +172,7 @@ export async function finishFailedStart(
       await deleteSandboxIfPresent(
         env.DB,
         providerForAccount(env, dependencies.fetch, providerAccount),
-        sandboxId,
+        { sandboxId, providerAccount },
         dependencies.now(),
       )
       await clearSandboxCleanup(

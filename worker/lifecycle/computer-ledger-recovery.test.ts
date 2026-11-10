@@ -48,6 +48,7 @@ it('keeps the last workspace owner when allocation recovery merges a retained co
     workspaceId: id,
     orgId: org.id,
     sandboxId: 'bx_1',
+    providerAccount: 'boat',
   })
   await runtime.env.DB.prepare(
     'DELETE FROM computer_ledger WHERE allocation_key = ?',
@@ -69,6 +70,7 @@ it('keeps the last workspace owner when allocation recovery merges a retained co
     {
       allocationKey: job.attempt,
       sandboxId: 'bx_1',
+      providerAccount: 'boat',
       orgId: org.id,
       ownerUserId: nextOwner.id,
       purpose: 'workspace',

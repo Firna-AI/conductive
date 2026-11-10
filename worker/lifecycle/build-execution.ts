@@ -22,7 +22,7 @@ import { installWorkspaceTools } from '../tools/image'
 import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { privilegedCommand } from '../terminal/privileged'
 import { recoverImageBuildAllocation } from './image-allocation'
-import { liveBuildComputerIds } from './computer-ledger'
+import { liveBuildComputers } from './computer-ledger'
 import { startAddedImageBuild } from './first-image-build'
 import { imageIsPublished } from './org-image-data'
 
@@ -103,7 +103,7 @@ export async function cleanupBuild(
     await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
   }
   const failures: unknown[] = []
-  for (const id of await liveBuildComputerIds(
+  for (const computer of await liveBuildComputers(
     runtime.env.DB,
     job.orgId,
     job.buildId,
@@ -111,8 +111,12 @@ export async function cleanupBuild(
     try {
       await deleteSandboxIfPresent(
         runtime.env.DB,
-        provider,
-        id,
+        providerForAccount(
+          runtime.env,
+          runtime.dependencies.fetch,
+          computer.providerAccount,
+        ),
+        computer,
         runtime.dependencies.now(),
       )
     } catch (error) {

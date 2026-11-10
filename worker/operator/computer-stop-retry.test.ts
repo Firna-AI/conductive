@@ -63,7 +63,10 @@ it('keeps both suspension scopes in one org task and retries after restart witho
     pendingBuildIds: [],
   })
   expect(beforeDispatch[0]).toEqual({
-    state: { orgId: org.id, sandboxIds: ['user-computer'] },
+    state: {
+      orgId: org.id,
+      computers: [{ sandboxId: 'user-computer', providerAccount: 'boat' }],
+    },
     alarm: TEST_TIME + 30_000,
   })
   expect(await suspendOrg(runtime, org.id, user.id)).toMatchObject({
@@ -98,7 +101,10 @@ it('keeps both suspension scopes in one org task and retries after restart witho
     await task.api.storage.get<ComputerStopTaskState>(COMPUTER_STOP_TASK_KEY),
   ).toEqual({
     orgId: org.id,
-    sandboxIds: ['user-computer', 'org-computer'],
+    computers: [
+      { sandboxId: 'user-computer', providerAccount: 'boat' },
+      { sandboxId: 'org-computer', providerAccount: 'boat' },
+    ],
   })
   expect(await task.api.storage.getAlarm()).toBe(TEST_TIME + 60_000)
   await task.restart()

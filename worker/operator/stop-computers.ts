@@ -2,6 +2,10 @@ import type { WorkspaceRuntime } from '../lifecycle/workspace-runtime'
 import { workspaceBinding } from '../app-api/workspace-state'
 import { computerStopObjectName } from '../lifecycle/computer-stop-task'
 import { suspensionComputers, type ComputerScope } from './computer-data'
+import {
+  computerIdentityKey,
+  type ComputerIdentity,
+} from '../lifecycle/computer-ledger'
 
 /** Lifecycle owners handle current resources. Detached resources still need a Stop. */
 export async function stopRecordedComputers(
@@ -16,11 +20,14 @@ export async function stopRecordedComputers(
   const computers = (await suspensionComputers(env.DB, scope)).filter(
     (computer) => !computer.currentWorkspace && !computer.unfinishedBuild,
   )
-  const orgs = new Map<string, string[]>()
+  const orgs = new Map<string, ComputerIdentity[]>()
   for (const computer of computers) {
     if (!computer.sandboxId) continue
     const ids = orgs.get(computer.orgId) ?? []
-    ids.push(computer.sandboxId)
+    ids.push({
+      sandboxId: computer.sandboxId,
+      providerAccount: computer.providerAccount,
+    })
     orgs.set(computer.orgId, ids)
   }
   const pending = new Set<string>()
@@ -28,12 +35,17 @@ export async function stopRecordedComputers(
     const remaining = await workspaceBinding(env)
       .getByName(computerStopObjectName(orgId), { locationHint: 'weur' })
       .queueComputerStops(orgId, ids)
-    for (const id of remaining) pending.add(id)
+    for (const computer of remaining) pending.add(computerIdentityKey(computer))
   }
   for (const computer of computers) {
     if (
       computer.sandboxId &&
-      !pending.has(computer.sandboxId) &&
+      !pending.has(
+        computerIdentityKey({
+          sandboxId: computer.sandboxId,
+          providerAccount: computer.providerAccount,
+        }),
+      ) &&
       !computer.cleanupPending
     )
       continue

@@ -34,6 +34,7 @@ import type { WorkspaceStartIntent } from './lifecycle/start-types'
 import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
+import type { ComputerIdentity } from './lifecycle/computer-ledger'
 
 export class WorkspaceLifecycle
   extends DurableObject<WorkspaceCompositionEnv>
@@ -86,9 +87,9 @@ export class WorkspaceLifecycle
 
   queueComputerStops(
     orgId: string,
-    sandboxIds: readonly string[],
-  ): Promise<string[]> {
-    return this.run(() => this.controller.queueComputerStops(orgId, sandboxIds))
+    computers: readonly ComputerIdentity[],
+  ): Promise<ComputerIdentity[]> {
+    return this.run(() => this.controller.queueComputerStops(orgId, computers))
   }
 
   async queueLifecycleStart(

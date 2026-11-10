@@ -57,6 +57,7 @@ it('records the workspace owner before create and attaches one computer after a 
     {
       allocationKey: attempt,
       sandboxId: null,
+      providerAccount: 'boat',
       orgId: org.id,
       ownerUserId: user.id,
       purpose: 'workspace',
@@ -107,6 +108,7 @@ it('records the build starter before create and retains its deleted computer aft
       {
         allocationKey: `image-${id}`,
         sandboxId: null,
+        providerAccount: 'boat',
         orgId: org.id,
         ownerUserId: user.id,
         purpose: 'build',
@@ -154,6 +156,7 @@ it('cleans every recorded failed computer after the workspace cleanup pointer ch
       workspaceId: workspace.id,
       orgId: org.id,
       sandboxId,
+      providerAccount: 'boat',
     })
   }
   boat.deleteFailures = 1

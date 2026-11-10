@@ -56,7 +56,7 @@ export async function archiveWorkspace(
       await deleteSandboxIfPresent(
         env.DB,
         provider,
-        row.sandboxId,
+        { sandboxId: row.sandboxId, providerAccount: row.providerAccount },
         dependencies.now(),
       )
     }

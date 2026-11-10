@@ -1,7 +1,6 @@
 import { activeAdminPredicate } from './org-data'
 import { CLEANUP_LEASE_MS, lifecycleWritePredicate } from './lifecycle-data'
 import { computerDeletedStatement } from '../lifecycle/computer-ledger'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 const RESTORE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -127,31 +126,11 @@ export async function recordSuspendedResources(
     db
       .prepare(
         `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, provider_account, sort_order)
-       SELECT org_id, 'sandbox', sandbox_id, provider_account, 0 FROM workspaces
-         WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}
-       UNION ALL SELECT org_id, 'sandbox', sandbox_id, provider_account, 1 FROM image_builds
-         WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}
-       UNION ALL SELECT org_id, 'sandbox', sandbox_id, provider_account, 0 FROM lifecycle_sandbox_cleanup
-         WHERE org_id = ? AND ${lifecycleWritePredicate}
-       UNION ALL SELECT l.org_id, 'sandbox', l.sandbox_id, COALESCE(
-         (SELECT provider_account FROM lifecycle_sandbox_cleanup WHERE org_id = l.org_id AND sandbox_id = l.sandbox_id),
-         (SELECT provider_account FROM workspaces WHERE org_id = l.org_id AND sandbox_id = l.sandbox_id),
-         (SELECT provider_account FROM image_builds WHERE org_id = l.org_id AND sandbox_id = l.sandbox_id), ?),
-         CASE WHEN l.purpose = 'build' THEN 1 ELSE 0 END
-       FROM computer_ledger l WHERE l.org_id = ? AND l.deleted_at IS NULL
-         AND l.create_rejected = 0 AND l.sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}`,
+       SELECT org_id, 'sandbox', sandbox_id, provider_account, CASE WHEN purpose = 'build' THEN 1 ELSE 0 END
+       FROM computer_ledger WHERE org_id = ? AND deleted_at IS NULL
+         AND create_rejected = 0 AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}`,
       )
-      .bind(
-        orgId,
-        ...ownership,
-        orgId,
-        ...ownership,
-        orgId,
-        ...ownership,
-        DEFAULT_PROVIDER_ACCOUNT,
-        orgId,
-        ...ownership,
-      ),
+      .bind(orgId, ...ownership),
     db
       .prepare(
         `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, provider_account)
@@ -243,7 +222,16 @@ export async function markResourceRemoved(
       )
       .bind(now, orgId, resource.kind, resource.id, resource.providerAccount),
     ...(resource.kind === 'sandbox'
-      ? [computerDeletedStatement(db, resource.id, now)]
+      ? [
+          computerDeletedStatement(
+            db,
+            {
+              sandboxId: resource.id,
+              providerAccount: resource.providerAccount,
+            },
+            now,
+          ),
+        ]
       : []),
   ])
 }

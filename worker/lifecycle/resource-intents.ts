@@ -84,7 +84,11 @@ export async function createResource(
           'invalid_request',
         ].includes(error.kind)
       )
-        await rejectComputerIntent(db, intent.input.idempotencyKey)
+        await rejectComputerIntent(
+          db,
+          intent.input.idempotencyKey,
+          intent.ownership.providerAccount,
+        )
       throw error
     }
     await attachComputer(
@@ -135,6 +139,7 @@ export function buildSandboxIntent(
     mayHaveAllocated,
     ownership: {
       orgId: job.orgId,
+      providerAccount: job.providerAccount,
       ownerUserId: job.startedByUserId,
       purpose: 'build',
       purposeId: job.buildId,
