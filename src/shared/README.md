@@ -27,9 +27,15 @@ confirmations, and resend rules. Its comments state the delivery contract.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
 Storage and network failures remain unconfirmed.
-After a refused file tree, changes list, start steps, or workspace name,
+After a refused file tree, changes list, start steps, workspace name, or port list,
 `RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
 It carries no login. A redelivery keeps its command ID.
+`ports.ts` defines `ListeningPort`, the full runner report, and the browser
+report whose null list means no current report. It owns the count and label
+limits. `terminal.ts` owns `TERMINAL_PORT`, shared by the runner exclusion
+and the terminal backend.
+[Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
+that report, its limits, and its refresh kind.
 `runner-transport.ts` defines the injectable socket boundary.
 Runner commands carry the agent login of the session starter, whoever sent the message. Browser response types do not.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
@@ -77,7 +83,7 @@ The Worker keeps the held text in the encrypted state of its runner stream.
 It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
 It saves both before it confirms the corresponding raw event.
 
-`event-limits.ts` applies the same excerpt caps after either filter.
+`event-limits.ts` applies the same excerpt and port-label caps after either filter.
 Its UTF-8 byte count works in the Worker and Node.
 
 `chat-events.ts` caps serialized tool detail at 64 KiB.
@@ -153,6 +159,8 @@ The git credential payload is not defined yet.
 
 ## Key code
 
+- [Port reports](ports.ts) carry sorted listening ports and their safe labels.
+- [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.

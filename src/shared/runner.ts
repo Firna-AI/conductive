@@ -3,6 +3,7 @@ import type { Timestamp } from './api'
 import type { AgentChatEvent } from './chat-events'
 import type { RunnerFileEvent } from './files'
 import type { UserMessage } from './messages'
+import type { RunnerPortsUpdated } from './ports'
 import type { RunnerFileCommand, RunnerFileResponse } from './runner-files'
 import type { WorkspaceStart } from './workspaces'
 
@@ -46,6 +47,7 @@ export interface RunnerEventEnvelope {
 export type RunnerEvent =
   | AgentChatEvent
   | RunnerFileEvent
+  | RunnerPortsUpdated
   | { type: 'runner.ready' }
   | { type: 'start.updated'; start: WorkspaceStart }
   | { type: 'workspace.title'; name: string }
@@ -134,7 +136,11 @@ export interface RunnerChangeModel {
 }
 
 export type RunnerReportKind =
-  'files.snapshot' | 'changes.updated' | 'start.updated' | 'workspace.title'
+  | 'files.snapshot'
+  | 'changes.updated'
+  | 'start.updated'
+  | 'workspace.title'
+  | 'ports.updated'
 
 /** Request a complete current report. Transport redelivery keeps the command ID. */
 export interface RunnerReportRefresh {

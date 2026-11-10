@@ -113,8 +113,13 @@ export function nativeChatTransport(actor: NativeActor) {
       if (batch) track(actor.api.peers.receiveMany(id, batch), true)
     })
   }
+  const flushInput = async () => {
+    await Promise.resolve()
+    await Promise.allSettled([...inputWork])
+  }
   const drain = async () => {
     do {
+      await flushInput()
       await Promise.allSettled([...pending])
       await actor.api.controls.drain()
     } while ((await pump()) > 0 || pending.size)
@@ -122,10 +127,7 @@ export function nativeChatTransport(actor: NativeActor) {
   }
   return {
     transport,
-    flushInput: async () => {
-      await Promise.resolve()
-      await Promise.allSettled([...inputWork])
-    },
+    flushInput,
     disconnect: async (runner: FakeRunner) => {
       runner.disconnect()
       await Promise.allSettled([...closing])

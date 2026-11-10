@@ -109,7 +109,8 @@ Every org image holds the app's own sandbox software:
 The agent runner runs Claude through the Claude Agent SDK, with the agent
 program that the SDK bundles at its own version. A pinned version guards
 against a change in how the agent program reads logins. The runner runs
-Codex through the Codex SDK or the Codex App Server (decision 36).
+Codex through the Codex SDK or the Codex App Server (decision 36). It finds
+the listening ports in the sandbox itself, with no Boat call (decision 213).
 
 ## External services
 

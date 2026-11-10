@@ -6,6 +6,20 @@ boundaries between the components of the
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
+## Hostnames
+
+| Hostname                | What it serves                                                              |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages           |
+| `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
+| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
+| `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
+
+`api.conductive.build` is the hostname for machines. Each of its routes has
+a path under `/v1/` (decision 102). The preview domain, `conductive.page`,
+is a separate registrable domain, so preview code is never same-site with
+the app (decision 6).
+
 ## Where data lives
 
 | Data                                                                         | Home                                     |

@@ -32,7 +32,7 @@ how a screen is built, and links to the other pages.
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
-| `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
+| `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
 | `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace |
@@ -42,7 +42,7 @@ with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -307,9 +307,11 @@ workspace asks for a fresh full report, and nothing shows. Only when that
 report is lost too does a notice name the data that stays unavailable,
 beside that data: under the file lists for a file list, and under the
 header for other data, such as the workspace name. The `failed-repair`
-value of the `lostUpdate` state draws it, and no other screen shows a
-notice for a lost update. `app/chat/unavailable-files` draws the files that
-the cloud computer could not read: a finished turn and a stopped turn
+value of the `lostUpdate` state draws it. The only other notice for a lost
+update is the one of the list of servers, under the port form of the
+Preview tool, as `app/tools/preview-repair` shows.
+`app/chat/unavailable-files` draws the files that the cloud computer
+could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
@@ -333,3 +335,34 @@ and in the `workspace-link` child page of `app/new-workspace/dialog`.
 The flow `user-flows/link-a-workspace` goes from the copy to the answer,
 and ends with a press on the chip, which opens
 `app/new-workspace/first-turn`.
+
+`app/tools` shows the terminal. Its child pages show the Preview tool,
+from decisions 213 C and 214 D, its list after a failed repair, and the
+hidden Desktop:
+
+- `app/tools/preview` has an open port preview. Each tab shows the port
+  and the program name of its server, cut to 10 characters, such as
+  `6006 storybook…`. Its tooltip and its spoken name give the port, the
+  full name, and the folder. Two named tabs do not fit beside the actions
+  of the frame, so the end of the tab row fades, as the centre tab row
+  does. Its variants:
+  - `detected` has the port form with no preview open. Each server that
+    the runner detects is a button with its port, its name, and its
+    folder. A folder that does not fit keeps its end, after "…". The
+    smaller Other port row opens any other port.
+  - `no-servers` has a report with no server. The form asks the user to
+    start one in the terminal or to ask the agent, and keeps the field.
+  - `no-report` has no report, as for a sandbox from an older image. The
+    form reads as before. It moved from `app/tools/preview-empty` and
+    declares `movedFrom`.
+  - `another-port` has the form after "+", beside the tabs of the open
+    previews. The ports of the open previews leave the list.
+- `app/tools/preview-repair` has the port form after a failed repair of
+  the list, from decision 96. The form keeps its last list and the Other
+  port row. Under them, the row of a file list that is not the latest one
+  says "The latest list of servers is unavailable", with the time since
+  the failure, and no Dismiss. A newer full report clears it. The page
+  stands beside `app/tools/preview`, which already shows five screens.
+- `app/tools/desktop` has the hidden Desktop. It moved into its own
+  folder and kept its path, so that `app/tools` shows only its canonical
+  screen.

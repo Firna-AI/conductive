@@ -121,6 +121,7 @@ export function parseWorkspaceMessage(value: unknown): WorkspaceToRunner {
         'changes.updated',
         'start.updated',
         'workspace.title',
+        'ports.updated',
       ]),
     }
   }

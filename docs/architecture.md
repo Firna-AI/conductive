@@ -49,8 +49,8 @@ requirements of each feature.
 - **Refresh:** an update of the org image that fetches the new commits of
   each chosen repository. It does not run the install script.
 - **Agent runner:** our program in each sandbox. It runs the agents through
-  the agent SDKs, and it reports the files and the changes of its
-  workspace.
+  the agent SDKs, and it reports the files, the changes, and the listening
+  ports of its workspace.
 - **Session:** one agent conversation in a workspace. It shows as a tab.
 - **Turn:** the work of the agent on a message, from the message to the
   result of the agent.
@@ -69,17 +69,8 @@ its storage, Boat, the sandbox software, and the external services.
 
 ## Hostnames
 
-| Hostname                | What it serves                                                              |
-| ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages                        |
-| `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
-| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
-| `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
-
-`api.conductive.build` is the hostname for machines. Each of its routes has
-a path under `/v1/` (decision 102). The preview domain, `conductive.page`,
-is a separate registrable domain, so preview code is never same-site with
-the app (decision 6).
+The [hostnames page](architecture/data-and-trust.md#hostnames) gives the
+role of each hostname and the separate preview domain.
 
 ## Flows
 
@@ -118,8 +109,8 @@ the merge.
   the chat shows, and the events.
   - [Messages and attachments](protocol/messages-and-attachments.md)
   - [Agent runner](protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, and the repair of lost workspace
-    updates.
+    its events and their limits, its turns, its port reports, and the repair
+    of lost workspace updates.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](protocol/isolation.md)

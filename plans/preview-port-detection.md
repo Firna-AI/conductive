@@ -311,6 +311,142 @@ decision. The user can override any of them.
   becomes Available in the pull request of this plan. An earlier change to
   Planned would need its own pull request.
 
+**From the mockups.** These calls of 10 November 2026 come from Milestone 1.
+
+- The list fills the port form from its top and scrolls, as the file
+  lists do. Reason: the desktop tools panel is about 355 px high, and a
+  report can hold 64 ports.
+- A line above the list keeps the words of today's form: "Open a web
+  server that runs in this sandbox." Reason: the form keeps one message in
+  each state.
+- A row shows the port in the monospace font, then the name, then the
+  folder in the muted colour at the end of the row. Its tooltip and its
+  accessible name are those of a tab. Reason: a cut folder must not hide
+  which server the row opens.
+- The "Other port" row has its label, the field, and Open preview in the
+  secondary tone. Its placeholder is "8080". Reason: the rows are the main
+  action, and "3000" would look like a port of the list.
+- When the runner reports no server, the form says "Servers that run in
+  this sandbox show here. Start one in the terminal, or ask the agent."
+  The title, the field, and the primary Open preview of today's form stay.
+- A tab label is the port and the cut name, such as `6006 storybook…`, in
+  the capitals of the tab labels. A port that the latest list does not
+  name keeps `Port 3000`. Reason: the name takes the place of "Port", and
+  the tooltip and the accessible name keep the case of the name.
+- The tab row fades its end when it clips tabs, as the session tab row
+  does. Reason: the mockups showed that two named tabs and the actions of
+  the frame do not fit the right column or a phone. The row then cut a
+  label with no sign.
+- After "+", the tabs keep their labels and no tab is current. "+" is
+  pressed, and Reload, Open in new tab, and Close hide, as today.
+- The fixtures use `astro dev` in `docs` and in `marketing-site`, not
+  `next dev` in `apps/web` and `apps/docs`. Reason: the root of the open
+  workspace already runs `next dev`, and the pair shows both kinds of
+  folder.
+- The hidden Desktop moves into its own folder and keeps its path,
+  `app/tools/desktop`. Reason: a page with child pages shows only its
+  canonical screen.
+
+**From the documentation.** This call of 10 November 2026 comes from
+Milestone 2.
+
+- The Privacy page gets the effective date 10 November 2026. Reason: the
+  page says that each published change updates its date. The pull request
+  moves the date when it merges on a later day.
+
+**From the repair mockup.** These calls of 10 November 2026 come from
+Milestone 2a.
+
+- After a failed repair of the list, the port form keeps its last list and
+  the "Other port" row. Under them, the row of a file list that is not the
+  latest one says "The latest list of servers is unavailable", with the
+  time since the failure. It has no Dismiss, as that row has none. Reason:
+  decision 96 puts the notice beside the data, as the file lists do.
+- The notice shows only where the port form shows the list: with no
+  preview open, and after "+". An open preview in its frame shows none.
+  Reason: the notice stands beside the list.
+- `lostCopy.ts` gets the data `servers`. Its line of a refused event says
+  "An update to the list of servers". Reason: one module holds the words of
+  lost data, and each refused event type needs a subject.
+- The state has its own page, `app/tools/preview-repair`, beside
+  `app/tools/preview`. Reason: that page already shows five screens.
+
+**From the final documentation check.** My call of 10 November 2026:
+move the hostname table and its complete text into the existing data and
+trust page. Keep the overview heading and a link. Reason: the architecture
+overview passed the shared documentation length target. No fact changes.
+
+**From the main merge.** My call of 10 November 2026: move the Privacy
+sections about data recipients and transfers into
+`src/marketing/privacy-data-sharing.ts`. Reason: the combined legal text
+passed 300 lines. The split keeps the evaluated document exactly the same.
+
+**From the runner implementation.** These are my calls of 10 November
+2026, within the approved report contract.
+
+- The production entry point supplies the optional port scanner boundary.
+  Reason: embedded runner callers and tests must not read host socket tables.
+- A failed scan keeps the stable list and warns. It does not count as an
+  absent port. A forced report can still send that stable list.
+- An unknown interpreter option gives no name. Reason: its next argument
+  can be an option value instead of a script.
+- An option-looking next argument does not join the name. Reason: it is
+  not a short command word.
+- The shared event bound applies the name and folder limits after secret
+  masking. Reason: masking can make a valid short label longer.
+- Character limits count Unicode code points. Reason: a cut must not split
+  one character.
+- Shutdown stops the port driver, starts agent shutdown, then waits for the
+  scans before the final connection close. Reason: a scan must not delay
+  stopping an agent.
+
+**From the workspace implementation.** These are my calls of 10 November
+2026, within the approved report contract.
+
+- The port parser requires strictly increasing numbers. Reason: one pass
+  checks the approved order and the absence of duplicates.
+- The existing event transaction stores and sends each report. Reason:
+  the list needs no separate stored projection.
+- The stop operation clears the list in its transaction, after preview
+  revocation. Reason: it must run even when no preview is open.
+- The chat Access guide moves intact into `worker/chat/access.md`, with
+  the README anchor kept. Reason: the README passed the file-length target.
+
+**From the Preview implementation.** These are my calls of 10 November
+2026, within the approved UI contract.
+
+- The tool event adapter keeps the latest report and the first repair
+  failure since that report. It replays them with revocations in event order.
+- A report that the browser cannot parse leaves the last report in place.
+  Reason: a partial decode must not replace useful data.
+- The tool store accepts an optional envelope adapter. Reason: the notice
+  needs the event time, while other tools keep their existing event input.
+- The form uses a field state when every detected server has an open tab.
+  Reason: those servers still run, so an empty-server instruction is wrong.
+- Server buttons wait while a preview opens. Reason: one pending open must
+  not create repeated preview requests.
+- The notice uses the app clock and updates its age every 30 seconds.
+  Reason: it follows the existing file-list notice.
+- The Preview tab row reuses the session-tab scroll helper. Reason: it
+  keeps the current tab in view and fades clipped ends.
+- The dev page uses explicit report fixtures and a fixed clock. Reason:
+  the repair-age smoke check must stay reproducible.
+
+**From the final main integration.** My call of 10 November 2026:
+keep the new component and protocol pages from `main`. Put the runner's
+port responsibility in the components page. Keep `main`'s Privacy uses
+module and add the server-list fact there. Its new attachment facts and
+all other legal text stay. The earlier private data-sharing module is
+redundant after this merge and is removed. The hostname table stays in
+the data and trust page, with its overview link. The chat Access guide
+keeps the new queued-write rules from `main`.
+
+**From the repair verification.** My call of 10 November 2026: reuse the
+native transport's existing input-completion barrier at the start of each
+drain pass. Reason: the controlled proof showed that an outgoing read
+could finish before the deferred input request. This is a test-support
+completion fix. It changes no product behavior or requirement.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -320,25 +456,27 @@ Depends on: none
 The Preview tool gets the new states of its port form. The Tools page
 would then pass five screens, so the Preview states move to a child page.
 
-- [ ] Add detected servers to `docs/mockups/src/fixtures/previews.ts`. Give
+- [x] Add detected servers to `docs/mockups/src/fixtures/previews.ts`. Give
       two of them one program in two folders, such as `next dev` in
       `apps/web` and in `apps/docs`. Add one with a long folder and one with
       a name over 10 characters.
-- [ ] Draw the port form with the list of detected servers and the smaller
+- [x] Draw the port form with the list of detected servers and the smaller
       "Other port" row, in `docs/mockups/src/components/tools/PortPreview.tsx`.
       Each row shows the port, the name, and the folder.
-- [ ] Draw the tab of an open preview with the port and the name cut to 10
+- [x] Draw the tab of an open preview with the port and the name cut to 10
       characters, with no folder.
-- [ ] Move the Preview states from
+- [x] Move the Preview states from
       `docs/mockups/src/entries/app/tools/index.mockup.tsx` to a child page,
       `app/tools/preview`. Its canonical screen is the open port preview.
       Its variants are detected servers, no server yet, no report, and "+"
       over an open preview.
-- [ ] Update `docs/mockups/catalogue.md` for the new page.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages on the
+- [x] Update `docs/mockups/catalogue.md` for the new page.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages on the
       desktop and the phone sizes.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/preview-port-detection/m1-report.md`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -347,48 +485,72 @@ Depends on: 1
 The protocol docs state the requirements of the list and decisions 213
 and 214 before the code changes.
 
-- [ ] Update "Port previews" in `docs/protocol/workspace-tools.md`.
+- [x] Update "Port previews" in `docs/protocol/workspace-tools.md`.
       Replace the rule that the app does not discover ports. State the
       list, its names and folders, its update time, its empty and unknown
       states, its clear at a stop, the field, and the short tab label. Add
       decisions 213 and 214 with their rejected alternatives.
-- [ ] Update `docs/protocol/agent-runner.md`. State that the runner
+- [x] Update `docs/protocol/agent-runner.md`. State that the runner
       reports the listening ports, add `ports.updated` to the kinds of
       "Lost workspace updates", and give the limits of the list.
-- [ ] Update the runner term and "Sandbox software" in
+- [x] Update the runner term and "Sandbox software" in
       `docs/architecture.md`.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
-- [ ] Update `src/previews/README.md`, `runner/README.md`,
+- [x] Update `src/previews/README.md`, `runner/README.md`,
       `runner/event-limits.md`, and `src/shared/README.md`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
-## Milestone 3: Runner port reports
+Evidence: `.context/preview-port-detection/m2-report.md`.
+
+## Milestone 2a: Port-list repair notice mockup
+
+Tags: mockup
 
 Depends on: 2
 
+The documentation pass found that the existing failed-repair requirement
+also covers the new port list. The Preview tool needs that visual state.
+
+- [x] Draw the failed port-list repair notice beside the detected servers,
+      with the shared notice style and product words. Add a linked catalogue
+      page without passing the five-screen limit of the Preview page.
+- [x] Run `npm run mockups:check` and smoke-test the new state on desktop
+      and phone sizes.
+- [x] Record the mockup calls in the design and align the Milestone 5 tasks.
+
+Evidence: `.context/preview-port-detection/m2a-report.md`.
+
+## Milestone 3: Runner port reports
+
+Depends on: 2, 2a
+
 The runner watches the socket tables and reports the list.
 
-- [ ] Add the shared contract in `src/shared/`: a listening port type with
+- [x] Split the Privacy content source after the merge from `main`, so its
+      expanded text stays below 300 lines per file. Keep every rendered
+      word and its order.
+
+- [x] Add the shared contract in `src/shared/`: a listening port type with
       `port`, `name`, and `folder`, `ports.updated` in `RunnerEvent` and
       `WorkspaceEvent`, the kind in `RunnerReportKind`, the limits, and the
       terminal port constant.
-- [ ] Add the port watcher to the runner: the parser of the socket tables,
+- [x] Add the port watcher to the runner: the parser of the socket tables,
       the filter, the names, the folders, the rule of two scans, and the
       reports after a change, a connect, and a refresh.
-- [ ] Test the parser and the filter with socket table fixtures: a
+- [x] Test the parser and the filter with socket table fixtures: a
       wildcard, a loopback, and a specific address, another owner, another
       state, the terminal port, IPv6, and one port in both tables.
-- [ ] Add a table test of the name rule with literal command lines: an
+- [x] Add a table test of the name rule with literal command lines: an
       interpreter, `-m`, a flag, a path, a next word with digits or
       capitals, the length limit, and a process that the runner cannot
       read.
-- [ ] Add a table test of the folder rule with literal folders: the root
+- [x] Add a table test of the folder rule with literal folders: the root
       of the workspace's repository, a folder below it, another repository
       under `~/code`, a folder outside `~/code`, and a folder over 120
       characters.
-- [ ] Test the rule of two scans for a new and for a closed port, a report
+- [x] Test the rule of two scans for a new and for a closed port, a report
       only on a change, the report after a connect, and the refresh answer.
       Use a fake scan driver and no sleep.
 - [ ] Get the listeners of a new workspace on the test deployment, with
@@ -396,23 +558,32 @@ The runner watches the socket tables and reports the list.
       that is not a user server to the exclusion list. Save the output under
       `.context/preview-port-detection/`.
 
+Evidence: `.context/preview-port-detection/m3-report.md` and
+`.context/preview-port-detection/privacy-split-report.md`.
+
+The deployed inventory needs a signed-in test workspace. The app returns
+`401 sign_in_required` here. The report contract and runner checks are
+complete, so the independent workspace and UI work can continue.
+
 ## Milestone 4: Workspace list and clear
 
 Depends on: 3
 
 The workspace accepts, stores, filters, sends, and clears the list.
 
-- [ ] Accept `ports.updated` in the runner event parser of the workspace,
+- [x] Accept `ports.updated` in the runner event parser of the workspace,
       with its limits. Refuse an invalid report with the refusal marker and
       the repair of decision 96.
-- [ ] Store and send each report as a workspace event.
-- [ ] Add each name and each folder to the output filter in
+- [x] Store and send each report as a workspace event.
+- [x] Add each name and each folder to the output filter in
       `src/shared/output-fields.ts`.
-- [ ] Commit `ports.updated` with `ports: null` in the stop hook of the
+- [x] Commit `ports.updated` with `ports: null` in the stop hook of the
       workspace, beside the preview revocation.
-- [ ] Add Worker tests: a stored and sent report, an invalid report with
+- [x] Add Worker tests: a stored and sent report, an invalid report with
       its marker and its refresh, a masked marked env value in a name and
       in a folder, and the clear at a stop.
+
+Evidence: `.context/preview-port-detection/m4-report.md`.
 
 ## Milestone 5: Detected servers in the Preview tool
 
@@ -422,24 +593,34 @@ Depends on: 1, 4
 
 The port form lists the detected servers, as the mockups show.
 
-- [ ] Read `ports.updated` in `src/app/api/read-events.ts`. Keep the latest
+- [x] Read `ports.updated` in `src/app/api/read-events.ts`. Keep the latest
       list in the preview reducer.
-- [ ] Show the list in `PreviewOpenForm`, with the states and the words of
+- [x] Show the list in `PreviewOpenForm`, with the states and the words of
       the mockups, on the desktop and the phone sizes. Each row shows the
       port, the name, and the folder.
-- [ ] Show the port and the cut name in the tab, in `PreviewToolbar`. Give
+- [x] Show the port and the cut name in the tab, in `PreviewToolbar`. Give
       the tab a tooltip and an accessible name with the port, the full name,
       and the folder.
-- [ ] Add tests: the reducer keeps the latest list and the null list, the
+- [x] Add tests: the reducer keeps the latest list and the null list, the
       form lists the servers without an open preview, a click opens the
       port, and the empty and unknown states show. Test that a tab cuts a
       name over 10 characters to 9 and "…", and that its accessible name
       holds the full name and the folder.
-- [ ] Add a fake `ports.updated` to the tools dev page in
+- [x] Show the failed port-list repair notice from Milestone 2a beside
+      the list. Keep the last list until a newer full report arrives. Test
+      the failed marker, its replay, and the clear from a later report.
+      - Draw it as `app/tools/preview-repair` shows: `LostUpdateRow` with
+        `unavailableText('servers')` and the time since the failure, under
+        the port form, with no Dismiss. Show it with no preview open and
+        after "+", and never with a preview in its frame.
+      - Map a refused `ports.updated` to `servers` in `LostEventLine`.
+- [x] Add a fake `ports.updated` to the tools dev page in
       `src/terminal/dev/`. Smoke-test the port form there.
-- [ ] Set the "Automatic port detection" row in
+- [x] Set the "Automatic port detection" row in
       `src/marketing/from-conductor/areas/cloud.ts` to Available. Its note
       names the click on a detected server.
+
+Evidence: `.context/preview-port-detection/m5-report.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
@@ -447,12 +628,32 @@ Depends on: every other milestone
 
 The complete gate proves the work, and the review checks it.
 
-- [ ] Run each new asynchronous test 10 times. Record the pass count under
+- [x] Run each new asynchronous test 10 times. Record the pass count under
       `.context/preview-port-detection/`.
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
+- [x] Align the three stop-history journey tests with the added null port
+      report. Keep every existing assertion and the complete event order.
+- [x] Correct the proved native input-completion race in the transport
+      owner. Reproduce both repair failures with controlled native order,
+      keep every test assertion, and verify ten fresh runs.
+- [x] Verify the implementation after the merge of the new native Worker
+      test support, typed warnings, attachment facts, and split protocol docs.
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
       the targeted tests and the complete gate, `npm run check`.
-- [ ] Check that decisions 213 and 214 are still free on `origin/main`.
+- [x] Check that decisions 213 and 214 are still free on `origin/main`.
       Renumber them when they are not.
+Evidence: `.context/preview-port-detection/m6-integration-report.md`.
+The native repair tests exposed an input-completion race. Controlled native
+checks reproduced both missing-command assertions. The transport now
+waits for its existing input barrier before reading outgoing messages.
+Both controlled cases and ten fresh runs passed. The resolved follow-up
+`plans/follow-ups/runner-report-repair-test-flake.md` is deleted. Every
+permanent test assertion, timeout, and retry setting stays unchanged.
+Evidence: `.context/preview-port-detection/m6-repair-drain-report.md`.
+
+Evidence: `.context/preview-port-detection/complete-gate-verified.log`.
+The complete gate passed on the final merged tree. The final runner build
+also passed, in `.context/preview-port-detection/final-runner-build.log`.
+
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

@@ -53,7 +53,8 @@ share.
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages, the entries that moved,
 the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
-`app/chat`, and `app/workspace-links`, and the New workspace dialog.
+`app/chat`, `app/workspace-links`, and `app/tools`, and the New workspace
+dialog.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared

@@ -31,3 +31,8 @@ byte budget measures the event or field after the output filter.
 - A confirm can also cover a refusal marker that the workspace stored for
   an event. The runner then removes that event from its outbox and does
   not send it again. The runner never sends a refusal marker.
+- `ports.updated` sends a full list of at most 64 ports. Names keep at most
+  40 characters, and folders keep at most 120. The shared bound applies
+  again after secret filtering, without splitting a Unicode character.
+  [Listening ports](../docs/protocol/agent-runner.md#listening-ports)
+  gives the limits of that report: its ports, its names, and its folders.

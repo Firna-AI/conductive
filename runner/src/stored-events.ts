@@ -6,6 +6,12 @@ import type {
 } from '../../src/shared/files'
 import type { RunnerEvent, RunnerEventEnvelope } from '../../src/shared/runner'
 import type { WorkspaceStart } from '../../src/shared/workspaces'
+import {
+  PORT_REPORT_MAX_PORTS,
+  PORT_NAME_MAX_CHARACTERS,
+  PORT_FOLDER_MAX_CHARACTERS,
+  type ListeningPort,
+} from '../../src/shared/ports'
 import { parseChoice } from './commands'
 import {
   array,
@@ -111,6 +117,21 @@ function start(value: unknown): WorkspaceStart {
   }
 }
 
+function port(value: unknown): ListeningPort {
+  const input = object(value)
+  const port = integer(input.port)
+  const name = nullable(input.name)
+  const folder = nullable(input.folder)
+  if (
+    port < 1 ||
+    port > 65535 ||
+    (name !== null && Array.from(name).length > PORT_NAME_MAX_CHARACTERS) ||
+    (folder !== null && Array.from(folder).length > PORT_FOLDER_MAX_CHARACTERS)
+  )
+    throw new Error('The saved listening port exceeds its limits.')
+  return { port, name, folder }
+}
+
 export function parseEvent(value: unknown): RunnerEvent {
   const input = object(value)
   const type = string(input.type)
@@ -118,6 +139,12 @@ export function parseEvent(value: unknown): RunnerEvent {
   if (type === 'files.unavailable') return { type }
   if (type === 'workspace.title') return { type, name: string(input.name) }
   if (type === 'start.updated') return { type, start: start(input.start) }
+  if (type === 'ports.updated') {
+    const ports = array(input.ports, port)
+    if (ports.length > PORT_REPORT_MAX_PORTS)
+      throw new Error('The saved listening ports exceed their limit.')
+    return { type, ports }
+  }
   if (type === 'files.snapshot') {
     const tree = object(input.tree)
     return {
