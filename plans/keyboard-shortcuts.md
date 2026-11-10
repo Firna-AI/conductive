@@ -634,6 +634,13 @@ without a Conductor key starts with no key, and the person can give it
 one: Go to All files, Checks, Preview, and Desktop, New section, Session
 history, and Create org.
 
+Agent call, 2026-11-10, from the fifth merge of `main`: Restore workspace,
+which `main` added to the palette, becomes a command without a default
+key, in the Workspace group after Archive workspace. It runs where the
+palette offers it. Reason: the call above gives each palette action
+without a Conductor key a command with no key, so that a key and its
+palette row do the same thing.
+
 "Kept" names the browsers that keep a key in a normal tab. "Second key"
 is the key of decision 191 that a browser tab lets through.
 
@@ -1108,6 +1115,9 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
       and Ctrl+L, and only Chrome dims Ctrl+1 to Ctrl+9. Update each note
       of the mockups that calls decisions 196 and 197 open. Decision 197 D
       changes nothing that a page draws.
+- [ ] Add the command Restore workspace, without a default key, to the
+      rows of the tab, and its key to the Restore workspace row of the
+      palette, from the agent call of the fifth merge of `main`.
 - [ ] Run `npm run mockups:check`. Smoke-test the new pages in light and
       dark, desktop and phone.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -1144,6 +1154,8 @@ block only the Linux rules, which follow the answers.
 - [x] State the user's answers to review items 4 and 10 under "Fixed
       keys" and "How a key matches". The guides and the legal pages were
       read in full; none restates a changed fact.
+- [ ] Add Restore workspace, without a default key, to the default keys
+      of `docs/protocol/keyboard-shortcuts-keys.md`.
 - [ ] State decision 198 C in the Settings section of
       `docs/protocol/command-palette.md`: the Account group follows the
       order of the Account page, tab by tab.
@@ -1178,6 +1190,8 @@ the layout switch rule until the answers.
   - [ ] Decision 197 D: the layout switch rule in the model, the key-up
         and the focus loss of a switch key in `windowKeys`, and the stop of
         a press that runs no command, with tests.
+- [ ] Add the command Restore workspace without a default key, and run it
+      from the palette's Restore workspace action, with tests.
 - [x] Apply the user's answers to review items 4 and 10 in the model and
       the shared contracts, with tests: the fixed rule of the keys of a
       focused control, and one key text for each press. Evidence:
@@ -1346,6 +1360,8 @@ Depends on: every other milestone
 - [ ] Merge `origin/main` before the work on the answers to decisions 196
       to 198, and again before the pull request. Merge justifications:
       `.context/keyboard-shortcuts/merge/justifications.md`.
+  - [x] Before the work: the fifth merge, commit `cd88a525`.
+  - [ ] Before the pull request.
 - [ ] Run the targeted tests and `npm run check` on the tree with
       Milestones 1, 2, 3, and 9 and the last merge of `main`.
 - [ ] Review the complete local diff against `origin/main` again with the
