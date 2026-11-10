@@ -5,11 +5,13 @@ import type {
 } from '../../src/shared/runner'
 
 /** An in-memory socket. Tests close it explicitly, without sleeps or real ports. */
-export class FakeRunnerConnection implements RunnerConnection {
+export class FakeRunnerConnection<
+  Message extends WorkspaceToRunner = WorkspaceToRunner,
+> implements RunnerConnection<Message> {
   private closed = false
-  private readonly messages = new Set<(message: WorkspaceToRunner) => void>()
+  private readonly messages = new Set<(message: Message) => void>()
   private readonly closes = new Set<() => void>()
-  private readonly queued: WorkspaceToRunner[] = []
+  private readonly queued: Message[] = []
   private readonly receive: (message: RunnerToWorkspace) => void
 
   constructor(receive: (message: RunnerToWorkspace) => void) {
@@ -21,13 +23,13 @@ export class FakeRunnerConnection implements RunnerConnection {
     this.receive(structuredClone(message))
   }
 
-  reply(message: WorkspaceToRunner): void {
+  reply(message: Message): void {
     if (this.closed) return
     if (this.messages.size === 0) this.queued.push(structuredClone(message))
     for (const listener of this.messages) listener(structuredClone(message))
   }
 
-  onMessage(listener: (message: WorkspaceToRunner) => void): () => void {
+  onMessage(listener: (message: Message) => void): () => void {
     this.messages.add(listener)
     for (const message of this.queued.splice(0)) listener(message)
     return () => this.messages.delete(listener)
