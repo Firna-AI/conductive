@@ -3,7 +3,10 @@ import { join } from 'node:path'
 import { onTestFinished } from 'vitest'
 
 import type { Agent } from '../../src/shared/agents'
-import type { RunnerTurn } from '../../src/shared/runner'
+import type {
+  RunnerTurnV2 as RunnerTurn,
+  RunnerMessageDuringTurnV2,
+} from '../../src/shared/runner'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
 import { Runner } from '../src/runner'
 import { DiskStorage, EventStore } from '../src/state'
@@ -37,10 +40,21 @@ export function turn(
     },
     attachments: [],
     commitAuthor: null,
-    login:
+    credential:
       agent === 'claude'
-        ? { agent, kind: 'token', secret: `secret-${sender}` }
-        : { agent, kind: 'api-key', secret: `secret-${sender}` },
+        ? { agent, kind: 'token', token: `secret-${sender}` }
+        : { agent, kind: 'api-key', token: `secret-${sender}` },
+  }
+}
+
+export function duringTurn(command: RunnerTurn): RunnerMessageDuringTurnV2 {
+  return {
+    type: 'message',
+    commandId: command.commandId,
+    sessionId: command.sessionId,
+    turnId: command.turnId,
+    message: command.message,
+    attachments: command.attachments,
   }
 }
 

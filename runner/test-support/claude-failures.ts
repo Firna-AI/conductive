@@ -161,7 +161,9 @@ export async function checkClaudeFailures(
   )({
     cwd: root,
     home,
-    login: turn().login,
+    sessionId: turn().sessionId,
+    endpoint: 'https://machines.conductive.test/v1/model/claude',
+    credential: { type: 'gateway', ...turn().credential },
     commitAuthor: null,
     choice: turn().message.choice,
     conversationId: null,

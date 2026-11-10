@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
 
-import type { WorkspaceToRunner } from '../../src/shared/runner'
+import type { WorkspaceToRunnerV2 as WorkspaceToRunner } from '../../src/shared/runner'
 import type {
   RunnerConnection,
   RunnerConnectionRequest,
@@ -10,7 +10,7 @@ import { parseWorkspaceMessage } from './commands'
 export const connectWebSocket = (
   request: RunnerConnectionRequest,
   warn: (message: string) => void,
-): Promise<RunnerConnection> =>
+): Promise<RunnerConnection<WorkspaceToRunner>> =>
   new Promise((resolve, reject) => {
     const url = new URL(request.url)
     if (url.protocol !== 'https:' && url.protocol !== 'wss:') {

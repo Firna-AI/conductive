@@ -2,7 +2,7 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../test-support/harness'
+import { duringTurn, runnerHarness, turn } from '../../test-support/harness'
 import { fakeToolContext } from '../../test-support/providers'
 import { Runner } from '../runner'
 import { createCodexFactory } from './codex'
@@ -59,7 +59,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     text: 'Hello world',
   })
   h.endpoint.send({
-    ...turn('2', 'alice', 'codex'),
+    ...duringTurn(turn('2', 'alice', 'codex')),
     type: 'message',
     turnId: 'turn-1',
   })
@@ -144,14 +144,18 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     model: 'steered-model',
     effort: 'medium',
   }
-  h.endpoint.send({ ...fifth, type: 'message', turnId: 'turn-4' })
+  h.endpoint.send({ ...duringTurn(fifth), type: 'message', turnId: 'turn-4' })
   const queuedChoice = turn('queued-choice', 'bob', 'codex')
   queuedChoice.message.choice = {
     agent: 'codex',
     model: 'second-steered-model',
     effort: 'high',
   }
-  h.endpoint.send({ ...queuedChoice, type: 'message', turnId: 'turn-4' })
+  h.endpoint.send({
+    ...duringTurn(queuedChoice),
+    type: 'message',
+    turnId: 'turn-4',
+  })
   await runner.idle()
   expect(
     previous.writes.filter((write) => write.method === 'turn/steer'),
@@ -238,7 +242,15 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
   const direct = await createCodexFactory(servers.start)({
     cwd: h.root,
     home: h.home,
-    login: turn('close', 'bob', 'codex').login,
+    sessionId: turn('close', 'bob', 'codex').sessionId,
+    endpoint:
+      fakeToolContext.machineOrigin +
+      '/v1/model/' +
+      turn('close', 'bob', 'codex').message.choice.agent,
+    credential: {
+      type: 'gateway',
+      ...turn('close', 'bob', 'codex').credential,
+    },
     commitAuthor: null,
     choice: { agent: 'codex', model: 'test-model', effort: 'high' },
     conversationId: null,

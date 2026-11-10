@@ -184,6 +184,7 @@ describe('workspace chat queue', () => {
     if (next?.type !== 'turn') throw new Error('Expected the next turn.')
     expect(next.sessionId).toBe(session.id)
     expect(next.turnId).not.toBe(initial.turnId)
+    if (!next.login) throw new Error('The version 1 turn has no login.')
     expect(next.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     expect(next.commitAuthor).toEqual({
       name: 'Teammate',

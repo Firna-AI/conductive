@@ -6,7 +6,7 @@ import {
   fakeComputerServer,
   mockComputerServer,
 } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../test-support/harness'
+import { duringTurn, runnerHarness, turn } from '../../test-support/harness'
 import { stop } from '../../test-support/runtime'
 import { Runner } from '../runner'
 import { createClaudeFactory } from './claude'
@@ -107,7 +107,7 @@ it.each(['claude', 'codex'] as const)(
       GIT_COMMITTER_EMAIL: '1+alice@users.noreply.github.com',
     })
     h.endpoint.send({
-      ...turn('during', 'bob', agent),
+      ...duringTurn(turn('during', 'bob', agent)),
       type: 'message',
       turnId: 'turn-first',
     })
@@ -125,7 +125,7 @@ it.each(['claude', 'codex'] as const)(
       agent === 'claude' ? queries[0].closed : servers.processes[0].closed,
     ).toBe(true)
     const next = turn('second', 'bob', agent)
-    next.login = first.login
+    next.credential = first.credential
     next.commitAuthor = {
       name: 'Bob Example',
       email: '2+bob@users.noreply.github.com',

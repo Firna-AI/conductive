@@ -4,6 +4,92 @@ import type { RunnerTurn } from '../../src/shared/runner'
 import { turn } from '../test-support/harness'
 import { parseWorkspaceMessage } from './commands'
 
+const parse = (value: unknown) => parseWorkspaceMessage(value, () => {})
+
+function command() {
+  const original = turn()
+  return {
+    type: 'turn',
+    commandId: original.commandId,
+    sessionId: original.sessionId,
+    turnId: original.turnId,
+    message: original.message,
+    attachments: original.attachments,
+    credential: {
+      agent: 'claude',
+      kind: 'api-key',
+      token: 'sk-ant-api-turn-token',
+    },
+    commitAuthor: null,
+  }
+}
+
+it('accepts only the version 2 welcome', () => {
+  expect(() =>
+    parse({
+      type: 'welcome',
+      protocolVersion: 2,
+      streamId: 'stream',
+      confirmedThrough: 0,
+    }),
+  ).not.toThrow()
+  expect(
+    parse({
+      type: 'welcome',
+      protocolVersion: 2,
+      streamId: 'stream',
+      confirmedThrough: 0,
+    }),
+  ).toEqual({
+    type: 'welcome',
+    protocolVersion: 2,
+    streamId: 'stream',
+    confirmedThrough: 0,
+  })
+  expect(() =>
+    parse({
+      type: 'welcome',
+      protocolVersion: 1,
+      streamId: 'stream',
+      confirmedThrough: 0,
+    }),
+  ).toThrow('The runner protocol version is not supported.')
+})
+
+it('parses a turn credential and a message without a credential', () => {
+  const input = command()
+  expect(() => parse(input)).not.toThrow()
+  expect(parse(input)).toEqual(input)
+  const message = { ...input, type: 'message', credential: undefined }
+  expect(parse(message)).toEqual({
+    type: 'message',
+    commandId: input.commandId,
+    sessionId: input.sessionId,
+    turnId: input.turnId,
+    message: input.message,
+    attachments: [],
+  })
+  expect(() =>
+    parse({
+      ...input,
+      credential: { agent: 'codex', kind: 'api-key', token: 'other-agent' },
+    }),
+  ).toThrow()
+  expect(() =>
+    parse({
+      ...input,
+      credential: { agent: 'claude', kind: 'unknown', token: 'wrong-kind' },
+    }),
+  ).toThrow()
+  expect(() =>
+    parse({
+      ...input,
+      credential: undefined,
+      login: { agent: 'claude', kind: 'api-key', secret: 'real-login' },
+    }),
+  ).toThrow()
+})
+
 it('keeps the supplied commit author only on a turn command', () => {
   const command = turn()
   command.commitAuthor = {
