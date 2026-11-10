@@ -13,7 +13,7 @@ Their terminal access can reach credentials available on a workspace's cloud com
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 The agent login's share setting controls whose messages spend that login.
-It does not hide the credential from code or terminal users on the same computer.
+It does not prevent code or terminal users from using credentials available on the computer.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -61,9 +61,16 @@ They do not offer a call to read or message another workspace's chat.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
-The cloud computer receives the session's login when a turn needs it.
 
-A program or member with terminal access there can read or copy that login.
+Your ChatGPT sign-in stays outside the cloud computer.
+Conductive renews that sign-in for you.
+With a ChatGPT plan, Codex uses a temporary turn token through Conductive's model gateway.
+That token permits model requests only during the turn.
+Programs and members with terminal access can use that token while its turn runs.
+Your ChatGPT email, account ID, and workspace name can also reach the cloud computer.
+
+Other login kinds can reach older cloud computers.
+Programs and members with terminal access there can copy those logins.
 A copied login can remain usable after the turn ends.
 Removing a login from Account does not revoke a copy held elsewhere.
 

@@ -12,7 +12,7 @@ Have these ready:
 - A GitHub account.
 - GitHub read access to the repository where you will create a workspace.
 - Permission to install a GitHub App if you will set up your own org.
-- A Claude subscription token, an Anthropic API key, or an OpenAI API key.
+- A Claude subscription token, an Anthropic API key, an OpenAI API key, or a ChatGPT plan.
 
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
@@ -121,7 +121,8 @@ Choose the login you want to use:
 | --- | --- | --- |
 | Claude | Subscription token | Select **Subscription token**. Paste a token from `claude setup-token`. |
 | Claude | Anthropic API key | Select **API key**. Paste your Anthropic API key. |
-| Codex | OpenAI API key | Paste your OpenAI API key. |
+| Codex | OpenAI API key | Select **API key**. Paste your OpenAI API key. |
+| Codex | ChatGPT plan | Select **ChatGPT plan**. Select **Get a code**. Complete the ChatGPT sign-in. |
 
 For a subscription token, run this command on a computer where the `claude` command is installed:
 
@@ -138,12 +139,21 @@ Paste the key into its field.
 Select **Connect**.
 The agent row then shows **Connected**.
 
+For a ChatGPT plan, first turn on device code sign-in in your ChatGPT security settings.
+Ask your ChatGPT admin if you cannot change that setting.
+ChatGPT sign-in also works with Plus and Pro.
+Follow [Connect Codex](/docs/agent-logins#connect-codex) for the sign-in steps.
+
+Never share the code.
+Enter only a code that the Conductive page shows.
+The code expires in 15 minutes.
+
 One connected agent is enough to finish setup.
 You can connect the other later in **Account**.
 
 If your first agent request reports a login error, open **Account**.
 Remove that agent's login.
-Then connect the correct token or key.
+Then connect the correct account.
 
 - [Manage logins and sharing](/docs/agent-logins)
 

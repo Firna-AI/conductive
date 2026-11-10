@@ -16,7 +16,7 @@ Connect at least one of these:
 | Agent | Supported login |
 | --- | --- |
 | Claude | A Claude subscription token or an Anthropic API key |
-| Codex | An OpenAI API key |
+| Codex | An OpenAI API key or a ChatGPT plan |
 
 Use a login that you have permission to use.
 Model use goes to its connected account.
@@ -53,11 +53,38 @@ Conductive keeps the stored login hidden in Account.
 2. Open **General**.
 3. Find Codex under **Agents**.
 4. Select **Connect**.
-5. Paste your OpenAI API key.
-6. Select **Connect**.
+
+### Use a ChatGPT plan
+
+Sign-in works with any ChatGPT plan, including Plus and Pro.
+First turn on device code sign-in in your ChatGPT security settings.
+Ask your ChatGPT admin if you cannot change that setting.
+
+1. Choose **ChatGPT plan**.
+2. Select **Get a code**.
+3. Open [OpenAI's sign-in page](https://auth.openai.com/codex/device).
+4. Sign in to ChatGPT.
+5. Enter only a code that the Conductive page shows.
+
+Never share the code.
+The code expires in 15 minutes.
+Keep the Conductive page open while it shows **Waiting for you to sign in**.
+If the code expires, select **Get a new code**.
+If ChatGPT refuses sign-in, check the security setting before you get a new code.
+
+Conductive renews your saved ChatGPT sign-in for you.
+OpenAI offers its own **Sign in with ChatGPT** for apps only to partners.
+OpenAI can block this device code sign-in.
+Use an OpenAI API key if that happens.
+
+### Use an OpenAI API key
+
+1. Choose **API key**.
+2. Paste your OpenAI API key.
+3. Select **Connect**.
 
 The form has a link to create a key with OpenAI.
-The row shows **Connected** after you save it.
+The row shows **Connected** after either connection succeeds.
 
 Choose a model for the connected agent when you send a message.
 The message box asks you to connect the agent if its login is missing.
@@ -75,8 +102,10 @@ The switch saves each change at once.
 | On | Uses your login and connected account |
 | Off | Starts a new session on that member's own login |
 
-Sharing starts off for a new subscription token.
+Sharing starts off for a new Claude subscription token or ChatGPT sign-in.
 It starts on for a new API key.
+The share switch stays available for a ChatGPT plan.
+Only its owner may use a ChatGPT plan under OpenAI's terms.
 
 A new session on another member's login has no copy of your conversation.
 The earlier session keeps its history.
@@ -105,24 +134,26 @@ Removing it from Conductive does not revoke a copy held elsewhere.
 The first agent request can still report an authentication error.
 
 Check the error from the provider.
-Make sure the token or key belongs to the account you want to use.
+Make sure you connected the account you want to use.
 Note your choice for **Let other members use this login** before removing the login.
 Remove the saved login if you need to replace it.
-Then connect the correct token or key.
+Then connect the correct account.
 
 Check **Let other members use this login** after connecting.
 Set the switch to your preferred choice if needed.
 
-A failed save keeps the secret in its field.
+A failed token or API key save keeps the secret in its field.
 Correct the cause shown by the form before you try again.
 If a share-setting change fails, the switch returns to its saved value.
 
 ## Understand access to credentials
 
 Conductive stores agent logins encrypted.
-During a turn, its cloud computer uses the session starter's login.
-Code and members with terminal access on that computer can read or copy it.
-The share switch does not hide it from them.
+Your ChatGPT sign-in stays outside the cloud computer.
+With a ChatGPT plan, Codex uses a temporary turn token through Conductive's model gateway.
+Code and members with terminal access can use that token while its turn runs.
+Other login kinds can reach older cloud computers.
+The share switch does not hide credentials available on the computer.
 
 Work in an org with people you trust with your agent and GitHub logins.
 
