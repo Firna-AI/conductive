@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, from the branch `calummoore/betterstack-implementation-brainstorm`, finding 2 of the report on the Privacy page words for Better Stack error reporting.
-- **Location:** `src/marketing/privacy.ts:52` (the Resend entry of "Who gets your data"), `src/marketing/privacy.ts:96` (the section "Transfers to other countries"), and `src/marketing/legal-pages.md:30` (the sources for the review of the legal pages).
+- **Location:** `src/marketing/privacy.ts:52` (the Resend entry of "Who gets your data"), `src/marketing/privacy.ts:96` (the section "Transfers to other countries"), and `src/marketing/legal-pages.md:31` (the sources for the review of the legal pages).
 - **Reason:** The gap exists on `origin/main`, and the error reporting change that found it does not change what Resend gets.
 
 - **Source:** Implementation. **Category:** Docs or spec.

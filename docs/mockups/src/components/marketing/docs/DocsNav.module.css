@@ -1,0 +1,62 @@
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.heading {
+  padding: 0 10px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row of the menu. A phone raises it to the touch size. */
+.item {
+  display: flex;
+  align-items: center;
+  min-height: max(32px, var(--ui-touch-min));
+  padding: 6px 10px;
+  border-radius: var(--ui-radius-md);
+  box-sizing: border-box;
+  color: var(--ui-ink2);
+  font-size: 14px;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.item:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+/* The current page takes the fill of a selected row. */
+.current,
+.current:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+  font-weight: 500;
+}
+
+/* The ring sits inside the row, so a scrolled sidebar never clips it. */
+.item:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}

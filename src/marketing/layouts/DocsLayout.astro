@@ -1,0 +1,71 @@
+---
+import type { MarkdownHeading } from 'astro'
+import { productName } from '../../../docs/mockups/src/brand'
+import DocsContents from '../components/DocsContents.astro'
+import DocsMenu from '../components/DocsMenu.astro'
+import DocsNav from '../components/DocsNav.astro'
+import DocsPager from '../components/DocsPager.astro'
+import type { Guide, MenuGroup } from '../docs-guides'
+import SiteLayout from './SiteLayout.astro'
+import '../styles/docs-layout.css'
+import '../styles/docs-nav.css'
+import '../styles/docs-contents.css'
+import '../styles/docs-prose.css'
+import '../styles/docs-code.css'
+
+/*
+ * A guide of the docs inside the site: the guides, the group with the
+ * title and the lead, "On this page", the body, and the neighbouring
+ * guides. The header marks Docs as the current section. A desktop shows the
+ * guides in a sidebar and the contents in a column beside the body, or in
+ * a box under the lead in a narrower window. A phone shows the docs menu
+ * under the header and the contents as a disclosure under the lead. Its
+ * stylesheets join the other styles of the page, which carries them
+ * inline, so the page needs no other request and runs no script. The build
+ * puts them before the shared styles of `Document`, so each rule of the
+ * docs relies on its own classes, not on the order of the stylesheets.
+ */
+type Props = {
+  guide: Guide
+  groups: readonly MenuGroup[]
+  previous?: Guide
+  next?: Guide
+  /** The level-two headings of the body, in the order of the page. */
+  sections: readonly MarkdownHeading[]
+}
+
+const { guide, groups, previous, next, sections } = Astro.props
+---
+
+<SiteLayout
+  title={`${guide.title} – ${productName}`}
+  description={guide.description}
+  current="docs"
+>
+  <main class="main">
+    <DocsMenu groups={groups} current={guide.id} />
+    <div class="docs">
+      <div class="docs-side">
+        <DocsNav groups={groups} current={guide.id} />
+      </div>
+      <header class="docs-head">
+        <span class="docs-label">{guide.group}</span>
+        <h1 class="docs-title">{guide.title}</h1>
+        {guide.description ? (
+          <p class="docs-lead">{guide.description}</p>
+        ) : null}
+      </header>
+      {sections.length > 0 ? (
+        <div class="docs-contents">
+          <DocsContents sections={sections} />
+        </div>
+      ) : null}
+      <div class="docs-body docs-prose">
+        <slot />
+      </div>
+      <div class="docs-foot">
+        <DocsPager previous={previous} next={next} />
+      </div>
+    </div>
+  </main>
+</SiteLayout>

@@ -4,11 +4,12 @@ import { productSummary } from '../../../../../src/marketing/features'
 import { paths } from '../../paths'
 import { classes } from '../common/classes'
 import { SiteFooter } from './SiteFooter'
-import { SiteHeader, type SiteLinks } from './SiteHeader'
+import { SiteHeader, type SiteLinks, type SiteSection } from './SiteHeader'
 import styles from './SitePage.module.css'
 
 const links: SiteLinks = {
   home: paths.marketing,
+  docs: paths.docs,
   fromConductor: paths.fromConductor,
   signIn: paths.signIn,
 }
@@ -20,19 +21,26 @@ const year = 2026
  * A page of the marketing site: the header, the content, and the footer.
  * The content grows, so the footer of a short page stays at the bottom. A
  * bare page, such as the page before GitHub on the host of the app, has
- * only the wordmark in its header and no footer.
+ * only the wordmark in its header and no footer. `current` is the section
+ * of the page, which the header marks, such as the docs.
  */
 export function SitePage(props: {
   viewport: Viewport
   children: ReactNode
   bare?: boolean
+  current?: SiteSection
 }) {
   const { viewport, bare } = props
   return (
     <div
       className={classes(styles.site, viewport === 'mobile' && styles.mobile)}
     >
-      <SiteHeader bare={bare} links={links} viewport={viewport} />
+      <SiteHeader
+        bare={bare}
+        current={props.current}
+        links={links}
+        viewport={viewport}
+      />
       <main className={styles.main}>{props.children}</main>
       {bare ? null : (
         <SiteFooter

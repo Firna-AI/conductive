@@ -1,9 +1,9 @@
 # Legal pages
 
-The [marketing site README](README.md#legal-pages) gives the rule for a
-change to a fact that the legal pages restate, and the rule that names each
-outside service. This page gives the operator, the shared text, and the
-sources for the review of the Terms and Privacy pages.
+The [marketing site README](README.md#legal-pages) gives the pages of the
+site, the rule for a change to a fact that the legal pages restate, and the
+rule that names each outside service. This page gives the operator, the
+shared text, and the sources for the review of the Terms and Privacy pages.
 
 The operator is Firna Ltd, registered in England and Wales.
 `legalOperator` in `legal-text.ts` holds its company number, registered
@@ -22,10 +22,11 @@ reports, and their retention, from
 [Error reporting](../../docs/protocol/error-reporting.md).
 
 The words of the legal pages, of the page for an unknown address, and of
-the sign-in agreement are text without markup. `terms.ts`, `privacy.ts` with `privacy-uses.ts`,
-and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
-`components/RunningText.astro` build their HTML for the site. The mockups and the sign-in screen of the app render the same text
-with React. So every surface shows the same words.
+the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`
+with `privacy-uses.ts`, and `legal-text.ts` hold them.
+`layouts/LegalPage.astro` and `components/RunningText.astro` build their
+HTML for the site. The mockups and the sign-in screen of the app render the
+same text with React. So every surface shows the same words.
 
 Sources for the review:
 
