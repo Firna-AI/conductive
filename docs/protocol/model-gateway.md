@@ -3,14 +3,16 @@
 This doc holds the requirements and the decisions in force for the model
 gateway. The gateway keeps the agent logins out of the sandbox. It adds
 the login of a turn to each model request of the agents, and sends the
-request on to the provider. The terms are those of the
-[architecture doc](../architecture.md#terms).
+request on to the provider or to an own endpoint. The terms are those of
+the [architecture doc](../architecture.md#terms).
 
 A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
 decision number, such as gateway decision 6, names the dated record of one
 decision of the change that adds the gateway. Its plan keeps these records
-while the change is open. Its pull request keeps them after the merge.
+while the change is open. Its pull request keeps them after the merge. An
+own endpoint decision number names a decision of the change that adds the
+own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Terms
 
@@ -18,8 +20,8 @@ while the change is open. Its pull request keeps them after the merge.
   agent programs in a sandbox.
 - **Turn token:** a secret of one turn. The agent programs send it to the
   gateway in place of an agent login.
-- **Upstream:** the provider API that gets a model request from the
-  gateway.
+- **Upstream:** the provider API, or the own endpoint of the login, that
+  gets a model request from the gateway.
 - **Profile:** a pair of Anthropic files that Claude reads: a config file
   with an address, and a credentials file with a token.
 
@@ -161,7 +163,9 @@ while the change is open. Its pull request keeps them after the merge.
 ## Requests and answers
 
 - The upstream is Anthropic for a Claude subscription token or an
-  Anthropic API key. It is OpenAI for an OpenAI API key.
+  Anthropic API key. It is OpenAI for an OpenAI API key. It is the endpoint
+  of the login for an own endpoint login, as [Own endpoints](#own-endpoints)
+  says.
 - [Agent logins](tokens-and-secrets.md#agent-logins) states that both
   providers confirmed this use of their logins.
 - The gateway forwards only a fixed list of model routes for each agent.
@@ -206,8 +210,9 @@ while the change is open. Its pull request keeps them after the merge.
   starter.
 - The check is no security boundary. A process that can read the turn
   token can also copy the markers.
-- No response header and no error body carries the real login. The
-  gateway removes the login from them before it sends them on.
+- No response header and no error body carries the real login. For an own
+  endpoint, the login is its key and its address. The gateway removes the
+  login from them before it sends them on.
 - Reason: [Anthropic's gateway guide](https://code.claude.com/docs/en/llm-gateway-protocol)
   asks a gateway to pass `anthropic-*` headers and body fields as open
   lists. It also asks a gateway to pass error bodies unmodified.
@@ -215,6 +220,33 @@ while the change is open. Its pull request keeps them after the merge.
   upstream's API, with a stable error code. A body above its limit gets
   the answer that [Request bodies](access-and-security.md#request-bodies)
   gives.
+
+## Own endpoints
+
+- For an own endpoint login, the gateway sends each model request of the
+  turn to the endpoint, with the key in the header that
+  [Own endpoint logins](tokens-and-secrets.md#own-endpoint-logins) names
+  (gateway decision 10). No runner gets the address or the key, as
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
+  says.
+- The endpoint gets the messages, the files, and the command results of
+  each turn on the login, whoever sent the message.
+- Before each request, the gateway checks the address again with the rule
+  of [Own endpoint logins](tokens-and-secrets.md#own-endpoint-logins). It
+  follows no redirect. Reason: a redirect could send the key and the turn
+  to an address that the rule refuses.
+- A request reaches only a public IP address, also when a public name
+  points to a private address. Reason: a check of the name cannot see
+  where the name points at the time of the request.
+- The gateway reaches an endpoint on any port that a fetch of the Worker
+  reaches (gateway decision 8).
+- The workspace also checks the address when it dispatches a turn. A
+  refused address fails the turn before an agent starts (gateway decision
+  4). The cause names the starter and the agent, and points to the account
+  page. The login then counts as a login that cannot be used, as
+  [Messages](messages-and-attachments.md#messages) says.
+- When the gateway cannot connect to the endpoint, it answers the request
+  with an error that names the endpoint as unreachable.
 
 ## Streams
 

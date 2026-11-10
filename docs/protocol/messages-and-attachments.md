@@ -6,6 +6,8 @@ of a session and the files that a message carries. It belongs to
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. An own endpoint decision number names a decision of the change that
+adds the own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md)
 says.
 
 ## Messages
@@ -41,8 +43,17 @@ says.
   login with the other members. Every member reads the same value. Each tab
   gets a changed value. `loginAvailable` stays true for a login that only
   the starter can use.
+- When the login is an own endpoint and both values are true, the same
+  check also gives the host of its address (own endpoint decision 5). Each
+  tab gets a changed host.
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
+  gives the reason.
+- Risk: the chat history keeps each session record that carried a host.
+  So the members can still read that host after the starter stops sharing
+  the login.
 - The workspace does not watch the logins or their share settings for
-  changes. So a tab can show an old result until the next check.
+  changes. So a tab can show an old result, or an old host, until the next
+  check.
 - When the record already shows that the login of the starter cannot be
   used, or that the starter does not share it, the composer of another
   member says before the send that the message starts a new session. When
@@ -54,6 +65,17 @@ says.
 - When a message runs on the login of another member, the composer names
   that member inside the message box, such as "Priya's login". A line under
   the box was rejected, because the box then moved between sessions.
+- When that login is an own endpoint, the label names that member and the
+  host from the session record, such as "Priya's endpoint at
+  proxy.example.com" (own endpoint decision 5). When the box is narrow, the
+  words before the host shrink first, so that the host stays visible.
+- Reason: the message, its files, and the results of the commands of its
+  turn go to that server, in place of Anthropic or OpenAI. So the sender
+  sees the server before the send.
+- Risk: the label shows the host of the last login check. A message runs on
+  the login that the workspace reads when its turn starts. So a message
+  that waits, or a Try again, can go to a new endpoint of the starter that
+  no label named.
 - The composer names no login when a message runs on the user's own login.
   A name for the own login was rejected, because it tells the user nothing
   new.

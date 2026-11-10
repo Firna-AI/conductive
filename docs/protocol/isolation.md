@@ -10,7 +10,9 @@ The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
 decision number names a decision of the change that adds the
-[model gateway](model-gateway.md), as that doc says.
+[model gateway](model-gateway.md), as that doc says. An own endpoint
+decision number names a decision of the change that adds the own endpoint
+logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Orgs and workspaces
 
@@ -128,6 +130,12 @@ decision number names a decision of the change that adds the
 - A newer runner gets a turn token as the credential of each turn. An
   older runner gets the agent login itself. This rule holds for each
   runner connection.
+- An own endpoint login never reaches a sandbox, whatever its version pin.
+  The gateway keeps its address and its key in the Worker (gateway
+  decision 10). An older runner gets no turn on such a login. Such a turn
+  fails before an agent starts, as a turn on a login that cannot be used
+  does. Reason: an older runner would hold the key itself, and each
+  process of its sandbox could read it.
 - The version pin of a workspace is the lowest runner protocol version that
   it accepts. The workspace takes the pin from the org image that its
   cloud computer starts from. A stop and a resume keep the pin. A
@@ -145,10 +153,16 @@ decision number names a decision of the change that adds the
   messages of other members can run on that login.
 - The kind of a login sets the default of its share setting. A new Claude
   subscription login does not let other members use it. A new API key lets
-  them use it.
+  them use it. A new own endpoint login lets them use it too, like an API
+  key (own endpoint decision 4).
 - Reason: Anthropic's consumer terms forbid making a Claude account
   available to anyone else. The owner of an API key may let a team use it.
   Sharing every login by default was rejected for that reason.
+- Risk: an own endpoint can stand for the personal subscriptions of its
+  owner, such as a proxy that pools them. The app cannot tell such an
+  endpoint from a team key. So other members can spend those
+  subscriptions, which their terms can forbid, until the owner turns
+  sharing off.
 - A replaced login keeps its share setting while its kind stays the same. A
   login whose kind changes gets the default of its new kind. Reason: a key
   rotation keeps the choice of its owner.
@@ -165,7 +179,14 @@ decision number names a decision of the change that adds the
 - A message of a sender who left the org never reaches the agent, also
   while the login of the starter works.
 - The session record shows whether the login of its starter can be used,
-  and whether the starter shares it. It holds no part of the login.
+  and whether the starter shares it. It holds no part of the login, except
+  the host of an own endpoint while the starter shares a login that works
+  (own endpoint decision 5).
+- Reason: the composer of each other member then names the server that
+  gets the message, as [Messages](messages-and-attachments.md#messages)
+  says. The host shows only to members whose messages can go to that
+  server. A record that carries the host also while the starter does not
+  share the login was rejected for that reason.
 - The runner never writes a login to disk.
 - Risk: while the starter shares the login, the other members of a session
   spend it. Anthropic's rules for hosted products ask each end user to sign
@@ -234,7 +255,7 @@ decision number names a decision of the change that adds the
 
 - The workspace of a sandbox with a version pin of 1 accepts an older
   runner and a newer runner. An older runner gets the agent login itself
-  with each turn (gateway decision 2).
+  with each turn (gateway decision 2), but never an own endpoint login.
 - Reason: an older runner cannot use a turn token, and a sandbox keeps the
   runner of its org image. A refusal of each turn of an older runner was
   rejected, because each workspace with an older runner would then lose

@@ -9,7 +9,11 @@ The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
 decision number names a decision of the change that adds the
-[model gateway](model-gateway.md), as that doc says.
+[model gateway](model-gateway.md), as that doc says. An own endpoint
+decision number, such as own endpoint decision 9, names the dated record of
+one decision of the change that adds the
+[own endpoint logins](#own-endpoint-logins). Its plan keeps these records
+while the change is open. Its pull request keeps them after the merge.
 
 ## The workspace token
 
@@ -40,7 +44,9 @@ decision number names a decision of the change that adds the
 
 ## Secrets that users enter
 
-- The app stores the env var values and the agent logins encrypted.
+- The app stores the env var values and the agent logins encrypted. It
+  also keeps the host of an own endpoint in plain text, as
+  [Own endpoint logins](#own-endpoint-logins) says.
 - The values of env vars are write-only. The settings never return a
   stored value to the browser, whatever the mark of the env var.
 - An admin marks each env var of the org as secret or not secret
@@ -95,6 +101,8 @@ decision number names a decision of the change that adds the
 - A user connects Codex with an OpenAI API key. The app offers no ChatGPT
   plan sign-in, because OpenAI allows it for hosted apps only after a
   waitlist.
+- A user can also connect each agent with an own endpoint, as
+  [Own endpoint logins](#own-endpoint-logins) says.
 - Anthropic gave the operator permission to use `claude setup-token`
   tokens (decision 37).
 - Anthropic confirmed to the operator on 9 November 2026 that the
@@ -112,3 +120,58 @@ decision number names a decision of the change that adds the
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says. The GitHub token of a turn still belongs to its sender, as
   [GitHub tokens](#github-tokens) says.
+
+### Own endpoint logins
+
+- An own endpoint login holds the address of a gateway or a proxy that the
+  user chose, and its key (own endpoint decision 1). Each agent has its own
+  login. So a user who sends both agents to one proxy connects it once for
+  each agent.
+- A manual mode, where the scripts and the env vars of the org set up the
+  agent programs, was rejected. Reason: only an admin could change it, and
+  each process on the cloud computers of the org would get the key.
+- An endpoint that an admin sets for the whole org was rejected, because
+  each agent login belongs to one user (decisions 21 and 105).
+- A Claude endpoint must serve the Anthropic Messages API, and accept the
+  key in the `x-api-key` header. A Codex endpoint must serve the OpenAI
+  Responses API, and accept the key as a bearer token in the
+  `Authorization` header.
+- The [model gateway](model-gateway.md#own-endpoints) sends each model
+  request of a turn on the login to the endpoint, with the key. The app
+  makes no other call to the endpoint, also not to test the key at the save
+  or to read its models (own endpoint decision 3).
+- The key and the full address are write-only, as the other logins are.
+  The browser gets back only the host of the address, with its port when
+  the port is not the default. The account page shows that host with the
+  login.
+- The app stores the key and the address encrypted. It keeps only the host
+  and the port in plain text, so that it can show them. Reason: the path or
+  the query of an address can hold a secret.
+- One rule decides which addresses the app accepts (own endpoint decision
+  9). The connect form, the save, the dispatch of a turn, and the gateway
+  use the same rule.
+- The rule accepts only an `https://` address with a public host. It
+  refuses these hosts:
+  - `localhost`, and each IP address that is not public, such as a
+    loopback, private, or link-local address
+  - a single-label name, such as `proxy`, and an internal name
+  - a name in the domains of the app and of the previews, which
+    [Hostnames](../architecture.md#hostnames) gives
+- The rule refuses an address with a user name or a password, because a
+  request address cannot carry them.
+- The rule keeps the path and the query of the address. It drops a
+  fragment and a trailing slash. It also drops a final `/v1` of a Claude
+  address, so that a Claude address works with or without it.
+- A Claude request goes to the address with its route added, such as
+  `/v1/messages`. A Codex request goes to the address with `/responses`
+  added. So a Codex address names the base of that API, such as
+  `https://proxy.example.com/v1`.
+- The form shows the address as the app saves it. The save refuses each
+  other address with HTTP 400 and the error code `invalid_endpoint`.
+- Reason: the gateway in the Worker calls the endpoint. It sends a login
+  only to an https address with a public host (gateway decision 8), and
+  never to the app itself or to a preview. So the app saves no address that
+  would fail each turn.
+- `http://` to a loopback address, for a proxy on the cloud computer, was
+  rejected. Reason: the Worker cannot reach an address in a cloud
+  computer.

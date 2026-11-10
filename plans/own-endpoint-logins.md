@@ -462,6 +462,10 @@ changed the recommendation from C to L.
 - **Related:** Decision 4. Its option B makes this label matter from the first message of another member.
 - **Recommendation:** L. It was C before the options check of 10 November 2026. At the same Medium effort, L keeps each label within one check of the starter's login, with no new refusal. H best protects the sender, at the cost of a new refusal and a Large effort.
 - **Action:** ask the user, because L changes the protocol rule that the session record holds no part of the login.
+- **Chosen:** C, by Cal on 10 November 2026. The options check had
+  recommended L. So the session record carries the host of the starter's
+  endpoint only while the starter shares a login that works, and the bar
+  label names it with the host kept visible.
 
 ### 6. Choose how the form names the models that the endpoint must serve
 
@@ -488,6 +492,10 @@ recommendation from B to D.
 - **Previous examples:** None found.
 - **Recommendation:** D. It was B before the options check. The copy rule of the `product-ui` skill puts technical detail in a secondary place such as a details panel, and D does that next to the model names, with text that the user can copy.
 - **Action:** ask the user, because the wider fix E adds a failure text that no requirement covers, and D against E trades effort for help at the failure.
+- **Answer of 10 November 2026:** Cal wrote: "I don't mind using endpoint
+  to get the models tbh - but then we might need to update the model
+  selector - as if there are a lot of models could be bad ux?" This
+  reopens decision 3. Decision 10 asks both questions together.
 
 ### 7. Choose the text of the agent step of Get started
 
@@ -512,6 +520,8 @@ of 9 November 2026 added option D, and it kept the recommendation.
 - **Previous examples:** None found.
 - **Recommendation:** B, as before the options check. It names the new choice and keeps the words that a new user knows. C best protects the text from a later kind.
 - **Action:** ask the user, because B and C are both correct, and no copy rule picks one.
+- **Chosen:** B, by Cal on 10 November 2026: the step adds "or on your
+  own endpoint".
 
 ### 8. Choose how tools get an own endpoint address
 
@@ -591,6 +601,58 @@ it changed the recommendation from C to E.
 - **Related:** Decision 2. Options B, C, and D change its answer B.
 - **Recommendation:** E. It was C before the options check of 10 November 2026. C still saves a user name and a password, which a fetch cannot send, and E prevents every form that fails each turn at the same Small effort.
 - **Action:** ask the user, because E changes Cal's decision 2 B and adds a refusal.
+- **Chosen:** E, by Cal on 10 November 2026. One builder in `src/shared/`
+  checks the address and builds the exact upstream address of each model
+  route, for the form, the save, and the gateway.
+
+### 10. Choose how the app uses the endpoint's model list
+
+Added on 10 November 2026 from Cal's answer to decision 6: "I don't mind
+using endpoint to get the models tbh - but then we might need to update
+the model selector - as if there are a lot of models could be bad ux?"
+It reopens decision 3, which chose the operator model list only, and it
+takes over the question of decision 6. The options check of 10 November
+2026 added options F to K, and it changed the recommendation from B to G.
+
+- **Severity:** Medium. **Effort:** Large.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `worker/app-api/models.ts`, `src/chat/components/model-menu.ts`, `src/chat/components/ModelPicker.tsx`, `src/shell/ui/ModelPicker.tsx` (new workspace, routines, and Preferences), `GET /v1/tools/models` with `docs/protocol/agent-tools.md`, the gateway under `worker/model-gateway/`, and "Models" in `docs/deployment.md`.
+- **Terms:**
+  - **Operator model list:** the models that the app offers, from `CONDUCTIVE_MODELS`. Today it has 8: Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.2 for Claude, and GPT-6.1 Sol, GPT-6 Astra, GPT-6.1 Terra, and GPT-6 Luna for Codex.
+  - **Known ID:** a model ID that the pinned agent program has built-in data for. An unknown ID runs with weaker defaults.
+- **Background:**
+  - The picker is one menu: the models of each agent as a group, then the efforts of the chosen model.
+  - After Milestone 5b, the gateway in the Worker calls each own endpoint for its turns. It can then also read the endpoint's model list at `GET /v1/models`, with the address rule of decision 9 E. Today the gateway refuses own endpoint logins.
+  - Cal's proxy lists 35 models in each format on 10 November 2026: all 8 operator IDs, and 31 more, such as older Claude models, aliases, and image models. Evidence: `.context/own-endpoint-logins/checks/proxy-model-lists-2026-11-10.txt`.
+  - Cal's proxy and LiteLLM give an ID, a display name, and token limits in the Anthropic form, and the ID only in the OpenAI form. Anthropic's own list also gives effort capabilities. CLIProxyAPI and LiteLLM also serve a Codex catalog form with reasoning levels.
+  - The picker of each session reads one list for the reader's account. A session on another member's shared login runs on that member's endpoint.
+  - Main's follow-up item keeps model discovery off unless this feature turns it on.
+- **Problem:** The app does not know which models an own endpoint serves, and a long list would crowd the picker.
+- **Impact if no action:** A missing model fails only in its turn, and the user cannot use the other models of the endpoint.
+- **Root question:** For a turn on an own endpoint login, which models can the app offer, with which labels, efforts, and agent handling, so that each offered model runs on that login and each menu stays short?
+- **Options:**
+  - **A.** Keep decision 3 A: the operator model list only. The form lists the exact IDs that the endpoint must serve, in a closed list that the user can copy. Effort: Small.
+  - **B.** A check only. The Worker reads the endpoint's model list at the save and when the user presses Refresh. The account page marks each operator model that the endpoint lacks, and the picker marks it as unavailable in sessions on that login. The picker keeps its size and its models. Cost: the list can go stale between refreshes, and marks in another member's session need the starter's list in the session record. Effort: Large.
+  - **C.** As B, and the picker gets a closed "More models" group with a search field. It lists the endpoint's other models that the pinned agent program knows, so they keep every feature. It hides unknown IDs and image models. Cost: the app needs a list of known IDs for each pinned program version, and it knows no efforts for the extra models. Effort: Large.
+  - **D.** As B, and the account page lists the endpoint's models with switches, as Amp does. The operator models that the endpoint serves start on. The picker shows only the models that are on. Cost: the user curates the list, and Cal said that Amp's form may be too much. Effort: Large.
+  - **E.** As C, but the group lists every model of the endpoint for that agent, also unknown IDs. Cost: unknown IDs run with weaker defaults, and the list is long. Effort: Large.
+  - **F.** As A, and a failed turn on an own endpoint names the model ID and the host when the agent reports the model as unavailable, such as "proxy.example.com does not serve claude-opus-5-5." No call reads the list. Cost: a new failure text. Effort: Medium.
+  - **G.** As B, and the marks stay current and soft. The Worker also reads the list again in the background when a turn on that login starts, at most once every 10 minutes. A failed read keeps the last list, and a mark never blocks a choice. The marks show only in the owner's own pickers, so the session record does not change. For every member, a failed turn names the missing ID as in F. Cost: calls to the endpoint during turns, and no marks in another member's tab. Effort: Large.
+  - **H.** As G, and the session record also carries the operator model IDs that the starter's endpoint lacks, only while the starter shares a login that works, as decision 5 C does for the host. Cost: one more part of the login in the record and in the protocol. Effort: Large.
+  - **I.** As B, and an entry of `CONDUCTIVE_MODELS` can say that the pickers offer it only on an own endpoint whose list names it. The operator gives its label and its efforts, so each extra model is a known ID. Cost: a new field in "Models" of `docs/deployment.md`, and the operator keeps those IDs in step with the pinned programs. Effort: Large.
+  - **J.** As D, and each unknown ID that the user turns on names the known model that it behaves as, so that the agent program gives it that model's handling. Cost: no check ran these settings, and the turn command must carry the mapping. Effort: Large.
+  - **K.** As E, and for Codex the gateway also forwards `GET /models` to the endpoint, so that Codex runs each listed model with the endpoint's catalog. Cost: a new gateway route, and an endpoint catalog that lacks an operator model degrades it. Effort: Large.
+- **Left out:**
+  - A read of the list in the cloud computer. B is better on every point: it reads before the first turn, and no sandbox process can change its result.
+  - Claude's own model discovery. It fills only its own picker, which the app does not use. Codex's catalog comes back as K.
+  - An own endpoint that replaces the operator list in the picker. The operator models keep every feature and a known effort list, so they stay the base.
+  - Typed model IDs. D gives the same curation from the endpoint's list, with no typing errors.
+- **Wider fix:** G. Its marks follow the endpoint with no press of Refresh, and its failure text names any model that the endpoint lacks, also one that the operator adds later.
+- **Previous examples:** Decision 3 A, decision 6, and the Amp form that Cal showed on 9 November 2026. Other tools take model names from a typed list, from `GET /v1/models`, or from a catalog, as `.context/own-endpoint-logins/prior-art.md` says.
+- **Related:** Decision 3 and decision 6, which this decision replaces. Decision 9 E, whose address rule the read of the list uses. A model that only one login serves fails in a linked session of decision 115 and after a Try again on a changed login. `plans/follow-ups/unoffered-model-choice.md` must follow a list for each login if a login can add models.
+- **Recommendation:** G. It was B before the options check. G uses the endpoint to learn which models work, keeps the picker as short as it is today, keeps its marks current with no Refresh, never blocks a model that a list omits, and makes a failed turn name the missing ID for every member. C or I can follow later, if users want the endpoint's other models.
+- **Action:** ask the user, because Cal asked for this choice, and G changes decision 3 A.
 
 ## Design
 
@@ -652,7 +714,8 @@ them.
 - The hint of an own endpoint key promises no test, because the app never
   calls the endpoint. The hints of the other kinds stay as they are. On a
   phone, the kind choice wraps onto two lines. Agent call of 9 November
-  2026, from the mockups.
+  2026, from the mockups. Waits for decision 10: an option that reads the
+  model list at the save also tests the key.
 - The output filter hides the key and the endpoint of an own endpoint
   login. Reason: the endpoint is stored encrypted because its path can
   hold a secret, and the error details of Codex print the request address.
@@ -719,7 +782,7 @@ The mockups show the answers to the questions that Milestone 1 raised.
       `docs/mockups/orgs-and-logins.md`: the gateway in the Worker sends
       each request, not the cloud computer. Show the refused state of
       decision 9.
-- [ ] Show the model IDs in the form as decision 6 says.
+- [ ] Show the model list in the form as decision 10 says.
 - [ ] Change the text of the agent step in
       `docs/mockups/src/screens/getStartedCopy.ts` as decision 7 says. The
       app reads the same file.
@@ -764,29 +827,42 @@ record text waits for decision 5.
 
 The protocol states the own endpoint login with the gateway.
 
-- [ ] In "Agent logins" of `docs/protocol/tokens-and-secrets.md`, state
+- [x] In "Agent logins" of `docs/protocol/tokens-and-secrets.md`, state
       the own endpoint login: an endpoint and a key for each agent, a
       write-only key and address, the host on the account page, the
       address rule of decision 9, and the API that each agent's endpoint
       must serve.
-- [ ] In `docs/protocol/model-gateway.md`, state that the gateway forwards
+- [x] In `docs/protocol/model-gateway.md`, state that the gateway forwards
       the requests of an own endpoint turn to the endpoint, that the
       endpoint gets the messages and the files of those turns, the ports
       that the gateway reaches, and the cause of a failed own endpoint
       turn.
-- [ ] In "Agent logins in a sandbox" of `docs/protocol/isolation.md`,
+- [x] In "Agent logins in a sandbox" of `docs/protocol/isolation.md`,
       state that a new own endpoint login is shared by default (decision 4
       B), that the runner never gets an own endpoint or its key, and what
       the session record shows (decision 5). Change the composer label
       rules in `docs/protocol/messages-and-attachments.md` as decision 5
       says.
-- [ ] In "Models" of `docs/deployment.md`, state that an own endpoint must
-      serve the full model IDs of `CONDUCTIVE_MODELS` (decision 3 A).
-- [ ] Update the data flow and the trust boundaries in
+- [ ] In "Models" of `docs/deployment.md`, state how an own endpoint's
+      models work, as decision 10 says.
+- [x] Update the data flow and the trust boundaries in
       `docs/architecture/flows.md` and `docs/architecture/data-and-trust.md`.
-- [ ] Update the feature list and "What a user needs" in `README.md`.
-- [ ] Read both legal pages in full, as `AGENTS.md` says, and list each
+- [x] Update the feature list and "What a user needs" in `README.md`.
+- [x] Read both legal pages in full, as `AGENTS.md` says, and list each
       sentence that Milestone 6 must change.
+- [ ] Add the own endpoint as an upstream in
+      `docs/architecture/components.md`, which names only Anthropic and
+      OpenAI.
+- [ ] State the list of ports in `docs/protocol/model-gateway.md` after the
+      port check of Milestone 5b. A refusal of other ports follows decision
+      9 E.
+- [ ] Change the sentence "The app makes no other call to the endpoint" in
+      `docs/protocol/tokens-and-secrets.md` if decision 10 reads the
+      endpoint's model list.
+
+The legal sentences that Milestone 6 must change are listed in
+`.context/own-endpoint-logins/m2b-report.md`. Evidence of the link check:
+`.context/own-endpoint-logins/m2b/`.
 
 ## Milestone 3: Fix the Claude endpoint for every login
 
@@ -926,7 +1002,7 @@ the tasks of `plans/follow-ups/own-endpoints-through-model-gateway.md`.
 - [ ] Forward each allowed model route to the stored endpoint. Keep the
       gateway's body limit, allowed headers, error redaction, turn and
       access checks, login change checks, cancellation, and request lease.
-      Keep model discovery off (decision 3 A).
+      Read the endpoint's model list only as decision 10 says.
 - [ ] Send the key in `x-api-key` for Claude and in `Authorization:
       Bearer` for Codex.
 - [ ] Use the address rule of decision 9 at the save and before every
@@ -946,6 +1022,12 @@ the tasks of `plans/follow-ups/own-endpoints-through-model-gateway.md`.
       runner of protocol 1, and secret endpoint values in the error
       redaction.
 - [ ] Update the READMEs of the changed areas.
+- [ ] Remove the `oauth-2025-04-20` beta value for a Claude own endpoint,
+      as the gateway does for an Anthropic API key, because the endpoint
+      gets the key in `x-api-key`.
+- [ ] Check whether an own endpoint that pools subscriptions should get the
+      1-hour prompt cache of gateway decision 13, which today applies only
+      to a subscription token. Raise a decision if it should.
 
 ## Milestone 6: Account and Get started
 
@@ -961,8 +1043,8 @@ show.
       `LoginShareSetting`. Let the kind choice wrap on a phone.
 - [ ] Call the shared address rule in the form, and show its refusal at
       the endpoint field.
-- [ ] Name the models that the endpoint must serve, as decision 6 says.
-      Take them from `GET /api/models`, not from the mockup fixtures.
+- [ ] Show the model list and its marks, as decision 10 says. Take the
+      models from `GET /api/models`, not from the mockup fixtures.
 - [ ] Check the agent step of Get started, which reuses `AgentList` in
       `src/shell/onboarding/AgentStep.tsx`.
 - [ ] Say on the Privacy page in `src/marketing/privacy.ts` and
@@ -978,6 +1060,14 @@ show.
       the mockups show.
 - [ ] Extend `src/shell/account/AccountScreen.test.tsx` and
       `src/shell/onboarding/GetStartedSteps.test.tsx`.
+- [ ] Update the public guides of the website for the own endpoint:
+      `agent-logins.md`, `get-started.md`, `overview.md`, `security.md`, and
+      `sessions-and-chat.md` under `src/marketing/docs/`, at the lines that
+      the Milestone 2b report lists.
+- [ ] Mark the "Custom API endpoints" row of the Conductor comparison done,
+      in `src/marketing/from-conductor/areas/models-and-providers.ts`.
+- [ ] Remove "not complete yet" from the README when the account page
+      offers the kind and turns run on it.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

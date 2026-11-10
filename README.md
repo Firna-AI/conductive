@@ -42,7 +42,10 @@ feature that is not complete yet says so.
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
 - Attach files of up to 25 MB each to a message.
-- Each user connects their own Claude subscription token or API keys.
+- Each user connects their own Claude subscription token or API keys. An
+  own endpoint login, a gateway or a proxy that the user chose, is not
+  complete yet. The account API saves one, but the account page does not
+  offer it yet, and no turn runs on it yet.
 - Files and Changes, a terminal, and port previews. The live desktop is
   hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
   says.
@@ -68,8 +71,17 @@ feature that is not complete yet says so.
 ## What a user needs
 
 - a GitHub account
-- a Claude subscription token or an Anthropic API key, or an OpenAI API key
-  for Codex
+- at least one agent login:
+  - for Claude, a Claude subscription token, an Anthropic API key, or an
+    own endpoint
+  - for Codex, an OpenAI API key or an own endpoint
+
+An own endpoint is a gateway or a proxy that the user chose, at a public
+`https://` address, with its key. A Claude endpoint must serve the
+Anthropic Messages API, and a Codex endpoint the OpenAI Responses API.
+[Own endpoint logins](docs/protocol/tokens-and-secrets.md#own-endpoint-logins)
+states the rules. Own endpoint logins are not complete yet, as
+[Features](#features) says.
 
 ## Get started
 

@@ -20,6 +20,7 @@ and the separate preview domain.
 | Routines and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
+| The host of each own endpoint login | D1 |
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
 | Chat history and banner state                                                | The workspace Durable Object             |
 | Files attached to chat messages | The attachment storage, an R2 bucket |
@@ -52,6 +53,15 @@ and the separate preview domain.
   login. The token spends the login of the starter of its session only
   through the gateway, and only while the turn runs. The agent logins stay
   in the Worker.
+- An own endpoint is a server outside the app that a user chose. For each
+  turn on its login, the gateway sends it the key and the model requests,
+  with the messages, the files, and the command results of the turn. Its
+  address and its key never reach a sandbox, whatever the version pin.
+- The gateway calls an own endpoint only at a public https address. So a
+  saved address cannot point the Worker at a private network, at the app,
+  or at a preview, as
+  [Own endpoint logins](../protocol/tokens-and-secrets.md#own-endpoint-logins)
+  and [Own endpoints](../protocol/model-gateway.md#own-endpoints) say.
 - During a turn, a sandbox with a runner of protocol version 1 holds the
   agent login of the starter itself. A workspace with a version pin of 1
   accepts such a runner, also after a runner of version 2 or later
