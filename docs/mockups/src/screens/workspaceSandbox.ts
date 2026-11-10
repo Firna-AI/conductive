@@ -1,5 +1,6 @@
 import { isPendingCommand } from '../components/chat/PendingCommand'
 import type {
+  ArchiveRestore,
   SandboxNoticeState,
   SandboxPanelState,
 } from '../components/workspace/sandboxNoticeState'
@@ -35,6 +36,27 @@ export function drawnState(state: WorkspaceState): WorkspaceState {
 }
 
 /**
+ * What an archived workspace can get back: Restore until its last day, for
+ * every member, except in a suspended org, which refuses it. After that
+ * day, Restore ended, also while the delete of the cloud computer tries
+ * again. A workspace that is not archived, or whose cloud computer the app
+ * deleted, has none.
+ */
+export function archiveRestore(
+  state: WorkspaceState,
+): ArchiveRestore | undefined {
+  if (state.sandbox !== 'archived') return undefined
+  switch (state.archive) {
+    case 'deleted':
+      return undefined
+    case 'ended':
+      return 'ended'
+    case 'kept':
+      return state.org === 'suspended' ? 'refused' : 'available'
+  }
+}
+
+/**
  * The new workspace of the create flow before its first successful start:
  * each of its messages still waits in the queue. Its error is a failed
  * first start. A later error is a failed resume.
@@ -52,7 +74,8 @@ function beforeFirstStart(state: WorkspaceState): boolean {
  * The bar under the chat while the sandbox is not running. A refused start
  * shows the words of its cause: the org or the owner. A failed start
  * carries the message that the app saved for it. A failed first start
- * keeps the composer under its bar.
+ * keeps the composer under its bar. An archived workspace says what it can
+ * get back.
  */
 export function sandboxNotice(
   state: WorkspaceState,
@@ -73,8 +96,9 @@ export function sandboxNotice(
         firstStart: beforeFirstStart(state),
       }
     case 'stopped':
+      return { problem: 'stopped' }
     case 'archived':
-      return { problem: state.sandbox }
+      return { problem: 'archived', restore: archiveRestore(state) }
     case 'ready':
     case 'starting':
       return undefined

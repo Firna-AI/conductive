@@ -70,7 +70,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         suspension keeps your cloud computers stopped until an operator
         lifts it.`,
       text`Your session: a cookie of the app keeps you signed in. A
-        second cookie protects the GitHub sign-in while it runs.`,
+        second cookie protects the GitHub sign-in while it runs. A third
+        cookie keeps the screen that you left for GitHub, for up to 1 hour.`,
       text`Your orgs: the orgs, members, roles, invites, sections,
         repositories, workspaces, scripts, and settings that you and your
         team make. They run the service.`,

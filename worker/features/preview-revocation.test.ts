@@ -72,10 +72,9 @@ it('publishes one durable revocation per preview on expiry and archive through t
     `${'b'.repeat(32)}.preview.test`,
     Date.now() + 86_400_000,
   )
-  active.boat.synchronousOutput = '\0' + '0\n'
   const archive = await active.request(
     workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
-    { method: 'POST', body: JSON.stringify({ discardUnpushedWork: false }) },
+    { method: 'POST', body: '{}' },
   )
   expect(archive.status).toBe(200)
   for (const inbox of tabs)

@@ -8,8 +8,8 @@ decision number names a dated record, as
 ## Responsibilities
 
 - Static pages at the root of `conductive.build`: the home page, the public
-  docs, the Terms and Privacy pages, and the Conductor comparison page.
-  Visitors see them without a sign-in.
+  docs, the pricing page, the Terms and Privacy pages, and the Conductor
+  comparison page. Visitors see them without a sign-in.
 - Astro builds these pages ahead of time. The Worker serves the built files
   on `conductive.build`. It fills in the values of each request, such as
   the app address in the sign-in links and the year in the footer.
@@ -62,3 +62,19 @@ decision number names a dated record, as
   and its mockup show the same words.
 - The page shows a status and a short note for each row. The evidence
   behind a status stays out of the page and out of its rows.
+
+## The pricing page
+
+- The page at `conductive.build/pricing` shows the plans, the prices, and
+  the cloud hours. [Pricing](../protocol/pricing.md) states its
+  requirements.
+- Its plans and words are content of the site, as the rows of the
+  comparison page are. A change to a price is a change to the repository.
+- No component computes a price or reads a plan while the site runs. The
+  page reads nothing from the app, the API, a sandbox, or a payment
+  provider.
+- The site build and the mockup catalogue read the same plans and words, so
+  the page and its mockup show the same prices.
+- The page sells nothing. It has no checkout, and it links no payment
+  provider. Billing is a planned change, as
+  [Planned changes](../protocol/pricing.md#planned-changes) says.

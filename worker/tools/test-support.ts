@@ -161,6 +161,7 @@ export async function toolFixture(harness: TestHarness) {
       createdAt: TEST_TIME,
       updatedAt: TEST_TIME,
       archivedAt: null,
+      restoreUntil: null,
     },
     sessionId: 'created-session',
   }))

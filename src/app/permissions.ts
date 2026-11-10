@@ -45,3 +45,22 @@ export function mayArchive(
   if (workspace.state === 'archived' || access.suspended) return false
   return access.role === 'admin' || workspace.owner.id === viewer.id
 }
+
+/**
+ * Every member of an org that is not suspended restores an archived
+ * workspace while the app keeps its cloud computer, until `restoreUntil`.
+ * Restore deletes nothing, so the role and the owner do not count. `ended`
+ * says that the clock of the page reached `restoreUntil`.
+ */
+export function mayRestore(
+  access: Pick<OrgAccess, 'suspended'>,
+  workspace: Pick<Workspace, 'state' | 'restoreUntil'>,
+  ended: boolean,
+): boolean {
+  return (
+    workspace.state === 'archived' &&
+    workspace.restoreUntil !== null &&
+    !ended &&
+    !access.suspended
+  )
+}

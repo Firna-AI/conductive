@@ -24,7 +24,6 @@ export class WorkspaceReadMarks {
   private reading = false
   private queued = false
   private opened = false
-  private archived = false
   private cancelTimer: (() => void) | null = null
   private readonly stops: (() => void)[] = []
 
@@ -37,8 +36,6 @@ export class WorkspaceReadMarks {
   open(): void {
     if (this.opened) return
     this.opened = true
-    this.archived =
-      valueOf(this.view.detail.get())?.workspace.state === 'archived'
     const check = () => this.check()
     this.stops.push(
       this.view.detail.subscribe(check),
@@ -56,14 +53,17 @@ export class WorkspaceReadMarks {
     for (const stop of this.stops.splice(0)) stop()
   }
 
+  /**
+   * Whether marks go out now. An archived workspace gets none. Its detail
+   * shows no older record from before the Archive, also while the history
+   * replays, so a Restore starts the marks again.
+   */
   private follow(): boolean {
     const detail = valueOf(this.view.detail.get())
-    // Old history can show pre-archive records after an archived HTTP detail.
-    if (detail?.workspace.state === 'archived') this.archived = true
     if (
       !this.opened ||
       !detail ||
-      this.archived ||
+      detail.workspace.state === 'archived' ||
       this.view.suspended.get() ||
       !this.services.visible.get()
     ) {
