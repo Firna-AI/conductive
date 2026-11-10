@@ -67,6 +67,57 @@ export const acmeRepositories: readonly ReachableRepository[] = [
   },
 ]
 
+/**
+ * The repository that an admin of Acme adds. It waits until a build clones
+ * it into the cloud computer of Acme.
+ */
+export const addedRepository = 'acme/admin-dashboard'
+
+/**
+ * The repository that an admin of Acme removes. The cloud computer of Acme
+ * holds it until the next build.
+ */
+const removedRepository = 'acme/marketing-site'
+
+/**
+ * The saved repository changes of Acme that its cloud computer does not
+ * hold yet: none, the added repository, the removed one, or both.
+ */
+export const repositoryChanges = ['none', 'added', 'removed', 'both'] as const
+
+export type RepositoryChange = (typeof repositoryChanges)[number]
+
+/** The repositories that a change adds and removes. */
+export function changedNames(change: RepositoryChange): {
+  added: readonly string[]
+  removed: readonly string[]
+} {
+  const adds = change === 'added' || change === 'both'
+  const removes = change === 'removed' || change === 'both'
+  return {
+    added: adds ? [addedRepository] : [],
+    removed: removes ? [removedRepository] : [],
+  }
+}
+
+/** The repositories of Acme after a change, as the Repositories tab lists them. */
+export function changedAcmeRepositories(
+  change: RepositoryChange,
+): readonly ReachableRepository[] {
+  const { added, removed } = changedNames(change)
+  return acmeRepositories.map((repository) => {
+    if (added.includes(repository.name)) return { ...repository, used: true }
+    if (removed.includes(repository.name)) {
+      return { ...repository, used: false }
+    }
+    return repository
+  })
+}
+
+/** The task of a kept draft in the added repository. */
+export const addedRepositoryDraft =
+  'Add a filter for the refund reason to the orders table.'
+
 /** The org that the create screen makes, and its repositories. */
 export const newOrg = {
   name: 'Firna',

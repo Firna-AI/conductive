@@ -134,7 +134,6 @@ export function coreFixtures(role: OrgRole = 'admin') {
       startupScript,
       envVars,
       updatedAt: FAKE_TIME,
-      needsBuild: false,
     },
   }
   const build: BuildResponse = {
@@ -159,6 +158,11 @@ export function coreFixtures(role: OrgRole = 'admin') {
   const builds: BuildsResponse = {
     builds: [build.build],
     currentImageBuildId: build.build.id,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   }
   const githubInstallations: GitHubInstallationsResponse = {
     installations: installations.map((installation, index) => ({

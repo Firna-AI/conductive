@@ -1,35 +1,39 @@
-# The added build after the first build can be lost
+# The added build after a job can be lost
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-09, finding 1 of review round 1 and a new problem of its check, branch `calummoore/box-auto-build-onboarding`, plan `plans/automatic-first-build.md`.
-- **Location:** `cleanupBuild` in `worker/lifecycle/build-execution.ts` (the `done` write before `startAddedImageBuild`), `startAddedImageBuild` in `worker/lifecycle/first-image-build.ts`, `publishBuild` in `worker/lifecycle/build-admission-data.ts`, `pendingImageCleanup` in `worker/lifecycle/image-maintenance-data.ts`, and `refreshImagesForPush` in `worker/lifecycle/image-timers.ts`.
+- **Added:** 2026-11-09, finding 1 of review round 1 and a new problem of its check, branch `calummoore/box-auto-build-onboarding`, plan `plans/automatic-first-build.md`. Extended on 2026-11-10 with finding 7 of review round 2 and two new problems of its check, branch `calummoore/new-repo-build-recreation`, plan `plans/added-repository-builds.md`: the decision of the added build can go stale while cleanup waits.
+- **Location:** `cleanupBuild` in `worker/lifecycle/build-execution.ts` (the `done` write before `startAddedImageBuild`), `startAddedImageBuild` in `worker/lifecycle/first-image-build.ts`, `publishBuild` in `worker/lifecycle/build-admission-data.ts`, `pendingImageCleanup` in `worker/lifecycle/image-maintenance-data.ts`, `worker/lifecycle/image-coordinator.ts`, and `refreshImagesForPush` and `runImageAlarm` in `worker/lifecycle/image-timers.ts`.
 - **Reason:** both ways to lose the build need a rare timing, and the fix is not harder after the merge.
 
 - **Source:** Review. **Category:** Product bug.
 - **Terms:**
   - **First good build:** the earliest build of an org that succeeds. Until it publishes, the org has no image that a workspace can start from.
-  - **Added build:** one more build that the app starts by itself when the repositories or the install script changed during the first good build, as "The first build" in `docs/protocol/org-image.md` requires.
+  - **Added build:** one more build that the app starts for changes during the first good build, or for a chosen repository absent after a successful job.
+  - **Job:** a build or a refresh of the org image.
   - **Image coordinator:** the Durable Object of an org that advances its builds and refreshes with alarms, one job at a time, in `worker/lifecycle/image-coordinator.ts`.
-  - **`cleanup-build`:** the job phase that `publishBuild` saves when a first good build needs an added build. Cleanup then deletes the build sandbox and starts the added build.
+  - **`cleanup-build`:** the job phase that `publishBuild` saves when a successful job needs an added build. Cleanup deletes the build sandbox and starts that build.
 - **Background:**
   - `publishBuild` compares the settings revision of the build with the current one, and saves the phase `cleanup-build` when the first good build is behind.
+  - It also saves `cleanup-build` after each successful build or refresh that lacks a chosen repository, when the newest build succeeded.
+  - `docs/protocol/org-image.md` requires both added builds. A failed build gets none, and a refresh after a failed build gets none.
   - `cleanupBuild` deletes the build sandbox, writes the phase `done`, and only then calls `startAddedImageBuild`, which calls `startImageBuild` with the first admin who is not suspended.
   - `pendingImageCleanup` finds only jobs in `allocating`, `cleanup`, or `cleanup-build`, so a job in `done` never runs again.
   - `startAddedImageBuild` catches each error and writes only the warning "Could not start the added cloud computer build.".
   - After the first good build publishes, the org has an image, so `refreshImagesForPush` can start a refresh during the cleanup. A refresh only fetches the repositories of the current image, and runs no install script.
   - `startImageBuild` returns the ID of a running build in place of a new one. So when a refresh runs at the end of the cleanup, no added build is recorded.
   - Review round 1 reproduced the first case: after a lost database reply that follows the `done` write, a rebuilt coordinator held one good build, no added build, and only the daily refresh.
-- **Problem:** The added build is lost when the Worker stops or a database reply is lost after the `done` write, or when a push refresh runs at the end of the cleanup. No warning shows in the second case.
-- **Impact if no action:** A repository or an install script that an admin saved during the first build does not reach the cloud computer. The admin must find Build computer, which the protocol says is not needed.
-- **Root question:** How does a change saved during the first good build always get exactly one added build, also when a step after that build fails or stops?
+- **Problem:** The added build is lost when the Worker stops or a database reply is lost after the `done` write. A failed start or a push refresh at the end of cleanup can lose it too. A competing refresh gives no warning. The same gap also lets the decision go stale: `publishBuild` checks that the newest build succeeded only in the publication batch, and cleanup can wait for an image lease or a failed delete. An admin can start a newer build in that wait. When that build fails, the start after cleanup still starts a build by itself, which the rule that the app starts no build by itself after a failed build forbids. An admin who removes the added repository in that wait also gets a build that no chosen repository needs.
+- **Impact if no action:** A repository added during a successful job, or settings saved during the first good build, can stay outside the image. The admin must find Build computer, which the protocol says is not needed.
+- **Root question:** How does each change that needs an added build get exactly that build, while all of its conditions still hold, also when cleanup or its start fails or stops?
 - **Options:**
   - **A.** Keep `cleanup-build` until the added build is recorded, and give that build a stable ID so that a retry cannot start it twice. End the job when the start is refused, and keep it open only on a short fault. It leaves the refresh case open. Effort: Small.
-  - **B.** Make build admission record the added build and complete the job of its first good build in one D1 batch, and make a repeated admission return the same build. It leaves the refresh case open. Effort: Medium.
+  - **B.** Make build admission record the added build and complete its preceding job in one D1 batch, and make a repeated admission return the same build. It leaves the refresh case open. Effort: Medium.
   - **C.** Store a separate pending request for the added build before cleanup completes, and let the coordinator run it. It needs a migration. Effort: Medium.
-  - **D.** Record the added build in the `publishBuild` batch that publishes the first good build, and remove the `cleanup-build` phase and the start after the cleanup. The success and the added build then commit together, and no refresh can start between them. Publication must first read the admin, the settings, and the repositories, and `insertBuild` must give its statements to that batch. After a failed cleanup, the coordinator runs the added build first, so the deletion of the first build sandbox can wait up to 60 minutes. Effort: Medium.
+  - **D.** Record the added build in the `publishBuild` batch that publishes a job that needs one, and remove the `cleanup-build` phase and the start after the cleanup. The success and the added build then commit together, and no refresh can start between them. Publication must first read the admin, the settings, and the repositories, and `insertBuild` must give its statements to that batch. After a failed cleanup, the coordinator runs the added build first, so the deletion of the preceding job's sandbox can wait up to 60 minutes. Effort: Medium.
+  - **E.** Let the image coordinator start a build from `runImageAlarm` when no job runs, the image lacks a chosen repository, the newest build succeeded, and an admin who is not suspended exists. The add still starts its build at once. A lost cleanup step or a failed start then tries again at the next alarm. A start that keeps failing needs a wait. This covers waiting repositories, but leaves a script-only change during the first good build open. Effort: Medium.
 - **Left out:** Moving the `done` write alone, because a failed added build can then start again after another lost reply, and the protocol forbids a build by itself after a failure. A test alone, because it keeps no build request. No change, because the protocol and the Cloud computer tab promise the added build.
-- **Wider fix:** D. One batch ties the first good build to its added build, so no later step and no refresh can separate them.
+- **Wider fix:** D. One batch ties each job that needs an added build to that build, so no later step and no refresh can separate them.
 - **Previous examples:** Commit `6ae0ffde`, "fix(lifecycle): recover recorded snapshot intents", fixed a similar recovery gap through shared resource creation.
-- **Recommendation:** D. It closes both cases. The review and its check recommended B for the first case alone.
+- **Recommendation:** D. It closes both cases. The review and its check recommended B for the first case alone. D also records the added build in the batch that decides it, so a newer failed build or a removal cannot come between the decision and the record. The check of finding 7 of 2026-11-10 recommended the same fix.
 - **Action:** fix after merge, apply D, because both cases are rare and the fix is not harder after the merge.
