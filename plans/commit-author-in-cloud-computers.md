@@ -374,21 +374,21 @@ Depends on: none
 
 The protocol docs state the commit author rule and decisions 231 to 233.
 
-- [ ] Add a commit author section to `docs/protocol/github-tokens.md`. Give
+- [x] Add a commit author section to `docs/protocol/github-tokens.md`. Give
       the turn sender rule, the owner rule, the name rule, and the email
       rule. Cite decisions 231 and 232, with the rejected options and their
       reasons. Add the rule of decision 233 A: an org variable with one of
       the four names has no effect.
-- [ ] Under "Access" in `docs/protocol/agent-instructions.md`, say that
+- [x] Under "Access" in `docs/protocol/agent-instructions.md`, say that
       the commits of a turn name the same member as its token. Link to the
       new section.
-- [ ] Update the env var requirement of
+- [x] Update the env var requirement of
       `docs/protocol/workspaces-and-sandboxes.md` for decision 233 A. Say
       that the app's own names, such as the four Git author names, replace
       an org variable with the same name.
-- [ ] Check `docs/architecture.md` and `docs/architecture/components.md`.
+- [x] Check `docs/architecture.md` and `docs/architecture/components.md`.
       Add the commit author where they list the Git access of a sandbox.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 2: Owner default in the sandbox variables
 

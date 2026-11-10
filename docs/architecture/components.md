@@ -120,6 +120,11 @@ program that the SDK bundles at its own version. A pinned version guards
 against a change in how the agent program reads logins. The runner runs
 Codex through the Codex SDK or the Codex App Server (decision 36).
 
+The Worker gives each sandbox the commit author of its workspace owner.
+The agent runner gives each agent the commit author of the sender of its
+turn. [Commit author](../protocol/github-tokens.md#commit-author) states
+the rules.
+
 ## External services
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the
