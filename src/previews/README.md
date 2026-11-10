@@ -16,7 +16,8 @@ as the Preview page, as
 - The form lists each reported server that has no tab, as a button with its
   port, its name, and its folder. A click sends the same open request as a
   typed port. The buttons wait while an open runs. The field stays below
-  them as the smaller Other port row.
+  them as the smaller Other port row. Each state of the form keeps the same
+  field, so a new report keeps a typed port, its focus, and its selection.
 - An empty report asks the user to start a server. Without a report, and
   when each reported server has a tab, the form shows the field alone.
 - Open preview sends the port as JSON. A port that is open already shows its

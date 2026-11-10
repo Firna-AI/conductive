@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Globe } from 'lucide-react'
 import { InputFrame } from '@firna/ui/input'
+import { classes } from '../../docs/mockups/src/components/common/classes'
 import rows from '../../docs/mockups/src/components/tools/PortForm.module.css'
 import { portFormCopy } from '../../docs/mockups/src/components/tools/previewCopy'
 import { ToolButton } from '../terminal/tool-parts/ToolButtons'
 import { useControlSizes } from '../terminal/tool-parts/ToolRoot'
-import { ToolMessage } from '../terminal/tool-parts/ToolStates'
+import message from '../terminal/tool-parts/ToolStates.module.css'
 import type { ToolError } from '../terminal/tool-parts/request'
 import type { PortFormList } from './previewsState'
 import { ServerRows } from './ServerRows'
@@ -85,46 +86,52 @@ function OpenError(props: { error: ToolError | null; className?: string }) {
  * report, the form lists each one that has no preview yet, over a smaller
  * Other port row. When the runner reports no server, it asks the user to
  * start one. Without a report, and when every server already has a tab, it
- * shows the field alone.
+ * shows the field alone, in the centred message of a tool.
+ *
+ * Each state draws the same tree, so the port field keeps its place. A new
+ * report changes the words, the rows, and the classes around the field, and
+ * never mounts a new field. So the typed port, its focus, and its selection
+ * stay while servers start and stop.
  */
 export function PreviewOpenForm(props: FormProps) {
   const { list } = props
-  if (list.kind === 'servers') {
-    return (
-      <div className={rows.list}>
-        <p className={rows.intro}>{portFormCopy.body}</p>
+  const servers = list.kind === 'servers'
+  const body =
+    list.kind === 'empty' ? portFormCopy.noServers : portFormCopy.body
+  return (
+    <div className={servers ? rows.list : message.message}>
+      {servers ? null : (
+        <Globe className={message.icon} size={28} strokeWidth={1.5} />
+      )}
+      {servers ? null : <h2 className={message.title}>{portFormCopy.title}</h2>}
+      <p className={servers ? rows.intro : message.body}>{body}</p>
+      {servers ? (
         <ServerRows
           disabled={props.opening}
           onOpen={props.onOpen}
           servers={list.servers}
         />
-        <div className={rows.other}>
-          <span aria-hidden className={rows.otherLabel}>
-            {portFormCopy.otherPort}
-          </span>
+      ) : null}
+      <div
+        className={servers ? undefined : classes(message.action, styles.form)}
+      >
+        <div className={servers ? rows.other : styles.open}>
+          {servers ? (
+            <span aria-hidden className={rows.otherLabel}>
+              {portFormCopy.otherPort}
+            </span>
+          ) : null}
           <PortField
             {...props}
-            label={portFormCopy.otherPort}
-            placeholder="8080"
+            label={servers ? portFormCopy.otherPort : 'Port'}
+            placeholder={servers ? '8080' : '3000'}
           />
         </div>
-        <OpenError className={styles.listError} error={props.error} />
+        <OpenError
+          className={servers ? styles.listError : undefined}
+          error={props.error}
+        />
       </div>
-    )
-  }
-  return (
-    <ToolMessage
-      action={
-        <div className={styles.form}>
-          <div className={styles.open}>
-            <PortField {...props} label="Port" placeholder="3000" />
-          </div>
-          <OpenError error={props.error} />
-        </div>
-      }
-      body={list.kind === 'empty' ? portFormCopy.noServers : portFormCopy.body}
-      icon={Globe}
-      title={portFormCopy.title}
-    />
+    </div>
   )
 }

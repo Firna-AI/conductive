@@ -447,6 +447,12 @@ drain pass. Reason: the controlled proof showed that an outgoing read
 could finish before the deferred input request. This is a test-support
 completion fix. It changes no product behavior or requirement.
 
+**From review finding 1.** My call of 10 November 2026: apply option A
+from the confirmed finding. Keep one mounted manual-editing subtree in
+all report states. Reuse the message styles for the centred states.
+Reason: a report must not replace an input while the user types. The
+same input then keeps its text, focus, selection, and invalid mark.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -622,6 +628,25 @@ The port form lists the detected servers, as the mockups show.
 
 Evidence: `.context/preview-port-detection/m5-report.md`.
 
+## Milestone 5a: Keep manual port editing stable
+
+Tags: ui
+
+Depends on: 5
+
+Review finding 1 and its independent check found that the two form roots
+replace the manual input when a report changes between a list and a message.
+Apply option A. Keep one mounted editing row and the existing visual states.
+
+- [x] Add a mounted regression case for the typed port, focus, and selection
+      through report changes in both directions. See its assertion fail.
+- [x] Keep one root and stable positions for the message, list, and manual
+      field. Keep every existing state, action, error, and busy behavior.
+- [x] Run the targeted UI checks and the new asynchronous case ten times.
+      Smoke-test the same panel and phone layouts.
+
+Evidence: `.context/preview-port-detection/finding-1-fix-report.md`.
+
 ## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
@@ -654,7 +679,7 @@ Evidence: `.context/preview-port-detection/complete-gate-verified.log`.
 The complete gate passed on the final merged tree. The final runner build
 also passed, in `.context/preview-port-detection/final-runner-build.log`.
 
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

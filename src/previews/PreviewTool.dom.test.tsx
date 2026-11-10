@@ -21,6 +21,7 @@ import {
   mount,
   MOUNTED_TEST_TIMEOUT,
   press,
+  typeText,
   waitFor,
 } from '../test-support/mount'
 import { fullReport, refusedReport } from '../test-support/recorded-repairs'
@@ -99,6 +100,18 @@ function serverRows(): string[] {
 const waitForForm = () =>
   waitFor(() => queryByRole('button', 'Open preview'), 'the port form')
 
+/** The text of the port field, and whether it keeps the focus and selection. */
+function draftIn(label: string) {
+  const field = byLabel(label)
+  return field instanceof HTMLInputElement
+    ? {
+        value: field.value,
+        focused: document.activeElement === field,
+        selection: [field.selectionStart, field.selectionEnd],
+      }
+    : null
+}
+
 describe('the Preview tool with detected servers', () => {
   it('lists each reported server without a tab after "+", waits while one opens, and opens its port with the open request', async () => {
     holdAnimationFrames()
@@ -154,6 +167,40 @@ describe('the Preview tool with detected servers', () => {
     await waitFor(() => queryByText(askForServer), 'the request for a server')
     expect(byLabel('Port')).toBeDefined()
     expect(queryByRole('list', 'Servers in this sandbox')).toBeNull()
+  })
+
+  it('keeps a typed port, its focus, and its selection while reports change the form, and opens that port', async () => {
+    holdAnimationFrames()
+    const server = serverWith([])
+    server.json('POST', path, { preview: preview(8080) }, 201)
+    const { tools, send } = workspaceEvents()
+    const navigate = await mountTool(server.fetch, tools)
+    await waitForForm()
+    const field = byLabel('Port')
+    await typeText(field, '8080')
+    if (field instanceof HTMLInputElement) field.setSelectionRange(2, 4)
+    const kept = { value: '8080', focused: true, selection: [2, 4] }
+
+    // A server starts, and the form lists it over the Other port row.
+    send(fullReport('ports.updated'))
+    await waitFor(
+      () => queryByRole('list', 'Servers in this sandbox'),
+      'the list of servers',
+    )
+    expect(draftIn('Other port')).toEqual(kept)
+
+    // The servers stop, and the form asks for a server again.
+    send({ type: 'ports.updated', ports: [] })
+    await waitFor(() => queryByText(askForServer), 'the request for a server')
+    expect(draftIn('Port')).toEqual(kept)
+
+    await press(byRole('button', 'Open preview'))
+    await waitFor(() => navigate.mock.calls.length > 0, 'the new preview')
+    const posts = server.requests.filter(({ method }) => method === 'POST')
+    expect(await Promise.all(posts.map((post) => post.json()))).toEqual([
+      { port: 8080 },
+    ])
+    expect(navigate.mock.calls).toEqual([['preview-8080']])
   })
 
   it('keeps the field, without the request for a server, when each reported server has a tab', async () => {
