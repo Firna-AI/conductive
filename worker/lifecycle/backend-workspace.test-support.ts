@@ -8,7 +8,8 @@ import { recordRunningEnvironment } from './start-environment'
 import type { WorkspaceStartJob } from './start-types'
 import { ensureWorkspaceToken } from './tokens'
 import { assignSandbox, insertWorkspace } from './workspace-data'
-import { orgSandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount } from '../sandbox/client'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 export async function seededCompletedWorkspace(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
@@ -36,6 +37,7 @@ export async function seededCompletedWorkspace(
   const job: WorkspaceStartJob = {
     workspaceId: id,
     orgId: org.id,
+    providerAccount: DEFAULT_PROVIDER_ACCOUNT,
     kind: 'create',
     requestedByUserId: user.id,
     imageName: null,
@@ -56,30 +58,32 @@ export async function seededCompletedWorkspace(
     { orgId: org.id, senderUserId: user.id, messageId: FIRST_MESSAGE.id },
     job,
   )
-  const imageName = await insertWorkspace(env.DB, {
+  const image = await insertWorkspace(env.DB, {
     ...creation,
     id,
     orgId: org.id,
+    providerAccount: job.providerAccount,
     message: FIRST_MESSAGE,
     now,
     turnId,
     repositoryLocations: input.repositoryLocations,
   })
-  const provider = await orgSandboxProvider(
+  const provider = await orgProviderForAccount(
     env,
     user.id,
     org.id,
     dependencies.fetch,
+    job.providerAccount,
   )
   const sandbox = await provider.create({
     name: id,
-    snapshotName: imageName,
+    snapshotName: image.imageName,
     env: {},
     ttlSeconds: 1_800,
     idempotencyKey: job.attempt,
     labels: { org: org.id, workspace: id },
   })
-  await assignSandbox(env.DB, org.id, id, sandbox.id)
+  await assignSandbox(env.DB, org.id, id, sandbox.id, job.providerAccount)
   await ensureWorkspaceToken(env, id, dependencies.randomToken, now)
   await recordRunningEnvironment(
     env.DB,

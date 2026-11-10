@@ -6,35 +6,14 @@ owner, name, sandbox, installed software, files, and sessions. The old
 branch stays in the sandbox and on GitHub.
 [Continue](../../docs/protocol/continue.md) and
 [GitHub tokens](../../docs/protocol/github-tokens.md#continue) state the
-requirements. This guide gives the routes, the durable job, the Git
-commands, the publication, and the recovery of this code.
+requirements. This guide gives the durable job, the Git commands, the
+publication, and the recovery of this code.
+[Continue routes](continue-routes.md) gives the routes and the errors.
 
 ## Routes
 
-`workspacePaths` in [the shared contracts](../../src/shared/workspaces.ts)
-builds both routes under `/api/orgs/:orgId/workspaces/:workspaceId`.
-`continueRoute` in [`continue.ts`](../app-api/continue.ts) serves them
-after the browser gate, beside the Archive route.
-
-| Route | Method | Reply |
-| --- | --- | --- |
-| `/continue` | POST with `ContinueWorkspaceRequest` | 202 with `{ "state": "pending", "continueId": "<job ID>" }` |
-| `/continue/:continueId` | GET or HEAD | 200 with a `ContinueWorkspaceResponse` |
-
-- The request gives `expectedBranch`, the branch that the caller shows,
-  and an optional `allowLocalWork` boolean for Continue anyway. Another
-  body returns 400 `invalid_request`.
-- A poll returns `pending`, `confirmation-required` with `branch`,
-  `baseBranch`, and `localWork`, or `continued` with the updated
-  `workspace` and the `eventNumber` of its update. A failed job returns its
-  safe app error. HEAD returns the status with an empty body.
-- Only the member who started a job can read it. An unknown or foreign job
-  ID returns 404 `workspace_continue_unavailable`.
-- A repeat from a branch that already continued returns the saved
-  `continued` reply, and moves nothing.
-- The workspace link of a `continued` reply uses the app origin of the
-  request. No origin is saved in the job or in the events.
-- The reply holds no fetch ID, token, command output, or GitHub error text.
+[Continue routes](continue-routes.md#routes) gives the two routes, their
+requests and replies, and who may read a job.
 
 ## Admission
 
@@ -48,6 +27,11 @@ admits a request in the chat queue:
   installation that is not suspended. Every such member may continue.
 - The workspace owner must be active, and the workspace must have a saved
   sandbox, because Continue can resume it.
+- The job saves that sandbox and the provider account of the workspace
+  record. Its commands use that saved account. Its resume and its check of
+  local work go through the workspace record, and each phase checks that
+  the record still names the saved account, as
+  [Provider accounts](provider-accounts.md#routing) says.
 - `expectedBranch` must be the current branch, or the reply is 409
   `workspace_branch_changed`.
 - No turn may run or stop in the committed chat, or the reply is 409
@@ -90,7 +74,8 @@ phase at a time. A provider wait never holds the chat queue. Each phase
 first checks, with `authorizeContinue` in
 [`continue-data.ts`](continue-data.ts), that the member still has access,
 that the repository, installation, and branch are unchanged, that the
-owner is active, and that the sandbox is the same.
+owner is active, and that the sandbox and its provider account are the
+same.
 
 1. `verify` refreshes the GitHub state as the member, and needs a merged
    pull request, or the job ends with 409 `workspace_not_merged`. It reads
@@ -165,9 +150,9 @@ in its environment.
 runs after a good move. It never runs Git again.
 
 - `storeContinuedBranch` writes the new branch to D1 only while the row
-  still names the old branch and the same sandbox, in an active org and a
-  workspace that is not archived. It also records the fetched default
-  branch on the repository.
+  still names the old branch, the same sandbox, and the same provider
+  account, in an active org and a workspace that is not archived. It also
+  records the fetched default branch on the repository.
 - One chat transaction then commits `workspace.updated`, one
   `workspace.continued` note for each stored session, open or closed, the
   saved `continued` reply with the range of its event numbers, and the
@@ -217,19 +202,8 @@ runs after a good move. It never runs Git again.
 
 ## Errors
 
-| Status | Code | Cause |
-| --- | --- | --- |
-| 400 | `invalid_request` | The request body is not a `ContinueWorkspaceRequest` |
-| 409 | `workspace_branch_changed` | The workspace is on another branch than the caller saw, or its binding changed |
-| 409 | `workspace_turn_running` | A turn runs or stops in a session |
-| 409 | `workspace_continuing` | Another Continue runs, or Archive waits for it |
-| 409 | `workspace_not_merged` | The pull request of the branch is not merged |
-| 409 | `workspace_continue_failed` | A phase failed, or Git refused the move |
-| 409 | `sandbox_unavailable` | The workspace has no sandbox, or it changed |
-| 404 | `workspace_continue_unavailable` | The job is unknown or belongs to another member |
-
-The existing gate errors still apply, such as `workspace_not_found`,
-`org_suspended`, and `workspace_archived`.
+[Continue routes](continue-routes.md#errors) gives the error of each
+refusal.
 
 ## Key code
 
@@ -246,7 +220,9 @@ The existing gate errors still apply, such as `workspace_not_found`,
   check of each phase, and `storeContinuedBranch`, the guarded D1 branch
   write with its read-back check.
 - [`continue-publication.ts`](continue-publication.ts): `publishContinue`.
-- [`continue-types.ts`](continue-types.ts): the stored job and its keys.
+- [`continue-types.ts`](continue-types.ts): the stored job, its keys, and
+  `readContinueJob`, which reads an older job without a provider account
+  as the `boat` account.
 - [`local-work.ts`](local-work.ts): the shared local-work command and its
   reader of NUL-separated records.
 - [`workspace-branch.ts`](workspace-branch.ts): the branch name of a

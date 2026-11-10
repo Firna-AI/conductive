@@ -3,7 +3,7 @@ import { HttpError } from '../http'
 import { shellQuote } from './commands'
 
 export function localWorkCommand(directory: string): string {
-  return `set -eu\ncd ${shellQuote(directory)}\ngit status --porcelain=v1 -z --untracked-files=all\nprintf '\\0'\ngit rev-list --count --branches --not --remotes`
+  return `set -eu\ncd ${shellQuote(directory)}\ngit status --porcelain=v1 -z --untracked-files=all\nprintf '\\0'\ngit rev-list --count HEAD --branches --not --remotes`
 }
 
 export function localWorkResult(output: string): ArchiveCheckResponse {

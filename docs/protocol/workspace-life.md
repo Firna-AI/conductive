@@ -111,11 +111,16 @@ says.
   remote branch holds, on every local branch.
 - When the check finds such work, the question lists it. The user can then
   archive anyway or cancel.
+- When the check does not finish, the question says so and names the
+  failure. It offers Try again and Cancel.
+- The app archives nothing without a finished check.
 - Reason: an archive without the check can delete work that was never
   pushed. After [Continue](continue.md), an earlier branch can still hold
   such commits.
 - The pull request bar offers Archive after the merge, as
-  [After the merge](github-banner.md#after-the-merge) says.
+  [After the merge](github-banner.md#after-the-merge) says. The menu of a
+  workspace row offers it too, as [Archive](workspace-menu.md#archive)
+  says.
 - An archived workspace has no file lists and no tools. A phone shows only
   its chat.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may

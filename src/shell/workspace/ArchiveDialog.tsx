@@ -21,8 +21,11 @@ import ui from '../ui/ui.module.css'
 
 const kept = 'The chat stays in Archived, where you can read it.'
 
-/** The work that the check found, which is not on GitHub yet. */
-function UnpushedList(props: { check: ArchiveCheckResponse; branch: string }) {
+/**
+ * The work that the check found, which is not on GitHub yet. The commits are
+ * those of every local branch, so their status names no branch.
+ */
+function UnpushedList(props: { check: ArchiveCheckResponse }) {
   const commits = props.check.unpushedCommits
   return (
     <ul aria-label="Work that is not pushed" className={styles.list}>
@@ -39,7 +42,7 @@ function UnpushedList(props: { check: ArchiveCheckResponse; branch: string }) {
           <span className={styles.path}>
             {commits} {commits === 1 ? 'commit' : 'commits'}
           </span>
-          <span className={styles.detail}>not pushed to {props.branch}</span>
+          <span className={styles.detail}>not pushed</span>
         </li>
       ) : null}
     </ul>
@@ -161,7 +164,7 @@ export function ArchiveDialog(props: {
       <DialogText>
         Archive deletes the cloud computer of {name}, with this work:
       </DialogText>
-      <UnpushedList branch={workspace.branch} check={flow.check} />
+      <UnpushedList check={flow.check} />
       <DialogText>{kept}</DialogText>
       {failure}
     </Dialog>

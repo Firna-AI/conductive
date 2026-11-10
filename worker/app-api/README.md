@@ -20,7 +20,7 @@ access, org creation with initials and repository choices, shared settings,
 repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) uses the real workspace object to check saved work and remove its sandbox.
-The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue](../lifecycle/continue.md#routes) says.
+The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue routes](../lifecycle/continue-routes.md) says.
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.

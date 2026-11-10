@@ -4,6 +4,7 @@ import { act } from 'react'
 import { describe, expect, test } from 'vitest'
 import { routes } from '../../app/router'
 import { groupWorkspaces } from '../../app/sections'
+import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
   coreFixtures,
@@ -13,9 +14,19 @@ import {
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { mountScreen } from '../test-mount'
 import { startedApp } from '../test-render'
+import type { Workspace } from '../../shared/workspaces'
+import type { MenuAnchor } from '../ui/menu-place'
 import type { DropTarget } from './drop-target'
+import type { RowMenu } from './row-menu'
 import type { SectionActions } from './SectionHeader'
 import { SectionList } from './SectionList'
+
+/** The menu of a row, closed. */
+const closedMenu: RowMenu = {
+  open: false,
+  show: () => {},
+  rename: null,
+}
 
 const noActions: SectionActions = {
   toggle: () => {},
@@ -83,7 +94,7 @@ function mouse(target: EventTarget, type: string, init: PointerEventInit) {
 }
 
 describe('the drag of a workspace row', () => {
-  test('moves the workspace to the place under the pointer, keeps that place outside every section, and moves nothing when it ends at the own place of the row', async () => {
+  test('moves the workspace to the place under the pointer, keeps that place outside every section, and moves nothing when it ends at the own place of the row or starts on Archive', async () => {
     const app = await startedApp(new FakeApiServer())
     const groups = groupWorkspaces(
       coreFixtures().sectionList.sections,
@@ -94,6 +105,7 @@ describe('the drag of a workspace row', () => {
       app,
       <SectionList
         actions={noActions}
+        archiveAction={() => () => {}}
         archived={groups.archived}
         groups={groups.sections}
         move={(workspaceId, target) => moves.push({ workspaceId, target })}
@@ -118,6 +130,15 @@ describe('the drag of a workspace row', () => {
     ])
     const status = () => view.querySelector('li [role="status"]')?.textContent
 
+    // Archive keeps its own press, so a press on it lifts no row.
+    const pricing = rowLink(view, 'pricing-copy').closest('li')
+    if (!pricing) throw new Error('The list has no row for pricing-copy.')
+    const archive = byRole('button', 'Archive workspace', pricing)
+    mouse(archive, 'pointerdown', { clientY: 70 })
+    mouse(window, 'pointermove', { clientY: 76 })
+    mouse(window, 'pointermove', { clientY: 165 })
+    const fromArchive = status()
+    mouse(window, 'pointerup', { clientY: 165, buttons: 0 })
     // Invoice PDF fonts goes to Checkout, then back to its own place.
     mouse(rowLink(view, 'invoice-fonts'), 'pointerdown', { clientY: 50 })
     mouse(window, 'pointermove', { clientY: 56 })
@@ -133,7 +154,8 @@ describe('the drag of a workspace row', () => {
     const outside = status()
     mouse(window, 'pointerup', { clientY: 240, buttons: 0 })
 
-    expect({ inCheckout, outside, moves }).toEqual({
+    expect({ fromArchive, inCheckout, outside, moves }).toEqual({
+      fromArchive: undefined,
       inCheckout: 'Moving Pricing page copy to Checkout',
       outside: 'Moving Pricing page copy to Checkout',
       moves: [
@@ -142,6 +164,62 @@ describe('the drag of a workspace row', () => {
           target: { sectionId: 'checkout', index: 1 },
         },
       ],
+    })
+  })
+
+  test('a finger that holds a row keeps its press for the drag and opens no menu, and a right click of a mouse opens the menu of the row at its pointer', async () => {
+    const app = await startedApp(new FakeApiServer())
+    const groups = groupWorkspaces(
+      coreFixtures().sectionList.sections,
+      workspaceFixtures().workspaces.workspaces,
+    )
+    const shown: { workspaceId: string; anchor: MenuAnchor }[] = []
+    const menus = (workspace: Workspace): RowMenu => ({
+      ...closedMenu,
+      show: ({ anchor }) => shown.push({ workspaceId: workspace.id, anchor }),
+    })
+    const view = mountScreen(
+      app,
+      <SectionList
+        actions={noActions}
+        archived={groups.archived}
+        groups={groups.sections}
+        menus={menus}
+        move={() => {}}
+        now={FAKE_TIME}
+        readOnly={false}
+        selectedId={null}
+        variant="sidebar"
+      />,
+    )
+    const link = rowLink(view, 'apple-pay')
+    const menuEvent = (x: number) =>
+      new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: x,
+        clientY: 190,
+      })
+    const finger = { pointerId: 2, pointerType: 'touch', clientY: 190 }
+    mouse(link, 'pointerdown', finger)
+    const hold = menuEvent(100)
+    act(() => {
+      link.dispatchEvent(hold)
+    })
+    mouse(window, 'pointercancel', { ...finger, buttons: 0 })
+    const rightClick = menuEvent(120)
+    act(() => {
+      link.dispatchEvent(rightClick)
+    })
+
+    expect({
+      holdStopped: hold.defaultPrevented,
+      rightClickStopped: rightClick.defaultPrevented,
+      shown,
+    }).toEqual({
+      holdStopped: true,
+      rightClickStopped: true,
+      shown: [{ workspaceId: 'apple-pay', anchor: { x: 120, y: 190 } }],
     })
   })
 })

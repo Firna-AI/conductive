@@ -6,8 +6,9 @@ sandbox of an org starts from. A workspace has its own Boat sandbox and one
 branch at a time. [Continue](continue.md) moves it to a new branch after
 its merge. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
-with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
-says.
+with the client of the provider account that each record stores.
+[Provider accounts](provider-accounts.md) and the
+[sandbox area](../sandbox/README.md) say how.
 
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
@@ -63,9 +64,9 @@ turn repair from the committed chat and the one writer of the shown state.
 
 ### Continue
 
-[Continue](continue.md) gives the routes of Continue, its admission and
-reservation, its phases, the staged fetch and the branch move, the
-publication, and the recovery.
+[Continue](continue.md) gives the admission and reservation of Continue,
+its phases, the staged fetch and the branch move, the publication, and the
+recovery. [Continue routes](continue-routes.md) gives its routes and errors.
 [The git credential sender](git-credentials.md#continue) gives the grant
 of its fetch.
 
@@ -105,6 +106,12 @@ marks. The start-log masker and the workspace object output filter use
 that capture. No private org-value list goes into the runner environment.
 A running sandbox keeps its capture after later org setting changes.
 Disk retention resumes also replace the saved capture.
+
+## Provider accounts
+
+[Provider accounts](provider-accounts.md) gives the provider account that
+each record and start job stores, the client that each call uses, and the
+[org image of each account](provider-accounts.md#org-images).
 
 ## Development
 

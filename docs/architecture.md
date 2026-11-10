@@ -47,6 +47,8 @@ requirements of each feature.
   belongs to the starter of the session, the member who started it.
 - **Boat key:** the one key of the app's own Boat account, where every
   sandbox and every org image of every org runs. It is a Worker secret.
+- **Provider account:** an account with a sandbox provider. The Worker
+  holds its credentials, and reaches it through its own client.
 - **Sandbox:** the Boat sandbox of one workspace. The product calls it a
   cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts

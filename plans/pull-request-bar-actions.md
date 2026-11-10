@@ -994,6 +994,16 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: add a restored-file scenario to both
   action development pages. It has no net diff and one raw dirty file.
   Reason: real browser checks must reproduce the missing local-work case.
+- Design call on 10 November 2026: Continue saves the workspace's provider
+  account with its computer. An older job keeps its known implicit `boat`
+  account. Reason: a changed default must not move commands or recovery to
+  a different account. This follows the new main account-routing contract.
+- Design call on 10 November 2026: Archive labels its aggregate commit
+  count "not pushed", without the current branch name. Reason: the check
+  also finds commits left on older local branches after Continue.
+- Design call on 10 November 2026: the shared local-work check counts
+  HEAD together with every local branch. Reason: the all-branch extension
+  must retain the old check's protection for detached-HEAD commits.
 
 ## Milestone 1: Mockups
 
@@ -1248,6 +1258,9 @@ Depends on: every other milestone
 - [x] Align the runner Git fixtures with the fetched default reference.
       Preserve all existing path, encoding, size, representation, and
       index-preservation assertions.
+- [x] Retain HEAD coverage in the shared all-branch local-work check.
+      Prove that a clean detached checkout with an unpushed commit is
+      reported as local work without changing earlier count assertions.
 - [ ] Run the affected tests and the complete gate on the combined review
       fixes. Re-review the fix once under the same review workflow.
 

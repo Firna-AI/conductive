@@ -32,7 +32,10 @@ export async function authorizeContinue(
     job.binding.id,
   )
   await requireActiveWorkspaceOwner(options.env.DB, row.ownerUserId, row.orgId)
-  if (row.sandboxId !== job.sandboxId)
+  if (
+    row.sandboxId !== job.sandboxId ||
+    row.providerAccount !== job.providerAccount
+  )
     throw new HttpError(
       409,
       'sandbox_unavailable',
@@ -50,7 +53,7 @@ export async function storeContinuedBranch(
     db
       .prepare(
         `UPDATE workspaces SET branch = ?, updated_at = MAX(updated_at, ?)
-      WHERE id = ? AND org_id = ? AND repository_id = ? AND sandbox_id = ? AND branch = ?
+      WHERE id = ? AND org_id = ? AND repository_id = ? AND sandbox_id = ? AND provider_account = ? AND branch = ?
       AND archived_at IS NULL AND state != 'archived'
       AND EXISTS (SELECT 1 FROM orgs o WHERE o.id = workspaces.org_id AND ${activeOrgPredicate('o')})`,
       )
@@ -61,12 +64,13 @@ export async function storeContinuedBranch(
         job.binding.orgId,
         job.repositoryId,
         job.sandboxId,
+        job.providerAccount,
         job.binding.branch,
       ),
     db
       .prepare(
         `UPDATE repositories SET default_branch = ? WHERE id = ? AND org_id = ?
-      AND EXISTS (SELECT 1 FROM workspaces WHERE id = ? AND branch = ?)`,
+      AND EXISTS (SELECT 1 FROM workspaces WHERE id = ? AND branch = ? AND sandbox_id = ? AND provider_account = ?)`,
       )
       .bind(
         job.baseBranch,
@@ -74,10 +78,16 @@ export async function storeContinuedBranch(
         job.binding.orgId,
         job.binding.id,
         job.branch,
+        job.sandboxId,
+        job.providerAccount,
       ),
   ])
   const row = await readWorkspace(db, job.binding.orgId, job.binding.id)
-  if (row.branch !== job.branch)
+  if (
+    row.branch !== job.branch ||
+    row.sandboxId !== job.sandboxId ||
+    row.providerAccount !== job.providerAccount
+  )
     throw new Error('The continued branch publication is pending.')
   return row
 }

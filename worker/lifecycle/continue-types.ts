@@ -12,6 +12,7 @@ import type {
   GitHubRefreshWorkspace,
   GitHubWorkspace,
 } from '../github/contracts'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 export const CONTINUE_JOB_KEY = 'lifecycle:continue'
 export const continueJobKey = (id: string) => `continue:job:${id}`
@@ -34,6 +35,7 @@ export interface ContinueJob {
   binding: GitHubWorkspace
   repositoryId: string
   sandboxId: string
+  providerAccount: string
   member: MessageSender
   request: ContinueWorkspaceRequest
   branch: string
@@ -68,9 +70,24 @@ export interface ContinueOptions {
   activity(): Promise<void>
 }
 
+export async function readContinueJob(
+  storage: ContinueOptions['storage'],
+  key = CONTINUE_JOB_KEY,
+): Promise<ContinueJob | null | undefined> {
+  const job = await storage.get<
+    (Omit<ContinueJob, 'providerAccount'> & { providerAccount?: string }) | null
+  >(key)
+  return job
+    ? {
+        ...job,
+        providerAccount: job.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT,
+      }
+    : job
+}
+
 export async function pendingContinue(
   storage: ContinueOptions['storage'],
 ): Promise<boolean> {
-  const job = await storage.get<ContinueJob | null>(CONTINUE_JOB_KEY)
+  const job = await readContinueJob(storage)
   return Boolean(job)
 }

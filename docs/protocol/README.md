@@ -14,6 +14,8 @@ the terms, and the meaning of a decision number.
     limits, the states, the stop and resume, the archive, and Continue.
   - [Continue](continue.md): the next task of a workspace after a merge, on
     a new branch with the same sandbox and sessions.
+  - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
+    moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](workspace-tools.md)
 - [Chat and events](chat-and-events.md): sessions, messages, what the chat
   shows, and the events.
@@ -63,4 +65,5 @@ the terms, and the meaning of a decision number.
 - [Invite and referral codes](waitlist-codes.md): the codes of the
   waitlist, the join link, and the use of a code.
 - [Conductor Cloud comparison](conductor-cloud-comparison.md): the public
-  page with the status of each Conductor Cloud feature.
+  page for people who move from Conductor Cloud, with the status of each
+  Conductor Cloud feature.

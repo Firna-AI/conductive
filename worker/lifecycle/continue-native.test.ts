@@ -107,4 +107,28 @@ it('counts distinct unpushed commits across all local branches after Continue', 
   expect(await f.git('rev-list', '--count', 'HEAD', '--not', '--remotes')).toBe(
     '0\n',
   )
+  const refs = await f.git('for-each-ref', '--format=%(refname) %(objectname)')
+  await f.git('checkout', '--quiet', '--detach')
+  await f.write('detached.txt', 'detached local commit\n')
+  await f.git('add', 'detached.txt')
+  await f.git('commit', '--quiet', '-m', 'Detached unpushed task')
+  const head = await f.git('rev-parse', 'HEAD')
+  const index = await f.git('write-tree')
+  expect(await f.git('status', '--porcelain=v1')).toBe('')
+  expect(
+    await f.git(
+      'for-each-ref',
+      '--contains=HEAD',
+      '--format=%(refname)',
+      'refs/heads/',
+      'refs/remotes/',
+    ),
+  ).toBe('')
+  expect(await f.work()).toEqual({ uncommittedFiles: [], unpushedCommits: 4 })
+  expect(await f.git('rev-parse', 'HEAD')).toBe(head)
+  expect(await f.git('write-tree')).toBe(index)
+  expect(await f.git('for-each-ref', '--format=%(refname) %(objectname)')).toBe(
+    refs,
+  )
+  expect(await f.read('detached.txt')).toBe('detached local commit\n')
 })

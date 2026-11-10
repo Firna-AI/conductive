@@ -22,6 +22,7 @@ export async function queueRuntimeCreate(
     avatarUrl: null,
   }
   const job: WorkspaceStartJob = {
+    providerAccount: 'boat',
     workspaceId,
     orgId: 'runtime-org',
     kind: 'create',

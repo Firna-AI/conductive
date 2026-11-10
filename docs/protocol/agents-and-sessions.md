@@ -177,6 +177,8 @@ says.
 - The app gives an automatic name only to a workspace or a session that has
   no name (decision 182). So no automatic name replaces a name that a
   member or the app gave.
+- A member names a workspace with Rename in the
+  [menu of its row](workspace-menu.md#rename).
 - The app gives no automatic name in an archived workspace, or in a
   workspace of a deleted org.
 - Reason: a missing name shows that no one named the workspace or the

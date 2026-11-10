@@ -10,6 +10,7 @@ import { workspaceBranch } from './workspace-branch'
 import {
   CONTINUE_JOB_KEY,
   continueJobKey,
+  readContinueJob,
   type ContinueJob,
   type ContinueOptions,
 } from './continue-types'
@@ -34,9 +35,7 @@ export async function reserveContinue(
     workspaceId,
     member.id,
   )
-  const existing = await options.storage.get<ContinueJob | null>(
-    CONTINUE_JOB_KEY,
-  )
+  const existing = await readContinueJob(options.storage)
   if (existing && !existing.outcome) {
     if (
       existing.member.id === member.id &&
@@ -77,6 +76,7 @@ export async function reserveContinue(
     binding,
     repositoryId: row.repositoryId,
     sandboxId: row.sandboxId,
+    providerAccount: row.providerAccount,
     member: {
       id: member.id,
       githubLogin: member.githubLogin,

@@ -7,7 +7,7 @@ import { presentWorkspace } from '../data/workspace-link'
 import { readMergeWorkspace } from '../github/merge-access'
 import { requireFeatureResult } from '../features/result'
 import { HttpError } from '../http'
-import { sandboxProvider } from '../sandbox/client'
+import { providerForAccount } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
 import { reserveContinue } from './continue-admission'
 import { authorizeContinue } from './continue-data'
@@ -20,6 +20,7 @@ import {
   CONTINUE_JOB_KEY,
   continueJobKey,
   continuedBranchKey,
+  readContinueJob,
   type ContinueJob,
   type ContinueOptions,
 } from './continue-types'
@@ -74,7 +75,8 @@ export class WorkspaceContinue implements ContinueProgress {
         'The workspace is not available.',
       )
     await readMergeWorkspace(this.options.env.DB, orgId, id, userId)
-    const job = await this.options.storage.get<ContinueJob>(
+    const job = await readContinueJob(
+      this.options.storage,
       continueJobKey(continueId),
     )
     if (
@@ -112,9 +114,7 @@ export class WorkspaceContinue implements ContinueProgress {
 
   async save(job: ContinueJob): Promise<void> {
     await this.options.run(async () => {
-      const current = await this.options.storage.get<ContinueJob | null>(
-        CONTINUE_JOB_KEY,
-      )
+      const current = await readContinueJob(this.options.storage)
       if (!current || current.id !== job.id || current.outcome) return
       if (current.cancelled) job.cancelled = true
       await this.options.storage.put(continueJobKey(job.id), job)
@@ -128,9 +128,7 @@ export class WorkspaceContinue implements ContinueProgress {
   ): Promise<void> {
     this.scope = null
     await this.options.run(async () => {
-      const current = await this.options.storage.get<ContinueJob | null>(
-        CONTINUE_JOB_KEY,
-      )
+      const current = await readContinueJob(this.options.storage)
       if (!current || current.id !== job.id) return
       await this.options.storage.put(continueJobKey(job.id), {
         ...job,
@@ -147,9 +145,7 @@ export class WorkspaceContinue implements ContinueProgress {
   }
 
   private async advanceOwned(): Promise<void> {
-    const job = await this.options.storage.get<ContinueJob | null>(
-      CONTINUE_JOB_KEY,
-    )
+    const job = await readContinueJob(this.options.storage)
     if (!job || (job.outcome && job.phase !== 'publish')) {
       await this.options.schedule(null)
       return
@@ -183,9 +179,7 @@ export class WorkspaceContinue implements ContinueProgress {
         },
       })
     }
-    const pending = await this.options.storage.get<ContinueJob | null>(
-      CONTINUE_JOB_KEY,
-    )
+    const pending = await readContinueJob(this.options.storage)
     await this.options.schedule(
       pending ? this.options.dependencies.now() + 1_000 : null,
     )
@@ -193,9 +187,7 @@ export class WorkspaceContinue implements ContinueProgress {
   }
 
   async credentialSender(turnId: string): Promise<string | null | undefined> {
-    const job = await this.options.storage.get<ContinueJob | null>(
-      CONTINUE_JOB_KEY,
-    )
+    const job = await readContinueJob(this.options.storage)
     if (!job || job.fetchId !== turnId) return undefined
     if (
       this.scope !== turnId ||
@@ -205,9 +197,11 @@ export class WorkspaceContinue implements ContinueProgress {
     )
       return null
     if (job.processId !== null) {
-      const status = await sandboxProvider(
+      await this.options.run(() => authorizeContinue(this.options, job))
+      const status = await providerForAccount(
         this.options.env,
         this.options.dependencies.fetch,
+        job.providerAccount,
       ).getCommandStatus(job.sandboxId, job.processId, {
         stdoutOffset: job.stdoutOffset,
         stderrOffset: job.stderrOffset,
@@ -218,9 +212,7 @@ export class WorkspaceContinue implements ContinueProgress {
       }
     }
     return this.options.run(async () => {
-      const current = await this.options.storage.get<ContinueJob | null>(
-        CONTINUE_JOB_KEY,
-      )
+      const current = await readContinueJob(this.options.storage)
       if (
         !current ||
         current.id !== job.id ||
@@ -236,9 +228,7 @@ export class WorkspaceContinue implements ContinueProgress {
 
   async cancel(): Promise<void> {
     this.scope = null
-    const job = await this.options.storage.get<ContinueJob | null>(
-      CONTINUE_JOB_KEY,
-    )
+    const job = await readContinueJob(this.options.storage)
     if (job) await this.save({ ...job, cancelled: true })
   }
 }

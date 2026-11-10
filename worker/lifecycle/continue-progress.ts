@@ -1,6 +1,6 @@
 import { readArchiveCheck } from '../app-api/archive'
 import { HttpError } from '../http'
-import { sandboxProvider } from '../sandbox/client'
+import { providerForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { lifecycleCommand } from './command-intents'
 import {
@@ -99,7 +99,11 @@ export async function advanceContinue(
     await progress.save(job)
     return
   }
-  const provider = sandboxProvider(options.env, options.dependencies.fetch)
+  const provider = providerForAccount(
+    options.env,
+    options.dependencies.fetch,
+    job.providerAccount,
+  )
   if (!(await advanceContinueCommand(provider, options, progress, job))) return
   await completeCommand(progress, job)
 }
@@ -140,7 +144,11 @@ async function settleContinueCommand(
     await progress.save(job)
   }
   if (job.cancelled) progress.scope = null
-  const provider = sandboxProvider(options.env, options.dependencies.fetch)
+  const provider = providerForAccount(
+    options.env,
+    options.dependencies.fetch,
+    job.providerAccount,
+  )
   if (await advanceContinueCommand(provider, options, progress, job))
     await completeCommand(progress, job)
 }

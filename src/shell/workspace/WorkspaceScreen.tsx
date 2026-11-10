@@ -8,7 +8,7 @@ import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.m
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
 import { mayArchive } from '../../app/permissions'
 import { routes } from '../../app/router'
-import { useStore } from '../../app/store'
+import { useStore, valueOf } from '../../app/store'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
@@ -16,7 +16,7 @@ import {
 import { failedFirstStart } from '../../app/first-start'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp, useOrgAccess } from '../context'
+import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
@@ -103,31 +103,46 @@ export function WorkspaceScreen(props: {
   )
   const { model, notices, chat, toolEvents } = shown
   const startError = useStore(model.startError)
+  const listed = valueOf(useStore(useOrgModel(props.org.id).workspaces))?.find(
+    (item) => item.id === props.workspaceId,
+  )
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
+  // The Archive question keeps one place in each state of the screen. So a
+  // question that the row of the workspace started during the first read,
+  // with the name of the list, shows once and stays when the read ends.
+  const named = detail.state === 'ready' ? detail.value.workspace : listed
+  const withQuestion = (content: ReactNode) => (
+    <>
+      {content}
+      {named ? (
+        <ArchiveDialog archive={model.archive} workspace={named} />
+      ) : null}
+    </>
+  )
   if (detail.state === 'loading') {
-    return (
+    return withQuestion(
       <div className={workspaceStyles.center}>
         <Spinner
           accessibilityLabel="Opening the workspace"
           color={theme.colors.muted}
           size={14}
         />
-      </div>
+      </div>,
     )
   }
   if (detail.state === 'failed') {
     if (detail.error.status === 404) {
-      return (
+      return withQuestion(
         <Unavailable
           body="It may have moved to another org."
           orgId={props.org.id}
-        />
+        />,
       )
     }
-    return (
+    return withQuestion(
       <EmptyState
         action={
           <ActionButton onPress={() => void model.open()} tone="primary">
@@ -137,7 +152,7 @@ export function WorkspaceScreen(props: {
         body={detail.error.message}
         icon={CircleAlert}
         title="The workspace didn't open"
-      />
+      />,
     )
   }
   const { workspace, start, error } = detail.value
@@ -214,11 +229,10 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  // The questions of Archive and Continue, and the actions of the screen
-  // for the palette.
+  // The question of Continue, and the actions of the screen for the palette.
+  // The Archive question has its own place, as `withQuestion` says.
   const dialog = (
     <>
-      <ArchiveDialog archive={model.archive} workspace={workspace} />
       <ContinueDialog />
       <WorkspacePaletteActions chat={chat} context={context} />
     </>
@@ -249,15 +263,15 @@ export function WorkspaceScreen(props: {
     )
     // An archived workspace on a phone shows only its chat: no pull request
     // row and no Checks, so it reads no GitHub state and no files.
-    if (archived) return screen
-    return (
+    if (archived) return withQuestion(screen)
+    return withQuestion(
       <KeptFilesConnection context={context}>
         <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
-      </KeptFilesConnection>
+      </KeptFilesConnection>,
     )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
-  return (
+  return withQuestion(
     <KeptFilesConnection context={context}>
       <WorkspaceGitHub context={context}>
         <WorkspaceMacBar context={context} />
@@ -275,6 +289,6 @@ export function WorkspaceScreen(props: {
           {dialog}
         </div>
       </WorkspaceGitHub>
-    </KeptFilesConnection>
+    </KeptFilesConnection>,
   )
 }

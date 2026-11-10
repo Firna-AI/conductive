@@ -18,6 +18,8 @@ These docs belong to this doc:
   limits, the states, the stop and resume, the archive, and Continue.
 - [Continue](continue.md): the next task of a workspace after a merge, on
   a new branch with the same sandbox and sessions.
+- [Workspace menu](workspace-menu.md): the menu of a workspace row, which
+  moves, reassigns, renames, and archives the workspace.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
   terminal, the port previews, and the desktop.
 
@@ -114,6 +116,11 @@ These docs belong to this doc:
   `link`. Copy link, the chips, and the agent tools use this link.
 - Reason: the page of the Mac app runs on its own origin, and a sandbox
   does not know the app origin.
+
+## The workspace menu
+
+- [Workspace menu](workspace-menu.md) holds the requirements of the menu
+  of a workspace row: Move to section, Reassign to, Rename, and Archive.
 
 ## Tools of a workspace
 

@@ -1,7 +1,8 @@
-import { useCallback, useState, type KeyboardEvent } from 'react'
+import { useCallback, useState } from 'react'
 import { ArrowLeft, ArrowRight, Pencil } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import { opensMenu } from '../../shell/ui/menu-keys'
 import type { MenuEntry, MenuPoint } from '../ui/Menu'
 import { rowKey, type RowTab, type TabItemProps } from './tab-row'
 
@@ -14,13 +15,6 @@ export interface OpenTabMenu {
 
 /** The menu opens this far below a tab, as the mockups draw it. */
 const below = 4
-
-/** Shift and F10, or the Menu key, with no other modifier. */
-function opensMenu(event: KeyboardEvent): boolean {
-  if (event.altKey || event.ctrlKey || event.metaKey) return false
-  if (event.key === 'ContextMenu') return !event.shiftKey
-  return event.key === 'F10' && event.shiftKey
-}
 
 /** The items of the menu of the tab at `index` of the row. */
 function entriesOf(

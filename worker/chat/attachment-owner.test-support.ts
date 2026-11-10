@@ -20,6 +20,7 @@ export function attachmentOwnerCopy(harness: TestHarness, failFirst = false) {
   const files = new Map<string, Uint8Array>()
   const delivered = new Set<string>()
   const writes: { sandboxId: string; path: string }[] = []
+  const requests: Request[] = []
   const active = new Map<string, number>()
   const work: Promise<string | null>[] = []
   let maximumWriters = 0
@@ -29,6 +30,7 @@ export function attachmentOwnerCopy(harness: TestHarness, failFirst = false) {
   const fetch = async (request: Request) => {
     const url = new URL(request.url)
     if (url.hostname === 'boat.dev') {
+      requests.push(request)
       const body: { path: string } = await request.json()
       const sandboxId = url.pathname.split('/').at(-3)
       if (!sandboxId) throw new Error('The destination computer is missing.')
@@ -74,6 +76,7 @@ export function attachmentOwnerCopy(harness: TestHarness, failFirst = false) {
     entered,
     release,
     writes,
+    requests,
     settleCopies: () => Promise.allSettled(work),
     settleReplacements: () => Promise.allSettled(work.slice(1)),
     edit: (sandboxId: string, path: string) => {

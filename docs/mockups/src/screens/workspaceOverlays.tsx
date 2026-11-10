@@ -7,11 +7,15 @@ import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
-import { ArchiveDialog } from '../components/workspace/ArchiveDialog'
+import {
+  ArchiveDialog,
+  headerArchiveLinks,
+} from '../components/workspace/ArchiveDialog'
 import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
+import { unpushedWork } from '../fixtures/archive'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -66,10 +70,19 @@ export function workspaceOverlay(
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
     case 'archive-unpushed':
+      return (
+        <ArchiveDialog
+          links={headerArchiveLinks}
+          question={{ kind: 'unpushed', work: unpushedWork }}
+          viewport={viewport}
+          workspace={workspace}
+        />
+      )
     case 'archive-pushed':
       return (
         <ArchiveDialog
-          pushed={state.overlay === 'archive-pushed'}
+          links={headerArchiveLinks}
+          question={{ kind: 'pushed' }}
           viewport={viewport}
           workspace={workspace}
         />
