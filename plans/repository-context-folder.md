@@ -15,10 +15,12 @@ This change does the same in Conductive. The Worker copies each attached
 file into `.context/attachments/` in the repository folder of the
 workspace (decision 242). At each start, the runner makes the `.context`
 folder and makes Git ignore it, and the agent instructions name the folder
-(decision 243). The change does not show `.context` files in All files or
-Changes, so members find them in the terminal. It does not show images in
-the chat, and it adds none of Conductor's pull request context files or
-artifacts.
+(decision 243). The text that each message adds for its files tells the
+agent to read each file before it answers, and it gives the size of each
+file (decision 244). The change does not show `.context` files in All
+files or Changes, so members find them in the terminal. It does not show
+images in the chat, and it adds none of Conductor's pull request context
+files or artifacts.
 
 Contract owners:
 
@@ -101,6 +103,37 @@ is in `.context/repository-context-folder/options-check.md`.
 - **Action:** ask the user, because B changes the agent instructions that a protocol doc states, and it changes the status of a comparison row.
 - **Chosen:** B, by the user on 10 November 2026. Options C and D came after the choice.
 
+### 244. The attached-file text has no read instruction
+
+The options check of 10 November 2026 changed the root question, added
+options E and F, and kept the recommendation. Its report is in
+`.context/repository-context-folder/options-check-244.md`.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `runner/src/providers/attachment-description.ts:4`
+- **Background:** For each message with files, the runner adds one line per file to the agent's input: `Attached file: {"name":…,"mediaType":…,"path":…}`. Fix round 1 of PR #71, in commit `35265e46`, chose this one-line JSON form, so that a name with quotes or a line break stays inside its value. Codex also gets each image as image input. Conductor adds a block before the message instead: "The user has attached these files. Read them before proceeding." It lists each path with its size.
+- **Problem:** The current text gives the facts, but it does not tell the agent to read the files. An agent can answer without opening a file.
+- **Impact if no action:** An agent can skip a file that the member expects it to read. The text stays different from Conductor's.
+- **Root question:** How does each agent take in every file that a message carries before it answers?
+- **Options:**
+  - **A.** Keep the current text. The agent gets the facts only. Effort: Small.
+  - **B.** Put one rule in the agent instructions: "When a message has attached files, read them before you answer." It is stated once for each session, far from the files. A session that started before the change never gets it, and only cloud computers from a new org image get it. Effort: Small.
+  - **C.** Put one line before the file lines of each message: "The sender attached these files. Read each file before you answer." Keep the JSON lines, and add the size to each. Only cloud computers from a new org image get it. Effort: Small.
+  - **D.** Use Conductor's block as it is, with a path and a size on each line. The agent then loses the original name and the media type of each file. Only cloud computers from a new org image get it. Effort: Small.
+  - **E.** As C, and give Claude each image as image input, as Codex gets it today. The runner reads each image when it sends the message, and an image that the model service refuses gets the path only. An image that the service cannot decode can fail the whole turn. Added by the options check. Effort: Medium.
+  - **F.** As C, but the Worker adds the read line to the text of the message in the runner command, and the runner adds only the size. Older org images get the line at once. App text then goes into the field that holds the member's words, and the text gets two owners. Added by the options check. Effort: Small.
+- **Left out:**
+  - A line that the composer adds to the member's text. It breaks the rule that the stored message and the chat hold only the member's words, as [Agent instructions](../docs/protocol/agent-instructions.md) says.
+  - A runner check that the agent read each file. It fails the goal, because the runner cannot see every read.
+- **Wider fix:** None. This is a design question, not a class of defect.
+- **Previous examples:** Fix round 1 of PR #71 chose the JSON form. Conductor's block is in the user's copy of Conductor's prompts.
+- **Related:** Decision 243 changes the same agent instructions. B would add its rule to that text.
+- **Recommendation:** C. It puts the instruction next to the files, in the one place that builds the agent input. If Claude still skips attached images after C ships, E is the next step.
+- **Action:** ask the user, because C changes a requirement in `docs/protocol/messages-and-attachments.md`, which says that the agent gets the path, the name, and the media type of each file.
+- **Chosen:** C, by the user on 10 November 2026. Options E and F came after the choice.
+
 ## Design calls
 
 My calls, on 10 November 2026:
@@ -141,9 +174,23 @@ My calls, on 10 November 2026:
   `.context` folder deeper in the repository, the sandbox user owns both
   folders before the first upload, and a failed step must not stop the
   runner.
+- The agent instructions get two entries after the repository folders.
+  The first is `Context folder: "<repository folder>/.context"`. The second
+  is "Git ignores the context folder. Keep notes, screenshots, and files
+  for other sessions of this workspace there. Attached files arrive in its
+  attachments folder." Reason: these are Conductor's facts, in the form of
+  the other entries. The user saw this text on 10 November 2026.
 - The agent instructions do not ask agents to show screenshots in replies.
   Reason: the chat does not show images, as
   [Chat Markdown](../docs/protocol/chat-markdown.md) says.
+- For decision 244, the read line comes once after the text of the
+  message, before the first file line. Each file line adds `sizeBytes`
+  from the metadata of the message. Codex keeps its image input after
+  each file line, and its read line adds "Each image is also in this
+  message." Reason: the line then stands next to the files in both agents,
+  and Codex spends no tool step on an image that it already has. The size
+  tells the agent how large a file is before it reads it, as in Conductor,
+  and needs no file read in the cloud computer.
 - A command that deletes ignored files, such as `git clean -fdx`, deletes
   the folder and the attached files in it. The protocol doc states this
   limit. Reason: Conductor has the same limit, and the bucket keeps each
@@ -157,7 +204,7 @@ My calls, on 10 November 2026:
 - The comparison row moves to Available in this change, because the merge
   ships the feature. The comparison mockup reads the same rows, so the plan
   has no mockup milestone.
-- Decisions 242 and 243 took the next free numbers on 10 November 2026.
+- Decisions 242 to 244 took the next free numbers on 10 November 2026.
 
 ## Milestone 1: Documentation and protocol
 
@@ -170,6 +217,10 @@ State the requirements and the decisions in force for the work below.
       in the repository folder of the workspace, and that Git ignores each
       copied file. Give decision 242 with its reason and the rejected
       alternatives.
+- [ ] In the same section, state that the agent gets one line that tells
+      it to read each file before it answers, and the size of each file
+      with its path, name, and media type. Give decision 244 with its
+      reason, the reason for the size, and the rejected alternatives.
 - [ ] In [Repository folders](../docs/protocol/repository-folders.md), add
       the section "The context folder" with decision 243: the folder, its
       exclude rule, its creation at each start, the tracked files that stay
@@ -210,11 +261,16 @@ Depends on: 1
 
 - [ ] Add the start step of the design calls, before the first file report.
 - [ ] Name the folder and its use in the agent instructions.
+- [ ] Add the read line and the size of each file to the attached-file
+      text of both agents, as decision 244 and the design calls say.
 - [ ] Move the sample path of `runner/src/providers/attachments.test.ts` to
-      the new form.
+      the new form. Move the exact attached-file text that
+      `runner/src/providers/instructions.test.ts` asserts for both agents.
 - [ ] Add tests: the step in a temporary repository, a repeated start, a
-      `.context` file, a failed step, and the instructions.
-- [ ] Update the [runner README](../runner/README.md).
+      `.context` file, a failed step, the instructions, and the
+      attached-file text of both agents.
+- [ ] Update the [runner README](../runner/README.md) and the Agent input
+      section of `worker/chat/attachments.md`.
 - [ ] Run `npm --prefix runner run typecheck` and `npm --prefix runner test`.
 
 ## Milestone 4: The comparison row
@@ -236,7 +292,7 @@ Depends on: every other milestone
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       complete gate, `npm run check`.
 - [ ] Check that no other plan on `origin/main` or an open branch uses
-      decisions 242 and 243. Renumber them when one does.
+      decisions 242 to 244. Renumber them when one does.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
