@@ -227,6 +227,8 @@ recommendation from E to F.
   from the transcript.
 - **Action:** ask the user, because F changes the answer that the user
   gave.
+- **Chosen:** E, by the user on 10 November 2026, in place of B. The plan
+  recommended F, then E after decision 7 chose F without J.
 
 ### 6. How the work that GitHub does not hold reaches the cloud computer
 
@@ -417,6 +419,7 @@ from B to B with E.
   cloud computer. The plan first recommended B alone.
 - **Action:** ask the user, because each option except A adds a new limit,
   a new failure, or a new rejection.
+- **Chosen:** B and E, by the user on 10 November 2026.
 
 ### 12. One upload path for attachments and the import
 
@@ -462,13 +465,23 @@ decision or the user.
   import. It says that an admin can add the repository.
 - A workspace that the org already imported shows as imported, with a
   link to it. The app records the local Conductor ID for this.
+- A workspace whose upload stopped shows as unfinished, with Try again,
+  until its reservation expires (decision 14).
 
 ### The import, at once
 
-- The Worker creates each selected workspace with the "from Conductor"
-  flag, its name, its branch, and no cloud computer, in the section
-  "Import from Conductor" (decision 10). It creates that section when it
-  does not exist.
+- For each selected workspace, the Worker first records a reservation.
+  The Mac app uploads the workspace's package and Markdown files under
+  the reservation's own bucket prefix.
+- When the last part is stored and checked, the Worker creates the
+  workspace with the "from Conductor" flag, its name, its branch, and no
+  cloud computer, in the section "Import from Conductor" (decisions 10
+  and 13). It creates that section when it does not exist. So no member
+  ever sees a workspace with incomplete work.
+- An upload that stops keeps its reservation. The Mac list shows its row
+  as unfinished, with Try again, which uploads only the missing parts
+  (decision 14). An unfinished reservation and its parts expire after
+  7 days, as decision 14 records.
 - The Mac app reads each session file, also a compressed one, and turns
   it into one Markdown file: the messages, the agent's answers, and short
   lines for its tool steps (decision 7). It uploads the file with the
@@ -491,7 +504,13 @@ decision or the user.
   to the bucket behind one small storage adapter, as it does for the
   cloud computer provider. Reason: another storage then needs only a new
   adapter on the server, and an old Mac app keeps working.
-- Decision 11 says which files are too large to import.
+- A changed or untracked file over 100 MiB stays on the Mac, and the
+  import result lists it. The Git bundle, the memory files, and the
+  Markdown files always upload whole (decision 11).
+- Agent call, 10 November 2026: a session whose memory file is gone does
+  not import, and the import result names it. Reason: the user chose no
+  read of Conductor's database, in decisions 5 and 7, so such a session
+  has no source.
 - Each part, each session page, and each request stays small, as the
   performance rules below say.
 
@@ -516,10 +535,22 @@ decision or the user.
   can use the same path. A short-lived download link would be faster for a
   large package, but the security rules allow no such credential in a
   cloud computer today.
+- Before it sends the package, activation checks that the package fits
+  the free disk of the cloud computer, with room to unpack it. When it
+  does not fit, activation stops before it changes the checkout, keeps the
+  package, and names both sizes (decision 11).
 - The runner then fetches the commits from the bundle, checks out the
   branch at the newest commit of the Mac, and copies the changed files and
-  `.context` over the checkout. It puts the session files in place as
-  decision 5 says, and the Markdown files in `.context/conductor/`. Then
+  `.context` over the checkout. It puts the Markdown files in
+  `.context/conductor/`.
+- The runner puts each memory file into the agent data of the cloud
+  computer, under the folder path of the repository for Claude, and writes
+  each pair of a Conductive session and its agent session into its state.
+  Each imported session gets the importer as its starter. The old session
+  then continues with its memory (decision 5).
+- A session that does not resume falls back to its Markdown file in
+  `.context/conductor/`, and the first message of its new session names
+  that file. Then
   the app deletes the bucket data of that workspace, except the Markdown
   files.
 - A failed activation keeps the workspace, its sessions, and its bucket
@@ -540,6 +571,9 @@ decision or the user.
   start fetches that branch and checks it out with tracking.
 - When the branch no longer exists on GitHub at the start, the start fails
   and names that cause.
+- A pull request whose branch lives in another repository, such as a fork,
+  shows as unavailable, with its reason and Open on GitHub. The picker
+  compares repository IDs, not branch names (decision 15).
 
 ### Performance
 
@@ -621,12 +655,10 @@ These are agent calls from Milestone 1, within the decisions in force.
   data also read the native collections. An import-only section must not
   appear there before an import.
 
-### Open decisions from the mockups
+### Decisions from the mockups
 
-These continue the decision numbers above. They are open, from
-10 November 2026. No option has been applied. The normal progress example
-keeps the current design: the first workspace is fully uploaded before its
-link opens. The incomplete workspace and interrupted upload stay undrawn.
+These continue the decision numbers above. Milestone 1 raised them on
+10 November 2026, and the user answered each one on the same day.
 
 #### 13. A workspace whose upload is not complete
 
@@ -678,6 +710,7 @@ link opens. The incomplete workspace and interrupted upload stay undrawn.
 - **Action:** ask the user, because C changes the current appearance
   timing, and the other options add incomplete-upload behaviour that no
   requirement covers.
+- **Chosen:** C, by the user on 10 November 2026.
 
 #### 14. An upload that stops before completion
 
@@ -724,6 +757,11 @@ link opens. The incomplete workspace and interrupted upload stay undrawn.
   A remains the recommendation.
 - **Action:** ask the user, because upload recovery has no requirement,
   and the best option depends on decision 13.
+- **Chosen:** D, by the user on 10 November 2026.
+- **Agent call, 10 November 2026:** an unfinished reservation and its
+  stored parts expire after 7 days. Reason: the Mac still holds the source,
+  so an expiry loses nothing, and 7 days matches the unsent draft
+  attachments of decision 132 of the main plan.
 
 #### 15. Continue a pull request from a fork
 
@@ -786,20 +824,7 @@ link opens. The incomplete workspace and interrupted upload stay undrawn.
   added D and E. B lets a maintainer take over work without fork access.
 - **Action:** ask the user, because the new picker has no fork rule,
   and filtering, copying, and continuing the original have real trade-offs.
-
-## Checks before Milestone 1
-
-These checks settle facts that decisions 5 and 7 need. They need no
-product code. Save their results under `.context/import-from-conductor/`.
-
-- [ ] Read the layout of one `session_messages` row on the user's Mac,
-      after the user agrees.
-- [ ] Count the local sessions whose agent file is gone.
-- [ ] Measure the free disk of a new cloud computer, for decision 11.
-- [ ] Prove one resume of a transferred Claude session file and of a Codex
-      rollout file in a cloud computer, with each login kind that
-      Conductive offers: a Claude subscription token, an Anthropic API key,
-      and an OpenAI API key for a Codex history from a ChatGPT login.
+- **Chosen:** A, by the user on 10 November 2026.
 
 ## Milestone 1: Mockups
 
@@ -821,7 +846,8 @@ timing. It opens only a workspace whose own upload is complete.
 - [x] Add the consent dialog, the list with Select all, the rows that
       cannot import, and the already imported rows.
 - [x] Add the normal import progress and result.
-- [ ] Add the omitted-file result. Blocked by decision 11.
+- [ ] Add the result list of the files over 100 MiB that stay on the Mac,
+      and of the sessions whose memory file is gone (decision 11).
 - [x] Add an imported workspace: its flag, the links to its old sessions,
       the Markdown view of one old session, the Activate
       question, activation progress, and a failed activation.
@@ -830,14 +856,18 @@ timing. It opens only a workspace whose own upload is complete.
 - [x] Add Archive of a never-activated import and its archived workspace.
       Keep the old session documents readable. Show no false statement
       about pushed work or a deleted cloud computer.
-- [ ] Add the resumed-session tab. Blocked by decision 5.
-- [ ] Add the full-disk activation stop. Blocked by decision 11.
-- [ ] Finish incomplete-upload workspace availability, and revise the
-      progress and flow if needed. Blocked by decision 13.
-- [ ] Add interrupted-upload recovery and the unfinished row. Blocked by
-      decision 14, which also depends on decision 13.
-- [ ] Add the fork pull request case to the page, dialog, and phone
-      picker if needed. Blocked by decision 15.
+- [ ] Add the resumed-session tab: a session tab that links to its old
+      document and continues with the agent's memory, and the fallback
+      when a session does not resume (decision 5).
+- [ ] Add the activation that stops because the package does not fit the
+      disk, with both sizes (decision 11).
+- [ ] Show each workspace appearing only when its own upload ends, and
+      revise the progress and the user flow to match (decision 13).
+- [ ] Add the unfinished row with Try again in the Mac list, and its expiry
+      after 7 days (decision 14).
+- [ ] Add pull requests from forks as unavailable rows, with the reason and
+      Open on GitHub, on the page, in the dialog, and on a phone
+      (decision 15).
 - [x] Add the user flow `import-from-conductor`, from the offer to an
       activated workspace.
 - [x] Keep import fixtures separate from the native section collection
@@ -895,7 +925,9 @@ Depends on: 1
 Depends on: 2
 
 - [ ] Add a Worker route that lists the branches and the open pull
-      requests of a chosen repository, without the default branch. Page
+      requests of a chosen repository, without the default branch. Mark a
+      pull request whose branch is in another repository as unavailable,
+      by repository ID (decision 15). Page
       the list and support the search shown in the picker.
 - [ ] Apply decision 15 to fork pull requests. Use repository IDs for
       identity. B needs a copy from the pull request ref. C or E also
@@ -916,13 +948,13 @@ Depends on: 2
       computer, with the "from Conductor" flag and the local Conductor ID,
       with its migration. Record Not active and whether activation
       completed, so Archive can choose the correct words.
-- [ ] Add the import routes: create the imported workspaces in the section
-      "Import from Conductor", record each old session with its title and
-      its Markdown file, and give short-lived upload links for the bucket
-      data.
-- [ ] Add the upload completion and recovery state chosen in decisions
-      13 and 14. Keep a partial import from claiming that all its work is
-      ready. Keep accepted messages under the failed-first-start rule.
+- [ ] Add the reservation of each selected workspace, with short-lived
+      upload links under its own bucket prefix.
+- [ ] Create the workspace in the section "Import from Conductor" only when
+      its last part is stored and checked, and record each old session with
+      its title and its Markdown file (decision 13).
+- [ ] Keep an unfinished reservation for Try again, and expire it with its
+      parts after 7 days (decision 14).
 - [ ] Add the route that reads the Markdown file of an old session for a
       member of the org.
 - [ ] Add the R2 bucket of decision 132 when Milestone 8p of the main plan
@@ -935,15 +967,22 @@ Depends on: 2
 
 Depends on: 4
 
+- [ ] Prove one resume of a transferred Claude memory file and of a Codex
+      rollout file in a cloud computer, with each login kind that
+      Conductive offers: a Claude subscription token, an Anthropic API key,
+      and an OpenAI API key for a Codex history from a ChatGPT login.
+- [ ] Measure the free disk of a new cloud computer, and check before
+      activation that the package fits it (decision 11).
 - [ ] Add the activation start: a first start with no first message.
 - [ ] Send the bucket data to the runner over the runner connection, in
       checked parts below 1 MiB, before the first turn.
 - [ ] Let the runner apply the bundle, the changed files, and `.context`,
       put the Markdown files of the old sessions in `.context/conductor/`,
       and add `.context/` to the local exclude file.
-- [ ] Put each session file in the agent data of the cloud computer, write
+- [ ] Put each memory file in the agent data of the cloud computer, write
       each pair into the runner state, and give each imported session its
-      starter, as decision 5 says.
+      starter. Fall back to the Markdown file for a session that does not
+      resume (decision 5).
 - [ ] Delete the bucket data after a successful activation, and keep it
       after a failed one.
 - [ ] Add Worker and runner tests, as the `testing` skill says.
@@ -962,7 +1001,12 @@ Depends on: 4
       into one Markdown file, as decision 7 says.
 - [ ] Build the bucket data of decision 8 with Git, and upload it with the
       short-lived links.
-- [ ] Handle an upload that stops, and retry it only as decision 14 says.
+- [ ] Leave each changed or untracked file over 100 MiB on the Mac, and list
+      it (decision 11).
+- [ ] Count the sessions whose memory file is gone, and list them in the
+      result.
+- [ ] Keep the reservation of a stopped upload, and upload only its missing
+      parts on Try again (decision 14).
 - [ ] Add the device operations of the scan and the upload.
 - [ ] Add the tests of the Mac app, as the `testing` skill says.
 - [ ] Update `desktop/README.md`.
