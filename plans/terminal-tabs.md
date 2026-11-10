@@ -184,7 +184,9 @@ only the requirements, in Milestone 2.
 - The saved view gets an optional `terminal`, the ID of the shown
   terminal. A missing or unknown ID shows the first terminal.
 - The Terminal tool shows a row of terminal tabs above the screen, with
-  the + at its end. Each tab shows "Terminal" and its number. The phone
+  the + at its end. Each tab shows "Terminal" and its number. The tabs
+  look like the tabs of the centre column. Each tab keeps its whole title,
+  and a row that does not fit scrolls sideways. The phone
   shows the same row at the top of the Terminal page. At the limit, the
   hint that says to close a terminal shows as text, not only on hover, so
   a phone shows it too. The address
@@ -218,6 +220,23 @@ All design calls are of 10 November 2026, by the agent.
   this gap.
 - The last terminal has no close button. Reason: the Terminal tool then
   never needs an empty state, and `exit` still gives it a new shell.
+- Each terminal tab keeps its whole title, also on a phone, and a row
+  that does not fit scrolls. Reason: the mockups showed that tabs which
+  shrink, as the tabs of the centre column do, cut every title to "Ter…"
+  at the limit, and a phone shows only icons. The titles differ only in
+  their number.
+- A failed open or close shows the failure toast of the app, with the
+  message of the server. The user tries again with the + or the close
+  button. Reason: the app shows each failed change of a list this way,
+  such as a failed rename. A Try again button in the toast was dropped,
+  because the + and the close button stay in place.
+- A workspace with older cloud computer software shows no row of tabs.
+  Reason: a row with one tab, no close button, and no + gives the user
+  nothing.
+- The close question names the terminal, says that its shell and running
+  commands end for everyone, and confirms with "Close terminal" in the
+  danger tone. Reason: the close ends running commands of other members
+  too.
 - `exit` keeps today's rule in each terminal: the next connection opens a
   new shell in the same tab. Reason: this keeps a requirement in force.
 - A stop of the cloud computer keeps the list. Each terminal opens a new
@@ -252,8 +271,8 @@ All design calls are of 10 November 2026, by the agent.
 
 ### Related follow-up items
 
-- `plans/follow-ups/terminal-disconnected-mockup.md`: Milestone 1 draws
-  the Disconnected state and deletes the item.
+- `plans/follow-ups/terminal-disconnected-mockup.md`: Milestone 1 drew
+  the Disconnected state and deleted the item.
 - `plans/follow-ups/comparison-notes-over-two-sentences.md`: Milestone 8
   rewrites the note of `workspace-terminal` and removes that row from the
   item.
@@ -279,28 +298,37 @@ Depends on: none
 The terminal tabs, their states, and the close question, in the desktop
 panel and on a phone. Each mockup has a desktop and a phone variant.
 
-- [ ] Show the terminal tabs in the canonical Terminal screen of
+- [x] Show the terminal tabs in the canonical Terminal screen of
       `app/tools`: three terminals, the second shown, and the + at the end
       of the row.
-- [ ] Move the other states to a child page under `app/tools`, with at
+- [x] Move the other states to a child page under `app/tools`, with at
       most five screens on each page, as the `mockups` skill says:
-  - [ ] One terminal: the row with Terminal 1, the + button, and no close
+  - [x] One terminal: the row with Terminal 1, the + button, and no close
         button.
-  - [ ] The limit: ten terminals, the + button off, and its hint as
+  - [x] The limit: ten terminals, the + button off, and its hint as
         visible text, also on a phone.
-  - [ ] The close question: a dialog on desktop and a sheet on a phone.
-  - [ ] A failed open or close, with its message and Try again.
-  - [ ] The Disconnected bar of one terminal, with Reconnect. Delete
+  - [x] The close question: a dialog on desktop and a sheet on a phone.
+  - [x] A failed open or close, with its message and Try again.
+  - [x] The Disconnected bar of one terminal, with Reconnect. Delete
         `plans/follow-ups/terminal-disconnected-mockup.md`.
-- [ ] Keep the preview screens and the hidden Desktop screen reachable,
+- [x] Keep the preview screens and the hidden Desktop screen reachable,
       on the page of `app/tools` or on child pages.
-- [ ] Add "New terminal" after the Go to rows in the actions of the
+- [x] Add "New terminal" after the Go to rows in the actions of the
       command palette mockup (decision 250 B).
-- [ ] Update `docs/mockups/catalogue.md` for the new pages.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages, and save
+- [x] Update `docs/mockups/catalogue.md` for the new pages.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages, and save
       the screenshots under `.context/terminal-tabs/`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+- [x] Capture the marketing pictures again with `npm run marketing:pictures`.
+      The hero, Mac, and tools pictures show the Terminal tool, which now
+      has its row of tabs.
+
+Done on 10 November 2026. The pages are `app/tools`, its child pages
+`terminals`, `disconnected`, `older-software`, `preview`, `preview-empty`,
+and `desktop`, and `app/command-palette/actions/workspace`. Evidence:
+the screenshots in `.context/terminal-tabs/shots/` and the logs in
+`.context/terminal-tabs/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -420,7 +448,8 @@ Depends on: 1, 5
       show its hint as visible text. Hide the + when `several` is false.
 - [ ] Close a terminal after the confirmation. Hide the close button on
       the last terminal.
-- [ ] Show the error of a failed open or close, with Try again.
+- [ ] Show a failed open or close in the failure toast of the app, with
+      the message of the server.
 - [ ] Keep each terminal that the user showed mounted and connected while
       it is hidden.
 - [ ] Save the shown terminal in the saved view. Follow the address

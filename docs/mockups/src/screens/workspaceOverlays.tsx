@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Square } from 'lucide-react'
+import { Square, X } from 'lucide-react'
 import { nameLabel } from '../../../../src/shared/name-label'
 import { ActionButton } from '../components/common/actions'
 import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
+import { FailureToast } from '../components/common/FailureToast'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
@@ -16,6 +17,7 @@ import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { unpushedWork } from '../fixtures/archive'
 import { workspaceSessions } from '../fixtures/sessions'
+import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
@@ -47,6 +49,44 @@ function CloseSessionDialog(props: { viewport: Viewport }) {
         the session history, where you can reopen it.
       </DialogText>
     </ConfirmDialog>
+  )
+}
+
+/**
+ * The question before a terminal closes. The close ends its shell and its
+ * running commands for every member, as decision 248 says.
+ */
+function CloseTerminalDialog(props: { viewport: Viewport }) {
+  return (
+    <ConfirmDialog
+      actions={
+        <>
+          <ScreenLink asChild to={paths.terminal}>
+            <ActionButton>Cancel</ActionButton>
+          </ScreenLink>
+          <ActionButton icon={X} tone="danger">
+            Close terminal
+          </ActionButton>
+        </>
+      }
+      title={`Close ${closedTerminal}?`}
+      viewport={props.viewport}
+    >
+      <DialogText>
+        Its shell and any running commands end for everyone in this workspace.
+      </DialogText>
+    </ConfirmDialog>
+  )
+}
+
+/** The toast of a terminal that did not open or close, with its message. */
+function TerminalFailure(props: { title: string; viewport: Viewport }) {
+  return (
+    <FailureToast
+      message={cloudComputerSilent}
+      phone={props.viewport === 'mobile'}
+      title={props.title}
+    />
   )
 }
 
@@ -110,5 +150,21 @@ export function workspaceOverlay(
       return mobile && row.menuTab ? (
         <TabMenuSheet tab={row.menuTab} tabs={row.tabs} />
       ) : null
+    case 'close-terminal':
+      return <CloseTerminalDialog viewport={viewport} />
+    case 'terminal-open-failed':
+      return (
+        <TerminalFailure
+          title="The new terminal didn't open."
+          viewport={viewport}
+        />
+      )
+    case 'terminal-close-failed':
+      return (
+        <TerminalFailure
+          title={`${closedTerminal} didn't close.`}
+          viewport={viewport}
+        />
+      )
   }
 }

@@ -139,6 +139,8 @@ export const paths = {
   maskedPathsAllFiles: 'app/chat/masked-paths/all-files',
   maskedPathsUnnamed: 'app/chat/masked-paths/unnamed',
   terminal: 'app/tools',
+  terminals: 'app/tools/terminals',
+  closeTerminal: 'app/tools/terminals/close',
   preview: 'app/tools/preview',
   desktop: 'app/tools/desktop',
   macPrompt: 'mac-app/commands',

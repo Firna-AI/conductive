@@ -16,6 +16,7 @@ import {
   Server,
   Settings2,
   SlidersHorizontal,
+  SquarePlus,
   SquareTerminal,
   Users,
 } from 'lucide-react'
@@ -61,12 +62,20 @@ const rightColumnActions: readonly Command[] = [
     words: ['port'],
     to: paths.preview,
   },
+  {
+    label: 'New terminal',
+    lead: icon(SquarePlus),
+    words: ['shell', 'tab'],
+    to: paths.terminal,
+  },
 ]
 
 /**
  * The actions of the open workspace: a new session, the session history,
- * each tab of the right column, and Archive, which only the owner of the
- * workspace and the admins of the org see.
+ * each tab of the right column, a new terminal, and Archive, which only the
+ * owner of the workspace and the admins of the org see. New terminal shows
+ * where the Go to rows show, from decision 250, while the Terminal tool
+ * offers its + button.
  */
 export function workspaceActions(
   archivable: boolean,

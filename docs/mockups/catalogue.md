@@ -35,7 +35,7 @@ how a screen is built, and links to the other pages.
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
-| `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
+| `app/tools`         | The terminal tabs and their states, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
 | `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command, link a workspace, mention a file |
@@ -45,7 +45,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, and `app/file-mentions` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, `app/file-mentions`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -274,3 +274,20 @@ On a phone each chip of the composer keeps its icon and ends with a ×.
 The flow `user-flows/mention-a-file` goes from the query to the sent
 message, and ends with a press on the file chip, which opens
 `app/files/code`.
+
+`app/tools` draws three terminals as tabs of the Terminal tool, from
+decisions 248 to 250, with the test run of Terminal 2 shown. Its child
+pages:
+
+- `app/tools/terminals` has the one terminal that a workspace starts
+  with. Its `limit` variant has ten terminals, with the + off and the line
+  that says how to open another. Its `close` variant has the question
+  before Terminal 2 closes. Its `open-failed` and `close-failed` variants
+  have the toast of a failed open and of a failed close.
+- `app/tools/disconnected` has Terminal 2 after its connection ended, with
+  Reconnect.
+- `app/tools/older-software` has the one terminal of a cloud computer with
+  older software, without tabs.
+- `app/tools/preview`, `app/tools/preview-empty`, and `app/tools/desktop`
+  moved from the saved states of `app/tools` into their own folders, and
+  kept their paths.

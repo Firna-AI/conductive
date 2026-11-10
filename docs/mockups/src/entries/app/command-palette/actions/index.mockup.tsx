@@ -21,7 +21,9 @@ export const paletteActions = defineScreen({
       slug: 'workspace',
       title: 'In a workspace',
       description:
-        'Over an open workspace, its actions come first: New session, Session history, a Go to row for each tab of the right column, and Archive workspace. Only the owner of the workspace and the admins of the org see Archive. A phone opens the palette from the list, so its page shows the actions of the list.',
+        'Over an open workspace, its actions come first: New session, Session history, a Go to row for each tab of the right column, New terminal, and Archive workspace. New terminal shows while the Terminal tool offers its +, so not at the limit of 10 terminals. Only the owner of the workspace and the admins of the org see Archive. A phone opens the palette from the list, so its page shows the actions of the list.',
+      rationale:
+        'The user chose on 10 November 2026 that the palette offers New terminal after the Go to rows (decision 250), as it offers New session beside the + of the sessions.',
       props: { over: 'workspace' },
     },
   ],

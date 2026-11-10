@@ -7,6 +7,7 @@ import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { startErrorKeys } from '../fixtures/starting'
+import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
 
 /**
@@ -26,6 +27,7 @@ export const workspaceStateSchema = {
     'banner',
     'files',
     'tool',
+    'terminals',
     'ports',
     'focus',
     'tab',
@@ -76,6 +78,13 @@ export const workspaceStateSchema = {
     files: { enum: fileLists },
     /** The tool of the tools panel. */
     tool: { enum: toolKeys },
+    /**
+     * The terminals of the Terminal tool, from decisions 248 and 249: the
+     * one terminal that a workspace starts with, three terminals, the limit
+     * of ten, three terminals whose shown connection ended, or the one
+     * terminal of older cloud computer software, which shows no tabs.
+     */
+    terminals: { enum: terminalStates },
     ports: { enum: ['open', 'none'] },
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
@@ -159,7 +168,8 @@ export const workspaceStateSchema = {
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the
      * question of Archive, with work that is not pushed or with none, or
-     * the tab menu of the first session.
+     * the tab menu of the first session. Or the question before a terminal
+     * closes, or the toast of a terminal that did not open or close.
      */
     overlay: {
       enum: [
@@ -170,6 +180,9 @@ export const workspaceStateSchema = {
         'archive-unpushed',
         'archive-pushed',
         'tab-menu',
+        'close-terminal',
+        'terminal-open-failed',
+        'terminal-close-failed',
       ],
     },
     /** The person signed in: an admin of the org, or a member who is not. */
@@ -230,6 +243,7 @@ export const readyWorkspace: WorkspaceState = {
   banner: 'ready-to-merge',
   files: 'changes',
   tool: 'terminal',
+  terminals: 'one',
   ports: 'open',
   focus: 'chat',
   tab: 'session',

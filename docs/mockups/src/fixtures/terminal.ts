@@ -33,6 +33,9 @@ function success(text: string): TerminalLine {
 
 const workspaceLocation = `storefront (${checkoutAutocomplete.branch})`
 
+/** The prompt of a terminal of the open workspace that waits for a command. */
+export const workspacePrompt = `${workspaceLocation} $ `
+
 /** The dev server in the open workspace. */
 export const workspaceSession: readonly TerminalLine[] = [
   prompt(workspaceLocation, 'npm run dev'),
@@ -49,6 +52,22 @@ export const workspaceSession: readonly TerminalLine[] = [
   plain(' GET /checkout 200 in 2304ms'),
   plain(' GET /api/places?q=221b%20baker 200 in 184ms'),
   plain(' GET /api/places?q=221b%20baker%20st 200 in 162ms'),
+]
+
+/** A test run in a second terminal of the open workspace, which ended. */
+export const testSession: readonly TerminalLine[] = [
+  prompt(workspaceLocation, 'npm test -- checkout'),
+  plain(''),
+  muted('> storefront@2.4.0 test'),
+  muted('> vitest run checkout'),
+  plain(''),
+  success(' ✓ src/checkout/address.test.ts (6 tests) 412ms'),
+  success(' ✓ src/checkout/autocomplete.test.ts (9 tests) 688ms'),
+  plain(''),
+  plain(' Test Files  2 passed (2)'),
+  plain('      Tests  15 passed (15)'),
+  muted('   Duration  1.94s'),
+  plain(''),
 ]
 
 function error(text: string): TerminalLine {

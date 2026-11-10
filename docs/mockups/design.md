@@ -106,6 +106,14 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
   `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
   `TabRename.module.css` the rename field. The app shares these modules.
+- `TerminalTabs` in `src/components/tools/` draws the terminals of a
+  workspace as a row of tabs above the shown terminal, with + at its end,
+  from decisions 248 to 250, as `app/tools` shows. Its tabs are the tabs of
+  the centre column. The titles differ only in their number, so each tab
+  keeps its whole title, and a row that does not fit scrolls. The last
+  terminal has no close button. At the limit of 10 the + is off, and a line
+  under the row says how to open another. `TerminalTool` beside it adds the
+  shown terminal and the Disconnected bar.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without

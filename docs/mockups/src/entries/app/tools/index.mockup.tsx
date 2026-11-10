@@ -8,9 +8,9 @@ import {
 export const tools = defineScreen({
   title: 'Tools',
   description:
-    'The terminal of the sandbox, here running the dev server while the agent works. On mobile a row of keys adds the keys that a phone keyboard lacks.',
+    'Three terminals of the cloud computer, as tabs above the shown terminal. Terminal 2 shows a test run, while the dev server runs in Terminal 1. The + at the end of the row opens a new terminal, and the close button of a tab closes its terminal. Every member of the workspace sees the same terminals. On mobile the tabs sit at the top of the Terminal page, and a row of keys adds the keys that a phone keyboard lacks.',
   rationale:
-    'The tools sit in the lower panel of the right column, under the files, so the user sees the dev server and the changes together. The terminal follows the light or dark scheme of the app.',
+    'The tools sit in the lower panel of the right column, under the files, so the user sees the dev server and the changes together. The user chose terminal tabs in the Terminal tool on 10 November 2026 (decision 248): each tab is its own shell, and the tabs look like the tabs of the centre column. The terminal follows the light or dark scheme of the app.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {
@@ -18,34 +18,10 @@ export const tools = defineScreen({
     conversation: 'running',
     banner: 'none',
     tool: 'terminal',
+    terminals: 'several',
     focus: 'tool',
   },
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),
-  variants: [
-    {
-      slug: 'preview',
-      title: 'Port preview',
-      description:
-        'Port 3000 of the sandbox in a frame. Open in new tab opens the same preview in its own tab, where the previewed app can keep its cookies.',
-      props: { tool: 'preview' },
-    },
-    {
-      slug: 'preview-empty',
-      title: 'No preview open',
-      description:
-        'Before any port is open, the preview tab asks for a port number.',
-      props: { tool: 'preview', ports: 'none' },
-    },
-    {
-      slug: 'desktop',
-      title: 'Hidden Desktop',
-      description:
-        'The live desktop of the sandbox, where the agent uses a browser. The app hides Desktop. No tab or palette action opens this view, so no tab shows as selected. This page keeps the design of the view for the return of Desktop.',
-      rationale:
-        'The user chose to hide Desktop from every user while its stream is not reliable. The app keeps its implementation for its return. The tools offer Terminal and Preview.',
-      props: { tool: 'desktop' },
-    },
-  ],
 })

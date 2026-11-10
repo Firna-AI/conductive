@@ -1,0 +1,10 @@
+{
+  "order": [
+    "terminals",
+    "disconnected",
+    "older-software",
+    "preview",
+    "preview-empty",
+    "desktop"
+  ]
+}
