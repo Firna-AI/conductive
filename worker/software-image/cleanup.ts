@@ -47,7 +47,13 @@ export async function cleanupSoftwareImage(
       revision: current.revision + 1,
     }
   }
-  if (image.sandboxId) await deleteSandboxIfPresent(provider, image.sandboxId)
+  if (image.sandboxId)
+    await deleteSandboxIfPresent(
+      env.DB,
+      provider,
+      { providerAccount: image.providerAccount, sandboxId: image.sandboxId },
+      dependencies.now(),
+    )
   if (image.state === 'failed' && image.snapshotRecorded)
     await deleteSnapshotIfPresent(provider, image.snapshotName)
   if (image.state === 'deleting') {

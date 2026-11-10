@@ -11,8 +11,11 @@ export async function allocateSoftwareImage(
   image: SoftwareImage,
 ): Promise<string> {
   const name = `software-image-${image.id}`
-  const sandbox = await createResource(provider, {
+  const sandbox = await createResource(db, provider, {
     kind: 'sandbox',
+    // No org owns this computer, so the computer ledger does not hold it.
+    ownership: null,
+    mayHaveAllocated: true,
     input: {
       name,
       idempotencyKey: name,
@@ -32,7 +35,7 @@ export async function snapshotSoftwareImage(
   image: SoftwareImage,
 ) {
   if (!image.sandboxId) throw new Error('Missing software image sandbox')
-  return createResource(provider, {
+  return createResource(db, provider, {
     kind: 'snapshot',
     recorded: image.snapshotRecorded === 1,
     input: { sandboxId: image.sandboxId, name: image.snapshotName },
