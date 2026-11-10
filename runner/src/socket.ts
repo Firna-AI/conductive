@@ -1,10 +1,16 @@
 import WebSocket from 'ws'
 
-import type { WorkspaceToRunner } from '../../src/shared/runner'
-import type { RunnerConnector } from '../../src/shared/runner-transport'
+import type { WorkspaceToRunnerV2 as WorkspaceToRunner } from '../../src/shared/runner'
+import type {
+  RunnerConnection,
+  RunnerConnectionRequest,
+} from '../../src/shared/runner-transport'
 import { parseWorkspaceMessage } from './commands'
 
-export const connectWebSocket: RunnerConnector = (request) =>
+export const connectWebSocket = (
+  request: RunnerConnectionRequest,
+  warn: (message: string) => void,
+): Promise<RunnerConnection<WorkspaceToRunner>> =>
   new Promise((resolve, reject) => {
     const url = new URL(request.url)
     if (url.protocol !== 'https:' && url.protocol !== 'wss:') {
@@ -26,7 +32,7 @@ export const connectWebSocket: RunnerConnector = (request) =>
     socket.on('message', (bytes) => {
       try {
         const input: unknown = JSON.parse(bytes.toString())
-        const message = parseWorkspaceMessage(input)
+        const message = parseWorkspaceMessage(input, warn)
         for (const listener of messages) listener(message)
       } catch {
         socket.close(1002, 'Invalid runner message')

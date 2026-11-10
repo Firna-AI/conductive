@@ -17,6 +17,10 @@ export const SIMPLE_WARNINGS = {
     'Approval email delivery failed. The email remains pending.',
   approval_email_retry_failed:
     'The retry of approval emails failed. It runs again at the next timer.',
+  software_image_repair_failed:
+    'Software image repair failed. It runs again at the next timer.',
+  software_image_cleanup_failed:
+    'Software image cleanup failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',
   attachment_upload_cleanup_retry: 'An attachment upload cleanup will retry.',
   activity_timestamp_failed: 'Workspace activity timestamp could not be saved.',
@@ -28,6 +32,7 @@ export const SIMPLE_WARNINGS = {
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
   | { kind: keyof typeof SIMPLE_WARNINGS }
+  | { kind: 'runner_protocol_version_mismatch'; workspaceId: WarningId }
   | {
       kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'
       error: ErrorSummary

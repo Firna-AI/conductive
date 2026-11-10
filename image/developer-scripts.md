@@ -89,9 +89,22 @@ node image/live-check.mjs
 - A repository of that org that the image holds.
 
 Build computer on the Cloud computer tab of the org starts that build, as
-[The org image](../docs/protocol/workspaces-and-sandboxes.md#the-org-image)
+[The org image](../docs/protocol/org-image.md#the-org-image)
 says. [The runner archive](README.md#the-runner-archive) gives the steps
 that supply the archive to the build.
+
+A full build records the runner protocol version of the test Worker, not
+the version of the archive. So package the archive from the same commit as
+the test Worker, as [The runner archive](../docs/deployment.md#the-runner-archive)
+says. A workspace refuses a runner below the version of its image. So a
+runner of version 1 from an older archive gets no turns.
+
+The check does not read the runner version of the image. With a runner of
+protocol version 2, the agents send the model requests of the chat steps
+through the [model gateway](../docs/protocol/model-gateway.md) of the test
+Worker. The gateway adds the login that the app stored for the account. A refresh
+keeps the runner and the version of its image. So an image from an older
+build can still hold a runner of version 1, which gets that login itself.
 
 ### Variables
 
@@ -108,7 +121,7 @@ These variables are required:
 | `LIVE_BOAT_ORG` | The ID of that organization: the `BOAT_ORG_ID` of the test Worker. |
 | `LIVE_AGENT` | `claude` or `codex`. |
 | `LIVE_MODEL` | A model of that agent. |
-| `LIVE_AGENT_LOGIN` | A login of that agent, only for the measurement forks. The app uses the login that it stored for the account. |
+| `LIVE_AGENT_LOGIN` | A login of that agent, only for the measurement forks. Their model requests go straight to the provider, not through the gateway. The app uses the login that it stored for the account. |
 
 These variables are optional:
 
@@ -147,7 +160,8 @@ Each wait for a state or an answer stops after 10 minutes.
    forks keep the private Node of the image in its place.
 8. It stops and resumes each fork `LIVE_RUNS` times. After each resume,
    the private Node runs the `measure.mjs` of the copy, which times the
-   first agent text.
+   first agent text. Its prompt goes straight to the provider with
+   `LIVE_AGENT_LOGIN`.
 9. `dist/runner/compare.mjs` compares the two placements.
 10. It deletes the forks and stops the sandbox of the workspace. The
     workspace stays in the org.
@@ -176,8 +190,9 @@ More facts:
   `local-fake-endpoints`. Such a run does not prove a real sandbox.
 - The check writes no Boat key, cookie, login, response body, or agent
   answer to its output or its files.
-- Each fork gets `LIVE_AGENT_LOGIN` in its resume env. So clean up each
-  sandbox that `cleanupNeeded` lists at once.
+- Each fork gets `LIVE_AGENT_LOGIN` in its resume env. So a fork holds a
+  real login, unlike a sandbox with a version pin of 2 or later. Clean up
+  each sandbox that `cleanupNeeded` lists at once.
 
 ## Development
 

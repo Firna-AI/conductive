@@ -5,7 +5,8 @@ import { join } from 'node:path'
 import { onTestFinished, vi } from 'vitest'
 
 import type { ChangedFile } from '../../src/shared/files'
-import type { RunnerConnection } from '../../src/shared/runner-transport'
+import type { WorkspaceToRunnerV2 as WorkspaceToRunner } from '../../src/shared/runner'
+import type { RunnerConnection as TransportRunnerConnection } from '../../src/shared/runner-transport'
 import {
   FakeDurableObjectEndpoint,
   type FakeDurableObjectOptions,
@@ -15,6 +16,8 @@ import { Repository, type RepositorySnapshot } from '../src/repository'
 import { Runner } from '../src/runner'
 import { DiskStorage, EventStore } from '../src/state'
 import { FakeProviders } from './providers'
+
+type RunnerConnection = TransportRunnerConnection<WorkspaceToRunner>
 
 export function emptySnapshot(): RepositorySnapshot {
   return {

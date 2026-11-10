@@ -18,6 +18,7 @@
     - commit `073f71b5` (#130), whose Mac pictures show the header Archive button that commit `c02744f0` (#124) removed, as `plans/follow-ups/mac-pictures-show-header-archive.md` says
     - the branch `calummoore/sandbox-ready-notice-removal`, which removed the chat label "Sends when the sandbox is ready" and left it in the four `starting` pictures until its review on 10 November 2026 found them
     - the branch `calummoore/sandbox-time-limit-removal`, which removed the start-limit note and left it in the four start pictures until its review on 10 November 2026 found them
+  - On the same day, a capture on the branch `calummoore/file-selector-list`, with `main` at `1a9e75a` merged, also found the stale Mac pictures. `mac-light.webp` and `mac-dark.webp` still draw an Archive button in the workspace header, which the current mockup no longer draws. That branch changed no header, so it kept the old files.
   - Two builds of the same tree give byte-identical capture pages and style sheets.
 - **Problem:** Nothing tells a branch that a picture of the public site no longer matches its screen.
 - **Impact if no action:** The public site can show controls that the app no longer has, until someone notices.

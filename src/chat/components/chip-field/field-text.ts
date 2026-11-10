@@ -1,8 +1,12 @@
 import { textParts } from '../../links/workspace-links'
 
-/** A part of the plain text of the field: text, or the exact link of a chip. */
+/**
+ * A part of the plain text of the field: text, or the exact source of a
+ * chip: the link of a workspace chip, or the mention of a file chip.
+ */
 export type FieldPart =
-  { kind: 'text'; text: string } | { kind: 'chip'; source: string }
+  | { kind: 'text'; text: string }
+  | { kind: 'chip'; source: string; mention?: boolean }
 
 /** The text from `at` to the end of its line. */
 function lineFrom(text: string, at: number): string {
@@ -28,6 +32,17 @@ function staysLink(before: string, source: string, after: string): boolean {
   return false
 }
 
+/**
+ * Whether the mention `source` stays one mention between `before` and
+ * `after`: it needs a space or a line break, or the end of the text, on
+ * each side.
+ */
+function staysMention(before: string, after: string): boolean {
+  return (
+    (before === '' || /\s$/.test(before)) && (after === '' || /^\s/.test(after))
+  )
+}
+
 /** The text after the part at `index`, up to the next chip. */
 function textAfter(parts: readonly FieldPart[], index: number): string {
   let text = ''
@@ -47,10 +62,10 @@ const spacings = [
 ] as const
 
 /**
- * The plain text of the parts, with the exact link of each chip. A space
- * goes beside a chip only where the text next to it would join its link,
- * such as a word typed right after the chip. So the sent message, a copy,
- * and a draft that comes back each keep the link of every chip.
+ * The plain text of the parts, with the exact source of each chip. A space
+ * goes beside a chip only where the text next to it would join its link or
+ * its mention, such as a word typed right after the chip. So the sent
+ * message, a copy, and a draft that comes back each keep every chip.
  */
 export function joinFieldParts(parts: readonly FieldPart[]): string {
   let text = ''
@@ -62,10 +77,12 @@ export function joinFieldParts(parts: readonly FieldPart[]): string {
       return
     }
     const after = textAfter(parts, index)
+    const stays = (lead: string, trail: string) =>
+      part.mention
+        ? staysMention(text + pending + lead, trail + after)
+        : staysLink(text + pending + lead, part.source, trail + after)
     const [before, behind] =
-      spacings.find(([lead, trail]) =>
-        staysLink(text + pending + lead, part.source, trail + after),
-      ) ?? spacings[0]
+      spacings.find(([lead, trail]) => stays(lead, trail)) ?? spacings[0]
     text += pending + before + part.source
     pending = after === '' ? '' : behind
   })

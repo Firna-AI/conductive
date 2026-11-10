@@ -37,6 +37,7 @@ export interface BuildJob {
   sandboxId: string | null
   snapshotName: string | null
   settingsRevision: number
+  runnerProtocolVersion: number
   startedByUserId: string | null
   phase: BuildPhase
   processId: number | null
@@ -48,19 +49,22 @@ export interface BuildJob {
   previousRepositoryLocationsJson: string | null
   softwareJson: string
   previousImageName: string | null
+  softwareImageName: string | null
   previousProviderAccount: string
 }
 
 const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.started_at AS startedAt,
   b.sandbox_id AS sandboxId, b.snapshot_name AS snapshotName,
   b.provider_account AS providerAccount,
-  b.settings_revision AS settingsRevision, b.started_by_user_id AS startedByUserId,
+  b.settings_revision AS settingsRevision, b.runner_protocol_version AS runnerProtocolVersion,
+  b.started_by_user_id AS startedByUserId,
   j.phase, j.process_id AS processId, j.stdout_offset AS stdoutOffset,
   j.stderr_offset AS stderrOffset, j.install_script AS installScript,
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,
   j.repository_locations_json AS repositoryLocationsJson,
   j.previous_repository_locations_json AS previousRepositoryLocationsJson,
-  j.previous_image_name AS previousImageName, j.provider_account AS previousProviderAccount,
+  j.previous_image_name AS previousImageName, j.software_image_name AS softwareImageName,
+  j.provider_account AS previousProviderAccount,
   b.provider_retry_json AS providerRetryJson`
 
 const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,

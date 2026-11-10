@@ -11,7 +11,7 @@
   - **`archiveTabs`:** the list of the session tabs that a read-only workspace shows, kept in the chat snapshot in the browser.
   - **Saved view:** the open tabs in one order, the active tab, the list, and the tool of one user in one workspace. In a read-only workspace, the chat changes its browser copy only.
 - **Background:**
-  - The tab row draws the tabs in the order of the saved view, through `rowTabs` in `src/chat/state/tab-order.ts`. A tab opens at the end of the row, as "The tab row" in `docs/protocol/chat-and-events.md` says.
+  - The tab row draws the tabs in the order of the saved view, through `rowTabs` in `src/chat/state/tab-order.ts`. A tab opens at the end of the row, as "The tab row" in `docs/protocol/agents-and-sessions.md` says.
   - In a read-only workspace, Close and Reopen of a session change `archiveTabs` in the browser. Close shows the next session of `archiveTabs`.
   - So two lists hold the order of the read-only tabs: the browser copy of the view, which the row draws, and `archiveTabs`, which Close uses. The direct fix keeps them in step at each local Close and Reopen.
   - `placeSession` gives an arriving open session a place in the view. In a suspended org, an update from the stream can then put back a place that the reader closed.

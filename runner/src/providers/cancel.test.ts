@@ -45,7 +45,13 @@ it('closes Codex startup and in-flight requests when their session signal is can
     const opening = createCodexFactory(start)({
       cwd: h.root,
       home: h.home,
-      login: turn().login,
+      sessionId: turn().sessionId,
+      endpoint:
+        fakeToolContext.machineOrigin +
+        '/v1/model/' +
+        turn().message.choice.agent,
+      credential: { type: 'gateway', ...turn().credential },
+      commitAuthor: null,
       choice: turn().message.choice,
       conversationId: null,
       instructions: '',

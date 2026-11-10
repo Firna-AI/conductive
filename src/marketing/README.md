@@ -2,7 +2,7 @@
 
 The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the public docs, the Terms page,
-and the Privacy page. It also has the Conductor Cloud comparison page and a
+and the Privacy page. It also has the Conductor comparison page and a
 page for an unknown address. Visitors need no sign-in. The pages run no
 script and set no cookie. Every sign-in link leads to the app, on the
 `app.` host. The main action, Sign up, and Sign in lead to the same
@@ -161,12 +161,12 @@ both apply.
 
 ## The comparison page
 
-The page at `/from-conductor` shows people who move from Conductor Cloud
-the status of each Conductor Cloud feature in Conductive.
-[Conductor Cloud comparison](../../docs/protocol/conductor-cloud-comparison.md)
+The page at `/from-conductor` shows people who move from Conductor the
+status in Conductive of each Conductor feature, local and cloud.
+[Conductor comparison](../../docs/protocol/conductor-comparison.md)
 states its requirements. The link above the home headline and the "From
-Conductor Cloud" link in the Product column of the footer lead to it. Its
-last call to action has the sentence and the two actions of the home page.
+Conductor" link in the Product column of the footer lead to it. Its last
+call to action has the sentence and the two actions of the home page.
 
 [The comparison page](comparison.md) gives the one source of its rows, the
 steps to change a row and keep it true, and its key code.
@@ -259,7 +259,9 @@ before the Worker serves them.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.
-- `terms.ts`, `privacy.ts`, `privacy-uses.ts`, `legal-text.ts`: legal pages
+- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`, and
+  `legal-text.ts`: legal pages, the "Working in an org" section of the
+  Terms, the "What Conductive uses, and why" section of the Privacy page,
   and the shared text model, titles, contact addresses, and sign-in
   agreement.
 - `request-values.ts`: built-page markers, local Astro preview values,
