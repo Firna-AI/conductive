@@ -117,10 +117,7 @@ export async function advanceSoftwareImageStep(
     return { wait: waiting, output }
   }
   if (image.phase === 'journal') {
-    await clearImageCommands(provider, image.sandboxId, {
-      kind: 'software-image',
-      id: image.id,
-    })
+    await clearImageCommands(provider, image.sandboxId)
     await saveSoftwareImage(db, image, { phase: 'snapshot' })
     return {}
   }

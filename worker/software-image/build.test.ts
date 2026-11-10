@@ -38,8 +38,7 @@ it('resumes commands with saved offsets, publishes once, and creates a secret-fr
     output: 'last\n',
   })
   expect(boat.statusRequests.at(-1)?.stdoutOffset).toBe(6)
-  expect(boat.commands.at(-1)).toContain('software-image')
-  expect(boat.commands.at(-1)).toContain('rm -rf')
+  expect(boat.commands.at(-1)).toBe("rm -rf -- '/tmp/conductive-lifecycle'")
   expect(boat.deletedIds).toEqual(['bx_1'])
   expect(boat.deadlineIds).toContain('bx_1')
   expect(await requestSoftwareImage(images, SOFTWARE, digest)).toMatchObject({

@@ -10,7 +10,7 @@ import {
 import { allocateImageBuild } from './image-allocation'
 import { advanceBuildCommand, cleanupBuild } from './build-execution'
 import { completeBuildPhase } from './build-phase-data'
-import { clearBuildCommands } from './command-intents'
+import { clearImageCommands } from './command-intents'
 import type { ImageRuntime } from './image-builds'
 import { SourceCommandPort } from './image-sources/source-commands'
 import { providerState } from './provider-state'
@@ -53,7 +53,7 @@ export async function advanceBuildStep(
     throw new JobTimeLimit('build')
   if (job.phase === 'snapshot') {
     if (job.kind === 'build' && job.snapshotName === null)
-      await clearBuildCommands(provider, job.sandboxId, job.buildId)
+      await clearImageCommands(provider, job.sandboxId)
     await requireActiveOrg(env.DB, orgId)
     const snapshot = await createResource(
       runtime.env.DB,
