@@ -1,9 +1,9 @@
 # Long docs still pass the length target
 
-- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, a new problem of the check of finding 10 of PR #45, branch `conductor/boat-native-remote-workspaces-milestone-15m`, round 1.
-- **Location:** `docs/protocol/isolation.md`, `docs/deployment.md`, `docs/protocol/operator-actions.md`, and `docs/mockups/catalogue.md`.
+- **Location:** `docs/protocol/isolation.md`.
 - **Reason:** These topics are outside the approved gateway documentation split. These pages also change in open branches, so one split after their merge avoids conflicts.
 
 - **Terms:**
@@ -15,7 +15,7 @@
   - On 9 November 2026, main split `docs/protocol/access-and-security.md`, `docs/protocol/chat-and-events.md`, `docs/protocol/desktop-app.md`, `docs/protocol/workspaces-and-sandboxes.md`, and `docs/architecture.md` into linked pages, in commit `00a50295`. In the split, each moved section kept its words. On the same day, the model gateway change split three of these docs in other ways. The merge of main into the model gateway branch on 10 November 2026 kept the pages of main, and moved the gateway requirements into them.
   - Main moved the agents and the sessions from `docs/protocol/chat-and-events.md` to `docs/protocol/agents-and-sessions.md`. It moved the org image from `docs/protocol/workspaces-and-sandboxes.md` to `docs/protocol/org-image.md`. Both landing pages keep a stub section for each moved section.
   - The waitlist added requirements to the access, workspace, and architecture pages, and to the operator actions page.
-  - The counts below are from 10 November 2026, after that merge.
+  - The counts below are from 10 November 2026, after that merge and before the feedback change.
   - These pages meet the target:
     - `docs/protocol/access-and-security.md`: 205 lines.
     - `docs/protocol/tokens-and-secrets.md`: 113 lines.
@@ -37,16 +37,16 @@
   - `docs/deployment.md` has 361 lines. It is a deployment guide, not a protocol doc. "The runner archive", with "The archive in each deploy", fills lines 219 to 289. "Models" and "The title model" fill lines 146 to 218.
   - `docs/protocol/operator-actions.md` has 295 lines. "Suspend an org", "What members of a suspended org keep", and "Lift a suspension" fill lines 187 to 287. The other sections hold the operator, the suspension of a user and the access that it ends, and the abuse reports.
   - On 10 November 2026, the workspace marks change moved the marks and the labels from `docs/mockups/design.md` to `docs/mockups/design-marks.md`. The design page now has 286 lines.
-  - The mockup catalogue, `docs/mockups/catalogue.md`, still passes 300 lines. The `mockups` skill gives its rules.
   - Other docs, READMEs, code comments, and follow-up items cite sections of these pages. A split must update each of these citations.
-- **Problem:** Four docs still pass the target: two protocol docs, the deployment guide, and the mockup catalogue. A reader must scan long pages to find one rule.
+  - On 10 November 2026, the feedback change split `docs/protocol/command-palette.md`, `docs/deployment.md`, and `docs/mockups/catalogue.md` into linked pages. At this merge, they have 217, 264, and 248 lines. Their old section links still work. These three pages need no further split for this item. The operator actions page now has 223 lines and needs no further split. The workspace marks split leaves the design page at 287 lines. Only the isolation page remains, at 277 lines.
+- **Problem:** The isolation page still passes the length target. A reader must scan a long page to find one rule.
 - **Impact if no action:** Each branch that touches one of these docs must split it first, and the docs grow harder to read and to keep in line.
 - **Root question:** How do the remaining long docs get to about 250 lines each, with each topic easy to find?
 - **Options:**
-  - **A.** Split each of the four docs into linked pages by topic, in one change. Move each section without a change to its words. Update every relative link inside `docs/`, the doc lists of `docs/architecture.md` and `README.md`, and each link and citation outside `docs/`. Effort: Medium.
+  - **A.** Split the remaining isolation page into linked pages by topic. Move each section without a change to its words. Update every relative link inside `docs/`, the doc lists of `docs/architecture.md` and `README.md`, and each link and citation outside `docs/`. Effort: Small.
   - **B.** Change nothing now. Split each doc in the next change that touches it, as the `documentation` skill requires. Cost: that change carries the link migration of the split. Effort: Small.
 - **Left out:** A split in each open branch, because the branches change the same docs and would conflict. A lint for doc length, because it adds a gate. An exemption for the deployment guide, because the always-on rules split any file that passes 300 lines. A split of the three pages at the target, because about 250 lines is a target, not a gate.
 - **Wider fix:** None. The `documentation` skill already holds the rule.
 - **Previous examples:** `docs/protocol/workspace-tools.md` holds the moved tools requirements, and `docs/protocol/workspaces-and-sandboxes.md` keeps their section anchors as stub sections. The split of main, its merge with the model gateway split, and main's two extractions, which the background describes, are later examples.
-- **Recommendation:** A. One change moves the links of all four docs at once, and no feature branch carries a split that it does not need.
+- **Recommendation:** A. One change moves the links of the remaining page at once, and no feature branch carries a split that it does not need.
 - **Action:** fix after merge, apply A, because their topic splits are outside the approved gateway documentation work.

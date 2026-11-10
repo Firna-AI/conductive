@@ -25,6 +25,7 @@ const REVIEW_RUNS = ['failed', 'skipped'] as const
 /** The runs whose workspace `checkout-autocomplete` can be. */
 const RUN_WORKSPACES = ['pull-request', 'schedule'] as const
 const UPLOADS = ['wait', 'fail'] as const satisfies readonly DevUploadMode[]
+const FEEDBACK = ['ready', 'fail', 'no-email'] as const
 
 const BANNERS = [
   'none',
@@ -111,6 +112,7 @@ export interface DevOptions {
   /** What each file upload does. */
   upload: DevUploadMode
   shareSaveFails: boolean
+  feedback: (typeof FEEDBACK)[number]
   /** The run list of Review pull requests in place of its newest runs. */
   reviewRuns: (typeof REVIEW_RUNS)[number] | null
   /** The run whose workspace `checkout-autocomplete` is, or null. */
@@ -161,6 +163,7 @@ export function readDevOptions(search: string): DevOptions {
     stopAfterMs: stopAfter(params.get('stop')),
     upload: pick(params, 'upload', UPLOADS) ?? 'ready',
     shareSaveFails: params.get('shareSave') === 'fail',
+    feedback: pick(params, 'feedback', FEEDBACK) ?? 'ready',
     reviewRuns: pick(params, 'runs', REVIEW_RUNS) ?? null,
     runWorkspace: pick(params, 'run', RUN_WORKSPACES) ?? null,
     waiting,

@@ -225,7 +225,7 @@ describe('the rows of the command palette', () => {
     {
       who: 'a member gets no Archive for the workspace of another person',
       server: () => new FakeApiServer({ role: 'member' }),
-      groups: ['Checkout address autocomplete', 'Acme', 'Orgs'],
+      groups: ['Checkout address autocomplete', 'Acme', 'Orgs', 'Help'],
       rows: [
         'New session',
         'Session history',
@@ -233,6 +233,7 @@ describe('the rows of the command palette', () => {
         'New workspace',
         'New section',
         ...otherOrgs,
+        'Send feedback',
       ],
     },
     {
@@ -242,8 +243,8 @@ describe('the rows of the command palette', () => {
         serveSuspendedAcme(server)
         return server
       },
-      groups: ['Checkout address autocomplete', 'Orgs'],
-      rows: ['Session history', ...goTo, ...otherOrgs],
+      groups: ['Checkout address autocomplete', 'Orgs', 'Help'],
+      rows: ['Session history', ...goTo, ...otherOrgs, 'Send feedback'],
     },
   ])('on the Actions tab, $who', async ({ server, groups, rows }) => {
     holdAnimationFrames()

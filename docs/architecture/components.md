@@ -192,3 +192,9 @@ the rules.
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. Use of the app is free until billing starts, as
   [Pricing](../protocol/pricing.md) says.
+- **Resend:** the email service sends every email of the app, from
+  `mail.conductive.build`. These are the org invitations, the approval
+  emails, and the feedback emails. The Worker sends each feedback email,
+  with its screenshots, to the team inbox. The email provider of the
+  operator hosts that inbox. The app keeps no copy of feedback, as
+  [Feedback](../protocol/feedback.md) says.

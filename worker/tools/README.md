@@ -49,6 +49,8 @@ It preserves the first message text.
 It cleans an optional name with `sessionTitleFrom` in the [shared title helper](../../src/shared/session-title.ts).
 It keeps the first line with text, makes white space single, and removes one final full stop while keeping an ellipsis.
 It cuts at 60 Unicode code points, at a whole word when possible.
+It keeps each underscore, and it does not use `modelTitleFrom`, the title model rule that changes underscores to spaces.
+The tool description and the CLI help ask the agent to avoid underscores unless the user asks for them, as [Create and list calls](../../docs/protocol/agent-tools.md#create-and-list-calls) says.
 A blank result counts as no name, and the app shows "Untitled".
 The create answer gives the stored name. The branch and stored city keep the city.
 The tools preserve string names, including blank names, and ignore names of other types.

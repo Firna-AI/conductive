@@ -1,6 +1,7 @@
 import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
+import { helpGroupLabel } from '../feedback/feedbackCopy'
 import {
   workspaceSections,
   type OpenWorkspace,
@@ -9,6 +10,7 @@ import {
 import {
   accountSettings,
   appActions,
+  helpActions,
   orgActions,
   orgSettings,
   orgSettingsLabel,
@@ -119,8 +121,12 @@ function openActions(context: PaletteContext): Command[] {
   })
 }
 
+/**
+ * The actions in their order: those of the open workspace, of the org, and
+ * of the orgs, then Send feedback, which comes last.
+ */
 function actionsOf(context: PaletteContext): Command[] {
-  return [...openActions(context), ...orgActions, ...appActions]
+  return [...openActions(context), ...orgActions, ...appActions, ...helpActions]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
@@ -237,6 +243,7 @@ function groupsOf(
         ...own,
         { label: orgs.acme.name, rows: commandRows(orgActions) },
         { label: 'Orgs', rows: commandRows(appActions) },
+        { label: helpGroupLabel, rows: commandRows(helpActions) },
       ]
     }
     case 'settings':
@@ -251,6 +258,7 @@ function groupsOf(
     case 'search-loading':
     case 'search-unavailable':
     case 'search-repositories-unavailable':
+    case 'search-feedback':
       return searchGroups(
         paletteQueries[view] ?? '',
         active,

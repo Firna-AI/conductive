@@ -215,30 +215,9 @@ Each path is relative to `src/app/`, the folder of this page.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
   the tab opened last, from `AppModel.lastOrg`, or else the first org that
   is not deleted.
-- `palette/`: the command palette without React. `palette-results.ts`
-  gives the groups and the empty state of each tab for a query, from
-  `palette-groups.ts` and the rows of `palette-rows.ts`. `palette-status.ts`
-  gives the status part, which stands in place of the workspace groups
-  while the list or the repository names load or after a read failed,
-  and the reads that its Try again does again. `matcher.ts`
-  ranks the matches. `rowTexts` includes the workspace number label, such
-  as `W-395`, in the search texts. `withNumberLabel` adds that label when
-  a query word matches it. `../shell/palette/PaletteList.tsx` draws it
-  between the list mark and the name. `commands.ts` holds the labels and the search words.
-  `page-actions.ts` gives the offers of the parts of the page and
-  `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
-  `palette-keys.ts` the palette key and what it does, and `controller.ts`
-  the open state and the offers of one tab, with `show`, the one way to
-  open the palette.
-- `../shell/palette/`: the layer of the palette. `PaletteProvider.tsx`
-  hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
-  frame, `palette-context.ts` gives `usePaletteOffer` and
-  `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
-  `use-palette-source.ts` gives the list and the repositories of the org
-  with their load states, and `PaletteStatus.tsx` draws the status part.
-- `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
-  which say whether they closed, and the modal layers with their owners.
-  The palette reads them before it opens.
+- [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
+  names the entry points of the command palette, the layers of each
+  frame, New workspace as a dialog, and feedback with its screenshots.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/routines/RoutinesScreen.tsx`: the Routines page, which the
   Routines link of the sidebar and of the phone list opens.
@@ -262,34 +241,6 @@ Each path is relative to `src/app/`, the folder of this page.
 - `../shell/workspace/RunLine.tsx`: the line under the header of a run
   workspace, which links to its routine, and to the pull request of a pull
   request run.
-- `../shell/layout/frames.tsx`: the frames: the desktop frame with the
-  rail, a desktop page alone, such as Create org, and the phone frame.
-  `../shell/layout/DesktopLayers.tsx`: `DesktopLayers`, the layers and the
-  main area that every desktop frame shares: sheets and dialogs, the New
-  workspace dialog, and the command palette.
-- `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
-  `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
-  every sheet and dialog uses. Escape closes only the newest layer. Its
-  optional `returnFocus` names a trigger that a render can replace, such as
-  the row of a phone menu sheet.
-  `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
-  screen after a layer closes with a move, which the main area of a
-  desktop frame takes through `useScreenFocus`.
-- `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the
-  New workspace dialog of a desktop frame, and `useNewWorkspace`, the one
-  way that each place opens New workspace as the dialog or the page.
-  `NewWorkspaceDialog.tsx`: the dialog.
-- `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
-  and the dialog share: the repository, the notices, the readiness, and
-  the send. `parts.tsx`: their repository menu. `waiting.tsx`: the notice
-  of a repository that waits for its build.
-  The model of each form is the `owner` of its chip field. The shared chip
-  field supplies their focus handle. `CaretAtEndPlugin`
-  restores the saved caret position when keyboard focus enters. Without a
-  saved position, it puts the caret at the end. It lives in
-  `../chat/components/chip-field/focus-plugins.tsx`.
-- `../chat/components/send-key.ts`: `useSendKey`, the send key of every
-  composer.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value,
   as one value or field by field (`eachField`).
   `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
