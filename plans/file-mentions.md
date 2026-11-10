@@ -493,14 +493,16 @@ Depends on: 3, 4
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Renumber decisions 213 to 217 if `origin/main` uses their numbers.
+- [x] Renumber decisions 213 to 217 if `origin/main` uses their numbers.
+      On 10 November 2026, `origin/main` used decisions up to 212 only, so
+      the numbers stay.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
