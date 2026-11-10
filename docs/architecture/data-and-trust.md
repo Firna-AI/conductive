@@ -6,6 +6,11 @@ boundaries between the components of the
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
+## Hostnames
+
+[Hostnames](../architecture.md#hostnames) gives the role of each hostname
+and the separate preview domain.
+
 ## Where data lives
 
 | Data                                                                         | Home                                     |

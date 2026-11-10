@@ -4,7 +4,7 @@ import { FilePage } from '../components/files/FilePage'
 import { FilesPanel, type FileTabView } from '../components/files/FilesPanel'
 import type { BackLink } from '../components/layout/Page'
 import { DesktopView } from '../components/tools/DesktopView'
-import { PortPreview, PreviewEmpty } from '../components/tools/PortPreview'
+import { PreviewTool } from '../components/tools/PortPreview'
 import { TerminalTool } from '../components/tools/TerminalTool'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import { replacesLists } from '../components/workspace/sandboxNoticeState'
@@ -175,7 +175,7 @@ export function ToolContent(props: {
     case 'terminal':
       return <TerminalContent state={state} viewport={props.viewport} />
     case 'preview':
-      return state.ports === 'open' ? <PortPreview /> : <PreviewEmpty />
+      return <PreviewTool state={state.ports} />
     case 'desktop':
       return <DesktopView />
   }

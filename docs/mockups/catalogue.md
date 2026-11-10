@@ -35,7 +35,7 @@ how a screen is built, and links to the other pages.
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
-| `app/tools`         | The terminal tabs and their states, a port preview, no preview, and the hidden Desktop, kept for its return |
+| `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
 | `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command, link a workspace, mention a file |
@@ -227,67 +227,14 @@ workspace asks for a fresh full report, and nothing shows. Only when that
 report is lost too does a notice name the data that stays unavailable,
 beside that data: under the file lists for a file list, and under the
 header for other data, such as the workspace name. The `failed-repair`
-value of the `lostUpdate` state draws it, and no other screen shows a
-notice for a lost update. `app/chat/unavailable-files` draws the files that
-the cloud computer could not read: a finished turn and a stopped turn
+value of the `lostUpdate` state draws it. The only other notice for a lost
+update is the one of the list of servers, under the port form of the
+Preview tool, as `app/tools/preview-repair` shows.
+`app/chat/unavailable-files` draws the files that the cloud computer
+could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
 
-`app/workspace-links` draws the workspace numbers and the chips of
-decisions 211 and 212. Its canonical screen has a message and an answer
-with chips in Checkout address autocomplete, `W-395`. Its child pages:
-
-- `app/workspace-links/copy-link` has the header of Saved carts, `W-402`,
-  just after a press on the label, with the note "Link copied". Its
-  `failed` variant has a copy that failed, with the note "The link didn't
-  copy. Try again." in the danger colour.
-- `app/workspace-links/messages` has a pasted link as a chip in the
-  message box. Its `sent` variant has the sent message while the agent
-  works, and its `other-org` variant has a link of another org as plain
-  text.
-
-The message box of New workspace shows a pasted link as a chip in
-`app/new-workspace/workspace-link`, a child page of `app/new-workspace`,
-and in the `workspace-link` child page of `app/new-workspace/dialog`.
-The flow `user-flows/link-a-workspace` goes from the copy to the answer,
-and ends with a press on the chip, which opens
-`app/new-workspace/first-turn`.
-
-`app/file-mentions` draws the list of `@` and the file chips of decisions
-213 to 217. Its canonical screen has the query `@addr` in Checkout address
-autocomplete, with the best matches above the message box. Its child
-pages:
-
-- `app/file-mentions/list` has the list without a query, folders first.
-  Its `no-match` variant says "Nothing matches “zipcode”", its `loading`
-  variant says "Loading files…", and its `unavailable` variant says that
-  the list of all files is unavailable.
-- `app/file-mentions/chips` has a file chip and a folder chip in the
-  message box. Its `pointer` variant has the pointer over the icon of the
-  file chip, where a × takes the place of the icon. Its `sent` variant has
-  the sent message with both chips. Its `workspace-chip` and
-  `attached-file` variants show the same × on a pasted workspace link and
-  on an attached file.
-
-On a phone each chip of the composer keeps its icon and ends with a ×.
-The flow `user-flows/mention-a-file` goes from the query to the sent
-message, and ends with a press on the file chip, which opens
-`app/files/code`.
-
-`app/tools` draws three terminals as tabs of the Terminal tool, from
-decisions 248 to 250, with the test run of Terminal 2 shown. Its child
-pages:
-
-- `app/tools/terminals` has the one terminal that a workspace starts
-  with. Its `limit` variant has ten terminals, with the + off and the line
-  that says how to open another. Its `close` variant has the question
-  before Terminal 2 closes. Its `open-failed` and `close-failed` variants
-  have the toast of a failed open and of a failed close.
-- `app/tools/disconnected` has Terminal 2 after its connection ended, with
-  Reconnect.
-- `app/tools/older-software` has the one terminal of a cloud computer with
-  older software, without tabs.
-- `app/tools/preview`, `app/tools/preview-empty`, and `app/tools/desktop`
-  moved from the saved states of `app/tools` into their own folders, and
-  kept their paths.
+[Workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+gives those catalogue pages and their related flows.

@@ -2,6 +2,7 @@ import type { SchemaProps } from '@mokly/mokly'
 import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
+import { previewStates } from '../components/tools/PortPreview'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
@@ -85,7 +86,15 @@ export const workspaceStateSchema = {
      * terminal of older cloud computer software, which shows no tabs.
      */
     terminals: { enum: terminalStates },
-    ports: { enum: ['open', 'none'] },
+    /**
+     * The Preview tool: a preview in its frame, or "+" beside the tabs of
+     * the open previews. With no preview open, the port form lists the
+     * detected servers, says that the runner reports none, or reads as
+     * before when the app has no report, as for an older image. After a
+     * failed repair of the list (decision 96), it keeps its last list under
+     * a notice.
+     */
+    ports: { enum: previewStates },
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
     /**

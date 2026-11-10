@@ -55,8 +55,8 @@ hold the requirements of each feature.
 - **Refresh:** an update of the org image that fetches the new commits of
   each chosen repository. It does not run the install script.
 - **Agent runner:** our program in each sandbox. It runs the agents through
-  the agent SDKs, and it reports the files and the changes of its
-  workspace.
+  the agent SDKs, and it reports the files, the changes, and the listening
+  ports of its workspace.
 - **Session:** one agent conversation in a workspace. It shows as a tab.
 - **Turn:** the work of the agent on a message, from the message to the
   result of the agent.
