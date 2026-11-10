@@ -3,13 +3,16 @@ import type { SendMessageRequest } from '../../src/shared/messages'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
 import type { DurableLifecycleState } from './durable-types'
-import type { FailedCreationDraft } from './failed-creations'
 import type { MaskedStartLog } from './masked-start-log'
+import type { TurnTokenEndpoint } from '../model-gateway/types'
 import type {
   WorkspaceStartJob,
+  WorkspaceStartIntent,
   WorkspaceStartResult,
   WorkspaceCreationAdmission,
 } from './start-types'
+
+export const FIRST_MESSAGE_ADMISSION_KEY = 'lifecycle:first-message-admission'
 
 export interface PendingTurn {
   turnId: string
@@ -48,22 +51,21 @@ export interface WorkspaceLifecycleEndpoint {
   credentialSender(turnId: string): Promise<string | null>
   retryFailedCreateCleanup(workspaceId: string): Promise<void>
   finishDiskMaintenance(): Promise<void>
-  queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean>
+  queueLifecycleStart(
+    job: WorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean>
   waitLifecycleStart(): Promise<WorkspaceStartResult>
   waitCreationLifecycle(): Promise<WorkspaceStartResult>
   waitCreationAdmission(): Promise<WorkspaceCreationAdmission>
   readCreationLifecycleResult(): Promise<WorkspaceStartResult | undefined>
   readLifecycleStartLog(): Promise<MaskedStartLog>
-  retainLifecycleFailedCreation(
-    error: FailedCreationDraft['error'],
-    fallback?: Omit<FailedCreationDraft, 'error'>,
-  ): Promise<void>
 }
 
 export interface WorkspaceRuntime {
   env: AppEnv
   dependencies: AppDependencies
-  workspace(id: string): WorkspaceLifecycleEndpoint
+  workspace(id: string): WorkspaceLifecycleEndpoint & TurnTokenEndpoint
 }
 
 export interface FirstWorkspaceMessage {

@@ -1,11 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { sessionsPath } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { liveSessions } from './retry.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
-
 describe('session starter logins', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -17,7 +15,6 @@ describe('session starter logins', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('keeps the creator login when another member sends first and has no own login', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -37,6 +34,7 @@ describe('session starter logins', () => {
     const initial = messageCommands(runner, 'first')[0]
     if (initial?.type !== 'turn') throw new Error('The turn is missing.')
     expect(initial.message.sender.id).toBe(fixture.member.id)
+    if (!initial.login) throw new Error('The version 1 turn has no login.')
     expect(initial.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     await fixture.send(session.id, 'steer', fixture.memberCookie)
     const steer = messageCommands(runner, 'steer')[0]
@@ -65,10 +63,9 @@ describe('session starter logins', () => {
     })
     expect(memberTab.messages).toEqual(ownerTab.messages)
     expect(JSON.stringify(ownerTab.messages)).not.toContain('secret-')
-    ownerTab.close()
-    memberTab.close()
+    await ownerTab.close()
+    await memberTab.close()
   })
-
   it('publishes unavailable starter membership to another member without exposing a login', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -127,10 +124,9 @@ describe('session starter logins', () => {
     expect(linked.message.sessionId).toBe(linked.session.id)
     expect(JSON.stringify(memberTab.messages)).not.toContain('secret-')
     expect(JSON.stringify(newTab.messages)).not.toContain('secret-')
-    memberTab.close()
-    newTab.close()
+    await memberTab.close()
+    await newTab.close()
   })
-
   it('checks the queued sender membership separately from the available starter login', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()

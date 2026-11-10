@@ -1,7 +1,8 @@
 import type { AppEnv } from '../env'
 import { releasedStartLog, type EncryptedStartLog } from './start-logs'
-import type { WorkspaceStartResult } from './start-types'
+import type { WorkspaceStartIntent, WorkspaceStartResult } from './start-types'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
+import type { TurnTokenEndpoint } from '../model-gateway/types'
 import {
   serializeStartJob,
   type StoredWorkspaceStartJob,
@@ -9,16 +10,22 @@ import {
 
 type TransportStartResult = WorkspaceStartResult<EncryptedStartLog>
 
-/** RPC copies ciphertext and plain metadata. Masked classes stay local. */
-export interface WorkspaceLifecycleTransport extends Omit<
-  WorkspaceLifecycleEndpoint,
-  | 'waitLifecycleStart'
-  | 'waitCreationLifecycle'
-  | 'readCreationLifecycleResult'
-  | 'readLifecycleStartLog'
-  | 'queueLifecycleStart'
-> {
-  queueLifecycleStart(job: StoredWorkspaceStartJob): Promise<boolean>
+/** RPC copies ciphertext and plain metadata. Masked classes stay local. Gateway credentials stay within Worker calls. */
+export interface WorkspaceLifecycleTransport
+  extends
+    Omit<
+      WorkspaceLifecycleEndpoint,
+      | 'waitLifecycleStart'
+      | 'waitCreationLifecycle'
+      | 'readCreationLifecycleResult'
+      | 'readLifecycleStartLog'
+      | 'queueLifecycleStart'
+    >,
+    TurnTokenEndpoint {
+  queueLifecycleStart(
+    job: StoredWorkspaceStartJob,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean>
   waitLifecycleStart(): Promise<TransportStartResult>
   waitCreationLifecycle(): Promise<TransportStartResult>
   readCreationLifecycleResult(): Promise<TransportStartResult | undefined>
@@ -55,7 +62,7 @@ async function releasedStartResult(
 export function workspaceLifecycleEndpoint(
   transport: WorkspaceLifecycleTransport,
   env: Pick<AppEnv, 'BOAT_KEY_ENCRYPTION_KEY'>,
-): WorkspaceLifecycleEndpoint {
+): WorkspaceLifecycleEndpoint & TurnTokenEndpoint {
   return {
     initializeLifecycle: (input) => transport.initializeLifecycle(input),
     readLifecycle: () => transport.readLifecycle(),
@@ -70,10 +77,11 @@ export function workspaceLifecycleEndpoint(
     clearLifecycle: () => transport.clearLifecycle(),
     lifecycleActivity: () => transport.lifecycleActivity(),
     credentialSender: (turnId) => transport.credentialSender(turnId),
+    checkTurnToken: (token) => transport.checkTurnToken(token),
     retryFailedCreateCleanup: (id) => transport.retryFailedCreateCleanup(id),
     finishDiskMaintenance: () => transport.finishDiskMaintenance(),
-    queueLifecycleStart: (job) =>
-      transport.queueLifecycleStart(serializeStartJob(job)),
+    queueLifecycleStart: (job, intent) =>
+      transport.queueLifecycleStart(serializeStartJob(job), intent),
     async waitLifecycleStart() {
       return releasedStartResult(env, await transport.waitLifecycleStart())
     },
@@ -94,7 +102,5 @@ export function workspaceLifecycleEndpoint(
         log.secretsCiphertext,
       )
     },
-    retainLifecycleFailedCreation: (error, fallback) =>
-      transport.retainLifecycleFailedCreation(error, fallback),
   }
 }

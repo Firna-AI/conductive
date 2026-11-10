@@ -19,6 +19,7 @@ import {
 } from './composition-data'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import { requireFeatureResult, type FeatureResult } from '../features/result'
+import { purgeWorkspaceAttachments } from '../chat/attachment-cleanup'
 
 async function apply(operation: Promise<FeatureResult<void>>): Promise<void> {
   requireFeatureResult(await operation)
@@ -44,7 +45,10 @@ export function productionMembersHooks(
       return workspaceForViewer(
         env,
         userId,
-        workspaceView(await readWorkspace(env.DB, orgId, workspaceId)),
+        workspaceView(
+          await readWorkspace(env.DB, orgId, workspaceId),
+          env.APP_ORIGIN,
+        ),
       )
     },
     async suspendOrg(orgId, workspaceIds, ownership) {
@@ -127,6 +131,7 @@ export function productionMembersHooks(
         receiver(workspaceId).deleteMemberWorkspaceState(fence(ownership)),
       )
       await ownership.renew()
+      await purgeWorkspaceAttachments(env, workspaceId, () => ownership.renew())
       await apply(
         receiver(`org-image:${orgId}`).deleteMemberWorkspaceState(
           fence(ownership),

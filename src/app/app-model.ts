@@ -1,5 +1,4 @@
-import { ACCOUNT_PATHS } from '../shared/account'
-import { MODELS_PATH, type AgentModel } from '../shared/agents'
+import type { AgentModel } from '../shared/agents'
 import { API_PATHS, orgPath, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
 import {
@@ -8,28 +7,19 @@ import {
   type OrgSummary,
   type RenameOrgRequest,
 } from '../shared/orgs'
-import { ApiError, type ApiClient } from './api/client'
-import { ignore, items, nested, record } from './api/parse'
-import {
-  readAccount,
-  readGetStarted,
-  readModel,
-  readOrg,
-  readUser,
-} from './api/read-core'
+import type { ApiClient } from './api/client'
+import { ignore, nested, record } from './api/parse'
+import { readGetStarted, readOrg } from './api/read-core'
+import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
+import { failedBoot, readShared, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
 import { OrgModel } from './org-model'
 import { isSuspended } from './permissions'
 import type { AppServices } from './services'
 import { setupSteps } from './setup-steps'
-import { asApiError, Store, type Readable } from './store'
-
-export type Boot =
-  | { state: 'loading' }
-  | { state: 'signed-out' }
-  | { state: 'failed'; error: ApiError }
-  | { state: 'ready'; user: User }
+import { Store, type Readable } from './store'
+import { WaitlistModel } from './waitlist-model'
 
 const readOrgResponse = (body: unknown) => nested(record(body), 'org', readOrg)
 
@@ -64,6 +54,8 @@ export class AppModel {
   readonly account: AccountModel
   /** The invitations that wait for the user, which Home shows first. */
   readonly invitations: InvitationsModel
+  /** The waitlist screen of a person without app access. */
+  readonly waitlist: WaitlistModel
   readonly services: AppServices
   private readonly orgModels = new Map<string, OrgModel>()
   /** The last reply of the API on the steps. No screen reads it as it is. */
@@ -71,6 +63,8 @@ export class AppModel {
   private started = false
   /** The person of the last ready boot, whose creates the org models keep. */
   private userId: string | null = null
+  /** The open of the app after app access arrived, while it runs. */
+  private admitting: Promise<void> | null = null
 
   constructor(services: AppServices) {
     this.services = services
@@ -81,13 +75,14 @@ export class AppModel {
       account: this.account.account,
     })
     this.invitations = new InvitationsModel(this)
+    this.waitlist = new WaitlistModel(this)
     // The model lives as long as its store, so it never unsubscribes.
     this.boot.subscribe(() => this.followPerson())
   }
 
   /**
-   * A sign-out, or a sign-in of another person, forgets the admitted
-   * creates of every org, with the messages that they keep.
+   * A sign-out, or a sign-in of another person, ends the create requests
+   * of every org that still run, so that their answers change nothing.
    */
   private followPerson(): void {
     const boot = this.boot.get()
@@ -109,34 +104,62 @@ export class AppModel {
     void this.start()
   }
 
+  /**
+   * The first load: the session, then what every screen shares. A session
+   * without app access reads only the waitlist state, and the app shows
+   * the waitlist screen. A newer start makes an older one change nothing.
+   */
   async start(): Promise<void> {
-    const { api } = this.services
-    this.boot.set({ state: 'loading' })
+    const boot: Boot = { state: 'loading' }
+    this.boot.set(boot)
     try {
-      const user = await api.get(API_PATHS.session, (body) =>
-        nested(record(body), 'user', readUser),
+      const session = await this.services.api.get(
+        API_PATHS.session,
+        readSession,
       )
-      const [account, orgs, models, getStarted] = await Promise.all([
-        api.get(ACCOUNT_PATHS.account, readAccount),
-        api.get(API_PATHS.orgs, (body) => items(record(body), 'orgs', readOrg)),
-        api.get(MODELS_PATH, (body) =>
-          items(record(body), 'models', readModel),
-        ),
-        api.get(GET_STARTED_PATH, readGetStarted),
-      ])
-      this.account.account.set(account)
-      this.orgs.set(orgs)
-      this.models.set(models)
-      this.setupReply.set(getStarted)
-      this.boot.set({ state: 'ready', user })
+      // The app access can arrive between the two reads.
+      const waits = !session.appAccess && (await this.waitlist.load())
+      if (this.boot.get() !== boot) return
+      if (waits) {
+        this.boot.set({ state: 'waiting', user: session.user })
+        return
+      }
+      await this.openApp(boot, session.user)
     } catch (error) {
-      const failure = asApiError(error)
-      this.boot.set(
-        failure.status === 401
-          ? { state: 'signed-out' }
-          : { state: 'failed', error: failure },
-      )
+      this.fail(boot, error)
     }
+  }
+
+  /**
+   * App access arrived for the person on the waitlist. The app reads what
+   * every screen shares and opens as usual. A sign-out meanwhile changes
+   * nothing. A failed read shows that the app did not load, with Try again.
+   */
+  admit(): Promise<void> {
+    const boot = this.boot.get()
+    if (boot.state !== 'waiting') return Promise.resolve()
+    this.admitting ??= this.openApp(boot, boot.user)
+      .catch((error: unknown) => this.fail(boot, error))
+      .finally(() => {
+        this.admitting = null
+      })
+    return this.admitting
+  }
+
+  /** Reads what every screen shares, and opens the app while `from` is the boot. */
+  private async openApp(from: Boot, user: User): Promise<void> {
+    const shared = await readShared(this.services.api)
+    if (this.boot.get() !== from) return
+    this.account.account.set(shared.account)
+    this.orgs.set(shared.orgs)
+    this.models.set(shared.models)
+    this.setupReply.set(shared.getStarted)
+    this.boot.set({ state: 'ready', user })
+  }
+
+  /** A load failed, while `from` is still the boot. */
+  private fail(from: Boot, error: unknown): void {
+    if (this.boot.get() === from) this.boot.set(failedBoot(error))
   }
 
   org(orgId: string): OrgModel {

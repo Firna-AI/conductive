@@ -3,6 +3,7 @@ import type { LifecycleOwnership } from './lifecycle-contract'
 export interface WorkspaceDisk {
   workspaceId: string
   sandboxId: string
+  providerAccount: string
   stoppedAt: number
   nextKeepaliveAt: number | null
 }

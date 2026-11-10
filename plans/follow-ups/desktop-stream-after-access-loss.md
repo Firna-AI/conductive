@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-07, option C of `shared-session-check-for-connections`, which Milestone 11b applies with option B and deletes. The user sees it as item 117.
-- **Location:** `worker/desktop/README.md:14`, and the sections "Orgs and workspaces" and "Desktop" of `docs/protocol/access-and-security.md`.
+- **Location:** `worker/desktop/README.md:14`, the section "Orgs and workspaces" of `docs/protocol/isolation.md`, and the section "Desktop" of `docs/protocol/terminal-previews-and-desktop.md`.
 - **Reason:** The user deferred the replacement desktop transport on 8 November 2026. It needs a gateway, a viewer, startup wiring, and new dependencies.
 
 - **Terms:**
@@ -19,6 +19,7 @@
 - **Left out:** A shorter desktop URL, because an open stream keeps playing after its URL expires.
 - **Wider fix:** C.
 - **Previous examples:** finding 1 of PR #6, and finding 4 of PR #9.
+- **Related:** `plans/follow-ups/desktop-stream-on-own-domain.md`: the same replacement transport. Its option B serves the viewer and all desktop data through the Worker on the app's own domain. The gateway build can close both items. The user deferred that build on 8 November 2026.
 - **Recommendation:** C when the user starts the work. A Worker-managed media path lets the shared access check end the stream.
 - **Action:** ask the user later, because the user deferred it on 8 November 2026 (decision 146).
 

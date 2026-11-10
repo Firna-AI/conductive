@@ -6,17 +6,17 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
-import { failedCreate } from '../../app/creations'
 import { mayArchive } from '../../app/permissions'
 import { routes } from '../../app/router'
-import { useStore } from '../../app/store'
+import { useStore, valueOf } from '../../app/store'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
 } from '../../app/workspace-store'
+import { failedFirstStart } from '../../app/first-start'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp, useOrgAccess } from '../context'
+import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
@@ -38,8 +38,8 @@ import type { WorkspaceView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
 
 /**
- * A workspace that the app cannot show: a 404, or a create whose sandbox did
- * not start, which the server removes. The way out is the list of the org.
+ * A workspace that the app cannot show, such as after a 404. The way out is
+ * the list of the org.
  */
 function Unavailable(props: { orgId: string; body: string }) {
   const go = useGo()
@@ -66,8 +66,8 @@ function connectView(view: WorkspaceView): () => void {
 }
 
 /**
- * An open workspace. Desktop shows the chat column beside the right column;
- * a phone shows one view at a time, with five tabs to switch. The shell draws
+ * An open workspace. On desktop the chat column sits beside the right column.
+ * A phone shows one view at a time, with tabs to switch. The shell draws
  * the header, the start steps, and the states of the sandbox, and the chat
  * fills the centre. The app's own parts fill the files, the tools, the pull
  * request bar, and the owner picker, unless the host gives its own.
@@ -101,31 +101,46 @@ export function WorkspaceScreen(props: {
   )
   const { model, notices, chat, toolEvents } = shown
   const startError = useStore(model.startError)
+  const listed = valueOf(useStore(useOrgModel(props.org.id).workspaces))?.find(
+    (item) => item.id === props.workspaceId,
+  )
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
+  // The Archive question keeps one place in each state of the screen. So a
+  // question that the row of the workspace started during the first read,
+  // with the name of the list, shows once and stays when the read ends.
+  const named = detail.state === 'ready' ? detail.value.workspace : listed
+  const withQuestion = (content: ReactNode) => (
+    <>
+      {content}
+      {named ? (
+        <ArchiveDialog archive={model.archive} workspace={named} />
+      ) : null}
+    </>
+  )
   if (detail.state === 'loading') {
-    return (
+    return withQuestion(
       <div className={workspaceStyles.center}>
         <Spinner
           accessibilityLabel="Opening the workspace"
           color={theme.colors.muted}
           size={14}
         />
-      </div>
+      </div>,
     )
   }
   if (detail.state === 'failed') {
     if (detail.error.status === 404) {
-      return (
+      return withQuestion(
         <Unavailable
           body="It may have moved to another org."
           orgId={props.org.id}
-        />
+        />,
       )
     }
-    return (
+    return withQuestion(
       <EmptyState
         action={
           <ActionButton onPress={() => void model.open()} tone="primary">
@@ -135,29 +150,20 @@ export function WorkspaceScreen(props: {
         body={detail.error.message}
         icon={CircleAlert}
         title="The workspace didn't open"
-      />
-    )
-  }
-  // The server removes a create whose sandbox did not start: it has no
-  // Resume, and no files stay. The tab that sent it shows its form instead.
-  // Another tab shows the message that the start saved, when it has one.
-  if (failedCreate(detail.value)) {
-    const saved = detail.value.error?.message
-    return (
-      <Unavailable
-        body={saved ? saved : "Its sandbox didn't start."}
-        orgId={props.org.id}
-      />
+      />,
     )
   }
   const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   const { suspended } = access
+  // A failed first start keeps the workspace, its chat, and its queue for
+  // every member, with its saved cause and Try again.
   const sandboxParts = sandboxView({
     sandbox,
     suspended,
     startError,
     savedError: error?.message ?? null,
+    firstStart: failedFirstStart(workspace, start),
   })
   const context: WorkspaceContext = {
     org: props.org,
@@ -166,6 +172,7 @@ export function WorkspaceScreen(props: {
     sandbox,
     readOnly: suspended || sandbox === 'archived',
     panel: sandboxParts.panel,
+    resume,
     viewport,
     view: props.view,
     stream: model.stream,
@@ -198,8 +205,8 @@ export function WorkspaceScreen(props: {
     <ToolsPart context={context} placeholder={down} />
   )
   // The Files part keeps the lists of a stopped sandbox, from the copy that
-  // the workspace keeps, and shows a start or a refusal in their place. An
-  // archived workspace has no lists.
+  // the workspace keeps. It shows a start, a refusal, or a failed first
+  // start in their place. An archived workspace has no lists.
   const files = sandbox === 'archived' ? panel(null) : features.files?.(context)
   const chatArea = (
     <ChatArea
@@ -219,13 +226,8 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  // The Archive question, and the actions of the screen for the palette.
-  const dialog = (
-    <>
-      <ArchiveDialog archive={model.archive} workspace={workspace} />
-      <WorkspacePaletteActions chat={chat} context={context} />
-    </>
-  )
+  // The actions of the screen for the palette.
+  const dialog = <WorkspacePaletteActions chat={chat} context={context} />
   if (phone) {
     const view = phoneView(props.view)
     const archived = sandbox === 'archived'
@@ -252,11 +254,13 @@ export function WorkspaceScreen(props: {
     )
     // An archived workspace on a phone shows only its chat: no pull request
     // row and no Checks, so it reads no GitHub state.
-    if (archived) return screen
-    return <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
+    if (archived) return withQuestion(screen)
+    return withQuestion(
+      <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>,
+    )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
-  return (
+  return withQuestion(
     <WorkspaceGitHub context={context}>
       <WorkspaceMacBar context={context} />
       <div className={body.body}>
@@ -272,6 +276,6 @@ export function WorkspaceScreen(props: {
         />
         {dialog}
       </div>
-    </WorkspaceGitHub>
+    </WorkspaceGitHub>,
   )
 }

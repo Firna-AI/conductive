@@ -1,8 +1,8 @@
 import { defineScreen } from '@mokly/mokly'
 import {
   AccountScreen,
+  accountGeneral,
   accountSchema,
-  connectedAccount,
 } from '../../../../screens/AccountScreen'
 
 export const shareNotSaved = defineScreen({
@@ -13,7 +13,7 @@ export const shareNotSaved = defineScreen({
     'The switch saves at once, so a change that failed must not look saved. The cause stays beside the switch, not in a toast that goes away, because the setting decides who can use the login.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { ...connectedAccount, shareChange: 'not-saved' },
+  props: { ...accountGeneral, shareChange: 'not-saved' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

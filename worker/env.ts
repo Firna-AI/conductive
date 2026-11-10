@@ -1,8 +1,11 @@
 import type { InvitationMailer } from './invitation-mailer'
+import type { ProviderAccountConfigurations } from './sandbox/accounts'
+import type { ConnectionScheduler } from './security/connection-access'
 import type { Workspace } from './workspace'
 
 export interface AppEnv {
   DB: D1Database
+  CHAT_ATTACHMENTS?: R2Bucket
   APP_ORIGIN: string
   MARKETING_ORIGIN?: string
   MACHINE_ORIGIN?: string
@@ -10,6 +13,8 @@ export interface AppEnv {
   CONDUCTIVE_FRAME_SOURCES?: string
   ASSETS?: { fetch(request: Request): Promise<Response> }
   WORKSPACES?: DurableObjectNamespace<Workspace>
+  AI?: Ai
+  CONDUCTIVE_TITLE_MODEL?: string
   CONDUCTIVE_MODELS?: string
   CONDUCTIVE_DEFAULT_CHOICE?: string
   CONDUCTIVE_RUNNER_ARCHIVE_URL?: string
@@ -22,6 +27,7 @@ export interface AppEnv {
   SESSION_SIGNING_KEY: string
   BOAT_API_KEY: string
   BOAT_ORG_ID: string
+  SANDBOX_PROVIDER_ACCOUNTS?: ProviderAccountConfigurations
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
   OPERATOR_GITHUB_IDS?: string
@@ -34,4 +40,5 @@ export interface AppDependencies {
   now: () => number
   randomToken: () => string
   invitationMailer?: InvitationMailer
+  scheduleGatewayCheck?: ConnectionScheduler
 }

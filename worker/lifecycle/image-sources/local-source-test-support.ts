@@ -114,6 +114,7 @@ export async function localSourceFixture(
       orgId: org.id,
       buildId: 'build-one',
       sandboxId: 'builder-one',
+      providerAccount: 'boat',
       repositories: [repository],
       repositoryLocations: locations,
       previousRepositoryLocations: locations,
@@ -162,8 +163,8 @@ export async function localSourceFixture(
       ...input,
       commands: new SourceCommandPort(provider, input.sandboxId),
     }
-    const prepare = () =>
-      createGitHubImageSourceMaterializer(env, { fetch: access.fetch })(
+    const prepare = (now = () => TEST_TIME) =>
+      createGitHubImageSourceMaterializer(env, { fetch: access.fetch, now })(
         fullInput,
       )
     const step = async () => {

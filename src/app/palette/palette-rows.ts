@@ -1,3 +1,4 @@
+import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Workspace } from '../../shared/workspaces'
 import { routes, type SettingsTab } from '../router'
@@ -10,7 +11,9 @@ import {
   type OfferedActionId,
   type OwnActionId,
 } from './commands'
+import { matchRank } from './matcher'
 import type { OfferedAction } from './page-actions'
+import { nameLabel } from '../../shared/name-label'
 
 /** A workspace of the org. It opens the workspace. */
 export interface WorkspaceRow {
@@ -19,6 +22,11 @@ export interface WorkspaceRow {
   readonly workspace: Workspace
   /** The repository of the workspace, or empty while it is unknown. */
   readonly repository: string
+  /**
+   * The label of the number, such as `W-395`, which the row shows before
+   * the name while a word of the query is in that label.
+   */
+  readonly numberLabel?: string
   readonly href: string
 }
 
@@ -52,13 +60,36 @@ export interface PaletteGroup {
   readonly rows: readonly PaletteRow[]
 }
 
-/** The texts that a search looks at in a row. */
+/**
+ * The texts that a search looks at in a row. The label of the number of a
+ * workspace is one more text, with the same rules as its name.
+ */
 export function rowTexts(row: PaletteRow): readonly string[] {
   if (row.kind === 'workspace') {
     const { workspace } = row
-    return [workspace.name, workspace.branch, row.repository]
+    return [
+      nameLabel(workspace.name),
+      workspaceLabel(workspace.number),
+      workspace.branch,
+      row.repository,
+    ]
   }
   return [row.label, ...row.words]
+}
+
+/**
+ * The row as a search for the words shows it. A workspace row shows the
+ * label of its number when one of the words is in that label, by the rule
+ * of the search. Every other row stays as it is.
+ */
+export function withNumberLabel(
+  row: PaletteRow,
+  words: readonly string[],
+): PaletteRow {
+  if (row.kind !== 'workspace') return row
+  const label = workspaceLabel(row.workspace.number)
+  const matched = words.some((word) => matchRank([word], [label]) !== null)
+  return matched ? { ...row, numberLabel: label } : row
 }
 
 /** The names of the repositories of the org, by their ID. */
@@ -141,7 +172,7 @@ export function orgSettingRows(
   }))
 }
 
-/** The sections of the Account page. Each row opens the Account page. */
+/** The sections of the Account page. Each row opens the tab that holds it. */
 export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
   return accountSettingIds
     .filter((id) => mac || id !== 'this-mac')
@@ -152,6 +183,9 @@ export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
       label: accountSettings[id].label,
       words: accountSettings[id].words,
       detail: withDetail ? accountLabel : undefined,
-      href: routes.account(),
+      href:
+        id === 'new-workspaces'
+          ? routes.accountTab('preferences')
+          : routes.account(),
     }))
 }

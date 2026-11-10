@@ -1,0 +1,33 @@
+/*
+ * A wider card, such as the waitlist with its invitations and its code
+ * field. The element in the selector puts it above the width of the card
+ * in any order of the stylesheets. A phone keeps the full width, because
+ * its rule has two classes.
+ */
+section.wide {
+  max-width: 440px;
+}
+
+/* An invite code, in two groups of five, as a person types it. */
+.inviteCode {
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-md);
+  letter-spacing: 0.04em;
+}
+
+/*
+ * In the Mac app the header is the top bar of the window: as high as the
+ * top bars of the app, so the window buttons sit centred beside the
+ * lockup. The element in each selector puts it above the header rule of
+ * the sign-in, in any order of the stylesheets.
+ */
+header.macBar {
+  height: var(--ui-bar-height);
+  padding: 0 14px;
+}
+
+/* In a window the header keeps the space of the window buttons free. */
+header.windowButtons {
+  padding-left: 80px;
+}

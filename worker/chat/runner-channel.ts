@@ -1,15 +1,16 @@
-import { errorSummary, warnWorker } from '../warnings'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
-import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
+import { warnWorker } from '../warnings'
+import { errorSummary, WarningId } from '../warning-values'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import { HttpError } from '../http'
-import { RunnerFileReports } from '../files/runner-reports'
 import { AuthenticatedRunner } from './authenticated-runner'
 import { RunnerDelivery } from './runner-delivery'
 import { parseRunnerTransport } from './runner-input'
 import type { ChatStore } from './store'
+import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { storeRunnerReceipt } from './runner-receipt'
 import { RepairDelivery } from './repair-delivery'
+import { prepareRunnerHello } from './runner-handshake'
 import type {
   ChatDependencies,
   ChatCallbackPublisher,
@@ -31,11 +32,18 @@ export class RunnerChannel {
     store: ChatStore,
     dependencies: ChatDependencies,
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
+    forRunningTurn: WorkspaceTurnTokens['forRunningTurn'],
   ) {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
-    this.delivery = new RunnerDelivery(store, dependencies, publish)
+    this.delivery = new RunnerDelivery(
+      store,
+      dependencies,
+      publish,
+      () => this.flush(),
+      forRunningTurn,
+    )
     this.repairs = new RepairDelivery(store, publish)
   }
 
@@ -66,6 +74,7 @@ export class RunnerChannel {
         ),
         workspace,
         streamId: null,
+        protocolVersion: null,
         ready: false,
         delivered: new Set(),
       }
@@ -96,9 +105,11 @@ export class RunnerChannel {
       try {
         await this.handle(active, value)
       } catch (error) {
-        warnWorker(
-          `The runner of workspace ${active.workspace.id} closes after a failed message: ${errorSummary(error)}`,
-        )
+        warnWorker({
+          kind: 'runner_message_failed',
+          workspaceId: WarningId.checked(active.workspace.id),
+          error: errorSummary(error),
+        })
         active.peer.close()
         throw error
       }
@@ -108,35 +119,21 @@ export class RunnerChannel {
   private async handle(active: ActiveRunner, value: unknown): Promise<void> {
     const message = parseRunnerTransport(value)
     if (message.type === 'hello') {
-      if (active.streamId || message.workspaceId !== active.workspace.id) {
-        throw new HttpError(
-          400,
-          'runner_hello_mismatch',
-          'The connection is not available.',
-        )
-      }
-      const welcome = await this.store.change(
-        active.workspace.id,
-        async (transaction) => {
-          await new RunnerFileReports(transaction.files).beginStream(
-            message.streamId,
-          )
-          return {
-            cursor: await transaction.repairs.confirmedThrough(
-              message.streamId,
-              await transaction.cursor(message.streamId),
-            ),
-            ready: await transaction.streamReady(message.streamId),
-          }
-        },
+      const welcome = await prepareRunnerHello(
+        active,
+        message,
+        this.store,
+        this.dependencies,
         this.publish,
       )
+      if (!welcome) return
       active.streamId = message.streamId
+      active.protocolVersion = message.protocolVersion
       active.ready = welcome.ready
       if (active.ready) this.attachFiles(active)
       await active.peer.send({
         type: 'welcome',
-        protocolVersion: RUNNER_PROTOCOL_VERSION,
+        protocolVersion: message.protocolVersion,
         streamId: message.streamId,
         confirmedThrough: welcome.cursor,
       })
@@ -181,19 +178,20 @@ export class RunnerChannel {
         'runner_stream_mismatch',
         'The connection is not available.',
       )
-    let stored: WorkspaceEventEnvelope | undefined
+    let stored: WorkspaceEventEnvelope[] = []
     let becameReady = false
     const cursor = await this.store.change(
       active.workspace.id,
       async (transaction) => {
-        stored = undefined
+        stored = []
         becameReady = false
         const through = await transaction.cursor(message.streamId)
         if (message.eventNumber !== through + 1) return through
         const receipt = await storeRunnerReceipt(
           transaction,
+          active.workspace,
           message,
-          this.dependencies.randomId,
+          this.dependencies,
         )
         becameReady = receipt.ready
         stored = receipt.stored
@@ -216,13 +214,15 @@ export class RunnerChannel {
       streamId: message.streamId,
       throughEventNumber: cursor,
     })
+    await this.store.reportTurnEnds()
     const publish = this.publisher(active.workspace.id)
     if (becameReady) {
       active.ready = true
       this.attachFiles(active)
       await this.dependencies.runnerReady(active.workspace.id, publish)
     }
-    if (stored) await this.dependencies.runnerEventStored(stored, publish)
+    for (const envelope of stored)
+      await this.dependencies.runnerEventStored(envelope, publish)
     await this.flush()
   }
 

@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { heldOperation } from '../lifecycle/platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import { FIRST_MESSAGE } from '../lifecycle/durable-test-support'
 
 import {
@@ -35,6 +35,8 @@ afterEach(async () => {
 it('retries an org stop after native restart and keeps the stop after a voluntary owner departure', async () => {
   const { workspaceId, sandboxId } = await runningRuntimeWorkspace(fixture)
   await activeRuntimeOwner(fixture)
+  // Finish the restore watch, so that the alarm below is the stop retry.
+  await fixture.actor(workspaceId).tick()
   const previousAlarm = await fixture.actor(workspaceId).alarmAt()
   fixture.boat.stopReplyState = 'running'
   const result = await suspendOrg(

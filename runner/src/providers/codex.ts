@@ -1,30 +1,33 @@
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
 import { TOOL_ENV } from '../../../tools/context'
 import { object, string } from '../parse'
+import { attachmentDescription } from './attachment-description'
 import { codexBinary } from './binaries'
 import { codexNotification } from './codex-events'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
+import { providerMessage } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
 import type { ProviderFactory, ProviderInput } from './types'
 
 function input(command: ProviderInput) {
   return [
-    { type: 'text', text: command.message.text, text_elements: [] },
-    ...command.attachments.map((attachment) => {
+    { type: 'text', text: providerMessage(command.message), text_elements: [] },
+    ...command.attachments.flatMap((attachment) => {
       const metadata = command.message.attachments.find(
         (item) => item.id === attachment.attachmentId,
       )
+      const description = {
+        type: 'text',
+        text: attachmentDescription(command, attachment),
+        text_elements: [],
+      }
       return metadata?.kind === 'image'
-        ? { type: 'localImage', path: attachment.path }
-        : {
-            type: 'text',
-            text: `Attached file: ${attachment.path}`,
-            text_elements: [],
-          }
+        ? [description, { type: 'localImage', path: attachment.path }]
+        : [description]
     }),
   ]
 }
@@ -42,7 +45,7 @@ export function createCodexFactory(
     const configs = {
       model_provider: 'conductive',
       'model_providers.conductive.name': 'Conductive',
-      'model_providers.conductive.base_url': 'https://api.openai.com/v1',
+      'model_providers.conductive.base_url': options.endpoint,
       'model_providers.conductive.wire_api': 'responses',
       'model_providers.conductive.requires_openai_auth': true,
       cli_auth_credentials_store: 'ephemeral',
@@ -121,7 +124,10 @@ export function createCodexFactory(
       rpc.notify('initialized')
       await rpc.request('account/login/start', {
         type: 'apiKey',
-        apiKey: options.login.secret,
+        apiKey:
+          options.credential.type === 'gateway'
+            ? options.credential.token
+            : options.credential.login.secret,
       })
       const response = object(
         await rpc.request(
@@ -133,6 +139,7 @@ export function createCodexFactory(
             model: choice.model,
             modelProvider: 'conductive',
             cwd: options.cwd,
+            developerInstructions: options.instructions,
             approvalPolicy: 'never',
             sandbox: 'danger-full-access',
           },

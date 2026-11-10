@@ -1,9 +1,9 @@
-import {
-  RUNNER_PROTOCOL_VERSION,
-  type RunnerCommand,
-  type RunnerEvent,
-  type RunnerEventEnvelope,
-  type WorkspaceToRunner,
+import type {
+  RunnerCommand,
+  RunnerEvent,
+  RunnerEventEnvelope,
+  WorkspaceToRunner,
+  RunnerProtocolVersion,
 } from '../../src/shared/runner'
 import type {
   RunnerConnection,
@@ -16,6 +16,8 @@ export interface FakeRunnerOptions {
   workspaceId: string
   streamId?: string
   now?: () => number
+  /** Defaults to protocol version 1 for legacy runner fixtures. */
+  protocolVersion?: RunnerProtocolVersion
 }
 
 /**
@@ -51,7 +53,7 @@ export class FakeRunner {
     })
     connection.send({
       type: 'hello',
-      protocolVersion: RUNNER_PROTOCOL_VERSION,
+      protocolVersion: this.options.protocolVersion ?? 1,
       workspaceId: this.options.workspaceId,
       streamId: this.streamId,
     })

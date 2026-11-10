@@ -1,11 +1,14 @@
 import { Fragment } from 'react'
 import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react'
+import type { Membership } from '../../fixtures/members'
 import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { Menu } from '../common/Menu'
 import { ArchivedGroup } from './ArchivedGroup'
 import { sectionMenu } from './menus'
+import { mayArchiveWorkspace } from './permissions'
+import { rowControls, type RowContext, type RowFocus } from './rowControls'
 import type {
   ListDrag,
   ListMenu,
@@ -105,8 +108,11 @@ function DropTarget(props: {
  * A collapsed section shows only its header and its count. A workspace
  * moves to another section by drag and drop. The sidebar uses compact
  * rows; the list page uses taller rows for touch. `archived` adds the
- * Archived group at the end, open. `readOnly` drops the menus of the
- * sections, for a suspended org.
+ * Archived group at the end, open unless `archivedCollapsed`. `readOnly`
+ * drops the menus of the sections and of the rows, for a suspended org.
+ * `viewer` is the person who looks at the list, whose role decides Archive
+ * and the menu of each row. `focus` names the row whose menu, field, or
+ * hover the view draws.
  */
 export function SectionList(props: {
   sections: readonly SidebarSection[]
@@ -115,12 +121,23 @@ export function SectionList(props: {
   menuStyle?: MenuStyle
   drag?: ListDrag
   archived?: readonly WorkspaceRow[]
+  archivedCollapsed?: boolean
   readOnly?: boolean
+  viewer: Membership
+  focus?: RowFocus
 }) {
-  const { drag } = props
+  const { drag, viewer } = props
   const dragged = props.sections
     .flatMap((item) => item.rows)
     .find((row) => row.workspace.key === drag?.workspace)
+  const context: RowContext = {
+    viewer,
+    sections: props.sections.map((item) => item.section.key),
+    readOnly: props.readOnly ?? false,
+    sheet: props.menuStyle === 'sheet',
+  }
+  const controlsOf = (row: WorkspaceRow) =>
+    rowControls(row, props.focus, context)
   return (
     <div className={styles.sections}>
       {props.sections.map((item) => {
@@ -152,6 +169,11 @@ export function SectionList(props: {
                     ) : null}
                     <li>
                       <WorkspaceRowView
+                        archivable={
+                          !props.readOnly &&
+                          mayArchiveWorkspace(viewer, row.workspace.owner)
+                        }
+                        controls={controlsOf(row)}
                         drag={
                           row.workspace.key === drag?.workspace
                             ? 'placeholder'
@@ -172,7 +194,12 @@ export function SectionList(props: {
         )
       })}
       {props.archived ? (
-        <ArchivedGroup open rows={props.archived} variant={props.variant} />
+        <ArchivedGroup
+          controlsOf={controlsOf}
+          open={!props.archivedCollapsed}
+          rows={props.archived}
+          variant={props.variant}
+        />
       ) : null}
     </div>
   )

@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import {
   sessionPaths,
   sessionsPath,
@@ -12,7 +11,6 @@ import {
   startTurn,
   terminalEvent,
 } from './turn-lifecycle.test-support'
-
 describe('closing a session with waiting work', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -24,7 +22,6 @@ describe('closing a session with waiting work', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('stops waiting turns without ending the active turn and closes all waiting work in history', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -68,7 +65,12 @@ describe('closing a session with waiting work', () => {
     ).json()
     expect(closed.sessions).toEqual([])
     expect(closed.history).toEqual([
-      { ...session, activeTurnId: null, closedAt: 1_800_000_000_000 },
+      {
+        ...session,
+        title: 'Check this code',
+        activeTurnId: null,
+        closedAt: 1_800_000_000_000,
+      },
     ])
     const history = await fixture.history(session.id)
     const stopped = history.events
@@ -83,7 +85,7 @@ describe('closing a session with waiting work', () => {
       messageCommands(runner, 'unanswered').map((command) => command.type),
     ).toEqual(['message'])
     runner.disconnect()
-    fixture.restart()
+    await fixture.restart()
     await fixture.connect(runner)
     await fixture.fetch(
       sessionPaths.reopen(fixture.org.id, WORKSPACE_ID, session.id),

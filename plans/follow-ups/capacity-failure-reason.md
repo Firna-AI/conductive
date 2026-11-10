@@ -1,0 +1,39 @@
+# Users get no reason when capacity is full
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-09, decision 215 of `plans/sandbox-provider-groundwork.md`, branch `calummoore/vercel-sandbox-provider`.
+- **Location:** `worker/lifecycle/provider-retry.ts:47`, `worker/lifecycle/start-failure.ts:44`, `worker/lifecycle/start-records.ts:51`, `worker/lifecycle/image-build-failure.ts:81`, and "A failed first start" in `docs/protocol/create-a-workspace.md:205`.
+- **Reason:** Each option except A adds new behaviour at a boundary, which the user decides. The sandbox provider groundwork does not depend on the answer.
+
+- **Source:** Design. **Category:** Docs or spec.
+- **Terms:**
+  - **Capacity refusal:** a reply of the sandbox provider that refuses a start because a limit is reached or no machine is free.
+- **Background:**
+  - As recorded on 9 November 2026: Boat refuses a start with `rate_limited` when a start limit is reached, with the next free time. It refuses with `limit_reached` when every sandbox slot is in use, with only a wait. Boat does not count a refused start. Option F below also names Boat's 503 `out_of_capacity` reply.
+  - The Boat adapter maps HTTP 429 to the typed failure kind `rate_limited`, and HTTP 503 to `unavailable`.
+  - `worker/lifecycle/provider-retry.ts` retries the kinds `unavailable`, `invalid_response`, `conflict`, and `rate_limited`. Its backoff grows from 1 second to at most 60 seconds, inside a window of 10 minutes from the first failure. When the provider's wait is longer than the rest of the window, line 47 stops the retries, and the start fails at once.
+  - `worker/lifecycle/start-failure.ts:44` turns such a failure into the generic start failure. The workspace then shows "The cloud computer could not start. Try again.", from `worker/lifecycle/start-records.ts:51`.
+  - A refused build or refresh fails with "The cloud computer image could not build. Check the log and try again.", from `worker/lifecycle/image-build-failure.ts:81`.
+  - "A failed first start" in `docs/protocol/create-a-workspace.md` already says that every member sees the cause of the failure, and that the workspace stays in the error state with Try again.
+  - A start of a workspace's sandbox has a time limit of 20 minutes, as `docs/protocol/workspaces-and-sandboxes.md` says.
+  - The product is free, with no limits for each user.
+  - Each option except A adds requirements to the protocol docs. They go to the failure texts of "A failed first start" in `docs/protocol/create-a-workspace.md`, to the start steps and the resume in `docs/protocol/workspaces-and-sandboxes.md`, and to the build and refresh failures in `docs/protocol/org-image.md`. D also changes the rule of no limits for each user.
+- **Problem:** The workspace shows "The cloud computer could not start. Try again." Nothing says that all cloud computers are busy, or when to try again.
+- **Impact if no action:** At the launch, users see failures with no reason, and they cannot tell a busy app from a broken one.
+- **Root question:** What happens to a start, a build, or a refresh when no cloud computer is free?
+- **Options:** These are the options as recorded on 9 November 2026. A check of the options on that day added E and F.
+  - **A.** No change. Effort: Small.
+  - **B.** Say that all cloud computers are busy, and give the time when Try again can work. Effort: Small.
+  - **C.** Add a queue. The start waits in line, shows that it waits for a free cloud computer, and starts when one is free. The 20-minute start limit then includes the wait. Effort: Medium.
+  - **D.** Limit the running cloud computers of each user, so that one user cannot take every slot. It changes the rule that the product has no limits for each user. Effort: Medium.
+  - **E.** A start that the provider refuses for capacity keeps retrying until its 20-minute limit. A start step says that it waits for a free cloud computer. Risk: the waiting starts have no order. Effort: Medium.
+  - **F.** One typed capacity failure, with its wait when the provider gives one. Starts, resumes, builds, and refreshes show it in place of the generic text. The Boat adapter maps its 429 replies and its 503 `out_of_capacity` reply to it. Effort: Medium.
+- **Left out:** Overflow to a second provider, because the user chose on 9 November 2026 to choose that provider after the launch.
+- **Wider fix:** F. It shows the cause on every path that reaches the limit, and a later provider maps its own replies to the same failure.
+- **Previous examples:** A failed first start keeps the error state with Try again. An early choice set limits for each user, and a later choice removed them.
+- **Related:**
+  - `plans/follow-ups/launch-capacity-boat-limits.md`: how many starts and running sandboxes the Boat plan allows.
+  - `plans/follow-ups/choose-second-sandbox-provider.md`: a later provider maps its own capacity replies.
+- **Recommendation:** F. It covers every path that reaches the limit, and a later provider needs no change there. The first recommendation was B. C best protects users, but it needs a new waiting state.
+- **Action:** ask the user, because the wait time and the texts for a resume, a build, and a refresh are new behaviour at a boundary that no requirement covers.

@@ -1,6 +1,7 @@
 import {
   defaultAgentLoginNoReuse,
   type AgentLoginStatus,
+  type NewWorkspaceView,
   type SaveAgentLoginRequest,
 } from '../../src/shared/account'
 import type { Agent, AgentChoice } from '../../src/shared/agents'
@@ -36,10 +37,39 @@ export function accountDefault(
   return db
     .prepare(
       `SELECT default_agent AS agent, default_model AS model, default_effort AS effort
-       FROM user_preferences WHERE user_id = ?`,
+       FROM user_preferences WHERE user_id = ? AND default_agent IS NOT NULL`,
     )
     .bind(userId)
     .first<AgentChoice>()
+}
+
+export async function accountNewWorkspaceView(
+  db: D1Database,
+  userId: string,
+): Promise<NewWorkspaceView> {
+  const row = await db
+    .prepare(
+      'SELECT new_workspace_view AS view FROM user_preferences WHERE user_id = ?',
+    )
+    .bind(userId)
+    .first<{ view: NewWorkspaceView | null }>()
+  return row?.view ?? 'page'
+}
+
+export async function saveAccountNewWorkspaceView(
+  db: D1Database,
+  userId: string,
+  view: NewWorkspaceView,
+  now: number,
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO user_preferences (user_id, new_workspace_view, updated_at)
+       VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET
+       new_workspace_view = excluded.new_workspace_view, updated_at = excluded.updated_at`,
+    )
+    .bind(userId, view, now)
+    .run()
 }
 
 export async function saveAccountDefault(

@@ -1,1 +1,11 @@
-{ "order": ["setup", "connect", "codex-token", "share-not-saved"] }
+{
+  "order": [
+    "preferences",
+    "setup",
+    "connect-claude",
+    "connect-codex",
+    "codex-token",
+    "share-not-saved",
+    "invites"
+  ]
+}

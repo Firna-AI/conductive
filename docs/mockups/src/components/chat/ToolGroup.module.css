@@ -104,3 +104,115 @@
 .summary .leftOut {
   margin-left: 4px;
 }
+
+/*
+ * A message of the agent in an open fold of the work of a turn. Closed, it
+ * is one line, cut with an ellipsis. Open, the same line grows to the full
+ * text, with its paragraphs and bullets.
+ */
+.messageLine {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: max(24px, var(--ui-touch-min));
+  margin-left: -4px;
+  padding: 3px 6px 3px 4px;
+  border-radius: var(--ui-radius-sm);
+  box-sizing: border-box;
+  cursor: pointer;
+  list-style: none;
+}
+
+.messageLine::-webkit-details-marker {
+  display: none;
+}
+
+.messageLine:hover {
+  background: var(--ui-soft);
+}
+
+.messageText {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message[open] > .messageLine {
+  align-items: flex-start;
+}
+
+.message[open] .icon {
+  margin-top: 2.5px;
+}
+
+.message[open] .messageText {
+  overflow: visible;
+  white-space: normal;
+}
+
+.message[open] .paragraph,
+.message[open] .bullets {
+  display: block;
+}
+
+.message[open] .paragraph + .paragraph,
+.message[open] .bullets {
+  margin-top: 6px;
+}
+
+.message[open] .bullets {
+  padding-left: 20px;
+}
+
+/* The list and the summary set no markers, so a bullet sets its own. */
+.message[open] .bullet {
+  display: list-item;
+  list-style: disc;
+}
+
+.message[open] .bullet + .bullet {
+  margin-top: 2px;
+}
+
+/*
+ * A message with a table. A summary holds no table, so the closed line shows
+ * the table, and the rest of the message, as text. Open, the line keeps the
+ * paragraphs before the table, and this body shows the table and the rest
+ * under the line. The body starts at the text of the line, 6px under it.
+ */
+.message[open] .preview {
+  display: none;
+}
+
+.messageBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 3px;
+  padding-left: 20px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+.messageBody p,
+.messageBody ul {
+  margin: 0;
+}
+
+.messageBody ul {
+  padding-left: 20px;
+}
+
+.messageBody li + li {
+  margin-top: 2px;
+}
+
+/* A Mac command card among the steps of an open fold. */
+.card {
+  margin: 4px 0;
+}

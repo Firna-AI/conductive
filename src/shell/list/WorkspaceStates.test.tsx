@@ -17,7 +17,12 @@ describe('workspace states', () => {
     const row = textOf(
       renderScreen(
         app,
-        <OrgList orgId={FAKE_IDS.org} selectedId={null} variant="sidebar" />,
+        <OrgList
+          orgId={FAKE_IDS.org}
+          selectedId={null}
+          variant="sidebar"
+          viewer={fakeUser}
+        />,
       ),
     )
     expect(row).toContain('Checkout address autocomplete 6m , Needs input')
@@ -42,6 +47,13 @@ describe('workspace states', () => {
             sandbox: sandboxState(workspace),
             readOnly: false,
             panel: null,
+            // The header offers no Resume, so it never runs.
+            resume: {
+              run: () => undefined,
+              pending: false,
+              error: null,
+              reset: () => undefined,
+            },
             viewport: 'desktop',
             view: [],
             stream: open.stream,

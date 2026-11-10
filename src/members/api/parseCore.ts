@@ -122,11 +122,13 @@ export function parseWorkspace(value: unknown): Workspace {
   const source = object(value, 'workspace')
   return {
     id: text(source, 'id'),
+    number: count(source, 'number'),
+    link: text(source, 'link'),
     orgId: text(source, 'orgId'),
     repositoryId: text(source, 'repositoryId'),
     sectionId: text(source, 'sectionId'),
     owner: sender(nested(source, 'owner')),
-    name: text(source, 'name'),
+    name: textOrNull(source, 'name'),
     branch: text(source, 'branch'),
     choice: agentChoice(nested(source, 'choice')),
     state: oneOf(source, 'state', workspaceStates),

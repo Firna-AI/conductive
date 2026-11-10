@@ -4,6 +4,8 @@ import type {
   ImageBuild,
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgImage } from './org-image-data'
 import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { readBuildSnapshot } from './build-log-reader'
@@ -21,6 +23,7 @@ export type BuildPhase =
   | 'snapshot'
   | 'publish'
   | 'cleanup'
+  | 'cleanup-build'
   | 'done'
 
 export interface BuildJob {
@@ -28,11 +31,13 @@ export interface BuildJob {
   startedAt: number
   buildId: string
   orgId: string
+  providerAccount: string
   kind: ImageBuild['kind']
   state: ImageBuild['state']
   sandboxId: string | null
   snapshotName: string | null
   settingsRevision: number
+  runnerProtocolVersion: number
   startedByUserId: string | null
   phase: BuildPhase
   processId: number | null
@@ -44,17 +49,21 @@ export interface BuildJob {
   previousRepositoryLocationsJson: string | null
   softwareJson: string
   previousImageName: string | null
+  previousProviderAccount: string
 }
 
 const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.started_at AS startedAt,
   b.sandbox_id AS sandboxId, b.snapshot_name AS snapshotName,
-  b.settings_revision AS settingsRevision, b.started_by_user_id AS startedByUserId,
+  b.provider_account AS providerAccount,
+  b.settings_revision AS settingsRevision, b.runner_protocol_version AS runnerProtocolVersion,
+  b.started_by_user_id AS startedByUserId,
   j.phase, j.process_id AS processId, j.stdout_offset AS stdoutOffset,
   j.stderr_offset AS stderrOffset, j.install_script AS installScript,
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,
   j.repository_locations_json AS repositoryLocationsJson,
   j.previous_repository_locations_json AS previousRepositoryLocationsJson,
-  j.previous_image_name AS previousImageName, b.provider_retry_json AS providerRetryJson`
+  j.previous_image_name AS previousImageName, j.provider_account AS previousProviderAccount,
+  b.provider_retry_json AS providerRetryJson`
 
 const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,
   completed_at AS completedAt, CASE WHEN completed_at IS NULL THEN NULL
@@ -108,10 +117,13 @@ export async function assignBuildSandbox(
   db: D1Database,
   buildId: string,
   sandboxId: string,
+  providerAccount: string,
 ): Promise<void> {
   await db
-    .prepare('UPDATE image_builds SET sandbox_id = ? WHERE id = ?')
-    .bind(sandboxId, buildId)
+    .prepare(
+      'UPDATE image_builds SET sandbox_id = ?, provider_account = ? WHERE id = ?',
+    )
+    .bind(sandboxId, providerAccount, buildId)
     .run()
 }
 
@@ -119,10 +131,13 @@ export async function assignBuildSnapshot(
   db: D1Database,
   buildId: string,
   snapshotName: string,
+  providerAccount: string,
 ): Promise<void> {
   await db
-    .prepare('UPDATE image_builds SET snapshot_name = ? WHERE id = ?')
-    .bind(snapshotName, buildId)
+    .prepare(
+      'UPDATE image_builds SET snapshot_name = ?, provider_account = ? WHERE id = ?',
+    )
+    .bind(snapshotName, providerAccount, buildId)
     .run()
 }
 
@@ -172,6 +187,7 @@ export async function failBuild(
 export async function readBuildHistory(
   db: D1Database,
   orgId: string,
+  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<BuildsResponse> {
   const { results } = await db
     .prepare(
@@ -179,11 +195,8 @@ export async function readBuildHistory(
     )
     .bind(orgId)
     .all<ImageBuild>()
-  const settings = await db
-    .prepare('SELECT image_build_id AS id FROM settings WHERE org_id = ?')
-    .bind(orgId)
-    .first<{ id: string | null }>()
-  return { builds: results, currentImageBuildId: settings?.id ?? null }
+  const image = await readOrgImage(db, orgId, providerAccount)
+  return { builds: results, currentImageBuildId: image?.imageBuildId ?? null }
 }
 
 export async function readBuild(

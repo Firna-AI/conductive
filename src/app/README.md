@@ -18,10 +18,57 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, or `?suspended=1`. `dev/options.ts` lists
-  them. A new org
-  of the dev fake gets every repository of the account's list, and keeps
-  its custom initials through rename, delete, and restore.
+  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
+  `?waiting=1`, `?paused=1`, or
+  `?paths=masked`. `dev/options.ts` lists them. `dev/attachment-routes.ts`
+  keeps the uploaded files of both composers. With `?upload=wait` each
+  upload keeps running, and with `?upload=fail` the first upload of the
+  page fails once, so Try again works. `?sent=<percent>` makes the dev
+  fixture `dev/progress-fixture.ts` report that share of each file as
+  sent, so `?upload=wait&sent=64` shows the measured state. Create org of the dev fake
+  requires at least one repository and starts a simulated build. Its
+  repository catalogue keeps the saved choices, and its custom initials
+  stay through rename, delete, and restore. Settings changes during the
+  first good build start one added build. The fake compares settings
+  revisions with builds as the Worker does.
+- `?operator=1` makes the dev user an operator, so the rail and the org
+  switcher show Operator. The [operator section](../shell/operator/README.md)
+  then shows the sample orgs, users, people who wait, and codes of the
+  mockups. Suspend, Lift, Approve, New code, Disable, and the pause of
+  sign-ups change them. A suspension of Acme, Futex, or Firna also
+  suspends that org in the state of the fake, so the fake refuses each
+  write of that org with `org_suspended`. The open app does not read its orgs again, so its pages
+  of that org show the suspension only after such a refusal. Without the
+  option, each operator request gets `operator_required`, as the Worker
+  does.
+- `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
+  app access with a verified email, so the app shows only the
+  [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
+  account without a verified email. Sam starts as a new account, as
+  `?firstRun=github-app` does. With `?operator=1` nobody waits, because
+  an operator gets app access. With `?waiting`, `?invited=1` adds an
+  invitation of Acme, whose Accept makes Sam a member with app access. A
+  join link, such as `/join/V7MKC-2QDXH?waiting=1`, uses its code at once.
+  `?paused=1` pauses
+  sign-ups: each use of a code, and the Accept of a person who waits, get
+  `signups_paused`. The Account page shows the pause, and the operator
+  section shows its notice.
+  `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
+  invite code of a user with app access, also on the page of that user in
+  the operator section.
+- The waitlist and the operator section share one pause and one set of
+  codes, as they share the database of the Worker. The codes are those of
+  the operator mockups, with a referral code for each sample user with
+  app access. For example, `V7MKC-2QDXH` works, `M4QTX-7HKWD` is the
+  referral code of Mira Santos, `9PTXC-4WHMN` is used up, `HM3PE-7KWQT`
+  is disabled, and a code that the mockups do not list is not found. A
+  code that works counts its use, and gives app access and a new invite
+  code, so Get started opens. With `?operator=1`, a pause or a Disable in
+  the operator section shows on the Account page of the operator.
+- The fake keeps its state in the page. A reload starts again from the
+  options, so Sam waits again, and the codes and the pause are those of
+  the options. An operator never waits, so a pause or a new code of the
+  operator section cannot reach the waitlist screen.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -36,7 +83,12 @@ pull request bar, and the owner picker. A host can give its own parts, as
   [chat development page](../chat/dev/README.md) has a fake with state for
   live events and writes.
 - The production build uses `live-services.ts`: the Worker on the origin of
-  the page, and its event socket.
+  the page, its event socket, and an `XMLHttpRequest` for each raw file
+  upload, which measures the bytes that the browser sent.
+
+The development fake keeps each org's workspace number counter.
+A create gets the next number and a web link on the fake API origin.
+Workspace readers keep the number and link that the Worker supplies.
 
 ## Composition
 
@@ -73,7 +125,7 @@ feature leaves its place empty.
 | `composer`    | The composer of that column while the sandbox runs or starts |
 | `center`      | A part in place of the whole chat. Without it, the chat shows the file or diff tab of the address |
 | `files`       | All files, Changes, and Checks. The shell gives its own |
-| `tools`       | Terminal, Preview, and Desktop. The shell gives its own |
+| `tools`       | Terminal and Preview. The shell gives its own |
 | `pullRequest` | The pull request bar, or the row on a phone. The shell gives its own |
 | `owner`       | The owner picker that reassigns a workspace. The shell gives its own |
 
@@ -100,7 +152,8 @@ the workspace stores, and the raw event streams of feature stores.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the command palette, the focus, saved drafts, and New workspace.
+layers, the command palette, the focus, saved drafts, New workspace as a page or a dialog,
+with the send key that every composer shares, and the waitlist.
 
 ## Rules for this code
 
@@ -133,6 +186,10 @@ layers, the command palette, the focus, saved drafts, and New workspace.
   passive, so the palette key stops the browser's own action.
   `AppServices.platform` says whether the keyboard is a Mac, which
   chooses the palette key and its hint.
+- An address that people share, such as the invite link, starts with
+  `AppServices.appOrigin`: the origin of the page in a browser. The Mac
+  app loads the page from its own origin, so it names the app host of the
+  brand.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
@@ -143,92 +200,22 @@ layers, the command palette, the focus, saved drafts, and New workspace.
 ## Tests
 
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
-fake API, requests or answers that wait for the test (also two at one
-path), a manual timer with the wait of each pending timer, a manual page
-focus, visibility, input, and keys, and a recording event source.
+fake API, with raw file uploads through its fetch, requests or answers that
+wait for the test (also two at one path), a manual timer with the wait of
+each pending timer, a manual page focus, visibility, input, and keys, and a
+recording event source.
 `../shell/test-render.tsx` draws a screen with every provider through
 server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
 mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
 clicks, types, and lets the answers of the fake API settle.
+`../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
+for the tests of New workspace as a page or a dialog, and of its send key.
 
 ## Key code
 
-- `api/client.ts`: the JSON client and `ApiError`. The client also gives
-  its `fetch`, for a feature client that reads its own replies, so the web
-  app and the Mac app keep their transport. `api/read-*.ts`: the readers.
-- `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
-  store over the event source of the app, with the reconnect rules of
-  [Data lifecycle](data-lifecycle.md).
-- `app-model.ts`: the session, the orgs, the models list, Get started, and
-  `putOrg`, which takes a confirmed org record.
-- `invitations-model.ts`: `InvitationsModel`, the pending invitations,
-  Continue to workspaces, and Accept invitation.
-  `api/read-invitations.ts`: their readers.
-- `get-started.ts`: the order and the states of the steps of Get started.
-  `setup-steps.ts`: `setupSteps`, the steps that the screens show, and
-  `setupOrg`, the org of Get started and of the address `/`.
-- [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
-  setup text that the app and mockups share.
-- `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  and computer settings of one org, with `watch` and the wait of each part.
-- `account-model.ts`: the agent logins with their share setting, the
-  default model, the GitHub App installations, and the repositories that
-  Create org offers.
-- `panels.ts`: `PanelWidths`, the widths of the panels, and `next`, the
-  one rule of their steps.
-- `resource.ts`: `Resource`, a server value with its confirmed changes and
-  its waiting writes. `refresh.ts`: `Refresher`, the shared reads of a part
-  while screens show it.
-- `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
-  writes, their changes, moves, and the Archived group.
-- `workspace-model.ts` and `archive-model.ts`: an open workspace, its
-  `startError` and `reassigned`, and Archive.
-- `suspension.ts` and `permissions.ts`: the suspension of an org, the
-  client that reports its refusals, also the replies of its fetch, and the
-  rules of what a person may change.
-- `workspace-read-marks.ts`: `WorkspaceReadMarks`, the read marks of one
-  kept workspace model, with its shown and confirmed numbers.
-- `new-workspace-model.ts`: the first message that creates a workspace.
-  `creations.ts`: `Creations`, the admitted creates of an org in this tab,
-  and `failedCreate`, which tells a create whose start failed.
-- `computer-model.ts`: the scripts, the env vars, the builds, and the log.
-- `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
-  the log of one build.
-- `events.ts`: the ordered event stream, the event socket, and
-  `openSocket`, the terminal socket on the same origin as the events.
-- `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
-  the store of its workspace, and the `create` and `connect` functions that
-  the view supplies.
-- `workspace-store.test.tsx`: mounts the real hook with logged test stores in
-  happy-dom. It checks the connection after the render and the stop at
-  unmount. It checks that a switch stops the old store before the new one
-  connects, and shows only the new store. It also checks when the hook keeps
-  a store, connects it again, or makes a new one.
-- `router.ts` and `navigation.ts`: the addresses of the screens.
-- `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
-  the tab opened last, from `AppModel.lastOrg`, or else the first org that
-  is not deleted.
-- `palette/`: the command palette without React. `palette-results.ts`
-  gives the groups and the empty state of each tab for a query, from
-  `palette-groups.ts` and the rows of `palette-rows.ts`. `matcher.ts`
-  ranks the matches. `commands.ts` holds the labels and the search words.
-  `page-actions.ts` gives the offers of the parts of the page and
-  `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
-  `palette-keys.ts` the palette key and what it does, and `controller.ts`
-  the open state and the offers of one tab, with `show`, the one way to
-  open the palette.
-- `../shell/palette/`: the layer of the palette. `PaletteProvider.tsx`
-  hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
-  frame, `palette-context.ts` gives `usePaletteOffer` and
-  `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
-- `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
-  which say whether they closed, and the modal layers with their owners.
-  The palette reads them before it opens.
-- `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
-- `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
-  `useDismiss`, the layer of sheets and dialogs.
-- `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.
-  `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
-- `../shell/orgs/`: Create org and the name and initials fields.
-  `../shell/settings/RepositorySearch.tsx`: the searchable repository list.
+[Key code](key-code.md) names the files, the types, and the functions to
+open first. It covers the dev fake, the API client, the file uploads, the
+models, the waitlist and its codes, and the workspace list. It also covers
+the event streams, the drag, the operator section, the command palette, the
+layers, the frames, and New workspace.

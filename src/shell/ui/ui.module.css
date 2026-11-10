@@ -46,6 +46,15 @@
   outline-offset: -2px;
 }
 
+/*
+ * A menu at a point of the window, or its choices, above the page. Its
+ * owner sets its place, so no box that scrolls cuts it off.
+ */
+.pointLayer {
+  position: fixed;
+  z-index: 20;
+}
+
 /* The anchor of a menu that opens beside its trigger. */
 .anchor {
   display: flex;
@@ -71,13 +80,6 @@
 /* The scrim of a sheet or a dialog closes it. */
 .scrim {
   cursor: default;
-}
-
-.error {
-  margin: 0;
-  color: var(--ui-rose);
-  font-size: var(--ui-text-sm);
-  line-height: 1.45;
 }
 
 .center {

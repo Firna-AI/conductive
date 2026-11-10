@@ -1,4 +1,6 @@
-import type { OrgRole } from '../shared/api'
+import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
+import type { SessionResponse } from '../shared/account'
+import { API_PATHS, type OrgRole, type User } from '../shared/api'
 import { chatHistoryPath } from '../shared/events'
 import type { BannerState } from '../shared/github'
 import type { WorkspaceState } from '../shared/workspaces'
@@ -10,6 +12,10 @@ import { fakeToolRoutes } from './fake-tool-routes'
 import { fakeWorkspaceRoutes } from './fake-workspace-routes'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
 import type { FakeMacScenario } from './fixtures/devices'
+import {
+  maskedChangedFiles,
+  withMaskedTurnFiles,
+} from './fixtures/masked-paths'
 import { workspaceFixtures } from './fixtures/workspaces'
 import { recordedChatEvents, type RecordedChatScenario } from './recorded-chat'
 import { recordedFileEvents } from './recorded-files'
@@ -23,6 +29,11 @@ export interface FakeApiOptions {
   macCommands?: FakeMacScenario
   /** The window is the Mac app on the Mac of the fake user. */
   onMac?: boolean
+  /**
+   * `masked` adds two files whose real paths hold a fake secret value, with
+   * the labels of the mockups, to the file lists and to each finished turn.
+   */
+  paths?: PathState
 }
 
 function routeKey(method: string, path: string): string {
@@ -35,6 +46,8 @@ function routeKey(method: string, path: string): string {
  * Fetch-compatible, in-memory server for development and tests.
  * Writes return recorded replies. They do not implement backend state changes.
  * Override a reply with json(), empty(), or response() for the next screen state.
+ * A file upload names its file in its query, so a reply for the path of an
+ * upload route answers each file sent there.
  * This module is opt-in. The production Worker never imports it.
  */
 export class FakeApiServer implements FakeRouteWriter {
@@ -44,14 +57,24 @@ export class FakeApiServer implements FakeRouteWriter {
 
   constructor(options: FakeApiOptions = {}) {
     const conversation = options.conversation ?? 'history'
-    const chat = recordedChatEvents(conversation)
+    const paths = options.paths ?? 'plain'
+    const recorded = recordedChatEvents(conversation)
+    const chat =
+      paths === 'masked'
+        ? withMaskedTurnFiles(recorded, maskedChangedFiles())
+        : recorded
     this.events = new FakeWorkspaceEvents([
       ...chat,
-      ...recordedFileEvents(FAKE_IDS.workspace, chat.length + 1),
+      ...recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths),
     ])
     fakeCoreRoutes(this, options.role ?? 'admin')
-    fakeWorkspaceRoutes(this, options.workspaceState ?? 'ready', conversation)
-    fakeToolRoutes(this, options.banner ?? 'ready-to-merge')
+    fakeWorkspaceRoutes(
+      this,
+      options.workspaceState ?? 'ready',
+      conversation,
+      paths,
+    )
+    fakeToolRoutes(this, options.banner ?? 'ready-to-merge', paths)
     const { workspaces, created } = workspaceFixtures(options.workspaceState)
     fakeDeviceRoutes(
       this,
@@ -62,6 +85,14 @@ export class FakeApiServer implements FakeRouteWriter {
         created.workspace.id,
       ],
     )
+  }
+
+  /** Serves the session of `user`, with app access, as a sign-in of that person does. */
+  signIn(user: User): void {
+    this.json('GET', API_PATHS.session, {
+      user,
+      appAccess: true,
+    } satisfies SessionResponse)
   }
 
   json(method: FakeMethod, path: string, body: unknown, status = 200): void {
@@ -87,7 +118,7 @@ export class FakeApiServer implements FakeRouteWriter {
     this.requests.push(request.clone())
     const url = new URL(request.url)
     const key = routeKey(request.method, request.url)
-    const response = this.replies.get(key)
+    const response = this.replies.get(key) ?? this.uploadReply(request)
     if (response) return response.clone()
     const historyPath = new URL(
       chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session),
@@ -107,5 +138,14 @@ export class FakeApiServer implements FakeRouteWriter {
       },
       { status: 404 },
     )
+  }
+
+  /** The reply for the path of a raw file upload, whatever file it names. */
+  private uploadReply(request: Request): Response | undefined {
+    if (request.headers.get('Content-Type') !== 'application/octet-stream') {
+      return undefined
+    }
+    const path = new URL(request.url).pathname
+    return this.replies.get(routeKey(request.method, path))
   }
 }

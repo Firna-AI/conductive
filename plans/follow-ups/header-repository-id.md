@@ -13,11 +13,10 @@
 - **Impact if no action:** Each open of a workspace can flash an internal ID, and a failed read leaves it in the header.
 - **Root question:** What does the header show while the name of the repository is not known?
 - **Options:**
-  - **A.** Show nothing in the place of the repository until the name is known, and keep the branch. Effort: Small.
+  - **A.** Show nothing in the place of the repository until the name is known. Effort: Small.
   - **B.** Send the repository name with the workspace record or with the workspace list, from D1, which already holds it. The header then never waits for a second read. Effort: Medium.
-- **Left out:** A spinner in the header, because it draws attention to a detail that the branch already gives.
-- **Wider fix:** B. The name then comes with the workspace, as the command palette also needs, in `plans/follow-ups/palette-unavailable-data.md`.
-- **Previous examples:** The same read also leaves the palette without repository names, in `plans/follow-ups/palette-unavailable-data.md`.
-- **Related:** `plans/follow-ups/palette-unavailable-data.md`, a shared wider fix: its option E sends the names with the list.
-- **Recommendation:** A now, then B with the palette item.
+- **Left out:** A spinner in the header, because it adds clutter while a secondary detail loads.
+- **Wider fix:** B. The name then comes with the workspace, so no screen waits for a second read.
+- **Previous examples:** The same read also leaves the command palette without repository names. The palette shows a status part while they load or after they fail, as `docs/protocol/command-palette-states.md` says. Decision 164 rejected sending the names with the list for the palette.
+- **Recommendation:** A, because it removes the internal ID with a small change in the header. B best protects the codebase, because the name then comes with the workspace.
 - **Action:** fix after merge, apply A, because the header is outside the diff of the palette.

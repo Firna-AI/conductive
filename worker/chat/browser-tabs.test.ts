@@ -1,11 +1,9 @@
 import { expect, it } from 'vitest'
-
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
-} from '../../src/shared/events'
+} from './workspace-events'
 import { BrowserTabs } from './browser-tabs'
-
 it('sends events only before the grant deadline when scheduled callbacks do not run', async () => {
   let now = 0
   let closed = 0
@@ -14,7 +12,7 @@ it('sends events only before the grant deadline when scheduled callbacks do not 
   const tabs = new BrowserTabs({
     now: () => now,
     readConnectionAccess: async () => [
-      { connectionNumber: 0, deadline: 30_000 },
+      { connectionNumber: 0, deadline: 30000 },
     ],
     scheduleBrowserCheck: (work) => {
       scheduledCallbacks.push(work)
@@ -39,22 +37,20 @@ it('sends events only before the grant deadline when scheduled callbacks do not 
   const beforeDeadline: WorkspaceEventEnvelope = {
     workspaceId: 'workspace',
     eventNumber: 1,
-    occurredAt: 29_999,
+    occurredAt: 29999,
     event: { type: 'workspace.title', name: 'Before the deadline' },
   }
   const afterDeadline: WorkspaceEventEnvelope = {
     workspaceId: 'workspace',
     eventNumber: 2,
-    occurredAt: 30_001,
+    occurredAt: 30001,
     event: { type: 'workspace.title', name: 'After the deadline' },
   }
-
-  now = 29_999
+  now = 29999
   tabs.publish([beforeDeadline])
   expect(messages).toEqual([{ type: 'event', envelope: beforeDeadline }])
   expect(closed).toBe(0)
-
-  now = 30_001
+  now = 30001
   tabs.publish([afterDeadline])
   expect(messages).toEqual([{ type: 'event', envelope: beforeDeadline }])
   expect(closed).toBe(1)

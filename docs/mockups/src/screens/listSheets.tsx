@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
-import { Check, Plus } from 'lucide-react'
+import { Check, Gauge, Plus } from 'lucide-react'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
 import { orgLinks } from '../components/orgs/orgLinks'
 import { AccountAvatar, OrgTile } from '../components/orgs/OrgTile'
 import { sectionMenu } from '../components/workspaces/menus'
+import type { RowMenuOpen } from '../components/workspaces/RowMenu'
 import { orgList, type OrgKey } from '../fixtures/orgs'
 import { menuSection, sections } from '../fixtures/sections'
 import { paths } from '../paths'
@@ -38,9 +39,13 @@ function SheetRow(props: {
 
 /**
  * The org switcher of a phone, which has no rail: every org, a way to
- * create one, and the account.
+ * create one, and the account. An operator also gets Operator under the
+ * account.
  */
-export function OrgSwitcherSheet(props: { current: OrgKey }) {
+export function OrgSwitcherSheet(props: {
+  current: OrgKey
+  operator?: boolean
+}) {
   return (
     <Sheet title="Orgs">
       <nav aria-label="Orgs">
@@ -74,6 +79,14 @@ export function OrgSwitcherSheet(props: { current: OrgKey }) {
           <AccountAvatar size={26} />
           <span className={styles.sheetLabel}>Account</span>
         </SheetRow>
+        {props.operator ? (
+          <SheetRow to={paths.operator}>
+            <span className={styles.operatorTile}>
+              <Gauge aria-hidden size={15} />
+            </span>
+            <span className={styles.sheetLabel}>Operator</span>
+          </SheetRow>
+        ) : null}
       </nav>
     </Sheet>
   )
@@ -85,6 +98,22 @@ export function SectionSheet() {
   return (
     <Sheet title={section.name}>
       <Menu entries={sectionMenu} label={section.name} placement="sheet" />
+    </Sheet>
+  )
+}
+
+/**
+ * The menu of a workspace row, as a phone layout shows it after a right
+ * click or the menu keys: a sheet with the name of the workspace. A choice
+ * with a submenu, such as Move to section, shows its choices in the sheet
+ * in place of the menu.
+ */
+export function WorkspaceMenuSheet(props: { menu: RowMenuOpen }) {
+  const { menu } = props
+  const shown = menu.submenu ?? menu
+  return (
+    <Sheet title={menu.label}>
+      <Menu entries={shown.entries} label={shown.label} placement="sheet" />
     </Sheet>
   )
 }

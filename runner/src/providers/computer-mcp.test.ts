@@ -6,7 +6,10 @@ import type { Agent } from '../../../src/shared/agents'
 import { FakeAppServers } from '../../test-support/app-server'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { turn } from '../../test-support/harness'
-import { fakeToolContext } from '../../test-support/providers'
+import {
+  fakeClaudeProfile,
+  fakeToolContext,
+} from '../../test-support/providers'
 import { createClaudeFactory } from './claude'
 import { createCodexFactory } from './codex'
 import * as environment from './environment'
@@ -35,6 +38,7 @@ function providerFixture(agent: Agent) {
             return query.open(parameters)
           },
           () => '/pinned/sdk/claude',
+          fakeClaudeProfile,
         )
       : createCodexFactory(servers.start)
   const warnings: string[] = []
@@ -42,9 +46,15 @@ function providerFixture(agent: Agent) {
   const options = {
     cwd: '/repo',
     home: '/private-agent-home',
-    login: command.login,
+    sessionId: command.sessionId,
+    endpoint:
+      fakeToolContext.machineOrigin +
+      '/v1/model/' +
+      command.message.choice.agent,
+    credential: { type: 'gateway' as const, ...command.credential },
     choice: command.message.choice,
     conversationId: null,
+    instructions: '',
     tools: fakeToolContext,
     event: () => {},
     warn: (message: string) => warnings.push(message),
@@ -129,7 +139,7 @@ it.each(['claude', 'codex'] as const)(
         expect(h.warnings).toHaveLength(index + 1)
         expect(await h.send(provider)).toMatchObject(
           agent === 'claude'
-            ? { role: 'user', content: 'Change the file.' }
+            ? { role: 'user', content: 'Sender: @alice\n\nChange the file.' }
             : { clientUserMessageId: 'message-computer' },
         )
       } finally {

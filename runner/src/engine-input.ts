@@ -53,6 +53,9 @@ export async function inputCommand(
       agent: command.message.choice.agent,
       choice: command.message.choice,
       conversationId: saved?.providerSessionId ?? null,
+      instructions:
+        saved?.instructions ??
+        options.instructions[command.message.choice.agent],
       generation: 0,
       active: null,
     }
@@ -79,6 +82,7 @@ export async function inputCommand(
       session.active?.waiting.push(command)
     return
   }
+  if (command.type !== 'turn') return
   session.choice = command.message.choice
   const context = { sessionId: command.sessionId, turnId: command.turnId }
   const { controller } = actions

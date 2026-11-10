@@ -14,14 +14,51 @@ import {
   type Params,
   type Route,
 } from './router'
-import type { OrgState } from './state'
+import { updateNeedsBuild, type OrgState } from './state'
 
-/** A change of an env var. A set sends a value, which the fake drops. */
-function readEnvChange(value: unknown): { name: string; remove: boolean } {
+/** A set without a mark replaces only the value, and keeps the mark. */
+type EnvChange =
+  | { operation: 'set'; name: string; secret?: boolean }
+  | { operation: 'classify'; name: string; secret: boolean }
+  | { operation: 'remove'; name: string }
+
+/**
+ * A change of an env var. A set sends a value, which the fake drops. As in
+ * the Worker, a mark is secret unless the change says `false`.
+ */
+function readEnvChange(value: unknown): EnvChange {
   const change = record(value, 'env var')
-  const remove = choice(change, 'operation', ['set', 'remove']) === 'remove'
-  if (!remove) text(change, 'value')
-  return { name: requiredText(change, 'name'), remove }
+  const name = requiredText(change, 'name')
+  const operation = choice(change, 'operation', ['set', 'classify', 'remove'])
+  if (operation === 'remove') return { operation, name }
+  const secret = change.secret !== false
+  if (operation === 'classify') return { operation, name, secret }
+  text(change, 'value')
+  return change.secret === undefined
+    ? { operation, name }
+    : { operation, name, secret }
+}
+
+type EnvVars = OrgState['settings']['envVars']
+
+/**
+ * The variables after one change. A set adds a new name at the end, which
+ * starts secret when the set has no mark. A set without a mark keeps the
+ * mark of a known name. A classify of a missing name changes nothing.
+ */
+function applyEnvChange(vars: EnvVars, change: EnvChange): EnvVars {
+  if (change.operation === 'remove') {
+    return vars.filter((item) => item.name !== change.name)
+  }
+  const known = vars.some((item) => item.name === change.name)
+  if (change.operation === 'set' && !known) {
+    return [...vars, { name: change.name, secret: change.secret ?? true }]
+  }
+  return vars.map((item) =>
+    item.name === change.name
+      ? { ...item, secret: change.secret ?? item.secret }
+      : item,
+  )
 }
 
 function envChanges(object: JsonObject, key: string) {
@@ -29,8 +66,9 @@ function envChanges(object: JsonObject, key: string) {
 }
 
 /**
- * The scripts and the env vars. Only the names of env vars stay, so no
- * reply holds a value. A changed install script asks for a build.
+ * The scripts and the env vars. Only the names and the marks of env vars
+ * stay, so no reply holds a value. A changed install script asks for a
+ * build.
  */
 function updateSettings(
   backend: DevBackend,
@@ -41,11 +79,6 @@ function updateSettings(
   const installScript = optional(fields, 'installScript', text)
   const startupScript = optional(fields, 'startupScript', text)
   const changes = optional(fields, 'envVars', envChanges) ?? []
-  let names = org.settings.envVars.map((item) => item.name)
-  for (const change of changes) {
-    if (change.remove) names = names.filter((name) => name !== change.name)
-    else if (!names.includes(change.name)) names = [...names, change.name]
-  }
   const current = org.settings
   const changedInstall =
     installScript !== undefined && installScript !== current.installScript
@@ -53,10 +86,11 @@ function updateSettings(
     ...current,
     installScript: installScript ?? current.installScript,
     startupScript: startupScript ?? current.startupScript,
-    envVars: names.map((name) => ({ name })),
+    envVars: changes.reduce(applyEnvChange, current.envVars),
     updatedAt: backend.now(),
-    needsBuild: current.needsBuild || changedInstall,
   }
+  if (changedInstall) org.settingsRevision += 1
+  updateNeedsBuild(org)
   return json({ settings: org.settings } satisfies OrgSettingsResponse)
 }
 
@@ -65,9 +99,15 @@ function setRepository(
   repositoryId: string,
   selected: boolean,
 ): Response {
+  const changed = org.repositories.some(
+    (repository) =>
+      repository.id === repositoryId && repository.selected !== selected,
+  )
   org.repositories = org.repositories.map((repository) =>
     repository.id === repositoryId ? { ...repository, selected } : repository,
   )
+  if (changed) org.settingsRevision += 1
+  updateNeedsBuild(org)
   return json({ repositories: org.repositories } satisfies RepositoriesResponse)
 }
 

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { TOOL_TURN_HEADER } from '../../tools/context'
+import { configuredDefaultChoice } from '../app-api/models'
 import { HttpError } from '../http'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
@@ -28,6 +29,7 @@ it('inherits the org, owner, and owner defaults while the calling sender starts 
   const response = await fixture.create({
     repositoryId: 'repo-a',
     firstMessage: '  Keep this text.\nThen continue.  ',
+    name: 42,
     orgId: 'org-b',
     ownerUserId: 'outsider',
   })
@@ -61,6 +63,20 @@ it('inherits the org, owner, and owner defaults while the calling sender starts 
     workspace: { orgId: 'org-a', owner: { id: 'owner' }, choice: OWNER_CHOICE },
     sessionId: 'created-session',
   })
+})
+
+it('omits a blank name before workspace creation', async () => {
+  const response = await fixture.create({
+    repositoryId: 'repo-a',
+    firstMessage: 'Task',
+    name: ' \n\t\n ',
+  })
+
+  expect(response.status).toBe(201)
+  expect(fixture.services.createWorkspace).toHaveBeenCalledOnce()
+  expect(
+    fixture.services.createWorkspace.mock.calls[0]?.[0],
+  ).not.toHaveProperty('name')
 })
 
 it('uses the chosen model, effort, and org section without looking up unresolved defaults', async () => {
@@ -185,4 +201,32 @@ it('reports a lifecycle start failure instead of a successful create', async () 
       message: 'The cloud computer could not start. Try again.',
     },
   })
+})
+
+it('uses the configured model for an owner who saved only the workspace view', async () => {
+  await fixture.db
+    .prepare(
+      `UPDATE user_preferences SET default_agent = NULL, default_model = NULL,
+       default_effort = NULL, new_workspace_view = 'dialog' WHERE user_id = 'owner'`,
+    )
+    .run()
+  harness.env.CONDUCTIVE_DEFAULT_CHOICE = JSON.stringify({
+    agent: 'claude',
+    model: 'configured-model',
+    effort: 'medium',
+  })
+  fixture.services.ownerDefaultChoice.mockImplementation(async () =>
+    configuredDefaultChoice(harness.env),
+  )
+
+  const response = await fixture.create({
+    repositoryId: 'repo-a',
+    firstMessage: 'Build the feature.',
+  })
+  expect(response.status).toBe(201)
+  expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
+    expect.objectContaining({
+      choice: { agent: 'claude', model: 'configured-model', effort: 'medium' },
+    }),
+  )
 })

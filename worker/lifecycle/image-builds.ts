@@ -7,7 +7,8 @@ import {
   requireActiveUser,
   userSuspended,
 } from '../data/user-access'
-import { orgSandboxProvider, sandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount, providerForAccount } from '../sandbox/client'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import type { SandboxProvider } from '../sandbox/provider'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
 import {
@@ -29,7 +30,11 @@ import { jobSoftware, readBuildJob, runningBuild } from './build-data'
 import { cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { IMAGE_DAY_MS } from './image-schedule'
-import { handleImageBuildFailure } from './image-build-failure'
+import { readOrgImage } from './org-image-data'
+import {
+  failUnscheduledBuild,
+  handleImageBuildFailure,
+} from './image-build-failure'
 import {
   firstOrgAdmin,
   readImageSettings,
@@ -49,6 +54,7 @@ interface ImageScheduler {
     software: ImageSoftwareArtifact,
     at: number,
     buildId: string | null,
+    providerAccount?: string,
   ): Promise<void>
 }
 
@@ -57,6 +63,7 @@ export type PrepareImageSources = (input: {
   orgId: string
   buildId: string
   sandboxId: string
+  providerAccount: string
   repositories: readonly SelectedRepository[]
   repositoryLocations?: readonly RepositoryLocation[]
   previousRepositoryLocations?: readonly RepositoryLocation[]
@@ -79,6 +86,7 @@ export async function startImageBuild(
     software: ImageSoftwareArtifact
     dailyRefresh?: boolean
   },
+  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<string> {
   const { env, dependencies } = runtime
   await requireActiveOrg(env.DB, input.orgId)
@@ -86,23 +94,26 @@ export async function startImageBuild(
   const software = readImageSoftware(input.software)
   const existing = await runningBuild(env.DB, input.orgId)
   if (existing) {
+    const job = await readBuildJob(env.DB, input.orgId, existing)
     await runtime.scheduler.schedule(
       input.orgId,
-      jobSoftware(await readBuildJob(env.DB, input.orgId, existing)),
+      jobSoftware(job),
       dependencies.now(),
       existing,
+      job.providerAccount,
     )
     return existing
   }
   const settings = await readImageSettings(env.DB, input.orgId)
-  if (input.kind === 'refresh' && !settings.imageName)
+  const image = await readOrgImage(env.DB, input.orgId, providerAccount)
+  if (input.kind === 'refresh' && !image?.imageName)
     throw new HttpError(
       409,
       'image_required',
       'Build the cloud computer image first.',
     )
-  const previous = settings.imageBuildId
-    ? await readBuildJob(env.DB, input.orgId, settings.imageBuildId)
+  const previous = image?.imageBuildId
+    ? await readBuildJob(env.DB, input.orgId, image.imageBuildId)
     : null
   const previousRepositories = previous
     ? readRepositories(JSON.parse(previous.repositoriesJson))
@@ -127,6 +138,8 @@ export async function startImageBuild(
     await insertBuild(env.DB, {
       id,
       orgId: input.orgId,
+      providerAccount,
+      previousProviderAccount: previous?.providerAccount ?? providerAccount,
       userId: input.userId,
       kind: input.kind,
       settingsRevision:
@@ -138,7 +151,8 @@ export async function startImageBuild(
       repositoryLocations: locations,
       previousRepositoryLocations: previousLocations,
       software,
-      previousImageName: settings.imageName,
+      previousImageName: image?.imageName ?? null,
+      previousRunnerProtocolVersion: previous?.runnerProtocolVersion ?? null,
       now,
       nextImageRefreshAt:
         input.kind === 'refresh' && input.dailyRefresh
@@ -148,20 +162,28 @@ export async function startImageBuild(
   } catch (error) {
     const current = await runningBuild(env.DB, input.orgId)
     if (!current) throw error
+    const job = await readBuildJob(env.DB, input.orgId, current)
     await runtime.scheduler.schedule(
       input.orgId,
-      jobSoftware(await readBuildJob(env.DB, input.orgId, current)),
+      jobSoftware(job),
       dependencies.now(),
       current,
+      job.providerAccount,
     )
     return current
   }
-  await runtime.scheduler.schedule(
-    input.orgId,
-    software,
-    dependencies.now(),
-    id,
-  )
+  try {
+    await runtime.scheduler.schedule(
+      input.orgId,
+      software,
+      dependencies.now(),
+      id,
+      providerAccount,
+    )
+  } catch (error) {
+    await failUnscheduledBuild(runtime, id)
+    throw error
+  }
   return id
 }
 
@@ -210,17 +232,18 @@ export async function advanceImageBuild(
     if (cleaningUp)
       return await cleanupBuild(
         runtime,
-        sandboxProvider(env, dependencies.fetch),
+        providerForAccount(env, dependencies.fetch, job.providerAccount),
         job,
       )
     const admin = await firstOrgAdmin(env.DB, orgId)
     if (!admin)
       throw new HttpError(404, 'org_not_found', 'The org is not available.')
-    provider = await orgSandboxProvider(
+    provider = await orgProviderForAccount(
       env,
       admin.userId,
       orgId,
       dependencies.fetch,
+      job.providerAccount,
     )
     if (!recoveringAllocation && job.startedByUserId)
       await requireActiveUser(env.DB, job.startedByUserId, orgId)

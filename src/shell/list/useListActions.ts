@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { errorMessage } from '../../app/api/client'
 import type { OrgModel } from '../../app/org-model'
-import { routes } from '../../app/router'
 import {
   createSection,
   deleteSection,
@@ -12,7 +11,7 @@ import {
 } from '../../app/section-actions'
 import { defaultSection } from '../../app/sections'
 import { valueOf } from '../../app/store'
-import { useGo } from '../ui/AppLink'
+import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import type { DropTarget } from './drop-target'
 import type { SectionActions } from './SectionHeader'
 
@@ -21,7 +20,7 @@ import type { SectionActions } from './SectionHeader'
  * fails, the list goes back, and a toast names what failed.
  */
 export function useListActions(org: OrgModel) {
-  const go = useGo()
+  const newWorkspace = useNewWorkspace()
   const { toast } = useToast()
   const [adding, setAdding] = useState(false)
   const failed = (title: string) => (error: unknown) =>
@@ -36,7 +35,13 @@ export function useListActions(org: OrgModel) {
       void renameSection(org, section.id, name).catch(
         failed("The section wasn't renamed."),
       ),
-    newWorkspace: (section) => go(routes.newWorkspace(org.orgId, section.id)),
+    // General, the default section, keeps the one draft of the row at the
+    // top of the list, which puts the workspace in General too.
+    newWorkspace: (section) =>
+      newWorkspace.open({
+        orgId: org.orgId,
+        sectionId: section.isDefault ? null : section.id,
+      }),
     newSection: () => setAdding(true),
     remove: (section) => {
       const general = defaultSection(

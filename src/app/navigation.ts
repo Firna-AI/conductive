@@ -63,7 +63,7 @@ export function useNavigation(): Navigation {
   return navigation
 }
 
-function useHref(): string {
+export function useHref(): string {
   const navigation = useNavigation()
   return useSyncExternalStore(
     navigation.subscribe,

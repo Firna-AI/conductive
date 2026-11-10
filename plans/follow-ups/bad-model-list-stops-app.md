@@ -1,0 +1,31 @@
+# One bad model value stops the whole app
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-08, from the options check of the operator section plan on branch `calummoore/admin-section-brainstorm`, new option E of its settings decision.
+- **Location:** `AppModel.start` in `src/app/app-model.ts:105-120`, the "Models" section of `docs/deployment.md`, and `GET /api/models` and `GET /api/account` in the Worker.
+- **Reason:** The fix changes how the app starts, which the operator section does not touch, and it changes a documented behaviour, so the user decides first.
+
+- **Terms:**
+  - **Model list:** the Worker variable `CONDUCTIVE_MODELS`, a JSON array of the models that the app offers. The repository sets it in `wrangler.jsonc`.
+  - **Default choice:** the Worker variable `CONDUCTIVE_DEFAULT_CHOICE`, the model and effort of a user with no saved default.
+  - **Boot:** the first reads of the web app, in `AppModel.start`, before it shows any screen.
+- **Background:**
+  - The Worker has no built-in model list. A missing or invalid model list gives `503 models_unavailable` on `GET /api/models`. A missing or invalid default choice gives `503 default_model_unavailable` on `GET /api/account` for a user with no saved default, as `docs/deployment.md` says.
+  - The boot reads the account, the orgs, the model list, and Get started in one `Promise.all`. One failed read fails the boot.
+  - `docs/deployment.md` states the result: the web app does not start without a valid model list.
+  - `wrangler.jsonc` holds both values as JSON strings. Each deploy publishes them. Dashboard edits can still change the live values until the next deploy.
+  - On 8 November 2026 the user chose to keep these settings in Worker variables for now, with no editor in the app.
+  - On 9 November 2026 the user chose to keep the model settings in the repository and deploy them from there. The app still fails to start with invalid model settings.
+- **Problem:** One bad JSON edit of the model list or the default choice stops the app from loading for every user, also the operator page of the operator.
+- **Impact if no action:** A typo in the model settings takes the whole app down until someone finds and fixes the value.
+- **Root question:** How does the app stay usable when the model list or the default choice is bad?
+- **Options:**
+  - **A.** Keep the behaviour, and add a warning to the "Models" section of `docs/deployment.md`. Effort: Small.
+  - **B.** The app starts without a valid model list or default choice. Only the model picker and the composer show the error, and the Worker logs a warning. A user with no saved default gets a defined empty state. It changes the boot, the account reply, the model picker, and the deployment doc. Effort: Medium.
+  - **C.** Check the two values in the `vars` of `wrangler.jsonc` during the build with the Worker's own reader. Each model change needs a commit and a deploy. An edit in the dashboard still skips the check. The build error needs the user's approval. Effort: Small.
+- **Left out:** A fallback model list built into the Worker, because the deployment doc keeps the model list as operator data with no built-in list.
+- **Wider fix:** B. A reader that survives a bad value protects every way of editing it, also a later editor on the operator page.
+- **Previous examples:** None found.
+- **Recommendation:** B. It follows the rule to warn and continue when input is recoverable, and it adds no rejection.
+- **Action:** ask the user, because B changes the documented start of the app, and C adds a build error.

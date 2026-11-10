@@ -1,6 +1,8 @@
 import type { Agent, AgentChoice } from '../../src/shared/agents'
 import type { AgentChatEvent } from '../../src/shared/chat-events'
 import type { ChangedFile } from '../../src/shared/files'
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import type { RunnerTurnV2 } from '../../src/shared/runner'
 import type { Checkpoint } from './checkpoint'
 import type {
   ProviderEvent,
@@ -16,7 +18,7 @@ import { ProviderLifetime } from './providers/lifetime'
 import type { WorkspaceToolRuntime } from './providers/workspace-tools'
 
 export interface ActiveTurn {
-  first: ProviderInput
+  first: RunnerTurnV2
   retryMessageId: string
   startedAt: number
   messageIds: string[]
@@ -39,6 +41,7 @@ export interface SessionRuntime {
   agent: Agent
   choice: AgentChoice
   conversationId: string | null
+  instructions: string
   generation: number
   active: ActiveTurn | null
 }
@@ -46,6 +49,7 @@ export interface SessionRuntime {
 export interface EngineOptions {
   cwd: string
   home: string
+  instructions: Record<Agent, string>
   tools: WorkspaceToolRuntime
   providers: Record<Agent, ProviderFactory>
   store: EventStore
@@ -67,6 +71,7 @@ export function rememberSession(
     sessionId: session.id,
     agent: session.agent,
     providerSessionId: session.conversationId,
+    instructions: session.instructions,
   })
 }
 
@@ -80,6 +85,14 @@ export async function startProvider(
   if (!turn) return
   const signal = turn.controller.signal
   signal.throwIfAborted()
+  if (
+    !options.store.snapshot.sessions.some(
+      (saved) =>
+        saved.sessionId === session.id &&
+        saved.instructions === session.instructions,
+    )
+  )
+    await cancelable(signal, () => rememberSession(options.store, session))
   session.choice = command.message.choice
   const lifetime = new ProviderLifetime()
   turn.lifetime = lifetime
@@ -94,9 +107,17 @@ export async function startProvider(
       options.providers[session.agent]({
         cwd: options.cwd,
         home: options.home,
-        login: turn.first.login,
+        sessionId: session.id,
+        endpoint: new URL(
+          session.agent === 'claude'
+            ? MACHINE_PATHS.claudeGateway
+            : MACHINE_PATHS.codexGateway,
+          options.tools.machineOrigin,
+        ).href,
+        credential: { type: 'gateway', ...turn.first.credential },
         choice: session.choice,
         conversationId: session.conversationId,
+        instructions: session.instructions,
         tools: { ...options.tools, turnId: turn.first.turnId },
         event,
         warn: options.warn,

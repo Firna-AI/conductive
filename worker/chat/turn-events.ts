@@ -66,6 +66,19 @@ export async function prepareAgentEvent(
   }
   return async () => {
     if (target.ended) {
+      if (
+        turn.state === 'failed' &&
+        turn.started === true &&
+        (event.type === 'turn.completed' || event.type === 'turn.failed')
+      )
+        for (const command of await transaction.pending()) {
+          if (
+            command.type === 'interrupt' &&
+            command.sessionId === session.id &&
+            command.turnId === turn.id
+          )
+            await transaction.removeCommand(command.commandId)
+        }
       await transaction.emit(event, occurredAt, true)
       return
     }
@@ -84,17 +97,15 @@ export async function prepareAgentEvent(
         await transaction.removeCommand(command.commandId)
       }
     }
-    await transaction.emit(event, occurredAt)
     if (event.type === 'turn.completed' || event.type === 'turn.failed') {
-      await new TurnLifecycle(transaction, session).finish(
+      await new TurnLifecycle(transaction, session).runnerEnded(
         turn,
-        event.type === 'turn.failed'
-          ? { state: 'failed', retryMessageId: event.retryMessageId }
-          : event.state === 'finished'
-            ? { state: 'finished', randomId }
-            : { state: 'stopped' },
+        event,
+        occurredAt,
+        randomId,
       )
     } else {
+      await transaction.emit(event, occurredAt)
       await transaction.saveTurn(turn)
     }
   }

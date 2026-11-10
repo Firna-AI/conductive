@@ -64,7 +64,7 @@ it('creates from captured image repositories while current settings and selectio
     }),
   ).rejects.toMatchObject({ status: 404, code: 'repository_not_found' })
   await runtime.env.DB.prepare(
-    'UPDATE settings SET image_build_id = NULL WHERE org_id = ?',
+    "UPDATE org_images SET image_build_id = NULL WHERE org_id = ? AND provider_account = 'boat'",
   )
     .bind(org.id)
     .run()
@@ -112,6 +112,7 @@ it('leases the image and captured branch from the same publication at claim admi
               repositories,
               software: SOFTWARE,
               now: TEST_TIME + 1,
+              runnerProtocolVersion: 2,
             })
           }
           return target.batch(queries)
@@ -133,7 +134,10 @@ it('leases the image and captured branch from the same publication at claim admi
       .prepare('SELECT COUNT(*) AS count FROM image_leases')
       .first('count'),
   ).toBe(1)
-  expect(await leasedImage(db, org.id, id)).toBe('next-image')
+  expect(await leasedImage(db, org.id, id)).toEqual({
+    imageName: 'next-image',
+    providerAccount: 'boat',
+  })
   expect(actor.lastAccepted()).toMatchObject({
     imageName: 'next-image',
     defaultBranch: 'published-next',
@@ -148,6 +152,7 @@ it('leases the image and captured branch from the same publication at claim admi
     repositories: [{ ...repositories[0], defaultBranch: 'published-later' }],
     software: SOFTWARE,
     now: TEST_TIME + 2,
+    runnerProtocolVersion: 3,
   })
   await db
     .prepare(
@@ -173,6 +178,12 @@ it('leases the image and captured branch from the same publication at claim admi
   expect(duplicate.workspace.id).toBe(id)
   expect(boat.starts).toHaveLength(1)
   expect(boat.starts[0]).toMatchObject({ from: 'next-image' })
+  expect(
+    await db
+      .prepare('SELECT runner_protocol_version FROM workspaces WHERE id = ?')
+      .bind(id)
+      .first('runner_protocol_version'),
+  ).toBe(2)
   expect(lifecycleCommandBody(boat.commands[0])).toContain(
     "git fetch origin 'published-next'",
   )
@@ -206,7 +217,10 @@ it('releases a failed claim lease before records exist and allows a fresh retry'
       'SELECT COUNT(*) AS count FROM image_leases',
     ).first('count'),
   ).toBe(1)
-  expect(await leasedImage(runtime.env.DB, org.id, id)).toBe('last-good-image')
+  expect(await leasedImage(runtime.env.DB, org.id, id)).toEqual({
+    imageName: 'last-good-image',
+    providerAccount: 'boat',
+  })
   await actor.advance()
   await expect(failed).rejects.toMatchObject({ code: 'section_not_found' })
   expect(
@@ -219,7 +233,10 @@ it('releases a failed claim lease before records exist and allows a fresh retry'
       'SELECT COUNT(*) AS count FROM image_leases',
     ).first('count'),
   ).toBe(0)
-  expect((await fixture.failedCreation(id))?.request).toEqual(FIRST_MESSAGE)
+  expect(await runtime.workspace(id).waitCreationAdmission()).toMatchObject({
+    ok: false,
+    error: { code: 'section_not_found' },
+  })
   const retried = await fixture.run(() =>
     createCompletedWorkspace(runtime, org.id, user, {
       repositoryId,

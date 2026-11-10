@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-release
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+      # The merge commit of the release pull request. Jobs check out this SHA,
+      # never a tag or branch name, so a name cannot point them at other code.
+      sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - name: Create or update release pull request
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+  mac:
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.release_created == 'true') }}
+    needs: release-please
+    uses: ./.github/workflows/desktop-mac-checks.yml
+    with:
+      ref: ${{ needs.release-please.outputs.sha || github.sha }}
+  verify-tag:
+    if: needs.release-please.outputs.release_created == 'true'
+    needs: [release-please, mac]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Verify the release tag points to the release commit
+        run: node desktop/scripts/verify-release-tag.ts
+        env:
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+          RELEASE_COMMIT: ${{ needs.release-please.outputs.sha }}
+  sign:
+    if: ${{ !cancelled() && needs.mac.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.verify-tag.result == 'success') && github.ref == 'refs/heads/main' }}
+    needs: [release-please, mac, verify-tag]
+    uses: ./.github/workflows/desktop-sign.yml
+    with:
+      ref: ${{ needs.release-please.outputs.sha || github.sha }}
+      updates: ${{ needs.release-please.outputs.release_created == 'true' }}
+    secrets:
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+  publish:
+    if: needs.release-please.outputs.release_created == 'true'
+    needs: [release-please, sign]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v6
+        with:
+          name: desktop-signed-packages
+          path: desktop/dist/release
+      - name: Verify and publish signed files
+        run: node desktop/scripts/publish.ts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+          RELEASE_VERSION: ${{ needs.release-please.outputs.version }}

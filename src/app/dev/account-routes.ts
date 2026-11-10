@@ -8,6 +8,7 @@ import {
   type SaveAgentLoginResponse,
   type SaveAgentLoginRequest,
   type SetDefaultModelResponse,
+  type SetNewWorkspaceViewResponse,
   type UpdateAgentLoginResponse,
 } from '../../shared/account'
 import type { Agent } from '../../shared/agents'
@@ -17,7 +18,7 @@ import {
 } from '../../shared/onboarding'
 import { coreFixtures } from '../../test-support/fixtures/core'
 import { choice, flag, nested, record } from '../api/parse'
-import { AGENTS, readChoice } from '../api/read-core'
+import { AGENTS, readChoice, readNewWorkspaceView } from '../api/read-core'
 import type { DevBackend } from './backend'
 import { json, noContent, requiredText, type Route } from './router'
 import { completeStep } from './state'
@@ -126,7 +127,7 @@ function loginRoutes(backend: DevBackend, agent: Agent): Route[] {
 }
 
 /**
- * The account, its agent logins and default model, and Get started.
+ * The account, its agent logins and preferences, and Get started.
  * Before the user installs the GitHub App, the account has no
  * installations. After that, the recorded installations answer.
  */
@@ -145,6 +146,15 @@ export function accountRoutes(backend: DevBackend): Route[] {
         const saved = nested(record(body), 'choice', readChoice)
         state.account = { ...state.account, defaultChoice: saved }
         return json({ choice: saved } satisfies SetDefaultModelResponse)
+      },
+    },
+    {
+      method: 'PUT',
+      path: ACCOUNT_PATHS.newWorkspaceView,
+      answer: ({ body }) => {
+        const saved = readNewWorkspaceView(body)
+        state.account = { ...state.account, newWorkspaceView: saved.view }
+        return json(saved satisfies SetNewWorkspaceViewResponse)
       },
     },
     {

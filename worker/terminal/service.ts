@@ -3,16 +3,16 @@ import { workspaceTarget } from '../previews/access'
 import { WorkspaceTools } from '../previews/provider'
 import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
-import { warnWorker } from '../warnings'
 import type { SandboxProvider } from '../sandbox/provider'
 import { cacheTerminalPassword } from './credentials'
-import { privilegedCommand } from './privileged'
+import { privilegedCommand, shellArgument } from './privileged'
 import {
   credentialScript,
   launcherScript,
   sessionServerScript,
   TERMINAL_RUNTIME,
   TERMINAL_RUNTIME_VIEW,
+  TERMINAL_RESTORE_MARKER,
 } from './scripts'
 
 export const TERMINAL_PORT = 7681
@@ -94,7 +94,31 @@ export async function installTerminalService(
     throw new ProviderError('unavailable', 502)
 }
 
-/** Call after sandbox ownership is stored, at create and every resume, before ready. */
+/** The lifecycle launches this command detached after the startup script exits. */
+export function terminalStartCommand(): string {
+  return privilegedCommand(`set -eu
+install -d -m 700 -o user -g user /run/conductive-terminal
+touch /run/conductive-terminal/enabled
+systemctl stop ttyd.service 2>/dev/null || true
+systemctl start conductive-terminal.service
+systemctl is-active --quiet conductive-terminal.service
+install -d -m 700 -o user -g user ${TERMINAL_RUNTIME_VIEW}
+mountpoint -q ${TERMINAL_RUNTIME_VIEW} || mount --bind ${TERMINAL_RUNTIME} ${TERMINAL_RUNTIME_VIEW}`)
+}
+
+export async function markTerminalRestoreEnded(
+  provider: Pick<SandboxProvider, 'runCommand'>,
+  sandboxId: string,
+): Promise<void> {
+  const result = await provider.runCommand(
+    sandboxId,
+    privilegedCommand(`touch ${shellArgument(TERMINAL_RESTORE_MARKER)}`),
+  )
+  if (result.exitCode !== 0 || result.timedOut)
+    throw new ProviderError('unavailable', 502)
+}
+
+/** Read and cache the password only after the detached setup command succeeds. */
 export async function startWorkspaceTerminal(
   env: AppEnv,
   orgId: string,
@@ -107,21 +131,6 @@ export async function startWorkspaceTerminal(
     target,
     dependencies.fetch,
   )
-  const command = `set -eu
-install -d -m 700 -o user -g user /run/conductive-terminal
-touch /run/conductive-terminal/enabled
-systemctl stop ttyd.service 2>/dev/null || true
-systemctl start conductive-terminal.service
-systemctl is-active --quiet conductive-terminal.service
-install -d -m 700 -o user -g user ${TERMINAL_RUNTIME_VIEW}
-mountpoint -q ${TERMINAL_RUNTIME_VIEW} || mount --bind ${TERMINAL_RUNTIME} ${TERMINAL_RUNTIME_VIEW}`
-  const result = await provider.command(privilegedCommand(command))
-  if (result.exitCode !== 0 || result.timedOut) {
-    warnWorker(
-      `The terminal of workspace ${workspaceId} did not start: exit code ${result.exitCode}, timed out ${result.timedOut}`,
-    )
-    throw new ProviderError('unavailable', 502)
-  }
   const file = await provider.readFile(`${TERMINAL_RUNTIME_VIEW}/password`, 64)
   if (file.kind !== 'file') throw new ProviderError('invalid_response', 502)
   let password: string

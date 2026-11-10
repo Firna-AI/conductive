@@ -2,7 +2,7 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../test-support/harness'
+import { duringTurn, runnerHarness, turn } from '../../test-support/harness'
 import { fakeToolContext } from '../../test-support/providers'
 import { string } from '../parse'
 import { Runner } from '../runner'
@@ -28,7 +28,7 @@ async function queuedClaudeTurn() {
   h.endpoint.send(first)
   for (let id = 2; id <= 65; id++)
     h.endpoint.send({
-      ...turn(String(id)),
+      ...duringTurn(turn(String(id))),
       type: 'message',
       turnId: 'turn-1',
       message: { ...turn(String(id)).message, text: `Message ${id}.` },
@@ -37,7 +37,10 @@ async function queuedClaudeTurn() {
   const sent: string[] = []
   for (let id = 1; id <= 64; id++) {
     const message = await sdk.nextUser()
-    expect(message.message).toEqual({ role: 'user', content: `Message ${id}.` })
+    expect(message.message).toEqual({
+      role: 'user',
+      content: `Sender: @alice\n\nMessage ${id}.`,
+    })
     sent.push(string(message.uuid))
   }
   return { ...h, runner, sdk, sent }
@@ -46,9 +49,9 @@ async function queuedClaudeTurn() {
 it('holds the 65th Claude message until a result frees input and completes the exact turn', async () => {
   const h = await queuedClaudeTurn()
   let delivered = false
-  const pending = h.sdk.nextUser().then((message) => {
-    delivered = true
-    return message
+  const pending = h.sdk.nextInput().then((message) => {
+    delivered = !message.done
+    return message.done ? null : message.value
   })
   await h.sdk.raw({ type: 'system', subtype: 'init', session_id: 'sdk-ready' })
   await h.runner.idle()
@@ -56,11 +59,17 @@ it('holds the 65th Claude message until a result frees input and completes the e
   await h.sdk.raw({
     type: 'result',
     is_error: false,
+    origin: { kind: 'task-notification' },
     user_message_uuids: h.sent,
   })
+  await h.runner.idle()
+  expect(delivered).toBe(true)
   const last = await pending
-  expect(last.message).toEqual({ role: 'user', content: 'Message 65.' })
-  expect(h.sent).not.toContain(last.uuid)
+  expect(last?.message).toEqual({
+    role: 'user',
+    content: 'Sender: @alice\n\nMessage 65.',
+  })
+  expect(h.sent).not.toContain(last?.uuid)
   await h.runner.idle()
   const completed = () =>
     h.endpoint.runnerEvents.flatMap(({ event }) =>
@@ -68,9 +77,33 @@ it('holds the 65th Claude message until a result frees input and completes the e
     )
   expect(completed()).toEqual([])
   await h.sdk.raw({
+    type: 'stream_event',
+    user_message_uuid: last?.uuid,
+    event: { type: 'message_start', message: { id: 'held-answer' } },
+  })
+  await h.sdk.raw({
+    type: 'stream_event',
+    event: {
+      type: 'content_block_delta',
+      delta: { type: 'text_delta', text: 'Queued reply.' },
+    },
+  })
+  await h.sdk.raw({
     type: 'result',
     is_error: false,
-    user_message_uuids: [last.uuid],
+    origin: { kind: 'task-notification' },
+    user_message_uuids: h.sent,
+  })
+  await h.runner.idle()
+  expect(
+    h.endpoint.runnerEvents.flatMap(({ event }) =>
+      event.type === 'assistant.completed' ? [event] : [],
+    ),
+  ).toEqual([])
+  expect(completed()).toEqual([])
+  await h.sdk.raw({
+    type: 'result',
+    is_error: false,
   })
   await h.runner.idle()
   expect(completed()).toEqual([
@@ -102,9 +135,13 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
   )({
     cwd: h.root,
     home: h.home,
-    login: first.login,
+    sessionId: first.sessionId,
+    endpoint:
+      fakeToolContext.machineOrigin + '/v1/model/' + first.message.choice.agent,
+    credential: { type: 'gateway', ...first.credential },
     choice: first.message.choice,
     conversationId: null,
+    instructions: '',
     tools: fakeToolContext,
     event: () => {},
     warn: h.options.warn,
@@ -155,7 +192,7 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
   })
   expect((await next).message).toEqual({
     role: 'user',
-    content: 'Change the file.',
+    content: 'Sender: @alice\n\nChange the file.',
   })
 })
 

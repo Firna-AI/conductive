@@ -75,7 +75,7 @@ it('answers with the stored queued first message before starting a sandbox and p
   const actor = fixture.starts.get(id)
   if (!actor) throw new Error('Missing admitted actor')
   expect(await actor.job()).toMatchObject({ phase: 'machine' })
-  actor.restart()
+  await actor.restart()
   input.firstMessage.text =
     'A duplicate cannot replace the stored first message.'
   const repeated = await fixture.run(create)
@@ -95,20 +95,27 @@ it('answers with the stored queued first message before starting a sandbox and p
     ok: false,
     error: { code: 'workspace_start_failed' },
   })
-  expect((await fixture.failedCreation(id))?.request).toEqual({
-    ...FIRST_MESSAGE,
-    attachmentIds: ['attachment-one'],
+  expect(await runtime.workspace(id).waitCreationAdmission()).toMatchObject({
+    ok: true,
+    created: {
+      first: {
+        request: {
+          ...FIRST_MESSAGE,
+          attachmentIds: ['attachment-one'],
+        },
+      },
+    },
   })
   expect(
     await runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspaces',
     ).first('count'),
-  ).toBe(0)
+  ).toBe(1)
   expect(
     await runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspace_tokens',
     ).first('count'),
-  ).toBe(0)
+  ).toBe(1)
   const events = fixture.actors
     .get(id)
     ?.events.map((envelope) => envelope.event)

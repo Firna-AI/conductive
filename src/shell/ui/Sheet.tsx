@@ -1,11 +1,6 @@
 import { useRef, type KeyboardEvent, type ReactNode } from 'react'
 import styles from '../../../docs/mockups/src/components/common/Sheet.module.css'
-import {
-  focusableSelector,
-  Overlay,
-  useDismiss,
-  useLayerFocus,
-} from './Overlay'
+import { focusableSelector, Overlay, useModalLayer } from './Overlay'
 
 /**
  * Keeps the Tab key inside a modal layer, as a dialog needs. Tab from the
@@ -38,16 +33,19 @@ export function trapTab(event: KeyboardEvent<HTMLElement>): void {
 
 /**
  * A sheet that rises from the bottom of a phone screen over the dimmed
- * app. A press on the dim area or Escape closes it.
+ * app. A press on the dim area or Escape closes it, and the focus goes back
+ * to its trigger. `returnFocus` names that trigger when a render can
+ * replace it while the sheet shows, such as the row of a menu that moves
+ * the row.
  */
 export function Sheet(props: {
   title: string
   close: () => void
+  returnFocus?: () => void
   children: ReactNode
 }) {
   const sheet = useRef<HTMLElement>(null)
-  useDismiss(true, sheet, props.close)
-  useLayerFocus(sheet, { modal: true })
+  useModalLayer(sheet, props.close, { returnFocus: props.returnFocus })
   return (
     <Overlay>
       <div className={styles.layer}>

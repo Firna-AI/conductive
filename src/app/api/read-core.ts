@@ -1,10 +1,12 @@
-import type {
-  AccountResponse,
-  AgentLoginStatus,
-  GitHubInstallation,
-  GitHubInstallationsResponse,
-  GitHubRepositoriesResponse,
-  GitHubRepository,
+import {
+  NEW_WORKSPACE_VIEWS,
+  type AccountResponse,
+  type AgentLoginStatus,
+  type GitHubInstallation,
+  type GitHubInstallationsResponse,
+  type GitHubRepositoriesResponse,
+  type GitHubRepository,
+  type SetNewWorkspaceViewResponse,
 } from '../../shared/account'
 import type {
   Agent,
@@ -39,7 +41,7 @@ export const EFFORTS = [
   'xhigh',
   'max',
 ] as const satisfies readonly Effort[]
-const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
+export const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
 export function readUser(value: unknown): User {
   const user = record(value, 'user')
@@ -138,9 +140,17 @@ export function readAccount(value: unknown): AccountResponse {
   return {
     user: nested(account, 'user', readUser),
     defaultChoice: nested(account, 'defaultChoice', readChoice),
+    newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
     agentLogins: items(account, 'agentLogins', readLogin),
+    operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),
   }
+}
+
+export function readNewWorkspaceView(
+  value: unknown,
+): SetNewWorkspaceViewResponse {
+  return { view: choice(record(value), 'view', NEW_WORKSPACE_VIEWS) }
 }
 
 function readInstallation(value: unknown): GitHubInstallation {

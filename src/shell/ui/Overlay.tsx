@@ -10,7 +10,8 @@ import {
   type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { useModalLayer, type LayerOwner } from './layers'
+import { useModalLayer as useOpenModalLayer, type LayerOwner } from './layers'
+import { requestScreenFocus } from './screen-focus'
 import styles from './ui.module.css'
 
 /** The elements of a layer that can take the focus, links first among equals. */
@@ -70,12 +71,17 @@ export function Overlay(props: { children: ReactNode }) {
   return host ? createPortal(props.children, host) : null
 }
 
+/** The open layers that Escape can close, the newest last. */
+const escapeLayers: object[] = []
+
 /** Closes an open layer on a press outside `inside`. */
 export function usePressOutside(
   open: boolean,
   inside: RefObject<HTMLElement | null>,
   close: () => void,
+  options: { modal?: boolean } = {},
 ): void {
+  const modal = options.modal ?? false
   const closeRef = useRef(close)
   useEffect(() => {
     closeRef.current = close
@@ -85,59 +91,109 @@ export function usePressOutside(
     const onPointer = (event: PointerEvent) => {
       const target = event.target
       if (target instanceof Node && inside.current?.contains(target)) return
+      if (modal) event.preventDefault()
       closeRef.current()
     }
     document.addEventListener('pointerdown', onPointer)
     return () => document.removeEventListener('pointerdown', onPointer)
-  }, [open, inside])
+  }, [open, inside, modal])
 }
 
 /**
- * Closes an open layer on Escape and on a press outside `inside`. Escape
- * counts in the capture phase, because a text field stops its key events.
+ * Closes an open layer on Escape. Escape counts in the capture phase,
+ * because a text field stops its key events. Escape closes only the newest
+ * open layer, such as a menu in a dialog, or the choices of a menu before
+ * the menu.
+ */
+export function useEscapeLayer(open: boolean, close: () => void): void {
+  const closeRef = useRef(close)
+  useEffect(() => {
+    closeRef.current = close
+  })
+  useEffect(() => {
+    if (!open) return
+    const layer = {}
+    escapeLayers.push(layer)
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || escapeLayers.at(-1) !== layer) return
+      event.stopPropagation()
+      closeRef.current()
+    }
+    document.addEventListener('keydown', onKey, true)
+    return () => {
+      escapeLayers.splice(escapeLayers.indexOf(layer), 1)
+      document.removeEventListener('keydown', onKey, true)
+    }
+  }, [open])
+}
+
+/**
+ * Closes an open layer on Escape and on a press outside `inside`, as
+ * `useEscapeLayer` and `usePressOutside` do. With `modal`, a press outside
+ * does not move the focus, which a browser does at each press, so the focus
+ * goes back to the trigger of the layer.
  */
 export function useDismiss(
   open: boolean,
   inside: RefObject<HTMLElement | null>,
   close: () => void,
+  options: { modal?: boolean } = {},
 ): void {
-  const closeRef = useRef(close)
-  useEffect(() => {
-    closeRef.current = close
-  })
-  usePressOutside(open, inside, close)
-  useEffect(() => {
-    if (!open) return
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      event.stopPropagation()
-      closeRef.current()
-    }
-    document.addEventListener('keydown', onKey, true)
-    return () => document.removeEventListener('keydown', onKey, true)
-  }, [open])
+  const modal = options.modal ?? false
+  usePressOutside(open, inside, close, { modal })
+  useEscapeLayer(open, close)
+}
+
+/** Something that takes the focus, such as the handle of a Firna field. */
+export interface Focusable {
+  focus(): void
 }
 
 /**
- * Moves the focus into a layer as it opens: to its element with
- * `data-autofocus`, else to the first one that can take the focus. When
- * the layer closes, the focus goes back to the element that had it, unless
- * the user moved it elsewhere. A modal layer, a sheet or a dialog, makes
- * the content of the frame inert while it shows, and active again before
- * the focus goes back. A layer inside another, such as a menu in a sheet,
- * leaves the focus to the outer layer with `enabled: false`. A modal layer
- * also counts as an open dialog for the command palette, whose key then
- * does nothing. `owner` names who holds it, such as the palette for its
- * own dialog. Without one, the layer is its own owner.
+ * Moves the focus into a layer as it opens: to `initial`, else to its
+ * element with `data-autofocus`, else to the first one that can take the
+ * focus. When the layer closes, the focus goes back to the element that
+ * had it, unless the user moved it elsewhere. `returnFocus` gives it to the
+ * trigger that the owner of the layer names instead, such as the new link
+ * of a row that a render replaced. When `moved` says that the address
+ * changed as the layer closed, the main area of the new screen takes the
+ * focus instead. A modal layer, a sheet or a dialog, makes the
+ * content of the frame inert while it shows, and active again before the
+ * focus goes back. A layer inside another, such as a menu in a sheet,
+ * leaves the focus to the outer layer with `enabled: false`.
+ * A modal layer counts as an open dialog for the command palette. `owner`
+ * names who holds it, such as the palette for its own dialog.
  */
 export function useLayerFocus(
   layer: RefObject<HTMLElement | null>,
-  options: { modal: boolean; enabled?: boolean; owner?: LayerOwner },
+  options: {
+    modal: boolean
+    enabled?: boolean
+    owner?: LayerOwner
+    /** The part that takes the focus as the layer opens. */
+    initial?: RefObject<Focusable | null>
+    /**
+     * Whether the address changed as the layer closed, such as after a
+     * create or Back. It reads the close.
+     */
+    moved?: () => boolean
+    /**
+     * Gives the focus back to the trigger of the layer as it closes. When it
+     * places no focus, the element that had the focus takes it back.
+     */
+    returnFocus?: () => void
+  },
 ): void {
   const { holdModal } = useContext(OverlayContext)
   const enabled = options.enabled ?? true
-  const { modal } = options
-  useModalLayer(enabled && modal, options.owner)
+  const { modal, initial } = options
+  useOpenModalLayer(enabled && modal, options.owner)
+  const moved = useRef(options.moved)
+  const returnFocus = useRef(options.returnFocus)
+  useEffect(() => {
+    moved.current = options.moved
+    returnFocus.current = options.returnFocus
+  })
   useEffect(() => {
     if (!enabled) return
     const node = layer.current
@@ -147,6 +203,7 @@ export function useLayerFocus(
         : null
     const release = modal ? holdModal() : null
     const first =
+      initial?.current ??
       node?.querySelector<HTMLElement>('[data-autofocus]') ??
       node?.querySelector<HTMLElement>(focusableSelector)
     ;(first ?? node)?.focus()
@@ -155,7 +212,34 @@ export function useLayerFocus(
       const active = document.activeElement
       const lost = active === null || active === document.body
       const inLayer = active instanceof Node && node?.contains(active)
-      if ((lost || inLayer) && before?.isConnected) before.focus()
+      if (!lost && !inLayer) return
+      if (moved.current?.()) {
+        requestScreenFocus()
+        return
+      }
+      returnFocus.current?.()
+      const now = document.activeElement
+      const placed = now !== active && now !== null && now !== document.body
+      if (!placed && before?.isConnected) before.focus()
     }
-  }, [layer, enabled, modal, holdModal])
+  }, [layer, enabled, modal, initial, holdModal])
+}
+
+/**
+ * A modal layer, a sheet or a dialog. Escape and a press outside close it.
+ * The focus moves into it as it opens, as `useLayerFocus` says, and the
+ * rest of the frame is inert while it shows. A press outside does not move
+ * the focus, so the focus goes back to the trigger as the layer closes.
+ */
+export function useModalLayer(
+  layer: RefObject<HTMLElement | null>,
+  close: () => void,
+  focus: {
+    initial?: RefObject<Focusable | null>
+    moved?: () => boolean
+    returnFocus?: () => void
+  } = {},
+): void {
+  useDismiss(true, layer, close, { modal: true })
+  useLayerFocus(layer, { ...focus, modal: true })
 }

@@ -4,6 +4,20 @@ import { expect, it, vi } from 'vitest'
 import { command } from '../../tests/device-support.js'
 import { notifyCommand, workspaceDeviceAddress } from './notification.js'
 
+it('names an untitled workspace in a background notification', () => {
+  const create = vi.fn(() => ({ on: vi.fn(), show: vi.fn(), close: vi.fn() }))
+  notifyCommand(command({ workspaceName: null }), {
+    foreground: () => false,
+    create,
+    open: vi.fn(),
+    warn: vi.fn(),
+  })
+  expect(create).toHaveBeenCalledWith({
+    title: 'Run a command on this Mac?',
+    body: 'An agent in Untitled asks to run printf hello.',
+  })
+})
+
 it('shows a background native notice that only opens the matching workspace and dismisses stale notices', () => {
   const notice = Object.assign(new EventEmitter(), {
     show: vi.fn(),

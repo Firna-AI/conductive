@@ -30,14 +30,21 @@ set -euo pipefail
 
 redis-server --daemonize yes`
 
-export type EnvVar = { name: string }
+/**
+ * An env var of the org: its name, and its Secret mark. The chat and the
+ * start logs hide the value of a secret variable. No screen shows a value.
+ */
+export type EnvVar = { name: string; secret: boolean }
 
 export const envVars: readonly EnvVar[] = [
-  { name: 'DATABASE_URL' },
-  { name: 'PLACES_API_KEY' },
-  { name: 'STRIPE_SECRET_KEY' },
-  { name: 'NEXT_PUBLIC_SITE_URL' },
+  { name: 'DATABASE_URL', secret: true },
+  { name: 'PLACES_API_KEY', secret: true },
+  { name: 'STRIPE_SECRET_KEY', secret: true },
+  { name: 'NEXT_PUBLIC_SITE_URL', secret: false },
 ]
+
+/** The variable that an admin adds, with the name typed and a value. */
+export const newEnvVar = { name: 'SENTRY_DSN', value: 'https://sentry.example' }
 
 type BuildResult = 'succeeded' | 'failed'
 
@@ -61,6 +68,41 @@ export const buildHistory: readonly Build[] = [
 
 /** The build that runs, in that state. */
 export const runningBuild = { elapsed: '2m 14s' } as const
+
+/**
+ * The first build of the cloud computer of a new org, which Create org
+ * starts when the org has a repository: it runs, it succeeded, it failed,
+ * or none runs, such as after a start that failed. Until it succeeds, the
+ * org has no image that a workspace can start from.
+ */
+export const firstBuildStates = [
+  'running',
+  'succeeded',
+  'failed',
+  'none',
+] as const
+
+export type FirstBuildState = (typeof firstBuildStates)[number]
+
+/**
+ * The first build of Firna, the new org of the sign-up, once it succeeded.
+ * Create org started it with the empty scripts of a new org.
+ */
+export const firstGoodBuild: Build = {
+  when: '1 minute ago',
+  result: 'succeeded',
+  duration: '4m 52s',
+}
+
+/**
+ * The install script that an admin of Firna saves after the first build.
+ * A new org starts with empty scripts and no env vars.
+ */
+export const firnaInstallScript = `#!/usr/bin/env bash
+set -euo pipefail
+
+cd ~/code/components && npm ci
+cd ~/code/docs && npm ci`
 
 /**
  * Each build and refresh runs for at most 60 minutes from its start. A

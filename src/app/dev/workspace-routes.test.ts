@@ -9,7 +9,10 @@ import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { createApiClient } from '../api/client'
-import { readOrderedWorkspaceResponse } from '../api/read-workspaces'
+import {
+  readOrderedWorkspaceResponse,
+  readWorkspaceResponse,
+} from '../api/read-workspaces'
 import { createBackend, guardScope } from './backend'
 import { readDevOptions } from './options'
 import { routeFetch } from './router'
@@ -108,4 +111,36 @@ test('development Resume includes its starting event number for the ordered read
     },
     error: null,
   })
+})
+
+test('development Rename trims the name, records its time, keeps the branch, and refuses an archived workspace', async () => {
+  const { api } = setup('ready')
+  const before = await api.get(path, readWorkspaceResponse)
+  const renamed = await api.send(
+    'PATCH',
+    path,
+    { name: '  Saved guest carts  ' },
+    readWorkspaceResponse,
+  )
+  expect(renamed.workspace).toEqual({
+    ...before.workspace,
+    name: 'Saved guest carts',
+    updatedAt: FAKE_TIME,
+  })
+  await api.send(
+    'POST',
+    workspacePaths.archive(orgId, workspaceId),
+    { discardUnpushedWork: true },
+    readWorkspaceResponse,
+  )
+  await expect(
+    api.send('PATCH', path, { name: 'Archived rename' }, readWorkspaceResponse),
+  ).rejects.toMatchObject({
+    status: 409,
+    code: 'workspace_archived',
+    message: 'The archived chat is read-only.',
+  })
+  expect((await api.get(path, readWorkspaceResponse)).workspace.name).toBe(
+    'Saved guest carts',
+  )
 })

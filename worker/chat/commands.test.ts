@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import type {
   ChangeModelResponse,
   SessionResponse,
@@ -13,7 +12,6 @@ import {
   createChatFixture,
   WORKSPACE_ID,
 } from './harness.test-support'
-
 describe('workspace chat commands', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -25,11 +23,11 @@ describe('workspace chat commands', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('keeps same-agent model changes and moves the unchanged draft to a new agent session', async () => {
     const ids = ['z-session', 'model-command']
     const fixture = await createChatFixture(harness, {
-      randomId: () => ids.shift() ?? 'later-command',
+      ids,
+      idFallback: 'later-command',
     })
     const session = await fixture.createSession()
     const runner = await fixture.connect()
@@ -62,7 +60,7 @@ describe('workspace chat commands', () => {
     runner.disconnect()
     await fixture.connect(runner)
     expect(runner.commands[1]).toEqual(changedModel)
-    await fixture.clock.advance(1_000)
+    await fixture.clock.advance(1000)
     const changedResponse = await fixture.fetch(
       sessionPaths.model(fixture.org.id, WORKSPACE_ID, session.id),
       { choice: CODEX, draft, newSessionId: 'a-session' },
@@ -74,7 +72,7 @@ describe('workspace chat commands', () => {
     expect(changed.session.id).toBe('a-session')
     expect(changed.session.id).not.toBe(session.id)
     expect(changed.session.choice).toEqual(CODEX)
-    expect(changed.session.createdAt).toBe(session.createdAt + 1_000)
+    expect(changed.session.createdAt).toBe(session.createdAt + 1000)
     expect(changed.draft).toEqual(draft)
     const invalid = await fixture.fetch(
       sessionPaths.messages(fixture.org.id, WORKSPACE_ID, session.id),
@@ -92,8 +90,16 @@ describe('workspace chat commands', () => {
       'claude',
       'codex',
     ])
+    expect(changed.session.title).toBeNull()
+    const accepted = await fixture.send(
+      changed.session.id,
+      'other-agent-message',
+      fixture.ownerCookie,
+      CODEX,
+      'Title the other agent session.',
+    )
+    expect(accepted.session.title).toBe('Title the other agent session')
   })
-
   it('stops a running session before closing and reopens its stored history', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -136,7 +142,12 @@ describe('workspace chat commands', () => {
     ).json()
     expect(closed.sessions).toEqual([])
     expect(closed.history).toEqual([
-      { ...session, activeTurnId: null, closedAt: 1_800_000_000_000 },
+      {
+        ...session,
+        title: 'Check this code',
+        activeTurnId: null,
+        closedAt: 1_800_000_000_000,
+      },
     ])
     const history = await fixture.history(session.id)
     expect(history.events.map(({ event }) => event.type)).toContain(

@@ -1,5 +1,6 @@
+import type { DraftFile } from '../../app/draft-files'
 import type { AgentModel } from '../../shared/agents'
-import type { Attachment, UserMessage } from '../../shared/messages'
+import type { UserMessage } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { Workspace, WorkspaceStart } from '../../shared/workspaces'
@@ -19,11 +20,15 @@ import { emptyTranscript, type Transcript } from './transcript'
 export interface Draft {
   id: string
   text: string
-  attachments: readonly Attachment[]
+  /**
+   * The files, in the order of the picks, each with its upload. Send waits
+   * while one uploads or failed, and takes only ready ones.
+   */
+  files: readonly DraftFile[]
+  /** The names of the files of the last pick that are over the size limit. */
+  refused: readonly string[]
   /** The client ID of a send that failed, so that a resend is one message. */
   sendId: string | null
-  /** Files that still upload. Send waits until they are attached. */
-  uploads: number
   /** A send of this draft waits for its answer. */
   sending: boolean
 }
@@ -64,10 +69,10 @@ export interface ChatSnapshot {
   workspace: Workspace | null
   start: WorkspaceStart | null
   /**
-   * The records showed that the first start of the workspace succeeded, as
-   * `first-start.ts` says. Until then, Send waits.
+   * The message that the workspace saved for its failed start, which the
+   * bar of the chat shows. Null when the workspace saved none.
    */
-  firstStartDone: boolean
+  savedError: string | null
   org: OrgSummary | null
   account: AccountSummary | null
   /** The members of the org, which name the member who stopped a turn. */
@@ -98,9 +103,9 @@ export function blankDraft(id: string): Draft {
   return {
     id,
     text: '',
-    attachments: [],
+    files: [],
+    refused: [],
     sendId: null,
-    uploads: 0,
     sending: false,
   }
 }
@@ -118,7 +123,7 @@ export const initialSnapshot: ChatSnapshot = {
   load: { state: 'loading' },
   workspace: null,
   start: null,
-  firstStartDone: false,
+  savedError: null,
   org: null,
   account: null,
   members: [],

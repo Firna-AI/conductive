@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { hash } from '../security/crypto'
 import {
   createHarness,
@@ -12,7 +11,6 @@ import {
   WORKSPACE_ID,
   WORKSPACE_TOKEN,
 } from './harness.test-support'
-
 describe('connected runner access', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -24,7 +22,6 @@ describe('connected runner access', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('closes a connected runner before sending logins after its token is revoked or replaced', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -68,6 +65,7 @@ describe('connected runner access', () => {
     if (first?.type !== 'turn')
       throw new Error('Expected the preserved queued turn.')
     expect(first.commandId).toBe(pending[0]?.commandId)
+    if (!first.login) throw new Error('The version 1 turn has no login.')
     expect(first.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     runner.emit({
       type: 'turn.started',
@@ -96,12 +94,12 @@ describe('connected runner access', () => {
     expect(
       await fixture.chat.store.read(WORKSPACE_ID, (view) => view.pending()),
     ).toMatchObject([{ type: 'message', messageId: 'after-replacement' }])
-    expect(JSON.stringify([...fixture.storage.records.values()])).not.toContain(
-      replacement,
-    )
-    expect(JSON.stringify([...fixture.storage.records.values()])).not.toContain(
-      'secret-',
-    )
+    expect(
+      JSON.stringify([...(await fixture.snapshot()).records.values()]),
+    ).not.toContain(replacement)
+    expect(
+      JSON.stringify([...(await fixture.snapshot()).records.values()]),
+    ).not.toContain('secret-')
     expect(
       (await fixture.history(session.id)).events.map(({ event }) => event.type),
     ).not.toContain('turn.failed')

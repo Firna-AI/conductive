@@ -1,7 +1,8 @@
 # Developer scripts
 
 These scripts of the [sandbox software](README.md) run on a developer
-machine. No image build installs them.
+machine. The deploy workflow also runs the packager. No image build
+installs them.
 
 - `package-runner.mjs` packages the runner archive.
 - `live-check.mjs` checks the chat path in a real sandbox. Then it times
@@ -22,19 +23,32 @@ node image/package-runner.mjs \
   --output .context/runner-artifact/runner.tar.gz
 ```
 
+The script takes these options. Pass exactly one of `--url` and
+`--base-url`.
+
 - `--url` is the public HTTPS URL of the archive after you publish it. It
   can hold no user name, password, query, or fragment.
+- `--base-url` is a public HTTPS base for the URL, with the same limits.
+  After the script computes the digest, the archive URL is
+  `<base>runner-<sha256>.tar.gz`. The script adds a missing final `/` to
+  the base.
 - `--output` is optional, and it must be under `.context/`. The default is
   `.context/runner-artifact/runner.tar.gz`.
 - `--help` prints the usage.
+
+The [deploy workflow](../docs/automatic-deploys.md) runs the packager with
+`--base-url https://runner.conductive.build/`.
 
 The script builds the runner bundles. The archive then holds only a
 `runner/` folder: `main.mjs`, `measure.mjs`, `compare.mjs`, the runner
 manifest and lockfile, and the production packages from
 `runner/node_modules`, for Linux x64. It holds no Node. Each image installs
-its own private Node, as [the private Node runtime](runtime.md) says. The
-script fixes the order, the times, and the owners of the archive entries.
-So the same source and installed packages give the same digest.
+its own private Node, as [the private Node runtime](runtime.md) says.
+
+The script fixes the order, the times, the owners, and the file modes of
+the archive entries. So the umask of `npm ci --prefix runner` does not
+change the digest. The same source and installed packages give the same
+digest.
 
 The script writes the archive and two files next to it:
 
@@ -75,9 +89,22 @@ node image/live-check.mjs
 - A repository of that org that the image holds.
 
 Build computer on the Cloud computer tab of the org starts that build, as
-[The org image](../docs/protocol/workspaces-and-sandboxes.md#the-org-image)
+[The org image](../docs/protocol/org-image.md#the-org-image)
 says. [The runner archive](README.md#the-runner-archive) gives the steps
 that supply the archive to the build.
+
+A full build records the runner protocol version of the test Worker, not
+the version of the archive. So package the archive from the same commit as
+the test Worker, as [The runner archive](../docs/deployment.md#the-runner-archive)
+says. A workspace refuses a runner below the version of its image. So a
+runner of version 1 from an older archive gets no turns.
+
+The check does not read the runner version of the image. With a runner of
+protocol version 2, the agents send the model requests of the chat steps
+through the [model gateway](../docs/protocol/model-gateway.md) of the test
+Worker. The gateway adds the login that the app stored for the account. A refresh
+keeps the runner and the version of its image. So an image from an older
+build can still hold a runner of version 1, which gets that login itself.
 
 ### Variables
 
@@ -94,7 +121,7 @@ These variables are required:
 | `LIVE_BOAT_ORG` | The ID of that organization: the `BOAT_ORG_ID` of the test Worker. |
 | `LIVE_AGENT` | `claude` or `codex`. |
 | `LIVE_MODEL` | A model of that agent. |
-| `LIVE_AGENT_LOGIN` | A login of that agent, only for the measurement forks. The app uses the login that it stored for the account. |
+| `LIVE_AGENT_LOGIN` | A login of that agent, only for the measurement forks. Their model requests go straight to the provider, not through the gateway. The app uses the login that it stored for the account. |
 
 These variables are optional:
 
@@ -133,7 +160,8 @@ Each wait for a state or an answer stops after 10 minutes.
    forks keep the private Node of the image in its place.
 8. It stops and resumes each fork `LIVE_RUNS` times. After each resume,
    the private Node runs the `measure.mjs` of the copy, which times the
-   first agent text.
+   first agent text. Its prompt goes straight to the provider with
+   `LIVE_AGENT_LOGIN`.
 9. `dist/runner/compare.mjs` compares the two placements.
 10. It deletes the forks and stops the sandbox of the workspace. The
     workspace stays in the org.
@@ -162,8 +190,9 @@ More facts:
   `local-fake-endpoints`. Such a run does not prove a real sandbox.
 - The check writes no Boat key, cookie, login, response body, or agent
   answer to its output or its files.
-- Each fork gets `LIVE_AGENT_LOGIN` in its resume env. So clean up each
-  sandbox that `cleanupNeeded` lists at once.
+- Each fork gets `LIVE_AGENT_LOGIN` in its resume env. So a fork holds a
+  real login, unlike a sandbox with a version pin of 2 or later. Clean up
+  each sandbox that `cleanupNeeded` lists at once.
 
 ## Development
 

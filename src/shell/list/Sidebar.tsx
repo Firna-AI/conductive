@@ -6,9 +6,11 @@ import links from '../../../docs/mockups/src/components/workspaces/SidebarLinks.
 import { latestBuild } from '../../app/org-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
+import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
 import { useSidebarShown } from '../mac/mac-app'
+import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import { SearchRow } from '../palette/SearchRow'
 import { AppLink } from '../ui/AppLink'
 import ui from '../ui/ui.module.css'
@@ -44,12 +46,18 @@ export function SettingsLink(props: { orgId: string; current: boolean }) {
   )
 }
 
-/** The row at the top of the list that starts a new workspace in General. */
+/**
+ * The row at the top of the list that starts a new workspace in General. It
+ * links to the page. A plain click opens the dialog in its place when the
+ * user chose the dialog, and a click with a modifier key opens the page in
+ * a new tab.
+ */
 export function NewWorkspaceLink(props: {
   orgId: string
   current: boolean
   variant: RowVariant
 }) {
+  const newWorkspace = useNewWorkspace()
   return (
     <AppLink
       aria-current={props.current ? 'page' : undefined}
@@ -58,6 +66,9 @@ export function NewWorkspaceLink(props: {
         props.variant === 'page' && links.page,
         props.current && links.selected,
       )}
+      onClick={(event) =>
+        newWorkspace.click(event, { orgId: props.orgId, sectionId: null })
+      }
       to={routes.newWorkspace(props.orgId)}
     >
       <Plus aria-hidden className={links.plus} size={14} />
@@ -72,7 +83,11 @@ export function NewWorkspaceLink(props: {
  * org shows its sections read-only, without New workspace. While the
  * sidebar shows, its list offers New section to the command palette.
  */
-export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
+export function Sidebar(props: {
+  org: OrgSummary
+  current: ListCurrent
+  user: User
+}) {
   const { org, current } = props
   const { suspended } = useOrgAccess(org)
   const shown = useSidebarShown()
@@ -101,6 +116,7 @@ export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
             current?.screen === 'workspace' ? current.workspaceId : null
           }
           variant="sidebar"
+          viewer={props.user}
         />
       </div>
     </>

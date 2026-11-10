@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-07, from the options check of `plans/follow-ups/agent-logins-readable-in-sandbox.md` on branch `calummoore/conductor-alternative-architecture`, a problem outside its scope. The user sees it as item 121.
-- **Location:** `handleGitCredential` in `worker/lifecycle/machine.ts:10`, the stored token read in `worker/security/github-tokens.ts:104`, `image/git-credential-helper.sh`, the section "Start in a workspace" of `image/README.md`, and the section "GitHub tokens" of `docs/protocol/access-and-security.md`.
+- **Location:** `handleGitCredential` in `worker/lifecycle/machine.ts:10`, the stored token read in `worker/security/github-tokens.ts:104`, `image/git-credential-helper.sh`, the section "Start in a workspace" of `image/README.md`, and the section "GitHub tokens" of `docs/protocol/tokens-and-secrets.md`.
 - **Reason:** each option states or changes a security rule of the access protocol, and the user decides those rules.
 
 - **Terms:**

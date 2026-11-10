@@ -1,5 +1,4 @@
 import type { AppDependencies, AppEnv } from '../../env'
-import { appSigningKey } from '../../github/private-key'
 import { HttpError } from '../../http'
 import { encrypt, hash, randomToken } from '../../security/crypto'
 import type { PrepareImageSources } from '../image-builds'
@@ -43,7 +42,7 @@ export function imageSourceFailure(missingKey = false): HttpError {
 /** Each call starts or polls one native command. Token ownership survives actor restarts. */
 export function createGitHubImageSourceMaterializer(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
-  dependencies: Pick<AppDependencies, 'fetch'>,
+  dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
 ): PrepareImageSources {
   return async (input) => {
     let missingKey = false
@@ -54,6 +53,7 @@ export function createGitHubImageSourceMaterializer(
         input.orgId,
         input.buildId,
         input.sandboxId,
+        input.providerAccount,
       )
       if (JSON.stringify(repositories) !== JSON.stringify(input.repositories))
         throw new Error('Captured repositories changed')
@@ -62,7 +62,9 @@ export function createGitHubImageSourceMaterializer(
       let job = await readSourceJob(env.DB, input.buildId)
       if (
         job &&
-        (job.orgId !== input.orgId || job.sandboxId !== input.sandboxId)
+        (job.orgId !== input.orgId ||
+          job.sandboxId !== input.sandboxId ||
+          job.providerAccount !== input.providerAccount)
       )
         throw new Error('Source ownership changed')
       ownsBuild = true
@@ -78,6 +80,7 @@ export function createGitHubImageSourceMaterializer(
           input.orgId,
           input.buildId,
           input.sandboxId,
+          input.providerAccount,
         )
         await writeBuildLog(
           env.DB,
@@ -128,8 +131,9 @@ export function createGitHubImageSourceMaterializer(
         const token = await installationToken(
           dependencies.fetch,
           env.GITHUB_CLIENT_ID,
-          await appSigningKey(env.GITHUB_APP_PRIVATE_KEY),
+          env.GITHUB_APP_PRIVATE_KEY,
           source,
+          dependencies.now,
         )
         const grant = randomToken()
         try {

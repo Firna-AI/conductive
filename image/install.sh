@@ -17,9 +17,15 @@ chmod -R a+rX "$fresh_software"
 rm -rf /opt/conductive/software
 mv "$fresh_software" /opt/conductive/software
 
+if [ ! -x /usr/bin/gh ]; then
+  apt-get update
+  apt-get install -y gh
+fi
+
 install -m 755 /opt/conductive/staged/runner-start.sh /opt/conductive/runner-start.sh
 install -m 755 /opt/conductive/staged/git-credential-helper.sh /usr/local/bin/conductive-git-credential
 install -m 644 /opt/conductive/staged/git-credential-helper.mjs /opt/conductive/git-credential-helper.mjs
+install -m 755 /opt/conductive/staged/github-cli.sh /usr/local/bin/gh
 install -m 644 /opt/conductive/staged/conductive-runner.service /etc/systemd/system/conductive-runner.service
 git config --system --replace-all credential.helper /usr/local/bin/conductive-git-credential
 git config --system credential.useHttpPath true

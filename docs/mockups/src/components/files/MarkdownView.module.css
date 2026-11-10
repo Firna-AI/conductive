@@ -34,7 +34,8 @@
 
 .doc p,
 .doc ol,
-.doc ul {
+.doc ul,
+.table {
   margin: 0 0 10px;
 }
 

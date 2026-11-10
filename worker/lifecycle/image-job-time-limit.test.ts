@@ -5,7 +5,7 @@ import { encrypt } from '../security/crypto'
 import { setupBackendTests } from './backend-test-hooks'
 import { readBuild } from './build-data'
 import { imageRetryFixture, statusFault } from './retry-test-support'
-import { readImageSettings } from './settings-data'
+import { readOrgImage } from './org-image-data'
 import {
   insertSourceJob,
   readSourceJob,
@@ -24,10 +24,10 @@ it('ends an install that never exits at the original build deadline after phase 
   await image.tick(TEST_TIME + 3_000_000)
   await image.tick(TEST_TIME + 3_001_000)
   fixture.boat.commandRunning = true
-  image.restart()
+  await image.restart()
   await image.tick(TEST_TIME + 3_599_999)
   const before = await image.job()
-  const alarm = image.storage.alarmAt
+  const alarm = await image.storage.getAlarm()
   await image.tick(TEST_TIME + 3_600_000)
 
   expect(await image.job()).toMatchObject({
@@ -42,7 +42,7 @@ it('ends an install that never exits at the original build deadline after phase 
   ).toMatchObject({ error: FAILURE, completedAt: TEST_TIME + 3_600_000 })
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
   expect(
-    await readImageSettings(fixture.runtime.env.DB, fixture.org.id),
+    await readOrgImage(fixture.runtime.env.DB, fixture.org.id),
   ).toMatchObject({ imageName: 'last-good-image' })
 })
 
@@ -52,7 +52,7 @@ it('ends a refresh whose computer never becomes ready after reconstruction', asy
   fixture.boat.states.set('bx_1', 'provisioning')
   await image.tick(TEST_TIME + 3_599_999)
   const before = await image.job()
-  image.restart()
+  await image.restart()
   await image.tick(TEST_TIME + 3_600_000)
 
   expect(await image.job()).toMatchObject({
@@ -66,7 +66,7 @@ it('ends a refresh whose computer never becomes ready after reconstruction', asy
   ).toMatchObject({ error: FAILURE })
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
   expect(
-    await readImageSettings(fixture.runtime.env.DB, fixture.org.id),
+    await readOrgImage(fixture.runtime.env.DB, fixture.org.id),
   ).toMatchObject({ imageName: 'last-good-image' })
 })
 
@@ -76,9 +76,9 @@ it('schedules and enforces the build deadline before a later provider retry', as
   const fault = statusFault(fixture)
   fault.fail('60')
   await image.tick(TEST_TIME + 3_599_000)
-  const alarm = image.storage.alarmAt
+  const alarm = await image.storage.getAlarm()
   const polls = fixture.boat.statusRequests.length
-  image.restart()
+  await image.restart()
   await image.tick(TEST_TIME + 3_600_000)
 
   expect(await image.job()).toMatchObject({ state: 'failed', phase: 'done' })
@@ -99,7 +99,7 @@ it('fails a build when its final provider read returns at the deadline before pu
   const publishing = await image.job()
   expect(publishing).toMatchObject({ phase: 'publish' })
   fixture.boat.beforeSandboxRead = async () => {
-    fixture.setTime(TEST_TIME + 3_600_000)
+    await fixture.setTime(TEST_TIME + 3_600_000)
   }
   await image.tick(TEST_TIME + 3_599_999)
 
@@ -108,7 +108,7 @@ it('fails a build when its final provider read returns at the deadline before pu
     (await readBuild(fixture.runtime.env.DB, fixture.org.id, image.id)).build,
   ).toMatchObject({ error: FAILURE })
   expect(
-    await readImageSettings(fixture.runtime.env.DB, fixture.org.id),
+    await readOrgImage(fixture.runtime.env.DB, fixture.org.id),
   ).toMatchObject({ imageName: 'last-good-image' })
   expect(fixture.boat.deletedSnapshots).toEqual([publishing.snapshotName])
 })
@@ -117,7 +117,13 @@ it('publishes the build limit while retaining source cleanup until its encrypted
   const fixture = await backendFixture()
   const image = await imageRetryFixture(fixture, { steps: 1 })
   const { env, dependencies } = fixture.runtime
-  const source = await insertSourceJob(env.DB, fixture.org.id, image.id, 'bx_1')
+  const source = await insertSourceJob(
+    env.DB,
+    fixture.org.id,
+    image.id,
+    'bx_1',
+    'boat',
+  )
   await setSourcePhase(env.DB, image.id, 'ready')
   await storeSourceGrant(
     env.DB,
@@ -149,7 +155,7 @@ it('publishes the build limit while retaining source cleanup until its encrypted
     tokenCiphertext: expect.stringMatching(/^v1\./u),
   })
   expect(fixture.boat.deletedIds).toEqual([])
-  image.restart()
+  await image.restart()
   await image.tick(TEST_TIME + 3_601_000)
   expect(await image.job()).toMatchObject({ state: 'failed', phase: 'done' })
   expect(await readSourceJob(env.DB, image.id)).toBeNull()

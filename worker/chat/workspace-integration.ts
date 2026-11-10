@@ -1,7 +1,7 @@
 import { HttpError } from '../http'
 import { WorkspaceFiles } from '../files/workspace'
 import { durableFilesStorage } from '../files/storage'
-import { WorkspaceAlarms } from '../features/alarms'
+import { WorkspaceAlarms, nativeAlarmStorage } from '../features/alarms'
 import { nativeWorkspaceStorage } from '../lifecycle/platform-storage'
 import {
   assertReceiverActive,
@@ -20,19 +20,25 @@ import type { LifecyclePublisher } from '../lifecycle/durable-types'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
 import { WorkspaceChat } from './backend'
 import { firstMessageIdentity } from './first-message'
-import { updateWorkspaceTitle } from './queries'
+import { projectWorkspaceTitle } from './workspace-title'
 import type { ChatCallbackPublisher, ChatDependencies } from './types'
+import {
+  observeWorkspaceCallbacks,
+  type WorkspaceCallbackObservers,
+} from './workspace-callbacks'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
   Pick<
     ChatDependencies,
     | 'resolveAttachments'
+    | 'prepareAttachments'
     | 'scheduleRunnerCheck'
     | 'scheduleBrowserCheck'
     | 'randomId'
+    | 'runTitleModel'
   >
->
+> & { callbackObservers?: WorkspaceCallbackObservers }
 
 function callbackPublisher(publish: ChatCallbackPublisher): LifecyclePublisher {
   return ({ event, occurredAt }) => publish(event, occurredAt)
@@ -62,7 +68,7 @@ export function createWorkspaceIntegration(
       return response
     },
   }
-  const alarms = new WorkspaceAlarms(storage)
+  const alarms = new WorkspaceAlarms(nativeAlarmStorage(storage))
   const stoppedHooks: ((id: string) => Promise<void>)[] = []
   const files = new WorkspaceFiles(
     durableFilesStorage(storage),
@@ -88,78 +94,63 @@ export function createWorkspaceIntegration(
       })
     },
     runnerDetached: (connectionId) => files.runner.detach(connectionId),
-    receiveFileResult: async (value, connectionId) => {
-      files.runner.receive(connectionId, value)
-    },
     runnerHello: async (_id, publish) =>
       controller.recoverLifecycle(callbackPublisher(publish)),
-    runnerReady: async (_id, publish) => {
-      await controller.reportRunnerLifecycle(
-        { type: 'runner.ready' },
-        callbackPublisher(publish),
-      )
-      await controller.acknowledgeLifecycleFirstMessage(
-        callbackPublisher(publish),
-      )
-    },
-    runnerDisconnected: async (_id, publish) =>
-      controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
-    turnDispatching: async (_id, turn, publish) => {
-      const state = await controller.readLifecycle()
-      if (!state) return true
-      if (!['ready', 'working', 'unread', 'input'].includes(state.state))
-        return false
-      await controller.registerLifecycleTurn(turn, callbackPublisher(publish))
-      const registered = await controller.readLifecycle()
-      return registered?.state === 'working'
-    },
-    turnDispatchFailed: async (_id, turnId, publish) =>
-      controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
-    runnerEventStored: async (envelope, publish) => {
-      const event = envelope.event
-      const lifecyclePublish = callbackPublisher(publish)
-      try {
-        if (event.type === 'runner.event-refused') {
-          if (
-            event.turnId &&
-            (event.runnerEventType === 'turn.completed' ||
-              event.runnerEventType === 'turn.failed')
-          )
+    ...observeWorkspaceCallbacks(
+      {
+        turnEnded: async (_id, turnId, publish) => {
+          try {
+            const fence = await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY)
+            if (fence && fence.mode !== 'active') return
             await controller.finishLifecycleTurn(
-              event.turnId,
-              lifecyclePublish,
-              envelope.occurredAt,
+              turnId,
+              callbackPublisher(publish),
             )
-        } else if (
-          event.type === 'turn.started' ||
-          event.type === 'turn.completed' ||
-          event.type === 'turn.failed' ||
-          event.type === 'start.updated'
-        ) {
+          } finally {
+            context.waitUntil(devices.reconcile())
+          }
+        },
+        receiveFileResult: async (value, connectionId) => {
+          files.runner.receive(connectionId, value)
+        },
+        runnerReady: async (_id, publish) => {
           await controller.reportRunnerLifecycle(
-            event,
-            lifecyclePublish,
-            envelope.occurredAt,
+            { type: 'runner.ready' },
+            callbackPublisher(publish),
           )
-        }
-        if (event.type === 'workspace.title')
-          await updateWorkspaceTitle(
-            env.DB,
-            envelope.workspaceId,
-            event.name,
-            now(),
+          await controller.acknowledgeLifecycleFirstMessage(
+            callbackPublisher(publish),
           )
-      } finally {
-        if (
-          event.type === 'turn.completed' ||
-          event.type === 'turn.failed' ||
-          (event.type === 'runner.event-refused' &&
-            (event.runnerEventType === 'turn.completed' ||
-              event.runnerEventType === 'turn.failed'))
-        )
-          context.waitUntil(devices.reconcile())
-      }
-    },
+        },
+        runnerDisconnected: async (_id, publish) =>
+          controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
+        turnDispatching: async (_id, turn, publish) => {
+          const state = await controller.readLifecycle()
+          if (!state) return true
+          if (!['ready', 'working', 'unread', 'input'].includes(state.state))
+            return false
+          await controller.registerLifecycleTurn(
+            turn,
+            callbackPublisher(publish),
+          )
+          const registered = await controller.readLifecycle()
+          return registered?.state === 'working'
+        },
+        turnDispatchFailed: async (_id, turnId, publish) =>
+          controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
+        runnerEventStored: async (envelope, publish) => {
+          const event = envelope.event
+          if (event.type === 'turn.started' || event.type === 'start.updated') {
+            await controller.reportRunnerLifecycle(
+              event,
+              callbackPublisher(publish),
+            )
+          }
+          await projectWorkspaceTitle(env.DB, envelope, now())
+        },
+      },
+      resolvers.callbackObservers,
+    ),
   })
   const devices = new DeviceRuntime(
     env,
@@ -195,7 +186,6 @@ export function createWorkspaceIntegration(
     ({ workspaceId, event, occurredAt }) =>
       chat.commitWorkspaceEvent(workspaceId, event, occurredAt),
     nativeWorkspaceStorage(storage, {
-      lifecycleAlarms: true,
       guarded: true,
       generation: () => generation,
     }),

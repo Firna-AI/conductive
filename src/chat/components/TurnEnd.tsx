@@ -15,22 +15,28 @@ function fileName(path: string): string {
   return path.slice(path.lastIndexOf('/') + 1)
 }
 
+/**
+ * A changed file of the turn. It shows the label of its path, which hides
+ * each secret value, and it opens the diff of its real path. The Worker
+ * leaves the label out when it equals the real path.
+ */
 function FileChip(props: {
   file: ChangedFile
   onOpenDiff?: (path: string) => void
 }) {
   const { file, onOpenDiff } = props
+  const label = file.displayPath ?? file.path
   const content = (
     <>
       <FileText className={styles.icon} size={12} />
-      {fileName(file.path)}
+      {fileName(label)}
       <DiffStat added={file.added} removed={file.removed} />
     </>
   )
   if (!onOpenDiff) return <span className={styles.chip}>{content}</span>
   return (
     <button
-      aria-label={`Open the changes of ${file.path}`}
+      aria-label={`Open the changes of ${label}`}
       className={classes(controls.bare, styles.chip, local.chipButton)}
       onClick={() => onOpenDiff(file.path)}
       type="button"

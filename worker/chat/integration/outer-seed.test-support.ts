@@ -1,4 +1,5 @@
 import type { AppEnv } from '../../env'
+import { seedAppAccess } from '../../test-support/app-access'
 import { seedPublishedImage } from '../../lifecycle/published-image-test-support'
 import { storeWorkspaceToken } from '../../lifecycle/tokens'
 import { SESSION_COOKIE } from '../../security/cookies'
@@ -45,8 +46,8 @@ export async function seedOuterRuntime(env: AppEnv) {
        VALUES ('chat-repository', 'chat-org', 101, 'owner/repository', 'main', 91)`,
     ),
     db.prepare(
-      `INSERT INTO settings (org_id, org_image_name, updated_at)
-       VALUES ('chat-org', 'outer-image', 1)`,
+      `INSERT INTO settings (org_id, updated_at)
+       VALUES ('chat-org', 1)`,
     ),
     ...[OUTER_WORKSPACE, OTHER_WORKSPACE].map((id) =>
       db
@@ -58,6 +59,7 @@ export async function seedOuterRuntime(env: AppEnv) {
         .bind(id, id, `owner/${id.replaceAll(' ', '-')}`),
     ),
   ])
+  await seedAppAccess(db, ['owner', 'member', 'outsider'], 1)
   await storeWorkspaceToken(env, OUTER_WORKSPACE, OUTER_TOKEN, now)
   await storeWorkspaceToken(env, OTHER_WORKSPACE, OTHER_TOKEN, now)
   for (const userId of ['owner', 'member']) {
@@ -82,6 +84,7 @@ export async function seedOuterRuntime(env: AppEnv) {
     orgId: OUTER_ORG,
     buildId: 'outer-image-build',
     imageName: 'outer-image',
+    runnerProtocolVersion: 1,
     repositories: [
       {
         id: OUTER_REPOSITORY,

@@ -25,7 +25,10 @@ export function runtimeOwnershipHooks(fixture: RuntimeFixture) {
       workspaceRuntime(fixture.env),
     ),
     readWorkspace: async (orgId: string, id: string) =>
-      workspaceView(await readWorkspace(fixture.env.DB, orgId, id)),
+      workspaceView(
+        await readWorkspace(fixture.env.DB, orgId, id),
+        fixture.env.APP_ORIGIN,
+      ),
   }
 }
 
@@ -55,6 +58,7 @@ export async function queueRuntimeResume(fixture: RuntimeFixture, id: string) {
     serializeStartJob({
       workspaceId: id,
       orgId: row.orgId,
+      providerAccount: row.providerAccount,
       kind: 'resume',
       requestedByUserId: row.ownerUserId,
       imageName: null,

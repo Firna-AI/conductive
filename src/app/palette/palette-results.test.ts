@@ -103,4 +103,59 @@ describe('the All tab of the palette', () => {
       token: [['Settings', ['Agents · Account']]],
     })
   })
+
+  test('a search finds a workspace by the label of its number with the rank of a name, and only a row whose label holds a word of the query shows that label', () => {
+    const issue = extra({
+      id: 'issue-1395',
+      name: 'Fix issue 1395',
+      number: 412,
+    })
+    const redesign = extra({
+      id: 'redesign',
+      name: 'Checkout page redesign',
+      number: 393,
+      repositoryId: 'storefront',
+      state: 'archived',
+      archivedAt: FAKE_TIME,
+    })
+    const list = ready({
+      sections,
+      workspaces: [...workspaces, issue, redesign],
+    })
+    const search = (text: string) =>
+      shown(paletteResults(query({ text }), source({ list })))
+    expect({
+      label: search('W-395'),
+      number: search('395'),
+      part: search('39'),
+      mixed: search('checkout 39'),
+    }).toEqual({
+      label: [['Workspaces', ['W-395 Checkout address autocomplete']]],
+      number: [
+        [
+          'Workspaces',
+          ['W-395 Checkout address autocomplete', 'Fix issue 1395'],
+        ],
+      ],
+      part: [
+        [
+          'Workspaces',
+          [
+            'W-397 Invoice PDF fonts',
+            'W-399 Retry failed webhooks',
+            'W-398 Apple Pay button',
+            'W-395 Checkout address autocomplete',
+            'W-396 Upgrade to Next.js 16',
+            'W-391 Move retries to a queue',
+            'Fix issue 1395',
+          ],
+        ],
+        ['Archived', ['W-393 Checkout page redesign']],
+      ],
+      mixed: [
+        ['Workspaces', ['W-395 Checkout address autocomplete']],
+        ['Archived', ['W-393 Checkout page redesign']],
+      ],
+    })
+  })
 })

@@ -4,19 +4,14 @@ import { activeAdminMemberPredicate } from '../data/active-admin'
 import { HttpError, isRecord } from '../http'
 import { decrypt } from '../security/crypto'
 import { readSavedScript, type SavedScript } from './saved-script'
+import { parseOrgEnvironment, type OrgEnvironment } from './org-environment'
 
 export interface ImageSettings {
   orgId: string
   installScript: SavedScript
   startupScript: SavedScript
   envVarsCiphertext: string | null
-  imageName: string | null
-  imageBuildId: string | null
   revision: number
-  lastRefreshAt: number | null
-  lastPushRefreshAt: number | null
-  pendingPushRefreshAt: number | null
-  nextImageRefreshAt: number | null
 }
 
 export interface SelectedRepository {
@@ -53,10 +48,7 @@ export async function readImageSettings(
   const row = await db
     .prepare(
       `SELECT org_id AS orgId, install_script AS installScript,
-       startup_script AS startupScript, env_vars_ciphertext AS envVarsCiphertext,
-       org_image_name AS imageName, image_build_id AS imageBuildId, revision,
-       last_refresh_at AS lastRefreshAt, last_push_refresh_at AS lastPushRefreshAt,
-       next_image_refresh_at AS nextImageRefreshAt, pending_push_refresh_at AS pendingPushRefreshAt
+       startup_script AS startupScript, env_vars_ciphertext AS envVarsCiphertext, revision
      FROM settings WHERE org_id = ?`,
     )
     .bind(orgId)
@@ -114,11 +106,11 @@ export async function workspaceRepository(
   return row
 }
 
-export async function workspaceEnvironment(
+export async function workspaceEnvironmentSettings(
   env: AppEnv,
   orgId: string,
   ciphertext?: string | null,
-): Promise<Record<string, string>> {
+): Promise<OrgEnvironment> {
   const stored =
     ciphertext === undefined
       ? (await readImageSettings(env.DB, orgId)).envVarsCiphertext
@@ -131,21 +123,7 @@ export async function workspaceEnvironment(
       env.BOAT_KEY_ENCRYPTION_KEY,
     ),
   )
-  if (
-    !isRecord(value) ||
-    !Object.values(value).every((entry) => typeof entry === 'string')
-  ) {
-    throw new HttpError(
-      409,
-      'org_environment_unavailable',
-      'The cloud computer settings could not load. Ask an org admin to save them again.',
-    )
-  }
-  const result: Record<string, string> = {}
-  for (const [name, entry] of Object.entries(value)) {
-    if (typeof entry === 'string') result[name] = entry
-  }
-  return result
+  return parseOrgEnvironment(value)
 }
 
 export function firstOrgAdmin(

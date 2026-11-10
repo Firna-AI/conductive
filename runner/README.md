@@ -6,11 +6,11 @@ workspace. It also reports the files and the changes of the workspace
 repository.
 
 The runner opens one outbound WebSocket to the workspace Durable Object.
-It sends numbered events. It gets turns, messages, interrupts, model
-changes, file requests, and report requests.
-[Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner)
-states its requirements, and the
-[shared contracts](../src/shared/README.md) define its messages.
+It speaks runner protocol version 2. It sends numbered events. It gets
+turns, messages, interrupts, model changes, file requests, and report
+requests. [Agent runner](../docs/protocol/agent-runner.md) and
+[Model gateway](../docs/protocol/model-gateway.md) state its requirements,
+and the [shared contracts](../src/shared/README.md) define its messages.
 
 This folder is a separate Node 24 package with its own lockfile. The root
 `npm install` does not install it. Tests inject the fake workspace endpoint.
@@ -32,13 +32,26 @@ These facts belong to this implementation, not to the protocol docs.
 - Both agents get the sandbox's `computer` MCP server and the `conductive`
   workspace MCP server. The [agent tools guide](agent-tools.md) gives
   their settings, runtime context, and process lifetime.
-- Each agent program gets the login of its turn through a route that its
-  tool processes do not inherit, as [Agent logins](agent-logins.md) says.
+- No command carries an agent login or a GitHub token. Each `turn` command
+  carries a turn token for the model gateway, as [Agent logins](agent-logins.md)
+  says. [GitHub tokens](../docs/protocol/github-tokens.md)
+  states how a sandbox gets GitHub access.
+- `agentInstructions` builds the agent instructions of each agent from the
+  configuration. Claude gets its seven base rules and that text as
+  `systemPrompt`. Codex keeps its default base instructions and gets the
+  text as `developerInstructions` on `thread/start` and `thread/resume`.
+- The runner saves the text of a session before its first agent start. Later
+  starts reuse it exactly, also after a restart or a change of configuration
+  or wording. A saved session without text takes the current text once.
+- Each message to an agent starts with a sender line, then an empty line:
+  `Sender: <display name> (@<login>)`, or `Sender: @<login>` without a
+  display name. No adapter maps a user message to an event, so the chat
+  never shows the sender line.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
-  process then takes the waiting input on the same conversation and login.
-  If that process fails, the turn fails. Its retry names the first message
-  of that process, and the input that still waits does not run.
+  process then takes the waiting input on the same conversation and turn
+  token. If that process fails, the turn fails. Its retry names the first
+  message of that process, and the input that still waits does not run.
 - To close an agent process, the runner sends `SIGTERM` and waits until the
   process exits. A process that still runs 5 seconds after `SIGTERM` gets
   `SIGKILL`. The end of a turn goes out only after its agent process exits,
@@ -55,21 +68,38 @@ These facts belong to this implementation, not to the protocol docs.
   input. Only a `turn` command starts a turn. A `message` command reaches
   only the running turn that it names. Others get only a local warning. An
   idle `model` command only saves the choice, and the next turn applies it.
-- One output filter replaces the workspace token and known logins with
-  `[redacted]`. It holds possible secret prefixes across text events.
+- The shared output filter replaces the workspace token and the turn
+  tokens in displayed text with `[redacted]`. It holds possible secret
+  prefixes across answer events. After a completion or a turn end, it
+  keeps the shown end of each answer that can still start a secret. Later
+  text of that answer then masks the part that completes a secret.
+- The filter keeps real file paths and base branches for operations, and
+  masks their separate display labels. The workspace object filters marked
+  org env values before it stores or sends events. The runner receives no
+  private list of org env values. Its local state can therefore hold those
+  values, as agent sessions can.
 - Claude text joins across SDK frames and text blocks until `message_stop`,
   or else the next `message_start`, a tool result, or the result. So a split
-  login stays in one filtered message, and partial text still streams live.
+  token stays in one filtered message, and partial text still streams live.
 - The Claude adapter holds new input while 64 sent messages wait for a
   result that lists them. Each result frees only the messages that it
   lists. Closing discards held input. The engine matches result lists exactly.
+- A Claude SDK result with the origin `task-notification` belongs to a
+  background task, such as a background command or subagent. The adapter
+  ignores such a result when it lists no sent message that still waits. An
+  ignored result does not take the message list of an earlier SDK frame. It
+  does not end the active turn, and it frees no sent message. When such a
+  result lists sent messages that still wait, it answers them as usual. So
+  each result stays with the
+  [messages that it answers](../docs/protocol/chat-and-events.md#what-the-chat-shows).
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
-  counter, the unconfirmed events, the tree and changes revisions, the
-  conversation references, and `turns` records of accepted turns. It also
-  holds the last `start.updated` and `workspace.title` events, and the ID of
-  each answered [report request](#report-requests). It holds no other
-  command data and no login. The runner saves a turn record before the
+  counter, the unconfirmed events, the tree and changes revisions, and
+  `turns` records of accepted turns. It holds the conversation reference and
+  the agent instructions of each session. It also holds the last
+  `start.updated` and `workspace.title` events, and the ID of each answered
+  [report request](#report-requests). It holds no other command data, no
+  login, and no turn token. The runner saves a turn record before the
   session save. The saves of `turn.started` and its end update that record.
   A turn stopped before its start also has a saved end record.
   The confirm of the end removes the record.
@@ -108,10 +138,7 @@ These facts belong to this implementation, not to the protocol docs.
   Git stops patch output at the cap. An oversized result returns
   `file_too_large`. Patch size reports the first byte over the limit.
 - Before it connects, the runner reads the `claude` program file once, so
-  that the disk loads it early. It uses no login and starts no agent.
-- The runner protocol carries no GitHub token.
-  [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
-  states how a sandbox gets GitHub access.
+  that the disk loads it early. It uses no credential and starts no agent.
 
 ## Event limits
 
@@ -123,11 +150,11 @@ the outbox size check.
 
 The workspace sends a `report.refresh` command when it needs a fresh full
 report of one kind.
-[Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the requirements.
 
-- The runner takes a request without a session or a login. The agents never
-  get it. So a running turn keeps its agent process and its input.
+- The runner takes a request without a session or a credential. The agents
+  never get it. So a running turn keeps its agent process and its input.
 - After the `welcome`, the runner takes commands while the refresh after the
   connect still runs. So a request does not wait for `runner.ready`.
 - A `files.snapshot` or `changes.updated` request scans the repository again.
@@ -184,42 +211,8 @@ image installs the runner as a systemd service, and how that service starts.
 
 ## Configuration
 
-The runner reads these variables when the service starts.
-
-| Variable                      | Required | Value                                                                 |
-| ----------------------------- | -------- | --------------------------------------------------------------------- |
-| `CONDUCTIVE_WORKSPACE_ID`     | Yes      | The workspace ID. The runner sends it in `hello`.                     |
-| `CONDUCTIVE_WORKSPACE_TOKEN`  | Yes      | The workspace token. The runner sends it as a bearer token.           |
-| `CONDUCTIVE_RUNNER_URL`       | Yes      | The `https:` or `wss:` URL of the runner route.                       |
-| `CONDUCTIVE_REPOSITORY`       | Yes      | The folder of the workspace repository.                               |
-| `CONDUCTIVE_DEFAULT_BRANCH`   | Yes      | The default branch, as a name that Git resolves in that folder.       |
-| `CONDUCTIVE_HOME`             | No       | The home folder of the agents. The default is the home of the user.   |
-| `CONDUCTIVE_STATE_PATH`       | No       | The state file. The default is `.conductive/runner-state.json` there. |
-
-- The runner route is the path `MACHINE_PATHS.runner`, which is
-  `/v1/runner`, from [`agent-tools.ts`](../src/shared/agent-tools.ts) on
-  the hostname for machines, `api.conductive.build`.
-- No variable configures the computer tools. The runner reads the entry
-  that Boat writes, as [Computer tools](agent-tools.md#computer-tools) says.
-- `CONDUCTIVE_DEFAULT_BRANCH` is the base of the file marks, the Changes
-  list, and the changed files of each turn. Each diff request names its own
-  base branch. File reports compare the commit of that branch, the Git ID
-  of each file, and a streamed hash of the bytes that a read returns. That
-  hash uses the same path checks as a read, and a fixed value for a refused
-  or missing target. So an edit, a link into an ignored folder, or a clean
-  filter cannot hide a change from the open files and diffs.
-- The home folder also holds `.conductive/claude` and `.conductive/codex`,
-  where the agents keep their sessions. Boat keeps the disk across a stop
-  and a resume, so the sessions stay.
-- The state file belongs to one workspace. Keep it out of the org image.
-- After a failed or dropped connection, the runner connects again in 1 second.
-
-When a required variable is missing, or the state file cannot be read,
-the runner exits with code 1. It writes this line to standard error:
-
-```text
-The runner could not start. Check its configuration and saved state.
-```
+[Runner configuration](configuration.md) gives the service variables,
+their defaults, and the startup failure message.
 
 ## Tests and their limits
 
@@ -238,8 +231,8 @@ The runner could not start. Check its configuration and saved state.
   the fixed test entry `fakeComputerServer`.
 - The tests need Git. They need no network, no agent login, no cloud
   account, and no cloud computer. No test starts a real agent program, a
-  real Worker, or a real sandbox. So a passing run does not show that a
-  real login works, or that the `computer` MCP server answers.
+  real Worker, or a real sandbox. So a passing run does not show that the
+  gateway path, a real login, or the `computer` MCP server works.
 - `scripts/codex-capabilities.mjs` checks what the Codex SDK streams and
   whether an abort stops it. Each model request goes to a local fake server.
 
@@ -252,11 +245,14 @@ tools that time the first agent start after a resume.
 
 - `src/main.ts` and `src/config.ts`: the service entry point, the variables
   and their defaults, the state file, and the reconnect after each drop.
-- `src/runner.ts` and `src/output-sanitizer.ts`: `Runner` joins the
-  connection, the agents, the file reports, and the report requests. The
-  shared output filter removes known secrets from complete and streamed text
-  before each save.
-- `src/event-limits.ts`: byte accounting and tool and turn-summary caps.
+- `src/runner.ts`: `Runner` joins the connection, agents, file reports,
+  and report requests.
+- `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
+- [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
+  [output field policy](../src/shared/output-fields.ts): the one filter
+  shared with the Worker. The runner supplies the workspace and turn tokens.
+- [`event-limits.ts`](../src/shared/event-limits.ts): portable UTF-8 byte
+  accounting and the shared tool and turn-summary caps.
 - `src/file-parts.ts`: full report parts and bounded tree deltas.
 - `src/file-updates.ts`: the full tree or the tree delta of each scan, and
   the check for a new changes report.
@@ -274,8 +270,11 @@ tools that time the first agent start after a resume.
 - `src/engine-pending.ts`: accepted turn saves and the ends of pending starts.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
+  `message.ts` puts the sender line before the text of each message.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
-  The [tool entry points](agent-tools.md#key-code) cover both MCP servers.
+  `attachment-description.ts` describes each attached file to both agents.
+  The [tool entry points](agent-tools.md#key-code) cover both MCP servers,
+  and the [login entry points](agent-logins.md#key-code) cover the credentials.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of
   one turn.
@@ -288,11 +287,13 @@ tools that time the first agent start after a resume.
 
 ## Related docs
 
-- [Architecture: sandbox software](../docs/architecture.md#sandbox-software)
-- [Chat and events: the agent runner](../docs/protocol/chat-and-events.md#the-agent-runner)
-- [Chat and events: lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
-- [Access and security: agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
-- [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+- [Architecture: sandbox software](../docs/architecture/components.md#sandbox-software)
+- [Agent runner](../docs/protocol/agent-runner.md)
+- [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
+- [Agent instructions](../docs/protocol/agent-instructions.md)
+- [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
+- [Workspaces and sandboxes: files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)
 - [Agent tools: workspace tools](../docs/protocol/agent-tools.md#workspace-tools)
 - [Shared contracts](../src/shared/README.md)

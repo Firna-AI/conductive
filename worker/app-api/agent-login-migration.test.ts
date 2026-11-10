@@ -3,7 +3,7 @@ import { expect, it } from 'vitest'
 import { createHarness } from '../test-support/harness'
 import { applyMigrations } from '../test-support/migrations'
 
-const migration = '202611090000_codex_access_token.sql'
+const migration = '202611100000_codex_access_token.sql'
 
 it('keeps existing logins and accepts Codex tokens after the table rebuild', async () => {
   const harness = await createHarness({ migrationsBefore: migration })

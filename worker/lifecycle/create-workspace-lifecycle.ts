@@ -1,6 +1,6 @@
 import type { WorkspacePlatform } from './workspace-platform'
 import type { AppEnv, AppDependencies } from '../env'
-import { requireActiveOrg } from '../data/user-access'
+import { readWorkspaceAccessStop, requireActiveOrg } from '../data/user-access'
 import { DurableLifecycle } from './durable'
 import type { TurnScopes } from './turns'
 import type { WorkspaceEventJournal } from './durable-journal'
@@ -12,9 +12,14 @@ import {
   extendWorkspaceDeadline,
   stopWorkspaceSandbox,
   reconcileWorkspaceSandbox,
+  checkWorkspaceRestore,
   workspaceActionContext,
 } from './workspace-actions'
 import { keepWorkspaceDisk } from './disk-retention'
+import {
+  taskWorkspaceStorage,
+  workspaceTaskAlarms,
+} from './workspace-task-alarms'
 
 export function createWorkspaceLifecycle(
   ctx: WorkspacePlatform,
@@ -23,22 +28,27 @@ export function createWorkspaceLifecycle(
   turns: TurnScopes,
   journal: WorkspaceEventJournal,
 ) {
+  const storage = taskWorkspaceStorage(ctx.storage, 'lifecycle')
+  const alarms = workspaceTaskAlarms(ctx.storage)
   const lifecycle: DurableLifecycle = new DurableLifecycle(
     {
       get: (key) => ctx.storage.get('lifecycle', key),
       put: (key, state) => ctx.storage.put('lifecycle', key, state),
       delete: (key) => ctx.storage.delete(key),
-      setAlarm: (at) => ctx.storage.setAlarm(at),
-      deleteAlarm: () => ctx.storage.deleteAlarm(),
+      setAlarm: (at) => storage.setAlarm(at),
+      deleteAlarm: () => storage.deleteAlarm(),
+      changedAlarm: (at, keepEarlier = true) =>
+        alarms.set('lifecycle:changed', at, keepEarlier),
     },
     dependencies.now,
     {
       changed: async (state, publish) => {
         if (isConfirmedStopped(state) && !hasRetentionAttempt(state))
           await clearRetention(env.DB, state.workspaceId)
-        await projection.changed(publish)
+        const projected = await projection.changed(publish)
         if (state.state === 'stopped' || state.state === 'error')
           await ctx.stopped?.(state.workspaceId)
+        return projected
       },
       stop: async () => {
         const state = await lifecycle.read()
@@ -62,6 +72,11 @@ export function createWorkspaceLifecycle(
         if (!state) return undefined
         await requireActiveOrg(env.DB, state.orgId)
         if (request?.kind === 'check') return undefined
+        if (
+          (await readWorkspaceAccessStop(env.DB, state.workspaceId))
+            ?.ownerSuspended
+        )
+          return undefined
         if (
           state.state === 'stopped' ||
           state.state === 'archived' ||
@@ -89,8 +104,17 @@ export function createWorkspaceLifecycle(
         if (result) await turns.clear()
         return result
       },
+      checkRestore: async () => {
+        const result = await checkWorkspaceRestore(
+          await workspaceActionContext(env, dependencies, lifecycle),
+        )
+        if (result === 'stopped' || result === 'error') await turns.clear()
+        return result
+      },
       startPending: async () =>
         Boolean(await ctx.storage.get('job', 'lifecycle:start-job')),
+      lastTurnEndedAt: async (id) =>
+        (await ctx.readChatRecovery?.(id))?.lastTurnEndedAt ?? null,
       recoverTurns: async (id) => {
         const recovery = await ctx.readChatRecovery?.(id)
         if (!recovery) return undefined

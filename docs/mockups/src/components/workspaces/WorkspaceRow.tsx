@@ -1,25 +1,78 @@
+import { Archive } from 'lucide-react'
+import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
+import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
+import { RowPointMenu, type RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { activityPresentation } from './status'
 import { StatusGlyph } from './StatusGlyph'
+import rowMenu from './RowMenu.module.css'
 import styles from './WorkspaceRow.module.css'
 
 /** How a drag shows a row: lifted under the pointer, or left behind. */
 export type RowDrag = 'lifted' | 'placeholder'
 
+type Variant = 'sidebar' | 'page'
+
+/**
+ * The row of a workspace that the user renames from its menu. The field
+ * takes the place of the name and the time. It opens with the name
+ * selected, and after a failed save it keeps the draft.
+ */
+function RenameRow(props: {
+  row: WorkspaceRow
+  variant: Variant
+  rename: { value: string; selected: boolean }
+}) {
+  const { row, rename } = props
+  const page = props.variant === 'page'
+  return (
+    <form
+      className={classes(
+        styles.row,
+        page && styles.page,
+        row.selected && styles.selected,
+      )}
+    >
+      <StatusGlyph status={row.status} />
+      <span
+        aria-label="Workspace name"
+        className={classes(rowMenu.field, page && rowMenu.fieldPage)}
+        role="textbox"
+      >
+        {rename.selected ? (
+          <span className={rowMenu.selection}>{rename.value}</span>
+        ) : (
+          rename.value
+        )}
+      </span>
+    </form>
+  )
+}
+
 /**
  * One workspace on one line: its state as a small square on the left, its
- * name, and the time since its last activity. A drag lifts the row, and
- * leaves a faint copy where it was.
+ * name, and the time since its last activity. Archive covers the time on
+ * hover only. A drag lifts the row and leaves a faint copy behind.
+ * `controls` draws the menu that a right click opened, the field of
+ * Rename, or a hover, because a view runs no script.
  */
 export function WorkspaceRowView(props: {
   row: WorkspaceRow
-  variant: 'sidebar' | 'page'
+  variant: Variant
   drag?: RowDrag
+  archivable?: boolean
+  controls?: RowControls
 }) {
   const { row } = props
+  const controls = props.drag ? undefined : props.controls
+  if (controls?.rename) {
+    return (
+      <RenameRow rename={controls.rename} row={row} variant={props.variant} />
+    )
+  }
   const status = activityPresentation[row.status]
   const className = classes(
     styles.row,
@@ -36,14 +89,40 @@ export function WorkspaceRowView(props: {
       <span className={a11y.hidden}>, {status.label}</span>
     </>
   )
-  if (!row.to || props.drag) return <div className={className}>{content}</div>
+  if (props.drag) return <div className={className}>{content}</div>
+  const archivable = props.archivable === true && row.status !== 'archived'
+  // The pointer of a right click lies over the row of its menu. A sheet
+  // keeps its row marked, without a hover.
+  const hovered = controls?.open?.at === 'pointer' || controls?.hovered
+  const held = controls?.open?.at === 'sheet'
   return (
-    <ScreenLink
-      aria-current={row.selected ? 'page' : undefined}
-      className={className}
-      to={row.to}
+    <span
+      className={classes(
+        styles.container,
+        archivable && styles.archivable,
+        hovered && styles.hovered,
+        held && styles.held,
+      )}
     >
-      {content}
-    </ScreenLink>
+      {row.to ? (
+        <ScreenLink
+          aria-current={row.selected ? 'page' : undefined}
+          className={className}
+          to={row.to}
+        >
+          {content}
+        </ScreenLink>
+      ) : (
+        <div className={className}>{content}</div>
+      )}
+      {archivable ? (
+        <span className={styles.archive}>
+          <ScreenLink asChild to={paths.archive}>
+            <IconButton icon={Archive} label="Archive workspace" quiet />
+          </ScreenLink>
+        </span>
+      ) : null}
+      {controls ? <RowPointMenu controls={controls} /> : null}
+    </span>
   )
 }

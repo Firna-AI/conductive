@@ -1,0 +1,39 @@
+---
+import { sitePaths, sourceRepositoryHref } from '../links'
+import { featuresHref, macAppHref, signInHref } from '../request-values'
+import GitHubMark from './GitHubMark.astro'
+import StartButton from './StartButton.astro'
+import Wordmark from './Wordmark.astro'
+
+/*
+ * The top of each page: the lockup, Features, Download, GitHub, Sign in, and
+ * the main action. Features and Download lead to their sections of the home
+ * page. A phone keeps the lockup, GitHub, and Sign in.
+ */
+---
+
+<header class="header">
+  <div class="header-inner">
+    <Wordmark home={sitePaths.home} />
+    <nav aria-label="Site" class="header-nav">
+      <a class="header-link header-wide" href={featuresHref}>
+        Features
+      </a>
+      <a class="header-link header-wide" href={macAppHref}>
+        Download
+      </a>
+      <a
+        class="header-link"
+        href={sourceRepositoryHref}
+        title="Open source on GitHub"
+      >
+        <GitHubMark size={16} />
+        GitHub
+      </a>
+      <a class="header-link" href={signInHref}>
+        Sign in
+      </a>
+      <StartButton size="md" class="header-wide" />
+    </nav>
+  </div>
+</header>

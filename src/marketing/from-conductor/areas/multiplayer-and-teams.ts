@@ -1,0 +1,75 @@
+import type { ParityFeature } from '../model'
+
+export const multiplayerAndTeamsFeatures: readonly ParityFeature[] = [
+  {
+    id: 'organizations',
+    area: 'multiplayer-and-teams',
+    name: 'Organizations',
+    status: 'available',
+    note: 'Users with app access can create orgs, invite members by email, and switch orgs. Org invitations can grant app access.',
+  },
+  {
+    id: 'shared-workspaces',
+    area: 'multiplayer-and-teams',
+    name: 'Shared workspaces',
+    status: 'available',
+    note: 'Every member can open the org’s workspaces and continue work in them.',
+  },
+  {
+    id: 'private-workspaces',
+    area: 'multiplayer-and-teams',
+    name: 'Private workspaces',
+    status: 'planned',
+    note: 'Private workspaces with owner only app access are planned.',
+    due: null,
+  },
+  {
+    id: 'home-view',
+    area: 'multiplayer-and-teams',
+    name: 'Home view',
+    status: 'available',
+    note: 'The workspace list shows the org’s work. The command palette filters by repository and archive state.',
+  },
+  {
+    id: 'shared-live-chats',
+    area: 'multiplayer-and-teams',
+    name: 'Shared live chats',
+    status: 'available',
+    note: 'Members see live chat updates and can prompt the same agent. Typing and presence indicators are under consideration.',
+  },
+  {
+    id: 'follow-a-workspace',
+    area: 'multiplayer-and-teams',
+    name: 'Follow a workspace',
+    status: 'considering',
+    note: 'Following another member’s workspace is under consideration.',
+  },
+  {
+    id: 'reassign-a-workspace',
+    area: 'multiplayer-and-teams',
+    name: 'Reassign a workspace',
+    status: 'available',
+    note: 'An admin can reassign a workspace to another member.',
+  },
+  {
+    id: 'direct-links',
+    area: 'multiplayer-and-teams',
+    name: 'Direct links',
+    status: 'available',
+    note: 'Copy a workspace link from its number. Links to workspaces in the same org show live chips in messages and drafts.',
+  },
+  {
+    id: 'team-list-and-profiles',
+    area: 'multiplayer-and-teams',
+    name: 'Team list and profiles',
+    status: 'available',
+    note: 'The Members tab lists org members. Member profiles and token use charts are under consideration.',
+  },
+  {
+    id: 'team-prompts',
+    area: 'multiplayer-and-teams',
+    name: 'Team prompts',
+    status: 'considering',
+    note: 'Editable prompts for the whole org are under consideration.',
+  },
+]

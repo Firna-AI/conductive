@@ -62,7 +62,7 @@ describe('the Connect form of Codex', () => {
     const app = await startedApp(server)
     const view = mountScreen(
       app,
-      <AccountScreen connect="codex" user={fakeUser} />,
+      <AccountScreen connect="codex" tab="general" user={fakeUser} />,
     )
     const first = kindChoices(view)
     await press(byRole('radio', 'Access token', view))

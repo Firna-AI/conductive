@@ -1,8 +1,8 @@
 import { defineScreen } from '@mokly/mokly'
 import {
   AccountScreen,
+  accountGeneral,
   accountSchema,
-  connectedAccount,
 } from '../../../../screens/AccountScreen'
 
 export const accountCodexToken = defineScreen({
@@ -13,7 +13,7 @@ export const accountCodexToken = defineScreen({
     'The user chose option C of decision 171 on 9 November 2026: a new Codex access token is not shared, and one typed default for each agent and kind sets it. A personal token acts as the member who made it, and Section 3.1 of the OpenAI Services Agreement forbids the share of login credentials between users. The owner can still turn the switch on, as decision 116 allows for each login. The app stores no expiry date, so the row shows none, and an expired token fails its turn with the error of the agent.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { ...connectedAccount, codexLogin: 'token' },
+  props: { ...accountGeneral, codexLogin: 'token' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

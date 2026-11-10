@@ -14,6 +14,18 @@ inside or outside the home folder.
 - With `CONDUCTIVE_MEASURE_MODE=agent`, `measure.mjs` sends one prompt to
   a real agent. It prints the time from its own start to the first agent
   text. Run it once after each real resume.
+- The agent mode gives the agent the developer login of
+  `CONDUCTIVE_MEASURE_LOGIN`. Its model requests go straight to Anthropic
+  or OpenAI, with no turn token and no model gateway.
+  [The measure tool](../agent-logins.md#the-measure-tool) gives the route of
+  that login.
+- The agent mode starts one agent adapter directly, not a session of the
+  runner. The agent gets empty agent instructions, and the tool saves no
+  session state. So the time leaves out the build of the instructions, the
+  model's work on their text, and their save in the state file.
+- The time also leaves out the profile pair of Claude, and the path of each
+  model request through the gateway. Do not read it as the full start time
+  of the runner.
 - Each agent sample has a placement. `home` is an install folder inside
   the home folder. `system` is an install folder outside it.
 - `compare.mjs <file>...` reads the JSON lines of the agent samples. It

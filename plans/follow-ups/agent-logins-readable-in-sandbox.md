@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-07, from the user's request on branch `calummoore/conductor-alternative-architecture`, after a read of Conductor's sandbox worker. The user sees it as item 120. Updated on 2026-11-09 by branch `calummoore/openai-subscription-token-support`, which adds the Codex access token as a login kind.
-- **Location:** `providerEnvironment` in `runner/src/providers/environment.ts:15`, the Codex model provider in `runner/src/providers/codex.ts:40`, the `RunnerLogin` type in `src/shared/runner.ts:88`, the login read in `worker/chat/queries.ts:52`, and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
+- **Location:** `providerEnvironment` in `runner/src/providers/environment.ts:15`, the Codex model provider in `runner/src/providers/codex.ts:40`, the `RunnerLogin` type in `src/shared/runner.ts:88`, the login read in `worker/chat/queries.ts:52`, and the section "Agent logins in a sandbox" of `docs/protocol/isolation.md`.
 - **Reason:** the access protocol records that the user rejected a login proxy as a much larger build, so only the user can bring it back.
 
 - **Terms:**

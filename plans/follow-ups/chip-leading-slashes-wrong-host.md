@@ -1,0 +1,73 @@
+# Leading slashes change chip navigation
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-09, from `calummoore/workspace-link-widget-brainstorm`, review round 1, finding 2, at commit `6f35b06`.
+- **Location:** `src/chat/links/workspace-links.ts`, the `return` of `linkTarget`, line 126 at commit `6f35b06`. `src/chat/links/LinkedText.tsx`, `href={to}` and `open(to)` in `LinkChip`. The test file `src/chat/links/workspace-links.test.ts`.
+- **Reason:** Each workspace link that the app makes has one slash after the origin, so only a hand-edited link meets the bug.
+
+- **Terms:**
+  - **Workspace chip:** a box in chat that shows a visible workspace's state, number, and current name, and opens that workspace.
+  - **App origin:** the scheme, the hostname, and the port of the web app, such as `https://app.conductive.build`.
+  - **Internal address:** the path, the query, and the hash of a page of the app, such as `/orgs/acme/workspaces/id/files?line=2#diff`.
+  - **Network-path reference:** an address whose first two slashes make a browser read the next segment as a hostname, on the current scheme.
+  - **Mac app:** the Electron shell for macOS. Its page runs on its own origin, `conductive-app://desktop`.
+- **Background:**
+  - Chat shows each link to a visible workspace of the same org as a chip, in sent messages and in agent answers.
+  - `linkTarget` in `src/chat/links/workspace-links.ts` reads the link with the URL parser. It asks `parseRoute` in `src/app/router.ts` for the page. It checks that the link has the origin of the `link` that the Worker gives the workspace.
+  - `parseRoute` drops empty path segments, at `src/app/router.ts:144`. So it reads `//orgs/acme/workspaces/id` as the page of workspace `id`, as it reads `/orgs/acme/workspaces/id`.
+  - The `return` of `linkTarget` gives the chip the internal address `${url.pathname}${url.search}${url.hash}`. So the address copies the path of the link text.
+  - `LinkChip` in `src/chat/links/LinkedText.tsx` puts that address in the `href` of the chip. A plain click calls `open` with it.
+  - `ChatArea` in `src/shell/workspace/ChatArea.tsx` connects `open` to `useGo`, at line 46. `useGo` pushes the address with `history.pushState`, at `src/app/navigation.ts:21`.
+  - `docs/protocol/workspace-links.md`, under "Which links show as chips", says: "The app resolves each link as a browser does before it looks for the workspace. So a chip always shows the workspace whose page a press opens, also for a link with `..` or other odd parts."
+  - The same doc, under "Messages and answers", says that a press opens the page that the link of the chip names, in the same window.
+- **Problem:**
+  - Take the link `https://app.conductive.build//orgs/acme/workspaces/id`. Here `acme` is the org of the chat, and `id` is a workspace that the reader may see.
+  - The URL parser keeps the app origin and the path `//orgs/acme/workspaces/id`. The origin check passes, and `parseRoute` reads the page of `id`. So the link shows as a chip.
+  - The chip gets the internal address `//orgs/acme/workspaces/id`. That is a network-path reference, so a browser reads `orgs` as the hostname.
+  - On a page of the app, the address resolves to `https://orgs/acme/workspaces/id`, with host `orgs` and path `/acme/workspaces/id`. That is not the page that the chip shows.
+  - Three slashes, as in `https://app.conductive.build///orgs/acme/workspaces/id`, give the same host. So does a backslash, as in `https://app.conductive.build/\orgs/acme/workspaces/id`, because the URL parser turns it into a slash.
+  - The host is always `orgs`. A link becomes a chip only when `parseRoute` reads `orgs` as the first segment, after it drops the empty ones. A browser takes that same segment as the host.
+  - So no person and no agent can choose another host. A link such as `https://app.conductive.build//evil.example/orgs/acme/workspaces/id` has `evil.example` as its first segment, so it stays plain text.
+- **Evidence:**
+  - A Node URL probe on 9 November 2026: `new URL('https://app.conductive.build//orgs/acme/workspaces/id')` keeps origin `https://app.conductive.build` and path `//orgs/acme/workspaces/id`.
+  - The same probe: `new URL('//orgs/acme/workspaces/id', 'https://app.conductive.build/orgs/acme/workspaces/w0').href` is `https://orgs/acme/workspaces/id`.
+  - On the page of the Mac app, `new URL('//orgs/acme/workspaces/id', 'conductive-app://desktop/orgs/acme/workspaces/w0').href` is `conductive-app://orgs/acme/workspaces/id`.
+  - `history.pushState` throws a `SecurityError` for an address on another origin. So the plain click stops at `src/app/navigation.ts:21`.
+  - The app makes no such link. `workspaceLink` at `worker/data/workspace-link.ts:20` builds each link as `new URL(routes.workspace(orgId, workspaceId), origin).href`, with one slash after the origin.
+  - The Copy link button of the workspace header copies that link, and the agent tools give it. A doubled slash comes only from an edit, such as a join of `https://app.conductive.build/` and `/orgs/acme/workspaces/id`. So the likelihood is Rare.
+  - No test has a link with a doubled slash. The closest test is "a link with `..` shows the workspace whose page it opens" in `src/chat/links/workspace-links.test.ts`.
+- **Impact if no action:**
+  - In a browser, a plain click on such a chip does nothing. `history.pushState` throws, and the error goes to the console.
+  - A click with a modifier key or with the middle button opens a new tab at `https://orgs/acme/workspaces/id`. That host usually does not load. A copied link address of the chip is the same wrong address.
+  - In the Mac app, a plain click does nothing too, because the address resolves to `conductive-app://orgs/acme/workspaces/id`, another origin.
+  - A new-window request for that address goes nowhere in the Mac app. `navigationTarget` in `desktop/src/navigation.ts` drops an address whose scheme is not HTTP or HTTPS, unless the address is on the desktop origin.
+  - The person can still open the workspace from the workspace list or the command palette.
+- **Root question:** How does every way to open a chip lead to the page of the workspace that the chip shows? The ways are a plain click, a click with a modifier key, and a copied link address.
+- **Options:**
+  - **A.** Remove the extra leading slashes of the path before `linkTarget` returns the internal address. Add the doubled-slash case to `src/chat/links/workspace-links.test.ts`. Cost: the address still copies the link text, so the fix depends on its slash pattern. Effort: Small.
+  - **B.** Return the checked absolute URL and a separate internal address built from the route. Use the absolute URL for the native link and the internal address for the app navigation. Cost: the native link keeps the odd URL. A new tab from it then opens the app at `//orgs/...`, where `useRoute` in `src/app/navigation.ts` shows the not-found page. It also changes `LinkTarget` and `LinkChip`. Effort: Small.
+  - **C.** Add one shared step that cleans each address at the navigation boundary of the app and in its link components. Cost: it reaches navigation code beyond the chips. Effort: Medium.
+  - **D.** In `linkTarget`, build the address from the route that `parseRoute` read: `routes.workspace(route.orgId, route.workspaceId, ...route.view)`, then the query and the hash of the link. Details:
+    - Use that one address for the `href` of the chip and for `open`.
+    - Keep `LinkTarget`, `LinkChip`, the docs, and the expected values of the existing tests as they are.
+    - Add the regression case to the test "a link with `..` shows the workspace whose page it opens" in `src/chat/links/workspace-links.test.ts`. Use the `address` helper of that file with `/${routes.workspace(org, first.id)}`, and expect `{ chip: first.id, to: routes.workspace(org, first.id) }`.
+    - Add the same link with a tab, a query, and a hash, such as `files/src/cart.ts?line=2#diff`. Expect the tab address from `routes.workspace` with the same query and hash.
+    - Cost: an address can differ in form from the link text, such as `%40` for `@` in a file path. It then equals the address that the app builds for that page. Effort: Small.
+  - **E.** Give app addresses their own type, which only the route builders of `src/app/router.ts` make. Make `navigation.push`, `navigation.replace`, `useGo`, `AppLink`, and `LinkTarget` take only that type. Cost: on 9 November 2026, `src/` had 25 declarations of `to: string` outside the tests. They and their callers change, mostly outside the chips. Each place that passes a saved address, such as the current address, needs a checked conversion. Effort: Medium.
+- **Left out:**
+  - Plain text for links with doubled slashes. D is better on each point that differs: the chip stays, and no protocol doc changes. Both are Small.
+  - A check in `LinkChip` or in the navigation that refuses an address that starts with `//`. It fails the goal, because the chip then still opens nothing.
+  - A change in the Worker. The failing history call and the new tab on host `orgs` send no request to the Worker.
+  - A fix in `useRoute`. The plain click fails in `history.pushState`, before the app reads an address. The defect of `useRoute` has its own item, named under **Related**.
+- **Wider fix:** D. It builds the address from the result of the router, so it does not depend on the slash pattern of the link text. E gives the same guarantee to every app address.
+- **Previous examples:** None found in the history or the plans.
+- **Related:**
+  - [address-leading-slashes-not-found.md](address-leading-slashes-not-found.md): the same doubled-slash address in `useRoute`, the reader of the current address. After D, a pasted or typed address still meets that defect. The two fixes are independent and can merge in either order.
+  - [chat-links-not-pressable.md](chat-links-not-pressable.md): when that work adds a second reader of link text, it can move the address builder of D into `src/app/router.ts`, or apply E.
+- **Recommendation:** D. One address that `routes.workspace` builds from the route serves the native link, a copied link address, and the app navigation. Each then opens the page that the chip shows. Details:
+  - Normal links keep their behaviour. A link with one slash still gives `routes.workspace(org, id)`. A tab link keeps its tab, its query, and its hash, because `routes.workspace` encodes each segment that `parseRoute` decoded.
+  - In the Mac app, a plain click then opens the page in the window, as the other links of the app do. D does not change how `navigationTarget` in `desktop/src/navigation.ts` handles a new-window request.
+  - On 9 November 2026 the first review recommended B. Its finding check changed the recommendation to D, because B keeps the odd URL in the native link. The change that found the bug then chose D, to apply after its merge.
+  - E best protects the codebase if a second reader of link text appears.
+- **Action:** fix after merge, apply D, because each workspace link that the app makes has one slash after the origin, so only a hand-edited link meets the bug.

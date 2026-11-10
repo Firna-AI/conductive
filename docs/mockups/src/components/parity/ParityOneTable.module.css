@@ -1,0 +1,82 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* The widths of the area, feature, and status columns. Notes take the rest. */
+.columns th:nth-child(1) {
+  width: 16%;
+}
+
+.columns th:nth-child(2) {
+  width: 25%;
+}
+
+.columns th:nth-child(3) {
+  width: 21%;
+}
+
+/*
+ * The area reads as a label of the app, on the first line of its group. A
+ * header cell keeps the normal weight of the label.
+ */
+.area {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 22px;
+  text-transform: var(--ui-label-case);
+}
+
+/*
+ * The areas read apart without headings: the first row of an area has more
+ * room above it, and a darker neutral hairline ends the last row. Both are
+ * plain table lines, not a coloured edge on a box.
+ */
+tr.groupStart > * {
+  padding-top: 20px;
+}
+
+tr.groupEnd > * {
+  border-bottom-color: var(--ui-border2);
+}
+
+/*
+ * The merged area cell spans every row of its area, so its own bottom edge
+ * is the end of the area. No feature line crosses it.
+ */
+th.groupArea {
+  border-bottom-color: var(--ui-border2);
+}
+
+/*
+ * Each row also has its own area cell, for a phone. A computer hides it, and
+ * a phone hides the merged cell, so the table needs no script.
+ */
+.rowArea {
+  display: none;
+}
+
+.mobile {
+  gap: 40px;
+}
+
+.mobile .groupArea {
+  display: none;
+}
+
+.mobile .rowArea {
+  display: block;
+}
+
+.mobile .area {
+  line-height: 1.4;
+}
+
+/* A phone draws each row as a block, so the row itself ends the area. */
+.mobile tr.groupEnd {
+  border-bottom-color: var(--ui-border2);
+}

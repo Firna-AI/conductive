@@ -7,8 +7,9 @@ import { MacScreen } from '../components/mac/MacScreen'
 import { conversations as chats } from '../fixtures/conversations'
 import { safariTest } from '../fixtures/mac'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
-import { AccountScreen, connectedAccount } from './AccountScreen'
+import { AccountScreen, accountGeneral } from './AccountScreen'
 import { NewWorkspaceScreen, newWorkspaceForm } from './NewWorkspaceScreen'
+import { WaitlistScreen, type WaitlistState } from './WaitlistScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
 
@@ -19,8 +20,11 @@ export const macAppSchema = {
   properties: {
     /** A normal window, or full screen, where macOS hides the buttons. */
     window: { enum: ['window', 'full-screen'] },
-    /** The page of the app: a workspace, the empty New workspace, or the account. */
-    page: { enum: ['workspace', 'new-workspace', 'account'] },
+    /**
+     * The page of the app: a workspace, the empty New workspace, the
+     * account, or the waitlist of a person without app access.
+     */
+    page: { enum: ['workspace', 'new-workspace', 'account', 'waitlist'] },
     /**
      * A command that an agent asks to run on this Mac: none, the request
      * above the composer, the request of a longer time limit, the request
@@ -79,6 +83,14 @@ function workspaceFor(command: MacAppState['command']): WorkspaceState {
   return { ...readyWorkspace, conversation: conversations[command] }
 }
 
+/** A person who waits, with no code tried yet, as on the web app. */
+const waitingState: WaitlistState = {
+  email: 'verified',
+  code: 'none',
+  from: 'field',
+  invitations: 'none',
+}
+
 function pageFor(state: MacAppState): ReactNode {
   switch (state.page) {
     case 'workspace':
@@ -91,7 +103,9 @@ function pageFor(state: MacAppState): ReactNode {
     case 'new-workspace':
       return <NewWorkspaceScreen state={newWorkspaceForm} viewport="desktop" />
     case 'account':
-      return <AccountScreen state={connectedAccount} viewport="desktop" />
+      return <AccountScreen state={accountGeneral} viewport="desktop" />
+    case 'waitlist':
+      return <WaitlistScreen state={waitingState} viewport="desktop" />
   }
 }
 

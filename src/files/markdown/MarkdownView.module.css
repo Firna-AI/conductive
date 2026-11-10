@@ -48,7 +48,7 @@
 .doc ol,
 .doc ul,
 .doc blockquote,
-.tableScroll {
+.table {
   margin: 0 0 10px;
 }
 
@@ -125,26 +125,4 @@
   color: var(--ui-ink);
   font-family: var(--ui-font-mono);
   font-size: 0.86em;
-}
-
-.tableScroll {
-  overflow-x: auto;
-}
-
-.tableScroll table {
-  border-collapse: collapse;
-  font-size: var(--ui-text-sm);
-}
-
-.tableScroll th,
-.tableScroll td {
-  padding: 5px 10px;
-  border: 1px solid var(--ui-border);
-  text-align: left;
-}
-
-.tableScroll th {
-  background: var(--ui-raised);
-  color: var(--ui-ink);
-  font-weight: var(--ui-weight-strong);
 }

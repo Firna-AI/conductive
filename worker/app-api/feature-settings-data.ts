@@ -1,7 +1,9 @@
 import { BASE_IMAGE } from '../../src/shared/base-image'
 import type { OrgSettings } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { activeAdminPredicate } from '../members/org-data'
+import type { OrgEnvironment } from '../lifecycle/org-environment'
 
 export interface ShellSettingsRow {
   installScript: string
@@ -15,16 +17,21 @@ export interface ShellSettingsRow {
 export async function readShellSettings(
   db: D1Database,
   orgId: string,
+  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<ShellSettingsRow> {
   const row = await db
     .prepare(
       `SELECT s.install_script AS installScript, s.startup_script AS startupScript,
        s.env_vars_ciphertext AS envVarsCiphertext, s.revision, s.updated_at AS updatedAt,
        b.settings_revision AS builtRevision
-       FROM settings s LEFT JOIN image_builds b ON b.id = s.image_build_id
+       FROM settings s LEFT JOIN org_images i ON i.org_id = s.org_id AND i.provider_account = ?
+       LEFT JOIN image_builds b ON b.org_id = s.org_id AND b.provider_account = ?
+       AND b.id = COALESCE(i.image_build_id,
+         (SELECT id FROM image_builds WHERE org_id = s.org_id AND kind = 'build' AND provider_account = ?
+          ORDER BY started_at DESC, id DESC LIMIT 1))
        WHERE s.org_id = ?`,
     )
-    .bind(orgId)
+    .bind(providerAccount, providerAccount, providerAccount, orgId)
     .first<ShellSettingsRow>()
   if (!row)
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
@@ -33,17 +40,18 @@ export async function readShellSettings(
 
 export function shellSettingsView(
   row: ShellSettingsRow,
-  environment: Record<string, string>,
+  environment: OrgEnvironment,
 ): OrgSettings {
   return {
     baseImage: BASE_IMAGE,
     installScript: row.installScript,
     startupScript: row.startupScript,
-    envVars: Object.keys(environment)
-      .sort()
-      .map((name) => ({ name })),
+    envVars: Object.entries(environment)
+      .sort(([a], [b]) => (a === b ? 0 : a < b ? -1 : 1))
+      .map(([name, entry]) => ({ name, secret: entry.secret })),
     updatedAt: row.updatedAt,
-    needsBuild: row.builtRevision !== row.revision,
+    needsBuild:
+      row.builtRevision !== null && row.builtRevision !== row.revision,
   }
 }
 

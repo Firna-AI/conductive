@@ -1,15 +1,19 @@
 # Chat
 
 The chat of a workspace: the session tabs with the session history, and the
-chat of the open session with its composer. It shows messages, folded tool
-calls, the running turn, steer, Stop, failures with Try again, the start
-steps of the sandbox, the wait of Send during the first start of a new
-workspace, the Mac commands of each turn, and the bar that takes the
-composer's place while the sandbox does not run. The workspace screen
+chat of the open session with its composer. It shows messages, folded runs
+of tool calls, the folded work of each ended turn above its answer, the
+running turn, steer, Stop, failures with Try again, the start steps of the
+sandbox, the Mac commands of each turn, and the bar that takes the
+composer's place while the sandbox does not run. After a failed first start
+of a new workspace, that bar sits above the composer, which stays. The workspace screen
 of the app shell mounts it by default, as
 [the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
 says. It builds against the fake API and the recorded chat events of
 `src/test-support/`.
+
+The history button follows the available closed sessions, as
+[Sessions](../../docs/protocol/agents-and-sessions.md#sessions) says.
 
 ## Use it in the app
 
@@ -29,172 +33,44 @@ stops its own controller:
   onWorkspaceChange={(workspace) => showInHeader(workspace)}
   onViewChange={(view) => keepTabs(view)}
   onOpenDiff={(path) => openDiffTab(path)}
+  onOpenPage={(to) => navigate(to)}
   onConnectAgent={(agent) => openAccount(agent)}
 />
 ```
 
-- `client` and `subscribe` must be stable. A new one starts a new chat.
-  `client` is an `ApiClient`: `AppServices.api` in the app, or one from
-  `createApiClient` over a fake.
-- Each call of the chat goes through that client. A failure shows the
-  message of its `ApiError`, such as the message of the Worker. A reply that
-  a reader of the chat refuses shows "The request failed. Try again."
-- `subscribe(target, afterEventNumber, listener)` opens the stream of
-  `workspaceEventsPath` after the event number. In the app, it opens
-  `AppServices.events`. It gives each message to `listener.message`, the
-  stored history first, and calls `listener.closed()` when the connection
-  drops. The chat checks each message as `unknown`.
-- The chat reads the signed-in user from the account route and the members
-  of the org from the members route, or it takes both from its `sources`,
-  as [A chat that the app keeps](#a-chat-that-the-app-keeps) says. A
-  stopped turn then says "You stopped the agent" to the member who pressed
-  Stop, and names that member to the others. When the members do not load,
-  it names nobody but the reader.
-- `onWorkspaceChange` gets the workspace record after each change: its state,
-  and the title that the agent writes through `workspace.title` and
-  `workspace.updated` events. The header and the list of the app show it.
-- Each tab shows the `title` of its session record. The backend provides
-  the titles that the mockups show: the first session of a new workspace
-  has the workspace name, and the agent's title renames both. The
-  development page does the same.
-- `extraTabs` takes `<li>` tabs, such as open files, after the session tabs.
-- `content` takes a page that the app shows in place of the chat of the
-  open session, such as an open file. The session tabs and the overlays
-  stay, and no session tab is the current one.
-- The controller's `updateView(change)` changes the saved view with a
-  change of the app, such as an open file tab or the list of the Files
-  panel. It saves through the same writer as the session tabs, so a later
-  write of the chat keeps the change. Until the load reads the view, it
-  changes nothing, so the saved tabs stay. In a read-only workspace,
-  archived or shown read-only by the app, it changes the view in the
-  browser only, and sends no write.
-- `host` takes the start steps and the sandbox bar that the app draws, as
-  `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
-  Without a host, the chat draws both from its own record of the workspace.
-- `readOnly` says that the workspace takes no write, such as while its org
-  is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
-  shows its history, as an archived workspace does, and the host's bar
-  takes the place of the composer.
-- Render the chat inside the Firna theme provider and the Graphite token CSS
-  of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
-- The chat sets no CSS position. A dialog or a sheet covers the nearest
-  positioned frame: the app frame.
-- The menus, the dialogs, and the sheets of the chat note themselves in
-  the open layers of the app shell, from `../shell/ui/layers.ts`. So the
-  key of the command palette closes an open menu, and does nothing while
-  a dialog or a sheet is open. Outside the app, nothing notes them.
-- The Mac app shows two more parts of Mac commands outside the chat:
-  `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
-  say how to mount them.
-- `useChatController` gives the controller and its snapshot to an app that
-  composes `SessionTabs` and `SessionChat` in its own layout. Such an app
-  takes the tabs from `tabSessions`, and the session history from
-  `historySessions` with the times of `endedAt`, so an archived workspace
-  navigates without a write.
-- `useChatController` makes the controller through the shared
-  `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
-  starts the controller after the render. It stops the controller at
-  unmount. When a new controller replaces it, the hook stops the old
-  controller before the new controller starts.
+[Chat integration](integration.md) gives the rules of each prop and
+callback of `WorkspaceChat`, its theme and its layers, the parts that
+the Mac app shows outside the chat, and `useChatController`.
 
 ### A chat that the app keeps
 
-`WorkspaceChatView` draws a `ChatController` that the app keeps, such as
-across the pages of a tab. It takes the props of `WorkspaceChat` other than
-the connection. The app makes the controller with a stable `client` and
-`subscribe`, and calls `show` and `hide` itself:
-
-- The first `show` loads the chat, as `start` does. A `show` after a failed
-  load loads it again.
-- A later `show` opens the stream again after its cursor. So the chat shows
-  at once, and it reads no history, no session list, and no view again.
-- `hide` closes the stream while the app shows another page. The chat keeps
-  its sessions, drafts, transcripts, and cursor. Actions and loads that run
-  still finish.
-- A load that ends while the chat is hidden opens no stream until the next
-  `show`.
-- `stop` ends the controller, as at a sign-out. Late replies then change
-  nothing.
-
-The app can also give the controller `sources`, a `ChatSources` from
-`state/sources.ts`. It gives the account, the org, the models, and the
-members from the models of the app.
-
-- With sources, the load sends none of these four reads and writes none of
-  these values. So no reply of an old read replaces a newer value of the
-  app. The view read stays.
-- Each change of a source shows at once, also while the chat is hidden. So
-  a login that the account screen saves shows in a kept chat on a return.
-- `start` copies the sources into the snapshot and follows them. `stop`
-  ends the subscriptions. `hide` and `show` keep them.
-- A chat without sources reads the four values at each load.
+[A chat that the app keeps](integration.md#a-chat-that-the-app-keeps)
+says how `WorkspaceChatView` draws a controller that the app keeps: its
+`show`, `hide`, and `stop`, its `sources`, and the workspace list of its
+chips.
 
 ## Rules for this code
 
+- [The tab row](tab-row.md) gives the rules of the one order of the
+  tabs, the drag, the tab menu, and the scroll of the row.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
-  and Try again.
-- The chat loads the history of each session that becomes the shown session,
-  whatever changed the selection: a click, an action, or a record from the
-  stream. One load runs at a time for each session, and a failed load waits
-  for Try again or for the next selection.
-- The status of the stored history comes from its load alone. A chat with
-  content, such as live messages, a sent message, a running turn, or the
-  start steps, keeps it and shows a failed load as a notice by the composer,
-  with Try again. An empty chat shows the failure in place of the chat.
-- A read-only workspace keeps its chat as it is, and the backend refuses
-  its writes: an archived workspace, and one that the app shows read-only,
-  such as in a suspended org. So its tabs change in the browser only. The
-  session history opens the stored history of any session as a tab, and a
-  tab closes with no write. A closed tab shows in the session history
-  again, also the tab of a session that was open at the archive. The
-  session records do not change, so a closed session stays closed. The
-  controller's `select`, `requestClose`, and `reopen` take this path while
-  the workspace is read-only, and the server path otherwise. The controller
-  reads `readOnly` at each action, because a suspension can start during a
-  visit, and it sends no other write then.
-- A read-only chat shows no composer, no +, no Rename, no Try again, and
-  no answer to a Mac command. Its empty state names only the session
-  history.
+  the work fold of each ended turn, and Try again.
+- [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
+  says what folds when a turn ends. It also says that the line of each fold
+  stays in place when the user opens or closes it, also for a run of calls.
+- [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
+  formatting and the tables of agent messages.
+  [Workspace links](../../docs/protocol/workspace-links.md) states the
+  chips of sent messages and answers. [Agent text](agent-text.md) gives the
+  rules of the code that formats them: the chips, and the table parts that
+  the chat shares with the file preview and the mockups.
+- [Loads, records, and sends](loads-and-sends.md) gives the rules of
+  the history loads, the read-only chats, the order of the records, the
+  sends, the message field of each composer, and Stop.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
-- A Stop request records the member who pressed Stop, and ends nothing. The
-  turn ends when its end says stopped. A stop with no request names nobody:
-  "The agent stopped".
-- Each reply, read, and event with a session record, or with the workspace
-  record and its start steps, carries the event number of its state. The
-  newest number wins, whatever arrives first. So a Resume reply never
-  hides a newer state from the stream, such as a failed start with its Try
-  again. The steps after an action, such as a view save, the focus, or a
-  free Resume button, still run when its reply is older. The header of
-  [`state/session-records.ts`](state/session-records.ts) gives the pending
-  edits of a rename or a model change.
-- Send waits in every session until the records show that the first start
-  of the workspace succeeded. The Worker refuses each new message until
-  then, as [Messages](../../docs/protocol/chat-and-events.md#messages) says.
-  The box keeps each draft, and the reason shows beside Send: "You can send
-  when the sandbox is ready", from the mockups' `SendWait`.
-- A state that the Worker sets only after that start shows the success:
-  ready, working, input, or unread. The record of a resume shows it too. A
-  stop or an error does not, because a first start can stop or fail before
-  it succeeds.
-- The chat remembers the success. So a resume never waits, also when its
-  workspace record comes before its start record, while the record of the
-  first start still shows. A message during a resume goes, and the
-  workspace queues it for the sandbox.
-- No draft sends on its own when the start succeeds. The user sends it.
-- A send that the Worker refuses with `409 workspace_starting` keeps its
-  text, its files, and its message ID. The notice "Your message didn't send"
-  shows the Worker's plain message.
-- The chat loads the session list and the view, then the full history of the
-  shown session, then the workspace and the session list again. The stream
-  starts after the history's `throughEventNumber`, so no change between the
-  reads and the stream gets lost.
-- The chat writes no browser storage. The drafts stay in memory, and the
-  server keeps the open tabs through the view route. A kept controller
-  lives only in the memory of its tab, so a reload or a new tab starts
-  empty.
 - [The Mac commands](device/README.md) hold the rules of the requests,
   their answers, and the settings of the Mac.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
@@ -208,7 +84,7 @@ members from the models of the app.
   the mockups, and the composer of a new workspace share it. The chat keeps
   no size formatter of its own.
 - User-facing text follows the
-  [names in the product](../../docs/protocol/chat-and-events.md#names-in-the-product):
+  [names in the product](../../docs/protocol/agents-and-sessions.md#names-in-the-product):
   no "Claude Code", and no provider name.
 
 ## Development page
@@ -226,20 +102,7 @@ on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers. The
 [workspace screen](../shell/workspace/README.md#key-code) tests the kept
 chat in the whole app.
-`components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
-It checks the plain message of a refused retry in a tab that missed newer events.
-`state/linked-replies.test.tsx` drives replies of Send and Try again that
-name a linked session, in both orders, and two chats with different readers
-on one fake stream. `components/SessionLogin.test.tsx` renders the login
-line and its notices. `components/SourceLink.dom.test.tsx` presses the link
-of a linked session to its open and its closed source. In an archived
-workspace, it opens a linked session that closed before the archive from the
-session history. Its source link writes nothing.
-`state/first-start.test.ts` drives Send in two sessions during the first
-start, a stop before its success, and a resume whose workspace record comes
-first. It also checks a send that the Worker refuses during the first start.
-`components/FirstStart.dom.test.tsx` mounts the chat during the first start,
-presses Enter, and then sends after the start succeeds.
+[Chat tests](tests.md) says what each test file checks.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
@@ -252,15 +115,46 @@ check in the Mac app.
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
   state and its actions, with `show` and `hide` for a kept chat.
+- `state/controller-context.ts`: the context, upload identities, devices, and event stream of one controller run.
+- `state/tab-order.ts`: the pure row order, the places of the open
+  sessions, and the move before or after a neighbour.
+- `components/SessionTabs.tsx`: the tab row, with the session tabs of
+  `components/SessionTab.tsx` and the tabs of `renderTab`.
+  `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
+  the row in the saved order with their titles.
+- `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
+  move, and the status. `components/TabDragParts.tsx`: the drop line and
+  the lifted tab.
+- `components/useTabMenu.ts` and `components/TabMenu.tsx`: the tab menu,
+  its items, and its drawing at a point or in a sheet.
+  `components/useTabMoves.ts`: the moves of the row, the focus after a move
+  from the menu, and the words of the status.
+- `components/row-scroll.ts`: the scroll of a full row, its fades, and the
+  scroll of a drag near an end. `components/row-reveal.ts`: the place of a
+  tab in the row, and the scroll that brings tabs into view.
+  `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
+  scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
+- `components/Composer.tsx`: the message box and its controls, with the
+  steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
+  states.
+- `components/chip-field/`: `ChipTextField`, the message field of every
+  composer. [The message field](loads-and-sends.md#the-message-field)
+  gives its rules and its files.
 - `state/load.ts`: the order of the first reads and the stream start.
+- `links/`: `workspace-links.ts`, the link syntax, the reader of the
+  links of a message field, and `linkTarget`, `chat-parts.ts`, the one
+  tokenizer of sent messages and answers, `LinksContext.tsx`, the
+  workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
+  which draws the parts of a message or an answer.
+- `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
+  read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
 - `state/transcript.ts`: how chat events become the parts of a transcript.
 - `state/session-log.ts`: the event log of each session, with its records
-  in event order and its newest record. `offer` takes the record of a read
-  or a reply.
+  in event order and its newest record. The record owner keeps the logs private.
 - `state/known-turns.ts`: the known turns, their order, their ends, and
   `retryItemId`, the one failed item that offers Try again.
 - `state/placement.ts`: where an item goes in its turn, also a late one.
@@ -271,16 +165,25 @@ check in the Mac app.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+- `state/attachment-actions.ts`: attach, Try again, and Remove for the files
+  of a draft. Each upload goes through the app's `uploadAttachment`, ends
+  on its draft after a move, and stops with Remove and with the chat.
+- `components/AttachmentChips.tsx`: the file chips of both composers, with
+  the measured share of an upload, the sent files, and the notice for files
+  over the size limit, from the mockups' `attachmentCopy.ts`.
 - `state/archive-view.ts`: the tabs and the session history of a
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
-  that first shows the new session.
-- `state/session-records.ts`: the order of the session records and of the
-  workspace record by event number, and the pending edits of a session.
-- `state/first-start.ts`: the success of the first start of the workspace,
-  which the snapshot remembers, and the wait of Send until then.
+  that first shows the new session. Its target becomes selected only while
+  the source stays selected. A newer session, file, or diff tab stays selected.
+- `state/session-records.ts`: the order of session records by event number,
+  and the pending edits of a session. It publishes accepted records from
+  replies, complete current lists, and event merges. `confirmSessions`
+  establishes the current records before the shown session starts its history.
+- `state/workspace-records.ts`: the order of the workspace record and its
+  start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, and the words of the line under the composer.
+  record and the reader, and the login label in the composer.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its
@@ -288,6 +191,28 @@ check in the Mac app.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
   event from the mockups' `lostCopy.ts`.
+- `components/turn-work.ts` and `components/transcript-entries.ts`:
+  `foldedWork` finds the work of each ended turn that folds, as the
+  [transcript rules](transcript.md) say. `groupEntries` makes the entries
+  that the chat draws, and puts each insert at its place, also in a fold.
+- `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
+  of an ended turn with its steps, and the message line that grows to the
+  full text. A message line with a table opens the table under the line.
+- `components/agent-text.ts`: `textBlocks`, the paragraphs, lists, code
+  blocks, and tables of an agent message, with `TextTable`.
+  `components/AgentText.tsx`: `AgentText`, which draws them, and
+  `AgentBlocks`, which the message line shares. Their text draws through
+  `LinkedText` of `links/`.
+- `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
+  `CallLine`, which the work fold shares.
+- `components/reading-place.ts`: the keeper of the reader's place, which
+  `ChatPane` gives through `ChatKeeper`. While the reader is scrolled up, it
+  keeps the top row in view in place for every change of size of the
+  transcript. When that row folds away, the fold that took it keeps its
+  place.
+- `components/useFold.ts`: `useFold` opens and closes a fold on a click on
+  its line, and gives the line to the keeper, also at the bottom of the
+  chat, so the line keeps its place.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
@@ -297,16 +222,23 @@ check in the Mac app.
   responses.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
+- `components/send-key.ts`: `useSendKey`, the send key that the composer
+  shares with the page and the dialog of New workspace in the app shell.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
-  in `dev/dev-logins.ts`.
+  in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the answers of the
+  scripted agent, which the `answer` option chooses.
 
 
 ### Related docs
 
 - [Chat and events](../../docs/protocol/chat-and-events.md)
+- [Chat Markdown](../../docs/protocol/chat-markdown.md): the formatting of
+  agent messages, with their tables.
+- [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
+  runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):
   start steps, stop and resume, and archive.
 - [Architecture](../../docs/architecture.md)

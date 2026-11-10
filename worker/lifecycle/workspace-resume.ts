@@ -10,6 +10,7 @@ import { readWorkspace } from './workspace-data'
 import { workspaceResponse } from './workspace-response'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import { workspaceRepositoryLocations } from './repository-location-data'
+import { retryFailedCreation } from './retry-creation'
 
 export async function resumeWorkspace(
   runtime: WorkspaceRuntime,
@@ -27,6 +28,8 @@ export async function resumeWorkspace(
   if (row.state !== 'stopped' && row.state !== 'error')
     return workspaceResponse(runtime, orgId, workspaceId)
   await requireActiveWorkspaceOwner(env.DB, row.ownerUserId, orgId)
+  if (await retryFailedCreation(runtime, row, userId))
+    return workspaceResponse(runtime, orgId, workspaceId)
   if (!row.sandboxId)
     throw new HttpError(
       409,
@@ -39,6 +42,7 @@ export async function resumeWorkspace(
     workspaceId,
     orgId,
     kind: 'resume',
+    providerAccount: row.providerAccount,
     requestedByUserId: userId,
     imageName: null,
     startupScript: settings.startupScript,

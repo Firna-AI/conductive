@@ -1,6 +1,4 @@
 import { useEffect, type ReactNode } from 'react'
-import { Spinner } from '@firna/ui/spinner'
-import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
 import { EmptyState } from '../../docs/mockups/src/components/common/EmptyState'
 import { inFirstRun } from '../app/get-started'
@@ -13,53 +11,17 @@ import { AccountScreen } from './account/AccountScreen'
 import { SignInScreen } from './auth/SignInScreen'
 import { useApp } from './context'
 import { InvitationsScreen } from './invitations/InvitationsScreen'
+import { Alone, Loading } from './layout/Alone'
 import { PhoneFrame } from './layout/frames'
-import layout from './layout/layout.module.css'
 import { Sidebar } from './list/Sidebar'
 import { useKeptOrg } from './mac/mac-app'
-import { WindowStrip } from './mac/WindowControls'
 import { GetStartedScreen } from './onboarding/GetStartedScreen'
+import { OperatorRoutes } from './operator/OperatorRoutes'
 import { CreateOrgScreen } from './orgs/CreateOrgScreen'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
-import { PaletteLayer } from './palette/PaletteLayer'
 import { ActionButton } from './ui/actions'
-import { OverlayHost } from './ui/Overlay'
 import { useViewport } from './ui/viewport'
-import ui from './ui/ui.module.css'
-
-/**
- * A page alone in the window: a phone frame, or a desktop page without the
- * rail. In the Mac app a strip with the window controls tops it.
- */
-function Alone(props: { children: ReactNode }) {
-  if (useViewport() === 'phone')
-    return <PhoneFrame>{props.children}</PhoneFrame>
-  return (
-    <div className={layout.standalone}>
-      <OverlayHost>
-        <WindowStrip />
-        {props.children}
-        <PaletteLayer />
-      </OverlayHost>
-    </div>
-  )
-}
-
-/** The wait of the first load, as the app shows it. */
-function Loading() {
-  const theme = useSharedUiTheme()
-  return (
-    <Alone>
-      <div className={ui.center}>
-        <Spinner
-          accessibilityLabel="Loading"
-          color={theme.colors.muted}
-          size={16}
-        />
-      </div>
-    </Alone>
-  )
-}
+import { Waiting } from './waitlist/Waiting'
 
 /**
  * The app opens as usual: Get started, or the org of Get started. That is
@@ -77,6 +39,16 @@ function OpenApp() {
       ? routes.getStarted()
       : routes.org(first.id)
   useEffect(() => navigation.replace(target), [navigation, target])
+  return null
+}
+
+/**
+ * The join link of a person with app access: the app uses no code, and it
+ * opens as usual at `/`, with no notice.
+ */
+function Joined() {
+  const navigation = useNavigation()
+  useEffect(() => navigation.replace(routes.home()), [navigation])
   return null
 }
 
@@ -110,12 +82,20 @@ type AccountRoute = Extract<Route, { screen: 'account' }>
 function Account(props: { route: AccountRoute; user: User }) {
   const phone = useViewport() === 'phone'
   const org = useKeptOrg(useStore(useApp().orgs))
-  const page = <AccountScreen connect={props.route.connect} user={props.user} />
+  const page = (
+    <AccountScreen
+      connect={props.route.connect}
+      tab={props.route.tab}
+      user={props.user}
+    />
+  )
   if (phone) return <PhoneFrame>{page}</PhoneFrame>
   return (
     <RailFrame
       current="account"
-      sidebar={org ? <Sidebar current={null} org={org} /> : undefined}
+      sidebar={
+        org ? <Sidebar current={null} org={org} user={props.user} /> : undefined
+      }
       user={props.user}
     >
       {page}
@@ -147,6 +127,10 @@ function Signed(props: { route: Route; user: User }) {
           <CreateOrgScreen first={route.first} />
         </Alone>
       )
+    case 'operator':
+      return <OperatorRoutes user={user} view={route.view} />
+    case 'join':
+      return <Joined />
     case 'not-found':
       return inRail(<NotAvailable title="This page is not available" />, null)
     default:
@@ -156,7 +140,8 @@ function Signed(props: { route: Route; user: User }) {
 
 /**
  * The web app: the first load, the sign-in, and the screen of the address.
- * Get started is the only first run.
+ * A person without app access sees only the waitlist, at every address.
+ * Get started is the only first run, and it opens only after app access.
  */
 export function Shell() {
   const app = useApp()
@@ -169,7 +154,9 @@ export function Shell() {
     case 'signed-out':
       return (
         <Alone>
-          <SignInScreen />
+          <SignInScreen
+            code={route.screen === 'join' ? route.code : undefined}
+          />
         </Alone>
       )
     case 'failed':
@@ -187,6 +174,8 @@ export function Shell() {
           />
         </Alone>
       )
+    case 'waiting':
+      return <Waiting route={route} user={boot.user} />
     case 'ready':
       return <Signed route={route} user={boot.user} />
   }

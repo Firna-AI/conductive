@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { API_PATHS } from '../../src/shared/api'
 import type { SendMessageResponse } from '../../src/shared/messages'
 import {
@@ -16,7 +15,6 @@ import {
   MACHINE_ORIGIN,
   WORKSPACE_ID,
 } from './harness.test-support'
-
 describe('workspace chat security', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -28,7 +26,6 @@ describe('workspace chat security', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('uses the app gate, org membership, and stored workspace identity', async () => {
     const fixture = await createChatFixture(harness)
     await harness.env.DB.prepare('UPDATE workspaces SET state = ? WHERE id = ?')
@@ -37,14 +34,14 @@ describe('workspace chat security', () => {
     const path = sessionsPath(fixture.org.id, WORKSPACE_ID)
     const noSession = fixture.request(path)
     noSession.headers.delete('Cookie')
-    expect((await fixture.chat.fetch(noSession)).status).toBe(401)
+    expect((await fixture.fetchRequest(noSession)).status).toBe(401)
     const wrongOrigin = fixture.request(path, { choice: CLAUDE })
     wrongOrigin.headers.set('Origin', 'https://untrusted.example')
-    expect((await fixture.chat.fetch(wrongOrigin)).status).toBe(403)
+    expect((await fixture.fetchRequest(wrongOrigin)).status).toBe(403)
     const wrongSocket = fixture.request(path)
     wrongSocket.headers.set('Upgrade', 'websocket')
     wrongSocket.headers.set('Origin', 'https://untrusted.example')
-    expect((await fixture.chat.fetch(wrongSocket)).status).toBe(403)
+    expect((await fixture.fetchRequest(wrongSocket)).status).toBe(403)
     const otherOrg = await harness.createOrg(fixture.memberCookie, 'Other org')
     expect(
       (
@@ -82,7 +79,7 @@ describe('workspace chat security', () => {
     await harness.env.DB.prepare(
       'UPDATE workspaces SET archived_at = ? WHERE id = ?',
     )
-      .bind(1_800_000_000_000, WORKSPACE_ID)
+      .bind(1800000000000, WORKSPACE_ID)
       .run()
     expect((await fixture.fetch(path, { choice: CLAUDE })).status).toBe(409)
     expect((await fixture.fetch(path)).status).toBe(200)
@@ -90,10 +87,10 @@ describe('workspace chat security', () => {
     await harness.env.DB.prepare('UPDATE workspaces SET state = ? WHERE id = ?')
       .bind('stopped', WORKSPACE_ID)
       .run()
-    await fixture.clock.advance(30_000)
+    await fixture.clock.advance(30000)
     expect(archived.closed).toBe(0)
     expect(archived.messages[0]).toMatchObject({ type: 'history' })
-    await fixture.chat.appendWorkspaceEvent(WORKSPACE_ID, {
+    await fixture.appendWorkspaceEvent(WORKSPACE_ID, {
       type: 'workspace.title',
       name: 'Archived history remains available',
     })
@@ -101,9 +98,9 @@ describe('workspace chat security', () => {
       type: 'event',
       envelope: { event: { type: 'workspace.title' } },
     })
-    archived.close()
+    await archived.close()
     await expect(
-      fixture.chat.appendWorkspaceEvent('other-workspace', {
+      fixture.appendWorkspaceEvent('other-workspace', {
         type: 'workspace.title',
         name: 'Wrong object',
       }),
@@ -117,7 +114,6 @@ describe('workspace chat security', () => {
     ).toBe(404)
     expect((await fixture.fetch(API_PATHS.orgs)).status).toBe(404)
   })
-
   it('authenticates the runner token and validates its hello and neutral event type', async () => {
     const fixture = await createChatFixture(harness)
     await expect(
@@ -141,7 +137,7 @@ describe('workspace chat security', () => {
       type: 'event',
       streamId: 'fake-stream-1',
       eventNumber: 2,
-      occurredAt: 1_800_000_000_000,
+      occurredAt: 1800000000000,
       event: Object.assign(
         {
           type: 'turn.thinking' as const,
@@ -171,7 +167,6 @@ describe('workspace chat security', () => {
       (await fixture.history(session.id)).events.map(({ event }) => event.type),
     ).not.toContain('turn.thinking')
   })
-
   it('retries a failed turn with the starter login and requesting member attribution', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -216,6 +211,7 @@ describe('workspace chat security', () => {
     expect(runner.commands).toHaveLength(2)
     const retried = runner.commands[1]
     if (retried?.type !== 'turn') throw new Error('Expected a retry turn.')
+    if (!retried.login) throw new Error('The version 1 turn has no login.')
     expect(retried.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     expect(
       (await fixture.history(session.id)).events.filter(

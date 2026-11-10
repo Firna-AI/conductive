@@ -1,5 +1,5 @@
 import type { AppModel } from '../../app/app-model'
-import { failedCreate } from '../../app/creations'
+import type { ArchiveModel } from '../../app/archive-model'
 import type { OrgModel } from '../../app/org-model'
 import { valueOf } from '../../app/store'
 import { WorkspaceModel } from '../../app/workspace-model'
@@ -8,6 +8,7 @@ import { ChatController } from '../../chat/state/controller'
 import type { ChatSources } from '../../chat/state/sources'
 import type { SubscribeToWorkspace } from '../../chat/stream/workspace-stream'
 import type { WorkspaceFiles } from '../../files/model/files-store'
+import type { Workspace } from '../../shared/workspaces'
 import { createWorkspaceFiles } from './files/files-store'
 import { HeaderNotices } from './header-notices'
 import { ToolEvents } from './tools/tool-events'
@@ -28,16 +29,16 @@ export interface ShownWorkspace {
 
 interface KeptWorkspace extends ShownWorkspace {
   readonly org: OrgModel
-  /** Whether a screen showed it, so that its first show started the observers. */
+  /** Whether a screen showed it, so that its first show read the members. */
   started: boolean
-  /** End the subscriptions of the kept parts to each other and to the org. */
-  readonly stops: (() => void)[]
 }
 
 /**
  * The inputs of a kept chat from the app models that own them: the account,
- * the org, the models, and the members. So a login that the account screen
- * saves, or a new default model, shows in the kept chat at once.
+ * the org, the models, the members, and the workspace list of the org. So a
+ * login that the account screen saves, a new default model, or a rename of a
+ * linked workspace shows in the kept chat at once. The chat watches the list
+ * while it shows, as the sidebar does.
  */
 function chatSources(app: AppModel, org: OrgModel): ChatSources {
   return {
@@ -51,6 +52,11 @@ function chatSources(app: AppModel, org: OrgModel): ChatSources {
       get: () => valueOf(org.members.get()) ?? null,
       subscribe: org.members.subscribe,
     },
+    workspaces: {
+      get: () => valueOf(org.workspaces.get()) ?? null,
+      subscribe: org.workspaces.subscribe,
+    },
+    watchWorkspaces: () => org.watch('list'),
   }
 }
 
@@ -94,6 +100,31 @@ export class ShownWorkspaces {
     return new WorkspaceView(shown, () => this.start(key, shown))
   }
 
+  /** Saves a row's name and updates a model that the tab already keeps. */
+  async rename(workspace: WorkspaceIdentity, name: string): Promise<void> {
+    const { orgId, workspaceId } = workspace
+    const updated = await this.app
+      .org(orgId)
+      .workspaceActions.rename(workspaceId, name)
+    this.kept.get(`${orgId}/${workspaceId}`)?.model.renamed(updated)
+  }
+
+  /** Takes the owner reply without opening the workspace. */
+  reassigned(workspace: Workspace): void {
+    const kept = this.kept.get(`${workspace.orgId}/${workspace.id}`)
+    if (kept) kept.model.reassigned(workspace)
+    else this.app.org(workspace.orgId).workspaceActions.reassigned(workspace)
+  }
+
+  /** Reuses a kept Archive flow, or the flow of an unopened list row. */
+  archive(workspace: WorkspaceIdentity): ArchiveModel {
+    const { orgId, workspaceId } = workspace
+    return (
+      this.kept.get(`${orgId}/${workspaceId}`)?.model.archive ??
+      this.app.org(orgId).workspaceActions.archive(workspaceId)
+    )
+  }
+
   private keep(key: string, workspace: WorkspaceIdentity): KeptWorkspace {
     const { orgId, workspaceId } = workspace
     const { services } = this.app
@@ -114,7 +145,6 @@ export class ShownWorkspaces {
       }),
       org,
       started: false,
-      stops: [],
     }
     this.kept.set(key, shown)
     return shown
@@ -122,32 +152,17 @@ export class ShownWorkspaces {
 
   /**
    * The first show of a kept workspace. It says whether the tab still keeps
-   * the workspace, and starts the observers that end when the tab forgets
-   * it. Later shows start nothing more.
+   * the workspace. Later shows start nothing more.
    */
   private start(key: string, shown: KeptWorkspace): boolean {
     if (this.kept.get(key) !== shown) return false
     if (shown.started) return true
     if (!this.onShow()) return false
     shown.started = true
-    const { model, org } = shown
-    const { workspaceId } = model
+    const { org } = shown
     // The chat names the members of the org. A first show reads them when
     // no screen did, and a return reads them never again.
     if (org.members.get().state !== 'ready') void org.reload('members')
-    const { creations } = org
-    const failed = creations.of(workspaceId)
-    shown.stops.push(
-      // The creates of this tab read the same events, so a failed start
-      // turns into its form in the same render as the error state.
-      model.stream.subscribe((envelope) =>
-        creations.observe(workspaceId, envelope),
-      ),
-      model.detail.subscribe(() => this.removal(key, org, model)),
-      failed.subscribe(() => {
-        if (failed.get()?.state === 'failed') this.forget(key)
-      }),
-    )
     return true
   }
 
@@ -177,37 +192,9 @@ export class ShownWorkspaces {
     for (const files of this.keptFiles.values()) files.stop()
     this.keptFiles.clear()
   }
-
-  /**
-   * The server removes a create whose sandbox did not start. A 404 of its
-   * open tells the creates of this tab. An error state of its create start
-   * takes it out of the list, and forgets its kept parts, also in a tab
-   * that did not create it.
-   */
-  private removal(key: string, org: OrgModel, model: WorkspaceModel): void {
-    const detail = model.detail.get()
-    if (detail.state === 'failed' && detail.error.status === 404) {
-      org.creations.removed(model.workspaceId)
-    }
-    if (detail.state === 'ready' && failedCreate(detail.value)) {
-      org.removeWorkspace(model.workspaceId)
-      this.forget(key)
-    }
-  }
-
-  /** Stops a kept workspace for good, so that its streams never open again. */
-  private forget(key: string): void {
-    this.keptFiles.get(key)?.stop()
-    this.keptFiles.delete(key)
-    const shown = this.kept.get(key)
-    if (!shown) return
-    this.kept.delete(key)
-    stop(shown)
-  }
 }
 
 function stop(shown: KeptWorkspace): void {
   shown.model.close()
-  for (const end of shown.stops) end()
   shown.chat.stop()
 }
