@@ -140,10 +140,17 @@ decision number names a dated record, as
     with the time since the build began.
   - After a failed build, it says that the cloud computer did not build.
   - With no build, it says that the cloud computer needs a build.
-- After a failed build or with no build, an admin gets a link to the Cloud
-  computer tab, which offers Try again or Build computer. A member who is
-  not an admin gets no link, and the notice says that an admin can build.
-  Reason: only an admin builds (decision 57).
+- In each state, an admin gets a link to the Cloud computer tab. While a
+  build runs, the admin can follow the build there and change the settings
+  of the cloud computer, as [The first build](org-image.md#the-first-build)
+  says. After a failed build or with no build, the tab offers Try again or
+  Build computer.
+- Reason: an admin can then set up the cloud computer, such as its install
+  script, while the first build runs. A link only after a failed build or
+  with no build was rejected, because the admin then has to find the tab.
+- A member who is not an admin gets no link. After a failed build or with
+  no build, the notice says that an admin can build. Reason: only an admin
+  builds and changes the settings of the cloud computer (decision 57).
 - When a build succeeds, the notice goes, and Send and Create turn on.
 - Once the org has a good image, New workspace shows no such notice, also
   during a later build or after a failed later build. New workspaces then

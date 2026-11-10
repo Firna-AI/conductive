@@ -65,11 +65,14 @@ const firstBuilds: Readonly<Record<string, BuildsResponse>> = {
 }
 
 /**
- * The notice of the build that runs. A non-breaking space keeps its time
- * on one line on a narrow phone.
+ * The notice of the build that runs, as a member sees it. A non-breaking
+ * space keeps its time on one line on a narrow phone.
  */
 const running =
   "Preparing the cloud computer · 2m&nbsp;14s You can send when it's ready."
+
+/** The notice of the build that runs, with the link of an admin. */
+const runningAdmin = `${running} Open Cloud computer`
 
 /** The org of the page, as a person with `role` reaches it. */
 const acme = (role: OrgRole) => ({ id: FAKE_IDS.org, name: 'Acme', role })
@@ -135,6 +138,7 @@ describe('the notice of the first build in New workspace', () => {
     holdAnimationFrames()
     const shown = {
       running: await newWorkspace('admin', firstBuilds.running),
+      runningMember: await newWorkspace('member', firstBuilds.running),
       failed: await newWorkspace('admin', firstBuilds.failed),
       failedMember: await newWorkspace('member', firstBuilds.failed),
       none: await newWorkspace('admin', firstBuilds.none),
@@ -144,6 +148,11 @@ describe('the notice of the first build in New workspace', () => {
     const off = { spinner: false, send: false, tryAgain: false }
     expect(shown).toEqual({
       running: {
+        notices: [runningAdmin],
+        ...off,
+        spinner: true,
+      },
+      runningMember: {
         notices: [running],
         ...off,
         spinner: true,
@@ -184,7 +193,7 @@ describe('the notice of the first build in New workspace', () => {
     expect(refused).toEqual({
       notices: [
         "The workspace wasn't created The cloud computer is still being prepared. Your message is kept. Try again",
-        running,
+        runningAdmin,
       ],
       spinner: true,
       send: false,
