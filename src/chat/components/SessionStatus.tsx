@@ -107,7 +107,9 @@ export function emptyView(props: {
     return (
       <EmptyState
         action={
-          <ActionButton onPress={controller.start}>Try again</ActionButton>
+          <ActionButton onPress={() => void controller.start()}>
+            Try again
+          </ActionButton>
         }
         body={load.message}
         icon={CircleAlert}

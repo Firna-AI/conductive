@@ -14,7 +14,7 @@ export class Workspace extends FeatureWorkspace {
     const clock = { value: DEVICE_TEST_NOW }
     super(context, env, () => clock.value)
     this.testClock = clock
-    context.blockConcurrencyWhile(async () => {
+    void context.blockConcurrencyWhile(async () => {
       clock.value =
         (await context.storage.get<number>(CLOCK_KEY)) ?? DEVICE_TEST_NOW
     })

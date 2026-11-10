@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactElement } from 'react'
 import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
 import { CreateFailedNotice } from '../components/new-workspace/notices'
 import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
@@ -105,8 +105,8 @@ export function formNotices(
   state: NewWorkspaceFormState,
   failed: boolean,
   ready = true,
-): ReactNode[] {
-  const notices: ReactNode[] = []
+): ReactElement[] {
+  const notices: ReactElement[] = []
   if (failed) {
     notices.push(<CreateFailedNotice key="failed" ready={ready} />)
   }

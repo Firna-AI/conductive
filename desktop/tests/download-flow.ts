@@ -82,8 +82,10 @@ export async function installDownloadFlow(page: Page, appOrigin: string) {
       )
       const button = document.createElement('button')
       button.textContent = 'Download authorized file'
-      button.addEventListener('click', async () => {
-        button.dataset.result = String(await download(client, input.name))
+      button.addEventListener('click', () => {
+        void download(client, input.name).then((result) => {
+          button.dataset.result = String(result)
+        })
       })
       document.body.append(button)
     },

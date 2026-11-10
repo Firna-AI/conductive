@@ -27,7 +27,7 @@ export class NativeAlarmWorkspace extends ProductionWorkspace {
     super(context, env, readNow, resolvers, schedule)
     this.alarmClock = clock
     this.alarmNow = readNow
-    context.blockConcurrencyWhile(async () => {
+    void context.blockConcurrencyWhile(async () => {
       clock.now =
         (await context.storage.get<number>(CLOCK_KEY)) ?? DEVICE_TEST_NOW
     })

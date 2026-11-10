@@ -17,7 +17,7 @@ export class Workspace extends ProductWorkspace {
     this.clock = clock
     this.testStorage = context.storage
     this.testContext = context
-    context.blockConcurrencyWhile(() => clock.restore(context.storage))
+    void context.blockConcurrencyWhile(() => clock.restore(context.storage))
   }
   fetchDeviceRequest(request: Request): Promise<Response> {
     return super.fetch(request)

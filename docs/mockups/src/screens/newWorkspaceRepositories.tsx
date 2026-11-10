@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactElement } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import type { MenuEntry } from '../components/common/Menu'
@@ -99,7 +99,7 @@ export function waitingNotice(props: {
   form: FormRepositories
   wait: RepositoryWait
   admin: boolean
-}): ReactNode {
+}): ReactElement | null {
   const waits = formWait(props.form)
   if (!waits) return null
   return (

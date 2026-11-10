@@ -124,7 +124,7 @@ export class NativeWorkspace extends Workspace {
       await controls.unobservedPut(CLOCK_KEY, { at: clock.now(), ...state })
     }
     this.saveState = saveClock
-    context.blockConcurrencyWhile(async () => {
+    void context.blockConcurrencyWhile(async () => {
       const saved = await context.storage.get<{ at: number } & typeof state>(
         CLOCK_KEY,
       )

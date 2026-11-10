@@ -129,6 +129,6 @@ export function startUpdates(dependencies: {
   return {
     available: true,
     check,
-    stop: dependencies.every(automaticCheck, 4 * 60 * 60 * 1000),
+    stop: dependencies.every(() => void automaticCheck(), 4 * 60 * 60 * 1000),
   }
 }

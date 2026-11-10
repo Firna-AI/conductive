@@ -140,19 +140,29 @@ describe('the pointer drag', () => {
     vi.useFakeTimers()
     try {
       pointer(a, 'pointerdown', { ...finger, clientX: 50 })
-      act(() => vi.advanceTimersByTime(200))
+      act(() => {
+        vi.advanceTimersByTime(200)
+      })
       pointer(window, 'pointermove', { ...finger, clientX: 59 })
-      act(() => vi.advanceTimersByTime(250))
+      act(() => {
+        vi.advanceTimersByTime(250)
+      })
       const scrolled = shown()
       pointer(window, 'pointercancel', { ...finger, clientX: 59, buttons: 0 })
 
       pointer(b, 'pointerdown', { ...finger, clientX: 150 })
-      act(() => vi.advanceTimersByTime(300))
+      act(() => {
+        vi.advanceTimersByTime(300)
+      })
       // A browser can send its menu event while the finger still holds.
       const menuWhileHolding = allowed(b, new MouseEvent('contextmenu', event))
-      act(() => vi.advanceTimersByTime(149))
+      act(() => {
+        vi.advanceTimersByTime(149)
+      })
       const early = shown()
-      act(() => vi.advanceTimersByTime(1))
+      act(() => {
+        vi.advanceTimersByTime(1)
+      })
       const held = shown()
       const pageScrolls = allowed(b, new Event('touchmove', event))
       const menuOpens = allowed(b, new MouseEvent('contextmenu', event))
