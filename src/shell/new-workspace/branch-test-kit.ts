@@ -1,7 +1,12 @@
+import { act } from 'react'
 import { branchPagePath } from '../../app/branch-list'
 import { requestLines } from '../../app/test-kit'
 import { repositoryBranchesPath } from '../../shared/workspace-branches'
-import { accessibleName, byRole } from '../../test-support/dom-queries'
+import {
+  accessibleName,
+  byRole,
+  whyInoperable,
+} from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { branchFixtures } from '../../test-support/fixtures/branches'
 import { repositoryFixtures } from '../../test-support/fixtures/repositories'
@@ -60,24 +65,63 @@ function descriptionOf(element: Element): string {
 }
 
 /**
- * The rows of the open picker in `root`, as a person meets them with the
- * arrow keys: each name, with ✓ on the checked choice, the reason of a row
- * that is off, and the address of a link.
+ * A part of the picker as a person meets it with the arrow keys: its name,
+ * with ✓ on the checked choice, the reason of a row that is off, and the
+ * address of a link.
  */
+function partOf(item: HTMLElement): string {
+  const name = accessibleName(item)
+  if (item.getAttribute('aria-checked') === 'true') return `${name} ✓`
+  if (item.getAttribute('aria-disabled') === 'true') {
+    const reason = descriptionOf(item)
+    return reason === '' ? `${name} (off)` : `${name} (off: ${reason})`
+  }
+  if (item instanceof HTMLAnchorElement) {
+    return `${name} (${descriptionOf(item)}) → ${item.href}`
+  }
+  return name
+}
+
+/** The rows of the open picker in `root`, as `partOf` reads each one. */
 export function pickerRows(root: HTMLElement): string[] {
   const menu = byRole('menu', 'Branch', root)
   return Array.from(
     menu.querySelectorAll<HTMLElement>('[role^="menuitem"]'),
-    (item) => {
-      const name = accessibleName(item)
-      if (item.getAttribute('aria-checked') === 'true') return `${name} ✓`
-      if (item.getAttribute('aria-disabled') === 'true') {
-        return `${name} (off: ${descriptionOf(item)})`
-      }
-      if (item instanceof HTMLAnchorElement) {
-        return `${name} (${descriptionOf(item)}) → ${item.href}`
-      }
-      return name
-    },
+    partOf,
   )
+}
+
+/** The part of the page that has the focus, as `partOf` reads it. */
+export function focusedPart(): string {
+  const active = document.activeElement
+  if (!(active instanceof HTMLElement) || active === document.body) {
+    return 'nothing'
+  }
+  return partOf(active)
+}
+
+/**
+ * Presses Enter on the focused part, as a browser does: a keydown, then the
+ * click that activates a native button when no handler stopped the key,
+ * then a keyup. happy-dom gives a key no activation of its own.
+ */
+export function pressEnter(): void {
+  const target = document.activeElement
+  if (!(target instanceof HTMLElement)) {
+    throw new Error('No element has the focus.')
+  }
+  const why = whyInoperable(target)
+  if (why !== null) throw new Error(`A person cannot press Enter: ${why}.`)
+  const key = (type: string) =>
+    new KeyboardEvent(type, { key: 'Enter', bubbles: true, cancelable: true })
+  const down = key('keydown')
+  act(() => {
+    target.dispatchEvent(down)
+  })
+  if (!down.defaultPrevented && target instanceof HTMLButtonElement) {
+    act(() => target.click())
+  }
+  act(() => {
+    target.dispatchEvent(key('keyup'))
+  })
 }

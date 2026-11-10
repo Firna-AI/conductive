@@ -27,6 +27,9 @@ import ui from '../ui/ui.module.css'
 /** The `data-option` of New branch, which no row of the list has. */
 export const newBranchKey = 'new'
 
+/** The `data-option` of Show more, which no row of the list has. */
+export const moreKey = 'more'
+
 type PullRequestOption = Extract<
   WorkspaceBranchOption,
   { type: 'pull-request' }
@@ -128,6 +131,7 @@ function ShowMore(props: { reading: boolean; more: () => void }) {
     <button
       aria-disabled={props.reading ? true : undefined}
       className={itemClass}
+      data-option={moreKey}
       onClick={() => {
         if (!props.reading) props.more()
       }}

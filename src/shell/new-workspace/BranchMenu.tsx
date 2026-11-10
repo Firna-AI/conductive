@@ -20,8 +20,8 @@ import { useStore } from '../../app/store'
 import type { Repository } from '../../shared/org-settings'
 import type { WorkspaceBranchOption } from '../../shared/workspace-branches'
 import { LoadFailure } from '../ui/LoadFailure'
-import { useLayerFocus } from '../ui/Overlay'
-import { BranchEntries, newBranchKey } from './BranchRows'
+import { focusableSelector, useLayerFocus } from '../ui/Overlay'
+import { BranchEntries, moreKey, newBranchKey } from './BranchRows'
 import { useWithinWindow } from './within-window'
 
 /** The handle of the text field of Firna, which takes the focus. */
@@ -30,14 +30,20 @@ type FieldHandle =
     ? Handle
     : never
 
-/** The parts of the picker that the arrow keys move between. */
-const ITEM = '[role^="menuitem"]'
+/**
+ * The parts of the picker that the arrow keys move between, in the order of
+ * the page: each control that can take the focus, such as the search field
+ * and Try again of the list under the rows, and each row, also a row that
+ * is off.
+ */
+const STOPS = `${focusableSelector}, [role^="menuitem"]`
 
 /**
- * The arrow keys move from the search field down the rows and back up,
- * and Home and End go to the first and the last row. Tab closes the picker
- * beside its control, as it closes every menu, and a sheet keeps Tab.
- * The keys count in the capture phase, because a text field stops them.
+ * The arrow keys move from the search field down the rows and the actions
+ * under them, and back up, and Home and End go to the first and the last
+ * of them. Tab closes the picker beside its control, as it closes every
+ * menu, and a sheet keeps Tab. The keys count in the capture phase, because
+ * a text field stops them.
  */
 function moveFocus(
   event: KeyboardEvent<HTMLDivElement>,
@@ -49,16 +55,16 @@ function moveFocus(
     return
   }
   const box = event.currentTarget
+  const stops = Array.from(box.querySelectorAll<HTMLElement>(STOPS))
   const field = box.querySelector('input')
-  const items = Array.from(box.querySelectorAll<HTMLElement>(ITEM))
-  const stops = field ? [field, ...items] : items
+  const parts = stops.filter((stop) => stop !== field)
   const at = stops.findIndex((stop) => stop === document.activeElement)
-  const inField = field !== null && at === 0
+  const inField = field !== null && field === document.activeElement
   const targets: Record<string, HTMLElement | undefined> = {
-    ArrowDown: stops[(at + 1) % stops.length],
-    ArrowUp: stops[(at - 1 + stops.length) % stops.length],
-    Home: inField ? undefined : items[0],
-    End: inField ? undefined : items.at(-1),
+    ArrowDown: stops[at + 1 < stops.length ? at + 1 : 0],
+    ArrowUp: stops[at > 0 ? at - 1 : stops.length - 1],
+    Home: inField ? undefined : parts[0],
+    End: inField ? undefined : parts.at(-1),
   }
   const target = targets[event.key]
   if (!target) return
@@ -74,11 +80,12 @@ function rowOf(box: HTMLElement, key: string): HTMLElement | undefined {
 }
 
 /**
- * Keeps the focus in the picker when the control that has it goes, such
- * as Show more after the last page, or Try again: the first row that Show
- * more added takes it, else the search field on a computer, or New branch
- * in a sheet, which has no search ref. `moreFromRef` holds the number of
- * rows when Show more went.
+ * Keeps the focus in the picker when the control that has it goes. While a
+ * later page loads, Show more takes it, such as after Try again of that
+ * page. Then the first row of the page takes it, as after Show more. Else
+ * the search field takes it on a computer, or New branch in a sheet, which
+ * has no search ref. `moreFromRef` holds the number of rows when Show more
+ * or Try again of a later page went.
  */
 function useKeptFocus(
   boxRef: RefObject<HTMLElement | null>,
@@ -88,13 +95,15 @@ function useKeptFocus(
 ) {
   useEffect(() => {
     const node = boxRef.current
-    if (!node || (rows.state === 'ready' && rows.more.state === 'reading')) {
+    if (!node) return
+    const active = document.activeElement
+    const lost = active === null || active === document.body
+    if (rows.state === 'ready' && rows.more.state === 'reading') {
+      if (lost) rowOf(node, moreKey)?.focus()
       return
     }
     const from = moreFromRef.current
     moreFromRef.current = null
-    const active = document.activeElement
-    const lost = active === null || active === document.body
     const added =
       rows.state === 'ready' && from !== null ? rows.rows[from] : null
     const target = added ? rowOf(node, optionKey(added)) : undefined
@@ -139,9 +148,9 @@ function Status(props: { rows: BranchRows; retry: () => Promise<void> }) {
  * The branch picker of New workspace: a search field, New branch, the open
  * pull requests, and the branches of the repository on GitHub without its
  * default branch. It hangs below its control on a computer, inside the
- * window, where the search takes the focus, and fills a sheet on a phone. The search and the
- * pages come from `list`, and a choice goes to `choose`, with `null` for
- * New branch.
+ * window, where the search takes the focus, and fills a sheet on a phone.
+ * The search and the pages come from `list`, and a choice goes to
+ * `choose`, with `null` for New branch.
  */
 export function BranchMenu(props: {
   placement: 'below-start' | 'sheet'
@@ -167,6 +176,13 @@ export function BranchMenu(props: {
   const more = () => {
     if (rows.state === 'ready') moreFrom.current = rows.rows.length
     void list.more()
+  }
+  // Try again of a later page wants its rows, as Show more does.
+  const retry = () => {
+    if (rows.state === 'ready' && rows.more.state === 'failed') {
+      moreFrom.current = rows.rows.length
+    }
+    return list.retry()
   }
   const status = rows.state !== 'ready' || rows.more.state === 'failed'
   return (
@@ -204,7 +220,7 @@ export function BranchMenu(props: {
       </div>
       {status ? (
         <div className={menu.status}>
-          <Status retry={() => list.retry()} rows={rows} />
+          <Status retry={retry} rows={rows} />
         </div>
       ) : null}
     </div>

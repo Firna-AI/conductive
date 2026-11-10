@@ -196,10 +196,12 @@ states the requirements.
 - On a computer the picker hangs below its control, and `within-window.ts`
   keeps it inside the window: it moves left and caps its height as the
   window needs. The search field takes the focus, and the arrow keys move
-  from it down the rows. Escape and a press outside close only the picker,
-  and the focus goes back to its control. Show more gives the focus to the
-  first row of its page. A phone shows the picker in a sheet, which gives
-  the focus to the checked row.
+  from it down the rows and the actions under them, such as Try again.
+  Escape and a press outside close only the picker, and the focus goes
+  back to its control. Show more, and Try again of a later page, keep the
+  focus on Show more while the page loads, and then give it to the first
+  row of that page. A phone shows the picker in a sheet, which gives the
+  focus to the checked row.
 
 ## Rules for this code
 
