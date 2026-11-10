@@ -4,16 +4,28 @@ import { readAttachment as readPublicAttachment } from '../../../src/app/api/rea
 import { attachmentUploadUrl } from '../../../src/shared/messages'
 import type { HttpFetch } from '../../env'
 import { readAttachment } from '../attachment-data'
-import { attachmentBucket } from '../attachment-record'
+import {
+  attachmentBucket,
+  attachmentPath,
+  ATTACHMENTS_DIRECTORY,
+} from '../attachment-record'
 import { identifier, record } from '../inputs'
 import type { Workspace } from './journey-entry.test-support'
 import type { OuterRuntime } from './outer-runtime.test-support'
-import { OUTER_ORG } from './outer-seed.test-support'
+import { OUTER_ORG, OUTER_REPOSITORY } from './outer-seed.test-support'
 
 export const FIRST_START_FILE_BYTES = new Uint8Array([0, 255, 128, 13, 10, 65])
+export const REPAIRED_REPOSITORY_LOCATIONS = [
+  {
+    repositoryId: OUTER_REPOSITORY,
+    directory: '/home/user/code/repaired-repository',
+    variable: 'CONDUCTIVE_REPOSITORY_REPAIRED_REPOSITORY_DIR',
+  },
+]
 
 export function firstStartAttachmentTransfer() {
   const copies: Uint8Array[] = []
+  const paths: string[] = []
   const outbound = async (request: Request, fallback: HttpFetch) => {
     const url = new URL(request.url)
     if (
@@ -21,6 +33,7 @@ export function firstStartAttachmentTransfer() {
       url.pathname.endsWith('/files/upload-url')
     ) {
       const path = identifier(record(await request.json()).path)
+      paths.push(path)
       return Response.json({
         ok: true,
         type: 'file.upload_url',
@@ -36,7 +49,29 @@ export function firstStartAttachmentTransfer() {
     }
     return fallback(request)
   }
-  return { copies, outbound }
+  return { copies, paths, outbound }
+}
+
+export async function expectFirstStartCopies(
+  fixture: OuterRuntime,
+  transfer: ReturnType<typeof firstStartAttachmentTransfer>,
+  command: Record<string, unknown>,
+  attachmentId: string,
+) {
+  const stored = await readAttachment(fixture.env.DB, attachmentId)
+  if (!stored) throw new Error('The file record is missing.')
+  const messageId = identifier(record(command.message).id)
+  const directory = REPAIRED_REPOSITORY_LOCATIONS[0].directory
+  const path = `${directory}/${await attachmentPath(stored, messageId)}`
+  expect(transfer.copies).toEqual([
+    new Uint8Array([42]),
+    FIRST_START_FILE_BYTES,
+  ])
+  expect(transfer.paths).toEqual([
+    `${directory}/${ATTACHMENTS_DIRECTORY}/.gitignore`,
+    path,
+  ])
+  expect(command.attachments).toEqual([{ attachmentId, path }])
 }
 
 export async function uploadFirstStartFile(

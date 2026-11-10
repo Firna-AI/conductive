@@ -135,6 +135,7 @@ function DialogCard(props: {
             chosen={form.repository}
             repositories={form.repositories ?? []}
             tone="plain"
+            waiting={form.waiting}
           />
         ) : null}
         <span className={styles.place}>{place}</span>

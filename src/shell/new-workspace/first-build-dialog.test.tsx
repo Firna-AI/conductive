@@ -27,6 +27,11 @@ test('before the first good build, Create and Enter keep the draft, and Open Clo
   server.json('GET', orgSettingsPaths.builds(org), {
     builds: [],
     currentImageBuildId: null,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   })
   const tab = await openTab(server)
   click(newWorkspaceRow(sidebarOf(tab.view)))

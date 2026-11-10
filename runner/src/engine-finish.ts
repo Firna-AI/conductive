@@ -1,8 +1,35 @@
 import type { AgentChatEvent } from '../../src/shared/chat-events'
+import type { ChangedFile } from '../../src/shared/files'
+import type { Checkpoint } from './checkpoint'
 import type { EngineOptions, SessionRuntime } from './engine-session'
 import type { ProviderEvent } from './providers/types'
 import { cancelable } from './engine-cancel'
 import { disposeProvider } from './engine-disposal'
+
+/**
+ * How long the end of a stopped turn waits for its changed files. A longer
+ * read marks them as unavailable, so Stop and a shutdown still end the turn.
+ */
+export const STOPPED_FILES_TIMEOUT_MS = 10_000
+
+/**
+ * Reads the changed files of a turn that Stop or a shutdown ended. The stop
+ * already aborted the signal of the turn, so this read has its own limit.
+ */
+async function stoppedFiles(
+  options: EngineOptions,
+  baseline: Checkpoint,
+): Promise<readonly ChangedFile[]> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), STOPPED_FILES_TIMEOUT_MS)
+  try {
+    return await cancelable(controller.signal, () =>
+      options.changedSince(baseline, controller.signal),
+    )
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 export async function finishTurn(
   options: EngineOptions,
@@ -47,12 +74,9 @@ export async function finishTurn(
         options.warn('The changed files could not be read.')
     }
   }
-  if (turn.shutdown && turn.baseline !== null && turn.files === null) {
+  if (turn.stopped && turn.baseline !== null && turn.files === null) {
     try {
-      turn.files = await options.changedSince(
-        turn.baseline,
-        new AbortController().signal,
-      )
+      turn.files = await stoppedFiles(options, turn.baseline)
     } catch {
       options.warn('The changed files could not be read.')
     }

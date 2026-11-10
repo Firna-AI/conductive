@@ -5,15 +5,55 @@ import { readAttachment } from './attachment-data'
 import { storeAttachment } from './attachment-storage'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import type { ChatFixtureOptions } from './harness.test-support'
+import type { RepositoryLocation } from '../lifecycle/repository-locations'
+
+export const ATTACHMENT_REPOSITORY_DIRECTORY = '/home/user/code/attachment-repo'
+export const ATTACHMENT_IGNORE_BYTES = new Uint8Array([42])
 export const FILE_BYTES = new Uint8Array([0, 255, 128, 13, 10, 65])
+
+export function attachmentRepositoryLocations(
+  directory = ATTACHMENT_REPOSITORY_DIRECTORY,
+): readonly RepositoryLocation[] {
+  return [
+    {
+      repositoryId: 'another-repo',
+      directory: '/home/user/code/another-repo',
+      variable: 'CONDUCTIVE_REPOSITORY_ANOTHER_REPO_DIR',
+    },
+    {
+      repositoryId: 'repo',
+      directory,
+      variable: 'CONDUCTIVE_REPOSITORY_ATTACHMENT_REPO_DIR',
+    },
+  ]
+}
+
 export async function attachmentFixture(
   harness: TestHarness,
-  overrides: ChatFixtureOptions = {},
+  options: ChatFixtureOptions & { captureRepository?: boolean } = {},
 ) {
+  const { captureRepository = true, ...overrides } = options
   const chat = await createChatFixture(harness, {
     prepareAttachments: async () => null,
     ...overrides,
   })
+  if (captureRepository)
+    await harness.env.DB.prepare(
+      `INSERT INTO workspace_runtime
+      (workspace_id, org_id, created_by_user_id, session_id, first_turn_id,
+       agent, model, effort, first_message_id, repository_locations_json)
+      VALUES (?, ?, ?, 'fixture-session', 'fixture-turn', ?, ?, ?, 'fixture-first', ?)`,
+    )
+      .bind(
+        WORKSPACE_ID,
+        chat.org.id,
+        chat.owner.id,
+        CLAUDE.agent,
+        CLAUDE.model,
+        CLAUDE.effort,
+        JSON.stringify(attachmentRepositoryLocations()),
+      )
+      .run()
   const target: AttachmentUploadTarget = {
     type: 'workspace',
     workspaceId: WORKSPACE_ID,
