@@ -22,3 +22,5 @@
 - **Previous examples:** None found.
 - **Recommendation:** A. It covers the state that users meet after each dropped connection, at the smallest cost.
 - **Action:** fix after merge, apply A, because the gap is outside the scope of the terminal copy change.
+
+The plan of the change, before its deletion: https://github.com/Firna-AI/remote-code/blob/df8a3160206f427a810aeae476f121ca3264f9f8/plans/terminal-copy.md
