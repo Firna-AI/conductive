@@ -27,6 +27,14 @@ Cleanup can still recover uncertain allocations and remove resources.
 A pending start, outcome publication, or failed-computer cleanup keeps suspension pending and its native alarm armed.
 Suspended orgs get no disk retention restart, including after an owner change.
 
+## Runner version
+
+- A full build records the Worker's runner protocol version.
+  A refresh copies the version of the image that it refreshes.
+- Each new computer allocation stores the runner version of its image snapshot before the provider call.
+  This includes a first start, Try again, and a restored allocation.
+  A missing image version counts as version 1.
+
 ## Build jobs
 
 `startImageBuild` in [`image-builds.ts`](image-builds.ts) records a build or
@@ -59,7 +67,12 @@ A write that passes that budget removes whole rows from the middle.
 The line `[N output bytes omitted]` takes their place in the event order.
 
 - A build loads the chosen repositories, installs the image software, runs
-  the install script with Bash, and saves a snapshot. A refresh only loads
+  the install script with Bash, and saves a snapshot. A first build that
+  pins a matching ready software image starts from it and skips the
+  software step. Admission records the pin in the job insert. The pin stays
+  until the job reaches `done`, including its cleanup. The
+  [software image backend](../software-image/README.md) owns these images.
+  A refresh only loads
   the repositories of the current image again, and saves a snapshot.
 - The org image changes only when the new snapshot is ready. Each job
   deletes every live ledger computer of that org and build, and keeps its history and log.

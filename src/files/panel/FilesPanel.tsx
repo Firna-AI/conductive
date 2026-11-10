@@ -90,6 +90,7 @@ function AllFiles(props: ListProps) {
         onFolder={(path, isOpen) => files.setFolderOpen(path, isOpen)}
         openMode={open?.kind === 'file' ? open.mode : 'preview'}
         openPath={openPath}
+        revealed={snapshot.revealed}
         rows={rows}
       />
     </div>

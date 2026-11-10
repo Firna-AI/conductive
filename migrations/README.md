@@ -140,7 +140,14 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
-`202611101200_shortcuts.sql` adds `user_shortcuts`.
+`202611101200_software_images.sql` adds `software_images`, which owns each
+software image attempt and its provider account, version, artifact, phase,
+resources, output, and deploy token digest. A partial unique index allows
+one building attempt per account. `image_build_jobs.software_image_name`
+pins the ready software image that a first build uses.
+The [software image backend](../worker/software-image/README.md) owns these records.
+
+`202611101300_shortcuts.sql` adds `user_shortcuts`.
 Each row holds one account's changed command for one keyboard, with its
 ordered keys as JSON. An empty list keeps a command without keys.
 The primary key keeps each account, keyboard, and command separate.
@@ -184,7 +191,8 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Chat attachment metadata | `202611081800`–`202611081859` |
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
 | Computer ledger account merge | `202611100900`–`202611100959` |
-| Keyboard shortcuts storage | `202611101200`–`202611101259` |
+| Software image for first builds | `202611101200`–`202611101259` |
+| Keyboard shortcuts storage | `202611101300`–`202611101359` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 

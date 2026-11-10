@@ -82,6 +82,14 @@ export async function allocateWorkspace(
       env.BOAT_KEY_ENCRYPTION_KEY,
     )
   }
+  await env.DB.prepare(
+    `UPDATE workspaces SET runner_protocol_version = COALESCE(
+      (SELECT runner_protocol_version FROM image_builds
+       WHERE org_id = ? AND snapshot_name = ? AND state = 'succeeded' LIMIT 1), 1)
+     WHERE org_id = ? AND id = ?`,
+  )
+    .bind(job.orgId, payload.snapshotName ?? null, job.orgId, job.workspaceId)
+    .run()
   try {
     if (!job.allocatedSandboxId) {
       const sandbox = await createResource(env.DB, provider, {

@@ -8,6 +8,7 @@ import { createTerminalHandler } from '../terminal/handler'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
 import { handoffRequest, launchForm } from './launch-test-support'
+import { relayResponse } from './relay.test-support'
 import { bodySource, openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
@@ -33,7 +34,7 @@ it('refuses suspended org sandbox entry before provider calls and stops old gran
   harness.dependencies.fetch = async (request) =>
     new URL(request.url).hostname === 'boat.dev'
       ? base(request)
-      : new Response(source.stream)
+      : relayResponse(source.stream)
   const response = await setup.handler.proxy(setup.previewRequest())
   const reader = response.body?.getReader()
   const before = reader?.read()

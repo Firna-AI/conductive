@@ -19,6 +19,7 @@ export function nativeChatObservers() {
     turnDispatching: async (...args) => observers.turnDispatching?.(...args),
     turnDispatchFailed: async (...args) =>
       observers.turnDispatchFailed?.(...args),
+    turnEnded: async (...args) => observers.turnEnded?.(...args),
     receiveFileResult: async (...args) =>
       observers.receiveFileResult?.(...args),
   }

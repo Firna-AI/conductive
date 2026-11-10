@@ -84,6 +84,9 @@ export function TerminalScreen(props: {
       // Bold keeps its colour, as the bold prompt of the mockup does.
       drawBoldTextInBrightColors: false,
       minimumContrastRatio: 4.5,
+      // On a Mac, an Option press selects while a program has the mouse. The
+      // screen sends each plain press again with Option, so a drag selects.
+      macOptionClickForcesSelection: true,
     })
     const fit = new FitAddon()
     xterm.loadAddon(fit)

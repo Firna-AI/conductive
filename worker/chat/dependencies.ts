@@ -1,4 +1,6 @@
 import type { AppEnv } from '../env'
+import { commitAuthor } from '../../src/shared/commit-author'
+import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { randomToken } from '../security/crypto'
 import {
@@ -12,6 +14,7 @@ import {
 } from './login-availability'
 import { readAutomaticTitleWorkspace } from './queries'
 import { titleModelBinding } from './title-model'
+import { readRunnerProtocolVersion } from './runner-version-data'
 import type { ChatDependencies } from './types'
 import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
@@ -29,6 +32,10 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    readCommitAuthor: async (userId) => {
+      const user = await readUser(env.DB, userId)
+      return user ? commitAuthor(user) : null
+    },
     readAutomaticTitleWorkspace: (id) =>
       readAutomaticTitleWorkspace(env.DB, id),
     runTitleModel: titleModelBinding(env),
@@ -39,6 +46,7 @@ export function chatDependencies(
     scheduleRunnerCheck: scheduleConnectionCheck,
     readRunnerAccess: (id, tokenHash) =>
       runnerTokenAllowed(env.DB, id, tokenHash),
+    readRunnerProtocolVersion: (id) => readRunnerProtocolVersion(env.DB, id),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
     randomId: randomToken,
@@ -79,6 +87,7 @@ export function chatDependencies(
     runnerDisconnected: async () => undefined,
     turnDispatching: async () => true,
     turnDispatchFailed: async () => undefined,
+    turnEnded: async () => undefined,
     browserOpened: async () => undefined,
     browserClosed: async () => undefined,
     waitUntil: (promise) => {

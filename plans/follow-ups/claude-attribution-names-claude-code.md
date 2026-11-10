@@ -14,7 +14,7 @@
   SDK 0.3.318, and it sets no `attribution` setting. The type docs of that
   SDK say that each field of `attribution` defaults to the standard Claude
   Code attribution, and that an empty string or `false` hides it. The
-  section "Names in the product" of `docs/protocol/chat-and-events.md` says
+  section "Names in the product" of `docs/protocol/agents-and-sessions.md` says
   that user-facing text never uses "Claude Code" as a name of the product
   or of its features.
 - **Problem:** Commits and pull request descriptions that Claude agents

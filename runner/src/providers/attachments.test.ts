@@ -48,7 +48,10 @@ function attachedTurn(agent: Agent) {
   const options: ProviderOptions = {
     cwd: '/test/repository',
     home: '/test/home',
-    login: command.login,
+    sessionId: command.sessionId,
+    endpoint: `${fakeToolContext.machineOrigin}/v1/model/${agent}`,
+    credential: { type: 'gateway', ...command.credential },
+    commitAuthor: null,
     choice: command.message.choice,
     conversationId: null,
     instructions: agentInstructions({
@@ -68,6 +71,11 @@ it('gives Claude original attachment metadata and copied paths', async () => {
   const provider = await createClaudeFactory(
     sdk.open,
     () => '/fake/claude',
+    async () => ({
+      directory: '/test/home/.conductive/anthropic',
+      name: 'session-attachments',
+      remove: async () => {},
+    }),
   )(options)
   onTestFinished(() => provider.close())
   await provider.send(command)

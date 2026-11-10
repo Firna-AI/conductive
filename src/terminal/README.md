@@ -31,8 +31,14 @@ change can move the shared parts to the app's shared components.
   replies reach the shell, but they keep a held Ctrl and count as no
   activity. The screen marks them where xterm.js makes them, so a key with
   the same bytes, such as Shift+F3, stays the user's key.
+- A plain drag selects text, also while a program, such as tmux, has the
+  mouse. The screen sends each plain left press to xterm.js again as a
+  forced selection, with Option on a Mac and Shift elsewhere. The wheel,
+  the right and middle buttons, and a press with Cmd or Ctrl still reach
+  the program. On a Mac, Cmd+C copies the selection.
 - When the connection ends, the screen keeps its output, takes no more
-  input or size, and offers Reconnect.
+  input or size, and offers Reconnect. It also turns off the mouse reports
+  of the program, so a drag selects the text and shows the text cursor.
 - Another workspace starts the tool again, so no input reaches the old one.
 
 ## Mount the tool
@@ -142,8 +148,9 @@ phone. The page lists each request and each call of the terminal transport.
 The buttons send fake events: revoke a preview, start the sandbox, end the
 terminal connection, and change the workspace. In the `late` state, the
 terminal reads that start before the sandbox runs wait for Answer held
-reads. Two buttons make the shell ask for the cursor position and turn on
-focus reports. These two buttons leave the keyboard on the terminal.
+reads. Three buttons make the shell ask for the cursor position, turn on
+focus reports, and turn on mouse reports, as tmux does. These three
+buttons leave the keyboard on the terminal.
 
 ## Key code
 
@@ -154,6 +161,8 @@ focus reports. These two buttons leave the keyboard on the terminal.
 - `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
 - `xtermScreen.ts`: splits the data of xterm.js into the user's input and
   its own replies.
+- `plainPresses.ts`: keeps plain left presses for the selection of the page
+  while a program has the mouse.
 - `terminalSession.ts`: connects the screen to a `TerminalTransport`.
 - `terminalKeys.ts`: the bytes of the key row and of Ctrl with a key.
 - `terminalTheme.ts`: the colours and the type of the screen from the tokens.

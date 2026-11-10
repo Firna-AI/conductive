@@ -66,6 +66,15 @@ mount the chat.
   chip of the file shows the label of its path, `displayPath`, which hides
   each secret value, as [Labels of paths](../files/labels.md)
   says.
+- `mentions` gives the composer the files and folders of the workspace for
+  the list of `@`, and the open of a file chip, as `ChatMentions` in
+  `mentions/MentionsContext.tsx` says. `files` is a store of the kept file
+  tree: the `WorkspaceFiles` of the Files screens fits it. `openFile`
+  opens a file as a press in All files does, `showFolder` shows All files
+  with a folder open, and `href` gives the address of the page of a chip.
+  Without `mentions`, the composer has no list, and a message shows each
+  mention as text, as
+  [File mentions](../../docs/protocol/file-mentions.md) says.
 - `onOpenPage` gets the page of a workspace chip in a sent message or an
   answer, such as `/orgs/acme/workspaces/<id>/files`, after a plain click.
   The app opens it in the same window. A click with a modifier key stays
@@ -92,10 +101,11 @@ mount the chat.
   takes the place of the composer.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
-- The chat sets no CSS position. A dialog or a sheet covers the nearest
-  positioned frame: the app frame. The lifted tab of a drag, and the tab
-  menu on desktop, draw on `document.body` with a fixed position, because
-  the row clips what it holds.
+- The chat sets no CSS position, except on the message box of a composer,
+  so the list of `@` lies just above the box. A dialog or a sheet covers
+  the nearest positioned frame: the app frame. The lifted tab of a drag,
+  and the tab menu on desktop, draw on `document.body` with a fixed
+  position, because the row clips what it holds.
 - The menus, the dialogs, and the sheets of the chat note themselves in
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while

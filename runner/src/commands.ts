@@ -1,6 +1,10 @@
 import type { AgentChoice } from '../../src/shared/agents'
+import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { Attachment, UserMessage } from '../../src/shared/messages'
-import type { RunnerLogin, WorkspaceToRunner } from '../../src/shared/runner'
+import type {
+  RunnerTurnCredential,
+  WorkspaceToRunnerV2 as WorkspaceToRunner,
+} from '../../src/shared/runner'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { array, integer, nullable, object, oneOf, string } from './parse'
 
@@ -20,20 +24,20 @@ export function parseChoice(value: unknown): AgentChoice {
   }
 }
 
-function parseLogin(value: unknown): RunnerLogin {
+function parseCredential(value: unknown): RunnerTurnCredential {
   const input = object(value)
-  const secret = string(input.secret)
+  const token = string(input.token)
   if (input.agent === 'claude') {
     return {
       agent: 'claude',
       kind: oneOf(input.kind, ['token', 'api-key']),
-      secret,
+      token,
     }
   }
   if (input.agent === 'codex' && input.kind === 'api-key') {
-    return { agent: 'codex', kind: 'api-key', secret }
+    return { agent: 'codex', kind: 'api-key', token }
   }
-  throw new Error('The login type is not supported.')
+  throw new Error('The turn credential type is not supported.')
 }
 
 function parseAttachment(value: unknown): Attachment {
@@ -67,7 +71,24 @@ function parseUserMessage(value: unknown): UserMessage {
   }
 }
 
-export function parseWorkspaceMessage(value: unknown): WorkspaceToRunner {
+function parseCommitAuthor(
+  value: unknown,
+  warn: (message: string) => void,
+): CommitAuthor | null {
+  if (value === undefined || value === null) return null
+  try {
+    const author = object(value)
+    return { name: string(author.name), email: string(author.email) }
+  } catch {
+    warn('The turn commit author is invalid. The sandbox author will be used.')
+    return null
+  }
+}
+
+export function parseWorkspaceMessage(
+  value: unknown,
+  warn: (message: string) => void,
+): WorkspaceToRunner {
   const input = object(value)
   const type = string(input.type)
   if (type === 'welcome') {
@@ -132,13 +153,8 @@ export function parseWorkspaceMessage(value: unknown): WorkspaceToRunner {
   if (type === 'interrupt') return { type, commandId, sessionId, turnId }
   if (type === 'turn' || type === 'message') {
     const message = parseUserMessage(input.message)
-    const login = parseLogin(input.login)
-    if (
-      message.sessionId !== sessionId ||
-      message.choice.agent !== login.agent
-    ) {
-      throw new Error('The message does not match its session or login.')
-    }
+    if (message.sessionId !== sessionId)
+      throw new Error('The message does not match its session.')
     const attachments = array(input.attachments, (value) => {
       const attachment = object(value)
       return {
@@ -146,7 +162,17 @@ export function parseWorkspaceMessage(value: unknown): WorkspaceToRunner {
         path: string(attachment.path),
       }
     })
-    return { type, commandId, sessionId, turnId, message, login, attachments }
+    const command = { commandId, sessionId, turnId, message, attachments }
+    if (type === 'message') return { ...command, type }
+    const credential = parseCredential(input.credential)
+    if (message.choice.agent !== credential.agent)
+      throw new Error('The message does not match its turn credential.')
+    return {
+      ...command,
+      type,
+      credential,
+      commitAuthor: parseCommitAuthor(input.commitAuthor, warn),
+    }
   }
   throw new Error('The runner command is not supported.')
 }

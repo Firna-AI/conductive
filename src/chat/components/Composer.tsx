@@ -1,10 +1,11 @@
-import { useRef, type RefObject } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import { filesWait } from '../../app/draft-files'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
+import { MentionAnchor } from '../../../docs/mockups/src/components/chat/MentionList'
 import {
   SessionLoginLabel,
   type SessionLogin,
@@ -80,12 +81,15 @@ function useComposerKeys(props: {
  * the shared rule of `useSendKey`: on desktop, Enter sends and Shift+Enter
  * starts a new line. The text field asks the send key before it adds a
  * line, so Enter never adds a line to a message that it sends. A pasted
- * workspace link shows as a chip, and the draft keeps the plain link.
+ * workspace link shows as a chip, and the draft keeps the plain link. In a
+ * chat with the files of its workspace, `@` opens the list of the files and
+ * folders just above the box, and a pick shows as a file chip.
  */
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
   const files = useRef<HTMLInputElement>(null)
   const field = useRef<FieldHandle>(null)
+  const [mentionHost, setMentionHost] = useState<HTMLDivElement | null>(null)
   const { draft } = props
   useComposerKeys({
     field,
@@ -103,77 +107,80 @@ export function Composer(props: ComposerProps) {
         refused={draft.refused}
       />
       <div className={styles.wrap}>
-        <div className={styles.composer}>
-          {draft.files.length > 0 ? (
-            <DraftFiles
-              files={draft.files}
-              onRemove={props.onRemoveFile}
-              onRetry={props.onRetryFile}
-            />
-          ) : null}
-          <ChipTextField
-            handle={field}
-            label="Message"
-            lines={2}
-            maxLines={8}
-            onChangeText={props.onChangeText}
-            onEnter={sendKey}
-            owner={draft.id}
-            placeholder={
-              steers ? 'Steer the agent while it works' : 'Message the agent'
-            }
-            value={draft.text}
-          />
-          <div className={styles.bar}>
-            <IconButton
-              icon={Paperclip}
-              label="Attach files"
-              onPress={() => files.current?.click()}
-              shortcut="attach-files"
-            />
-            <input
-              aria-hidden
-              className={local.fileInput}
-              multiple
-              onChange={(event) => {
-                props.onAttach([...(event.currentTarget.files ?? [])])
-                event.currentTarget.value = ''
-              }}
-              ref={files}
-              tabIndex={-1}
-              type="file"
-            />
-            <ModelPicker
-              choice={props.choice}
-              models={props.models}
-              onChoose={props.onChooseModel}
-              sessionAgent={props.sessionAgent}
-            />
-            {props.login ? <SessionLoginLabel {...props.login} /> : null}
-            <span className={styles.spacer} />
-            {props.running ? (
-              <ActionButton
-                busy={props.stopping}
-                icon={Square}
-                onPress={props.onStop}
-                shortcut="stop-agent"
-              >
-                Stop
-              </ActionButton>
+        <MentionAnchor onElement={setMentionHost}>
+          <div className={styles.composer}>
+            {draft.files.length > 0 ? (
+              <DraftFiles
+                files={draft.files}
+                onRemove={props.onRemoveFile}
+                onRetry={props.onRetryFile}
+              />
             ) : null}
-            <Button
-              accessibilityLabel="Send"
-              boxSize={control.height}
-              busy={props.sending}
-              disabled={off}
-              icon={ArrowUp}
-              onPress={props.onSend}
-              shape="square"
-              size="sm"
-              tone={off ? 'secondary' : 'primary'}
+            <ChipTextField
+              handle={field}
+              label="Message"
+              lines={2}
+              maxLines={8}
+              mentionHost={mentionHost}
+              onChangeText={props.onChangeText}
+              onEnter={sendKey}
+              owner={draft.id}
+              placeholder={
+                steers ? 'Steer the agent while it works' : 'Message the agent'
+              }
+              value={draft.text}
             />
+            <div className={styles.bar}>
+              <IconButton
+                icon={Paperclip}
+                label="Attach files"
+                onPress={() => files.current?.click()}
+                shortcut="attach-files"
+              />
+              <input
+                aria-hidden
+                className={local.fileInput}
+                multiple
+                onChange={(event) => {
+                  props.onAttach([...(event.currentTarget.files ?? [])])
+                  event.currentTarget.value = ''
+                }}
+                ref={files}
+                tabIndex={-1}
+                type="file"
+              />
+              <ModelPicker
+                choice={props.choice}
+                models={props.models}
+                onChoose={props.onChooseModel}
+                sessionAgent={props.sessionAgent}
+              />
+              {props.login ? <SessionLoginLabel {...props.login} /> : null}
+              <span className={styles.spacer} />
+              {props.running ? (
+                <ActionButton
+                  busy={props.stopping}
+                  icon={Square}
+                  onPress={props.onStop}
+                  shortcut="stop-agent"
+                >
+                  Stop
+                </ActionButton>
+              ) : null}
+              <Button
+                accessibilityLabel="Send"
+                boxSize={control.height}
+                busy={props.sending}
+                disabled={off}
+                icon={ArrowUp}
+                onPress={props.onSend}
+                shape="square"
+                size="sm"
+                tone={off ? 'secondary' : 'primary'}
+              />
+            </div>
           </div>
-        </div>
+        </MentionAnchor>
       </div>
     </>
   )

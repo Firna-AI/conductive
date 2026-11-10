@@ -1,12 +1,14 @@
 import type { Agent, AgentChoice, AgentModel, Effort } from './agents'
 import type { Workspace, WorkspaceState } from './workspaces'
 
-/** Machine routes use workspace bearer tokens or a GitHub webhook signature. */
+/** Machine routes use workspace or turn tokens, or a GitHub webhook signature. */
 export const MACHINE_PATHS = {
   runner: '/v1/runner',
   githubWebhook: '/v1/github/webhooks',
   gitCredential: '/v1/git/credential',
   workspaces: '/v1/tools/workspaces',
+  claudeGateway: '/v1/model/claude',
+  codexGateway: '/v1/model/codex',
   repositories: '/v1/tools/repositories',
   sections: '/v1/tools/sections',
   models: '/v1/tools/models',

@@ -1,7 +1,7 @@
 import { expect, it, onTestFinished } from 'vitest'
 
 import { engineFixture } from '../test-support/engine'
-import { turn } from '../test-support/harness'
+import { duringTurn, turn } from '../test-support/harness'
 import { AgentEngine } from './engine'
 import { EventStore } from './state'
 
@@ -16,7 +16,11 @@ it('ignores input after completion and accepts its explicit continuation turn', 
   })
   await h.engine.idle()
   const completed = structuredClone(h.events)
-  const late = { ...turn('late'), type: 'message' as const, turnId: 'turn-1' }
+  const late = {
+    ...duringTurn(turn('late')),
+    type: 'message' as const,
+    turnId: 'turn-1',
+  }
   await h.engine.command(late)
   await h.engine.idle()
   expect(h.events).toEqual(completed)
@@ -30,6 +34,8 @@ it('ignores input after completion and accepts its explicit continuation turn', 
   const continuation = {
     ...late,
     type: 'turn' as const,
+    credential: turn().credential,
+    commitAuthor: null,
     commandId: 'continuation-late',
     turnId: 'turn-2',
   }
@@ -45,7 +51,7 @@ it('ignores input after completion and accepts its explicit continuation turn', 
     messageIds: ['message-late'],
   })
   const followup = {
-    ...turn('followup'),
+    ...duringTurn(turn('followup')),
     type: 'message' as const,
     turnId: 'turn-2',
   }
@@ -93,7 +99,7 @@ it('ignores mismatched input without changing the running turn', async () => {
   await h.engine.idle()
   const running = structuredClone(h.events)
   await h.engine.command({
-    ...turn('old', 'bob', 'codex'),
+    ...duringTurn(turn('old', 'bob', 'codex')),
     type: 'message',
     turnId: 'old-turn',
   })
@@ -105,7 +111,7 @@ it('ignores mismatched input without changing the running turn', async () => {
     h.providers.latest.messages.map((command) => command.message.id),
   ).toEqual(['message-active'])
   await h.engine.command({
-    ...turn('current'),
+    ...duringTurn(turn('current')),
     type: 'message',
     turnId: 'turn-active',
   })

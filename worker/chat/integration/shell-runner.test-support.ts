@@ -1,7 +1,6 @@
 import { WebSocket } from 'miniflare'
 
 import type { RunnerEvent } from '../../../src/shared/runner'
-import { RUNNER_PROTOCOL_VERSION } from '../../../src/shared/runner'
 import { SocketInbox } from '../adapter-sockets.test-support'
 import type { OuterRuntime } from './outer-runtime.test-support'
 import { requestRunner } from './runner-socket.test-support'
@@ -32,7 +31,7 @@ export async function connectShellRunner(
   socket.send(
     JSON.stringify({
       type: 'hello',
-      protocolVersion: RUNNER_PROTOCOL_VERSION,
+      protocolVersion: 1,
       workspaceId,
       streamId,
     }),
