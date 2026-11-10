@@ -51,6 +51,13 @@ shows stopped. Its child pages:
   old tab can still open. The refused bar takes the place of the composer.
 - `app/orgs/suspended/settings` has the four tabs, read-only also for an
   admin.
+- `app/orgs/suspended/routines` has the routines of the org under its
+  notice, without New routine, because a suspension takes away no read.
+  Its child page `app/orgs/suspended/routines/routine` has a routine
+  without Save, Run now, Delete, Turn off, or Add trigger. Its `runs`
+  variant has the Runs tab of a phone, and its `unavailable` and
+  `not-loaded` variants have the page when it cannot show the routine.
+  The notice of the org stays at the top of each.
 - `app/orgs/suspended/leave` has Leave org for a member who is not an
   admin, and its `confirm` variant has the question before the leave. Acme
   is the only org of that member, so Leave org opens

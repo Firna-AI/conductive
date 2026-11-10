@@ -63,6 +63,8 @@ describe('the tab menu', () => {
       opened: {
         items: [
           { name: 'Rename session', off: false },
+          { name: 'Copy concise transcript', off: false },
+          { name: 'Copy full transcript', off: false },
           { name: 'Move left', off: true },
           { name: 'Move right', off: false },
         ],
@@ -71,21 +73,24 @@ describe('the tab menu', () => {
       },
     })
 
-    await pressKey('ArrowDown')
-    const afterArrow = focused()
+    const arrows: (string | null)[] = []
+    for (let press = 0; press < 3; press += 1) {
+      await pressKey('ArrowDown')
+      arrows.push(focused())
+    }
     // Some browsers send their menu event to the focus after these keys.
     const browserMenu = rightClick(document.activeElement ?? document.body)
     const menus = queryAllByRole('menu', 'Address autocomplete').length
     await pressKey('Escape')
 
     expect({
-      afterArrow,
+      arrows,
       browserMenu,
       menus,
       closed: menuItems('Address autocomplete'),
       focus: focused(),
     }).toEqual({
-      afterArrow: 'Move right',
+      arrows: ['Copy concise transcript', 'Copy full transcript', 'Move right'],
       browserMenu: false,
       menus: 1,
       closed: [],
@@ -157,6 +162,8 @@ describe('the tab menu', () => {
     rightClick(tab, { clientX: 150, clientY: 12 })
     expect(menuItems(debounce)).toEqual([
       { name: 'Rename session', off: false },
+      { name: 'Copy concise transcript', off: false },
+      { name: 'Copy full transcript', off: false },
       { name: 'Move left', off: false },
       { name: 'Move right', off: true },
     ])

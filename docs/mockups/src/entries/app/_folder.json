@@ -10,6 +10,7 @@
     "operator",
     "banner",
     "new-workspace",
+    "routines",
     "org-settings",
     "chat",
     "mac-commands",
@@ -22,6 +23,7 @@
     "file-mentions",
     "files",
     "tabs",
+    "transcripts",
     "tools",
     "panels"
   ]

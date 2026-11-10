@@ -78,6 +78,11 @@ describe('the build log of the Cloud computer tab', () => {
     server.json('GET', buildsPath, {
       builds: [buildA],
       currentImageBuildId: null,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     server.json('GET', buildPath(org, buildA.id), {
       build: buildA,
@@ -95,6 +100,11 @@ describe('the build log of the Cloud computer tab', () => {
     server.json('GET', buildsPath, {
       builds: [endedA],
       currentImageBuildId: null,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     server.json('GET', buildPath(org, buildA.id), {
       build: endedA,
@@ -130,6 +140,11 @@ describe('the build log of the Cloud computer tab', () => {
     server.json('GET', buildsPath, {
       builds: [buildA],
       currentImageBuildId: null,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     server.json('GET', buildPath(org, buildA.id), { build: buildA, log: logA })
     // The tab follows the log of A, and reads it on its timer.
@@ -163,6 +178,11 @@ describe('the build log of the Cloud computer tab', () => {
     server.json('GET', buildsPath, {
       builds: [buildA],
       currentImageBuildId: null,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     server.json('GET', buildPath(org, buildA.id), refused, 503)
     computer.start()
@@ -176,6 +196,11 @@ describe('the build log of the Cloud computer tab', () => {
     server.json('GET', buildsPath, {
       builds: [endedA],
       currentImageBuildId: null,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     await model.reload('builds')
     await flushMicrotasks()
@@ -197,6 +222,11 @@ describe('the build log of the Cloud computer tab', () => {
     server.json('GET', buildsPath, {
       builds: [buildA],
       currentImageBuildId: null,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     // The first read of the log fails, and its answer comes late.
     server.json('GET', buildPath(org, buildA.id), refused, 503)
@@ -207,6 +237,11 @@ describe('the build log of the Cloud computer tab', () => {
     server.json('GET', buildsPath, {
       builds: [endedA],
       currentImageBuildId: null,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     await model.reload('builds')
     server.json('GET', buildPath(org, buildA.id), {

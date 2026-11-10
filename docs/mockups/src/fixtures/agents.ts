@@ -1,3 +1,5 @@
+import type { effortLabels } from '../../../../src/shared/agents'
+
 /**
  * The agents that a message can use, with their models and effort levels.
  * The app offers Claude and Codex only for now.
@@ -7,16 +9,7 @@ export const agentKeys = ['claude', 'codex'] as const
 
 export type AgentKey = (typeof agentKeys)[number]
 
-export type EffortKey = 'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
-
-export const effortLabels: Readonly<Record<EffortKey, string>> = {
-  none: 'None',
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  xhigh: 'Extra high',
-  max: 'Max',
-}
+export type EffortKey = keyof typeof effortLabels
 
 type Model = {
   name: string

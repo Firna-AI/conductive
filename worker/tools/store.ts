@@ -11,6 +11,10 @@ import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { hash } from '../security/crypto'
 import { workspaceNameColumn } from '../data/workspace-name'
 import { workspaceLink } from '../data/workspace-link'
+import {
+  imageAdmissionError,
+  readImageRepositories,
+} from '../lifecycle/published-image-data'
 
 export interface CallingWorkspace {
   workspaceId: string
@@ -154,15 +158,13 @@ export async function requireRepository(
   orgId: string,
   repositoryId: string,
 ): Promise<void> {
-  const repository = await db
-    .prepare('SELECT id FROM repositories WHERE org_id = ? AND id = ?')
-    .bind(orgId, repositoryId)
-    .first<unknown>()
-  if (repository === null) {
-    throw new HttpError(
-      404,
+  const repositories = await readImageRepositories(db, orgId)
+  if (!repositories.some((repository) => repository.id === repositoryId)) {
+    throw await imageAdmissionError(
+      db,
+      orgId,
       'repository_not_found',
-      'The repository is not available.',
+      repositoryId,
     )
   }
 }

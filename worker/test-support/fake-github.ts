@@ -8,6 +8,7 @@ export class FakeGitHub {
   emails: unknown = []
   emailPages: readonly unknown[] | null = null
   emailsStatus = 200
+  accounts = new Map<string, { id: number; login: string }>()
 
   reset() {
     this.requests = []
@@ -17,11 +18,24 @@ export class FakeGitHub {
     this.emails = []
     this.emailPages = null
     this.emailsStatus = 200
+    this.accounts.clear()
   }
 
   fetch: HttpFetch = async (request) => {
     this.requests.push(request.clone())
     const url = new URL(request.url)
+    if (
+      url.origin === 'https://api.github.com' &&
+      url.pathname.startsWith('/users/')
+    ) {
+      const login = decodeURIComponent(
+        url.pathname.slice('/users/'.length),
+      ).toLowerCase()
+      const account = this.accounts.get(login)
+      return Response.json(account ?? { message: 'Not Found' }, {
+        status: account ? 200 : 404,
+      })
+    }
     if (
       url.origin === 'https://github.com' &&
       url.pathname === '/login/oauth/access_token'

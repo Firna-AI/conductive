@@ -19,6 +19,11 @@ const CONVERSATIONS = [
   'first-turn',
 ] as const satisfies readonly RecordedChatScenario[]
 
+/** The run lists of Review pull requests that the mockups also draw. */
+const REVIEW_RUNS = ['failed', 'skipped'] as const
+
+/** The runs whose workspace `checkout-autocomplete` can be. */
+const RUN_WORKSPACES = ['pull-request', 'schedule'] as const
 const UPLOADS = ['wait', 'fail'] as const satisfies readonly DevUploadMode[]
 
 const BANNERS = [
@@ -71,6 +76,11 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   each file name fails once, so Try again works.
  * - `shareSave=fail`: each change of the share setting of an agent login
  *   fails, so the account shows that the change was not saved.
+ * - `runs=failed|skipped`: the Runs list of Review pull requests holds a
+ *   failed run of each cause, or the skipped runs of accounts outside Acme.
+ * - `run=pull-request|schedule`: `checkout-autocomplete` is the workspace
+ *   of a run, of Review pull requests for #482 or of an hourly run of
+ *   Triage new errors. So its header shows the line of the run.
  * - `waiting=1`: the user is Sam Okafor, who waits for app access, with a
  *   verified email, so the app shows the waitlist. `waiting=no-email`: the
  *   same account without a verified email. Sam starts as a new account, as
@@ -105,6 +115,10 @@ export interface DevOptions {
   /** What each file upload does. */
   upload: DevUploadMode
   shareSaveFails: boolean
+  /** The run list of Review pull requests in place of its newest runs. */
+  reviewRuns: (typeof REVIEW_RUNS)[number] | null
+  /** The run whose workspace `checkout-autocomplete` is, or null. */
+  runWorkspace: (typeof RUN_WORKSPACES)[number] | null
   /** The user waits for app access, with a verified email or none. */
   waiting: 'verified' | 'none' | null
   invited: boolean
@@ -152,6 +166,8 @@ export function readDevOptions(search: string): DevOptions {
     stopAfterMs: stopAfter(params.get('stop')),
     upload: pick(params, 'upload', UPLOADS) ?? 'ready',
     shareSaveFails: params.get('shareSave') === 'fail',
+    reviewRuns: pick(params, 'runs', REVIEW_RUNS) ?? null,
+    runWorkspace: pick(params, 'run', RUN_WORKSPACES) ?? null,
     waiting,
     invited: params.get('invited') === '1',
     paused: params.get('paused') === '1',

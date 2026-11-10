@@ -16,8 +16,12 @@ export const recordedPush = {
 export const recordedPullRequest = {
   action: 'opened',
   number: 2,
+  sender: { id: 7, login: 'octocat' },
   pull_request: {
     number: 2,
+    merged: false,
+    html_url: 'https://github.com/Codertocat/Hello-World/pull/2',
+    user: { id: 7, login: 'octocat' },
     title: 'Update the README with new information',
     head: {
       ref: 'changes',

@@ -24,6 +24,15 @@ The [archive route](archive.ts) archives and restores a workspace through its wo
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
+The [routine routes](../routines/README.md) serve routine records after the same app gate.
+Section deletion moves routines to General in its workspace-move batch.
+Repository deselection turns matching routines off in its repository-write batch.
+Run now and run history use the same app gate.
+Workspace view replies include `routine`, the run's routine ID and name, or null.
+A join from the run record supplies the routine without a new lifecycle field.
+Deleting the routine removes that link and keeps its normal run workspaces.
+Workspace view replies also include the resolved `baseBranch`.
+View writes cannot change this branch.
 
 ## Rules
 
@@ -47,9 +56,15 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   first image build after it saves the org, its admin, and its repositories.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
-- The settings reply compares its revision with the published image's
-  build. Before the first image, it uses the newest build. With no build,
-  `needsBuild` is false.
+- A save that adds a repository starts an image build for the admin who
+  added it, also after a failed build. A repeated save and a removal start
+  no build. A running job takes the request without starting another job.
+  A failed start writes one fixed warning through `warnWorker`. The saved
+  choice stays, and the reply keeps the repository list and HTTP 200.
+- The build history reply also gives `BuildsResponse.changes`: the saved
+  install script change and the added and removed repositories. The
+  [image build reader](../lifecycle/image-builds.md#build-jobs) owns the
+  comparison.
 - `getStartedGitHubComplete` owns the `github-app` step in every org state.
   The step is complete when an org of the user that is not deleted has a
   repository through an installation that is not suspended.
@@ -159,8 +174,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   repository reads, saved org initials, and admin repository selection.
 - `feature-org.test.ts` checks the repository requirement, the first build,
   and a failed build start that keeps the org.
-- `feature-settings-builds.test.ts` checks the build revision used by the
-  settings reply before and after the first image.
+- `feature-settings-builds.test.ts` checks the install script change in
+  the build history before and after the first image.
+- `feature-repository-builds.test.ts` checks the admin's repository build,
+  repeated saves, removals, adds after a failed build, and a failed start
+  that keeps the choice.
 
 ### Key code
 
@@ -194,7 +212,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   repositories and starts its first build with `startImageBuild` of the
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
-  the org's saved choices with repositories that its reader can access.
+  the org's saved choices with repositories that its reader can access,
+  and starts a build after an add.
   Their `*-data.ts` files keep queries and guarded writes.
 
 ### Related docs

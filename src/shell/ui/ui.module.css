@@ -14,9 +14,22 @@
   display: contents;
 }
 
-/* A wrapper without a box, such as the one of a button that keeps its focus. */
+/* A wrapper without a box, such as the one of a suggestion and its divider. */
 .contents {
   display: contents;
+}
+
+/*
+ * The wrapper of a button that keeps the focus. The button takes the flex
+ * that a row of actions gives the wrapper, as a phone footer stretches each
+ * action.
+ */
+.keepFocus {
+  display: contents;
+}
+
+.keepFocus > * {
+  flex: inherit;
 }
 
 .plainButton {
@@ -38,6 +51,15 @@
 .plainButton:disabled {
   cursor: default;
   opacity: 0.5;
+}
+
+/*
+ * A menu item that is off fades its parts, except its note, through the
+ * `disabled` style of the mockup menu, so that the reader can read why it
+ * is off. The button itself keeps its opacity, so no part fades twice.
+ */
+.menuItem:disabled {
+  opacity: 1;
 }
 
 .plainButton:focus-visible,

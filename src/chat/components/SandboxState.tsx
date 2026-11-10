@@ -5,7 +5,8 @@ import { Archive, CircleAlert, CirclePause } from 'lucide-react'
 import type { WorkspaceStart } from '../../shared/workspaces'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/workspace/StartingCard.module.css'
-import { formatDay, formatDuration } from '../state/format'
+import { formatDuration } from '../../shared/transcript/duration'
+import { formatDay } from '../state/format'
 import { ActionButton } from '../ui/actions'
 
 /**

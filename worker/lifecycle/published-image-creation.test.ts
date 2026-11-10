@@ -48,7 +48,7 @@ it('creates from captured image repositories while current settings and selectio
     env: { CURRENT_ENV: 'current-value' },
   })
   expect(lifecycleCommandBody(boat.commands[0])).toContain(
-    "git fetch origin 'main'",
+    "git fetch origin '+refs/heads/main:refs/remotes/origin/main'",
   )
   const accepted = fixture.starts.get(created.workspace.id)?.lastAccepted()
   expect(accepted).toMatchObject({
@@ -62,7 +62,24 @@ it('creates from captured image repositories while current settings and selectio
       repositoryId: 'new-selection',
       firstMessage: { ...FIRST_MESSAGE, id: 'new-selection-message' },
     }),
-  ).rejects.toMatchObject({ status: 404, code: 'repository_not_found' })
+  ).rejects.toMatchObject({
+    status: 404,
+    code: 'repository_not_found',
+    message: 'The repository is ready after the next build.',
+  })
+  await runtime.env.DB.prepare(
+    "UPDATE repositories SET selected = 0 WHERE id = 'new-selection'",
+  ).run()
+  await expect(
+    createCompletedWorkspace(runtime, org.id, user, {
+      repositoryId: 'new-selection',
+      firstMessage: { ...FIRST_MESSAGE, id: 'removed-selection-message' },
+    }),
+  ).rejects.toMatchObject({
+    status: 404,
+    code: 'repository_not_found',
+    message: 'The repository is not available.',
+  })
   await runtime.env.DB.prepare(
     "UPDATE org_images SET image_build_id = NULL WHERE org_id = ? AND provider_account = 'boat'",
   )
@@ -185,7 +202,7 @@ it('leases the image and captured branch from the same publication at claim admi
       .first('runner_protocol_version'),
   ).toBe(2)
   expect(lifecycleCommandBody(boat.commands[0])).toContain(
-    "git fetch origin 'published-next'",
+    "git fetch origin '+refs/heads/published-next:refs/remotes/origin/published-next'",
   )
   expect(
     await db

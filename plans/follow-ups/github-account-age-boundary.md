@@ -27,7 +27,7 @@
   - Other duration helpers outside this area do not have the defect.
   - A class test is unnecessary beside D and would need user approval.
 - **Wider fix:** D. Each unit selects itself by the count it shows, so its threshold cannot disagree with its division.
-- **Previous examples:** None found. Other format helpers in `src/app/time.ts`, `src/github/format.ts`, `src/chat/state/format.ts`, and `src/members/time.ts` already start their units at a whole count.
+- **Previous examples:** None found. Other format helpers in `src/app/time.ts`, `src/github/format.ts`, `src/shared/transcript/duration.ts`, and `src/members/time.ts` already start their units at a whole count.
 - **Recommendation:** D. It removes the separate thresholds for every unit at the same Small effort as B.
 - **Action:** fix after merge, apply D, because the Low/Rare defect affects one narrow interval and does not block approval.
 

@@ -38,6 +38,15 @@ gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest` serves, the options of its caller, and the rules
 of a create.
 
+The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
+Its provider account argument selects the published org image independently of those branch fields.
+The creation claim keeps them in its saved plan.
+The fetch updates `refs/remotes/origin/<base branch>`.
+The branch phase uses the event commit when it exists, or the fetched head otherwise.
+It sets the branch's `gh-merge-base` Git setting to the workspace base.
+Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
+A null stored base uses the repository default branch.
+
 ### Input activity
 
 [Input activity](routes.md#input-activity) gives how one
@@ -105,10 +114,16 @@ A confirmed missing archived disk uses that batch too.
   route.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
   workspace and queues its start.
+- [`creation-attempt-data.ts`](creation-attempt-data.ts) keeps the public failure code and message after a failed create.
+  [`start-failure.ts`](start-failure.ts) writes that cause and reports a run failure.
+  Accepted first starts keep the workspace in its error state for Try again.
+  The saved attempt cause repairs a run outcome after an interrupted report.
 - [`creation-claims.ts`](creation-claims.ts): `claimCreation`, which records
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+  Its `imageAdmissionError` gives a waiting repository the next-build message.
+  The browser create and the agent tools share that message.
 - [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
 - [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
@@ -150,6 +165,7 @@ A confirmed missing archived disk uses that batch too.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.
+- [`creation-fetch-label.ts`](creation-fetch-label.ts) names the pull request or base branch in the fetch step from saved run facts.
 - [`start-progress.ts`](start-progress.ts): the command steps, the
   terminal setup and its password read, and the move into the saved runner
   readiness phase.

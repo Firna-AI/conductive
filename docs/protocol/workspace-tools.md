@@ -23,10 +23,11 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).
-- Changes lists the files that the branch changes against the default
-  branch. Its summary gives the number of changed files and the lines that
+- Changes lists the files that the branch changes against its base branch,
+  from the merge base of the two, as [Base branches](base-branches.md)
+  says. Its summary gives the number of changed files and the lines that
   they add and remove.
-- A changed file opens its diff against the default branch as a tab.
+- A changed file opens its diff against the base branch as a tab.
 - Each new file or diff tab opens at the end of the tab row of the centre
   column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
