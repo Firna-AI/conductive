@@ -1429,7 +1429,7 @@ approval. It adds no product decision and changes no required gate.
       fact is true.
 - [x] Add the web app tests, as the `testing` skill says.
 - [x] Update `src/app/README.md` and `src/shell/workspace/README.md`.
-- [ ] After Milestone 6 pushes its production code, change the note of the
+- [x] After Milestone 6 pushes its production code, change the note of the
       `local-workspaces` row in
       `src/marketing/from-conductor/areas/workspaces-and-branches.ts`: the
       import through the Mac app becomes in progress. Keep the row ID and
@@ -1437,7 +1437,8 @@ approval. It adds no product decision and changes no required gate.
       [Conductor comparison](../docs/protocol/conductor-comparison.md#statuses)
       says.
 
-Verification evidence: `.context/import-from-conductor/current/m8-ui-report.md`.
+Verification evidence: `.context/import-from-conductor/current/m8-ui-report.md`
+and, for the comparison note, `.context/import-from-conductor/current/m8/package-9/`.
 
 ## Milestone 9: Verification, commit, review, and pull request
 
