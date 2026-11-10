@@ -70,6 +70,7 @@ export function createWorkspaceInput(
   return {
     repositoryId: text(fields.repositoryId),
     firstMessage: text(fields.firstMessage),
+    ...(typeof fields.name === 'string' && { name: fields.name }),
     ...(model && {
       model: { agent: agent(model.agent), model: text(model.model) },
     }),

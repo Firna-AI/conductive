@@ -74,6 +74,17 @@ const saved = 'Your files and chat are saved.'
  */
 const history = 'Your chat history is available.'
 
+/**
+ * A failed first start leaves a new workspace with no files yet, so its
+ * notice promises only the chat, with its queued messages.
+ */
+const chatSaved = 'Your chat is saved.'
+
+/** What stays of the workspace: a failed first start keeps only its chat. */
+function keptBody(notice: SandboxNoticeState, body: string): string {
+  return notice.problem === 'error' && notice.firstStart ? chatSaved : body
+}
+
 function problemOf(problem: SandboxProblem, archivedOn: string): Problem {
   switch (problem) {
     case 'stopped':
@@ -149,11 +160,12 @@ export function RefusedBar(props: { reason: string }) {
 }
 
 /**
- * The bar that takes the place of the composer while the sandbox is down. A
- * refused start shows the words of the refusal, and no action, because the
- * start stays refused until its cause changes. A start that failed shows
- * the message that the workspace saved for it, such as its time limit,
- * before the body.
+ * The bar under the chat while the sandbox is down. It takes the place of
+ * the composer, except after a failed first start, whose composer stays
+ * under it. A refused start shows the words of the refusal, and no action,
+ * because the start stays refused until its cause changes. A start that
+ * failed shows the message that the workspace saved for it, such as its
+ * time limit, before the body.
  */
 export function SandboxBar(props: {
   notice: SandboxNoticeState
@@ -175,7 +187,7 @@ export function SandboxBar(props: {
           </ActionButton>
         ) : undefined
       }
-      body={barBody(notice, problem.body)}
+      body={barBody(notice, keptBody(notice, problem.body))}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}
@@ -226,7 +238,9 @@ export function SandboxPanel(props: {
         ) : undefined
       }
       body={
-        phone && state.problem === 'refused' ? state.reason : problem.panelBody
+        phone && state.problem === 'refused'
+          ? state.reason
+          : keptBody(state, problem.panelBody)
       }
       icon={problem.icon}
       title={state.problem === 'archived' ? 'Archived' : problem.title}

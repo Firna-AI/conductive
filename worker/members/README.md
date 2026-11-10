@@ -9,7 +9,9 @@ Its production hooks use the real workspace and image coordinator objects.
 ## Integration
 
 Run `membersGate` before feature dispatch on the app hostname.
-It calls the existing gate for sign-in, hostname, Origin, and JSON checks.
+It calls the existing gate for sign-in, app access, hostname, Origin, and JSON checks.
+It supplies the original request when it substitutes the session path.
+The waiting-session allow list therefore checks the actual method and org path.
 It then reads current membership from D1.
 It permits a deleted org only for its admins on its detail, Delete retry,
 and Restore paths.
@@ -79,7 +81,7 @@ The production receiver keeps a stopped create checkpoint after Delete, before o
 Restore starts no sandbox. The normal resume route requeues that create when the workspace opens.
 The checkpoint keeps its sender, first message, and allocation identity.
 The requeued create gets a fresh 20-minute start limit from that open. It keeps its original creation date.
-A create without a sandbox also keeps its image pin. A missing pin uses the existing failed-create draft and cleanup path.
+A create without a sandbox also keeps its image pin. A missing pin keeps the workspace, its accepted chat, and its error, with durable sandbox cleanup.
 A create with a retained sandbox resumes it and continues at its saved creation step, as the [lifecycle README](../lifecycle/README.md#browser-routes) says.
 Hidden attempts and pending lifecycle cleanup sandboxes also enter suspension and purge.
 
@@ -147,7 +149,9 @@ Only then does it clear the deletion marker and recovery journal.
 A failed handoff leaves ordinary access closed.
 Scheduled cleanup retries that handoff while the request remains valid.
 A newer Delete retry cancels the intent.
-An invalid admin or an expired window cannot activate a pending Restore.
+The save of an intent, its read before each handoff, and the activation each check its admin with `activeAdminMemberPredicate`.
+So an admin who lost the role or is suspended cannot activate a pending Restore. An expired window cannot either.
+When that read finds no valid intent, it cancels the intent, and the org stays deleted.
 Restore makes no provider resume call. Old preview hostnames stay revoked.
 
 Schedule `cleanupDeletedOrgs` with all hooks except `readWorkspace`.
@@ -181,7 +185,8 @@ The capability expires when its callback ends or its lease expires.
 An invitation names an email.
 The invite route sends it through `createInvitationMailer` in `worker/invitation-mailer.ts`.
 `AppDependencies.invitationMailer` replaces that mailer when it is set.
-The mailer posts to Resend with the `RESEND_API_KEY` Worker secret, from `invites@conductive.build`.
+The mailer posts to Resend with the `RESEND_API_KEY` Worker secret, from `invites@mail.conductive.build`.
+[Secrets](../../docs/deployment.md#secrets) says which domain Resend must verify for this sender.
 With a local `APP_ORIGIN`, such as `http://127.0.0.1:5173`, the mailer always writes each invitation link to the log and sends no email.
 This is also true when the key is set.
 On every other origin, the mailer needs the key and fails each send without it.
@@ -207,6 +212,11 @@ Call `acceptOrgInvite` after an explicit acceptance by a signed-in user.
 It accepts only an invitation that names one of that user's current verified emails.
 A durable match alone does not permit acceptance.
 Sign-in alone does not accept an invitation.
+Acceptance also includes the [app access grant](../waitlist/README.md) in
+its D1 batch. The record retains the org, invitation ID, and inviting
+admin after the invitation row is deleted. Invitations use no code count.
+The batch preserves the invitation while sign-ups are paused for a user
+without app access. It still accepts for a user who already has access.
 A membership-delete trigger cancels each invitation of the membership's org that has a durable match to the departing user.
 It runs in the same statement as the membership delete, so the removal and the cancellation apply together.
 
@@ -217,7 +227,7 @@ Each session keeps the agent login of its starter.
 
 `activeAdminMemberPredicate(alias)` in [`active-admin.ts`](../data/active-admin.ts) is the one SQL rule of an active admin: the admin role, and a user whose account is not suspended.
 It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remaining`, and `candidate`.
-`activeAdminPredicate`, the last-admin guards, the recipient of a leave, and `firstActiveOrgAdmin` use it.
+`activeAdminPredicate`, the last-admin guards, the recipient of a leave, `firstActiveOrgAdmin`, and the Restore intent queries in `restore-data.ts` use it.
 
 - A leave, a removal, or a role change can end the admin role of an active admin only while another active admin remains.
   Otherwise it fails with 409 `last_admin`, which asks to make another member whose account is not suspended an admin.
@@ -253,6 +263,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `errors.ts` defines `lastActiveAdminError` and `suspendedOwnerRecipientError`.
 - [`active-admin.ts`](../data/active-admin.ts) defines `activeAdminMemberPredicate`, the shared SQL rule of an active admin.
 - `invites.ts` manages pending invitations and explicit acceptance.
+- `invite-data.ts` batches membership, app access, the referral code, and invitation deletion under the current pause and identity checks.
 - `ownership.ts` supplies creation ownership and workspace reassignment.
 - `deletion.ts` implements Delete, suspension, and provider stops.
 - `maintenance.ts` runs lifecycle maintenance and validates schedules.

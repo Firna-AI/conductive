@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
+import { nameLabel } from '../../shared/name-label'
 import { createApiClient } from '../../app/api/client'
 import { ServicesContext } from '../../app/services'
 import { testServices } from '../../app/test-kit'
@@ -8,6 +9,7 @@ import type { Action } from '../../shell/ui/useAction'
 import {
   byRole,
   queryAllByRole,
+  queryByLabel,
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
@@ -23,6 +25,8 @@ import {
 } from '../../test-support/mount'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
 import { WorkspaceChat } from '../WorkspaceChat'
+import { pointer, rowStatus } from './tab-drag-test-kit'
+import { pressOn, rightClick } from './tab-row-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -41,14 +45,16 @@ const noResume: Action<[]> = {
 }
 
 describe('a read-only chat', () => {
-  it('shows the refused bar of the host for a suspended org, switches its sessions with no write, and shows no control that writes', async () => {
+  it('shows the refused bar of the host for a suspended org, switches its sessions with no write, shows no control that writes, and opens no tab menu', async () => {
     holdAnimationFrames()
     // The cloud computer still runs while its stop waits, so the chat would
     // show its composer without the read-only input.
     const server = new FakeApiServer({ workspaceState: 'ready' })
     const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
       server.events.subscribe(after, (message) => listener.message(message))
-    const { workspace } = workspaceFixtures('ready').detail
+    const fixtures = workspaceFixtures('ready')
+    const { workspace } = fixtures.detail
+    const second = nameLabel(fixtures.sessions.sessions[1].title)
     await mount(
       <ServicesContext.Provider value={testServices(server)}>
         <WorkspaceChat
@@ -62,6 +68,7 @@ describe('a read-only chat', () => {
                 workspace={workspace}
               />
             ),
+            keepsComposer: false,
           }}
           orgId={FAKE_IDS.org}
           readOnly
@@ -75,17 +82,32 @@ describe('a read-only chat', () => {
       () => queryByText(orgRefusal.reason),
       'the refused bar of the host',
     )
-    await press(byRole('button', 'Debounce lookups'))
+    await press(byRole('button', second))
     await waitFor(
-      () => isShownTab('Debounce lookups'),
+      () => isShownTab(second),
       'the second session as the shown tab',
     )
+    const mouse = { pointerType: 'mouse' }
+    pointer(byRole('button', second), 'pointerdown', {
+      ...mouse,
+      clientX: 50,
+    })
+    pointer(window, 'pointermove', { ...mouse, clientX: 90 })
+    const drag = rowStatus()
+    pointer(window, 'pointerup', { ...mouse, clientX: 90, buttons: 0 })
+    const tab = byRole('button', second)
+    const tabMenu = {
+      browserMenu: rightClick(tab, { clientX: 50, clientY: 15 }),
+      keyReachesBrowser: pressOn(tab, 'F10', { shiftKey: true }),
+      menus: queryAllByRole('menu', second).length,
+    }
     expect({
       refused: queryByText("The sandbox can't start") !== null,
-      composer: document.querySelector('textarea') !== null,
+      composer: queryByLabel('Message') !== null,
       newSession: queryByRole('button', 'New session') !== null,
-      rename: queryByRole('button', 'Rename Debounce lookups') !== null,
+      tabMenu,
       resume: queryByRole('button', 'Resume') !== null,
+      drag,
       writes: server.requests
         .filter((request) => request.method !== 'GET')
         .map((request) => `${request.method} ${new URL(request.url).pathname}`),
@@ -93,8 +115,9 @@ describe('a read-only chat', () => {
       refused: true,
       composer: false,
       newSession: false,
-      rename: false,
+      tabMenu: { browserMenu: true, keyReachesBrowser: true, menus: 0 },
       resume: false,
+      drag: '',
       writes: [],
     })
   })

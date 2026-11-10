@@ -27,7 +27,7 @@ export const browserTargets: FileActionTargets = {
 }
 
 /** Copies the original text of a file. True when the clipboard took it. */
-export async function copyText(
+async function copyText(
   targets: FileActionTargets,
   text: string,
 ): Promise<boolean> {

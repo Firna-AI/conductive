@@ -52,10 +52,15 @@ skill at that moment instead of guessing the rule.
 
 Run each command from the repository root, with Node 24 from `.nvmrc`.
 
-- Development: `npm run dev`. It serves the web app and the local Worker
-  at `http://127.0.0.1:5173`.
-- Build: `npm run build`. It checks the types and builds the web app and
-  the Worker into `dist/`.
+- Development: `npm run dev`. It builds the marketing site, then serves
+  the web app and the local Worker at `http://127.0.0.1:5173`.
+- Build: `npm run build`. It checks the types, builds the marketing site
+  into `public/_site/`, and builds the web app and the Worker into
+  `dist/`.
+- Marketing site: `npm run site:dev` serves the Astro pages of the site at
+  `http://localhost:4321`, and it reloads them on each change.
+  `npm run site:build` builds them into `public/_site/`, which Git
+  ignores, with their file list.
 - Build preview: `npm run preview`. It serves the built app and the local
   Worker at `http://127.0.0.1:5174`. The mockup preview uses port 4173.
 - Targeted tests: `npm run test -- worker/app.test.ts`. Vitest runs the
@@ -64,10 +69,13 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
 - Typecheck: `npm run typecheck`. It generates the Worker binding and
   runtime types under `.wrangler/`, then checks the app, Worker, and tools.
   It checks Worker production code without Node types and tests with them.
+  Then `astro check` checks the `.astro` files of the marketing site, with
+  `tsconfig.site.json`.
   Use `npm run mockups:typecheck` for the mockups.
 - Early check: `npm run format:check`, `npm run lint`, and
-  `npm run file-length:check`. The last command rejects JavaScript and
-  TypeScript files over 300 lines, including comments and blank lines.
+  `npm run file-length:check`. The last command rejects JavaScript,
+  TypeScript, and Astro files over 300 lines, including comments and blank
+  lines.
 - Complete gate: `npm run check`. It checks types, lint, format, file
   length, tests, the app build, and the mockups. It also runs the typecheck
   and the tests of the [agent runner](runner/README.md). It stops at its
@@ -86,6 +94,16 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
 GitHub Actions runs `npm run check` from `.github/workflows/ci.yml` on each
 pull request, and on each push to `main` and to the primary branch of the
 plan. A push to another branch runs no CI until its pull request opens.
+
+The active `Protect main` ruleset requires a pull request with a green
+`Complete gate` check. An admin can bypass its rules only through a pull
+request. It requires no approval and does not require the branch to be up
+to date. It requires resolved review conversations, blocks force pushes,
+and restricts deletion of `main`.
+
+`.github/workflows/deploy.yml` deploys each push to `main` to the test
+deployment at `conductive.build`. It does not wait for CI, as
+[Automatic deploys](docs/automatic-deploys.md) says.
 
 - Agent merges: off
 
@@ -110,6 +128,18 @@ plan. A push to another branch runs no CI until its pull request opens.
   "sandbox", as [The provider](docs/protocol/workspaces-and-sandboxes.md#the-provider)
   says. Identifiers, comments, developer docs, and the deployment setup can
   name Boat.
+- When you change a fact in the architecture doc or in a protocol doc,
+  read both legal pages in full. The legal pages are the Terms page in
+  `src/marketing/terms.ts` and the Privacy page in
+  `src/marketing/privacy.ts`. In the same change, update each sentence of
+  the legal pages that restates the fact. A search for the old words is
+  not enough, because a legal page can restate a fact in other words.
+- The comparison page at `conductive.build/from-conductor` gives each
+  listed Conductor Cloud feature a status. Its rows live in
+  `src/marketing/from-conductor/`. When a change ships, starts, or drops a
+  listed feature, update the status of its row in the same change. The
+  claim rules are in
+  [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md#statuses).
 
 ## Product
 

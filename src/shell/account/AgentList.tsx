@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import styles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
 import { AGENTS } from '../../app/api/read-core'
@@ -10,6 +10,7 @@ import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { AgentConnectForm } from './AgentConnectForm'
 import { agentNames, loginLabels } from './labels'
+import { LoginShareSetting } from './LoginShareSetting'
 
 type ConnectedLogin = Extract<AgentLoginStatus, { connected: true }>
 
@@ -23,6 +24,8 @@ function connectedLogin(
 
 function AgentRow(props: {
   agent: Agent
+  /** The id of the name of the agent, which names its share setting too. */
+  nameId: string
   login: ConnectedLogin | null
   formOpen: boolean
   removable: boolean
@@ -61,7 +64,9 @@ function AgentRow(props: {
   }
   return (
     <div className={styles.row}>
-      <span className={styles.name}>{name}</span>
+      <span className={styles.name} id={props.nameId}>
+        {name}
+      </span>
       <span className={styles.detail}>
         {login ? (
           <>
@@ -79,12 +84,14 @@ function AgentRow(props: {
  * Claude and Codex, each with Connect, or Connected and the kind of its
  * login. Connect opens the form of the agent under its row, one form at a
  * time. `initial` opens a form at first. `removable` gives each connected
- * login its Remove, as on the account. `closable` gives each form its
- * Cancel. `disabled` turns Connect off, as in a later step of Get started.
+ * login its Remove, and `shares` its share setting, as on the account.
+ * `closable` gives each form its Cancel. `disabled` turns Connect off, as
+ * in a later step of Get started.
  */
 export function AgentList(props: {
   initial: Agent | null
   removable: boolean
+  shares?: boolean
   closable: boolean
   disabled?: boolean
   /** Runs after a save, such as the refresh of Get started. */
@@ -93,12 +100,14 @@ export function AgentList(props: {
   const app = useApp()
   const account = useStore(app.account.account)
   const [open, setOpen] = useState<Agent | null>(props.initial)
+  const ids = useId()
   const close = () => setOpen(null)
   return (
     <ul aria-label="Agents" className={styles.list}>
       {AGENTS.map((agent) => {
         const login = connectedLogin(account, agent)
         const formOpen = open === agent && login === null
+        const nameId = `${ids}-${agent}`
         return (
           <li key={agent}>
             <AgentRow
@@ -106,9 +115,17 @@ export function AgentList(props: {
               disabled={props.disabled ?? false}
               formOpen={formOpen}
               login={login}
+              nameId={nameId}
               open={() => setOpen(agent)}
               removable={props.removable}
             />
+            {login && props.shares ? (
+              <LoginShareSetting
+                agent={agent}
+                nameId={nameId}
+                noReuse={login.noReuse}
+              />
+            ) : null}
             {formOpen ? (
               <AgentConnectForm
                 agent={agent}

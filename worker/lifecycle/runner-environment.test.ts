@@ -8,7 +8,10 @@ import { createCompletedWorkspace } from './completed-creation-test-support'
 import { readRetention } from './retention-data'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { seedPublishedImage } from './published-image-test-support'
-import { orgEnvironmentContext, workspaceEnvironment } from './settings-data'
+import {
+  orgEnvironmentContext,
+  workspaceEnvironmentSettings,
+} from './settings-data'
 import { runningEnvironment } from './start-environment'
 import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 
@@ -19,9 +22,18 @@ it('supplies each start its repository branch and encrypted org settings without
   const { runtime, org, user, boat } = fixture
   const initialSecret = 'create-environment-secret'
   const resumedSecret = 'resume-environment-secret'
-  const saveEnvironment = async (secret: string) => {
+  const saveEnvironment = async (secret: string, classified = true) => {
     const ciphertext = await encrypt(
-      JSON.stringify({ ORG_SECRET: secret }),
+      JSON.stringify(
+        classified
+          ? {
+              ORG_SECRET: { value: secret, secret: true },
+              PUBLIC_MODE: { value: 'production', secret: false },
+              PUBLIC_FLAG: { value: '1', secret: false },
+              SHORT_SECRET: { value: 'a', secret: true },
+            }
+          : { ORG_SECRET: secret },
+      ),
       orgEnvironmentContext(org.id),
       runtime.env.BOAT_KEY_ENCRYPTION_KEY,
     )
@@ -31,7 +43,7 @@ it('supplies each start its repository branch and encrypted org settings without
       .bind(ciphertext, org.id)
       .run()
   }
-  await saveEnvironment(initialSecret)
+  await saveEnvironment(initialSecret, false)
   const resumes: Request[] = []
   runtime.dependencies.fetch = async (request) => {
     if (new URL(request.url).pathname.endsWith('/resume'))
@@ -65,6 +77,7 @@ it('supplies each start its repository branch and encrypted org settings without
   expect(boat.starts[0]).toMatchObject({
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'release-main',
+      CONDUCTIVE_WORKSPACE_BRANCH: created.workspace.branch,
       ORG_SECRET: initialSecret,
     },
   })
@@ -76,9 +89,9 @@ it('supplies each start its repository branch and encrypted org settings without
   )
   const captured = await runningEnvironment(runtime.env.DB, id)
   expect(captured).not.toContain(initialSecret)
-  expect(await workspaceEnvironment(runtime.env, org.id, captured)).toEqual({
-    ORG_SECRET: initialSecret,
-  })
+  expect(
+    await workspaceEnvironmentSettings(runtime.env, org.id, captured),
+  ).toEqual({ ORG_SECRET: { value: initialSecret, secret: true } })
 
   await actor.lifecycleStopped()
   boat.states.set('bx_1', 'archived')
@@ -88,7 +101,7 @@ it('supplies each start its repository branch and encrypted org settings without
     .bind('resume-main', fixture.repositoryId)
     .run()
   await saveEnvironment(resumedSecret)
-  boat.commandOutput = `configured ${resumedSecret}\n`
+  boat.commandOutput = `settings ${resumedSecret} production 1 a\n`
   const resumed = await fixture.run(() =>
     resumeWorkspace(runtime, org.id, id, user.id),
   )
@@ -97,13 +110,17 @@ it('supplies each start its repository branch and encrypted org settings without
   expect(request).toMatchObject({
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'resume-main',
+      CONDUCTIVE_WORKSPACE_BRANCH: created.workspace.branch,
       ORG_SECRET: resumedSecret,
+      PUBLIC_MODE: 'production',
+      PUBLIC_FLAG: '1',
+      SHORT_SECRET: 'a',
       CONDUCTIVE_DISK_KEEPALIVE: '0',
     },
   })
   expect(JSON.stringify(resumed)).not.toContain(resumedSecret)
   expect((await actor.readLifecycleStartLog()).text).toBe(
-    'configured [hidden]\n',
+    'settings [hidden] production 1 [hidden]\n',
   )
   const secrets = await fixture.actors
     .get(id)
@@ -115,12 +132,13 @@ it('supplies each start its repository branch and encrypted org settings without
   await fixture.run(() => resumeWorkspace(runtime, org.id, id, user.id))
   expect(resumes).toHaveLength(1)
   expect((await actor.readLifecycleStartLog()).text).toBe(
-    'configured [hidden]\n',
+    'settings [hidden] production 1 [hidden]\n',
   )
 
   await actor.lifecycleStopped()
   boat.states.set('bx_1', 'archived')
-  await saveEnvironment(resumedSecret)
+  const retentionSecret = 'retention-environment-secret'
+  await saveEnvironment(retentionSecret)
   fixture.setTime(runtime.dependencies.now() + 1_123_200_000)
   await actor.alarm()
   expect(await readRetention(runtime.env.DB, id)).toEqual({
@@ -132,8 +150,22 @@ it('supplies each start its repository branch and encrypted org settings without
   expect(retention).toMatchObject({
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'resume-main',
-      ORG_SECRET: resumedSecret,
+      CONDUCTIVE_WORKSPACE_BRANCH: created.workspace.branch,
+      ORG_SECRET: retentionSecret,
       CONDUCTIVE_DISK_KEEPALIVE: '1',
     },
+  })
+  await saveEnvironment('rotated-after-retention')
+  expect(
+    await workspaceEnvironmentSettings(
+      runtime.env,
+      org.id,
+      await runningEnvironment(runtime.env.DB, id),
+    ),
+  ).toEqual({
+    ORG_SECRET: { value: retentionSecret, secret: true },
+    PUBLIC_MODE: { value: 'production', secret: false },
+    PUBLIC_FLAG: { value: '1', secret: false },
+    SHORT_SECRET: { value: 'a', secret: true },
   })
 })

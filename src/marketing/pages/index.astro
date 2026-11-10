@@ -1,0 +1,81 @@
+---
+import { productName } from '../../../docs/mockups/src/brand'
+import { waitlistText } from '../access-copy'
+import ClosingCall from '../components/ClosingCall.astro'
+import Icon from '../components/Icon.astro'
+import PictureFrame from '../components/PictureFrame.astro'
+import SectionIntro from '../components/SectionIntro.astro'
+import SiteActions from '../components/SiteActions.astro'
+import { features, smallerFeatures } from '../features'
+import { parityLinkCopy } from '../from-conductor/copy'
+import SiteLayout from '../layouts/SiteLayout.astro'
+import { sitePaths } from '../links'
+
+/*
+ * The home page: the hero with a short link to the page for people who
+ * move from Conductor Cloud and the app, the features with real screens,
+ * the smaller features, and a last call to action.
+ */
+---
+
+<SiteLayout
+  title={`${productName} – Coding agents on cloud computers, in your browser`}
+  description="Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser."
+>
+  <main class="main">
+    <section class="hero">
+      <div class="hero-copy">
+        <a class="hero-notice" href={sitePaths.fromConductor}>
+          {parityLinkCopy.home}
+          <Icon name="arrow-right" size={14} class="hero-notice-icon" />
+        </a>
+        <h1 class="hero-title">
+          Give every coding task its own cloud computer.
+        </h1>
+        <p class="hero-text">
+          Agents powered by Claude and Codex work on their own branch, in a full
+          clone of your repository. You follow along and review the work from
+          any browser.
+        </p>
+        <SiteActions />
+      </div>
+      <div class="hero-picture">
+        <PictureFrame picture="hero" loading="eager" />
+      </div>
+    </section>
+    <div class="sections" id="features">
+      {features.map((feature) => (
+        <section class="feature">
+          <SectionIntro
+            label={feature.label}
+            title={feature.title}
+            text={feature.text}
+          />
+          <div class={feature.bleed ? 'stage stage-bleed' : 'stage'}>
+            <PictureFrame picture={feature.picture} loading="lazy" />
+          </div>
+        </section>
+      ))}
+      <section class="grid-section">
+        <SectionIntro
+          label="And more"
+          title="Less to look after."
+          text="The app starts and stops the cloud computers for you."
+        />
+        <ul class="grid">
+          {smallerFeatures.map((item) => (
+            <li class="grid-item">
+              <Icon name={item.icon} size={16} class="grid-icon" />
+              <h3 class="grid-title">{item.title}</h3>
+              <p class="grid-text">{item.text}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <ClosingCall
+        title="Give your next task its own cloud computer."
+        text={waitlistText}
+      />
+    </div>
+  </main>
+</SiteLayout>

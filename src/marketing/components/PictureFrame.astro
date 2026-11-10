@@ -1,0 +1,33 @@
+---
+import {
+  marketingPictures,
+  type MarketingPictureKey,
+} from '../../../docs/mockups/src/screens/marketingPictureList'
+import { frameClasses } from '../picture-styles'
+import PictureImages from './PictureImages.astro'
+
+/**
+ * A real screen of the app as a still picture in its frame: an excerpt, a
+ * phone, or a window. A picture holds no link and no control.
+ */
+type Props = {
+  picture: MarketingPictureKey
+  loading: HTMLImageElement['loading']
+}
+
+const { picture, loading } = Astro.props
+const { frame } = marketingPictures[picture]
+---
+
+<div class={`frame ${frameClasses[frame]} picture-${picture}`}>
+  {frame === 'excerpt' ? (
+    <PictureImages picture={picture} loading={loading} />
+  ) : (
+    <div class="phone-screen">
+      <div class="phone-band">
+        <span class="phone-notch" />
+      </div>
+      <PictureImages picture={picture} loading={loading} />
+    </div>
+  )}
+</div>

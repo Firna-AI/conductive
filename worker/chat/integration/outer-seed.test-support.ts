@@ -1,4 +1,5 @@
 import type { AppEnv } from '../../env'
+import { seedAppAccess } from '../../test-support/app-access'
 import { seedPublishedImage } from '../../lifecycle/published-image-test-support'
 import { storeWorkspaceToken } from '../../lifecycle/tokens'
 import { SESSION_COOKIE } from '../../security/cookies'
@@ -12,6 +13,7 @@ export const OUTER_TOKEN = 'outer-workspace-token'
 export const OTHER_TOKEN = 'other-workspace-token'
 export const OUTER_REPOSITORY = 'chat-repository'
 export const OUTER_SECTION = 'chat-section'
+/** @public Shared runner archive fixture for the composed feature routes. */
 export const OUTER_SOFTWARE = {
   url: 'https://software.conductive.test/runner.tar.gz',
   sha256: 'a'.repeat(64),
@@ -57,6 +59,7 @@ export async function seedOuterRuntime(env: AppEnv) {
         .bind(id, id, `owner/${id.replaceAll(' ', '-')}`),
     ),
   ])
+  await seedAppAccess(db, ['owner', 'member', 'outsider'], 1)
   await storeWorkspaceToken(env, OUTER_WORKSPACE, OUTER_TOKEN, now)
   await storeWorkspaceToken(env, OTHER_WORKSPACE, OTHER_TOKEN, now)
   for (const userId of ['owner', 'member']) {

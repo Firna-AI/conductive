@@ -1,7 +1,7 @@
 import type {
   ChatHistoryResponse,
   WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+} from './workspace-events'
 import type { ChatData, StoredTurn } from './types'
 
 export interface ChatWorkspaceSummary {

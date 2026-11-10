@@ -3,13 +3,7 @@
  * one of them.
  */
 
-export const repositoryKeys = [
-  'storefront',
-  'billing-service',
-  'marketing-site',
-] as const
-
-export type RepositoryKey = (typeof repositoryKeys)[number]
+export type RepositoryKey = 'storefront' | 'billing-service' | 'marketing-site'
 
 export type Repository = {
   key: RepositoryKey
@@ -88,6 +82,10 @@ export const newOrg = {
     { name: 'firna/icons', description: 'The icon set', used: false },
   ],
 } as const
+
+/** The task that Cal types for the first workspace of Firna. */
+export const newOrgDraft =
+  'Add a loading state to the Button component, with a spinner and tests.'
 
 /** Another org that Create org makes beside the user's orgs. */
 export const anotherOrg = {

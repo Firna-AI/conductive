@@ -1,7 +1,7 @@
 {
   "name": "@conductive/desktop",
   "private": true,
-  "version": "0.1.0-alpha.1",
+  "version": "0.3.0",
   "description": "The Conductive Mac app",
   "homepage": "https://conductive.build",
   "author": "Conductive",
@@ -17,6 +17,7 @@
     "test:logic": "node ../node_modules/vitest/vitest.mjs run --config vitest.config.ts",
     "test:electron": "node scripts/smoke.ts",
     "package": "node scripts/package.ts",
+    "package:release": "node scripts/package.ts --release",
     "test:packaged": "node scripts/packaged-smoke.ts"
   },
   "dependencies": {

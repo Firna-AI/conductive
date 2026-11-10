@@ -15,10 +15,22 @@ requirements of each feature.
 - **Admin** and **member:** the two roles in an org. Each person in an org
   has one of them.
 - **Operator:** the person who runs the app, as opposed to the admin of an
-  org. Only an operator can suspend a user.
-- **Suspension:** the block of one user by the operator. It ends the
-  sign-in sessions of the user, stops the sandboxes of the workspaces that
-  the user owns, and blocks new starts.
+  org. Only an operator can suspend a user or an org, or lift a
+  suspension. Only an operator opens the operator section.
+- **Suspension:** the block of one user or one org by an operator, until
+  an operator lifts it. It stops the sandboxes of the workspaces that the
+  user owns, or of every workspace of the org, and blocks new starts. A
+  user suspension also ends the sign-in sessions of the user.
+- **App access:** the right of a user to use the app: to create or join an
+  org, and to start cloud computers. A new account starts without it.
+- **Waitlist:** the users without app access. Each of them sees only the
+  waitlist screen until an approval, a code, or an org invitation gives
+  app access.
+- **Invite code:** a code that an operator makes, with a use limit. Each
+  use gives app access to one person who waits.
+- **Referral code:** the personal code of each user with app access. It
+  gives app access to up to 5 people who wait. The screens of users call
+  it an invite code.
 - **Workspace:** one task in an org. It has one repository, one branch,
   one sandbox, and one or more sessions.
 - **Workspace owner:** the person who is responsible for a workspace. It is
@@ -53,12 +65,9 @@ requirements of each feature.
 
 ### Marketing site
 
-- A few static pages at the root of `conductive.build`, with the Terms and
-  Privacy pages. Visitors see them without a sign-in.
-- [The marketing site README](../src/marketing/README.md) describes how the
-  Worker serves them.
-- The main action is "Start free with GitHub". The site does not name
-  Boat, and users need no Boat account (decision 80).
+- The static public pages at the root of `conductive.build`. The
+  [marketing site page](architecture/marketing-site.md) gives their
+  responsibilities and boundaries.
 
 ### Web app
 
@@ -67,6 +76,11 @@ requirements of each feature.
 - It shows the orgs, the workspaces, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](mockups/README.md) (decision 15).
+- For an operator, it also shows the operator section at `/operator`. The
+  section gives counts across every org. It finds any org or user, and it
+  suspends or lifts it. It also approves people who wait, makes and
+  disables codes, and pauses sign-ups.
+  [Operator section](protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
   the Worker. A tab keeps the chats that it showed in memory, as
@@ -75,6 +89,10 @@ requirements of each feature.
 ### Mac app
 
 - An Electron shell for macOS, as [Mac app](protocol/desktop-app.md) says.
+- Its packages and its updates come from the GitHub releases of the
+  public source repository, as
+  [Packages and updates](protocol/desktop-app.md#packages-and-updates)
+  says.
 
 ### Worker
 
@@ -92,7 +110,9 @@ requirements of each feature.
 ### D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, and the active preview hostnames.
+  repositories, workspaces, settings, and the active preview hostnames. It
+  also holds the app access of each user, the codes and their uses, the
+  pause, and the state of each approval email.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -142,6 +162,9 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
   Claude or OpenAI account of the starter of its session.
+- **Workers AI:** the Cloudflare model service writes the title of each new
+  workspace from its first message. Its use bills to the Cloudflare account
+  of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. The app is free, with no limits (decision 81).
 
@@ -149,7 +172,7 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
 
 | Hostname                | What it serves                                                              |
 | ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms and Privacy pages                        |
+| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages           |
 | `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
 | `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
 | `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
@@ -161,82 +184,19 @@ the app (decision 6).
 
 ## Flows
 
-### Create a workspace
-
-1. The user sends the first message of a new workspace. The Worker records
-   the workspace, and its Durable Object keeps the message.
-2. With the Boat key, the Worker asks Boat for a sandbox from the newest
-   good org image of the org. The sandbox gets the workspace token and the
-   org's env vars, but no agent login.
-3. The Durable Object pushes each start step to the open tabs.
-4. The agent runner starts and connects to the Durable Object. The Durable
-   Object sends it the waiting message.
-
-### Chat
-
-1. A tab sends a message to the Worker. The Durable Object forwards it to
-   the agent runner, with the agent login of the starter of its session.
-2. The runner gives it to the agent through the SDK. It numbers each agent
-   event and sends it to the Durable Object.
-3. The Durable Object stores each event, confirms it to the runner, and
-   pushes it to every open tab of the workspace.
-
-### Terminal, previews, and desktop
-
-- The terminal socket goes from the browser to the Worker on
-  `app.conductive.build`. The Worker connects it to the private terminal
-  port.
-- A preview frame loads its preview hostname. The Worker proxies the
-  request to the private port of the sandbox.
-- The Worker asks Boat for a short-lived desktop URL, and the browser
-  shows Boat's desktop stream.
-
-### GitHub events
-
-- GitHub sends pull request, check, status, and push webhooks. The Worker
-  routes each event to the workspace of its branch.
-- A push to the default branch of a chosen repository can also start a
-  refresh of the org image.
-
-### Stops
-
-- The Durable Object stops a sandbox when the stop rule of
-  [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md#stop-and-resume)
-  says so.
-- Near day 14 of a stop, the app starts the sandbox briefly and stops it
-  again, so that Boat keeps its disk (decision 43).
+The [flows page](architecture/flows.md) describes how the components work
+together for a new workspace, chat, the terminal, previews, the desktop,
+GitHub events, and stops.
 
 ## Where data lives
 
-| Data                                                     | Home                                     |
-| -------------------------------------------------------- | ---------------------------------------- |
-| Users, orgs, members, sections, workspaces, and settings | D1                                       |
-| The org of each sandbox and each saved snapshot          | D1                                       |
-| Env var values and agent logins                          | The Worker's storage, encrypted          |
-| The Boat key and the other keys of the Worker            | Worker secrets                           |
-| Chat history and banner state                            | The workspace Durable Object             |
-| The repository, the files, and the agent sessions        | The home folder of the sandbox           |
-| The prepared repositories and the installed software     | The org image, in the app's Boat account |
-| Panel widths                                             | The browser, or the Mac app              |
+The [data locations](architecture/data-and-trust.md#where-data-lives) give
+where each kind of data lives.
 
 ## Trust boundaries
 
-- The org is the boundary between tenants. A request reaches an org only
-  for a member of that org.
-- The one Boat key reaches the sandboxes and the saved snapshots of every
-  org (decision 80). So the Worker's own records keep the orgs apart, as
-  [Access and security](protocol/access-and-security.md#orgs-and-workspaces)
-  says.
-- The Boat key never goes to the browser, into a sandbox, into a log, or
-  into a saved snapshot.
-- Sandbox code is untrusted. Agents write and run it, and previews show it
-  only on the preview domain.
-- A sandbox gets none of the secrets of the app's Boat account. At a
-  start, it gets only the secrets of its workspace and its org.
-- During a turn, the sandbox also holds the agent login of the starter of
-  its session. The members of one org can reach that login, as
-  [Access and security](protocol/access-and-security.md#agent-logins-in-a-sandbox)
-  says.
+The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
+separate the orgs, the Boat key, and the sandboxes.
 
 ## Decision numbers
 
@@ -247,18 +207,52 @@ the merge.
 
 ## Protocol docs
 
-- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
-  image, the life of a workspace, and the tools of a workspace.
-- [Chat and events](protocol/chat-and-events.md): sessions, messages, the
-  agent runner, and the events.
+- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the
+  life of a workspace, and the number and the link of each workspace.
+- [Org image](protocol/org-image.md): the org image, its builds and its
+  refreshes, and the first build of a new org.
+- [Workspace tools](protocol/workspace-tools.md): the tools of a workspace.
+- [Create a workspace](protocol/create-a-workspace.md): New workspace as a
+  page or as a dialog, the create, the branch, and a failed first start.
+- [Repository folders](protocol/repository-folders.md): the folder and the
+  shell variable of each repository in a sandbox.
+- [Chat and events](protocol/chat-and-events.md): messages, what the chat
+  shows, and the events.
+- [Agents and sessions](protocol/agents-and-sessions.md): the agents and
+  their logins, the sessions, and the names of workspaces and sessions.
+- [Workspace links](protocol/workspace-links.md): Copy link, and the chips
+  that show workspace links in chat.
+- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
+  messages in the chat, with their tables.
+- [Agent runner](protocol/agent-runner.md): the connection of the runner,
+  its events and their limits, its turns, and the repair of lost workspace
+  updates.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
 - [GitHub banner](protocol/github-banner.md): the pull request bar and its
   events.
+- [GitHub tokens](protocol/github-tokens.md): git and CLI account scope.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a
   sandbox.
+- [Agent instructions](protocol/agent-instructions.md): the text that each
+  agent session gets, the sender line of each message, and the base
+  prompt of Claude agents.
 - [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
 - [Operator actions](protocol/operator-actions.md): the operator, the
-  suspension of a user, and abuse reports.
+  suspension of a user or an org, the lift of a suspension, and abuse
+  reports.
+- [Operator section](protocol/operator-section.md): the pages of the
+  operator in the web app, their counts, and their searches.
+- [Waitlist](protocol/waitlist.md): app access, the waitlist screen, the
+  ways in, the pause, and the approval email.
+- [Invite and referral codes](protocol/waitlist-codes.md): the codes of
+  the waitlist, the join link, and the use of a code.
+- [Command palette](protocol/command-palette.md): the key and the search
+  that finds the workspaces, the actions, and the settings.
+- [Command palette: empty and unavailable states](protocol/command-palette-states.md):
+  what the palette shows while its workspace data loads or did not load,
+  and when a tab or a search has no row.
+- [Conductor Cloud comparison](protocol/conductor-cloud-comparison.md): the
+  public page with the status of each Conductor Cloud feature.

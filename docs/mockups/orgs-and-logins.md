@@ -19,24 +19,33 @@ plan limits.
   invitation with its org and the invited email, as
   `app/sign-in/invitations` shows. Accept invitation joins that org and
   opens it. Continue to workspaces accepts nothing. The page has no
-  Decline.
+  Decline. A person who waits for app access sees the same rows on the
+  waitlist screen, where Accept invitation also gives app access, as
+  `app/sign-in/waitlist/invited` shows.
 - Only an admin renames the org, and changes the repositories, the scripts,
   and the env vars, from decisions 54 and 57. A member sees the General,
   Repositories, and Cloud computer tabs read-only: the values, without edit
   fields, Save, or Build computer. The General tab of a member is the child
   page `app/org-settings/member`, because `app/org-settings` has child
   pages. `DetailList` in `src/components/settings/` shows such values.
-- Each session runs on the agent login of the member who started it, also
-  for the messages of other members. So a reassign changes no login, and
-  the cloud computer keeps running.
-- The line under the composer names the login that a message uses, such
-  as "Uses Cal's Claude login" in `app/composer/login`, or "Uses your Claude
-  login". When the login of the member who started a session is not
-  available, a message of another member starts a new session. The notice
-  over the composer of the first session says so, and its chat stays as it
-  was, as `app/sessions/no-starter-login` shows. The new session starts
-  with a line that links back to the first session, then the new message,
-  as `app/sessions/linked` shows. The parts live in
+- Each session runs on the agent login of the member who started it. The
+  messages of other members use that login only while that member shares
+  it, with the switch under each login of the account. So a reassign
+  changes no login, and the cloud computer keeps running.
+- When a message uses the login of another member, the bar of the
+  composer names that login after the model picker, such as "Cal's login"
+  in `app/composer/login`. So the box keeps its place. A message on the own
+  login of the viewer shows no name. When the login of the member who
+  started a session is not available, a message of another member starts
+  a new session. The notice over the composer of the first session says
+  so, and its chat stays as it was, as `app/sessions/no-starter-login`
+  shows. The same happens when that member does not share the login. The
+  notice then says that the login is for the messages of that member only,
+  as `app/composer/not-shared` shows. In both cases, a message does not
+  steer a running turn. A viewer without a login for the agent sees the
+  notice that asks to connect, as `app/composer/no-agent` shows. The new
+  session starts with a line that links back to the first session, then
+  the new message, as `app/sessions/linked` shows. The parts live in
   `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
 - A stopped turn names the member who pressed Stop, from decision 72,
   because all members of an org see the same chat. That member sees "You
@@ -56,6 +65,12 @@ plan limits.
 - No workspace shows as expiring. Near day 14 of a stop, the app starts the
   cloud computer briefly and stops it again, from decision 43.
 - Any user creates orgs. Create org of the first run returns to Get started.
+- Create org needs at least one repository, from decision 151, because it
+  starts the first build of the cloud computer. The hint under
+  Repositories says to add at least one, and Create org stays off until
+  one is added, as `app/orgs/new/no-repository` shows. When the GitHub App
+  reaches no repository, the list asks the person to give it access, with
+  Manage access, as `app/orgs/new/no-access` shows.
 - Delete org asks for the org name. The deleted org stays faded in the rail
   of its admins until the date when everything is deleted, and its page
   offers Restore.
@@ -72,7 +87,8 @@ plan limits.
   someone who can manage it. If a leave still gets the last-admin refusal,
   the screen names no step that the suspended org refuses.
 - Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
-  which Create org makes. The parts live in `src/components/members/`.
+  which Create org makes. Priya is a member of Acme and of Firna who is not
+  an admin. The parts live in `src/components/members/`.
 
 ## Logins
 
@@ -83,8 +99,38 @@ plan limits.
   `claude setup-token` or an API key, and Codex with an OpenAI API key.
   `AgentConnectForm` opens under the row of the agent. A connected login
   shows its kind and Remove.
+- Under each connected login, the switch "Let other members use this
+  login" says whether the messages of other members in the sessions of the
+  user run on it, from decision 116. The switch starts off for a Claude
+  subscription and on for an API key, as `app/account` shows. It saves at
+  once. A change that the app did not save shows its cause beside the
+  switch, as `app/account/share-not-saved` shows. The part lives in
+  `src/components/settings/LoginShare.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
+  It opens only after app access, so a person who waits sees the
+  waitlist instead.
+- Create org starts the first build of the cloud computer of the org, from
+  decision 150. The org step shows that build under the org: preparing
+  with its time, then ready, or the failure with its saved message, Try
+  again, and a link to its log. An org with repositories and no build,
+  such as after a build that did not start, shows No build yet with Build
+  computer. The person connects an agent while the build runs.
+- A repository or an install script that an admin saves during the first
+  build goes into one more build, which starts by itself when the first
+  build succeeds, from decision 151. The Cloud computer tab says so, as
+  `app/org-settings/cloud-computer/first-build/script-changed` shows.
+- The finish says that the org is ready for a new workspace only after the
+  first build succeeded. While the build runs, it says that the cloud
+  computer is still being prepared, as `app/sign-in/get-started/preparing`
+  shows. After a failed build, it says that the cloud computer did not
+  build, and with no build, that it needs a build. Open ‹org› stays on in
+  each state.
+- Until the first build succeeds, New workspace shows its state over the
+  composer and keeps Send off, as `app/new-workspace/first-build` shows.
+  Only an admin gets the link to the Cloud computer tab. The app and the
+  mockups take the words of that notice from
+  `src/screens/firstBuildCopy.ts`.
 - A login belongs to the person, so the agent step has its own state. A
   person who leaves the last org returns to Get started with the agent
   still connected, as `app/sign-in/get-started/no-org` shows.
@@ -93,4 +139,54 @@ plan limits.
   use.
 - The composer shows a notice when the agent of the chosen model is not
   connected. In a session that another member started, a message uses the
-  available login of that member, so no agent notice shows.
+  available login of that member while that member shares it, so no agent
+  notice shows.
+
+## The waitlist
+
+The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
+an account without app access. The approval of an operator, an invite
+code, an invite link, or an org invitation gives app access.
+
+- A person without app access sees only the waitlist screen, as
+  `app/sign-in/waitlist` shows. It stands alone, as the sign-in does, and
+  it names the GitHub account with Sign out. It shows no place in line,
+  because operators approve people in any order, and no Delete account.
+  The Mac app shows the same screen in its window, as `mac-app/waitlist`
+  shows.
+- An approval sends one email, to the primary verified email of the
+  GitHub account. The screen names that address. An account without a
+  verified email gets no email, so the screen promises none. It says that
+  the app opens there once the person is approved, as
+  `app/sign-in/waitlist/no-email` shows.
+- The screen takes an invite code. A typed code that does not work names
+  its reason under the field: not found, disabled, or used up. A code that
+  the pause stopped stays unused, and a notice asks the person to try it
+  again later. The org invitations of the person show above the field,
+  and Accept invitation is then the main action.
+- During the pause, Accept invitation lets nobody in either. The person
+  joins no org, and the invitation stays. A notice above it says so, and
+  asks the person to accept it again when sign-ups resume, as
+  `app/sign-in/waitlist/invited/paused` shows. The screen names the pause
+  only after a code or an Accept that it stopped, because an approval
+  still works during the pause.
+- An invite link opens the sign-in with its code, as `app/sign-in/join`
+  shows. The page names no owner of the code. When the code of the link
+  does not work, the waitlist opens with a notice that names the reason,
+  as `app/sign-in/join/failed` shows. A person who already has app access
+  uses no code, and the app opens as usual.
+- Each user with app access has an invite code with 5 invites. The
+  Account page shows it at the end, after what every org shares, so that
+  the form of an agent stays near the top on a phone. It gives the invite
+  link with Copy, the code alone, and how many invites are left, as
+  `app/account` shows.
+  During the pause, the link stays under a notice. A code that is used up
+  or turned off shows no link, as `app/account/invites` shows. The page
+  names nobody who used an invite.
+- The words say "waitlist" as one word, "invite code" and "invite link"
+  for every code, and "Sign-ups are paused" for the pause. They never say
+  "referral". The mockups take them from `src/screens/waitlistCopy.ts`
+  and `src/components/settings/inviteCodeCopy.ts`.
+- The waitlist, the sign-in, and the sign-in of an invite link share one
+  frame, as [the design](design.md) gives. The home page asks a visitor
+  to join the waitlist, as [the marketing site](marketing-site.md) gives.

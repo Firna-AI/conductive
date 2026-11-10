@@ -1,4 +1,5 @@
 import { createApiClient } from '../../app/api/client'
+import type { AgentLoginStatus } from '../../shared/account'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { Session } from '../../shared/sessions'
 import { sessionsPath } from '../../shared/sessions'
@@ -21,11 +22,12 @@ import { createChatApi, type WorkspaceTarget } from '../api/client'
 import { endsTurn } from '../state/known-turns'
 import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
+import { devAnswers } from './dev-answers'
 import {
   seedLinked,
   withReaderLogin,
   withStarter,
-  writeReaderLogin,
+  writeReaderLogins,
 } from './dev-logins'
 import { DevMac, handleMacWrite, writeMacReplies } from './dev-mac'
 import { lossEvents, withUnreadFiles } from './dev-loss'
@@ -35,7 +37,7 @@ import { takeState } from './dev-sandbox'
 import { followTitle, setActiveTurn } from './dev-sessions'
 import { DevStream } from './dev-stream'
 
-export const NEW_WORKSPACE = 'saved-carts'
+const NEW_WORKSPACE = 'saved-carts'
 
 /** The fake API of the development page, with writes that change its state. */
 export class DevBackend {
@@ -49,8 +51,8 @@ export class DevBackend {
   readonly messages = new Map<string, UserMessage>()
   /** The member who reads the page, who sends, starts sessions, and presses Stop. */
   readonly viewer: MessageSender
-  /** The reader has a Claude login, which a Claude session of the reader records. */
-  readonly claudeLogin: boolean
+  /** The agent logins of the reader, which each session of the reader records. */
+  readonly logins: readonly AgentLoginStatus[]
   /** The recorded turn that runs in a session, which Stop and steer reach. */
   readonly recordedTurns = new Map<string, string>()
   workspace: Workspace
@@ -62,11 +64,13 @@ export class DevBackend {
   count = 0
   /** The first session of a new workspace, which follows its title. */
   titled: string | null = null
+  /** The new workspace asked for its title, which then comes on its own. */
+  titleAsked = false
 
   private constructor(parts: {
     target: WorkspaceTarget
     viewer: MessageSender
-    claudeLogin: boolean
+    logins: readonly AgentLoginStatus[]
     server: FakeApiServer
     clock: Clock
     stream: DevStream
@@ -75,10 +79,11 @@ export class DevBackend {
     open: Session[]
     closed: Session[]
     mac: DevMac
+    answer: readonly string[]
   }) {
     this.target = parts.target
     this.viewer = parts.viewer
-    this.claudeLogin = parts.claudeLogin
+    this.logins = parts.logins
     this.server = parts.server
     this.clock = parts.clock
     this.stream = parts.stream
@@ -87,7 +92,7 @@ export class DevBackend {
     this.open = parts.open
     this.closed = parts.closed
     this.mac = parts.mac
-    this.agent = new DevAgent(parts.stream, parts.clock)
+    this.agent = new DevAgent(parts.stream, parts.clock, parts.answer)
     this.agent.onTurn = (sessionId, turnId, at) =>
       setActiveTurn(this, sessionId, turnId, at)
   }
@@ -106,7 +111,10 @@ export class DevBackend {
     const workspaceId =
       options.workspace === 'new' ? NEW_WORKSPACE : FAKE_IDS.workspace
     const target = { orgId: org, workspaceId }
-    const claudeLogin = writeReaderLogin(server, options)
+    const logins = writeReaderLogins(server, options)
+    const claudeLogin = logins.some(
+      (login) => login.agent === 'claude' && login.connected,
+    )
     const api = createChatApi(createApiClient(server.fetch), target)
     const [detail, listed, view] = await Promise.all([
       api.workspace(),
@@ -140,7 +148,7 @@ export class DevBackend {
     const backend = new DevBackend({
       target,
       viewer,
-      claudeLogin,
+      logins,
       server,
       clock,
       stream: new DevStream(
@@ -158,6 +166,7 @@ export class DevBackend {
         options.app === 'mac',
         options.change,
       ),
+      answer: devAnswers[options.answer],
     })
     backend.note(recorded.map((envelope) => envelope.event))
     writeMacReplies(backend)

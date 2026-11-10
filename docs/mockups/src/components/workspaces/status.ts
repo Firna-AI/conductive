@@ -4,7 +4,7 @@ import type { ActivityStatus } from '../../fixtures/workspaces'
  * How a row title shows its state: strong for output that the user has not
  * read, active while an agent works, and dim while the sandbox is stopped.
  */
-export type RowEmphasis = 'strong' | 'active' | 'normal' | 'dim'
+type RowEmphasis = 'strong' | 'active' | 'normal' | 'dim'
 
 export type StatusPresentation = {
   /** The state in words: the header shows it, and screen readers hear it. */

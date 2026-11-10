@@ -8,6 +8,8 @@ import type { ChatOperation } from './operation'
 import { sessionFor } from './session-record'
 import { closeSession, createSession, stopTurn } from './sessions'
 import type { ChatDependencies } from './types'
+import type { WorkspaceLinkContext } from '../data/workspace-link'
+import { presentWorkspaceHistory } from './workspace-events'
 
 export function afterNumber(url: URL): number {
   const value = url.searchParams.get('after')
@@ -28,6 +30,7 @@ export async function chatRoute(
   context: RequestContext,
   operation: ChatOperation,
   dependencies: ChatDependencies,
+  presentation: WorkspaceLinkContext,
 ): Promise<Response> {
   const url = new URL(request.url)
   if (suffix === '/history' && request.method === 'GET') {
@@ -41,7 +44,7 @@ export async function chatRoute(
         sessionId,
       ),
     )
-    return Response.json(history)
+    return Response.json(presentWorkspaceHistory(history, presentation))
   }
   if (suffix === '/sessions') {
     if (request.method === 'GET') {

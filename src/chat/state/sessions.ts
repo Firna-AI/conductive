@@ -1,6 +1,7 @@
 import type { Session } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import type { ChatSnapshot } from './chat-snapshot'
+import { withSessionPlace } from './tab-order'
 
 const isSessionTab = (
   tab: WorkspaceTab | null,
@@ -62,7 +63,7 @@ export function viewShowing(
 }
 
 /** The view without the session's tab. The next session takes its place. */
-export function viewWithout(
+function viewWithout(
   view: WorkspaceView,
   sessionId: string,
   next: string | null,
@@ -113,9 +114,11 @@ export function placeSession(
         : snapshot.sessions.map((item) =>
             item.id === session.id ? session : item,
           )
+    const view = withSessionPlace(snapshot.view, session.id)
     return {
       ...snapshot,
-      sessions,
+      view,
+      sessions: orderSessions(sessions, view),
       history: others(snapshot.history),
       activeSessionId: snapshot.activeSessionId ?? session.id,
     }

@@ -1,8 +1,9 @@
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import { HttpError } from '../http'
+import {
+  FIRST_MESSAGE_ADMISSION_KEY,
+  type FirstWorkspaceMessage,
+} from '../lifecycle/workspace-runtime'
 import { chatFilesStorage } from './files-storage'
 import { saveHistoryEvent } from './history-storage'
 import { HistoryPages } from './history-pages'
@@ -12,6 +13,7 @@ import type { GitHubStateTransaction } from '../github/contracts'
 import { ReportRepairs } from './report-repairs'
 import { WorkspaceSummaryProjection } from './workspace-summary'
 import { PreviewRevocations } from '../previews/revocation-events'
+import { RunnerOutputState } from './runner-output-state'
 import {
   CHAT_ROOT as ROOT,
   CHAT_META as META,
@@ -34,6 +36,7 @@ export class ChatTransaction extends ChatRecords {
   readonly github: GitHubStateTransaction
   readonly repairs: ReportRepairs
   readonly previews: PreviewRevocations
+  readonly output: RunnerOutputState
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages: HistoryPages
   private through: number
@@ -41,6 +44,7 @@ export class ChatTransaction extends ChatRecords {
 
   constructor(data: ChatData, metadata: ChatMetadata, now: number) {
     super(data)
+    this.output = new RunnerOutputState(data)
     this.pages = new HistoryPages(data)
     this.files = chatFilesStorage(data)
     this.github = {
@@ -72,6 +76,9 @@ export class ChatTransaction extends ChatRecords {
     return records
       .sort((left, right) => left.order - right.order)
       .map((entry) => entry.command)
+  }
+  saveFirstMessageAdmission(first: FirstWorkspaceMessage): Promise<void> {
+    return this.data.put(FIRST_MESSAGE_ADMISSION_KEY, first)
   }
   async cursor(streamId: string): Promise<number> {
     return (await this.data.get<number>(key('cursor', streamId))) ?? 0

@@ -45,6 +45,7 @@ function providerFixture(agent: Agent) {
     login: command.login,
     choice: command.message.choice,
     conversationId: null,
+    instructions: '',
     tools: fakeToolContext,
     event: () => {},
     warn: (message: string) => warnings.push(message),
@@ -129,7 +130,7 @@ it.each(['claude', 'codex'] as const)(
         expect(h.warnings).toHaveLength(index + 1)
         expect(await h.send(provider)).toMatchObject(
           agent === 'claude'
-            ? { role: 'user', content: 'Change the file.' }
+            ? { role: 'user', content: 'Sender: @alice\n\nChange the file.' }
             : { clientUserMessageId: 'message-computer' },
         )
       } finally {

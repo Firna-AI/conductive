@@ -1,10 +1,14 @@
 # Desktop
 
 The Desktop tool shows the live desktop of a workspace's cloud computer,
-where the agents use a browser. The workspace screen shows it in the tools
-panel of the right column, and on a phone as the Desktop page, as
+where the agents use a browser. The app hides the tool for now and keeps
+this code for its return, as
+[Desktop](../../docs/protocol/workspace-tools.md#desktop) says. The
+workspace screen offers no Desktop tab. An address or a saved view that
+names Desktop shows Terminal, as
 [the tools part](../shell/workspace/README.md#the-tools-part) says. The
-screen mounts the tool at each show, so each show reads a new desktop URL.
+[tools development page](../terminal/README.md#development-page) still
+shows the tool.
 
 ## Behaviour
 
@@ -13,6 +17,10 @@ screen mounts the tool at each show, so each show reads a new desktop URL.
 - The frame opens the URL exactly as the server sent it, with the token in
   its fragment. It sends no referrer.
 - The bar says Connecting until the frame loads, then Live.
+- When the page's content security policy blocks the stream's origin, the
+  tool shows its error panel with Try again, not Live. The `frame-src` of
+  the policy must list the stream's host, as
+  [Frame sources](../../docs/deployment.md#frame-sources) says.
 - The screen keeps the 16:10 shape of the desktop, inside the width and the
   height of its panel.
 - A failed request shows its message and Try again.
@@ -29,7 +37,8 @@ screen mounts the tool at each show, so each show reads a new desktop URL.
 ```
 
 `workspace` and `touch` are the same as for the
-[terminal](../terminal/README.md#mount-the-tool).
+[terminal](../terminal/README.md#mount-the-tool). Mount the tool again at
+each show, so that each show reads a new desktop URL.
 
 ## Key code
 
@@ -37,5 +46,5 @@ screen mounts the tool at each show, so each show reads a new desktop URL.
 - `DesktopFrame.tsx`: the frame of the stream.
 - `desktopApi.ts`: the request for a new desktop URL.
 
-See [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md#desktop)
+See [Workspace tools](../../docs/protocol/workspace-tools.md#desktop)
 and [Access and security](../../docs/protocol/access-and-security.md#desktop).

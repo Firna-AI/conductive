@@ -9,7 +9,7 @@ import {
   type RunnerEvent,
   type RunnerEventEnvelope,
 } from '../../src/shared/runner'
-import { jsonBytes } from './event-limits'
+import { jsonBytes } from '../../src/shared/event-limits'
 import { parseEnvelope, parseEvent } from './stored-events'
 import { array, integer, object, oneOf, string } from './parse'
 import {
@@ -33,6 +33,7 @@ export interface SavedSession {
   sessionId: string
   agent: Agent
   providerSessionId: string | null
+  instructions?: string
 }
 
 export interface RunnerState {
@@ -96,6 +97,9 @@ function parseState(value: unknown): RunnerState {
       return {
         sessionId: string(session.sessionId),
         agent: oneOf(session.agent, ['claude', 'codex']),
+        ...(session.instructions === undefined
+          ? {}
+          : { instructions: string(session.instructions) }),
         providerSessionId:
           session.providerSessionId === null
             ? null

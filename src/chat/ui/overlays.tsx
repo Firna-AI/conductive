@@ -1,4 +1,5 @@
 import { useRef, type ReactNode } from 'react'
+import { useModalLayer } from '../../shell/ui/layers'
 import sheetStyles from '../../../docs/mockups/src/components/common/Sheet.module.css'
 import styles from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
 import { useEscape, useFocusInside, useFocusTrap } from './dismiss'
@@ -25,6 +26,7 @@ export function Sheet(props: {
   useEscape(props.onClose)
   useFocusTrap(ref)
   useFocusInside(ref, props.focus ?? keepFocus)
+  useModalLayer()
   return (
     <div className={sheetStyles.layer}>
       <div aria-hidden className={sheetStyles.scrim} onClick={props.onClose} />
@@ -53,6 +55,7 @@ function DesktopDialog(props: {
   useEscape(props.onCancel)
   useFocusTrap(ref)
   useFocusInside(ref, firstButton)
+  useModalLayer()
   return (
     <div className={styles.layer}>
       <div aria-hidden className={styles.scrim} onClick={props.onCancel} />

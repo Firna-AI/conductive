@@ -1,1 +1,11 @@
-{ "order": ["turns", "lost-data", "lost-updates", "unavailable-files"] }
+{
+  "order": [
+    "turns",
+    "work",
+    "tables",
+    "lost-data",
+    "lost-updates",
+    "unavailable-files",
+    "masked-paths"
+  ]
+}

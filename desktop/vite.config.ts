@@ -1,6 +1,8 @@
+import { rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { SITE_FOLDER } from '../src/shared/site-build.ts'
 import { DEFAULT_APP_ORIGIN, readConfiguration } from './src/config.ts'
 
 export default defineConfig({
@@ -23,6 +25,20 @@ export default defineConfig({
             'src="/src/main.tsx"',
             'src="/desktop/renderer/main.tsx"',
           ),
+      },
+    },
+    {
+      // The build copies the public folder, which also holds the built
+      // marketing site. The Mac app does not show the site.
+      name: 'conductive-desktop-without-site',
+      apply: 'build',
+      async writeBundle(options) {
+        if (options.dir) {
+          await rm(resolve(options.dir, SITE_FOLDER), {
+            recursive: true,
+            force: true,
+          })
+        }
       },
     },
   ],

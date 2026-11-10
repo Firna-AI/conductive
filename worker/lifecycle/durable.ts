@@ -1,7 +1,9 @@
 import {
   withStartStep,
   withStartFailure,
+  withCreateFailure,
   withReportedStart,
+  withPreparedStart,
 } from './durable-start'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
@@ -85,6 +87,7 @@ export class DurableLifecycle {
       runnerConnected: false,
       lastActivityAt: this.now(),
       startupPrepared: false,
+      restoreWatchAt: undefined,
       startStop: undefined,
       diskRetentionCommand: undefined,
     }))
@@ -145,19 +148,7 @@ export class DurableLifecycle {
   }
 
   prepared(): Promise<void> {
-    return this.update((state) =>
-      state.state === 'stopped' || state.state === 'archived'
-        ? state
-        : {
-            ...state,
-            startupPrepared: true,
-            state: state.runnerConnected
-              ? state.runningSessions.length
-                ? 'working'
-                : 'ready'
-              : 'starting',
-          },
-    )
+    return this.update((state) => withPreparedStart(state, this.now()))
   }
 
   activity(): Promise<void> {
@@ -197,8 +188,18 @@ export class DurableLifecycle {
     )
   }
 
-  fail(error: DurableLifecycleState['error']): Promise<void> {
-    return this.update((state) => withStartFailure(state, error, this.now()))
+  /** An access stop ends the restore watch, because its sandbox stops. */
+  endRestoreWatch(): Promise<void> {
+    return this.serial(async () => {
+      const state = await this.read()
+      if (state?.restoreWatchAt !== undefined)
+        await this.write({ ...state, restoreWatchAt: undefined })
+    })
+  }
+
+  fail(error: DurableLifecycleState['error'], create = false): Promise<void> {
+    const failure = create ? withCreateFailure : withStartFailure
+    return this.update((state) => failure(state, error, this.now()))
   }
 
   stopFailedStart(

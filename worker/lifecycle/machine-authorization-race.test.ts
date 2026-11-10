@@ -64,7 +64,7 @@ async function heldCredential() {
         ])
         expect(state).toEqual({ refreshing: true })
       },
-      request: (bearer = token) =>
+      request: (bearer = token, turnId: string | null = created.first.turnId) =>
         app.fetch(
           new Request(
             `${runtime.env.MACHINE_ORIGIN}${MACHINE_PATHS.gitCredential}`,
@@ -72,7 +72,7 @@ async function heldCredential() {
               method: 'POST',
               headers: {
                 Authorization: `Bearer ${bearer}`,
-                [TOOL_TURN_HEADER]: created.first.turnId,
+                ...(turnId === null ? {} : { [TOOL_TURN_HEADER]: turnId }),
               },
             },
           ),
@@ -85,40 +85,75 @@ async function heldCredential() {
   }
 }
 
-it('refuses a Git credential whose refresh finishes after real org suspension', async () => {
+it.each(['agent', 'terminal'] as const)(
+  'refuses the %s credential whose refresh finishes after real org suspension',
+  async (source) => {
+    const fixture = await heldCredential()
+    let pending: Promise<Response> | undefined
+    try {
+      const stale = await fixture.request('stale-workspace-token')
+      expect(stale.status).toBe(401)
+      expect(await stale.json()).toEqual({
+        error: {
+          code: 'workspace_token_refused',
+          message: 'The workspace token is not valid.',
+        },
+      })
+      expect(fixture.requests).toHaveLength(0)
+      pending = fixture.request(
+        undefined,
+        source === 'terminal' ? null : fixture.created.first.turnId,
+      )
+      await fixture.waitForRefresh(pending)
+      await suspendOrg(
+        workspaceRuntime(fixture.runtime.env, fixture.runtime.dependencies),
+        fixture.org.id,
+        fixture.user.id,
+      )
+      fixture.refresh.release()
+      const response = await pending
+      expect(response.status).toBe(401)
+      expect(response.headers.get('Cache-Control')).toBe('no-store')
+      expect(await response.json()).toEqual({
+        error: {
+          code: 'workspace_token_refused',
+          message: 'The workspace token is not valid.',
+        },
+      })
+      expect(fixture.requests).toHaveLength(1)
+    } finally {
+      fixture.refresh.release()
+      await Promise.allSettled(pending ? [pending] : [])
+      await fixture.dispose()
+    }
+  },
+)
+
+it('refuses a terminal credential when its owner changes during token refresh', async () => {
   const fixture = await heldCredential()
-  let pending: Promise<Response> | undefined
+  const pending = fixture.request(undefined, null)
   try {
-    const stale = await fixture.request('stale-workspace-token')
-    expect(stale.status).toBe(401)
-    expect(await stale.json()).toEqual({
-      error: {
-        code: 'workspace_token_refused',
-        message: 'The workspace token is not valid.',
-      },
-    })
-    expect(fixture.requests).toHaveLength(0)
-    pending = fixture.request()
     await fixture.waitForRefresh(pending)
-    await suspendOrg(
-      workspaceRuntime(fixture.runtime.env, fixture.runtime.dependencies),
-      fixture.org.id,
-      fixture.user.id,
-    )
+    await fixture.runtime.env.DB.batch([
+      fixture.runtime.env.DB.prepare(
+        "INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES ('new-owner', 29, 'new-owner', 1, 1)",
+      ),
+      fixture.runtime.env.DB.prepare(
+        "INSERT INTO org_members (org_id, user_id, role, joined_at) VALUES (?, 'new-owner', 'member', 1)",
+      ).bind(fixture.org.id),
+      fixture.runtime.env.DB.prepare(
+        "UPDATE workspaces SET owner_user_id = 'new-owner' WHERE id = ?",
+      ).bind(fixture.created.workspace.id),
+    ])
     fixture.refresh.release()
     const response = await pending
     expect(response.status).toBe(401)
-    expect(response.headers.get('Cache-Control')).toBe('no-store')
-    expect(await response.json()).toEqual({
-      error: {
-        code: 'workspace_token_refused',
-        message: 'The workspace token is not valid.',
-      },
+    expect(await response.json()).toMatchObject({
+      error: { code: 'workspace_token_refused' },
     })
-    expect(fixture.requests).toHaveLength(1)
   } finally {
     fixture.refresh.release()
-    await Promise.allSettled(pending ? [pending] : [])
+    await Promise.allSettled([pending])
     await fixture.dispose()
   }
 })

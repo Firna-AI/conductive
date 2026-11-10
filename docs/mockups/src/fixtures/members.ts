@@ -7,9 +7,7 @@
 
 import { account, type OrgKey } from './orgs'
 
-export const personKeys = ['cal', 'priya', 'jonas'] as const
-
-export type PersonKey = (typeof personKeys)[number]
+export type PersonKey = 'cal' | 'priya' | 'jonas'
 
 export type Person = {
   key: PersonKey
@@ -38,7 +36,10 @@ export const people: Readonly<Record<PersonKey, Person>> = {
 /** The person signed in, an admin of both orgs that the mockups draw. */
 export const you: PersonKey = 'cal'
 
-/** The member of Acme who is not an admin, whose view the mockups draw. */
+/**
+ * The member of Acme and Firna who is not an admin, whose view the mockups
+ * draw.
+ */
 export const memberViewer: PersonKey = 'priya'
 
 /** The roles of an org, as in Conductor (decision 54). */
@@ -51,6 +52,11 @@ export const roleLabels: Readonly<Record<Role, string>> = {
 
 export type Membership = { person: PersonKey; role: Role }
 
+/** The signed-in person of a screen's chosen role. */
+export function viewerMembership(role: Role): Membership {
+  return { person: role === 'admin' ? you : memberViewer, role }
+}
+
 /**
  * An invite that waits for its person to accept it, with a GitHub account
  * that has its email verified.
@@ -62,6 +68,15 @@ export const acmeMembers: readonly Membership[] = [
   { person: 'cal', role: 'admin' },
   { person: 'priya', role: 'member' },
   { person: 'jonas', role: 'member' },
+]
+
+/**
+ * The members of Firna, the new org of the sign-up: Cal, who created it,
+ * and Priya, whom Cal invited as a member who is not an admin.
+ */
+export const firnaMembers: readonly Membership[] = [
+  { person: 'cal', role: 'admin' },
+  { person: 'priya', role: 'member' },
 ]
 
 export const acmeInvites: readonly Invite[] = [

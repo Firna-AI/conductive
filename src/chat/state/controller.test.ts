@@ -113,6 +113,7 @@ describe('ChatController', () => {
           startedBy: senderSnapshot(fakeUser),
           sourceSessionId: null,
           loginAvailable: true,
+          loginShared: true,
         },
       ],
       history: [10, 30, 20].map((closedAt) => ({
@@ -128,6 +129,7 @@ describe('ChatController', () => {
         startedBy: senderSnapshot(fakeUser),
         sourceSessionId: null,
         loginAvailable: true,
+        loginShared: true,
       })),
     })
     await chat.controller.start()
@@ -137,7 +139,7 @@ describe('ChatController', () => {
     const fresh = {
       id: 'third',
       workspaceId: ws,
-      title: 'New session',
+      title: null,
       choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
       createdAt: FAKE_TIME,
       closedAt: null,
@@ -147,6 +149,7 @@ describe('ChatController', () => {
       startedBy: senderSnapshot(fakeUser),
       sourceSessionId: null,
       loginAvailable: true,
+      loginShared: true,
     }
     chat.server.json(
       'POST',
@@ -167,7 +170,6 @@ describe('ChatController', () => {
     expect(views.at(-1)).toEqual({
       tabs: [
         { kind: 'session', sessionId: 'autocomplete' },
-        { kind: 'session', sessionId: 'debounce' },
         { kind: 'session', sessionId: 'third' },
       ],
       activeTab: { kind: 'session', sessionId: 'third' },

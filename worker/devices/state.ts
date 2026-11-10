@@ -84,8 +84,9 @@ async function publishFallback(
     view.session(request.sessionId),
   )
   if (!row || !session) return
-  const workspace: Workspace = {
+  const workspace: Omit<Workspace, 'link'> = {
     id: row.id,
+    number: row.number,
     orgId: row.orgId,
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,

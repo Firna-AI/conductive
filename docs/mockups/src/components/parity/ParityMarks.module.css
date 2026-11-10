@@ -1,0 +1,65 @@
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  color: var(--ui-ink2);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.icon {
+  align-self: flex-start;
+  flex-shrink: 0;
+  margin-top: calc((1lh - 15px) / 2);
+}
+
+/*
+ * The icon of each status takes the colour of its tone: green, amber, blue,
+ * red, or grey. The tokens keep a readable contrast in both schemes.
+ */
+.success .icon {
+  color: var(--ui-success);
+}
+
+.warning .icon {
+  color: var(--ui-amber);
+}
+
+.active .icon {
+  color: var(--ui-primary);
+}
+
+.danger .icon {
+  color: var(--ui-rose);
+}
+
+.muted .icon {
+  color: var(--ui-muted);
+}
+
+/* A due day reads as a time of the app: the label font, in capitals. */
+.due {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+.dueIcon {
+  flex-shrink: 0;
+  color: var(--ui-primary);
+}
+
+.undated {
+  color: var(--ui-muted);
+}

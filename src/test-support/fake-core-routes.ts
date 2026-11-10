@@ -1,4 +1,8 @@
-import { ACCOUNT_PATHS, agentLoginPath } from '../shared/account'
+import {
+  ACCOUNT_PATHS,
+  agentLoginPath,
+  type SessionResponse,
+} from '../shared/account'
 import { MODELS_PATH } from '../shared/agents'
 import { API_PATHS, orgPath, type OrgRole } from '../shared/api'
 import { HEALTH_PATH } from '../shared/health'
@@ -17,15 +21,21 @@ import {
 } from '../shared/org-settings'
 import { deleteOrgPath, leaveOrgPath, restoreOrgPath } from '../shared/orgs'
 import { sectionPath, sectionsPath } from '../shared/sections'
+import { WAITLIST_PATHS } from '../shared/waitlist'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { coreFixtures, FAKE_IDS, FAKE_TIME } from './fixtures/core'
+import { accessState } from './fixtures/waitlist'
 
 export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   const data = coreFixtures(role)
   const org = data.orgs.orgs[0]
   const id = FAKE_IDS.org
   routes.json('GET', HEALTH_PATH, { status: 'ok' })
-  routes.json('GET', API_PATHS.session, { user: data.account.user })
+  routes.json('GET', API_PATHS.session, {
+    user: data.account.user,
+    appAccess: true,
+  } satisfies SessionResponse)
+  routes.json('GET', WAITLIST_PATHS.state, accessState)
   routes.empty('POST', API_PATHS.signOut)
   routes.json('GET', ACCOUNT_PATHS.account, data.account)
   routes.json('GET', MODELS_PATH, data.models)
@@ -38,9 +48,13 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   routes.json('PUT', ACCOUNT_PATHS.defaultModel, {
     choice: data.account.defaultChoice,
   })
+  routes.json('PUT', ACCOUNT_PATHS.newWorkspaceView, {
+    view: data.account.newWorkspaceView,
+  })
   routes.json('POST', ACCOUNT_PATHS.deleteAccount, { deleted: true })
   for (const login of data.account.agentLogins) {
     routes.json('PUT', agentLoginPath(login.agent), login)
+    routes.json('PATCH', agentLoginPath(login.agent), login)
     routes.empty('DELETE', agentLoginPath(login.agent))
   }
   routes.json('GET', GET_STARTED_PATH, data.getStarted)

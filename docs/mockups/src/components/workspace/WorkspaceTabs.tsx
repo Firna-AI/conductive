@@ -1,17 +1,7 @@
-import type { ReactNode } from 'react'
+import { Fragment } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import type { LucideIcon } from 'lucide-react'
-import {
-  FileCode,
-  FileDiff,
-  FileText,
-  History,
-  MessageSquare,
-  Pencil,
-  Plus,
-  RotateCcw,
-  X,
-} from 'lucide-react'
+import { History, Plus, RotateCcw } from 'lucide-react'
+import { nameLabel } from '../../../../../src/shared/name-label'
 import { closedSessions } from '../../fixtures/sessions'
 import { paths } from '../../paths'
 import { AgentMark } from '../chat/AgentMark'
@@ -19,58 +9,16 @@ import { Menu, type MenuEntry } from '../common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
 import { classes } from '../common/classes'
+import { DropPlace, TabItem, type WorkspaceTab } from './TabItem'
+import { tabMenuOf } from './TabMenu'
+import tabScroll from './TabScroll.module.css'
 import styles from './WorkspaceTabs.module.css'
 
-export type TabKind = 'session' | 'code' | 'markdown' | 'diff'
-
-export type WorkspaceTab = {
-  key: string
-  kind: TabKind
-  title: string
-  /** The screen that the tab shows, when the mockups draw it. */
-  to?: string
-  selected: boolean
-}
-
-const icons: Readonly<Record<TabKind, LucideIcon>> = {
-  session: MessageSquare,
-  code: FileCode,
-  markdown: FileText,
-  diff: FileDiff,
-}
-
-function TabLabel(props: { tab: WorkspaceTab; children: ReactNode }) {
-  const { tab } = props
-  if (!tab.to) return <span className={styles.link}>{props.children}</span>
-  return (
-    <ScreenLink
-      aria-current={tab.selected ? 'page' : undefined}
-      className={styles.link}
-      to={tab.to}
-    >
-      {props.children}
-    </ScreenLink>
-  )
-}
-
-function Tab(props: { tab: WorkspaceTab; readOnly: boolean }) {
-  const { tab } = props
-  const Icon = icons[tab.kind]
-  return (
-    <li className={classes(styles.tab, tab.selected && styles.selected)}>
-      <TabLabel tab={tab}>
-        <Icon aria-hidden className={styles.icon} size={13} />
-        <span className={styles.title}>{tab.title}</span>
-      </TabLabel>
-      {tab.kind === 'session' && tab.selected && !props.readOnly ? (
-        <IconButton icon={Pencil} label={`Rename ${tab.title}`} quiet />
-      ) : null}
-      <span className={styles.close}>
-        <IconButton icon={X} label={`Close ${tab.title}`} quiet />
-      </span>
-    </li>
-  )
-}
+/**
+ * A tab in the middle of a drag: the key of the tab, and the place where it
+ * lands, before the tab at `index`, or after the last tab.
+ */
+export type TabDrag = { tab: string; index: number }
 
 /**
  * The sessions whose tabs the user closed, the last closed first: the mark
@@ -79,7 +27,7 @@ function Tab(props: { tab: WorkspaceTab; readOnly: boolean }) {
 export const historyEntries: readonly MenuEntry[] = closedSessions.map(
   (session): MenuEntry => ({
     kind: 'item',
-    label: session.title,
+    label: nameLabel(session.title),
     mark: <AgentMark agent={session.agent} />,
     detail: session.closed,
     trailingIcon: RotateCcw,
@@ -87,7 +35,12 @@ export const historyEntries: readonly MenuEntry[] = closedSessions.map(
 )
 
 /** The clock that opens the session history, with its menu when open. */
-function HistoryButton(props: { open: boolean; anchored: boolean }) {
+function HistoryButton(props: {
+  open: boolean
+  anchored: boolean
+  entries: readonly MenuEntry[]
+}) {
+  const hasHistory = props.entries.some((entry) => entry.kind === 'item')
   const button = (
     <IconButton
       expanded={props.open}
@@ -98,16 +51,18 @@ function HistoryButton(props: { open: boolean; anchored: boolean }) {
   )
   return (
     <span className={styles.anchor}>
-      {props.open ? (
-        button
-      ) : (
-        <ScreenLink asChild to={paths.sessionHistory}>
-          {button}
-        </ScreenLink>
-      )}
+      {hasHistory ? (
+        props.open ? (
+          button
+        ) : (
+          <ScreenLink asChild to={paths.sessionHistory}>
+            {button}
+          </ScreenLink>
+        )
+      ) : null}
       {props.open && props.anchored ? (
         <Menu
-          entries={historyEntries}
+          entries={props.entries}
           label="Session history"
           placement="below-end"
           wide
@@ -117,39 +72,96 @@ function HistoryButton(props: { open: boolean; anchored: boolean }) {
   )
 }
 
+/** The place of a dragged tab after its drop, counted from 1. */
+function placeAfterDrop(from: number, index: number): number {
+  return index > from ? index : index + 1
+}
+
 /**
- * The tabs of the centre column: each agent session, then each open file
- * or diff, + for a new session on the same branch and cloud computer, and
- * the clock of the session history. Every tab closes. The current session
- * can be renamed. `historyOpen` draws the history open, beside the clock or,
- * on a phone, as a sheet that the screen draws. On a phone the current tab
- * shrinks too, so that every tab keeps some of its title.
+ * The tabs of the centre column: the agent sessions and the open files and
+ * diffs in the order that the user gave them, + for a new session on the
+ * same branch and cloud computer, and the clock of the session history.
+ * Every tab closes, and a right click opens its menu, the one way to rename
+ * a session. `drag` draws a tab in the middle of a drag, and `menuTab` the
+ * menu of a tab, below it or, on a phone, as a sheet that the screen draws.
+ * `renaming` draws the rename field in a tab, after Rename session in its
+ * menu. `full` draws a row whose tabs do not fit, scrolled to the tab that
+ * it keeps in view: the tab with the rename field, or else the shown tab.
+ * `historyOpen` draws the history open, beside the clock or, on a phone, as
+ * a sheet that the screen draws. On a phone the current tab shrinks too, so
+ * that every tab keeps some of its title.
  */
 export function WorkspaceTabs(props: {
   tabs: readonly WorkspaceTab[]
   viewport: Viewport
+  historyEntries?: readonly MenuEntry[]
   historyOpen?: boolean
-  /** An archived workspace: no new session, and no rename. */
+  /** An archived workspace: no new session. */
   readOnly?: boolean
+  drag?: TabDrag
+  menuTab?: string
+  renaming?: string
+  full?: boolean
 }) {
+  const { tabs, drag, menuTab } = props
   const readOnly = props.readOnly ?? false
   const phone = props.viewport === 'mobile'
+  const full = props.full ?? false
+  const from = tabs.findIndex((tab) => tab.key === drag?.tab)
+  const dragged = tabs[from]
+  const kept = props.renaming ?? tabs.find((tab) => tab.selected)?.key
+  const endInView = full && kept !== undefined && tabs.at(-1)?.key === kept
+  // The lifted tab and a menu below a tab hang below the row.
+  const overRow = dragged !== undefined || (menuTab !== undefined && !phone)
+  const dropAt = (index: number) =>
+    dragged && drag?.index === index ? (
+      <DropPlace
+        count={tabs.length}
+        place={placeAfterDrop(from, index)}
+        tab={dragged}
+      />
+    ) : null
   return (
     <nav
       aria-label="Sessions and files"
       className={classes(styles.bar, phone && styles.phone)}
     >
-      <ul className={styles.tabs}>
-        {props.tabs.map((tab) => (
-          <Tab key={tab.key} readOnly={readOnly} tab={tab} />
+      <ul
+        className={classes(
+          styles.tabs,
+          tabScroll.scroll,
+          endInView && tabScroll.scrolledToEnd,
+          full && (endInView ? tabScroll.fadeStart : tabScroll.fadeEnd),
+          overRow && !full && tabScroll.clipSides,
+        )}
+      >
+        {tabs.map((tab, index) => (
+          <Fragment key={tab.key}>
+            {dropAt(index)}
+            <TabItem
+              menu={
+                tab.key === menuTab
+                  ? { entries: tabMenuOf(tabs, tab.key), anchored: !phone }
+                  : undefined
+              }
+              placeholder={tab === dragged}
+              renaming={tab.key === props.renaming}
+              tab={tab}
+            />
+          </Fragment>
         ))}
+        {dropAt(tabs.length)}
       </ul>
       {readOnly ? null : (
         <ScreenLink asChild to={paths.sessions}>
           <IconButton icon={Plus} label="New session" />
         </ScreenLink>
       )}
-      <HistoryButton anchored={!phone} open={props.historyOpen ?? false} />
+      <HistoryButton
+        anchored={!phone}
+        entries={props.historyEntries ?? historyEntries}
+        open={props.historyOpen ?? false}
+      />
     </nav>
   )
 }

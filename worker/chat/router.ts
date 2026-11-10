@@ -2,6 +2,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { tokenWorkspace } from './queries'
+import { sessionGate } from '../security/gate'
 
 export async function routeRunner(
   request: Request,
@@ -24,11 +25,13 @@ export async function routeRunner(
 export async function routeChat(
   request: Request,
   env: AppEnv,
+  now = Date.now(),
 ): Promise<Response | null> {
   const match = new URL(request.url).pathname.match(
     /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:events|history|sessions(?:\/.*)?)$/,
   )
   if (!match) return null
+  await sessionGate(request, env, now)
   let workspaceId: string
   try {
     workspaceId = decodeURIComponent(match[1])
@@ -42,6 +45,7 @@ export async function routeChat(
   return forwardWorkspaceRequest(request, env, workspaceId)
 }
 
+/** @public The feature router forwards workspace requests through this boundary. */
 export async function forwardWorkspaceRequest(
   request: Request,
   env: AppEnv,

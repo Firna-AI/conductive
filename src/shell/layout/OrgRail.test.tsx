@@ -19,6 +19,7 @@ describe('OrgRail', () => {
         <OrgRail
           current={{ org: 'acme' }}
           firstRun={false}
+          operator={false}
           orgs={orgs}
           user={boot.user}
         />,

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { AppModel } from './app/app-model'
 import { NavigationContext, type Navigation } from './app/navigation'
-import { PanelWidths } from './app/panels'
+import { PanelLayout } from './app/panels'
 import { ServicesContext, type AppServices } from './app/services'
 import { AppModelContext } from './shell/context'
 import { PanelContext } from './shell/layout/panels'
+import { PaletteProvider } from './shell/palette/PaletteProvider'
 import { Shell } from './shell/Shell'
 import { ThemeRoot } from './shell/ui/ThemeRoot'
 import { useViewport, ViewportProvider } from './shell/ui/viewport'
@@ -25,7 +26,7 @@ export function App(props: {
   features?: WorkspaceFeatures
 }) {
   const [app] = useState(() => new AppModel(props.services))
-  const [panels] = useState(() => new PanelWidths(props.services.storage))
+  const [panels] = useState(() => new PanelLayout(props.services.storage))
   const viewport = useViewport()
   return (
     <ServicesContext.Provider value={props.services}>
@@ -35,7 +36,9 @@ export function App(props: {
             <FeaturesContext.Provider value={props.features ?? {}}>
               <ViewportProvider viewport={viewport}>
                 <ThemeRoot>
-                  <Shell />
+                  <PaletteProvider>
+                    <Shell />
+                  </PaletteProvider>
                 </ThemeRoot>
               </ViewportProvider>
             </FeaturesContext.Provider>

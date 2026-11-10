@@ -8,18 +8,22 @@ import type {
   RunnerInterrupt,
   RunnerLogin,
   WorkspaceToRunner,
+  RunnerEventEnvelope,
 } from '../../src/shared/runner'
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
   ConnectionGrant,
   ConnectionIdentity,
   ConnectionScheduler,
 } from '../security/connection-access'
 import type { AuthenticatedRunner } from './authenticated-runner'
-import type { SessionLoginTarget } from './login-availability'
+import type {
+  SessionLoginMetadata,
+  SessionLoginTarget,
+} from './login-availability'
+import type { FilteredRunnerOutput } from './runner-output'
+import type { ChatTransaction } from './store'
+import type { TitleModelCall } from './title-model'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -113,6 +117,15 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  readAutomaticTitleWorkspace: (
+    workspaceId: string,
+  ) => Promise<{ name: string | null } | null>
+  runTitleModel?: TitleModelCall
+  filterRunnerOutput(
+    transaction: ChatTransaction,
+    workspace: RunnerWorkspaceRecord,
+    input: RunnerEventEnvelope,
+  ): Promise<FilteredRunnerOutput>
   runnerAttached(
     workspaceId: string,
     connectionId: string,
@@ -146,12 +159,11 @@ export interface ChatDependencies {
     identities: readonly ConnectionIdentity[],
     now: number,
   ) => Promise<readonly ConnectionGrant[]>
-  firstStartIncomplete: (workspaceId: string) => Promise<boolean>
   randomId: () => string
   randomConnectionId: () => string
-  readLoginAvailability: (
+  readLoginMetadata: (
     targets: readonly SessionLoginTarget[],
-  ) => Promise<ReadonlySet<string>>
+  ) => Promise<ReadonlyMap<string, SessionLoginMetadata>>
   resolveLogin: (
     userId: string | null,
     agent: Agent,

@@ -1,14 +1,60 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test } from 'vitest'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { serveOperator } from '../../test-support/operator'
 import { PhoneFrame } from '../layout/frames'
 import { click, mountScreen, press } from '../test-mount'
 import { startedApp } from '../test-render'
 import { ListHeader } from './HomeList'
 
+/** Opens the org switcher of Acme on a phone, and gives its sheet. */
+async function openSwitcher(server: FakeApiServer): Promise<HTMLElement> {
+  const app = await startedApp(server)
+  const boot = app.boot.get()
+  const [org] = app.orgs.get()
+  if (boot.state !== 'ready' || !org) throw new Error('The app did not start.')
+  const view = mountScreen(
+    app,
+    <PhoneFrame>
+      <ListHeader org={org} settings={false} user={boot.user} />
+    </PhoneFrame>,
+    { viewport: 'phone' },
+  )
+  const trigger = view.querySelector<HTMLElement>('[aria-haspopup="dialog"]')
+  if (!trigger) throw new Error('The switcher has no trigger.')
+  click(trigger)
+  const sheet = document.querySelector<HTMLElement>('[role="dialog"]')
+  if (!sheet) throw new Error('The switcher did not open.')
+  return sheet
+}
+
 describe('the org switcher of a phone', () => {
-  test('keeps Tab and Shift+Tab inside, also from the sheet itself, and gives the focus back to its trigger', async () => {
+  test.each([
+    {
+      outcome: 'lists Operator under Account',
+      who: 'an operator',
+      operator: true,
+      last: ['/account', '/operator'],
+    },
+    {
+      outcome: 'lists no Operator',
+      who: 'anyone else',
+      operator: false,
+      last: ['/orgs/new', '/account'],
+    },
+  ])('$outcome for $who', async (row) => {
+    const server = new FakeApiServer()
+    if (row.operator) serveOperator(server)
+    const sheet = await openSwitcher(server)
+    const links = Array.from(sheet.querySelectorAll('a'), (link) =>
+      link.getAttribute('href'),
+    )
+    expect(links.slice(-2)).toEqual(row.last)
+  })
+
+  test('keeps Tab and Shift+Tab inside, also from the sheet itself, and gives the focus back to its trigger, also after a press outside', async () => {
     const app = await startedApp(new FakeApiServer())
     const boot = app.boot.get()
     const [org] = app.orgs.get()
@@ -39,14 +85,29 @@ describe('the org switcher of a phone', () => {
     press(links[links.length - 1], 'Tab')
     const fromLast = focused()
     press(links[0], 'Escape')
+    const closed = {
+      open: document.querySelector('[role="dialog"]') !== null,
+      behind: behind(),
+      trigger: document.activeElement === trigger,
+    }
+    click(trigger)
+    // A browser moves the focus at a press that the app does not keep.
+    const outside = new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+    })
+    act(() => {
+      document.body.dispatchEvent(outside)
+    })
     expect({
       opened,
       fromFirst,
       fromSheet,
       fromLast,
-      closed: {
+      closed,
+      pressedOutside: {
         open: document.querySelector('[role="dialog"]') !== null,
-        behind: behind(),
+        pressKept: outside.defaultPrevented,
         trigger: document.activeElement === trigger,
       },
     }).toEqual({
@@ -55,6 +116,7 @@ describe('the org switcher of a phone', () => {
       fromSheet: 4,
       fromLast: 0,
       closed: { open: false, behind: false, trigger: true },
+      pressedOutside: { open: false, pressKept: true, trigger: true },
     })
   })
 })

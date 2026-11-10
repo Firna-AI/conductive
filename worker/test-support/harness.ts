@@ -1,12 +1,15 @@
 import { Miniflare } from 'miniflare'
 
 import { API_PATHS, type Org } from '../../src/shared/api'
+import type { SessionResponse } from '../../src/shared/account'
 import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
 import type { AppEnv } from '../env'
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
+import { seedAppAccess } from './app-access'
 import { FakeBoat } from './fake-boat'
 import { FakeGitHub } from './fake-github'
+import { createTestOrg } from './org-test-support'
 import { applyMigrations } from './migrations'
 
 export const TEST_ORIGIN = 'https://app.conductive.test'
@@ -80,7 +83,7 @@ export async function createHarness() {
       cookie: responseCookie(response, OAUTH_COOKIE),
     }
   }
-  const login = async () => {
+  const login = async ({ appAccess = true } = {}) => {
     const start = await beginSignIn()
     const response = await fetch(
       `${API_PATHS.githubCallback}?state=${start.state}&code=good-code`,
@@ -90,21 +93,20 @@ export async function createHarness() {
       throw new Error(
         `Callback returned ${response.status}: ${await response.text()}`,
       )
-    return responseCookie(response, SESSION_COOKIE)
+    const session = responseCookie(response, SESSION_COOKIE)
+    if (appAccess) {
+      const current = await request(API_PATHS.session, session)
+      if (current.status !== 200)
+        throw new Error('Sign-in did not save the session')
+      const { user }: SessionResponse = await current.json()
+      await seedAppAccess(db, [user.id], now)
+    }
+    return session
   }
   const createOrg = async (
     session: string,
     name = 'Example org',
-  ): Promise<Org> => {
-    const response = await request(API_PATHS.orgs, session, {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    })
-    const value: { org: Org } = await response.json()
-    if (response.status !== 201)
-      throw new Error(`Org create returned ${response.status}`)
-    return value.org
-  }
+  ): Promise<Org> => createTestOrg({ github, db, request }, session, name)
   return {
     env,
     github,
@@ -141,10 +143,19 @@ export async function createHarness() {
           'org_members',
           'orgs',
           'sessions',
+          'access_code_uses',
+          'approval_emails',
+          'user_app_access',
+          'access_codes',
           'users',
           'oauth_states',
         ].map((table) => db.prepare(`DELETE FROM ${table}`)),
       )
+      await db
+        .prepare(
+          'UPDATE signup_settings SET paused = 0, updated_at = NULL, updated_by_user_id = NULL WHERE id = 1',
+        )
+        .run()
       github.reset()
       boat.reset()
       now = TEST_TIME

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { onTestFinished, vi } from 'vitest'
 import type { AppModel } from '../app/app-model'
 import { flushMicrotasks } from '../app/test-kit'
+import { asMessageField, typeMessage } from '../test-support/message-field'
 import { AppProviders, type ScreenOptions } from './test-render'
 
 /**
@@ -34,23 +35,34 @@ export function mountScreen(
   return container
 }
 
-/** Presses a key on an element, as the keyboard does. */
+/**
+ * Presses a key on an element, as the keyboard does. The result is the
+ * event, whose `defaultPrevented` says whether the browser's own action
+ * of the key was stopped.
+ */
 export function press(
   target: EventTarget,
   key: string,
-  options: { shift?: boolean; alt?: boolean } = {},
-): void {
-  act(() => {
-    target.dispatchEvent(
-      new KeyboardEvent('keydown', {
-        key,
-        shiftKey: options.shift ?? false,
-        altKey: options.alt ?? false,
-        bubbles: true,
-        cancelable: true,
-      }),
-    )
+  options: {
+    shift?: boolean
+    alt?: boolean
+    ctrl?: boolean
+    meta?: boolean
+  } = {},
+): KeyboardEvent {
+  const event = new KeyboardEvent('keydown', {
+    key,
+    shiftKey: options.shift ?? false,
+    altKey: options.alt ?? false,
+    ctrlKey: options.ctrl ?? false,
+    metaKey: options.meta ?? false,
+    bubbles: true,
+    cancelable: true,
   })
+  act(() => {
+    target.dispatchEvent(event)
+  })
+  return event
 }
 
 /** Clicks an element, as a press of the pointer does. */
@@ -63,12 +75,20 @@ export function click(target: HTMLElement): void {
 
 /**
  * Types text into a field, as the keyboard does: the field takes the focus,
- * and its value becomes `text`, so that React sees the change.
+ * and its value becomes `text`, so that React sees the change. A message
+ * field takes the text as `typeMessage` types it.
  */
 export function typeText(
-  field: HTMLInputElement | HTMLTextAreaElement,
+  field: HTMLInputElement | HTMLTextAreaElement | HTMLElement,
   text: string,
 ): void {
+  if (
+    !(field instanceof HTMLInputElement) &&
+    !(field instanceof HTMLTextAreaElement)
+  ) {
+    typeMessage(asMessageField(field), text)
+    return
+  }
   const prototype =
     field instanceof HTMLTextAreaElement
       ? HTMLTextAreaElement.prototype

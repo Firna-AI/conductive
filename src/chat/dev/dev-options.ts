@@ -13,10 +13,11 @@ export interface DevOptions {
   login: boolean
   /**
    * The login of the member who started each session: it works, it is not
-   * available, older records name no starter, or the reader's message has
-   * opened a linked session from the first session.
+   * available, the starter keeps it for their own messages, older records
+   * name no starter, or the reader's message has opened a linked session
+   * from the first session.
    */
-  starter: 'on' | 'off' | 'none' | 'linked'
+  starter: 'on' | 'off' | 'private' | 'none' | 'linked'
   replay: 'stored' | 'live'
   viewport: 'desktop' | 'mobile'
   scheme: 'dark' | 'light'
@@ -37,6 +38,11 @@ export interface DevOptions {
    * cloud computer could not read them.
    */
   files: 'listed' | 'unread'
+  /**
+   * The answer of each scripted turn: a line of text, or three tables that
+   * arrive one line at a time.
+   */
+  answer: 'text' | 'tables'
 }
 
 export const choices = {
@@ -63,7 +69,7 @@ export const choices = {
   ],
   role: ['admin', 'member'],
   login: ['on', 'off'],
-  starter: ['on', 'off', 'none', 'linked'],
+  starter: ['on', 'off', 'private', 'none', 'linked'],
   replay: ['stored', 'live'],
   viewport: ['desktop', 'mobile'],
   scheme: ['dark', 'light'],
@@ -88,6 +94,7 @@ export const choices = {
   change: ['done', 'done-not-saved', 'failed'],
   page: ['chat', 'this-mac'],
   files: ['listed', 'unread'],
+  answer: ['text', 'tables'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
 /** The options in the order that the page lists them. */
@@ -107,6 +114,7 @@ export const optionNames = [
   'change',
   'page',
   'files',
+  'answer',
 ] as const satisfies readonly (keyof DevOptions)[]
 
 function pick<T extends string>(
@@ -135,6 +143,7 @@ export function readOptions(search: string): DevOptions {
     change: pick(choices.change, get('change')),
     page: pick(choices.page, get('page')),
     files: pick(choices.files, get('files')),
+    answer: pick(choices.answer, get('answer')),
   }
 }
 

@@ -12,6 +12,7 @@ protocols:
   - name: Conductive sign-in
     schemes: [conductive]
 mac:
+  # The release command overrides these three fields and requires credentials.
   icon: dist/bundle/conductive.icns
   category: public.app-category.developer-tools
   identity: '-'
@@ -22,9 +23,11 @@ mac:
       arch: [arm64, x64]
     - target: zip
       arch: [arm64, x64]
+dmg:
+  writeUpdateInfo: false
 publish:
   provider: github
   owner: Firna-AI
-  repo: conductive-desktop
-  releaseType: prerelease
+  repo: remote-code
+  releaseType: release
   tagNamePrefix: v

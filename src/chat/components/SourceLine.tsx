@@ -1,4 +1,5 @@
 import { LinkedLine } from '../../../docs/mockups/src/components/chat/LinkedLine'
+import { nameLabel } from '../../shared/name-label'
 import type { Session } from '../../shared/sessions'
 import type { ChatSnapshot } from '../state/chat-snapshot'
 import controls from '../ui/controls.module.css'
@@ -6,8 +7,9 @@ import type { TranscriptInsert } from './transcript-entries'
 
 /**
  * The first line of a linked session: it names the session that it started
- * from, as a link that opens that session, also from the history. Without
- * the record of that session, no line shows.
+ * from, or Untitled for a session with no title, as a link that opens that
+ * session, also from the history. Without the record of that session, no
+ * line shows.
  */
 export function sourceInsert(
   snapshot: ChatSnapshot,
@@ -31,7 +33,7 @@ export function sourceInsert(
             onClick={() => onOpen(source.id)}
             type="button"
           >
-            {source.title}
+            {nameLabel(source.title)}
           </button>
         }
       />

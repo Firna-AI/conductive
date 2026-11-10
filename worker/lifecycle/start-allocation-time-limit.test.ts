@@ -7,6 +7,7 @@ import { FIRST_MESSAGE } from './durable-test-support'
 import { START_ALLOCATION_CLEANUP_KEY } from './start-allocation-cleanup'
 import { readWorkspaceToken } from './tokens'
 import { createWorkspace } from './workspaces'
+import { resumeWorkspace } from './workspace-resume'
 
 const backendFixture = setupBackendTests()
 
@@ -45,13 +46,16 @@ it('ends endless allocation retries and preserves encrypted cleanup ownership ac
     await fixture.runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspaces',
     ).first('count'),
-  ).toBe(0)
+  ).toBe(1)
   expect(
     await fixture.runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspace_tokens',
     ).first('count'),
-  ).toBe(0)
-  expect((await fixture.failedCreation(id))?.request).toEqual(FIRST_MESSAGE)
+  ).toBe(1)
+  expect(await actor.endpoint().waitCreationAdmission()).toMatchObject({
+    ok: true,
+    created: { first: { request: FIRST_MESSAGE } },
+  })
   expect(JSON.stringify([...(await actor.storage.list('job'))])).not.toContain(
     token,
   )
@@ -69,6 +73,10 @@ it('ends endless allocation retries and preserves encrypted cleanup ownership ac
       .bind(id)
       .first('sandboxId'),
   ).toBe('bx_1')
+  await actor
+    .endpoint()
+    .lifecycleStep('image', 'Starting from the newest image', 'failed')
+  expect(actor.storage.alarmAt).not.toBeNull()
   start.restart()
   await fixture.advanceTo(TEST_TIME + 1_235_000, id)
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
@@ -85,6 +93,25 @@ it('ends endless allocation retries and preserves encrypted cleanup ownership ac
       'SELECT COUNT(*) AS count FROM lifecycle_sandbox_cleanup',
     ).first('count'),
   ).toBe(0)
+  expect(actor.storage.alarmAt).toBeNull()
+  const retried = await resumeWorkspace(
+    fixture.runtime,
+    fixture.org.id,
+    id,
+    fixture.user.id,
+  )
+  expect(retried.workspace.id).toBe(id)
+  expect((await start.job())?.attempt).not.toBe(before?.attempt)
+  start.restart()
+  for (let step = 0; step < 16 && (await start.job()); step++) {
+    if ((await start.job())?.phase === 'runner')
+      await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
+    await start.advance()
+  }
+  expect(await start.wait()).toEqual({ ok: true })
+  expect(await readWorkspaceToken(fixture.runtime.env, id)).not.toBe(token)
+  expect(fixture.boat.starts.at(-1)).not.toEqual(fixture.boat.starts[0])
+  expect(fixture.boat.deletedIds).toEqual(['bx_1'])
 })
 
 it.each([
@@ -188,15 +215,15 @@ it.each([
       await fixture.runtime.env.DB.prepare(
         'SELECT COUNT(*) AS count FROM workspaces',
       ).first('count'),
-    ).toBe(0)
+    ).toBe(1)
     expect(
       await fixture.runtime.env.DB.prepare(
         'SELECT COUNT(*) AS count FROM workspace_tokens',
       ).first('count'),
-    ).toBe(0)
-    expect((await fixture.failedCreation(id))?.error).toMatchObject({
-      code,
-      message,
+    ).toBe(1)
+    expect(await actor.endpoint().waitCreationLifecycle()).toMatchObject({
+      ok: false,
+      error: { code, message },
     })
 
     unavailable = false

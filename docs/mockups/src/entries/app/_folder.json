@@ -3,8 +3,10 @@
     "sign-in",
     "shell",
     "sections",
+    "command-palette",
     "orgs",
     "account",
+    "operator",
     "banner",
     "new-workspace",
     "org-settings",
@@ -14,7 +16,9 @@
     "reassign",
     "archive",
     "composer",
+    "workspace-links",
     "files",
+    "tabs",
     "tools",
     "panels"
   ]

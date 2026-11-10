@@ -51,3 +51,34 @@ globalThis.fetch = async (url, options) => {
     await launcher.dispose()
   }
 })
+
+it('provides a fresh token to the GitHub CLI without requiring a turn or storing it', async () => {
+  const launcher = await credentialLauncher(
+    `globalThis.fetch = async (url, options) => {
+      const request = new Request(url, options)
+      process.stderr.write(JSON.stringify({
+        turnId: request.headers.get(${JSON.stringify(TOOL_TURN_HEADER)}),
+        authorization: request.headers.get('Authorization'),
+      }))
+      return Response.json({ token: 'fresh-terminal-token' })
+    }`,
+    {
+      CONDUCTIVE_MACHINE_ORIGIN: 'https://machine.conductive.test',
+      CONDUCTIVE_TURN_ID: 'stale-saved-turn',
+      WORKSPACE_TOKEN: 'workspace-token',
+    },
+  )
+  try {
+    const before = await launcher.files()
+    const result = await launcher.run('', '', ['token'])
+    expect(result.exitCode, result.stderr).toBe(0)
+    expect(result.stdout).toBe('fresh-terminal-token\n')
+    expect(JSON.parse(result.stderr)).toEqual({
+      turnId: null,
+      authorization: 'Bearer workspace-token',
+    })
+    expect(await launcher.files()).toEqual(before)
+  } finally {
+    await launcher.dispose()
+  }
+})

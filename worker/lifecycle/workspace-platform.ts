@@ -1,4 +1,4 @@
-import type { WorkspaceEvent } from '../../src/shared/events'
+import type { WorkspaceEvent } from '../chat/workspace-events'
 import type {
   PendingTurn,
   WorkspaceLifecycleEndpoint,
@@ -14,7 +14,7 @@ export interface WorkspaceEventPublication {
   occurredAt: number
 }
 
-export interface WorkspaceChatRecovery {
+interface WorkspaceChatRecovery {
   runningTurns: readonly PendingTurn[]
   lastTurnEndedAt: number | null
   title: { name: string; occurredAt: number } | null

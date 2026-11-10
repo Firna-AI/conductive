@@ -31,11 +31,13 @@ export type WorkspaceState =
 
 export interface Workspace {
   id: string
+  number: number
+  link: string
   orgId: string
   repositoryId: string
   sectionId: string
   owner: MessageSender
-  name: string
+  name: string | null
   branch: string
   choice: AgentChoice
   state: WorkspaceState
@@ -79,22 +81,7 @@ export interface CreateWorkspaceResponse extends WorkspaceResponse {
   sessionId: string
   firstMessage: UserMessage
 }
-export interface UpdateWorkspaceRequest {
-  name?: string
-  sectionId?: string
-  position?: number
-}
 export interface ArchiveCheckResponse {
   uncommittedFiles: readonly string[]
   unpushedCommits: number
-}
-export interface ArchiveWorkspaceRequest {
-  /** Explicit confirmation when the archive check found work. */
-  discardUnpushedWork: boolean
-}
-export interface WorkspaceActivityRequest {
-  source: 'input' | 'terminal' | 'preview'
-}
-export interface MarkWorkspaceReadRequest {
-  throughEventNumber: number
 }

@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 import type { FileEntry } from '../../shared/files'
 import { toolFixtures } from '../../test-support/fixtures/tools'
+import { pathLabel } from './file-labels'
 import { applyTreeDelta, treeFromSnapshot } from './tree-model'
 import { treeRows } from './tree-rows'
 
@@ -125,4 +126,98 @@ it('moves and removes a folder with the entries inside it', () => {
     'guide/a.md',
     'keep.md',
   ])
+})
+
+it('keeps the label that the server gave each entry inside a moved folder until an update of the entry gives a new one, and names a missing folder from a label', () => {
+  const entry = (
+    path: string,
+    kind: FileEntry['kind'],
+    displayPath?: string,
+  ): FileEntry => ({
+    path,
+    ...(displayPath === undefined ? {} : { displayPath }),
+    name: (displayPath ?? path).slice(
+      (displayPath ?? path).lastIndexOf('/') + 1,
+    ),
+    kind,
+    change: null,
+  })
+  const base = treeFromSnapshot({
+    revision: 1,
+    entries: [
+      entry('fixtures', 'directory'),
+      entry('fixtures/acme-7f3k', 'directory', 'fixtures/[redacted]'),
+      entry(
+        'fixtures/acme-7f3k/orders.json',
+        'file',
+        'fixtures/[redacted]/orders.json',
+      ),
+      entry('fixtures/plain.json', 'file'),
+      // The marked value "cret/fi" is in "secret/file.ts", but neither in
+      // "old/file.ts" nor in "secret", so joined labels would show it.
+      entry('old', 'directory'),
+      entry('old/file.ts', 'file'),
+    ],
+  })
+  const moved = applyTreeDelta(base, {
+    revision: 2,
+    changes: [
+      {
+        operation: 'move',
+        previousPath: 'fixtures',
+        entry: entry('data-acme-7f3k', 'directory', 'data-[redacted]'),
+      },
+      {
+        operation: 'move',
+        previousPath: 'old',
+        entry: entry('secret', 'directory'),
+      },
+    ],
+  })
+  const updated = applyTreeDelta(moved.tree, {
+    revision: 3,
+    changes: [
+      {
+        operation: 'upsert',
+        entry: entry(
+          'data-acme-7f3k/plain.json',
+          'file',
+          'data-[redacted]/plain.json',
+        ),
+      },
+      {
+        operation: 'upsert',
+        entry: entry('secret/file.ts', 'file', 'se[redacted]le.ts'),
+      },
+    ],
+  })
+  const labels = (entries: Iterable<FileEntry>) =>
+    [...entries].map((item) => `${item.path} → ${pathLabel(item)}`).sort()
+  const lacking = treeFromSnapshot({
+    revision: 1,
+    entries: [entry('keys-acme-7f3k/a.json', 'file', 'keys-[redacted]/a.json')],
+  })
+  expect({
+    moved: labels(moved.tree.entries.values()),
+    updated: labels(updated.tree.entries.values()),
+    rows: treeRows(lacking, new Map(), null).map((row) => row.entry.name),
+  }).toEqual({
+    moved: [
+      'data-acme-7f3k → data-[redacted]',
+      'data-acme-7f3k/acme-7f3k → fixtures/[redacted]',
+      'data-acme-7f3k/acme-7f3k/orders.json → fixtures/[redacted]/orders.json',
+      'data-acme-7f3k/plain.json → fixtures/plain.json',
+      'secret → secret',
+      'secret/file.ts → old/file.ts',
+    ],
+    updated: [
+      'data-acme-7f3k → data-[redacted]',
+      'data-acme-7f3k/acme-7f3k → fixtures/[redacted]',
+      'data-acme-7f3k/acme-7f3k/orders.json → fixtures/[redacted]/orders.json',
+      'data-acme-7f3k/plain.json → data-[redacted]/plain.json',
+      'secret → secret',
+      'secret/file.ts → se[redacted]le.ts',
+    ],
+    rows: ['keys-[redacted]'],
+  })
 })

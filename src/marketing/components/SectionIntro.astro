@@ -1,0 +1,12 @@
+---
+/** The start of a section: a label in capitals, a headline, and a sentence. */
+type Props = { label: string; title: string; text: string }
+
+const { label, title, text } = Astro.props
+---
+
+<div class="intro">
+  <span class="intro-label">{label}</span>
+  <h2 class="intro-title">{title}</h2>
+  <p class="intro-text">{text}</p>
+</div>

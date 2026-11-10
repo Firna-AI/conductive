@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'vitest'
-import { API_PATHS } from '../shared/api'
 import {
   acceptOrgInvitePath,
   PENDING_ORG_INVITES_PATH,
@@ -68,7 +67,7 @@ describe('the invitations of the signed-in person', () => {
     const accepting = app.invitations.accept(invite, (org) =>
       opened.push(org.id),
     )
-    server.json('GET', API_PATHS.session, { user: fakeUsers[1] })
+    server.signIn(fakeUsers[1])
     await app.start()
     held.release('GET', PENDING_ORG_INVITES_PATH)
     held.release('POST', acceptOrgInvitePath(invite.id))

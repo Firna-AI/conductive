@@ -28,18 +28,15 @@ the `AppModel` of the tab, for the signed-in user.
   next mount.
 - A sign-out, or a sign-in of another user, stops every kept workspace and
   forgets it.
-- Each kept workspace gives the events of its stream and a 404 of its open
-  to the creates of its org, as
-  [Creation recovery](../../app/creation-recovery.md) says. A failed create
-  of this tab forgets its kept model, notices, and chat, so its streams
-  never open again.
-- In a tab without its form, a workspace whose create start failed shows
-  the unavailable view. It says "This workspace is not available" and the
-  message that the start saved, or "Its sandbox didn't start." when it has
-  none, with All workspaces. It offers no Resume, and the list drops its
-  row.
+- A workspace whose first start failed stays kept, in every tab and for
+  every member. It shows the message that the start saved, its chat, and
+  its queued messages. The bar of the failed start, with Try again, sits
+  above the composer, which stays. Try again resumes the same workspace.
+  [Creation recovery](../../app/creation-recovery.md#a-failed-first-start)
+  gives the rules.
 - A create that started keeps its start record. So a later error of its
-  sandbox shows the sandbox bar with Try again, as a failed resume does.
+  sandbox shows the sandbox bar with Try again in place of the composer,
+  as a failed resume does.
 - The tab also keeps the `ToolEvents` of each workspace. Each show makes
   them follow the stream of the model before it opens, as the notices do.
   They keep the revokes of previews, and give each tool the kept revokes
@@ -47,8 +44,8 @@ the `AppModel` of the tab, for the signed-in user.
 - The tab also keeps the `WorkspaceFiles` of each workspace whose Files
   part showed. The Files part connects it while it shows, so a return
   shows the lists at once, and its socket asks only for the events after
-  its last event number. A sign-out and a failed create stop and forget it
-  with the other kept parts.
+  its last event number. A sign-out stops and forgets it with the other
+  kept parts.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
   and reads the stored history again.
 - The memory has no size limit. It keeps each workspace that the tab

@@ -19,7 +19,13 @@ export function readSandbox(value: Record<string, unknown>): Sandbox {
     return invalid()
   const state = SANDBOX_STATES.find((state) => state === sandbox.state)
   if (!state) return invalid()
-  return { id: sandbox.id, state }
+  if (sandbox.hydrated !== undefined && typeof sandbox.hydrated !== 'boolean')
+    return invalid()
+  return {
+    id: sandbox.id,
+    state,
+    ...(sandbox.hydrated === undefined ? {} : { hydrated: sandbox.hydrated }),
+  }
 }
 
 export function readSnapshot(value: Record<string, unknown>): SavedSnapshot {

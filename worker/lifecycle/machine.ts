@@ -51,7 +51,13 @@ async function authenticatedCredentialResponse(
     senderId,
     runtime.dependencies,
   )
-  await authorizeCredential(runtime, bearer, tokenHash, turnId)
+  const currentSenderId = await authorizeCredential(
+    runtime,
+    bearer,
+    tokenHash,
+    turnId,
+  )
+  if (currentSenderId !== senderId) throw workspaceTokenRefusedError()
   return privateResponse(Response.json({ token }))
 }
 
@@ -62,11 +68,11 @@ async function authorizeCredential(
   turnId: string | null,
 ): Promise<string> {
   const identity = await authenticateWorkspaceToken(runtime.env, bearer)
-  if (!turnId) throw currentTurnRequired()
-  const senderId = await runtime
-    .workspace(identity.workspaceId)
-    .credentialSender(turnId)
-  if (!senderId) throw currentTurnRequired()
+  const senderId =
+    turnId === null
+      ? null
+      : await runtime.workspace(identity.workspaceId).credentialSender(turnId)
+  if (turnId !== null && !senderId) throw currentTurnRequired()
   const access = await readMachineCredentialAccess(runtime.env.DB, {
     ...identity,
     tokenHash,
@@ -76,7 +82,7 @@ async function authorizeCredential(
   if (access.senderSuspendedAt !== null) throw suspendedUserError()
   if (access.memberUserId === null)
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  return senderId
+  return access.senderId
 }
 
 function currentTurnRequired(): HttpError {

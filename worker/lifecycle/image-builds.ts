@@ -29,7 +29,10 @@ import { jobSoftware, readBuildJob, runningBuild } from './build-data'
 import { cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { IMAGE_DAY_MS } from './image-schedule'
-import { handleImageBuildFailure } from './image-build-failure'
+import {
+  failUnscheduledBuild,
+  handleImageBuildFailure,
+} from './image-build-failure'
 import {
   firstOrgAdmin,
   readImageSettings,
@@ -43,7 +46,7 @@ import {
   type RepositoryLocation,
 } from './repository-locations'
 
-export interface ImageScheduler {
+interface ImageScheduler {
   schedule(
     orgId: string,
     software: ImageSoftwareArtifact,
@@ -156,12 +159,17 @@ export async function startImageBuild(
     )
     return current
   }
-  await runtime.scheduler.schedule(
-    input.orgId,
-    software,
-    dependencies.now(),
-    id,
-  )
+  try {
+    await runtime.scheduler.schedule(
+      input.orgId,
+      software,
+      dependencies.now(),
+      id,
+    )
+  } catch (error) {
+    await failUnscheduledBuild(runtime, id)
+    throw error
+  }
   return id
 }
 

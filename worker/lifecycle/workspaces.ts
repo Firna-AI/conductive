@@ -1,6 +1,5 @@
 import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
-import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import { requireOrgMember } from './access'
 import {
   existingCreation,
@@ -11,11 +10,15 @@ import {
   type CreationClaim,
 } from './creation-claims'
 import { markCreationFailed } from './creation-attempt-data'
-import { prepareCreationRequest } from './create-request'
+import {
+  prepareCreationRequest,
+  type WorkspaceCreationInput,
+} from './create-request'
 import { workspaceStartFailure } from './workspace-start'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import {
   provisionedResponse,
+  presentProvisionedWorkspace,
   type ProvisionedWorkspace,
 } from './workspace-response'
 
@@ -23,7 +26,7 @@ export async function createWorkspace(
   runtime: WorkspaceRuntime,
   orgId: string,
   user: User,
-  input: CreateWorkspaceRequest,
+  input: WorkspaceCreationInput,
   sender: User = user,
 ): Promise<ProvisionedWorkspace> {
   await requireActiveOrg(runtime.env.DB, orgId)
@@ -64,7 +67,7 @@ async function joinCreation(
   claim: CreationClaim,
   user: User,
   sender: User,
-  input: CreateWorkspaceRequest,
+  input: WorkspaceCreationInput,
 ): Promise<ProvisionedWorkspace> {
   let job = await recordedCreationJob(
     runtime.env.DB,
@@ -96,5 +99,5 @@ async function joinCreation(
   await endpoint.queueLifecycleStart(job)
   const result = await endpoint.waitCreationAdmission()
   if (!result.ok) throw workspaceStartFailure(result.error)
-  return result.created
+  return presentProvisionedWorkspace(runtime, result.created)
 }

@@ -1,5 +1,6 @@
 import { Square } from 'lucide-react'
 import type { DeviceSettings } from '../../shared/device'
+import { nameLabel } from '../../shared/name-label'
 import { ChangeOutcome } from '../../../docs/mockups/src/components/mac/ChangeOutcome'
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
 import mac from '../../../docs/mockups/src/components/settings/ThisMacSection.module.css'
@@ -119,12 +120,14 @@ export function SavedChoices(props: {
         <ul aria-label="Workspaces allowed for 15 minutes" className={mac.list}>
           {windows.map((grant) => (
             <li className={mac.row} key={grant.workspaceId}>
-              <span className={local.window}>{grant.workspaceName}</span>
+              <span className={local.window}>
+                {nameLabel(grant.workspaceName)}
+              </span>
               <span className={local.left}>
                 {timeLeft(grant.expiresAt, now)} left
               </span>
               <ActionButton
-                accessibilityLabel={`Stop ${grant.workspaceName}`}
+                accessibilityLabel={`Stop ${nameLabel(grant.workspaceName)}`}
                 {...control({
                   action: 'stop-workspace',
                   workspaceId: grant.workspaceId,

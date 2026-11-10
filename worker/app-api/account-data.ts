@@ -1,4 +1,7 @@
-import type { AgentLoginStatus } from '../../src/shared/account'
+import type {
+  AgentLoginStatus,
+  NewWorkspaceView,
+} from '../../src/shared/account'
 import type { Agent, AgentChoice } from '../../src/shared/agents'
 
 type ConnectedLogin = Extract<AgentLoginStatus, { connected: true }>
@@ -9,17 +12,28 @@ export async function accountLogins(
 ): Promise<AgentLoginStatus[]> {
   const { results } = await db
     .prepare(
-      `SELECT agent, kind, updated_at AS updatedAt FROM agent_logins
+      `SELECT agent, kind, no_reuse AS noReuse, updated_at AS updatedAt FROM agent_logins
        WHERE user_id = ? ORDER BY agent`,
     )
     .bind(userId)
-    .all<Omit<ConnectedLogin, 'connected'>>()
+    .all<Omit<ConnectedLogin, 'connected' | 'noReuse'> & { noReuse: number }>()
   return (['claude', 'codex'] as const).map((agent): AgentLoginStatus => {
     const login = results.find((item) => item.agent === agent)
     if (!login) return { agent, connected: false }
     if (login.agent === 'claude')
-      return { ...login, agent: 'claude', connected: true }
-    return { ...login, agent: 'codex', kind: 'api-key', connected: true }
+      return {
+        ...login,
+        agent: 'claude',
+        connected: true,
+        noReuse: login.noReuse === 1,
+      }
+    return {
+      ...login,
+      agent: 'codex',
+      kind: 'api-key',
+      connected: true,
+      noReuse: login.noReuse === 1,
+    }
   })
 }
 
@@ -30,10 +44,39 @@ export function accountDefault(
   return db
     .prepare(
       `SELECT default_agent AS agent, default_model AS model, default_effort AS effort
-       FROM user_preferences WHERE user_id = ?`,
+       FROM user_preferences WHERE user_id = ? AND default_agent IS NOT NULL`,
     )
     .bind(userId)
     .first<AgentChoice>()
+}
+
+export async function accountNewWorkspaceView(
+  db: D1Database,
+  userId: string,
+): Promise<NewWorkspaceView> {
+  const row = await db
+    .prepare(
+      'SELECT new_workspace_view AS view FROM user_preferences WHERE user_id = ?',
+    )
+    .bind(userId)
+    .first<{ view: NewWorkspaceView | null }>()
+  return row?.view ?? 'page'
+}
+
+export async function saveAccountNewWorkspaceView(
+  db: D1Database,
+  userId: string,
+  view: NewWorkspaceView,
+  now: number,
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO user_preferences (user_id, new_workspace_view, updated_at)
+       VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET
+       new_workspace_view = excluded.new_workspace_view, updated_at = excluded.updated_at`,
+    )
+    .bind(userId, view, now)
+    .run()
 }
 
 export async function saveAccountDefault(
@@ -60,15 +103,38 @@ export async function saveAccountLogin(
   kind: 'token' | 'api-key',
   ciphertext: string,
   now: number,
-): Promise<void> {
+): Promise<boolean> {
+  const noReuse = await db
+    .prepare(
+      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, no_reuse, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
+       kind = excluded.kind, ciphertext = excluded.ciphertext,
+       no_reuse = CASE WHEN agent_logins.kind = excluded.kind
+         THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
+       updated_at = excluded.updated_at RETURNING no_reuse`,
+    )
+    .bind(userId, agent, kind, ciphertext, kind === 'token' ? 1 : 0, now, now)
+    .first<number>('no_reuse')
+  return noReuse === 1
+}
+
+export async function updateAccountLoginReuse(
+  db: D1Database,
+  userId: string,
+  agent: Agent,
+  noReuse: boolean,
+): Promise<AgentLoginStatus> {
   await db
     .prepare(
-      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
-       kind = excluded.kind, ciphertext = excluded.ciphertext, updated_at = excluded.updated_at`,
+      'UPDATE agent_logins SET no_reuse = ? WHERE user_id = ? AND agent = ?',
     )
-    .bind(userId, agent, kind, ciphertext, now, now)
+    .bind(noReuse ? 1 : 0, userId, agent)
     .run()
+  return (
+    (await accountLogins(db, userId)).find(
+      (login) => login.agent === agent,
+    ) ?? { agent, connected: false }
+  )
 }
 
 export async function removeAccountLogin(

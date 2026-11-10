@@ -8,7 +8,7 @@ import { checkoutAutocomplete, savedCarts } from './workspaces'
 export type TerminalTone =
   'prompt' | 'plain' | 'muted' | 'success' | 'accent' | 'error'
 
-export type TerminalSegment = { text: string; tone: TerminalTone }
+type TerminalSegment = { text: string; tone: TerminalTone }
 
 export type TerminalLine = readonly TerminalSegment[]
 
@@ -95,7 +95,37 @@ export const timedOutBuildLog: readonly TerminalLine[] = [
   muted(timedOutBuild.error),
 ]
 
-export const workspaceSessionPrompt = `${workspaceLocation} $ `
+/**
+ * The start of the first build of Firna, the new org of the sign-up: it
+ * loads the two repositories, then installs the software of the cloud
+ * computer. The install script of a new org is empty.
+ */
+const firstBuildStart: readonly TerminalLine[] = [
+  muted('Cloning 2 repositories into ~/code'),
+  success(' ✓ firna/components at 3e9d2b7'),
+  success(' ✓ firna/docs at c41a8f0'),
+  muted('Installing the cloud computer software'),
+]
+
+/** The first build of Firna while it runs. */
+export const firstBuildLog: readonly TerminalLine[] = [
+  ...firstBuildStart,
+  plain('Setting up nodejs (24.11.0-1nodesource1) ...'),
+]
+
+/** The first build of Firna, which failed at a short network fault. */
+export const failedFirstBuildLog: readonly TerminalLine[] = [
+  ...firstBuildStart,
+  error('E: Temporary failure resolving archive.ubuntu.com'),
+  muted('The software install stopped with exit code 100.'),
+]
+
+/** The first build of Firna, which the app stopped at its 60-minute limit. */
+export const timedOutFirstBuildLog: readonly TerminalLine[] = [
+  ...firstBuildStart,
+  plain('Setting up nodejs (24.11.0-1nodesource1) ...'),
+  muted(timedOutBuild.error),
+]
 
 /** A new workspace: the terminal waits at its first prompt. */
 export const freshSessionPrompt = `storefront (${savedCarts.branch}) $ `

@@ -1,11 +1,9 @@
 import type { Viewport } from '@mokly/mokly'
-import type { LucideIcon } from 'lucide-react'
+import type { FeatureItem } from '../../../../../src/marketing/features'
 import { classes } from '../common/classes'
 import { SectionIntro } from './SectionIntro'
+import { siteIcons } from './siteIcons'
 import styles from './FeatureGrid.module.css'
-
-/** A smaller feature: an icon, a short title, and one sentence. */
-export type FeatureItem = { icon: LucideIcon; title: string; text: string }
 
 /** A section of smaller features in a grid, under one headline. */
 export function FeatureGrid(props: {
@@ -26,7 +24,7 @@ export function FeatureGrid(props: {
       />
       <ul className={styles.grid}>
         {props.items.map((item) => {
-          const Icon = item.icon
+          const Icon = siteIcons[item.icon]
           return (
             <li className={styles.item} key={item.title}>
               <Icon aria-hidden className={styles.icon} size={16} />

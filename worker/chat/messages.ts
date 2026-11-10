@@ -4,12 +4,13 @@ import type {
   SendMessageResponse,
   UserMessage,
 } from '../../src/shared/messages'
+import { applyMessageSessionTitle } from './session-titles'
 import { HttpError } from '../http'
 import { sessionFor } from './session-record'
 import { queueModel, sameAgent } from './sessions'
 import type { ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
-import type { ResolvedAttachments, StoredTurn } from './types'
+import type { ChatDependencies, ResolvedAttachments, StoredTurn } from './types'
 
 export async function existingMessage(
   transaction: ChatTransaction,
@@ -39,7 +40,7 @@ export async function existingMessage(
   return responseFor(transaction, existing)
 }
 
-export async function responseFor(
+async function responseFor(
   transaction: ChatTransaction,
   message: UserMessage,
 ): Promise<SendMessageResponse> {
@@ -60,6 +61,7 @@ export async function acceptMessage(
   user: User,
   attachments: ResolvedAttachments,
   randomId: () => string,
+  readWorkspace: ChatDependencies['readAutomaticTitleWorkspace'],
 ): Promise<SendMessageResponse> {
   const existing = await existingMessage(transaction, sessionId, input, user)
   if (existing) return existing
@@ -72,6 +74,12 @@ export async function acceptMessage(
       'Reopen the session to send a message.',
     )
   }
+  await applyMessageSessionTitle(
+    transaction,
+    session,
+    input.text,
+    readWorkspace,
+  )
   const message: UserMessage = {
     id: input.id,
     sessionId,

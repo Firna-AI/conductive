@@ -58,15 +58,17 @@ const readState = oneOf<WorkspaceState>({
   archived: true,
 })
 
-export function readWorkspace(value: unknown): Workspace {
+function readWorkspace(value: unknown): Workspace {
   const source = record(value, 'workspace')
   return {
     id: text(source.id),
+    number: count(source.number),
+    link: text(source.link),
     orgId: text(source.orgId),
     repositoryId: text(source.repositoryId),
     sectionId: text(source.sectionId),
     owner: readSender(source.owner),
-    name: text(source.name),
+    name: nullable(text)(source.name),
     branch: text(source.branch),
     choice: readChoice(source.choice),
     state: readState(source.state),
@@ -91,7 +93,7 @@ function readStep(value: unknown): StartStep {
   }
 }
 
-export function readStart(value: unknown): WorkspaceStart {
+function readStart(value: unknown): WorkspaceStart {
   const source = record(value, 'start')
   return {
     kind: oneOf<WorkspaceStart['kind']>({ create: true, resume: true })(
@@ -122,11 +124,23 @@ export function readWorkspaceResponse(
   }
 }
 
+/** The saved public error of an update. Its absence keeps the saved one. */
+function readUpdateError(value: unknown) {
+  const fields = record(value, 'error')
+  return { code: text(fields.code), message: text(fields.message) }
+}
+
 function readEvent(value: unknown): ChatStreamEvent | null {
   if (!isRecord(value)) return null
   switch (value.type) {
     case 'workspace.updated':
-      return { type: value.type, workspace: readWorkspace(value.workspace) }
+      return {
+        type: value.type,
+        workspace: readWorkspace(value.workspace),
+        ...(value.error === undefined
+          ? {}
+          : { error: nullable(readUpdateError)(value.error) }),
+      }
     case 'workspace.title':
       return { type: value.type, name: text(value.name) }
     case 'start.updated':

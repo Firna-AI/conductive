@@ -1,5 +1,6 @@
 import { RotateCcw, Square } from 'lucide-react'
 import type { Session } from '../../shared/sessions'
+import { nameLabel } from '../../shared/name-label'
 import type { Overlay } from '../state/chat-snapshot'
 import { formatAgo } from '../state/format'
 import { ActionButton } from '../ui/actions'
@@ -27,7 +28,7 @@ export function historyEntries(
     .map((session) => ({
       kind: 'item',
       key: session.id,
-      label: session.title,
+      label: nameLabel(session.title),
       mark: <AgentMark agent={session.choice.agent} />,
       detail: formatAgo(ended(session), now),
       trailingIcon: RotateCcw,
@@ -37,8 +38,8 @@ export function historyEntries(
 
 /**
  * What lies open over the chat: the question before a running session
- * closes, and on a phone the session history as a sheet. Desktop draws the
- * history beside its clock.
+ * closes, which names the session as its tab does, and on a phone the
+ * session history as a sheet. Desktop draws the history beside its clock.
  */
 export function ChatOverlays(props: {
   overlay: Overlay
@@ -50,9 +51,8 @@ export function ChatOverlays(props: {
 }) {
   const { overlay } = props
   if (overlay.kind === 'close') {
-    const title =
-      props.sessions.find((item) => item.id === overlay.sessionId)?.title ??
-      'this session'
+    const session = props.sessions.find((item) => item.id === overlay.sessionId)
+    const title = session ? nameLabel(session.title) : 'this session'
     return (
       <ConfirmDialog
         actions={

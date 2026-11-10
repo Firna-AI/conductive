@@ -75,9 +75,22 @@ export async function showLocally(
   const known = [...snapshot.sessions, ...snapshot.history]
   if (!known.some((item) => item.id === sessionId)) return
   const ids = tabIds(snapshot)
+  const opening = !ids.includes(sessionId)
   context.store.update((current) => ({
     ...current,
-    archiveTabs: ids.includes(sessionId) ? ids : [...ids, sessionId],
+    archiveTabs: opening ? [...ids, sessionId] : ids,
+    view:
+      opening && current.view
+        ? {
+            ...current.view,
+            tabs: [
+              ...current.view.tabs.filter(
+                (tab) => tab.kind !== 'session' || tab.sessionId !== sessionId,
+              ),
+              { kind: 'session', sessionId },
+            ],
+          }
+        : current.view,
     activeSessionId: sessionId,
     overlay: { kind: 'none' },
   }))
@@ -98,6 +111,12 @@ export function closeLocally(context: ChatContext, sessionId: string): void {
         : snapshot.activeSessionId
     return {
       ...snapshot,
+      view: snapshot.view && {
+        ...snapshot.view,
+        tabs: snapshot.view.tabs.filter(
+          (tab) => tab.kind !== 'session' || tab.sessionId !== sessionId,
+        ),
+      },
       archiveTabs: shown
         .filter((item) => item.id !== sessionId)
         .map((item) => item.id),

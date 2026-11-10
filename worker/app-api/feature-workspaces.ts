@@ -9,7 +9,6 @@ import {
   requireShellWriter,
 } from './feature-shell-access'
 import {
-  orderedSectionWorkspaceIds,
   shellSectionExists,
   updateShellWorkspace,
 } from './feature-workspaces-data'
@@ -33,21 +32,13 @@ export async function featureWorkspaceWrite(
   requireWritableWorkspace(current)
   const nameInput = optionalShellString(context.body?.name)
   const name = nameInput === undefined ? undefined : requiredString(nameInput)
-  const sectionInput = optionalShellString(context.body?.sectionId)
-  const sectionId = sectionInput ?? current.sectionId
+  const sectionId = optionalShellString(context.body?.sectionId)
   const position = optionalShellPosition(context.body?.position)
-  if (!(await shellSectionExists(env.DB, orgId, sectionId)))
+  if (
+    sectionId !== undefined &&
+    !(await shellSectionExists(env.DB, orgId, sectionId))
+  )
     throw sectionNotFound()
-  let order: string[] | undefined
-  if (sectionInput !== undefined || position !== undefined) {
-    order = await orderedSectionWorkspaceIds(
-      env.DB,
-      orgId,
-      sectionId,
-      workspaceId,
-    )
-    order.splice(Math.min(position ?? 0, order.length), 0, workspaceId)
-  }
   const binding = workspaceBinding(env).getByName(workspaceId)
   if (
     !(await updateShellWorkspace(env.DB, {
@@ -56,8 +47,7 @@ export async function featureWorkspaceWrite(
       workspaceId,
       sectionId,
       name,
-      order,
-      move: sectionInput !== undefined || position !== undefined,
+      position,
       now: dependencies.now(),
     }))
   ) {
@@ -71,7 +61,10 @@ export async function featureWorkspaceWrite(
     workspace: await workspaceForViewer(
       env,
       userId,
-      workspaceView(await readWorkspace(env.DB, orgId, workspaceId)),
+      workspaceView(
+        await readWorkspace(env.DB, orgId, workspaceId),
+        env.APP_ORIGIN,
+      ),
     ),
     start: lifecycle?.start ?? null,
     error: lifecycle?.error ?? null,
