@@ -114,6 +114,14 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     note: 'Answers show Markdown, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
   },
   {
+    id: 'chat-links',
+    area: 'agents-and-chat',
+    name: 'Chat links',
+    status: 'planned',
+    note: 'Clickable web links and labelled Markdown links are planned for chat. Local server links will open the workspace preview.',
+    due: null,
+  },
+  {
     id: 'copy-session-transcripts',
     area: 'agents-and-chat',
     name: 'Copy session transcripts',

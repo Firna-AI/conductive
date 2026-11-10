@@ -23,9 +23,8 @@ import {
   readStartJob,
   type StoredWorkspaceStartJob,
 } from './lifecycle/start-job-codec'
-import { nativeWorkspaceStorage } from './lifecycle/platform-storage'
-import { readEncryptedStartLog } from './lifecycle/start-storage'
 import {
+  readCreationResult,
   startResultForTransport,
   type WorkspaceLifecycleTransport,
 } from './lifecycle/workspace-transport'
@@ -34,10 +33,12 @@ import type { WorkspaceStartIntent } from './lifecycle/start-types'
 import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
+import type { WorkspaceErrorReporting } from './error-reporting/workspace'
 import {
-  workspaceErrorReporting,
-  type WorkspaceErrorReporting,
-} from './error-reporting/workspace'
+  recordWorkspaceActivity,
+  readWorkspaceLog,
+  runWorkspaceLifecycle,
+} from './lifecycle/run-workspace'
 import type { ComputerIdentity } from './lifecycle/computer-ledger'
 import type { TurnTokenCheck } from './model-gateway/types'
 
@@ -65,17 +66,15 @@ export class WorkspaceLifecycle
     super(context, env)
     this.context = context
     this.activityNow = now
-    this.reporting =
-      resolvers.reporting ??
-      workspaceErrorReporting(env, (pending) => context.waitUntil(pending))
-    const integration = createWorkspaceIntegration(context, env, now, {
-      ...resolvers,
-      reporting: this.reporting,
-    })
+    const integration = createWorkspaceIntegration(context, env, now, resolvers)
     this.integration = integration
+    this.reporting = integration.reporting
     this.chat = integration.chat
     this.devices = integration.devices
     this.controller = integration.controller
+    context.blockConcurrencyWhile(() =>
+      this.reporting.background(() => integration.sockets.restore()),
+    )
     this.activity = createWorkspaceInputActivity(
       context,
       env,
@@ -92,15 +91,28 @@ export class WorkspaceLifecycle
   }
 
   protected run<T>(operation: () => Promise<T>): Promise<T> {
-    return this.reporting.run(() =>
-      this.chat.runLifecycle(() =>
-        this.integration.withGeneration(async () => {
-          const result = await operation()
-          await this.chat.flushRunner()
-          return result
-        }),
-      ),
+    return runWorkspaceLifecycle(
+      this.chat,
+      this.integration.withGeneration,
+      this.reporting,
+      operation,
     )
+  }
+
+  webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
+    return this.reporting.background(() =>
+      this.integration.sockets.message(socket, message),
+    )
+  }
+
+  webSocketClose(socket: WebSocket) {
+    return this.reporting.background(() =>
+      this.integration.sockets.close(socket),
+    )
+  }
+
+  webSocketError(socket: WebSocket) {
+    return this.webSocketClose(socket)
   }
 
   queueComputerStops(
@@ -147,17 +159,14 @@ export class WorkspaceLifecycle
   async waitCreationAdmission() {
     return this.controller.waitCreationAdmission()
   }
-  async readCreationLifecycleResult() {
-    const result = await this.controller.readCreationLifecycleResult()
-    return result
-      ? startResultForTransport(result, () => this.readLifecycleStartLog())
-      : undefined
+  readCreationLifecycleResult() {
+    return readCreationResult(this.controller, () =>
+      this.readLifecycleStartLog(),
+    )
   }
 
   readLifecycleStartLog() {
-    return readEncryptedStartLog(
-      nativeWorkspaceStorage(this.integration.storage),
-    )
+    return readWorkspaceLog(this.integration.storage)
   }
 
   async initializeLifecycle(
@@ -186,15 +195,13 @@ export class WorkspaceLifecycle
     return this.run(() => this.controller.lifecycleFailed(error))
   }
 
-  async lifecycleActivity() {
-    const at = this.activityNow()
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const state = await this.controller.readLifecycle()
-        const result = await this.controller.lifecycleActivity(true)
-        if (result.ok && state) this.activity.record(state.workspaceId, at)
-        return result
-      }),
+  lifecycleActivity() {
+    return recordWorkspaceActivity(
+      this.chat,
+      this.integration.withGeneration,
+      this.controller,
+      this.activity,
+      this.activityNow(),
     )
   }
 

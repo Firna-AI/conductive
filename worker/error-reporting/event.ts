@@ -1,11 +1,15 @@
 import { SDK_VERSION, type ErrorEvent } from '@sentry/core'
 
-import { isWorkerWarningKind, warningMessage } from '../warning-types'
+import { warningMessage } from '../warning-types'
 import { workerErrorClassName } from './class-name'
 import { knownWorkerErrorCode } from './codes'
 import { record, workerFrames } from './frames'
 import { isWorkerRouteTemplate } from './routes'
-import { failureMessages, type WorkerEventContext } from './types'
+import {
+  failureMessages,
+  type WorkerClassification,
+  type WorkerEventContext,
+} from './types'
 
 const methods = new Set([
   'GET',
@@ -19,10 +23,16 @@ const methods = new Set([
   'TRACE',
 ])
 
+function isFailureClassification(
+  classification: WorkerClassification,
+): classification is keyof typeof failureMessages {
+  return Object.hasOwn(failureMessages, classification)
+}
+
 function classificationMessage(context: WorkerEventContext): string {
-  return isWorkerWarningKind(context.classification)
-    ? warningMessage({ kind: context.classification })
-    : failureMessages[context.classification]
+  return isFailureClassification(context.classification)
+    ? failureMessages[context.classification]
+    : warningMessage({ kind: context.classification })
 }
 
 export function rebuildWorkerErrorEvent(

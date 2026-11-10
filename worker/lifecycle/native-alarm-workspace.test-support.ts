@@ -61,7 +61,15 @@ export class NativeAlarmWorkspace extends ProductionWorkspace {
         },
       },
       at ?? Math.max(this.alarmNow(), stored ?? this.alarmNow()),
-      () => [{ storage: this.ctx.storage, fire: () => this.alarm() }],
+      () => [
+        {
+          storage: this.ctx.storage,
+          fire: async () => {
+            await this.alarm()
+            await this.settledAlarms()
+          },
+        },
+      ],
     )
   }
 }

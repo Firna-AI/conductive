@@ -7,6 +7,8 @@ import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
 const SIMPLE_WARNINGS = {
   error_tracking_dsn_invalid:
     'Worker error reporting is disabled because its DSN is invalid.',
+  workspace_alarm_failed:
+    'Workspace alarm work failed. Its durable deadline will retry.',
   routine_schedule_failed:
     'A routine schedule could not run. The next scan will try again.',
   routine_queued_start_failed:
@@ -116,10 +118,4 @@ const messages = {
 
 export function warningMessage(warning: Pick<WorkerWarning, 'kind'>): string {
   return messages[warning.kind]
-}
-
-export function isWorkerWarningKind(
-  value: unknown,
-): value is WorkerWarning['kind'] {
-  return typeof value === 'string' && Object.hasOwn(messages, value)
 }

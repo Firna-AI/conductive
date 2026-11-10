@@ -6,7 +6,6 @@ import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import {
   DEVICE_FRAME_LIMIT_BYTES,
   DEVICE_HEARTBEAT_MS,
-  DEVICE_LEASE_MS,
   DEVICE_OUTPUT_LIMIT_BYTES,
   DEVICE_REPLACED_CLOSE_CODE,
   DEVICE_REPLACED_CLOSE_REASON,
@@ -21,7 +20,6 @@ import {
 import type { ChatStorage } from '../chat/types'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
-import { desktopSessionAlive } from './access'
 import type {
   BrokerRequest,
   DeviceConnection,
@@ -32,11 +30,11 @@ import { receiveDeviceMessage } from './broker-messages'
 import { deviceWire } from './socket'
 import { relayDeviceSettings } from './broker-settings'
 import { BrokerRequests } from './broker-store'
-import { expireDeviceCommand } from './broker-expiry'
 import {
   workspaceErrorReporting,
   type WorkspaceErrorReporting,
 } from '../error-reporting/workspace'
+import { checkBroker, dropBroker, scheduleBroker } from './broker-lifecycle'
 
 export class DeviceBroker {
   readonly reporting: WorkspaceErrorReporting
@@ -46,12 +44,12 @@ export class DeviceBroker {
   private readonly requests: BrokerRequests
   readonly env: AppEnv
   readonly now: () => number
-  private readonly alarm: (when: number) => Promise<void>
+  readonly alarm: (when: number | null) => Promise<void>
 
   constructor(
     storage: ChatStorage,
     env: AppEnv,
-    alarm: (when: number) => Promise<void>,
+    alarm: (when: number | null) => Promise<void>,
     now: () => number = Date.now,
     reporting?: WorkspaceErrorReporting,
   ) {
@@ -72,7 +70,7 @@ export class DeviceBroker {
   }
   async store(item: BrokerRequest): Promise<void> {
     await this.requests.store(item)
-    await this.schedule()
+    await scheduleBroker(this)
   }
   forget(item: BrokerRequest): Promise<void> {
     return this.requests.forget(item)
@@ -112,61 +110,11 @@ export class DeviceBroker {
       await this.forget(item)
     }
   }
-  async drop(code = 1000, reason = 'The Mac is not available.'): Promise<void> {
-    const connection = this.connection
-    this.connection = null
-    try {
-      connection?.close(code, reason)
-    } catch {
-      /* A failed transport must still settle its requests. */
-    }
-    for (const waiter of this.settings.values()) {
-      waiter.cancel()
-      waiter.reject(
-        new HttpError(409, 'device_unavailable', 'The Mac is not available.'),
-      )
-    }
-    this.settings.clear()
-    for (const item of await this.pending()) await this.unavailable(item)
+  drop(code = 1000, reason = 'The Mac is not available.'): Promise<void> {
+    return dropBroker(this, code, reason)
   }
-  async check(): Promise<boolean> {
-    const connection = this.connection
-    if (
-      !connection ||
-      this.now() - connection.lastSeen >= DEVICE_LEASE_MS ||
-      !(await desktopSessionAlive(
-        this.env.DB,
-        connection.sessionId,
-        connection.userId,
-        this.now(),
-      ))
-    ) {
-      await this.drop()
-      return false
-    }
-    for (const item of await this.pending()) {
-      if (!(await this.valid(item))) await this.invalid(item)
-      else if (
-        item.executionDeadline !== null &&
-        item.executionDeadline <= this.now()
-      ) {
-        await expireDeviceCommand(this, connection, item)
-      }
-    }
-    await this.schedule()
-    return true
-  }
-  private async schedule(): Promise<void> {
-    const connection = this.connection
-    if (!connection) return
-    await this.alarm(
-      Math.min(
-        connection.lastSeen + DEVICE_LEASE_MS,
-        ...(await this.pending()).flatMap((item) =>
-          item.executionDeadline === null ? [] : [item.executionDeadline],
-        ),
-      ),
-    )
+  check(): Promise<boolean> {
+    return checkBroker(this)
   }
   async attach(connection: DeviceConnection): Promise<void> {
     await this.drop(DEVICE_REPLACED_CLOSE_CODE, DEVICE_REPLACED_CLOSE_REASON)
@@ -178,7 +126,9 @@ export class DeviceBroker {
       frameLimitBytes: DEVICE_FRAME_LIMIT_BYTES,
       heartbeatIntervalMs: DEVICE_HEARTBEAT_MS,
     })
-    await this.alarm(this.now() + DEVICE_LEASE_MS)
+    connection.nextCheckAt = this.now() + DEVICE_HEARTBEAT_MS
+    await connection.persist?.()
+    await scheduleBroker(this)
   }
   async current(
     userId: string,

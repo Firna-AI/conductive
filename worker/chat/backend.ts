@@ -1,6 +1,5 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import {
-  presentWorkspaceMessage,
   type WorkspaceEvent,
   type WorkspaceEventEnvelope,
 } from './workspace-events'
@@ -12,9 +11,11 @@ import { errorResponse, privateResponse } from '../http'
 import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
 import type { BrowserAccess } from './browser-authorization'
-import { subscribeBrowser } from './browser-subscription'
 import { browserRequest } from './browser-request'
-import { BrowserTabs } from './browser-tabs'
+import {
+  BrowserConnections,
+  type NativeBrowserConnections,
+} from './browser-connections'
 import { authorizeChatRunner } from './runner-authorization'
 import { WorkspaceTitles } from './workspace-titles'
 import { WorkspaceOperations } from './workspace-operations'
@@ -48,8 +49,8 @@ export class WorkspaceChat {
   readonly turnTokens: WorkspaceTurnTokens
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
-  private readonly runner: RunnerChannel
-  private readonly browsers: BrowserTabs
+  readonly runner: RunnerChannel
+  readonly browsers: BrowserConnections
   private readonly operations: WorkspaceOperations
   private readonly titles: WorkspaceTitles
   private readonly binding: ChatWorkspaceBinding
@@ -90,6 +91,7 @@ export class WorkspaceChat {
     storage: ChatStorage,
     env: AppEnv,
     overrides: Partial<ChatDependencies> = {},
+    native?: NativeBrowserConnections,
   ) {
     this.storage = storage
     this.env = env
@@ -110,7 +112,13 @@ export class WorkspaceChat {
       this.dependencies,
       (events) => this.publish(events),
     )
-    this.browsers = new BrowserTabs(this.dependencies)
+    this.browsers = new BrowserConnections(
+      this.store,
+      this.dependencies,
+      (id) => this.operation(id),
+      (id) => this.binding.bind(id),
+      native,
+    )
     this.turnTokens = new WorkspaceTurnTokens(
       this,
       env,
@@ -122,6 +130,8 @@ export class WorkspaceChat {
       this.dependencies,
       (events) => this.publish(events),
       (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
+      (id) => this.binding.bind(id),
+      native,
     )
     this.operations = new WorkspaceOperations({
       env,
@@ -164,10 +174,14 @@ export class WorkspaceChat {
     )
   }
 
-  async connectRunner(request: Request, peer: RunnerPeer): Promise<void> {
+  async connectRunner(
+    request: Request,
+    peer: RunnerPeer,
+    socket?: WebSocket,
+  ): Promise<void> {
     const workspace = await authorizeChatRunner(this.env, request)
     this.binding.bind(workspace.id)
-    await this.runner.open(workspace, peer)
+    await this.runner.open(workspace, peer, socket)
   }
 
   receiveRunner(peer: RunnerPeer, value: unknown): Promise<void> {
@@ -249,19 +263,9 @@ export class WorkspaceChat {
     access: BrowserAccess,
     after: number,
     peer: BrowserPeer,
+    socket?: WebSocket,
   ): Promise<() => void> {
-    return subscribeBrowser({
-      store: this.store,
-      browsers: this.browsers,
-      operation: this.operation(access.workspace.id),
-      access,
-      after,
-      peer: {
-        send: (message) =>
-          peer.send(presentWorkspaceMessage(message, access.presentation)),
-        close: () => peer.close(),
-      },
-    })
+    return this.browsers.subscribe(access, after, peer, socket)
   }
 
   private operation(workspaceId: string): ChatOperation {

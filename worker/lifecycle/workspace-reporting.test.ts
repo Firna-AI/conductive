@@ -24,7 +24,7 @@ function readReports(serialized: string) {
   return { events, payload }
 }
 
-it('reports an actual Workspace alarm failure and rethrows the original error', async () => {
+it('reports Workspace alarm work failure and preserves the original task error', async () => {
   const result = await fixture.actor('reporting-alarm').failAlarmForReporting()
   const { events, payload } = readReports(result.events)
   expect(result.rethrown).toBe(true)
@@ -78,5 +78,10 @@ it('reports a runner callback after upgrade and keeps runner validation silent',
   expect(malformed.response.status).toBe(101)
   malformed.send({ type: 'unknown' })
   await malformed.closed
+  expect(readReports(await actor.reportingEvents()).events).toHaveLength(1)
+  const invalidJson = await fixture.openRunner(id)
+  expect(invalidJson.response.status).toBe(101)
+  invalidJson.socket.send('{')
+  await invalidJson.closed
   expect(readReports(await actor.reportingEvents()).events).toHaveLength(1)
 })

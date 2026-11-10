@@ -69,9 +69,10 @@ export class AuthenticatedRunner {
 
   private schedule(): void {
     if (this.closed) return
-    this.cancelCheck = this.dependencies.scheduleRunnerCheck(async () => {
-      this.cancelCheck = null
-      if (await this.authorize()) this.schedule()
-    }, CONNECTION_CHECK_MS)
+    this.cancelCheck =
+      this.dependencies.scheduleRunnerCheck?.(async () => {
+        this.cancelCheck = null
+        if (await this.authorize()) this.schedule()
+      }, CONNECTION_CHECK_MS) ?? null
   }
 }

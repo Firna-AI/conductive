@@ -172,6 +172,91 @@ steps of the operator.
 
 The other modules of `error-reporting/` support these entry points.
 
+## Workspace object connections
+
+One `Workspace` class serves each workspace object and each Mac broker object.
+It accepts server sockets in three roles through the platform's [hibernation API](https://developers.cloudflare.com/durable-objects/best-practices/websockets/): the events socket of a browser tab, the runner socket, and the Mac device socket.
+These sockets keep their wire formats and protocol versions, so installed Mac apps and runners from older images need no change.
+
+`WorkspaceSockets` in [native-sockets.ts](native-sockets.ts) is the only caller of `acceptWebSocket`.
+It gives each socket a trusted role, and it sends each message, close, and error event to the owner of that role.
+The constructor of `WorkspaceLifecycle` restores the open sockets inside `blockConcurrencyWhile`.
+So no request, RPC call, alarm, or socket event runs before the restore ends.
+A restore registers saved state only. It starts no model work, and it sends no second `welcome`, `device.connected`, or history.
+A socket that its owner cannot restore closes.
+
+Each attachment holds a format version, the role, a connection ID of at most 128 code units, and a generation.
+A browser attachment also holds the app origin and the workspace number of its tab.
+State that can grow and public metadata live in durable records: raw records under the `native:` key prefix, and the pending command and repair records of chat.
+No attachment or native record holds a cookie, a workspace token, an agent login, a turn token, an env value, a transcript, or a growing ID list.
+
+A wake keeps the original sockets and their state.
+A real disconnect, a replacement, and a restart that closes the sockets still run their cleanup, such as the runner disconnect hook, the Mac drop, and the tab removal.
+The runner and the Mac keep a durable generation and a retirement tombstone. So a closing older socket cannot take back the authority of a newer connection.
+A close or an error can be the first event after a wake. Its owner then reads the saved state, and the cleanup runs once.
+Production upgrades always pass a physical socket. Only a physical socket, accepted or restored, saves, arms, and retires native state.
+A feature test can give a tab or runner owner an abstract peer inside the real object. That peer uses the same access logic.
+Its access checks use the scheduler that the test injects. Production has no default timer for them.
+[Open connections](chat/access.md#open-connections) and [Sleep and restore](devices/README.md#sleep-and-restore) give the state of each role.
+
+### Alarms
+
+`WorkspaceAlarms` in [features/alarms.ts](features/alarms.ts) keeps the due time of each source in its `alarm:<source>` marker, and it sets the one platform alarm.
+The security sources are `browser`, `runner`, and `devices`. They use raw storage, so a member fence cannot refuse their writes.
+The regular sources are the lifecycle tasks, `github`, and `previews`. They use the guarded receiver storage, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
+[The object alarm scheduler](lifecycle/alarm-scheduler.md) gives the shared rules, such as the lifecycle run lease and the steps at the end of each run.
+
+`Workspace.alarm` calls `WorkspaceAlarmRunner.alarm` in [features/workspace-alarm.ts](features/workspace-alarm.ts).
+It takes the due security sources before any member fence or lifecycle check.
+It runs the tab expiry at once. Runner, Mac, and regular work run as tracked tasks of `WorkspaceAlarmTasks`.
+So the handler returns before a slow access read or provider call ends.
+A due security source keeps a retry deadline until its owner replaces or clears it.
+The regular task then checks the member fence and the org lifecycle generation. Then it calls `runWorkspaceAlarms` in [workspace-alarms.ts](workspace-alarms.ts).
+While a fence pauses that work, a numeric deferral moves the platform alarm time of the regular sources. Each regular due time stays in its marker.
+A member suspension clears the regular sources in two guarded stages, and both stages keep each security deadline, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
+Its final stage also cancels the lifecycle run lease and the deferral. So a suspended object keeps no regular retry. A Restore clears the deferral in its guarded transaction.
+Provider and lifecycle writes stay fenced.
+
+Tab and runner access checks run every 15 seconds. Tab grants last at most 30 seconds. Mac session checks run at least every 10 seconds.
+The tab and runner owners save their next check before they read access.
+Each owner closes a connection at its stored deadline, by the current clock.
+A late alarm or a failed access read never extends a grant.
+
+### The Mac heartbeat
+
+The platform answers the exact Mac ping `{"type":"device.ping"}` with `{"type":"device.pong"}`, and the object does not wake.
+That automatic response applies to every hibernation socket of one object.
+So only a verified Mac broker object sets it, when it accepts or restores a Mac socket. The shared constructor never sets it.
+So no browser or runner socket gets a Mac pong. The runner checks the token of each frame, also a Mac ping, before it reads the frame.
+An automatic pong grants no command permission, and the session check still runs, as [Sleep and restore](devices/README.md#sleep-and-restore) says.
+
+### Work that keeps the object active
+
+An object whose open sockets all use these three roles can hibernate between its alarms and requests.
+This work keeps the object active:
+
+- An open terminal or preview socket. Its bridge holds an outbound socket to the sandbox, which cannot hibernate, as the [terminal](terminal/README.md) and [preview](previews/README.md) READMEs say.
+- A request that waits, such as a Mac settings reply, a file read or diff, an attachment copy, an input activity write, a title model call, or a preview HTTP stream.
+- A tracked alarm task, until it ends.
+
+The code closes no terminal, drops no pending promise, and weakens no limit to make the object sleep.
+So a workspace object stays active while a terminal socket is open, also while that socket is idle.
+The Mac broker is a separate object, so it can sleep while a workspace object stays active.
+No measurement of production sleep time, wake time, or cost saving exists.
+
+### Wake tests
+
+A wake test calls `unsafeEvictDurableObject(scriptName, 'Workspace', { name, webSockets: 'hibernate' })` of the pinned Miniflare.
+The client sockets stay open while a new object instance restores.
+Each fixture entry returns a random instance marker from a test-only route, and the test checks that the marker changed.
+The marker never enters a product route or a wire frame.
+An eviction without `webSockets` closes the sockets, so it tests the restart path, not a wake.
+The native alarm handler returns before its tracked work ends. So a fixture that calls `alarm()` also awaits the protected `settledAlarms()`.
+The native test harness and the lifecycle fixtures run only the stored alarms that are due, through `advanceScheduledAlarms`. They await `settledAlarms()` after each one.
+An automatic pong does not show that queued socket work ended. So the device fixture reads its readiness route after each socket message.
+A native fixture starts its client socket closes and `runtime.dispose()` together, and it awaits both.
+[Chat backend tests](chat/tests.md) and the [device checks](devices/README.md#composition-and-checks) name the fixtures.
+
 ## Development
 
 Run commands from the repository root with Node 24.
@@ -184,6 +269,7 @@ Run `node worker/chat/integration/run-browser-harness.mjs` to serve a production
 [Outer Worker tests](chat/integration/outer-worker-tests.md#browser-harness) gives its settings.
 Run `npm run test -- worker/operator` to check the overview and the suspension of users and orgs.
 Run `npm run test -- worker/error-reporting worker/application-error-reporting.test.ts worker/lifecycle/workspace-reporting.test.ts src/shared/error-stack.test.ts` to check the reporter, its capture points, and the stack guard.
+Run `npm run test -- worker/chat/adapter.test.ts worker/chat/browser-native-access.test.ts worker/chat/runner-native-access.test.ts worker/chat/runner-native-delivery.test.ts worker/features/security-alarms.test.ts worker/devices` to check the native sockets, their wake, and the shared alarm.
 Run `npm run test -- worker/model-gateway worker/http/request-body.test.ts` to check version 2 token delivery, model forwarding, turn access, streamed answers, and upload limits.
 The [test support area](test-support/README.md) supplies local D1 and fake providers.
 [Deployment inputs](../docs/deployment.md) lists the bindings, variables, and secrets of a deployment.
@@ -193,48 +279,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 
 ### Key Code
 
-- [app.ts](app.ts) exports the Worker HTTP handler.
-- [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
-- [application-scheduled.ts](application-scheduled.ts): `scheduledWorker` dispatches the minute routine scan and the 15-minute maintenance through the cron reporting boundary.
-- [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
-- [software-image/README.md](software-image/README.md) owns software image builds, the deploy token gate, and Cron cleanup.
-- [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk, archive, and image alarms from the Cron Trigger.
-- [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
-- [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
-- [routes.ts](routes.ts) dispatches protected app routes.
-- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details.
-- [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
-- [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
-- [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
-- [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
-- [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
-- [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
-- [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
-  The `turn` commands of a version 2 runner carry these tokens. The packaged runner uses version 2.
-- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. It writes one structured object with fixed text and selected safe fields. It copies no extra caller field, token, error message, request body, command output, or response body. `WarningRecord` names the logged object type. `CommandFailed` carries a failed command's state, exit code, and time-out.
-- [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too.
-- [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name.
-- [error-reporting/entry.ts](error-reporting/entry.ts): `workerFetchEntry`, `runWorkspaceAlarm`, and `runWorkerCron`, the reporting boundaries of a request, an alarm, and a cron run.
-- [error-reporting/runtime.ts](error-reporting/runtime.ts): `createWorkerErrorRuntime`, the private reporter on the real SDK.
-- [error-reporting/policy.ts](error-reporting/policy.ts): `captureWorkerWarning` and `captureUnexpectedWorkerFailure` decide which warnings and caught failures report.
-- [error-reporting/workspace.ts](error-reporting/workspace.ts): `workspaceErrorReporting`, the fresh reporting scope of each Durable Object callback.
-- [error-reporting/response-diagnostics.ts](error-reporting/response-diagnostics.ts) owns the bounded private cause that a Durable Object hands to the Worker with a 5xx response.
-- [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of each alarm run of a workspace object. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
-- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the devices, the previews, and GitHub. [Workspace Durable Object](lifecycle/workspace-object.md) gives its rules.
-- [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
-- [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
-- [routines/route.ts](routines/route.ts) serves routine records after the request gate.
-- [routines/run-route.ts](routines/run-route.ts) serves Run now and paginated run history.
-- [routines/run-starter.ts](routines/run-starter.ts) starts queued runs with the owner's logins.
-- [routines/pull-request-dispatch.ts](routines/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
-- [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due routines and retries up to 50 old queued runs each minute.
-- [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
-- [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between approval and invitation emails.
-- [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
-- [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.
-- [http/json-body.ts](http/json-body.ts) owns the shared JSON object parsing policy.
-- [http/bounded-body.ts](http/bounded-body.ts) collects bounded body bytes and decodes and parses complete JSON bodies.
-- [sandbox/transport.ts](sandbox/transport.ts) calls the fixed provider routes.
+[Worker key code](key-code.md) names the modules and their entry points.
 
 ### Related Docs
 

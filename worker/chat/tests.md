@@ -149,20 +149,93 @@ npm run typecheck
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
-  D1, and real WebSockets. `createAdapterRuntime` sets up that runtime.
-- It closes every socket before Miniflare evicts the real object. Restart
-  keeps SQLite history, queued messages, and the runner cursor. Event numbers
-  continue. The resumed queued turn fails. Its message can retry after a
-  second eviction.
+  D1, and real WebSockets. `createAdapterRuntime` sets up that runtime, and
+  the test bundles `browser-entry.test-support.ts`.
+- It closes every socket before `verifyAdapterRestart` in
+  `adapter-restart.test-support.ts` evicts the real object without
+  `webSockets`. Restart keeps SQLite history, queued messages, and the
+  runner cursor. Event numbers continue. The resumed queued turn fails. Its
+  message can retry after a second eviction.
+- `verifyBrowserWake` in `browser-wake.test-support.ts` then keeps two
+  original tab sockets, with a production and a local origin, through a
+  wake. Both tabs then get each new event in order, with the link of their
+  own origin.
 - `createAdapterRuntime` can bundle another Durable Object entry, also for
   another workspace ID. The [GitHub store tests](../github/README.md#verification)
   use it to run `WorkspaceChat` with the GitHub state on SQLite.
+- `browser-entry.test-support.ts` and `runner-entry.test-support.ts` extend
+  the production `Workspace`. Each adds a stored fixture clock, controls
+  that fail an access read or a lifecycle read or write, a random instance
+  marker, and a test-only control route. `browserControls` in
+  `browser-native.test-support.ts` and `runnerControls` in
+  `runner-native.test-support.ts` drive them. Their
+  `hibernate` helpers evict with `webSockets: 'hibernate'`, and they check
+  the instance marker, as [Wake tests](../README.md#wake-tests) says.
+- `browser-native-access.test.ts` checks the tab access clocks through
+  member fences and a wake, expiry while access and lifecycle work wait,
+  and expiry with failed lifecycle reads and writes. `closeBrowserPeers`
+  waits until the object handled each tab close.
+- `browser-native-suspension.test.ts` holds the first grant of a second tab
+  after its real D1 read, then calls the real `suspendMemberLifecycle`
+  RPC. `BrowserSuspensionProbe` in `browser-suspension.test-support.ts`
+  records the committed first stage when the suspension closes the current
+  tab. The `hold`, `entered`, `release`, and `suspension-entered` controls
+  fix the order of these steps.
+- The case checks that the first stage cleared the regular alarm keys and
+  kept the lifecycle run lease `alarm:lifecycle:run`, the deferral, and the
+  `browser` deadline. The platform alarm stays at that deadline. The held
+  tab then registers after the close, and the final stage leaves no run
+  lease or deferral.
+- After a sign-out, the late tab stays open until its stored 15-second
+  check. The `arm-due` control fires the platform alarm only when it is
+  due on the fixture clock. The check then closes the tab. No alarm stays
+  set, and the fence stays. After its history, the late tab gets only the
+  `ports.updated` frame with a null list that the suspension's workspace
+  stop sends. The current tab gets no frame after its history.
+- `runner-native-access.test.ts` checks the token deadline through a wake
+  and the fences, the token check of a Mac ping, and a native alarm that
+  returns while a token read waits. `runner-native-delivery.test.ts` checks
+  that a wake resends no command or repair, keeps file ownership, and
+  revives no replaced runner. It runs for protocol versions 1 and 2. The
+  stored state holds no login after the wake. A version 2 `message` command
+  then carries no credential, and each version 2 `turn` command carries a
+  turn token and no login. A version 1 `turn` command still carries the
+  real login.
+- `browser-native-close.test.ts` and `runner-native-close.test.ts` make a
+  close the first event after a wake, with no restored peer. Their entries
+  give the `prepare-close` and `close-handled` controls of
+  `NativeCloseProbe`, as
+  [Native close probe](../test-support/README.md#native-close-probe) says.
+  Each case checks the new instance, a close as the first event, the
+  omitted socket ID, and one completed close callback with no error.
+- The tab case then checks that the saved registration is gone and that no
+  alarm stays set. It also checks one close count, no access read, the
+  server close reply, and no frame after the history.
+- The runner case checks that the saved current runner is gone and that no
+  alarm stays set. It also checks one disconnect hook, the file detach of
+  the same connection ID, and no second `welcome`, hello hook, or ready
+  hook.
+- In both cases, a later settle or close changes nothing. So the cleanup
+  runs once.
+- `tab-access.test.ts`, `tab-deadlines.test.ts`, and `security.test.ts`
+  check the tab grants on the native browser peers of `createChatFixture`.
+  `runner-access.test.ts` and `runner-current-access.test.ts` check the
+  runner token rule on its native runner peers. These peers have no
+  physical socket, so their access checks use the injected scheduler of
+  the fixture clock.
+- `write-access.test.ts` holds a rename at its body read or in the queue.
+  Then one access fact ends, such as a sign-out, a removal from the org, or
+  an archive. The rename gets the refusal that a new request would get, and
+  saves nothing. A new refused request leaves its body unread.
 - `integration/runner-output-durability.test.ts` bundles
-  `integration/runner-output-entry.test-support.ts` with it. That entry
-  extends the production `Workspace`. It answers a test-only `/inspect`
-  fetch with the stored records, and forwards each other request. The test
-  seeds an encrypted env capture in D1, and finds no raw held text in the
-  records. After an eviction, the hidden continuation shows once.
+  `runner-entry.test-support.ts`. That entry also answers a test-only
+  `/inspect` fetch with the stored records. The test seeds an encrypted env
+  capture in D1, and finds no raw held text in the records. After a wake,
+  the hidden continuation shows once, and a skipped event number gets a
+  `resend`.
+- `runner-files-durable.test.ts` keeps its original sockets through a wake
+  between report parts. A later eviction that closes the sockets still
+  keeps the complete stored report.
 - Read stored records through a fetch path before an eviction, as the
   GitHub store tests do. A direct RPC read of the records can keep the
   eviction waiting.

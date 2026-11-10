@@ -5,7 +5,6 @@ import type { WorkspaceChat } from './backend'
 import type { BrowserAccess } from './browser-authorization'
 import type { BrowserPeer } from './types'
 import { afterNumber } from './http-routes'
-import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 
 function socketPair(request: Request) {
   if (
@@ -28,20 +27,18 @@ export async function browserUpgrade(
   access: BrowserAccess,
 ): Promise<Response> {
   const { client, server } = socketPair(request)
-  server.accept()
   const peer = {
     send: (message: WorkspaceSocketMessage) =>
       server.send(JSON.stringify(message)),
     close: () => server.close(1000, 'Connection closed.'),
   }
   try {
-    const unsubscribe = await chat.subscribe(
+    await chat.subscribe(
       access,
       afterNumber(new URL(request.url)),
       peer,
+      server,
     )
-    server.addEventListener('close', unsubscribe)
-    server.addEventListener('error', unsubscribe)
     return new Response(null, { status: 101, webSocket: client })
   } catch (error) {
     peer.close()
@@ -69,25 +66,6 @@ export async function runnerUpgrade(
     send: (message: WorkspaceToRunner) => server.send(JSON.stringify(message)),
     close: () => server.close(1000, 'Connection closed.'),
   }
-  await chat.connectRunner(request, peer)
-  server.accept()
-  server.addEventListener('message', (event) => {
-    let message: unknown
-    try {
-      if (typeof event.data !== 'string') throw new Error('Expected JSON text.')
-      message = JSON.parse(event.data)
-    } catch {
-      chat.disconnectRunner(peer)
-      return
-    }
-    void chat.reporting.callback(() =>
-      chat.receiveRunner(peer, message).catch((error: unknown) => {
-        captureUnexpectedWorkerFailure('runner_message_failed', error)
-        chat.disconnectRunner(peer)
-      }),
-    )
-  })
-  server.addEventListener('close', () => chat.disconnectRunner(peer))
-  server.addEventListener('error', () => chat.disconnectRunner(peer))
+  await chat.connectRunner(request, peer, server)
   return new Response(null, { status: 101, webSocket: client })
 }

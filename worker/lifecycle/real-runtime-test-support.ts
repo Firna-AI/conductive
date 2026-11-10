@@ -234,6 +234,7 @@ export async function realRuntimeFixture(bundle: string) {
     socket.accept()
     return {
       response,
+      socket,
       inbox,
       closed,
       send: (value: unknown) => socket.send(JSON.stringify(value)),

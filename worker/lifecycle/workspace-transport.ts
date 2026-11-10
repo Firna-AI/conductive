@@ -41,6 +41,14 @@ export async function startResultForTransport(
     : { ...result, error: { ...result.error, log: await readLog() } }
 }
 
+export async function readCreationResult(
+  lifecycle: Pick<WorkspaceLifecycleEndpoint, 'readCreationLifecycleResult'>,
+  readLog: () => Promise<EncryptedStartLog>,
+) {
+  const result = await lifecycle.readCreationLifecycleResult()
+  return result ? startResultForTransport(result, readLog) : undefined
+}
+
 async function releasedStartResult(
   env: Pick<AppEnv, 'BOAT_KEY_ENCRYPTION_KEY'>,
   result: TransportStartResult,

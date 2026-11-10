@@ -3,10 +3,7 @@ import { commitAuthor } from '../../src/shared/commit-author'
 import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { randomToken } from '../security/crypto'
-import {
-  readConnectionAccess,
-  scheduleConnectionCheck,
-} from '../security/connection-access'
+import { readConnectionAccess } from '../security/connection-access'
 import { loginResolver } from './login-access'
 import {
   readLoginMetadata,
@@ -102,12 +99,12 @@ export function chatDependencies(
     matchesObject: () => true,
     ...overrides,
     reporting,
-    scheduleBrowserCheck: reporting.schedule(
-      overrides.scheduleBrowserCheck ?? scheduleConnectionCheck,
-    ),
-    scheduleRunnerCheck: reporting.schedule(
-      overrides.scheduleRunnerCheck ?? scheduleConnectionCheck,
-    ),
+    scheduleBrowserCheck: overrides.scheduleBrowserCheck
+      ? reporting.schedule(overrides.scheduleBrowserCheck)
+      : undefined,
+    scheduleRunnerCheck: overrides.scheduleRunnerCheck
+      ? reporting.schedule(overrides.scheduleRunnerCheck)
+      : undefined,
     waitUntil: (pending) => waitUntil(reporting.observe(pending)),
     resolveLogin: loginResolver(env, workspaceId, overrides.resolveLogin),
   }
