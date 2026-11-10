@@ -13,6 +13,7 @@ import {
   Laptop,
   ListChecks,
   LogIn,
+  MessageSquareHeart,
   MessageSquarePlus,
   Monitor,
   PanelLeft,
@@ -53,6 +54,7 @@ const actionIcons: Readonly<Record<OfferedActionId | OwnActionId, LucideIcon>> =
     'new-workspace': Plus,
     'create-org': Building2,
     'switch-org': Building2,
+    'send-feedback': MessageSquareHeart,
   }
 
 const orgSettingIcons: Readonly<Record<SettingsTab, LucideIcon>> = {

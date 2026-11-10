@@ -43,7 +43,7 @@ export function feedbackDraft(): SendFeedbackRequest {
   }
 }
 
-export class FakeFeedbackResend {
+class FakeFeedbackResend {
   requests: { request: Request; body: string; key: string }[] = []
   deliveries = new Map<string, { id: string; body: string }>()
   refuse = false

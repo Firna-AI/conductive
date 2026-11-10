@@ -156,6 +156,13 @@ draws the dialog at `app/feedback`, on desktop and on a phone.
 - Without a reply address, the line says "To get a reply, add a verified
   email on GitHub, then sign in again." Reason: the Worker reads that email
   at each sign-in.
+- Each open of the dialog reads the reply address from the Worker again.
+  While the read runs, the reply line says "Loading the reply address".
+- After a failed read, a notice says "The reply address didn't load", then
+  the message of the error, with Try again, which reads it again.
+- Send stays off until the read is ready, so the reply line shows before
+  each send. The message box, the screenshots, and Cancel stay on while the
+  read runs or after it failed.
 - Reason: the person types nothing, and sees which address the team gets.
 - These approaches were rejected (decision 272):
   - No reply address, with only the GitHub login in the email.

@@ -130,6 +130,10 @@ of the data that the screens read and write.
 - `send` gives true only for an accepted send of the current person. It
   then closes the dialog and clears the draft, and a later edit starts a
   new draft ID. A failed or stale send gives false.
+- `screenshotIntake(app)` keeps one `ScreenshotIntake` for each app. It
+  holds the files that it still reads, and their notices, in the memory of
+  the tab. A file that it still reads joins the draft after a close. A
+  change of the person drops the waiting files and the notices.
 - The reply of the session says whether the person has app access.
   Without it, the first load reads only the waitlist state, and the boot
   is `waiting`. The waitlist reads the invitations of the person at its

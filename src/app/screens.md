@@ -2,11 +2,11 @@
 
 This guide belongs to [Web app: data and composition](README.md). It
 gives the rules of the screens of the app shell: the account and Get
-started, sign-in, invitations, orgs, panels and layers, the command
-palette, the focus, saved drafts, New workspace as a page or a dialog, and
-[the waitlist](#the-waitlist). The
-[command palette protocol](../../docs/protocol/command-palette.md) states
-what the palette does.
+started, sign-in, invitations, orgs, panels and layers, the focus, saved
+drafts, New workspace as a page or a dialog, and
+[the waitlist](#the-waitlist).
+[The command palette and Feedback](palette-screens.md) gives the rules of
+the command palette and of the Feedback dialog.
 
 - The app runs every cloud computer in its own Boat account, so no org has
   a Boat key. The app has no key screen, tab, notice, or Get started step,
@@ -108,47 +108,9 @@ what the palette does.
   trigger also after a press outside.
 - Escape closes only the newest open layer, such as a menu in a dialog.
   A press outside closes each layer that it misses.
-- The command palette is a layer of each frame: `PaletteLayer` sits in
-  the `OverlayHost` of the frame, and the open palette holds the frame
-  inert, as a sheet or a dialog does. Its search field takes the focus,
-  and `trapTab` keeps Tab inside. When a control that has the focus goes
-  away, such as a filter after a change of the tab, the field takes the
-  lost focus back. When the palette closes, the frame is active again
-  before the focus goes back.
-- Escape closes the palette from its own element, in the capture phase
-  of React. An open menu of a filter hears Escape first, on the document,
-  and stops it, so Escape closes only that menu. A press outside closes
-  the desktop dialog, and Cancel closes the phone page. A change of the
-  address and a sign-out close the palette too.
-- The palette key comes from `AppServices.onKey`, which hears each key in
-  the capture phase and not as a passive listener, so the palette can
-  stop the browser's own action. Every UI kit of the app notes its open
-  menus and modal layers through `useMenuLayer` and `useModalLayer` of
-  `../shell/ui/layers.ts`: the shell, the chat, and the members UI. A
-  menu says whether it closed, and a menu whose change runs refuses. A
-  modal layer has an owner: the dialog of the palette has the palette.
-  The owner of the terminal marks its element with `usePaletteTerminal`,
-  where Ctrl+K stays with the terminal.
-- `PaletteController.show` is the one way to open the palette, for the
-  key and for the Search row. It opens only when no dialog or sheet of
-  another owner holds the input, and when every open menu closed. The
-  key closes an open palette, and does nothing while a dialog or a sheet
-  of another owner is open over it, such as the sheet of a filter.
-- A part of the page offers its actions to the palette while it shows,
-  through `usePaletteOffer`: the workspace screen, the workspace list
-  that the page shows, and the sidebar toggle of the Mac app. A row
-  closes the palette first. Its action runs once the palette has left
-  the page, so a field that the action opens can take the focus, and a
-  question shows alone.
-- The palette reads the list and the repositories of its org through
-  `OrgModel.watch` while it is open, and shares those reads with the list
-  of the page. So the list and the palette show the same failure, and Try
-  again in either one reads the list again. The palette has no copy of
-  its own. Its Try again reads again each part that failed, through
-  `OrgModel.reload`.
-- `AppModel.lastOrg` keeps the org that the tab opened last, in memory
-  only. The Account sidebar of the Mac app and the palette on a page
-  without an org read it through `keptOrg`.
+- [The command palette and Feedback](palette-screens.md) gives the rules
+  of the palette layer, its key, its offers, and its reads, and of the
+  Feedback dialog that its Help row opens, with its screenshots.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the
@@ -190,8 +152,9 @@ what the palette does.
 - Every desktop frame hosts the dialog, over the whole frame
   (`NewWorkspaceHost`). The frame with the rail and a page alone, such as
   Create org, get it from `DesktopLayers`, with the layer of sheets and
-  dialogs, the command palette, and the main area. The dialog has no
-  address: it closes in the same render as a change of the address, also
+  dialogs, the command palette, the Feedback dialog, and the main area.
+  The dialog has no address: it closes in the same render as a change of
+  the address, also
   while its create runs. A phone frame has no dialog.
 - Escape and a press outside close the dialog, except while the create
   runs. An action of the dialog that opens another page, such as Connect
@@ -244,7 +207,8 @@ what the palette does.
   (`NewWorkspaceModel`), so a repository that turns on moves no written
   draft.
 - Every composer reads its send key through `useSendKey`: the chat, the
-  page, and the dialog. On a computer, Enter sends and Shift+Enter adds a
+  page and the dialog of New workspace, and the Feedback dialog. On a
+  computer, Enter sends and Shift+Enter adds a
   line, as [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)
   says. Enter does nothing while the message cannot go, and it belongs to
   an input method that composes a word. In the phone layout, Enter adds a

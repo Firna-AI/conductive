@@ -192,8 +192,10 @@ feedback draft.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the command palette, the focus, saved drafts, New workspace as a page or a dialog,
+layers, the focus, saved drafts, New workspace as a page or a dialog,
 with the send key that every composer shares, and the waitlist.
+[The command palette and Feedback](palette-screens.md) gives the rules of
+the palette and of the Feedback dialog.
 
 ## Rules for this code
 
@@ -283,5 +285,7 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the file uploads, the
 models, the waitlist and its codes, the routines, and the workspace list.
-It also covers the event streams, the drag, the operator section, the
-command palette, the layers, the frames, New workspace, and feedback.
+It also covers the event streams, the drag, and the operator section.
+[Key code: the palette, the layers, and the dialogs](key-code-layers.md)
+covers the command palette, the layers, the frames, New workspace as a
+dialog, and feedback with its screenshots.

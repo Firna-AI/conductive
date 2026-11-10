@@ -13,7 +13,7 @@ export interface FeedbackContext {
   desktop: boolean
 }
 
-export interface FeedbackScreenshot {
+interface FeedbackScreenshot {
   content: string
 }
 

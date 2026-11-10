@@ -518,6 +518,39 @@ line that applies a decision of the user names that decision.
   beside the kept draft.
 - A failed send shows a notice under the message box, with the message of
   the server. Send stays on.
+- The calls below are my implementation calls of 10 November 2026, for
+  Milestone 5:
+  - A paste adds screenshots only when the clipboard holds files and no
+    plain text. A paste with text stays text. Reason: a spreadsheet puts a
+    picture of its cells on the clipboard beside their text.
+  - While the dialog shows, a drop of files anywhere on the window adds
+    them, and the browser does not open them. Reason: the page under the
+    dialog takes no input, and an opened file leaves the page and loses the
+    draft, which only the memory of the tab keeps.
+  - The dialog takes the files of each pick, paste, and drop one at a time,
+    in their order, so the 7 MB limit counts each screenshot before it. The
+    limit counts the bytes after the removal of metadata, as the Worker
+    counts them. Send waits while the dialog reads files.
+  - A file that the dialog still reads joins the draft after a close. A
+    change of the person drops the files that wait, as it drops the draft.
+  - The removal of metadata works on the bytes of each format, and does not
+    encode the image again. The pixels, the colour profile, transparency,
+    and the frames of an animation stay. EXIF, XMP, IPTC, text, comments,
+    thumbnails, times, and bytes after the end of the image go, such as the
+    video of a motion photo. Reason: a new encoding changes the image and
+    drops the frames of an animation.
+  - A JPEG photo keeps its orientation, in the smallest EXIF segment with
+    only that value. Reason: without it, a phone photo shows on its side.
+  - A file whose structure breaks, or that the browser cannot read, gets
+    the notice of another type. Reason: its metadata cannot be found with
+    certainty, so it cannot go without it.
+  - The notices of refused files belong to the last pick, paste, or drop.
+    The next one replaces them, and a send clears them.
+  - The file picker offers the four image types. The first bytes still
+    decide.
+  - The dialog stays open when the address changes, such as after Back in
+    the Mac app, and keeps the context of its open. Reason: the page under
+    the dialog takes no input.
 - After a send, the dialog closes and a toast thanks the person.
 - A close without a send keeps the draft in the memory of the tab. The
   next open shows it. A send clears it. Reason: an Escape by mistake loses
@@ -841,44 +874,60 @@ Depends on: 1, 4, 4a
 
 Build the row, the dialog, and the toast as the mockups draw them.
 
-- [ ] Add the action `send-feedback` with its words to
+- [x] Add the action `send-feedback` with its words to
       `src/app/palette/commands.ts`, and the Help group to the palette
       results.
-- [ ] Add the host and the dialog of feedback under `src/shell/`, in the
+- [x] Add the host and the dialog of feedback under `src/shell/`, in the
       desktop frame and the phone frame. The palette passes its org and
       the open workspace to the dialog.
-- [ ] Build the screenshots: the picker, the paste, the drop, the chips,
+- [x] Build the screenshots: the picker, the paste, the drop, the chips,
       the removal of metadata, the 7 MB limit, and the shared check of the
       four image types.
-- [ ] Test the palette results: the Help group on each kind of page, and
+- [x] Test the palette results: the Help group on each kind of page, and
       a search by each search word.
-- [ ] Test the dialog in happy-dom: a send with a toast, a failed send
+- [x] Test the dialog in happy-dom: a send with a toast, a failed send
       that keeps the draft, a pasted screenshot, a screenshot over the
       limit, a photo whose location the dialog removes, Escape that keeps
-      the draft, and the reply line with and without an address.
-- [ ] Set the row "Help and feedback" of the comparison page to Available,
+      the draft, and the reply line with and without an address. A pure
+      test of the image bytes covers the removal of the location, as the
+      orchestrator asked.
+- [x] Set the row "Help and feedback" of the comparison page to Available,
       with a new note. Add a short section on how to send feedback to the
       overview guide `src/marketing/docs/overview.md`. Delegate this TODO
       to the `external docs implementor`.
-- [ ] Update `src/app/screens.md` and the READMEs of the changed folders.
+- [x] Update `src/app/screens.md` and the READMEs of the changed folders.
+
+Evidence and README notes: `.context/command-palette-feedback/reports/m5.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests, then the complete gate `npm run check`.
-- [ ] Smoke-test the row and the dialog with `npm run dev`, on the dev
+- [x] Align the existing consent tests with the combined Terms revision.
+      Keep every consent and identity assertion. Use the current revision
+      for callback-injection input and expected stored acceptance, so a
+      new approved revision keeps the same checks. The complete gate found
+      the stale literals after merging the routines revision.
+
+Evidence of the merge of `origin/main` with the routines and release 0.6.0:
+`.context/command-palette-feedback/m5/merge-resolution.diff` and
+`.context/command-palette-feedback/m5/main-merge-audit.txt`.
+
+- [x] Run the targeted tests, then the complete gate `npm run check`. The
+      final combined run passed. Evidence: `.context/command-palette-feedback/gate-attempt-3.log`.
+- [x] Smoke-test the row and the dialog with `npm run dev`, on the dev
       fake. The Worker tests of Milestone 3 cover the email, because the
       dev app does not call the Worker.
 - [ ] Ask the user to set the Worker secret `FEEDBACK_EMAIL` of the
       deployment to the team inbox before the merge. Without it, each send
       gets HTTP 503, and the comparison row is not true.
-- [ ] Add the follow-up item `plans/follow-ups/feedback-recent-app-errors.md`
+- [x] Add the follow-up item `plans/follow-ups/feedback-recent-app-errors.md`
       for option D of decision 271.
-- [ ] Add the follow-up item `plans/follow-ups/feedback-send-limit.md` for
+- [x] Add the follow-up item `plans/follow-ups/feedback-send-limit.md` for
       option B of decision 276: 10 feedback sends in an hour for each
       person. Invitations do not count.
-- [ ] Search `origin/main` for decisions 270 to 276. On a collision,
+- [x] Search `origin/main` for decisions 270 to 276. No collision was
+      found. On a collision,
       renumber the decisions of this plan and their citations.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
