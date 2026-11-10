@@ -116,7 +116,8 @@ decision number names a dated record, as
 
 - On a computer, Enter sends the message from every composer, and
   Shift+Enter adds a line (decision 143 of PR #73). The composers are the
-  chat of a workspace, the New workspace page, and the dialog.
+  chat of a workspace, the New workspace page, and the dialog. The message
+  box of the [Feedback dialog](feedback.md#the-dialog) is a composer too.
 - So Enter creates the workspace from the page and from the dialog.
 - On a phone, and in every window with the phone layout, Enter adds a
   line in every composer.

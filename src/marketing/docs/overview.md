@@ -94,6 +94,26 @@ The link shows the workspace's number, name, and state in a small box.
 - [Manage orgs and members](/docs/orgs-and-members)
 - [Understand access to credentials](/docs/security)
 
+## Send feedback
+
+Report a bug, share an idea, or ask the team a question from the command palette.
+
+1. Select **Search** above the workspace list.
+2. Search for `feedback`.
+3. Select **Send feedback**.
+4. Write your message.
+5. Select **Send**.
+
+You can also open the palette with **⌘K** on a Mac or **Ctrl+K** on another computer.
+Before sending, use **Add screenshots**, paste an image, or drop an image onto the dialog.
+It accepts PNG, JPEG, GIF, and WebP images.
+Together, the screenshots can be up to 7 MB.
+
+The dialog shows the included context and the email address for a reply.
+That address is your primary verified email on GitHub.
+Closing the dialog keeps your draft in the open tab.
+A failed send keeps the draft so you can try again.
+
 ## Start your first task
 
 To start with a new org:

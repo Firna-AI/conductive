@@ -78,6 +78,22 @@ says.
   every member. A short name on one line keeps each list readable.
 - A refusal of a blank or long name was rejected, because the agent then
   gets an error for a name that the rule can clean.
+- For the name, the CLI help and the description of `create_workspace`
+  say: "Use plain words separated by spaces. Avoid underscores unless the
+  user tells you to add them."
+- The rule keeps each underscore of the name (decision 256). Reason: only
+  the agent knows whether the member asked for underscores.
+- A rule step that changes each underscore to a space was rejected, because
+  the agent could then not keep underscores that a member asked for. A
+  field that marks a name from the member was rejected, because no agent
+  name showed the risk, and the agent must still set the field.
+- A step that keeps only the underscores of words from the member's
+  messages was rejected, because a request in other words, such as "use
+  snake case", then loses its underscores. A rule that an agent names a
+  workspace only when a member names it was rejected, because agents then
+  name fewer workspaces.
+- Risk: an agent that ignores the text still adds underscores. A cloud
+  computer gets the new text only from a full build of its org image.
 - The reply to a create call gives the new workspace with its number and
   its link, as
   [Workspace numbers and links](workspaces-and-sandboxes.md#workspace-numbers-and-links)

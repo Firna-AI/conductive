@@ -6,6 +6,7 @@ import {
   type Plugin,
   type UserConfig,
 } from 'vite'
+import { buildVersion } from './build-version.ts'
 
 export function developmentScripts() {
   const sources = new Map<string, string>()
@@ -52,6 +53,7 @@ export function developmentScripts() {
 }
 
 export default defineConfig({
+  define: { __CONDUCTIVE_APP_VERSION__: JSON.stringify(buildVersion()) },
   // Workers AI is remote only. Local development leaves new workspaces Untitled and needs no Cloudflare login.
   plugins: [
     react(),
