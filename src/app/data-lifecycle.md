@@ -8,7 +8,8 @@ of the data that the screens read and write.
   reads when its first screen mounts, each time that the user comes back
   to the page, and on a timer while a screen shows it. The last screen
   that leaves stops the timer. Screens that show a part share its reads.
-- The timer is short while a row works, needs input, or starts, or while a
+- The timer is short while a row works, needs input, or starts, while the
+  last run of a routine waits, starts, works, or needs input, or while a
   build runs. Otherwise it is slow, so that changes from other tabs and
   other people show. Repositories and the members read at entry and at
   focus only. The waits are choices of the app, not product
@@ -17,12 +18,44 @@ of the data that the screens read and write.
   then the changes that the server confirmed after that read started, such
   as events, then the waiting writes in the order that they went out. A
   read that started before a change keeps the change. A failed read keeps
-  the value that shows.
+  the value that shows. A part can name the errors that prove that its
+  value no longer exists, as the routine page does for `routine_not_found`.
+  Such a read shows its error also over the value.
+- The routine page reads its routine when it mounts and at each return to
+  the page. Each field that the owner did not change takes the field of the
+  newer routine, and an edited field keeps its edit. A save sends only the
+  fields that the owner changed, so it keeps a turn-off that the app made
+  during the edit. Its answer is the whole routine, and the Routines list
+  takes it at once, with the last run that the list has. A delete takes
+  the routine out of the list, and a later visit of its address reads it
+  again.
+- A read of the routine that gets `routine_not_found` shows that the
+  routine is not available, also in place of a routine that shows. Any
+  other failed read keeps the routine. The other requests of the page go
+  through one client of the routine: the reads of the runs, Show older
+  runs, Save, Turn off, Run now, and Delete. When one of them gets
+  `routine_not_found`, the routine reads again, after the read that runs,
+  if any, and that read decides. A write can get that refusal also while
+  the routine exists, so the refusal alone decides nothing.
+- The Runs list of the routine page shows a number of pages of 50 runs:
+  one at first, and one more after each Show older runs. It reads them
+  when it shows, every 10 seconds while it shows, and at each return to
+  the page. Each read gets that many pages from the newest run, one after
+  the other, and replaces the whole list. So the list has no gap, and each
+  row shows the state of the last read. When new runs arrive, the oldest
+  rows move behind Show older runs. Show older runs reads the page after
+  the oldest run that the list shows, and adds it at once. A read that
+  started before keeps that page only while its own pages end at the same
+  run. Run now shows its run first at once, and the Routines list takes it
+  as the last run. A later read of the runs brings its next state.
+- The chat reads the routine of a run workspace, with the pull request of
+  its run, with the saved view, at each load of the chat. The header shows
+  them until the next load.
 - A list write shows its change at once, and a failure takes back that
   change only. An answer confirms only the fields of its write: a move
   answer sets the section of the workspace, not its state. A workspace
-  record from an event, an open, or Archive keeps the place of its row,
-  because only a read of the list and a move change the place.
+  record from an event, an open, Archive, or Restore keeps the place of its
+  row, because only a read of the list and a move change the place.
 - A save can answer with the whole value, such as the repositories or
   computer settings. Its answer counts from its arrival. A read that
   started before it changes nothing.
@@ -33,15 +66,36 @@ of the data that the screens read and write.
 - A repository save adds or removes that repository only. It keeps the
   choices from other saves and other clients. The save queue keeps an add
   before a later remove of the same repository.
+- Each repository save and each save of the install script reads the
+  builds again, because an add starts a build, and each of these saves
+  changes `BuildsResponse.changes`.
 - A read or a Resume reply carries the event number of its state. It shows
   only when no newer state has shown, from the stream or another reply.
   After it, an older stream event changes nothing. A new owner, an
-  Archive, or a cleared unread state carries no number. Each shows at once
-  and stays over the reply of a pending Resume. A reply after close
-  changes no workspace state.
-- An open workspace follows confirmed archived records in the org list,
-  so Archive does not wait for the event stream. It also checks the list
-  when it opens. A known archive stays over an older open or Resume reply.
+  Archive, a Restore, or a cleared unread state carries no number. Each
+  shows at once and stays over the reply of a pending Resume. A reply
+  after close changes no workspace state.
+- Archive and Restore raise `updatedAt`, also at the same clock, and
+  `archivedAt` can repeat. So a record from the other side of an Archive
+  or a Restore shows only when its `updatedAt` is newer, whatever its
+  source. A reply of Archive or Restore changes only its own fields, and
+  only when it is newer, so a later Archive, Restore, or Resume stays.
+- A record below the `updatedAt` of the newest Archive or Restore that
+  shows changes nothing, also on the same side of the boundary. So a
+  replay of an older active record cannot open the way for the older
+  Archive after it. The Worker never lowers `updatedAt`, so each newer
+  record passes.
+- An open workspace follows the Archive and Restore records that the org
+  list confirmed, in both directions, and a newer record of an archived
+  workspace, such as the end of its Restore. So none of them waits for the
+  event stream. It also checks the list when it opens, and before a read
+  or a Resume reply shows. A known Archive or Restore stays over an older
+  open or Resume reply. An Archive or a Restore while the first read of an
+  open waits makes that open resume nothing. A failed read then keeps the
+  detail of that change, and the visit follows the event stream. With no
+  read before it, the stream replays from the last number that the model
+  applied. A first read that fails with no such change shows its failure
+  and follows nothing.
 - A workspace event applies its saved public error with the workspace
   state. An older event without the error keeps the current error. An
   explicit null clears it. Event errors carry no log, so the model keeps
@@ -96,9 +150,10 @@ of the data that the screens read and write.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
-- The Cloud computer tab follows the builds while it shows. When the newest
-  build ends, by any path, the tab reads the settings again, because the
-  server changes them at a build, such as `needsBuild`.
+- The Cloud computer tab follows the builds while it shows. The builds,
+  not the settings, say which saved changes the org image lacks, in
+  `BuildsResponse.changes`. They read again while a build runs and at
+  its end, so the end of a build reads no settings.
 - While the tab shows, `ComputerModel` owns one `BuildLogFollower` for the
   log of the newest build that runs or failed. A newer build replaces the
   follower, so an answer for an older build changes neither the log nor
@@ -139,10 +194,11 @@ of the data that the screens read and write.
   the page shows again, the mark goes through the current shown number. A
   page without the focus still shows its output, so the focus does not
   count.
-- An archived detail stops the marks for the rest of its visit, also while
-  the history replays records from before the archive. A replay in pages
-  moves `last` only after its final page, so a mark never passes output
-  that a later page holds.
+- An archived detail stops the marks until a Restore shows, also while the
+  history replays records from before the archive. After a Restore, the
+  next mark covers the output that came while the workspace was archived.
+  A replay in pages moves `last` only after its final page, so a mark never
+  passes output that a later page holds.
 - Known limit: a request that never answers holds back each later mark,
   because the API client has no timeout.
 - The chat, the GitHub views, the terminal tool, the preview tool, the

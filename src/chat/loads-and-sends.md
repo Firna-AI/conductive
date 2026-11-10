@@ -17,7 +17,9 @@ the message field of each composer, and Stop.
 - The chat loads the session list and the view, then the full history of the
   shown session, then the workspace and the session list again. The stream
   starts after the history's `throughEventNumber`, so no change between the
-  reads and the stream gets lost.
+  reads and the stream gets lost. The view also gives the routine of a run
+  workspace, with the pull request of a pull request run. The snapshot keeps
+  it as `routine` for the workspace header.
 - The chat writes no browser storage. The drafts stay in memory, and the
   server keeps the open tabs through the view route. A kept controller
   lives only in the memory of its tab, so a reload or a new tab starts
@@ -36,9 +38,11 @@ the message field of each composer, and Stop.
   the workspace is read-only, and the server path otherwise. The controller
   reads `readOnly` at each action, because a suspension can start during a
   visit, and it sends no other write then.
-- A read-only chat shows no composer, no +, no tab menu, no Try again, no
-  drag of a tab, and no answer to a Mac command. Its empty state names only
-  the session history.
+- A read-only chat shows no composer, no +, no Try again, no drag of a
+  tab, and no answer to a Mac command. The tab menu of a session tab holds
+  only the two copy items, and a file or diff tab opens no tab menu, as
+  [the tab row](tab-row.md) says. A copy reads the transcript and sends no
+  write. Its empty state names only the session history.
 
 When the chat becomes read-only, it hides an open rename or close question.
 The session history stays open. The tab keeps its old name, and the sandbox bar says why.
@@ -110,8 +114,15 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   chips find their workspaces through `LinksProvider`.
 - `components/chip-field/`: `ChipTextField`, the message field of every
   composer, over Lexical. `chip-nodes.tsx` holds the chip node and the
-  node of a link that waits for its workspace. `field-content.ts` turns
-  plain text into nodes and back, and reconciles the chips with the list.
+  node of a link that waits for its workspace. `file-mention-nodes.tsx`
+  holds the file chip node and the node of a mention that waits for its
+  entry. `field-content.ts` turns plain text into nodes and back, and
+  reconciles the chips with the list. `mention-content.ts` reconciles the
+  file chips with the tree, finds the query of `@`, puts a pick in its
+  place, and turns a waiting mention into text when typing continues it.
+  `mention-plugins.tsx` holds the list of `@` and the reconcile of the
+  file chips. `undo-plugin.tsx` holds the undo history, which starts from
+  the content at mount, so the first change is one step of undo.
   `field-text.ts` joins the parts of the plain text with the separator
   rule. `field-plugins.tsx` holds the value, paste, copy, Enter, editable,
   and reconcile plugins. `focus-plugins.tsx` holds the handle that focuses

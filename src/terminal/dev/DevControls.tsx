@@ -4,6 +4,7 @@ import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
 import { terminalPaths } from '../../shared/terminal'
 import {
+  devPortReports,
   devStates,
   devTools,
   emitDevEvent,
@@ -84,6 +85,12 @@ export function DevControls(props: {
         values={devStates[params.tool]}
       />
       <Choice
+        label="Ports"
+        onChange={(ports) => change('ports', ports)}
+        value={params.ports}
+        values={devPortReports}
+      />
+      <Choice
         label="Layout"
         onChange={(layout) => change('layout', layout)}
         value={params.layout}
@@ -123,6 +130,16 @@ export function DevControls(props: {
         type="button"
       >
         Turn on focus reports
+      </button>
+      <button
+        // The mouse reports of tmux: presses, drags, and the SGR encoding.
+        onClick={() =>
+          props.onTerminalOutput('\x1b[?1000h\x1b[?1002h\x1b[?1006h')
+        }
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Turn on mouse reports
       </button>
       <button
         onClick={() =>

@@ -128,7 +128,14 @@ export async function deviceFixture() {
   const closed = new Set<WebSocket>()
   const remember = (socket: WebSocket) => {
     sockets.push(socket)
-    socket.addEventListener('close', () => closed.add(socket), { once: true })
+    socket.addEventListener(
+      'close',
+      () => {
+        if (socket.readyState !== 3) socket.close()
+        closed.add(socket)
+      },
+      { once: true },
+    )
   }
   const tokenFor = async (userId: string, sessionId = `${userId}-session`) => {
     await db
@@ -264,8 +271,10 @@ export async function deviceFixture() {
       reason: 'Check a local file',
     }),
     dispose: async () => {
-      await closeSockets(...sockets.filter((socket) => !closed.has(socket)))
-      await runtime.dispose()
+      await Promise.all([
+        closeSockets(...sockets.filter((socket) => !closed.has(socket))),
+        runtime.dispose(),
+      ])
     },
   }
 }

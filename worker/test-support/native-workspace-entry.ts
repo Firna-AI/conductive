@@ -133,12 +133,15 @@ export class NativeWorkspace extends Workspace {
         await clock.setTime(saved.at)
       }
     })
-    const drain = async () => {
+    const settled = async () => {
       let work: Promise<unknown>
       do {
         work = this.chat.store.settled()
         await work
       } while (work !== this.chat.store.settled())
+    }
+    const drain = async () => {
+      await settled()
       if (errors.length) throw errors.shift()
     }
     this.native = {
@@ -218,8 +221,17 @@ export class NativeWorkspace extends Workspace {
               },
             },
             at,
-            () => [{ storage: context.storage, fire: () => this.alarm() }],
+            () => [
+              {
+                storage: context.storage,
+                fire: async () => {
+                  await this.alarm()
+                  await this.settledAlarms()
+                },
+              },
+            ],
           ),
+        settled,
         drain,
         drainBackground: async () => {
           while (pending.size) await Promise.allSettled([...pending])
@@ -233,7 +245,10 @@ export class NativeWorkspace extends Workspace {
           await context.storage.deleteAll()
         },
         rawRecords: () => context.storage.list({ prefix: '' }),
-        dispatchAlarm: () => this.alarm(),
+        dispatchAlarm: async () => {
+          await this.alarm()
+          await this.settledAlarms()
+        },
         eventNumber: (workspaceId) =>
           this.chat.readWorkspace(
             workspaceId,

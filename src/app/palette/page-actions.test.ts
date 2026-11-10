@@ -27,6 +27,7 @@ describe('the actions of an open workspace', () => {
         rightColumn: true,
         chat: true,
         desktopTool: false,
+        offersRestore: false,
         ...overrides,
       })
     expect({
@@ -40,6 +41,16 @@ describe('the actions of an open workspace', () => {
       phoneTool: ids({ rightColumn: false, chat: false }),
       suspended: ids({ access: { role: 'admin', suspended: true } }),
       archived: ids({ workspace: { ...workspace, state: 'archived' } }),
+      restorable: ids({
+        workspace: { ...workspace, state: 'archived' },
+        viewer: priya,
+        offersRestore: true,
+      }),
+      restorableTool: ids({
+        workspace: { ...workspace, state: 'archived' },
+        chat: false,
+        offersRestore: true,
+      }),
       desktopTool: ids({ desktopTool: true }),
     }).toEqual({
       owner: ['new-session', 'session-history', ...goTo, 'archive-workspace'],
@@ -49,6 +60,8 @@ describe('the actions of an open workspace', () => {
       phoneTool: ['archive-workspace'],
       suspended: ['session-history', ...goTo],
       archived: ['session-history'],
+      restorable: ['session-history', 'restore-workspace'],
+      restorableTool: [],
       desktopTool: [
         'new-session',
         'session-history',

@@ -1,4 +1,8 @@
-import { terminalPaths, type TerminalResponse } from '../../src/shared/terminal'
+import {
+  TERMINAL_PORT,
+  terminalPaths,
+  type TerminalResponse,
+} from '../../src/shared/terminal'
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
 import {
@@ -14,7 +18,6 @@ import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
 import { terminalPassword } from './credentials'
 import { terminalFrames } from './protocol'
-import { TERMINAL_PORT } from './service'
 import { TerminalConnections, type TerminalRegistration } from './connections'
 
 export function createTerminalHandler(
@@ -56,6 +59,7 @@ export function createTerminalHandler(
           env,
           target.workspaceId,
           target.sandboxId,
+          target.providerAccount,
         )
         if (tail === null) {
           const stopped = ['stopped', 'error'].includes(target.state)
@@ -103,6 +107,7 @@ export function createTerminalHandler(
           orgId: target.orgId,
           workspaceId: target.workspaceId,
           sandboxId: target.sandboxId,
+          providerAccount: target.providerAccount,
         })
         const auth = btoa(`conductive:${password}`)
         let upstream: Response

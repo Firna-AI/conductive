@@ -39,6 +39,7 @@ It can run before a manual test advance.
 `advanceTo` uses `advanceScheduledAlarms` from `scheduled-alarms.test-support.ts`.
 It advances the clock and runs only stored due alarms, in time order.
 It deletes each alarm before the production `Workspace.alarm` dispatcher runs.
+Then it awaits `settledAlarms`, because the native alarm handler returns before its tracked work ends.
 Do not call a native controller alarm directly.
 
 `backend-pump.test-support.ts` advances a waiting create or resume.
@@ -96,3 +97,9 @@ Its detached process IDs, status offsets, delayed replies, and stop failures rem
 Tests replace the current fetch dependency to inject a provider fault.
 The native outbound route reads that current dependency for each request.
 No test needs a real provider account, GitHub App, or cloud computer.
+
+The computer Stop regression uses the same native fixture and stored alarm dispatcher.
+It saves user and org scopes into one org task, restarts it, and changes no suspension request.
+Its provider fault checks that the task and alarm exist before dispatch.
+The build ledger cleanup tests retain older and current computer IDs.
+They confirm retry after failed Delete and after suspension blocks initial provider setup.

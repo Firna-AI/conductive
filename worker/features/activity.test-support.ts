@@ -1,6 +1,9 @@
 import type { Workspace } from './activity-entry.test-support'
-import { previewsPath } from '../../src/shared/previews'
-import { record, string } from '../chat/inputs'
+import {
+  previewsPath,
+  PREVIEW_RELAY_MARK_HEADER,
+} from '../../src/shared/previews'
+import { number, record, string } from '../chat/inputs'
 import {
   OUTER_ORG,
   OUTER_WORKSPACE,
@@ -13,6 +16,7 @@ import {
 } from 'miniflare'
 import { terminalPaths } from '../../src/shared/terminal'
 import { cacheTerminalPassword } from '../terminal/credentials'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 export class TerminalActivityUpstream {
   private readonly messages: string[] = []
@@ -59,6 +63,7 @@ export async function openActivityTerminal(fixture: ActivityFixture) {
       orgId: OUTER_ORG,
       workspaceId: OUTER_WORKSPACE,
       sandboxId: 'bx_activity',
+      providerAccount: DEFAULT_PROVIDER_ACCOUNT,
       state: 'ready',
     },
     'b'.repeat(64),
@@ -106,7 +111,6 @@ export async function activityFixture(
     },
   })
   await actor.lifecyclePrepared()
-  fixture.boat.synchronousOutput = 'LISTEN 0 128 0.0.0.0:3000 0.0.0.0:*\n'
   return { ...fixture, actor: () => actor, now }
 }
 
@@ -143,17 +147,36 @@ export async function openActivityPreview(fixture: ActivityFixture) {
     fixture.runtime.dispatchFetch(target, { headers: { Cookie: cookie } })
 }
 
-export function hostedActivityPort(request: Request): Response | undefined {
+export async function hostedActivityPort(
+  request: Request,
+): Promise<Response | undefined> {
   const url = new URL(request.url)
   if (url.hostname.endsWith('.on.boat.dev'))
-    return new Response('forwarded input')
-  if (url.pathname.endsWith('/host'))
+    return new Response('forwarded input', {
+      headers: { [PREVIEW_RELAY_MARK_HEADER]: '1' },
+    })
+  if (url.pathname.endsWith('/host')) {
+    const port = number(record(await request.clone().json()).port)
     return Response.json({
       ok: true,
       type: 'port.hosted',
-      port: 3000,
-      url: 'https://sandbox-3000.on.boat.dev?_token=server-port-token',
+      port,
+      url: `https://sandbox-${port}.on.boat.dev?_token=server-port-token`,
       access: 'private',
       isProtected: true,
+    })
+  }
+  if (
+    url.pathname.endsWith('/commands') &&
+    record(await request.clone().json()).command ===
+      'systemctl is-active --quiet conductive-preview-relay.socket'
+  )
+    return Response.json({
+      ok: true,
+      type: 'command.finished',
+      exitCode: 0,
+      stdout: '',
+      stderr: '',
+      timedOut: false,
     })
 }

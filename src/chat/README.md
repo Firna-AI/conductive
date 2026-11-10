@@ -13,7 +13,10 @@ says. It builds against the fake API and the recorded chat events of
 `src/test-support/`.
 
 The history button follows the available closed sessions, as
-[Sessions](../../docs/protocol/agents-and-sessions.md#sessions) says.
+[Sessions](../../docs/protocol/agents-and-sessions.md#sessions) says. The
+tab menu of a session copies its transcript as Markdown, also in a
+read-only workspace, as
+[Session transcripts](../../docs/protocol/session-transcripts.md) says.
 
 ## Use it in the app
 
@@ -28,6 +31,7 @@ stops its own controller:
   orgId={orgId}
   workspaceId={workspaceId}
   client={services.api}
+  copy={services}
   subscribe={openWorkspaceEvents}
   viewport={phone ? 'mobile' : 'desktop'}
   onWorkspaceChange={(workspace) => showInHeader(workspace)}
@@ -97,7 +101,7 @@ shows the chat, in the whole app, with the limits that
 
 ## Tests
 
-Run `npm run test -- src/chat`. The tests drive the controller and the stream
+Run `npm run test -- src/chat src/shared/transcript`. The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers. The
 [workspace screen](../shell/workspace/README.md#key-code) tests the kept
@@ -126,9 +130,14 @@ check in the Mac app.
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
 - `components/useTabMenu.ts` and `components/TabMenu.tsx`: the tab menu,
-  its items, and its drawing at a point or in a sheet.
+  its items with the mark of each item that changes the workspace, the
+  items of a read-only row, the long press that opens that row's menu, and
+  its drawing at a point or in a sheet.
   `components/useTabMoves.ts`: the moves of the row, the focus after a move
   from the menu, and the words of the status.
+- `components/TranscriptCopy.tsx`: `useTranscriptCopy`, the copy of a
+  transcript from the tab menu with the toast of its result, and
+  `ChatToasts`, the toasts of the host, else the chat's own.
 - `components/row-scroll.ts`: the scroll of a full row, its fades, and the
   scroll of a drag near an end. `components/row-reveal.ts`: the place of a
   tab in the row, and the scroll that brings tabs into view.
@@ -147,20 +156,36 @@ check in the Mac app.
   links of a message field, and `linkTarget`, `chat-parts.ts`, the one
   tokenizer of sent messages and answers, `LinksContext.tsx`, the
   workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
-  which draws the parts of a message or an answer.
+  which draws the parts of a message or an answer, with its file chips,
+  and `mention-copy.ts`, the copy of chat text that gives the mention of
+  each file chip in it, and leaves out text that the browser leaves out of
+  a copy.
+- `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
+  the entries that the list offers and their order, and
+  `MentionsContext.tsx`, the files that the chat gets and the tree that
+  the list and the chips find, with one value for each tree, and
+  `MentionIcon.tsx`, the icon of All files for an entry.
 - `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
-- `state/transcript.ts`: how chat events become the parts of a transcript.
-- `state/session-log.ts`: the event log of each session, with its records
+- [`transcript.ts`](../shared/transcript/transcript.ts): how chat events become the parts of a transcript.
+- [`agents.ts`](../shared/agents.ts): the shared effort words and model
+  labels of the pickers.
+- [`duration.ts`](../shared/transcript/duration.ts),
+  [`tool-words.ts`](../shared/transcript/tool-words.ts), and
+  [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
+  tool words, fold counts, and turn lines that the browser and Worker share.
+- [`session-events.ts`](../shared/transcript/session-events.ts): the session
+  events from stored Worker envelopes or parsed browser envelopes.
+- [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
   in event order and its newest record. The record owner keeps the logs private.
-- `state/known-turns.ts`: the known turns, their order, their ends, and
+- [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
   `retryItemId`, the one failed item that offers Try again.
-- `state/placement.ts`: where an item goes in its turn, also a late one.
-- `state/late-events.ts`: accepted events of a turn that has ended.
-- `state/item-keys.ts`: the item IDs that later events of an item reuse.
-- `state/refused-events.ts`: how a refusal marker becomes a line, and how a
+- [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
+- [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
+- [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.
+- [`refused-events.ts`](../shared/transcript/refused-events.ts): how a refusal marker becomes a line, and how a
   refused end ends its turn.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
@@ -170,7 +195,9 @@ check in the Mac app.
   on its draft after a move, and stops with Remove and with the chat.
 - `components/AttachmentChips.tsx`: the file chips of both composers, with
   the measured share of an upload, the sent files, and the notice for files
-  over the size limit, from the mockups' `attachmentCopy.ts`.
+  over the size limit, from the mockups' `attachmentCopy.ts`. The cell of
+  the icon of each draft file removes it, as `ChipIconCell` of the mockups
+  draws it.
 - `state/archive-view.ts`: the tabs and the session history of a
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
@@ -191,7 +218,8 @@ check in the Mac app.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
   event from the mockups' `lostCopy.ts`.
-- `components/turn-work.ts` and `components/transcript-entries.ts`:
+- [`turn-work.ts`](../shared/transcript/turn-work.ts) and
+  [`transcript-entries.ts`](../shared/transcript/transcript-entries.ts):
   `foldedWork` finds the work of each ended turn that folds, as the
   [transcript rules](transcript.md) say. `groupEntries` makes the entries
   that the chat draws, and puts each insert at its place, also in a fold.
@@ -217,6 +245,13 @@ check in the Mac app.
   a session.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
   the reconnect, and the `hold` and `release` of the workspace stream.
+- `transcript-copy.ts`: `copyTranscript`, the pending copy for a workspace,
+  session, and detail. It retains resolved text for one minute after a
+  clipboard failure. The next press consumes it at once. The cache uses the
+  stable services object, its clock, and its delay. It stores nothing on disk.
+  `browserCopy` is the clipboard, clock, and delay of the browser, for a
+  chat whose host gives no `copy`. The controller's `copyTranscript` calls
+  it with the chat API of the controller.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
   responses.

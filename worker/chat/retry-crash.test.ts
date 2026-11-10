@@ -56,6 +56,7 @@ async function runningFixture() {
     senderId: fixture.owner.id,
     messageIds: ['original'],
     state: 'failed',
+    error: { code: 'agent_unavailable', message: 'Try again.' },
     closeAfterStop: false,
     nextTurnId: null,
     started: true,

@@ -62,6 +62,7 @@ export async function realRuntimeFixture(bundle: string) {
           config: {
             name: 'workspace-runtime-test',
             compatibilityDate: '2026-11-06',
+            compatibilityFlags: ['global_fetch_strictly_public'],
             exports: {
               WorkspaceRuntimeFixture: {
                 type: 'durable-object',
@@ -153,7 +154,7 @@ export async function realRuntimeFixture(bundle: string) {
       "INSERT INTO repositories (id, org_id, github_repository_id, full_name, default_branch, installation_id) VALUES ('runtime-repo', 'runtime-org', 11, 'example/runtime', 'main', 91)",
     ),
     database.prepare(
-      "INSERT INTO settings (org_id, org_image_name, updated_at) VALUES ('runtime-org', 'base-runtime-image', 0)",
+      "INSERT INTO settings (org_id, updated_at) VALUES ('runtime-org', 0)",
     ),
   ])
   await seedAppAccess(database, ['runtime-user'], 0)
@@ -175,6 +176,7 @@ export async function realRuntimeFixture(bundle: string) {
     orgId: 'runtime-org',
     buildId: 'base-runtime-build',
     imageName: 'base-runtime-image',
+    runnerProtocolVersion: 1,
     repositories: [
       {
         id: 'runtime-repo',

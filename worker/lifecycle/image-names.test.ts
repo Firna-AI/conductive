@@ -1,11 +1,18 @@
 import { expect, it } from 'vitest'
 import { randomToken } from '../security/crypto'
-import { SAVED_IMAGE_NAME, savedImageName } from './image-names'
+import {
+  SAVED_IMAGE_NAME,
+  savedImageName,
+  softwareImageName,
+} from './image-names'
 
 it('gives a random build ID a name that the provider accepts', () => {
   for (let index = 0; index < 50; index++) {
     const name = savedImageName(randomToken())
     expect(name).toMatch(SAVED_IMAGE_NAME)
+    const software = softwareImageName(randomToken())
+    expect(software).toMatch(SAVED_IMAGE_NAME)
+    expect(software).toMatch(/^software-/)
   }
 })
 
@@ -15,6 +22,9 @@ it('gives the same build ID the same name, and IDs that differ in case different
   expect(savedImageName(id)).toBe(savedImageName(id))
   expect(savedImageName(otherCase)).toMatch(SAVED_IMAGE_NAME)
   expect(savedImageName(id)).not.toBe(savedImageName(otherCase))
+  expect(softwareImageName(id)).toBe(softwareImageName(id))
+  expect(softwareImageName(id)).not.toBe(softwareImageName(otherCase))
+  expect(softwareImageName(id)).not.toBe(savedImageName(id))
 })
 
 it('names a short ID that is not base64url from its text', () => {

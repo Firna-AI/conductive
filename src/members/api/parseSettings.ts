@@ -71,7 +71,6 @@ export function parseSettings(value: unknown): OrgSettings {
     startupScript: text(source, 'startupScript'),
     envVars: list(source, 'envVars', envVar),
     updatedAt: count(source, 'updatedAt'),
-    needsBuild: flag(source, 'needsBuild'),
   }
 }
 
@@ -91,10 +90,25 @@ function imageBuild(value: unknown): ImageBuild {
 
 export function parseBuilds(value: unknown): BuildsResponse {
   const source = object(value, 'builds response')
+  const changes = nested(source, 'changes')
   return {
     builds: list(source, 'builds', imageBuild),
     currentImageBuildId: textOrNull(source, 'currentImageBuildId'),
+    changes: {
+      installScript: flag(changes, 'installScript'),
+      addedRepositories: list(changes, 'addedRepositories', changedRepository),
+      removedRepositories: list(
+        changes,
+        'removedRepositories',
+        changedRepository,
+      ),
+    },
   }
+}
+
+function changedRepository(value: unknown) {
+  const source = object(value, 'changed repository')
+  return { id: text(source, 'id'), fullName: text(source, 'fullName') }
 }
 
 function logEvent(value: unknown): BuildLogEvent {

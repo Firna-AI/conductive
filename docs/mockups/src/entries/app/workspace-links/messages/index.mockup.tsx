@@ -12,7 +12,7 @@ export const workspaceLinkMessages = defineScreen({
   description:
     'In Checkout address autocomplete, Cal pasted the link of Saved carts into the message box. The link became a chip in the text at once, between the words before and after it. The list shows Saved carts at the top of General, where its agent works on the first message.',
   rationale:
-    'The box keeps plain text with the link of each chip, so a draft that comes back shows the same chips. A chip is one unit of the text: a press places the caret, and Backspace removes the whole chip.',
+    'The box keeps plain text with the link of each chip, so a draft that comes back shows the same chips. A chip is one unit of the text: a press places the caret, and Backspace removes the whole chip. Under the pointer, a × takes the place of the state mark of the chip, as `app/file-mentions/chips/workspace-chip` shows (decision 215).',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, composer: 'workspace-link' },

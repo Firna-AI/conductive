@@ -4,6 +4,7 @@ import { HttpError } from '../http'
 import { hash } from '../security/crypto'
 
 export const ATTACHMENT_DRAFT_MS = 7 * 24 * 60 * 60 * 1_000
+export const ATTACHMENTS_DIRECTORY = '.context/attachments'
 
 export interface AttachmentRecord {
   id: string
@@ -72,7 +73,23 @@ export async function attachmentPath(
   record: AttachmentRecord,
   messageId: string,
 ): Promise<string> {
-  const safe = await hash(JSON.stringify([messageId, record.id]))
-  const extension = record.name.match(/\.([A-Za-z0-9]{1,10})$/)?.[1]
-  return `/home/user/.conductive-attachment-${safe}${extension ? `.${extension.toLowerCase()}` : ''}`
+  const digest = new Uint8Array(
+    await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(JSON.stringify([messageId, record.id])),
+    ),
+  )
+  const directory = Array.from(digest.slice(0, 16), (byte) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('')
+  return `${ATTACHMENTS_DIRECTORY}/${directory}/${safeName(record.name)}`
+}
+
+function safeName(name: string): string {
+  const safe = name.replace(/[^a-zA-Z0-9._-]+/gu, '-')
+  if (!safe || /^\.+$/u.test(safe)) return 'file'
+  const dot = safe.lastIndexOf('.')
+  const extension = dot < 0 ? '' : safe.slice(dot).toLowerCase().slice(0, 96)
+  const stem = (dot < 0 ? safe : safe.slice(0, dot)) || 'file'
+  return `${stem.slice(0, 100 - extension.length)}${extension}`
 }

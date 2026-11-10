@@ -1,11 +1,11 @@
 import { WebSocket } from 'miniflare'
 
 import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
-import {
-  RUNNER_PROTOCOL_VERSION,
-  type RunnerEvent,
-  type RunnerEventEnvelope,
-  type RunnerToWorkspace,
+import type {
+  RunnerEvent,
+  RunnerEventEnvelope,
+  RunnerToWorkspace,
+  RunnerProtocolVersion,
 } from '../../../src/shared/runner'
 import { SocketInbox } from '../adapter-sockets.test-support'
 import {
@@ -40,7 +40,11 @@ export class OuterFakeRunner {
   constructor(
     socket: WebSocket,
     workspaceId = OUTER_WORKSPACE,
-    options: { streamId?: string; eventNumber?: number } = {},
+    options: {
+      streamId?: string
+      eventNumber?: number
+      protocolVersion?: RunnerProtocolVersion
+    } = {},
   ) {
     this.streamId = options.streamId ?? 'outer-runner-stream'
     this.eventNumber = options.eventNumber ?? 0
@@ -66,7 +70,7 @@ export class OuterFakeRunner {
     socket.accept()
     this.send({
       type: 'hello',
-      protocolVersion: RUNNER_PROTOCOL_VERSION,
+      protocolVersion: options.protocolVersion ?? 1,
       workspaceId,
       streamId: this.streamId,
     })

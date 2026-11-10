@@ -105,7 +105,10 @@ export function durableStartStorage(
         )
         const current = await transaction.get('job', JOB)
         if (current)
-          await transaction.put('job', JOB, { ...current, cancelled: true })
+          await transaction.put('job', JOB, {
+            ...serializeStartJob(readStartJob(current)),
+            cancelled: true,
+          })
         return Boolean(current)
       }),
     begin: async (job, epoch, intent) => {
@@ -118,7 +121,7 @@ export function durableStartStorage(
           return false
         for (const key of old.keys()) await transaction.delete(key)
         await transaction.delete(RESULT)
-        if (intent?.kind === 'retry-failed-create') {
+        if (intent && intent.kind !== 'continue') {
           await transaction.delete(CREATE_RESULT)
           await transaction.delete(PUBLICATION)
           await taskWorkspaceTransaction(
@@ -160,7 +163,7 @@ export function durableStartStorage(
           return false
         if (state === 'progress' && !current.providerRetry) return true
         await transaction.put('job', JOB, {
-          ...current,
+          ...serializeStartJob(readStartJob(current)),
           providerRetry:
             state === 'progress'
               ? current.providerRetry

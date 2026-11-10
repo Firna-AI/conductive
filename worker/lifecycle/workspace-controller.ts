@@ -26,10 +26,13 @@ import { WorkspaceAccessStop } from './workspace-suspension'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { WorkspacePlatform } from './workspace-platform'
 import type { WorkspaceController } from './workspace-controller-types'
+import { WorkspaceArchive } from './archive-state'
+import { restoreWorkspace } from './restore-workspace'
 import {
   taskWorkspaceStorage,
   workspaceTaskAlarms,
 } from './workspace-task-alarms'
+import { ComputerStopTask } from './computer-stop-task'
 
 export function createWorkspaceController(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
@@ -55,6 +58,11 @@ export function createWorkspaceController(
     env,
     dependencies,
   )
+  const computerStops = new ComputerStopTask(
+    taskWorkspaceStorage(platform.storage, 'lifecycle:computer-stops'),
+    env,
+    dependencies,
+  )
   const { lifecycle, projection } = createWorkspaceLifecycle(
     platform,
     env,
@@ -72,6 +80,11 @@ export function createWorkspaceController(
     alarms,
   }))
   const controller: WorkspaceController = {
+    archiveLifecycle: (id) => archive.begin(id),
+    reserveArchive: (id) => archive.reserve(id),
+    restoreWorkspace: (orgId, id, userId, origin) =>
+      restoreWorkspace(env, dependencies, orgId, id, userId, origin, archive),
+    queueComputerStops: (orgId, ids) => computerStops.enqueue(orgId, ids),
     extendLifecycleInput: (operation) => lifecycle.input.extend(operation),
     recordLifecycleInput: (at) => lifecycle.input.record(at),
     captureLifecycleActivity: () => lifecycle.input.capture(),
@@ -169,8 +182,9 @@ export function createWorkspaceController(
     ): Promise<boolean> {
       return (await accessStop.check(workspaceId, ownerUserId)) === true
     },
-    reconcileLifecycleAccess(workspaceId: string): Promise<void> {
-      return accessStop.ownerChanged(workspaceId)
+    async reconcileLifecycleAccess(workspaceId: string): Promise<void> {
+      await archive.repair(workspaceId)
+      await accessStop.ownerChanged(workspaceId)
     },
     async clearLifecycle(): Promise<void> {
       const state = await lifecycle.read()
@@ -249,6 +263,8 @@ export function createWorkspaceController(
         startStorage,
         startJobs,
         cleanupStorage,
+        archive,
+        computerStops,
       })
     },
   }
@@ -262,5 +278,16 @@ export function createWorkspaceController(
       await lifecycle.stopFailedStart(error, cancelled)
     },
   )
+  const archive = new WorkspaceArchive({
+    env,
+    dependencies,
+    storage: taskWorkspaceStorage(platform.storage, 'lifecycle:archive'),
+    lifecycle,
+    starts,
+    startJobs,
+    publish: platform.publish,
+    stopped: platform.stopped,
+    alarms,
+  })
   return controller
 }

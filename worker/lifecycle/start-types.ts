@@ -10,10 +10,13 @@ import type { FirstWorkspaceMessage } from './workspace-runtime'
 interface WorkspaceStartData {
   workspaceId: string
   orgId: string
+  providerAccount: string
   imageName: string | null
   startupScript: SavedScript
   environmentCiphertext: string | null
   defaultBranch: string
+  baseBranch?: string
+  startSha?: string
   repositoryLocations?: readonly RepositoryLocation[]
   turnId: string
   attempt: string
@@ -41,7 +44,9 @@ interface WorkspaceStartData {
 
 /** Admission intent is transient. Saved starts always continue their progress. */
 export type WorkspaceStartIntent =
-  { kind: 'continue' } | { kind: 'retry-failed-create' }
+  | { kind: 'continue' }
+  | { kind: 'retry-failed-create' }
+  | { kind: 'resume-retained-create' }
 
 export type WorkspaceMachinePhase =
   | 'machine'

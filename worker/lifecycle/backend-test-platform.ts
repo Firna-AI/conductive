@@ -1,4 +1,4 @@
-import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerLifecycleEvent } from './runner-lifecycle'
 import { HttpError } from '../http'
 import { heldOperation } from '../test-support/held-operation'
 import type { TestHarness } from '../test-support/harness'
@@ -24,7 +24,7 @@ function readyEndpoint<T extends object>(endpoint: T, ready: Promise<void>): T {
 export function backendActor(
   harness: TestHarness,
   id: string,
-  environment: Record<string, string | undefined>,
+  environment: NativeWorkspaceOptions['environment'],
   changed: () => void,
   accepted: (job: StoredWorkspaceStartJob) => void,
   now: () => number,
@@ -66,8 +66,13 @@ export function backendActor(
     },
   }
   const native = harness.native.actor(id, options)
-  const advance = async (at?: number) => {
+  const settled = async () => {
     await native.ready
+    // The admission notification can precede the final alarm write.
+    await native.api.controls.settled()
+  }
+  const advance = async (at?: number) => {
+    await settled()
     const alarm = await native.api.storage.getAlarm()
     await advanceTo(at ?? Math.max(now(), alarm ?? now()))
   }
@@ -92,7 +97,10 @@ export function backendActor(
     storage: native.api.storage,
     events,
     endpoint: () => endpoint,
-    checkpoint: () => native.api.lifecycleControls.checkpoint(),
+    checkpoint: async () => {
+      await settled()
+      return native.api.lifecycleControls.checkpoint()
+    },
     advance,
     restart: native.restart,
     cancelWaiters: native.api.lifecycleControls.cancelWaiters,
@@ -122,7 +130,7 @@ export function backendActor(
       await native.configure(options)
       return gate
     },
-    expectedRunnerReport: async (event: RunnerEvent) => {
+    expectedRunnerReport: async (event: RunnerLifecycleEvent) => {
       const result =
         await native.api.lifecycleControls.captureRunnerReport(event)
       if (!result.ok)

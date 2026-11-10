@@ -68,8 +68,8 @@ const featureIcons = {
 } as const satisfies IconShapes
 
 /**
- * The icons of the Conductor Cloud comparison page, and of its link from
- * the home page.
+ * The icons of the Conductor comparison page, and of its link from the home
+ * page.
  */
 const comparisonIcons = {
   'circle-check': [circle(12, 12, 10), path('m9 12 2 2 4-4')],
@@ -105,6 +105,10 @@ const comparisonIcons = {
     path('m9 16 2 2 4-4'),
   ],
   'arrow-right': [path('M5 12h14'), path('m12 5 7 7-7 7')],
+  link: [
+    path('M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'),
+    path('M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'),
+  ],
 } as const satisfies IconShapes
 
 /** The icons of actions, such as the downloads of the Mac app. */
@@ -117,6 +121,17 @@ const actionIcons = {
 } as const satisfies IconShapes
 
 /**
+ * The icons of the docs: the docs menu, the chevron of each disclosure, and
+ * the previous and next guides.
+ */
+const docsIcons = {
+  menu: [path('M4 5h16'), path('M4 12h16'), path('M4 19h16')],
+  'chevron-down': [path('m6 9 6 6 6-6')],
+  'arrow-left': [path('m12 19-7-7 7-7'), path('M19 12H5')],
+  'arrow-right': [path('M5 12h14'), path('m12 5 7 7-7 7')],
+} as const satisfies IconShapes
+
+/**
  * Every lucide icon of the site, as lucide-react 0.577.0 draws it, under the
  * ISC licence. The site runs no script, so it writes the SVG itself.
  */
@@ -124,6 +139,7 @@ export const lucideIcons = {
   ...featureIcons,
   ...actionIcons,
   ...comparisonIcons,
+  ...docsIcons,
 }
 
 /** An icon that a smaller feature can name. */

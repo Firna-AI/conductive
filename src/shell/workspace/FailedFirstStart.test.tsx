@@ -44,9 +44,10 @@ import { nameLabel } from '../../shared/name-label'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-const { created, detail, workspaces } = workspaceFixtures()
+const { created, detail, message, workspaces } = workspaceFixtures()
 const createdId = created.workspace.id
-const queuedLabel = 'Sends when the sandbox is ready'
+/** The message that the workspace keeps in its queue. */
+const queuedText = message.text
 const saved =
   'The cloud computer did not start within the 20-minute limit. Try again.'
 const resumeLine = `POST ${workspacePaths.resume(org, createdId)}`
@@ -124,7 +125,7 @@ describe('a new workspace whose first start fails', () => {
     expect(sidebar(view)).toContain(nameLabel(created.workspace.name))
     expect(view.textContent).toContain("The sandbox couldn't start")
     expect(view.textContent).toContain(`${saved} Your chat is saved.`)
-    expect(view.textContent).toContain(queuedLabel)
+    expect(view.textContent).toContain(queuedText)
     expect(view.textContent).not.toContain("The workspace wasn't created")
     expect(queryByLabel('Message', view)).not.toBeNull()
     typeText(messageField(view), 'Keep a saved cart for 30 days.')
@@ -177,7 +178,7 @@ describe('a new workspace whose first start fails', () => {
     expect(headerName(view)).toBe(nameLabel(created.workspace.name))
     expect(sidebar(view)).toContain(nameLabel(created.workspace.name))
     expect(view.textContent).toContain(`${saved} Your chat is saved.`)
-    expect(view.textContent).toContain(queuedLabel)
+    expect(view.textContent).toContain(queuedText)
     expect(queryByRole('button', 'Try again', view)).not.toBeNull()
     expect(requestLines(server)).not.toContain(resumeLine)
     typeText(messageField(view), 'Show a notice when a cart comes back.')

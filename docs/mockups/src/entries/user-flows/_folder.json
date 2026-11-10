@@ -8,8 +8,11 @@
     "retry-first-start",
     "reopen-stopped-workspace",
     "open-workspace-from-palette",
+    "archive-from-list",
     "create-org",
     "mac-command",
-    "link-a-workspace"
+    "create-routine",
+    "link-a-workspace",
+    "mention-a-file"
   ]
 }

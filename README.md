@@ -29,7 +29,9 @@ deployment needs.
 Conductive has these features. The protocol docs state each one. A
 feature that is not complete yet says so.
 
-- Sign in with GitHub. The product is free.
+- Sign in with GitHub. The product is free until billing starts.
+  [Pricing](docs/protocol/pricing.md) states the coming plans, which the
+  pricing page of the marketing site shows. Billing is not built yet.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
 - Every cloud computer runs in the app's own Boat account, so users need no
@@ -48,10 +50,14 @@ feature that is not complete yet says so.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
 - Agents can create and list workspaces.
+- Routines run a saved prompt on a schedule or on a pull request event,
+  each time in a new workspace.
 - Each workspace has a number, such as `W-395`. A press on the number in
   the header copies the link of the workspace. A workspace link in chat
   shows as a chip with the number and the name.
 - Orgs with members, sections, reassignment, Archive, and Delete org.
+- A menu on a workspace row moves, reassigns, renames, or archives the
+  workspace.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
 - The web app works on phones and on desktops.
@@ -232,9 +238,10 @@ features:
 - `worker/marketing/`: built marketing pages, the agreement page before
   GitHub, the file list, request markers, and the site's security headers.
 - `src/marketing/`: Astro pages, layouts, parts, styles, pictures, shared
-  legal text, and the shared rows and words of the Conductor Cloud
-  comparison page. Its [README](src/marketing/README.md) gives the build
-  and preview steps.
+  legal text, the public guides, the shared rows and words of the
+  Conductor comparison page, and the shared plans and words of the pricing
+  page. Its [README](src/marketing/README.md) gives the build and preview
+  steps.
 - `src/shared/site-build.ts`: names and types shared by the Astro build
   and the Worker.
 - `worker/security/`: GitHub sign-in, signed sessions, the request gate,
@@ -242,8 +249,9 @@ features:
   rules, and the shared content security policy of the web app and the Mac
   app.
 - `worker/data/`: D1 queries for users, orgs, and sessions.
-- `worker/sandbox/`: the typed Boat adapter, which uses the app's one Boat
-  key.
+- `worker/sandbox/`: the provider accounts, the lookup of the client of each
+  account, and the typed Boat adapter. Production has one account, which
+  uses the app's one Boat key.
 - `src/app/`: the data of the web app, such as the typed API client, the
   models that the screens read, the router, and the event stream. Its
   [README](src/app/README.md) gives the rules and the key code of the
@@ -269,39 +277,9 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   [marketing site](docs/architecture/marketing-site.md), the
   [data and trust boundaries](docs/architecture/data-and-trust.md), and the
   terms.
-- Protocol docs, which state the requirements:
-  - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
-  - [Org image](docs/protocol/org-image.md)
-  - [Workspace tools](docs/protocol/workspace-tools.md)
-  - [Create a workspace](docs/protocol/create-a-workspace.md)
-  - [Repository folders](docs/protocol/repository-folders.md)
-  - [Life of a workspace](docs/protocol/workspace-life.md)
-  - [Chat and events](docs/protocol/chat-and-events.md)
-  - [Messages and attachments](docs/protocol/messages-and-attachments.md)
-  - [Agents and sessions](docs/protocol/agents-and-sessions.md)
-  - [Workspace links](docs/protocol/workspace-links.md)
-  - [Chat Markdown](docs/protocol/chat-markdown.md)
-  - [Agent runner](docs/protocol/agent-runner.md)
-  - [Access and security](docs/protocol/access-and-security.md)
-  - [Isolation of orgs and sandboxes](docs/protocol/isolation.md)
-  - [Tokens and secrets](docs/protocol/tokens-and-secrets.md)
-  - [Terminal, previews, and desktop](docs/protocol/terminal-previews-and-desktop.md)
-  - [GitHub banner](docs/protocol/github-banner.md)
-  - [GitHub tokens](docs/protocol/github-tokens.md): git and CLI account scope.
-  - [Agent tools](docs/protocol/agent-tools.md)
-  - [Agent instructions](docs/protocol/agent-instructions.md)
-  - [Orgs and members](docs/protocol/orgs-and-members.md)
-  - [Mac app](docs/protocol/desktop-app.md)
-  - [Mac app sign-in](docs/protocol/desktop-sign-in.md)
-  - [Permissions and Mac commands](docs/protocol/desktop-commands.md)
-  - [Operator actions](docs/protocol/operator-actions.md)
-  - [Operator section](docs/protocol/operator-section.md)
-  - [Waitlist](docs/protocol/waitlist.md)
-  - [Invite and referral codes](docs/protocol/waitlist-codes.md)
-  - [Command palette](docs/protocol/command-palette.md)
-  - [Command palette: empty and unavailable states](docs/protocol/command-palette-states.md)
-  - [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md):
-    the public page for people who move from Conductor Cloud
+- [Protocol docs](docs/architecture/protocol-docs.md), which state the
+  requirements. That page of the architecture docs lists each one, with
+  what it covers.
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): licenses for copied icons
   and the bundled font.

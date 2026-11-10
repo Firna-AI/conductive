@@ -32,6 +32,9 @@ says.
   - with the first message of a new workspace
   - with a message that starts a new session, as
     [Messages](messages-and-attachments.md#messages) says
+- A routine run starts the first session of its workspace in the name of
+  the routine owner, as
+  [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
 - While the starter shares the login, the messages of the other members
@@ -140,9 +143,13 @@ says.
   menu. This holds on every system.
 - On a phone, a long press that ends without a move opens the tab menu as
   a sheet.
-- The tab menu of a session tab holds Rename session, then Move left and
-  Move right. The tab menu of a file or diff tab holds Move left and Move
-  right.
+- The tab menu of a session tab holds three groups, with a line between
+  them: Rename session, then Copy concise transcript and Copy full
+  transcript, then Move left and Move right. The tab menu of a file or diff
+  tab holds Move left and Move right.
+- Reason: the tab menu groups its items by kind (decision 188).
+- [Session transcripts](session-transcripts.md) states what each copy item
+  copies (decisions 213 and 215).
 - Move left and Move right move the tab one place in the row. On the first
   tab, Move left is off. On the last tab, Move right is off.
 - After a move from the tab menu, a screen reader user hears the name of
@@ -157,7 +164,23 @@ says.
   with Left or Right also goes Back and Forward in browsers on Windows and
   Linux.
 - A read-only workspace, such as an archived workspace or a workspace of a
-  suspended org, moves no tab and opens no tab menu.
+  suspended org, moves no tab.
+- The tab menu of a read-only workspace leaves out each item that changes
+  the workspace, and keeps each item that changes nothing (decision 214).
+  So the tab menu of a session tab there holds only Copy concise transcript
+  and Copy full transcript. A file or diff tab there opens no tab menu.
+- Reason: a read-only workspace accepts no change, but a member can still
+  copy there, as
+  [Read-only workspaces](session-transcripts.md#read-only-workspaces)
+  says. The rule also covers each item that the menu gets later.
+- The tab menu opens there in the same ways as in other workspaces. A long
+  press on a phone opens it, but lifts no tab.
+- An item that the place of a tab rules out, such as Move left on the
+  first tab, still shows, but off. An item that a read-only workspace
+  leaves out does not show.
+- The usual tab menu with Rename session, Move left, and Move right off was
+  rejected for a read-only workspace, because these rows never turn on
+  there.
 
 ## Workspace and session names
 
@@ -177,6 +200,8 @@ says.
 - The app gives an automatic name only to a workspace or a session that has
   no name (decision 182). So no automatic name replaces a name that a
   member or the app gave.
+- A member names a workspace with Rename in the
+  [menu of its row](workspace-menu.md#rename).
 - The app gives no automatic name in an archived workspace, or in a
   workspace of a deleted org.
 - Reason: a missing name shows that no one named the workspace or the

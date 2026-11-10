@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Repeat, type LucideIcon } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspaces/Sidebar.module.css'
 import links from '../../../docs/mockups/src/components/workspaces/SidebarLinks.module.css'
 import { latestBuild } from '../../app/org-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
+import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
 import { useSidebarShown } from '../mac/mac-app'
@@ -20,6 +21,7 @@ import type { RowVariant } from './WorkspaceRow'
 export type ListCurrent =
   | { screen: 'settings' }
   | { screen: 'new-workspace' }
+  | { screen: 'routines' }
   | { screen: 'workspace'; workspaceId: string }
   | null
 
@@ -45,6 +47,31 @@ export function SettingsLink(props: { orgId: string; current: boolean }) {
   )
 }
 
+/** A row at the top of the workspace list that opens a page of the org. */
+function OrgPageLink(props: {
+  to: string
+  icon: LucideIcon
+  label: string
+  current: boolean
+  variant: RowVariant
+}) {
+  const Icon = props.icon
+  return (
+    <AppLink
+      aria-current={props.current ? 'page' : undefined}
+      className={classes(
+        links.row,
+        props.variant === 'page' && links.page,
+        props.current && links.selected,
+      )}
+      to={props.to}
+    >
+      <Icon aria-hidden className={links.icon} size={14} />
+      {props.label}
+    </AppLink>
+  )
+}
+
 /**
  * The row at the top of the list that starts a new workspace in General. It
  * links to the page. A plain click opens the dialog in its place when the
@@ -61,7 +88,7 @@ export function NewWorkspaceLink(props: {
     <AppLink
       aria-current={props.current ? 'page' : undefined}
       className={classes(
-        links.newWorkspace,
+        links.row,
         props.variant === 'page' && links.page,
         props.current && links.selected,
       )}
@@ -70,19 +97,43 @@ export function NewWorkspaceLink(props: {
       }
       to={routes.newWorkspace(props.orgId)}
     >
-      <Plus aria-hidden className={links.plus} size={14} />
+      <Plus aria-hidden className={links.icon} size={14} />
       New workspace
     </AppLink>
   )
 }
 
 /**
+ * The row below New workspace that opens the routines of the org. A
+ * suspended org keeps it, because a suspension takes away no read.
+ */
+export function RoutinesLink(props: {
+  orgId: string
+  current: boolean
+  variant: RowVariant
+}) {
+  return (
+    <OrgPageLink
+      current={props.current}
+      icon={Repeat}
+      label="Routines"
+      to={routes.routines(props.orgId)}
+      variant={props.variant}
+    />
+  )
+}
+
+/**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, Search, and the sections of the org. A suspended
+ * link, New workspace, Routines, Search, and the sections of the org. A suspended
  * org shows its sections read-only, without New workspace. While the
  * sidebar shows, its list offers New section to the command palette.
  */
-export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
+export function Sidebar(props: {
+  org: OrgSummary
+  current: ListCurrent
+  user: User
+}) {
   const { org, current } = props
   const { suspended } = useOrgAccess(org)
   const shown = useSidebarShown()
@@ -101,6 +152,11 @@ export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
               variant="sidebar"
             />
           )}
+          <RoutinesLink
+            current={current?.screen === 'routines'}
+            orgId={org.id}
+            variant="sidebar"
+          />
           <SearchRow variant="sidebar" />
         </div>
         <OrgList
@@ -111,6 +167,7 @@ export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
             current?.screen === 'workspace' ? current.workspaceId : null
           }
           variant="sidebar"
+          viewer={props.user}
         />
       </div>
     </>

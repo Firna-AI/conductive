@@ -24,5 +24,14 @@ export const paletteActions = defineScreen({
         'Over an open workspace, its actions come first: New session, Session history, a Go to row for each tab of the right column, and Archive workspace. Only the owner of the workspace and the admins of the org see Archive. A phone opens the palette from the list, so its page shows the actions of the list.',
       props: { over: 'workspace' },
     },
+    {
+      slug: 'archived',
+      title: 'In an archived workspace',
+      description:
+        'Priya, a member who is not an admin, opens the palette over Checkout address autocomplete, which Cal archived. The actions of the workspace are Session history and Restore workspace. An archived workspace has no new session and no right column to go to, and Archive workspace is gone. A phone opens the palette from the list, so its page shows the actions of the list.',
+      rationale:
+        'The user chose option B of decision 2 of PR #138 on 10 November 2026: every member of an org that is not suspended may restore, also a workspace of another member. Archive stays with the owner of the workspace and the admins of the org. Restore workspace shows while the app keeps the cloud computer. A suspended org offers no Restore.',
+      props: { over: 'archived' },
+    },
   ],
 })

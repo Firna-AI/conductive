@@ -1,4 +1,6 @@
 import type { InvitationMailer } from './invitation-mailer'
+import type { ProviderAccountConfigurations } from './sandbox/accounts'
+import type { ConnectionScheduler } from './security/connection-access'
 import type { Workspace } from './workspace'
 
 export interface AppEnv {
@@ -17,6 +19,8 @@ export interface AppEnv {
   CONDUCTIVE_DEFAULT_CHOICE?: string
   CONDUCTIVE_RUNNER_ARCHIVE_URL?: string
   CONDUCTIVE_RUNNER_ARCHIVE_SHA256?: string
+  CF_VERSION_METADATA?: WorkerVersionMetadata
+  CONDUCTIVE_DEPLOY_TOKEN_SHA256?: string
   GITHUB_APP_PRIVATE_KEY?: string
   GITHUB_WEBHOOK_SECRET?: string
   GITHUB_CLIENT_ID: string
@@ -25,6 +29,7 @@ export interface AppEnv {
   SESSION_SIGNING_KEY: string
   BOAT_API_KEY: string
   BOAT_ORG_ID: string
+  SANDBOX_PROVIDER_ACCOUNTS?: ProviderAccountConfigurations
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
   OPERATOR_GITHUB_IDS?: string
@@ -37,4 +42,5 @@ export interface AppDependencies {
   now: () => number
   randomToken: () => string
   invitationMailer?: InvitationMailer
+  scheduleGatewayCheck?: ConnectionScheduler
 }

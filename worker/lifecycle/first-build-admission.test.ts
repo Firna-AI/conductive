@@ -28,7 +28,7 @@ it.each(['read', 'claim'] as const)(
             return async (queries: D1PreparedStatement[]) => {
               await target
                 .prepare(
-                  'UPDATE settings SET image_build_id = NULL, org_image_name = NULL WHERE org_id = ?',
+                  "UPDATE org_images SET image_build_id = NULL, image_name = NULL WHERE org_id = ? AND provider_account = 'boat'",
                 )
                 .bind(org.id)
                 .run()

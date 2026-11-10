@@ -1,7 +1,8 @@
-import { expect, it, vi } from 'vitest'
+import { expect, it, onTestFinished, vi } from 'vitest'
 
 import { engineFixture } from '../test-support/engine'
 import { deferred, sessionTurn, stop } from '../test-support/runtime'
+import { STOPPED_FILES_TIMEOUT_MS } from './engine-finish'
 
 it('closes a finished provider before its completion and resumes its saved conversation', async () => {
   const h = await engineFixture()
@@ -47,4 +48,39 @@ it('closes a finished provider before its completion and resumes its saved conve
     'turn.started',
   ])
   expect(h.warnings).toEqual([])
+})
+
+it('marks the files of a stopped turn as unavailable when their read passes the time limit', async () => {
+  const entered = deferred<AbortSignal>()
+  const h = await engineFixture({
+    changedSince: (_before, signal) => {
+      entered.resolve(signal)
+      return new Promise(() => {})
+    },
+  })
+  await h.engine.command(sessionTurn('slow'))
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+  onTestFinished(() => {
+    vi.useRealTimers()
+  })
+  const stopping = h.engine.command(stop('slow'))
+  const signal = await entered.promise
+  await vi.advanceTimersByTimeAsync(STOPPED_FILES_TIMEOUT_MS - 1)
+  expect(signal.aborted).toBe(false)
+  expect(h.events.map((event) => event.type)).toEqual(['turn.started'])
+  await vi.advanceTimersByTimeAsync(1)
+  expect(signal.aborted).toBe(true)
+  await stopping
+  expect(h.events.at(-1)).toEqual({
+    type: 'turn.completed',
+    sessionId: 'slow',
+    turnId: 'turn-slow',
+    state: 'stopped',
+    durationMs: 0,
+    files: [],
+    filesUnavailable: true,
+    omittedFileCount: 0,
+    userMessageIds: ['message-slow'],
+  })
+  expect(h.warnings).toEqual(['The changed files could not be read.'])
 })

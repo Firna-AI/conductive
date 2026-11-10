@@ -9,8 +9,11 @@ import type { StoredWorkspaceStartJob } from './start-job-codec'
 import type { FirstWorkspaceMessage, PendingTurn } from './workspace-runtime'
 import { assertReceiverActive } from '../members/receiver-fence'
 import type { ReceiverStorage } from '../members/receiver-storage'
+import type { WorkspaceArchiveState } from './archive-types'
+import type { ComputerStopTaskState } from './computer-stop-task'
 
 export interface WorkspaceValues {
+  archive: WorkspaceArchiveState
   lifecycle: DurableLifecycleState
   job: StoredWorkspaceStartJob
   result: WorkspaceStartResult
@@ -21,6 +24,7 @@ export interface WorkspaceValues {
   first: FirstWorkspaceMessage
   number: number
   text: string
+  computerStops: ComputerStopTaskState
 }
 
 export interface WorkspaceTransaction {

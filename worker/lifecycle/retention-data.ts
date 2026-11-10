@@ -44,13 +44,14 @@ export async function retentionResourceAllowed(
   db: D1Database,
   workspaceId: string,
   sandboxId: string,
+  providerAccount: string,
 ): Promise<boolean> {
   const resource = await db
     .prepare(
-      `SELECT w.id FROM workspaces w WHERE w.id = ? AND w.sandbox_id = ?
+      `SELECT w.id FROM workspaces w WHERE w.id = ? AND w.sandbox_id = ? AND w.provider_account = ?
      AND ${workspaceTokenResourcePredicate}`,
     )
-    .bind(workspaceId, sandboxId)
+    .bind(workspaceId, sandboxId, providerAccount)
     .first()
   return resource !== null
 }

@@ -12,12 +12,7 @@ import { runningWorkspacePredicate } from './workspace-counts'
 
 const resourceMatch = `CASE
   WHEN o.id = ?1 THEN 'org-id'
-  WHEN EXISTS (SELECT 1 FROM workspaces w WHERE w.org_id = o.id AND w.sandbox_id = ?1)
-    OR EXISTS (SELECT 1 FROM image_builds b WHERE b.org_id = o.id AND b.sandbox_id = ?1)
-    OR EXISTS (SELECT 1 FROM lifecycle_sandbox_cleanup c WHERE c.org_id = o.id AND c.sandbox_id = ?1)
-    OR EXISTS (SELECT 1 FROM preview_hostnames p WHERE p.org_id = o.id AND p.listener_sandbox_id = ?1)
-    OR EXISTS (SELECT 1 FROM terminal_credentials t JOIN workspaces w ON w.id = t.workspace_id
-      WHERE w.org_id = o.id AND t.sandbox_id = ?1)
+  WHEN EXISTS (SELECT 1 FROM computer_ledger c WHERE c.org_id = o.id AND c.sandbox_id = ?1)
     THEN 'cloud-computer-id'
   WHEN EXISTS (SELECT 1 FROM preview_hostnames p WHERE p.org_id = o.id AND p.hostname = ?3)
     THEN 'preview-address'

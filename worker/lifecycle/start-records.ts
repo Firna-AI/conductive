@@ -59,10 +59,12 @@ async function prepareWorkspaceRecords(
     creation.repositoryId,
   )
   job.defaultBranch = image.defaultBranch
+  job.providerAccount = image.providerAccount
   if (!(await workspaceExists(env.DB, job.orgId, job.workspaceId))) {
     await insertWorkspace(env.DB, {
       id: job.workspaceId,
       orgId: job.orgId,
+      providerAccount: image.providerAccount,
       repositoryId: creation.repositoryId,
       sectionId: creation.sectionId,
       user: creation.user,
@@ -70,6 +72,7 @@ async function prepareWorkspaceRecords(
       city: creation.city,
       name: creation.name,
       branch: creation.branch,
+      baseBranch: job.baseBranch,
       sessionId: creation.sessionId,
       turnId: job.turnId,
       message: creation.request,

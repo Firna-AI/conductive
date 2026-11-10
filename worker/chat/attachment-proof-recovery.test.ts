@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { createHarness, type TestHarness } from '../test-support/harness'
-import { attachmentFixture, held } from './attachment.test-support'
+import {
+  attachmentFixture,
+  attachmentRepositoryLocations,
+  held,
+} from './attachment.test-support'
+import { WORKSPACE_ID } from './harness.test-support'
 import {
   messageCommands,
   startTurn,
@@ -44,6 +49,16 @@ it('closes after a failed shared-proof save and recovers the continuation with c
         .status,
     ).toBe(202)
     await entered.promise
+    const relativePath = await fixture.chat.store.read(
+      WORKSPACE_ID,
+      async (view) =>
+        (await view.pending()).flatMap((command) =>
+          (command.type === 'turn' || command.type === 'message') &&
+          command.messageId === 'proof-recovery'
+            ? command.attachments.map((attachment) => attachment.relativePath)
+            : [],
+        )[0],
+    )
     runner.emit(terminalEvent(turn, 'finished'))
     await fixture.drain()
     await fixture.setStorageHooks({
@@ -69,9 +84,25 @@ it('closes after a failed shared-proof save and recovers the continuation with c
     expect(fixture.transport.closedConnections).toBe(1)
     expect(messageCommands(runner, 'proof-recovery')).toEqual([])
     await fixture.restart()
+    await harness.env.DB.prepare(
+      'UPDATE workspace_runtime SET repository_locations_json = ? WHERE workspace_id = ?',
+    )
+      .bind(
+        JSON.stringify(
+          attachmentRepositoryLocations('/home/user/code/restarted-repo'),
+        ),
+        WORKSPACE_ID,
+      )
+      .run()
     await fixture.connect(runner)
     await fixture.drainAttachments()
     expect(messageCommands(runner, 'proof-recovery')).toHaveLength(1)
+    expect(messageCommands(runner, 'proof-recovery')[0]?.attachments).toEqual([
+      {
+        attachmentId: file.id,
+        path: `/home/user/code/restarted-repo/${relativePath}`,
+      },
+    ])
     expect(copies).toBe(boundary === 'rejected' ? 2 : 1)
     runner.disconnect()
     await fixture.drainAttachments()

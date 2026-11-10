@@ -40,7 +40,7 @@ Each full report is explicitly part 1 of 1. Its tree ends at revision 2.
 It splits trees and changes into two parts and uses tree delta revisions 2 and 3.
 The small samples exercise joining without large fixtures.
 
-`recorded-repairs.ts` records the lost updates without a session: the file tree, the changes list, the start steps, and the workspace name.
+`recorded-repairs.ts` records the lost updates without a session: the file tree, the changes list, the start steps, the workspace name, and the list of servers.
 `firstLoss(kind)` gives the marker of a first loss. For the file tree, it is a refused tree delta.
 After a first loss, the workspace asks for a fresh full report, and the browser shows nothing.
 `refusedReport(kind, true)` gives the marker of the refused fresh report, with `repairFailed: true`. It marks a failed repair, which shows a notice.
@@ -154,7 +154,7 @@ Replies, timers, and `waitFor` go on.
 - `mount.ts` mounts React components in DOM tests, acts as a person does, and waits for a state.
 - `dom-queries.ts` finds shown elements in DOM tests, and says whether a person can use them.
 - `message-field.ts` focuses, types into, pastes into, presses keys in, clears, and reads the message field of a composer.
-- `fake-core-routes.ts` records account, org, settings, section, and member replies.
+- `fake-core-routes.ts` records account, org, settings, section, member, and routine replies: the list, and the read, update, and delete of each routine, and a create. Each routine, and the routine that a create answers, also has each page of its runs and a Run now that starts a run on a new workspace.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies.
 - `fake-api-routes.ts` defines the reply registration interface.
@@ -170,6 +170,11 @@ Replies, timers, and `waitFor` go on.
 - `fixtures/operator-samples.ts` and `fixtures/operator.ts` give the sample orgs and users of the operator section, and build its replies.
 - `fixtures/operator-access-samples.ts` and `fixtures/operator-access.ts` give the waitlist, the codes, and the app access of the samples, and `disabledCode`, the reply of a disable.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
+- `fixtures/routines.ts` maps the routines of the mockups, newest first, with the last run of each, to the shared contracts. Its `runs` are the runs that the page of each routine lists in the mockups, or else its last run. Its `created` is the reply of a create: the routine that the flow "Create a routine" saves.
+- `fixtures/routine-runs.ts` maps the run lists of the mockups to the runs of the API: each cause of a failed run and each reason of a skipped run as the Worker stores them, with the login of an account outside the org. `runsPage` gives one page of runs as the Worker pages them.
+  Each run includes its agent and owner for the shared run contract. A member who left the org stays the owner of their runs, as the Worker keeps their user record.
+  A run whose first start or first turn failed keeps its workspace, and a run that a check failed has none.
+- `fixtures/routine-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.
 - `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.

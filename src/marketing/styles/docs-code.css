@@ -1,0 +1,61 @@
+/*
+ * The colours of code in the guides. Prism gives each token of a code
+ * block a class, and these rules colour the classes with the code tokens
+ * of the design, so code keeps the colours of its syntax in both colour
+ * schemes. The docs mockup draws a comment, a string, a function, and an
+ * operator. The other token classes of Prism take the nearest of those
+ * colours, or the colour of a number.
+ */
+.docs-prose .token.comment,
+.docs-prose .token.prolog,
+.docs-prose .token.doctype,
+.docs-prose .token.cdata,
+.docs-prose .token.shebang {
+  color: var(--ui-code-comment);
+  font-style: italic;
+}
+
+.docs-prose .token.string,
+.docs-prose .token.char,
+.docs-prose .token.attr-value,
+.docs-prose .token.regex,
+.docs-prose .token.url,
+.docs-prose .token.inserted {
+  color: var(--ui-code-string);
+}
+
+/* A function, such as the command of a shell line, and a type. */
+.docs-prose .token.function,
+.docs-prose .token.function-name,
+.docs-prose .token.builtin,
+.docs-prose .token.class-name,
+.docs-prose .token.property,
+.docs-prose .token.tag,
+.docs-prose .token.attr-name {
+  color: var(--ui-code-type);
+}
+
+.docs-prose .token.keyword,
+.docs-prose .token.operator,
+.docs-prose .token.atrule,
+.docs-prose .token.selector {
+  color: var(--ui-code-keyword);
+}
+
+.docs-prose .token.number,
+.docs-prose .token.boolean,
+.docs-prose .token.constant,
+.docs-prose .token.symbol,
+.docs-prose .token.variable,
+.docs-prose .token.entity,
+.docs-prose .token.deleted {
+  color: var(--ui-code-number);
+}
+
+.docs-prose .token.bold {
+  font-weight: 600;
+}
+
+.docs-prose .token.italic {
+  font-style: italic;
+}

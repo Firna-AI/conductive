@@ -93,7 +93,7 @@ export function pullBanner(
 ): GitHubBanner {
   const common = {
     branch: workspace.branch,
-    baseBranch: pull.baseBranch,
+    baseBranch: workspace.baseBranch ?? pull.baseBranch,
     updatedAt: now,
     pullRequest: { number: pull.number, title: pull.title, url: pull.url },
     review: pull.review,

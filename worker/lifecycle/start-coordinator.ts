@@ -8,10 +8,8 @@ import type {
 import type { AppDependencies, AppEnv } from '../env'
 import { advanceStartRecords } from './start-records'
 import { publishCreationResult } from './creation-publication'
-import { HttpError } from '../http'
 import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
-import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
 import {
@@ -20,11 +18,10 @@ import {
   type ResumeStartFailure,
 } from './start-failure'
 import { requireActiveOrg } from '../data/user-access'
-import { firstOrgAdmin } from './settings-data'
 import { advanceStartMachine } from './start-machine'
-import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
+import type { WorkspaceController } from './workspace-controller-types'
 import { abortStartWaiters, StartWaiters } from './start-waiters'
-import { requireActiveStartUsers } from './start-access'
+import { requireActiveStartUsers, startProvider } from './start-access'
 import { advanceStartSteps } from './start-progress'
 import {
   providerRetryPending,
@@ -39,13 +36,15 @@ import {
 import { JobTimeLimit } from './job-time-limit'
 import { applyStartRunnerReady } from './start-runner'
 import { prepareStartSuccess, runnerStartConnected } from './start-completion'
+import { finishArchivedStart, recoverArchivedStart } from './archive-start'
+import { publishStartCompletion } from './start-result'
 import { enqueueWorkspaceStart } from './start-admission'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
   private readonly env: AppEnv
   private readonly dependencies: AppDependencies
-  private readonly endpoint: WorkspaceLifecycleEndpoint
+  private readonly endpoint: WorkspaceController
   private readonly storage: StartJobStorage
   private readonly finishResumeFailure: ResumeStartFailure
   private readonly waiters = new StartWaiters<WorkspaceStartResult>()
@@ -57,7 +56,7 @@ export class WorkspaceStartCoordinator {
   constructor(
     env: AppEnv,
     dependencies: AppDependencies,
-    endpoint: WorkspaceLifecycleEndpoint,
+    endpoint: WorkspaceController,
     storage: StartJobStorage,
     finishResumeFailure: ResumeStartFailure,
   ) {
@@ -125,6 +124,14 @@ export class WorkspaceStartCoordinator {
       this.dependencies.now(),
     )
     if (!job) return publishCreationResult(this.env, this.storage)
+    if (
+      await recoverArchivedStart(
+        this.env.DB,
+        job.workspaceId,
+        this.endpoint.archiveLifecycle,
+      )
+    )
+      return true
     const expired = startTimeLimitReached(job, this.dependencies.now())
     let provider: SandboxProvider | undefined
     try {
@@ -148,15 +155,7 @@ export class WorkspaceStartCoordinator {
         if (admitted) this.admissionWaiters.publish(admitted)
         return false
       }
-      const admin = await firstOrgAdmin(this.env.DB, job.orgId)
-      if (!admin)
-        throw new HttpError(404, 'org_not_found', 'The org is not available.')
-      provider = await orgSandboxProvider(
-        this.env,
-        admin.userId,
-        job.orgId,
-        this.dependencies.fetch,
-      )
+      provider = await startProvider(this.env, this.dependencies.fetch, job)
       if (job.cancelled && !job.failure)
         await requireActiveOrg(this.env.DB, job.orgId)
       if (job.cancelled || job.failure) {
@@ -166,7 +165,7 @@ export class WorkspaceStartCoordinator {
           this.storage,
           job,
           provider,
-          this.dependencies.now,
+          this.dependencies,
           this.finishResumeFailure,
         )
         if (result) await this.finish(result)
@@ -179,10 +178,11 @@ export class WorkspaceStartCoordinator {
       if (providerRetryExpired(job.providerRetry, this.dependencies.now()))
         throw new ProviderRetryExhausted()
       const row = await readWorkspace(this.env.DB, job.orgId, job.workspaceId)
-      if (row.archivedAt !== null || row.state === 'archived') {
-        await this.cancel()
-        return false
-      }
+      if (row.sandboxId && row.providerAccount !== job.providerAccount)
+        provider = await startProvider(this.env, this.dependencies.fetch, {
+          ...job,
+          providerAccount: row.providerAccount,
+        })
       const state = await this.endpoint.readLifecycle()
       if (!state?.start || state.state === 'stopped' || state.state === 'error')
         await this.endpoint.beginLifecycleStart(job.kind)
@@ -243,7 +243,7 @@ export class WorkspaceStartCoordinator {
         this.storage,
         failedJob,
         provider,
-        this.dependencies.now,
+        this.dependencies,
         this.finishResumeFailure,
       )
       if (result) await this.finish(result)
@@ -255,32 +255,33 @@ export class WorkspaceStartCoordinator {
     if (await this.storage.stop()) await this.storage.schedule()
   }
 
+  archive(): Promise<void> {
+    return finishArchivedStart(
+      this.storage,
+      [this.waiters, this.creationWaiters],
+      this.admissionWaiters,
+    )
+  }
+
   abortWaiters(): void {
     abortStartWaiters(this.waiters, this.creationWaiters, this.admissionWaiters)
   }
 
-  private async finish(result: WorkspaceStartResult): Promise<boolean> {
-    const job = await this.storage.job()
-    if (
-      result.ok &&
-      !(await prepareStartSuccess(
-        this.env,
-        this.endpoint,
-        this.storage,
-        this.dependencies.now,
-      ))
+  private finish(result: WorkspaceStartResult): Promise<boolean> {
+    return publishStartCompletion(
+      this.env,
+      this.storage,
+      this.waiters,
+      this.creationWaiters,
+      this.admissionWaiters,
+      result,
+      () =>
+        prepareStartSuccess(
+          this.env,
+          this.endpoint,
+          this.storage,
+          this.dependencies.now,
+        ),
     )
-      return false
-    await this.storage.complete(result)
-    const stored = (await this.storage.result()) ?? result
-    if (job?.kind === 'create') {
-      const admission = await this.storage.admission()
-      if (admission) this.admissionWaiters.publish(admission)
-      const created = (await this.storage.creationResult()) ?? stored
-      this.creationWaiters.publish(created)
-      await publishCreationResult(this.env, this.storage)
-    }
-    this.waiters.publish(stored)
-    return true
   }
 }

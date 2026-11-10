@@ -80,6 +80,93 @@ and body for stable delivery retries. A missing verified email saves the
 disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
 owns email delivery and code management.
 
+`202611092100_provider_accounts.sql` adds `provider_account` to each table
+that holds a sandbox ID or a saved snapshot name: `workspaces`,
+`image_builds`, `image_build_jobs`, `lifecycle_sandbox_cleanup`,
+`image_leases`, `workspace_creation_plans`, `image_source_jobs`,
+`org_deletion_resources`, `terminal_credentials`, and `preview_hostnames`.
+The column defaults to `boat`, the one production account. The default
+fills the existing rows and the rows that the previous Worker writes during
+a deploy. Name the account in each new write, and do not rely on the default.
+In `image_build_jobs`, the column holds the account of `previous_image_name`.
+In `preview_hostnames`, it holds the account of `listener_sandbox_id`.
+`settings` gets no column. The next migration moves the org image out of
+`settings`.
+The migration rebuilds `workspaces`, so that a unique index on
+`(provider_account, sandbox_id)` replaces the unique `sandbox_id`.
+D1 keeps cascading deletes active while it defers foreign keys. So the
+migration copies each child table of `workspaces` aside and back. It keeps
+each workspace number and the org counters, and it recreates both triggers.
+It also rebuilds `org_deletion_resources` with the account in its primary
+key, and it adds the account to the `image_leases_snapshot` index.
+
+`202611092305_org_images.sql` adds `org_images`, one org image for each org
+and provider account, with the primary key `(org_id, provider_account)`.
+Each row holds `image_name`, `image_build_id`, `last_refresh_at`,
+`last_push_refresh_at`, `pending_push_refresh_at`, and
+`next_image_refresh_at`. `provider_account` has no default, so each writer
+names it. The non-unique index `org_images_account_name`, on
+`(provider_account, image_name)`, serves the check of whether a record still
+names an image. The migration copies these six fields of each `settings` row. The
+copy takes the account of the build that `image_build_id` names, or `boat`
+without such a build. Then the migration drops the six fields from
+`settings`. The scripts, the env vars, and the revision stay in `settings`.
+A Worker version from before this migration cannot run on the new schema, as
+[When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails) says.
+The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#org-images)
+page gives the readers and the rules of these records.
+
+`202611100900_computer_ledger.sql` adds the retained computer ledger. Each
+entry names its computer by the provider account and the sandbox ID
+together, so equal IDs in two accounts stay two entries.
+It copies known IDs from workspaces, builds, cleanup records, preview
+listeners, terminal credentials, image source jobs, and the deleted-org
+resource journal. Each copy takes the account of its source row. The copy
+also keeps an account that the Worker does not configure. Such an entry
+stays pending, with no provider request and no deletion mark.
+Identity-write triggers copy the account of the source row in the same way.
+They also retain assigned IDs from imports and repairs.
+A workspace owner trigger keeps its live computer records with the current owner.
+An allocation starts with its request key, its account, and no provider ID.
+The lifecycle attaches the ID after the provider reply.
+Confirmed deletions keep their entries until the org purge.
+An owner or parent ID has no foreign key, so its removal keeps the computer record.
+The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#the-computer-ledger)
+page gives the rules of these entries.
+
+The ledger migration runs after `202611092100_provider_accounts.sql` and
+`202611092305_org_images.sql`. The first of these rebuilds `workspaces` and
+`org_deletion_resources`. SQLite drops the triggers of a table when it drops
+the table. This order puts the ledger triggers on the rebuilt tables, so
+they stay.
+
+`202611101200_software_images.sql` adds `software_images`, which owns each
+software image attempt and its provider account, version, artifact, phase,
+resources, output, and deploy token digest. A partial unique index allows
+one building attempt per account. `image_build_jobs.software_image_name`
+pins the ready software image that a first build uses.
+The [software image backend](../worker/software-image/README.md) owns these records.
+
+`202611101300_routines.sql` adds org-scoped routines and their run records.
+Routine owners reference users, so membership removal can transfer their records.
+Org deletion cascades to both tables.
+Run workspace IDs have no foreign key, so a failed admission can still keep its attempt identity.
+An accepted failed first start keeps its workspace.
+The routine also keeps the former owner's name and its consecutive failure count.
+
+`202611101400_routine_run_failures.sql` keeps the public code and message of a failed workspace creation attempt.
+It also records the owner when a run enters the queue.
+The saved owner prevents an old queued request from using a replacement owner's logins.
+Message indexes support first-turn reports and creation recovery.
+
+`202611101401_routine_run_choice.sql` adds the nullable agent choice of a run.
+The starter records the agent, model, and effort together before it checks the login.
+Existing runs keep null because their original choice is not known.
+
+`202611101500_workspace_base_branches.sql` adds the nullable workspace base branch and the creation plan base branch and start commit.
+A null base branch uses the repository default branch.
+Existing rows keep that fallback.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -115,8 +202,13 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Workspace link chips | `202611091200`–`202611091259` |
 | Chat attachment metadata | `202611081800`–`202611081859` |
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
+| Computer ledger account merge | `202611100900`–`202611100959` |
+| Software image for first builds | `202611101200`–`202611101259` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
+| Routines: records and routes | `202611101300`–`202611101359` |
+| Routines: runs and Run now | `202611101400`–`202611101459` |
+| Routines: pull request runs | `202611101500`–`202611101559` |
 
 ## Key code
 

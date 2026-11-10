@@ -2,7 +2,7 @@ import { appDomain } from '../brand'
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type PersonKey } from './members'
 import { orgs, type Org } from './orgs'
-import type { RepositoryKey } from './repositories'
+import { repositories, type RepositoryKey } from './repositories'
 import type { SectionKey } from './sections'
 
 /**
@@ -10,8 +10,9 @@ import type { SectionKey } from './sections'
  * `unread` means a turn ended with output that the user has not seen.
  * `input` means that the turn waits for the user, such as for the
  * approval of a command on a Mac. All three run on a ready sandbox.
- * `archived` means that its cloud computer is deleted and its chat is
- * read-only. The other values are the sandbox states.
+ * `archived` means that Archive stopped its cloud computer, which the app
+ * deletes 14 days later, and that its chat is read-only. The other values
+ * are the sandbox states.
  */
 export type ActivityStatus =
   | 'working'
@@ -64,6 +65,20 @@ export type Workspace = {
    * runs on the agent login of the member who started it.
    */
   owner: PersonKey
+  /**
+   * The branch that its work goes to. Changes and each diff compare with
+   * it from the merge base, and the pull request bar names it. Without
+   * one, the default branch of the repository applies. A pull request run
+   * gets the head branch of its pull request (decision 507 G).
+   */
+  baseBranch?: string
+}
+
+/** The branch that the work of a workspace goes to. */
+export function baseBranchOf(workspace: Workspace): string {
+  return (
+    workspace.baseBranch ?? repositories[workspace.repository].defaultBranch
+  )
 }
 
 /**

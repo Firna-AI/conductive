@@ -47,7 +47,10 @@ function fixture() {
   const options = {
     cwd: '/repo',
     home: '/private-agent-home',
-    login: command.login,
+    endpoint: 'https://machines.conductive.test/v1/model/codex',
+    credential: { type: 'gateway' as const, ...command.credential },
+    sessionId: 'session-1',
+    commitAuthor: null,
     choice: command.message.choice,
     conversationId: null,
     instructions: '',
@@ -92,6 +95,9 @@ it('gives Codex its login through private RPC before starting or resuming a thre
     })
     await h.entered.promise
     const request = h.servers.requests[0]
+    expect(request.args).toContain(
+      'model_providers.conductive.base_url="https://machines.conductive.test/v1/model/codex"',
+    )
     expect(
       /secret-alice|inherited-api-key|inherited-codex-key/.test(
         JSON.stringify(request.env),
@@ -137,4 +143,37 @@ it('closes Codex after a private login failure without opening a thread', async 
     'initialize',
     'initialized',
   ])
+})
+
+it('uses the native measurement endpoint and credential for Codex', async () => {
+  vi.stubEnv('CONDUCTIVE_MEASURE_LOGIN', 'native-measure-key')
+  const h = fixture()
+  const opening = createCodexFactory(h.start)({
+    ...h.options,
+    endpoint: 'https://api.openai.com/v1',
+    credential: {
+      type: 'native',
+      login: { agent: 'codex', kind: 'api-key', secret: 'native-measure-key' },
+    },
+  })
+  onTestFinished(async () => {
+    h.complete()
+    await (await opening).close()
+  })
+  await h.entered.promise
+  expect(h.login()).toMatchObject({
+    method: 'account/login/start',
+    params: { type: 'apiKey', apiKey: 'native-measure-key' },
+  })
+  expect(h.servers.requests[0].args).toContain(
+    'model_providers.conductive.base_url="https://api.openai.com/v1"',
+  )
+  expect(h.servers.requests[0].args.join(' ')).not.toContain(
+    'native-measure-key',
+  )
+  expect(
+    /native-measure-key/.test(JSON.stringify(h.servers.requests[0].env)),
+  ).toBe(false)
+  h.complete()
+  await (await opening).close()
 })

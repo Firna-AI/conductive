@@ -111,12 +111,11 @@ it('keeps a set name in detail reads and repairs after a stored title and restar
 
 it('stores no title or session change when a pending model title completes after Archive', async () => {
   const { active, actor } = await setup()
-  active.boat.synchronousOutput = '\0' + '0\n'
   const archived = await active.request(
     workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
     {
       method: 'POST',
-      body: JSON.stringify({ discardUnpushedWork: true }),
+      body: '{}',
     },
   )
   expect(archived.status).toBe(200)

@@ -13,6 +13,7 @@ import {
 } from '../chat/integration/outer-seed.test-support'
 import { insertBuild } from '../lifecycle/build-admission-data'
 import { readSavedScript } from '../lifecycle/saved-script'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
 
 let bundle: string
@@ -46,6 +47,8 @@ it('mounts build history, logs and admin starts and installs workspace tools in 
   await insertBuild(active.env.DB, {
     id: 'software-build',
     orgId: OUTER_ORG,
+    providerAccount: DEFAULT_PROVIDER_ACCOUNT,
+    previousProviderAccount: DEFAULT_PROVIDER_ACCOUNT,
     kind: 'build',
     userId: 'owner',
     settingsRevision: 1,
@@ -55,6 +58,7 @@ it('mounts build history, logs and admin starts and installs workspace tools in 
     previousRepositoryLocations: [],
     software: OUTER_SOFTWARE,
     previousImageName: 'outer-image',
+    previousRunnerProtocolVersion: null,
     now: await active.actor(`org-image:${OUTER_ORG}`).testAlarmTime(),
   })
   await active.env.DB.batch([

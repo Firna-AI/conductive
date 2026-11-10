@@ -41,18 +41,20 @@ export function PreviewFrame(props: { preview: Preview }) {
 
 /**
  * Opens the same launch page in a new tab. The tab gets its own preview
- * cookie, and the previewed app keeps its own cookies there.
+ * cookie, and the previewed app keeps its own cookies there. The link shows
+ * "Open", and its spoken name also says that a new tab opens.
  */
 export function OpenInNewTab(props: { preview: Preview }) {
   return (
     <a
+      aria-label="Open in new tab"
       className={styles.link}
       href={props.preview.url}
       referrerPolicy="no-referrer"
       rel="noopener noreferrer"
       target="_blank"
     >
-      Open in new tab
+      Open
       <ExternalLink aria-hidden size={12} />
     </a>
   )

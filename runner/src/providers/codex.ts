@@ -1,7 +1,10 @@
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
 import { TOOL_ENV } from '../../../tools/context'
 import { object, string } from '../parse'
-import { attachmentDescription } from './attachment-description'
+import {
+  attachmentDescription,
+  attachmentReadInstruction,
+} from './attachment-description'
 import { codexBinary } from './binaries'
 import { codexNotification } from './codex-events'
 import { readComputerServer } from './computer-mcp'
@@ -16,6 +19,19 @@ import type { ProviderFactory, ProviderInput } from './types'
 function input(command: ProviderInput) {
   return [
     { type: 'text', text: providerMessage(command.message), text_elements: [] },
+    ...(command.attachments.length
+      ? [
+          {
+            type: 'text',
+            text:
+              attachmentReadInstruction +
+              (command.message.attachments.some((file) => file.kind === 'image')
+                ? ' Each image is also in this message.'
+                : ''),
+            text_elements: [],
+          },
+        ]
+      : []),
     ...command.attachments.flatMap((attachment) => {
       const metadata = command.message.attachments.find(
         (item) => item.id === attachment.attachmentId,
@@ -45,7 +61,7 @@ export function createCodexFactory(
     const configs = {
       model_provider: 'conductive',
       'model_providers.conductive.name': 'Conductive',
-      'model_providers.conductive.base_url': 'https://api.openai.com/v1',
+      'model_providers.conductive.base_url': options.endpoint,
       'model_providers.conductive.wire_api': 'responses',
       'model_providers.conductive.requires_openai_auth': true,
       cli_auth_credentials_store: 'ephemeral',
@@ -79,7 +95,11 @@ export function createCodexFactory(
         command: process.execPath,
         args,
         cwd: options.cwd,
-        env: providerEnvironment(options.home, options.tools),
+        env: providerEnvironment(
+          options.home,
+          options.tools,
+          options.commitAuthor,
+        ),
         signal: options.signal,
         lifetime,
       }),
@@ -124,7 +144,10 @@ export function createCodexFactory(
       rpc.notify('initialized')
       await rpc.request('account/login/start', {
         type: 'apiKey',
-        apiKey: options.login.secret,
+        apiKey:
+          options.credential.type === 'gateway'
+            ? options.credential.token
+            : options.credential.login.secret,
       })
       const response = object(
         await rpc.request(

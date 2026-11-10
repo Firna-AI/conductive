@@ -72,10 +72,9 @@ it('publishes one durable revocation per preview on expiry and archive through t
     `${'b'.repeat(32)}.preview.test`,
     Date.now() + 86_400_000,
   )
-  active.boat.synchronousOutput = '\0' + '0\n'
   const archive = await active.request(
     workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
-    { method: 'POST', body: JSON.stringify({ discardUnpushedWork: false }) },
+    { method: 'POST', body: '{}' },
   )
   expect(archive.status).toBe(200)
   for (const inbox of tabs)
@@ -86,7 +85,26 @@ it('publishes one durable revocation per preview on expiry and archive through t
         event: { type: 'preview.revoked', previewId: 'archived-preview' },
       },
     })
+  for (const inbox of tabs) {
+    expect(await inbox.next()).toMatchObject({
+      type: 'event',
+      envelope: {
+        eventNumber: 3,
+        event: { type: 'ports.updated', ports: null },
+      },
+    })
+    expect(await inbox.next()).toMatchObject({
+      type: 'event',
+      envelope: {
+        eventNumber: 4,
+        event: {
+          type: 'workspace.updated',
+          workspace: { state: 'archived' },
+        },
+      },
+    })
+  }
   expect(await active.actor().readChatWorkspaceSummary()).toMatchObject({
-    throughEventNumber: 3,
+    throughEventNumber: 4,
   })
 })

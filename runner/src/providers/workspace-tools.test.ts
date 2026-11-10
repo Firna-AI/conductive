@@ -6,7 +6,7 @@ import {
   fakeComputerServer,
   mockComputerServer,
 } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../test-support/harness'
+import { duringTurn, runnerHarness, turn } from '../../test-support/harness'
 import { stop } from '../../test-support/runtime'
 import { Runner } from '../runner'
 import { createClaudeFactory } from './claude'
@@ -25,6 +25,10 @@ it.each(['claude', 'codex'] as const)(
       'CONDUCTIVE_TURN_ID',
     ])
       vi.stubEnv(name, 'stale-inherited-context')
+    vi.stubEnv('GIT_AUTHOR_NAME', 'Inherited Author')
+    vi.stubEnv('GIT_AUTHOR_EMAIL', 'inherited-author@example.test')
+    vi.stubEnv('GIT_COMMITTER_NAME', 'Inherited Committer')
+    vi.stubEnv('GIT_COMMITTER_EMAIL', 'inherited-committer@example.test')
     onTestFinished(() => {
       vi.unstubAllEnvs()
     })
@@ -47,6 +51,10 @@ it.each(['claude', 'codex'] as const)(
     onTestFinished(() => runner.close())
     await runner.start(false)
     const first = turn('first', 'alice', agent)
+    first.commitAuthor = {
+      name: 'Alice Example',
+      email: '1+alice@users.noreply.github.com',
+    }
     h.endpoint.send(first)
     await runner.idle()
     const environment = () =>
@@ -92,29 +100,57 @@ it.each(['claude', 'codex'] as const)(
       expect(JSON.stringify(registration())).not.toContain(turnId)
     }
     check('turn-first')
+    expect.soft(environment()).toMatchObject({
+      GIT_AUTHOR_NAME: 'Alice Example',
+      GIT_AUTHOR_EMAIL: '1+alice@users.noreply.github.com',
+      GIT_COMMITTER_NAME: 'Alice Example',
+      GIT_COMMITTER_EMAIL: '1+alice@users.noreply.github.com',
+    })
     h.endpoint.send({
-      ...turn('during', 'bob', agent),
+      ...duringTurn(turn('during', 'bob', agent)),
       type: 'message',
       turnId: 'turn-first',
     })
     await runner.idle()
     check('turn-first')
+    expect.soft(environment()).toMatchObject({
+      GIT_AUTHOR_NAME: 'Alice Example',
+      GIT_AUTHOR_EMAIL: '1+alice@users.noreply.github.com',
+      GIT_COMMITTER_NAME: 'Alice Example',
+      GIT_COMMITTER_EMAIL: '1+alice@users.noreply.github.com',
+    })
     h.endpoint.send(stop('session-1', 'turn-first'))
     await runner.idle()
     expect(
       agent === 'claude' ? queries[0].closed : servers.processes[0].closed,
     ).toBe(true)
     const next = turn('second', 'bob', agent)
-    next.login = first.login
+    next.credential = first.credential
+    next.commitAuthor = {
+      name: 'Bob Example',
+      email: '2+bob@users.noreply.github.com',
+    }
     h.endpoint.send(next)
     await runner.idle()
     check('turn-second')
+    expect.soft(environment()).toMatchObject({
+      GIT_AUTHOR_NAME: 'Bob Example',
+      GIT_AUTHOR_EMAIL: '2+bob@users.noreply.github.com',
+      GIT_COMMITTER_NAME: 'Bob Example',
+      GIT_COMMITTER_EMAIL: '2+bob@users.noreply.github.com',
+    })
     const concurrent = turn('parallel', 'charlie', agent)
     concurrent.sessionId = 'parallel-session'
     concurrent.message.sessionId = 'parallel-session'
     h.endpoint.send(concurrent)
     await runner.idle()
     expect(environment()).toMatchObject({ CONDUCTIVE_TURN_ID: 'turn-parallel' })
+    expect.soft(environment()).toMatchObject({
+      GIT_AUTHOR_NAME: 'Inherited Author',
+      GIT_AUTHOR_EMAIL: 'inherited-author@example.test',
+      GIT_COMMITTER_NAME: 'Inherited Committer',
+      GIT_COMMITTER_EMAIL: 'inherited-committer@example.test',
+    })
     expect(
       agent === 'claude'
         ? queries[1].parameters?.options?.env?.CONDUCTIVE_TURN_ID

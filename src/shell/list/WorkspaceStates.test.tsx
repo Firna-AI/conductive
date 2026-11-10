@@ -17,7 +17,12 @@ describe('workspace states', () => {
     const row = textOf(
       renderScreen(
         app,
-        <OrgList orgId={FAKE_IDS.org} selectedId={null} variant="sidebar" />,
+        <OrgList
+          orgId={FAKE_IDS.org}
+          selectedId={null}
+          variant="sidebar"
+          viewer={fakeUser}
+        />,
       ),
     )
     expect(row).toContain('Checkout address autocomplete 6m , Needs input')
@@ -61,6 +66,8 @@ describe('workspace states', () => {
             }),
             toolEvents: new ToolEvents().subscribe,
             archive: null,
+            restore: null,
+            running: null,
             onReassigned: () => undefined,
           }}
         />,

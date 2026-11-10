@@ -1,21 +1,23 @@
-import type { RunnerAttachment } from '../../src/shared/runner'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
-import { sandboxProvider } from '../sandbox/client'
+import { providerForAccount } from '../sandbox/client'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { readAttachment } from './attachment-data'
+import { attachmentRepositoryDirectory } from './attachment-paths'
 import {
   attachmentBucket,
   attachmentNotFound,
   attachmentPath,
+  ATTACHMENTS_DIRECTORY,
 } from './attachment-record'
+import type { StoredAttachment } from './types'
 
 export async function prepareMessageAttachments(
   env: AppEnv,
   workspaceId: string,
   userId: string,
   messageId: string,
-  attachments: readonly RunnerAttachment[],
+  attachments: readonly StoredAttachment[],
   sandboxId: string | null,
   httpFetch: HttpFetch = (request) => fetch(request),
 ): Promise<string | null> {
@@ -29,10 +31,21 @@ export async function prepareMessageAttachments(
     )
   if (workspace.sandboxId !== sandboxId) throw attachmentNotFound()
   const bucket = attachmentBucket(env)
-  const provider = sandboxProvider(env, httpFetch)
+  const provider = providerForAccount(env, httpFetch, workspace.providerAccount)
+  const directory = await attachmentRepositoryDirectory(env.DB, workspace)
+  await provider.writeFile(
+    workspace.sandboxId,
+    `${directory}/${ATTACHMENTS_DIRECTORY}/.gitignore`,
+    new Blob(['*']).stream(),
+    1,
+  )
   for (const attachment of attachments) {
     const current = await attachmentWorkspace(env.DB, workspaceId, userId)
-    if (current?.sandboxId !== workspace.sandboxId) throw attachmentNotFound()
+    if (
+      current?.sandboxId !== workspace.sandboxId ||
+      current.providerAccount !== workspace.providerAccount
+    )
+      throw attachmentNotFound()
     const record = await readAttachment(env.DB, attachment.attachmentId)
     if (
       !record ||
@@ -40,21 +53,22 @@ export async function prepareMessageAttachments(
       record.uploaderUserId !== userId ||
       record.state !== 'claimed' ||
       record.claimedWorkspaceId !== workspaceId ||
-      attachment.path !== (await attachmentPath(record, messageId))
+      attachment.relativePath !== (await attachmentPath(record, messageId))
     )
       throw attachmentNotFound()
     const object = await bucket.get(record.objectKey)
     if (!object || object.size !== record.sizeBytes) throw attachmentNotFound()
     await provider.writeFile(
       workspace.sandboxId,
-      attachment.path,
+      `${directory}/${attachment.relativePath}`,
       object.body,
       record.sizeBytes,
     )
   }
+  const current = await attachmentWorkspace(env.DB, workspaceId, userId)
   if (
-    (await attachmentWorkspace(env.DB, workspaceId, userId))?.sandboxId !==
-    workspace.sandboxId
+    current?.sandboxId !== workspace.sandboxId ||
+    current.providerAccount !== workspace.providerAccount
   )
     throw attachmentNotFound()
   return workspace.sandboxId

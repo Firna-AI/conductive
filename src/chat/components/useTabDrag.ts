@@ -90,7 +90,7 @@ export function useTabDrag(props: {
       ...bind(key, index),
       ref,
       className: classes(
-        local.dragSurface,
+        local.holdSurface,
         dragged?.item === key && tabDrag.placeholder,
       ),
     }

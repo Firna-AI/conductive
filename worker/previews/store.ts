@@ -1,6 +1,5 @@
 import { previewPath, type Preview } from '../../src/shared/previews'
 import type { WorkspaceTarget } from './types'
-import type { PortMode } from '../sandbox/provider'
 import { sandboxAccessPredicate } from '../data/sandbox-access'
 
 export interface PreviewRecord extends WorkspaceTarget {
@@ -8,8 +7,6 @@ export interface PreviewRecord extends WorkspaceTarget {
   hostname: string
   port: number
   expiresAt: number
-  listenerMode?: PortMode | null
-  listenerSandboxId?: string | null
 }
 
 export function publicPreview(row: PreviewRecord, appOrigin: string): Preview {
@@ -31,10 +28,11 @@ export async function insertPreview(
 ): Promise<boolean> {
   const result = await db
     .prepare(
-      `INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at, listener_mode, listener_sandbox_id)
-     SELECT ?, ?, w.org_id, w.id, ?, ?, ?, ?, w.sandbox_id FROM workspaces w
+      `INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at,
+       listener_sandbox_id, provider_account)
+     SELECT ?, ?, w.org_id, w.id, ?, ?, ?, w.sandbox_id, w.provider_account FROM workspaces w
      JOIN org_members m ON m.org_id = w.org_id
-     WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ?
+     WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ? AND w.provider_account = ?
      AND ${sandboxAccessPredicate} AND m.user_id = ?`,
     )
     .bind(
@@ -43,10 +41,10 @@ export async function insertPreview(
       row.port,
       now,
       row.expiresAt,
-      row.listenerMode ?? null,
       target.workspaceId,
       target.orgId,
       target.sandboxId,
+      target.providerAccount,
       userId,
     )
     .run()
@@ -88,24 +86,25 @@ export async function previewForLaunch(
   return row ? { ...target, ...row } : null
 }
 
-export async function savePreviewMode(
+export async function savePreviewSandbox(
   db: D1Database,
   target: WorkspaceTarget,
-  port: number,
-  mode: PortMode,
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE preview_hostnames SET listener_mode = ?, listener_sandbox_id = ? WHERE workspace_id = ? AND org_id = ? AND port = ?
-     AND revoked_at IS NULL AND EXISTS (SELECT 1 FROM workspaces w WHERE w.id = workspace_id AND w.sandbox_id = ?)`,
+      `UPDATE preview_hostnames SET listener_sandbox_id = ?, provider_account = ?
+       WHERE workspace_id = ? AND org_id = ? AND revoked_at IS NULL
+       AND EXISTS (SELECT 1 FROM workspaces w
+         WHERE w.id = preview_hostnames.workspace_id
+         AND w.sandbox_id = ? AND w.provider_account = ?)`,
     )
     .bind(
-      mode,
       target.sandboxId,
+      target.providerAccount,
       target.workspaceId,
       target.orgId,
-      port,
       target.sandboxId,
+      target.providerAccount,
     )
     .run()
 }

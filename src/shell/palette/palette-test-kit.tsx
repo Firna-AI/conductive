@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { FetchLike } from '../../app/api/client'
 import { memoryNavigation } from '../../app/navigation'
 import { windowKeys, type AppServices, type Platform } from '../../app/services'
 import { Store } from '../../app/store'
@@ -41,8 +42,12 @@ export async function openPaletteTab(
     viewport?: Viewport
     server?: FakeApiServer
     events?: AppServices['events']
+    /** The fetch of the app, such as one of `HeldRequests`. */
+    fetch?: FetchLike
     mac?: boolean
     beside?: ReactNode
+    /** The clock and the timers of the app, such as those of a test. */
+    clock?: Pick<AppServices, 'now' | 'delay'>
   } = {},
 ) {
   const server = options.server ?? new FakeApiServer()
@@ -50,6 +55,8 @@ export async function openPaletteTab(
     onKey: windowKeys(window),
     platform: options.platform ?? 'other',
     events: options.events ?? recordingSocket(server).source,
+    fetch: options.fetch,
+    ...options.clock,
   })
   const navigation = memoryNavigation(href)
   const shell = options.mac ? (

@@ -1,6 +1,7 @@
 # Shared contracts
 
-These modules define the browser API and the runner protocol.
+These modules define the browser API, the runner protocol, and the pure
+transcript fold that the browser and the Worker share.
 They use JSON values and plain TypeScript types.
 They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
@@ -17,21 +18,59 @@ keeps the stored mark inside each compare-and-swap attempt. A missing or
 deleted name starts secret. An explicit mark changes it with the value.
 Its `classify` change carries only a name and a mark, so it keeps the value.
 `api.ts` keeps the existing sign-in and org paths and common records.
+Its `ApiErrorBody` carries the error code and message.
+The optional `error.details` identifies an unknown routine author login.
+It carries `login`, `triggerIndex`, and `list`.
+`triggerIndex` is zero-based in the routine's complete trigger list.
+`list` uses the author-filter request key, `is` or `isNot`.
+Errors without details keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
 
 `runner.ts` defines the versioned handshake, commands, numbered events,
 confirmations, and resend rules. Its comments state the delivery contract.
+`RunnerProtocolVersion` is 1 or 2. The Worker accepts both versions.
+The `welcome` repeats the version of the runner's `hello`.
+`RUNNER_PROTOCOL_VERSION` is 2. The packaged runner sends it, and
+each full image build records it.
+The credential of a turn belongs to the session starter, whoever sent the
+message:
+
+- `RunnerTurnV1` and `RunnerMessageDuringTurnV1` carry the real agent
+  login in `login`, with its agent, kind, and secret.
+- `RunnerTurnV2` carries a turn token in `credential`, with the agent and
+  the login kind. It has no `login`.
+- `RunnerMessageDuringTurnV2` carries no credential and no login.
+
+`RunnerTurn`, `RunnerMessageDuringTurn`, `RunnerCommand`, and
+`WorkspaceToRunner` cover both versions. Their `V1` and `V2` forms give the
+shapes of one version. The runner imports the `V2` forms and uses
+a turn token.
+The [model gateway](../../worker/model-gateway/README.md#model-requests)
+gives the form of a turn token.
 `RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
 Storage and network failures remain unconfirmed.
-After a refused file tree, changes list, start steps, or workspace name,
+After a refused file tree, changes list, start steps, workspace name, or port list,
 `RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
-It carries no login. A redelivery keeps its command ID.
+It carries no login and no turn token. A redelivery keeps its command ID.
+`ports.ts` defines the common listening-port fields and both report phases.
+`RunnerPortsUpdated` carries complete selected private labels.
+`PortsUpdated` carries final filtered display labels, with a null list when
+there is no current report. The display limits apply only after the workspace
+filter. The module owns those limits and the shared count limit.
+`terminal.ts` owns `TERMINAL_PORT`, shared by the runner exclusion
+and the terminal backend.
+[Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
+that report, its limits, and its refresh kind.
 `runner-transport.ts` defines the injectable socket boundary.
-Runner commands carry the agent login of the session starter, whoever sent the message. Browser response types do not.
+`RunnerConnection` and `RunnerConnector` take the type of the Worker's
+messages.
+Browser response types carry no login and no turn token.
+Turn commands also carry the commit author of the member whose message started the turn.
+Message commands carry no commit author.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 
 `messages.ts` owns the attachment metadata and target identity.
@@ -77,8 +116,10 @@ The Worker keeps the held text in the encrypted state of its runner stream.
 It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
 It saves both before it confirms the corresponding raw event.
 
-`event-limits.ts` applies the same excerpt caps after either filter.
+`event-limits.ts` applies the same chat excerpt caps after either filter.
 Its UTF-8 byte count works in the Worker and Node.
+The workspace's [port report owner](../../worker/chat/port-reports.ts)
+shortens port labels only after its final filter.
 
 `chat-events.ts` caps serialized tool detail at 64 KiB.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.
@@ -153,6 +194,37 @@ The git credential payload is not defined yet.
 
 ## Key code
 
+- [Session Markdown](transcript/session-markdown.ts) folds session pages and
+  builds concise or full transcripts. [Markdown items](transcript/markdown-items.ts)
+  format the shared chat words, paths, and commands. [Markdown code](transcript/markdown-code.ts)
+  keeps inline and block fences longer than their content's backticks.
+- [Lost data](transcript/lost-data.ts) maps refusal event types to the same
+  product names for the browser line and the copied transcript.
+- [Agent words](agents.ts) supply the effort labels, model lookup, and model
+  labels for the chat, the new-workspace picker, and the mockups.
+- [Duration](transcript/duration.ts) formats elapsed chat and command times.
+  [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
+  and the rule that starts a run open.
+- [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
+  lines, with omitted-file and unavailable-file data.
+- [Command words](transcript/command-words.ts) supply Mac names, command
+  states, notes, and output text. Browser code supplies icons and colours.
+- [Session events](transcript/session-events.ts) take stored Worker envelopes
+  or parsed browser envelopes and select one session's events.
+- [Session log](transcript/session-log.ts) folds those events and session
+  records in event order. It keeps the transcript and each item's first time.
+- [Transcript](transcript/transcript.ts) defines the items and folds each
+  session event with its [turn helpers](transcript/turn-events.ts).
+- [Item placement](transcript/item-placement.ts) keeps late items in their
+  turn. [Command placement](transcript/command-placement.ts) puts each Mac
+  command after the items that began before it.
+- [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
+  [Transcript entries](transcript/transcript-entries.ts) group the items and
+  generic inserts. Browser callers use React nodes as the insert content.
+
+- [Port reports](ports.ts) carry sorted listening ports and their safe labels.
+- [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
+- [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
@@ -160,6 +232,18 @@ The git credential payload is not defined yet.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
+- [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
+  Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
+  Run now takes a page request ID and returns its run after workspace admission.
+  Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
+  Each run carries its own `agent` and `owner`, independent of later routine edits or owner moves.
+  An unknown historical agent or owner is null.
+  Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
+  A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
+  Older runs and skips without an account omit it.
+- [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.
+  The routine's `pullRequest` holds the run's pull request number and URL, or null for scheduled and Run now runs.
+  Replies also carry `baseBranch`, resolved by the Worker. View writes cannot change it.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.
 - [Runner fakes](../../worker/test-support/README.md) use these message types.

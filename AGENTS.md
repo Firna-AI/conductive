@@ -134,12 +134,21 @@ deployment at `conductive.build`. It does not wait for CI, as
   `src/marketing/privacy.ts`. In the same change, update each sentence of
   the legal pages that restates the fact. A search for the old words is
   not enough, because a legal page can restate a fact in other words.
+- The public guides of the marketing site are docs too. Their Markdown
+  files go in `src/marketing/docs/`. A change that makes a guide wrong
+  updates that guide in the same change. When you change a fact in the
+  architecture doc or in a protocol doc, also read each public guide in
+  full. In the same change, update each guide sentence that restates the
+  fact. A search for the old words is not enough, because a guide can
+  restate a fact in other words.
+  [Website docs](docs/protocol/website-docs.md) gives the rules for the
+  words of a guide.
 - The comparison page at `conductive.build/from-conductor` gives each
-  listed Conductor Cloud feature a status. Its rows live in
+  listed Conductor feature a status. Its rows live in
   `src/marketing/from-conductor/`. When a change ships, starts, or drops a
   listed feature, update the status of its row in the same change. The
   claim rules are in
-  [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md#statuses).
+  [Conductor comparison](docs/protocol/conductor-comparison.md#statuses).
 
 ## Product
 

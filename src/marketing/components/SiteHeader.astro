@@ -1,15 +1,31 @@
 ---
-import { sitePaths, sourceRepositoryHref } from '../links'
+import {
+  docsPath,
+  sitePaths,
+  sourceRepositoryHref,
+  type SiteSection,
+} from '../links'
+import { pricingLinkText } from '../pricing'
 import { featuresHref, macAppHref, signInHref } from '../request-values'
 import GitHubMark from './GitHubMark.astro'
 import StartButton from './StartButton.astro'
 import Wordmark from './Wordmark.astro'
 
 /*
- * The top of each page: the lockup, Features, Download, GitHub, Sign in, and
- * the main action. Features and Download lead to their sections of the home
- * page. A phone keeps the lockup, GitHub, and Sign in.
+ * The top of each page: the lockup, Features, Download, Pricing, Docs,
+ * GitHub, Sign in, and the main action. Features and Download lead to their
+ * sections of the home page. A phone keeps the lockup, Docs, GitHub as its
+ * mark, and Sign in, and its footer links the pricing page. `current` is the
+ * section of the page, such as the docs, which the header marks for sight
+ * and for screen readers. The docs hold many pages, so their link is the
+ * current section. The pricing page is one page, so its link is the current
+ * page.
  */
+type Props = { current?: SiteSection }
+
+const { current } = Astro.props
+const inDocs = current === 'docs'
+const inPricing = current === 'pricing'
 ---
 
 <header class="header">
@@ -23,12 +39,30 @@ import Wordmark from './Wordmark.astro'
         Download
       </a>
       <a
-        class="header-link"
+        aria-current={inPricing ? 'page' : undefined}
+        class:list={[
+          'header-link',
+          'header-wide',
+          { 'header-current': inPricing },
+        ]}
+        href={sitePaths.pricing}
+      >
+        {pricingLinkText}
+      </a>
+      <a
+        aria-current={inDocs ? 'true' : undefined}
+        class:list={['header-link', { 'header-current': inDocs }]}
+        href={docsPath}
+      >
+        Docs
+      </a>
+      <a
+        class="header-link header-mark"
         href={sourceRepositoryHref}
         title="Open source on GitHub"
       >
         <GitHubMark size={16} />
-        GitHub
+        <span class="header-mark-label">GitHub</span>
       </a>
       <a class="header-link" href={signInHref}>
         Sign in

@@ -1,6 +1,9 @@
 import type { RunnerAttachment } from '../../../src/shared/runner'
 import type { ProviderInput } from './types'
 
+export const attachmentReadInstruction =
+  'The sender attached these files. Read each file before you answer.'
+
 export function attachmentDescription(
   command: ProviderInput,
   attachment: RunnerAttachment,
@@ -12,5 +15,6 @@ export function attachmentDescription(
     name: metadata?.name,
     mediaType: metadata?.mediaType,
     path: attachment.path,
+    sizeBytes: metadata?.sizeBytes,
   })}`
 }

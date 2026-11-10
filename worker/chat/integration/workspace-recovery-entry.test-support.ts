@@ -12,6 +12,8 @@ export class Workspace extends ReviewWorkspace {
   private readonly pendingWork: Promise<unknown>[]
   private readonly recoveryClock: { now: number }
   private advanceRuns = 0
+  private lifecycleRuns = 0
+  private advancedLifecycleRuns = 0
   private registrationGate: ReturnType<typeof heldOperation> | undefined
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
@@ -28,6 +30,7 @@ export class Workspace extends ReviewWorkspace {
   }
 
   override async advanceStartAlarm(at = this.recoveryClock.now): Promise<void> {
+    const before = this.lifecycleRuns
     this.advanceRuns = await advanceScheduledAlarms(
       {
         now: () => this.recoveryClock.now,
@@ -36,16 +39,57 @@ export class Workspace extends ReviewWorkspace {
         },
       },
       at,
-      () => [{ storage: this.ctx.storage, fire: () => this.alarm() }],
+      () => [
+        {
+          storage: this.ctx.storage,
+          fire: async () => {
+            await this.alarm()
+            await this.settledAlarms()
+          },
+        },
+      ],
     )
+    this.advancedLifecycleRuns = this.lifecycleRuns - before
   }
 
   recoveryAdvanceRuns(): number {
     return this.advanceRuns
   }
 
+  recoveryLifecycleRuns(): number {
+    return this.advancedLifecycleRuns
+  }
+
+  protected override async alarmLifecycle(): Promise<void> {
+    this.lifecycleRuns++
+    await super.alarmLifecycle()
+  }
+
   recoveryAlarmAt(): Promise<number | null> {
     return this.ctx.storage.getAlarm()
+  }
+
+  async recoveryLifecycleAlarmAt(): Promise<number | null> {
+    return (await this.ctx.storage.get<number>('alarm:lifecycle')) ?? null
+  }
+
+  async recoveryRunnerAlarmAt(): Promise<number | null> {
+    return (await this.ctx.storage.get<number>('alarm:runner')) ?? null
+  }
+
+  async recoveryChangedAlarmAt(): Promise<number | null> {
+    return (
+      (await this.ctx.storage.get<number>('alarm:lifecycle:changed')) ?? null
+    )
+  }
+
+  async issueTurnToken(turnId: string): Promise<string | null> {
+    const workspaceId = await this.chat.store.workspaceId()
+    return workspaceId
+      ? this.chat.runLifecycle(() =>
+          this.chat.turnTokens.forRunningTurn(workspaceId, turnId),
+        )
+      : null
   }
 
   setRecoveryTime(at: number): void {

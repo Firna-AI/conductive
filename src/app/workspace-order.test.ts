@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { WorkspaceEvent } from '../shared/events'
 import {
+  WORKSPACE_RESTORE_MS,
   workspacePath,
   workspacePaths,
   type WorkspaceState,
@@ -96,33 +97,102 @@ describe('the order of the open workspace', () => {
   })
 
   test('keeps an Archive that came while Resume waited over the newer reply of the Resume', async () => {
-    const { server, held, workspace, state } = await opened('stopped')
+    const { server, held, org, workspace, live, state } =
+      await opened('stopped')
     server.json('POST', resumePath, { ...starting, eventNumber: 1 })
     const resuming = workspace.resume()
-    await workspace.archive.start()
-    await workspace.archive.confirm()
+    const newer = {
+      ...starting.workspace,
+      name: 'A newer workspace name',
+      owner: {
+        id: 'new-owner',
+        githubLogin: 'calummoore',
+        displayName: 'Cal',
+        avatarUrl: null,
+      },
+      updatedAt: FAKE_TIME + 1_000,
+    }
+    live(1, { type: 'workspace.updated', workspace: newer })
+    const listed = { ...newer, name: 'The latest listed name' }
+    org.putWorkspace(listed)
+    // The Worker saved the newer record, so its Archive is newer still. The
+    // reply holds the name and the owner from before that record.
+    const lifecycle = {
+      state: 'archived',
+      archivedAt: FAKE_TIME + 2_000,
+      restoreUntil: FAKE_TIME + 2_000 + WORKSPACE_RESTORE_MS,
+      updatedAt: FAKE_TIME + 2_000,
+    } as const
+    server.json('POST', workspacePaths.archive(orgId, workspaceId), {
+      workspace: { ...starting.workspace, ...lifecycle },
+      start: null,
+      error: null,
+    })
+    await workspace.archive.archive()
+    const shown = () => valueOf(workspace.detail.get())?.workspace
+    expect(shown()).toEqual({ ...newer, ...lifecycle })
+    expect(org.workspace(workspaceId)).toEqual({ ...listed, ...lifecycle })
     expect(state()).toBe('archived')
     held.release('POST', resumePath)
     await resuming
-    expect(state()).toBe('archived')
+    expect(shown()).toEqual({ ...newer, ...lifecycle })
+    expect(org.workspace(workspaceId)).toEqual({ ...listed, ...lifecycle })
+    live(2, { type: 'workspace.updated', workspace: starting.workspace })
+    expect(shown()).toEqual({ ...newer, ...lifecycle })
+    expect(org.workspace(workspaceId)).toEqual({ ...listed, ...lifecycle })
     workspace.close()
   })
 
   test('shows a list Archive without an event and keeps it over a pending Resume', async () => {
-    const { server, held, org, workspace } = await opened('error')
+    const { server, held, org, workspace, live, events, page } =
+      await opened('error')
+    const before = valueOf(workspace.detail.get())?.workspace
+    if (!before) throw new Error('The workspace did not open.')
     server.json('POST', resumePath, { ...starting, eventNumber: 1 })
     const resuming = workspace.resume()
     await flushMicrotasks()
     org.putWorkspace(archived)
+    // The list gives the fields of the Archive. The detail keeps its own
+    // other fields, which its stream orders.
     const expected = {
       state: 'ready',
-      value: { workspace: archived, start: null, error: null },
+      value: {
+        workspace: {
+          ...before,
+          state: 'archived',
+          archivedAt: archived.archivedAt,
+          restoreUntil: archived.restoreUntil,
+          updatedAt: archived.updatedAt,
+        },
+        start: null,
+        error: null,
+      },
     }
     expect(workspace.detail.get()).toEqual(expected)
     held.release('POST', resumePath)
     await resuming
     expect(workspace.detail.get()).toEqual(expected)
     expect(org.workspace(workspaceId)?.state).toBe('archived')
+    events.send(page([], 1))
+    workspace.reassigned({
+      ...archived,
+      owner: { ...archived.owner, id: 'new-owner' },
+    })
+    const reassigned = workspace.detail.get()
+    const listed = org.workspace(workspaceId)
+    live(2, {
+      type: 'workspace.updated',
+      workspace: starting.workspace,
+    })
+    expect(workspace.detail.get()).toEqual(reassigned)
+    expect(org.workspace(workspaceId)).toEqual(listed)
+    if (!starting.start) throw new Error('The starting fixture has no steps.')
+    live(3, { type: 'start.updated', start: starting.start })
+    expect(workspace.detail.get()).toEqual(reassigned)
+    expect(org.workspace(workspaceId)).toEqual(listed)
+    live(4, { type: 'workspace.title', name: 'An older workspace title' })
+    expect(workspace.detail.get()).toEqual(reassigned)
+    expect(org.workspace(workspaceId)).toEqual(listed)
     workspace.close()
   })
 
@@ -153,6 +223,16 @@ describe('the order of the open workspace', () => {
           new URL(request.url).pathname === resumePath,
       ),
     ).toHaveLength(0)
+    server.json(
+      'GET',
+      path,
+      {
+        error: { code: 'network_failure', message: 'The detail did not load.' },
+      },
+      503,
+    )
+    await workspace.open()
+    expect(workspace.detail.get()).toEqual(expected)
     workspace.close()
   })
 

@@ -11,12 +11,14 @@ light scheme uses the same cool greys and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, and
+The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. Archive covers the time on hover only, without moving the
-row content. Selection and keyboard focus alone keep the time visible.
-The centre column has a slim header that names the
+row content, and Restore does so in the Archived group. Selection and
+keyboard focus alone keep the time visible. A right click on a row opens
+the menu of the workspace. The centre column has a slim header that names
+the
 workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
@@ -25,7 +27,8 @@ session and each open file or diff, in the order that the user gives them
 by drag, + for a new session, and a clock that opens the session history.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list, and the
+It shows no file content. A phone shows an org switcher at the top of the list,
+then New workspace, Routines, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
 
@@ -57,16 +60,45 @@ sessions as tabs above the chat, and four tabs at the bottom.
   +, the heading of the empty chat that + opens, and each model of the
   other agent say it.
 - While a sandbox starts, also for the first time, Send queues each
-  message in the workspace. Each queued message shows "Sends when the
-  sandbox is ready", as `app/new-workspace/waiting` shows. After a failed
-  first start, the bar of the error sits above the composer, so members
-  can still queue messages, as `app/new-workspace/error` shows. Every
-  other bar of the sandbox takes the place of the composer.
+  message in the workspace, as `app/new-workspace/waiting` shows. A queued
+  message has no label of its own, because the start steps under the chat
+  already show the wait. After a failed first start, the bar of the error
+  sits above the composer, so members can still queue messages, as
+  `app/new-workspace/error` shows. Every other bar of the sandbox takes
+  the place of the composer.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
-  `src/components/common/` beside its button or its tab, or in a `Sheet` on
-  a phone. Firna's own menu rows are taller than the dense design. A row can
-  lead with a mark, such as an avatar, and end with a muted detail and an
-  icon. An item that is off keeps its place, greyed.
+  `src/components/common/` beside its button or its tab, at the pointer of
+  a right click, or in a `Sheet` on a phone. Firna's own menu rows are
+  taller than the dense design. A row can lead with a mark, such as an
+  avatar, and end with a muted detail and an icon. An item that is off
+  keeps its place, greyed, and its detail keeps the muted colour, so that
+  the reason stays readable. An item with choices ends with an arrow, and
+  its submenu opens beside the menu, level with the item.
+  A move that the place of a tab rules out keeps its place, greyed.
+  A read-only workspace leaves out each item that it does not allow,
+  from decision 214.
+- The menu of a workspace row has Move to section, Reassign to, Rename, a
+  line, then Archive, as `app/workspace-menu` shows. It lists only the
+  actions that the person can use, from `workspaceMenu.ts` in
+  `src/components/workspaces/`, and a row with none has no menu. The app
+  reads the same list, so `workspaceMenu.ts` imports no fixture. A right
+  click opens the menu at the pointer, from `RowMenu.tsx` beside it.
+  Shift+F10 and the Menu key on a focused row open it below the row. No
+  row has a button for the menu. The row under the pointer keeps its
+  hover, with Archive over the time when the person can archive the
+  workspace, and with Restore over the time of an archived row until its
+  last day of Restore. The menu has no Restore. A phone layout opens the
+  menu and its choices in a sheet. A
+  long press on a phone still lifts the row for a drag, and opens no menu.
+  Rename puts a field in place of the name and the time, with the name
+  selected. `RowMenu.module.css` styles the field and the menu at the
+  pointer.
+- `FailureToast` in `src/components/common/` draws the toast that names a
+  change of the list that failed, with the message of the server, in the
+  `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
+  Transcript copy uses the same layer. A copy that worked shows the
+  success mark. A copy that failed shows the error mark with the words
+  "Try again", as `app/transcripts` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -76,15 +108,20 @@ sessions as tabs above the chat, and four tabs at the bottom.
   stands between two tabs and takes no space. When the tabs do not fit at
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, then Move left
-  and Move right. A file or diff tab has only the moves. The menu is the one
-  way to rename a session, so no tab shows a rename button. Rename session
-  opens a field in place of the title of that tab, also when the tab does
-  not show. The field marks that tab, which takes no fill, so only the shown
-  tab is filled. On a phone, a long press that ends without a move opens the
-  menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
-  `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
-  `TabRename.module.css` the rename field. The app shares these modules.
+  tab opens its menu at the pointer: Rename session, a line, Copy concise
+  transcript and Copy full transcript, a line, then Move left and Move
+  right, from decisions 188 and 215. A file or diff tab has only the moves.
+  In a read-only workspace, the menu of a session tab holds only the two
+  copy items, and a file or diff tab opens no menu. A copy keeps the shown
+  tab, and a toast gives its result, as `app/transcripts` shows. The menu
+  is the one way to rename a session, so no tab shows a rename button.
+  Rename session opens a field in place of the title of that tab, also when
+  the tab does not show. The field marks that tab, which takes no fill, so
+  only the shown tab is filled. On a phone, a long press that ends without a
+  move opens the menu as a sheet. `WorkspaceTabs.module.css` styles the row
+  and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
+  a drag, and `TabRename.module.css` the rename field. The app shares these
+  modules.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without
@@ -110,6 +147,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `ToastLayer` in `src/components/common/` draws a toast of Firna open
+  where the app shows its toasts: at the bottom right of a desktop, and
+  across the bottom of a phone. An action that a user can undo, such as
+  Archive, asks no question and offers the undo in its toast.
+  `ArchivedToast` in `src/components/workspace/` gives the toast after
+  Archive, over the workspace and over the list.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
@@ -147,40 +190,32 @@ sessions as tabs above the chat, and four tabs at the bottom.
     repository, so the name keeps its room. The button
     keeps the height of that line, and its touch area of 44 px reaches up
     over the name and down to the bottom edge of the header.
-- `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
-  the org as a chip in a line of text: a small rounded pill with the
-  `StatusGlyph` of the workspace, its label in a muted colour, and its
-  current name. Its height is the height of the line less 2 px, so a line
-  with a chip keeps its height. A chip is never wider than its line or
-  than 22 times the size of its font, and a long name is cut short. It
-  takes no fixtures, so the app can use it too.
-  - `MessageText` shows the chips in sent messages and in answers, as
-    links to the screens of the workspaces. A Markdown link to a
-    workspace shows as the chip alone, and a link in code stays code. A
-    link to another org, or to a workspace that the list does not hold,
-    stays plain text, and a long link breaks to fit the line.
-  - The chat finds each workspace in the list of the org, with the
-    archived ones and with the states of the list, through
-    `ChatWorkspaces`. A phone finds the same workspaces with no list on
-    the screen. An archived workspace keeps its chip, with the archived
-    mark.
-  - A pasted link becomes a chip in the message box at once: in the chat,
-    and in New workspace as a page or a dialog. `MessageField` gives each
-    box its field. A draft with a workspace link shows in `ChipTextField`:
-    plain text with each chip as one unit, with the sizes and the line
-    limits of the plain text field. The draft keeps the plain link.
+- [Workspace and file chips](design-chat.md#workspace-and-file-chips) gives
+  the workspace links, file mentions, the list of `@`, and chip removal.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
   square, and ready is one bright cell on a faint green grid. A workspace
   whose agent waits for the user, such as for the approval of a command,
   shows Needs input: a middle column in the accent colour that pulses.
+  A routine run takes the mark of its workspace. A run without a
+  workspace shows an hourglass while it waits for one, and a chevron when
+  a rule skipped it. A failed run shows the mark of its failure. It keeps
+  that mark after Try again, because the run keeps its failed outcome.
+  - A run whose first start failed shows the cross, as its workspace in
+    the error state does.
+  - A run that a check failed before it had a workspace, and a run whose
+    first turn failed, show a slash in rose. After a failed turn, the mark
+    of the workspace shows a finished turn, which would hide the failure.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason. `sandboxNoticeState.ts`
-  beside it owns the types of the bar and the panels, which the app
-  imports too.
+  action. The notice takes any refusal reason. An archived workspace
+  offers Restore until its last day, and the bar gives that day. After
+  it, the bar gives the day when Restore ended while a failed delete of
+  the cloud computer tries again, and it says that the cloud computer is
+  deleted only after the delete. `sandboxNoticeState.ts` beside it owns
+  the types of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.
@@ -192,11 +227,37 @@ sessions as tabs above the chat, and four tabs at the bottom.
     place of the line on the chat history, as the `files` variants of
     `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
     keeps its short panels beside the bar.
+- The parts of routines live in `src/components/routines/`. The routine
+  page puts its form beside the Runs column on desktop. A phone shows a
+  saved routine in two tabs, Routine and Runs. The Runs list holds the
+  newest 50 runs, and Show older runs ends it when older runs exist. A
+  phone opens the Add trigger menu and the author filter of a pull request
+  trigger in a sheet. A suspended org keeps its Routines link, and shows
+  its routines read-only under its notice. `RunLinks` in
+  `src/components/workspace/` draws the line under the header of a run
+  workspace, which links to its routine and to its pull request. The pull
+  request bar names the base branch of a workspace: the default branch, or
+  for a pull request run the head branch of its pull request. A long base
+  branch ends in an ellipsis at half of the line. The
+  bubble of a message keeps its line breaks, as in the app, so the first
+  message of a run shows the facts of its trigger on their own lines.
+  - `runCopy.ts` gives the words of a failed run from its stored cause, and
+    from the agent and the owner of the run itself, not of its routine. So
+    a later change of the agent, or a move of the routine to another owner,
+    changes no past row. A failed start and a failed first turn keep their
+    workspace, and their rows open it, as `app/routines/runs/failed` shows.
+  - When the routine page cannot show its routine, the page keeps Routine
+    as its name and shows no tabs, no Runs list, and no actions. A routine
+    that the org no longer has shows the empty state "This routine is not
+    available" with Open Routines. A read that failed shows `LoadFailure`.
+    `app/routines/routine/unavailable` and `not-loaded` show them.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of
-  the list and of each settings tab, and above the bar of an archived
-  workspace. `SuspendedOrgPanel` shows the same words in the main area of
+  the list, of each settings tab, and of each view of a routine page, and
+  above the bar of an archived workspace. A phone shows it above either
+  tab of a routine page, as the `runs` variant of
+  `app/orgs/suspended/routines/routine` shows. `SuspendedOrgPanel` shows the same words in the main area of
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
   a deleted org, at the width of a settings page. A suspended org shows no
   action that it refuses.
@@ -204,7 +265,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   marketing site or Get started.
 - A build of the cloud computer runs for at most 60 minutes, and a start of
   a sandbox for at most 20 minutes. A build that runs names its limit under
-  its log, and the start card names the limit under its steps. A failed
+  its log. The start card does not name the limit of a start. A failed
   build or start shows the message that the app saved for it, so a job that
   passed its limit names that limit, as
   `app/org-settings/cloud-computer/build-failed/time-limit`,
@@ -214,6 +275,21 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `app/new-workspace/first-build` shows. A notice of work that runs, such
   as that build, shows a spinner in place of its icon: `Notice` in
   `src/components/common/` takes `busy`.
+- A chosen repository that the cloud computer does not hold yet waits for
+  its build, from decisions 240 and 241. The repository menu of New
+  workspace keeps it in place, off, with the note of when it is ready as
+  the muted detail of its row. A form whose repository waits keeps Send
+  off under a notice. `WaitingRepositoryNotice` in
+  `src/components/new-workspace/waitingRepository.tsx` draws that notice,
+  and `formWait` beside it says what the form waits for. The app shares
+  that module. `RepositoryNotice` in `src/components/settings/`
+  draws the notice of the Repositories and Cloud computer tabs, with a
+  spinner while the build of an added repository runs. An admin gets its
+  Try again or Build computer on the Repositories tab only, because the
+  build card of the Cloud computer tab has the same action.
+  `repositoryChangeCopy.ts` beside it holds the words of both, which the
+  app shares, as `app/new-workspace/waiting-repository` and
+  `app/org-settings/repositories` show.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
@@ -224,152 +300,17 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The mockups, chat, and composer of a new workspace share it.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
-- `AttachmentChips` in `src/components/chat/` draws each attached file as a
-  chip: a glyph, the name, a label, and its actions. While a file uploads,
-  a ring takes the place of its icon, and the share of the file that the
-  browser sent, such as "64%", the place of its size. Before the first
-  measurement, the spinner of a working agent and "Uploading" show, so no
-  chip shows a made-up share. A failed upload tints the whole chip
-  rose and offers Try again and Remove. Send waits for both states.
-  `AttachmentStates.module.css` holds the styles of the states, and
-  `attachmentCopy.ts` holds their words. A file over 25 MB never becomes a
-  chip: a notice over the composer names it, gives the limit, and offers
-  "Attach a smaller file", as `app/attachments/too-large` shows. The files
-  of a sent message show under it, at the right, without Remove. The New
-  workspace page and dialog use the same chips before the workspace exists,
-  as `app/new-workspace/files` and `app/new-workspace/dialog/files` show.
-  In the dialog, the notice of a file over 25 MB sits with its other
-  notices, under the message.
-- `MarkdownTable` in `src/components/common/` draws each Markdown table of
-  a reply and of the Markdown preview of a file as a native table. It
-  imports no fixture, so the app can use it too. Each caller draws the
-  content of the cells, such as inline code.
-  - The header row has the raised fill and the strong weight. One 1 px line
-    in the border colour stands between two cells and around the table.
-    The text of the table has the small size, one step under the text of a
-    reply.
-  - Each column takes the alignment of its separator cell, also in the
-    header row. A table wider than its place scrolls sideways inside its
-    box, so the text around it keeps its width, as
-    `app/chat/tables/wide` shows.
-  - A short row of a reply keeps only the cells that the agent wrote. Its
-    last cell spans the missing columns, up to 1,000, the most that HTML
-    allows, and any columns after that stay empty. The user chose the span
-    on 9 November 2026. The cell that spans keeps its text at its start,
-    so the text never stands under a column that it does not belong to,
-    as `app/chat/tables/short-row` shows. The file preview fills a short
-    row of a file with empty cells instead.
-  - While the agent writes, a header row shows as its text, with its
-    pipes, until a separator row with as many cells follows it. Then the
-    table shows the rows that have arrived, as `app/chat/tables/header`
-    and `app/chat/tables/rows` show.
-- When a turn ends, the work before its answer folds into one line, from
-  decision 150. The work is the agent messages and the tool calls, with
-  the Mac command cards and the lost lines among them. The answer is the
-  last agent message, with the agent messages right before it.
-  - `groupItems.ts` in `src/components/chat/` finds the turns, because the
-    mockup items have no turn IDs. The items after a member message, up to
-    a turn end, a stop, an error, or the lost line of a turn end, form one
-    turn. A message with `during` joins its turn and starts a new part.
-    Each part folds its own work and keeps its own answer in view.
-  - The work after the answer stays in view, such as the calls that a stop
-    cut off. A part without an agent message does not fold, and a run
-    folds only when it holds a tool call or a message. While a turn runs,
-    each message shows, and each run of tool calls folds on its own.
-  - `WorkFold` draws the fold. Its line reads "11 tool calls, 2 messages",
-    with the icons of the tool kinds and the left-out output. `FoldLine` in
-    `ToolGroup.tsx` draws the line of both kinds of fold. A Mac command
-    card and a lost line fold at their place, with no count and no mark,
-    from decision 151.
-  - The open fold lists its steps in order, in the indented list of an
-    open run of tool calls: the call line that `ToolGroup` shares, a
-    message as its first words on one line, the Mac command card, and the
-    lost line, which starts at the left edge. A click on a message line
-    grows it to the full text, with its paragraphs and bullets.
-  - A message line holds no table, because a summary holds only phrasing
-    content. Closed, the line shows a table as its cells, row by row, with
-    a dot between two cells. Open, the line keeps the paragraphs before
-    the first table, and the table and the rest of the message show under
-    the line, at the left edge of its text, as `app/chat/work/table`
-    shows.
-  - The `fold` state of the workspace opens the folds, and `open-message`
-    also opens the last message line of each. A view runs no script, so a
-    chat with open folds starts at its top.
-- Data that the chat does not have shows in plain words, from decision 76.
-  `lostCopy.ts` in `src/components/chat/` holds the words. A tool call whose
-  output the runner shortened shows the size that it left out, such as "1.2 MB left out", and
-  the line of its fold shows the total. A turn with more than 200 files ends its
-  list with plain text, such as "47 more files". A stopped turn shows no
-  file list, so its line ends with the count, such as
-  "You stopped the agent · 5 changed files not listed".
-  `LostLine` draws a refused runner event as one centred, muted line at its
-  place, which names the lost data and why, such as "A tool update was lost
-  because it was too large". It never shows the lost data, and a phone wraps
-  it into balanced lines. A lost line among the work of an ended turn folds
-  with that work.
-- Files that the cloud computer could not read never show as an empty list.
-  A finished turn still ends with its duration, then "Changed files
-  unavailable" in muted text in place of its files. A stopped turn ends its
-  line with the same words. All files keeps the list that it saved before,
-  under the notice "The latest list of all files is unavailable", which has
-  no time. With no saved list, All files says "The list of all files is
-  unavailable" in place of the tree. `lostCopy.ts` holds these words too.
+- [The chat](design-chat.md) gives the chips of attached files, the
+  Markdown tables of a reply and of a file preview, and the fold of the work
+  of a turn. It also gives the data that the chat does not have, and the
+  files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
   frame of a picture on the marketing site.
-- The operator section has the tabs Overview, Orgs, Users, Waitlist, and
-  Invite codes, from `OperatorPage` in `src/components/operator/`. On a
-  phone the five tabs keep one line while they fit, with the `flow` mode
-  of `LinkTabs`. On a narrower phone the last tabs move to a second line,
-  so that every tab shows. The overview uses
-  the stat tiles, the line chart, the table, and the skeletons of
-  `@firna/ui`. A view runs no script, so the chart keeps the width that the
-  page column gives it. The workspaces by state reuse `StatusGlyph`. A line
-  under the users tile counts the people on the waitlist and opens the
-  Waitlist tab.
-- A table of the operator keeps fewer columns on a phone, so that each
-  name keeps one line. The line under a name gives what a search found,
-  when it is not the name, and the state of a suspended or deleted target,
-  or Waiting for a person on the waitlist, with a dot between them. A phone
-  can add a second line for a column that it leaves out, such as the age
-  of a GitHub account. A column of days fits a day of another year, such
-  as 30 Sept 2026, on one line. A person shows on a disc and an org on a
-  square, with `PersonAvatar` and `InitialsTile` from
-  `src/components/orgs/`.
-- The Waitlist tab shows no picture. Each login opens the GitHub profile in
-  a new tab, with a small mark for it. After Approve, the row keeps its
-  place with Approved and the state of its email, in plain words.
-- A code shows in the monospace font, with Copy beside it. A code that
-  still works also has Copy join link, for a link such as
-  `https://app.conductive.build/join/<code>` on the domain of the app.
-  Disable on a row is a quiet icon, as in the member list of an org. A
-  code that no longer works keeps the place of Disable empty.
-- The Approval email row of a user page gives the state of the email. A
-  state of an email that did not go has a short muted line with the
-  reason. No state has an action, because the person keeps app access.
-- Suspend and Lift sit in the header of the page of an org or a user, and
-  in its footer on a phone. A person who waits also has Approve there. Each
-  asks first, with `ConfirmDialog`. The words of the questions and the
-  notices live in `operatorCopy.ts`, and those of the waitlist, the app
-  access, the codes, and the pause in `accessCopy.ts` and `codeCopy.ts`.
-  These modules import no fixture, so the app uses them too. So do
-  `WorkspaceStates` and `DailyChart`. Each text of an
-  org takes its deletion, so the questions and the notices of a deleted
-  org promise nothing that its members cannot open, and nothing that a
-  lift does not give back. The Suspend question of a user offers to
-  disable their referral code with `CheckOption` from
-  `src/components/common/`, the checkbox of the browser in the accent
-  colour, because `@firna/ui` has no checkbox.
-- `DailyChart` names each point and each label of its axis with the UTC
-  day, such as "10 Oct", in British English, so that no time zone and no
-  locale of a browser or of the build machine changes a date. Its axis has
-  one slot for each day and shows every few labels, so the labels leave
-  out the year. Its own table lists the UTC days, because the table of the
-  Firna chart cannot name its first column.
-- While sign-ups are paused, `PauseNotice` tops each tab of the section,
-  with Resume sign-ups. On the Invite codes tab it takes the place of the
-  Sign-ups box, which holds Pause sign-ups while sign-ups are open.
+- [The operator section](design-operator.md) gives its tabs, its tables,
+  the Waitlist tab, the codes, and the approval email. It also gives
+  Suspend, Lift, and Approve, the daily chart, and the notice of a pause.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
