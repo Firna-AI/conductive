@@ -538,9 +538,9 @@ first.
 
 Depends on: 4
 
-- [ ] Delete `needsBuild` from the Worker reply, `OrgSettings`, the
+- [x] Delete `needsBuild` from the Worker reply, `OrgSettings`, the
       parsers, the dev fakes, and the fixtures.
-- [ ] Run the targeted tests and `npm run typecheck`.
+- [x] Run the targeted tests and `npm run typecheck`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

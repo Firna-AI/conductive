@@ -14,7 +14,6 @@ const settings: OrgSettings = {
   startupScript: '',
   envVars: [],
   updatedAt: 0,
-  needsBuild: false,
 }
 
 function build(id: string, state: ImageBuild['state']): ImageBuild {
@@ -31,18 +30,15 @@ function build(id: string, state: ImageBuild['state']): ImageBuild {
   }
 }
 
-/**
- * The tab of a member with `builds`. The settings say `needsBuild`, which
- * the Worker also sets after a change of the repositories.
- */
-function view(builds: BuildsResponse, needsBuild = false) {
+/** The tab of a member with the saved changes from `builds`. */
+function view(builds: BuildsResponse) {
   return (
     <MemberComputerView
       builds={builds}
       log={[]}
       now={now}
       org={{ id: 'firna', name: 'Firna', role: 'member' }}
-      settings={{ ...settings, needsBuild }}
+      settings={settings}
       timeZone="UTC"
       viewport="desktop"
     />
@@ -117,7 +113,7 @@ describe('the notice of a changed install script for a member', () => {
       },
     }
     expect(
-      check(view(repositoryChange, true), [], ['The install script changed']),
+      check(view(repositoryChange), [], ['The install script changed']),
     ).toEqual({ missing: [], unwanted: [] })
   })
 })

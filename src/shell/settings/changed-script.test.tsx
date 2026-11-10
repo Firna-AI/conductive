@@ -7,11 +7,7 @@ import {
   type ImageBuild,
 } from '../../shared/org-settings'
 import { FakeApiServer } from '../../test-support/fake-api'
-import {
-  coreFixtures,
-  FAKE_IDS,
-  FAKE_TIME,
-} from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { buttonsOf } from '../account/test-markup'
 import { renderScreen, startedApp, textOf } from '../test-render'
 import { ComputerSettings } from './ComputerTab'
@@ -37,16 +33,11 @@ function buildOf(
 
 /**
  * The Install software card of the Cloud computer tab of an admin, when the
- * org has `builds`: the words from its notice on, and its buttons. The
- * settings say `needsBuild`, which the Worker also sets after a change of
- * the repositories.
+ * org has `builds`: the words from its notice on, and its buttons.
  */
-async function changedScript(builds: BuildsResponse, needsBuild = false) {
+async function changedScript(builds: BuildsResponse) {
   const server = new FakeApiServer()
   server.json('GET', orgSettingsPaths.builds(FAKE_IDS.org), builds)
-  server.json('GET', orgSettingsPaths.settings(FAKE_IDS.org), {
-    settings: { ...coreFixtures().settings.settings, needsBuild },
-  })
   const app = await startedApp(server)
   const org = app.orgs.get().find((item) => item.id === FAKE_IDS.org)
   if (!org) throw new Error('The fake org is missing.')
@@ -122,20 +113,17 @@ describe('the notice of a changed install script', () => {
   })
 
   test('does not show for a change of the repositories alone', async () => {
-    const repositoryChange = await changedScript(
-      {
-        builds: [buildOf('first', 'succeeded', 3_600_000)],
-        currentImageBuildId: 'first',
-        changes: {
-          installScript: false,
-          addedRepositories: [
-            { id: 'admin-dashboard', fullName: 'acme/admin-dashboard' },
-          ],
-          removedRepositories: [],
-        },
+    const repositoryChange = await changedScript({
+      builds: [buildOf('first', 'succeeded', 3_600_000)],
+      currentImageBuildId: 'first',
+      changes: {
+        installScript: false,
+        addedRepositories: [
+          { id: 'admin-dashboard', fullName: 'acme/admin-dashboard' },
+        ],
+        removedRepositories: [],
       },
-      true,
-    )
+    })
     expect(repositoryChange).toEqual({ notice: null, buttons: ['Save script'] })
   })
 })

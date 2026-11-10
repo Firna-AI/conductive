@@ -144,7 +144,6 @@ describe('the read-only settings of a member', () => {
       startupScript: '',
       envVars: [{ name: 'DATABASE_URL', secret: true }],
       updatedAt: 0,
-      needsBuild: false,
     }
     const event = (eventNumber: number, text: string): BuildLogEvent => ({
       eventNumber,

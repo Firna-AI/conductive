@@ -51,13 +51,10 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   no build. A running job takes the request without starting another job.
   A failed start writes one fixed warning through `warnWorker`. The saved
   choice stays, and the reply keeps the repository list and HTTP 200.
-- The settings reply compares its revision with the published image's
-  build. Before the first image, it uses the newest build. With no build,
-  `needsBuild` is false.
 - The build history reply also gives `BuildsResponse.changes`: the saved
   install script change and the added and removed repositories. The
   [image build reader](../lifecycle/image-builds.md#build-jobs) owns the
-  comparison. The settings reply still keeps `needsBuild`.
+  comparison.
 - `getStartedGitHubComplete` owns the `github-app` step in every org state.
   The step is complete when an org of the user that is not deleted has a
   repository through an installation that is not suspended.
@@ -165,8 +162,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   repository reads, saved org initials, and admin repository selection.
 - `feature-org.test.ts` checks the repository requirement, the first build,
   and a failed build start that keeps the org.
-- `feature-settings-builds.test.ts` checks the build revision used by the
-  settings reply before and after the first image.
+- `feature-settings-builds.test.ts` checks the install script change in
+  the build history before and after the first image.
 - `feature-repository-builds.test.ts` checks the admin's repository build,
   repeated saves, removals, adds after a failed build, and a failed start
   that keeps the choice.

@@ -71,7 +71,6 @@ export function parseSettings(value: unknown): OrgSettings {
     startupScript: text(source, 'startupScript'),
     envVars: list(source, 'envVars', envVar),
     updatedAt: count(source, 'updatedAt'),
-    needsBuild: flag(source, 'needsBuild'),
   }
 }
 

@@ -72,7 +72,6 @@ export function readSettings(value: unknown): OrgSettings {
     startupScript: text(settings, 'startupScript'),
     envVars: items(settings, 'envVars', readEnvVar),
     updatedAt: count(settings, 'updatedAt'),
-    needsBuild: flag(settings, 'needsBuild'),
   }
 }
 

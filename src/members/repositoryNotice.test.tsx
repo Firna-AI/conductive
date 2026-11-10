@@ -18,7 +18,6 @@ const settings: OrgSettings = {
   startupScript: '',
   envVars: [],
   updatedAt: 0,
-  needsBuild: false,
 }
 
 function build(

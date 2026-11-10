@@ -134,7 +134,6 @@ export function coreFixtures(role: OrgRole = 'admin') {
       startupScript,
       envVars,
       updatedAt: FAKE_TIME,
-      needsBuild: false,
     },
   }
   const build: BuildResponse = {

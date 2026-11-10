@@ -41,7 +41,6 @@ export interface OrgSettings {
   /** A stored value never goes back to the browser. */
   envVars: readonly { name: string; secret: boolean }[]
   updatedAt: Timestamp
-  needsBuild: boolean
 }
 export interface OrgSettingsResponse {
   settings: OrgSettings

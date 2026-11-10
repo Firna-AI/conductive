@@ -107,13 +107,10 @@ function newestBuild(scene: ComputerScene): BuildResponse | null {
   return null
 }
 
-/** The replies that draw the scene, for the routes of an org's cloud computer. */
-export function computerReplies(
-  scene: ComputerScene,
-  org: string,
-): { path: string; body: unknown }[] {
+/** The builds and saved changes of the dev scene. */
+export function computerBuilds(scene: ComputerScene): BuildsResponse {
   const newest = newestBuild(scene)
-  const builds: BuildsResponse = {
+  return {
     builds: newest ? [newest.build, ...history] : history,
     currentImageBuildId: 'build-5',
     changes: {
@@ -122,18 +119,19 @@ export function computerReplies(
       removedRepositories: [],
     },
   }
+}
+
+/** The replies that draw the scene, for the routes of an org's cloud computer. */
+export function computerReplies(
+  scene: ComputerScene,
+  org: string,
+): { path: string; body: unknown }[] {
+  const newest = newestBuild(scene)
   const replies: { path: string; body: unknown }[] = [
-    { path: orgSettingsPaths.builds(org), body: builds },
+    { path: orgSettingsPaths.builds(org), body: computerBuilds(scene) },
   ]
   if (newest) {
     replies.push({ path: buildPath(org, newest.build.id), body: newest })
-  }
-  if (scene === 'changed') {
-    const { settings } = coreFixtures().settings
-    const body: OrgSettingsResponse = {
-      settings: { ...settings, needsBuild: true },
-    }
-    replies.push({ path: orgSettingsPaths.settings(org), body })
   }
   return replies
 }

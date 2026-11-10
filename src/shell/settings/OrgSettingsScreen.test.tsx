@@ -147,7 +147,7 @@ describe('OrgSettingsScreen', () => {
 
   test('an older settings reply without the base image names no software', async () => {
     const server = new FakeApiServer()
-    const { installScript, startupScript, envVars, updatedAt, needsBuild } =
+    const { installScript, startupScript, envVars, updatedAt } =
       coreFixtures().settings.settings
     server.json('GET', orgSettingsPaths.settings(FAKE_IDS.org), {
       settings: {
@@ -155,7 +155,6 @@ describe('OrgSettingsScreen', () => {
         startupScript,
         envVars,
         updatedAt,
-        needsBuild,
       },
     })
     const { app, org, model } = await signedIn(server)

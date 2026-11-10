@@ -17,7 +17,6 @@ const settings: OrgSettings = {
   startupScript: '',
   envVars: [{ name: 'DATABASE_URL', secret: true }],
   updatedAt: 0,
-  needsBuild: false,
 }
 const done: ImageBuild = {
   id: 'b1',

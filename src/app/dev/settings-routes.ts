@@ -15,7 +15,7 @@ import {
   type Params,
   type Route,
 } from './router'
-import { updateNeedsBuild, type OrgState } from './state'
+import type { OrgState } from './state'
 
 /** A set without a mark replaces only the value, and keeps the mark. */
 type EnvChange =
@@ -91,7 +91,6 @@ function updateSettings(
     updatedAt: backend.now(),
   }
   if (changedInstall) org.settingsRevision += 1
-  updateNeedsBuild(org)
   return json({ settings: org.settings } satisfies OrgSettingsResponse)
 }
 
@@ -109,7 +108,6 @@ function setRepository(
     repository.id === repositoryId ? { ...repository, selected } : repository,
   )
   if (changed) org.settingsRevision += 1
-  updateNeedsBuild(org)
   if (changed && selected) startBuild(backend, org)
   return json({ repositories: org.repositories } satisfies RepositoriesResponse)
 }
