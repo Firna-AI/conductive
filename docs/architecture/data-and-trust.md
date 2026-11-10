@@ -8,17 +8,8 @@ decision number names a dated record, as
 
 ## Hostnames
 
-| Hostname                | What it serves                                                              |
-| ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with public docs and the Terms, Privacy, and comparison pages           |
-| `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
-| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, the credential helper, and the model gateway |
-| `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
-
-`api.conductive.build` is the hostname for machines. Each of its routes has
-a path under `/v1/` (decision 102). The preview domain, `conductive.page`,
-is a separate registrable domain, so preview code is never same-site with
-the app (decision 6).
+[Hostnames](../architecture.md#hostnames) gives the role of each hostname
+and the separate preview domain.
 
 ## Where data lives
 

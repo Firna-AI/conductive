@@ -16,7 +16,9 @@ it('accepts every report refresh kind without a session or login', () => {
   const parsed: unknown[] = []
   expect(() => {
     for (const command of commands)
-      parsed.push(parseWorkspaceMessage(JSON.parse(JSON.stringify(command))))
+      parsed.push(
+        parseWorkspaceMessage(JSON.parse(JSON.stringify(command)), () => {}),
+      )
   }).not.toThrow()
   expect(parsed).toEqual(commands)
 })

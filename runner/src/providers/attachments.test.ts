@@ -51,6 +51,7 @@ function attachedTurn(agent: Agent) {
     sessionId: command.sessionId,
     endpoint: `${fakeToolContext.machineOrigin}/v1/model/${agent}`,
     credential: { type: 'gateway', ...command.credential },
+    commitAuthor: null,
     choice: command.message.choice,
     conversationId: null,
     instructions: agentInstructions({

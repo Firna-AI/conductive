@@ -125,6 +125,11 @@ Every org image holds the app's own sandbox software:
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 
+The Worker builds one software image for each version of this software,
+when the deploy run asks. The software image holds the base image and this
+software, and no org data. A build of an org without an org image starts
+from it, so that build installs none of this software.
+
 The agent runner runs Claude through the Claude Agent SDK, with the agent
 program that the SDK bundles at its own version. A pinned version guards
 against a change in how the agent program reads its credential and its
@@ -149,6 +154,11 @@ sandbox. The previewed server then gets its local address as `Host`
 (decision 218).
 [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
 states the rules of the relay.
+
+The Worker gives each sandbox the commit author of its workspace owner.
+The agent runner gives each agent the commit author of the sender of its
+turn. [Commit author](../protocol/github-tokens.md#commit-author) states
+the rules.
 
 ## External services
 

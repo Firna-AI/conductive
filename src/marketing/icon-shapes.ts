@@ -68,8 +68,8 @@ const featureIcons = {
 } as const satisfies IconShapes
 
 /**
- * The icons of the Conductor Cloud comparison page, and of its link from
- * the home page.
+ * The icons of the Conductor comparison page, and of its link from the home
+ * page.
  */
 const comparisonIcons = {
   'circle-check': [circle(12, 12, 10), path('m9 12 2 2 4-4')],
@@ -105,6 +105,10 @@ const comparisonIcons = {
     path('m9 16 2 2 4-4'),
   ],
   'arrow-right': [path('M5 12h14'), path('m12 5 7 7-7 7')],
+  link: [
+    path('M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'),
+    path('M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'),
+  ],
 } as const satisfies IconShapes
 
 /** The icons of actions, such as the downloads of the Mac app. */

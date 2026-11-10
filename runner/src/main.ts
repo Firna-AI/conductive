@@ -31,7 +31,7 @@ async function main(): Promise<void> {
   const runner = new Runner({
     ...config,
     store,
-    connect: connectWebSocket,
+    connect: (request) => connectWebSocket(request, warn),
     providers: { claude: createClaudeFactory(), codex: createCodexFactory() },
     warm: warmClaude,
     now: Date.now,
