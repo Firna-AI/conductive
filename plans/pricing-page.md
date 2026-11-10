@@ -26,8 +26,8 @@ Contract owners:
 
 ## Decisions
 
-Decisions 250 to 252 are the answered items of the brainstorm. Decisions
-253 and 254 are open. The numbers start at 250, because other open
+Decisions 250 to 252 are the answered items of the brainstorm. The user
+answered decision 253 on 10 November 2026. Decision 254 is open. The numbers start at 250, because other open
 branches use numbers up to 241.
 
 ### 250. Choose what an org pays for
@@ -128,6 +128,11 @@ branches use numbers up to 241.
 - **Related:** Decision 254 sets how the page shows tax on these prices. The follow-up item `plans/follow-ups/idle-org-daily-refresh.md` covers the refreshes of H for every idle org.
 - **Recommendation:** E. The first recommendation was A. E follows the user's sketch: half of each price as use at the app's cost, and extra hours at twice the cost. It keeps about 43% of each price at full use, and more at normal use, and it brings Plus near Amp's 375 hours for $20.
 - **Action:** ask the user, because only the user sets prices.
+- **Chosen:** E, with the user's change on 10 November 2026: "lets only limit the free plan, max 3 active workspaces at once - the others are unlimited".
+  - Plus, Pro, and Ultra have no limit on workspaces or on cloud computers at once. Their included hours and the price of extra hours stay as in E.
+  - Free allows up to 3 workspaces that are not archived, with no other limit at once. It keeps its 20 hours for the org and its one free org for each person.
+  - Agent readings: "active" means not archived, as `docs/protocol/command-palette.md` uses the word. Free keeps its 20 hours, because the user named only the workspace limit.
+  - The agent recommended E with a limit at once on every plan. The user can still change a price or an hour figure.
 
 ### 254. Choose how the pricing page shows tax
 
@@ -243,13 +248,14 @@ Each needs its own plan:
 - Usage: one record of every cloud computer, as
   `plans/follow-ups/computer-ledger.md` says, the hours of each org, and
   the charge for extra hours.
-- Plan limits in the app: workspaces, hours, and machines at once.
+- Plan limits in the app: the 3 workspaces and the 20 hours of the free plan.
 
 Questions for those plans: what an unpaid or cancelled org keeps (closed
 decision 38), seat changes in the middle of a month (closed decision 40),
 start limits for each member (closed decision 34), the EU OSS
 registration, and a larger Boat plan when paying orgs need more starts
-or more machines at once.
+or more machines at once. Paid plans have no limit at once, so the shared
+capacity of the Boat plan is their only cap, as it is for every org today.
 
 ## Milestone 1: Mockups
 
