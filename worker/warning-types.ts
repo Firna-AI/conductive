@@ -1,6 +1,7 @@
 import type { BuildPhase } from './lifecycle/build-data'
 import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
+import type { WorkspaceArchiveState } from './lifecycle/archive-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
 
 export const SIMPLE_WARNINGS = {
@@ -15,10 +16,16 @@ export const SIMPLE_WARNINGS = {
     'Could not start the first cloud computer build.',
   added_image_build_start_failed:
     'Could not start the added cloud computer build.',
+  repository_image_build_start_failed:
+    'Could not start the cloud computer build for the added repository.',
   approval_email_delivery_failed:
     'Approval email delivery failed. The email remains pending.',
   approval_email_retry_failed:
     'The retry of approval emails failed. It runs again at the next timer.',
+  software_image_repair_failed:
+    'Software image repair failed. It runs again at the next timer.',
+  software_image_cleanup_failed:
+    'Software image cleanup failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',
   attachment_upload_cleanup_retry: 'An attachment upload cleanup will retry.',
   activity_timestamp_failed: 'Workspace activity timestamp could not be saved.',
@@ -29,6 +36,12 @@ export const SIMPLE_WARNINGS = {
 
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
+  | {
+      kind: 'workspace_archive_failed'
+      workspaceId: WarningId
+      phase: WorkspaceArchiveState['phase']
+      error: ErrorSummary
+    }
   | { kind: keyof typeof SIMPLE_WARNINGS }
   | { kind: 'runner_protocol_version_mismatch'; workspaceId: WarningId }
   | {

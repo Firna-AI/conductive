@@ -103,49 +103,56 @@ describe('WorkspaceModel', () => {
     ])
   })
 
-  test('archive lists the found work, and a confirm sends the explicit discard', async () => {
+  test('Archive sends one request with no check, and the workspace and its row keep the cloud computer until the last day of Restore', async () => {
     const server = new FakeApiServer()
     const { org: model, workspace } = setup(server)
     await model.reload('list')
     await workspace.open()
-    await workspace.archive.start()
-    expect(workspace.archive.flow.get()).toMatchObject({
-      step: 'confirm',
-      check: {
-        uncommittedFiles: ['src/app/checkout/AddressForm.tsx'],
-        unpushedCommits: 1,
+    const from = server.requests.length
+    const archived = await workspace.archive.archive()
+    const write = server.requests.at(-1)
+    expect({
+      requests: requestLines(server).slice(from),
+      body: await write?.json(),
+      reply: archived?.state,
+      detail: valueOf(workspace.detail.get())?.workspace.state,
+      row: model.workspace(id)?.state,
+      restoreUntil: model.workspace(id)?.restoreUntil,
+    }).toEqual({
+      requests: [`POST ${workspacePaths.archive(org, id)}`],
+      body: {},
+      reply: 'archived',
+      detail: 'archived',
+      row: 'archived',
+      restoreUntil: FAKE_TIME + 14 * 24 * 60 * 60 * 1_000,
+    })
+  })
+
+  test('Restore sends one request, puts the workspace back in its section stopped, and starts nothing', async () => {
+    const server = new FakeApiServer()
+    const { org: model, workspace } = setup(server)
+    await model.reload('list')
+    const section = model.workspace(id)?.sectionId
+    await workspace.open()
+    await workspace.archive.archive()
+    const from = server.requests.length
+    const restored = await workspace.archive.restore()
+    expect({
+      requests: requestLines(server).slice(from),
+      reply: restored?.state,
+      detail: valueOf(workspace.detail.get())?.workspace,
+      row: model.workspace(id),
+    }).toMatchObject({
+      requests: [`POST ${workspacePaths.restore(org, id)}`],
+      reply: 'stopped',
+      detail: { state: 'stopped', archivedAt: null, restoreUntil: null },
+      row: {
+        state: 'stopped',
+        archivedAt: null,
+        restoreUntil: null,
+        sectionId: section,
       },
     })
-    await workspace.archive.confirm()
-    const archive = server.requests.at(-1)
-    expect(archive?.method).toBe('POST')
-    expect(await archive?.json()).toEqual({ discardUnpushedWork: true })
-    expect(model.workspace(id)?.state).toBe('archived')
-    expect(workspace.archive.flow.get()).toEqual({ step: 'closed' })
-  })
-
-  test('cancel after the archive check changes nothing', async () => {
-    const server = new FakeApiServer()
-    const { workspace } = setup(server)
-    await workspace.open()
-    await workspace.archive.start()
-    workspace.archive.cancel()
-    await workspace.archive.confirm()
-    expect(requestLines(server)).toEqual([
-      `GET ${openPath}`,
-      `GET ${workspacePaths.archiveCheck(org, id)}`,
-    ])
-  })
-
-  test('a check that answers after cancel opens no archive question', async () => {
-    const { held, workspace } = setup(new FakeApiServer())
-    const checkPath = workspacePaths.archiveCheck(org, id)
-    held.hold('GET', checkPath)
-    const checking = workspace.archive.start()
-    workspace.archive.cancel()
-    held.release('GET', checkPath)
-    await checking
-    expect(workspace.archive.flow.get()).toEqual({ step: 'closed' })
   })
 
   test('a newer update while the read mark runs stays in place', async () => {

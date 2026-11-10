@@ -61,9 +61,12 @@ On the app hostname, the Worker serves these API routes:
 - `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 
-On the app hostname, the Worker also serves `/github/setup`, where GitHub sends the user after an install of the GitHub App.
-[`github-setup.ts`](github-setup.ts) serves it before the request gate, with no session.
-It sends an install from a browser back to the screen where it started.
+On the app hostname, the Worker also serves `/github/install` and `/github/setup`, before the request gate, with no session.
+[`github-setup.ts`](github-setup.ts) holds both.
+A browser starts each install or change of the GitHub App at `/github/install?from=<screen>`.
+The Worker keeps the screen in the return cookie, then sends the browser to the install page of the GitHub App.
+GitHub sends the user to `/github/setup` after an install or a change.
+That route sends a browser back to the screen of the return cookie, or to Home, and deletes the cookie.
 It answers an install from the Mac app with a page that sends the user back to the Mac app.
 [The GitHub App](../docs/protocol/github-banner.md#the-github-app) states the rules.
 
@@ -73,7 +76,7 @@ Use the same configured sources in the web app and Mac app.
 The model list and the default model come from Worker variables, as [Deployment inputs](../docs/deployment.md#models) says.
 
 The Worker also serves org settings, repository choices, sections, member writes,
-workspace metadata and archive, image builds and logs, account GitHub access,
+workspace metadata, Archive, and Restore, image builds and logs, account GitHub access,
 and pending invitations with explicit acceptance.
 The [feature shell](app-api/feature-shell.ts) implements the shared shell writes.
 The [workspace features](features/workspace.ts) dispatch files, terminal,
@@ -81,7 +84,8 @@ previews, and desktop inside the real workspace object.
 The [GitHub composition](features/github.ts) stores banner updates in the common chat stream.
 
 On the machine hostname, the Worker serves the Mac command routes, the git
-credential route, the image source credential route, workspace create/list
+credential route, the image source credential route, the
+[software image deploy route](software-image/README.md#deploy-route), workspace create/list
 tools, GitHub webhooks, the model gateway, and the runner socket.
 These handlers use their own machine credentials and skip the browser gate.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
@@ -98,7 +102,9 @@ A Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
 It also retries pending approval emails until delivery or 24 hours from
 approval. [Approval delivery](operator/README.md#approval-email-delivery)
 describes the saved messages and delivery keys.
-It also repairs overdue workspace disk alarms and org image refreshes after a 15-minute grace period.
+It also repairs overdue workspace disk and archive alarms and org image refreshes after a 15-minute grace period.
+It then advances unfinished software image builds and retries their cleanup
+in the default provider account.
 The repair checks at most 50 workspaces and 50 orgs per run.
 It defers failed calls and logs counts when either limit leaves work pending.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
@@ -135,7 +141,7 @@ Its access checks use the scheduler that the test injects. Production has no def
 `WorkspaceAlarms` in [features/alarms.ts](features/alarms.ts) keeps the due time of each source in its `alarm:<source>` marker, and it sets the one platform alarm.
 The security sources are `browser`, `runner`, and `devices`. They use raw storage, so a member fence cannot refuse their writes.
 The regular sources are the lifecycle tasks, `github`, and `previews`. They use the guarded receiver storage, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
-[Workspace Durable Object](lifecycle/workspace-object.md) gives the shared rules, such as the lifecycle run lease and the steps at the end of each run.
+[The object alarm scheduler](lifecycle/alarm-scheduler.md) gives the shared rules, such as the lifecycle run lease and the steps at the end of each run.
 
 `Workspace.alarm` calls `WorkspaceAlarmRunner.alarm` in [features/workspace-alarm.ts](features/workspace-alarm.ts).
 It takes the due security sources before any member fence or lifecycle check.
@@ -212,7 +218,8 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
-- [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk and image alarms from the Cron Trigger.
+- [software-image/README.md](software-image/README.md) owns software image builds, the deploy token gate, and Cron cleanup.
+- [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk, archive, and image alarms from the Cron Trigger.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
@@ -229,7 +236,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too.
 - [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name.
 - [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of the regular owners of each alarm run: the lifecycle run, the previews, and GitHub. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
-- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the previews, GitHub, and the `browser`, `runner`, and `devices` security sources. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage. [Workspace Durable Object](lifecycle/workspace-object.md) gives its rules.
+- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the previews, GitHub, and the `browser`, `runner`, and `devices` security sources. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage. [The object alarm scheduler](lifecycle/alarm-scheduler.md) gives its rules.
 - [features/workspace-alarm.ts](features/workspace-alarm.ts): `WorkspaceAlarmRunner`, the short native alarm handler, the security work before the fences, and the fenced regular work.
 - [features/alarm-tasks.ts](features/alarm-tasks.ts): `WorkspaceAlarmTasks`, the tracked background work of an alarm.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.

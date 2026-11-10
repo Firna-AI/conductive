@@ -27,7 +27,6 @@ export interface ActiveTurn {
   waiting: ProviderInput[]
   output: TurnOutput
   stopped: boolean
-  shutdown: boolean
   provider: ProviderProcess | null
   lifetime: ProviderLifetime | null
   closing: Promise<void>
@@ -115,6 +114,7 @@ export async function startProvider(
           options.tools.machineOrigin,
         ).href,
         credential: { type: 'gateway', ...turn.first.credential },
+        commitAuthor: turn.first.commitAuthor,
         choice: session.choice,
         conversationId: session.conversationId,
         instructions: session.instructions,

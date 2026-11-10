@@ -1,6 +1,7 @@
 # Shared contracts
 
-These modules define the browser API and the runner protocol.
+These modules define the browser API, the runner protocol, and the pure
+transcript fold that the browser and the Worker share.
 They use JSON values and plain TypeScript types.
 They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
@@ -46,13 +47,24 @@ gives the form of a turn token.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
 Storage and network failures remain unconfirmed.
-After a refused file tree, changes list, start steps, or workspace name,
+After a refused file tree, changes list, start steps, workspace name, or port list,
 `RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
 It carries no login and no turn token. A redelivery keeps its command ID.
+`ports.ts` defines the common listening-port fields and both report phases.
+`RunnerPortsUpdated` carries complete selected private labels.
+`PortsUpdated` carries final filtered display labels, with a null list when
+there is no current report. The display limits apply only after the workspace
+filter. The module owns those limits and the shared count limit.
+`terminal.ts` owns `TERMINAL_PORT`, shared by the runner exclusion
+and the terminal backend.
+[Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
+that report, its limits, and its refresh kind.
 `runner-transport.ts` defines the injectable socket boundary.
 `RunnerConnection` and `RunnerConnector` take the type of the Worker's
 messages.
 Browser response types carry no login and no turn token.
+Turn commands also carry the commit author of the member whose message started the turn.
+Message commands carry no commit author.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 
 `messages.ts` owns the attachment metadata and target identity.
@@ -98,8 +110,10 @@ The Worker keeps the held text in the encrypted state of its runner stream.
 It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
 It saves both before it confirms the corresponding raw event.
 
-`event-limits.ts` applies the same excerpt caps after either filter.
+`event-limits.ts` applies the same chat excerpt caps after either filter.
 Its UTF-8 byte count works in the Worker and Node.
+The workspace's [port report owner](../../worker/chat/port-reports.ts)
+shortens port labels only after its final filter.
 
 `chat-events.ts` caps serialized tool detail at 64 KiB.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.
@@ -174,6 +188,37 @@ The git credential payload is not defined yet.
 
 ## Key code
 
+- [Session Markdown](transcript/session-markdown.ts) folds session pages and
+  builds concise or full transcripts. [Markdown items](transcript/markdown-items.ts)
+  format the shared chat words, paths, and commands. [Markdown code](transcript/markdown-code.ts)
+  keeps inline and block fences longer than their content's backticks.
+- [Lost data](transcript/lost-data.ts) maps refusal event types to the same
+  product names for the browser line and the copied transcript.
+- [Agent words](agents.ts) supply the effort labels, model lookup, and model
+  labels for the chat, the new-workspace picker, and the mockups.
+- [Duration](transcript/duration.ts) formats elapsed chat and command times.
+  [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
+  and the rule that starts a run open.
+- [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
+  lines, with omitted-file and unavailable-file data.
+- [Command words](transcript/command-words.ts) supply Mac names, command
+  states, notes, and output text. Browser code supplies icons and colours.
+- [Session events](transcript/session-events.ts) take stored Worker envelopes
+  or parsed browser envelopes and select one session's events.
+- [Session log](transcript/session-log.ts) folds those events and session
+  records in event order. It keeps the transcript and each item's first time.
+- [Transcript](transcript/transcript.ts) defines the items and folds each
+  session event with its [turn helpers](transcript/turn-events.ts).
+- [Item placement](transcript/item-placement.ts) keeps late items in their
+  turn. [Command placement](transcript/command-placement.ts) puts each Mac
+  command after the items that began before it.
+- [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
+  [Transcript entries](transcript/transcript-entries.ts) group the items and
+  generic inserts. Browser callers use React nodes as the insert content.
+
+- [Port reports](ports.ts) carry sorted listening ports and their safe labels.
+- [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
+- [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.

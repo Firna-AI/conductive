@@ -29,7 +29,7 @@ one `RunnerReportKind`.
   `replacementRevision`. So the later parts of a reused revision count as a
   replacement.
 - The record, the marker, and the cursor commit in the receipt transaction.
-- A complete tree, changes list, start steps, or name removes the record of
+- A complete tree, changes list, start steps, name, or port list removes the record of
   its kind in the same transaction. A tree delta and a pending part do not.
 - After the commit, `RepairDelivery.flush` sends each `pending` record whose
   `deliveredTo` does not name the current connection. Each send then
@@ -45,7 +45,7 @@ one `RunnerReportKind`.
   commands. A repair needs no `runner.ready` and carries no login, so its
   send runs no login check. Like each send, it first passes the token
   check of `AuthenticatedRunner`, as the
-  [chat backend README](README.md#access) says.
+  [chat backend access guide](access.md) says.
 - Turn, message, interrupt, model, and file commands still wait for
   `runner.ready`.
 - Each new connection gets each `pending` record again, with the same

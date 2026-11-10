@@ -19,6 +19,7 @@ import {
   firnaInstallScript,
   firstGoodBuild,
   installScript,
+  installScriptWithout,
   lastBuild,
   startupScript,
   timedOutBuild,
@@ -33,10 +34,14 @@ import {
 import { type Org, orgs } from '../fixtures/orgs'
 import {
   acmeRepositories,
+  changedAcmeRepositories,
+  changedNames,
   newOrg,
   type ReachableRepository,
+  type RepositoryChange,
 } from '../fixtures/repositories'
 import {
+  acmeBuildLog,
   buildLog,
   failedBuildLog,
   failedFirstBuildLog,
@@ -141,14 +146,43 @@ function firna(build: BuildState): SettingsOrg {
   }
 }
 
-/** The org of the settings: Acme in use, Acme suspended, or Firna. */
+/**
+ * Acme after a saved change of its repositories. A build that runs clones
+ * the chosen repositories, and an admin who removes a repository takes its
+ * line out of the install script that they change.
+ */
+function acmeAfter(change: RepositoryChange): SettingsOrg {
+  if (change === 'none') return acme
+  const repositories = changedAcmeRepositories(change)
+  const chosen = repositories
+    .filter((repository) => repository.used)
+    .map((repository) => repository.name)
+  const { removed } = changedNames(change)
+  return {
+    ...acme,
+    repositories,
+    computer: {
+      ...acme.computer,
+      logs: { ...acme.computer.logs, building: acmeBuildLog(chosen) },
+      changedInstallScript:
+        removed.length > 0
+          ? installScriptWithout(removed)
+          : acme.computer.changedInstallScript,
+    },
+  }
+}
+
+/**
+ * The org of the settings: Acme in use, Acme suspended, or Firna. Acme
+ * shows the saved change of its repositories of the state.
+ */
 export function settingsOrg(state: OrgSettingsState): SettingsOrg {
   switch (state.org) {
     case 'active':
-      return acme
+      return acmeAfter(state.repositoryChange)
     case 'suspended':
       return {
-        ...acme,
+        ...acmeAfter(state.repositoryChange),
         list: paths.suspendedOrg,
         sections: suspendedSections(),
         links: suspendedSettingsLinks,

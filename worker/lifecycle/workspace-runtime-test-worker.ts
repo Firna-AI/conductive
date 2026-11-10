@@ -50,7 +50,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
         })),
         paths: ids.map((id) => ({
           attachmentId: id,
-          path: `/attachments/${id}.txt`,
+          relativePath: `.context/attachments/fixture/${id}.txt`,
         })),
       }),
       prepareAttachments: async () => null,

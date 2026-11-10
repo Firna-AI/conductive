@@ -201,15 +201,16 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   const stoppedLive = await liveEvents(
     resumedBrowser.inbox,
     before.throughEventNumber,
-    before.throughEventNumber + 2,
+    before.throughEventNumber + 3,
   )
   expect(stoppedLive).toMatchObject([
     { event: { type: 'workspace.updated', workspace: { state: 'stopped' } } },
     { event: { type: 'start.updated' } },
+    { event: { type: 'ports.updated', ports: null } },
   ])
   const stoppedBrowser = await fixture.openEvents(id)
   const after = await publicHistory(stoppedBrowser.inbox)
   expect(after.events.slice(0, before.events.length)).toEqual(before.events)
-  expect(after.throughEventNumber).toBe(before.throughEventNumber + 2)
+  expect(after.throughEventNumber).toBe(before.throughEventNumber + 3)
   expect(after.events).toEqual([...before.events, ...stoppedLive])
 }, 20_000)

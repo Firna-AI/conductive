@@ -15,7 +15,7 @@ import {
   type BrowserAccess,
 } from './browser-authorization'
 import { afterNumber } from './http-routes'
-import { browserRouteResponse } from './browser-route-response'
+import { browserRequest } from './browser-request'
 import {
   BrowserConnections,
   type NativeBrowserConnections,
@@ -43,6 +43,7 @@ import type {
 
 /** The Durable Object and the in-memory runner adapter use this boundary. */
 export class WorkspaceChat {
+  private readonly storage: ChatStorage
   readonly store: ChatStore
   readonly turnTokens: WorkspaceTurnTokens
   private readonly env: AppEnv
@@ -91,6 +92,7 @@ export class WorkspaceChat {
     overrides: Partial<ChatDependencies> = {},
     native?: NativeBrowserConnections,
   ) {
+    this.storage = storage
     this.env = env
     this.binding = new ChatWorkspaceBinding(
       overrides.matchesObject ?? (() => true),
@@ -144,15 +146,15 @@ export class WorkspaceChat {
       const access = await this.authorizeBrowser(request)
       if (access.suffix === '/events')
         return await browserUpgrade(this, request, access)
-      return await this.store.run(() =>
-        browserRouteResponse(
-          request,
-          access,
-          this.env,
-          this.dependencies,
-          (id) => this.operation(id),
-          () => this.runner.flush(),
-        ),
+      return await browserRequest(
+        request,
+        access,
+        this.store,
+        this.storage,
+        this.env,
+        this.dependencies,
+        this.operation(access.workspace.id),
+        () => this.runner.flush(),
       )
     } catch (error) {
       return privateResponse(errorResponse(error))

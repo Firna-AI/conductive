@@ -2,8 +2,9 @@
 
 The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the public docs, the Terms page,
-and the Privacy page. It also has the Conductor Cloud comparison page and a
-page for an unknown address. Visitors need no sign-in. The pages run no
+and the Privacy page. It also has the Conductor comparison page,
+[the pricing page](pricing-page.md), and a page for an unknown address.
+Visitors need no sign-in. The pages run no
 script and set no cookie. Every sign-in link leads to the app, on the
 `app.` host. The main action, Sign up, and Sign in lead to the same
 sign-in. A new person waits there for app access, as the
@@ -17,9 +18,9 @@ both actions from `siteActionCopy` in `access-copy.ts`.
 
 The shared header links to the public source repository on GitHub.
 The link appears on phones and desktops. On desktops, the header also has
-Features and Download, which lead to the features and to the Mac app
-section of the home page. The Product column of the footer links the same
-two sections, so a phone reaches the downloads from the footer. The header
+Features, Download, and Pricing. They lead to the features, the Mac app
+section of the home page, and the pricing page. The Product column of the
+footer links all three, so a phone reaches them from the footer. The header
 links never wrap. The header and the footer also link to the public docs.
 A phone header keeps the lockup, Docs, the GitHub mark alone, and Sign in.
 
@@ -41,9 +42,11 @@ The marketing mockups are the visual spec:
 [`NotFoundScreen.tsx`](../../docs/mockups/src/screens/NotFoundScreen.tsx),
 [`DocsScreen.tsx`](../../docs/mockups/src/screens/DocsScreen.tsx),
 [`FromConductorScreen.tsx`](../../docs/mockups/src/screens/FromConductorScreen.tsx),
+[`PricingScreen.tsx`](../../docs/mockups/src/screens/PricingScreen.tsx),
 and the parts in
-[`components/marketing/`](../../docs/mockups/src/components/marketing/) and
-[`components/parity/`](../../docs/mockups/src/components/parity/).
+[`components/marketing/`](../../docs/mockups/src/components/marketing/),
+[`components/parity/`](../../docs/mockups/src/components/parity/), and
+[`components/pricing/`](../../docs/mockups/src/components/pricing/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
 site uses the lockups and favicons from that folder unchanged. The header
 and the footer show the lockup 25 px high, from the `lockupHeight` token
@@ -161,12 +164,12 @@ both apply.
 
 ## The comparison page
 
-The page at `/from-conductor` shows people who move from Conductor Cloud
-the status of each Conductor Cloud feature in Conductive.
-[Conductor Cloud comparison](../../docs/protocol/conductor-cloud-comparison.md)
+The page at `/from-conductor` shows people who move from Conductor the
+status in Conductive of each Conductor feature, local and cloud.
+[Conductor comparison](../../docs/protocol/conductor-comparison.md)
 states its requirements. The link above the home headline and the "From
-Conductor Cloud" link in the Product column of the footer lead to it. Its
-last call to action has the sentence and the two actions of the home page.
+Conductor" link in the Product column of the footer lead to it. Its last
+call to action has the sentence and the two actions of the home page.
 
 [The comparison page](comparison.md) gives the one source of its rows, the
 steps to change a row and keep it true, and its key code.
@@ -256,6 +259,9 @@ before the Worker serves them.
   with one link for each chip and the oldest macOS version.
 - `access-copy.ts`: the words of the two actions of the site, and the
   sentence under the last call to action.
+- `pricing.ts` and `pages/pricing.astro`: the one source of the plans and
+  words of the pricing page and its mockup, and the page. Its
+  [key code](pricing-page.md#key-code) names each part.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.

@@ -13,9 +13,10 @@ These docs belong to this doc:
 - [Create a workspace](create-a-workspace.md): New workspace as a page or
   as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](repository-folders.md): the folder and the shell
-  variable of each repository in a sandbox.
+  variable of each repository in a sandbox, and the context folder of each
+  workspace.
 - [Life of a workspace](workspace-life.md): the start steps, the time
-  limits, the states, the stop and resume, and the archive.
+  limits, the states, the stop and resume, the archive, and the restore.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
   moves, reassigns, renames, and archives the workspace.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
@@ -71,6 +72,9 @@ These docs belong to this doc:
   read-only.
 - Each sandbox gets the org's env vars at create and at each resume
   (decision 17). A changed value applies at the next start.
+- The app's own variables, such as the four Git author variables of
+  [Commit author](github-tokens.md#commit-author), replace an org env var
+  with the same name (decision 233).
 - Builds and refreshes get none of the env vars, and no saved snapshot
   holds them. Reason: a saved snapshot keeps every file.
 - The app gives each sandbox its values itself, because every sandbox

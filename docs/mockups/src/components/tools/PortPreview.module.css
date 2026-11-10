@@ -35,13 +35,3 @@
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius-lg);
 }
-
-.open {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.port {
-  width: 88px;
-}

@@ -163,6 +163,11 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 
 ## Key code
 
+- [Shared session log](../../src/shared/transcript/session-log.ts) folds
+  history in the Worker chat tests. Its
+  [session events](../../src/shared/transcript/session-events.ts) accept
+  stored Worker envelopes and parsed browser envelopes.
+
 - `harness.ts` owns D1 setup and the HTTP test app.
 - [native-close.test-support.ts](native-close.test-support.ts): `NativeCloseProbe`, the close-first control of the native browser, runner, and Mac fixture entries.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.

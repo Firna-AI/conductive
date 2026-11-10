@@ -11,6 +11,7 @@ import { array, parseAgentEvent } from './agent-events'
 import { record, string, strings } from './inputs'
 import type { ChatTransaction } from './store'
 import type { RunnerWorkspaceRecord } from './types'
+import { displayPortReport } from './port-reports'
 
 export interface FilteredRunnerOutput {
   events: RunnerEventEnvelope[]
@@ -137,9 +138,13 @@ export async function filterRunnerOutput(
   )
   for (const secret of await runningOutputSecrets(env, workspace))
     sanitizer.add(secret)
-  const events = sanitizer
-    .accept(input.event)
-    .map((event) => ({ ...input, event: boundChatEvent(event) }))
+  const events = sanitizer.accept(input.event).map((event) => ({
+    ...input,
+    event:
+      event.type === 'ports.updated'
+        ? displayPortReport(event)
+        : boundChatEvent(event),
+  }))
   return {
     events,
     save: async () => {

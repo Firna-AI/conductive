@@ -20,7 +20,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Mentions',
     status: 'available',
-    note: 'Type @ in the message box to mention a file or a folder of the workspace. Teammate and pull request mentions remain under consideration.',
+    note: 'Type @ to mention workspace files or folders in chat. Teammate and pull request mentions remain under consideration.',
   },
   {
     id: 'attachments',
@@ -117,9 +117,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'copy-session-transcripts',
     area: 'agents-and-chat',
     name: 'Copy session transcripts',
-    status: 'in-progress',
-    note: 'Copying concise or full session transcripts as Markdown from the session menu is in progress.',
-    due: null,
+    status: 'available',
+    note: 'Copy a session as Markdown with Copy concise transcript or Copy full transcript in its tab menu. Both also work in archived workspaces.',
   },
   {
     id: 'chat-summaries',
@@ -155,6 +154,13 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     name: 'Agent-to-agent messages',
     status: 'considering',
     note: 'Agents can create another workspace with a first message. Messages to existing sessions are under consideration.',
+  },
+  {
+    id: 'codex-personalities',
+    area: 'agents-and-chat',
+    name: 'Codex personalities',
+    status: 'considering',
+    note: 'Codex personality settings are under consideration. Describe the working style that you want in your message.',
   },
   {
     id: 'voice-mode',

@@ -33,6 +33,14 @@ The bar can show **No commits yet** or **No pull request yet** before creation i
 GitHub operations in an agent turn use the person whose message started that turn.
 Commands in the shared Terminal use the workspace owner's GitHub account.
 
+Commits in each place name that same person as both author and committer.
+In a workspace with older cloud computer software, agent commits name the workspace owner.
+[Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
+Conductive uses their GitHub display name, or their login when the display name is missing or unusable.
+Each commit uses their private GitHub no-reply address, `<id>+<login>@users.noreply.github.com`.
+Here, `<id>` is their GitHub user ID and `<login>` is their GitHub login.
+GitHub links the commit to their account without showing their private email.
+
 ## Read the pull request state
 
 On a computer, the bar sits above the file lists.
@@ -74,12 +82,21 @@ Ask the org admin to check the GitHub App's repository access when needed.
 ## Archive after a merge
 
 After a merge, the workspace owner and org admins can select **Archive** in the bar.
-Conductive checks for uncommitted files and unpushed commits first.
-Cancel if you still need that work.
+Archive stops its cloud computer at once, without checking the work or asking a question.
+It keeps the computer and its files for 14 days.
+The chat stays read-only in **Archived**, with no file lists or tools.
 
-Archive deletes the workspace's cloud computer and its files.
-It keeps the chat read-only in **Archived**.
+The notification after Archive offers **Restore**.
+Every member of an active org can restore the workspace while its computer and Restore window remain available.
+Restore returns it to its section and place in the list, stopped.
+Select **Resume** if the restored workspace is already open.
+The archived bar and the command palette also offer Restore during that window.
+On a computer, point to its row in **Archived** to find **Restore**.
+
+Restore ends after 14 days.
+Conductive then deletes the computer and its files.
 The merge alone does not archive the workspace.
 
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 - [Understand Terminal's GitHub identity](/docs/terminal-and-previews#know-which-github-account-a-command-uses)

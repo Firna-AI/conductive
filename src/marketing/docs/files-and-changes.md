@@ -9,7 +9,8 @@ order: 30
 
 Open a workspace that belongs to one of your orgs.
 Its file tools use the workspace's selected repository.
-If its computer is stopped, select **Resume** before you use the tools.
+If its computer is stopped, the file lists show their last saved copy.
+Opening a file or a change starts the computer again.
 
 On a computer, the file lists sit beside the chat.
 On a phone, open the workspace's **Files** view.
@@ -18,7 +19,12 @@ On a phone, open the workspace's **Files** view.
 - **Changes** lists changes against its default branch.
 - **Checks** shows the pull request's GitHub checks.
 
-An archived workspace keeps its chat without the computer or file tools.
+An archived workspace keeps read-only chat, with no file lists or tools.
+Its computer and files can stay available for Restore for 14 days after Archive.
+Restore the workspace while **Restore** is available.
+Then select **Resume** before you use the file tools.
+
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 ## Read a file
 
@@ -71,7 +77,8 @@ Before the first successful list, the view can show an unavailable state.
 
 An unavailable list does not prove that the repository is empty.
 Use **Try again** when a file read fails.
-Check that the workspace's computer has started if the tools still wait.
+An open file or change waits while the workspace's computer starts.
+It opens when the computer is ready.
 
 If a turn says **Changed files unavailable**, open **Changes** to inspect the branch.
 That notice describes a missing turn summary.

@@ -104,6 +104,13 @@ npm run typecheck
   first receipt moves the answer end into the workspace record, and the
   older stream keeps no copy. The held text stays with its own stream. No
   record holds a raw secret prefix.
+- `port-reports.test.ts` checks complete private labels, sorted unique ports,
+  and the final display limits after filtering.
+  `runner-ports.test.ts` checks stored and streamed masked labels, replay,
+  and invalid-report repair. Its public scanner input includes marked values
+  across the final name and folder cuts. The real workspace lifecycle test in
+  `integration/workspace-lifecycle.test.ts` checks the stop clear with no
+  previews, and unchanged activity when a port report arrives.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a
@@ -182,7 +189,9 @@ npm run typecheck
 - After a sign-out, the late tab stays open until its stored 15-second
   check. The `arm-due` control fires the platform alarm only when it is
   due on the fixture clock. The check then closes the tab. No alarm stays
-  set, the fence stays, and no tab gets a frame after its history.
+  set, and the fence stays. After its history, the late tab gets only the
+  `ports.updated` frame with a null list that the suspension's workspace
+  stop sends. The current tab gets no frame after its history.
 - `runner-native-access.test.ts` checks the token deadline through a wake
   and the fences, the token check of a Mac ping, and a native alarm that
   returns while a token read waits. `runner-native-delivery.test.ts` checks

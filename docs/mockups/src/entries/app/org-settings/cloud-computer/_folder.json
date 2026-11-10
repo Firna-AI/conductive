@@ -4,6 +4,7 @@
     "build-failed",
     "first-build",
     "script-changed",
+    "repositories-changed",
     "add-variable",
     "change-value",
     "member"

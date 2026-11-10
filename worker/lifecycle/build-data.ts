@@ -13,6 +13,7 @@ import { buildLogStatements } from './build-log-statements'
 import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
+import { readBuildChanges } from './build-changes-data'
 
 export type BuildPhase =
   | 'create'
@@ -49,6 +50,7 @@ export interface BuildJob {
   previousRepositoryLocationsJson: string | null
   softwareJson: string
   previousImageName: string | null
+  softwareImageName: string | null
   previousProviderAccount: string
 }
 
@@ -62,7 +64,8 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.start
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,
   j.repository_locations_json AS repositoryLocationsJson,
   j.previous_repository_locations_json AS previousRepositoryLocationsJson,
-  j.previous_image_name AS previousImageName, j.provider_account AS previousProviderAccount,
+  j.previous_image_name AS previousImageName, j.software_image_name AS softwareImageName,
+  j.provider_account AS previousProviderAccount,
   b.provider_retry_json AS providerRetryJson`
 
 const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,
@@ -196,7 +199,11 @@ export async function readBuildHistory(
     .bind(orgId)
     .all<ImageBuild>()
   const image = await readOrgImage(db, orgId, providerAccount)
-  return { builds: results, currentImageBuildId: image?.imageBuildId ?? null }
+  return {
+    builds: results,
+    currentImageBuildId: image?.imageBuildId ?? null,
+    changes: await readBuildChanges(db, orgId, providerAccount),
+  }
 }
 
 export async function readBuild(

@@ -239,6 +239,7 @@ When the turn ends, the request fails with `turn_ended`, and D1 shows `ready`.
 - `native-sockets.ts`, `connection-store.ts`: `DeviceSockets`, the native acceptance, restore, close, and automatic heartbeat response of the Mac socket, and the durable current connection with its generation.
 - `broker-lifecycle.ts`: the lease and session check, the drop that settles pending work, and the alarm schedule.
 - `records.ts`, `storage.ts`: durable requests and chunked values.
+  `record-read.ts` lists their records for device reads and the transcript snapshot.
 - `state.ts`: `publishDeviceState`, the queue-owned call of the shared state writer, and the device-only fallback.
 - `body.ts`: browser gates that preserve the unread request body.
 - `internal.ts`, `socket.ts`: the RPC client with its plain reply types, and wire bounds.

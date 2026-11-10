@@ -67,6 +67,8 @@ number names a dated record, as
   rules of the palette key.
 - The other ways to act on a row stay. They are drag and drop, the keys
   that move a row, a click with a modifier key, and the Archive shortcut.
+  An archived row can have a Restore shortcut in the same place, as
+  [Sections](orgs-and-members.md#sections) says.
 - The app adds no keys that run an action of the menu directly.
 
 ## Who sees each action
@@ -80,6 +82,11 @@ number names a dated record, as
 - Only the workspace owner and the admins see Archive.
 - On an archived workspace, the menu of an admin holds only Reassign to.
   Other members get no menu on an archived row.
+- The menu offers no Restore. Every member restores an archived row with
+  its Restore shortcut, the bar, the toast after Archive, or the palette,
+  as [Restore](workspace-life.md#restore) says.
+- Restore in the menu was rejected, because these four ways already reach
+  every member.
 - In a suspended org, no row has a menu, because nothing in the org can
   change, as
   [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
@@ -142,14 +149,15 @@ number names a dated record, as
 
 - A confirmed Archive advances the row's activity time to its acknowledged
   time. If the row already has a newer activity time, that newer time stays.
-- Archive asks the Archive question over the current page, with its check
-  for work that is not pushed, as
+- Archive in the menu archives the workspace at once, with one write. It
+  asks no question and runs no check, as
   [Archive](workspace-life.md#archive) says.
-- Archive in the menu and the Archive shortcut of the row ask the same
-  question, with the same check. One action shows one question, also for
-  the open workspace while it loads.
-- Cancel keeps the current page as it was. After the archive, the current
-  page stays, and the row moves to the Archived group.
-- The check does not start a stopped cloud computer. When the check does
-  not finish, the question says so, as
-  [Archive](workspace-life.md#archive) says.
+- Archive in the menu and the Archive shortcut of the row make the same
+  write. One action archives the workspace once, also for the open
+  workspace while it loads.
+- Archive does not open the workspace, and it starts no cloud computer.
+- While the write runs, the app shows that the Archive is pending. When the
+  write fails, the row stays in its section, and a toast names the failure.
+- After the archive, the current page stays, and the row moves to the
+  Archived group. The toast after Archive offers Restore, as
+  [Restore](workspace-life.md#restore) says.

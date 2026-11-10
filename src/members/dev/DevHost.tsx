@@ -11,6 +11,7 @@ import { MemberRepositoriesTab } from '../MemberRepositoriesTab'
 import { MembersTab } from '../MembersTab'
 import { OwnerPicker } from '../OwnerPicker'
 import { deletionTime } from '../time'
+import { computerBuilds } from './devComputer'
 import {
   DevMainFrame,
   DevNote,
@@ -49,6 +50,7 @@ function SettingsBody(props: {
       return member ? (
         <MemberRepositoriesTab
           api={api}
+          builds={computerBuilds(options.computer)}
           org={org}
           viewport={options.viewport}
         />

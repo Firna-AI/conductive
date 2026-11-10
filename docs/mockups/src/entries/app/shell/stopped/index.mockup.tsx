@@ -8,7 +8,7 @@ import {
 export const sandboxStopped = defineScreen({
   title: 'Sandbox stopped',
   description:
-    'The sandbox stopped while the workspace was open, for example in a background tab. The chat history stays, and Resume starts the sandbox again. All files and Changes keep the lists that the workspace saved.',
+    'The sandbox stopped while the workspace was open, for example in a background tab. The chat history stays, and Resume starts the sandbox again. All files and Changes keep the lists that the workspace saved. An open file tab keeps the file that it shows, and a file or a change that a member opens starts the sandbox again.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, sandbox: 'stopped' },

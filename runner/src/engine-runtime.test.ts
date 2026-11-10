@@ -174,6 +174,12 @@ it('cancels a session request on Stop and recovers the session after a failed re
 })
 
 it('cancels baseline and completion scans with one ordered terminal event despite duplicate Stop and result callbacks', async () => {
+  const kept: ChangedFile = {
+    path: 'kept',
+    change: 'modified',
+    added: 1,
+    removed: 0,
+  }
   for (const phase of ['baseline', 'completion'] as const) {
     const entered = deferred<AbortSignal | undefined>()
     const baseline = deferred<Checkpoint>()
@@ -194,7 +200,7 @@ it('cancels baseline and completion scans with one ordered terminal event despit
           entered.resolve(signal)
           return completion.promise
         }
-        return [{ path: 'kept', change: 'modified', added: 1, removed: 0 }]
+        return [kept]
       },
     })
     const starting = h.engine.command(sessionTurn(phase))
@@ -222,7 +228,11 @@ it('cancels baseline and completion scans with one ordered terminal event despit
         'turn.started',
         'turn.completed',
       ])
-      expect(h.events.at(-1)).toMatchObject({ state: 'stopped', files: [] })
+      // Stop cancels the completion scan, and the stopped end reads again.
+      expect(h.events.at(-1)).toMatchObject({
+        state: 'stopped',
+        files: phase === 'completion' ? [kept] : [],
+      })
       baseline.resolve(new Map())
       completion.resolve([])
       await h.engine.command(sessionTurn(phase, `${phase}-next`))
@@ -235,7 +245,7 @@ it('cancels baseline and completion scans with one ordered terminal event despit
       expect(h.events.at(-1)).toMatchObject({
         type: 'turn.completed',
         state: 'finished',
-        files: [{ path: 'kept', change: 'modified', added: 1, removed: 0 }],
+        files: [kept],
       })
       h.options.checkpoint = async () => {
         throw new Error('Baseline failed.')

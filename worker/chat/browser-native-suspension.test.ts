@@ -59,6 +59,16 @@ it('keeps a late browser admission scheduled through real member suspension and 
     const late = await opening
     sockets.push(late.socket)
     expect(await suspension).toEqual({ ok: true })
+    const portsCleared = {
+      type: 'event',
+      envelope: {
+        workspaceId: WORKSPACE_ID,
+        eventNumber: 1,
+        occurredAt: BROWSER_TEST_NOW,
+        event: { type: 'ports.updated', ports: null },
+      },
+    }
+    expect(await late.inbox.next()).toEqual(portsCleared)
     const admitted = await controls.request('settled')
     expect(admitted.closed).toBe(1)
     expect(admitted.opened).toBe(2)
@@ -106,7 +116,7 @@ it('keeps a late browser admission scheduled through real member suspension and 
     expect(
       state(expired.state).has('security:regular-alarms-deferred-until'),
     ).toBe(false)
-    expect(late.inbox.received).toEqual([late.history])
+    expect(late.inbox.received).toEqual([late.history, portsCleared])
     expect(current.inbox.received).toEqual([current.history])
   } finally {
     await controls.request('release')

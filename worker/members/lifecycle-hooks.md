@@ -32,7 +32,7 @@ Production also supplies `deleteOrgState` to remove the image coordinator payloa
   In `retention` mode, it performs only due restarts through `retention.restart`.
   It then schedules the new stop's next keepalive.
   In `restore` mode, it only plans dates. It must start no sandbox.
-  Build sandboxes and archived workspaces do not enter this hook.
+  Build sandboxes stay outside this hook. Retained archived disks enter until their window ends.
   The lifecycle keeps its restart policy here, including its margin before day 14.
   It must await every capability call before it returns.
   A hook failure keeps the org pending for retry.

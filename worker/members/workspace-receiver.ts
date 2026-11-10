@@ -13,6 +13,10 @@ import {
   scheduleWorkspaceAlarm,
   suspendWorkspaceAlarms,
 } from '../features/alarms'
+import {
+  ARCHIVE_STATE_KEY,
+  type WorkspaceArchiveState,
+} from '../lifecycle/archive-types'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import {
   LIFECYCLE_FENCE_KEY,
@@ -150,6 +154,8 @@ export class WorkspaceMembersReceiver {
           await transaction.put('org-image:coordinator', image)
           await transaction.put('alarm:lifecycle', image.nextAt)
         }
+        if (await transaction.get<WorkspaceArchiveState>(ARCHIVE_STATE_KEY))
+          await transaction.put('alarm:lifecycle:archive', this.now())
         if (await transaction.get<string>('lifecycle:cleanup'))
           await transaction.put('alarm:lifecycle', this.now() + 5_000)
         await scheduleWorkspaceAlarm(transaction, { resumeRegular: true })

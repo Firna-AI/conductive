@@ -34,8 +34,13 @@ says.
   - The folder of the workspace's repository, and the folder of each other
     repository in the cloud computer, as
     [Repository folders](repository-folders.md) says.
+  - The absolute path of the context folder (decision 243). Git ignores
+    this folder, and attached files arrive in its attachments folder, as
+    [The context folder](repository-folders.md#the-context-folder) says.
   - The workspace branch and the target branch.
 - The instructions also give this guidance:
+  - The agent keeps notes, screenshots, and files for other sessions of the
+    workspace in the context folder.
   - The agent keeps the name of the workspace branch, unless a member asks
     for a rename.
   - The target branch is the base of the diffs and the pull requests of
@@ -50,6 +55,9 @@ says.
 - The instructions never tell the agent to send a member to a tool that
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.
+- The instructions do not ask the agent to show a screenshot in a reply.
+  Reason: the chat shows the Markdown of an image as text, as
+  [Chat Markdown](chat-markdown.md#formatting) says.
 - The instructions hold no secret, such as the workspace token or an agent
   login.
 - The instructions follow the naming rules of user-facing text, as
@@ -100,8 +108,10 @@ says.
 - A Mac command of a turn goes to the Mac of the sender of the turn, the
   member whose message started the turn. The GitHub token of the turn also
   belongs to that member, as
-  [GitHub tokens](github-tokens.md) says.
-- A message that another member sends during the turn changes neither.
+  [GitHub tokens](github-tokens.md) says. The commits of the turn name that
+  member too, as [Commit author](github-tokens.md#commit-author) says.
+- A message that another member sends during the turn changes none of
+  them.
 - Reason: the Worker takes the sender of a Mac command or a Git operation
   from its own record of the turn.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states
