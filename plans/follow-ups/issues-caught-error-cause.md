@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-10, from branch `calummoore/bootstrap-v124`, item 1 of the change that turns on Issues.
+- **Added:** 2026-11-10, from branch `calummoore/cloudflare-worker-error-tracking`, item 1 of the change that turns on Issues.
 - **Location:** `errorResponse` in `worker/http.ts:14`, the catch-all in `worker/application.ts:182`, and `warnWorker` in `worker/warnings.ts:21`.
 - **Reason:** B and C trade detail against the risk of a secret in a log, so the user chooses.
 

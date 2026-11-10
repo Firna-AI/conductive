@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-10, from branch `calummoore/bootstrap-v124`, item 2 of the change that turns on Issues.
+- **Added:** 2026-11-10, from branch `calummoore/cloudflare-worker-error-tracking`, item 2 of the change that turns on Issues.
 - **Location:** None. Automations live in the Cloudflare dashboard. A destination that gets user data also changes the section "Who gets your data" of `src/marketing/privacy.ts`.
 - **Reason:** Each option except A sends user data to a provider or for a use that the Privacy page does not name, and the setup needs the owner's Cloudflare account.
 

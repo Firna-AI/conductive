@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
-- **Added:** 2026-11-10, from branch `calummoore/bootstrap-v124`, the change that turns on Issues.
+- **Added:** 2026-11-10, from branch `calummoore/cloudflare-worker-error-tracking`, the change that turns on Issues.
 - **Location:** `observability.issues` in `wrangler.jsonc`, and the Issues bullet of `docs/deployment.md`.
 - **Reason:** The check needs the deployed Worker, real traffic, and the Cloudflare dashboard.
 
