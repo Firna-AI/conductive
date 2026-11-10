@@ -91,6 +91,13 @@ function warningFields(warning: WorkerWarning) {
         workspaceId: warning.workspaceId.text,
         error: errorFields(warning.error),
       }
+    case 'runner_protocol_version_mismatch':
+      return {
+        kind: warning.kind,
+        message:
+          'The runner closes because its protocol version does not meet the workspace version pin.',
+        workspaceId: warning.workspaceId.text,
+      }
     case 'lifecycle_repair_limited':
       return {
         kind: warning.kind,

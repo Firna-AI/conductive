@@ -86,7 +86,8 @@ An org has two roles: **Admin** and **Member**.
 
 Use a person's role control in **Members** to change their role.
 An org can have several admins.
-Every member of an active org can restore another member's archived workspace while its computer is kept.
+Every member of an active org can restore another member's archived workspace within 14 days of Archive while its computer is kept.
+Restore ends after 14 days, even while Conductive retries deleting the computer.
 Archived chats stay read-only until Restore.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)

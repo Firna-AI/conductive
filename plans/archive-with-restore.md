@@ -411,6 +411,14 @@ Agent calls from Milestone 4, on 10 November 2026:
   record, and the floor of the newest Archive or Restore keeps each older
   record out.
 
+Agent call from the finding check, on 10 November 2026:
+
+- Review finding 1 applies option C. Keep an unresolved create request
+  through Archive expiry. Save its recovered computer ID in D1 before
+  clearing the request. Reason: the existing Archive owner then survives
+  both lost replies and interrupted D1 writes without a second alarm
+  handoff. The shared ledger alternative is separate follow-up work.
+
 ## Milestone 1: Mockups (completed)
 
 Tags: mockup
@@ -705,6 +713,12 @@ Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 4a, 5
       the final gate. Keep Archive preview revocation and unavailable tools.
 - [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
       the targeted tests and the complete gate, `npm run check`.
+- [x] Integrate main's model gateway, model choices, terminal copy, and file
+      mentions. Preserve Archive contracts, resolve docs path by path, and
+      audit all incoming functionality before final verification.
+- [x] Fix confirmed review finding 1 with option C. Prove lost-reply expiry
+      and recovered-ID persistence through interruption. Keep Restore ended
+      after 14 days while cleanup retries.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

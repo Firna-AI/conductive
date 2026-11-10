@@ -29,11 +29,14 @@ says:
 
 - `registerLifecycleTurn` records a turn and its sender before the turn
   goes out, after a check of the org membership, and marks its session as
-  running. `finishLifecycleTurn`, or a report that the turn ended, removes
-  it. These records keep the running sessions. They give no GitHub access,
-  as [The git credential sender](routes.md#the-git-credential-sender) says.
-- `reportRunnerLifecycle` takes each runner event that ordered runner
-  ingestion accepts. `runnerLifecycleDisconnected` takes a disconnect.
+  running. `finishLifecycleTurn` removes it. Each turn end reaches it only
+  through the `turnEnded` hook. `turnDispatchFailed` also calls it for a
+  turn that did not go out. These records keep the running sessions. They
+  give no GitHub access, as
+  [The git credential sender](routes.md#the-git-credential-sender) says.
+- `reportRunnerLifecycle` takes only the runner events `runner.ready`,
+  `turn.started`, and `start.updated`. `runnerLifecycleDisconnected` takes
+  a disconnect.
 - `acknowledgeLifecycleFirstMessage` clears the pending first message of
   the create. The admission keeps its own copy for repeats.
 
@@ -52,7 +55,8 @@ within the [retry window](image-builds.md#provider-retries), except a source
 command start. For a workspace object, it:
 
 - runs the queued start of a create or a resume, one phase at a time
-- finishes Archive initialization and uncertain allocation recovery before normal start work
+- finishes Archive initialization and uncertain allocation recovery before normal start work,
+  also after the Restore window, until D1 holds the recovered ID
 - stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline
 - clears Restore when the provider confirms that a retained computer is missing
 - repairs the running turns from the committed chat before its deadline

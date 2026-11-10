@@ -7,6 +7,10 @@ export function nativeChatRecordControls(
   files: WorkspaceFiles,
 ) {
   return {
+    checkTurnTokens: (workspaceId: string, tokens: readonly string[]) =>
+      Promise.all(
+        tokens.map((token) => chat.turnTokens.check(workspaceId, token)),
+      ),
     history: (workspaceId: string, after = 0, through?: number) =>
       chat.readWorkspace(workspaceId, (view) => view.history(after, through)),
     fileProjection: (kind: 'tree' | 'changes') =>

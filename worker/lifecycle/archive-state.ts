@@ -150,6 +150,7 @@ export class WorkspaceArchive {
     if (row.orgDeleted !== null) return
     if (
       row.sandboxId === null &&
+      !state.allocation &&
       dependencies.now() >= state.archivedAt + WORKSPACE_RESTORE_MS
     )
       state = {
@@ -212,11 +213,14 @@ export class WorkspaceArchive {
           sandboxId: sandbox.id,
           providerAccount: job.providerAccount,
           phase: 'stop',
-          allocation: undefined,
         }
         await this.save(state)
       }
       await writeArchiveDisk(env.DB, row, state.sandboxId, state.stoppedAt)
+      if (state.sandboxId && state.allocation) {
+        state = { ...state, allocation: undefined }
+        await this.save(state)
+      }
       if (!state.allocation)
         await releaseImageLease(env.DB, state.orgId, state.workspaceId)
       if (

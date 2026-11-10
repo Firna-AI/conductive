@@ -1,7 +1,15 @@
 import type { ComponentProps, ReactNode } from 'react'
 import a11y from '../common/a11y.module.css'
+import { classes } from '../common/classes'
 import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
+import {
+  ChipEndRemove,
+  ChipIconCell,
+  useNoHover,
+  type ChipRemoval,
+} from './ChipRemove'
+import base from './InlineChip.module.css'
 import styles from './WorkspaceChip.module.css'
 
 /** What a chip shows of its workspace, as the list of the org has it now. */
@@ -14,12 +22,27 @@ export type ChipWorkspace = {
   status: ComponentProps<typeof StatusGlyph>['status']
 }
 
-/** What the element that opens the workspace of a chip gets from it. */
+/** What the element that opens the page of a chip gets from it. */
 export type ChipOpener = {
   className: string
   /** The whole name, which a narrow line can cut short. */
   title: string
+  /** The text that a copy of a file chip gives: its mention. */
+  'data-mention'?: string
   children: ReactNode
+}
+
+/**
+ * The class of a chip: a chip of the composer starts with the cell of its
+ * icon, and where no pointer hovers it ends with a ×.
+ */
+export function useChipClass(removal: ChipRemoval | undefined): string {
+  const noHover = useNoHover()
+  return classes(
+    base.chip,
+    removal && base.removable,
+    removal && noHover && base.withEnd,
+  )
 }
 
 /**
@@ -31,26 +54,33 @@ export type ChipOpener = {
  *
  * In a sent message or an answer, `opener` makes the chip the element that
  * opens its workspace, such as a link. A chip in a message box has none: it
- * is one unit of the text, and a press there places the caret.
+ * is one unit of the text, and a press there places the caret. `removal`
+ * gives a chip of a message box the cell of its mark, which a pointer turns
+ * into a × that removes the chip.
  */
 export function WorkspaceChip(props: {
   workspace: ChipWorkspace
   opener?: (chip: ChipOpener) => ReactNode
+  removal?: ChipRemoval
 }) {
   const { label, name, status } = props.workspace
+  const { removal } = props
+  const className = useChipClass(removal)
+  const mark = <StatusGlyph status={status} />
   const chip: ChipOpener = {
-    className: styles.chip,
+    className,
     title: name,
     children: (
       <>
-        <StatusGlyph status={status} />
-        <span className={styles.text}>
+        {removal ? <ChipIconCell icon={mark} removal={removal} /> : mark}
+        <span className={base.text}>
           <span className={styles.label}>{label}</span>{' '}
-          <span className={styles.name}>{name}</span>
+          <span className={base.name}>{name}</span>
         </span>
         <span className={a11y.hidden}>
           , {activityPresentation[status].label}
         </span>
+        {removal ? <ChipEndRemove removal={removal} /> : null}
       </>
     ),
   }

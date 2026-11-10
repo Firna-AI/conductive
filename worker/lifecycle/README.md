@@ -61,8 +61,8 @@ turn repair from the committed chat and the one writer of the shown state.
 
 ### Builds and refreshes
 
-[Image builds](image-builds.md) describes build sandboxes, suspension, provider retries,
-logs, snapshot leases, and refresh timers.
+[Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
+provider retries, logs, snapshot leases, and refresh timers.
 
 ## Settings
 
@@ -107,6 +107,8 @@ A confirmed missing archived disk uses that batch too.
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+- [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
+- [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
   `workspaceView` adds the canonical web link for an explicit app origin.
@@ -119,6 +121,8 @@ A confirmed missing archived disk uses that batch too.
 - [`archive-workspace.ts`](archive-workspace.ts): the guarded Archive without a Git check.
 - [`archive-state.ts`](archive-state.ts): `WorkspaceArchive`, the durable owner of interrupted starts, stop confirmation, retention, deletion, and publication.
   Its allocation recovery calls `createResource` with the saved account and request, the workspace purpose, and the creator or labelled user as owner.
+  While the recovery fails, it keeps the saved request and its retry alarm, also after the Restore window.
+  It writes a recovered ID to D1 before it clears the request and releases the image lease.
   [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with no env values or startup command.
   [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
   [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
@@ -176,6 +180,8 @@ A confirmed missing archived disk uses that batch too.
   for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
+  It also exposes the trusted `checkTurnToken` RPC through `workspaceRuntime`.
+- [`credential-sender.ts`](credential-sender.ts): the git credential sender lookup, including creation-time access and active stored turns.
 - [`retry-creation.ts`](retry-creation.ts): `retryFailedCreation` reuses the
   first-message admission and workspace identity after a failed first start.
   [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.

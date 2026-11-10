@@ -64,3 +64,9 @@
   - `cleanupBuild` in `worker/lifecycle/build-execution.ts` keeps the saved request of a failed build through every failure exit, for the same class at the build's own exits.
 - **Recommendation:** B. It keeps Delete org right whatever the hook implementation does, and the other sandboxes still stop at once. A is smaller, if the branch that writes the hook keeps the members code as it is.
 - **Action:** fix after merge, apply B, because the gap is in Delete org code that predates the time-limit work.
+- **Evidence update, 2026-11-10:** the computer ledger now exists. It is the D1 table `computer_ledger`, from `migrations/202611100900_computer_ledger.sql`.
+  - It has a row for each create request. The row holds the allocation key, the provider account, the org, the owner, the purpose, and the computer ID once the app knows it. It holds no saved request body.
+  - So the claims above that no D1 record names an unresolved workspace allocation predate the ledger. A replay still needs the saved request, which only its owner keeps.
+  - Delete org now lists the live ledger rows that hold a computer ID, at `worker/members/deletion-data.ts:130-131`. The other line anchors above also predate the ledger. Recheck each claim and anchor against the current hooks before the work starts.
+  - This note changes no option and no recommendation. It does not claim that the gap still reproduces.
+  - `plans/follow-ups/unresolved-computer-request-ownership.md` holds the wider question: one owner for unresolved create requests across every owner. Its option D would also close this gap.

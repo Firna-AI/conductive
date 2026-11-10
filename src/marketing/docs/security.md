@@ -13,7 +13,7 @@ Their terminal access can reach credentials available on a workspace's cloud com
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 The agent login's share setting controls whose messages spend that login.
-It does not hide the credential from code or terminal users on the same computer.
+It does not hide a turn's credential from code or terminal users on the same computer.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -61,18 +61,29 @@ They do not offer a call to read or message another workspace's chat.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
-The cloud computer receives the session's login when a turn needs it.
 
-A program or member with terminal access there can read or copy that login.
+A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
+Each turn there gets a credential that uses the session starter's login through Conductive.
+A program or member with terminal access can read or copy that credential.
+It works through Conductive while that turn runs, also from outside the computer.
+After **Stop**, it can start no new request.
+A request that still runs ends within 30 seconds after the turn ends.
+
+An older cloud computer starts from an earlier setup that still permits software to receive the agent login itself.
+A program or member with terminal access can read or copy that login during a turn.
 A copied login can remain usable after the turn ends.
 Removing a login from Account does not revoke a copy held elsewhere.
+Installing newer software on that computer does not remove this risk.
+A new build gives the protection to new cloud computers created from its setup.
+
+Agent settings in the repository can send model requests and their credentials to another address.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-A copied credential from another member's workspace can still expose credentials of later turns.
+A copied credential for a workspace connection can still expose credentials of later turns.
 
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.

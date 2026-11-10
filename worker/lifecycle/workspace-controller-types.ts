@@ -1,4 +1,4 @@
-import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerLifecycleEvent } from './runner-lifecycle'
 import type { AgentChoice } from '../../src/shared/agents'
 import type {
   WorkspaceLifecycleEndpoint,
@@ -59,7 +59,7 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
     publish?: LifecyclePublisher,
   ): Promise<void>
   reportRunnerLifecycle(
-    event: RunnerEvent,
+    event: RunnerLifecycleEvent,
     publish?: LifecyclePublisher,
   ): Promise<void>
   runnerLifecycleDisconnected(publish?: LifecyclePublisher): Promise<void>
