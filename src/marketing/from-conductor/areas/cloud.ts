@@ -69,7 +69,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Managed Git identity',
     status: 'available',
-    note: 'Git and the GitHub CLI use the message sender’s GitHub account. The terminal uses the workspace owner’s account.',
+    note: 'Turns use the sender’s GitHub account, and Merge and Continue use yours. Terminals use the workspace owner’s account, as does GitHub CLI outside turns.',
   },
   {
     id: 'organization-environment-and-secrets',

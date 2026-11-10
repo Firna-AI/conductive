@@ -945,6 +945,20 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
   that tab. Reason: the row then leads to Create pull request, and the
   link stays one tap away.
 
+### Documentation structure
+
+- Design call on 9 November 2026: Continue has its own protocol page, with
+  a short section beside Archive. Reason: the lifecycle requirements stay
+  in short pages without losing their shared entry point.
+- Design call on 9 November 2026: workspace-title rules live with the
+  agent and session naming rules. The Messages heading keeps a pointer.
+  Reason: the chat page stays short and its existing anchors still work.
+- Design call on 9 November 2026: the protocol index lives in its own
+  README, with a pointer under the architecture heading. Reason: the
+  architecture page stays short and keeps every index entry.
+- Design call on 9 November 2026: Continue and local work are shared
+  architecture terms. Reason: several protocols use the same words.
+
 ### Out of scope
 
 - Auto-merge, merge queues, stacked pull requests, approvals, "Update
@@ -1181,14 +1195,14 @@ Evidence: `.context/pull-request-bar-actions/ui/report.md`.
 
 Depends on: every other milestone
 
-- [ ] Update the listed feature statuses on the Conductor Cloud comparison
+- [x] Update the listed feature statuses on the Conductor Cloud comparison
       page for the completed Merge, agent actions, and Continue behavior.
       The repository rule from pull request #129 requires this update.
 
-- [ ] Capture the marketing pictures again with `npm run marketing:pictures`.
+- [x] Capture the marketing pictures again with `npm run marketing:pictures`.
       The `hero` and `review` pictures show the bar of Ready to merge, which
       now offers Squash and merge.
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Run the targeted tests and the complete gate, `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
