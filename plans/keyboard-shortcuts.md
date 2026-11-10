@@ -14,7 +14,8 @@ change adds no new feature behind a key, such as a theme or a zen mode.
 On 2026-11-10 the user answered the last open decisions: 192 = B, 193 =
 D, 194 = A, and 195 = E. With the answers the user also set a
 requirement: the shortcuts must not take the keys of the terminal or of
-the message field. "Where a key goes" applies it.
+the message field. "Where a key goes" applies it. The key research of
+Milestone 1 raised decisions 196 and 197 about Linux, which are open.
 
 On 2026-11-09 this plan's decisions moved from 180 to 184 to 190 to 194,
 because `main` uses 181, 182, 184, and 185 for the workspace titles of PR
@@ -416,6 +417,140 @@ Replaced ways:
   covers.
 - **Answer:** E, chosen by the user on 2026-11-10.
 
+### Decision 196: Org keys in a Linux browser tab
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:** On Linux, Chrome and Firefox select tab 1 to 8 on Alt+1
+  to Alt+8, and the last tab on Alt+9. The page gets these keys first and
+  can stop them, as a live check in Chrome and Firefox on Linux showed.
+  Windows browsers have no Alt+digit keys. Firefox on Linux has no action
+  on Ctrl+1 to Ctrl+9.
+- **Problem:** Decision 194 A gives Alt+1 to Alt+9 to Switch to org 1 to
+  9. Decision 192 B leaves the browser its tab keys in a tab, but it names
+  only ⌘1 to ⌘9 and Ctrl+1 to Ctrl+9.
+- **Impact if no action:** In a Linux browser tab, a person cannot switch
+  browser tabs with Alt+1 to Alt+9 while Conductive has the focus.
+- **Root question:** In a Linux browser tab, which tab keys stay with the
+  browser, and which key does each command get when it loses its key
+  there? The options check wrote this question. The first one took it as
+  given that the browser keeps Alt+1 to Alt+9, and it missed that Firefox
+  on Linux has no action on Ctrl+1 to Ctrl+9.
+- **Options:**
+  - **A.** Keep both decisions as written. Linux tabs lose the Alt+digit
+    tab keys. Effort: Small.
+  - **B.** In a Linux browser tab, leave Alt+1 to Alt+9 to the browser.
+    Switch to org 1 to 9 has no default key there. An installed app keeps
+    Alt+1 to Alt+9. The model tells Linux from Windows by the browser's
+    user agent. Effort: Small.
+  - **C.** As B, and give Switch to org 1 to 9 the second keys Ctrl+Alt+1
+    to Ctrl+Alt+9 on Linux only. In the live check, Chrome and Firefox have
+    no action on Ctrl+Alt+1, 3, 5, and 9, and edit no text. The sources
+    cover the other five. GNOME, KDE, and Orca have no default on them. On
+    Windows, Ctrl+Alt types the characters of AltGr, so these keys stay
+    Linux only. Windows and Linux share one stored keyboard, so C also
+    needs a rule for a changed org row that carries these keys to Windows.
+    Effort: Medium.
+  - **D.** Added by the options check. It goes with B, C, or E. Decision
+    192 B leaves to each browser the keys that it uses on that system to
+    select a tab or open its address bar. The table of kept keys of each
+    browser holds this list too. On Linux and Android, Chrome and Edge use
+    Ctrl+1 to Ctrl+9 and Alt+1 to Alt+9, and Firefox uses only Alt+1 to
+    Alt+9. So Open workspace 1 to 9 keeps Ctrl+1 to Ctrl+9 in Firefox on
+    Linux. Cost: one more list in each browser table, and its tests.
+    Effort: Small.
+  - **E.** Added by the options check. Switch to org 1 to 9 moves to
+    Ctrl+Shift+1 to Ctrl+Shift+9 on Windows and Linux, in every host. No
+    default then uses Alt+1 to Alt+9. Cost: the org keys change on Windows
+    too, no live check has run, Windows lets a person set Ctrl+Shift with a
+    digit as the key of one input language, and the Linux layout switch on
+    Ctrl+Shift turns these keys into Ctrl+1 to Ctrl+9. Effort: Medium.
+- **Left out:** A change on Windows for its own sake, because Windows
+  browsers have no Alt+digit keys. The installed app, because its window
+  has no browser tabs.
+- **Wider fix:** D. One table of the tab keys of each browser sets what
+  192 B leaves to the browser, also for a browser with other tab keys.
+- **Previous examples:** Decision 192, for ⌘1 to ⌘9 and ⌘L.
+- **Related:** Decision 197. With the Linux layout switch on Alt+Shift,
+  Alt+Shift+1 to 9 arrive as Alt+1 to 9.
+- **Recommendation:** B with D. The browser keeps its tab keys, no default
+  key exists for only one system, and the palette's Switch to rows still
+  reach each org from the keyboard. The options check recommended C with
+  D, because in 192 the user chose second keys over no key. B with D best
+  protects the codebase.
+- **Action:** ask the user, because decisions 192 and 194 conflict on
+  Linux, and no rule settles which one wins.
+
+### Decision 197: The Linux layout switch on Alt+Shift
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Terms:**
+  - **XKB:** the keyboard layout system of Linux.
+  - **`grp:alt_shift_toggle`:** the XKB option that switches the layout on
+    Alt+Shift.
+- **Background:** The Debian, Ubuntu, and Fedora installers turn on
+  `grp:alt_shift_toggle` when a person picks two layouts, such as English
+  and Russian. XKB switches the layout as the second modifier goes down,
+  and that modifier never becomes active. Chromium reports that key as
+  "GroupNext".
+- **Problem:** For these people, an Alt+Shift shortcut of decision 194 A
+  arrives as another key. Alt+Shift+1 arrives as Alt+1, which runs Switch
+  to org 1. Alt+Shift+← arrives as Alt+←, which is the browser's Back.
+  Alt+Shift+↑ arrives as Alt+↑, which moves a focused workspace row. When
+  Shift goes down first, the press types a character of the other layout
+  into the message field.
+- **Impact if no action:** These people run the wrong command, or leave
+  the page, when they press a shortcut that the tab shows.
+- **Root question:** When the Linux layout switch takes one modifier of a
+  shortcut, how does the app stop the wrong action, and how does the
+  person still reach the command? The options check wrote this question,
+  because the first one asked only about the harm.
+- **Options:**
+  - **A.** Change nothing, and name the cost in the protocol doc. Effort:
+    Small.
+  - **B.** While a layout switch key is down, no shortcut runs, and the
+    browser's own action of the key does not run either. Cost: one rule in
+    the model and its tests. Whether Firefox reports "GroupNext" is not
+    confirmed. These people still record other keys for the Alt+Shift
+    commands. Effort: Small.
+  - **C.** Give Linux its own key family without Alt+Shift. Cost: a third
+    keyboard in storage and on the tab. Effort: Large.
+  - **D.** Added by the options check. Run the shortcut that the person
+    pressed. While a layout switch key is down, the model adds back the
+    modifier that the switch key took, and it matches the press by its
+    physical key, because the character comes from the other layout. So
+    Alt+Shift+1 runs Open workspace 1, in either order of the modifiers. A
+    press that then matches no command goes no further, as in B. Each
+    press still switches the layout, and the page cannot stop that. Cost:
+    the rule of B, the key-up of the switch key, a reset when the window
+    loses the focus, and their tests. Effort: Medium.
+  - **E.** Added by the options check. It goes with B or D. The first such
+    press in a session shows one toast that says that Alt+Shift also
+    switches the layout, with a link to the Keyboard shortcuts tab. Cost:
+    the copy, a toast and its mockup, and tests. Effort: Medium.
+  - **F.** Added by the options check. Linux gets second keys without
+    Alt+Shift, such as Ctrl+Alt with the same key. Cost: more than 20 keys
+    to choose and check, desktop keys on Ctrl+Alt, a clash with 196 C, and
+    the same harm from the Ctrl+Alt layout switch. Effort: Large.
+- **Left out:** Reading the XKB option, because a web page cannot read it.
+  Moving only the keys whose Alt form runs something, because a press
+  with Shift first still types a character.
+- **Wider fix:** D, or B, with a rule that matches each name of a layout
+  switch key: GroupNext, GroupPrevious, GroupFirst, and GroupLast. Then it
+  also covers the Ctrl+Shift and Ctrl+Alt switches.
+- **Previous examples:** None found.
+- **Related:** Decision 196.
+- **Recommendation:** D, changed from B by the options check. D stops the
+  same wrong commands and lost pages as B, and the keys on the tab also
+  work for these people.
+- **Action:** ask the user, because B adds behaviour at the key boundary
+  that no requirement covers.
+
 ## Design
 
 ### Commands and default keys
@@ -451,17 +586,17 @@ is the key of decision 191 that a browser tab lets through.
 | Navigation | Repositories settings | ⌥⌘A | Org pages, admins |
 | Workspace | New workspace | ⌘N (kept), second key ⌥⌘N | Org pages |
 | Workspace | Archive workspace | ⇧⌘A | Workspace, owner and admins |
-| Workspace | Open workspace 1 to 9, one row each | ⌘1 to ⌘9, see decision 192 | Org pages |
+| Workspace | Open workspace 1 to 9, one row each | ⌘1 to ⌘9 (left to the browser in a tab, decision 192), second keys ⌥⌘1 to ⌥⌘9 | Org pages |
 | Workspace | Previous, next workspace | ⌥⌘↑, ⌥⌘↓ (kept in Firefox), second keys ⌃⌘↑, ⌃⌘↓ | Org pages |
 | Workspace | Next workspace that needs input | ⌥⌘L | Org pages |
 | Workspace | Go to Changes | ⌥⌘U | Workspace |
 | Workspace | Go to Terminal | ⌘J | Workspace |
 | Chat | New session | ⌘T (kept), second key ⌥⌘T | Workspace |
-| Chat | Focus the message field | ⌘L (kept in Safari), second key ⇧⌘L | Workspace |
+| Chat | Focus the message field | ⌘L (left to the browser in a tab, decision 192), second key ⇧⌘L | Workspace |
 | Chat | Attach files | ⌘U | Workspace |
 | Chat | Model picker | ⌘/ | Workspace |
-| Chat | Next effort level | ⇧⌘/ | Workspace |
-| Chat | Stop the agent | ⇧⌘⌫ | Workspace |
+| Chat | Next effort level | ⌃⌘/ | Workspace |
+| Chat | Stop the agent | ⌃⌘⌫ | Workspace |
 
 Fixed shortcuts, which show in the list with "Fixed shortcut":
 
@@ -489,6 +624,58 @@ Agent call, 2026-11-09: the second keys of decision 191 on a Mac are ⌥⌘N,
 features that the page may take. No source confirms Safari's keys.
 Milestone 1 also checks each key against the keys that macOS takes first,
 such as ⇧⌘/ for the Help menu.
+
+Agent calls of Milestone 1, 2026-11-10, from the key research. The
+evidence and the sources are in `.context/keyboard-shortcuts/key-table.md`.
+
+- The second keys of Open workspace 1 to 9 in a Mac browser tab are ⌥⌘1 to
+  ⌥⌘9. Reason: Chrome and Firefox have no command on them, and a digit
+  matches by its physical key, so ⌥ does no harm. ⌃⌘1 to ⌃⌘9 was the other
+  candidate. ⇧⌘L stays the second key of Focus the message field in every
+  browser.
+- Next effort level becomes ⌃⌘/ on a Mac. Reason: ⇧⌘/ is the macOS key of
+  the Help menu, and Chrome, Edge, and the Mac app never give it to the
+  page when the system's key file lists it.
+- Stop the agent becomes ⌃⌘⌫ on a Mac. Reason: ⇧⌘⌫ deletes to the start of
+  the line in a text field, as Firefox's model of macOS says, so it would
+  not run from the message field.
+- The text keys that the tab and the recorder treat as fixed are the keys
+  of section 10 of the evidence. The Text group shows the ones that a
+  person could record by mistake.
+- The tab menu key ⇧F10 and the menu key of a keyboard, on a focused tab,
+  are fixed keys, because the tab menu change is on `main`.
+
+The keys of Windows and Linux follow decision 194 A: Ctrl for ⌘, Shift
+stays, Alt+Shift with the same key for a Mac key with ⌥ and for each
+second key, and Alt+1 to Alt+9 for the orgs. Agent calls of 2026-11-10
+change these keys, because a check failed or two commands clashed:
+
+- Reopen closed session gets the second key Alt+Shift+Z, and New session
+  keeps Alt+Shift+T. Reason: New session is used more, and every browser
+  keeps Ctrl+T in a tab.
+- Focus the message field gets the second key Ctrl+Shift+L, and Next
+  workspace that needs input keeps Alt+Shift+L. Reason: Ctrl+Shift+L is the
+  plain twin of ⇧⌘L, and no browser keeps it.
+- Stop the agent is Alt+Shift+S. Reason: Chrome and Firefox on Linux
+  delete to the start of the line on Ctrl+Shift+Backspace.
+- Model picker is Alt+Shift+M. Reason: Firefox on Linux selects all text
+  on Ctrl+/.
+- Previous workspace and Next workspace also get Alt+Shift+PageUp and
+  Alt+Shift+PageDown. Reason: the Orca screen reader on Linux takes
+  Alt+Shift with the arrows in every mode, so a person who uses Orca has
+  no other default key for them.
+- Ctrl+U stays the key of Attach files. Firefox on Linux deletes to the
+  start of the line on Ctrl+U only in a single-line field, so the model
+  treats it as a text key only there.
+
+Corrections from the research: Firefox also opens its menus on Alt+Shift
+with a menu letter, and the page can stop it. Chrome keeps Ctrl+Shift+T
+only while a closed tab can be reopened. Windows switches the input
+language on Alt+Shift only when no third key follows, so Alt+Shift keys
+reach the page. On German and French layouts, [ and ] need AltGr, so the
+bracket keys of the tabs cannot be pressed there, and the arrow keys stay.
+Decisions 196 and 197 hold the two Linux questions that the research
+found.
 
 ### Where a key goes
 
@@ -525,6 +712,12 @@ Firefox. French keyboards type digits with Shift. `KeyPress` in
 `src/app/services.ts` gets the physical key for this. A punctuation key,
 such as ⌘/, can sit elsewhere on another layout, and the person can
 record another key.
+
+Agent call, 2026-11-10, from the options check: a letter or digit key
+whose character is not a Latin letter or a digit, as on a Cyrillic or a
+Greek layout, matches by its physical key. Reason: on Windows and Linux,
+Ctrl+K arrives as Ctrl+л on a Russian layout, so every letter shortcut,
+also the palette key on `main`, would fail there.
 
 Agent call, 2026-11-09: the Mac app and a Chrome or Edge installed app
 give the page every key. In a normal browser tab, the kept keys come from
@@ -680,10 +873,12 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
       Chrome and Firefox where a check needs a browser. Mark each key that
       no source confirms. Record the evidence under
       `.context/keyboard-shortcuts/`.
-  - [ ] Check each default key against the keys that the text fields use
+  - [x] Check each default key against the keys that the text fields use
         on each system and the keys that a shell reads, from the user
         requirement of 2026-11-10. Choose another key where a default
         clashes.
+  - [ ] Fix the Linux keys after decisions 196 and 197. Evidence so far:
+        `.context/keyboard-shortcuts/key-table.md`.
 - [x] Draw the Keyboard shortcuts tab of the Account page in the Mac app,
       with its fixed menu keys, and its states: recording, a conflict with
       Replace, a changed row with Reset, and a failed save. No open
