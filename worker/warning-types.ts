@@ -5,6 +5,8 @@ import type { WorkspaceArchiveState } from './lifecycle/archive-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
 
 export const SIMPLE_WARNINGS = {
+  workspace_alarm_failed:
+    'Workspace alarm work failed. Its durable deadline will retry.',
   routine_schedule_failed:
     'A routine schedule could not run. The next scan will try again.',
   routine_queued_start_failed:

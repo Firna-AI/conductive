@@ -19,6 +19,8 @@ import {
   stored,
   workspaceState,
 } from './requests.test-support'
+import { deviceClock } from './alarm.test-support'
+import { DEVICE_TEST_NOW } from './clock.test-support'
 
 let fixture: DeviceFixture
 beforeEach(async () => {
@@ -43,6 +45,10 @@ it('requires main-process cookie proof and the exact desktop Origin on device co
     },
   )
   expect(wrongOrigin.status).toBe(403)
+  await connected(fixture)
+  const clock = deviceClock(fixture)
+  expect((await clock.ready()).autoResponse).toBe('{"type":"device.ping"}')
+  expect((await clock.ready(WID)).autoResponse).toBeNull()
 })
 
 it.each([
@@ -64,14 +70,41 @@ it.each([
 )
 
 it.each([
-  ['signed-out', "DELETE FROM sessions WHERE id = 'sender-session'"],
-  ['expired', "UPDATE sessions SET expires_at = 1 WHERE id = 'sender-session'"],
+  ['signed-out', "DELETE FROM sessions WHERE id = 'sender-session'", null],
+  [
+    'expired',
+    "UPDATE sessions SET expires_at = 1 WHERE id = 'sender-session'",
+    null,
+  ],
+  [
+    'unreadable',
+    'ALTER TABLE sessions RENAME TO unavailable_sessions',
+    'ALTER TABLE unavailable_sessions RENAME TO sessions',
+  ],
 ] as const)(
   'fails work after the target desktop session becomes %s',
-  async (_name, query) => {
+  async (_name, query, restore) => {
     const mac = await connected(fixture)
     await command(fixture, mac)
+    const clock = deviceClock(fixture)
+    const restored = await clock.hibernate()
+    expect(restored.current).toEqual({
+      ok: true,
+      value: { device: mac.device },
+    })
+    const closed = new Promise<number>((resolve) =>
+      mac.socket.addEventListener('close', (event) => resolve(event.code), {
+        once: true,
+      }),
+    )
     await fixture.db.prepare(query).run()
+    try {
+      await clock.set(DEVICE_TEST_NOW + 10_000)
+      await clock.runAlarm()
+      expect(await closed).toBe(1000)
+    } finally {
+      if (restore) await fixture.db.prepare(restore).run()
+    }
     expect(await stored(fixture)).toMatchObject({
       state: 'unavailable',
       error: { code: 'device_unavailable' },
@@ -194,6 +227,7 @@ it('refuses suspended org approvals and late Mac results while keeping the accou
   mac.socket.send(
     JSON.stringify({ type: 'command.result', ...ref('running'), result }),
   )
+  await mac.settle()
   mac.socket.send(JSON.stringify({ type: 'device.ping' }))
   expect(await mac.inbox.next()).toEqual({
     type: 'command.cancel',

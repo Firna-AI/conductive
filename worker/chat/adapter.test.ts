@@ -6,6 +6,8 @@ import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { createAdapterRuntime } from './adapter-runtime.test-support'
 import { closeSockets, SocketInbox } from './adapter-sockets.test-support'
+import { closeBrowserPeers } from './browser-native.test-support'
+import { verifyBrowserWake } from './browser-wake.test-support'
 import { verifyAdapterRestart } from './adapter-restart.test-support'
 import {
   CLAUDE,
@@ -17,7 +19,9 @@ import { record, string } from './inputs'
 import { array } from './agent-events'
 
 it('serves the actual Durable Object with SQLite storage and authenticated WebSockets', async () => {
-  const { runtime, headers } = await createAdapterRuntime()
+  const { runtime, headers } = await createAdapterRuntime(
+    'worker/chat/browser-entry.test-support.ts',
+  )
   try {
     const created = await runtime.dispatchFetch(
       `${TEST_ORIGIN}${sessionsPath('org', WORKSPACE_ID)}`,
@@ -169,7 +173,8 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
         event: { type: 'session.updated', session: { activeTurnId: null } },
       },
     })
-    await closeSockets(runner, browser)
+    await closeBrowserPeers(runtime, headers, browser)
+    await closeSockets(runner)
     const queued = await runtime.dispatchFetch(
       `${TEST_ORIGIN}${sessionPaths.messages('org', WORKSPACE_ID, sessionId)}`,
       {
@@ -214,6 +219,7 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
       body,
       string(turn.turnId),
     )
+    await verifyBrowserWake(runtime, headers)
   } finally {
     await runtime.dispose()
   }

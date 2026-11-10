@@ -9,6 +9,7 @@ export interface StoredReportRepair {
   cause: { streamId: string; eventNumber: number; revision: number | null }
   state: 'pending' | 'failed'
   sent: boolean
+  deliveredTo?: string
   /** An accepted new part one on the cause stream distinguishes a reused revision. */
   replacementRevision: number | null
 }
