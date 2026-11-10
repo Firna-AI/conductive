@@ -1,0 +1,124 @@
+/*
+ * The guides of the docs, in the sidebar of a desktop and in the docs menu
+ * of a phone. The values follow DocsNav and DocsMenu of the docs mockup.
+ */
+.docs-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.docs-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.docs-nav-heading {
+  padding: 0 10px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.docs-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row of the menu. A phone raises it to the touch size. */
+.docs-nav-item {
+  display: flex;
+  align-items: center;
+  min-height: max(32px, var(--ui-touch-min));
+  padding: 6px 10px;
+  border-radius: var(--ui-radius-md);
+  box-sizing: border-box;
+  color: var(--ui-ink2);
+  font-size: 14px;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.docs-nav-item:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+/* The current guide takes the fill of a selected row. */
+.docs-nav-current,
+.docs-nav-current:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+  font-weight: 500;
+}
+
+/* The ring sits inside the row, so a scrolled sidebar never clips it. */
+.docs-nav-item:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}
+
+/*
+ * The docs menu of a phone: a bar under the header that opens in place. A
+ * desktop shows the guides in the sidebar instead.
+ */
+.docs-menu {
+  display: none;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-sidebar);
+}
+
+.docs-menu-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 20px;
+  color: var(--ui-ink);
+  font-size: 14px;
+  font-weight: 500;
+  list-style: none;
+  cursor: pointer;
+}
+
+.docs-menu-bar::-webkit-details-marker {
+  display: none;
+}
+
+.docs-menu-bar:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}
+
+.docs-menu-icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.docs-menu-panel {
+  padding: 4px 12px 20px;
+}
+
+/* The chevron of a disclosure bar points up while the disclosure is open. */
+.docs-chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--ui-muted);
+}
+
+details[open] > summary .docs-chevron {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 759.98px) {
+  .docs-menu {
+    display: block;
+  }
+}
