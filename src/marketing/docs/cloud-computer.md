@@ -88,7 +88,7 @@ Use startup commands for work that needs those values.
 
 ## Run commands at startup
 
-Use **Startup script** for commands needed at each workspace start and resume.
+Use **Startup script** for commands needed when you start or resume a workspace.
 Bash runs it in the workspace's selected repository folder.
 
 1. Enter the commands under **Startup script**.
@@ -96,6 +96,7 @@ Bash runs it in the workspace's selected repository folder.
 
 The changed script applies when a workspace next starts or resumes.
 It does not rerun just because you saved it while a computer was running.
+Archive and Restore do not run this script.
 
 ## Set environment variables
 

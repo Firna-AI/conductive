@@ -32,26 +32,34 @@ const personNamed = (key: string): User =>
 
 export function workspaceFixtures(state: WorkspaceState = 'ready') {
   const workspaces: WorkspacesResponse = {
-    workspaces: workspaceList.map((workspace, index) => ({
-      id: workspace.key,
-      number: workspace.number,
-      link: new URL(routes.workspace(FAKE_IDS.org, workspace.key), FAKE_ORIGIN)
-        .href,
-      orgId: FAKE_IDS.org,
-      repositoryId: workspace.repository,
-      sectionId: workspace.section,
-      owner: fakeUsers.find((user) => user.id === workspace.owner) ?? fakeUser,
-      name: workspace.name,
-      branch: workspace.branch,
-      choice: workspace.choice,
-      state: workspace.key === FAKE_IDS.workspace ? state : workspace.status,
-      createdAt: FAKE_TIME - (index + 1) * 86_400_000,
-      updatedAt: FAKE_TIME - index * 60_000,
-      archivedAt:
+    workspaces: workspaceList.map((workspace, index) => {
+      const archived =
         workspace.key === FAKE_IDS.workspace && state === 'archived'
-          ? FAKE_TIME
-          : null,
-    })),
+      return {
+        id: workspace.key,
+        number: workspace.number,
+        link: new URL(
+          routes.workspace(FAKE_IDS.org, workspace.key),
+          FAKE_ORIGIN,
+        ).href,
+        orgId: FAKE_IDS.org,
+        repositoryId: workspace.repository,
+        sectionId: workspace.section,
+        owner:
+          fakeUsers.find((user) => user.id === workspace.owner) ?? fakeUser,
+        name: workspace.name,
+        branch: workspace.branch,
+        choice: workspace.choice,
+        state: workspace.key === FAKE_IDS.workspace ? state : workspace.status,
+        createdAt: FAKE_TIME - (index + 1) * 86_400_000,
+        // Archive raises the time of the record to its own time, as the
+        // Worker does, so the archived record is newer than each record of
+        // the workspace from before the Archive.
+        updatedAt: archived ? FAKE_TIME : FAKE_TIME - index * 60_000,
+        restoreUntil: null,
+        archivedAt: archived ? FAKE_TIME : null,
+      }
+    }),
   }
   const workspace = workspaces.workspaces.find(
     (item) => item.id === FAKE_IDS.workspace,

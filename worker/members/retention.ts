@@ -53,9 +53,9 @@ export function deletedOrgRetention(
     },
     async restart(workspaceId, ttlSeconds) {
       await ownership.renew()
-      const disk = (await workspaceDisks(env.DB, orgId)).find(
-        (disk) => disk.workspaceId === workspaceId,
-      )
+      const disk = (
+        await workspaceDisks(env.DB, orgId, dependencies.now())
+      ).find((disk) => disk.workspaceId === workspaceId)
       if (
         mode !== 'retention' ||
         !disk ||
@@ -125,9 +125,9 @@ export function deletedOrgRetention(
       )
         throw cleanupBusy()
       if (resumeFailure) throw resumeFailure.error
-      const stopped = (await workspaceDisks(env.DB, orgId)).find(
-        (item) => item.workspaceId === workspaceId,
-      )
+      const stopped = (
+        await workspaceDisks(env.DB, orgId, dependencies.now())
+      ).find((item) => item.workspaceId === workspaceId)
       if (!stopped) throw new Error('The retained disk has no stop record')
       return { stoppedAt: stopped.stoppedAt }
     },

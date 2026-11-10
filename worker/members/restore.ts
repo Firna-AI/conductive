@@ -64,7 +64,7 @@ export async function finishPendingRestore(
   await maintainDeletedOrg(env, orgId, token, dependencies, hooks, 'restore')
   const dates = await deletedOrgDates(env.DB, orgId)
   if (!dates) throw restoreExpired()
-  const workspaces = await workspaceDisks(env.DB, orgId)
+  const workspaces = await workspaceDisks(env.DB, orgId, dependencies.now())
   const workspaceIds = await orgWorkspaceIds(env.DB, orgId)
   const installed = await runLifecycleHook(
     env,

@@ -11,9 +11,18 @@ import type {
   LifecycleReconciliation,
 } from './durable-types'
 import type { LifecycleActivitySnapshot } from './input-activity-state'
+import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import type { ComputerIdentity } from './computer-ledger'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  archiveLifecycle(workspaceId: string): Promise<void>
+  reserveArchive(workspaceId: string): Promise<void>
+  restoreWorkspace(
+    orgId: string,
+    workspaceId: string,
+    userId: string,
+    origin: string,
+  ): Promise<WorkspaceResponse>
   queueComputerStops(
     orgId: string,
     computers: readonly ComputerIdentity[],
