@@ -80,12 +80,6 @@ export const resumingLog: StartingLog = {
 }
 
 /**
- * Each create and resume runs for at most 20 minutes from its start, with
- * the startup script and every retry.
- */
-export const startLimit = 'Each start has a 20-minute limit.'
-
-/**
  * Why a start failed: a failure, the 20-minute limit, a chosen branch that
  * is gone from GitHub, or work from Conductor that does not fit the free
  * disk of the cloud computer, which an activation checks first.
