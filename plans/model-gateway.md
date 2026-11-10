@@ -384,51 +384,53 @@ order. The remaining milestones follow decision 10 B.
 
 ### 11. Agent tools inherit the gateway address
 
-Added on 9 November 2026 from Milestone 4a. Pending: no option is
-selected.
+Added on 9 November 2026 from Milestone 4a. Options I, J, and K were
+added on 10 November 2026. Cal chose K on 10 November 2026.
 
-- **Severity:** High. **Effort:** Large.
+- **Severity:** High. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** security.
-- **Location:** `runner/src/providers/claude.ts`, `runner/src/providers/environment.ts`, and `docs/protocol/model-gateway.md`, "No login in the sandbox".
+- **Location:** `runner/src/providers/claude.ts`, `runner/src/providers/environment.ts`, `worker/model-gateway/route.ts`, and `docs/protocol/model-gateway.md`, "No login in the sandbox".
 - **Terms:**
   - **Turn token:** A temporary credential that lets one running turn use the saved login through Conductive.
   - **Child process:** A command, server, or helper that the Claude program starts in the workspace.
-  - **Shell prefix:** A runner program that Claude starts before some commands, hooks, and tool servers.
   - **Relay:** A runner HTTP server that forwards each model request to its destination.
   - **Certificate setting:** A value that tells a program which TLS certificates it trusts.
-- **Background:** Conductive must keep saved provider logins outside computers from newer org images. Claude therefore needs a fixed gateway address. The pinned client copies that address and certificate settings into child processes. A project tool can have its own provider key and destination. Some child processes keep running after the agent exits.
+  - **Profile pair:** An Anthropic config file with a `base_url` and a credentials file beside it. The pinned client reads them when it has no other credential.
+- **Background:** Conductive must keep saved provider logins outside computers from newer org images. Claude therefore needs the gateway address. The pinned client copies an address from its environment or its flag settings, and the certificate settings, into child processes. A project tool can have its own provider key and destination. Some child processes keep running after the agent exits. The pinned client also reads the address from the `base_url` of a profile pair, when `ANTHROPIC_BASE_URL` is empty. It gives that address to no child.
 - **Problem:** Inherited gateway settings redirect some project tools and send their own keys to Conductive. Conductive refuses these requests. Restoring settings with a wrapper fixes the tested common cases, but it leaves known failures.
 - **Impact if no action:** The new runner cannot complete its cutover. Both Claude and Codex still deliver saved logins to existing-image computers.
 - **Root question:** How should Claude use the gateway while the processes that it starts keep their own provider and certificate settings?
 - **Options:**
   - **A.** Wait for a vendor client change that separates model traffic from child environments. Cost: both runner cutovers wait without a date. Saved logins remain in existing-image computers. Effort: Small now.
   - **B.** Use the fixed gateway settings in every child. Cost: project Anthropic calls without an explicit destination fail and send their keys to Conductive. Children also lose repository certificate settings. Effort: Medium.
-  - **C.** Restore project settings through a shell prefix. Common commands, background commands, shell hooks, and tested tool servers passed. Accept B's behavior only for children that bypass the prefix. Exec-form hooks are the proved case. The draft restore also replaced an explicit empty certificate override incorrectly in a boundary control. Fix that defect before merge. Verify plugin servers and other helper paths before claiming coverage. The prefix adds launch work and changes some client command handling. Effort: Large.
+  - **C.** Restore project settings through a shell prefix, a runner program that Claude starts before some commands, hooks, and tool servers. Common commands, background commands, shell hooks, and tested tool servers passed. Accept B's behavior only for children that bypass the prefix. Exec-form hooks are the proved case. The draft restore also replaced an explicit empty certificate override incorrectly in a boundary control. Fix that defect before merge. Verify plugin servers and other helper paths before claiming coverage. The prefix adds launch work and changes some client command handling. Effort: Large.
   - **D.** Add a relay to C. Route turn tokens to the gateway and other keys to the repository destination. Keep the relay alive with the runner for surviving processes. Cost: some tools use Anthropic instead of their own configured destination. Proxy handling, restarts, routing, and restoration need proof. Effort: Large.
   - **E.** Use a Unix socket that ends the client's TLS and forwards to the gateway. Cost: a new certificate authority and its key enter the computer. Custom destinations and child inheritance can still change behavior. The working relay remains unproved. Effort: Large.
   - **F.** Use D's relay without a shell prefix. Cost: every model call uses the relay. Some project keys reach the default provider instead of the intended destination. Tool proxy and certificate behavior can change. Effort: Large.
   - **G.** Restore settings when each child loads a native library. Cost: static programs bypass the library. The library reaches child environments and still needs source information to distinguish equal-value overrides. Unproved. Effort: Large.
   - **H.** Restore settings in the outer agent's native process-start calls. This could also cover static children. Cost: it affects the agent's own helper launches. Coverage and safe process handling need proof. The final environment still lacks the source information that the equal-value case needs. Unproved. Effort: Large.
-- **Shared assumptions:** The saved login stays outside a newer-image computer and the gateway accepts only turn tokens. Both come from the approved gateway requirement. Native Claude subscription and API-key modes remain, as the approved scope requires. The current client version is an implementation pin, which A can replace. Private descriptor delivery is an existing design call. No option authorizes a new trust change or an unlisted child regression without Cal's answer.
-- **Left out:** An environment-only endpoint lets repository settings redirect the agent. Tested host-managed mode, built-in scrubbing, and a plain Unix socket failed the goal. Vendor cloud-provider modes change the required native authentication. Gateway pass-through accepts credentials outside the gateway contract. Real-login fallback breaks the approved protection. A contains the vendor client-change route. No fully compliant local route is proved.
+  - **I.** Use B, and let the gateway forward a request with any key that is not a turn token to Anthropic, unchanged. Cost: project keys and their requests pass through Conductive. Anyone with an Anthropic key can use the gateway as a relay. A project address in an env file loses to the inherited one. Children still lose repository certificate settings. Effort: Medium.
+  - **J.** Give Claude the gateway address and the turn token in a profile pair, with no address, token, or certificate setting in its environment or flag settings. Pin `ANTHROPIC_BASE_URL` to an empty value in the flag settings, so that repository settings cannot redirect the agent. Cost: the turn token moves from the private descriptor into a file that each process can read during the turn. A project SDK without its own key finds the profile pair and spends the starter's login, unless the gateway refuses requests without the agent's markers. The empty value reaches children: Python SDK 0.125.0 then fails, and a project address in an env file loses to it. The client sends the token of an API-key login as a bearer token. Effort: Medium.
+  - **K.** Use J without the empty pin. Cost: a repository setting can send the agent's requests and its turn token to another address, and the agent then fails there. A repository hook could already read the token file. Python SDKs and env-file addresses keep working. The other costs of J stay. Effort: Medium.
+- **Shared assumptions:** The saved login stays outside a newer-image computer. It comes from the approved gateway requirement. Options A to I also keep the turn token on its private descriptor and the native Claude subscription and API-key modes. J and K drop both: the turn token sits in a file, and Claude uses its profile mode. The current client version is an implementation pin, which A can replace. No option authorizes a new trust change or an unlisted child regression without Cal's answer.
+- **Left out:** An environment-only endpoint lets repository settings redirect the agent, and children inherit it. Tested host-managed mode, built-in scrubbing, and a plain Unix socket failed the goal. Vendor cloud-provider modes change the required native authentication. A profile pair whose credentials path is the private descriptor failed, because the pinned client creates a lock folder beside the credentials file. Real-login fallback breaks the approved protection. A contains the vendor client-change route.
 - **Wider fix:** A's client separation. None of the runner mechanisms removes the entire class.
 - **Previous examples:** The existing custom-endpoint plan has the same child-environment problem. The pinned-client proofs showed the gateway address in commands, background commands, both hook forms, and MCP servers. The restoring-prefix proof passed its common-case matrix but failed the explicit equal-value override case.
 - **Related:** Gateway-first remains approved. This question affects Claude's transport and blocks the shared version 2 runner cutover. It does not reopen custom endpoints or provider approval.
-- **Recommendation:** C, with approval of the unwrapped-child exception. It preserves the tested common cases without a new listener or certificate authority. Fix the wrapped-child restoration defect before merge. A's vendor change best removes this defect class.
-- **Action:** ask the user, because unwrapped children would inherit the gateway address and lose repository certificate settings. The proved case is an exec-form hook. Its own provider call can fail and send its project key to Conductive. No recorded answer approves that change. The equal-value restore defect and untested coverage remain engineering work. No further regression is approved by this question.
-- **Status on 9 November 2026:** Pending. No option is selected, and Cal has not answered. No runtime exception, narrowed pin set, or new requirement is approved. This record authorizes no contact with Anthropic.
-- **Not questions for Cal:** The empty-certificate collision was a separate wrapper-boundary control, not a second native MCP session. Fix it before merge, with no approval from Cal. Plugin, LSP, Monitor, and helper coverage is untested, not a proved bypass. H is unproved, not disproved.
+- **Recommendation:** K, changed from C on 10 November 2026. No child gets the gateway address, so every tested project call keeps its own key and destination, with no wrapper, relay, or certificate authority. The token file is the main new risk, and the token works only during its turn. A's vendor change best removes this defect class.
+- **Action:** ask the user, because K moves the turn token into a file, adds a gateway refusal, and drops the rule that repository settings cannot redirect the agent.
+- **Chosen by Cal on 10 November 2026:** K. Design calls D38 to D40 give the mechanics.
+- **Options of 10 November 2026:** Cal's questions in the primary session added I, J, and K. A loopback-only probe with the pinned client proved the main path of J and K: `.context/model-gateway/profile-probe/report.md`. Milestone 4a checks the child forms and login kinds that the probe did not cover.
 - **Options checks of 9 November 2026:** The first check added F and G, and it asked for a runtime proof of C. A static read of the agent's own process starts added H. The final check kept the letters, the recommendation, and the "ask the user" outcome. It corrected the reason of the Action. It found one question for Cal: the exception for children that the prefix does not wrap. Reports: `.context/model-gateway/reports/decision-11-options-check.md`, `decision-11-parent-spawn-check.md`, and `decision-11-final-check.md`.
-- **Blocks:** the transport TODO of Milestone 7. So the version 2 runner cutover of Claude and Codex, and Milestone 10, wait for the answer. Worker, legal-copy, and document-split work do not wait.
-- **Follow-up:** [Agent tools inherit the gateway address](follow-ups/claude-child-provider-settings.md) holds the same pending question for a reader without this plan.
+- **Status after the answer:** The wrapper of C is not built, so its restore defect needs no fix. Milestones 4a, 5a, 6a, 7, and 8a apply K. The answer removed the follow-up item `plans/follow-ups/claude-child-provider-settings.md`.
 
 ## Design
 
 The gateway is a Worker route on the machine hostname. Each running turn
 gets a turn token from the workspace Durable Object. The runner gives the
-token to the agent program through the private route of its login kind,
-and points the program at the gateway. For each model request, the
+token to Codex through its login request, and to Claude through a
+profile pair (decision 11 K). It points each program at the gateway. For each model request, the
 gateway asks the Durable Object whether the turn still runs and which
 login it uses. Then it forwards the request to the upstream of that login
 and streams the answer back. Older runners keep their real login, and
@@ -478,9 +480,11 @@ more approaches of each call.
   the workspace token with the turn ID, because each process already
   holds the workspace token. A token for each session works in later
   turns. A token for each agent process gains nothing.
-- **D2. Token delivery.** The current private routes: the descriptor pipe
-  of the `claude` program and the login request of the Codex App Server.
-  Rejected: the environment, which each tool process inherits.
+- **D2. Token delivery.** Claude: the credentials file of its profile pair
+  (D38), as decision 11 K chose on 10 November 2026. Codex: the login
+  request of the Codex App Server. Rejected: the environment, which each
+  tool process inherits. The descriptor pipe of the `claude` program
+  stays for runners of version 1 and for the measure tool.
 - **D3. Token format.** The prefix shape of its login kind. Open check 3
   found that the pinned program recognises an API key by its `sk-ant-api`
   prefix and picks its background model from that, so an opaque token
@@ -519,21 +523,22 @@ more approaches of each call.
 - **D9. Address.** One base address for each agent under `/v1/` on
   `api.conductive.build`. The turn picks the upstream.
 - **D10. Endpoint in the runner.** This branch supplies the gateway
-  endpoint itself. Claude uses SDK flag settings. Milestone 7 ports the
-  endpoint and transport settings from own-endpoint commits `e6948b66`
-  and `978941df`, with no custom login kind or form. It checks the effect
-  on tool environments, because an inherited `ANTHROPIC_BASE_URL` can
-  redirect a project's own model requests. Codex uses `base_url` of the
-  model provider. Model discovery stays off. Rejected:
+  endpoint itself. Claude reads it from the `base_url` of its profile
+  pair (D38), as decision 11 K chose on 10 November 2026. The runner sets
+  no address in Claude's environment or flag settings, so no child
+  process inherits one. Milestone 7 ports nothing from own-endpoint
+  commits `e6948b66` and `978941df`. The repository's
+  `.claude/settings.json` can still set `ANTHROPIC_BASE_URL`, which wins
+  over the profile. The agent then sends its turn token to that address
+  and fails there. On `origin/main` the same file can send the starter's
+  real login to any host. On a newer runner it can send only a turn
+  token. An older runner keeps the path, and Milestone 5 states it with
+  the old risk of decision 2 A. Codex uses `base_url` of the model
+  provider. Model discovery stays off. Rejected:
   `CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST`, because open check 3 showed that
-  it makes the program ignore the flag-settings endpoint. This also closes a path on `origin/main`: the runner reads the
-  repository's `.claude/settings.json` (`settingSources: ['project']` in
-  `runner/src/providers/claude.ts`), and that file can set the endpoint.
-  The own-endpoint workspace found on 8 November 2026 that project settings
-  replace the environment endpoint, and that flag settings win over them.
-  So today a repository file can send the starter's real login to any host.
-  On a newer runner the gateway endpoint wins. An older runner keeps the
-  path, and Milestone 5 states it with the old risk of decision 2 A.
+  it makes the program ignore the flag-settings endpoint. Rejected: SDK
+  flag settings, because the client copies their address into child
+  processes (decision 11).
 - **D11. Address rule.** The later own-endpoint integration owns this
   rule, recorded in its follow-up. Before each custom upstream fetch,
   the gateway refuses an IP
@@ -562,8 +567,9 @@ more approaches of each call.
   no body and no header value.
 - **D16. Runner protocol.** Version 2. The `turn` command carries the turn
   token, the agent, and the login kind. A `message` command carries no
-  credential. The runner keeps the token in memory, and its output filter
-  hides it.
+  credential. The runner keeps the token in memory. For Claude it also
+  writes the token to the credentials file of the turn's profile pair
+  (D38). Its output filter hides the token.
 - **D17. Upload limit.** The upload streams through the current limit
   wrapper. An overflow ends the upstream request and gives HTTP 413, also
   after an early upstream answer.
@@ -669,6 +675,42 @@ more approaches of each call.
   queued state and keeps those fields. Reason: token issuance requires a
   real active turn, and redelivery must reuse its credential without
   storing a login or token in a pending command.
+- **D38. Profile transport for Claude, 10 November 2026.** Agent call for
+  decision 11 K. At each turn the runner writes a profile pair for the
+  session in its own Anthropic config folder: `configs/<name>.json` with
+  the gateway's Claude base as `base_url` and `authentication.type`
+  `user_oauth`, and `credentials/<name>.json` with the turn token as
+  `access_token`. The file has mode 0600, in a folder with mode 0700.
+  The name is unique for each session, so two sessions with different
+  starters never share a token. The runner starts Claude with
+  `ANTHROPIC_CONFIG_DIR` and `ANTHROPIC_PROFILE`, with no descriptor
+  credential, and with no address, token, proxy, or certificate setting
+  of its own. It removes the credentials file when the turn ends, when
+  the session closes, and when the runner starts. Reason: the pinned
+  client uses `ANTHROPIC_BASE_URL` before the profile's `base_url`, and
+  it uses profile auth only when no other credential is set. It refuses
+  a credentials file that other users can read. Rejected: `/dev/fd/3` as
+  the credentials path, because the client creates a lock folder beside
+  the file. Rejected: the user's default profile folder and name,
+  because they would replace a project's own Anthropic profile.
+- **D39. Agent markers, 10 November 2026.** Agent call for decision 11 K.
+  The Claude route refuses a request that lacks the markers that only
+  the `claude` program sends, before the turn check and before any
+  upstream call. Milestone 4a names the markers, such as the
+  `claude-code-20250219` value of `anthropic-beta` and the user agent of
+  the client. The refusal uses the Anthropic error shape and a stable
+  code. Reason: a project SDK without its own key finds the profile pair
+  through the inherited variables, and would otherwise spend the
+  starter's login. It is no security boundary: a process that reads the
+  token can copy the markers.
+- **D40. API-key requests in profile mode, 10 November 2026.** Agent call
+  for decision 11 K. In profile mode the client sends the turn token of
+  an API-key login as a bearer token, with the OAuth beta. On the Claude
+  route the gateway accepts that header for an API-key login, and keeps
+  the signed-prefix check of D35. It sends the real key in `x-api-key`.
+  It removes each `anthropic-beta` value that native API-key mode does
+  not send, as Milestone 4a lists. Reason: the upstream request then
+  keeps the shape of a native API-key request.
 
 ## Milestone 1: Documentation and protocol
 
@@ -830,17 +872,31 @@ This read-only check can run beside Milestone 5. It needs the pinned
 agent program and the chosen gateway requirements, not the new runner
 wire types. Keep scripts and proof under `.context/model-gateway/`.
 
-- [ ] Check the pinned Claude program's available transport mechanisms
+- [x] Check the pinned Claude program's available transport mechanisms
       and tool environments. Find a route that fixes the gateway address
       while preserving a project's own model settings and private
       credential delivery. Check commands, background commands, both
       hook forms, and MCP servers with fake keys and local fake upstreams.
-- [ ] Return the mechanism, its proof, and any requirement exception it
+- [x] Return the mechanism, its proof, and any requirement exception it
       would need. Select no such exception without Cal's answer.
+- [ ] Profile proof for decision 11 K, with the layout of D38, the pinned
+      client, fake upstreams, fake keys, and a loopback-only network:
+      normal and background commands, shell-form and exec-form hooks, and
+      MCP servers from `.mcp.json` and from the SDK options get no gateway
+      address and no turn token. A child with its own key reaches its own
+      destination.
+- [ ] Same setup: record each request header name, the `anthropic-beta`
+      values, and the user agent in profile mode with the token prefix of
+      each login kind, beside native API-key and subscription mode. List
+      the values that only profile mode sends (D40), and the markers that
+      a keyless request of `@anthropic-ai/sdk` 1.6.0 lacks (D39). Record
+      the model that the client picks for background work in each mode.
+- [ ] Same setup: two sessions at once, with two profile names in one
+      config folder, each send only their own token.
 
 Evidence: `.context/model-gateway/reports/m4a-report.md`,
-`m4a-unix-report.md`, and `c-restore-report.md`. Gateway decision 11
-holds the open choice.
+`m4a-unix-report.md`, `c-restore-report.md`, and
+`profile-probe/report.md`. Cal chose K for gateway decision 11.
 
 ## Milestone 5: Login docs for the gateway
 
@@ -875,6 +931,30 @@ OpenAI login kinds. Decision 10 B removes the own-endpoint dependency.
       The chat flow is on its flows page, `docs/architecture/flows.md`.
 - [x] Check each relative link of the changed Markdown files.
       Report: `.context/model-gateway/reports/m5-docs.md`.
+
+## Milestone 5a: Docs for the profile transport
+
+Depends on: 5
+
+The protocol docs state the rules of decision 11 K.
+
+- [ ] `docs/protocol/model-gateway.md`: the programs that the agent
+      starts get no gateway address from the runner. Claude reads the
+      turn token from a file that only the sandbox user can read, and
+      the runner removes the file when the turn ends. A settings file in
+      the repository can change the address of Claude's requests, and
+      that address then gets the turn token. On the Claude route the
+      gateway refuses a request without the markers of the agent program
+      (D39). Replace the rule that a repository settings file cannot send
+      these requests to another address, with its reason.
+- [ ] `docs/protocol/sandbox-credentials.md`: state these risks for a
+      sandbox with a version pin of 2 or later. In the version 1 risk,
+      replace the sentence that a newer runner closes the settings path:
+      a newer runner sends only a turn token on that path.
+- [ ] Read `src/marketing/privacy.ts` and `src/marketing/terms.ts` in
+      full, with their parts. List each sentence that restates a changed
+      fact, for Milestone 8a.
+- [ ] Check each relative link of each changed Markdown file.
 
 ## Milestone 6: Runner protocol version 2 in the Worker
 
@@ -918,6 +998,25 @@ tokens for the existing Anthropic and OpenAI login kinds.
 
 Evidence: `.context/model-gateway/report.md`.
 
+## Milestone 6a: The gateway for the profile transport
+
+Depends on: 4a
+
+The Claude route accepts the requests of Claude's profile mode, and
+refuses the requests of other programs (decision 11 K). Merge it before
+Milestone 7, so that API-key turns work at each merge.
+
+- [ ] Accept the turn token of an API-key login as a bearer token on the
+      Claude route, and keep the signed-prefix check (D35, D40). Send the
+      real key in `x-api-key`. Remove the `anthropic-beta` values that
+      Milestone 4a lists for profile mode only.
+- [ ] Refuse a request without the agent markers that Milestone 4a names
+      (D39), with no turn check and no upstream call. Answer in the
+      Anthropic error shape with a stable code.
+- [ ] Add the focused tests in `worker/model-gateway/`. Keep every
+      current assertion.
+- [ ] Update `worker/model-gateway/README.md`.
+
 ## Milestone 7: Runner on the gateway
 
 Depends on: 6, 4a
@@ -926,27 +1025,23 @@ The runner speaks version 2 only. Its agent programs send their model
 requests to the gateway with the turn token.
 
 - [ ] The provider adapters take an endpoint and a credential (D23).
-- [ ] Apply the transport result of Milestone 4a. Keep the
-      gateway address from overriding a project's own model settings
-      through inherited `ANTHROPIC_BASE_URL`. Keep the turn credential
-      on its private route. A change of merge order does not choose an
-      exception for tool commands, hooks, or MCP servers. If a proposed
-      mechanism needs such an exception, present that requirement change
-      to Cal before applying it.
-- [ ] Claude: port the endpoint and transport settings from commits
-      `e6948b66` and `978941df` on `calummoore/cli-proxy-setup`, with their
-      focused tests, without its endpoint login kind or UI (D10).
-      Put the gateway address in those settings. Give the turn token
-      through the descriptor pipe of its login kind (D2), in the format
-      of D3.
+- [ ] Claude: write the profile pair of D38 at each turn, and start the
+      `claude` program with its config folder and profile name. Give it
+      no descriptor credential and no address, token, proxy, or
+      certificate setting. Remove the credentials file at the end of the
+      turn, at the close of the session, and at runner start (decision
+      11 K).
 - [ ] Codex: put the gateway in `base_url` of the model provider. Send the
       turn token with `account/login/start` (D2, D10).
 - [ ] The output filter hides the turn token (D16).
+- [ ] The packaged runner and each new image build advertise protocol
+      version 2 (D34).
 - [ ] Move each runner consumer of the replaced ways. Remove the runner's
       real-login handling from its production version 2 turn path.
 - [ ] Move `runner/src/providers/claude-login.test.ts` and
       `codex-login.test.ts` to the turn token and the gateway address,
-      with every assertion.
+      with every assertion. Add tests for the profile pair: its paths,
+      modes, content, one name for each session, and its removal.
 - [ ] Update `runner/agent-logins.md`, `runner/README.md`,
       `runner/scripts/README.md`, and `image/developer-scripts.md`.
 - [ ] Limit `plans/follow-ups/agent-login-in-tool-processes.md` to runners
@@ -971,6 +1066,20 @@ file (D24).
       restates a changed fact. Branch: `conductor/model-gateway-legal-copy`.
 - [x] Run `npm run mockups:check`. Open the privacy page in the mockup
       preview. Branch: `conductor/model-gateway-legal-copy`.
+
+## Milestone 8a: Legal copy for the profile transport
+
+Tags: ui
+
+Depends on: 5a
+
+- [ ] `src/marketing/privacy-recipients.ts` and `src/marketing/terms-org.ts`:
+      in a newer cloud computer, agent settings in the repository can make
+      the agent send the credential of a turn to another address. Update
+      each other sentence that Milestone 5a lists. Follow the Terms
+      version rule of `src/marketing/README.md`.
+- [ ] Run `npm run mockups:check`. Open the privacy and terms pages in
+      the mockup preview.
 
 ## Milestone 9: Split the long docs
 
