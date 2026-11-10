@@ -6,7 +6,15 @@ export const terminalScriptsAndPreviewsFeatures: readonly ParityFeature[] = [
     area: 'terminal-scripts-and-previews',
     name: 'Workspace terminal',
     status: 'available',
-    note: 'One cloud terminal keeps running through disconnects, with text selection and copying while programs use the mouse. Terminal tabs are under consideration.',
+    note: 'One cloud terminal keeps running through disconnects, with text selection and copying while programs use the mouse.',
+  },
+  {
+    id: 'terminal-tabs',
+    area: 'terminal-scripts-and-previews',
+    name: 'Terminal tabs',
+    status: 'planned',
+    note: 'Shared terminal tabs with separate shells are planned, with up to 10 terminals per workspace.',
+    due: null,
   },
   {
     id: 'big-terminal-mode',
