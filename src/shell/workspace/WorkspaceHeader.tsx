@@ -16,6 +16,8 @@ import { useGo } from '../ui/AppLink'
 import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import type { WorkspaceContext } from './features'
+import { RunLine } from './RunLine'
+import { useRunRoutine } from './saved-view'
 
 /** The owner of the workspace, without the menu that reassigns it. */
 function Owner(props: { workspace: Workspace; compact: boolean }) {
@@ -43,7 +45,9 @@ function State(props: { workspace: Workspace }) {
 /**
  * The name, repository, branch, owner, and state of the open workspace,
  * and Archive for its owner and the org's admins (decision 42). The list
- * groups workspaces by section, so the header names the repository.
+ * groups workspaces by section, so the header names the repository. The
+ * workspace of a routine run has a line under the header that links to
+ * its routine.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -55,6 +59,7 @@ export function WorkspaceHeader(props: {
   const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
   const bar = useMacBar()
+  const routine = useRunRoutine(props.context.savedView)
   useEffect(() => model.watch('repositories'), [model])
   const repository =
     repositories?.find((item) => item.id === workspace.repositoryId)
@@ -66,27 +71,24 @@ export function WorkspaceHeader(props: {
   const archiveButton = archive ? (
     <IconButton icon={Archive} label="Archive workspace" onPress={archive} />
   ) : null
-  if (phone) {
-    return (
-      <header className={styles.mobile}>
-        <IconButton
-          icon={ChevronLeft}
-          label="All workspaces"
-          onPress={() => go(routes.org(org.id))}
-        />
-        <div className={styles.titles}>
-          <h1 className={styles.title}>{workspace.name}</h1>
-          <span className={styles.branch}>
-            {repository} · {workspace.branch}
-          </span>
-        </div>
-        {ownerView}
-        <State workspace={workspace} />
-        {archiveButton}
-      </header>
-    )
-  }
-  return (
+  const header = phone ? (
+    <header className={styles.mobile}>
+      <IconButton
+        icon={ChevronLeft}
+        label="All workspaces"
+        onPress={() => go(routes.org(org.id))}
+      />
+      <div className={styles.titles}>
+        <h1 className={styles.title}>{workspace.name}</h1>
+        <span className={styles.branch}>
+          {repository} · {workspace.branch}
+        </span>
+      </div>
+      {ownerView}
+      <State workspace={workspace} />
+      {archiveButton}
+    </header>
+  ) : (
     <header className={classes(styles.bar, bar)}>
       <h1 className={styles.title}>{workspace.name}</h1>
       <span className={styles.meta}>
@@ -102,5 +104,12 @@ export function WorkspaceHeader(props: {
       <State workspace={workspace} />
       {archiveButton}
     </header>
+  )
+  if (!routine) return header
+  return (
+    <>
+      {header}
+      <RunLine orgId={org.id} routine={routine} />
+    </>
   )
 }

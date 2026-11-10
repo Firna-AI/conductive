@@ -1738,21 +1738,57 @@ Depends on: 4, 6, 8, 8a, 8b
 
 Show the runs, and let the owner start one.
 
-- [ ] Build the Runs list from the mockup, with each state, each cause of
+- [x] Build the Runs list from the mockup, with each state, each cause of
       a failure, each skipped run with its reason, and the links to the
       run workspaces.
-- [ ] Add Run now for the owner. Read the runs again every 10 seconds
+- [x] Add Run now for the owner. Read the runs again every 10 seconds
       while the page shows, and when the page gets the focus.
 - [ ] Show the routine link in the header of a run workspace, and the
       pull request link for a pull request run, in the header and in the
       Runs list.
-- [ ] Let the pull request bar name the base branch of the workspace, and
+- [x] Let the pull request bar name the base branch of the workspace, and
       open "Create pull request" into it.
-- [ ] Mark the chip of a refused login and open its filter, from the field
+- [x] Mark the chip of a refused login and open its filter, from the field
       of Milestone 8b.
 
   - [ ] Test Run now, the states of the runs, and the header links.
-- [ ] Update the web app README.
+- [x] Update the web app README.
+
+The UI implementor built Milestone 9 on 10 November 2026, and the
+orchestrator re-ran the 592 tests of `src` and the static checks. Two
+parts wait for API fields: the pull request link of the run line, and the
+account login in the reason of a skipped run. Milestones 9a and 9b add
+them. The handoff is in `.context/routines/reports/m9-ui.md`. The
+follow-up item `dev-fake-chat-for-new-workspaces.md` holds the dev fake
+gap.
+
+## Milestone 9a: The pull request of a run and the account of a skip
+
+Depends on: 9
+
+Agent call of 10 November 2026: the API gives the two fields that the
+protocol and the mockups need. `docs/protocol/routine-runs.md` asks for
+the pull request link in the run line, and the mockups name the account
+of a skip, so that the owner knows which account to add to "Author is".
+
+- [ ] Add the number and the address of the pull request of a run to the
+      routine of the workspace view.
+- [ ] Store the login of the author or the sender that a skip names, and
+      return it with the skipped run.
+  - [ ] Test both fields.
+- [ ] Update the READMEs of the areas that change.
+
+## Milestone 9b: The pull request link and the skip words
+
+Tags: ui
+
+Depends on: 9a
+
+- [ ] Show "for #<number>" with its link in the run line of a pull request
+      run.
+- [ ] Show the words of a skipped run with the account login, as the
+      mockups write them.
+  - [ ] Test both.
 
 ## Milestone 10: Verification, commit, review, and pull request
 

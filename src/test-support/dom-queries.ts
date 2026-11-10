@@ -4,6 +4,7 @@
 
 const implicitRoles: Readonly<Record<string, string>> = {
   A: 'link',
+  ASIDE: 'complementary',
   BUTTON: 'button',
   DIALOG: 'dialog',
   INPUT: 'textbox',

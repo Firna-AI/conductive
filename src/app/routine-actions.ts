@@ -3,6 +3,7 @@ import {
   routinesPath,
   type CreateRoutineRequest,
   type Routine,
+  type RoutineRun,
   type UpdateRoutineRequest,
 } from '../shared/routines'
 import { ignore } from './api/parse'
@@ -94,4 +95,26 @@ export async function deleteRoutine(
     routineRemoved(routineId),
     `routine ${routineId}`,
   )
+}
+
+/**
+ * Run now of the owner. Its run shows first in the Runs list, and as the
+ * last run of the routine in the Routines list. The workspace list reads
+ * again at once, so the new run workspace shows in it before the next
+ * timer.
+ */
+export async function runRoutine(
+  org: OrgModel,
+  routineId: string,
+): Promise<RoutineRun> {
+  const run = await routineModel(org, routineId).runs.runNow()
+  org.resources.routines.confirm(
+    (list) =>
+      list.map((item) =>
+        item.id === routineId ? { ...item, lastRun: run } : item,
+      ),
+    `last run ${routineId}`,
+  )
+  if (run.workspaceId !== null) void org.reload('list')
+  return run
 }

@@ -132,6 +132,7 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
           key={`${org.id}:new-routine`}
           org={org}
           routineId={null}
+          tab="routine"
           user={user}
         />
       )
@@ -141,6 +142,7 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
           key={`${org.id}:${route.routineId}`}
           org={org}
           routineId={route.routineId}
+          tab={route.tab}
           user={user}
         />
       )

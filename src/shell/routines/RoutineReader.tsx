@@ -3,6 +3,7 @@ import { hasSchedule } from '../../../docs/mockups/src/components/routines/trigg
 import { personName } from '../../app/people'
 import { turnOffRoutine } from '../../app/routine-actions'
 import { draftOf } from '../../app/routine-draft'
+import type { RoutineTab } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
@@ -16,13 +17,14 @@ import { PromptFacts } from './PromptBox'
 import { RoutineFacts } from './RoutineFields'
 import { RoutineFrame } from './RoutineFrame'
 import { RoutineNote, type RoutineAccess } from './RoutineNote'
+import { RunsPanel, type RunsSource } from './RunsPanel'
 import { TriggerFacts } from './TriggerList'
 
 /**
  * A routine as a person who cannot change it reads it: its facts, its
- * triggers, and its prompt with the model. An admin can turn it off while
- * it is on, and delete it. In a suspended org nobody acts, and no line
- * names the logins of runs, because no run starts.
+ * triggers, and its prompt with the model, beside its runs. An admin can
+ * turn it off while it is on, and delete it. In a suspended org nobody
+ * acts, and no line names the logins of runs, because no run starts.
  */
 export function RoutineReader(props: {
   access: Exclude<RoutineAccess, 'owner'>
@@ -30,6 +32,8 @@ export function RoutineReader(props: {
   routine: Routine
   repositories: readonly Repository[]
   sections: readonly Section[]
+  runs: RunsSource
+  tab: RoutineTab
 }) {
   const { access, org, routine } = props
   const models = useStore(useApp().models)
@@ -64,7 +68,15 @@ export function RoutineReader(props: {
       </>
     ) : undefined
   return (
-    <RoutineFrame actions={actions} org={org} title={routine.name}>
+    <RoutineFrame
+      actions={actions}
+      org={org}
+      runs={
+        <RunsPanel orgName={org.name} ownerViews={false} source={props.runs} />
+      }
+      tabs={{ routineId: routine.id, current: props.tab }}
+      title={routine.name}
+    >
       <RoutineNote
         access={access}
         org={org}

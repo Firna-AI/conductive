@@ -112,7 +112,7 @@ export class DevBackend {
       (login) => login.agent === 'claude' && login.connected,
     )
     const api = createChatApi(createApiClient(server.fetch), target)
-    const [detail, listed, view] = await Promise.all([
+    const [detail, listed, { view }] = await Promise.all([
       api.workspace(),
       api.sessions(),
       api.view(),

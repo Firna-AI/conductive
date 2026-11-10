@@ -160,8 +160,9 @@ fake API, with its address options, its controls, and the test command.
   draws its own tools panel when the host gives no `tools` part.
 - `WorkspaceOwner.tsx` and `WorkspaceMacBar.tsx`: the owner picker of the
   members UI, and the bar of the 15 minutes in the Mac app.
-- `saved-view.ts`: the saved view of the kept chat, and `saveView`, which
-  writes a change only once the chat read the view.
+- `saved-view.ts`: the saved view of the kept chat, `saveView`, which
+  writes a change only once the chat read the view, and `useRunRoutine`,
+  the routine of a run workspace, which the chat reads with the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
   takes the place of the tools inside the tabs, the tool and preview of the
@@ -193,7 +194,9 @@ fake API, with its address options, its controls, and the test command.
   `WorkspaceContext`, what each part gets, and `useFeatures`, the parts of
   the host over the app's own parts.
 - `WorkspaceHeader.tsx` and `WorkspaceColumns.tsx`: the header, the
-  columns, and the tab bar of a phone.
+  columns, and the tab bar of a phone. `RunLine.tsx`: the line under the
+  header of a run workspace, which links to its routine.
+  `RunLine.test.tsx` checks the line and its link.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into

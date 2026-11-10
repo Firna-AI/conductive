@@ -1,7 +1,8 @@
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
+import { queryByRole } from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
-import { holdAnimationFrames } from '../../test-support/mount'
+import { holdAnimationFrames, waitFor } from '../../test-support/mount'
 import { Shell } from '../Shell'
 import { mountScreen } from '../test-mount'
 import { startedApp } from '../test-render'
@@ -41,6 +42,15 @@ export function wordsOf(element: Element): string {
   }
   walk(element)
   return words.join(' ')
+}
+
+/** The words of each row of the Runs list, once it shows. */
+export async function runRows(view: HTMLElement): Promise<string[]> {
+  const list = await waitFor(
+    () => queryByRole('list', 'Runs', view),
+    'the Runs list',
+  )
+  return [...list.querySelectorAll(':scope > li')].map(wordsOf)
 }
 
 /** A Firna button marks itself with `aria-disabled`, a native one with `disabled`. */

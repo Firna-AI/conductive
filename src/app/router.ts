@@ -9,6 +9,9 @@ export const SETTINGS_TABS = [
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
+/** The tabs of a saved routine on a phone: its form, and its runs. */
+export type RoutineTab = 'routine' | 'runs'
+
 /** The screen that an address shows. */
 export type Route =
   | { screen: 'home' }
@@ -27,7 +30,13 @@ export type Route =
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
   | { screen: 'routines'; orgId: string }
   | { screen: 'new-routine'; orgId: string }
-  | { screen: 'routine'; orgId: string; routineId: string }
+  /** A phone shows the form of a saved routine and its runs in two tabs. */
+  | {
+      screen: 'routine'
+      orgId: string
+      routineId: string
+      tab: RoutineTab
+    }
   | { screen: 'not-found' }
 
 const encode = encodeURIComponent
@@ -54,8 +63,10 @@ export const routes = {
       : `/orgs/${encode(orgId)}/settings/${tab}`,
   routines: (orgId: string) => `/orgs/${encode(orgId)}/routines`,
   newRoutine: (orgId: string) => `/orgs/${encode(orgId)}/routines/new`,
-  routine: (orgId: string, routineId: string) =>
-    `/orgs/${encode(orgId)}/routines/${encode(routineId)}`,
+  routine: (orgId: string, routineId: string, tab: RoutineTab = 'routine') =>
+    tab === 'routine'
+      ? `/orgs/${encode(orgId)}/routines/${encode(routineId)}`
+      : `/orgs/${encode(orgId)}/routines/${encode(routineId)}/runs`,
 } as const
 
 function settingsTab(value: string | undefined): SettingsTab | null {
@@ -108,10 +119,17 @@ export function parseRoute(pathname: string, search: string): Route {
     const tab = settingsTab(id)
     if (tab) return { screen: 'settings', orgId, tab }
   }
-  if (area === 'routines' && rest.length === 0) {
+  if (area === 'routines') {
     if (id === undefined) return { screen: 'routines', orgId }
-    if (id === 'new') return { screen: 'new-routine', orgId }
-    return { screen: 'routine', orgId, routineId: id }
+    if (id === 'new' && rest.length === 0) {
+      return { screen: 'new-routine', orgId }
+    }
+    if (id !== 'new' && rest.length === 0) {
+      return { screen: 'routine', orgId, routineId: id, tab: 'routine' }
+    }
+    if (id !== 'new' && rest.length === 1 && rest[0] === 'runs') {
+      return { screen: 'routine', orgId, routineId: id, tab: 'runs' }
+    }
   }
   return { screen: 'not-found' }
 }

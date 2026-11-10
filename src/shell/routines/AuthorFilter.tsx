@@ -4,6 +4,7 @@ import { addAuthor, removeAuthor, setMembers } from '../../app/routine-triggers'
 import type { User } from '../../shared/api'
 import type { RoutineAuthorFilterInput } from '../../shared/routines'
 import { LoginField } from './LoginField'
+import type { RefusedLogin } from './useRoutineSave'
 
 /**
  * The author filter of a pull request trigger: an "Author is" list and an
@@ -17,8 +18,10 @@ export function AuthorFilter(props: {
   change: (filter: RoutineAuthorFilterInput | undefined) => void
   orgName: string
   members: readonly User[]
+  /** A login of this filter that a save refused. */
+  unknown: RefusedLogin | null
 }) {
-  const { filter, change, orgName } = props
+  const { filter, change, orgName, unknown } = props
   const current = filter ?? { members: false, is: [], isNot: [] }
   return (
     <div className={styles.filter}>
@@ -35,6 +38,7 @@ export function AuthorFilter(props: {
         logins={current.is}
         members={props.members}
         remove={(login) => change(removeAuthor(filter, 'is', login))}
+        unknown={unknown?.list === 'is' ? unknown.login : null}
       />
       <LoginField
         add={(login) => change(addAuthor(filter, 'isNot', login))}
@@ -43,6 +47,7 @@ export function AuthorFilter(props: {
         logins={current.isNot}
         members={props.members}
         remove={(login) => change(removeAuthor(filter, 'isNot', login))}
+        unknown={unknown?.list === 'isNot' ? unknown.login : null}
       />
       <p className={styles.note}>
         {`To let a bot or another account outside ${orgName} start runs, add it to Author is.`}

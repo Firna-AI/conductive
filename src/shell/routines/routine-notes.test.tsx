@@ -32,7 +32,12 @@ async function pageOf(server: FakeApiServer, routineId: string, user: User) {
   return textOf(
     renderScreen(
       app,
-      <RoutineScreen org={summary} routineId={routineId} user={user} />,
+      <RoutineScreen
+        org={summary}
+        routineId={routineId}
+        tab="routine"
+        user={user}
+      />,
     ),
   )
 }

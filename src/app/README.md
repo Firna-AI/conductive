@@ -22,12 +22,23 @@ pull request bar, and the owner picker. A host can give its own parts, as
   them. A new org
   of the dev fake gets every repository of the account's list, and keeps
   its custom initials through rename, delete, and restore. Acme has the
-  routines of the mockups, each with its last run. The other orgs have no
+  routines of the mockups, each with the runs that its page in the mockups
+  lists. `?runs=failed` or `?runs=skipped` gives Review pull requests the
+  failed or the skipped runs of the mockups. The fake has no workspaces
+  for these runs, so the workspace list stays as the mockups draw it, and
+  the link of such a run opens no workspace. The other orgs have no
   routines, so their Routines page shows its empty state. A save of a
   routine checks the prompt, each custom cron, and the time zone, as the
   Worker does. Its author filter knows the members of the org and a few
   bots, such as `dependabot[bot]`. Any other login gets the refusal of a
-  login that names no GitHub account.
+  login that names no GitHub account, with its trigger and its list.
+- Run now makes the workspace of the run as Create workspace does, in the
+  section of the routine, and the run takes the state of that workspace.
+  Without the agent login of the routine's model, as with `?login=none`,
+  the run fails with no workspace. A prompt that contains `fail` stands for
+  a cloud computer that did not start. The recorded server has no chat for
+  a workspace that the fake made, so its chat does not load, and the line
+  of its routine does not show.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -176,11 +187,14 @@ clicks, types, and lets the answers of the fake API settle.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   routines, and computer settings of one org, with `watch` and the wait of
   each part. `api/read-routines.ts`: the readers of the routines, each with
-  its newest run, and of one routine.
-- `routine-model.ts`: `RoutineModel`, one routine with its reads and its
-  saves, and `routineModel`, the model that the org keeps for each routine.
-  `routine-actions.ts`: create, update, Turn off, and Delete, which also
-  update the Routines list.
+  its newest run, and of one routine. `api/read-routine-runs.ts`: the
+  readers of the runs.
+- `routine-model.ts`: `RoutineModel`, one routine with its reads, its
+  saves, and its runs, and `routineModel`, the model that the org keeps for
+  each routine. `routine-actions.ts`: create, update, Turn off, Delete, and
+  Run now, which also update the Routines list.
+- `routine-runs.ts`: `RoutineRuns`, the Runs list of one routine: its
+  reads while the page shows it, Show older runs, and Run now.
 - `routine-draft.ts`: the draft of the routine page, its create and update
   requests, and whether Save can send it. `routine-triggers.ts`: the
   defaults of a new trigger and the edits of an author filter.
@@ -228,7 +242,15 @@ clicks, types, and lets the answers of the fake API settle.
 - `../shell/routines/RoutineScreen.tsx`: the routine page and the page of
   a new routine. `RoutineEditor.tsx` is the form of the owner, and
   `RoutineReader.tsx` the read-only view of every other member, with Turn
-  off and Delete for an admin.
+  off and Delete for an admin. `useRoutineSave.ts` is Save, with the login
+  that a save refused. `RoutineFrame.tsx` puts the Runs list beside the
+  form on desktop, and on the Runs tab of a phone.
+- `../shell/routines/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
+  the state, the trigger, the pull request, and the time of each run, and
+  the link to its workspace. `run-copy.ts`: the cause of a failed run and
+  the reason of a skipped run in words. `RunNow.tsx`: Run now of the owner.
+- `../shell/workspace/RunLine.tsx`: the line under the header of a run
+  workspace, which links to its routine.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.

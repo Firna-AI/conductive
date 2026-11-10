@@ -18,6 +18,9 @@ const CONVERSATIONS = [
   'first-turn',
 ] as const satisfies readonly RecordedChatScenario[]
 
+/** The run lists of Review pull requests that the mockups also draw. */
+const REVIEW_RUNS = ['failed', 'skipped'] as const
+
 const BANNERS = [
   'none',
   'no-commits',
@@ -53,6 +56,8 @@ const BANNERS = [
  *   opens, as a sandbox does that stops while its workspace is open.
  * - `shareSave=fail`: each change of the share setting of an agent login
  *   fails, so the account shows that the change was not saved.
+ * - `runs=failed|skipped`: the Runs list of Review pull requests holds a
+ *   failed run of each cause, or the skipped runs of accounts outside Acme.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -66,6 +71,8 @@ export interface DevOptions {
   /** The wait before an open workspace stops, or `null` for no stop. */
   stopAfterMs: number | null
   shareSaveFails: boolean
+  /** The run list of Review pull requests in place of its newest runs. */
+  reviewRuns: (typeof REVIEW_RUNS)[number] | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -94,6 +101,7 @@ export function readDevOptions(search: string): DevOptions {
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
     shareSaveFails: params.get('shareSave') === 'fail',
+    reviewRuns: pick(params, 'runs', REVIEW_RUNS) ?? null,
   }
 }
 

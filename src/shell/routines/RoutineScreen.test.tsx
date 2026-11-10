@@ -41,11 +41,14 @@ function actions(view: HTMLElement): string[] {
   )
 }
 
-/** The words of the main area of the page. */
+/** The words of the main area of the page, without the Runs column. */
 function page(view: HTMLElement): string {
   const main = view.querySelector('main')
   if (!main) throw new Error('The frame has no main area.')
-  return wordsOf(main)
+  const form = main.cloneNode(true)
+  if (!(form instanceof HTMLElement)) throw new Error('The copy is no element.')
+  form.querySelector('aside')?.remove()
+  return wordsOf(form)
 }
 
 describe('the routine page', () => {

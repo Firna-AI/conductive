@@ -6,7 +6,7 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import { newRoutineDraft } from '../../app/routine-draft'
 import { routineModel } from '../../app/routine-model'
-import { routes } from '../../app/router'
+import { routes, type RoutineTab } from '../../app/router'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
@@ -59,16 +59,21 @@ function Missing(props: { org: OrgSummary }) {
 function SavedRoutine(props: {
   org: OrgSummary
   routineId: string
+  tab: RoutineTab
   user: User
 }) {
   const { org } = props
   const orgModel = useOrgModel(org.id)
   const model = routineModel(orgModel, props.routineId)
   const routine = useStore(model.routine)
+  const runs = useStore(model.runs.shown)
   const repositories = useStore(orgModel.repositories)
   const sections = useStore(orgModel.sections)
   const { suspended } = useOrgAccess(org)
+  // The runs read with the routine, and stop when the routine fails to read.
+  const failed = routine.state === 'failed'
   useEffect(() => model.watch(), [model])
+  useEffect(() => (failed ? undefined : model.runs.watch()), [model, failed])
   useEffect(() => orgModel.watch('repositories', 'list', 'members'), [orgModel])
   if (routine.state === 'failed') {
     if (routine.error.code === 'routine_not_found') return <Missing org={org} />
@@ -89,9 +94,16 @@ function SavedRoutine(props: {
   ) {
     return <Waiting org={org} title="Routine" />
   }
-  const lists = {
+  const shared = {
     repositories: repositories.state === 'ready' ? repositories.value : [],
     sections: sections.state === 'ready' ? sections.value : [],
+    tab: props.tab,
+    runs: {
+      routine: routine.value,
+      runs,
+      loadOlder: () => model.runs.loadOlder(),
+      retry: () => model.runs.reload(),
+    },
   }
   if (!suspended && routine.value.owner.id === props.user.id) {
     return (
@@ -99,7 +111,7 @@ function SavedRoutine(props: {
         org={org}
         routine={routine.value}
         user={props.user}
-        {...lists}
+        {...shared}
       />
     )
   }
@@ -110,7 +122,7 @@ function SavedRoutine(props: {
       }
       org={org}
       routine={routine.value}
-      {...lists}
+      {...shared}
     />
   )
 }
@@ -158,6 +170,8 @@ function NewRoutine(props: { org: OrgSummary; user: User }) {
       initial={initial}
       org={org}
       routine={null}
+      runs={null}
+      tab="routine"
       user={props.user}
       {...lists}
     />
@@ -165,13 +179,15 @@ function NewRoutine(props: { org: OrgSummary; user: User }) {
 }
 
 /**
- * The page of a routine, or of a new routine when `routineId` is null.
- * Its owner changes it. Every other member reads it, and an admin can also
- * turn it off and delete it. A suspended org shows it read-only to all.
+ * The page of a routine, or of a new routine when `routineId` is null,
+ * with its runs. Its owner changes it and uses Run now. Every other member
+ * reads it, and an admin can also turn it off and delete it. A suspended
+ * org shows it read-only to all. `tab` is the tab that a phone shows.
  */
 export function RoutineScreen(props: {
   org: OrgSummary
   routineId: string | null
+  tab: RoutineTab
   user: User
 }) {
   if (props.routineId === null) {
@@ -181,6 +197,7 @@ export function RoutineScreen(props: {
     <SavedRoutine
       org={props.org}
       routineId={props.routineId}
+      tab={props.tab}
       user={props.user}
     />
   )

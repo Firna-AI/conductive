@@ -16,10 +16,16 @@ import {
   repositoryPath,
 } from '../shared/org-settings'
 import { deleteOrgPath, leaveOrgPath, restoreOrgPath } from '../shared/orgs'
-import { routinePath, routinesPath } from '../shared/routines'
+import {
+  routinePath,
+  routinePaths,
+  routinesPath,
+  type RoutineRunResponse,
+} from '../shared/routines'
 import { sectionPath, sectionsPath } from '../shared/sections'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { coreFixtures, FAKE_IDS, FAKE_TIME } from './fixtures/core'
+import { listRuns, runsPage } from './fixtures/routine-runs'
 import { routineFixtures } from './fixtures/routines'
 
 export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
@@ -101,9 +107,29 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   const routines = routineFixtures(id)
   routes.json('GET', routinesPath(id), routines.list)
   routes.json('POST', routinesPath(id), { routine: routines.created }, 201)
-  for (const routine of routines.routines) {
+  // The routine that a create answers has a page too, as after the create.
+  for (const routine of [...routines.routines, routines.created]) {
     routes.json('GET', routinePath(id, routine.id), { routine })
     routes.json('PATCH', routinePath(id, routine.id), { routine })
     routes.empty('DELETE', routinePath(id, routine.id))
+    // Each page of the runs, newest first, and the run that Run now starts.
+    const runs = routines.runs.filter((run) => run.routineId === routine.id)
+    let before: string | null = null
+    do {
+      const page = runsPage(runs, before)
+      routes.json(
+        'GET',
+        routinePaths.runs(id, routine.id, before ?? undefined),
+        page,
+      )
+      before = page.nextCursor
+    } while (before)
+    const [started] = listRuns(routine, 'run-now')
+    routes.json(
+      'POST',
+      routinePaths.runNow(id, routine.id),
+      { run: started } satisfies RoutineRunResponse,
+      201,
+    )
   }
 }

@@ -22,6 +22,8 @@ interface RouteRequest {
   params: Params
   /** The JSON body, or `null` when the request has none. */
   body: unknown
+  /** The query string of the address, such as the cursor of a page. */
+  query: URLSearchParams
 }
 
 /**
@@ -35,15 +37,25 @@ export interface Route {
   answer: (request: RouteRequest) => Response | null
 }
 
+type ErrorDetails = ApiErrorBody['error']['details']
+
 /** A refused request. The fetch sends it as the error body of the API. */
 export class RouteError extends Error {
   readonly status: number
   readonly code: string
+  /** What the refusal names, such as the trigger of an unknown login. */
+  readonly details: ErrorDetails
 
-  constructor(status: number, code: string, message: string) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    details?: ErrorDetails,
+  ) {
     super(message)
     this.status = status
     this.code = code
+    this.details = details
   }
 }
 
@@ -122,14 +134,22 @@ async function readBody(request: Request): Promise<unknown> {
   }
 }
 
-function failure(status: number, code: string, message: string): Response {
-  return json({ error: { code, message } } satisfies ApiErrorBody, status)
+function failure(
+  status: number,
+  code: string,
+  message: string,
+  details?: ErrorDetails,
+): Response {
+  const body: ApiErrorBody = {
+    error: { code, message, ...(details ? { details } : {}) },
+  }
+  return json(body, status)
 }
 
 /** The error body of the API for a failed route, as the Worker sends it. */
 function errorResponse(error: unknown): Response {
   if (error instanceof RouteError) {
-    return failure(error.status, error.code, error.message)
+    return failure(error.status, error.code, error.message, error.details)
   }
   if (error instanceof ParseError) {
     return failure(400, 'invalid_input', 'Complete the required fields.')
@@ -153,12 +173,15 @@ export function routeFetch(
     init?: RequestInit,
   ): Promise<Response | null> {
     const request = new Request(new URL(input, FAKE_ORIGIN), init)
-    const path = new URL(request.url).pathname
+    const url = new URL(request.url)
+    const path = url.pathname
     guard(path, request.method)
     for (const route of routes) {
       if (route.method !== request.method) continue
       const params = match(route.path, path)
-      if (params) return route.answer({ params, body: await readBody(request) })
+      if (!params) continue
+      const body = await readBody(request)
+      return route.answer({ params, body, query: url.searchParams })
     }
     return null
   }

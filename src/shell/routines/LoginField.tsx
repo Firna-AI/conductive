@@ -7,87 +7,50 @@ import {
   type Ref,
 } from 'react'
 import { InputFrame, type InputFrameProps } from '@firna/ui/input'
-import { Users, X } from 'lucide-react'
+import { CircleAlert, Users, X } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
-import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import form from '../../../docs/mockups/src/components/routines/form.module.css'
 import styles from '../../../docs/mockups/src/components/routines/LoginField.module.css'
-import { personName } from '../../app/people'
 import type { User } from '../../shared/api'
-import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
+import {
+  items,
+  SuggestionMenu,
+  suggestionsFor,
+  type MembersEntry,
+} from './LoginSuggestions'
 
 type InputHandle =
   NonNullable<InputFrameProps['inputRef']> extends Ref<infer Handle>
     ? Handle
     : never
 
-/** The entry of "Author is" that stands for every member of the org. */
-export interface MembersEntry {
+function Chip(props: {
   label: string
-  listed: boolean
-  add: () => void
+  group?: boolean
+  unknown?: boolean
   remove: () => void
-}
-
-interface Suggestion {
-  key: string
-  label: string
-  detail: string
-  member: User | null
-  choose: () => void
-}
-
-/**
- * The suggestions for the typed text: the entry of every member first,
- * then each member whose login or name holds the text, and who is not
- * listed yet. An empty text offers each of them.
- */
-function suggestionsFor(
-  typed: string,
-  logins: readonly string[],
-  members: readonly User[],
-  entry: MembersEntry | undefined,
-  add: (login: string) => void,
-): Suggestion[] {
-  const text = typed.trim().replace(/^@/, '').toLowerCase()
-  const listed = new Set(logins.map((login) => login.toLowerCase()))
-  const people = members
-    .filter(
-      (member) =>
-        !listed.has(member.githubLogin.toLowerCase()) &&
-        (member.githubLogin.toLowerCase().includes(text) ||
-          personName(member).toLowerCase().includes(text)),
-    )
-    .map((member) => ({
-      key: member.id,
-      label: personName(member),
-      detail: `@${member.githubLogin}`,
-      member,
-      choose: () => add(member.githubLogin),
-    }))
-  if (!entry || entry.listed || !entry.label.toLowerCase().includes(text)) {
-    return people
-  }
-  const everyone = {
-    key: 'members',
-    label: entry.label,
-    detail: 'Every member',
-    member: null,
-    choose: entry.add,
-  }
-  return [everyone, ...people]
-}
-
-function Chip(props: { label: string; group?: boolean; remove: () => void }) {
+}) {
   return (
-    <span className={classes(styles.chip, props.group && styles.group)}>
+    <span
+      className={classes(
+        styles.chip,
+        props.group && styles.group,
+        props.unknown && styles.unknown,
+      )}
+    >
       {props.group ? <Users aria-hidden size={12} /> : null}
       {props.label}
+      {props.unknown ? (
+        <span className={ui.hidden}>, not found on GitHub</span>
+      ) : null}
       <button
         aria-label={`Remove ${props.label}`}
         className={styles.remove}
+        // A sheet that opens on a refused login puts the focus here, where
+        // it opens no suggestions over the refusal.
+        data-autofocus={props.unknown || undefined}
         onClick={props.remove}
         type="button"
       >
@@ -97,16 +60,15 @@ function Chip(props: { label: string; group?: boolean; remove: () => void }) {
   )
 }
 
-/** The items of the open suggestions, which the arrow keys move between. */
-function items(list: HTMLElement | null): HTMLElement[] {
-  return Array.from(list?.querySelectorAll<HTMLElement>('button') ?? [])
-}
-
 /**
  * A list of GitHub logins, as chips with a field that adds one. Enter adds
- * the typed login, such as a bot. While the field has the focus, it offers
- * the members of the org, and the arrow keys reach them. A list of authors
- * can also hold the entry for every member.
+ * the typed login, such as a bot. While its text box or a suggestion has
+ * the focus, it offers the members of the org, and the arrow keys reach
+ * them. The Remove button of a chip opens no suggestions, so a sheet that
+ * opens on it keeps the line under the list in view. A list of authors
+ * can also hold the entry for every member. A login that a save refused,
+ * because no GitHub account has it, marks its chip, and its refusal shows
+ * in place of the hint.
  */
 export function LoginField(props: {
   label: string
@@ -116,6 +78,8 @@ export function LoginField(props: {
   remove: (login: string) => void
   members: readonly User[]
   entry?: MembersEntry
+  /** A login of the list that no GitHub account has. */
+  unknown: string | null
 }) {
   const id = useId()
   const { field } = useControlSizes()
@@ -132,6 +96,7 @@ export function LoginField(props: {
     props.add,
   )
   const open = focused && !dismissed && suggestions.length > 0
+  const unknown = props.unknown?.toLowerCase()
   const finish = () => {
     setTyped('')
     setDismissed(false)
@@ -153,6 +118,10 @@ export function LoginField(props: {
       else choices[at - 1]?.focus()
     }
   }
+  // The text box and the suggestions offer the members. A chip does not.
+  const offers = (target: EventTarget) =>
+    target instanceof HTMLInputElement ||
+    (target instanceof Node && (list.current?.contains(target) ?? false))
   const blur = (event: FocusEvent<HTMLDivElement>) => {
     const next = event.relatedTarget
     if (!(next instanceof Node) || !event.currentTarget.contains(next)) {
@@ -168,12 +137,15 @@ export function LoginField(props: {
       <div
         className={styles.anchor}
         onBlur={blur}
-        onFocus={() => setFocused(true)}
+        onFocus={(event) => setFocused(offers(event.target))}
         onKeyDown={keys}
       >
         <div
           aria-labelledby={`${id}-label`}
-          className={styles.box}
+          className={classes(
+            styles.box,
+            unknown !== undefined && styles.invalid,
+          )}
           role="group"
         >
           {props.entry?.listed ? (
@@ -184,6 +156,7 @@ export function LoginField(props: {
               key={login}
               label={`@${login}`}
               remove={() => props.remove(login)}
+              unknown={login.toLowerCase() === unknown}
             />
           ))}
           <span className={styles.entry}>
@@ -211,46 +184,25 @@ export function LoginField(props: {
           </span>
         </div>
         {open ? (
-          <div
-            aria-label={`Suggestions for ${props.label}`}
-            className={classes(menu.menu, menu['below-start'])}
+          <SuggestionMenu
+            choose={(suggestion) => {
+              suggestion.choose()
+              finish()
+            }}
+            label={props.label}
             ref={list}
-            role="menu"
-          >
-            {suggestions.map((suggestion, index) => (
-              <div className={ui.contents} key={suggestion.key}>
-                {index === 1 && suggestions[0].member === null ? (
-                  <hr className={menu.divider} />
-                ) : null}
-                <button
-                  className={classes(menu.item, ui.plainButton, ui.menuItem)}
-                  onClick={() => {
-                    suggestion.choose()
-                    finish()
-                  }}
-                  // A press keeps the focus in the field, as some browsers
-                  // do not focus a button that the pointer presses.
-                  onMouseDown={(event) => event.preventDefault()}
-                  role="menuitem"
-                  tabIndex={-1}
-                  type="button"
-                >
-                  {suggestion.member ? (
-                    <span className={menu.mark}>
-                      <PersonAvatar person={suggestion.member} size={18} />
-                    </span>
-                  ) : (
-                    <Users aria-hidden className={menu.icon} size={14} />
-                  )}
-                  <span className={menu.label}>{suggestion.label}</span>
-                  <span className={menu.detail}>{suggestion.detail}</span>
-                </button>
-              </div>
-            ))}
-          </div>
+            suggestions={suggestions}
+          />
         ) : null}
       </div>
-      <p className={form.hint}>{props.hint}</p>
+      {props.unknown ? (
+        <p className={form.error} role="alert">
+          <CircleAlert aria-hidden className={form.errorIcon} size={12} />
+          {`No GitHub account is named ${props.unknown}. Check the spelling, then save.`}
+        </p>
+      ) : (
+        <p className={form.hint}>{props.hint}</p>
+      )}
     </div>
   )
 }

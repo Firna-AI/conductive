@@ -25,6 +25,16 @@ of the data that the screens read and write.
   whole routine, and the Routines list takes it at once, with the last run
   that the list has. A delete takes the routine out of the list, and a
   later visit of its address reads it again.
+- The Runs list of the routine page reads the newest 50 runs when it
+  shows, every 10 seconds while it shows, and at each return to the page.
+  Show older runs reads the page after the oldest run that the list shows.
+  From then on, the list keeps each run that it showed, and each read of
+  the newest runs updates them, so a new run that pushes runs out of the
+  newest page leaves no gap. Run now shows its run first at once, and the
+  Routines list takes it as the last run. A later read of the runs brings
+  its next state.
+- The chat reads the routine of a run workspace with the saved view, at
+  each load of the chat. The header shows it until the next load.
 - A list write shows its change at once, and a failure takes back that
   change only. An answer confirms only the fields of its write: a move
   answer sets the section of the workspace, not its state. A workspace

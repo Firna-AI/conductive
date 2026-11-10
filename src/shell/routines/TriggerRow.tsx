@@ -12,6 +12,7 @@ import { Sheet } from '../ui/Sheet'
 import { AuthorFilter } from './AuthorFilter'
 import { triggerName } from './routine-copy'
 import { CronField, ScheduleControls } from './ScheduleControls'
+import type { RefusedLogin } from './useRoutineSave'
 
 /** The mark of a trigger: a clock for a schedule, or a pull request. */
 function TriggerIcon(props: { trigger: RoutineTriggerInput }) {
@@ -54,6 +55,8 @@ export function TriggerRow(props: {
   orgName: string
   members: readonly User[]
   phone: boolean
+  /** A login of the filter of this trigger that a save refused. */
+  unknown: RefusedLogin | null
 }) {
   const { trigger } = props
   const name = triggerName(trigger)
@@ -68,6 +71,7 @@ export function TriggerRow(props: {
         filter={trigger.authors}
         members={props.members}
         orgName={props.orgName}
+        unknown={props.unknown}
       />
     ) : null
   return (

@@ -8,8 +8,21 @@ import type {
   SessionResponse,
   SessionsResponse,
 } from '../../shared/sessions'
-import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
-import { count, flag, list, nullable, oneOf, record, text } from './json'
+import type {
+  WorkspaceTab,
+  WorkspaceView,
+  WorkspaceViewResponse,
+} from '../../shared/workspace-view'
+import {
+  count,
+  flag,
+  list,
+  nullable,
+  oneOf,
+  optional,
+  record,
+  text,
+} from './json'
 import {
   readAgent,
   readAttachment,
@@ -146,6 +159,29 @@ export function readView(value: unknown): WorkspaceView {
     activeTab: nullable(readTab)(view.activeTab),
     fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
     tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
+  }
+}
+
+/** The routine whose run made the workspace. */
+export type RunRoutine = NonNullable<WorkspaceViewResponse['routine']>
+
+/** The saved view, and the routine of a run workspace. */
+export interface ViewReply {
+  view: WorkspaceView
+  /** Null for a workspace that a person created. */
+  routine: RunRoutine | null
+}
+
+function readRunRoutine(value: unknown): RunRoutine {
+  const routine = record(value, 'routine')
+  return { id: text(routine.id), name: text(routine.name) }
+}
+
+export function readViewReply(value: unknown): ViewReply {
+  const routine = record(value, 'view response').routine
+  return {
+    view: readView(value),
+    routine: optional(nullable(readRunRoutine))(routine) ?? null,
   }
 }
 

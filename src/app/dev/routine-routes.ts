@@ -4,12 +4,11 @@ import {
   routinesPath,
   type Routine,
   type RoutineResponse,
-  type RoutineRun,
   type RoutinesResponse,
 } from '../../shared/routines'
 import { flag, record, text, type JsonObject } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
-import { ID, json, noContent, optional, RouteError, type Route } from './router'
+import { ID, json, noContent, optional, type Route } from './router'
 import {
   choiceOf,
   nextRunOf,
@@ -19,37 +18,8 @@ import {
   storedTriggers,
   timeZoneOf,
 } from './routine-input'
+import { ownerRequired, requireRoutine, routineRuns } from './routine-records'
 import { slugify, uniqueId, type OrgState } from './state'
-
-/** The newest run of a routine, or null, as the list of the Worker gives it. */
-function lastRun(org: OrgState, routineId: string): RoutineRun | null {
-  let newest: RoutineRun | null = null
-  for (const run of org.runs) {
-    if (run.routineId !== routineId) continue
-    if (!newest || run.createdAt > newest.createdAt) newest = run
-  }
-  return newest
-}
-
-function requireRoutine(org: OrgState, routineId: string): Routine {
-  const routine = org.routines.find((item) => item.id === routineId)
-  if (!routine) {
-    throw new RouteError(
-      404,
-      'routine_not_found',
-      'The routine is not available.',
-    )
-  }
-  return routine
-}
-
-function ownerRequired(): RouteError {
-  return new RouteError(
-    403,
-    'routine_owner_required',
-    'Only the owner can change this routine.',
-  )
-}
 
 function reply(routine: Routine, status = 200): Response {
   return json({ routine } satisfies RoutineResponse, status)
@@ -174,7 +144,7 @@ export function routineRoutes(backend: DevBackend): Route[] {
         return json({
           routines: org.routines.map((routine) => ({
             ...routine,
-            lastRun: lastRun(org, routine.id),
+            lastRun: routineRuns(org, routine.id)[0] ?? null,
           })),
         } satisfies RoutinesResponse)
       },

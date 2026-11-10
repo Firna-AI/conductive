@@ -20,6 +20,7 @@ import { MenuButton, type MenuEntry } from '../ui/Menu'
 import { useViewport } from '../ui/viewport'
 import { TimeZoneField } from './ScheduleControls'
 import { TriggerFact, TriggerRow } from './TriggerRow'
+import type { RefusedLogin } from './useRoutineSave'
 
 /**
  * Add trigger: one flat menu with two labelled groups, because the menu of
@@ -64,12 +65,20 @@ export function TriggerEditor(props: {
   changeTimeZone: (timeZone: string) => void
   orgName: string
   members: readonly User[]
-  /** The refusal of a save that names a login, which no GitHub account has. */
+  /** A login that a save refused, with its trigger and its list. */
+  refused: RefusedLogin | null
+  /** The words of a refused login, when the refusal names no trigger. */
   refusal: string | null
 }) {
   const heading = useId()
   const phone = useViewport() === 'phone'
   const [open, setOpen] = useState<number | null>(null)
+  // A refused login opens the filter of its trigger, where its chip shows.
+  const [seen, setSeen] = useState(props.refused)
+  if (props.refused !== seen) {
+    setSeen(props.refused)
+    if (props.refused) setOpen(props.refused.triggerIndex)
+  }
   const { triggers, change } = props
   const remove = (index: number) => {
     change(triggers.filter((_, at) => at !== index))
@@ -109,6 +118,9 @@ export function TriggerEditor(props: {
                 setOpen((current) => (current === index ? null : index))
               }
               trigger={trigger}
+              unknown={
+                props.refused?.triggerIndex === index ? props.refused : null
+              }
             />
           ))}
         </ul>

@@ -95,6 +95,29 @@ function readTriggerInput(value: unknown): RoutineTriggerInput {
 }
 
 /**
+ * Refuses the first login of the author filters that the fake GitHub does
+ * not know, with its trigger and its list, as the Worker does.
+ */
+function checkLogins(
+  inputs: readonly RoutineTriggerInput[],
+  known: (login: string) => string | undefined,
+): void {
+  for (const [triggerIndex, input] of inputs.entries()) {
+    if (input.kind !== 'pull-request' || !input.authors) continue
+    for (const list of ['is', 'isNot'] as const) {
+      const login = input.authors[list].find((item) => !known(item))
+      if (login === undefined) continue
+      throw new RouteError(
+        400,
+        'unknown_github_login',
+        `GitHub account ${login} was not found. Check the login.`,
+        { login, triggerIndex, list },
+      )
+    }
+  }
+}
+
+/**
  * The triggers of a save, as the Worker stores them. A custom cron must run
  * at most once an hour, and each login must name an account that the fake
  * GitHub knows: a member of the org, or a known bot.
@@ -104,21 +127,12 @@ export function storedTriggers(
   value: unknown,
 ): RoutineTrigger[] {
   const members = org.members.members.map((member) => member.user.githubLogin)
-  const accountOf = (login: string) => {
-    const known = [...members, ...knownAccounts].find(
+  const known = (login: string) =>
+    [...members, ...knownAccounts].find(
       (item) => item.toLowerCase() === login.toLowerCase(),
     )
-    if (!known) {
-      throw new RouteError(
-        400,
-        'unknown_github_login',
-        `GitHub account ${login} was not found. Check the login.`,
-      )
-    }
-    return fakeAccount(known)
-  }
   const inputs = items(record({ value }), 'value', readTriggerInput)
-  return inputs.map((input) => {
+  for (const input of inputs) {
     if (input.kind === 'custom' && cronProblem(input.cron) !== null) {
       throw new RouteError(
         400,
@@ -126,8 +140,11 @@ export function storedTriggers(
         'Use five cron fields with one minute, for a schedule that runs at most once an hour.',
       )
     }
-    return storedTrigger(input, accountOf)
-  })
+  }
+  checkLogins(inputs, known)
+  return inputs.map((input) =>
+    storedTrigger(input, (login) => fakeAccount(known(login) ?? login)),
+  )
 }
 
 /** A prompt with text, as the Worker requires. */

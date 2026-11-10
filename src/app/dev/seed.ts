@@ -1,11 +1,13 @@
 import type { AgentLoginStatus } from '../../shared/account'
 import type { OrgSummary } from '../../shared/orgs'
+import type { RoutineRun } from '../../shared/routines'
 import type { Workspace } from '../../shared/workspaces'
 import {
   coreFixtures,
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
+import { listRuns } from '../../test-support/fixtures/routine-runs'
 import { routineFixtures } from '../../test-support/fixtures/routines'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { AGENTS } from '../api/read-core'
@@ -24,8 +26,24 @@ type CoreFixtures = ReturnType<typeof coreFixtures>
 const DELETE_AFTER = 604_800_000
 
 /**
+ * The runs of the routines. Review pull requests can list the failed or
+ * the skipped runs of the mockups in place of its newest runs. After the
+ * suspension of Acme, it lists its runs as the suspension left them.
+ */
+function seedRuns(
+  fixtures: ReturnType<typeof routineFixtures>,
+  options: DevOptions,
+): RoutineRun[] {
+  const list = options.reviewRuns ?? (options.suspended ? 'suspended' : null)
+  const review = fixtures.routines.find((item) => item.id === 'review-prs')
+  if (list === null || !review) return fixtures.runs
+  const others = fixtures.runs.filter((run) => run.routineId !== review.id)
+  return [...listRuns(review, list), ...others]
+}
+
+/**
  * Acme with the recorded sections, workspaces, settings, build, members,
- * and routines with their last runs. A starting workspace has the recorded
+ * and routines with their runs. A starting workspace has the recorded
  * resume step, and a workspace in the error state has the recorded start
  * error.
  */
@@ -35,7 +53,7 @@ function acme(
   options: DevOptions,
 ): OrgState {
   const { workspaces } = workspaceFixtures(options.server.workspaceState)
-  const { routines, runs } = routineFixtures(summary.id)
+  const fixtures = routineFixtures(summary.id)
   const starting = workspaceFixtures('starting').detail.start
   const failed = workspaceFixtures('error').detail.error
   const startOf = (workspace: Workspace): [string, StartRecord] => [
@@ -65,8 +83,8 @@ function acme(
     builds: [core.build],
     currentImageBuildId: core.builds.currentImageBuildId,
     members: core.members,
-    routines,
-    runs,
+    routines: fixtures.routines,
+    runs: seedRuns(fixtures, options),
   }
 }
 

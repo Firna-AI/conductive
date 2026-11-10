@@ -14,26 +14,10 @@ import type {
   RoutinesResponse,
 } from '../../shared/routines'
 import { FAKE_IDS, FAKE_TIME, fakeUsers } from './core'
+import { listRuns, pullRequestTrigger, runListOf, timeOf } from './routine-runs'
 import { fakeAccount, storedTrigger } from './routine-triggers'
 
 const day = 86_400_000
-
-/** The units of the ages that the mockups write, such as "5m" or "2w". */
-const units: Readonly<Record<string, number>> = {
-  m: 60_000,
-  h: 3_600_000,
-  d: day,
-  w: 7 * day,
-}
-
-/** The time of an age that the mockups write, such as "now" or "3d". */
-function timeOf(when: string): number {
-  if (when === 'now') return FAKE_TIME
-  const match = /^(\d+)([mhdw])$/.exec(when)
-  const unit = match ? units[match[2]] : undefined
-  if (!match || unit === undefined) throw new Error(`Unknown age: ${when}`)
-  return FAKE_TIME - Number(match[1]) * unit
-}
 
 function sender(routine: MockupRoutine): MessageSender {
   const user = fakeUsers.find((item) => item.id === routine.owner.key)
@@ -61,16 +45,7 @@ function runTrigger(routine: MockupRoutine, at: number): RoutineRunTrigger {
   if (first.kind !== 'pull-request') {
     return { kind: 'schedule', schedule: first.kind, scheduledAt: at }
   }
-  const number = 482
-  return {
-    kind: 'pull-request',
-    event: first.event,
-    number,
-    url: `https://github.com/acme/${routine.repository}/pull/${number}`,
-    headBranch: 'cal/saved-carts',
-    headSha: '4f2a9c1',
-    baseBranch: 'main',
-  }
+  return pullRequestTrigger(routine.repository, first.event, 482)
 }
 
 /**
@@ -132,23 +107,30 @@ function record(routine: MockupRoutine, index: number, orgId: string): Routine {
 
 /**
  * The routines of Acme as the mockups list them, newest first, as the
- * Worker sorts them, with the last run of each. `list` is the reply of the
- * list route. `routines` and `runs` are the records that the dev fake
- * keeps. `created` is the reply of a create.
+ * Worker sorts them. `list` is the reply of the list route, with the last
+ * run of each routine that the Routines page of the mockups shows.
+ * `routines` and `runs` are the records that the test fake and the dev
+ * fake serve: each routine has the runs that its page in the mockups
+ * lists, or else its last run. `created` is the reply of a create.
  */
 export function routineFixtures(orgId: string = FAKE_IDS.org) {
   const routines: Routine[] = routineRows.map((row, index) =>
     record(row.routine, index, orgId),
   )
-  const runs: RoutineRun[] = routineRows.flatMap((row) =>
+  const lastRuns: RoutineRun[] = routineRows.flatMap((row) =>
     row.lastRun ? [lastRun(row.routine, row.lastRun, orgId)] : [],
   )
   const list: RoutinesResponse = {
     routines: routines.map((routine) => ({
       ...routine,
-      lastRun: runs.find((run) => run.routineId === routine.id) ?? null,
+      lastRun: lastRuns.find((run) => run.routineId === routine.id) ?? null,
     })),
   }
+  const runs = routines.flatMap((routine) => {
+    const runList = runListOf[routine.id]
+    if (runList) return listRuns(routine, runList)
+    return lastRuns.filter((run) => run.routineId === routine.id)
+  })
   // The routine that the flow "Create a routine" saves, as a create answers.
   const created: Routine = {
     ...record(mockupRoutines['morning-summary'], 0, orgId),

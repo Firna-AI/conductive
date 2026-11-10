@@ -82,21 +82,27 @@ function readFirstMessage(value: unknown): SendMessageRequest {
   }
 }
 
+/** What a new workspace needs: its repository, its section, and its first message. */
+export interface WorkspaceRequest {
+  repositoryId: string
+  /** The section, or null for General. */
+  sectionId: string | null
+  first: SendMessageRequest
+}
+
 /**
- * Create workspace. The first message makes it, in the section of the
- * request or else in General. Its name is a city, and its branch is the login
- * of the user, the city, and four random characters. A first message that
- * contains `fail` stands for a cloud computer that did not start: the fake
- * makes nothing, and the app keeps the draft.
+ * Makes a workspace from its first message, in the section of the request
+ * or else in General, and starts its cloud computer. Its name is a city,
+ * and its branch is the login of the user, the city, and four random
+ * characters. A first message that contains `fail` stands for a cloud
+ * computer that did not start: the fake makes nothing and throws.
  */
-function createWorkspace(
+export function startWorkspace(
   backend: DevBackend,
   org: OrgState,
-  body: unknown,
-): Response {
-  const fields = record(body)
-  const first = readFirstMessage(fields.firstMessage)
-  const repositoryId = requiredText(fields, 'repositoryId')
+  request: WorkspaceRequest,
+): CreateWorkspaceResponse {
+  const { first, repositoryId } = request
   const repository = org.repositories.find((item) => item.id === repositoryId)
   if (!repository) {
     throw new RouteError(
@@ -107,9 +113,8 @@ function createWorkspace(
   }
   // A draft can outlive its section. Its workspace then goes to General,
   // so that Try again does not fail on the same section again.
-  const sectionId = maybeText(fields, 'sectionId')
   const section =
-    org.sections.find((item) => item.id === sectionId) ??
+    org.sections.find((item) => item.id === request.sectionId) ??
     defaultSection(org.sections)
   if (first.text.includes('fail')) {
     throw new RouteError(
@@ -151,25 +156,37 @@ function createWorkspace(
   const attachments = first.attachmentIds.flatMap(
     (attachmentId) => backend.state.attachments.get(attachmentId) ?? [],
   )
-  return json(
-    {
-      workspace,
+  return {
+    workspace,
+    sessionId,
+    firstMessage: {
+      id: first.id,
       sessionId,
-      firstMessage: {
-        id: first.id,
-        sessionId,
-        sender: owner,
-        text: first.text,
-        attachments,
-        choice: workspace.choice,
-        createdAt: at,
-        state: 'queued',
-      },
-      start,
-      error: null,
-    } satisfies CreateWorkspaceResponse,
-    201,
-  )
+      sender: owner,
+      text: first.text,
+      attachments,
+      choice: workspace.choice,
+      createdAt: at,
+      state: 'queued',
+    },
+    start,
+    error: null,
+  }
+}
+
+/** Create workspace, from the first message of the user. */
+function createWorkspace(
+  backend: DevBackend,
+  org: OrgState,
+  body: unknown,
+): Response {
+  const fields = record(body)
+  const created = startWorkspace(backend, org, {
+    repositoryId: requiredText(fields, 'repositoryId'),
+    sectionId: maybeText(fields, 'sectionId'),
+    first: readFirstMessage(fields.firstMessage),
+  })
+  return json(created satisfies CreateWorkspaceResponse, 201)
 }
 
 export function createRoutes(backend: DevBackend): Route[] {

@@ -3,17 +3,19 @@ import { readRoutineResponse } from './api/read-routines'
 import type { OrgModel } from './org-model'
 import { Refresher } from './refresh'
 import { Resource } from './resource'
+import { RoutineRuns } from './routine-runs'
 import type { Loadable, Readable } from './store'
 
 /**
- * One routine of an org, as its page shows it. It reads when its page
- * mounts and at each return of the user to the page. Its saves go out one
- * at a time, and each answer shows the whole routine.
+ * One routine of an org, as its page shows it, with its runs. It reads when
+ * its page mounts and at each return of the user to the page. Its saves go
+ * out one at a time, and each answer shows the whole routine.
  */
 export class RoutineModel {
   readonly routineId: string
   readonly resource: Resource<Routine>
   readonly routine: Readable<Loadable<Routine>>
+  readonly runs: RoutineRuns
   private readonly reads: Refresher<Routine>
 
   constructor(org: OrgModel, routineId: string) {
@@ -25,6 +27,7 @@ export class RoutineModel {
       ),
     )
     this.routine = this.resource.store
+    this.runs = new RoutineRuns(org, routineId)
     this.reads = new Refresher(this.resource, () => null, org.services)
   }
 
