@@ -13,7 +13,7 @@ import {
 import { readCreated } from '../../../src/app/api/read-workspaces'
 import { readWorkspaceToken } from '../../lifecycle/tokens'
 import { readWorkspace } from '../../lifecycle/workspace-data'
-import { sandboxProvider } from '../../sandbox/client'
+import { providerForAccount } from '../../sandbox/client'
 import type { Workspace } from './journey-entry.test-support'
 import { closeSockets } from '../adapter-sockets.test-support'
 import { CLAUDE } from '../harness.test-support'
@@ -175,9 +175,11 @@ it('boots the production shell and delivers the durable first message through st
   )
   if (!running.sandboxId) throw new Error('The sandbox ID is missing.')
   expect(
-    await sandboxProvider(active.env, active.boat.fetch).stop(
-      running.sandboxId,
-    ),
+    await providerForAccount(
+      active.env,
+      active.boat.fetch,
+      running.providerAccount,
+    ).stop(running.sandboxId),
   ).toMatchObject({ state: 'archived' })
   await actor().lifecycleStopped()
   expect(await runner.closed).toEqual({

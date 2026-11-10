@@ -10,7 +10,7 @@ sign-ups. The Mac app shows the same pages, because it shows the web app.
 [Operator actions](../../../docs/protocol/operator-actions.md), and
 [Waitlist](../../../docs/protocol/waitlist.md) give the requirements. The
 visual spec is the `app/operator` page of the
-[mockup catalogue](../../../docs/mockups/catalogue.md).
+[mockup catalogue](../../../docs/mockups/catalogue-operator.md).
 
 ## Access
 

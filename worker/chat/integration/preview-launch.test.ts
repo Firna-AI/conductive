@@ -4,6 +4,7 @@ import { previewPath } from '../../../src/shared/previews'
 import { assignSandbox } from '../../lifecycle/workspace-data'
 import { launchForm } from '../../previews/launch-test-support'
 import { insertPreview } from '../../previews/store'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../../sandbox/account-identity'
 import {
   createOuterRuntime,
   outerWorkerBundle,
@@ -30,6 +31,7 @@ it('keeps the browser preview launch origin through the outer Worker response', 
     orgId: OUTER_ORG,
     workspaceId: OUTER_WORKSPACE,
     sandboxId: 'bx_preview',
+    providerAccount: DEFAULT_PROVIDER_ACCOUNT,
     state: 'ready' as const,
     id: 'outer-preview',
     hostname: `${'a'.repeat(32)}.conductive-previews.test`,
@@ -41,6 +43,7 @@ it('keeps the browser preview launch origin through the outer Worker response', 
     OUTER_ORG,
     OUTER_WORKSPACE,
     preview.sandboxId,
+    preview.providerAccount,
   )
   await insertPreview(active.env.DB, preview, preview, 'owner', now)
 

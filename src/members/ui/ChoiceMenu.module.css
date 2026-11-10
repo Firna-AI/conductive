@@ -55,6 +55,20 @@
   gap: 1px;
 }
 
+/*
+ * The choices in a menu of the app shell, whose box draws the border and
+ * sets the width, as a wide menu of the header does.
+ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.panel .note {
+  max-width: none;
+}
+
 .items {
   display: flex;
   flex-direction: column;

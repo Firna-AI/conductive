@@ -18,6 +18,6 @@ export async function recoverImageBuildAllocation(
   job: BuildJob,
 ): Promise<string> {
   const sandbox = await createResource(provider, buildSandboxIntent(db, job))
-  await assignBuildSandbox(db, job.buildId, sandbox.id)
+  await assignBuildSandbox(db, job.buildId, sandbox.id, job.providerAccount)
   return sandbox.id
 }

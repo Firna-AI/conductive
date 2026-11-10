@@ -40,6 +40,8 @@ requirements of each feature.
   belongs to the starter of the session, the member who started it.
 - **Boat key:** the one key of the app's own Boat account, where every
   sandbox and every org image of every org runs. It is a Worker secret.
+- **Provider account:** an account with a sandbox provider. The Worker
+  holds its credentials, and reaches it through its own client.
 - **Sandbox:** the Boat sandbox of one workspace. The product calls it a
   cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
@@ -113,6 +115,8 @@ the merge.
   - [Repository folders](protocol/repository-folders.md): the folder and the
     shell variable of each repository in a sandbox.
   - [Life of a workspace](protocol/workspace-life.md)
+  - [Workspace menu](protocol/workspace-menu.md): the menu of a workspace
+    row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](protocol/workspace-tools.md)
 - [Chat and events](protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
@@ -172,4 +176,5 @@ the merge.
   the waitlist, the join link, and the use of a code.
 
 - [Conductor Cloud comparison](protocol/conductor-cloud-comparison.md): the
-  public page with the status of each Conductor Cloud feature.
+  public page for people who move from Conductor Cloud, with the status of
+  each Conductor Cloud feature.

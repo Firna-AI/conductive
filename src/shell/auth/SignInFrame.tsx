@@ -60,7 +60,7 @@ function Header(props: { windowBar: boolean }) {
       )}
     >
       <a className={wordmark.wordmark} href={siteHrefs.home}>
-        <Lockup height={bar ? macLockup : 30} />
+        <Lockup height={bar ? macLockup : undefined} />
       </a>
     </header>
   )
