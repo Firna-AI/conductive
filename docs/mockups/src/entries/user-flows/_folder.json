@@ -12,6 +12,7 @@
     "create-org",
     "mac-command",
     "create-routine",
-    "link-a-workspace"
+    "link-a-workspace",
+    "mention-a-file"
   ]
 }

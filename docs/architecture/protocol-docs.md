@@ -17,6 +17,9 @@ them, and this page lists each protocol doc and what it covers.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
+  - [File mentions](../protocol/file-mentions.md): the list of `@` in the
+    composer, the chips of files and folders, and the removal of each chip
+    of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, and the repair of lost workspace
     updates.
@@ -56,7 +59,8 @@ them, and this page lists each protocol doc and what it covers.
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
   messages in the chat, with their tables.
-- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope.
+- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope,
+  and the author of each commit in a sandbox.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, the sender line of each message, and the base
   prompt of Claude agents.

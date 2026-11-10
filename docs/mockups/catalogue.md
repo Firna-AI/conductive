@@ -33,12 +33,13 @@ how a screen is built, and links to the other pages.
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
+| `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command, link a workspace, create a routine |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
@@ -46,7 +47,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
-`app/routines/triggers`, and `app/orgs/suspended/routines` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/routines/triggers`, `app/orgs/suspended/routines`, and `app/file-mentions` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -304,3 +305,24 @@ and in the `workspace-link` child page of `app/new-workspace/dialog`.
 The flow `user-flows/link-a-workspace` goes from the copy to the answer,
 and ends with a press on the chip, which opens
 `app/new-workspace/first-turn`.
+
+`app/file-mentions` draws the list of `@` and the file chips of decisions
+213 to 217. Its canonical screen has the query `@addr` in Checkout address
+autocomplete, with the best matches above the message box. Its child
+pages:
+
+- `app/file-mentions/list` has the list without a query, folders first.
+  Its `no-match` variant says "Nothing matches “zipcode”", its `loading`
+  variant says "Loading files…", and its `unavailable` variant says that
+  the list of all files is unavailable.
+- `app/file-mentions/chips` has a file chip and a folder chip in the
+  message box. Its `pointer` variant has the pointer over the icon of the
+  file chip, where a × takes the place of the icon. Its `sent` variant has
+  the sent message with both chips. Its `workspace-chip` and
+  `attached-file` variants show the same × on a pasted workspace link and
+  on an attached file.
+
+On a phone each chip of the composer keeps its icon and ends with a ×.
+The flow `user-flows/mention-a-file` goes from the query to the sent
+message, and ends with a press on the file chip, which opens
+`app/files/code`.

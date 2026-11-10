@@ -3,19 +3,15 @@ import { requireActiveUser } from '../data/user-access'
 import { WorkspaceStartError } from './workspace-start'
 import type { DiskRetentionResult } from './durable-types'
 import { JobTimeLimit } from './job-time-limit'
-import {
-  repositoryEnvironment,
-  repositoryLocation,
-} from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import {
   readImageSettings,
   workspaceEnvironmentSettings,
   workspaceRepository,
 } from './settings-data'
-import { environmentValues } from './org-environment'
+import { sandboxEnvironment } from './sandbox-environment'
 import { recordRunningEnvironment } from './start-environment'
-import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
+import { ensureWorkspaceToken } from './tokens'
 import {
   readRetention,
   setRetention,
@@ -110,33 +106,21 @@ export async function keepWorkspaceDisk(
         orgId,
         row.repositoryId,
       )
-      const token = await readWorkspaceToken(env, workspaceId)
       const locations = await workspaceRepositoryLocations(env.DB, workspaceId)
+      const runtimeEnv = await sandboxEnvironment(env, {
+        workspace: row,
+        environment,
+        locations,
+        defaultBranch: row.baseBranch ?? repository.defaultBranch,
+        diskKeepalive: true,
+      })
       await requireActiveUser(env.DB, row.ownerUserId, orgId)
       await recordRunningEnvironment(
         env.DB,
         workspaceId,
         settings.envVarsCiphertext,
       )
-      await provider.resume(
-        sandboxId,
-        {
-          ...environmentValues(environment),
-          ...repositoryEnvironment(locations),
-          WORKSPACE_TOKEN: token,
-          CONDUCTIVE_WORKSPACE_ID: workspaceId,
-          CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
-          CONDUCTIVE_DEFAULT_BRANCH: row.baseBranch ?? repository.defaultBranch,
-          CONDUCTIVE_WORKSPACE_BRANCH: row.branch,
-          CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
-            locations,
-            row.repositoryId,
-          ),
-          CONDUCTIVE_TURN_ID: '',
-          CONDUCTIVE_DISK_KEEPALIVE: '1',
-        },
-        1_800,
-      )
+      await provider.resume(sandboxId, runtimeEnv, 1_800)
     }
     await setRetention(env.DB, workspaceId, 'wait')
     return { done: false, error: null }

@@ -72,6 +72,8 @@ turn repair from the committed chat and the one writer of the shown state.
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
+The [software image area](../software-image/README.md) builds the shared
+image that a build of an org without an org image starts from.
 
 ## Settings
 
@@ -292,6 +294,7 @@ The native cleanup pointer can therefore change without losing an older failed c
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
+- [Software images](../software-image/README.md): the shared software builds and their cleanup.
 - [`image-software.ts`](image-software.ts): the runner archive check and
   install/start commands.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text

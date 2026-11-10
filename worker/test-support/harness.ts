@@ -141,6 +141,7 @@ export async function createHarness() {
           'org_images',
           'image_build_logs',
           'image_builds',
+          'software_images',
           'org_members',
           'orgs',
           'sessions',

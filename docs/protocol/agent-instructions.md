@@ -102,8 +102,10 @@ says.
 - A Mac command of a turn goes to the Mac of the sender of the turn, the
   member whose message started the turn. The GitHub token of the turn also
   belongs to that member, as
-  [GitHub tokens](github-tokens.md) says.
-- A message that another member sends during the turn changes neither.
+  [GitHub tokens](github-tokens.md) says. The commits of the turn name that
+  member too, as [Commit author](github-tokens.md#commit-author) says.
+- A message that another member sends during the turn changes none of
+  them.
 - Reason: the Worker takes the sender of a Mac command or a Git operation
   from its own record of the turn.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states

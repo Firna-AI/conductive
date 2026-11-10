@@ -23,6 +23,11 @@ import {
 } from './lifecycle/image-sources/credential'
 import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
 import { repairLifecycleAlarms } from './lifecycle/repair'
+import { repairSoftwareImages } from './software-image/repair'
+import {
+  handleSoftwareImage,
+  SOFTWARE_IMAGE_PATH,
+} from './software-image/route'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -116,6 +121,10 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await routeMacCommand(request, env))
         }
         if (surface === 'machine') {
+          if (path === SOFTWARE_IMAGE_PATH)
+            return respond(
+              await handleSoftwareImage(request, env, dependencies),
+            )
           if (isAgentToolPath(path))
             return respond(
               await productionAgentTools(request, env, dependencies),
@@ -222,6 +231,11 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         imageRuntime(env, dependencies),
         () => runnerSoftware(env),
       )
+      try {
+        await repairSoftwareImages({ env, dependencies })
+      } catch {
+        warnWorker({ kind: 'software_image_repair_failed' })
+      }
       // Last, so that a slow or failed email never holds back the repairs.
       try {
         await retryApprovalEmails(env, dependencies)
