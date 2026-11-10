@@ -11,7 +11,10 @@ import type {
   RunRoutine,
 } from '../api/read-responses'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
-import { emptyTranscript, type Transcript } from './transcript'
+import {
+  emptyTranscript,
+  type Transcript,
+} from '../../shared/transcript/transcript'
 
 /**
  * The message that a user writes in a session. Its identity stays when the

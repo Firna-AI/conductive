@@ -5,11 +5,12 @@ import { StatusText } from '../../../docs/mockups/src/components/common/StatusTe
 import card from '../../../docs/mockups/src/components/chat/MacCommand.module.css'
 import styles from '../../../docs/mockups/src/components/chat/PendingCommand.module.css'
 import {
+  commandCopy,
   limitLabel,
   longerReason,
   personName,
-  statePresentation,
-} from './command-text'
+} from '../../shared/transcript/command-words'
+import { statePresentation } from './command-text'
 import { LiteralText } from './LiteralText'
 
 /**
@@ -86,7 +87,8 @@ export function RequestDetails(props: {
       <summary className={styles.summary}>
         <span className={styles.meta}>
           <span>
-            {props.mac} · up to {limitLabel(request.timeoutSeconds)}
+            {props.mac} · {commandCopy.upTo}{' '}
+            {limitLabel(request.timeoutSeconds)}
           </span>
           <span className={styles.toggle}>
             Details

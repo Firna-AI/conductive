@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
@@ -94,6 +95,6 @@ export function createFakeServices(search: string): AppServices {
     newId,
     leave: (url) => window.location.assign(url),
     appOrigin: window.location.origin,
-    copy: (text) => navigator.clipboard.writeText(text),
+    copy: (text) => copyText(window, text),
   }
 }

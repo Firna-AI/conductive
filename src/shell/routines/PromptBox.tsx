@@ -4,9 +4,14 @@ import { Plug } from 'lucide-react'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import form from '../../../docs/mockups/src/components/routines/form.module.css'
 import styles from '../../../docs/mockups/src/components/routines/PromptBox.module.css'
-import type { AgentChoice, AgentModel } from '../../shared/agents'
+import {
+  effortLabels,
+  modelLabel,
+  type AgentChoice,
+  type AgentModel,
+} from '../../shared/agents'
 import { agentNames } from '../account/labels'
-import { effortLabels, ModelPicker, modelLabel } from '../ui/ModelPicker'
+import { ModelPicker } from '../ui/ModelPicker'
 
 /** Whose agent login and GitHub access the runs use, under the prompt. */
 function Logins(props: { whose: string; choice: AgentChoice }) {

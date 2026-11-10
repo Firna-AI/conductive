@@ -90,7 +90,7 @@ describe('the app access and the referral code on the page of a user', () => {
   test('the referral code gives Copy join link, its uses, and who used it; Disable code asks first, sends {}, and the page shows the disable', async () => {
     const copied: string[] = []
     const page = await openUser(SAMPLE_IDS.activeUser, {
-      services: { copy: async (text) => void copied.push(text) },
+      services: { copy: async (text) => void copied.push(await text) },
     })
     const { server, user } = page
     if (!user.referralCode) throw new Error('Mira has no referral code.')

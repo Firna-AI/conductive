@@ -5,40 +5,21 @@ import { useControlSizes } from '../../../docs/mockups/src/components/common/tou
 import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
 import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
 import { EFFORTS } from '../../app/api/read-core'
-import type {
-  Agent,
-  AgentChoice,
-  AgentModel,
-  Effort,
+import {
+  effortLabels,
+  modelLabel,
+  type Agent,
+  type AgentChoice,
+  type AgentModel,
+  type Effort,
 } from '../../shared/agents'
 import { MenuButton, type MenuEntry } from './Menu'
-
-/** The words of each effort, as the picker shows them. */
-export const effortLabels: Readonly<Record<Effort, string>> = {
-  none: 'None',
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  xhigh: 'Extra high',
-  max: 'Max',
-}
 
 /** The effort that a new model keeps: the same one, or the next lower one. */
 function effortFor(model: AgentModel, effort: Effort): Effort {
   if (model.efforts.includes(effort)) return effort
   const lower = EFFORTS.slice(0, EFFORTS.indexOf(effort)).reverse()
   return lower.find((item) => model.efforts.includes(item)) ?? model.efforts[0]
-}
-
-export function modelLabel(
-  models: readonly AgentModel[],
-  choice: AgentChoice,
-): string {
-  return (
-    models.find(
-      (item) => item.agent === choice.agent && item.model === choice.model,
-    )?.label ?? choice.model
-  )
 }
 
 function entries(

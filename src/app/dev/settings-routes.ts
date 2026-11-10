@@ -6,6 +6,7 @@ import {
 } from '../../shared/org-settings'
 import { choice, items, record, text, type JsonObject } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
+import { startBuild } from './build-routes'
 import {
   ID,
   json,
@@ -14,7 +15,7 @@ import {
   type Params,
   type Route,
 } from './router'
-import { updateNeedsBuild, type OrgState } from './state'
+import type { OrgState } from './state'
 
 /** A set without a mark replaces only the value, and keeps the mark. */
 type EnvChange =
@@ -90,7 +91,6 @@ function updateSettings(
     updatedAt: backend.now(),
   }
   if (changedInstall) org.settingsRevision += 1
-  updateNeedsBuild(org)
   return json({ settings: org.settings } satisfies OrgSettingsResponse)
 }
 
@@ -100,6 +100,7 @@ function updateSettings(
  * Worker does.
  */
 function setRepository(
+  backend: DevBackend,
   org: OrgState,
   repositoryId: string,
   selected: boolean,
@@ -126,7 +127,7 @@ function setRepository(
     )
   }
   if (changed) org.settingsRevision += 1
-  updateNeedsBuild(org)
+  if (changed && selected) startBuild(backend, org)
   return json({ repositories: org.repositories } satisfies RepositoriesResponse)
 }
 
@@ -146,13 +147,25 @@ export function settingsRoutes(backend: DevBackend): Route[] {
       method: 'PUT',
       path: repositoryPath(ID.org, ID.repository),
       answer: ({ params }) =>
-        setRepository(orgOf(params), params.repository, true, backend.now()),
+        setRepository(
+          backend,
+          orgOf(params),
+          params.repository,
+          true,
+          backend.now(),
+        ),
     },
     {
       method: 'DELETE',
       path: repositoryPath(ID.org, ID.repository),
       answer: ({ params }) =>
-        setRepository(orgOf(params), params.repository, false, backend.now()),
+        setRepository(
+          backend,
+          orgOf(params),
+          params.repository,
+          false,
+          backend.now(),
+        ),
     },
     {
       method: 'GET',

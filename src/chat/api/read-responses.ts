@@ -7,6 +7,7 @@ import type {
   InterruptResponse,
   SessionResponse,
   SessionsResponse,
+  SessionTranscriptResponse,
 } from '../../shared/sessions'
 import type {
   WorkspaceTab,
@@ -195,4 +196,9 @@ export function readViewReply(value: unknown): ViewReply {
     view: readView(value),
     routine: optional(nullable(readRunRoutine))(routine) ?? null,
   }
+}
+
+/** The Markdown of a session, for its pending clipboard write. */
+export function readTranscript(value: unknown): SessionTranscriptResponse {
+  return { markdown: text(record(value, 'session transcript').markdown) }
 }

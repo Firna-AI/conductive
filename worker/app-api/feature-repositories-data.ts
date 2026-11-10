@@ -13,7 +13,7 @@ export async function saveShellRepository(
     selected: boolean
     now: number
   },
-): Promise<boolean> {
+): Promise<{ saved: boolean; added: boolean }> {
   const { repository, userId, selected, now } = input
   const selectedValue = selected ? 1 : 0
   const result = await db.batch([
@@ -76,5 +76,8 @@ export async function saveShellRepository(
         userId,
       ),
   ])
-  return result[1].meta.changes > 0
+  return {
+    saved: result[1].meta.changes > 0,
+    added: selected && result[0].meta.changes > 0,
+  }
 }

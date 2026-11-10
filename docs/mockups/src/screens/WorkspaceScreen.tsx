@@ -37,7 +37,11 @@ import {
   ToolContent,
   workspaceSidebar,
 } from './workspaceParts'
-import { workspaceOverlay, workspaceToast } from './workspaceOverlays'
+import {
+  transcriptToast,
+  workspaceOverlay,
+  workspaceToast,
+} from './workspaceOverlays'
 import { openWorkspace } from './workspaceRun'
 import {
   activityOf,
@@ -148,7 +152,9 @@ export function WorkspaceScreen(props: {
         workspaceOverlay(state, workspace, viewport, {
           tabs,
           menuTab: row.menuTab,
+          readOnly,
         })}
+      {transcriptToast(state, viewport)}
     </ChatWorkspaces>
   )
   const tabRow = (

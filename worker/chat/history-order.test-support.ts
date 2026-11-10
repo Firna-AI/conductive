@@ -2,7 +2,8 @@ import {
   readEnvelope,
   readStoredEvents,
 } from '../../src/chat/api/read-workspace'
-import { chatEventsOf, SessionLog } from '../../src/chat/state/session-log'
+import { chatEventsOf } from '../../src/shared/transcript/session-events'
+import { SessionLog } from '../../src/shared/transcript/session-log'
 import type {
   ChatHistoryResponse,
   WorkspaceEventEnvelope,

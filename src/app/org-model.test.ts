@@ -153,6 +153,11 @@ describe('OrgModel', () => {
     const history = (latest: ImageBuild) => ({
       builds: [latest, done],
       currentImageBuildId: done.id,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     server.json('GET', orgSettingsPaths.builds(org), history(running))
     const model = new OrgModel(

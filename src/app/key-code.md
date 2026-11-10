@@ -73,6 +73,13 @@ Each path is relative to `src/app/`, the folder of this page.
   defaults of a new trigger and the edits of an author filter.
   `routine-cron.ts`: the rule of a custom cron, which the Worker applies
   too.
+- `repository-changes.ts`: the saved repository changes that the org
+  image lacks, from `BuildsResponse.changes`. `repositoryWaitOf` gives
+  their state, `repositoryChangesOf` the changes of the repository
+  notice, `waitingRepositoriesOf` the waiting repositories of New
+  workspace, and `changeWaits` whether the build history stays closed.
+  `../shell/settings/RepositoryChangeNotice.tsx` draws the notice of an
+  admin, and `../members/RepositoryNotice.tsx` the notice of a member.
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the New workspace view, the GitHub App installations,
   and the repositories that Create org offers. A screen watches the
@@ -173,10 +180,18 @@ Each path is relative to `src/app/`, the folder of this page.
   click after a drag, the scroll lock of touch, and a new drop place after a
   scroll under a still pointer. A menu event ends the press of a mouse
   and keeps the press of a finger. `ownPress` keeps a press on a control
-  inside a dragged element, such as Close or Archive, for that control.
+  inside a dragged element, such as Close or Archive, for that control,
+  and `isOwnPress` says whether a control kept a press. `longPress` and
+  `touchSlop` are the hold of a finger and how far it moves first.
   `next-click.ts`: `stopNextClick`, which stops the click that ends a drag
   wherever it lands, also the late click of a finger.
   `pointer-drag.test.tsx` mounts the hook in happy-dom.
+- `long-press.ts`: `useLongPress`, the long press of a finger that opens a
+  menu where nothing drags, such as a tab of a read-only row. It holds as
+  long and allows as small a move as the drag. It ignores a press that a
+  control keeps, and stops the click after a hold. A mouse and a pen bind
+  nothing. `../chat/components/TranscriptCopy.dom.test.tsx` checks it
+  through the tab row of a read-only chat.
   `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
   a section, on `usePointerDrag`.
 - `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
@@ -264,7 +279,8 @@ Each path is relative to `src/app/`, the folder of this page.
   `NewWorkspaceDialog.tsx`: the dialog.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
   and the dialog share: the repository, the notices, the readiness, and
-  the send. `parts.tsx`: their repository menu.
+  the send. `parts.tsx`: their repository menu. `waiting.tsx`: the notice
+  of a repository that waits for its build.
   The model of each form is the `owner` of its chip field. The shared chip
   field supplies their focus handle. `CaretAtEndPlugin`
   restores the saved caret position when keyboard focus enters. Without a

@@ -39,7 +39,7 @@ describe('Copy link in the workspace header', () => {
       events: recordingSocket(server).source,
       delay: timers.delay,
       copy: async (text) => {
-        copies.push(text)
+        copies.push(await text)
         if (fails) throw new Error('The clipboard refused the text.')
       },
     })

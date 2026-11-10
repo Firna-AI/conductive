@@ -9,7 +9,8 @@ them, and this page lists each protocol doc and what it covers.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
-    shell variable of each repository in a sandbox.
+    shell variable of each repository in a sandbox, and the context folder
+    of each workspace.
   - [Life of a workspace](../protocol/workspace-life.md)
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
@@ -27,6 +28,8 @@ them, and this page lists each protocol doc and what it covers.
     of lost workspace updates.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
+  - [Session transcripts](../protocol/session-transcripts.md): copying a
+    session as concise or full Markdown, and its route.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)

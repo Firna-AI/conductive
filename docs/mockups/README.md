@@ -56,12 +56,15 @@ shows. It also gives the rules of the folder pages and the entries that
 moved. It gives the child pages of `marketing/docs`, `app/account`,
 `app/banner`, `app/chat`, `app/routines`, `app/workspace-menu`,
 `app/workspace-links`, and `app/tools`,
-and the New workspace dialog. Its linked page,
+the New workspace dialog, and the repositories that wait for a build. Its
+linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section.
 The [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 page gives their child pages and flows.
+The [chat and routines](catalogue-chat-and-routines.md) page gives their
+child pages and flows.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared

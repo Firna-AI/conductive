@@ -4,6 +4,7 @@ import { TOOL_TURN_HEADER } from '../../tools/context'
 import { runToolProcess } from '../../tools/main'
 import { MCP_PROTOCOL_VERSION } from '../../tools/mcp'
 import { createHarness, type TestHarness } from '../test-support/harness'
+import { publishToolImage } from './list-test-support'
 import {
   MCP_INITIALIZE as initialize,
   MCP_INITIALIZED as initialized,
@@ -35,6 +36,7 @@ afterAll(async () => {
 })
 
 it('serves MCP discovery, create, and list over JSON lines with the calling turn and negotiated version', async () => {
+  await publishToolImage(fixture.db)
   await fixture.db
     .prepare("UPDATE workspaces SET name = '' WHERE id = 'teammate-workspace'")
     .run()

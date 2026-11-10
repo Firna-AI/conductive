@@ -11,6 +11,7 @@ import type { SendMessageRequest } from '../../shared/messages'
 import {
   retryMessagePath,
   sessionPath,
+  sessionTranscriptPath,
   sessionPaths,
   sessionsPath,
   type ChangeModelRequest,
@@ -18,6 +19,7 @@ import {
   type CreateSessionRequest,
   type InterruptRequest,
   type RenameSessionRequest,
+  type TranscriptDetail,
 } from '../../shared/sessions'
 import {
   workspaceViewPath,
@@ -38,6 +40,7 @@ import {
   readSendResponse,
   readSessionResponse,
   readSessions,
+  readTranscript,
   readView,
   readViewReply,
 } from './read-responses'
@@ -67,6 +70,11 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
   })
 
   return {
+    transcript: (sessionId: string, detail: TranscriptDetail) =>
+      client.get(
+        sessionTranscriptPath(orgId, workspaceId, sessionId, detail),
+        readTranscript,
+      ),
     workspace: () =>
       client.get(workspacePath(orgId, workspaceId), readWorkspaceResponse),
     /** The visible workspaces of the org, including archived workspaces. */

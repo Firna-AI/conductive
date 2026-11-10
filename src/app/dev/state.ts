@@ -38,7 +38,13 @@ export interface OrgState {
   repositories: readonly Repository[]
   settings: OrgSettings
   settingsRevision: number
-  buildRevisions: Map<string, number>
+  buildInputs: Map<
+    string,
+    {
+      installScript: string
+      repositories: readonly Pick<Repository, 'id' | 'fullName'>[]
+    }
+  >
   /** Each build with its log, the newest first. */
   builds: readonly BuildResponse[]
   currentImageBuildId: string | null
@@ -140,11 +146,10 @@ export function freshOrg(
       startupScript: '',
       envVars: [],
       updatedAt: now,
-      needsBuild: false,
     },
     builds: [],
     settingsRevision: 1,
-    buildRevisions: new Map(),
+    buildInputs: new Map(),
     currentImageBuildId: null,
     members: {
       members: [{ user, role: org.role, joinedAt: now }],
@@ -152,18 +157,6 @@ export function freshOrg(
     },
     routines: [],
     runs: [],
-  }
-}
-
-export function updateNeedsBuild(org: OrgState): void {
-  const baseline =
-    org.currentImageBuildId ??
-    org.builds.find((item) => item.build.kind === 'build')?.build.id
-  const revision =
-    baseline === undefined ? undefined : org.buildRevisions.get(baseline)
-  org.settings = {
-    ...org.settings,
-    needsBuild: revision !== undefined && revision !== org.settingsRevision,
   }
 }
 

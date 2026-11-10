@@ -2,7 +2,11 @@ import type { Session, SessionsResponse } from '../../shared/sessions'
 import type { ChatSnapshot } from './chat-snapshot'
 import { withTranscript, type ChatContext } from './context'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
-import { SessionLog, type ChatEnvelope, type PlacedRecord } from './session-log'
+import type { ChatEnvelope } from '../../shared/transcript/session-events'
+import {
+  SessionLog,
+  type PlacedRecord,
+} from '../../shared/transcript/session-log'
 import {
   orderSessions,
   pickActive,

@@ -1,6 +1,7 @@
 import { InputFrame } from '@firna/ui/input'
 import { Plug } from 'lucide-react'
-import { effortLabels, type AgentChoice } from '../../fixtures/agents'
+import { effortLabels } from '../../../../../src/shared/agents'
+import type { AgentChoice } from '../../fixtures/agents'
 import { noop } from '../../noop'
 import { ModelPicker } from '../chat/ModelPicker'
 import { useControlSizes } from '../common/touch'

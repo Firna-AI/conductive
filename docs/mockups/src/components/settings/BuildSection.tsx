@@ -173,8 +173,11 @@ export function BuildSection(props: {
   state: BuildState
   builds: OrgBuilds
   readOnly?: boolean
-  /** A changed install script waits for a build, so the history stays closed. */
-  scriptChanged?: boolean
+  /**
+   * A saved change of the install script or of the repositories waits for
+   * a build, so the history stays closed.
+   */
+  changeWaits?: boolean
 }) {
   const { state, builds } = props
   return (
@@ -188,7 +191,7 @@ export function BuildSection(props: {
       {state === 'none' ? null : (
         <BuildHistory
           builds={builds.history}
-          open={state === 'ready' && props.scriptChanged !== true}
+          open={state === 'ready' && props.changeWaits !== true}
         />
       )}
     </section>
