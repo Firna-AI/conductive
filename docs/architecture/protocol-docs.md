@@ -20,6 +20,9 @@ them, and this page lists each protocol doc and what it covers.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
+    - [Message attachments](../protocol/message-attachments.md): the size
+      limit, the upload, the storage, the copy into the cloud computer, and
+      the deletion of the files of a message.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, and the removal of each chip
     of the composer.
