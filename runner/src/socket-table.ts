@@ -1,5 +1,8 @@
 import { TERMINAL_PORT } from '../../src/shared/terminal'
 
+// The terminal, ascii-agent, and Sunshine belong to the sandbox image.
+const internalPorts = new Set([TERMINAL_PORT, 8911, 47984, 47989, 47990, 48010])
+
 export interface ListeningSocket {
   identity: string
   inode: string
@@ -53,7 +56,7 @@ export function listeningSockets(
     )
       continue
     const port = Number.parseInt(local[2], 16)
-    if (port === 0 || port === TERMINAL_PORT) continue
+    if (port === 0 || internalPorts.has(port)) continue
     result.push({
       port,
       inode,

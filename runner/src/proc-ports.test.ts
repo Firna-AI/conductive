@@ -25,6 +25,14 @@ it('finds only same-user wildcard and loopback listeners and returns sorted uniq
       { port: 3003, uid: 0 },
       { port: 3004, state: '01' },
       { port: 7681 },
+      { port: 8911, inode: '23780' },
+      { port: 8911, ipv6: true, inode: '21646' },
+      { port: 47984, address: '0100007F', inode: '93782' },
+      { port: 47989, address: '0100007F', inode: '93182' },
+      { port: 47990, address: '0100007F', inode: '93180' },
+      { port: 48010, address: '0100007F', inode: '94983' },
+      { port: 8912 },
+      { port: 47985, address: '0100007F' },
       { port: 0 },
       { port: 5000, ipv6: true },
       { port: 4000, ipv6: true, address: '00000000000000000000000001000000' },
@@ -39,6 +47,8 @@ it('finds only same-user wildcard and loopback listeners and returns sorted uniq
     { port: 4000, name: null, folder: null },
     { port: 4001, name: null, folder: null },
     { port: 5000, name: null, folder: null },
+    { port: 8912, name: null, folder: null },
+    { port: 47985, name: null, folder: null },
   ])
 })
 

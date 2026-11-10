@@ -466,6 +466,13 @@ The shared display-bound test moves to the Worker owner with every
 assertion retained. The existing tool-detail cutoff is a separate
 follow-up in `plans/follow-ups/tool-detail-cut-before-env-filter.md`.
 
+**From the fresh listener inventory.** My call of 10 November 2026: add
+exact exclusions for ascii-agent port 8911 and Sunshine ports 47984,
+47989, 47990, and 48010. Keep the shared terminal port 7681. Reason:
+these services listen as the runner's user in the supplied fresh workspace.
+Keep neighboring user ports eligible. The owner filter covers the other
+system services. This completes the approved internal-service filter.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -572,7 +579,7 @@ The runner watches the socket tables and reports the list.
 - [x] Test the rule of two scans for a new and for a closed port, a report
       only on a change, the report after a connect, and the refresh answer.
       Use a fake scan driver and no sleep.
-- [ ] Get the listeners of a new workspace on the test deployment, with
+- [x] Get the listeners of a new workspace on the test deployment, with
       `ss -H -ltnpe` in its Terminal. The user can run it. Add each listener
       that is not a user server to the exclusion list. Save the output under
       `.context/preview-port-detection/`.
@@ -580,9 +587,11 @@ The runner watches the socket tables and reports the list.
 Evidence: `.context/preview-port-detection/m3-report.md` and
 `.context/preview-port-detection/privacy-split-report.md`.
 
-The deployed inventory needs a signed-in test workspace. The app returns
-`401 sign_in_required` here. The report contract and runner checks are
-complete, so the independent workspace and UI work can continue.
+The user supplied the fresh workspace inventory on 10 November 2026.
+Evidence: `.context/preview-port-detection/live-listener-inventory.txt`.
+The same-user ascii-agent and Sunshine ports join the terminal exclusion.
+The scanner checks and report are in
+`.context/preview-port-detection/listener-exclusions-report.md`.
 
 ## Milestone 4: Workspace list and clear
 
@@ -754,14 +763,15 @@ also passed, in `.context/preview-port-detection/final-runner-build.log`.
       field as today.
 
 Verification status: the review findings are fixed and independently checked.
-The draft pull request keeps this plan because the required signed-in
-listener inventory is still open. The complete gate and Mac checks run on
-the pull request head. The plan deletion waits for the required inventory.
+The fresh listener inventory is now supplied and its exact exclusions are
+implemented. The remaining rollout checks are recorded in
+`plans/follow-ups/preview-port-detection-deployed-smoke.md`.
+The completed change deletes this plan after final verification and review.
 
 Final local verification: the current source passed its typecheck, 149
 runner tests, production build, and strict mockup build. The local root
 suite passed 2,013 cases and hit the existing restore-watch flake once.
 Its unchanged file rerun passed all 11 cases. The existing follow-up keeps
 the exact assertion and suspected cause. The pull request's complete gate
-and both Mac checks verify the final head. The required live inventory
-still waits for a signed-in test workspace.
+and both Mac checks verify the final head. The user supplied the required
+live inventory, and its exclusion regression passes.
