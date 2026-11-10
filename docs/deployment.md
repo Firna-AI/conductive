@@ -222,6 +222,7 @@ says. It is operator data. The Worker has no built-in title model.
 
 Each new image build installs the runner archive into the org image. A
 refresh keeps the installed runner and updates the repositories.
+Publish the runner archive from the same commit as the Worker before any image build.
 [The runner archive](../image/README.md#the-runner-archive) says how to make
 and publish it.
 

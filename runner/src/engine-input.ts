@@ -82,6 +82,7 @@ export async function inputCommand(
       session.active?.waiting.push(command)
     return
   }
+  if (command.type !== 'turn') return
   session.choice = command.message.choice
   const context = { sessionId: command.sessionId, turnId: command.turnId }
   const { controller } = actions

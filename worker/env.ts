@@ -1,5 +1,6 @@
 import type { InvitationMailer } from './invitation-mailer'
 import type { ProviderAccountConfigurations } from './sandbox/accounts'
+import type { ConnectionScheduler } from './security/connection-access'
 import type { Workspace } from './workspace'
 
 export interface AppEnv {
@@ -41,4 +42,5 @@ export interface AppDependencies {
   now: () => number
   randomToken: () => string
   invitationMailer?: InvitationMailer
+  scheduleGatewayCheck?: ConnectionScheduler
 }

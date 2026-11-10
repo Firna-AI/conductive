@@ -157,6 +157,7 @@ export async function startImageBuild(
           ? await softwareVersion(software)
           : undefined,
       previousImageName: image?.imageName ?? null,
+      previousRunnerProtocolVersion: previous?.runnerProtocolVersion ?? null,
       now,
       nextImageRefreshAt:
         input.kind === 'refresh' && input.dailyRefresh
