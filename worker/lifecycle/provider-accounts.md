@@ -49,6 +49,35 @@ stores, through `providerForAccount` or `orgProviderForAccount` in
   only a provider `not_found`. So a cleanup never counts the resource of an
   unknown account as removed.
 
+## The computer ledger
+
+The [computer ledger](computer-ledger.ts) keeps one entry for each cloud
+computer of an org. Each entry stores its provider account with its sandbox
+ID. The account and the ID together name the computer, so equal IDs in two
+accounts stay two entries.
+
+- An allocation record stores its request key and its account before the
+  create request. The account and the key together name the allocation.
+  The lifecycle attaches the returned ID to that record.
+- Each write of an entry names its account. A read, an update, or a delete
+  of one computer matches its account and its ID together. A list of live
+  computers gives the account with each ID.
+- A D1 trigger copies the account of each record that names a computer,
+  such as a workspace, a build, or a cleanup record. The
+  [ledger migration](../../migrations/README.md) fills the ledger from older
+  records in the same way.
+- An org Stop task in [`computer-stop-task.ts`](computer-stop-task.ts) saves
+  the account and the ID of each computer before its first provider request.
+- Each provider call for a ledger computer uses the client of the stored
+  account, as [Routing](#routing) says.
+- The Stop or the Delete of a computer in an account that the Worker does
+  not configure stays pending. `ProviderAccountError` stops the call before
+  any provider request. The ledger entry gets no deletion mark.
+- A software image build belongs to no org, so the ledger holds no entry
+  for its computer. Its `createResource` intent has no ownership. The
+  [software image record](../software-image/README.md) keeps the account
+  and the ID of that computer until its cleanup deletes it.
+
 ## Org images
 
 `org_images` holds one org image for each org and provider account: the

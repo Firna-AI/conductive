@@ -54,8 +54,11 @@ export async function refuseRunnerEvent(
     target.started === true &&
     (type === 'turn.completed' || type === 'turn.failed')
   ) {
-    await new TurnLifecycle(transaction, target.session).finish(target.turn, {
-      state: 'failed',
-    })
+    await new TurnLifecycle(transaction, target.session).runnerEnded(
+      target.turn,
+      null,
+      occurredAt,
+      randomId,
+    )
   }
 }

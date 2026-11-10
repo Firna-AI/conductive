@@ -28,3 +28,24 @@ export function dayWords(day: string, length: 'long' | 'short'): string {
   if (Number.isNaN(time)) return day
   return (length === 'long' ? longDay : shortDay).format(time)
 }
+
+const clock = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+  timeZone: 'UTC',
+})
+
+/** A time in UTC, as `YYYY-MM-DDTHH:MMZ`. */
+const utcTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/
+
+/**
+ * The words of a time in UTC, such as "9 November 2026 at 19:17 UTC". A
+ * value in another form, or one that does not parse, stays as it is, so the
+ * words never give the time of another zone as UTC.
+ */
+export function timeWords(time: string): string {
+  const moment = utcTime.test(time) ? Date.parse(time) : Number.NaN
+  if (Number.isNaN(moment)) return time
+  return `${longDay.format(moment)} at ${clock.format(moment)} UTC`
+}

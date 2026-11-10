@@ -1,4 +1,5 @@
 import type { IDisposable, IFunctionIdentifier, Terminal } from '@xterm/xterm'
+import { forcedSelectionKey, keepPlainPresses } from './plainPresses'
 import type { TerminalScreen } from './terminalSession'
 
 type Listener = (data: string) => void
@@ -22,6 +23,8 @@ const dcsRequests: readonly IFunctionIdentifier[] = [
 ]
 /** Requests of the palette, text, background, and cursor colours. */
 const oscRequests: readonly number[] = [4, 10, 11, 12]
+/** Turns off each mouse mode of xterm.js: X10, normal, drag, and any move. */
+const mouseModesOff = '\x1b[?9l\x1b[?1000l\x1b[?1002l\x1b[?1003l'
 
 function subscribe(listeners: Set<Listener>, listener: Listener): IDisposable {
   listeners.add(listener)
@@ -33,8 +36,9 @@ function subscribe(listeners: Set<Listener>, listener: Listener): IDisposable {
  * its own replies is marked where it starts: a parser hook runs before the
  * handler of each request that xterm.js answers, and a focus listener runs
  * before its focus handler while focus reports are on. All other data is the
- * user's: keys, text, composed text, paste, and mouse reports. Create it after
- * `open()`, and write to xterm.js only through it.
+ * user's: keys, text, composed text, paste, and mouse reports. A plain drag
+ * selects text also while a program has the mouse. Create it after `open()`,
+ * and write to xterm.js only through it.
  */
 export class XtermScreen implements TerminalScreen {
   private readonly xterm: Terminal
@@ -65,6 +69,7 @@ export class XtermScreen implements TerminalScreen {
       }),
     )
     this.watchFocus()
+    this.keepPlainDrags()
   }
 
   get cols(): number {
@@ -108,6 +113,11 @@ export class XtermScreen implements TerminalScreen {
     this.xterm.focus()
   }
 
+  /** Writes the reset of each mouse mode to xterm.js, never to the shell. */
+  releaseMouse(): void {
+    this.write(mouseModesOff)
+  }
+
   dispose(): void {
     for (const disposable of this.disposables.splice(0)) disposable.dispose()
   }
@@ -140,5 +150,21 @@ export class XtermScreen implements TerminalScreen {
         }
       },
     })
+  }
+
+  /**
+   * While a program has the mouse, a plain drag still selects text. The
+   * program still gets the wheel, the other buttons, and each press with a
+   * modifier.
+   */
+  private keepPlainDrags(): void {
+    const { element } = this.xterm
+    if (!element) return
+    const stop = keepPlainPresses(
+      element,
+      () => this.xterm.modes.mouseTrackingMode !== 'none',
+      forcedSelectionKey(navigator.platform),
+    )
+    this.disposables.push({ dispose: stop })
   }
 }

@@ -116,6 +116,37 @@ A Worker version from before this migration cannot run on the new schema, as
 The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#org-images)
 page gives the readers and the rules of these records.
 
+`202611100900_computer_ledger.sql` adds the retained computer ledger. Each
+entry names its computer by the provider account and the sandbox ID
+together, so equal IDs in two accounts stay two entries.
+It copies known IDs from workspaces, builds, cleanup records, preview
+listeners, terminal credentials, image source jobs, and the deleted-org
+resource journal. Each copy takes the account of its source row. The copy
+also keeps an account that the Worker does not configure. Such an entry
+stays pending, with no provider request and no deletion mark.
+Identity-write triggers copy the account of the source row in the same way.
+They also retain assigned IDs from imports and repairs.
+A workspace owner trigger keeps its live computer records with the current owner.
+An allocation starts with its request key, its account, and no provider ID.
+The lifecycle attaches the ID after the provider reply.
+Confirmed deletions keep their entries until the org purge.
+An owner or parent ID has no foreign key, so its removal keeps the computer record.
+The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#the-computer-ledger)
+page gives the rules of these entries.
+
+The ledger migration runs after `202611092100_provider_accounts.sql` and
+`202611092305_org_images.sql`. The first of these rebuilds `workspaces` and
+`org_deletion_resources`. SQLite drops the triggers of a table when it drops
+the table. This order puts the ledger triggers on the rebuilt tables, so
+they stay.
+
+`202611101200_software_images.sql` adds `software_images`, which owns each
+software image attempt and its provider account, version, artifact, phase,
+resources, output, and deploy token digest. A partial unique index allows
+one building attempt per account. `image_build_jobs.software_image_name`
+pins the ready software image that a first build uses.
+The [software image backend](../worker/software-image/README.md) owns these records.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -151,6 +182,8 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Workspace link chips | `202611091200`–`202611091259` |
 | Chat attachment metadata | `202611081800`–`202611081859` |
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
+| Computer ledger account merge | `202611100900`–`202611100959` |
+| Software image for first builds | `202611101200`–`202611101259` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 

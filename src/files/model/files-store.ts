@@ -51,6 +51,11 @@ export interface FilesSnapshot {
    * report of the same list in the stream clears one.
    */
   failedRepairs: FailedRepairs
+  /**
+   * The folder that a press on its chip showed last, so All files scrolls
+   * to it. `count` grows with each press, also on the same folder.
+   */
+  revealed: { path: string; count: number } | null
 }
 
 type Resource = 'tree' | 'changes'
@@ -76,6 +81,7 @@ export class WorkspaceFiles {
     epoch: 0,
     versions: new Map(),
     failedRepairs: noFailedRepairs,
+    revealed: null,
   }
   private repairs: FailedRepairs = noFailedRepairs
   private readonly listeners = new Set<() => void>()
@@ -122,6 +128,20 @@ export class WorkspaceFiles {
   setFolderOpen(path: string, open: boolean): void {
     const folders = new Map(this.snapshot.folders).set(path, open)
     this.publish({ folders })
+  }
+
+  /** Opens a folder and each folder that holds it, and marks it to show. */
+  revealFolder(path: string): void {
+    const folders = new Map(this.snapshot.folders)
+    for (
+      let at = path;
+      at !== '';
+      at = at.slice(0, Math.max(0, at.lastIndexOf('/')))
+    ) {
+      folders.set(at, true)
+    }
+    const count = (this.snapshot.revealed?.count ?? 0) + 1
+    this.publish({ folders, revealed: { path, count } })
   }
 
   subscribe = (listener: () => void): (() => void) => {

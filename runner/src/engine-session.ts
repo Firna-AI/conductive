@@ -1,6 +1,8 @@
 import type { Agent, AgentChoice } from '../../src/shared/agents'
 import type { AgentChatEvent } from '../../src/shared/chat-events'
 import type { ChangedFile } from '../../src/shared/files'
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import type { RunnerTurnV2 } from '../../src/shared/runner'
 import type { Checkpoint } from './checkpoint'
 import type {
   ProviderEvent,
@@ -16,7 +18,7 @@ import { ProviderLifetime } from './providers/lifetime'
 import type { WorkspaceToolRuntime } from './providers/workspace-tools'
 
 export interface ActiveTurn {
-  first: ProviderInput
+  first: RunnerTurnV2
   retryMessageId: string
   startedAt: number
   messageIds: string[]
@@ -105,7 +107,15 @@ export async function startProvider(
       options.providers[session.agent]({
         cwd: options.cwd,
         home: options.home,
-        login: turn.first.login,
+        sessionId: session.id,
+        endpoint: new URL(
+          session.agent === 'claude'
+            ? MACHINE_PATHS.claudeGateway
+            : MACHINE_PATHS.codexGateway,
+          options.tools.machineOrigin,
+        ).href,
+        credential: { type: 'gateway', ...turn.first.credential },
+        commitAuthor: turn.first.commitAuthor,
         choice: session.choice,
         conversationId: session.conversationId,
         instructions: session.instructions,

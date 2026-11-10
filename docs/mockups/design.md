@@ -187,9 +187,36 @@ sessions as tabs above the chat, and four tabs at the bottom.
     mark.
   - A pasted link becomes a chip in the message box at once: in the chat,
     and in New workspace as a page or a dialog. `MessageField` gives each
-    box its field. A draft with a workspace link shows in `ChipTextField`:
-    plain text with each chip as one unit, with the sizes and the line
-    limits of the plain text field. The draft keeps the plain link.
+    box its field. A draft with a workspace link or a file mention shows
+    in `ChipTextField`: plain text with each chip as one unit, with the
+    sizes and the line limits of the plain text field. The draft keeps the
+    plain link.
+  - `InlineChip.module.css` beside it holds the pill of every chip in a
+    line of text, so a workspace chip and a file chip have the same size.
+  - In a message box each chip starts with the cell of its icon, from
+    `ChipIconCell` in `ChipRemove.tsx`. While a pointer is over the cell, a
+    × takes the place of the icon, and a press removes the chip. Where no
+    pointer hovers, as on a phone, the icon stays, and `ChipEndRemove`
+    puts a × at the end of the chip. Attached files follow the same rule,
+    and on a phone they keep their × button of touch size.
+- `FileChip` in `src/components/chat/` draws a file or a folder of the
+  workspace as a chip of the same size: the icon that All files gives it,
+  and its name. Its title is the whole path. `EntryIcon` in
+  `src/components/files/` gives the icon to All files, the chips, and the
+  list. It is the one icon map of the mockups and the app: a folder, a
+  Markdown file, a code file, or another file. A file is code when the
+  code view of the app gives it syntax colours, as `fileKind` in
+  `src/files/code/file-kind.ts` of the app says, so one list of languages
+  sets both. The user chose this on 10 November 2026. A sent message shows
+  each file chip as a link to the tab of the
+  file, and an answer shows none. It takes no fixtures, so the app can use
+  it too.
+- `FileMentionList` in `src/components/chat/` draws the list of `@` above
+  the message box: the icon, the name, and the folder of each entry that
+  matches the query, with the first row highlighted. One line takes the
+  place of the rows while the tree loads, when no tree is available, and
+  when nothing matches. `fileMentions.ts` beside it reads the mentions of
+  a text and orders the rows.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
@@ -225,7 +252,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   marketing site or Get started.
 - A build of the cloud computer runs for at most 60 minutes, and a start of
   a sandbox for at most 20 minutes. A build that runs names its limit under
-  its log, and the start card names the limit under its steps. A failed
+  its log. The start card does not name the limit of a start. A failed
   build or start shows the message that the app saved for it, so a job that
   passed its limit names that limit, as
   `app/org-settings/cloud-computer/build-failed/time-limit`,

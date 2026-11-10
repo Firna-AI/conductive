@@ -3,7 +3,7 @@
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
 and the guidance in them, the sender line of each message, and the base
-prompt of Claude agents. [Chat and events](agents-and-sessions.md#agents)
+prompt of Claude agents. [Agents and sessions](agents-and-sessions.md#agents)
 states the agents and their sessions. [Agent tools](agent-tools.md)
 states the tools of the agents. The other terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -100,8 +100,10 @@ says.
 - A Mac command of a turn goes to the Mac of the sender of the turn, the
   member whose message started the turn. The GitHub token of the turn also
   belongs to that member, as
-  [GitHub tokens](github-tokens.md) says.
-- A message that another member sends during the turn changes neither.
+  [GitHub tokens](github-tokens.md) says. The commits of the turn name that
+  member too, as [Commit author](github-tokens.md#commit-author) says.
+- A message that another member sends during the turn changes none of
+  them.
 - Reason: the Worker takes the sender of a Mac command or a Git operation
   from its own record of the turn.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states

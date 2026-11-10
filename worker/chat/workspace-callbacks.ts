@@ -7,6 +7,7 @@ type WorkspaceCallbacks = Pick<
   | 'runnerDisconnected'
   | 'turnDispatching'
   | 'turnDispatchFailed'
+  | 'turnEnded'
   | 'receiveFileResult'
 >
 
@@ -52,6 +53,7 @@ export function observeWorkspaceCallbacks(
       callbacks.turnDispatchFailed,
       observers.turnDispatchFailed,
     ),
+    turnEnded: observed(callbacks.turnEnded, observers.turnEnded),
     receiveFileResult: observed(
       callbacks.receiveFileResult,
       observers.receiveFileResult,

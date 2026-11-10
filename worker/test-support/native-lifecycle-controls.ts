@@ -1,4 +1,4 @@
-import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerLifecycleEvent } from '../lifecycle/runner-lifecycle'
 import { HttpError } from '../http'
 import type { Workspace } from '../workspace'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
@@ -6,7 +6,8 @@ import {
   readStartJob,
   type StoredWorkspaceStartJob,
 } from '../lifecycle/start-job-codec'
-import { START_JOB_KEY } from '../lifecycle/start-storage'
+import { hasPendingStartWork, START_JOB_KEY } from '../lifecycle/start-storage'
+import { nativeWorkspaceStorage } from '../lifecycle/platform-storage'
 import type { WorkspaceStartIntent } from '../lifecycle/start-types'
 
 interface NativeLifecycleCheckpoint {
@@ -14,6 +15,7 @@ interface NativeLifecycleCheckpoint {
   alarmGeneration: number
   alarmAt: number | null
   job: StoredWorkspaceStartJob | undefined
+  startPending: boolean
 }
 
 type NativeRunnerReportResult =
@@ -26,7 +28,9 @@ export interface NativeLifecycleControls {
     job: StoredWorkspaceStartJob,
     intent?: WorkspaceStartIntent,
   ): Promise<boolean>
-  captureRunnerReport(event: RunnerEvent): Promise<NativeRunnerReportResult>
+  captureRunnerReport(
+    event: RunnerLifecycleEvent,
+  ): Promise<NativeRunnerReportResult>
   cancelWaiters(): Promise<void>
 }
 
@@ -41,6 +45,9 @@ export function nativeLifecycleControls(
       ...runtime(),
       alarmAt: await storage.getAlarm(),
       job: await storage.get<StoredWorkspaceStartJob>(START_JOB_KEY),
+      startPending:
+        (await hasPendingStartWork(nativeWorkspaceStorage(storage))) ||
+        (await storage.get('alarm:lifecycle:publication')) !== undefined,
     }),
     queueForEpochGuard: (job, intent) =>
       controller.queueLifecycleStart(readStartJob(job), intent),

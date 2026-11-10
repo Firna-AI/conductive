@@ -4,7 +4,7 @@ import { expect, it } from 'vitest'
 
 import { imageSoftwareFixture } from './image-software-test-support'
 
-it('installs a runner-only artifact and starts it with the private runtime after sandbox env loading', async () => {
+it('installs the runner and relay and starts both with the private runtime', async () => {
   const fixture = await imageSoftwareFixture()
   const installed = await fixture.install()
   expect(installed.exitCode, installed.stderr).toBe(0)
@@ -16,7 +16,29 @@ it('installs a runner-only artifact and starts it with the private runtime after
     'git config --system credential.useHttpPath true',
     'systemctl daemon-reload',
     'systemctl enable conductive-runner.service',
+    'systemctl enable conductive-preview-relay.socket',
+    'systemctl enable conductive-preview-relay.service',
   ])
+  expect(await fixture.relayService()).toContain(
+    'ExecStart=/opt/conductive/preview-relay-start.sh',
+  )
+  expect(await fixture.relayService()).toContain(
+    'Requires=conductive-preview-relay.socket',
+  )
+  expect(await fixture.relayService()).toContain(
+    'After=network-online.target conductive-preview-relay.socket',
+  )
+  expect(await fixture.relaySocket()).toBe(
+    '[Unit]\nDescription=Conductive preview relay socket\n\n' +
+      '[Socket]\nListenStream=127.0.0.1:7682\n\n' +
+      '[Install]\nWantedBy=sockets.target\n',
+  )
+  const relay = await fixture.relayStart()
+  expect(relay.exitCode, relay.stderr).toBe(0)
+  expect(JSON.parse(relay.stdout)).toEqual({
+    node: process.execPath,
+    relay: true,
+  })
   const github = await fixture.githubCli(['--version'])
   expect(github.exitCode, github.stderr).toBe(0)
   expect(github.stdout).toBe('gh-ready\n')
@@ -33,6 +55,13 @@ it('installs a runner-only artifact and starts it with the private runtime after
     configuredNode: `${fixture.commands}/node`,
   })
   expect((await fixture.calls()).at(-1)).toBe('private Node')
+})
+
+it('rejects an archive without the relay before it replaces installed software', async () => {
+  const fixture = await imageSoftwareFixture({ relay: false })
+  const installed = await fixture.install()
+  expect(installed.exitCode).toBe(1)
+  expect(await fixture.calls()).toEqual([])
 })
 
 it('keeps the image runner stopped before workspace startup and during disk retention', async () => {

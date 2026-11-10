@@ -61,40 +61,14 @@ turn repair from the committed chat and the one writer of the shown state.
 
 ### Builds and refreshes
 
-- A build sandbox starts from the current org image, or as a new default
-  sandbox for the first build. Its env holds only the folder variables.
-- Risk: a program with root access that an earlier install left in that
-  image can read the clone token of a later copy. That token can only read
-  its own repository, which the image already holds. The Worker revokes it
-  when the copy ends, as
-  [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens)
-  says.
-- Repository copies use the [shared GitHub App credential flow](../github/app-credentials.ts).
-  The [source loader](repository-layout.md#the-source-loader) gives the token and revocation steps.
-
-[Image builds](image-builds.md) gives the build entry points, the build steps, the provider retries,
-the log limits, the snapshot leases, and the refresh timers.
-
-The [operator backend](../operator/README.md#suspend-an-org) can suspend an org.
-Every start and build phase checks this with user suspension.
-Guarded admission, publication, token replacement, source grants, and refresh claims also check stored org state.
-Cleanup can still recover uncertain allocations and remove resources.
-A pending start, outcome publication, or failed-computer cleanup keeps suspension pending and its native alarm armed.
-Suspended orgs get no disk retention restart, including after an owner change.
+[Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
+provider retries, logs, snapshot leases, and refresh timers.
+The [software image area](../software-image/README.md) builds the shared
+image that a build of an org without an org image starts from.
 
 ## Settings
 
-The lifecycle code reads `LifecycleEnvironment` from
-[`runtime.ts`](runtime.ts). [Deployment inputs](../../docs/deployment.md)
-gives each binding, variable, and secret that it reads, such as
-`WORKSPACES`, `MACHINE_ORIGIN`, `BOAT_API_KEY`, `BOAT_ORG_ID`,
-`GITHUB_APP_PRIVATE_KEY`, and the runner archive variables.
-
-Each provider start captures the encrypted org env values and their secret
-marks. The start-log masker and the workspace object output filter use
-that capture. No private org-value list goes into the runner environment.
-A running sandbox keeps its capture after later org setting changes.
-Disk retention resumes also replace the saved capture.
+[Lifecycle settings](settings.md) gives the environment inputs and captured secret values.
 
 ## Provider accounts
 
@@ -107,6 +81,19 @@ each record and start job stores, the client that each call uses, and the
 Run `npm run test -- worker/lifecycle` from the repository root with Node 24.
 The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarms, and focused checks.
 
+D1 holds the workspace, token, build, and log records. The storage of each
+object holds the lifecycle state, the turn records, and the events.
+The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs with their [provider accounts](provider-accounts.md#the-computer-ledger).
+It keeps deleted computer IDs until their org is purged.
+Assigned identity writes also retain older IDs, including imports and repairs.
+Workspace owner changes update each live ledger entry of that workspace.
+The retained owner survives removal of the workspace row.
+Allocation recovery keeps that retained owner when it merges an imported computer.
+Definite first create refusals stay as rejected allocation records.
+A refused replay keeps an earlier uncertain request live.
+Each failed computer has its own cleanup flag.
+The native cleanup pointer can therefore change without losing an older failed computer.
+
 ### Key Code
 
 - [`browser.ts`](browser.ts): `handleLifecycleRequest`, the browser routes.
@@ -118,6 +105,8 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+- [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
+- [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
   `workspaceView` adds the canonical web link for an explicit app origin.
@@ -181,6 +170,8 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
   for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
+  It also exposes the trusted `checkTurnToken` RPC through `workspaceRuntime`.
+- [`credential-sender.ts`](credential-sender.ts): the git credential sender lookup, including creation-time access and active stored turns.
 - [`retry-creation.ts`](retry-creation.ts): `retryFailedCreation` reuses the
   first-message admission and workspace identity after a failed first start.
   [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.
@@ -230,6 +221,15 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
   path to a Boat call that creates a sandbox or a snapshot. It stores the
   request first, so the lifecycle finds the resource after a lost reply.
+  It records a computer allocation before create and attaches the returned ID.
+- [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
+  confirmed deletions, and the live computers that still need cleanup.
+- [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.
+  The task saves the account and ID of each computer, and its alarm, before the first provider request.
+  Its native RPC and alarm share the lifecycle queue.
+- [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
+- [`cleanup.ts`](cleanup.ts): retries every failed computer of a workspace.
+  `deleteSandboxIfPresent` marks the ledger after Delete succeeds or returns not found.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`, the
   maintenance resume, startup, and stop phases. Its D1 progress retains a
   failure while stop cleanup retries.
@@ -262,7 +262,7 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
   `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as the
   [Workspace Durable Object](workspace-object.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
-- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
+- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
@@ -280,6 +280,7 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
+- [Software images](../software-image/README.md): the shared software builds and their cleanup.
 - [`image-software.ts`](image-software.ts): the runner archive check and
   install/start commands.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text

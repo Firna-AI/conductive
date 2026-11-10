@@ -1,22 +1,39 @@
 import { expect, it, vi } from 'vitest'
 
 import { engineFixture } from '../test-support/engine'
-import { turn } from '../test-support/harness'
+import { duringTurn, turn } from '../test-support/harness'
 import type { ProviderProcess } from './providers/types'
 
 it('keeps the turn login and member order when a model change needs a new provider', async () => {
   const h = await engineFixture()
-  await h.engine.command(turn())
+  const initial = turn()
+  initial.commitAuthor = {
+    name: 'Alice Example',
+    email: '1+alice@users.noreply.github.com',
+  }
+  await h.engine.command(initial)
   await h.engine.idle()
   const first = h.providers.latest
   const process: ProviderProcess = first
   vi.spyOn(process, 'model').mockResolvedValue('deferred')
   const next = turn('next', 'bob')
+  next.commitAuthor = {
+    name: 'Bob Example',
+    email: '2+bob@users.noreply.github.com',
+  }
   next.message.choice = { agent: 'claude', model: 'next-model', effort: 'max' }
-  await h.engine.command({ ...next, type: 'message', turnId: 'turn-1' })
+  await h.engine.command({
+    ...duringTurn(next),
+    type: 'message',
+    turnId: 'turn-1',
+  })
   const last = turn('last', 'charlie')
   last.message.choice = next.message.choice
-  await h.engine.command({ ...last, type: 'message', turnId: 'turn-1' })
+  await h.engine.command({
+    ...duringTurn(last),
+    type: 'message',
+    turnId: 'turn-1',
+  })
   expect(first.messages.map(({ message }) => message.id)).toEqual(['message-1'])
   first.emit({
     type: 'result',
@@ -25,12 +42,20 @@ it('keeps the turn login and member order when a model change needs a new provid
   })
   await h.engine.idle()
   const second = h.providers.latest
+  expect(second.options.endpoint).toBe(
+    'https://machines.conductive.test/v1/model/claude',
+  )
   expect(first.closed).toBe(true)
   expect(h.providers.processes).toHaveLength(2)
-  expect(second.options.login).toEqual({
+  expect(second.options.credential).toEqual({
+    type: 'gateway',
     agent: 'claude',
     kind: 'token',
-    secret: 'secret-alice',
+    token: 'secret-alice',
+  })
+  expect(second.options.commitAuthor).toEqual({
+    name: 'Alice Example',
+    email: '1+alice@users.noreply.github.com',
   })
   expect(second.options.conversationId).toBe('conversation-1')
   expect(second.options.choice).toEqual({

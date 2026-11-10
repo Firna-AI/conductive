@@ -22,6 +22,7 @@ import { installWorkspaceTools } from '../tools/image'
 import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { privilegedCommand } from '../terminal/privileged'
 import { recoverImageBuildAllocation } from './image-allocation'
+import { liveBuildComputers } from './computer-ledger'
 import { startAddedImageBuild } from './first-image-build'
 import { imageIsPublished } from './org-image-data'
 
@@ -101,12 +102,33 @@ export async function cleanupBuild(
     }
     await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
   }
+  const failures: unknown[] = []
+  for (const computer of await liveBuildComputers(
+    runtime.env.DB,
+    job.orgId,
+    job.buildId,
+  )) {
+    try {
+      await deleteSandboxIfPresent(
+        runtime.env.DB,
+        providerForAccount(
+          runtime.env,
+          runtime.dependencies.fetch,
+          computer.providerAccount,
+        ),
+        computer,
+        runtime.dependencies.now(),
+      )
+    } catch (error) {
+      failures.push(error)
+    }
+  }
+  if (failures.length > 0) throw failures[0]
   if (job.sandboxId) {
-    await deleteSandboxIfPresent(provider, job.sandboxId)
     await runtime.env.DB.prepare(
-      'UPDATE image_builds SET sandbox_id = NULL WHERE id = ? AND sandbox_id = ? AND provider_account = ?',
+      'UPDATE image_builds SET sandbox_id = NULL WHERE id = ? AND org_id = ? AND sandbox_id = ? AND provider_account = ?',
     )
-      .bind(job.buildId, job.sandboxId, job.providerAccount)
+      .bind(job.buildId, job.orgId, job.sandboxId, job.providerAccount)
       .run()
   }
   if (
