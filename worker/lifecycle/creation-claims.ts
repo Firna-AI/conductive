@@ -101,6 +101,7 @@ interface PlanRow {
   city: string
   name: string | null
   branch: string
+  branchMode: 'new' | 'existing'
   attempt: string
   startupScript: string
   environmentCiphertext: string | null
@@ -127,6 +128,7 @@ export async function recordedCreationJob(
     .prepare(
       `SELECT p.repository_id AS repositoryId, p.owner_user_id AS ownerUserId,
     p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.branch,
+    p.branch_mode AS branchMode,
     p.start_attempt AS attempt, p.startup_script AS startupScript, p.environment_ciphertext AS environmentCiphertext,
     p.image_name AS imageName, p.provider_account AS providerAccount,
     p.default_branch AS defaultBranch, p.agent, p.model, p.effort,
@@ -176,6 +178,7 @@ export async function recordedCreationJob(
       city: plan.city,
       ...(plan.name !== null && { name: plan.name }),
       branch: plan.branch,
+      branchMode: plan.branchMode,
       createdAt: plan.createdAt,
       request: {
         id: key.messageId,

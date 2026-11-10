@@ -21,6 +21,14 @@ Its `classify` change carries only a name and a mark, so it keeps the value.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
 
+`workspace-branches.ts` owns `WorkspaceBranchChoice` and the paged picker reply.
+`repositoryBranchesPath` lists branch and open pull request rows of one selected repository.
+Requests carry `query` and the previous `nextCursor` as `cursor`.
+Follow a non-null cursor even when the current page has no matching rows.
+Start without a cursor when the query changes.
+`CreateWorkspaceRequest.branch` is optional. Omission keeps New branch.
+An existing choice carries the branch name. Unavailable fork rows cannot supply that choice.
+
 `runner.ts` defines the versioned handshake, commands, numbered events,
 confirmations, and resend rules. Its comments state the delivery contract.
 `RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.

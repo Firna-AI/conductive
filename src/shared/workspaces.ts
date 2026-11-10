@@ -1,6 +1,7 @@
 import type { AgentChoice } from './agents'
 import { orgPath, type Timestamp } from './api'
 import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
+import type { WorkspaceBranchChoice } from './workspace-branches'
 
 export function workspacesPath(orgId: string): string {
   return `${orgPath(orgId)}/workspaces`
@@ -75,6 +76,7 @@ export interface WorkspacesResponse {
 export interface CreateWorkspaceRequest {
   repositoryId: string
   sectionId?: string
+  branch?: WorkspaceBranchChoice
   firstMessage: SendMessageRequest
 }
 export interface CreateWorkspaceResponse extends WorkspaceResponse {

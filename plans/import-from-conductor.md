@@ -634,6 +634,15 @@ They do not reopen a user decision. The earlier dated facts stay as history.
   later sign-in must record the updated Terms, under the existing consent
   rule. Existing sessions get no new gate.
 
+- Agent calls for branch continuation, 10 November 2026: keep the branch
+  choice optional for native callers. Save its mode for retry. Keep one
+  combined cursor for the two bounded GitHub lists. Follow an empty
+  filtered page while its cursor remains. Suppress duplicate branch rows
+  through the ref's associated open pull requests. Distinguish a confirmed
+  absent remote ref from authentication and transport failures. Hide the
+  default branch only in the picker. Preserve the lifecycle code map in a
+  linked area page to meet the file-length rule.
+
 ### Mockup design calls, 10 November 2026
 
 These are agent calls from Milestone 1, within the decisions in force.
@@ -999,21 +1008,23 @@ Verification evidence: `.context/import-from-conductor/current/docs-report.md`.
 
 Depends on: 2
 
-- [ ] Add a Worker route that lists the branches and the open pull
+- [x] Add a Worker route that lists the branches and the open pull
       requests of a chosen repository, without the default branch. Mark a
       pull request whose branch is in another repository as unavailable,
       by repository ID (decision 15). Page
       the list and support the search shown in the picker.
-- [ ] Apply decision 15 to fork pull requests. Use repository IDs for
+- [x] Apply decision 15 to fork pull requests. Use repository IDs for
       identity. B needs a copy from the pull request ref. C or E also
       needs the head repository, push access, banner, and webhook changes.
-- [ ] Accept an existing branch in the create request. Keep New branch as
+- [x] Accept an existing branch in the create request. Keep New branch as
       the default.
-- [ ] Fetch and check out the existing branch at the first start, with
+- [x] Fetch and check out the existing branch at the first start, with
       tracking, and fail with a clear cause when it is gone.
-- [ ] Add Worker tests against the fake GitHub server, as the `testing`
+- [x] Add Worker tests against the fake GitHub server, as the `testing`
       skill says.
-- [ ] Update the READMEs of `worker/lifecycle` and `worker/github`.
+- [x] Update the READMEs of `worker/lifecycle` and `worker/github`.
+
+Verification evidence: `.context/import-from-conductor/current/milestone-3-report.md`.
 
 ## Milestone 4: Imported workspaces and their data
 

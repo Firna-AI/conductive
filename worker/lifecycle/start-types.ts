@@ -80,6 +80,8 @@ interface WorkspaceCreation {
   city: string
   name?: string
   branch: string
+  /** An absent mode belongs to a saved native create from an older Worker. */
+  branchMode?: 'new' | 'existing'
   sessionId: string
   request: SendMessageRequest
   createdAt: number

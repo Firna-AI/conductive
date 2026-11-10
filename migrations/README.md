@@ -140,6 +140,10 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
+`202611101104_workspace_branch_choice.sql` adds `workspace_creation_plans.branch_mode`.
+Existing creation plans keep `new`. A chosen existing branch keeps its mode
+through admission, object restart, and failed-first-start retry.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

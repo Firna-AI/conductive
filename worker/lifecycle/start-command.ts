@@ -1,5 +1,9 @@
 import { shellQuote } from './commands'
 import { defaultBranchCommand } from './default-branch-command'
+import {
+  existingBranchCheckout,
+  existingBranchFetch,
+} from './existing-branch-command'
 import { repositoryLocation } from './repository-locations'
 import { workspaceStartupCommand } from './image-software'
 import type { WorkspaceRow } from './workspace-data'
@@ -15,6 +19,11 @@ export function workspacePhaseCommand(
     job.repositoryLocations,
     row.repositoryId,
   )
+  if (job.creation?.branchMode === 'existing') {
+    if (job.phase === 'fetch')
+      return existingBranchFetch(directory, row.branch, job.turnId)
+    return existingBranchCheckout(directory, row.branch, job.turnId)
+  }
   if (job.phase === 'fetch') {
     if (!job.creation) throw new Error('Missing trusted creation sender')
     return defaultBranchCommand({

@@ -35,6 +35,15 @@
   The queued-job notification can precede the final alarm schedule.
   A manual advance can then run no phase before the test waits for creation admission.
   This explanation remains an inference from the fixture code.
+
+  A targeted regression run on 10 November 2026 also timed out in `worker/chat/integration/failed-first-start-retry.test.ts`.
+  Its case was "retries the same failed workspace with a fresh token and dispatches every stored message once in order".
+  It reported `Error: Test timed out in 15000ms.` The run had 29 passes, one failure, and no skips.
+  An unchanged isolated rerun passed its one test, with no failures or skips, in 2,491 ms.
+  This case has one isolated rerun, not a ten-run result.
+  The test kept every assertion and its 15,000 ms timeout.
+  Concurrent work included native test suites, repeated new tests, lint, file-length checks, formatting, and export checks.
+  Machine contention is the suspected source. The cause is unproved.
 - **Problem:** A gate run fails on one of these tests now and then, also when the change has nothing to do with it. The pull request then waits for a rerun.
 - **Impact if no action:** Every branch and every merge into `main` pays reruns and delay, and a real failure can hide among the known flakes.
 - **Root question:** How do these tests give the same result under the load of the full gate as alone?
