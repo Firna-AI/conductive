@@ -12,7 +12,7 @@ shows the web app.
 [Waitlist](../../../docs/protocol/waitlist.md), and
 [Sign-ups](../../../docs/protocol/sign-ups.md) give the requirements. The
 visual spec is the `app/operator` page of the
-[mockup catalogue](../../../docs/mockups/catalogue.md).
+[mockup catalogue](../../../docs/mockups/catalogue-operator.md).
 
 ## Access
 

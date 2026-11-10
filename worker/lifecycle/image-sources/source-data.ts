@@ -19,6 +19,7 @@ export interface SourceJob {
   buildId: string
   orgId: string
   sandboxId: string
+  providerAccount: string
   sourceIndex: number
   repositoryId: string | null
   phase: SourcePhase
@@ -31,6 +32,7 @@ export interface SourceJob {
 }
 
 const columns = `build_id AS buildId, org_id AS orgId, sandbox_id AS sandboxId,
+  provider_account AS providerAccount,
   source_index AS sourceIndex, repository_id AS repositoryId, phase,
   process_id AS processId, stdout_offset AS stdoutOffset, stderr_offset AS stderrOffset,
   grant_hash AS grantHash, token_ciphertext AS tokenCiphertext, failed`
@@ -58,16 +60,27 @@ export async function insertSourceJob(
   orgId: string,
   buildId: string,
   sandboxId: string,
+  providerAccount: string,
 ): Promise<SourceJob> {
   await db
     .prepare(
-      `INSERT INTO image_source_jobs (build_id, org_id, sandbox_id, phase)
-       SELECT ?, ?, ?, 'layout-starting' WHERE EXISTS (
+      `INSERT INTO image_source_jobs (build_id, org_id, sandbox_id, provider_account, phase)
+       SELECT ?, ?, ?, ?, 'layout-starting' WHERE EXISTS (
          SELECT 1 FROM image_builds b JOIN orgs o ON o.id = b.org_id
          WHERE b.id = ? AND b.org_id = ? AND b.sandbox_id = ?
+         AND b.provider_account = ?
          AND b.state = 'running' AND o.deleted_at IS NULL AND ${activeOrgPredicate('o')})`,
     )
-    .bind(buildId, orgId, sandboxId, buildId, orgId, sandboxId)
+    .bind(
+      buildId,
+      orgId,
+      sandboxId,
+      providerAccount,
+      buildId,
+      orgId,
+      sandboxId,
+      providerAccount,
+    )
     .run()
   const job = await readSourceJob(db, buildId)
   if (!job) throw new Error('Missing source ownership')
@@ -136,6 +149,7 @@ export async function storeSourceGrant(
          SELECT 1 FROM image_builds b JOIN orgs o ON o.id = b.org_id
          WHERE b.id = image_source_jobs.build_id AND b.org_id = image_source_jobs.org_id
          AND b.sandbox_id = image_source_jobs.sandbox_id AND b.state = 'running'
+         AND b.provider_account = image_source_jobs.provider_account
          AND o.deleted_at IS NULL AND ${activeOrgPredicate('o')})`,
     )
     .bind(repositoryId, grantHash, ciphertext, job.buildId, job.sourceIndex)
@@ -155,6 +169,7 @@ export function claimSourceGrant(db: D1Database, grantHash: string) {
          JOIN orgs o ON o.id = b.org_id
          JOIN repositories r ON r.org_id = b.org_id AND r.id = s.repository_id
          WHERE b.id = s.build_id AND b.org_id = s.org_id AND b.sandbox_id = s.sandbox_id
+         AND b.provider_account = s.provider_account
          AND b.state = 'running' AND j.phase = 'sources' AND o.deleted_at IS NULL AND ${activeOrgPredicate('o')}
          AND json_extract(j.repositories_json, '$[' || s.source_index || '].id') = r.id
          AND json_extract(j.repositories_json, '$[' || s.source_index || '].fullName') = r.full_name

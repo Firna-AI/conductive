@@ -1,7 +1,7 @@
 import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { orgSandboxProvider, sandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount, providerForAccount } from '../sandbox/client'
 import { readWorkspace, revokeWorkspacePreviews } from './workspace-data'
 import { firstOrgAdmin } from './settings-data'
 import type { DurableLifecycle } from './durable'
@@ -56,11 +56,12 @@ export async function actionResources(context: WorkspaceActionContext) {
   const admin = await firstOrgAdmin(context.env.DB, context.orgId)
   if (!admin)
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  const provider = await orgSandboxProvider(
+  const provider = await orgProviderForAccount(
     context.env,
     admin.userId,
     context.orgId,
     context.dependencies.fetch,
+    row.providerAccount,
   )
   return { row, provider, sandboxId: row.sandboxId }
 }
@@ -80,9 +81,14 @@ export async function stopWorkspaceSandbox(
 export async function stopAccessDeniedWorkspaceSandbox(
   context: WorkspaceActionContext,
   sandboxId: string | null,
+  providerAccount: string,
 ): Promise<LifecycleStopResult> {
   if (!sandboxId) return 'stopped'
-  const provider = sandboxProvider(context.env, context.dependencies.fetch)
+  const provider = providerForAccount(
+    context.env,
+    context.dependencies.fetch,
+    providerAccount,
+  )
   let sandbox: Sandbox
   try {
     sandbox = await replyOrCurrentState(provider, sandboxId, () =>

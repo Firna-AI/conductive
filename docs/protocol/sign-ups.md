@@ -10,8 +10,8 @@ who waits and the ways in. [Operator section](operator-section.md) states
 the other parts of the section. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue.md) draws each screen of
-this doc, on desktop and on a phone.
+says. The [mockup catalogue](../mockups/catalogue-operator.md) draws each
+screen of this doc, on desktop and on a phone.
 
 ## The pause
 

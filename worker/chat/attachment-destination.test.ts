@@ -4,9 +4,11 @@ import { attachmentFixture, FILE_BYTES, held } from './attachment.test-support'
 import {
   AGENT_BYTES,
   attachmentOwnerCopy,
+  attachmentOwnerFixture,
   selectAttachmentComputer,
 } from './attachment-owner.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
+import { WORKSPACE_ID } from './harness.test-support'
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -17,6 +19,45 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
+
+it('copies attachments through the stored provider account', async () => {
+  const { copy, fixture, file, session, runner } =
+    await attachmentOwnerFixture(harness)
+  harness.env.SANDBOX_PROVIDER_ACCOUNTS = {
+    'attachment-account': {
+      kind: 'boat',
+      orgId: 'attachment-provider-org',
+      apiKey: 'attachment-provider-key',
+    },
+  }
+  await harness.env.DB.prepare(
+    'UPDATE workspaces SET provider_account = ? WHERE id = ?',
+  )
+    .bind('attachment-account', WORKSPACE_ID)
+    .run()
+  try {
+    expect(
+      (await fixture.sendAttachment(session.id, 'account-file', [file.id]))
+        .status,
+    ).toBe(202)
+    await copy.entered.promise
+    copy.release.resolve()
+    await fixture.drainAttachments()
+    expect(
+      copy.requests.map((request) => request.headers.get('X-Boat-Org')),
+    ).toEqual(['attachment-provider-org'])
+    expect(
+      copy.requests.map((request) => request.headers.get('Authorization')),
+    ).toEqual(['Bearer attachment-provider-key'])
+    expect(messageCommands(runner, 'account-file')).toHaveLength(1)
+  } finally {
+    copy.release.resolve()
+    await fixture.drainAttachments()
+    runner.disconnect()
+    delete harness.env.SANDBOX_PROVIDER_ACCOUNTS
+  }
+})
+
 it('binds an owner to its selected computer while a new computer copies independently', async () => {
   const entered = held<void>()
   const release = held<void>()

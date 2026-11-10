@@ -33,8 +33,14 @@ export async function terminalPassword(
   env: AppEnv,
   workspaceId: string,
   sandboxId: string | null,
+  providerAccount: string,
 ): Promise<string | null> {
-  const row = await readTerminalCredential(env.DB, workspaceId, sandboxId)
+  const row = await readTerminalCredential(
+    env.DB,
+    workspaceId,
+    sandboxId,
+    providerAccount,
+  )
   return row
     ? decrypt(row.ciphertext, context(workspaceId), env.BOAT_KEY_ENCRYPTION_KEY)
     : null

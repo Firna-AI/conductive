@@ -8,7 +8,7 @@ import { refreshImagesForPush, runImageAlarm } from './image-timers'
 import { finishImageBuild as finish } from './image-test-support'
 import { joinedMember } from '../operator/suspension-test-support'
 import { suspendUser } from '../operator/suspend-user'
-import { readImageSettings } from './settings-data'
+import { readOrgImage } from './org-image-data'
 
 const backendFixture = setupBackendTests()
 
@@ -163,7 +163,7 @@ it('uses an active admin for automatic refreshes and leaves timers unchanged whe
       'UPDATE users SET suspended_at = ? WHERE id = ?',
     ).bind(noAdminAt, admin.id),
     runtime.env.DB.prepare(
-      'UPDATE settings SET pending_push_refresh_at = ? WHERE org_id = ?',
+      "UPDATE org_images SET pending_push_refresh_at = ? WHERE org_id = ? AND provider_account = 'boat'",
     ).bind(noAdminAt, org.id),
   ])
   await expect(
@@ -178,7 +178,7 @@ it('uses an active admin for automatic refreshes and leaves timers unchanged whe
   if (!pending) throw new Error('Missing idle image schedule')
   await expect(runImageAlarm(images, pending)).resolves.toBeUndefined()
   expect(fixture.scheduled).toHaveLength(before)
-  expect(await readImageSettings(runtime.env.DB, org.id)).toMatchObject({
+  expect(await readOrgImage(runtime.env.DB, org.id)).toMatchObject({
     lastPushRefreshAt: TEST_TIME,
     pendingPushRefreshAt: noAdminAt,
   })

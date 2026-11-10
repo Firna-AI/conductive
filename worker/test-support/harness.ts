@@ -136,6 +136,7 @@ export async function createHarness() {
           'sections',
           'repositories',
           'settings',
+          'org_images',
           'image_build_logs',
           'image_builds',
           'org_members',

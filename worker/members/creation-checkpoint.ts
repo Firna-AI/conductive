@@ -64,18 +64,22 @@ export async function resumeCreationCheckpoint(
     job.afterReadyPhase = job.phase
   if (job.phase !== 'records') job.phase = 'machine'
   try {
-    if (row.sandboxId)
+    if (row.sandboxId) {
+      job.providerAccount = row.providerAccount
       job.environmentCiphertext = (
         await readImageSettings(env.DB, orgId)
       ).envVarsCiphertext
-    else {
+    } else {
       const image = await leasedCreationImage(
         env.DB,
         orgId,
         workspaceId,
         row.repositoryId,
       )
-      if (image.imageName !== job.imageName)
+      if (
+        image.imageName !== job.imageName ||
+        image.providerAccount !== job.providerAccount
+      )
         throw new HttpError(
           409,
           'image_required',

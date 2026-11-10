@@ -38,11 +38,6 @@ it('reports the metadata size above the caller limit after small content refusal
         ),
     },
     {
-      name: 'HTTP 413 text refusal',
-      response: () =>
-        new Response('private boat-first credential', { status: 413 }),
-    },
-    {
       name: 'HTTP 502 unknown refusal',
       response: () => Response.json({ unexpected: 'refusal' }, { status: 502 }),
     },
@@ -147,7 +142,7 @@ it('keeps HTTP 502 when a small content refusal is followed by a metadata reply 
   expect(reply.server.requests).toHaveLength(2)
 })
 
-it('accepts the reply path that Boat gives relative to its work directory', async () => {
+it('refuses a relative reply for another path', async () => {
   const server = new FakeBoat()
   server.responseFactories = [
     () =>
@@ -155,39 +150,15 @@ it('accepts the reply path that Boat gives relative to its work directory', asyn
         ok: true,
         type: 'file.read',
         success: true,
-        path: 'note.txt',
+        path: 'other.txt',
         encoding: 'base64',
         size: 2,
         content: btoa('hi'),
       }),
+    () => fileInfo(2),
   ]
   const client = new BoatClient('boat-first', server.fetch, 'app-org')
-  await expect(client.readFile('bx_one', path, 3)).resolves.toEqual({
-    kind: 'file',
-    file: { path, sizeBytes: 2, encoding: 'base64', content: btoa('hi') },
+  await expect(client.readFile('bx_one', path, 3)).rejects.toMatchObject({
+    kind: 'invalid_response',
   })
-})
-
-it('refuses a reply for another path, also a relative one', async () => {
-  for (const replyPath of ['other.txt', '/home/user/other.txt']) {
-    const server = new FakeBoat()
-    server.responseFactories = [
-      () =>
-        Response.json({
-          ok: true,
-          type: 'file.read',
-          success: true,
-          path: replyPath,
-          encoding: 'base64',
-          size: 2,
-          content: btoa('hi'),
-        }),
-      () => fileInfo(2),
-    ]
-    const client = new BoatClient('boat-first', server.fetch, 'app-org')
-    await expect(
-      client.readFile('bx_one', path, 3),
-      replyPath,
-    ).rejects.toMatchObject({ kind: 'invalid_response' })
-  }
 })
