@@ -3,9 +3,9 @@ import {
   createServer,
   request,
   type IncomingMessage,
-  type RequestListener,
   type RequestOptions,
   type Server,
+  type ServerResponse,
 } from 'node:http'
 import type { Socket } from 'node:net'
 
@@ -32,11 +32,19 @@ function serverPort(server: Server): number {
   return address.port
 }
 
-export async function localServer(
-  listener: RequestListener,
-  host = '127.0.0.1',
-) {
-  const server = createServer(listener)
+/**
+ * A test server can answer at once or later, so its result is ignored. A
+ * rejection stays unhandled, so the test run fails.
+ */
+type TestListener = (
+  request: IncomingMessage,
+  response: ServerResponse,
+) => unknown
+
+export async function localServer(listener: TestListener, host = '127.0.0.1') {
+  const server = createServer((request, response) => {
+    void listener(request, response)
+  })
   ownServer(server)
   server.listen(0, host)
   await once(server, 'listening')

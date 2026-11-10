@@ -181,13 +181,13 @@ under `.wrangler/`, which Git also ignores.
 | `npm run typecheck`         | Generate types and check app, tools, Worker production, Worker tests, and the Astro files of the marketing site |
 | `npm run test`              | Run the Vitest tests                                           |
 | `npm run db:migrate`        | Apply the D1 migrations to local storage                       |
-| `npm run file-length:check` | Check the 300-line limit of JavaScript, TypeScript, and Astro files |
+| `npm run file-length:check` | Run `npm run lint`, which checks the 300-line limit of JavaScript, TypeScript, and Astro files |
 | `npm run site:dev`          | Serve the marketing site from Astro at `http://localhost:4321`, and reload on edits |
 | `npm run site:build`        | Build the marketing site into `public/_site/`, with its file list |
 | `npm run check`             | Run every check, including the app build, the mockup checks, and the runner checks |
 | `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
 | `npm run mockups:check`     | Check mockup types, then build the catalogue in strict mode     |
-| `npm run lint`              | Run ESLint                                                     |
+| `npm run lint`              | Run ESLint, with the promise rules and the 300-line limit, in one process for each group of TypeScript projects |
 | `npm run format:check`      | Check formatting with Prettier                                 |
 | `npm run format`            | Format the files with Prettier                                 |
 
@@ -264,6 +264,9 @@ features:
 - `migrations/`: the D1 schema migrations.
 - `desktop/`: the Mac app, an Electron package of its own. Its
   [README](desktop/README.md) gives its key code.
+- `eslint.config.js` and `scripts/lint.mjs`: the lint rules, and the
+  `npm run lint` runner that lints each group of TypeScript projects in
+  its own process.
 
 The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 

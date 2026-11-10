@@ -155,20 +155,28 @@ describe('a drag in the tab row', () => {
     vi.useFakeTimers()
     try {
       pointer(tab, 'pointerdown', finger)
-      act(() => vi.advanceTimersByTime(449))
+      act(() => {
+        vi.advanceTimersByTime(449)
+      })
       const early = rowStatus()
-      act(() => vi.advanceTimersByTime(1))
+      act(() => {
+        vi.advanceTimersByTime(1)
+      })
       const held = rowStatus()
       const lifted = liftedCopy(debounce)
       // A finger that stays within 8 px of its press has not moved. The
       // frames of 300 ms run while it holds still.
       pointer(window, 'pointermove', { ...finger, clientX: 196 })
-      act(() => vi.advanceTimersByTime(300))
+      act(() => {
+        vi.advanceTimersByTime(300)
+      })
       const scrolled = tabList().scrollLeft
       pointer(window, 'pointerup', { ...finger, clientX: 196, buttons: 0 })
       // A finger sends its click after the release, on what is under it then:
       // the dimmed page behind the sheet.
-      act(() => vi.advanceTimersByTime(20))
+      act(() => {
+        vi.advanceTimersByTime(20)
+      })
       const dimmed = queryByRole('dialog', debounce)?.previousElementSibling
       allowed(dimmed ?? document.body, new MouseEvent('click', fingerClick))
 

@@ -172,7 +172,8 @@ startDesktop({
         })
       },
       every: (callback, milliseconds) => {
-        const timer = setInterval(callback, milliseconds)
+        // Each check catches its own errors, so the timer ignores its promise.
+        const timer = setInterval(() => void callback(), milliseconds)
         return () => clearInterval(timer)
       },
       warn,

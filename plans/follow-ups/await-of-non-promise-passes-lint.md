@@ -1,0 +1,31 @@
+# An await of a non-promise passes the lint
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, from review round 2 of branch `calummoore/missing-await-lint`, as the blocked wider fix of finding 2.
+- **Location:** `eslint.config.js`, the blocks that `TYPE_PROJECTS` makes. `desktop/src/updates.ts:41`, the return of `startUpdates` when updates are off. `desktop/src/updates.test.ts`.
+- **Reason:** The recommended option adds a lint rule, and the user decides each new lint.
+
+- **Terms:**
+  - **`await-thenable`:** a `typescript-eslint` rule that reports an `await` of a value whose type is not a promise. It also reports a `Promise.all` of such values. It needs type information.
+  - **Promise rules:** the rules `no-floating-promises` and `no-misused-promises`, which `eslint.config.js` turns on for each TypeScript project.
+- **Background:**
+  - In review round 2 of branch `calummoore/missing-await-lint`, the Mac app passed its update check to the timer as `() => void automaticCheck()`. The test `answers a failed manual check and keeps automatic failures silent` in `desktop/src/updates.test.ts` awaits that timer callback. The wrapper returned `undefined`, so the test stopped waiting for the check, and a dialog after an automatic failure passed all 9 tests.
+  - The fix typed the timer callback as `() => Promise<unknown>` and moved `void` into the timer adapter in `desktop/src/main.ts`. The same deliberate dialog then failed the test at line 157.
+  - The promise rules did not report the lost wait, because the old type `() => void` hid the promise. `await-thenable` reports an `await` of such a value.
+  - On 10 November 2026, a one-time run of `await-thenable` with type information, after that fix, reported 105 calls in 48 files:
+    - 14 are in `desktop/src/updates.test.ts`. They await `updates.check()`, whose type is `() => void`, because the return of `startUpdates` when updates are off has `check() {}`. That return needs a check that returns a promise. Then `desktop/src/main.ts` must pass `updates.check` to `installMenu` through a `void` wrapper.
+    - Most others are in Worker tests. They await the synchronous fixture getter of `setupBackendTests()`, or `closeConnections()`, which returns no promise.
+    - 1 is in product code: `runner/src/engine-pending.ts:78` gives `Promise.all` values that can be `null`. That is harmless.
+  - The rule is part of the `recommended-type-checked` preset of `typescript-eslint`. Its lint time was not measured.
+- **Problem:** No check finds an `await` that waits for nothing. A type that hides a promise, such as `() => void`, lets a test stop waiting with no report.
+- **Impact if no action:** A test can again pass while the code that it checks has not finished. Such a test cannot fail on the behaviour that it names.
+- **Root question:** How does the lint find a wait on a value that is not a promise?
+- **Options:**
+  - **A.** Change nothing. The promise rules find a promise that the code drops, but not a wait on a value that is not a promise. Effort: Small.
+  - **B.** Turn on `await-thenable` in the blocks that `TYPE_PROJECTS` makes, beside the promise rules. Fix the 105 reports: remove each `await` of a value that is not a promise, and give `check` a promise type in both returns of `startUpdates`. Measure the lint time. Effort: Medium.
+- **Left out:** A type for each callback that returns a promise, as the round 2 fix did for the timer. It must know each interface, so it is the direct fix of each case, not a fix for the class. Fewer than three approaches are real, because only a lint rule or a review finds this class.
+- **Wider fix:** B, a detection fix for the class. No structural fix covers every interface.
+- **Previous examples:** Finding 2 of review round 2 of branch `calummoore/missing-await-lint`. No earlier case was found.
+- **Recommendation:** B. It finds a lost wait in each project, and its 105 reports are known.
+- **Action:** ask the user, because B adds a lint rule, and the user decides each new lint.

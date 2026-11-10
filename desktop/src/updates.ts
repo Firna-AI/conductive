@@ -34,7 +34,7 @@ export function startUpdates(dependencies: {
   enabled: boolean
   choose(message: string, action: string): Promise<boolean>
   inform(message: string): Promise<void>
-  every(callback: () => void, milliseconds: number): () => void
+  every(callback: () => Promise<unknown>, milliseconds: number): () => void
   warn(error: unknown): void
 }) {
   if (!dependencies.packaged || !dependencies.enabled)

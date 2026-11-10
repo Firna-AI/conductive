@@ -147,11 +147,11 @@ function ChatBody(
         historyOpen={overlay.kind === 'history'}
         mobile={mobile}
         onCancelRename={controller.dismissOverlay}
-        onClose={controller.requestClose}
+        onClose={(id) => void controller.requestClose(id)}
         onMove={controller.moveTab}
         onNew={() => void controller.newSession()}
         onRename={(id, title) => void controller.rename(id, title)}
-        onSelect={controller.select}
+        onSelect={(id) => void controller.select(id)}
         onShowHistory={controller.showHistory}
         onStartRename={controller.startRename}
         readOnly={readOnly}
@@ -178,7 +178,7 @@ function ChatBody(
       <ChatOverlays
         history={history}
         mobile={mobile}
-        onConfirmClose={controller.confirmClose}
+        onConfirmClose={() => void controller.confirmClose()}
         onDismiss={controller.dismissOverlay}
         overlay={overlay}
         sessions={snapshot.sessions}

@@ -28,9 +28,9 @@ export function updateHarness() {
     enabled: true,
     choose: vi.fn(async () => false),
     inform: vi.fn<(message: string) => Promise<void>>(async () => {}),
-    every: vi.fn<(callback: () => void, milliseconds: number) => () => void>(
-      () => vi.fn(),
-    ),
+    every: vi.fn<
+      (callback: () => Promise<unknown>, milliseconds: number) => () => void
+    >(() => vi.fn()),
     warn: vi.fn(),
   }
   return { updater, nativeUpdater, dependencies }

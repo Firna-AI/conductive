@@ -262,7 +262,9 @@ describe('a full tab row', () => {
     vi.useFakeTimers()
     try {
       pointer(byRole('button', 'Address autocomplete'), 'pointerdown', finger)
-      act(() => vi.advanceTimersByTime(450))
+      act(() => {
+        vi.advanceTimersByTime(450)
+      })
       // A move of 115 px toward the clipped end, more than the 8 px of a
       // move. 10 px from the end, the pointer is 22 px into the 32 px zone
       // of the edge scroll: the row scrolls 9 of the 12 px of a full step.
