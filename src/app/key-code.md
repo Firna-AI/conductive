@@ -164,6 +164,8 @@ Each path is relative to `src/app/`, the folder of this page.
   `api/read-operator-waitlist.ts`: their readers. The
   [operator section](../shell/operator/README.md) gives the screens.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
+  `routeOf` gives the screen of an address, and `useRoute` the screen of
+  the current one.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
   the tab opened last, from `AppModel.lastOrg`, or else the first org that
   is not deleted.
