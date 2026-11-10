@@ -1078,13 +1078,15 @@ Tags: ui
 
 Depends on: 5a
 
-- [ ] `src/marketing/privacy-recipients.ts` and `src/marketing/terms-org.ts`:
+- [x] `src/marketing/privacy-recipients.ts` and `src/marketing/terms-org.ts`:
       in a newer cloud computer, agent settings in the repository can make
       the agent send the credential of a turn to another address. Update
       each other sentence that Milestone 5a lists. Follow the Terms
       version rule of `src/marketing/README.md`.
-- [ ] Run `npm run mockups:check`. Open the privacy and terms pages in
+- [x] Run `npm run mockups:check`. Open the privacy and terms pages in
       the mockup preview.
+
+Evidence: `.context/model-gateway/m8a/screens/checks.json`.
 
 ## Milestone 9: Split the long docs
 

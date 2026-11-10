@@ -22,7 +22,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 9 November 2026.`,
+  it uses it, and who gets it. Effective date: 10 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -110,9 +110,11 @@ export const privacyDocument: LegalDocument = {
             computers that ${productName} runs for your org. ${productName}
             reads a file or a diff when you open it, to show it to you. In a
             newer cloud computer, the agents send their requests to the models
-            of Anthropic or OpenAI through ${productName}. These model requests
-            can hold your messages, your files, and your code. ${productName}
-            adds the login that the session uses, and passes each request on.
+            of Anthropic or OpenAI through ${productName}. Agent settings in the
+            repository can send them to another address instead. These model
+            requests can hold your messages, your files, and your code.
+            ${productName} adds the login that the session uses, and passes
+            each request on.
             When it passes on these model requests and their answers, it keeps
             no copy of them. It writes no body or header value of them to its
             logs. ${productName} still keeps the chat history above.`,

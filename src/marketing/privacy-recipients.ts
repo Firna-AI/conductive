@@ -15,7 +15,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         Cloudflare's AI model service also writes a short name for each
         new workspace from the text of its first message. The model requests
         of the agents in a newer cloud computer, and their answers, pass
-        through ${productName} on Cloudflare.`,
+        through ${productName} on Cloudflare. Agent settings in the repository
+        can send these requests to another address instead.`,
       text`GitHub signs you in, and gives ${productName} access to your
         repositories through its GitHub App. The Mac app also checks
         GitHub for updates and downloads new versions. These requests
@@ -34,7 +35,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         login of the first owner of the workspace. From a newer cloud computer, the
         agents send them through ${productName}, which adds the agent
         login. With the older software in an older cloud computer, the agents
-        send them directly, with the agent login. Each session uses the login of
+        send them directly, with the agent login. In both kinds of cloud
+        computer, agent settings in the repository can send them to another
+        address instead. Each session uses the login of
         the member who
         started it. Your messages in another member's session use that
         member's login only when that member lets other members use it.
@@ -53,7 +56,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         outside the cloud computer. A program that keeps running, such as a
         dev server or a program that the startup script starts, can also
         get the credentials of later turns. This includes the turns of
-        sessions that other members start. The setting that lets other
+        sessions that other members start. Agent settings in the repository
+        can make the agent send its model requests, with their content and
+        the credential of the turn, to another address. A commit, the agent,
+        or other code can change those settings. The setting that lets other
         members use a login does not change this. After Stop, a credential
         can start no new request. A request that still runs ends within 30
         seconds after the turn ends. If the member who started the session

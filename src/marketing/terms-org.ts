@@ -43,7 +43,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         also from outside the cloud computer. A program that keeps running,
         such as a dev server or a program that the startup script starts,
         can also get the credentials of later turns. This includes the
-        turns of sessions that other members start. After Stop, a
+        turns of sessions that other members start. Agent settings in the
+        repository can make the agent send its model requests, with their
+        content and the credential of the turn, to another address. A commit,
+        the agent, or other code can change those settings. After Stop, a
         credential can start no new request. A request that still runs
         ends within 30 seconds after the turn ends. If the member who
         started the session removes or changes the login, or loses access

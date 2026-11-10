@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   and ${appDomain}. You accept their current version each time that you
   continue with GitHub to sign in. ${productName} keeps the latest version
   that you accepted, and the time when you first accepted it. Effective
-  date: 9 November 2026.`,
+  date: 10 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -80,7 +80,9 @@ export const termsDocument: LegalDocument = {
             Anthropic or OpenAI from the cloud computer. Installing newer
             software in that cloud computer does not remove this risk. A new
             image build gives the protection to each cloud computer that starts
-            from it.`,
+            from it. In both kinds of cloud computer, agent settings in the
+            repository can send the model requests of the agents to another
+            address instead.`,
           text`Keep your keys and logins safe. Connect only accounts that you
             have permission to use. If a key or login is exposed, revoke it
             with its provider and remove or replace it in ${productName}.`,
