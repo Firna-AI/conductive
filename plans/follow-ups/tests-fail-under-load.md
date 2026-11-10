@@ -2,9 +2,9 @@
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-10. It joins four items of earlier branches and two failures of the CI of pull request #90.
+- **Added:** 2026-11-10. It joins four items of earlier branches and two failures of the CI of pull request #90. Extended on 2026-11-10 with the pricing-page CI and isolated-run failure from pull request #170.
 - **Location:** the tests below, the native harness of Milestone 5f in `worker/test-support/`, `worker/chat/native-transport.test-support.ts`, `worker/test-support/native-peers.ts`, and the alarm driver of the backend fixture.
-- **Reason:** each test fails only under load, passes alone and in repeated runs, and no branch that saw it changed it.
+- **Reason:** the affected branches did not change these tests, and the failures concern shared test timing or event handling outside their scope.
 
 - **Terms:**
   - **Full gate:** `npm run check`, which CI runs on each push and pull request.
@@ -17,6 +17,9 @@
     - On 10 November 2026, the full gate failed this test again. The local run followed a merge of main `1a9e75a7` into `calummoore/vercel-sandbox-provider`. The test and its report helper matched that main commit. The run had 1,984 passes, one failure, and no skips.
     - The first command-list assertion, at line 30, expected `files.snapshot`, `changes.updated`, `start.updated`, and `workspace.title`. It received an empty list after `fixture.drain()`: `AssertionError: expected [] to deeply equal [ 'files.snapshot', …(3) ]`.
     - An unchanged rerun of `npm run test -- worker/chat/runner-repairs.test.ts` then passed both tests in the file, with no skips. The cause is unproved. The empty list narrows the suspected source to event processing, drain completion, or command observation.
+    - On 10 November 2026, the pricing-page CI failed the same assertion at commit `b240576d`. Its complete gate had 2,031 passes and this one failure across 707 files. The test and all files under `worker/chat/` and `worker/test-support/` matched `origin/main` at `ae736ab5`.
+    - One unchanged isolated command, `npm run test -- worker/chat/runner-repairs.test.ts`, also failed at line 30. One test passed and one failed. It received the same empty list instead of the four report commands. So this failure also occurs without the load of the full gate.
+    - The branch's earlier complete local gate passed all 2,033 tests. No test assertion, timeout, or harness code changed. The cause remains unproved. Event processing, drain completion, or command observation remain the suspected sources.
   - `worker/chat/runner-repair-parts.test.ts:39`: "keeps deltas, old tails with valid counts, and partial or repeated full reports from resolving a tree repair".
     - On 10 November 2026, the CI of pull request #162 failed this test at commit `f5e1c290`. That branch changed no worker file. The run had 2,004 passes and this one failure.
     - The assertion at line 39 expected the first refresh command to match `{ type: 'report.refresh', kind: 'files.snapshot' }`. It received `undefined` after `fixture.drain()`: `AssertionError: expected undefined to match object { type: 'report.refresh', …(1) }`.
