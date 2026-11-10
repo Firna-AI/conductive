@@ -34,8 +34,9 @@ plan limits.
   changes no login, and the cloud computer keeps running.
 - When a message uses the login of another member, the bar of the
   composer names that login after the model picker, such as "Cal's login"
-  in `app/composer/login`. So the box keeps its place. On an own endpoint
-  the label also names the host, as [Logins](#logins) says. A message on
+  in `app/composer/login`. So the box keeps its place. The label names an
+  own endpoint login in the same way, with no host, as [Logins](#logins)
+  says. A message on
   the own login of the viewer shows no name. When the login of the member who
   started a session is not available, a message of another member starts
   a new session. The notice over the composer of the first session says
@@ -160,18 +161,11 @@ plan limits.
     that a phone shows both in full. It never shows the key or the full
     address, as `app/account/own-endpoint/connected` shows. The part lives
     in `src/components/settings/LoginEndpoint.tsx`.
-  - The session record carries the host of the endpoint of the starter
-    only while the starter shares a login that works (decision 5 C of that
-    plan). Then the label in the bar of the composer of another member
-    names the host, such as "Cal's endpoint at proxy.example.com" in
-    `app/composer/own-endpoint`, so that the sender sees where the message
-    goes. In a narrow bar the words before the host give way first, with
-    an ellipsis, so the host stays visible on a phone and beside the right
-    column of a desktop. When the starter does not share the login, or the
-    login does not work, a message of another member starts a new session,
-    as for every login, and nothing names the host. A session on the own
-    endpoint of the viewer gets no label, as for every own login, as its
-    `yours` variant shows.
+  - In a session on the own endpoint of another member, the bar of the
+    composer names the login as for every login, such as "Cal's login".
+    It names no host, because the members of an org trust each other with
+    their logins (decision 5 of the own endpoint plan, which Cal changed on
+    10 November 2026).
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude

@@ -31,7 +31,7 @@ how a screen is built, and links to the other pages.
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
-| `app/composer`      | Attached files, the picker, another member's login, a missing agent, and a login on an own endpoint |
+| `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
@@ -48,7 +48,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/composer`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
 `app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
@@ -58,9 +58,8 @@ which links back to it. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
-`app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
-`app/archive`, and `app/composer` moved into their own folders and kept
-their paths, so that
+`app/new-workspace/dialog`, `app/org-settings/cloud-computer`, and
+`app/archive` moved into their own folders and kept their paths, so that
 each of those pages shows only its canonical screen. `app/sign-in/get-started` moved into its own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
@@ -209,14 +208,6 @@ chose these four actions on 9 November 2026. Its child pages:
   still offers Restore on hover, and a suspended org, whose rows have no
   menu.
 
-`app/composer` shows a message with two uploaded files. Its child pages:
-`app/composer/picker` has the open picker, `app/composer/no-agent` has an
-agent that is not connected, and `app/composer/login` has a session on the
-login of another member. `app/composer/not-shared` has a session whose
-starter does not share the login. `app/composer/own-endpoint` has a
-session on the own endpoint of another member, whose label in the bar
-names the host and keeps it visible on a phone. Its `yours` variant has a
-session on the own endpoint of the viewer, whose bar names no login.
 
 `app/command-palette` shows the All tab of the command palette over the
 list of Acme. Its child pages:

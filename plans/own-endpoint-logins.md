@@ -466,6 +466,11 @@ changed the recommendation from C to L.
   recommended L. So the session record carries the host of the starter's
   endpoint only while the starter shares a login that works, and the bar
   label names it with the host kept visible.
+- **Changed:** by Cal on 10 November 2026: "remove the host from the chat
+  window - you have to trust people you work with". So the label names an
+  own endpoint login as main names every login, such as "Cal's login", and
+  the session record holds no part of the login, as on `main`. The
+  protocol records the host label as rejected for that reason.
 
 ### 6. Choose how the form names the models that the endpoint must serve
 
@@ -695,6 +700,8 @@ recommendation from C to D.
 - **Related:** Decision 5 C, whose rule says that the host stays visible.
 - **Recommendation:** D. It was C before the options check. C only moves the cut, so a host can still read as another server, while D never cuts the part that names the owner. A is the smallest change.
 - **Action:** ask the user, because each option breaks a part of decision 5 C or of main's picker in a full bar, and no option is clearly best.
+- **Closed:** on 10 November 2026, with no option applied, because Cal changed
+  decision 5: the chat window shows no host.
 
 ## Design
 
@@ -831,12 +838,16 @@ The mockups show the answers to the questions that Milestone 1 raised.
       `docs/mockups/src/screens/getStartedCopy.ts` as decision 7 says. The
       app reads the same file.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Settle how the label shows the host in a full phone bar, as
+- [x] Dropped on 10 November 2026, because decision 5 changed and decision
+      11 closed: settle how the label shows the host in a full phone bar, as
       decision 11 says. Add a state with a running turn to
       `app/composer/own-endpoint`, and correct the texts that say the host
       always stays visible on a phone.
 
 Screenshots: `.context/own-endpoint-logins/m1b/screens/`.
+
+Decision 5 changed on 10 November 2026, so the composer mockups went back
+to main's version, with no host and no own endpoint page.
 
 ## Milestone 2: Documentation and protocol
 
@@ -913,6 +924,10 @@ The protocol states the own endpoint login with the gateway.
 The legal sentences that Milestone 6 must change are listed in
 `.context/own-endpoint-logins/m2b-report.md`. Evidence of the link check:
 `.context/own-endpoint-logins/m2b/`.
+
+Decision 5 changed on 10 November 2026: the protocol now says that the
+session record and the composer label name no host, and it records the
+host label as rejected.
 
 ## Milestone 3: Fix the Claude endpoint for every login
 
@@ -999,9 +1014,9 @@ in each turn.
       `src/shared/`: refuse `http://` unless the host is `localhost`,
       `127.0.0.1`, or `[::1]`. Call it in the save route. Encrypt the
       endpoint with the key, and keep its origin in plain text.
-- [ ] Send in the session record what decision 5 chooses about the login
-      of the starter. Add the new field to the change check of `save()` in
-      `worker/chat/session-login.ts`, so that a change reaches each tab.
+- [x] Dropped on 10 November 2026, because decision 5 changed: send in the
+      session record what decision 5 chooses about the login of the
+      starter.
 - [x] Send the endpoint with the key in the turn login. Count the kind in
       `agentLoginKind` and the login availability.
 - [x] Remove each place that fixes the kind of a Codex login to `api-key`:
@@ -1103,13 +1118,12 @@ show.
 - [ ] Say on the Privacy page in `src/marketing/privacy.ts` and
       `src/marketing/privacy-uses.ts` that a chosen
       endpoint gets the messages and the files. Name the endpoint address,
-      stored encrypted, under "Keys and logins". Add what members see
-      about the login of a session, as decision 5 says.
+      stored encrypted, under "Keys and logins".
 - [ ] Update `src/marketing/terms.ts` and `src/marketing/terms-org.ts`: they name only the terms of
       Anthropic or OpenAI, and the share defaults of two kinds. Raise
       `TERMS_VERSION` in `src/shared/terms.ts`.
-- [ ] Show the own endpoint in the login label of the composer bar, as
-      decision 5 says and
+- [x] Dropped on 10 November 2026, because decision 5 changed: show the own
+      endpoint in the login label of the composer bar, as decision 5 says and
       the mockups show.
 - [ ] Extend `src/shell/account/AccountScreen.test.tsx` and
       `src/shell/onboarding/GetStartedSteps.test.tsx`.

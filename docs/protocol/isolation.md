@@ -179,14 +179,10 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - A message of a sender who left the org never reaches the agent, also
   while the login of the starter works.
 - The session record shows whether the login of its starter can be used,
-  and whether the starter shares it. It holds no part of the login, except
-  the host of an own endpoint while the starter shares a login that works
-  (own endpoint decision 5).
-- Reason: the composer of each other member then names the server that
-  gets the message, as [Messages](messages-and-attachments.md#messages)
-  says. The host shows only to members whose messages can go to that
-  server. A record that carries the host also while the starter does not
-  share the login was rejected for that reason.
+  and whether the starter shares it. It holds no part of the login.
+- A record that names the host of an own endpoint was rejected, because
+  the members of an org trust each other with their logins (own endpoint
+  decision 5).
 - The runner never writes a login to disk.
 - Risk: while the starter shares the login, the other members of a session
   spend it. Anthropic's rules for hosted products ask each end user to sign

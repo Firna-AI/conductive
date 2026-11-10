@@ -54,8 +54,8 @@ of [the operator section](design-operator.md).
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
 moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/composer`, `app/banner`, `app/chat`, `app/routines`,
-`app/workspace-menu`, `app/workspace-links`, and `app/tools`,
+`app/banner`, `app/chat`, `app/routines`, `app/workspace-menu`,
+`app/workspace-links`, and `app/tools`,
 the New workspace dialog, and the repositories that wait for a build. Its
 linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives

@@ -13,7 +13,7 @@ import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { endpointOf, otherStarter, sessionLoginFor } from './sessionStarter'
+import { otherStarter, sessionLoginFor } from './sessionStarter'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -100,12 +100,12 @@ export function isRunning(state: WorkspaceState): boolean {
  * the message with the files that the composer attached.
  *
  * A session runs on the login of its starter. When the starter is another
- * member, a label in the bar names that login, with the host of an own
- * endpoint, and the own login of the viewer does not matter. When the login
- * of that starter is not available, or that starter keeps it for their own
- * messages, Send opens a new linked session on the own login of the viewer,
- * and the bar has no login label. Such a message does not steer a running
- * turn of the session, and Stop still ends that turn.
+ * member, a label in the bar names that login, and the own login of the
+ * viewer does not matter. When the login of that starter is not
+ * available, or that starter keeps it for their own messages, Send opens a
+ * new linked session on the own login of the viewer, and the bar has no
+ * login label. Such a message does not steer a running turn of the
+ * session, and Stop still ends that turn.
  *
  * While the sandbox is not ready, Send queues the message in the
  * workspace, also during the first start and after a failed first start of
@@ -127,14 +127,13 @@ export function composerFor(
   const linkedState =
     state.composer === 'no-starter-login' || state.composer === 'not-shared'
   const opensLinked = !fresh && linkedState && starter !== undefined
-  const followsUp = noLogin || linkedState || state.composer === 'own-endpoint'
   const files = fresh ? undefined : composerFiles[state.composer]
   const mention = fresh ? undefined : mentionLists[state.composer]
   const chips = fresh ? undefined : chipDraft(state.composer)
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (files) draft = attachmentDraft
-  else if (!fresh && followsUp) draft = followUpDraft
+  else if (!fresh && (noLogin || linkedState)) draft = followUpDraft
   else if (mention) draft = mention.draft
   else if (chips) draft = chips
   else if (!fresh && state.composer === 'draft') {
@@ -157,10 +156,7 @@ export function composerFor(
     sendTo,
     startsSession: opensLinked,
     blocked: needsLogin,
-    sessionLogin: sessionLoginFor(
-      opensLinked ? undefined : starter,
-      endpointOf(state, workspace),
-    ),
+    sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),
     mention: mention?.tree,
     pointer: fresh ? undefined : pointerOf(state),
   }

@@ -1,5 +1,4 @@
 import type { SessionLogin } from '../components/chat/SessionLogin'
-import { endpointLogins } from '../fixtures/logins'
 import { memberViewer, people, you, type PersonKey } from '../fixtures/members'
 import { linkedSession, workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
@@ -44,30 +43,14 @@ export function otherStarter(
 }
 
 /**
- * The host of the endpoint of the starter's login, when the state draws a
- * session that runs on Cal's proxy.
- */
-export function endpointOf(
-  state: WorkspaceState,
-  workspace: Workspace,
-): string | undefined {
-  if (state.composer !== 'own-endpoint') return undefined
-  const login = endpointLogins[workspace.choice.agent]
-  return login?.kind === 'endpoint' ? login.host : undefined
-}
-
-/**
  * The display props of the login label in the composer. `member` is the
  * starter when that starter is another member. Without it, the composer has
  * no login label, because a message uses the own login of the viewer: in a
  * session of the viewer, or when a message opens a linked session.
- * `endpoint` is the host of the login of that member when it is an own
- * endpoint.
  */
 export function sessionLoginFor(
   member: PersonKey | undefined,
-  endpoint?: string,
 ): SessionLogin | undefined {
   if (member === undefined) return undefined
-  return { starter: people[member].name, endpoint }
+  return { starter: people[member].name }
 }
