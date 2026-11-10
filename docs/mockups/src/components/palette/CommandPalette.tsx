@@ -2,6 +2,7 @@ import type { Viewport } from '@mokly/mokly'
 import { InputFrame } from '@firna/ui/input'
 import { Archive, ChevronDown, FolderGit2, Search } from 'lucide-react'
 import { repositories } from '../../fixtures/repositories'
+import { pageHost } from '../../fixtures/shortcutHosts'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
@@ -185,7 +186,7 @@ export function CommandPalette(props: {
   if (props.viewport === 'mobile') return <PalettePage content={content} />
   const keys: PaletteKeys = {
     changes: context.shortcuts ?? {},
-    host: context.mac ? 'mac-app' : 'chrome-mac',
+    host: pageHost(context.mac === true),
   }
   return (
     <div className={styles.layer}>

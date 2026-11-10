@@ -935,8 +935,9 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
       from the user requirement of 2026-11-10.
 - [x] Draw Remove in the recorder and the conflict line of a Reset, from
       the agent calls of Milestone 2, in the Mac app and in a browser.
-- [ ] Draw the key of each org in the hover hint of its tile in the org
-      rail, from the questions of Milestone 5 part B.
+- [x] Draw the key of each org in the hover hint of its tile in the org
+      rail, from the questions of Milestone 5 part B. Evidence:
+      `.context/keyboard-shortcuts/shots/round4/`.
       Evidence: `.context/keyboard-shortcuts/shots/round3/`.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark.

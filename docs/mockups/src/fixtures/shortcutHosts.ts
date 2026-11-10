@@ -151,6 +151,15 @@ const hosts: Readonly<Record<ShortcutHost, HostKeys>> = {
   },
 }
 
+/**
+ * The host of a page that does not choose one: the Mac app, or else a
+ * normal Chrome tab on a Mac, which the browser pages draw. Only the
+ * Keyboard shortcuts tab draws the other hosts.
+ */
+export function pageHost(macApp: boolean): ShortcutHost {
+  return macApp ? 'mac-app' : 'chrome-mac'
+}
+
 export function keyboardOf(host: ShortcutHost): Keyboard {
   return hosts[host].keyboard
 }
