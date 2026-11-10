@@ -177,8 +177,10 @@ export async function finishFailedStart(
     try {
       if (!provider) throw new Error('Provider unavailable')
       await deleteSandboxIfPresent(
+        env.DB,
         providerForAccount(env, dependencies.fetch, providerAccount),
-        sandboxId,
+        { sandboxId, providerAccount },
+        dependencies.now(),
       )
       await clearSandboxCleanup(
         env.DB,

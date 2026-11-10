@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { createPreviewHandler } from './handler'
+import { relayResponse } from './relay.test-support'
 import { barrier, bodySource, openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
@@ -22,7 +23,7 @@ it('uses HTTP backpressure to read one response chunk only when the browser requ
   harness.dependencies.fetch = async (request) =>
     new URL(request.url).hostname === 'boat.dev'
       ? base(request)
-      : new Response(source.stream)
+      : relayResponse(source.stream)
   const response = await setup.handler.proxy(
     setup.previewRequest(setup.previewUrl),
   )
