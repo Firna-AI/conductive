@@ -18,6 +18,11 @@
     - The first command-list assertion, at line 30, expected `files.snapshot`, `changes.updated`, `start.updated`, and `workspace.title`. It received an empty list after `fixture.drain()`: `AssertionError: expected [] to deeply equal [ 'files.snapshot', …(3) ]`.
     - An unchanged rerun of `npm run test -- worker/chat/runner-repairs.test.ts` then passed both tests in the file, with no skips. The cause is unproved. The empty list narrows the suspected source to event processing, drain completion, or command observation.
     - Later on 10 November 2026, the full gate of `calummoore/sandbox-startup-diff-error` failed it with the same text, at line 30, with 2,033 passes. That branch changes no Worker code. The first isolated rerun, directly after the gate, failed in the same way. Two later isolated reruns in the same tree passed. A clean worktree of main `a1bbd7f8` passed three runs, one of them with the branch diff applied. So the test can fail without the load of the full gate.
+  - `worker/chat/runner-repair-parts.test.ts:39`: "keeps deltas, old tails with valid counts, and partial or repeated full reports from resolving a tree repair".
+    - On 10 November 2026, the CI of pull request #162 failed this test at commit `f5e1c290`. That branch changed no worker file. The run had 2,004 passes and this one failure.
+    - The assertion at line 39 expected the first refresh command to match `{ type: 'report.refresh', kind: 'files.snapshot' }`. It received `undefined` after `fixture.drain()`: `AssertionError: expected undefined to match object { type: 'report.refresh', …(1) }`.
+    - Five unchanged local runs of `npx vitest run worker/chat/runner-repair-parts.test.ts` then passed all six tests of the file. They ran on a merge of that commit with main `a1bbd7f8`, which changed no file under `worker/chat/` or `worker/test-support/`.
+    - The symptom matches the `runner-repairs.test.ts` case above: no command after the drain. So the suspected source is the same.
   - `worker/lifecycle/provisioning.test.ts`: "recovers an accepted create after its caller closes and the actor restarts".
   - `worker/lifecycle/disk-retention.test.ts`: "keeps a stopped disk through startup and stop failures without a stale stop after user open".
 
