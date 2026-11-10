@@ -2,9 +2,10 @@
 
 This doc holds the requirements and the decisions in force for the keys of
 the keyboard shortcuts: the default keys, the keys of Windows and Linux,
-the keys that each browser keeps, the fixed keys, and the text keys. It
-belongs to [Keyboard shortcuts](keyboard-shortcuts.md), which gives the
-rules and the terms. A decision number names a dated record, as
+the keys that each browser keeps, the keys that the app leaves to each
+browser, the fixed keys, and the text keys. It belongs to
+[Keyboard shortcuts](keyboard-shortcuts.md), which gives the rules and the
+terms. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
 ## The default keys
@@ -45,6 +46,7 @@ rules and the terms. A decision number names a dated record, as
 | Workspace | New workspace | ⌘N, ⌥⌘N | Ctrl+N, Alt+Shift+N | Palette |
 | Workspace | New section | – | – | Palette |
 | Workspace | Archive workspace | ⇧⌘A | Ctrl+Shift+A | Palette |
+| Workspace | Restore workspace | – | – | Palette |
 | Workspace | Open workspace 1 to 9 | ⌘1 to ⌘9, ⌥⌘1 to ⌥⌘9 | Ctrl+1 to Ctrl+9, Alt+Shift+1 to Alt+Shift+9 | Org page |
 | Workspace | Previous workspace | ⌥⌘↑, ⌃⌘↑ | Alt+Shift+↑, Alt+Shift+PageUp | Org page |
 | Workspace | Next workspace | ⌥⌘↓, ⌃⌘↓ | Alt+Shift+↓, Alt+Shift+PageDown | Org page |
@@ -88,11 +90,21 @@ rules and the terms. A decision number names a dated record, as
 
 - A Mac uses the Mac keys. Windows and Linux use the Windows and Linux
   keys.
+- Some rules differ between Windows and Linux:
+  [the keys that the app leaves to the browser](#keys-that-the-app-leaves-to-the-browser),
+  [the text keys](#text-keys), and Ctrl+U in a single-line text field. For
+  each such rule, Android counts as Linux. An unknown system on the Windows
+  and Linux keyboard counts as Windows and as Linux.
+- Reason: an unknown browser already counts the keys of each supported
+  browser. A missed key would take a key of the browser or of a text field
+  from the person.
 - The Windows and Linux keys follow the Mac keys (decision 194):
   - Ctrl takes the place of ⌘, and Shift stays.
   - A Mac key with ⌥ becomes Alt+Shift with the same key.
   - Each second key becomes Alt+Shift with the same key.
-  - Switch to org 1 to 9 use Alt+1 to Alt+9.
+  - Switch to org 1 to 9 use Alt+1 to Alt+9. In a normal tab on Linux, the
+    app leaves these keys to the browser, as
+    [Hosts](keyboard-shortcuts.md#hosts) says.
 - When two commands would get the same key, or a key fails a check, a key
   chosen by hand takes its place, as
   [Keys chosen by hand](#keys-chosen-by-hand) says.
@@ -142,9 +154,9 @@ On Windows and Linux:
 ## Keys that a tab keeps
 
 The table lists the default keys that each browser keeps in a normal tab.
-Every other default key reaches the page there. The app also leaves to the
-browser the keys of its tabs and of its address bar, as
-[Hosts](keyboard-shortcuts.md#hosts) says.
+It does not list the keys that the app leaves to the browser anyway, as
+[Keys that the app leaves to the browser](#keys-that-the-app-leaves-to-the-browser)
+says. Every other default key reaches the page there.
 
 | Browser | Mac | Windows and Linux |
 | --- | --- | --- |
@@ -157,28 +169,26 @@ browser the keys of its tabs and of its address bar, as
   cannot tell when.
 - Firefox lets the page take ⇧⌘T and Ctrl+Shift+T.
 
-## How a key matches
+## Keys that the app leaves to the browser
 
-- A key without ⌥ matches by the character that it types. A key with ⌥
-  matches by its physical key. Reason: on a Mac, ⌥ changes the character,
-  so ⌥⌘N types no N.
-- A digit matches by its physical key in the top row. Reason: French
-  keyboards type digits with Shift.
-- A letter or a digit whose key types another script, such as Cyrillic or
-  Greek, matches by its physical key. Reason: on a Russian layout, Ctrl+K
-  arrives as Ctrl+л, so every letter key would fail, also the palette key.
-- A keypad key counts as the key that it types. So the keypad / with ⌘ is
-  ⌘/, the keypad 8 with Num Lock off is ↑, and the keypad Enter is Enter, a
-  fixed key. Reason: each press then has one key, so the conflict line,
-  Replace, Reset, and the fixed keys see every key that a press can run. A
-  keypad key of its own was rejected, because two keys could then run on
-  one press.
-- A keypad digit stays a key of the keypad, so ⌘ with the keypad 8 does
-  not run Open workspace 8. Reason: a digit matches by its physical key.
-- A punctuation key, such as the / of ⌘/, can sit at another place on
-  another layout. The person can then record another key.
-- On German and French layouts, [ and ] need AltGr. So the bracket keys of
-  Previous tab and Next tab do not work there. Their arrow keys still work.
+The table lists the keys that each browser uses on each system to select a
+tab or to open its address bar. In a normal tab, the app leaves them to the
+browser, as [Hosts](keyboard-shortcuts.md#hosts) says.
+
+| Browser | Mac | Windows | Linux |
+| --- | --- | --- | --- |
+| Chrome and Edge | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L | Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, Ctrl+L |
+| Firefox | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L | Alt+1 to Alt+9, Ctrl+L |
+| Safari | ⌘1 to ⌘9, ⌘L | – | – |
+
+- In Safari, these keys are also kept keys.
+- [Windows and Linux](#windows-and-linux) says how Android and an unknown
+  system count.
+- An unknown browser leaves to the browser the keys of each supported
+  browser on its system.
+- Reason: a key that the app takes by mistake takes a feature of the
+  browser from the person. An unknown browser counts the kept keys in the
+  same way, as [Hosts](keyboard-shortcuts.md#hosts) says.
 
 ## Fixed keys
 
@@ -254,3 +264,5 @@ On Windows and Linux:
 
 In a single-line text field on Linux, Ctrl+U is a text key too, as
 [Keys chosen by hand](#keys-chosen-by-hand) says.
+[Windows and Linux](#windows-and-linux) says how Android and an unknown
+system count for these keys.

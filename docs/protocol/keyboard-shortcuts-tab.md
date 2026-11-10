@@ -63,7 +63,9 @@ app.
   On Windows and Linux it says "Every key goes to the terminal while it
   has the focus."
 - In a normal tab, a key that does not work there is dimmed. Such a key is
-  a kept key, or a key that the app leaves to the browser there.
+  a kept key, or a key that the app leaves to that browser on that system,
+  as [Hosts](keyboard-shortcuts.md#hosts) says. For example, a Chrome tab
+  on Linux dims Alt+1 to Alt+9.
 - One more line then names where the dimmed keys work: in the Mac app on a
   Mac, and in the app that the browser installs when the browser is Chrome
   or Edge.
@@ -95,6 +97,9 @@ app.
 
 - A press on a key records a new key in its place. A press on Add shortcut
   or on + records one more key.
+- [The layout switch](keyboard-shortcuts-matching.md#the-layout-switch)
+  gives the key that the recorder records while a layout switch key is
+  down.
 - The recorder says "Press the keys" until the person presses a key.
 - Escape cancels the recording, and so does Cancel. The row then keeps its
   keys.

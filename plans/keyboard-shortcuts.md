@@ -1168,18 +1168,24 @@ block only the Linux rules, which follow the answers.
       your team make" covers the stored keys, or update the sentence.
 - [x] Check each relative link of each changed Markdown file. Evidence:
       `.context/keyboard-shortcuts/m2/link-check.log`.
-- [ ] Add the Linux rules after decisions 196 and 197.
+- [x] Add the Linux rules after decisions 196 and 197. Agent call,
+      2026-11-10: "How a key matches" and the new rule "The layout
+      switch" move to the new page `docs/protocol/keyboard-shortcuts-matching.md`,
+      because the keys page would pass 300 lines. Report:
+      `.context/keyboard-shortcuts/reports/answers-196-198-docs.md`.
 - [x] State the user's answers to review items 4 and 10 under "Fixed
       keys" and "How a key matches". The guides and the legal pages were
       read in full; none restates a changed fact.
-- [ ] Add Restore workspace, without a default key, to the default keys
+- [x] Add Restore workspace, without a default key, to the default keys
       of `docs/protocol/keyboard-shortcuts-keys.md`.
-- [ ] State decision 198 C in the Settings section of
+- [x] State decision 198 C in the Settings section of
       `docs/protocol/command-palette.md`: the Account group follows the
       order of the Account page, tab by tab.
-- [ ] For the answers to decisions 196 to 198: read both legal pages and
+- [x] For the answers to decisions 196 to 198: read both legal pages and
       each public guide in full, and update each sentence that restates a
       changed fact. Check each relative link of each changed Markdown file.
+      No legal page or guide restates a changed fact. Evidence:
+      `.context/keyboard-shortcuts/m2/link-check-196-198.log`.
 
 ## Milestone 3: The key model
 

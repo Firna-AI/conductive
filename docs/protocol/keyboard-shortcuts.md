@@ -8,11 +8,15 @@ those of the [architecture doc](../architecture.md#terms) and the terms
 below. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
-Two pages belong to this doc:
+Three pages belong to this doc:
 
 - [Keyboard shortcuts: the keys](keyboard-shortcuts-keys.md) gives the
   default keys of each command, the keys of Windows and Linux, the keys
-  that each browser keeps, the fixed keys, and the text keys.
+  that each browser keeps, the keys that the app leaves to each browser,
+  the fixed keys, and the text keys.
+- [Keyboard shortcuts: matching a press](keyboard-shortcuts-matching.md)
+  gives how a press matches a key, also on other keyboard layouts and
+  while a layout switch key is down.
 - [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md) gives
   the tab where a person changes the keys.
 
@@ -40,6 +44,9 @@ app.
   send key.
 - **Text key:** a key that the text fields of a system use to edit or to
   move in text, such as ⌘C or ⌥←.
+- **Layout switch key:** a key that switches the keyboard layout of the
+  system, such as from English to Russian. The browser reports its press
+  as GroupNext, GroupPrevious, GroupFirst, or GroupLast.
 
 ## Commands
 
@@ -132,15 +139,30 @@ app.
   rejected, because the Mac app would then lose ⌘N, ⌘T, and ⌘W. The keys of
   Conductor alone were rejected, because these commands would then have no
   key in a normal tab.
-- In a normal tab, the app leaves to the browser the keys that select its
-  tabs and open its address bar (decision 192). These keys are ⌘1 to ⌘9
-  and ⌘L on a Mac, and Ctrl+1 to Ctrl+9 and Ctrl+L on Windows and Linux.
-- There, Open workspace 1 to 9 and Focus the message field use their second
-  keys. The Mac app and an installed app take these keys too.
+- In a normal tab, the app leaves some keys to the browser (decision 192).
+  They are the keys that the browser uses on its system to select a tab or
+  to open its address bar. Such a key runs no command there, as a kept key
+  does.
+- [Keys that the app leaves to the browser](keyboard-shortcuts-keys.md#keys-that-the-app-leaves-to-the-browser)
+  lists these keys for each browser and system, such as ⌘1 to ⌘9 and ⌘L
+  on a Mac.
+- So Open workspace 1 to 9 and Focus the message field use their second
+  keys where the browser uses their keys from Conductor. The Mac app and
+  an installed app take both keys.
 - Reason: people use these keys of the browser the most. After ⌘L, an
   address that the person types and sends would go to the agent. A tab
   that takes every key that the browser lets through was rejected for
   these reasons.
+- Chrome, Edge, and Firefox on Linux select a tab on Alt+1 to Alt+9. So in
+  a normal tab on Linux, Switch to org 1 to 9 have no default key that
+  works (decision 196). An installed app takes Alt+1 to Alt+9.
+- Firefox on Linux has no action on Ctrl+1 to Ctrl+9. So in Firefox on
+  Linux, Open workspace 1 to 9 keep Ctrl+1 to Ctrl+9.
+- Reason: the person keeps each tab key of the browser, and the Switch to
+  rows of the palette still open every other org. Alt+1 to Alt+9 for the
+  orgs in a Linux tab were rejected for this reason. Other org keys were
+  rejected: Ctrl+Alt+1 to Ctrl+Alt+9 would work on Linux only, and a layout
+  switch can take Ctrl+Shift+1 to Ctrl+Shift+9.
 - Each other key of the browser that a tab lets the page take stays a
   default key, such as ⇧⌘A, which is tab search in Chrome. Where the page
   offers the command, the key runs the command in place of the action of
@@ -196,6 +218,8 @@ app.
   hears it. Without this rule, a key could run its command and also edit
   the text or reach the shell.
 - Each other key goes on to the page and to the browser.
+  [The layout switch](keyboard-shortcuts-matching.md#the-layout-switch)
+  gives the exception while a layout switch key is down.
 - No key allows or denies a Mac command (decision 62). Reason: a stray key
   must never run a command on the Mac of the person.
 
@@ -247,7 +271,7 @@ app.
 - The Worker checks each command and each key of a save, and that a
   command has at most four keys. It rejects a fixed key, and a keypad key
   other than a digit, as
-  [How a key matches](keyboard-shortcuts-keys.md#how-a-key-matches) says.
+  [How a key matches](keyboard-shortcuts-matching.md#how-a-key-matches) says.
   A list with one wrong change saves nothing.
 - The account reply skips a stored command that the app no longer has.
   It also drops a stored key that a save would reject, such as a key that
