@@ -18,7 +18,8 @@ owner. Each commit carries that person's GitHub no-reply address (decision
 start, so current workspaces get it at their next start or resume. Each
 turn command also carries the turn sender's author, and the runner gives it
 to the agent. That part reaches only the workspaces that start from an org
-image built after the change.
+image built after the change. An org variable with one of the four Git
+author names then has no effect (decision 233 A).
 
 The change does not cover signed commits. It also does not cover a personal
 or an org choice of the commit name or email. Decision 232 keeps those as
@@ -322,6 +323,10 @@ Added on 10 November 2026 from the options check of decisions 231 and 232.
 - **Changed on 10 November 2026:** before the report, the options check
   added E, F, and G, made G the wider fix, and changed the category to
   Docs or spec. The recommendation stays A.
+- **Chosen:** A, by the user on 10 November 2026. This approves the stop of
+  org values for the four names. The app's author comes after the org
+  variables, and the guides say that an org variable or a script cannot
+  change it.
 
 ## Design
 
@@ -372,20 +377,22 @@ The protocol docs state the commit author rule and decisions 231 to 233.
 - [ ] Add a commit author section to `docs/protocol/github-tokens.md`. Give
       the turn sender rule, the owner rule, the name rule, and the email
       rule. Cite decisions 231 and 232, with the rejected options and their
-      reasons. Add the rule of decision 233 after the user answers it.
+      reasons. Add the rule of decision 233 A: an org variable with one of
+      the four names has no effect.
 - [ ] Under "Access" in `docs/protocol/agent-instructions.md`, say that
       the commits of a turn name the same member as its token. Link to the
       new section.
-- [ ] After the user answers decision 233, update the env var requirement
-      of `docs/protocol/workspaces-and-sandboxes.md`. Say which names the
-      app sets.
+- [ ] Update the env var requirement of
+      `docs/protocol/workspaces-and-sandboxes.md` for decision 233 A. Say
+      that the app's own names, such as the four Git author names, replace
+      an org variable with the same name.
 - [ ] Check `docs/architecture.md` and `docs/architecture/components.md`.
       Add the commit author where they list the Git access of a sandbox.
 - [ ] Check each relative link of each changed Markdown file.
 
 ## Milestone 2: Owner default in the sandbox variables
 
-Depends on: 1, and the answer to decision 233
+Depends on: 1
 
 Each start, resume, and disk retention restart gives the cloud computer the
 workspace owner's author. Current workspaces get it at their next start or
@@ -398,11 +405,11 @@ resume, with no image build.
       helper. Delete its inline author.
 - [ ] Make one builder for the sandbox variables of
       `worker/lifecycle/start-machine.ts` and
-      `worker/lifecycle/disk-retention.ts`. Add the owner's author with the
-      precedence that decision 233 chooses.
+      `worker/lifecycle/disk-retention.ts`. Add the owner's author after the
+      org variables, as decision 233 A says.
 - [ ] Extend `worker/lifecycle/runner-environment.test.ts`. A create and a
       resume give the owner's author. An org variable `GIT_AUTHOR_NAME`
-      gets the precedence of decision 233. An owner without a usable
+      does not replace it. An owner without a usable
       display name gets the login. See each new assertion fail first.
 - [ ] Update the variables table of `image/README.md`. Add a short commit
       author section to `image/github.md`.
@@ -452,7 +459,7 @@ The terminal and the scripts keep the owner's author.
 
 ## Milestone 5: Public guides, Privacy page, and comparison row
 
-Depends on: 1, and the answer to decision 233
+Depends on: 1
 
 The public text says who a commit names.
 
@@ -462,9 +469,11 @@ The public text says who a commit names.
 - [ ] In the GitHub account section of
       `src/marketing/docs/terminal-and-previews.md`, say that commits name
       the same person as the table, with their private GitHub address.
-- [ ] Give the rule of decision 233 in `src/marketing/docs/cloud-computer.md`
-      and `src/marketing/docs/security.md`, where they say that each
-      workspace gets every org value.
+- [ ] Give the rule of decision 233 A in
+      `src/marketing/docs/cloud-computer.md` and
+      `src/marketing/docs/security.md`, where they say that each workspace
+      gets every org value. An org variable or a script cannot change the
+      commit author.
 - [ ] Read the Privacy page in `src/marketing/privacy.ts` and
       `src/marketing/privacy-uses.ts` in full. Say that commits carry the
       member's GitHub name and no-reply address, and that each reader of
