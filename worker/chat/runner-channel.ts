@@ -1,4 +1,5 @@
-import { errorSummary, warnWorker } from '../warnings'
+import { warnWorker } from '../warnings'
+import { errorSummary, WarningId } from '../warning-values'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
@@ -35,7 +36,9 @@ export class RunnerChannel {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
-    this.delivery = new RunnerDelivery(store, dependencies, publish)
+    this.delivery = new RunnerDelivery(store, dependencies, publish, () =>
+      this.flush(),
+    )
     this.repairs = new RepairDelivery(store, publish)
   }
 
@@ -96,9 +99,11 @@ export class RunnerChannel {
       try {
         await this.handle(active, value)
       } catch (error) {
-        warnWorker(
-          `The runner of workspace ${active.workspace.id} closes after a failed message: ${errorSummary(error)}`,
-        )
+        warnWorker({
+          kind: 'runner_message_failed',
+          workspaceId: WarningId.checked(active.workspace.id),
+          error: errorSummary(error),
+        })
         active.peer.close()
         throw error
       }

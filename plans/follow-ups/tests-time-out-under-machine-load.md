@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, from the branch `calummoore/chat-title-rename`, where several agents ran tests, a mockup build, and Chrome on one machine at the same time.
-- **Location:** `worker/chat/retry.test.ts`, `worker/chat/retry-queue.test.ts`, `worker/lifecycle/runner-environment.test.ts`, and two Git tests of the agent runner under `runner/src/`.
+- **Location:** `worker/chat/retry.test.ts`, `worker/chat/retry-queue.test.ts`, `worker/lifecycle/runner-environment.test.ts`, `worker/lifecycle/disk-retention.test.ts`, and two Git tests of the agent runner under `runner/src/`.
 - **Reason:** The branch changed none of these tests, and each passed alone and in two complete gate runs.
 
 - **Source:** Implementation. **Category:** Test.
@@ -24,6 +24,6 @@
   - **C.** Change nothing, and rerun a failed gate. Effort: Small.
 - **Left out:** A longer time limit. The `testing` skill needs the user's approval for it, and it hides the slow step.
 - **Wider fix:** A. It removes the dependence on machine speed.
-- **Previous examples:** `plans/follow-ups/start-time-limit-test-under-load.md` and `plans/follow-ups/harness-test-speed.md`.
+- **Previous examples:** `plans/follow-ups/start-time-limit-test-under-load.md` and `plans/follow-ups/harness-test-speed.md`. On 10 November 2026, on the branch `calummoore/mac-app-downloads-site`, the complete gate ran beside a review session that ran type checks. `worker/lifecycle/disk-retention.test.ts > ends failed maintenance and refuses destructive resume of a normal errored workspace` failed with "Error: Test timed out in 15000ms." It passed alone, and that branch changed no lifecycle file.
 - **Recommendation:** A. Each test then fails only for a real defect.
 - **Action:** ask the user, because these are tests of code outside the branch, and A and B each cost real time while the failures came only under unusual load.

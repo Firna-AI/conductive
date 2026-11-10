@@ -1,15 +1,13 @@
 import type { ApiClient } from '../../app/api/client'
 import { readWorkspaces } from '../../app/api/read-workspaces'
+import { uploadAttachment } from '../../app/attachment-upload'
+import type { UploadHooks } from '../../app/draft-files'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { MODELS_PATH, type AgentChoice } from '../../shared/agents'
 import { orgPath, type EmptyRequest } from '../../shared/api'
 import { chatHistoryPath } from '../../shared/events'
-import { filePaths } from '../../shared/files'
 import { membersPath } from '../../shared/members'
-import type {
-  SendMessageRequest,
-  UploadAttachmentRequest,
-} from '../../shared/messages'
+import type { SendMessageRequest } from '../../shared/messages'
 import {
   retryMessagePath,
   sessionPath,
@@ -32,7 +30,6 @@ import {
 } from '../../shared/workspaces'
 import {
   readAccount,
-  readAttachmentResponse,
   readChangeModel,
   readInterrupt,
   readMembers,
@@ -71,10 +68,7 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
   return {
     workspace: () =>
       client.get(workspacePath(orgId, workspaceId), readWorkspaceResponse),
-    /**
-     * The workspaces of the org that the reader may see, with the archived
-     * ones, which the chips of the chat find.
-     */
+    /** The visible workspaces of the org, including archived workspaces. */
     workspaces: () => client.get(workspacesPath(orgId), readWorkspaces),
     resume: () =>
       client.send(
@@ -142,13 +136,15 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
       ),
     changeModel: (id: string, request: ChangeModelRequest) =>
       client.send('PUT', routes(id).model, request, readChangeModel),
-    attach: (request: UploadAttachmentRequest) =>
-      client.send(
-        'POST',
-        filePaths.attachments(orgId, workspaceId),
-        request,
-        readAttachmentResponse,
-      ),
+    /** Uploads one file of a draft through the one upload operation. */
+    upload: (file: File, hooks: UploadHooks) =>
+      uploadAttachment({
+        api: client,
+        orgId,
+        target: { type: 'workspace', workspaceId },
+        file,
+        ...hooks,
+      }),
   }
 }
 

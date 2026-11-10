@@ -29,8 +29,8 @@ it.each([
     boat.stopReplyState = native
     boat.failStop = refused
     const readCount = boat.sandboxReads.length
-    fixture.setTime(runtime.dependencies.now() + IDLE_MS)
-    await actor.alarm()
+    await fixture.setTime(runtime.dependencies.now() + IDLE_MS)
+    await actor.advance()
     expect(await actor.readLifecycle()).toMatchObject({
       state: expected,
       runningSessions: [],

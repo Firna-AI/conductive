@@ -8,7 +8,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { cleanupDeletedOrgs } from './cleanup'
-import { deletionFixture, providerRequests } from './deletion-test-support'
+import { providerRequests } from './deletion-test-support'
 import type { RestoreOrgMaintenance } from './maintenance-contract'
 import {
   lifecycleFixture,
@@ -16,7 +16,12 @@ import {
   stopWorkspace,
   DAY_MS,
 } from './maintenance-test-support'
-import { write } from './members-test-support'
+import {
+  memberFixture,
+  membersClient,
+  seedWorkspace,
+  write,
+} from './members-test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -29,15 +34,25 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('retries a Restore maintenance handoff and lets a newer Delete cancel its intent', async () => {
-  const { org, admin, member, client } = await deletionFixture(harness)
-  const lifecycle = lifecycleFixture(client)
+async function deletedWorkspaceFixture() {
+  const fixture = await memberFixture(harness)
+  const { org, admin, member } = fixture
+  await seedWorkspace(harness, org, member.user)
   await stopWorkspace(harness, 'workspace-one', 13)
+  const client = membersClient(harness)
+  const lifecycle = lifecycleFixture(client)
   await client.request(
     deleteOrgPath(org.id),
     admin.session,
     write({ name: org.name }),
   )
+  harness.boat.requests = []
+  return { ...fixture, client, lifecycle }
+}
+
+it('keeps one failed Restore intent across retries and cancels it after a newer Delete', async () => {
+  const { org, admin, member, client, lifecycle } =
+    await deletedWorkspaceFixture()
   const failedHandoffs: string[] = []
   Object.assign(client.hooks, {
     restoreOrgMaintenance: async (input: RestoreOrgMaintenance) => {
@@ -76,6 +91,11 @@ it('retries a Restore maintenance handoff and lets a newer Delete cancel its int
     await cleanupDeletedOrgs(harness.env, client.dependencies, client.hooks),
   ).toEqual({ purged: [], pending: [] })
   expect(lifecycle.restored).toEqual([])
+})
+
+it('retries a scheduled Restore handoff after retention and activates the original request', async () => {
+  const { org, admin, member, client, lifecycle } =
+    await deletedWorkspaceFixture()
   client.setTime(TEST_TIME + 23 * 3600000)
   harness.boat.requests = []
   Object.assign(client.hooks, {

@@ -180,7 +180,7 @@ GitHub CLI wrapper, their token rules, and their tests.
   snapshot holds a secret of a workspace.
 - The Worker gives each read token only to the Git command that copies its
   repository. The Worker revokes it before the build goes on, as
-  [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
+  [GitHub tokens](../docs/protocol/tokens-and-secrets.md#github-tokens)
   says. The software step and the install script run only after that.
 - The workspace object keeps the env values and output chunks of a start
   only in encrypted form. Before it returns a start log, it masks the
@@ -263,5 +263,5 @@ build, a disk retention restart, and an unfinished start start no runner.
   the org image, the startup script, and the env vars.
 - [Access and security](../docs/protocol/access-and-security.md): what a
   sandbox holds, GitHub tokens, and the terminal.
-- [Architecture](../docs/architecture.md#sandbox-software): the sandbox
+- [Architecture](../docs/architecture/components.md#sandbox-software): the sandbox
   software and its parts.

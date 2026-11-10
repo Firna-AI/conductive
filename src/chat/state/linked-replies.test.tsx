@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
+import { readyIds } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath } from '../../shared/events'
 import { filePaths } from '../../shared/files'
@@ -213,13 +214,15 @@ describe('the draft when a reply opens a linked session', () => {
     expect(snapshot(chat).activeSessionId).toBe(LINKED)
     expect(chat.draftOf(LINKED)?.id).toBe(draftId)
     expect(chat.draftOf(LINKED)?.text).toBe('Also the error state.')
-    expect(chat.draftOf(LINKED)?.uploads).toBe(1)
+    expect(chat.draftOf(LINKED)?.files.map((item) => item.state)).toEqual([
+      'uploading',
+    ])
     expect(chat.draftOf(first)?.id).not.toBe(draftId)
     expect(chat.draftOf(first)?.text).toBe('')
     chat.held.splice(0, 1)[0]()
     await attaching
     const files = (sessionId: string) =>
-      chat.draftOf(sessionId)?.attachments.map((item) => item.id)
+      readyIds(chat.draftOf(sessionId)?.files ?? [])
     expect(files(LINKED)).toEqual(['late-file'])
     expect(files(first)).toEqual([])
     expect(pendingIn(chat, LINKED)).toEqual([words])

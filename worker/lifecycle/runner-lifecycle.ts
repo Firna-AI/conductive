@@ -13,7 +13,6 @@ export async function applyRunnerLifecycle(
   turns: TurnScopes,
   event: RunnerEvent,
   publish?: LifecyclePublisher,
-  occurredAt?: number,
 ): Promise<void> {
   const state = await lifecycle.read()
   if (
@@ -29,10 +28,10 @@ export async function applyRunnerLifecycle(
     await lifecycle.runnerReady(publish)
   } else if (event.type === 'turn.started') {
     const turn = await turns.find(event.turnId)
-    if (turn) await lifecycle.turn(turn.sessionId, true, publish, occurredAt)
+    if (turn) await lifecycle.turn(turn.sessionId, true, publish)
   } else if (event.type === 'turn.completed' || event.type === 'turn.failed') {
     const turn = await turns.remove(event.turnId)
-    if (turn) await lifecycle.turn(turn.sessionId, false, publish, occurredAt)
+    if (turn) await lifecycle.turn(turn.sessionId, false, publish)
   } else if (event.type === 'start.updated') {
     await lifecycle.reportStart(event.start, publish)
   }
