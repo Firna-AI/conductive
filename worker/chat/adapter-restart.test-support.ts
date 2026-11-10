@@ -5,6 +5,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { chatHistoryPath, workspaceEventsPath } from '../../src/shared/events'
 import { retryMessagePath, sessionsPath } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
+import { closeBrowserPeers } from './browser-native.test-support'
 import { closeSockets, SocketInbox } from './adapter-sockets.test-support'
 import {
   MACHINE_ORIGIN,
@@ -193,7 +194,8 @@ export async function verifyAdapterRestart(
       },
     },
   })
-  await closeSockets(resumedRunner, resumedBrowser)
+  await closeBrowserPeers(runtime, headers, resumedBrowser)
+  await closeSockets(resumedRunner)
   await runtime.unsafeEvictDurableObject('chat-adapter-tests', 'Workspace', {
     name: WORKSPACE_ID,
   })

@@ -1,5 +1,6 @@
 import { generateKeyPairSync } from 'node:crypto'
 
+import type { WebSocket } from 'miniflare'
 import { beforeAll, expect, it } from 'vitest'
 
 import { createGitHubActions } from '../../src/github/githubActions'
@@ -21,9 +22,10 @@ beforeAll(async () => {
   bundle = await outerWorkerBundle('worker/features/entry.test-support.ts')
 })
 
-it('routes member merges through the real Worker, retains poll jobs after eviction, and publishes the merged head', async () => {
+it('routes member merges through the real Worker, retains poll jobs after eviction and socket wake, and publishes the merged head', async () => {
   const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
   let api: RepositoryGitHub | undefined
+  let socket: WebSocket | undefined
   const fixture = await featureFixture(bundle, {
     configuration: {
       GITHUB_APP_PRIVATE_KEY: privateKey
@@ -101,49 +103,52 @@ it('routes member merges through the real Worker, retains poll jobs after evicti
       { headers: { Upgrade: 'websocket' } },
     )
     expect(stream.status).toBe(101)
-    const socket = stream.webSocket
+    socket = stream.webSocket ?? undefined
     if (!socket) throw new Error('Missing workspace socket.')
     const inbox = new SocketInbox(socket)
     socket.accept()
-    try {
-      expect(record(record(await inbox.next()).history).events).toEqual([])
-      const job = api.merges.jobs.values().next().value
-      if (!job) throw new Error('Missing fake merge job.')
-      job.state = 'merged'
-      expect(await actions.mergeResult(started.mergeId)).toEqual({
-        state: 'merged',
-      })
-      expect(await inbox.next()).toMatchObject({
-        type: 'event',
-        envelope: {
-          event: {
-            type: 'github.updated',
-            banner: { state: 'merged', pullRequest: { headSha: HEAD_SHA } },
-          },
+    expect(record(record(await inbox.next()).history).events).toEqual([])
+    const woke = await fixture.hibernate()
+    expect(woke.after.instance).not.toBe(woke.before.instance)
+    expect(woke.before.sockets).toEqual([1])
+    expect(woke.after.sockets).toEqual([1])
+    const job = api.merges.jobs.values().next().value
+    if (!job) throw new Error('Missing fake merge job.')
+    job.state = 'merged'
+    expect(await actions.mergeResult(started.mergeId)).toEqual({
+      state: 'merged',
+    })
+    expect(await inbox.next()).toMatchObject({
+      type: 'event',
+      envelope: {
+        event: {
+          type: 'github.updated',
+          banner: { state: 'merged', pullRequest: { headSha: HEAD_SHA } },
         },
-      })
-      expect(
-        api.requests
-          .filter((request) =>
-            new URL(request.url).pathname.includes('merge-async'),
-          )
-          .map((request) => request.headers.get('Authorization')),
-      ).toEqual([
-        'Bearer member-merge-token',
-        'Bearer member-merge-token',
-        'Bearer member-merge-token',
-      ])
-      expect(
-        api.requests
-          .filter((request) =>
-            new URL(request.url).pathname.includes('merge-async'),
-          )
-          .map((request) => request.method),
-      ).toEqual(['PUT', 'GET', 'GET'])
-    } finally {
-      await closeSockets(socket)
-    }
+      },
+    })
+    expect(
+      api.requests
+        .filter((request) =>
+          new URL(request.url).pathname.includes('merge-async'),
+        )
+        .map((request) => request.headers.get('Authorization')),
+    ).toEqual([
+      'Bearer member-merge-token',
+      'Bearer member-merge-token',
+      'Bearer member-merge-token',
+    ])
+    expect(
+      api.requests
+        .filter((request) =>
+          new URL(request.url).pathname.includes('merge-async'),
+        )
+        .map((request) => request.method),
+    ).toEqual(['PUT', 'GET', 'GET'])
   } finally {
-    await fixture.dispose()
+    await Promise.all([
+      socket ? closeSockets(socket) : Promise.resolve(),
+      fixture.dispose(),
+    ])
   }
 })

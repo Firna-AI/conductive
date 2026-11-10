@@ -74,7 +74,8 @@ Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
 
 A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
-The agent's model requests pass through Conductive, which adds the session starter's login before sending them to Anthropic or OpenAI.
+Its model requests and answers pass through Conductive on Cloudflare.
+Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
 
 Each turn there gets a temporary credential called a turn token.
 It gives no copy of the stored login.
@@ -86,8 +87,8 @@ After **Stop**, the token can start no new request.
 Any request that still runs ends within 30 seconds after the turn ends.
 Changing or removing the session starter's login ends the turn at its next model request.
 The same happens if that member loses org access.
-Programs that keep running can read the tokens of later turns, including turns in other members' sessions.
-Agent settings in the repository can send model requests and their turn token to another address.
+A program that keeps running can read the tokens of later turns, including turns in other members' sessions.
+Agent settings in the repository can send model requests, with their content and their turn token, to another address.
 
 Review those settings in repositories you use.
 Conductive keeps no copy of a model request or answer as it passes them on.

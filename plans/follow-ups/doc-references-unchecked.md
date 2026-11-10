@@ -44,3 +44,7 @@
   - The file-mentions link recorded above remains broken on both captured parents. Its intended heading remains in `docs/protocol/tokens-and-secrets.md`.
   - Captured main fixes the older preview link to `../architecture/components.md#sandbox-software`. That earlier example is closed.
   - The changed internal guides pass their link checks. These unchanged upstream references need correction with the approved reference-check work. This branch adds no gate and changes neither protocol requirement.
+- **Evidence update, 2026-11-10:** captured main `247c772afaf09cae29856f67dc4ada41b646cb20` fixes the pricing and file-mention references recorded above.
+  - Pricing now links to `docs/protocol/conductor-comparison.md`.
+  - File mentions now links to `docs/protocol/tokens-and-secrets.md#secrets-that-users-enter`.
+  - Both observations are closed. The approved future reference check remains open. This branch adds no gate.

@@ -81,9 +81,10 @@ command start. For a workspace object, it:
   steps run only to advance a queued start, as
   [Continue](continue.md#the-reservation) says
 
-[The object alarm](object-alarm.md) gives `WorkspaceAlarms`, the one
-scheduler of the object alarm: the due time of each owner, the run lease,
-and the steps at the end of each run.
+[The object alarm scheduler](alarm-scheduler.md) gives `WorkspaceAlarms`,
+the one scheduler of the object alarm: the owners and their due times, the
+security sources, Continue, the run lease, and the steps at the end of each
+run.
 
 The deadline and stop actions use the sandbox state in each Boat reply.
 When Boat refuses an action, they read the sandbox state once. The

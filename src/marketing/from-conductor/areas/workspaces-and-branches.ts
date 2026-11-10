@@ -13,7 +13,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Local workspaces',
     status: 'different',
-    note: 'Each workspace runs on its own cloud computer instead of your Mac. Importing local Conductor workspaces through the Mac app is planned.',
+    note: 'Each workspace runs on its own cloud computer instead of your Mac. Importing local Conductor workspaces through the Mac app is in progress.',
   },
   {
     id: 'add-a-project',

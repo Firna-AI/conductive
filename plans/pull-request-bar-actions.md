@@ -1144,6 +1144,16 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: Move unchanged toast and copy state fields into feedbackState.ts. Reason: The existing sibling schema pattern keeps the combined workspace state below the current 300-line limit.
 - Design call on 10 November 2026: Keep fresh combined hero and Mac captures and restore only the measured mobile icon noise. Reason: Both parents share the mobile content, while the four conflicted images must reflect current routine navigation and action controls.
 - Design call on 10 November 2026: Use the existing member-merge surface for the outgoing browser action check. Reason: The routine development surface returns a recorded message for every send, so its run-link and action-display checks are reported separately.
+- Design call on 10 November 2026: Advance Continue through main's guarded regular alarm task. Reason: Durable Continue work must survive wake while browser, runner and device security deadlines remain outside lifecycle fences.
+- Design call on 10 November 2026: Retain callingToolTurn in WorkspaceLifecycle beside native socket callbacks. Reason: The inherited RPC already has the same behavior and keeps the composed Workspace below the existing file limit.
+- Design call on 10 November 2026: Extend the two existing real-route cases with native hibernating eviction. Reason: Their Merge publication and Continue reservation assertions must cover the newly combined wake path without duplicating cases.
+- Design call on 10 November 2026: Use alarm-scheduler.md as the canonical alarm guide and retain object-alarm.md as a pointer. Reason: Main's current alarm rules and every earlier branch anchor stay available in one complete home.
+- Design call on 10 November 2026: Retain explicit model request and answer transport through Conductive on Cloudflare. Reason: That existing disclosure must coexist with the branch's login expiry, image protection and member action facts.
+- Design call on 10 November 2026: Keep the current combined Terms revision during the hibernation integration. Reason: All seven legal and consent sources remain unchanged and the socket change adds no new recipient or retention claim.
+- Design call on 10 November 2026: Close only the resolved pricing and file-mention reference observations. Reason: Captured main repairs both targets while the approved future reference-check work stays open without a new gate here.
+- Design call on 10 November 2026: Retain all 201 comparison rows and main's Planned Chat links status. Reason: The integration adds no chat-link feature and preserves all seven available action upgrades.
+- Design call on 10 November 2026: Use HTTP controls for the two real-route wake fixtures. Reason: Miniflare RPC calls retain active object references and block eviction; the HTTP probe reconstructs the instance while keeping the original socket.
+- Design call on 10 November 2026: Close final fixture sockets together with runtime disposal. Reason: Main's native cleanup requires both operations to proceed together, while mid-case socket closes still await readiness before restart.
 
 ## Milestone 1: Mockups
 
@@ -1625,15 +1635,15 @@ The completed delivery above remains history and is not reopened.
 
 Depends on: 12
 
-- [ ] Integrate captured main `247c772afaf09cae29856f67dc4ada41b646cb20`.
+- [x] Integrate captured main `247c772afaf09cae29856f67dc4ada41b646cb20`.
       Preserve hibernating browser, runner and device connections, native
       socket recovery, alarm ownership, access expiry and membership fences.
-- [ ] Keep private member Merge jobs, durable Continue reservations,
+- [x] Keep private member Merge jobs, durable Continue reservations,
       credential scopes, branch/base context, notes, files and queued turns
       correct through wake-up and reconstruction.
-- [ ] Resolve and audit all runtime and document combinations. Preserve
+- [x] Resolve and audit all runtime and document combinations. Preserve
       current public, legal and comparison facts without a new policy.
-- [ ] Run bounded affected checks and required material regression proofs
+- [x] Run bounded affected checks and required material regression proofs
       and repeats. Keep source, types, tests and protocol contracts aligned.
 - [ ] Audit the two-parent merge and resolutions. Commit and push all
       current source for the final record and complete final-head CI.
@@ -1641,6 +1651,8 @@ Depends on: 12
 The routines merge `51616db4` is pushed and locally verified. Main's later
 hibernation change creates confirmed conflicts before its CI can start.
 The earlier green `b1dd3619` remains evidence for that earlier tree only.
+
+Evidence: `.context/pull-request-bar-actions/hibernation-base-integration/backend-phase2-report.md`, `root-incoming-preservation.json`, and the internal/public owner reports.
 
 ## Milestone 15: Renewed final record and CI
 

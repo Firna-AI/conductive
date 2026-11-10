@@ -23,6 +23,7 @@ import { WorkspaceChat } from './backend'
 import { firstMessageIdentity } from './first-message'
 import { projectWorkspaceTitle } from './workspace-title'
 import type { ChatCallbackPublisher, ChatDependencies } from './types'
+import { WorkspaceSockets } from '../native-sockets'
 import {
   observeWorkspaceCallbacks,
   type WorkspaceCallbackObservers,
@@ -38,8 +39,15 @@ export type WorkspaceChatResolvers = Partial<
     | 'scheduleBrowserCheck'
     | 'randomId'
     | 'runTitleModel'
+    | 'readConnectionAccess'
+    | 'readRunnerAccess'
+    | 'browserOpened'
+    | 'browserClosed'
   >
-> & { callbackObservers?: WorkspaceCallbackObservers }
+> & {
+  callbackObservers?: WorkspaceCallbackObservers
+  socketAutoResponseAt?: (socket: WebSocket) => number | null
+}
 
 function callbackPublisher(publish: ChatCallbackPublisher): LifecyclePublisher {
   return ({ event, occurredAt }) => publish(event, occurredAt)
@@ -69,7 +77,11 @@ export function createWorkspaceIntegration(
       return response
     },
   }
-  const alarms = new WorkspaceAlarms(nativeAlarmStorage(storage))
+  const alarms = new WorkspaceAlarms(
+    nativeAlarmStorage(storage),
+    nativeAlarmStorage(context.storage),
+  )
+  const sockets = new WorkspaceSockets(context)
   const stoppedHooks: ((id: string) => Promise<void>)[] = []
   const files = new WorkspaceFiles(
     durableFilesStorage(storage),
@@ -77,88 +89,100 @@ export function createWorkspaceIntegration(
   )
   const matches = (name: string) =>
     env.WORKSPACES.idFromName(name).equals(context.id)
-  const chat: WorkspaceChat = new WorkspaceChat(storage, env, {
-    ...resolvers,
-    now,
-    matchesObject: matches,
-    waitUntil: (promise) => context.waitUntil(promise),
-    runnerAttached: (_workspaceId, connectionId, send) => {
-      files.runner.attach(connectionId, (command) => {
-        context.waitUntil(
-          send(command).then(
-            (sent) => {
-              if (!sent) files.runner.detach(connectionId)
-            },
-            () => files.runner.detach(connectionId),
-          ),
-        )
-      })
-    },
-    runnerDetached: (connectionId) => files.runner.detach(connectionId),
-    runnerHello: async (_id, publish) =>
-      controller.recoverLifecycle(callbackPublisher(publish)),
-    ...observeWorkspaceCallbacks(
-      {
-        turnEnded: async (_id, turnId, publish) => {
-          try {
-            const fence = await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY)
-            if (fence && fence.mode !== 'active') return
-            await controller.finishLifecycleTurn(
-              turnId,
-              callbackPublisher(publish),
-            )
-          } finally {
-            context.waitUntil(devices.reconcile())
-          }
-        },
-        receiveFileResult: async (value, connectionId) => {
-          files.runner.receive(connectionId, value)
-        },
-        runnerReady: async (_id, publish) => {
-          await controller.reportRunnerLifecycle(
-            { type: 'runner.ready' },
-            callbackPublisher(publish),
+  const chat: WorkspaceChat = new WorkspaceChat(
+    storage,
+    env,
+    {
+      ...resolvers,
+      now,
+      matchesObject: matches,
+      waitUntil: (promise) => context.waitUntil(promise),
+      browserAlarm: (at) => alarms.set('browser', at),
+      runnerAlarm: (at) => alarms.set('runner', at),
+      runnerAttached: (_workspaceId, connectionId, send) => {
+        files.runner.attach(connectionId, (command) => {
+          context.waitUntil(
+            send(command).then(
+              (sent) => {
+                if (!sent) files.runner.detach(connectionId)
+              },
+              () => files.runner.detach(connectionId),
+            ),
           )
-          await controller.acknowledgeLifecycleFirstMessage(
-            callbackPublisher(publish),
-          )
-        },
-        runnerDisconnected: async (_id, publish) =>
-          controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
-        turnDispatching: async (_id, turn, publish) => {
-          if (await pendingContinue(storage)) return false
-          const state = await controller.readLifecycle()
-          if (!state) return true
-          if (!['ready', 'working', 'unread', 'input'].includes(state.state))
-            return false
-          await controller.registerLifecycleTurn(
-            turn,
-            callbackPublisher(publish),
-          )
-          const registered = await controller.readLifecycle()
-          return registered?.state === 'working'
-        },
-        turnDispatchFailed: async (_id, turnId, publish) =>
-          controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
-        runnerEventStored: async (envelope, publish) => {
-          const event = envelope.event
-          if (event.type === 'turn.started' || event.type === 'start.updated') {
-            await controller.reportRunnerLifecycle(
-              event,
-              callbackPublisher(publish),
-            )
-          }
-          await projectWorkspaceTitle(env.DB, envelope, now())
-        },
+        })
       },
-      resolvers.callbackObservers,
-    ),
-  })
+      runnerDetached: (connectionId) => files.runner.detach(connectionId),
+      runnerHello: async (_id, publish) =>
+        controller.recoverLifecycle(callbackPublisher(publish)),
+      ...observeWorkspaceCallbacks(
+        {
+          turnEnded: async (_id, turnId, publish) => {
+            try {
+              const fence =
+                await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY)
+              if (fence && fence.mode !== 'active') return
+              await controller.finishLifecycleTurn(
+                turnId,
+                callbackPublisher(publish),
+              )
+            } finally {
+              context.waitUntil(devices.reconcile())
+            }
+          },
+          receiveFileResult: async (value, connectionId) => {
+            files.runner.receive(connectionId, value)
+          },
+          runnerReady: async (_id, publish) => {
+            await controller.reportRunnerLifecycle(
+              { type: 'runner.ready' },
+              callbackPublisher(publish),
+            )
+            await controller.acknowledgeLifecycleFirstMessage(
+              callbackPublisher(publish),
+            )
+          },
+          runnerDisconnected: async (_id, publish) =>
+            controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
+          turnDispatching: async (_id, turn, publish) => {
+            if (await pendingContinue(storage)) return false
+            const state = await controller.readLifecycle()
+            if (!state) return true
+            if (!['ready', 'working', 'unread', 'input'].includes(state.state))
+              return false
+            await controller.registerLifecycleTurn(
+              turn,
+              callbackPublisher(publish),
+            )
+            const registered = await controller.readLifecycle()
+            return registered?.state === 'working'
+          },
+          turnDispatchFailed: async (_id, turnId, publish) =>
+            controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
+          runnerEventStored: async (envelope, publish) => {
+            const event = envelope.event
+            if (
+              event.type === 'turn.started' ||
+              event.type === 'start.updated'
+            ) {
+              await controller.reportRunnerLifecycle(
+                event,
+                callbackPublisher(publish),
+              )
+            }
+            await projectWorkspaceTitle(env.DB, envelope, now())
+          },
+        },
+        resolvers.callbackObservers,
+      ),
+    },
+    { sockets, storage: context.storage },
+  )
   const devices = new DeviceRuntime(
     env,
     storage,
     chat,
     matches,
+    { context, sockets, autoResponseAt: resolvers.socketAutoResponseAt },
     (when) => alarms.set('devices', when),
     now,
     async (request, at, publish) => {
@@ -248,6 +272,7 @@ export function createWorkspaceIntegration(
     controller,
     files,
     alarms,
+    sockets,
     withGeneration: async <T>(operation: () => Promise<T>): Promise<T> => {
       const prior = generation
       generation =

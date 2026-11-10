@@ -25,10 +25,9 @@ import { createWorkspaceContinue } from './lifecycle/continue-composition'
 import { pendingContinue } from './lifecycle/continue-types'
 import type { User } from '../src/shared/api'
 import type { ContinueWorkspaceRequest } from '../src/shared/workspaces'
-import { orgLifecycleActive } from './members/composition-data'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
-import { expireWorkspacePreviews, runWorkspaceAlarms } from './workspace-alarms'
 import type { ConnectionScheduler } from './security/connection-access'
+import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 
 export class Workspace extends AttachmentWorkspace {
   private readonly features: WorkspaceFeatures
@@ -36,6 +35,7 @@ export class Workspace extends AttachmentWorkspace {
   private readonly members: WorkspaceMembersReceiver
   private readonly continuation: WorkspaceContinue
   private readonly now: () => number
+  private readonly alarmRunner: WorkspaceAlarmRunner
 
   constructor(
     context: DurableObjectState,
@@ -92,6 +92,21 @@ export class Workspace extends AttachmentWorkspace {
       integration: this.integration,
       github: this.github,
       run: (operation) => this.run(operation),
+    })
+    this.alarmRunner = new WorkspaceAlarmRunner({
+      context,
+      env,
+      now,
+      alarms: this.integration.alarms,
+      storage: this.integration.storage,
+      browsers: this.chat.browsers,
+      runner: this.chat.runner.connections,
+      devices: this.devices,
+      members: this.members,
+      github: this.github,
+      continuation: this.continuation,
+      features: this.features,
+      lifecycle: () => this.alarmLifecycle(),
     })
   }
 
@@ -171,41 +186,12 @@ export class Workspace extends AttachmentWorkspace {
     })
   }
 
-  async alarm(): Promise<void> {
-    if (!(await this.members.active())) return
-    const fence = await this.members.readFence()
-    if (
-      fence &&
-      !(await orgLifecycleActive(this.env.DB, fence.orgId, fence.generation))
-    ) {
-      await this.integration.alarms.defer(this.now(), this.now() + 30_000)
-      await this.integration.alarms.set('lifecycle:access', this.now() + 30_000)
-      return
-    }
-    await runWorkspaceAlarms(this.integration.alarms, this.now, {
-      continuation: async () => {
-        if (await pendingContinue(this.integration.storage))
-          await this.continuation.advance()
-      },
-      lifecycleAllowed: async () =>
-        !(await pendingContinue(this.integration.storage)) ||
-        Boolean(await this.integration.storage.get('lifecycle:start-job')),
-      lifecycle: () => this.alarmLifecycle(),
-      github: () => this.github.alarm(),
-      previews: () =>
-        expireWorkspacePreviews(
-          this.integration.storage,
-          this.integration.alarms,
-          this.features.previews,
-        ),
-      devices: () => this.devices.alarm(),
-      publishRevocations: async () => {
-        const workspaceId = await this.integration.storage.get<string>(
-          'previews:workspace-id',
-        )
-        if (workspaceId) await this.features.publishRevocations(workspaceId)
-      },
-    })
+  alarm(): Promise<void> {
+    return this.alarmRunner.alarm()
+  }
+
+  protected settledAlarms(): Promise<void> {
+    return this.alarmRunner.settled()
   }
 
   async fetch(request: Request): Promise<Response> {

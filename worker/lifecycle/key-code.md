@@ -170,8 +170,8 @@ points of each part.
   time has come.
   [`workspace-task-alarms.ts`](workspace-task-alarms.ts):
   `taskWorkspaceStorage` gives each lifecycle owner its own due time in
-  `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as the
-  [Workspace Durable Object](workspace-object.md) says.
+  `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as
+  [The object alarm scheduler](alarm-scheduler.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [Image builds](image-builds.md#key-code): the entries of the image
   builds, the refreshes, the build logs and timers, the image coordinator,

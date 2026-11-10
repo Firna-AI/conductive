@@ -1,10 +1,11 @@
+import type { WebSocket } from 'miniflare'
 import { beforeAll, expect, it } from 'vitest'
 
-import { chatHistoryPath } from '../../src/shared/events'
+import { chatHistoryPath, workspaceEventsPath } from '../../src/shared/events'
 import { githubPaths } from '../../src/shared/github'
 import { sessionPaths } from '../../src/shared/sessions'
 import { workspacePaths } from '../../src/shared/workspaces'
-import { closeSockets } from '../chat/adapter-sockets.test-support'
+import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
 import { CLAUDE } from '../chat/harness.test-support'
 import { record, string } from '../chat/inputs'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
@@ -29,9 +30,10 @@ beforeAll(async () => {
   )
 })
 
-it('resumes Continue through real routes, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events', async () => {
+it('resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events', async () => {
   const f = await continueRoutesFixture(bundle)
   let runner: OuterFakeRunner | undefined
+  let browser: WebSocket | undefined
   try {
     const path = workspacePaths.continue(OUTER_ORG, OUTER_WORKSPACE)
     const input = { expectedBranch: 'changes', allowLocalWork: true }
@@ -63,6 +65,11 @@ it('resumes Continue through real routes, fences sends and Archive, expires reco
     const pending = record(await response.json())
     const continueId = string(pending.continueId)
     expect(await (await post()).json()).toEqual(pending)
+    await f.control('seed', {
+      values: { 'alarm:continue': 0, 'alarm:lifecycle': 0 },
+    })
+    await f.control('advance')
+    expect(await f.activeJob()).toMatchObject({ phase: 'resume' })
     const queued = await f.request(
       sessionPaths.messages(OUTER_ORG, OUTER_WORKSPACE, f.firstSession),
       {
@@ -97,7 +104,7 @@ it('resumes Continue through real routes, fences sends and Archive, expires reco
     expect(record(await runner.inbox.next()).type).toBe('welcome')
     runner.emit({ type: 'runner.ready' })
     expect(record(await runner.inbox.next()).type).toBe('confirm')
-    await f.actor().readChatWorkspaceSummary()
+    await f.control('summary')
     expect(
       runner.received.filter((message) => record(message).type === 'turn'),
     ).toEqual([])
@@ -113,6 +120,32 @@ it('resumes Continue through real routes, fences sends and Archive, expires reco
     expect(await (await f.credential(token, fetchId)).json()).toEqual({
       token: 'member-continue-token',
     })
+    const stream = await f.request(
+      workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE),
+      {
+        headers: { Upgrade: 'websocket' },
+      },
+    )
+    expect(stream.status).toBe(101)
+    browser = stream.webSocket ?? undefined
+    if (!browser) throw new Error('Missing workspace socket.')
+    const inbox = new SocketInbox(browser)
+    browser.accept()
+    expect(record(await inbox.next()).type).toBe('history')
+    const woke = await f.hibernate()
+    expect(woke.after.instance).not.toBe(woke.before.instance)
+    expect(woke.before.sockets).toEqual([1, 1])
+    expect(woke.after.sockets).toEqual([1, 1])
+    expect((await f.credential(token, fetchId)).status).toBe(409)
+    expect(await f.activeJob()).toMatchObject({ phase: 'fetch', fetchId })
+    expect(
+      runner.received.filter((message) => record(message).type === 'welcome'),
+    ).toHaveLength(1)
+    expect(
+      runner.received.filter((message) => record(message).type === 'turn'),
+    ).toEqual([])
+    await closeSockets(browser)
+    browser = undefined
     const archived = await f.request(
       workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
       { method: 'POST', body: '{}' },
@@ -234,7 +267,9 @@ it('resumes Continue through real routes, fences sends and Archive, expires reco
     })
     expect(f.api.pulls[2].state).toBe('MERGED')
   } finally {
-    if (runner) await closeSockets(runner.socket)
-    await f.dispose()
+    const sockets: WebSocket[] = []
+    if (runner) sockets.push(runner.socket)
+    if (browser) sockets.push(browser)
+    await Promise.all([closeSockets(...sockets), f.dispose()])
   }
 })

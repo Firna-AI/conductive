@@ -31,9 +31,10 @@ one `RunnerReportKind`.
 - The record, the marker, and the cursor commit in the receipt transaction.
 - A complete tree, changes list, start steps, name, or port list removes the record of
   its kind in the same transaction. A tree delta and a pending part do not.
-- After the commit, `RepairDelivery.flush` sends each `pending` record that
-  the connection did not get yet. The first send of a record then commits
-  `sent`.
+- After the commit, `RepairDelivery.flush` sends each `pending` record whose
+  `deliveredTo` does not name the current connection. Each send then
+  commits `sent` and `deliveredTo`. A wake keeps the connection ID, so it
+  sends no record again.
 - Only then does `RunnerChannel` send the confirm and run the hooks. A send
   failure or a failed `sent` commit throws. The channel then closes the
   connection without the confirm.

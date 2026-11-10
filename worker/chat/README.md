@@ -98,11 +98,12 @@ Try again replaces the failed first computer without accepting the stored messag
 
 ## Access
 
-[Chat backend access](access.md) gives the gates that the Durable Object
-runs itself. It covers the browser gate and its second check in the
-queue, the grants of open tabs, the runner token checks, the workspace
-version pin, the binding of the object, the login lookups and checks, and
-an org suspension.
+[Chat backend access and open connections](access.md) gives the gates
+that the Durable Object runs itself. It covers the browser gate and its
+second check in the queue, the grants of open tabs, the runner token
+checks, the workspace version pin, the binding of the object, the login
+lookups and checks, and an org suspension. It also gives the native state
+of the tab and runner sockets across a wake.
 
 ## History and event order
 
@@ -132,12 +133,12 @@ runner for one fresh full report after it refuses an update. It describes
 the stored records, the refusal checks, and the sends before each confirm.
 
 `workspace-events.ts` defines the private saved event shape and presents browser events.
-Each authorized connection captures its app origin and immutable workspace number.
+Each authorized tab socket keeps its app origin and immutable workspace number in its attachment.
 Replay and live events get the same fields before they reach the browser.
 Older saved workspace updates can omit number and link.
 Presentation fills both fields while it keeps each saved name, state, time, and event number.
 The HTTP history route uses the same presentation.
-No origin is saved in the workspace object.
+No origin is saved in the chat records or the history.
 
 ## Tests
 
@@ -149,11 +150,6 @@ npm run typecheck
 The shared chat and runner fixtures run the production workspace object in Miniflare with native SQLite.
 Their restart helpers evict the real object.
 [Chat backend tests](tests.md) names the native controls and each group of tests.
-
-`write-access.test.ts` holds a rename at its body read or in the queue.
-Then one access fact ends, such as a sign-out, a removal from the org, or
-an archive. The rename gets the refusal that a new request would get, and
-saves nothing. A new refused request leaves its body unread.
 
 ## Seams for other milestones
 

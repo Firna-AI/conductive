@@ -58,22 +58,24 @@ export async function continueRoutesFixture(bundle: string) {
     ).bind(OUTER_WORKSPACE),
   ])
   const firstSession = `session-${OUTER_WORKSPACE}`
-  await fixture.actor().initializeLifecycle({
-    workspaceId: OUTER_WORKSPACE,
-    orgId: OUTER_ORG,
-    firstMessage: {
-      id: `message-${OUTER_WORKSPACE}`,
-      text: 'The earlier task',
-      choice: CLAUDE,
-      attachmentIds: [],
-    },
-    firstTurn: {
-      turnId: `turn-${OUTER_WORKSPACE}`,
-      sessionId: firstSession,
-      senderUserId: 'owner',
+  await fixture.control('initialize', {
+    input: {
+      workspaceId: OUTER_WORKSPACE,
+      orgId: OUTER_ORG,
+      firstMessage: {
+        id: `message-${OUTER_WORKSPACE}`,
+        text: 'The earlier task',
+        choice: CLAUDE,
+        attachmentIds: [],
+      },
+      firstTurn: {
+        turnId: `turn-${OUTER_WORKSPACE}`,
+        sessionId: firstSession,
+        senderUserId: 'owner',
+      },
     },
   })
-  await fixture.actor().lifecycleStopped()
+  await fixture.control('stopped')
   await fixture.env.DB.prepare(
     'UPDATE workspace_tokens SET revoked_at = 1 WHERE workspace_id = ?',
   )
@@ -91,16 +93,15 @@ export async function continueRoutesFixture(bundle: string) {
       },
       Date.now(),
     )
-  const state = async () =>
-    featureState(await fixture.actor().inspectFeatureState())
+  const state = async () => featureState(await fixture.control('state'))
   const drive = async (ready: (state: Map<string, unknown>) => boolean) => {
     for (let step = 0; step < 25; step++) {
       const current = await state()
       if (ready(current)) return current
-      await fixture
-        .actor()
-        .seedFeatureState({ 'alarm:continue': 0, 'alarm:lifecycle': 0 })
-      await fixture.actor().advanceStartAlarm()
+      await fixture.control('seed', {
+        values: { 'alarm:continue': 0, 'alarm:lifecycle': 0 },
+      })
+      await fixture.control('advance')
     }
     throw new Error('The composed Continue did not reach its expected phase.')
   }

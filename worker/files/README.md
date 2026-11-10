@@ -76,6 +76,7 @@ It must not apply a file report again.
 On this path, `files` serves the API from the same Durable Object storage.
 Its `tree` and `changes` methods read the complete projection.
 For each accepted runner socket, call `files.runner.attach(physicalConnectionId, send)` with a fresh ID.
+A ready runner socket that the workspace object restores after a wake attaches again with the same ID.
 Call `files.runner.detach(physicalConnectionId)` when that socket closes.
 Do not call `WorkspaceFiles.connect` on this path.
 It moves the projection from the runner stream to the physical connection.
@@ -115,6 +116,7 @@ The browser receives no secret list. Raw operational paths can therefore
 contain marked values; the access protocol states this exposure.
 The broker checks the response type, connection, requested path, requested base branch, and file byte count.
 Pending reads fail when their connection closes or when their request signal aborts.
+A pending read is a live request, so it keeps the workspace object active until it ends.
 The owner must handle socket health and detach a connection that has failed.
 
 ## HTTP handler

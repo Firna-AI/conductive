@@ -66,6 +66,7 @@ export class WorkspaceLifecycle
     this.chat = integration.chat
     this.devices = integration.devices
     this.controller = integration.controller
+    context.blockConcurrencyWhile(() => integration.sockets.restore())
     this.activity = createWorkspaceInputActivity(
       context,
       env,
@@ -94,6 +95,18 @@ export class WorkspaceLifecycle
       const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
       return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
     })
+  }
+
+  webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
+    return this.integration.sockets.message(socket, message)
+  }
+
+  webSocketClose(socket: WebSocket) {
+    return this.integration.sockets.close(socket)
+  }
+
+  webSocketError(socket: WebSocket) {
+    return this.integration.sockets.close(socket)
   }
 
   queueComputerStops(

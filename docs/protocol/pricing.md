@@ -67,7 +67,7 @@ month, in US dollars.
   hours, were not chosen. Unlimited hours were rejected, because the user
   asked for a charge for use past the included hours.
 - The plans have no Enterprise plan. Reason: Enterprise plans stay Under
-  consideration on the [comparison page](conductor-cloud-comparison.md).
+  consideration on the [comparison page](conductor-comparison.md).
 - Prices are monthly only. Reason: yearly plans bring refunds and changes
   that the first billing change does not need.
 - Prices are in US dollars. Reason: every competitor and the costs of the
