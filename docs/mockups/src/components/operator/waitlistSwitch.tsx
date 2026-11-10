@@ -8,6 +8,7 @@ import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { waitlistOffTitle, waitlistWords } from './codeCopy'
+import { codesTabLinks } from './signUpLinks'
 
 /** New people wait, or an operator turned the waitlist off. */
 export type WaitlistState = 'on' | 'off'
@@ -32,7 +33,7 @@ export function TurnOffWaitlistButton() {
  * open sign-up starts again when sign-ups resume.
  */
 export function WaitlistOffNotice(props: { paused: boolean }) {
-  const on = props.paused ? paths.operatorCodesPaused : paths.operatorCodes
+  const on = codesTabLinks.on[props.paused ? 'paused' : 'open']
   return (
     <Notice
       action={

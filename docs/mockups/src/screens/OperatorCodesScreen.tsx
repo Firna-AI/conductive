@@ -103,8 +103,13 @@ function results(list: OperatorCodesState['list']): Results {
   }
 }
 
+/**
+ * The dialog over the tab. The question before the pause keeps the state of
+ * the waitlist switch in its links.
+ */
 function CodesDialog(props: {
   dialog: OperatorCodesState['dialog']
+  waitlist: OperatorCodesState['waitlist']
   viewport: Viewport
 }) {
   switch (props.dialog) {
@@ -125,7 +130,7 @@ function CodesDialog(props: {
         />
       )
     case 'pause':
-      return <PauseDialog viewport={props.viewport} />
+      return <PauseDialog viewport={props.viewport} waitlist={props.waitlist} />
     case 'turn-off-waitlist':
       return <TurnOffWaitlistDialog viewport={props.viewport} />
   }
@@ -153,7 +158,13 @@ export function OperatorCodesScreen(props: {
           </ActionButton>
         </ScreenLink>
       }
-      dialog={<CodesDialog dialog={dialog} viewport={props.viewport} />}
+      dialog={
+        <CodesDialog
+          dialog={dialog}
+          viewport={props.viewport}
+          waitlist={waitlist}
+        />
+      }
       signUps={signUps}
       tab="codes"
       title="Operator"

@@ -133,8 +133,10 @@ The child pages of `app/operator/codes`:
   GitHub login of the owner of a referral code. Its variants have a search
   that finds the referral code of a user, and a search with no match.
 - `app/operator/codes/pause` has the question before Pause sign-ups. Its
-  variants have the Invite codes tab while sign-ups are paused, with
-  Resume sign-ups, and the same notice on the Waitlist and the Overview.
+  `waitlist-off` variant has the same question while the waitlist is off,
+  and its links keep the waitlist off. Its other variants have the Invite
+  codes tab while sign-ups are paused, with Resume sign-ups, and the same
+  notice on the Waitlist and the Overview.
   The question and the notice say that new people wait, also while the
   waitlist is off.
 - `app/operator/codes/waitlist-off` has the question before Turn off the

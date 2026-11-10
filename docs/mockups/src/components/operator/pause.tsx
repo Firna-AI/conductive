@@ -1,7 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { CirclePause, Pause, Play } from 'lucide-react'
 import { signUpPause } from '../../fixtures/operatorCodes'
-import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { Notice } from '../common/Notice'
@@ -9,6 +8,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import { StatusText } from '../common/StatusText'
 import { Section } from '../settings/Section'
 import { pausedTitle, pauseWords, waitlistWords } from './codeCopy'
+import { codesTabLinks, pauseQuestionLinks } from './signUpLinks'
 import { TurnOffWaitlistButton, type WaitlistState } from './waitlistSwitch'
 
 /**
@@ -18,14 +18,10 @@ import { TurnOffWaitlistButton, type WaitlistState } from './waitlistSwitch'
  * the waitlist switch.
  */
 export function PauseNotice(props: { waitlist: WaitlistState }) {
-  const resumed =
-    props.waitlist === 'off'
-      ? paths.operatorCodesWaitlistTurnedOff
-      : paths.operatorCodes
   return (
     <Notice
       action={
-        <ScreenLink asChild to={resumed}>
+        <ScreenLink asChild to={codesTabLinks[props.waitlist].open}>
           <ActionButton icon={Play}>{pauseWords.resume}</ActionButton>
         </ScreenLink>
       }
@@ -46,7 +42,7 @@ export function PauseNotice(props: { waitlist: WaitlistState }) {
  */
 export function SignUpsSection(props: { waitlist: WaitlistState }) {
   const pause = (
-    <ScreenLink asChild to={paths.operatorCodesPause}>
+    <ScreenLink asChild to={pauseQuestionLinks[props.waitlist]}>
       <ActionButton icon={Pause}>{pauseWords.pause}</ActionButton>
     </ScreenLink>
   )
@@ -77,17 +73,22 @@ export function SignUpsSection(props: { waitlist: WaitlistState }) {
 /**
  * The operator confirms the pause. The question says what lets nobody in,
  * that each code keeps its uses, that new people wait also while the
- * waitlist is off, and what still works.
+ * waitlist is off, and what still works. Cancel and Pause sign-ups keep
+ * the state of the waitlist switch.
  */
-export function PauseDialog(props: { viewport: Viewport }) {
+export function PauseDialog(props: {
+  waitlist: WaitlistState
+  viewport: Viewport
+}) {
+  const tab = codesTabLinks[props.waitlist]
   return (
     <ConfirmDialog
       actions={
         <>
-          <ScreenLink asChild to={paths.operatorCodes}>
+          <ScreenLink asChild to={tab.open}>
             <ActionButton>Cancel</ActionButton>
           </ScreenLink>
-          <ScreenLink asChild to={paths.operatorCodesPaused}>
+          <ScreenLink asChild to={tab.paused}>
             <ActionButton icon={Pause} tone="danger">
               {pauseWords.pause}
             </ActionButton>
