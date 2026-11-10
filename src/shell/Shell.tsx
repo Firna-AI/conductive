@@ -93,7 +93,9 @@ function Account(props: { route: AccountRoute; user: User }) {
   return (
     <RailFrame
       current="account"
-      sidebar={org ? <Sidebar current={null} org={org} /> : undefined}
+      sidebar={
+        org ? <Sidebar current={null} org={org} user={props.user} /> : undefined
+      }
       user={props.user}
     >
       {page}

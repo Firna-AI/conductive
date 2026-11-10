@@ -52,6 +52,8 @@ feature that is not complete yet says so.
   the header copies the link of the workspace. A workspace link in chat
   shows as a chip with the number and the name.
 - Orgs with members, sections, reassignment, Archive, and Delete org.
+- A menu on a workspace row moves, reassigns, renames, or archives the
+  workspace.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
 - The web app works on phones and on desktops.
@@ -269,39 +271,8 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   [marketing site](docs/architecture/marketing-site.md), the
   [data and trust boundaries](docs/architecture/data-and-trust.md), and the
   terms.
-- Protocol docs, which state the requirements:
-  - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
-  - [Org image](docs/protocol/org-image.md)
-  - [Workspace tools](docs/protocol/workspace-tools.md)
-  - [Create a workspace](docs/protocol/create-a-workspace.md)
-  - [Repository folders](docs/protocol/repository-folders.md)
-  - [Life of a workspace](docs/protocol/workspace-life.md)
-  - [Chat and events](docs/protocol/chat-and-events.md)
-  - [Messages and attachments](docs/protocol/messages-and-attachments.md)
-  - [Agents and sessions](docs/protocol/agents-and-sessions.md)
-  - [Workspace links](docs/protocol/workspace-links.md)
-  - [Chat Markdown](docs/protocol/chat-markdown.md)
-  - [Agent runner](docs/protocol/agent-runner.md)
-  - [Access and security](docs/protocol/access-and-security.md)
-  - [Isolation of orgs and sandboxes](docs/protocol/isolation.md)
-  - [Tokens and secrets](docs/protocol/tokens-and-secrets.md)
-  - [Terminal, previews, and desktop](docs/protocol/terminal-previews-and-desktop.md)
-  - [GitHub banner](docs/protocol/github-banner.md)
-  - [GitHub tokens](docs/protocol/github-tokens.md): git and CLI account scope.
-  - [Agent tools](docs/protocol/agent-tools.md)
-  - [Agent instructions](docs/protocol/agent-instructions.md)
-  - [Orgs and members](docs/protocol/orgs-and-members.md)
-  - [Mac app](docs/protocol/desktop-app.md)
-  - [Mac app sign-in](docs/protocol/desktop-sign-in.md)
-  - [Permissions and Mac commands](docs/protocol/desktop-commands.md)
-  - [Operator actions](docs/protocol/operator-actions.md)
-  - [Operator section](docs/protocol/operator-section.md)
-  - [Waitlist](docs/protocol/waitlist.md)
-  - [Invite and referral codes](docs/protocol/waitlist-codes.md)
-  - [Command palette](docs/protocol/command-palette.md)
-  - [Command palette: empty and unavailable states](docs/protocol/command-palette-states.md)
-  - [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md):
-    the public page for people who move from Conductor Cloud
+- [Protocol docs](docs/architecture.md#protocol-docs), which state the
+  requirements. The architecture doc lists each one, with what it covers.
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): licenses for copied icons
   and the bundled font.

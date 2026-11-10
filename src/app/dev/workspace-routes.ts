@@ -23,6 +23,7 @@ import {
   noContent,
   optional,
   requiredText,
+  RouteError,
   type Params,
   type Route,
 } from './router'
@@ -54,11 +55,18 @@ function updateWorkspace(
   workspaceId: string,
   body: unknown,
 ): Response {
+  const current = requireWorkspace(org, workspaceId)
+  if (current.archivedAt !== null || current.state === 'archived') {
+    throw new RouteError(
+      409,
+      'workspace_archived',
+      'The archived chat is read-only.',
+    )
+  }
   const fields = record(body)
   const name = optional(fields, 'name', requiredText)
   const sectionId = optional(fields, 'sectionId', text)
   const position = optional(fields, 'position', count)
-  const current = requireWorkspace(org, workspaceId)
   if (sectionId !== undefined) requireSection(org, sectionId)
   if (sectionId !== undefined || position !== undefined) {
     org.workspaces = moveWorkspace(
@@ -70,7 +78,11 @@ function updateWorkspace(
     )
   }
   const moved = requireWorkspace(org, workspaceId)
-  changeWorkspace(backend, org, { ...moved, name: name ?? moved.name })
+  changeWorkspace(backend, org, {
+    ...moved,
+    name: name ?? moved.name,
+    updatedAt: backend.now(),
+  })
   return detailReply(org, workspaceId)
 }
 

@@ -1,0 +1,12 @@
+/* The toasts of the app sit 16px from the bottom right of the window. */
+.layer {
+  position: absolute;
+  z-index: 50;
+  right: 16px;
+  bottom: 16px;
+}
+
+/* A phone screen gives the toast its width, inside the same margins. */
+.phone {
+  left: 16px;
+}
