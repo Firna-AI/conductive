@@ -333,8 +333,8 @@ Depends on: every other milestone
       complete gate, `npm run check`.
 - [x] Check that no other plan on `origin/main` or an open branch uses
       decisions 242 to 244. Renumber them when one does.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -344,6 +344,10 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Evidence: `.context/repository-context-folder/complete-gate-integrated.log`,
+`.context/reviews/calummoore/repo-context-attachments/round-1-review.md`, and
+`.context/repository-context-folder/feature-merge-preservation.txt`.
 
 ## Post-merge follow-up (non-blocking)
 
