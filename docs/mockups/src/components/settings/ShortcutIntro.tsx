@@ -16,7 +16,7 @@ import styles from './ShortcutsSections.module.css'
 /**
  * The keys that the terminal keeps while it has the focus, from the user
  * requirement of 10 November 2026: every key without ⌘ on a Mac, and every
- * key on Windows.
+ * key on Windows and Linux.
  */
 function TerminalLine(props: { keyboard: Keyboard }) {
   if (props.keyboard === 'mac') {
@@ -37,8 +37,8 @@ function TerminalLine(props: { keyboard: Keyboard }) {
 /**
  * Where the dimmed keys of a normal browser tab work: in the Mac app on a
  * Mac, and in the app that Chrome or Edge installs. Firefox installs no app
- * on a Mac, and its web apps on Windows keep the keys of a tab, so there
- * the line names the browsers that install the app.
+ * on a Mac or on Linux, and its web apps on Windows keep the keys of a tab,
+ * so off a Mac the line of Firefox names the browsers that install the app.
  */
 function keptKeysLine(keyboard: Keyboard, tab: BrowserTab): string {
   const places = [

@@ -246,17 +246,23 @@ New workspace, because the tab keeps ⌘N. A workspace row and a phone show
 no key.
 
 The keyboard shortcuts plan draws the Keyboard shortcuts tab in the Mac
-app and in a browser, from decisions 190 to 195. The pages of
+app and in a browser, from decisions 190 to 196. The pages of
 `app/account` and `mac-app/this-mac` show it as the third tab of the
 account.
 
 - `app/account/shortcuts` shows the tab in a normal Chrome tab on a Mac.
   The search field of decision 195 stands at the top. The lines under it
   say which keys the terminal keeps, and where the dimmed keys work. A
-  key that the tab keeps, or that decision 192 leaves to the browser, is
-  dimmed. Its child pages:
+  key that the tab keeps, or that decisions 192 and 196 leave to the
+  browser, is dimmed. Its child pages:
   - `app/account/shortcuts/windows` has a normal Chrome tab on Windows,
     with the keys of decision 194 and the terminal line of Windows.
+  - `app/account/shortcuts/linux` has a normal Chrome tab on Linux, with
+    the keys of Windows and Linux. From decision 196, the app leaves
+    Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, and Ctrl+L to Chrome, so Switch to
+    org 1 to 9 show only dimmed keys. Its `firefox` variant has a normal
+    Firefox tab on Linux, where the app leaves only Alt+1 to Alt+9 and
+    Ctrl+L to Firefox, so Ctrl+1 to Ctrl+9 are not dimmed.
   - `app/account/shortcuts/firefox` has a normal Firefox tab on a Mac,
     which keeps ⌥⌘↑ and ⌥⌘↓ and lets the page take ⇧⌘T.
   - `app/account/shortcuts/installed` has the installed app of Chrome on

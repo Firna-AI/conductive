@@ -777,6 +777,10 @@ of each supported browser on its system, and an unknown system on the
 Windows and Linux keyboard counts as Windows and as Linux. Reason: an
 unknown browser already counts the kept keys of each supported browser,
 and a missed tab key would take a key of the browser from the person.
+Agent call of the same day, from the docs work: this holds for every rule
+that differs between Windows and Linux, also the text keys and the
+single-line Ctrl+U text key, which before held only on Linux. Android
+counts as Linux.
 
 ### Where a key goes
 
@@ -920,6 +924,15 @@ goes no further. Agent calls of the same day apply it:
   Ctrl+Shift+Z into Ctrl+Z, which undoes in place of redoing.
 - The recorder records the key with the modifier added back. Reason: the
   person pressed that key, and the listener matches it the same way.
+- Agent call, 2026-11-10, from the docs work of the answers: the restore,
+  the physical match, and the stop apply only to a press that has Ctrl,
+  Alt, or ⌘ after the restore. Every other press goes on as it does
+  without a switch key, and types its character. The recorder follows the
+  same rule. Reason: a fast typist presses the next letter before the
+  switch key is up, such as after Caps Lock or with Shift still down after
+  Alt+Shift, and the user requirement of 2026-11-10 keeps the keys of the
+  message field. Each harmful press has Ctrl, Alt, or ⌘. A stop of every
+  press was rejected, because it lost typed letters.
 
 ### The Keyboard shortcuts tab
 
@@ -1110,18 +1123,23 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
   - [x] The browser and phone pages: the stale list of fixed shortcuts,
         and the Orca keys in the evidence. Reports:
         `.context/keyboard-shortcuts/reports/`.
-- [ ] Draw the answer to decision 196 on the browser pages of the tab:
+- [x] Draw the answer to decision 196 on the browser pages of the tab:
       Chrome and Firefox in a normal tab on Linux. Both dim Alt+1 to Alt+9
       and Ctrl+L, and only Chrome dims Ctrl+1 to Ctrl+9. Update each note
       of the mockups that calls decisions 196 and 197 open. Decision 197 D
-      changes nothing that a page draws.
-- [ ] Add the command Restore workspace, without a default key, to the
+      changes nothing that a page draws. Pages: `app/account/shortcuts/linux`
+      and its saved state `firefox`. Agent call, 2026-11-10: Firefox on
+      Linux is a saved state of the Linux page, so the two Linux browsers
+      sit side by side within the five screens of a folder page. Report:
+      `.context/keyboard-shortcuts/reports/answers-196-198-mockups.md`.
+- [x] Add the command Restore workspace, without a default key, to the
       rows of the tab, and its key to the Restore workspace row of the
       palette, from the agent call of the fifth merge of `main`.
-- [ ] Run `npm run mockups:check`. Smoke-test the new pages in light and
-      dark, desktop and phone.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the new pages show.
+- [x] Run `npm run mockups:check`. Smoke-test the new pages in light and
+      dark, desktop and phone. Evidence:
+      `.context/keyboard-shortcuts/shots/round6/`.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the new pages show. The pages showed none.
 
 ## Milestone 2: Documentation and protocol
 

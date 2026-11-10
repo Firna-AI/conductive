@@ -33,6 +33,7 @@ export type CommandId =
   | 'new-workspace'
   | 'new-section'
   | 'archive-workspace'
+  | 'restore-workspace'
   | `workspace-${Digit}`
   | 'previous-workspace'
   | 'next-workspace'
@@ -52,7 +53,7 @@ export type CommandId =
 
 /**
  * A command with its default keys on a Mac. `windowsKeys` holds its keys
- * on Windows. `only` keeps a command to the Mac app.
+ * on Windows and Linux. `only` keeps a command to the Mac app.
  */
 export type CommandSpec = {
   kind: 'command'
@@ -87,6 +88,7 @@ const commandWords: Partial<Record<CommandId, readonly string[]>> = {
   'repositories-settings': ['github'],
   'new-workspace': ['create', 'task'],
   'new-section': ['group'],
+  'restore-workspace': ['unarchive'],
   'go-to-checks': ['ci'],
   'go-to-preview': ['port'],
   'new-session': ['tab', 'agent', 'chat'],
@@ -179,6 +181,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('new-workspace', 'New workspace', '⌘N', '⌥⌘N'),
       command('new-section', 'New section'),
       command('archive-workspace', 'Archive workspace', '⇧⌘A'),
+      command('restore-workspace', 'Restore workspace'),
       ...numbered('workspace', 'Open workspace', (digit) => [
         `⌘${digit}`,
         `⌥⌘${digit}`,

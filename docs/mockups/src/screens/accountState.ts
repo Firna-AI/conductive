@@ -74,8 +74,8 @@ export const accountSchema = {
     /**
      * Where the page runs, which sets the keys of Keyboard shortcuts: Chrome
      * or Firefox in a normal tab on a Mac, Chrome in a normal tab on
-     * Windows, or the installed app of Chrome on a Mac. The Mac app draws
-     * its own pages.
+     * Windows, Chrome or Firefox in a normal tab on Linux, or the installed
+     * app of Chrome on a Mac. The Mac app draws its own pages.
      */
     host: { enum: browserHosts },
   },

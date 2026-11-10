@@ -2,13 +2,14 @@ import type { Shortcut } from '../components/common/KeyChips'
 import type { CommandId } from './shortcutCommands'
 
 /**
- * The default keys of each command on a Windows keyboard, from decision
- * 194 A: Ctrl for ⌘, Shift stays, Alt+Shift with the same key for a Mac key
- * with ⌥ and for each second key, and Alt+1 to Alt+9 for the orgs. The key
- * research of 10 November 2026 chose the keys of the clashes and of the
- * checks that failed: Alt+Shift+Z, Ctrl+Shift+L, Alt+Shift+S, Alt+Shift+M,
- * and Alt+Shift+PgUp and Alt+Shift+PgDn. Only the Mac app has the sidebar
- * toggle, Back, and Forward, so they have no key here.
+ * The default keys of each command on the keyboard of Windows and Linux,
+ * from decision 194 A: Ctrl for ⌘, Shift stays, Alt+Shift with the same key
+ * for a Mac key with ⌥ and for each second key, and Alt+1 to Alt+9 for the
+ * orgs. The key research of 10 November 2026 chose the keys of the clashes
+ * and of the checks that failed: Alt+Shift+Z, Ctrl+Shift+L, Alt+Shift+S,
+ * Alt+Shift+M, and Alt+Shift+PgUp and Alt+Shift+PgDn. The user's answers of
+ * the same day to decisions 196 and 197 add no key. Only the Mac app has
+ * the sidebar toggle, Back, and Forward, so they have no key here.
  */
 export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'command-palette': ['Ctrl+K'],
@@ -42,6 +43,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'new-workspace': ['Ctrl+N', 'Alt+Shift+N'],
   'new-section': [],
   'archive-workspace': ['Ctrl+Shift+A'],
+  'restore-workspace': [],
   'workspace-1': ['Ctrl+1', 'Alt+Shift+1'],
   'workspace-2': ['Ctrl+2', 'Alt+Shift+2'],
   'workspace-3': ['Ctrl+3', 'Alt+Shift+3'],

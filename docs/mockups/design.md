@@ -190,18 +190,19 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ShortcutsSections` in `src/components/settings/` draws the Keyboard
   shortcuts tab, in the Mac app and in each browser. It shows the keys of
   a host: the Mac app, a normal tab of Chrome or Firefox, or the installed
-  app of Chrome, with a Mac or a Windows keyboard.
-  `src/fixtures/shortcutHosts.ts` holds the keyboard of each host and the
-  keys that a normal browser tab keeps, and
-  `src/fixtures/windowsShortcuts.ts` holds the keys of Windows. A search
-  field at the top keeps each row whose label or search words hold every
-  word of the query, by the rule of the palette, from `shortcutSearch.ts`.
+  app of Chrome, with a Mac keyboard or the keyboard of Windows and
+  Linux. `src/fixtures/shortcutHosts.ts` holds the keyboard of each host,
+  `browserTabKeys.ts` beside it holds the keys that each normal browser
+  tab keeps, and `windowsShortcuts.ts` holds the keys of Windows and
+  Linux. A search field at the top keeps each row whose label or search
+  words hold every word of the query, by the rule of the palette, from
+  `shortcutSearch.ts`.
   Fixed rows match too. A group without a matching row hides, and a search
   without a match says so, as the palette does. The lines under the field,
   from `ShortcutIntro.tsx`, say how to change a shortcut and which keys
   the terminal keeps on the keyboard of the page. In a normal browser tab,
-  a key that the browser keeps, or that decision 192 leaves to it, is
-  dimmed, and one more line says where the dimmed keys work. A dimmed key
+  a key that the browser keeps, or that decisions 192 and 196 leave to it,
+  is dimmed, and one more line says where the dimmed keys work. A dimmed key
   stays a button that records new keys. A browser leaves out the commands
   and the groups that only the Mac app has. Each group of commands is a
   section with its rows in one box. A row ends with its shortcuts. Each

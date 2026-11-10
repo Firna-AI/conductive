@@ -1,3 +1,11 @@
 {
-  "order": ["windows", "firefox", "installed", "search", "recording", "changes"]
+  "order": [
+    "windows",
+    "linux",
+    "firefox",
+    "installed",
+    "search",
+    "recording",
+    "changes"
+  ]
 }

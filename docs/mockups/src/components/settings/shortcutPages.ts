@@ -33,5 +33,7 @@ export const shortcutPages: Readonly<Record<ShortcutHost, ShortcutPages>> = {
   },
   'firefox-mac': { tab: paths.accountShortcutsFirefox },
   'chrome-windows': { tab: paths.accountShortcutsWindows },
+  'chrome-linux': { tab: paths.accountShortcutsLinux },
+  'firefox-linux': { tab: paths.accountShortcutsLinuxFirefox },
   'installed-mac': { tab: paths.accountShortcutsInstalled },
 }

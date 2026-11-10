@@ -100,7 +100,7 @@ const sessionHistory: Command = {
 /**
  * The actions of the open workspace: a new session, the session history,
  * each tab of the right column, and Archive. An archived workspace keeps
- * its session history and offers Restore.
+ * its session history and offers Restore, a command without a default key.
  */
 export function workspaceActions(open: OpenActions): Command[] {
   if (open.archived) {
@@ -109,6 +109,7 @@ export function workspaceActions(open: OpenActions): Command[] {
       lead: icon(ArchiveRestore),
       words: ['unarchive'],
       to: paths.restored,
+      shortcut: 'restore-workspace',
     }
     return open.restorable ? [sessionHistory, restore] : [sessionHistory]
   }

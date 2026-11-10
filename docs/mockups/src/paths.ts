@@ -60,6 +60,8 @@ export const paths = {
   accountShortcutsChanges: 'app/account/shortcuts/changes',
   accountShortcutsResetAll: 'app/account/shortcuts/changes/reset-all',
   accountShortcutsWindows: 'app/account/shortcuts/windows',
+  accountShortcutsLinux: 'app/account/shortcuts/linux',
+  accountShortcutsLinuxFirefox: 'app/account/shortcuts/linux/firefox',
   accountShortcutsFirefox: 'app/account/shortcuts/firefox',
   accountShortcutsInstalled: 'app/account/shortcuts/installed',
   accountSetup: 'app/account/setup',
