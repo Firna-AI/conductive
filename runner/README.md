@@ -67,6 +67,11 @@ These facts belong to this implementation, not to the protocol docs.
   closes the agent process of that session, discards its unread input, and
   cancels its pending work. Other sessions keep streaming and can stop. A
   stopped running turn sends one end event, after its `turn.started`.
+- After the agent process of a stopped turn exits, the runner reads the
+  changed files of the turn for its end. This holds for Stop and for a
+  shutdown. A Stop during the file read at the end of a turn cancels that
+  read, and the stopped end reads the files again. A read that takes more
+  than 10 seconds marks the files as unavailable, so the end still goes out.
 - Stop for a pending turn sends one stopped `turn.completed` at once. It
   cancels the start. No `turn.started` follows, also after a held save
   returns. A second Stop sends nothing. A saved end suppresses another end.
@@ -129,8 +134,8 @@ These facts belong to this implementation, not to the protocol docs.
   failed `turn.started` save or start step ends the turn with its cause.
 - At a normal shutdown, the runner sends one stopped end for each running
   turn, before it closes the connection. Each end lists the changed files
-  when the runner can read them. Otherwise, it marks them as unavailable.
-  After a restart, a turn with a saved end never runs again. An
+  when the runner can read them in time. Otherwise, it marks them as
+  unavailable. After a restart, a turn with a saved end never runs again. An
   unfinished turn, such as after a crash, gets one stopped end, and no agent
   starts for it. A recovered started turn marks its changed files as
   unavailable. The state file holds no record of its initial files.
