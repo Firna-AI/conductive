@@ -45,9 +45,26 @@ requirements of each feature.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
   from. It holds a prepared copy of each repository that the org chose.
 - **Build:** a run of the install script on a copy of the org image. It
-  replaces the org image only when it succeeds.
+  replaces the org image only when it succeeds. Each build is a first
+  build or a later build.
+- **First build:** the first build of an org. Create org starts it by
+  itself.
+- **Later build:** each build of an org after its first build. An admin
+  starts it with Build computer, or the app starts it by itself, such as
+  the added build after the first build.
 - **Refresh:** an update of the org image that fetches the new commits of
-  each chosen repository. It does not run the install script.
+  each chosen repository. It does not run the install script. A push to
+  the default branch of a chosen repository starts one at most once in 30
+  minutes, and a daily timer starts one too.
+- **Deploy run:** one run of the GitHub Actions workflow `Deploy`. Each
+  push to `main` starts one, and it deploys the test deployment, as
+  [Automatic deploys](automatic-deploys.md) says.
+- **Workspace start:** a start of the sandbox of one workspace. Each one
+  is a first workspace start or a later workspace start.
+- **First workspace start:** the start that creates the sandbox of a new
+  workspace from the org image.
+- **Later workspace start:** each resume of the sandbox of a workspace,
+  also the restart near day 14 of a stop.
 - **Agent runner:** our program in each sandbox. It runs the agents through
   the agent SDKs, and it reports the files and the changes of its
   workspace.
