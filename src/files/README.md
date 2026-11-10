@@ -237,7 +237,12 @@ tests keep their static markup checks in Node.
   `parser` replaces the worker for a static render. It draws each table
   through the shared `MarkdownTable` of the mockups, with the margin of
   its `.table` class.
-- `code/`: the syntax colours and the code view.
+- `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
+  `fileKind`, the kind of a file by its name: Markdown, code, or another
+  file. A file is code when the code view gives it syntax colours.
+  `panel/file-icons.tsx` draws the icon of each kind through `EntryIcon` of
+  the mockups, the one icon map of All files, the tabs, the list of `@`,
+  and the file chips.
 - `diff/`: the unified diff parser and view.
 - `dev/`: the development page, its Vite config, its fixtures, its Copy
   and Download targets, `RepairControls`, the controls of the failed

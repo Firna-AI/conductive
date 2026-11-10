@@ -1,8 +1,20 @@
 import { File, FileCode, FileText, Folder, FolderOpen } from 'lucide-react'
+import {
+  fileKind,
+  type FileKind,
+} from '../../../../../src/files/code/file-kind'
+
+const kindIcons: Record<FileKind, typeof File> = {
+  markdown: FileText,
+  code: FileCode,
+  file: File,
+}
 
 /**
  * The icon of an entry of the tree, as All files draws it: a folder, open
- * or closed, a code file, a Markdown file, or another file.
+ * or closed, a Markdown file, a code file, or another file. It is the one
+ * icon map of the mockups and the app. A file is code when the code view of
+ * the app gives it syntax colours.
  */
 export function EntryIcon(props: {
   name: string
@@ -19,7 +31,6 @@ export function EntryIcon(props: {
   if (props.folder) {
     return props.open ? <FolderOpen {...icon} /> : <Folder {...icon} />
   }
-  if (/\.(tsx?|json)$/.test(props.name)) return <FileCode {...icon} />
-  if (props.name.endsWith('.md')) return <FileText {...icon} />
-  return <File {...icon} />
+  const Icon = kindIcons[fileKind(props.name)]
+  return <Icon {...icon} />
 }

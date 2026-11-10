@@ -182,7 +182,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   workspace as a chip of the same size: the icon that All files gives it,
   and its name. Its title is the whole path. `EntryIcon` in
   `src/components/files/` gives the icon to All files, the chips, and the
-  list. A sent message shows each file chip as a link to the tab of the
+  list. It is the one icon map of the mockups and the app: a folder, a
+  Markdown file, a code file, or another file. A file is code when the
+  code view of the app gives it syntax colours, as `fileKind` in
+  `src/files/code/file-kind.ts` of the app says, so one list of languages
+  sets both. The user chose this on 10 November 2026. A sent message shows
+  each file chip as a link to the tab of the
   file, and an answer shows none. It takes no fixtures, so the app can use
   it too.
 - `FileMentionList` in `src/components/chat/` draws the list of `@` above
