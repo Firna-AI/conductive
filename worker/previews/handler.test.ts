@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import {
+  PREVIEW_RELAY_PORT,
   previewPath,
   previewsPath,
   type PreviewResponse,
@@ -45,9 +46,9 @@ it('persists an unpredictable preview hostname and lists it with a 24-hour expir
   if (!upstream) throw new Error('Missing host call')
   expect(upstream.url).toBe('https://boat.dev/api/v1/sandboxes/bx_one/host')
   expect(await upstream.json()).toEqual({
-    port: 3000,
+    port: PREVIEW_RELAY_PORT,
     public: false,
-    localhost: false,
+    localhost: true,
   })
   expect(upstream.headers.get('Authorization')).toBe('Bearer boat-test-key')
   expect(upstream.headers.get('X-Boat-Org')).toBe('app-org')
