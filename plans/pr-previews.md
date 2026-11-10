@@ -14,7 +14,9 @@ pull request links the copy. A close or a merge deletes it. One relay
 Worker gives GitHub events and install returns to every preview.
 
 The user chose the approach in a brainstorm on 9 and 10 November 2026:
-decision 1 B and decision 2 D below. The notes, the checked facts, and the
+decision 1 B and decision 2 D below. Decisions 3 and 4 came from the
+options checks, and the user answered them on 10 November 2026: 3 A, and
+the user provides the Boat key of decision 4. The notes, the checked facts, and the
 earlier transcripts are in `.context/pr-previews/`. The change does not
 cover port previews in a preview, the Mac app, or seed data for a new
 preview. The design gives the reason for
@@ -156,7 +158,8 @@ Contract owners:
 - **Related:** Decision 1: its option C uses the same trusted workflow in the live account. Decision 2: its option E removes the real keys. Decision 4: E needs its option B.
 - **Recommendation:** A. B protects only against branch authors who already hold the admin GitHub token, and it adds a workflow that forks can start. The first recommendation and both options checks chose B. E best protects the previews.
 - **Action:** ask the user, because the options trade the reach of a bad branch against a privileged workflow, a slower path for changes to the preview tool, and new Boat setup.
-- **Answer so far:** On 10 November 2026 the user asked for a preview GitHub App to test with, which sends GitHub events to every preview and redirects correctly, with the real Boat service. That rules out D and adds the relay of the design. It chooses none of A, B, C, E, and F, so the decision stays open.
+- **Answer so far:** On 10 November 2026 the user asked for a preview GitHub App to test with, which sends GitHub events to every preview and redirects correctly, with the real Boat service. That ruled out D and added the relay of the design.
+- **Chosen:** A, by the user on 10 November 2026.
 
 ### 4. Choose the Boat account for preview sandboxes
 
@@ -210,9 +213,10 @@ otherwise. The user can override any of them.
   response. Reason: previews stay out of search results, and Cloudflare
   adds the header itself only on `workers.dev`. A zone rule needs no
   product code.
-- The GitHub environment `preview` holds the settings. Decision 3 decides
-  which runs can read it: each pull request run with no branch rule, or a
-  trusted workflow on `main` with a `main`-only branch rule.
+- The GitHub environment `preview` holds the settings. It has no
+  deployment branch rule, so each pull request run of this repository can
+  read it, as decision 3 A says. Runs of forks and of Dependabot get no
+  secrets.
   - Secrets: `CLOUDFLARE_API_TOKEN`, `GITHUB_CLIENT_SECRET`,
     `GITHUB_APP_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`,
     `SESSION_SIGNING_KEY`, `BOAT_KEY_ENCRYPTION_KEY`, and `BOAT_API_KEY`.
@@ -338,11 +342,11 @@ otherwise. The user can override any of them.
   runner reuses the archive in the preview bucket.
 - The deploy job uses the environment `preview`, and it sets the
   environment URL to the app hostname.
-- Decision 3 decides where the deploy job runs. In the pull request run,
-  the job still runs the workflow file and the preview tool of the branch
-  next to the token. A trusted workflow on `main` runs those of `main`.
-  Corrected on 10 November 2026 by the options check: the first design
-  said that no package code of a pull request runs next to the token.
+- The deploy job runs in the pull request run, as decision 3 A says. It
+  runs the workflow file and the preview tool of the branch next to the
+  token. Corrected on 10 November 2026 by the options check: the first
+  design said that no package code of a pull request runs next to the
+  token.
 - The deploy job installs the packages of `main` in a temporary folder,
   with `npm ci --ignore-scripts`, and runs that Wrangler. It unpacks the
   build in the temporary folder of the runner, never in its working
@@ -356,9 +360,6 @@ otherwise. The user can override any of them.
   and a binding that the preview account cannot serve must fail early.
   A pull request that adds a binding adds it to the allow list too.
   Added on 10 November 2026 from the second options check.
-- With decision 3 B or C, `PREVIEW_ZONE` is a repository variable, because
-  a pull request run cannot read the variables of the environment
-  `preview`, and the runner job needs the zone.
 - The deploy job runs the preview tool in this order:
   1. It creates the D1 database, or it finds the one from an earlier run.
      When a migration that the database applied has changed or gone, it
@@ -500,9 +501,8 @@ gives each step.
       repositories.
 - [ ] Give the preview Boat key and its organization ID, as decision 4
       says.
-- [ ] Make the GitHub environment `preview` with its secrets, its
-      variables, and the branch rule that decision 3 chooses. With
-      decision 3 B or C, also set the repository variable `PREVIEW_ZONE`.
+- [ ] Make the GitHub environment `preview` with its secrets and
+      variables, and with no branch rule.
 - [ ] For the smoke test of Milestone 7, put a token of the preview
       account in this workspace.
 
@@ -517,6 +517,10 @@ The docs state what a preview is, its setup, its relay, and its life.
 - [ ] In the same page, give the setup by the user with each setting, each
       token permission, and the permissions and events of the preview
       GitHub App.
+- [ ] In the same page, warn that the code of any open pull request can
+      reach the data and the logins of every preview, and the relay. Ask
+      for agent logins with a spending limit, and for the preview GitHub
+      App only on test repositories, as decision 3 A says.
 - [ ] In the same page, give the relay, the life of a preview, the sweep,
       a recovery by hand, and the costs.
 - [ ] `docs/deployment.md`: add the optional variable
@@ -592,14 +596,15 @@ tool prints the manifest of the preview GitHub App.
 
 ## Milestone 6: Preview workflow
 
-Depends on: 2, 5, and the answer to decision 3
+Depends on: 2 and 5
 
 `.github/workflows/preview.yml` runs the tool for each pull request, and
 deploys the relay from `main`.
 
 - [ ] Add the workflow with its triggers, permissions, concurrency, and
-      jobs: build, runner, deploy, delete, sweep, comment, and relay. Put
-      the deploy, delete, and comment jobs where decision 3 says.
+      jobs: build, runner, deploy, delete, sweep, comment, and relay. The
+      deploy, delete, and comment jobs run in the pull request run, as
+      decision 3 A says.
 - [ ] Skip forks and Dependabot with a notice. Warn and skip without the
       settings.
 - [ ] Install the packages of `main` for the deploy job in a temporary
@@ -651,8 +656,7 @@ Depends on: every other milestone
 - [ ] Check the first real preview of the next pull request: the links,
       the comment, sign-in, an install, an org, an image build, a
       workspace, chat, the terminal, and a live update of the pull request
-      bar. With decision 3 B or C, the trusted workflow runs only
-      after this change merges.
+      bar.
 - [ ] Check that the preview of this pull request was deleted when it
       merged, and that the first daily sweep passed.
 - [ ] Add port previews to previews: a second domain for preview
