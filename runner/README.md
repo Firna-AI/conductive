@@ -119,21 +119,9 @@ These facts belong to this implementation, not to the protocol docs.
   unavailable. The state file holds no record of its initial files.
   A changed-file read failure also keeps the turn's completed state and
   marks its files as unavailable.
-- File reads and diffs use the shared UTF-8 decoder and keep a leading byte
-  order mark. A valid path can hold a tab, a newline, or a backslash. Each
-  path must still resolve inside the repository and pass the `.git` check.
-- Each changes report includes `unpushedCommits`, the current branch's
-  commits that no remote branch holds. A remote ref update can change the
-  count without a file change. The report keeps that count through its
-  numbered parts and saved events.
-- Existing workspaces keep the runner of their original image. Reports
-  from older runners have no commit count. The Worker and browser preserve
-  that absence as unknown, rather than reporting zero.
-- File reads cap bytes at `FILE_READ_MAX_BYTES`, also when a caller asks
-  for more. Diffs use the same cap for each file version and for the patch.
-  The runner checks file and blob sizes before it loads their bytes.
-  Git stops patch output at the cap. An oversized result returns
-  `file_too_large`. Patch size reports the first byte over the limit.
+- The [file reports guide](file-reports.md) gives the base of each
+  comparison, the counts of each changes report, and the limits of file
+  reads and diffs.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no login and starts no agent.
 - The runner protocol carries no GitHub token.
@@ -253,9 +241,8 @@ tools that time the first agent start after a resume.
   shared with the Worker. The runner supplies tokens and logins.
 - [`event-limits.ts`](../src/shared/event-limits.ts): portable UTF-8 byte
   accounting and the shared tool and turn-summary caps.
-- `src/file-parts.ts`: full report parts and bounded tree deltas.
-- `src/file-updates.ts`: the full tree or the tree delta of each scan, and
-  the check for a new changes report.
+- [File reports](file-reports.md#key-code): the scans, the file tree, the
+  branch changes and their base, the report parts, and Git comparisons.
 - `src/link.ts`, `src/state.ts`, `src/socket.ts`, `src/commands.ts`, and
   `src/stored-events.ts`: the hello, welcome, confirm, and resend rules, the
   state file, the WebSocket, and checks of messages and saved events.
@@ -274,14 +261,6 @@ tools that time the first agent start after a resume.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
   `attachment-description.ts` describes each attached file to both agents.
   The [tool entry points](agent-tools.md#key-code) cover both MCP servers.
-- `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
-  queue, the file tree, the branch changes, bounded reads, and the files of
-  one turn.
-- `src/repository-changes.ts`: changed files against the base branch and
-  current-branch commits that no remote branch holds.
-- `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
-  indexes and objects for Git comparisons. The real index stays unchanged.
-- `src/git-paths.ts`: shared Git namespace states for paths and parents.
 - `src/measure.ts`, `src/compare.ts`, `scripts/`, and `service/`: the
   first-start measurement and its comparison, the build, the install
   script, the Codex check, and the systemd unit.

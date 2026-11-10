@@ -45,14 +45,23 @@ export function continueMoveCommand(
       `${GIT} -c protocol.allow=never -c protocol.file.allow=always fetch --quiet --no-tags --no-recurse-submodules -- ${stage} ${shellQuote(`+refs/heads/continue-base:refs/remotes/origin/${job.baseBranch}`)}`,
       `test "$(${GIT} rev-parse --verify ${base})" = "$conductive_base_commit"`,
       `${GIT} checkout --quiet --no-track --no-overwrite-ignore -b ${shellQuote(job.branch)} ${base} --`,
+      `${GIT} symbolic-ref refs/remotes/origin/HEAD ${base}`,
       `rm -rf -- ${stage}`,
     ].join('\n'),
   )
 }
 
 export function continueBranchCommand(
-  job: Pick<ContinueJob, 'directory'>,
+  job: Pick<ContinueJob, 'directory' | 'branch' | 'baseBranch'>,
 ): string {
-  const command = `set -eu\ncd ${shellQuote(job.directory)}\n${GIT} symbolic-ref --short HEAD`
+  const base = shellQuote(`refs/remotes/origin/${job.baseBranch}`)
+  const command = `set -eu
+cd ${shellQuote(job.directory)}
+conductive_current_branch=$(${GIT} symbolic-ref --short HEAD)
+if [ "$conductive_current_branch" = ${shellQuote(job.branch)} ]; then
+  ${GIT} rev-parse --verify ${shellQuote(`refs/remotes/origin/${job.baseBranch}^{commit}`)} > /dev/null
+  ${GIT} symbolic-ref refs/remotes/origin/HEAD ${base}
+fi
+printf '%s\\n' "$conductive_current_branch"`
   return `/usr/bin/env -i PATH=/usr/bin:/bin HOME=/home/user LC_ALL=C TZ=UTC GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 /bin/sh -c ${shellQuote(command)}`
 }

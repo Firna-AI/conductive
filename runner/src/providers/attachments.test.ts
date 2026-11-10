@@ -111,4 +111,36 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
       ],
     },
   })
+  await provider.send({
+    ...command,
+    message: { ...command.message, id: 'attachment-with-current-branches' },
+    branches: { workspaceBranch: 'owner/next', targetBranch: 'trunk' },
+  })
+  expect(
+    servers.latest.writes.find((write) => write.method === 'turn/steer'),
+  ).toMatchObject({
+    params: {
+      input: [
+        {
+          type: 'text',
+          text: 'Sender: @alice\nCurrent branches: workspace "owner/next"; target "trunk".\n\nChange the file.',
+          text_elements: [],
+        },
+        {
+          type: 'text',
+          text: 'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/home/user/.conductive-attachment-pdf.pdf"}',
+          text_elements: [],
+        },
+        {
+          type: 'text',
+          text: 'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/home/user/.conductive-attachment-image.png"}',
+          text_elements: [],
+        },
+        {
+          type: 'localImage',
+          path: '/home/user/.conductive-attachment-image.png',
+        },
+      ],
+    },
+  })
 })

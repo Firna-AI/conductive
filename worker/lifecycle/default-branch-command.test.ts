@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 
 import { expect, it } from 'vitest'
+import { Repository } from '../../runner/src/repository'
 
 import { setupBackendTests } from './backend-test-hooks'
 import { SENDER_GITHUB_TOKEN } from './default-branch-credential-test-support'
@@ -24,6 +25,20 @@ it('pushes an empty root as the turn sender without staged files and fetches it 
       await fixture.remoteGit('rev-parse', 'refs/heads/main')
     ).trim()
     expect(await fixture.git('rev-parse', 'FETCH_HEAD')).toBe(`${commit}\n`)
+    await fixture.git('checkout', '--quiet', '-b', 'owner/first', 'FETCH_HEAD')
+    await expect(
+      new Repository(fixture.directory).snapshot('main'),
+    ).resolves.toMatchObject({
+      baseCommit: commit,
+      changes: { baseBranch: 'main', uncommittedFileCount: 1 },
+    })
+    expect(
+      await fixture.git(
+        'for-each-ref',
+        '--format=%(refname)',
+        'refs/heads/main',
+      ),
+    ).toBe('')
     expect(await fixture.remoteGit('rev-list', '--count', 'main')).toBe('1\n')
     expect(await fixture.remoteGit('show', '-s', '--format=%P', 'main')).toBe(
       '\n',
@@ -73,10 +88,21 @@ it('pushes an empty root as the turn sender without staged files and fetches it 
 it('fetches normal history without a push', async () => {
   const fixture = await defaultBranchFixture(await backendFixture())
   try {
-    const commit = await fixture.createRemoteCommit()
+    const older = await fixture.createRemoteCommit()
+    expect((await fixture.execute()).exitCode).toBe(0)
+    await fixture.git('branch', 'main', 'refs/remotes/origin/main')
+    const commit = await fixture.createRemoteCommit(
+      'refs/heads/main',
+      'Updated remote commit',
+    )
     const result = await fixture.execute()
     expect(result.exitCode, result.stderr).toBe(0)
     expect(await fixture.git('rev-parse', 'FETCH_HEAD')).toBe(`${commit}\n`)
+    await fixture.git('checkout', '--quiet', '-b', 'owner/new', 'FETCH_HEAD')
+    await expect(
+      new Repository(fixture.directory).snapshot('main'),
+    ).resolves.toMatchObject({ baseCommit: commit })
+    expect(await fixture.git('rev-parse', 'main')).toBe(`${older}\n`)
     expect(await fixture.remoteGit('rev-parse', 'main')).toBe(`${commit}\n`)
     expect(
       fixture.github.requests.filter((request) =>

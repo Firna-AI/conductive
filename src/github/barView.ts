@@ -83,13 +83,25 @@ export interface BarControls {
 
 const noPullRequest = 'No pull request yet'
 
-/** The local work of a changes report. An absent count stays unknown. */
+/** The report sends this count, and the count is above zero. */
+function positive(count: number | undefined): boolean {
+  return count !== undefined && count > 0
+}
+
+/**
+ * The local work of a changes report, or unknown while no report shows.
+ * Each file that is not committed counts, also one that the net list leaves
+ * out, such as a file that an edit took back to its base content. The raw
+ * count of the runner holds such files. An older runner sends no raw count.
+ * Then only its listed files show the files that are not committed. The
+ * unpushed commits that a report counts are local work too.
+ */
 export function localWorkOf(changes: ChangesResponse | null): LocalWork {
   if (changes === null) return 'unknown'
-  if (changes.files.some((file) => file.uncommitted)) return 'yes'
-  // An older runner leaves the count out, so only the files decide then.
-  const commits = changes.unpushedCommits
-  return commits !== undefined && commits > 0 ? 'yes' : 'no'
+  const files =
+    positive(changes.uncommittedFileCount) ||
+    changes.files.some((file) => file.uncommitted)
+  return files || positive(changes.unpushedCommits) ? 'yes' : 'no'
 }
 
 /**

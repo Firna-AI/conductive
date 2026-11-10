@@ -62,9 +62,13 @@ A new stream starts with full reports. A reconnect keeps its revisions and parts
 The workspace joins all parts before it publishes a full browser report.
 Branch changes include committed, staged, unstaged, and untracked work.
 `ChangesResponse.unpushedCommits` counts the current branch's commits that
-no remote branch holds. Each changes part repeats that complete count.
-The current runner always sends it. Reports from older workspace images
-can omit it, and readers preserve that absence instead of assuming zero.
+no remote branch holds. `ChangesResponse.uncommittedFileCount` counts the
+raw Git status records of uncommitted work, also untracked files, and
+counts a rename once. It also counts a file whose edit brings back its base
+content, which Changes lists in no row. So it can differ from the number
+of rows. Each changes part repeats both complete counts.
+The current runner always sends both. Reports from older workspace images
+can omit either, and readers preserve that absence instead of assuming zero.
 `runner-files.ts` defines file read and diff commands and their matching results.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.

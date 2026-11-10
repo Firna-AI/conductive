@@ -25,6 +25,7 @@ export function emptySnapshot(): RepositorySnapshot {
     changes: {
       baseBranch: 'main',
       unpushedCommits: 0,
+      uncommittedFileCount: 0,
       files: [],
       summary: { files: 0, added: 0, removed: 0 },
     },

@@ -22,7 +22,6 @@ import { LifecycleBoat } from './lifecycle-boat-test-support'
 import { WorkspaceContinue } from './continue'
 import {
   CONTINUE_JOB_KEY,
-  pendingContinue,
   type ContinueJob,
   type ContinueOptions,
 } from './continue-types'
@@ -31,10 +30,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { TOOL_TURN_HEADER } from '../../tools/context'
 
 export async function continueFixture(harness: TestHarness) {
-  const chat = await createChatFixture(harness, {
-    turnDispatching: async () => !(await pendingContinue(storage)),
-  })
-  const storage: ContinueOptions['storage'] = chat.storage
+  const chat = await createChatFixture(harness)
   const api = new RepositoryGitHub(harness.github)
   api.branches.set('refs/heads/octocat/test', HEAD_SHA)
   api.pulls[2] = repositoryPull({
@@ -116,12 +112,15 @@ export async function continueFixture(harness: TestHarness) {
           ? api.fetch(request)
           : boat.fetch(request),
     },
-    run: (work) =>
-      chat.chat.runLifecycle(async () => {
+    run: async (work) => {
+      const result = await chat.chat.runLifecycle(async () => {
         const result = await work()
         await chat.chat.flushRunner()
         return result
-      }),
+      })
+      await chat.drain()
+      return result
+    },
     schedule: async (at) => {
       scheduled.push(at)
     },
@@ -212,9 +211,8 @@ export async function continueFixture(harness: TestHarness) {
       coordinator = new WorkspaceContinue(options)
     },
     resetContinue: async () => {
-      chat.chat.closeRunner()
-      await chat.drain()
-      chat.storage.records.clear()
+      await chat.actor.api.controls.reset()
+      await chat.restart()
       await chat.env.DB.prepare(
         "UPDATE workspaces SET branch = 'octocat/test', state = 'ready' WHERE id = ?",
       )

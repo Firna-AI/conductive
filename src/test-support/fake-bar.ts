@@ -35,8 +35,12 @@ export type FakeAccess = 'write' | 'read' | 'unknown'
 export type FakeMergeEnd =
   'merged' | 'moved-head' | 'no-right' | 'refused' | 'unavailable'
 
-/** The local work of the fake sandbox. `legacy` is a report with no count. */
-export type FakeWork = 'none' | 'files' | 'commits' | 'legacy'
+/**
+ * The local work of the fake sandbox. `restored` is a file that an edit took
+ * back to its base content: Git status holds it, and the net list does not.
+ * `legacy` is a report of an older runner, with no count.
+ */
+export type FakeWork = 'none' | 'files' | 'restored' | 'commits' | 'legacy'
 
 /** How a Continue of the fake ends. */
 export type FakeContinueEnd =
@@ -122,11 +126,27 @@ export function workReport(work: FakeWork): ChangesResponse {
     ...file,
     uncommitted: work === 'files' && file.path === FAKE_FILE_PATH,
   }))
-  // An older runner sends no count of commits.
+  // An older runner sends no count of commits or of files.
   if (work === 'legacy') {
     return { baseBranch: changes.baseBranch, files, summary: changes.summary }
   }
-  return { ...changes, files, unpushedCommits: work === 'commits' ? 2 : 0 }
+  // The current runner sends both counts. Its raw count holds each file in
+  // Git status, also one that the net list leaves out.
+  if (work === 'restored') {
+    return {
+      baseBranch: changes.baseBranch,
+      unpushedCommits: 0,
+      uncommittedFileCount: 1,
+      files: [],
+      summary: { files: 0, added: 0, removed: 0 },
+    }
+  }
+  return {
+    ...changes,
+    files,
+    unpushedCommits: work === 'commits' ? 2 : 0,
+    uncommittedFileCount: work === 'files' ? 1 : 0,
+  }
 }
 
 /**
@@ -187,12 +207,14 @@ export function continuedReply(
 
 /**
  * The changes report of the new branch after Continue: only the changed
- * files that moved with it, and no commit of its own yet.
+ * files that moved with it, none of them committed, and no commit of its
+ * own yet.
  */
 function continuedReport(moved: readonly BranchChangedFile[]): ChangesResponse {
   return {
     baseBranch: 'main',
     unpushedCommits: 0,
+    uncommittedFileCount: moved.length,
     files: moved,
     summary: {
       files: moved.length,

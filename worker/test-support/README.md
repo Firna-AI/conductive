@@ -99,7 +99,7 @@ Set `endpoint.confirmEvents = false` to retain unconfirmed events.
 The endpoint stores each event once and confirms only contiguous event numbers.
 It requests a resend when a number is missing.
 It joins valid runner file parts before it emits a complete browser file event.
-It preserves the current-branch commit count and its absence in older reports.
+It preserves the current-branch commit count and the raw status count, and the absence of each in older reports.
 Pending parts stay on the endpoint across reconnects.
 Set `refuseEvent` to return `too_large`, `invalid`, or `turn_not_active`.
 The endpoint stores one workspace refusal marker and confirms that event number.

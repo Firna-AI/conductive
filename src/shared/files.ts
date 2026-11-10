@@ -94,7 +94,7 @@ export type RunnerFileTreePart = FileTreeResponse & RunnerFileRevisionPart
 
 /**
  * Concatenate files in part order. Each path occurs once in the full list.
- * Every part repeats the same baseBranch, unpushedCommits, and summary.
+ * Every part repeats the same baseBranch, status counts, and summary.
  * summary.files counts the complete list, not the files in this part.
  */
 export type RunnerChangesPart = ChangesResponse & RunnerFileRevisionPart
@@ -153,6 +153,8 @@ export interface ChangesResponse {
   displayBaseBranch?: string
   /** Current-branch commits held by no remote branch. Older runners omit it. */
   unpushedCommits?: number
+  /** Raw status entries, including untracked files. Older runners omit it. */
+  uncommittedFileCount?: number
   files: readonly BranchChangedFile[]
   summary: { files: number; added: number; removed: number }
 }

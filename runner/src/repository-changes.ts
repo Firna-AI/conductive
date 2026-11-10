@@ -4,6 +4,7 @@ import type {
   ChangesResponse,
 } from '../../src/shared/files'
 import { Git, zeroPaths } from './git'
+import { comparisonBase } from './comparison-base'
 import {
   addUntracked,
   comparison,
@@ -46,11 +47,11 @@ export async function branchChanges(
   branch: string,
   warn: (message: string) => void = () => {},
 ): Promise<ChangesResponse> {
-  const sha = await git.resolve(branch)
+  const base = await comparisonBase(git, branch)
   return withGitIndex(
     git,
-    (index) => changesFromIndex(index, branch, sha, warn),
-    sha,
+    (index) => changesFromIndex(index, base.branch, base.sha, warn),
+    base.sha,
   )
 }
 
@@ -75,9 +76,11 @@ export async function changesFromIndex(
     index.source.run(['rev-list', '--count', 'HEAD', '--not', '--remotes']),
   ])
   const dirty = new Set<string>()
+  let uncommittedFileCount = 0
   const statuses = zeroPaths(status)
   for (let i = 0; i < statuses.length; i++) {
     const item = statuses[i]
+    uncommittedFileCount++
     dirty.add(item.slice(3))
     if (item.slice(0, 2).includes('R') || item.slice(0, 2).includes('C'))
       dirty.add(statuses[++i])
@@ -107,6 +110,7 @@ export async function changesFromIndex(
   return {
     baseBranch: branch,
     unpushedCommits: Number(unpushed.toString().trim()),
+    uncommittedFileCount,
     files,
     summary: {
       files: files.length,

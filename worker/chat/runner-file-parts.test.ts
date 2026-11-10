@@ -1,4 +1,6 @@
 import { expect, it } from 'vitest'
+
+import { parseChanges } from '../../src/files/api/parse-changes'
 import { FilesState } from '../files/state'
 import type { FilesStorage } from '../files/storage'
 import { createRunnerLimitsFixture } from './runner-limits.test-support'
@@ -40,6 +42,7 @@ it('joins trees and independent changes parts before projection, live publicatio
       partCount: 2,
       baseBranch: 'main',
       unpushedCommits: 3,
+      uncommittedFileCount: 4,
       files: [
         { path, change: 'modified', added: 1, removed: 0, uncommitted: true },
       ],
@@ -61,9 +64,12 @@ it('joins trees and independent changes parts before projection, live publicatio
     'b.txt',
   ])
   expect(await files.changes()).toMatchObject({ unpushedCommits: 3 })
+  expect(parseChanges(await files.changes())).toMatchObject({
+    uncommittedFileCount: 4,
+  })
   expect(fixture.published.at(-1)?.event).toMatchObject({
     type: 'changes.updated',
-    changes: { unpushedCommits: 3 },
+    changes: { unpushedCommits: 3, uncommittedFileCount: 4 },
   })
   expect((await fixture.history()).events.map(({ event }) => event)).toEqual(
     fixture.published.slice(1).map(({ event }) => event),
@@ -178,6 +184,7 @@ it('refuses inconsistent changes metadata and empty multipart reports', async ()
       partCount: 2,
       baseBranch: 'main',
       unpushedCommits: 3,
+      uncommittedFileCount: 4,
       files: [
         {
           path: `file-${partNumber}`,
@@ -194,6 +201,7 @@ it('refuses inconsistent changes metadata and empty multipart reports', async ()
   for (const patch of [
     { baseBranch: 'other' },
     { unpushedCommits: 4 },
+    { uncommittedFileCount: 5 },
     { partCount: 3 },
     { summary: { files: 3, added: 2, removed: 0 } },
   ]) {
@@ -232,6 +240,7 @@ it('refuses inconsistent changes metadata and empty multipart reports', async ()
   const stored = {
     baseBranch: 'main',
     unpushedCommits: 3,
+    uncommittedFileCount: 4,
     files: [
       {
         path: 'file-1',

@@ -69,8 +69,8 @@ scheduler of the object alarm. Each owner of a timed task stores its own
 due time there. The lifecycle owners are the lifecycle state, the start,
 and the publication of a create result. The `changed` retry, the delete of
 a failed create, the access stop, and the image coordinator are lifecycle
-owners too. The Mac devices, the previews, and GitHub store their due
-times there too.
+owners too. The Mac devices, the previews, GitHub, and Continue store their
+due times there too.
 
 - Each write that changes a due time sets the object alarm to the earliest
   stored due time.
@@ -80,7 +80,8 @@ times there too.
 - The scheduler clears a due time of the Mac devices after their run
   succeeds, unless that run stored a new one.
 - `runWorkspaceAlarms` in [`workspace-alarms.ts`](../workspace-alarms.ts)
-  is the outer run of the object alarm. It runs the Mac devices, the
+  is the outer run of the object alarm. It first advances a running
+  [Continue](continue.md#phases). It runs the Mac devices, the
   previews, and GitHub. It also starts the lifecycle run,
   `runWorkspaceAlarm` in [`workspace-alarm.ts`](workspace-alarm.ts). The
   lifecycle run runs the lifecycle owners.

@@ -1,7 +1,8 @@
 # Routes and input activity
 
 This page is part of the [workspace lifecycle](README.md) guide. It gives the browser
-routes, the input activity, and the machine route of this folder.
+routes, the input activity, and the machine route of this folder, and their
+entry points.
 
 ## Browser routes
 
@@ -171,3 +172,20 @@ It also checks that both authorizations selected the same person.
 [`image-sources/credential.ts`](image-sources/credential.ts). It does this
 on the machine hostname only, after the Mac command route and before the
 runner socket, with the private error response wrapper.
+
+## Key code
+
+- [`browser.ts`](browser.ts): `handleLifecycleRequest`, the browser routes.
+- [`machine.ts`](machine.ts): `handleGitCredential`, the git credential
+  route.
+- [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
+  the one input owner of a workspace object, with its minute updates and
+  retries. [`create-input-activity.ts`](create-input-activity.ts) connects
+  it to the lifecycle hooks, the member fence, and `warnWorker`.
+- [`input-activity-local.ts`](input-activity-local.ts): `LifecycleInputState`,
+  the fenced input time in the durable lifecycle state, with its capture
+  and its reconciliation.
+- [`input-activity-update.ts`](input-activity-update.ts) and
+  [`input-activity-data.ts`](input-activity-data.ts): one D1 and provider
+  update. `writeWorkspaceActivity` moves `last_activity_at` forward with
+  `MAX`.

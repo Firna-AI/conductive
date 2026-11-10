@@ -68,6 +68,9 @@ export function toolFixtures(
     sizeBytes: 0,
   }
   content.sizeBytes = new TextEncoder().encode(content.content).byteLength
+  // A deliberate legacy report: a runner from before the raw count of Git
+  // status sends none. The recorded file events reuse it. The current
+  // reports, with both counts, are in `fake-bar.ts`.
   const changes: ChangesResponse = {
     baseBranch: 'main',
     unpushedCommits: 1,

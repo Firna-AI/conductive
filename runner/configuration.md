@@ -26,13 +26,16 @@ The [agent runner](README.md) reads these variables when the service starts.
   folder absolute. `CONDUCTIVE_REPOSITORY_DIR` has no folder part, so it is
   not one of them. The start script maps it to `CONDUCTIVE_REPOSITORY`, as
   [Start in a workspace](../image/README.md#start-in-a-workspace) says.
-- `CONDUCTIVE_DEFAULT_BRANCH` is the base of the file marks, the Changes
+- `CONDUCTIVE_DEFAULT_BRANCH` names the base of the file marks, the Changes
   list, and the changed files of each turn. Each diff request names its own
-  base branch. File reports compare the commit of that branch, the Git ID
-  of each file, and a streamed hash of the bytes that a read returns. That
-  hash uses the same path checks as a read, and a fixed value for a refused
-  or missing target. So an edit, a link into an ignored folder, or a clean
-  filter cannot hide a change from the open files and diffs. The agent
+  base branch. The current fetched default branch of `origin/HEAD` comes
+  first, and these names apply only without it, as
+  [The comparison base](file-reports.md#the-comparison-base) says. File
+  reports compare the commit of the selected base, the Git ID of each file,
+  and a streamed hash of the bytes that a read returns. That hash uses the
+  same path checks as a read, and a fixed value for a refused or missing
+  target. So an edit, a link into an ignored folder, or a clean filter
+  cannot hide a change from the open files and diffs. The agent
   instructions also name it as the target branch.
 - `CONDUCTIVE_WORKSPACE_BRANCH` is the workspace branch that the
   [agent instructions](../docs/protocol/agent-instructions.md#the-branches)

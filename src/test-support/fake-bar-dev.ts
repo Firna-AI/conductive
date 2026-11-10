@@ -45,7 +45,7 @@ export const scenarioValues: {
   access: ['write', 'read', 'unknown'],
   method: ['squash', 'merge', 'rebase', 'none'],
   merge: ['merged', 'moved-head', 'no-right', 'refused', 'unavailable'],
-  work: ['none', 'files', 'commits', 'legacy'],
+  work: ['none', 'files', 'restored', 'commits', 'legacy'],
   continue: ['continued', 'question', 'clash', 'stopped', 'turn'],
 }
 

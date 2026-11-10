@@ -967,6 +967,34 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
   `calummoore/keyboard-shortcuts-settings` works on shortcuts.
 - Archive on merge.
 
+### Review corrections
+
+- Design call on 10 November 2026: report `uncommittedFileCount` from raw
+  Git status before net-diff filtering. Keep the field optional for older
+  runners. Reason: a dirty file can have no net difference from the base.
+- Design call on 10 November 2026: use one comparison-base resolver for
+  snapshots, Changes, and file diffs. Prefer the current remote default
+  reference and preserve tree-tip comparisons and local branches. Reason:
+  Continue can update the remote base while local `main` stays unchanged.
+- Design call on 10 November 2026: keep `origin/HEAD` current during trusted
+  creation and Continue. Repair it after a lost move result before
+  publication, without another checkout. Reason: the retained reporter must
+  use the new default branch and target name after recovery too.
+- Design call on 10 November 2026: use the combined Terms revision
+  `2026-11-10-pull-request-actions` after merging the Mac and attachment
+  notices. Reason: the combined notices need one current consent revision
+  with the latest effective date.
+- Design call on 10 November 2026: treat any positive raw status count,
+  listed uncommitted file, or unpushed commit as local work. Reason: Merge
+  must not hide work that either report field shows.
+- Design call on 10 November 2026: keep the shared recorded tools report
+  without a raw status count as a deliberate legacy fixture. Current bar
+  scenarios supply explicit counts. Reason: legacy readers must preserve
+  absence instead of inventing zero.
+- Design call on 10 November 2026: add a restored-file scenario to both
+  action development pages. It has no net diff and one raw dirty file.
+  Reason: real browser checks must reproduce the missing local-work case.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1203,12 +1231,27 @@ Depends on: every other milestone
       The `hero` and `review` pictures show the bar of Ready to merge, which
       now offers Squash and merge.
 - [x] Run the targeted tests and the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [x] Fix confirmed review finding 1 by reporting the raw uncommitted-file
+      count independently of the net branch diff. Preserve legacy absence.
+- [x] Fix confirmed review finding 2 with one current comparison-base
+      resolver for scans and diffs. Preserve local branches and existing
+      tip-comparison behavior. Follow the current target after Continue.
+- [x] Preserve the shared GitHub request deadline for token revocation
+      after the main integration. Update the captured-branch fetch checks
+      and replace obsolete timeout-API spies with behavioral coverage.
+- [x] Align the runner Git fixtures with the fetched default reference.
+      Preserve all existing path, encoding, size, representation, and
+      index-preservation assertions.
+- [ ] Run the affected tests and the complete gate on the combined review
+      fixes. Re-review the fix once under the same review workflow.
+
+Evidence: `.context/pull-request-bar-actions/verification/report-final-local.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

@@ -80,6 +80,7 @@ it('watches new directories and Git index changes as tree deltas', async () => {
       partCount: 1,
       baseBranch: 'main',
       unpushedCommits: 0,
+      uncommittedFileCount: 1,
       files: [
         {
           path: 'created/deep/new.txt',
@@ -145,6 +146,7 @@ it('waits for warm-up and watches files after an initial connection failure', as
       partCount: 1,
       baseBranch: 'main',
       unpushedCommits: 0,
+      uncommittedFileCount: 1,
       files: [
         {
           path: 'after-recovery/new.txt',

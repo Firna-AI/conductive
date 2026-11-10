@@ -124,11 +124,14 @@ export async function defaultBranchFixture(
         turnId: auth.turnId,
         sender: auth.sender,
       })
-    const createRemoteCommit = async (ref = 'refs/heads/main') => {
+    const createRemoteCommit = async (
+      ref = 'refs/heads/main',
+      message = 'Existing remote commit',
+    ) => {
       const tree = (await checked(remote, ['mktree'])).trim()
       const result = await run(
         'git',
-        ['commit-tree', tree, '-m', 'Existing remote commit'],
+        ['commit-tree', tree, '-m', message],
         remote,
         {
           ...environment,

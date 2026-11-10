@@ -48,6 +48,7 @@ it('refreshes only the requested file kind without hiding later monitor updates'
       partCount: 1,
       baseBranch: 'main',
       unpushedCommits: 0,
+      uncommittedFileCount: 1,
       files: [
         {
           path: 'first',
@@ -75,6 +76,7 @@ it('refreshes only the requested file kind without hiding later monitor updates'
         partCount: 1,
         baseBranch: 'main',
         unpushedCommits: 0,
+        uncommittedFileCount: 1,
         files: [
           {
             path: 'second',

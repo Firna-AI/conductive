@@ -70,6 +70,9 @@ export class FakeRunnerFileReports {
         ...(event.changes.unpushedCommits === undefined
           ? {}
           : { unpushedCommits: event.changes.unpushedCommits }),
+        ...(event.changes.uncommittedFileCount === undefined
+          ? {}
+          : { uncommittedFileCount: event.changes.uncommittedFileCount }),
         files: parts.flatMap((part) => part.files),
         summary: event.changes.summary,
       },

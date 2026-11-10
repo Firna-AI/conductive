@@ -36,10 +36,16 @@ knows:
   answer, the bar offers no agent action and no Merge. A failed read
   offers the agent actions and no Merge. Write access without an allowed
   method offers the agent actions and no Merge.
-- `localWorkOf` reads the changes report of the kept files: a changed file
-  that is not committed, or a commit that no remote branch holds. Until a
-  report shows, the local work is unknown, and Merge waits. A report of an
-  older runner has no count, which stays unknown, so its files decide.
+- `localWorkOf` reads the changes report of the kept files. Any one of
+  these is local work: a positive raw count of uncommitted files, a listed
+  file that is not committed, or a commit that no remote branch holds. The
+  raw count also holds a file that the list leaves out, such as a file that
+  an edit took back to its base content, as
+  [the counts of a changes report](../../runner/file-reports.md#the-counts-of-a-changes-report)
+  say. Until a report shows, the local work is unknown, and Merge waits. A
+  report of an older runner can lack either count. A missing count stays
+  absent, never zero. Without the raw count, listed files show uncommitted
+  work. A reported unpushed count still applies.
 - Fix checks shows only while the checks name a check that blocks the
   merge: failed, timed out, cancelled, or one that needs an action. Its
   prompt lists them.
@@ -92,9 +98,8 @@ reply.
 - A `continued` reply names an event number. Continuing shows until the
   ordered stream reaches it, so the workspace on its new branch and the
   note of each session show. The store of the new branch then follows.
-- `continueOutcome` keeps the Worker's safe words for each stop, so the
-  words of a clash show only for a real clash. A refusal because a turn
-  runs shows the wait.
+- `continueOutcome` keeps the Worker's safe words for each stop. A refusal
+  because a turn runs shows the wait.
 
 ## Key code
 

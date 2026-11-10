@@ -83,7 +83,9 @@ go out with the current branches.
 
 ## Phases
 
-The `continue` alarm source of the workspace object advances the job one
+Each alarm run of the workspace object first runs the `continue` alarm
+source, through `runWorkspaceAlarms` in
+[`workspace-alarms.ts`](../workspace-alarms.ts). It advances the job one
 phase at a time. A provider wait never holds the chat queue. Each phase
 first checks, with `authorizeContinue` in
 [`continue-data.ts`](continue-data.ts), that the member still has access,
@@ -145,6 +147,10 @@ in its environment.
   without force, with `--no-track` and `--no-overwrite-ignore`. Changed
   files move with the branch. It runs no reset, clean, or stash, and writes
   no local base branch.
+- After the checkout, it points `refs/remotes/origin/HEAD` at the fetched
+  base. So the runner compares with that base, as
+  [The comparison base](../../runner/file-reports.md#the-comparison-base)
+  says.
 - When the changed files clash with the base, Git refuses. The old branch,
   its files, and its commits stay, and the job ends with 409
   `workspace_continue_failed`.
@@ -189,10 +195,12 @@ runs after a good move. It never runs Git again.
   fails the job, so no operation starts again with an old identity.
 - When a move loses its process or ends with an error, Continue first
   reads the actual branch of the working repository with
-  `continueBranchCommand`. A HEAD on the new branch means that the move is
-  done, so publication runs without another checkout. A HEAD on the old
-  branch keeps the rules above. Any other answer keeps the reservation, and
-  the step retries until the read names one of the two branches.
+  `continueBranchCommand`. On the new branch, the read checks that the
+  fetched base resolves, and points `origin/HEAD` at it again. Then the
+  move is done, so publication runs without another checkout. A HEAD on the
+  old branch keeps the rules above. Any other answer, also a failed write of
+  `origin/HEAD`, keeps the reservation, and the step retries until the read
+  names one of the two branches. So no new branch publishes with an old base.
 - A failure during publication or during a started command retries after
   one second. The move stays done, so no second branch starts.
 - A member or org suspension and a lifecycle stop cancel the job. The fetch
@@ -232,7 +240,8 @@ The existing gate errors still apply, such as `workspace_not_found`,
 - [`continue-progress.ts`](continue-progress.ts): `advanceContinue`, the
   phases and the commands.
 - [`continue-commands.ts`](continue-commands.ts): the fetch and move
-  commands, and `continueBranchCommand`, the read of the actual branch.
+  commands, and `continueBranchCommand`, the read of the actual branch,
+  which also repairs `origin/HEAD` on the new branch.
 - [`continue-data.ts`](continue-data.ts): `authorizeContinue`, the access
   check of each phase, and `storeContinuedBranch`, the guarded D1 branch
   write with its read-back check.
@@ -263,7 +272,8 @@ results.
 - [`continue.test.ts`](continue.test.ts): a Continue by another member, the
   note in every open and closed session, the local-work question, a failed
   move, a publication that lost its reply, and a move that lost its exit
-  result. [`continue.test-support.ts`](continue.test-support.ts) builds its
+  result, also while the read of its branch fails.
+  [`continue.test-support.ts`](continue.test-support.ts) builds its
   chat fixture with the Continue hold, the fake GitHub repository, and the
   fake Boat.
 - [`continue-access.test.ts`](continue-access.test.ts): the admission
@@ -278,5 +288,11 @@ results.
   with the new base, and the count of every local branch.
   [`continue-native.test-support.ts`](continue-native.test-support.ts)
   builds its real Git repositories.
+- [`continue-comparisons.test.ts`](continue-comparisons.test.ts) keeps one
+  runner file reporter across a fetch without a merge, Continue, and a
+  default branch that only the remote has after a rename. Changes and diffs
+  follow the fetched tip, and the local default branch keeps its commit. A
+  lock on `origin/HEAD` after the checkout fails the read until the lock
+  goes, and the next read repairs it without another checkout.
 - [`branch-context.test.ts`](../chat/branch-context.test.ts): the current
   branches of each runner command.

@@ -153,6 +153,9 @@ export function parseEvent(value: unknown): RunnerEvent {
         ...(update.unpushedCommits === undefined
           ? {}
           : { unpushedCommits: integer(update.unpushedCommits) }),
+        ...(update.uncommittedFileCount === undefined
+          ? {}
+          : { uncommittedFileCount: integer(update.uncommittedFileCount) }),
         ...(typeof update.displayBaseBranch === 'string'
           ? { displayBaseBranch: update.displayBaseBranch }
           : {}),

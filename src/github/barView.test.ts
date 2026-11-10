@@ -241,16 +241,26 @@ describe('the actions of the bar', () => {
 })
 
 describe('the local work of a changes report', () => {
-  it('counts each changed file that is not committed and each unpushed commit, and keeps an absent count unknown', () => {
+  it('counts each file that is not committed, also one that the net list leaves out, and each unpushed commit, and reads only the files of a report with no counts', () => {
     const { changes } = toolFixtures()
     const clean = changes.files.map((file) => ({ ...file, uncommitted: false }))
     const { baseBranch, summary } = changes
+    // An edit back to the base content leaves the net list empty. Git status
+    // still holds the file, so the raw count of the runner does too.
+    const restored = {
+      baseBranch,
+      files: [],
+      summary: { files: 0, added: 0, removed: 0 },
+    }
     expect([
       localWorkOf(null),
       localWorkOf({ ...changes, files: clean, unpushedCommits: 0 }),
       localWorkOf({ ...changes, files: clean, unpushedCommits: 2 }),
       localWorkOf({ ...changes, unpushedCommits: 0 }),
       localWorkOf({ baseBranch, summary, files: clean }),
-    ]).toEqual(['unknown', 'no', 'yes', 'yes', 'no'])
+      localWorkOf({ ...restored, uncommittedFileCount: 1, unpushedCommits: 0 }),
+      localWorkOf({ ...restored, uncommittedFileCount: 0, unpushedCommits: 0 }),
+      localWorkOf({ ...restored, uncommittedFileCount: 0, unpushedCommits: 2 }),
+    ]).toEqual(['unknown', 'no', 'yes', 'yes', 'no', 'yes', 'no', 'yes'])
   })
 })

@@ -113,9 +113,8 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
 
 ### Key Code
 
-- [`browser.ts`](browser.ts): `handleLifecycleRequest`, the browser routes.
-- [`machine.ts`](machine.ts): `handleGitCredential`, the git credential
-  route.
+- [Routes and input activity](routes.md#key-code): the browser routes, the
+  git credential route, and the input activity owner.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
   workspace and queues its start.
 - [`creation-claims.ts`](creation-claims.ts): `claimCreation`, which records
@@ -197,17 +196,6 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
   Both take the turn part of the idle time only from the committed chat.
   The [turn recovery](recovery-and-shown-state.md#turn-recovery) gives the
   rules.
-- [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
-  the one input owner of a workspace object, with its minute updates and
-  retries. [`create-input-activity.ts`](create-input-activity.ts) connects
-  it to the lifecycle hooks, the member fence, and `warnWorker`.
-- [`input-activity-local.ts`](input-activity-local.ts): `LifecycleInputState`,
-  the fenced input time in the durable lifecycle state, with its capture
-  and its reconciliation.
-- [`input-activity-update.ts`](input-activity-update.ts) and
-  [`input-activity-data.ts`](input-activity-data.ts): one D1 and provider
-  update. `writeWorkspaceActivity` moves `last_activity_at` forward with
-  `MAX`.
 - [`durable-start-stop.ts`](durable-start-stop.ts): the saved stop owner of
   failed and cancelled resumes.
 - [`durable-alarm.ts`](durable-alarm.ts): `advanceLifecycleAlarm`, the
@@ -266,34 +254,14 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
   `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as the
   [Workspace Durable Object](workspace-object.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
-- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
-- [`image-builds.ts`](image-builds.ts): `startImageBuild` and
-  `advanceImageBuild`, which removes the command journals before a snapshot.
-- [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
-  which starts changed settings after the first good build finishes cleanup.
-- [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
-- [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
-  replays a saved allocation request and saves the recovered sandbox ID.
-  Failed image jobs retain their unresolved allocation phase until cleanup
-  recovers and deletes the sandbox.
-- [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
-  which splits output into rows and adds the budget statements of
-  [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.
-- [`build-log-reader.ts`](build-log-reader.ts): `readBuildSnapshot`, which
-  reads the build state and its log in one D1 batch.
-- [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
-  `runImageAlarm`.
-- [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
-- [`image-software.ts`](image-software.ts): the runner archive check and
-  install/start commands.
+- [Image builds](image-builds.md#key-code): the image build, its log, its
+  timers, its coordinator, its software, and the private Node of the image.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
   into a Bash command. [`lifecycleCommand`](command-intents.ts) runs each step once.
-- [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
-  private Node of the org image, and its paths. The
-  [runtime guide](../../image/runtime.md#update-the-node-release) says how to
-  update it.
 - [Repository layout](repository-layout.md#key-code): the repository entries.
+- [The default branch at a create](default-branch.md#key-code): the fetch
+  and branch commands of a create.
 - [Continue](continue.md#key-code): the Continue entries, the shared
   local-work check, and the branch name of a create and of Continue.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and

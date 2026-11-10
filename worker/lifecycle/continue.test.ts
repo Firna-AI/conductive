@@ -146,8 +146,12 @@ it('repairs publication after a committed transaction loses its reply without a 
   const pending = await f.start()
   if (pending.state !== 'pending') throw new Error('Expected pending Continue.')
   await f.advanceTo('publish')
-  f.storage.crashAfterCommit = true
+  await f.failNextCommit('after', 'The committed Continue reply was lost.')
   await f.coordinator.advance()
+  expect(await f.active()).toMatchObject({
+    id: pending.continueId,
+    phase: 'publish',
+  })
   const after = (await f.history(session.id)).events.filter(
     ({ event }) => event.type === 'workspace.continued',
   )
@@ -181,6 +185,14 @@ it('publishes an already switched branch after the command loses its exit result
     'octocat/test',
   )
   f.inspectBranch(job.branch)
+  f.boat.synchronousExitCode = 1
+  f.reconstruct()
+  await f.coordinator.advance()
+  expect(await f.result(pending.continueId)).toEqual(pending)
+  expect((await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).branch).toBe(
+    'octocat/test',
+  )
+  f.boat.synchronousExitCode = 0
   f.reconstruct()
   await f.finish()
   await expect(f.result(pending.continueId)).resolves.toMatchObject({
