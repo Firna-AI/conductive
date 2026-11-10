@@ -1,3 +1,4 @@
+import { PREVIEW_RELAY_MARK_HEADER } from '../../src/shared/previews'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
@@ -110,7 +111,12 @@ export class PreviewProxy {
         this.ports.invalidate(row)
         throw new ProviderError('unavailable', 503)
       }
-      if ([401, 403].includes(upstream.status)) this.ports.invalidate(row)
+      if (!upstream.headers.has(PREVIEW_RELAY_MARK_HEADER)) {
+        this.ports.invalidate(row)
+        void upstream.body?.cancel().catch(() => {})
+        upstream.webSocket?.close(1008, 'Connection closed.')
+        throw new ProviderError('unavailable', 503)
+      }
       await scope.authorize()
       const headers = portResponseHeaders(upstream, request, row.port)
       if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {

@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { PREVIEW_RELAY_MARK_HEADER } from '../../../src/shared/previews'
 import { localServer, readBody, relayFixture } from './test-support'
 
 it('accepts only the private hostname of its own port', async () => {
@@ -19,11 +20,13 @@ it('accepts only the private hostname of its own port', async () => {
       headers: { ...relay.headers(target.port), Host: host },
     })
     expect(response.status, host).toBe(403)
+    expect(response.headers[PREVIEW_RELAY_MARK_HEADER.toLowerCase()]).toBe('1')
     expect(response.body).toBe('The preview is not available.')
     expect(response.headers['content-type']).toBe('text/plain; charset=utf-8')
   }
   const allowed = await relay.send({ headers: relay.headers(target.port) })
   expect(allowed.status).toBe(200)
+  expect(allowed.headers[PREVIEW_RELAY_MARK_HEADER.toLowerCase()]).toBe('1')
   expect(allowed.body).toBe('ready')
 })
 
@@ -52,6 +55,7 @@ it('rejects missing, empty, non-decimal, repeated, and looping target ports', as
         : { Host: host, 'X-Conductive-Preview-Port': value }
     const response = await relay.send({ headers })
     expect(response.status, JSON.stringify(value)).toBe(400)
+    expect(response.headers[PREVIEW_RELAY_MARK_HEADER.toLowerCase()]).toBe('1')
     expect(response.body).toBe('The preview is not available.')
   }
 })
@@ -61,6 +65,7 @@ it('forwards the request and strips credentials and proxy headers', async () => 
     response.setHeader('Set-Cookie', ['one=1', 'two=2'])
     response.setHeader('Connection', 'close, X-Response-Hop')
     response.setHeader('X-Response-Hop', 'secret')
+    response.setHeader(PREVIEW_RELAY_MARK_HEADER, 'untrusted')
     response.end(
       JSON.stringify({
         method: request.method,
@@ -96,6 +101,7 @@ it('forwards the request and strips credentials and proxy headers', async () => 
     'first line\nsecond line',
   )
   expect(result.status).toBe(200)
+  expect(result.headers[PREVIEW_RELAY_MARK_HEADER.toLowerCase()]).toBe('1')
   expect(JSON.parse(result.body)).toEqual({
     method: 'POST',
     url: '/submit/a%20b?one=1&two=2',

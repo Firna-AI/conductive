@@ -1,6 +1,8 @@
+import { PREVIEW_RELAY_MARK_HEADER } from '../../src/shared/previews'
 import { createHarness, TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import type { ProxySocket, SocketRuntime } from './types'
 import { toolsActivity } from './activity.test-support'
+import { relayResponse } from './relay.test-support'
 
 class TestSocket implements ProxySocket {
   binaryType: 'blob' | 'arraybuffer' = 'blob'
@@ -194,12 +196,14 @@ export async function createToolsHarness() {
       if (request.headers.get('Upgrade') === 'websocket') {
         const upstream = new TestSocket()
         upstreamSockets.push(upstream)
-        return socketResponse(
+        const response = socketResponse(
           upstream,
           request.headers.get('Sec-WebSocket-Protocol') ?? '',
         )
+        response.headers.set(PREVIEW_RELAY_MARK_HEADER, '1')
+        return response
       }
-      return new Response('preview content', {
+      return relayResponse('preview content', {
         headers: {
           'Content-Type': 'text/plain',
           'Set-Cookie':

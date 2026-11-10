@@ -470,6 +470,7 @@ The GitHub CLI works outside an agent turn with the workspace owner's account.
   [Sandbox software](../architecture.md#sandbox-software) says. Each preview
   request goes through it to the previewed server, the server on the port
   of the preview.
+- An answer that does not come from the preview relay never reaches the browser.
 - The Worker refuses previews with 409 `preview_relay_unavailable` without
   a running relay, because the app is not live and the Worker keeps one route.
   Decision 214 rejects a direct fallback, installation at preview open,

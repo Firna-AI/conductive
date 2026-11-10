@@ -3,6 +3,7 @@ import type { IncomingMessage } from 'node:http'
 import {
   PREVIEW_RELAY_PORT,
   PREVIEW_RELAY_PORT_HEADER,
+  PREVIEW_RELAY_MARK_HEADER,
 } from '../../../src/shared/previews'
 
 const portHeader = PREVIEW_RELAY_PORT_HEADER.toLowerCase()
@@ -43,7 +44,7 @@ export function requestTarget(
   return { port }
 }
 
-export function responseHeaders(message: IncomingMessage): string[] {
+function forwardedHeaders(message: IncomingMessage): string[] {
   const removed = new Set(hopHeaders)
   for (const token of (message.headers.connection ?? '').split(','))
     removed.add(token.trim().toLowerCase())
@@ -56,11 +57,22 @@ export function responseHeaders(message: IncomingMessage): string[] {
   return headers
 }
 
+export function responseHeaders(message: IncomingMessage): string[] {
+  const headers = forwardedHeaders(message)
+  const marked = [PREVIEW_RELAY_MARK_HEADER, '1']
+  for (let index = 0; index < headers.length; index += 2)
+    if (
+      headers[index].toLowerCase() !== PREVIEW_RELAY_MARK_HEADER.toLowerCase()
+    )
+      marked.push(headers[index], headers[index + 1])
+  return marked
+}
+
 export function requestHeaders(
   request: IncomingMessage,
   port: number,
 ): string[] {
-  const headers = responseHeaders(request)
+  const headers = forwardedHeaders(request)
   const forwarded: string[] = ['Host', `localhost:${port}`]
   for (let index = 0; index < headers.length; index += 2) {
     const name = headers[index]

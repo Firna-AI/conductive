@@ -92,7 +92,7 @@ it('invalidates a rejected descriptor without replaying a write and resolves the
   const refused = await setup.handler.proxy(
     setup.previewRequest(setup.previewUrl, { method: 'POST', body: 'cart=2' }),
   )
-  expect(refused.status).toBe(403)
+  expect(refused.status).toBe(502)
   expect(writes).toBe(1)
   harness.requests.length = 0
   const next = await setup.handler.proxy(

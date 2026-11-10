@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { createPreviewHandler } from './handler'
+import { relayResponse } from './relay.test-support'
 import { openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
@@ -48,7 +49,7 @@ it('resolves a relative redirect against the requested upstream path', async () 
   const fetch = harness.dependencies.fetch
   harness.dependencies.fetch = async (request) => {
     if (new URL(request.url).hostname === 'boat.dev') return fetch(request)
-    return new Response(null, {
+    return relayResponse(null, {
       status: 302,
       headers: { Location: 'login' },
     })

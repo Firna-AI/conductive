@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import {
   PREVIEW_RELAY_PORT,
   PREVIEW_RELAY_PORT_HEADER,
+  PREVIEW_RELAY_MARK_HEADER,
 } from '../../src/shared/previews'
 import { SESSION_COOKIE } from '../security/cookies'
 import { TEST_TIME } from '../test-support/harness'
@@ -38,6 +39,7 @@ it('proxies WebSocket frames without keeping an idle workspace active and closes
     }),
   )
   expect(response.status).toBe(101)
+  expect(response.headers.get(PREVIEW_RELAY_MARK_HEADER)).toBe(null)
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
   expect(response.headers.get('Sec-WebSocket-Protocol')).toBe('hot-reload')
   const forwarded = harness.requests.find(

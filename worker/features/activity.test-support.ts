@@ -1,5 +1,8 @@
 import type { Workspace } from './activity-entry.test-support'
-import { previewsPath } from '../../src/shared/previews'
+import {
+  previewsPath,
+  PREVIEW_RELAY_MARK_HEADER,
+} from '../../src/shared/previews'
 import { number, record, string } from '../chat/inputs'
 import {
   OUTER_ORG,
@@ -147,7 +150,9 @@ export async function hostedActivityPort(
 ): Promise<Response | undefined> {
   const url = new URL(request.url)
   if (url.hostname.endsWith('.on.boat.dev'))
-    return new Response('forwarded input')
+    return new Response('forwarded input', {
+      headers: { [PREVIEW_RELAY_MARK_HEADER]: '1' },
+    })
   if (url.pathname.endsWith('/host')) {
     const port = number(record(await request.clone().json()).port)
     return Response.json({

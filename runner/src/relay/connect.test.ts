@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { PREVIEW_RELAY_MARK_HEADER } from '../../../src/shared/previews'
 import { localServer, readBody, relayFixture } from './test-support'
 
 it('keeps a request body across a refused connection before IPv6 succeeds', async () => {
@@ -45,5 +46,6 @@ it('returns a short gateway error when no target address accepts a connection', 
   const relay = await relayFixture({ targetAddresses: ['127.0.0.1', '::1'] })
   const result = await relay.send({ headers: relay.headers(target.port) })
   expect(result.status).toBe(502)
+  expect(result.headers[PREVIEW_RELAY_MARK_HEADER.toLowerCase()]).toBe('1')
   expect(result.body).toBe('The server did not answer.')
 })

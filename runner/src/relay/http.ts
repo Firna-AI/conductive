@@ -1,5 +1,6 @@
 import { request, type IncomingMessage, type ServerResponse } from 'node:http'
 
+import { PREVIEW_RELAY_MARK_HEADER } from '../../../src/shared/previews'
 import { connectTarget } from './connect'
 import { requestHeaders, requestTarget, responseHeaders } from './headers'
 
@@ -10,6 +11,7 @@ function fail(response: ServerResponse, status: 400 | 403 | 502) {
     return
   }
   response.writeHead(status, {
+    [PREVIEW_RELAY_MARK_HEADER]: '1',
     'Content-Type': 'text/plain; charset=utf-8',
     Connection: 'close',
   })

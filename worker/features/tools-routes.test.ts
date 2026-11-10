@@ -2,7 +2,10 @@ import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { desktopPath } from '../../src/shared/desktop'
-import { previewsPath } from '../../src/shared/previews'
+import {
+  previewsPath,
+  PREVIEW_RELAY_MARK_HEADER,
+} from '../../src/shared/previews'
 import { terminalPaths } from '../../src/shared/terminal'
 import { workspaceEventsPath } from '../../src/shared/events'
 import { number, record, string } from '../chat/inputs'
@@ -36,7 +39,10 @@ it('serves terminal and fresh desktop URLs and launches a preview through its se
       if (url.hostname.endsWith('.on.boat.dev')) {
         upstream.push(request)
         return new Response('private preview', {
-          headers: { 'Content-Type': 'text/plain' },
+          headers: {
+            'Content-Type': 'text/plain',
+            [PREVIEW_RELAY_MARK_HEADER]: '1',
+          },
         })
       }
       if (url.pathname.endsWith('/host')) {

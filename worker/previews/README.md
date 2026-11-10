@@ -140,8 +140,15 @@ Each preview open checks the relay unit with one command call:
 `systemctl is-active --quiet conductive-preview-relay.service`.
 A proxy cache miss runs the same check. Concurrent requests share its pending result.
 Document loads, iframe loads, and module requests reuse the cached descriptor.
-A sandbox change, a failed upstream request, or a 401 or 403 clears the descriptor.
+A sandbox change, a failed upstream request, or an unmarked response clears the descriptor.
 A failed request is never replayed automatically. The next request checks again.
+
+The relay marks every HTTP response and WebSocket handshake with `X-Conductive-Relay: 1`.
+The Worker replaces an unmarked answer with the provider-unavailable error.
+No provider page reaches the browser.
+The next request checks the relay unit again.
+Marked errors keep the descriptor, including 401, 403, and the relay's 502 for a stopped dev server.
+The response header allowlist removes the mark before the browser gets the answer.
 
 When the relay unit does not run, the open and the proxy refuse with
 409 `preview_relay_unavailable`. The message says:

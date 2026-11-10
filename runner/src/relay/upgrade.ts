@@ -1,6 +1,7 @@
 import { request, type IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 
+import { PREVIEW_RELAY_MARK_HEADER } from '../../../src/shared/previews'
 import { connectTarget } from './connect'
 import { requestHeaders, requestTarget, responseHeaders } from './headers'
 
@@ -13,7 +14,7 @@ function fail(client: Duplex, status: 400 | 403 | 502) {
     status
   ]
   client.end(
-    `HTTP/1.1 ${status} ${title}\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: ${Buffer.byteLength(text)}\r\nConnection: close\r\n\r\n${text}`,
+    `HTTP/1.1 ${status} ${title}\r\n${PREVIEW_RELAY_MARK_HEADER}: 1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: ${Buffer.byteLength(text)}\r\nConnection: close\r\n\r\n${text}`,
   )
 }
 

@@ -7,6 +7,7 @@ import {
   type PreviewResponse,
 } from '../../src/shared/previews'
 import { createPreviewHandler } from './handler'
+import { relayResponse } from './relay.test-support'
 import { launchPreview } from './launch-test-support'
 import { openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
@@ -98,7 +99,7 @@ it.each([401, 'network failure'] as const)(
     const failed = await setup.handler.proxy(
       setup.previewRequest(setup.previewUrl),
     )
-    expect(failed.status).toBe(failure === 'network failure' ? 502 : failure)
+    expect(failed.status).toBe(502)
     harness.setRelayRunning(false)
     harness.requests.length = 0
     const next = await setup.handler.proxy(
@@ -163,7 +164,7 @@ it('keeps redirects to the hosted address instead of mapping them to the preview
   harness.dependencies.fetch = async (request) =>
     new URL(request.url).hostname === 'boat.dev'
       ? base(request)
-      : new Response(null, { status: 302, headers: { Location: location } })
+      : relayResponse(null, { status: 302, headers: { Location: location } })
   const response = await setup.handler.proxy(setup.previewRequest())
   expect(response.status).toBe(302)
   expect(response.headers.get('Location')).toBe(location)

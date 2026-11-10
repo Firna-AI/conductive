@@ -3,11 +3,13 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import {
   PREVIEW_RELAY_PORT,
   PREVIEW_RELAY_PORT_HEADER,
+  PREVIEW_RELAY_MARK_HEADER,
 } from '../../src/shared/previews'
 import { SESSION_COOKIE } from '../security/cookies'
 import { DESKTOP_SESSION_COOKIE } from '../security/desktop-contract'
 import { TEST_TIME } from '../test-support/harness'
 import { PREVIEW_COOKIE_PREFIX } from './credentials'
+import { relayResponse } from './relay.test-support'
 import { openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
@@ -45,6 +47,7 @@ it('proxies HTTP with explicit headers and keeps only preview app cookies', asyn
   expect(await response.text()).toBe('preview content')
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
   expect(response.headers.get('Set-Cookie')).toBe('shop=green; Path=/; Secure')
+  expect(response.headers.get(PREVIEW_RELAY_MARK_HEADER)).toBe(null)
   const upstream = harness.requests.find(
     (request) => new URL(request.url).hostname !== 'boat.dev',
   )
@@ -86,7 +89,7 @@ it('rewrites local redirects and strips reserved response cookies and headers', 
       'Set-Cookie',
       'shop=green; Domain=.on.boat.dev; HttpOnly; Path=/',
     )
-    return new Response(null, { status: 302, headers })
+    return relayResponse(null, { status: 302, headers })
   }
   for (const address of [
     'http://localhost:3000',
@@ -127,7 +130,7 @@ it('maps same-origin form and fetch Origins to localhost while preserving foreig
   harness.dependencies.fetch = async (request) => {
     if (new URL(request.url).hostname === 'boat.dev') return base(request)
     origins.push(request.headers.get('Origin'))
-    return new Response('accepted')
+    return relayResponse('accepted')
   }
   const cases: Record<string, string>[] = [
     { Origin: 'null', 'Sec-Fetch-Site': 'same-origin' },
@@ -176,7 +179,7 @@ it('forwards authenticated OPTIONS and rejects browser preflights without a cred
       const requested = request.headers.get('Access-Control-Request-Headers')
       if (requested) headers.set('Access-Control-Allow-Headers', requested)
     }
-    return new Response(null, { status: 204, headers })
+    return relayResponse(null, { status: 204, headers })
   }
   const preflight = await setup.handler.proxy(
     new Request(`${setup.previewUrl}/api/cart`, {

@@ -4,6 +4,7 @@ import type { IncomingHttpHeaders } from 'node:http'
 import { expect, it, onTestFinished } from 'vitest'
 import { WebSocket, WebSocketServer } from 'ws'
 
+import { PREVIEW_RELAY_MARK_HEADER } from '../../../src/shared/previews'
 import { deferred } from '../../test-support/runtime'
 import { localServer, relayFixture } from './test-support'
 
@@ -20,14 +21,19 @@ it('applies the hostname and target port rules to WebSocket upgrades', async () 
     })
     client.on('error', () => {})
     onTestFinished(() => client.terminate())
-    const status = new Promise<number | undefined>((resolve) => {
+    const rejected = new Promise<{
+      status: number | undefined
+      headers: IncomingHttpHeaders
+    }>((resolve) => {
       client.once('unexpected-response', (_request, response) => {
         response.resume()
-        resolve(response.statusCode)
+        resolve({ status: response.statusCode, headers: response.headers })
       })
-      client.once('open', () => resolve(101))
+      client.once('open', () => resolve({ status: 101, headers: {} }))
     })
-    expect(await status).toBe(expected)
+    const response = await rejected
+    expect(response.status).toBe(expected)
+    expect(response.headers[PREVIEW_RELAY_MARK_HEADER.toLowerCase()]).toBe('1')
   }
 })
 
@@ -60,6 +66,8 @@ it('relays WebSocket frames and keeps the same local request headers', async () 
   })
   onTestFinished(() => client.terminate())
   client.on('error', () => {})
+  const handshake = deferred<IncomingHttpHeaders>()
+  client.once('upgrade', (response) => handshake.resolve(response.headers))
   const opened = new Promise<number | undefined>((resolve) => {
     client.once('open', () => resolve(101))
     client.once('unexpected-response', (_request, response) => {
@@ -70,6 +78,9 @@ it('relays WebSocket frames and keeps the same local request headers', async () 
   const greeting = deferred<string>()
   client.once('message', (data) => greeting.resolve(data.toString()))
   expect(await opened).toBe(101)
+  expect(
+    (await handshake.promise)[PREVIEW_RELAY_MARK_HEADER.toLowerCase()],
+  ).toBe('1')
   expect(await greeting.promise).toBe('from server')
   const incoming = await received.promise
   expect(incoming.url).toBe('/live?room=one')
@@ -94,4 +105,26 @@ it('relays WebSocket frames and keeps the same local request headers', async () 
   const closed = once(client, 'close')
   client.close(1000, 'finished')
   expect((await closed)[0]).toBe(1000)
+})
+
+it('marks a refused upgrade and the relay gateway error when the server stops', async () => {
+  const target = await localServer((_request, response) => {
+    response.writeHead(403, { [PREVIEW_RELAY_MARK_HEADER]: 'untrusted' })
+    response.end('App refused the upgrade.')
+  })
+  const relay = await relayFixture({ targetAddresses: ['127.0.0.1'] })
+  const headers = {
+    ...relay.headers(target.port),
+    Connection: 'Upgrade',
+    Upgrade: 'websocket',
+  }
+  const refused = await relay.send({ headers })
+  expect(refused.status).toBe(403)
+  expect(refused.body).toBe('App refused the upgrade.')
+  expect(refused.headers[PREVIEW_RELAY_MARK_HEADER.toLowerCase()]).toBe('1')
+  await new Promise<void>((resolve) => target.server.close(() => resolve()))
+  const stopped = await relay.send({ headers })
+  expect(stopped.status).toBe(502)
+  expect(stopped.body).toBe('The server did not answer.')
+  expect(stopped.headers[PREVIEW_RELAY_MARK_HEADER.toLowerCase()]).toBe('1')
 })

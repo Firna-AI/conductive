@@ -189,6 +189,10 @@ states the requirements.
 The preview relay connects preview requests to servers in the sandbox.
 It gives each server `Host: localhost:<port>`.
 It streams HTTP bodies and WebSocket traffic.
+It adds `X-Conductive-Relay: 1` to every response, including errors and upgrade handshakes.
+It replaces any value for this header that the previewed server sends.
+The Worker uses the mark to distinguish relay answers from provider answers.
+The Worker removes the mark before it sends the answer to the browser.
 The [preview requirements](../docs/protocol/access-and-security.md#port-previews)
 state its access rules.
 
