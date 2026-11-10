@@ -20,7 +20,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 9 November 2026.`,
+  it uses it, and who gets it. Effective date: 10 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -97,6 +97,12 @@ export const privacyDocument: LegalDocument = {
             storage of ${productName} at Cloudflare. When the agent starts
             work on the message, ${productName} copies them to the cloud
             computer of the workspace.`,
+          text`Mac commands: ${productName} keeps each request and its result.
+            They record the command, its folder, its reason, its time limit,
+            and the output. A request also names the Mac that gets it.
+            The result says how the command ended. They let you and the
+            agent follow the command. Always-allowed commands and 15-minute
+            permissions stay only on your Mac.`,
           text`Your code: it stays in the cloud computers that ${productName}
             runs for your org. ${productName} reads a file or a diff when you
             open it, to show it to you.`,
@@ -131,7 +137,9 @@ export const privacyDocument: LegalDocument = {
             your files, and your agent sessions are in them. ${productName}
             sends the provider the requests that start, stop, and use them.`,
           text`Anthropic and OpenAI get your messages, your files, and your
-            code when an agent works on them. With each message, they also get
+            code when an agent works on them. Each Mac command request and its
+            result also go to the agent and to Anthropic or OpenAI.
+            With each message, they also get
             the GitHub login and the display name of its sender. They also get
             the name of the workspace branch, which starts with the GitHub
             login of the first owner of the workspace. Each session uses the
@@ -140,8 +148,9 @@ export const privacyDocument: LegalDocument = {
             lets other members use it. When that member does not share the
             login, your message starts a new session on your own login. The
             terms of that provider apply.`,
-          text`The members of your orgs see the workspaces of the org and
-            their chats. A member with a terminal in a cloud computer can read
+          text`The members of your orgs see the workspaces of the org,
+            their chats, and each Mac command request and result.
+            A member with a terminal in a cloud computer can read
             the agent login and the GitHub token of a turn that runs there. A
             program that a tool of the agent starts, such as a dev server, can
             keep the agent login after the turn ends. A member with a terminal
@@ -203,8 +212,9 @@ export const privacyDocument: LegalDocument = {
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and
           suspension records do not automatically expire when you stop
-          using ${productName}. Workspace chat history stays while its org
-          exists, including while a cloud computer is stopped.`,
+          using ${productName}. Workspace chat history and Mac command records
+          stay while their org exists, including while a cloud computer is
+          stopped.`,
         paragraph`A connected agent login stays until you remove or replace
           it. Panel widths stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
@@ -248,10 +258,11 @@ export const privacyDocument: LegalDocument = {
     {
       title: 'Cookies',
       blocks: [
-        paragraph`This site sets no cookies. The app sets one cookie that
-          keeps you signed in, and one that protects the GitHub sign-in while
-          it runs.`,
-        paragraph`The sign-in cookie lasts for up to 7 days. The GitHub
+        paragraph`This site sets no cookies. The web app and the Mac app each
+          set their own cookie that keeps you signed in. Only the Mac app's
+          cookie store holds its session cookie. Another cookie protects the
+          GitHub sign-in while it runs.`,
+        paragraph`Each sign-in cookie lasts for up to 7 days. The GitHub
           sign-in protection cookie lasts for up to 10 minutes. These
           cookies support sign-in and security. They use secure connections
           and cannot be read by page scripts.`,

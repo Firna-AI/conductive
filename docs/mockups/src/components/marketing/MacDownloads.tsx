@@ -1,10 +1,12 @@
 import type { Viewport } from '@mokly/mokly'
-import { Download } from 'lucide-react'
 import type { MacAppSection } from '../../../../../src/marketing/features'
 import { macDownloadHref } from '../../../../../src/marketing/links'
 import { useOutsideHref } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import styles from './MacDownloads.module.css'
+import { siteIcons } from './siteIcons'
+
+const DownloadIcon = siteIcons.download
 
 type MacDownload = MacAppSection['downloads'][number]
 
@@ -20,7 +22,7 @@ function DownloadLink(props: { download: MacDownload; main: boolean }) {
       className={classes(styles.button, props.main && styles.primary)}
       href={href}
     >
-      <Download aria-hidden className={styles.icon} size={16} />
+      <DownloadIcon aria-hidden className={styles.icon} size={16} />
       {props.download.label}
     </a>
   )
