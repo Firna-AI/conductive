@@ -19,6 +19,7 @@ import type { AttachmentStorageInput } from '../chat/attachment-storage'
 import type { NativeByteChunk } from './native-attachment-controls'
 import type { NativeQuery } from './native-d1'
 import type { NativeLifecycleControls } from './native-lifecycle-controls'
+import type { ProviderAccountConfigurations } from '../sandbox/accounts'
 
 export const NATIVE_TEST_TIME = 1_800_000_000_000
 
@@ -28,7 +29,10 @@ export interface NativeWorkspaceOptions {
   callbacks?: NativeChatCallbacks
   onPublication?(event: WorkspaceEventPublication): Promise<void>
   onQueued?(): Promise<void>
-  environment?: Record<string, string | undefined>
+  environment?: Record<
+    string,
+    string | ProviderAccountConfigurations | undefined
+  >
   observers?: NativeChatObservers
   idPrefix?: string
   idWidth?: number

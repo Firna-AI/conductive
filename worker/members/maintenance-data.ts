@@ -18,9 +18,11 @@ export async function workspaceDisks(
   return (
     await db
       .prepare(
-        `SELECT w.id AS workspaceId, w.sandbox_id AS sandboxId, w.stopped_at AS stoppedAt,
+        `SELECT w.id AS workspaceId, w.sandbox_id AS sandboxId,
+     w.provider_account AS providerAccount, w.stopped_at AS stoppedAt,
      w.next_disk_keepalive_at AS nextKeepaliveAt FROM workspaces w
      JOIN org_deletion_resources r ON r.org_id = w.org_id AND r.kind = 'sandbox' AND r.resource_id = w.sandbox_id
+       AND r.provider_account = w.provider_account
      WHERE w.org_id = ? AND w.archived_at IS NULL AND w.state = 'stopped'
      AND w.stopped_at IS NOT NULL AND r.removed_at IS NULL AND ${activeWorkspaceOwnerPredicate} ORDER BY w.id`,
       )
@@ -34,13 +36,16 @@ export async function scheduleDisk(
   orgId: string,
   token: string,
   workspaceId: string,
+  sandboxId: string,
+  providerAccount: string,
   nextKeepaliveAt: number,
   generation: number,
   now: number,
 ) {
   const result = await db
     .prepare(
-      `UPDATE workspaces SET next_disk_keepalive_at = ? WHERE org_id = ? AND id = ? AND archived_at IS NULL
+      `UPDATE workspaces SET next_disk_keepalive_at = ? WHERE org_id = ? AND id = ?
+     AND sandbox_id = ? AND provider_account = ? AND archived_at IS NULL
      AND state = 'stopped' AND stopped_at < ?
      AND (next_disk_keepalive_at IS NULL OR next_disk_keepalive_at = ?)
      AND EXISTS (SELECT 1 FROM org_deletions WHERE org_id = ? AND purge_started_at IS NULL)
@@ -50,6 +55,8 @@ export async function scheduleDisk(
       nextKeepaliveAt,
       orgId,
       workspaceId,
+      sandboxId,
+      providerAccount,
       nextKeepaliveAt,
       nextKeepaliveAt,
       orgId,
@@ -67,15 +74,17 @@ export async function beginDiskRestart(
   orgId: string,
   token: string,
   sandboxId: string,
+  providerAccount: string,
   generation: number,
   now: number,
 ) {
   const result = await db
     .prepare(
-      `UPDATE org_deletion_resources SET stopped_at = NULL WHERE org_id = ? AND resource_id = ? AND kind = 'sandbox'
+      `UPDATE org_deletion_resources SET stopped_at = NULL WHERE org_id = ? AND resource_id = ?
+     AND provider_account = ? AND kind = 'sandbox'
      AND ${lifecycleWritePredicate}`,
     )
-    .bind(orgId, sandboxId, orgId, token, now, generation)
+    .bind(orgId, sandboxId, providerAccount, orgId, token, now, generation)
     .run()
   return result.meta.changes > 0
 }
@@ -84,15 +93,27 @@ export async function markDiskResumed(
   db: D1Database,
   orgId: string,
   workspaceId: string,
+  sandboxId: string,
+  providerAccount: string,
   token: string,
   generation: number,
   now: number,
 ) {
   const result = await db
     .prepare(
-      `UPDATE workspaces SET state = 'starting' WHERE org_id = ? AND id = ? AND ${lifecycleWritePredicate}`,
+      `UPDATE workspaces SET state = 'starting' WHERE org_id = ? AND id = ?
+       AND sandbox_id = ? AND provider_account = ? AND ${lifecycleWritePredicate}`,
     )
-    .bind(orgId, workspaceId, orgId, token, now, generation)
+    .bind(
+      orgId,
+      workspaceId,
+      sandboxId,
+      providerAccount,
+      orgId,
+      token,
+      now,
+      generation,
+    )
     .run()
   return result.meta.changes > 0
 }

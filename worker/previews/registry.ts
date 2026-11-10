@@ -32,6 +32,7 @@ class PreviewScope {
         this.closed ||
         current.id !== row.id ||
         current.sandboxId !== row.sandboxId ||
+        current.providerAccount !== row.providerAccount ||
         current.expiresAt <= dependencies.now()
       ) {
         this.close()
@@ -82,7 +83,11 @@ export class PreviewRegistry {
       identity.expiresAt,
     ])
     let scope = this.scopes.get(key)
-    if (!scope || scope.row.sandboxId !== row.sandboxId) {
+    if (
+      !scope ||
+      scope.row.sandboxId !== row.sandboxId ||
+      scope.row.providerAccount !== row.providerAccount
+    ) {
       scope?.close()
       scope = new PreviewScope(
         this.env,

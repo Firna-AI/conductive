@@ -1,4 +1,5 @@
 import type { AppDependencies } from '../env'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import {
   createHarness,
   TEST_TIME,
@@ -89,6 +90,7 @@ export async function backendFixture(sharedHarness?: TestHarness) {
         id,
         {
           MACHINE_ORIGIN: env.MACHINE_ORIGIN,
+          SANDBOX_PROVIDER_ACCOUNTS: env.SANDBOX_PROVIDER_ACCOUNTS,
           GITHUB_APP_PRIVATE_KEY: id.startsWith('org-image:')
             ? imageAppKey()
             : undefined,
@@ -127,8 +129,17 @@ export async function backendFixture(sharedHarness?: TestHarness) {
       sourceCalls.push(input)
     },
     scheduler: {
-      schedule: async (orgId, software, nextAt, buildId) => {
-        scheduled.push({ orgId, software, nextAt, buildId })
+      schedule: async (orgId, software, nextAt, buildId, providerAccount) => {
+        scheduled.push({
+          orgId,
+          software,
+          nextAt,
+          buildId,
+          ...(providerAccount === undefined ||
+          providerAccount === DEFAULT_PROVIDER_ACCOUNT
+            ? {}
+            : { providerAccount }),
+        })
       },
     },
   }

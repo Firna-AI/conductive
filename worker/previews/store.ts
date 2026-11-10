@@ -10,6 +10,7 @@ export interface PreviewRecord extends WorkspaceTarget {
   expiresAt: number
   listenerMode?: PortMode | null
   listenerSandboxId?: string | null
+  listenerProviderAccount?: string | null
 }
 
 export function publicPreview(row: PreviewRecord, appOrigin: string): Preview {
@@ -31,10 +32,11 @@ export async function insertPreview(
 ): Promise<boolean> {
   const result = await db
     .prepare(
-      `INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at, listener_mode, listener_sandbox_id)
-     SELECT ?, ?, w.org_id, w.id, ?, ?, ?, ?, w.sandbox_id FROM workspaces w
+      `INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at,
+       listener_mode, listener_sandbox_id, provider_account)
+     SELECT ?, ?, w.org_id, w.id, ?, ?, ?, ?, w.sandbox_id, w.provider_account FROM workspaces w
      JOIN org_members m ON m.org_id = w.org_id
-     WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ?
+     WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ? AND w.provider_account = ?
      AND ${sandboxAccessPredicate} AND m.user_id = ?`,
     )
     .bind(
@@ -47,6 +49,7 @@ export async function insertPreview(
       target.workspaceId,
       target.orgId,
       target.sandboxId,
+      target.providerAccount,
       userId,
     )
     .run()
@@ -61,7 +64,8 @@ export async function listPreviews(
 ): Promise<Preview[]> {
   const { results } = await db
     .prepare(
-      `SELECT id, hostname, port, expires_at AS expiresAt FROM preview_hostnames
+      `SELECT id, hostname, port, expires_at AS expiresAt,
+       provider_account AS listenerProviderAccount FROM preview_hostnames
      WHERE org_id = ? AND workspace_id = ? AND revoked_at IS NULL AND expires_at > ?
      ORDER BY created_at, id`,
     )
@@ -78,7 +82,8 @@ export async function previewForLaunch(
 ): Promise<PreviewRecord | null> {
   const row = await db
     .prepare(
-      `SELECT p.id, p.hostname, p.port, p.expires_at AS expiresAt FROM preview_hostnames p
+      `SELECT p.id, p.hostname, p.port, p.expires_at AS expiresAt,
+       p.provider_account AS listenerProviderAccount FROM preview_hostnames p
      JOIN workspaces w ON w.id = p.workspace_id AND w.org_id = p.org_id
      WHERE p.org_id = ? AND p.workspace_id = ? AND p.id = ?
        AND p.revoked_at IS NULL AND p.expires_at > ? AND ${sandboxAccessPredicate}`,
@@ -96,16 +101,20 @@ export async function savePreviewMode(
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE preview_hostnames SET listener_mode = ?, listener_sandbox_id = ? WHERE workspace_id = ? AND org_id = ? AND port = ?
-     AND revoked_at IS NULL AND EXISTS (SELECT 1 FROM workspaces w WHERE w.id = workspace_id AND w.sandbox_id = ?)`,
+      `UPDATE preview_hostnames SET listener_mode = ?, listener_sandbox_id = ?, provider_account = ?
+     WHERE workspace_id = ? AND org_id = ? AND port = ? AND revoked_at IS NULL
+     AND EXISTS (SELECT 1 FROM workspaces w WHERE w.id = workspace_id
+       AND w.sandbox_id = ? AND w.provider_account = ?)`,
     )
     .bind(
       mode,
       target.sandboxId,
+      target.providerAccount,
       target.workspaceId,
       target.orgId,
       port,
       target.sandboxId,
+      target.providerAccount,
     )
     .run()
 }

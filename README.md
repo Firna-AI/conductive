@@ -244,8 +244,9 @@ features:
   rules, and the shared content security policy of the web app and the Mac
   app.
 - `worker/data/`: D1 queries for users, orgs, and sessions.
-- `worker/sandbox/`: the typed Boat adapter, which uses the app's one Boat
-  key.
+- `worker/sandbox/`: the provider accounts, the lookup of the client of each
+  account, and the typed Boat adapter. Production has one account, which
+  uses the app's one Boat key.
 - `src/app/`: the data of the web app, such as the typed API client, the
   models that the screens read, the router, and the event stream. Its
   [README](src/app/README.md) gives the rules and the key code of the
