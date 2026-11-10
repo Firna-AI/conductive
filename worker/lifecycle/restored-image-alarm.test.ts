@@ -14,7 +14,7 @@ it('advances a restored image coordinator from its shared lifecycle alarm', asyn
   const actor = fixture.actors.get(id)
   if (!actor) throw new Error('The image coordinator is missing.')
   await fixture.runtime.env.DB.prepare(
-    'UPDATE settings SET next_image_refresh_at = ? WHERE org_id = ?',
+    "UPDATE org_images SET next_image_refresh_at = ? WHERE org_id = ? AND provider_account = 'boat'",
   )
     .bind(now + 60_000, fixture.org.id)
     .run()

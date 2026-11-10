@@ -1,28 +1,25 @@
 # Sandbox provider
 
-This area owns the Boat transport and the use of the app's one Boat key.
+This area owns the provider accounts, the lookup of the client of each
+account, and the Boat transport. Boat is the only provider kind.
+Production has one account, `boat`, with the app's one Boat key.
 Every sandbox and every saved snapshot of every org lives in the app's own
 Boat organization. The key does not keep the orgs apart, so each caller
-authorizes its org and its resource before it asks for a provider.
-
-Call `orgSandboxProvider(env, userId, orgId, fetch)` when the caller still
-needs the membership check. It returns 404 `org_not_found` for a user who is
-not a member of the org.
-Trusted feature code calls `sandboxProvider(env, fetch)` after it authorizes
-its workspace, its build, or its cleanup lease.
-Both return `SandboxProvider`. Neither gives the key to its caller.
-The caller checks ownership before it passes a sandbox or saved snapshot ID.
+authorizes its org and its resource before it asks for a provider, as
+[Provider accounts](#provider-accounts) says.
 
 The transport creates the API URL and headers from fixed routes.
-It sends `X-Boat-Org` with `BOAT_ORG_ID` on every API request. A change of the
-active Boat organization of the key's user then moves no work of the app.
+It sends `X-Boat-Org` with the organization ID of its account on every
+API request, `BOAT_ORG_ID` for `boat`. A change of the active Boat organization
+of the key's user then moves no work of the app.
 It forwards no browser cookie.
 File writes also send a signed PUT to the exact address that the fixed
 upload-grant route returns. That transfer sends no provider credential or org header.
 
 `SandboxProvider.privatePort(sandboxId, port, mode)` calls only the fixed host
 route. It requires explicit localhost or network mode and private access.
-It parses the provider URL into a server-only origin and token.
+It parses the provider URL into a `PrivatePort`: a server-only origin and the
+[port credential](#port-credentials) that the client builds.
 `SandboxProvider.desktop(sandboxId)` calls only the fixed desktop route.
 It returns a typed ready URL or a starting result. Ready URLs require HTTPS
 and a fragment token. The feature layer maps starting into its public response.
@@ -33,6 +30,53 @@ The transport validates sandbox ID segments and centralizes errors and the organ
 `runCommand` waits for the command, with a 600 second Boat timeout and a 610 second request timeout.
 `startCommand` starts a detached command, with a 30 second request timeout.
 `SandboxProvider.getCommandStatus` reads detached output from byte offsets, with the same 30 second timeout.
+
+## Port credentials
+
+A `PortCredential` tells the proxies how to reach one private port:
+
+- `headers`: the trusted request headers that the port needs, ready to send.
+- `stripCookies`: the cookie names that the proxies drop from browser
+  cookies and from upstream `Set-Cookie` headers.
+- `stripHeaders`: the header names that the proxies drop from the upstream
+  request and from the reply.
+- `stripQueryParameters`: the query names that the proxies drop from the
+  upstream URL and from each rewritten redirect.
+
+The Boat client puts the token of the port URL only in the header
+`Cookie: _port_auth=<token>`. It strips the `_port_auth` cookie and the
+`_token` and `_port_auth` query names, and it names no header to strip.
+No credential goes to the browser. The
+[preview backend](../previews/README.md) applies the credential.
+
+## Provider accounts
+
+Each D1 record of a sandbox or a saved snapshot stores its provider
+account, as the lifecycle page
+[Provider accounts](../lifecycle/provider-accounts.md) says.
+Ask for the client of that stored account:
+
+- Call `orgProviderForAccount(env, userId, orgId, fetch, accountId)` when
+  the caller still needs the membership check. It returns 404
+  `org_not_found` for a user who is not a member of the org.
+- Trusted feature code calls `providerForAccount(env, fetch, accountId)`
+  after it authorizes its workspace, its build, or its cleanup lease.
+
+Both return `SandboxProvider`. Neither gives a key to its caller.
+The caller checks ownership before it passes a sandbox or saved snapshot ID.
+
+The `boat` account, `DEFAULT_PROVIDER_ACCOUNT` in
+[account-identity.ts](account-identity.ts), always uses `BOAT_API_KEY` and
+`BOAT_ORG_ID`. The optional `SANDBOX_PROVIDER_ACCOUNTS` map of the trusted
+Worker environment adds other accounts, each with its kind, API key, and
+organization ID. It cannot replace `boat`. Production does not set it.
+Tests set it for a second Boat organization.
+
+An account that the Worker does not configure throws `ProviderAccountError`
+before any provider request. That error is not a `ProviderError`, so no
+cleanup counts the record of an unknown account as already removed.
+Each switch over the provider kind is exhaustive. So the type check finds
+each place that a new kind must handle.
 
 ## The app's Boat account
 
@@ -195,13 +239,54 @@ It does not copy transfer error text or codes.
 
 Run `npm run test -- worker/files worker/sandbox` from the repository root with Node 24.
 Tests use [FakeBoat and local storage](../test-support/README.md).
+`FakeBoat.addAccount` gives the fake server a second organization with its own key, for a second account.
 The transport tests use counted streams to check exact budgets and early cancellation.
+
+### Provider contract suite
+
+[provider-contract.test.ts](provider-contract.test.ts) runs one shared set of
+`SandboxProvider` assertions against the Boat adapter. The shared modules
+call only the public provider methods. They compare the values and the
+typed errors that callers use:
+
+- `registerLifecycleContract` and `registerSnapshotContract` in
+  [contract-lifecycle.test-support.ts](contract-lifecycle.test-support.ts).
+- `registerCommandContract` in [contract-commands.test-support.ts](contract-commands.test-support.ts).
+- `registerFileContract` in [contract-files.test-support.ts](contract-files.test-support.ts).
+- `registerPortContract` in [contract-ports.test-support.ts](contract-ports.test-support.ts).
+- `registerErrorContract` in [contract-errors.test-support.ts](contract-errors.test-support.ts).
+
+Each function takes a `ProviderContractFactory` from
+[contract-fixture.test-support.ts](contract-fixture.test-support.ts). Each
+call of the factory gives a new `ProviderContractFixture`: the provider, a
+secret that no error may show, the expected `PrivatePort`, `given(reply)`
+for the normalized `ContractReply` of the next calls, and
+`createIdentities()` for the idempotency keys that the creates sent.
+
+`createBoatContractFixture` in [boat-contract.test-support.ts](boat-contract.test-support.ts)
+is the Boat driver. With [boat-contract-replies.test-support.ts](boat-contract-replies.test-support.ts),
+it turns each `ContractReply` into `FakeBoat` replies. A failure without its
+own provider code or retry wait gets `provider_code` and 3 seconds.
+
+Boat routes, headers, bodies, byte budgets, input checks, `fork`, and
+`hydrated` stay in the Boat tests beside the adapter. The suite leaves out
+`fork`, because no production code calls it. The lifecycle tests keep the
+replay of a lost create, and the Files tests keep the production 5 MiB limit.
+
+A new adapter needs a factory and a driver that turn the same `ContractReply`
+values into replies of its own fake server, with the same failure defaults.
+Its entry calls each `register…Contract` function with that factory. Its wire
+tests stay beside the adapter.
 
 ### Key Code
 
-- [provider.ts](provider.ts) defines the server's sandbox and file read/write interface.
-- [boat.ts](boat.ts) forwards provider operations to the Boat helpers.
-- [client.ts](client.ts) creates the provider from the app's Boat values, with or without the membership check.
+- [provider.ts](provider.ts) defines the server's sandbox and file read/write interface, with `PrivatePort` and `PortCredential`.
+- [boat.ts](boat.ts) forwards provider operations to the Boat helpers. It builds the Boat port credential.
+- [provider-contract.test.ts](provider-contract.test.ts) runs the [provider contract suite](#provider-contract-suite) with the Boat driver, `createBoatContractFixture` in [boat-contract.test-support.ts](boat-contract.test-support.ts). Its port case checks the Boat port credential that `privatePort` returns.
+- [client.ts](client.ts) gives the client of an account with `providerForAccount`, and after the membership check with `orgProviderForAccount`.
+- [accounts.ts](accounts.ts) defines the provider kind, the account configuration, and `ProviderAccountError`.
+- [account-identity.ts](account-identity.ts) holds `DEFAULT_PROVIDER_ACCOUNT`, the `boat` account.
+- [accounts.test.ts](accounts.test.ts) checks that each account uses its own organization and key, that `boat` stays pinned, and that an unknown account fails before any request.
 - [routes.ts](routes.ts) holds the fixed Boat route list.
 - [transport.ts](transport.ts) owns request headers and response handling.
 - [transport-body.test.ts](transport-body.test.ts) checks normal and command byte limits and safe overflow messages.

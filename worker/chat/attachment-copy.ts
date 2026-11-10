@@ -1,7 +1,7 @@
 import type { RunnerAttachment } from '../../src/shared/runner'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
-import { sandboxProvider } from '../sandbox/client'
+import { providerForAccount } from '../sandbox/client'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { readAttachment } from './attachment-data'
 import {
@@ -29,10 +29,14 @@ export async function prepareMessageAttachments(
     )
   if (workspace.sandboxId !== sandboxId) throw attachmentNotFound()
   const bucket = attachmentBucket(env)
-  const provider = sandboxProvider(env, httpFetch)
+  const provider = providerForAccount(env, httpFetch, workspace.providerAccount)
   for (const attachment of attachments) {
     const current = await attachmentWorkspace(env.DB, workspaceId, userId)
-    if (current?.sandboxId !== workspace.sandboxId) throw attachmentNotFound()
+    if (
+      current?.sandboxId !== workspace.sandboxId ||
+      current.providerAccount !== workspace.providerAccount
+    )
+      throw attachmentNotFound()
     const record = await readAttachment(env.DB, attachment.attachmentId)
     if (
       !record ||
@@ -52,9 +56,10 @@ export async function prepareMessageAttachments(
       record.sizeBytes,
     )
   }
+  const current = await attachmentWorkspace(env.DB, workspaceId, userId)
   if (
-    (await attachmentWorkspace(env.DB, workspaceId, userId))?.sandboxId !==
-    workspace.sandboxId
+    current?.sandboxId !== workspace.sandboxId ||
+    current.providerAccount !== workspace.providerAccount
   )
     throw attachmentNotFound()
   return workspace.sandboxId

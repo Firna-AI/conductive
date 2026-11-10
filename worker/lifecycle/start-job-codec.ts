@@ -1,9 +1,13 @@
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { readSavedScript, serializeSavedScript } from './saved-script'
 import type { WorkspaceStartJob } from './start-types'
 import { readProviderRetry } from './provider-retry'
 
 type StoredJob<Job> = Job extends WorkspaceStartJob
-  ? Omit<Job, 'startupScript'> & { startupScript: string }
+  ? Omit<Job, 'startupScript' | 'providerAccount'> & {
+      startupScript: string
+      providerAccount?: string
+    }
   : never
 
 export type StoredWorkspaceStartJob = StoredJob<WorkspaceStartJob>
@@ -18,6 +22,7 @@ export function serializeStartJob(
 export function readStartJob(job: StoredWorkspaceStartJob): WorkspaceStartJob {
   return {
     ...job,
+    providerAccount: job.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT,
     startupScript: readSavedScript(job.startupScript),
     providerRetry:
       job.providerRetry === undefined

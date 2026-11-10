@@ -62,6 +62,12 @@ plan limits.
   it after a merge. Only the workspace's owner and the org's admins see
   Archive, from decision 42. An archived workspace has no file lists and no
   tools, so a phone shows only its chat.
+- The menu of a workspace row follows the same roles, as
+  `app/workspace-menu/roles` shows. Every member moves and renames a
+  workspace that is not archived. Only an admin sees Reassign to, and only
+  the owner and the admins see Archive. The archived row of an admin
+  offers only Reassign to. An archived row of a member and every row of a
+  suspended org have no menu.
 - No workspace shows as expiring. Near day 14 of a stop, the app starts the
   cloud computer briefly and stops it again, from decision 43.
 - Any user creates orgs. Create org of the first run returns to Get started.

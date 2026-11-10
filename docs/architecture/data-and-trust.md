@@ -26,7 +26,7 @@ the app (decision 6).
 | ---------------------------------------------------------------------------- | ---------------------------------------- |
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
 | App access, the codes and their uses, the pause, and approval email states   | D1                                       |
-| The org of each sandbox and each saved snapshot                              | D1                                       |
+| The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
 | Chat history and banner state                                                | The workspace Durable Object             |
