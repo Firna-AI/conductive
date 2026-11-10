@@ -45,26 +45,31 @@ Replaced ways:
 
 - A warning as free text, `warnWorker(message: string)` → a warning of
   fixed text with typed values, as option D of the follow-up
-  `plans/follow-ups/typed-worker-warnings.md` says. Consumers: each call
-  site and each injected `warn` option in
-  `worker/app-api/feature-github.ts`,
-  `worker/app-api/get-started-github.ts`,
-  `worker/chat/runner-channel.ts`,
-  `worker/lifecycle/build-execution.ts`,
+  `plans/follow-ups/typed-worker-warnings.md` says. Consumers: each caller
+  of `warnWorker` and each injected `warn` option, with their tests. On
+  10 November 2026 they are in `worker/app-api/feature-github.ts`,
+  `worker/app-api/feature-org.ts`,
+  `worker/app-api/get-started-github.ts`, `worker/application.ts`,
+  `worker/chat/runner-channel.ts`, `worker/chat/title-model.ts`,
+  `worker/chat/workspace-titles.ts`,
   `worker/lifecycle/create-input-activity.ts`,
+  `worker/lifecycle/first-image-build.ts`,
   `worker/lifecycle/image-build-failure.ts`,
   `worker/lifecycle/input-activity-owner.ts`,
-  `worker/lifecycle/lifecycle-admission.ts`,
+  `worker/lifecycle/lifecycle-admission.ts`, `worker/lifecycle/repair.ts`,
   `worker/lifecycle/start-coordinator.ts`,
-  `worker/lifecycle/start-failure.ts`, `worker/marketing/page.ts`, and
-  `worker/terminal/service.ts`, with their tests. `errorSummary` in
-  `worker/warnings.ts` returns typed values. Moved in Milestone 3. Deleted
-  in Milestone 3.
+  `worker/lifecycle/start-failure.ts`, `worker/marketing/page.ts`,
+  `worker/operator/approval-email.ts`, and `worker/terminal/service.ts`.
+  Milestone 3 searches again, because `main` adds callers. `errorSummary`
+  in `worker/warnings.ts` returns typed values. Moved in Milestone 3.
+  Deleted in Milestone 3.
 
 ## Decisions
 
 Decisions 1 to 4 come from the brainstorm of 8 November 2026. The user
-answered them on 9 November 2026. Decision 5 is open. An options check of
+answered them on 9 November 2026, and decision 5 on 10 November 2026. The
+line numbers in the decisions are those of 10 November 2026. An options
+check of
 9 November 2026 added the options from F on in decision 1, from D on in
 decisions 2 and 4, C in decisions 3 and 5, and D in decision 5. It also
 wrote new root questions for decisions 3, 4, and 5.
@@ -87,7 +92,7 @@ Terms that the decisions share:
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design.
 - **Category:** Process.
-- **Location:** `worker/application.ts:159`, `worker/warnings.ts:4`, `worker/chat/sockets.ts:70`, and `worker/members/cleanup.ts:125`.
+- **Location:** `worker/application.ts:178`, `worker/warnings.ts:4`, `worker/chat/sockets.ts:71`, and `worker/members/cleanup.ts:126`.
 - **Terms:**
   - **Tail Worker:** a second Worker that gets each finished invocation of the main Worker, with its log lines, errors, and outcome.
   - **Better Stack Telemetry:** Better Stack's log store, with search and alerts on log lines.
@@ -170,11 +175,11 @@ Terms that the decisions share:
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Process.
-- **Location:** `worker/application.ts:169` and `worker/members/cleanup.ts:125`.
+- **Location:** `worker/application.ts:188` and `worker/members/cleanup.ts:126`.
 - **Terms:**
   - **Better Stack Uptime:** Better Stack's checks of public addresses, with alerts and status pages.
   - **Heartbeat:** a secret Better Stack address that a job calls each time it runs. Better Stack sends an alert when the calls stop.
-- **Background:** The app has three hostnames. `/api/health` returns `{"status":"ok"}`, but it does not check D1 or the sandbox provider. A cron trigger runs every 15 minutes and deletes the orgs that were deleted 7 days ago. It puts each failed org in a list that the cron handler ignores, so the run still ends well. Bookfolio has no uptime checks.
+- **Background:** The app has three hostnames. `/api/health` returns `{"status":"ok"}`, but it does not check D1 or the sandbox provider. A cron trigger runs every 15 minutes. It deletes the orgs that were deleted 7 days ago, repairs the lifecycle alarms, and retries the approval emails. It puts each failed org in a list that the cron handler ignores, so the run still ends well. Bookfolio has no uptime checks.
 - **Problem:** No check outside Cloudflare tells the operator when the app is down, for example after a DNS or certificate failure. A heartbeat after each cron run would report success while every deletion fails.
 - **Impact if no action:** The operator learns of a full outage only from a user report. Deleted orgs can stay past the 7 days that Orgs and members promises.
 - **Root question:** Does the operator learn when the whole app is down, or when the cron stops doing its work?
@@ -197,25 +202,25 @@ Terms that the decisions share:
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
 - **Category:** UX wording.
-- **Location:** `src/marketing/privacy.ts:75`, the list "Who gets your data", and `src/marketing/README.md:153`.
+- **Location:** `src/marketing/privacy.ts:114`, the list "Who gets your data", and the "Legal pages" section of `src/marketing/README.md:139`.
 - **Terms:**
-  - **Privacy page:** the legal page at `conductive.build/privacy`. Its text lives in `src/marketing/privacy.ts`, and the mockup catalogue shows the same text. A lawyer reviews it before the app opens to other people.
+  - **Privacy page:** the public privacy notice at `conductive.build/privacy`. Its text lives in `src/marketing/privacy.ts`, and the mockup catalogue shows the same text.
   - **Legal-pages rule:** a repository rule in `AGENTS.md`. A change to a fact in the architecture doc or a protocol doc also updates each legal-page sentence that restates the fact.
-- **Background:** "Who gets your data" names Cloudflare, GitHub, Anthropic, and OpenAI. It names the cloud computer provider only in general words, because a repository rule keeps that name out of user-facing text. No such rule covers Better Stack. A sentence in the marketing README says that the legal pages name no provider, and it means the cloud computer provider. Bookfolio's Privacy Policy names Better Stack and describes some other providers by kind.
-- **Problem:** The error reports send data to a new recipient, and the page must name the recipient or its kind. The email invitations raise the same question for Resend.
+- **Background:** "Who gets your data" names Cloudflare, GitHub, Resend, Anthropic, and OpenAI. It names the cloud computer provider only in general words, because a repository rule keeps that name out of user-facing text. No such rule covers Better Stack. Bookfolio's Privacy Policy names Better Stack and describes some other providers by kind.
+- **Problem:** The error reports send data to a new recipient, and the page must name the recipient or its kind. The follow-up for Resend asked the same question, and no rule answers it for later services.
 - **Impact if no action:** The legal-pages rule blocks the change, because the page would omit a recipient.
 - **Root question:** How does the Privacy page name each outside service that gets user data, such as the error service and the email service?
 - **Options:**
   - **A.** Name Better Stack, with the data that it gets and its EU hosting. Effort: Small.
   - **B.** Write "an error reporting service", with the same data. The text stays true if the service changes. Effort: Small.
   - **C.** Pick the form by the path of the data, and record that rule in the marketing README. The page names each service that the user's browser or account reaches directly, and describes a back-end-only service by its kind. Better Stack is then named, and Resend becomes "an email provider". Effort: Small.
-  - **D.** A, and a naming rule in the "Legal drafts" section of the marketing README: the page names each outside service that gets user data, except the cloud computer provider. The Resend question and each later service then follow the rule with no new decision. Effort: Small.
+  - **D.** A, and a naming rule in the "Legal pages" section of the marketing README: the page names each outside service that gets user data, except the cloud computer provider. The Resend question and each later service then follow the rule with no new decision. Effort: Small.
 - **Left out:** Change nothing, because it breaks the legal-pages rule. A separate page that lists the named services, because A is better on every point: a Privacy edit asks for no new agreement.
 - **Wider fix:** D. The legal-pages rule says when the page changes, not how it names a recipient. C is the same kind of fix with the other rule.
 - **Previous examples:** `plans/follow-ups/privacy-invitation-email-data.md` asks the same question for Resend. Bookfolio's `ts/app/src/legal/privacy.md` names Better Stack.
-- **Related:** `plans/follow-ups/privacy-invitation-email-data.md`: the same choice for the email provider. C or D settles both. Milestone 1 waits for this decision.
+- **Related:** `plans/follow-ups/privacy-invitation-email-data.md`: the same choice for the email provider. C or D settles both.
 - **Recommendation:** D, after the options check. The first recommendation was A. The policy header of each app page already shows Better Stack's address, under decision 3, so a kind alone would hide a name that the app shows. B protects the page best if the service changes.
-- **Action:** ask the user, because both forms of text are correct, and no copy rule picks one.
+- **Chosen:** D, by the user on 10 November 2026.
 
 ## Design
 
@@ -275,6 +280,8 @@ The user can override any of them.
 - A failed alarm of the `Workspace` Durable Object gives one event. The
   error is then thrown again, so that Cloudflare still retries the alarm.
 - A failed cron run gives one event, and the error is then thrown again.
+  The cron already catches a failed retry of the approval emails and
+  writes a warning, so the inventory of Milestone 6 marks that warning.
 - A catch that hides an unexpected failure gives one event, such as the
   runner message catch in `worker/chat/sockets.ts` and the org cleanup
   catch in `worker/members/cleanup.ts`. A normal result, such as a busy
@@ -379,6 +386,23 @@ The user can override any of them.
 - Mac builds upload no maps yet. A follow-up item records that step for
   the Mac release work of `plans/conductive-desktop-notarization.md`.
 
+**Privacy page.**
+
+- The Privacy page names Better Stack (decision 5). The "Legal pages"
+  section of the marketing README states the rule: the page names each
+  outside service that gets user data, except the cloud computer provider.
+- The page says that Better Stack keeps each error report for 90 days, the
+  retention that the operator sets. Reason: the page gives the retention
+  of each kind of data that it can, and the operator controls this one.
+- "Transfers to other countries" gets an entry for Better Stack from its
+  published data processing terms, as the other providers have. The
+  review sources of the marketing README get those terms.
+- Milestone 2 also adds Resend to "External services" of the architecture
+  doc, and the plan deletes `plans/follow-ups/privacy-invitation-email-data.md`.
+  Reason: decision 5 answers that item's naming question with option A,
+  and the Privacy page on `main` already names Resend and the verified
+  emails. Only the architecture list and the invited email address remain.
+
 **Order and verification.**
 
 - Milestone 3 does the follow-up `typed-worker-warnings.md` first. Reason:
@@ -393,7 +417,7 @@ The user can override any of them.
 
 Tags: mockup
 
-Depends on: none. It waits for decision 5.
+Depends on: none
 
 The Privacy page tells users about the error reports. Its text lives in
 `src/marketing/privacy.ts`, and the mockup catalogue draws the same text.
@@ -401,10 +425,18 @@ The Privacy page tells users about the error reports. Its text lives in
 - [ ] In "What Conductive uses, and why", add the error reports: what a
       browser report holds, what a server report holds, and their use to
       find and fix failures.
-- [ ] In "Who gets your data", add the error service in the form that
-      decision 5 chooses, with its EU hosting, the data that it gets, and
-      the IP address that it can store for each browser report.
-- [ ] Keep the draft notes for the lawful basis and the retention.
+- [ ] In "Who gets your data", name Better Stack (decision 5), with its EU
+      hosting, the data that it gets, and the IP address that it can store
+      for each browser report.
+- [ ] In "Transfers to other countries", add Better Stack from its
+      published data processing terms.
+- [ ] In "How long Conductive keeps data", say that Better Stack keeps
+      each error report for 90 days.
+- [ ] Say that an org invitation keeps the email address that the admin
+      invited, as option A of
+      `plans/follow-ups/privacy-invitation-email-data.md` asks.
+- [ ] Check that the lawful basis paragraph covers the error reports. It
+      names legitimate interests to operate and secure the service.
 - [ ] Run `npm run mockups:check`. Smoke-test the Privacy mockup and the
       built Privacy page.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -430,13 +462,16 @@ below.
       origin of the browser error reports (decision 3).
 - [ ] Add Better Stack to "External services" and "Where data lives" in
       `docs/architecture.md`, and link the new doc under "Protocol docs".
+- [ ] Add Resend to "External services" too. Then delete
+      `plans/follow-ups/privacy-invitation-email-data.md`, because this
+      milestone and Milestone 1 apply its option A.
 - [ ] Add `CONDUCTIVE_ERROR_TRACKING_DSN` to the secrets of
       `docs/deployment.md`. Add the browser DSN, the upload settings, the
       build steps of a release with maps, and the Better Stack settings.
 - [ ] Link the new doc from the "Docs" list of `README.md`.
-- [ ] Make the sentence of `src/marketing/README.md` about the legal pages
-      and providers say that it means the cloud computer provider. Add the
-      naming rule there when decision 5 chooses C or D.
+- [ ] Add the naming rule of decision 5 to the "Legal pages" section of
+      `src/marketing/README.md`. Add Better Stack's data processing terms
+      to its review sources.
 - [ ] Read both legal pages in full, as the legal-pages rule says. Update
       each sentence that a changed fact touches.
 - [ ] Check each relative link of the changed Markdown files.
@@ -528,7 +563,7 @@ Depends on: 5
       response.
 - [ ] Update `worker/README.md`.
 - [ ] Smoke-test with the Worker DSN, when the user gives it. In
-      `npm run dev`, set an invalid `CONDUCTIVE_MODELS`, open
+      `npm run dev`, set an invalid `CONDUCTIVE_MODELS` in `.dev.vars`, open
       `/api/models`, and check one `development` event with only the kept
       fields. This also proves that Better Stack takes events from
       `@sentry/cloudflare`. Without the DSN, record the step as blocked.
