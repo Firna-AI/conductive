@@ -260,25 +260,26 @@ Depends on: none
 The Terminal requirements say how the user selects and copies the text of
 the screen, while connected and after the end.
 
-- [ ] In the Terminal section of `docs/protocol/workspace-tools.md`, add
+- [x] In the Terminal section of `docs/protocol/workspace-tools.md`, add
       the requirement: when the connection ends, the user can still select
       and copy a part of the text of the screen (decision 213). Add its
       reason: the screen keeps its output so that the user can use it,
       such as an error.
-- [ ] In the same section, add the requirement: a plain drag selects text
+- [x] In the same section, add the requirement: a plain drag selects text
       in the screen, also while a program, such as tmux, uses the mouse.
       The wheel still reaches the program. A held Cmd on a Mac, or Ctrl on
       Windows and Linux, gives a click or a drag to the program
       (decision 214). Add its reason, and the rejected clipboard writes
       from the sandbox: any process in the sandbox could then write the
       user's clipboard.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
-      restates the changed fact.
-- [ ] In `src/terminal/README.md`, extend the Behaviour line about the end
+      restates the changed fact. Both pages were read in full. No sentence
+      restates terminal selection, copy, or clipboard behaviour.
+- [x] In `src/terminal/README.md`, extend the Behaviour line about the end
       of the connection: a drag still selects the text, and Cmd+C copies
       it.
-- [ ] In the Behaviour section of `src/terminal/README.md`, add the
+- [x] In the Behaviour section of `src/terminal/README.md`, add the
       selection rule of decision 214: a plain drag selects, the wheel and
       the right and middle buttons reach the program, and a held Cmd or
       Ctrl gives a click or a drag to the program.
@@ -292,18 +293,19 @@ Depends on: 1
 When the connection ends, the screen turns off mouse reports. A drag then
 selects text, and Cmd+C copies it.
 
-- [ ] Add a test: a program turns on mouse reports, the transport closes,
+- [x] Add a test: a program turns on mouse reports, the transport closes,
       and xterm.js then tracks no mouse. Use a real xterm.js `Terminal`,
       as `src/terminal/xtermScreen.test.ts` does. Show that the test fails
       before the change.
-- [ ] At the end of the connection, turn off mouse modes 9, 1000, 1002,
+- [x] At the end of the connection, turn off mouse modes 9, 1000, 1002,
       and 1003 in xterm.js. Write the reset only to xterm.js.
-- [ ] Add a "Turn on mouse reports" button to
+- [x] Add a "Turn on mouse reports" button to
       `src/terminal/dev/DevControls.tsx`, beside "Turn on focus reports".
       Update the development page section of `src/terminal/README.md`.
-- [ ] Smoke test in Chrome on the development page, with a Mac platform:
+- [x] Smoke test in Chrome on the development page, with a Mac platform:
       turn on mouse reports, disconnect, drag, and copy. Save the result
-      under `.context/terminal-copy/`.
+      under `.context/terminal-copy/`. Results:
+      `.context/terminal-copy/smoke/smoke-results.txt`.
 
 ## Milestone 3: Copy while connected
 
@@ -315,35 +317,38 @@ While a program has the mouse, a plain drag selects in the page, and the
 program still gets the wheel. A held Cmd on a Mac, or Ctrl elsewhere,
 gives a click or a drag to the program.
 
-- [ ] Add a DOM test with happy-dom, as `src/app/pointer-drag.test.tsx`
+- [x] Add a DOM test with happy-dom, as `src/app/pointer-drag.test.tsx`
       does, for the press rule:
-  - [ ] While a program has the mouse, a plain left press reaches
+  - [x] While a program has the mouse, a plain left press reaches
         xterm.js again as a forced press, with the same position, buttons,
         and click count. The first press goes no further.
-  - [ ] A press with Cmd on a Mac, or Ctrl elsewhere, a right press, a
+  - [x] A press with Cmd on a Mac, or Ctrl elsewhere, a right press, a
         middle press, and each press while no program has the mouse pass
         unchanged.
-  - [ ] Show that the test fails before the change.
-- [ ] Turn on `macOptionClickForcesSelection` in the options of the
+  - [x] Show that the test fails before the change.
+- [x] Turn on `macOptionClickForcesSelection` in the options of the
       xterm.js `Terminal` in `src/terminal/TerminalScreen.tsx`.
-- [ ] Implement the press rule in the screen, with a capture listener on
+- [x] Implement the press rule in the screen, with a capture listener on
       the xterm.js element. Remove the listener when the screen goes.
-- [ ] Show the text cursor over the screen while a program has the mouse.
-- [ ] Smoke test in Chrome on the development page, with a Mac platform
+- [x] Show the text cursor over the screen while a program has the mouse.
+- [x] Smoke test in Chrome on the development page, with a Mac platform
       and with Linux. Turn on mouse reports, then check:
-  - [ ] A plain drag selects, and the copy command copies the text.
-  - [ ] A double click selects a word.
-  - [ ] A wheel turn reaches the program as a mouse report.
-  - [ ] A Cmd-drag on a Mac, or a Ctrl-drag on Linux, reaches the program
+  - [x] A plain drag selects, and the copy command copies the text.
+  - [x] A double click selects a word.
+  - [x] A wheel turn reaches the program as a mouse report.
+  - [x] A Cmd-drag on a Mac, or a Ctrl-drag on Linux, reaches the program
         and selects nothing.
-  - [ ] A right press reaches the program.
-  - [ ] Save the results under `.context/terminal-copy/`.
+  - [x] A right press reaches the program.
+  - [x] Save the results under `.context/terminal-copy/`. Results:
+        `.context/terminal-copy/smoke/smoke-results.txt`. Ten repeat runs
+        of the new tests: `.context/terminal-copy/repeat-runs.txt`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      Gate log: `.context/terminal-copy/gate.log`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
