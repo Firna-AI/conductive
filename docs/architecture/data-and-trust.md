@@ -10,7 +10,7 @@ decision number names a dated record, as
 
 | Hostname                | What it serves                                                              |
 | ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages           |
+| `conductive.build`      | The marketing site, with public docs and the Terms, Privacy, and comparison pages           |
 | `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
 | `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
 | `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
