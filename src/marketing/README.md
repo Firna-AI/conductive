@@ -181,7 +181,7 @@ the fact. A search for the old words is not enough, because a legal page
 can restate a fact in other words.
 
 The words of the legal pages, of the page for an unknown address, and of
-the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`,
+the sign-in agreement are text without markup. `terms.ts`, `privacy.ts` with `privacy-uses.ts`,
 and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
 `components/RunningText.astro` build their HTML for the site. The mockups and the sign-in screen of the app render the same text
 with React. So every surface shows the same words.
@@ -338,7 +338,7 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   sentence under the last call to action.
 - `links.ts`: the source repository address, the Mac app download
   addresses, site paths, and `pageHrefs` for links from another origin.
-- `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
+- `terms.ts`, `privacy.ts`, `privacy-uses.ts`, `legal-text.ts`: legal pages and the shared
   text model, titles, contact addresses, and sign-in agreement.
 - `request-values.ts`: built-page markers, local Astro preview values,
   the sign-in address, and the links to the sections of the home page.
