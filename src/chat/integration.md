@@ -32,7 +32,8 @@ mount the chat.
   `src/shared/name-label.ts`, as
   [Workspace and session names](../../docs/protocol/agents-and-sessions.md#workspace-and-session-names)
   says. "New session" names only the action of +: its label, the heading
-  of the empty chat, and the detail in the model picker.
+  of the empty chat, and the spoken name of the icon that marks each model
+  of the other agent in the model picker.
 - Each tab shows the `title` of its session record. The backend provides
   the titles that the mockups show. The title from the first message names
   the workspace and its first session, as
