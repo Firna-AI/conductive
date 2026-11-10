@@ -13,7 +13,7 @@ const elapsed = runningBuild.elapsed.replaceAll(' ', '\u00a0')
 function ComputerLink(props: { to: string }) {
   return (
     <ScreenLink asChild to={props.to}>
-      <ActionButton icon={ArrowRight}>{copy.open}</ActionButton>
+      <ActionButton icon={ArrowRight}>{copy.settings}</ActionButton>
     </ScreenLink>
   )
 }

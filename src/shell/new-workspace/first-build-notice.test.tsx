@@ -95,7 +95,7 @@ const running =
   "Preparing the cloud computer · 2m&nbsp;14s You can send when it's ready."
 
 /** The notice of the build that runs, with the link of an admin. */
-const runningAdmin = `${running} Open Cloud computer`
+const runningAdmin = `${running} Cloud computer settings`
 
 /** The org of the page, as a person with `role` reaches it. */
 const acme = (role: OrgRole) => ({ id: FAKE_IDS.org, name: 'Acme', role })
@@ -182,7 +182,7 @@ describe('the notice of the first build in New workspace', () => {
       },
       failed: {
         notices: [
-          "The cloud computer didn't build Try the build again to send your message. Open Cloud computer",
+          "The cloud computer didn't build Try the build again to send your message. Cloud computer settings",
         ],
         ...off,
       },
@@ -194,7 +194,7 @@ describe('the notice of the first build in New workspace', () => {
       },
       none: {
         notices: [
-          'The cloud computer needs a build Build it to send your message. Open Cloud computer',
+          'The cloud computer needs a build Build it to send your message. Cloud computer settings',
         ],
         ...off,
       },
@@ -224,7 +224,7 @@ describe('the notice of the first build in New workspace', () => {
     })
   })
 
-  test('Open Cloud computer leads an admin to the Cloud computer tab of the org', async () => {
+  test('Cloud computer settings leads an admin to the Cloud computer tab of the org', async () => {
     const server = new FakeApiServer()
     server.json(
       'GET',
@@ -239,7 +239,7 @@ describe('the notice of the first build in New workspace', () => {
       { navigation },
     )
     await settle()
-    click(byRole('button', 'Open Cloud computer', view))
+    click(byRole('button', 'Cloud computer settings', view))
     expect(navigation.history.at(-1)).toBe(
       routes.settings(FAKE_IDS.org, 'cloud-computer'),
     )

@@ -35,7 +35,7 @@ export const waitingRepository = defineScreen({
       slug: 'none-ready',
       title: 'No repository ready',
       description:
-        'Acme chose only acme/admin-dashboard, after an admin replaced the repositories of its cloud computer, and the build of the add failed. The picker shows acme/admin-dashboard. The notice over the composer says that it is ready after a build succeeds, and that the last build failed. Open Cloud computer leads Cal to the failed build with Try again. Send is off, and the Settings link in the sidebar shows a dot.',
+        'Acme chose only acme/admin-dashboard, after an admin replaced the repositories of its cloud computer, and the build of the add failed. The picker shows acme/admin-dashboard. The notice over the composer says that it is ready after a build succeeds, and that the last build failed. Cloud computer settings leads Cal to the failed build with Try again. Send is off, and the Settings link in the sidebar shows a dot.',
       rationale:
         'Only an admin builds the computer (decision 57), so only an admin gets the link. A failed build gets no automatic retry (decision 12). The link shows also when no build runs, and leads to Build computer. While a build runs, the notice has a spinner and no link, as the notice of a first build has.',
       props: {

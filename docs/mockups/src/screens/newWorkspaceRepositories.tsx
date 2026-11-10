@@ -106,7 +106,9 @@ export function waitingNotice(props: {
     <WaitingRepositoryNotice
       action={(wait) => (
         <ScreenLink asChild to={computerPages[wait]}>
-          <ActionButton icon={ArrowRight}>{firstBuildCopy.open}</ActionButton>
+          <ActionButton icon={ArrowRight}>
+            {firstBuildCopy.settings}
+          </ActionButton>
         </ScreenLink>
       )}
       admin={props.admin}

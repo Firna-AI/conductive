@@ -41,7 +41,7 @@ describe('the notice of a waiting repository in New workspace', () => {
     })
   })
 
-  test('with no chosen repository ready, Send is off, an admin gets Open Cloud computer unless a build runs, and a member reads that an admin can act', async () => {
+  test('with no chosen repository ready, Send is off, an admin gets Cloud computer settings unless a build runs, and a member reads that an admin can act', async () => {
     holdAnimationFrames()
     const only = chosen(['admin-dashboard'])
     const page = async (wait: Wait, role: OrgRole = 'admin') => {
@@ -63,7 +63,7 @@ describe('the notice of a waiting repository in New workspace', () => {
     }).toEqual({
       failed: {
         notices: [
-          'acme/admin-dashboard is ready after a build succeeds The last build failed. Try it again to send your message. Open Cloud computer',
+          'acme/admin-dashboard is ready after a build succeeds The last build failed. Try it again to send your message. Cloud computer settings',
         ],
         spinner: false,
         picker,
@@ -79,7 +79,7 @@ describe('the notice of a waiting repository in New workspace', () => {
       },
       waiting: {
         notices: [
-          'acme/admin-dashboard is ready after the next build Build the computer to send your message. Open Cloud computer',
+          'acme/admin-dashboard is ready after the next build Build the computer to send your message. Cloud computer settings',
         ],
         spinner: false,
         picker,
@@ -94,7 +94,7 @@ describe('the notice of a waiting repository in New workspace', () => {
         ...off,
       },
     })
-    click(byRole('button', 'Open Cloud computer', failed.view))
+    click(byRole('button', 'Cloud computer settings', failed.view))
     expect(failed.navigation.history.at(-1)).toBe(
       routes.settings(FAKE_IDS.org, 'cloud-computer'),
     )

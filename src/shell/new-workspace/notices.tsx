@@ -62,7 +62,7 @@ export function useFirstBuildNotice(
       icon={ArrowRight}
       onPress={() => openPage(routes.settings(org.id, 'cloud-computer'))}
     >
-      {buildCopy.open}
+      {buildCopy.settings}
     </ActionButton>
   ) : undefined
   switch (first.state) {
