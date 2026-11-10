@@ -1,28 +1,26 @@
 ---
 import { parityPageCopy } from '../from-conductor/copy'
+import { timeWords } from '../from-conductor/dates'
 import CopyText from './CopyText.astro'
-import Icon from './Icon.astro'
 
 /*
- * The top of the comparison page: the title, one sentence, the note that
- * the list covers Conductor Cloud only, the days of Conductor Cloud beside
- * its announcement, and the day of the last check of the list.
+ * The top of the comparison page: the title, one sentence, the days of the
+ * cloud workspaces of Conductor beside its announcement, and, on its own
+ * line, the time in UTC of the last full check of the list.
  */
 const copy = parityPageCopy
+const { lastCheck } = copy
 ---
 
 <header class="parity-intro">
   <span class="parity-label">{copy.label}</span>
   <h1 class="parity-title">{copy.title}</h1>
   <p class="parity-lead">{copy.lead}</p>
-  <div class="parity-scope" role="note">
-    <Icon name="cloud" size={16} class="parity-scope-icon" />
-    <p class="parity-scope-text">
-      <strong class="parity-scope-title">{copy.scope.title}</strong>{' '}
-      {copy.scope.text}
-    </p>
-  </div>
   <p class="parity-facts">
-    <CopyText text={copy.cloudDays} /> <CopyText text={copy.checked} />
+    <CopyText text={copy.cloudDays} />
+  </p>
+  <p class="parity-facts">
+    {lastCheck.label}{' '}
+    <time datetime={lastCheck.time}>{timeWords(lastCheck.time)}</time>
   </p>
 </header>
