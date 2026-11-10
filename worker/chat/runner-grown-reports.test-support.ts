@@ -3,11 +3,9 @@ import type {
   FileEvent,
   RunnerFileEvent,
 } from '../../src/shared/files'
-import { jsonBytes } from '../../src/shared/event-limits'
-import { OutputSanitizer } from '../../src/shared/output-sanitizer'
-import type { MemoryChatStorage } from './memory-storage.test-support'
+import { encrypt } from '../security/crypto'
+import { orgEnvironmentContext } from '../lifecycle/settings-data'
 import { createRunnerLimitsFixture } from './runner-limits.test-support'
-
 export const grownEntries: readonly FileEntry[] = Array.from(
   { length: 960 },
   (_, index) => ({
@@ -18,7 +16,6 @@ export const grownEntries: readonly FileEntry[] = Array.from(
     change: null,
   }),
 )
-
 export function reportPart(
   kind: 'tree' | 'changes',
   partNumber: number,
@@ -45,7 +42,6 @@ export function reportPart(
     },
   }
 }
-
 export function completeReport(kind: 'tree' | 'changes'): FileEvent {
   if (kind === 'tree')
     return {
@@ -69,25 +65,19 @@ export function completeReport(kind: 'tree' | 'changes'): FileEvent {
     },
   }
 }
-
-export function capStorageValues(storage: MemoryChatStorage): void {
-  storage.beforeCommit = async (staged) => {
-    for (const value of staged.records.values()) {
-      if (jsonBytes(value) > 2_097_152)
-        throw new Error('Storage value exceeds the SQLite value limit.')
-    }
-  }
-}
-
-export function createGrownReportsFixture() {
-  const sanitizer = new OutputSanitizer()
-  sanitizer.add('a')
-  return createRunnerLimitsFixture({
-    filterRunnerOutput: async (_transaction, _workspace, input) => ({
-      events: sanitizer
-        .accept(input.event)
-        .map((event) => ({ ...input, event })),
-      save: async () => undefined,
-    }),
-  })
+export async function createGrownReportsFixture() {
+  const fixture = await createRunnerLimitsFixture()
+  const ciphertext = await encrypt(
+    JSON.stringify({ TOKEN: { value: 'a', secret: true } }),
+    orgEnvironmentContext('org'),
+    fixture.harness.env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  await fixture.harness.env.DB.prepare(
+    `INSERT INTO workspace_runtime
+    (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, environment_ciphertext, agent, model, effort, first_message_id)
+    VALUES ('workspace', 'org', 'sender', 'session', 'turn', ?, 'claude', 'test', 'high', 'unused')`,
+  )
+    .bind(ciphertext)
+    .run()
+  return fixture
 }

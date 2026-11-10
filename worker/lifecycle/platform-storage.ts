@@ -9,7 +9,6 @@ import type { StoredWorkspaceStartJob } from './start-job-codec'
 import type { FirstWorkspaceMessage, PendingTurn } from './workspace-runtime'
 import { assertReceiverActive } from '../members/receiver-fence'
 import type { ReceiverStorage } from '../members/receiver-storage'
-import { scheduleWorkspaceAlarm } from '../features/alarms'
 
 export interface WorkspaceValues {
   lifecycle: DurableLifecycleState
@@ -115,7 +114,6 @@ class NativeTransaction extends NativeOperations {
 }
 
 export interface NativeWorkspaceStorageOptions {
-  lifecycleAlarms?: boolean
   guarded?: boolean
   generation?: () => number | undefined
 }
@@ -124,7 +122,6 @@ export function nativeWorkspaceStorage(
   storage: ReceiverStorage,
   options: NativeWorkspaceStorageOptions = {},
 ): WorkspaceStorage {
-  const alarms = options.lifecycleAlarms ?? false
   const guarded = options.guarded ?? false
   const generation = options.generation ?? (() => undefined)
   const operations = new NativeOperations(storage)
@@ -133,24 +130,7 @@ export function nativeWorkspaceStorage(
   ) =>
     storage.transaction(async (native) => {
       const transaction = new NativeTransaction(native, guarded, generation)
-      const schedule = async (at: number | null) => {
-        if (guarded) await assertReceiverActive(native, generation())
-        if (at === null) await native.delete('alarm:lifecycle')
-        else await native.put('alarm:lifecycle', at)
-        await scheduleWorkspaceAlarm(native)
-      }
-      return operation(
-        alarms
-          ? {
-              get: transaction.get.bind(transaction),
-              put: transaction.put.bind(transaction),
-              delete: transaction.delete.bind(transaction),
-              list: transaction.list.bind(transaction),
-              setAlarm: (at) => schedule(at),
-              deleteAlarm: () => schedule(null),
-            }
-          : transaction,
-      )
+      return operation(transaction)
     })
   function remove(key: string): Promise<boolean>
   function remove(keys: string[]): Promise<number>
@@ -165,12 +145,8 @@ export function nativeWorkspaceStorage(
       transaction((storage) => storage.put(kind, key, value)),
     delete: remove,
     list: operations.list.bind(operations),
-    setAlarm: alarms
-      ? (at) => transaction((storage) => storage.setAlarm(at))
-      : operations.setAlarm.bind(operations),
-    deleteAlarm: alarms
-      ? () => transaction((storage) => storage.deleteAlarm())
-      : operations.deleteAlarm.bind(operations),
+    setAlarm: operations.setAlarm.bind(operations),
+    deleteAlarm: operations.deleteAlarm.bind(operations),
     transaction,
   }
 }

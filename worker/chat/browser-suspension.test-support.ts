@@ -23,7 +23,7 @@ export class BrowserSuspensionProbe {
       regular: ['lifecycle', 'github', 'previews'].map(
         (source) => this.storage.kv.get(`alarm:${source}`) ?? null,
       ),
-      pending: this.storage.kv.get('security:regular-alarms-pending'),
+      pending: this.storage.kv.get('alarm:lifecycle:run'),
       deferred: this.storage.kv.get('security:regular-alarms-deferred-until'),
     }
     const alarm = this.storage.getAlarm()

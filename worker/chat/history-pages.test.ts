@@ -1,14 +1,12 @@
-import { expect, it, vi } from 'vitest'
-
+import { expect, it } from 'vitest'
 import type { WorkspaceEvent } from '../../src/shared/events'
-import { MemoryChatStorage } from './memory-storage.test-support'
+import { nativeChatStore } from './native-store.test-support'
 import { ChatStore } from './store'
 import { saveHistoryEvent } from './history-storage'
 import { CHAT_EVENT_PREFIX, CHAT_META, chatEventKey } from './storage-keys'
 import { WorkspaceSummaryProjection } from './workspace-summary'
-
 it('reads bounded history pages and advances through all stored state', async () => {
-  const storage = new MemoryChatStorage()
+  const { storage, setStorageHooks } = await nativeChatStore()
   const store = new ChatStore(storage, () => 25)
   await store.change(
     'workspace',
@@ -18,7 +16,12 @@ it('reads bounded history pages and advances through all stored state', async ()
     },
     () => undefined,
   )
-  const lists = vi.spyOn(storage, 'list')
+  const lists: DurableObjectListOptions[] = []
+  await setStorageHooks({
+    afterList: async (options) => {
+      lists.push(options)
+    },
+  })
   const first = await store.read('workspace', (view) => view.history(0))
   expect(first).toMatchObject({
     throughEventNumber: 70,
@@ -47,14 +50,13 @@ it('reads bounded history pages and advances through all stored state', async ()
     ),
   ).toEqual(Array.from({ length: 70 }, (_, index) => index + 1))
   expect(
-    lists.mock.calls
-      .filter(([options]) => options.prefix === CHAT_EVENT_PREFIX)
-      .map(([options]) => options.limit),
+    lists
+      .filter((options) => options.prefix === CHAT_EVENT_PREFIX)
+      .map((options) => options.limit),
   ).toEqual([32, 32, 32])
 })
-
 it('indexes legacy history before an append and removes replaced tree chunks', async () => {
-  const storage = new MemoryChatStorage()
+  const { storage } = await nativeChatStore()
   const store = new ChatStore(storage, () => 25)
   await new WorkspaceSummaryProjection(
     storage,
@@ -67,7 +69,7 @@ it('indexes legacy history before an append and removes replaced tree chunks', a
       type: 'files.snapshot',
       tree: {
         revision: 1,
-        entries: Array.from({ length: 2_000 }, (_, index) => ({
+        entries: Array.from({ length: 2000 }, (_, index) => ({
           path: `legacy-${index}-${'x'.repeat(600)}`,
           name: 'old',
           kind: 'file',
@@ -96,9 +98,9 @@ it('indexes legacy history before an append and removes replaced tree chunks', a
     through: 4,
     commandThrough: 0,
   })
-  const legacyChunks = [...storage.records.values()].filter(
-    (value) => typeof value === 'string',
-  )
+  const legacyChunks = [
+    ...(await storage.list({ prefix: '' })).values(),
+  ].filter((value) => typeof value === 'string')
   expect(legacyChunks.length).toBeGreaterThan(0)
   await store.change(
     'workspace',
@@ -116,12 +118,13 @@ it('indexes legacy history before an append and removes replaced tree chunks', a
   expect(history.throughEventNumber).toBe(5)
   expect(await storage.get(chatEventKey(1))).toBeUndefined()
   expect(
-    [...storage.records.values()].filter((value) => typeof value === 'string'),
+    [...(await storage.list({ prefix: '' })).values()].filter(
+      (value) => typeof value === 'string',
+    ),
   ).toEqual([])
 })
-
 it('keeps final answers and tool states with the newest tree without dropping live events', async () => {
-  const storage = new MemoryChatStorage()
+  const { storage } = await nativeChatStore()
   const store = new ChatStore(storage, () => 25)
   const context = { sessionId: 'session', turnId: 'turn' }
   const tool = {

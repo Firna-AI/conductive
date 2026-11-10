@@ -1,29 +1,17 @@
-import app, { Workspace as ProductionWorkspace } from '../index'
+import { createApp } from '../application'
+import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
+import { NativeAlarmWorkspace } from '../lifecycle/native-alarm-workspace.test-support'
 import type { ReceiverOwnership } from '../members/workspace-receiver'
 import type { AppEnv } from '../env'
 import { featureResult } from './result'
-import type {
-  WorkspaceCompositionEnv,
-  WorkspaceChatResolvers,
-} from '../chat/workspace-integration'
-import type { ConnectionScheduler } from '../security/connection-access'
+import { scheduleWorkspaceAlarm } from './alarms'
+import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 
-export class Workspace extends ProductionWorkspace {
+const app = createApp({ now: () => DEVICE_TEST_NOW })
+
+export class Workspace extends NativeAlarmWorkspace {
   private suspensions = 0
   private readonly observers = new Map<number, () => void>()
-  private readonly alarmClock: { now?: number }
-
-  constructor(
-    context: DurableObjectState,
-    env: WorkspaceCompositionEnv,
-    now: () => number = Date.now,
-    resolvers: WorkspaceChatResolvers = {},
-    activitySchedule?: ConnectionScheduler,
-  ) {
-    const clock: { now?: number } = {}
-    super(context, env, () => clock.now ?? now(), resolvers, activitySchedule)
-    this.alarmClock = clock
-  }
 
   async suspendMemberLifecycle(
     ownership: ReceiverOwnership,
@@ -48,19 +36,10 @@ export class Workspace extends ProductionWorkspace {
     })
   }
 
-  async advanceStartAlarm(): Promise<void> {
-    await this.alarm()
-    await this.settledAlarms()
-  }
   async runSecurityAlarmAt(at: number): Promise<void> {
-    this.alarmClock.now = at
-    try {
-      await this.alarm()
-      await this.settledAlarms()
-    } finally {
-      delete this.alarmClock.now
-    }
+    await this.advanceStartAlarm(at)
   }
+
   async inspectFeatureState() {
     return [...(await this.ctx.storage.list()).entries()]
   }
@@ -79,7 +58,25 @@ export class Workspace extends ProductionWorkspace {
 
   async seedFeatureState(values: Record<string, unknown>) {
     for (const [key, value] of Object.entries(values))
-      await this.ctx.storage.put(key, value)
+      await this.ctx.storage.put(
+        key,
+        key.startsWith('alarm:') && typeof value === 'number'
+          ? Math.max(this.testAlarmTime(), value)
+          : value,
+      )
+    if ('org-image:coordinator' in values) {
+      const image = await this.ctx.storage.get<ImageCoordinatorState>(
+        'org-image:coordinator',
+      )
+      if (image)
+        await this.integration.alarms.set(
+          'lifecycle:image',
+          Math.max(this.testAlarmTime(), image.nextAt),
+        )
+    }
+    await this.ctx.storage.transaction((transaction) =>
+      scheduleWorkspaceAlarm(transaction),
+    )
   }
 }
 

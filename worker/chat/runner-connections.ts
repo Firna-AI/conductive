@@ -25,6 +25,7 @@ interface NativeRunnerConnections {
 export class RunnerConnections {
   current: ActiveRunner | null = null
   private record: StoredRunnerConnection | null = null
+  private retained = false
   private readonly peers = new WeakMap<WebSocket, RunnerPeer>()
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
@@ -77,6 +78,7 @@ export class RunnerConnections {
     return this.store.run(async () => {
       await this.store.read(workspace.id, async () => undefined)
       this.close()
+      this.retained = socket !== undefined
       const record = {
         id: this.dependencies.randomConnectionId(),
         generation: 1,
@@ -104,6 +106,7 @@ export class RunnerConnections {
 
   private activate(source: RunnerPeer, record: StoredRunnerConnection): void {
     this.record = record
+    const saved = this.retained ? this.saved : undefined
     const active: ActiveRunner = {
       id: record.id,
       workspace: record.workspace,
@@ -114,7 +117,7 @@ export class RunnerConnections {
         record.workspace,
         {
           ...this.dependencies,
-          scheduleRunnerCheck: this.native
+          scheduleRunnerCheck: this.retained
             ? undefined
             : this.dependencies.scheduleRunnerCheck,
         },
@@ -125,7 +128,7 @@ export class RunnerConnections {
           this.dependencies.runnerDetached(active.id)
           this.dependencies.waitUntil(
             Promise.all([
-              this.saved?.save(null, record.generation),
+              saved?.save(null, record.generation),
               this.arm(),
               this.store.run(() =>
                 this.dependencies.runnerDisconnected(
@@ -166,6 +169,7 @@ export class RunnerConnections {
       close: () => socket.close(1000, 'Connection closed.'),
     }
     this.peers.set(socket, peer)
+    this.retained = true
     this.activate(peer, record)
     await this.arm()
     return true
@@ -183,7 +187,7 @@ export class RunnerConnections {
     if (this.current !== active || !record) return
     record.streamId = active.streamId
     record.ready = active.ready
-    await this.saved?.save(record, record.generation)
+    if (this.retained) await this.saved?.save(record, record.generation)
   }
 
   attachFiles(active: ActiveRunner): void {
@@ -205,6 +209,7 @@ export class RunnerConnections {
   }
 
   async alarm(): Promise<void> {
+    if (!this.retained) return
     const active = this.current
     const record = this.record
     if (!active || !record) {
@@ -216,12 +221,13 @@ export class RunnerConnections {
       return
     }
     record.checkAt = this.dependencies.now() + CONNECTION_CHECK_MS
-    await this.saved?.save(record, record.generation)
+    if (this.retained) await this.saved?.save(record, record.generation)
     await active.peer.authorize()
     await this.arm()
   }
 
   private arm(): Promise<void> {
+    if (!this.retained) return Promise.resolve()
     return (
       this.dependencies.runnerAlarm?.(this.record?.checkAt ?? null) ??
       Promise.resolve()

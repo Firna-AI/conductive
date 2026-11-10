@@ -42,6 +42,7 @@ export class BrowserTabs {
   private readonly persistence = new Map<BrowserPeer, BrowserPersistence>()
   private cancelSchedule: (() => void) | null = null
   private checking = false
+  private nativeAlarmArmed = false
   private pending: Promise<unknown> = Promise.resolve()
   private refresh: Promise<void> = Promise.resolve()
   private readonly dependencies: TabDependencies
@@ -176,17 +177,23 @@ export class BrowserTabs {
   }
 
   private schedule(): void {
-    const times = [...this.peers.values()].flatMap((registration) =>
-      this.checking
-        ? [registration.deadline]
-        : [registration.deadline, registration.checkAt],
-    )
-    const at = times.length ? Math.min(...times) : null
-    const alarm = this.dependencies.browserAlarm
-    if (alarm) {
-      this.enqueue(() => alarm(at))
-      return
+    const nextAt = (native: boolean) => {
+      const times = [...this.peers.entries()].flatMap(([peer, registration]) =>
+        this.persistence.has(peer) !== native
+          ? []
+          : this.checking
+            ? [registration.deadline]
+            : [registration.deadline, registration.checkAt],
+      )
+      return times.length ? Math.min(...times) : null
     }
+    const alarm = this.dependencies.browserAlarm
+    const nativeAt = nextAt(true)
+    if (alarm && (nativeAt !== null || this.nativeAlarmArmed)) {
+      this.nativeAlarmArmed = nativeAt !== null
+      this.enqueue(() => alarm(nativeAt))
+    }
+    const at = nextAt(false)
     this.cancelSchedule?.()
     this.cancelSchedule =
       at === null

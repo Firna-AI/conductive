@@ -154,7 +154,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   expect(fixture.boat.starts).toHaveLength(1)
   expect(fixture.boat.commands).toHaveLength(4)
   expect(fixture.boat.commandRequests.at(-1)).toMatchObject({
-    detached: false,
+    detached: true,
     command: expect.stringContaining(
       'systemctl start conductive-terminal.service',
     ),
@@ -163,9 +163,10 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     startupPrepared: true,
     pendingFirstMessage: FIRST_MESSAGE,
   })
-  await restored.tick()
   // Finish the restore watch before checking the idle alarm.
-  await restored.tick()
+  const restoring = await restored.readLifecycle()
+  if (restoring?.restoreWatchAt !== undefined)
+    await restored.tick(restoring.restoreWatchAt)
   const ready = await restored.readLifecycle()
   const idleAt = (ready?.lastActivityAt ?? 0) + IDLE_MS
   expect(await restored.lifecycleAlarmAt()).toBe(idleAt)
@@ -173,6 +174,8 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   expect(accessAt).not.toBeNull()
   expect(accessAt).toBeLessThan(idleAt)
   expect(await restored.alarmAt()).toBe(accessAt)
+  await restored.passTime((ready?.lastActivityAt ?? 0) + IDLE_MS - 1)
+  expect(await restored.alarmAt()).toBe((ready?.lastActivityAt ?? 0) + IDLE_MS)
   const completedBrowser = await fixture.openEvents(id)
   const before = await publicHistory(completedBrowser.inbox)
   expect(

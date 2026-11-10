@@ -9,6 +9,10 @@ import type { WorkspaceAlarms } from './alarms'
 import { WorkspaceAlarmTasks } from './alarm-tasks'
 import type { WorkspaceGitHub } from './github'
 import type { WorkspaceFeatures } from './workspace'
+import {
+  expireWorkspacePreviews,
+  runWorkspaceAlarms,
+} from '../workspace-alarms'
 
 interface WorkspaceAlarmInput {
   context: DurableObjectState
@@ -36,14 +40,19 @@ export class WorkspaceAlarmRunner {
 
   async alarm(): Promise<void> {
     const { alarms, now, browsers, devices } = this.input
-    const security = await alarms.takeSecurity(now())
-    if (security.has('browser')) await browsers.alarm()
+    const startedAt = now()
+    const security = await alarms.takeSecurity(startedAt)
+    const claimAt = startedAt + 2_000
+    if (security.has('browser'))
+      await alarms.run('browser', claimAt, () => browsers.alarm())
     if (security.has('runner'))
-      this.tasks.start('runner', () => this.input.runner.alarm())
+      this.tasks.start('runner', () =>
+        alarms.run('runner', claimAt, () => this.input.runner.alarm()),
+      )
     if (security.has('devices'))
       this.tasks.start('devices', async () => {
         try {
-          await devices.alarm()
+          await alarms.run('devices', claimAt, () => devices.alarm())
         } catch (error) {
           await alarms.set('devices', now() + 2_000)
           throw error
@@ -71,28 +80,30 @@ export class WorkspaceAlarmRunner {
         !(await orgLifecycleActive(env.DB, fence.orgId, fence.generation))
       ) {
         await alarms.deferRegular(now() + 30_000)
+        await alarms.set('lifecycle:access', now() + 30_000)
         return
       }
-      const due = await alarms.take(now(), security.size === 0)
-      await this.run(due)
-      await alarms.complete(due)
+      const { lifecycle, github, features, storage } = this.input
+      await runWorkspaceAlarms(
+        alarms,
+        now,
+        {
+          lifecycle,
+          github: () => github.alarm(),
+          previews: () =>
+            expireWorkspacePreviews(storage, alarms, features.previews),
+          devices: async () => {},
+          publishRevocations: async () => {
+            const id = await storage.get<string>('previews:workspace-id')
+            if (id) await features.publishRevocations(id)
+          },
+        },
+        { securityHandled: true, fallbackLifecycle: security.size === 0 },
+      )
+      await alarms.deferRegular(null)
     } catch (error) {
       await alarms.deferRegular(now() + 2_000)
       throw error
     }
-  }
-
-  private async run(due: ReadonlySet<string>): Promise<void> {
-    const { lifecycle, github, features, storage, alarms } = this.input
-    if (due.has('lifecycle')) await lifecycle()
-    if (due.has('github')) await github.alarm()
-    if (due.has('previews')) {
-      await features.previews.expire()
-      const id = await storage.get<string>('previews:workspace-id')
-      if (id)
-        await alarms.set('previews', await features.previews.nextExpiry(id))
-    }
-    const previewWorkspace = await storage.get<string>('previews:workspace-id')
-    if (previewWorkspace) await features.publishRevocations(previewWorkspace)
   }
 }

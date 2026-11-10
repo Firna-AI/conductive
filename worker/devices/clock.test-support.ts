@@ -1,5 +1,6 @@
 import { deviceNumber, deviceObject } from '../../src/shared/device-read'
 import { readJsonObject } from '../http/json-body'
+import { advanceScheduledAlarms } from '../lifecycle/scheduled-alarms.test-support'
 
 // Future fixture time prevents workerd from firing these alarms on real time.
 export const DEVICE_TEST_NOW = 3_000_000_000_000
@@ -81,7 +82,17 @@ export class ManualDeviceClock {
       this.value = deviceNumber(deviceObject(await readJsonObject(request)).now)
       await storage.put(CLOCK_KEY, this.value)
     } else if (path === ALARM_PATH && request.method === 'POST') {
-      await alarm()
+      await advanceScheduledAlarms(
+        {
+          now: this.now,
+          setTime: async (at) => {
+            this.value = at
+            await storage.put(CLOCK_KEY, at)
+          },
+        },
+        this.value,
+        () => [{ storage, fire: alarm }],
+      )
     } else if (path !== CLOCK_PATH || request.method !== 'GET') return null
     return Response.json({ now: this.value, alarm: await storage.getAlarm() })
   }

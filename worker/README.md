@@ -117,23 +117,27 @@ A wake keeps the original sockets and their state.
 A real disconnect, a replacement, and a restart that closes the sockets still run their cleanup, such as the runner disconnect hook, the Mac drop, and the tab removal.
 The runner and the Mac keep a durable generation and a retirement tombstone. So a closing older socket cannot take back the authority of a newer connection.
 A close or an error can be the first event after a wake. Its owner then reads the saved state, and the cleanup runs once.
+Production upgrades always pass a physical socket. Only a physical socket, accepted or restored, saves, arms, and retires native state.
+A feature test can give a tab or runner owner an abstract peer inside the real object. That peer uses the same access logic.
+Its access checks use the scheduler that the test injects. Production has no default timer for them.
 [Open connections](chat/access.md#open-connections) and [Sleep and restore](devices/README.md#sleep-and-restore) give the state of each role.
 
 ### Alarms
 
-`WorkspaceAlarms` in [features/alarms.ts](features/alarms.ts) keeps one durable deadline for each source and sets the one platform alarm.
+`WorkspaceAlarms` in [features/alarms.ts](features/alarms.ts) keeps the due time of each source in its `alarm:<source>` marker, and it sets the one platform alarm.
 The security sources are `browser`, `runner`, and `devices`. They use raw storage, so a member fence cannot refuse their writes.
-The regular sources are `lifecycle`, `github`, and `previews`. They use the guarded receiver storage, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
+The regular sources are the lifecycle tasks, `github`, and `previews`. They use the guarded receiver storage, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
+[Workspace Durable Object](lifecycle/workspace-object.md) gives the shared rules, such as the lifecycle run lease and the steps at the end of each run.
 
 `Workspace.alarm` calls `WorkspaceAlarmRunner.alarm` in [features/workspace-alarm.ts](features/workspace-alarm.ts).
 It takes the due security sources before any member fence or lifecycle check.
 It runs the tab expiry at once. Runner, Mac, and regular work run as tracked tasks of `WorkspaceAlarmTasks`.
 So the handler returns before a slow access read or provider call ends.
 A due security source keeps a retry deadline until its owner replaces or clears it.
-The regular task then checks the member fence and the org lifecycle generation. A fence defers the regular sources and keeps their deadlines.
-A claimed regular source stays saved until its work completes, or until the final stage of a member suspension cancels it.
+The regular task then checks the member fence and the org lifecycle generation. Then it calls `runWorkspaceAlarms` in [workspace-alarms.ts](workspace-alarms.ts).
+While a fence pauses that work, a numeric deferral moves the platform alarm time of the regular sources. Each regular due time stays in its marker.
 A member suspension clears the regular sources in two guarded stages, and both stages keep each security deadline, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
-So a suspended object keeps no regular retry. A Restore clears the deferral in its guarded transaction.
+Its final stage also cancels the lifecycle run lease and the deferral. So a suspended object keeps no regular retry. A Restore clears the deferral in its guarded transaction.
 Provider and lifecycle writes stay fenced.
 
 Tab and runner access checks run every 15 seconds. Tab grants last at most 30 seconds. Mac session checks run at least every 10 seconds.
@@ -155,7 +159,7 @@ An object whose open sockets all use these three roles can hibernate between its
 This work keeps the object active:
 
 - An open terminal or preview socket. Its bridge holds an outbound socket to the sandbox, which cannot hibernate, as the [terminal](terminal/README.md) and [preview](previews/README.md) READMEs say.
-- A request that waits, such as a Mac settings reply, a file read or diff, an input activity write, a title model call, or a preview HTTP stream.
+- A request that waits, such as a Mac settings reply, a file read or diff, an attachment copy, an input activity write, a title model call, or a preview HTTP stream.
 - A tracked alarm task, until it ends.
 
 The code closes no terminal, drops no pending promise, and weakens no limit to make the object sleep.
@@ -171,6 +175,7 @@ Each fixture entry returns a random instance marker from a test-only route, and 
 The marker never enters a product route or a wire frame.
 An eviction without `webSockets` closes the sockets, so it tests the restart path, not a wake.
 The native alarm handler returns before its tracked work ends. So a fixture that calls `alarm()` also awaits the protected `settledAlarms()`.
+The native test harness and the lifecycle fixtures run only the stored alarms that are due, through `advanceScheduledAlarms`. They await `settledAlarms()` after each one.
 An automatic pong does not show that queued socket work ended. So the device fixture reads its readiness route after each socket message.
 A native fixture starts its client socket closes and `runtime.dispose()` together, and it awaits both.
 [Chat backend tests](chat/tests.md) and the [device checks](devices/README.md#composition-and-checks) name the fixtures.
@@ -206,8 +211,11 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
 - [native-sockets.ts](native-sockets.ts): `WorkspaceSockets`, the trusted socket roles, the attachment check, the restore, and the dispatch of native socket events.
-- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Messages use fixed safe text and numeric repair counts. They hold no token, raw error, request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
-- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the durable deadline of each security and regular alarm source. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage.
+- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. It writes one structured object with fixed text and selected safe fields. It copies no extra caller field, token, error message, request body, command output, or response body. `WarningRecord` names the logged object type. `CommandFailed` carries a failed command's state, exit code, and time-out.
+- [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too.
+- [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name.
+- [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of the regular owners of each alarm run: the lifecycle run, the previews, and GitHub. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
+- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the previews, GitHub, and the `browser`, `runner`, and `devices` security sources. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage. [Workspace Durable Object](lifecycle/workspace-object.md) gives its rules.
 - [features/workspace-alarm.ts](features/workspace-alarm.ts): `WorkspaceAlarmRunner`, the short native alarm handler, the security work before the fences, and the fenced regular work.
 - [features/alarm-tasks.ts](features/alarm-tasks.ts): `WorkspaceAlarmTasks`, the tracked background work of an alarm.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.

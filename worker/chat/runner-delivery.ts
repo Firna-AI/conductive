@@ -4,11 +4,19 @@ import { DeliveryState } from './delivery-state'
 import { RunnerAccessDenied, SenderAccessDenied } from './login-access'
 import { unavailableLoginMessage } from './session-login'
 import { ChatOperation } from './operation'
+import {
+  commandDispatchState,
+  dispatchInOrder,
+  type DispatchResult,
+  type DispatchState,
+} from './ordered-dispatch'
 import type { ChatStore, ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
+import { AttachmentPreparation } from './attachment-delivery'
 
 export class RunnerDelivery {
+  private readonly preparations: AttachmentPreparation
   private readonly dispatch: DeliveryState
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
@@ -18,11 +26,18 @@ export class RunnerDelivery {
     store: ChatStore,
     dependencies: ChatDependencies,
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
+    resume: () => Promise<void>,
   ) {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
     this.dispatch = new DeliveryState(store, publish)
+    this.preparations = new AttachmentPreparation(
+      store,
+      dependencies,
+      publish,
+      resume,
+    )
   }
 
   /** Called inside the store's serial queue, after the request commits. */
@@ -46,105 +61,111 @@ export class RunnerDelivery {
     const pending = await this.store.read(active.workspace.id, (view) =>
       view.pending(),
     )
-    for (const command of pending) {
+    await dispatchInOrder(pending, async (command) => {
+      const state = await this.send(active, command, isCurrent, detach)
       if (
-        !isCurrent() ||
-        (await this.store.read(active.workspace.id, (view) =>
-          view.commandDelivered(command.commandId, active.id),
+        state === 'skip' &&
+        !(await this.store.read(active.workspace.id, (view) =>
+          view.command(command.commandId),
         ))
       )
-        continue
-      const current = await this.store.read(active.workspace.id, (view) =>
-        view.command(command.commandId),
-      )
-      if (!current) continue
-      let outbound: RunnerCommand | null
-      try {
-        outbound = await this.command(active, command)
-      } catch (error) {
-        if (!(error instanceof RunnerAccessDenied)) throw error
-        detach()
-        return false
-      }
-      if (!outbound) {
-        if (
-          !(await this.store.read(active.workspace.id, (view) =>
-            view.command(command.commandId),
-          ))
-        )
-          advanced = true
-        continue
-      }
-      const publish = async (
-        event: WorkspaceEventEnvelope['event'],
-        occurredAt?: number,
-      ) => {
-        await this.store.change(
-          active.workspace.id,
-          (transaction) => transaction.emit(event, occurredAt),
-          this.publish,
-        )
-      }
-      if (
-        outbound.type === 'turn' &&
-        !(await this.dependencies.turnDispatching(
-          active.workspace.id,
-          {
-            turnId: outbound.turnId,
-            sessionId: outbound.sessionId,
-            senderUserId: outbound.message.sender.id,
-          },
-          publish,
-        ))
-      )
-        continue
-      if (!isCurrent()) {
-        if (outbound.type === 'turn')
-          await this.dependencies.turnDispatchFailed(
-            active.workspace.id,
-            outbound.turnId,
-            publish,
-          )
-        return false
-      }
-      const beganTurn = await this.dispatch.begin(active.workspace.id, command)
-      try {
-        await active.peer.send(outbound)
-      } catch {
-        detach()
-        await this.dispatch.unsent(active.workspace.id, command, beganTurn)
-        if (beganTurn && 'turnId' in command)
-          await this.dependencies.turnDispatchFailed(
-            active.workspace.id,
-            command.turnId,
-            publish,
-          )
-        return false
-      }
-      await this.dispatch.sent(active.workspace.id, command, active.id)
+        advanced = true
+      return state
+    })
+    return advanced && isCurrent()
+  }
+
+  private async send(
+    active: ActiveRunner,
+    command: PendingCommand,
+    isCurrent: () => boolean,
+    detach: () => void,
+  ): Promise<DispatchState> {
+    if (
+      !isCurrent() ||
+      (await this.store.read(active.workspace.id, (view) =>
+        view.commandDelivered(command.commandId, active.id),
+      ))
+    )
+      return 'skip'
+    let prepared: DispatchResult<RunnerCommand>
+    try {
+      prepared = await this.command(active, command)
+    } catch (error) {
+      if (!(error instanceof RunnerAccessDenied)) throw error
+      detach()
+      return 'skip'
     }
-    return advanced
+    if (prepared.state !== 'send') return prepared.state
+    const outbound = prepared.command
+    if (outbound.type === 'turn' || outbound.type === 'message') {
+      const state = await this.preparations.check(active, outbound, isCurrent)
+      if (state !== 'send') return state
+    }
+    const publish = async (
+      event: WorkspaceEventEnvelope['event'],
+      occurredAt?: number,
+    ) => {
+      await this.store.change(
+        active.workspace.id,
+        (transaction) => transaction.emit(event, occurredAt),
+        this.publish,
+      )
+    }
+    if (
+      outbound.type === 'turn' &&
+      !(await this.dependencies.turnDispatching(
+        active.workspace.id,
+        {
+          turnId: outbound.turnId,
+          sessionId: outbound.sessionId,
+          senderUserId: outbound.message.sender.id,
+        },
+        publish,
+      ))
+    )
+      return 'wait'
+    if (!isCurrent()) {
+      if (outbound.type === 'turn')
+        await this.dependencies.turnDispatchFailed(
+          active.workspace.id,
+          outbound.turnId,
+          publish,
+        )
+      return 'skip'
+    }
+    const beganTurn = await this.dispatch.begin(active.workspace.id, command)
+    try {
+      await active.peer.send(outbound)
+    } catch {
+      detach()
+      await this.dispatch.unsent(active.workspace.id, command, beganTurn)
+      if (beganTurn && 'turnId' in command)
+        await this.dependencies.turnDispatchFailed(
+          active.workspace.id,
+          command.turnId,
+          publish,
+        )
+      return 'skip'
+    }
+    await this.dispatch.sent(active.workspace.id, command, active.id)
+    return 'send'
   }
 
   private async command(
     active: ActiveRunner,
     command: PendingCommand,
-  ): Promise<RunnerCommand | null> {
-    const canDispatch = await this.store.read(
-      active.workspace.id,
-      async (view) => {
-        const session = await view.session(command.sessionId)
-        return session
-          ? new TurnLifecycle(view, session).canDispatch(command)
-          : false
-      },
+  ): Promise<DispatchResult<RunnerCommand>> {
+    const state = await this.store.read(active.workspace.id, (view) =>
+      commandDispatchState(view, command),
     )
-    if (!canDispatch) return null
-    if (command.type === 'interrupt' || command.type === 'model') return command
+    if (state !== 'send') return { state }
+    if (command.type === 'interrupt' || command.type === 'model')
+      return { state: 'send', command }
     const message = await this.store.read(active.workspace.id, (view) =>
       view.message(command.messageId),
     )
-    if (!message) return null
+    if (!message) return { state: 'skip' }
     let login: RunnerLogin | null
     try {
       const operation = new ChatOperation(
@@ -162,21 +183,33 @@ export class RunnerDelivery {
     } catch (error) {
       if (!(error instanceof SenderAccessDenied)) throw error
       await this.failLogin(active.workspace.id, command, error.message)
-      return null
+      return this.unavailable(active.workspace.id, command)
     }
     if (!login || login.agent !== message.choice.agent) {
       await this.failLogin(active.workspace.id, command)
-      return null
+      return this.unavailable(active.workspace.id, command)
     }
     return {
-      type: command.type,
-      commandId: command.commandId,
-      sessionId: command.sessionId,
-      turnId: command.turnId,
-      message: { ...message, state: 'sent' },
-      attachments: command.attachments,
-      login,
+      state: 'send',
+      command: {
+        type: command.type,
+        commandId: command.commandId,
+        sessionId: command.sessionId,
+        turnId: command.turnId,
+        message: { ...message, state: 'sent' },
+        attachments: command.attachments,
+        login,
+      },
     }
+  }
+
+  private unavailable(
+    workspaceId: string,
+    command: PendingCommand,
+  ): Promise<DispatchResult<RunnerCommand>> {
+    return this.store.read(workspaceId, async (view) => ({
+      state: (await view.command(command.commandId)) ? 'wait' : 'skip',
+    }))
   }
 
   private async failLogin(

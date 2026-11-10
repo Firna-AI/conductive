@@ -19,7 +19,7 @@ afterEach(async () => {
 
 it('runs security deadlines through lifecycle fences and retains deferred feature deadlines', async () => {
   const active = (fixture = await featureFixture(bundle))
-  const due = Date.now() + 60_000
+  const due = (await active.actor().testAlarmTime()) + 60_000
   for (const mode of ['suspended', 'purged', 'active'] as const) {
     await active.actor().seedFeatureState({
       'members:lifecycle-fence': { orgId: OUTER_ORG, generation: 100, mode },

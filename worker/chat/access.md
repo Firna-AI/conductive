@@ -17,6 +17,15 @@ The Durable Object runs the gates itself.
   header, the session cookie, the org membership, and the body of writes.
 - `findChatWorkspace` then reads the workspace from D1. The workspace must
   belong to that org, and the org must not be deleted.
+- Each browser write then enters the serial queue of the object. In the
+  queue, `authorizeChatBrowser` checks the access again, with the body that
+  the gate already read and the time of the queued check. It runs
+  `gateAccess`, the [access checks](../security/README.md#access-checks) of
+  the gate, and reads the workspace and its archive state again. This
+  repeats the D1 reads of the first check. So a write that waited for its
+  body or for the queue gets the refusal that a new request would get. An
+  example is `401 sign_in_required` after a sign-out. The write saves
+  nothing. Reads and the events socket take no second check.
 - Each open tab holds a `workspace` identity. The
   [shared connection reader](../security/README.md#open-connections) of
   the security area gives it a grant with a deadline. The `workspace` kind
@@ -87,7 +96,8 @@ The Durable Object runs the gates itself.
 
 An org suspension keeps chat history and event subscriptions readable.
 The common browser write gate refuses session and message changes with `org_suspended`.
-The same check runs inside the browser write queue before session or message changes.
+The second access check of each browser write refuses such a change again in the queue.
+This also holds when the suspension starts while the change waits.
 The shared token rule refuses runners and agent logins for the org.
 
 
@@ -99,13 +109,19 @@ of the workspace object, as
 says. `browserUpgrade` and `runnerUpgrade` in [`sockets.ts`](sockets.ts)
 build each socket pair. The owners below accept the server side.
 
+Only a physical socket, accepted or restored, saves its native record and
+arms the `browser` or `runner` alarm source. A feature test can give an
+owner an abstract peer inside the real object. That peer uses the same
+access logic, with the access scheduler that the test injects.
+
 ### Tabs
 
 - `BrowserConnections` in [`browser-connections.ts`](browser-connections.ts)
   accepts the socket of a tab before its admission. The attachment holds
   the link context of the tab: its app origin and its workspace number.
-- The raw record `native:browser:<connection ID>` holds the identity, the
-  tab ID, the grant deadline, and the next check time.
+- `BrowserConnections` creates the raw record
+  `native:browser:<connection ID>` only for a physical socket. It holds the
+  identity, the tab ID, the grant deadline, and the next check time.
   [`browser-registration.ts`](browser-registration.ts) reads it. The
   identity holds the session and user IDs, never a credential.
 - A new tab keeps its admission order: the first grant, the history, then
@@ -127,9 +143,10 @@ build each socket pair. The owners below accept the server side.
   owns the current runner. Its attachment holds only the routing identity.
 - `RunnerConnectionStore` in
   [`runner-connection-store.ts`](runner-connection-store.ts) keeps the
-  current connection in chunked raw records under `native:runner:`. They
-  hold the connection ID, the generation, the workspace record with the
-  token hash, the stream ID, the readiness, and the next check time.
+  current physical connection in chunked raw records under
+  `native:runner:`. They hold the connection ID, the generation, the
+  workspace record with the token hash, the stream ID, the readiness, and
+  the next check time.
 - A new connection raises the generation, and a retired connection leaves
   a tombstone. So a closing older socket cannot take back authority.
 - A restore needs the saved connection ID and generation. It sends no

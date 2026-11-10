@@ -5,6 +5,7 @@ import type { FakeApiOptions } from '../../test-support/fake-api'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
+import type { DevUploadMode } from './attachment-routes'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -17,6 +18,8 @@ const CONVERSATIONS = [
   'queued',
   'first-turn',
 ] as const satisfies readonly RecordedChatScenario[]
+
+const UPLOADS = ['wait', 'fail'] as const satisfies readonly DevUploadMode[]
 
 const BANNERS = [
   'none',
@@ -64,6 +67,8 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
  * - `stop=<seconds>`: an open workspace stops that many seconds after it
  *   opens, as a sandbox does that stops while its workspace is open.
+ * - `upload=wait|fail`: each file upload never ends, or the first upload of
+ *   each file name fails once, so Try again works.
  * - `shareSave=fail`: each change of the share setting of an agent login
  *   fails, so the account shows that the change was not saved.
  * - `waiting=1`: the user is Sam Okafor, who waits for app access, with a
@@ -92,6 +97,8 @@ export interface DevOptions {
   signedOut: boolean
   /** The wait before an open workspace stops, or `null` for no stop. */
   stopAfterMs: number | null
+  /** What each file upload does. */
+  upload: DevUploadMode
   shareSaveFails: boolean
   /** The user waits for app access, with a verified email or none. */
   waiting: 'verified' | 'none' | null
@@ -137,6 +144,7 @@ export function readDevOptions(search: string): DevOptions {
     operator,
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
+    upload: pick(params, 'upload', UPLOADS) ?? 'ready',
     shareSaveFails: params.get('shareSave') === 'fail',
     waiting,
     invited: params.get('invited') === '1',

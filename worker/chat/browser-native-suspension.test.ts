@@ -31,9 +31,7 @@ it('keeps a late browser admission scheduled through real member suspension and 
         'alarm:github': BROWSER_TEST_NOW + 120_000,
         'alarm:previews': BROWSER_TEST_NOW + 180_000,
         'alarm:lifecycle': BROWSER_TEST_NOW + 240_000,
-        'security:regular-alarms-pending': {
-          github: BROWSER_TEST_NOW + 60_000,
-        },
+        'alarm:lifecycle:run': BROWSER_TEST_NOW + 60_000,
         'security:regular-alarms-deferred-until': BROWSER_TEST_NOW + 2_000,
       },
     })
@@ -55,7 +53,7 @@ it('keeps a late browser admission scheduled through real member suspension and 
     expect(initial.browserAt).toBe(BROWSER_TEST_NOW + 15_000)
     expect(initial.alarm).toBe(BROWSER_TEST_NOW + 15_000)
     expect(initial.regular).toEqual([null, null, null])
-    expect(initial.pending).toEqual({ github: BROWSER_TEST_NOW + 60_000 })
+    expect(initial.pending).toBe(BROWSER_TEST_NOW + 60_000)
     expect(initial.deferred).toBe(BROWSER_TEST_NOW + 2_000)
     await controls.request('release')
     const late = await opening
@@ -75,9 +73,7 @@ it('keeps a late browser admission scheduled through real member suspension and 
       BROWSER_TEST_NOW + 15_000,
     )
     expect(admitted.alarm).toBe(BROWSER_TEST_NOW + 15_000)
-    expect(state(admitted.state).has('security:regular-alarms-pending')).toBe(
-      false,
-    )
+    expect(state(admitted.state).has('alarm:lifecycle:run')).toBe(false)
     expect(
       state(admitted.state).has('security:regular-alarms-deferred-until'),
     ).toBe(false)
@@ -106,9 +102,7 @@ it('keeps a late browser admission scheduled through real member suspension and 
     expect(state(expired.state).get('members:lifecycle-fence')).toEqual(
       initial.fence,
     )
-    expect(state(expired.state).has('security:regular-alarms-pending')).toBe(
-      false,
-    )
+    expect(state(expired.state).has('alarm:lifecycle:run')).toBe(false)
     expect(
       state(expired.state).has('security:regular-alarms-deferred-until'),
     ).toBe(false)

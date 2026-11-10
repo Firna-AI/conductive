@@ -3,7 +3,7 @@ import type {
   WorkspaceCompositionEnv,
   WorkspaceChatResolvers,
 } from './chat/workspace-integration'
-import { WorkspaceLifecycle } from './workspace-lifecycle'
+import { AttachmentWorkspace } from './chat/attachment-workspace'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import { WorkspaceFeatures } from './features/workspace'
 import { WorkspaceGitHub } from './features/github'
@@ -25,7 +25,7 @@ import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 
-export class Workspace extends WorkspaceLifecycle {
+export class Workspace extends AttachmentWorkspace {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver

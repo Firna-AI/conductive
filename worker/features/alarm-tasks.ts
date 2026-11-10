@@ -15,9 +15,7 @@ export class WorkspaceAlarmTasks {
     this.tasks.set(source, pending)
     this.context.waitUntil(
       pending.catch(() => {
-        warnWorker(
-          'Workspace alarm work failed. Its durable deadline will retry.',
-        )
+        warnWorker({ kind: 'workspace_alarm_failed' })
       }),
     )
   }

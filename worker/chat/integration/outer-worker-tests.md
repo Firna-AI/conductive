@@ -32,6 +32,12 @@ npm run test -- worker/chat/integration
   after a restart, and a repeat adds no history.
 - `failed-first-start-retry.test.ts` checks a kept first-start failure through
   restart, a retry by another member, fresh credentials, and ordered queued delivery.
+  Its first message carries a raw file that a member uploads through the
+  production route. After the failure and after the retry, the native
+  expiry RPC keeps the expired claim and its bytes. The retry copies the
+  exact bytes once. `first-start-attachments.test-support.ts` gives the
+  upload, a fake file upload address with its transfer, and that expiry
+  call.
 - `failed-creation-replay.test.ts` checks all history pages of a kept failed
   workspace through the normal member event socket, which stays live.
 - `workspace-lifecycle.test.ts` joins runner readiness, a reconnect, a
@@ -77,15 +83,20 @@ npm run test -- worker/chat/integration
 - `workspace-lifecycle.test-support.ts` holds the fixture of the two
   workspace tests.
 - `journey-entry.test-support.ts` adds `advanceStartAlarm` to the
-  production `Workspace`. It calls `alarm`, then awaits `settledAlarms`,
-  because the native alarm handler returns before its tracked work ends.
-  `driveWorkspaceStart` in `workspace-start.test-support.ts` uses it to run
-  each start phase without a wait for the timers. `completeWorkspaceResume`
-  of the same file waits for the end of a resume after its reply, and fails
-  on a failed start.
-- `workspace-review-entry.test-support.ts` holds a `Workspace` with a
-  fixed clock, a wait for queued starts, a read of the start checkpoint,
-  and `advanceStartAlarm`. All state changes use the production object.
+  production `Workspace`. `driveWorkspaceStart` in
+  `workspace-start.test-support.ts` uses it to run each start phase without
+  a wait for the timers. `completeWorkspaceResume` of the same file waits
+  for the end of a resume after its reply, and fails on a failed start.
+- `workspace-review-entry.test-support.ts` holds a `Workspace` with a wait
+  for queued starts, a read of the start checkpoint, and
+  `advanceStartAlarm`.
+  [`NativeAlarmWorkspace`](../../lifecycle/native-alarm-workspace.test-support.ts),
+  the shared base of the journey, preparation, and review entries, starts
+  its clock at a fixed test time. `advanceStartAlarm` advances that clock
+  to the given time or to the stored alarm. Then it runs only the stored
+  alarms that are due on that clock. After each one, it awaits
+  `settledAlarms`, because the native alarm handler returns before its
+  tracked work ends. All state changes use the production object.
   `reviewWorkspaceFixture` in `workspace-review.test-support.ts` starts it
   with a prepared create start, a ready fake runner with a running first
   turn, event sockets, and a Mac connection.
@@ -158,4 +169,7 @@ CHAT_HARNESS_ASSETS=path/to/client CHAT_HARNESS_PORT=5181 \
   It holds the start, leaves, and fails the start.
   The workspace stays readable with its error and queued messages.
   It returns through history and retries in the same workspace.
-- The Worker routes no attachment upload yet, so such a check sends text.
+- The Worker routes raw attachment uploads, and `attachment-raw.test.ts`
+  checks them with native R2. The fake provider of the harness gives no
+  file upload address, so a file copy into its fake sandbox fails. So such
+  a check sends text.

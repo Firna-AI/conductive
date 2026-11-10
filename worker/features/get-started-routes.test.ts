@@ -201,12 +201,12 @@ it('keeps boot routes available during a GitHub failure and reports the installa
       { step: 'agent-login', complete: false },
     ],
   })
-  expect(await warning).toBe(
-    'Could not read GitHub installation status for Get started.',
-  )
-  expect(warnings).toEqual([
-    'Could not read GitHub installation status for Get started.',
-  ])
+  const expectedWarning = `{
+  kind: 'github_installation_status_failed',
+  message: 'Could not read GitHub installation status for Get started.'
+}`
+  expect(await warning).toBe(expectedWarning)
+  expect(warnings).toEqual([expectedWarning])
   const installations = await active.request(
     ACCOUNT_PATHS.githubInstallations,
     {

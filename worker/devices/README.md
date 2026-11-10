@@ -209,8 +209,9 @@ Only the fixture mounts the pre-existing chat and runner paths for setup.
 Its Vite bundle uses `write: false`.
 Sender selection comes from messages stored through that real chat path.
 `DeviceRuntime` takes one clock for lease, watchdog, and command times.
-The fixture moves that clock and invokes the real Durable Object alarm through test-only routes.
-Its alarm route then awaits the tracked alarm work.
+The fixture moves that clock through a test-only route.
+Its test-only alarm route runs the real Durable Object alarm only for stored alarms that are due on that clock, through `advanceScheduledAlarms`.
+After each alarm, that route awaits the tracked alarm work.
 Its `ManualDeviceClock` restores the fixture time from storage when the object starts again.
 It also maps each automatic response time of the platform to the fixture time.
 Its readiness route reports the instance marker, the native sockets with their attachments, and the automatic response.

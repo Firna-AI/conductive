@@ -3,7 +3,7 @@
 This guide belongs to the [chat backend](README.md). It gives the stored
 retry state and the rules of the retry route.
 
-[Messages](../../docs/protocol/chat-and-events.md#messages) states the
+[Messages](../../docs/protocol/messages-and-attachments.md#messages) states the
 rules. `Session.retryMessageId` names the one message that the retry route
 accepts. It is the only public part of the retry state.
 

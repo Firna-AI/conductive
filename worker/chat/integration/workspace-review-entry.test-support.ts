@@ -1,12 +1,13 @@
-import app, { Workspace as ProductionWorkspace } from '../../index'
-import type { WorkspaceCompositionEnv } from '../workspace-integration'
+import { createApp } from '../../application'
 import { DEVICE_TEST_NOW } from '../../devices/clock.test-support'
+import { NativeAlarmWorkspace } from '../../lifecycle/native-alarm-workspace.test-support'
+import type { WorkspaceCompositionEnv } from '../workspace-integration'
 import { START_JOB_KEY } from '../../lifecycle/start-storage'
 import type { StoredWorkspaceStartJob } from '../../lifecycle/start-job-codec'
 import type { WorkspaceStartIntent } from '../../lifecycle/start-types'
 
 /** Only test controls differ. All state changes use the production object. */
-export class Workspace extends ProductionWorkspace {
+export class Workspace extends NativeAlarmWorkspace {
   private queued = 0
   private readonly queueReaders: { after: number; resolve: () => void }[] = []
   private stopAfterRead = false
@@ -14,7 +15,7 @@ export class Workspace extends ProductionWorkspace {
   constructor(
     context: DurableObjectState,
     env: WorkspaceCompositionEnv,
-    now: () => number = () => DEVICE_TEST_NOW,
+    now?: () => number,
   ) {
     super(context, env, now)
   }
@@ -54,11 +55,6 @@ export class Workspace extends ProductionWorkspace {
   readStartCheckpoint(): Promise<StoredWorkspaceStartJob | undefined> {
     return this.ctx.storage.get(START_JOB_KEY)
   }
-
-  async advanceStartAlarm(): Promise<void> {
-    await this.alarm()
-    await this.settledAlarms()
-  }
 }
 
-export default app
+export default createApp({ now: () => DEVICE_TEST_NOW })
