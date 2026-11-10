@@ -61,8 +61,8 @@ turn repair from the committed chat and the one writer of the shown state.
 
 ### Builds and refreshes
 
-[Image builds](image-builds.md) describes build sandboxes, suspension, provider retries,
-logs, snapshot leases, and refresh timers.
+[Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
+provider retries, logs, snapshot leases, and refresh timers.
 
 ## Settings
 

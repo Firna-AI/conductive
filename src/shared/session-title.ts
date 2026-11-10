@@ -5,7 +5,7 @@
  * over 60 Unicode code points at its last space within the limit, or at
  * the limit when the first word is longer.
  * The Worker, runner, development page, and mockups share this rule, as
- * "Sessions" in `docs/protocol/chat-and-events.md` says.
+ * "Sessions" in `docs/protocol/agents-and-sessions.md` says.
  */
 export function sessionTitleFrom(text: string): string | null {
   const line = text.trim().split('\n')[0].replace(/\s+/g, ' ').trim()

@@ -18,6 +18,12 @@
   height: 100%;
 }
 
+/* A plain drag selects also while a program has the mouse, so the screen
+   keeps the text cursor that xterm.js turns into an arrow then. */
+.host :global(.xterm.enable-mouse-events:not(.xterm-cursor-pointer)) {
+  cursor: text;
+}
+
 .keys {
   display: flex;
   flex-shrink: 0;

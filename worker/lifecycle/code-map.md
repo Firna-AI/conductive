@@ -11,6 +11,8 @@ These entry points belong to the [workspace lifecycle](README.md).
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+- [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
+- [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
   `workspaceView` adds the canonical web link for an explicit app origin.
@@ -74,6 +76,8 @@ These entry points belong to the [workspace lifecycle](README.md).
   for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
+  It also exposes the trusted `checkTurnToken` RPC through `workspaceRuntime`.
+- [`credential-sender.ts`](credential-sender.ts): the git credential sender lookup, including creation-time access and active stored turns.
 - [`retry-creation.ts`](retry-creation.ts): `retryFailedCreation` reuses the
   first-message admission and workspace identity after a failed first start.
   [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.
@@ -164,7 +168,7 @@ These entry points belong to the [workspace lifecycle](README.md).
   `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as the
   [Workspace Durable Object](workspace-object.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
-- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
+- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,

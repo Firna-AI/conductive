@@ -47,7 +47,20 @@ decision number names a dated record, as
   storage.
 - A sandbox gets none of the secrets of the app's Boat account. At a
   start, it gets only the secrets of its workspace and its org.
-- During a turn, the sandbox also holds the agent login of the starter of
-  its session. The members of one org can reach that login, as
+- For a sandbox with a version pin of 2 or later, the model gateway is the
+  boundary between the sandbox and the model providers. The version pin of
+  a sandbox is the lowest runner protocol version that its workspace
+  accepts, as [The agent runner](../protocol/agent-runner.md#the-agent-runner)
+  says. During a turn, such a sandbox holds a turn token, not an agent
+  login. The token spends the login of the starter of its session only
+  through the gateway, and only while the turn runs. The agent logins stay
+  in the Worker.
+- During a turn, a sandbox with a runner of protocol version 1 holds the
+  agent login of the starter itself. A workspace with a version pin of 1
+  accepts such a runner, also after a runner of version 2 or later
+  connects. So a runner of version 2 or later does not put a sandbox with
+  a version pin of 1 behind the boundary of the gateway.
+- The members of one org can reach the turn token or the login in a
+  sandbox, as
   [Access and security](../protocol/isolation.md#agent-logins-in-a-sandbox)
   says.

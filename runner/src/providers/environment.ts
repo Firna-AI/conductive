@@ -12,12 +12,13 @@ export async function prepareProviderHome(home: string): Promise<void> {
   )
 }
 
-/** Provider logins travel through private process input, never the environment. */
+/** Provider credentials never enter the inherited environment. */
 export function providerEnvironment(
   home: string,
   tools: WorkspaceToolContext,
 ): Record<string, string | undefined> {
   const env = { ...process.env }
+  delete env.CONDUCTIVE_MEASURE_LOGIN
   for (const key of Object.keys(env)) {
     if (/^(ANTHROPIC_|CLAUDE_|CLAUDECODE$|OPENAI_|CODEX_)/.test(key))
       delete env[key]

@@ -6,13 +6,14 @@ sandboxes, the terminal, the port previews, and the uploads and the storage
 of an import from Conductor. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A gateway decision number names a decision of the change that adds
+the [model gateway](model-gateway.md), as that doc says.
 
 These docs belong to this doc:
 
 - [Isolation of orgs and sandboxes](isolation.md): the checks that keep
   the orgs apart, the app's Boat key, what a sandbox holds, and the agent
-  logins in a sandbox.
+  logins and the turn tokens in a sandbox.
 - [Tokens and secrets](tokens-and-secrets.md): the workspace token, the
   GitHub tokens, the secrets that users enter, and the agent logins that
   users connect.
@@ -83,12 +84,16 @@ These docs belong to this doc:
   must match. Every write and every socket upgrade needs a matching
   `Origin` (decision 60).
 - The hostname for machines is `api.conductive.build`. It serves the
-  GitHub webhooks, the agent tools, the agent runner, and the git
-  credential helper. Its gate checks a webhook signature or a workspace
-  token in place of the sign-in.
+  GitHub webhooks, the agent tools, the agent runner, the git credential
+  helper, and the [model gateway](model-gateway.md). Its gate checks a
+  webhook signature or a workspace token in place of the sign-in.
 - The gate also accepts a one-use build grant, but only on
   `/v1/internal/image-source/credential`, the route that gives the Git
   command of a build its read token (decision 90).
+- The gate also accepts a turn token, but only on the routes of the model
+  gateway (decision 120). These routes accept no other credential.
+  [The turn token](model-gateway.md#the-turn-token) states when a turn
+  token works.
 - Each route of `api.conductive.build` has a path under `/v1/`
   (decision 102).
 - Paths without a version were rejected. Reason: a later change to the
@@ -118,6 +123,14 @@ A lint was rejected because a read through another name escapes it.
   All other routes get the default, also routes added later.
 - The GitHub webhook limit is 26 MiB, or 27,262,976 bytes.
   GitHub's [25 MB payload maximum](https://docs.github.com/en/webhooks/webhook-events-and-payloads#payload-cap) is the reason.
+- The limit of the [model gateway](model-gateway.md) is 100,000,000 bytes
+  (gateway decision 3).
+- Reason: Cloudflare accepts a request body of at most 100 MB on a zone of
+  the Free or Pro plan. The limit is not above that cap, whether Cloudflare
+  counts 100 MB as 100,000,000 or as 104,857,600 bytes. So the Worker's
+  own HTTP 413 answer comes first.
+- A higher limit, such as the 128 MB that Anthropic's API accepts, was
+  rejected, because it needs a zone of the Business or Enterprise plan.
 - The Worker counts the bytes that arrive. It does not rely on the
   `Content-Length` header for the limit.
 - The Worker stops reading a body as soon as the body passes its limit.
@@ -235,7 +248,7 @@ Later screens add the frame and connection sources that they need.
 
 - [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   states how a login reaches the sandbox, its share setting, and its
-  risk.
+  risk. It also states the turn tokens and the risks of each version pin.
 
 ## GitHub tokens
 

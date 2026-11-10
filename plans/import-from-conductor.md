@@ -743,8 +743,9 @@ These are agent calls from Milestone 1, within the decisions in force.
   rule stays in force. This milestone adds no storage cleanup policy.
 - The scan must obtain each row's upload size without building every
   bundle before the user chooses. Milestone 6 must check that cost.
-  The shared notice contract and its app switch must change together in
-  Milestone 8. Reason: the mockups exposed both consumers of the new state.
+  The shared notice contract and its app switch must change together.
+  Reason: the mockups exposed both consumers of the new state. Milestone 3a
+  changed both, and Milestone 8 uses that contract.
 - Native fixture collections keep their original entries. Import examples
   add their fixtures explicitly. Reason: the app's tests and development
   data also read the native collections. An import-only section must not
