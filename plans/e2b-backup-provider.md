@@ -582,10 +582,10 @@ The complete change passes the gate and the review.
       terminal, and model changes. Match a runner-version lookup with the
       saved provider account as well as the org and image name.
 - [x] Run the targeted tests and the complete gate, `npm run check`.
-- [ ] Fix the confirmed command-completion race, use one provider header
+- [x] Fix the confirmed command-completion race, use one provider header
       list in preview checks, and link current provider plan limits.
       Repeat the affected checks and the complete gate.
-- [ ] Integrate main's archive restore and shared software images. Keep
+- [x] Integrate main's archive restore and shared software images. Keep
       E2B archive recovery read-only and skip its vendor disk restarts.
       Verify same-account software-image selection and template fallback.
 - [x] Commit with Conventional Commits and push the branch.
@@ -603,6 +603,7 @@ The complete change passes the gate and the review.
 Evidence: `.context/e2b-backup-provider/complete-gate-1.log` and
 `combined-smoke/result.json`. Real E2B checks above remain blocked.
 Round 1 review and checks: `.context/reviews/calummoore/e2b-backup-sandbox-provider/`.
+Combined integration gate: `.context/e2b-backup-provider/complete-gate-3.log`.
 
 ## Post-merge follow-up (non-blocking)
 
