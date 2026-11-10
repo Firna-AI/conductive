@@ -2,6 +2,7 @@ import type { Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
+import { DeleteRoutineDialog } from '../components/routines/DeleteRoutineDialog'
 import { RunsPanel } from '../components/routines/RunsPanel'
 import { offersRunNow } from '../components/routines/triggerCopy'
 import {
@@ -22,8 +23,10 @@ import { RoutineTabs } from './routineTabs'
 import styles from './RoutineScreen.module.css'
 
 /**
- * The screens that the actions of the flow "Create a routine" open: Save
- * of a new routine, and Run now of the saved routine before its first run.
+ * The screens that the actions open: Save of a new routine and Run now of
+ * the saved routine before its first run, as in the flow "Create a
+ * routine", and the question of Delete of the routine that reviews pull
+ * requests.
  */
 function flowLinks(state: RoutineState, routine: Routine) {
   return {
@@ -32,6 +35,7 @@ function flowLinks(state: RoutineState, routine: Routine) {
       routine.key === 'morning-summary' && state.runs === 'none'
         ? paths.routineRunNow
         : undefined,
+    deleteTo: routine.key === 'review-prs' ? paths.routineDelete : undefined,
   }
 }
 
@@ -56,6 +60,11 @@ export function RoutineScreen(props: {
   const menu = state.triggers === 'menu'
   // A new routine has no runs yet, so a phone shows it without tabs.
   const runsTab = mobile && routine.saved && state.tab === 'runs'
+  const links = flowLinks(state, routine)
+  const dialog =
+    state.dialog === 'delete' && !suspended ? (
+      <DeleteRoutineDialog routine={routine} viewport={viewport} />
+    ) : null
   const form = (
     <RoutineForm
       access={access}
@@ -85,7 +94,7 @@ export function RoutineScreen(props: {
         viewport,
         withForm: !runsTab,
         runNow: offersRunNow(edits.map((edit) => edit.trigger)),
-        ...flowLinks(state, routine),
+        ...links,
       })}
       back={{
         label: 'Routines',
@@ -110,7 +119,7 @@ export function RoutineScreen(props: {
           <div className={styles.phoneContent}>
             {runsTab ? runs : form}
             {!runsTab && access === 'owner' && routine.saved ? (
-              <PhoneDelete />
+              <PhoneDelete to={links.deleteTo} />
             ) : null}
           </div>
         </div>
@@ -129,11 +138,13 @@ export function RoutineScreen(props: {
       <MobileFrame>
         {page}
         <PhoneSheet edits={edits} menu={menu} />
+        {dialog}
       </MobileFrame>
     )
   }
   return (
     <AppFrame
+      overlay={dialog}
       rail={{
         ...acmeRail,
         suspended: suspended ? suspendedOrg : undefined,

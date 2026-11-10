@@ -11,7 +11,7 @@ import { routineKeys, type Routine } from '../fixtures/routines'
 export const routineStateSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['routine', 'viewer', 'triggers', 'runs', 'tab', 'org'],
+  required: ['routine', 'viewer', 'triggers', 'runs', 'tab', 'org', 'dialog'],
   properties: {
     /** A new routine, a draft of one, or a saved routine of Acme. */
     routine: { enum: routineKeys },
@@ -40,6 +40,11 @@ export const routineStateSchema = {
      * changes them, also an admin or the owner.
      */
     org: { enum: ['active', 'suspended'] },
+    /**
+     * The question over the page: none, or the one of Delete, which asks
+     * first, because a deleted routine cannot come back.
+     */
+    dialog: { enum: ['none', 'delete'] },
   },
 } as const
 
@@ -53,6 +58,7 @@ export const ownerRoutine: RoutineState = {
   runs: 'review',
   tab: 'routine',
   org: 'active',
+  dialog: 'none',
 }
 
 /**

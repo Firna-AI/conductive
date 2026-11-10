@@ -7,6 +7,12 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 
 Each area owns its paths and payloads. Import from that area directly.
 `api.ts` keeps the existing sign-in and org paths and common records.
+Its `ApiErrorBody` carries the error code and message.
+The optional `error.details` identifies an unknown routine author login.
+It carries `login`, `triggerIndex`, and `list`.
+`triggerIndex` is zero-based in the routine's complete trigger list.
+`list` uses the author-filter request key, `is` or `isNot`.
+Errors without details keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.

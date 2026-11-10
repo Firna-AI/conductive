@@ -142,36 +142,47 @@ it('resolves member and bot logins to account IDs in both author lists at each s
   })
 })
 
-it('names an unknown login and preserves the routine when a save refuses it', async () => {
+it('returns the unknown login, trigger index, and author list without changing the routine', async () => {
   const { org, member, admin, input, seed } = await authorsFixture()
   const path = await seed()
-  const body = {
-    ...input,
-    triggers: [
+  for (const [list, authors] of [
+    ['is', { members: true, is: ['member', 'missing-account'], isNot: [] }],
+    [
+      'isNot',
       {
-        kind: 'pull-request',
-        event: 'opened',
-        authors: { members: true, is: ['missing-account'], isNot: [] },
+        members: true,
+        is: ['member'],
+        isNot: ['dependabot[bot]', 'missing-account'],
       },
     ],
-  }
-  for (const [target, method] of [
-    [routinesPath(org.id), 'POST'],
-    [path, 'PATCH'],
   ] as const) {
-    const response = await harness.request(
-      target,
-      member.session,
-      write(body, method),
-    )
-    expect(response.status).toBe(400)
-    expect(await response.json()).toEqual({
-      error: {
-        code: 'unknown_github_login',
-        message:
-          'GitHub account missing-account was not found. Check the login.',
-      },
-    })
+    const body = {
+      ...input,
+      triggers: [
+        ...input.triggers,
+        { kind: 'pull-request', event: 'opened' },
+        { kind: 'pull-request', event: 'opened', authors },
+      ],
+    }
+    for (const [target, method] of [
+      [routinesPath(org.id), 'POST'],
+      [path, 'PATCH'],
+    ] as const) {
+      const response = await harness.request(
+        target,
+        member.session,
+        write(body, method),
+      )
+      expect(response.status, `${method} ${list}`).toBe(400)
+      expect(await response.json(), `${method} ${list}`).toEqual({
+        error: {
+          code: 'unknown_github_login',
+          message:
+            'GitHub account missing-account was not found. Check the login.',
+          details: { login: 'missing-account', triggerIndex: 2, list },
+        },
+      })
+    }
   }
   const read = await harness.request(path, admin.session)
   expect(await read.json()).toMatchObject({

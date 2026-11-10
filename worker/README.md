@@ -89,6 +89,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
 - [routes.ts](routes.ts) dispatches protected app routes.
+- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.

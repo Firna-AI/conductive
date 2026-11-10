@@ -45,6 +45,7 @@ export const paths = {
   routineAdmin: 'app/routines/routine/admin',
   routineOwnerLeft: 'app/routines/routine/owner-left',
   routineTurnedOff: 'app/routines/routine/turned-off',
+  routineDelete: 'app/routines/routine/delete',
   routineTriggers: 'app/routines/triggers',
   routineRuns: 'app/routines/runs',
   authorFilter: 'app/routines/triggers/author-filter',

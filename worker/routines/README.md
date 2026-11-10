@@ -75,6 +75,10 @@ One failed claim or retry logs a safe warning and leaves the other scan items av
 Author-filter requests hold logins.
 Replies and stored triggers hold GitHub account IDs and canonical logins.
 Each save resolves those logins again with the owner's GitHub user token.
+An unknown login returns `unknown_github_login` with `error.details`.
+The details hold the refused `login`, its zero-based `triggerIndex`, and its author-filter `list`, `is` or `isNot`.
+The index counts all triggers, including schedules.
+The refused save leaves the stored routine unchanged.
 An empty `is` list means every org member.
 The `members` flag includes org members beside the named accounts of a nonempty `is` list.
 

@@ -116,10 +116,11 @@ New workspace opens. Its child pages:
   child pages: `new` has a new routine, `member` the view of a member,
   `admin` the view of an admin with Turn off and Delete, `owner-left` a
   routine that moved, turned off, to Cal, the admin who got the
-  workspaces of a member who left, and `turned-off` a routine that turned
-  off after three runs in a row failed. The first four were saved states
-  of the page. They moved into their own folders and kept their paths, so
-  the page shows only its canonical screen.
+  workspaces of a member who left, `turned-off` a routine that turned
+  off after three runs in a row failed, and `delete` the question that
+  Delete asks first, because a deleted routine cannot come back. The first
+  four were saved states of the page. They moved into their own folders
+  and kept their paths, so the page shows only its canonical screen.
 - `app/routines/triggers` has the open Add trigger menu. Its child page
   `app/routines/triggers/schedules` has the Hourly, Daily, and Weekly
   editors with the time zone, and a custom cron that the form refuses.

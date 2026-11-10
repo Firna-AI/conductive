@@ -1701,10 +1701,14 @@ The app found a state that the mockups do not draw. Agent call of
 because a deleted routine cannot come back. The mockups drew Delete but
 not what it does, so this fills a gap and contradicts no screen.
 
-- [ ] Draw the Delete question of the routine page: "Delete <name>? Its
+- [x] Draw the Delete question of the routine page: "Delete <name>? Its
       triggers and prompt are deleted. Its run workspaces stay.", with
       Cancel and Delete routine, at both sizes.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+
+Milestone completed on 10 November 2026. The UI implementor subagent drew
+the question on the new page `app/routines/routine/delete`. The
+orchestrator re-ran the mockup check and the static checks.
 
 ## Milestone 8b: The refused login in the refusal
 
@@ -1715,11 +1719,16 @@ that login in its own field, so that the page can mark its chip and open
 its filter, as the mockups draw it. The mockups are the spec, and the
 message text alone cannot tell the page which chip to mark.
 
-- [ ] Add an optional field to the shared error body, and let the routine
+- [x] Add an optional field to the shared error body, and let the routine
       save put the refused login and its trigger in it.
-  - [ ] Test that a save with an unknown login returns that login and
+  - [x] Test that a save with an unknown login returns that login and
         its trigger in the field.
-- [ ] Update the READMEs of the areas that change.
+- [x] Update the READMEs of the areas that change.
+
+Milestone completed on 10 November 2026. A Codex non-ui implementor
+session added the optional `details` field to the shared error body. The
+orchestrator re-ran 62 tests of `worker/routines` and `worker/http` and
+the static checks. The handoff is in `.context/routines/reports/m8b-worker.md`.
 
 ## Milestone 9: Runs list and run workspaces
 

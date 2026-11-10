@@ -45,6 +45,8 @@ export function routineActions(props: {
   saveTo?: string
   /** The screen after Run now, when the mockups draw it. */
   runNowTo?: string
+  /** The question of Delete, when the mockups draw it. */
+  deleteTo?: string
 }): ReactNode {
   switch (props.access) {
     case 'member':
@@ -76,7 +78,9 @@ export function routineActions(props: {
       if (!runNow && !props.withForm) return null
       return (
         <>
-          {props.viewport === 'desktop' ? deleteButton : null}
+          {props.viewport === 'desktop'
+            ? linked(deleteButton, props.deleteTo)
+            : null}
           {runNow}
           {props.withForm ? save : null}
         </>
@@ -85,13 +89,19 @@ export function routineActions(props: {
   }
 }
 
-/** The owner's Delete on a phone, at the end of the form. */
-export function PhoneDelete() {
+/**
+ * The owner's Delete on a phone, at the end of the form. `to` is its
+ * question, when the mockups draw it.
+ */
+export function PhoneDelete(props: { to?: string }) {
   return (
     <div className={styles.phoneDelete}>
-      <ActionButton icon={Trash2} tone="danger">
-        Delete routine
-      </ActionButton>
+      {linked(
+        <ActionButton icon={Trash2} tone="danger">
+          Delete routine
+        </ActionButton>,
+        props.to,
+      )}
     </div>
   )
 }

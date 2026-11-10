@@ -17,7 +17,11 @@ export async function resolveRoutineAuthors(
 ): Promise<RoutineTrigger[]> {
   const accounts = new Map<string, RoutineAuthorAccount>()
   let token: string | undefined
-  const resolve = async (login: string): Promise<RoutineAuthorAccount> => {
+  const resolve = async (
+    login: string,
+    triggerIndex: number,
+    list: 'is' | 'isNot',
+  ): Promise<RoutineAuthorAccount> => {
     const key = login.toLowerCase()
     const saved = accounts.get(key)
     if (saved) return saved
@@ -35,6 +39,7 @@ export async function resolveRoutineAuthors(
         400,
         'unknown_github_login',
         `GitHub account ${login} was not found. Check the login.`,
+        { login, triggerIndex, list },
       )
     }
     const value = object(await githubJson(async () => response, request))
@@ -43,7 +48,7 @@ export async function resolveRoutineAuthors(
     return account
   }
   const result: RoutineTrigger[] = []
-  for (const trigger of triggers) {
+  for (const [triggerIndex, trigger] of triggers.entries()) {
     if (trigger.kind !== 'pull-request') {
       result.push(trigger)
       continue
@@ -54,9 +59,10 @@ export async function resolveRoutineAuthors(
     }
     const included: RoutineAuthorAccount[] = []
     const excluded: RoutineAuthorAccount[] = []
-    for (const login of trigger.authors.is) included.push(await resolve(login))
+    for (const login of trigger.authors.is)
+      included.push(await resolve(login, triggerIndex, 'is'))
     for (const login of trigger.authors.isNot)
-      excluded.push(await resolve(login))
+      excluded.push(await resolve(login, triggerIndex, 'isNot'))
     result.push({
       ...trigger,
       authors: {
