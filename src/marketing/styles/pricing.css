@@ -63,40 +63,6 @@
   text-wrap: pretty;
 }
 
-/*
- * The note that the product stays free is a quiet box with a full outline,
- * as the scope note of the comparison page is. No edge has its own colour.
- */
-.pricing-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--ui-border2);
-  border-radius: var(--ui-radius-xxl);
-  background: var(--ui-sidebar);
-}
-
-.pricing-note-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--ui-primary);
-}
-
-.pricing-note-text {
-  margin: 0;
-  color: var(--ui-ink2);
-  font-size: 14px;
-  line-height: 1.55;
-  text-wrap: pretty;
-}
-
-.pricing-note-title {
-  color: var(--ui-ink);
-  font-weight: var(--ui-weight-heading);
-}
-
 .pricing-plans {
   display: flex;
   flex-direction: column;

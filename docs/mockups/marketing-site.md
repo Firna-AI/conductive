@@ -215,9 +215,9 @@ the page.
   `SitePage`. It sets the `current` prop of `SitePage`, so the header fills
   its Pricing link and marks it as the current page. The parts live in
   `src/components/pricing/`.
-- The top has the label, the title, and one sentence. A quiet box under
-  them says that the product stays free until billing starts, and that
-  nobody pays until they choose a plan. It gives no date.
+- The top has the label, the title, and one sentence. It has no note that
+  the product is free until billing starts, as the user chose on
+  10 November 2026.
 - Each plan is a quiet box with a full outline: its name, its price, what
   the price covers, and what it includes, under a hairline. No plan is
   marked above the others. No box has a button, because nobody chooses a

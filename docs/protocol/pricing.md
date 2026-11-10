@@ -153,8 +153,8 @@ hand. An accountant should confirm them before the first sale.
 - The page lives at `https://conductive.build/pricing`, on the
   [marketing site](../architecture/marketing-site.md). Visitors need no
   sign-in.
-- The top of the page says that Conductive stays free until billing
-  starts, and that nobody pays until they choose a plan. It gives no date.
+- The page has no note that Conductive is free until billing starts, as
+  the user chose on 10 November 2026.
 - The page shows each plan with its price, what the price covers, and what
   the plan includes. A line under the plans says that the prices are
   monthly, in US dollars, and gives the tax line.

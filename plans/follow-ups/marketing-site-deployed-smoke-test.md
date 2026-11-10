@@ -12,7 +12,7 @@
   - The agreement page before GitHub comes from the same build. The app host shows it when a sign-in starts without the current Terms revision, such as the browser sign-in of the Mac app.
   - The site also has the Conductor Cloud comparison page at `/from-conductor`. Its rows, statuses, dates, and words come from `src/marketing/from-conductor/`. The link "From Conductor Cloud? Compare the features" above the home headline and the link "From Conductor Cloud" in the Product column of the footer lead to it. `docs/protocol/conductor-cloud-comparison.md` states its requirements.
   - The site also builds twelve public Markdown guides at `/docs` and `/docs/<id>`. They use the same file list and security headers, with native phone menus and an "On this page" link to each section. The header and the footer link to `/docs`. `docs/protocol/website-docs.md` states their requirements.
-  - The site also has the pricing page at `/pricing`. Its plans, prices, cloud hours, and words come from `src/marketing/pricing.ts`. The desktop header and the Product column of the footer link it. The phone header has no Pricing link, so a phone reaches the page from the footer. The page says that Conductive stays free until billing starts, and it sells nothing. `docs/protocol/pricing.md` states its requirements.
+  - The site also has the pricing page at `/pricing`. Its plans, prices, cloud hours, and words come from `src/marketing/pricing.ts`. The desktop header and the Product column of the footer link it. The phone header has no Pricing link, so a phone reaches the page from the footer. The page sells nothing, and it has no note that Conductive is free until billing starts. `docs/protocol/pricing.md` states its requirements.
   - Each push to `main` deploys `conductive.build` through the `Deploy` workflow, as `docs/automatic-deploys.md` says.
   - The branches checked all of this with `npm run build` and `npm run preview`, but not on Cloudflare.
 - **Task:**
@@ -43,7 +43,7 @@
       Check that each link opens `https://conductive.build/pricing` with status `200`, and that the header marks Pricing as the current page.
       At a phone width, check that the header has no Pricing link and that the footer has it.
   13. On the pricing page, check these points against `src/marketing/pricing.ts` at the deployed commit, on a phone at 320 px and on a desktop, in both colour schemes:
-      - The note at the top says that Conductive stays free until billing starts, and that nobody pays until they choose a plan. It gives no date.
+      - The top shows the label, the title, and one sentence, with no note that Conductive is free until billing starts.
       - Four plans show, with no button, and no plan is marked as the best. On 10 November 2026 they were Free at $0 per month, with 20 cloud hours a month for the org and up to 3 workspaces that are not archived, then Plus at $20, Pro at $50, and Ultra at $200 per member per month, with 275, 700, and 2,750 cloud hours a month for each member and extra hours at $0.07 each.
       - The line under the plans says "All prices are monthly, in US dollars. Prices exclude VAT and sales tax." No text says that checkout adds the tax.
       - How cloud hours count gives 4 vCPU and 8 GB, one pool for the org, every minute of every cloud computer, the stop after 30 minutes without activity, and the monthly limit of extra hours that an org admin sets.

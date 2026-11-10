@@ -176,14 +176,10 @@ const hoursRules: readonly HoursRule[] = [
  */
 export const pricingPageCopy = {
   documentTitle: `Pricing – ${productName}`,
-  description: `${productName} plans with cloud hours included: ${names.format(pricingPlans.map((plan) => plan.name))}. ${productName} stays free until billing starts.`,
+  description: `${productName} plans with cloud hours included: ${names.format(pricingPlans.map((plan) => plan.name))}.`,
   label: 'Pricing',
   title: 'Plans with cloud hours included.',
   lead: 'Each workspace runs on its own cloud computer. Your plan includes the hours that those computers run each month.',
-  free: {
-    title: `${productName} stays free until billing starts.`,
-    text: 'Nobody pays until they choose a plan.',
-  },
   currency: 'All prices are monthly, in US dollars.',
   tax: 'Prices exclude VAT and sales tax.',
   hours: {

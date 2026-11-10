@@ -9,10 +9,9 @@ requirements, and
 of the marketing mockups is its visual spec.
 
 The page shows the coming plans with their prices and cloud hours, the
-price of an extra hour, the tax line, and how cloud hours count. It says
-that Conductive stays free until billing starts. It sells nothing, so no
-plan has an action. Its last call to action has the two actions of the
-site.
+price of an extra hour, the tax line, and how cloud hours count. It sells
+nothing, so no plan has an action. Its last call to action has the two
+actions of the site.
 
 `pricing.ts` is the one source of the plans, the prices, the hours, and the
 words of the page. The pricing mockup, `marketing/pricing`, reads the same
