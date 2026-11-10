@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.3.0](https://github.com/Firna-AI/remote-code/compare/v0.2.0...v0.3.0) (2026-11-10)
+
+
+### Features
+
+* **chat:** render Markdown tables in agent replies ([#119](https://github.com/Firna-AI/remote-code/issues/119)) ([712afd8](https://github.com/Firna-AI/remote-code/commit/712afd8f97dd2264e570b9b05fa3db87bc39163e))
+* draw Mac app downloads and give release DMGs fixed names ([#128](https://github.com/Firna-AI/remote-code/issues/128)) ([c49a4f8](https://github.com/Firna-AI/remote-code/commit/c49a4f8e52a92dc9abcf645681851c4402296740))
+* **marketing:** add the Conductor Cloud feature comparison ([#129](https://github.com/Firna-AI/remote-code/issues/129)) ([8999b4b](https://github.com/Firna-AI/remote-code/commit/8999b4b46f356fee1245905843b91c22fe8024d2))
+* **models:** deploy the model list from the repository ([#131](https://github.com/Firna-AI/remote-code/issues/131)) ([422f96e](https://github.com/Firna-AI/remote-code/commit/422f96e72f862e636d583c9193fee7472d06d6fb))
+* **runner:** send stable workspace instructions and sender context ([#112](https://github.com/Firna-AI/remote-code/issues/112)) ([de36738](https://github.com/Firna-AI/remote-code/commit/de367388a42b4e4940abc6a522dc73bdf7751cb6))
+* **waitlist:** add controlled access and invite codes ([#116](https://github.com/Firna-AI/remote-code/issues/116)) ([af96807](https://github.com/Firna-AI/remote-code/commit/af96807f6b1ee20fabd73df0bdd664f15423d5ec))
+* **workspaces:** add workspace numbers and link chips ([#118](https://github.com/Firna-AI/remote-code/issues/118)) ([374260b](https://github.com/Firna-AI/remote-code/commit/374260b8509a2bce3145f2583ddb28f5c650ee39))
+
+
+### Bug Fixes
+
+* **chat:** add space between workspace chips and the cursor ([#125](https://github.com/Firna-AI/remote-code/issues/125)) ([3875aa0](https://github.com/Firna-AI/remote-code/commit/3875aa05d343588e4a702301f02eb4fab8c8df88))
+* **chat:** align history button and hide it when empty ([#126](https://github.com/Firna-AI/remote-code/issues/126)) ([718e192](https://github.com/Firna-AI/remote-code/commit/718e19200ee7aa2776a886a80d2f0849144c81f6))
+* **desktop:** configure preview origins in Mac builds ([#114](https://github.com/Firna-AI/remote-code/issues/114)) ([8bccd3c](https://github.com/Firna-AI/remote-code/commit/8bccd3ca5c1003dadaad1aa165510085aa58e8b1))
+* **github:** authenticate CLI commands in cloud computers ([#110](https://github.com/Firna-AI/remote-code/issues/110)) ([7e23773](https://github.com/Firna-AI/remote-code/commit/7e23773fe8b13ecd1b11c6292a3c5d417360715c))
+* **mail:** send Resend requests that the Workers runtime accepts ([#132](https://github.com/Firna-AI/remote-code/issues/132)) ([b9d3f40](https://github.com/Firna-AI/remote-code/commit/b9d3f40bf6896aa79b110bd579a67b46450ec054))
+* **marketing:** refresh Conductor comparison statuses ([#134](https://github.com/Firna-AI/remote-code/issues/134)) ([fc2c009](https://github.com/Firna-AI/remote-code/commit/fc2c0099d457a206606d2693649caa78fb638c56))
+* **mockups:** move the invite code to the end of the Account page ([af96807](https://github.com/Firna-AI/remote-code/commit/af96807f6b1ee20fabd73df0bdd664f15423d5ec))
+* **previews:** preserve the launch page referrer policy ([#113](https://github.com/Firna-AI/remote-code/issues/113)) ([fc2f874](https://github.com/Firna-AI/remote-code/commit/fc2f874472218a68382dc7af2f2191739c12db31))
+* reorder section menu actions ([#117](https://github.com/Firna-AI/remote-code/issues/117)) ([d4c2f12](https://github.com/Firna-AI/remote-code/commit/d4c2f12cfe45be5149af81e1ed0e3e21a340a4ac))
+* **terminal:** restore output history scrolling ([#115](https://github.com/Firna-AI/remote-code/issues/115)) ([e6ebc09](https://github.com/Firna-AI/remote-code/commit/e6ebc0912384dacb386f8418363bedb9be7f6a66))
+* **terminal:** show only the current folder in the prompt ([#127](https://github.com/Firna-AI/remote-code/issues/127)) ([68e001d](https://github.com/Firna-AI/remote-code/commit/68e001d145025033b96a0d464b8178dcb2506a37))
+* **worker:** keep the scheduled repairs going when an email retry fails ([af96807](https://github.com/Firna-AI/remote-code/commit/af96807f6b1ee20fabd73df0bdd664f15423d5ec))
+* **workspace:** remove the branch name from the header ([#122](https://github.com/Firna-AI/remote-code/issues/122)) ([b5ac64c](https://github.com/Firna-AI/remote-code/commit/b5ac64c27724085e9e502905ce51ef26c3c9bb5b))
+* **workspaces:** move Archive to workspace rows ([#124](https://github.com/Firna-AI/remote-code/issues/124)) ([c02744f](https://github.com/Firna-AI/remote-code/commit/c02744f0ae9834e246d72ece451e6e9e99eaff4a))
+
 ## [0.2.0](https://github.com/Firna-AI/remote-code/compare/v0.1.0...v0.2.0) (2026-11-09)
 
 

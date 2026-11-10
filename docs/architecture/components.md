@@ -9,19 +9,9 @@ says.
 
 ## Marketing site
 
-- A few static pages at the root of `conductive.build`, with the Terms and
-  Privacy pages. Visitors see them without a sign-in.
-- Astro builds these pages ahead of time. The Worker serves the built files
-  on `conductive.build`. It fills in the values of each request, such as
-  the app address in the sign-in links and the year in the footer.
-- [The marketing site README](../../src/marketing/README.md) describes how the
-  Worker serves them.
-- The same build also makes the page that asks for the
-  [agreement to the Terms](../protocol/access-and-security.md#sign-in) before
-  the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
-- The main action is "Join the waitlist", because a new account waits for
-  app access. The site does not name Boat, and users need no Boat account
-  (decision 80).
+- The static public pages at the root of `conductive.build`. The
+  [marketing site page](marketing-site.md) gives their
+  responsibilities and boundaries.
 
 ## Web app
 
@@ -43,6 +33,10 @@ says.
 ## Mac app
 
 - An Electron shell for macOS, as [Mac app](../protocol/desktop-app.md) says.
+- Its packages and its updates come from the GitHub releases of the
+  public source repository, as
+  [Packages and updates](../protocol/desktop-app.md#packages-and-updates)
+  says.
 
 ## Worker
 

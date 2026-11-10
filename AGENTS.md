@@ -134,6 +134,12 @@ deployment at `conductive.build`. It does not wait for CI, as
   `src/marketing/privacy.ts`. In the same change, update each sentence of
   the legal pages that restates the fact. A search for the old words is
   not enough, because a legal page can restate a fact in other words.
+- The comparison page at `conductive.build/from-conductor` gives each
+  listed Conductor Cloud feature a status. Its rows live in
+  `src/marketing/from-conductor/`. When a change ships, starts, or drops a
+  listed feature, update the status of its row in the same change. The
+  claim rules are in
+  [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md#statuses).
 
 ## Product
 

@@ -12,6 +12,9 @@ of the app shell mounts it by default, as
 says. It builds against the fake API and the recorded chat events of
 `src/test-support/`.
 
+The history button follows the available closed sessions, as
+[Sessions](../../docs/protocol/agents-and-sessions.md#sessions) says.
+
 ## Use it in the app
 
 The tab keeps one `ChatController` for each workspace that it showed. The

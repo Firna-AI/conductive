@@ -147,6 +147,9 @@ states how the Worker keeps them away from the browser and the sandboxes.
 `https://api.conductive.build`, and `PREVIEW_DOMAIN` is `conductive.page`.
 It sets `CONDUCTIVE_TITLE_MODEL` for automatic workspace names, as
 [The title model](docs/deployment.md#the-title-model) says.
+It also holds the model list and the app default in `CONDUCTIVE_MODELS`
+and `CONDUCTIVE_DEFAULT_CHOICE`. Edit these values in the repository.
+The next deploy publishes them, as [Models](docs/deployment.md#models) says.
 A value in `.dev.vars` replaces the corresponding production value locally.
 When `.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
 requests to that address keep that role. The
@@ -223,8 +226,9 @@ complete yet:
 - `worker/app.ts`: the Worker's HTTP entry point.
 - `worker/marketing/`: built marketing pages, the agreement page before
   GitHub, the file list, request markers, and the site's security headers.
-- `src/marketing/`: Astro pages, layouts, parts, styles, pictures, and
-  shared legal text. Its [README](src/marketing/README.md) gives the build
+- `src/marketing/`: Astro pages, layouts, parts, styles, pictures, shared
+  legal text, and the shared rows and words of the Conductor Cloud
+  comparison page. Its [README](src/marketing/README.md) gives the build
   and preview steps.
 - `src/shared/site-build.ts`: names and types shared by the Astro build
   and the Worker.
@@ -256,7 +260,10 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 
 - [Architecture](docs/architecture.md): the
   [components](docs/architecture/components.md), the hostnames, the
-  [flows](docs/architecture/flows.md), and the terms.
+  [flows](docs/architecture/flows.md), the
+  [marketing site](docs/architecture/marketing-site.md), the
+  [data and trust boundaries](docs/architecture/data-and-trust.md), and the
+  terms.
 - Protocol docs, which state the requirements:
   - [Workspaces and sandboxes](docs/protocol/workspaces-and-sandboxes.md)
   - [Org image](docs/protocol/org-image.md)
@@ -271,10 +278,10 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
   - [Sandbox credentials](docs/protocol/sandbox-credentials.md)
-  - [GitHub tokens](docs/protocol/github-tokens.md)
   - [Terminal and previews](docs/protocol/terminal-and-previews.md)
   - [Model gateway](docs/protocol/model-gateway.md)
   - [GitHub banner](docs/protocol/github-banner.md)
+  - [GitHub tokens](docs/protocol/github-tokens.md): git and CLI account scope.
   - [Agent tools](docs/protocol/agent-tools.md)
   - [Agent instructions](docs/protocol/agent-instructions.md)
   - [Orgs and members](docs/protocol/orgs-and-members.md)
@@ -285,6 +292,8 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Invite and referral codes](docs/protocol/waitlist-codes.md)
   - [Command palette](docs/protocol/command-palette.md)
   - [Command palette: empty and unavailable states](docs/protocol/command-palette-states.md)
+  - [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md):
+    the public page for people who move from Conductor Cloud
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): licenses for copied icons
   and the bundled font.

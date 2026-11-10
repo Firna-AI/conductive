@@ -80,7 +80,7 @@ and its responsibilities:
 
 | Hostname                | What it serves                                                                                 |
 | ----------------------- | ---------------------------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms and Privacy pages                                           |
+| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages                              |
 | `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                                       |
 | `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, the credential helper, and the model gateway |
 | `*.conductive.page`     | One random hostname for each open port preview, one level deep                                 |
@@ -98,51 +98,13 @@ GitHub events, and stops.
 
 ## Where data lives
 
-| Data                                                                         | Home                                     |
-| ---------------------------------------------------------------------------- | ---------------------------------------- |
-| Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
-| App access, the codes and their uses, the pause, and approval email states   | D1                                       |
-| The org of each sandbox and each saved snapshot                              | D1                                       |
-| Env var values and agent logins                                              | The Worker's storage, encrypted          |
-| The Boat key and the other keys of the Worker                                | Worker secrets                           |
-| Chat history and banner state                                                | The workspace Durable Object             |
-| The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
-| The prepared repositories and the installed software                         | The org image, in the app's Boat account |
-| Panel widths                                                                 | The browser, or the Mac app              |
+The [data locations](architecture/data-and-trust.md#where-data-lives) give
+where each kind of data lives.
 
 ## Trust boundaries
 
-- The org is the boundary between tenants. A request reaches an org only
-  for a member of that org. An operator is the one exception, as
-  [Orgs and workspaces](protocol/access-and-security.md#orgs-and-workspaces)
-  says.
-- The one Boat key reaches the sandboxes and the saved snapshots of every
-  org (decision 80). So the Worker's own records keep the orgs apart, as
-  [Access and security](protocol/access-and-security.md#orgs-and-workspaces)
-  says.
-- The Boat key never goes to the browser, into a sandbox, into a log, or
-  into a saved snapshot.
-- Sandbox code is untrusted. Agents write and run it, and previews show it
-  only on the preview domain.
-- A sandbox gets none of the secrets of the app's Boat account. At a
-  start, it gets only the secrets of its workspace and its org.
-- For a sandbox with a version pin of 2 or later, the model gateway is the
-  boundary between the sandbox and the model providers. The version pin of
-  a sandbox is the lowest runner protocol version that its workspace
-  accepts, as [The agent runner](protocol/agent-runner.md#the-agent-runner)
-  says. During a turn, such a sandbox holds a turn token, not an agent
-  login. The token spends the login of the starter of its session only
-  through the gateway, and only while the turn runs. The agent logins stay
-  in the Worker.
-- During a turn, a sandbox with a runner of protocol version 1 holds the
-  agent login of the starter itself. A workspace with a version pin of 1
-  accepts such a runner, also after a runner of version 2 or later
-  connects. So a runner of version 2 or later does not put a sandbox with
-  a version pin of 1 behind the boundary of the gateway.
-- The members of one org can reach the turn token or the login in a
-  sandbox, as
-  [Sandbox credentials](protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
-  says.
+The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
+separate the orgs, the Boat key, the model gateway, and the sandboxes.
 
 ## Decision numbers
 
@@ -213,3 +175,5 @@ as gateway decision 6. The doc that cites it defines the name.
 - [Command palette: empty and unavailable states](protocol/command-palette-states.md):
   what the palette shows while its workspace data loads or did not load,
   and when a tab or a search has no row.
+- [Conductor Cloud comparison](protocol/conductor-cloud-comparison.md): the
+  public page with the status of each Conductor Cloud feature.

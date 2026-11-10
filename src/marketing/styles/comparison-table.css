@@ -1,0 +1,174 @@
+/*
+ * The table of the comparison page. One table serves both layouts. A
+ * computer shows the merged Area cell of each row group, and a phone shows
+ * the Area cell of each row, so the page needs no script. The values follow
+ * the mockup marketing/from-conductor/one-table.
+ */
+.parity-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.parity-head th {
+  padding: 0 20px 10px 0;
+  border-bottom: 1px solid var(--ui-border2);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: var(--ui-label-case);
+}
+
+/* The widths of the area, feature, and status columns. Notes take the rest. */
+.parity-head th:nth-child(1) {
+  width: 16%;
+}
+
+.parity-head th:nth-child(2) {
+  width: 25%;
+}
+
+.parity-head th:nth-child(3) {
+  width: 21%;
+}
+
+/* Each row sits on a neutral hairline, as the rows of a table do. */
+.parity-row > * {
+  padding: 14px 20px 14px 0;
+  border-bottom: 1px solid var(--ui-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.parity-row > :last-child {
+  padding-right: 0;
+}
+
+/*
+ * The area reads as a label of the site, on the first line of its group. A
+ * header cell keeps the normal weight of the label.
+ */
+.parity-area {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 22px;
+  text-transform: var(--ui-label-case);
+}
+
+.parity-name {
+  color: var(--ui-ink);
+  font-size: 15px;
+  font-weight: var(--ui-weight-heading);
+  line-height: 1.45;
+}
+
+/* The status, with the due day under it when the feature has one. */
+.parity-status > * {
+  display: flex;
+  width: fit-content;
+}
+
+/* The first line of the status takes the height of the line of the name. */
+.parity-status > :first-child {
+  line-height: 22px;
+}
+
+.parity-status > * + * {
+  margin-top: 4px;
+}
+
+.parity-note {
+  color: var(--ui-ink2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/*
+ * The areas read apart without headings: the first row of an area has more
+ * room above it, and a darker neutral hairline ends the last row. Both are
+ * plain table lines, not a coloured edge on a box.
+ */
+tr.parity-group-start > * {
+  padding-top: 20px;
+}
+
+tr.parity-group-end > * {
+  border-bottom-color: var(--ui-border2);
+}
+
+/*
+ * The merged Area cell spans every row of its area, so its own bottom edge
+ * is the end of the area. No feature line crosses it.
+ */
+th.parity-group-area {
+  border-bottom-color: var(--ui-border2);
+}
+
+.parity-row-area {
+  display: none;
+}
+
+@media (max-width: 759.98px) {
+  /* A phone keeps the column names for screen readers only. */
+  .parity-table .parity-head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* A phone stacks the cells of each row, so the page keeps its width. */
+  .parity-table,
+  .parity-table tbody {
+    display: block;
+  }
+
+  .parity-table .parity-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--ui-border);
+  }
+
+  .parity-table .parity-row > * {
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .parity-table tr.parity-group-end {
+    border-bottom-color: var(--ui-border2);
+  }
+
+  .parity-table .parity-group-area {
+    display: none;
+  }
+
+  .parity-table .parity-row-area {
+    display: block;
+    line-height: 1.4;
+  }
+
+  .parity-table .parity-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+  }
+
+  .parity-table .parity-status > :first-child {
+    line-height: 1.35;
+  }
+
+  .parity-table .parity-status > * + * {
+    margin-top: 0;
+  }
+}

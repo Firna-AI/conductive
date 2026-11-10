@@ -1,5 +1,7 @@
 import { nameLabel } from '../../../../src/shared/name-label'
+import type { MenuEntry } from '../components/common/Menu'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
+import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
   linkedSession,
   newSession,
@@ -15,6 +17,13 @@ import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 /** A workspace that the create flow made has no edits and one session. */
 export function isNew(state: WorkspaceState): boolean {
   return state.workspace === 'saved-carts'
+}
+
+/** The history of the workspace, with a note while a new workspace has none. */
+export function historyFor(state: WorkspaceState): readonly MenuEntry[] {
+  return isNew(state)
+    ? [{ kind: 'note', text: 'Sessions that you close show here.' }]
+    : historyEntries
 }
 
 /**
