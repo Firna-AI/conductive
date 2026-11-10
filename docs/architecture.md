@@ -46,8 +46,12 @@ hold the requirements of each feature.
   cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
   from. It holds a prepared copy of each repository that the org chose.
-- **Build:** a run of the install script on a copy of the org image. It
+- **Build:** a run of the install script on a copy of the org image. An org
+  without an org image builds on a copy of the software image. A build
   replaces the org image only when it succeeds.
+- **Software image:** the saved snapshot of the base image with the app's
+  own software, and no org data. Each deploy run builds the one of its
+  version, and a build of an org without an org image starts from it.
 - **Refresh:** an update of the org image that fetches the new commits of
   each chosen repository. It does not run the install script.
 - **Agent runner:** our program in each sandbox. It runs the agents through
@@ -61,7 +65,8 @@ hold the requirements of each feature.
 - **Preview hostname:** a random hostname on the preview domain. It shows
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
-  build or a refresh. The app's Boat account limits the starts of all orgs.
+  build, a refresh, or a software image build. The app's Boat account
+  limits the starts of all orgs.
 - **Plan:** what an org pays for each month, with the cloud hours that it
   includes: Free, Plus, Pro, or Ultra. [Pricing](protocol/pricing.md)
   states the plans. Billing has not started, so no org has a plan yet.
@@ -76,12 +81,12 @@ its storage, Boat, the sandbox software, and the external services.
 
 ## Hostnames
 
-| Hostname               | What it serves                                                                                 |
-| ---------------------- | ---------------------------------------------------------------------------------------------- |
-| `conductive.build`     | The marketing site, with the public docs and the pricing, Terms, Privacy, and comparison pages |
-| `app.conductive.build` | The web app, the API, the chat sockets, and the terminal                                       |
-| `api.conductive.build` | The GitHub webhooks, the agent tools, the runner, the credential helper, and the model gateway |
-| `*.conductive.page`    | One random hostname for each open port preview, one level deep                                 |
+| Hostname               | What it serves                                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `conductive.build`     | The marketing site, with the public docs and the pricing, Terms, Privacy, and comparison pages                                             |
+| `app.conductive.build` | The web app, the API, the chat sockets, and the terminal                                                                                   |
+| `api.conductive.build` | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, and the software image route of the deploy run |
+| `*.conductive.page`    | One random hostname for each open port preview, one level deep                                                                             |
 
 `api.conductive.build` is the hostname for machines. Each of its routes has
 a path under `/v1/` (decision 102). The preview domain, `conductive.page`,

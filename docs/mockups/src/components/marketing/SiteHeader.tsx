@@ -11,8 +11,7 @@ import styles from './SiteHeader.module.css'
 
 /**
  * Where the header and the footer lead: the home page, the pricing page, the
- * docs, the page for people who move from Conductor Cloud, and the GitHub
- * sign-in.
+ * docs, the page for people who move from Conductor, and the GitHub sign-in.
  */
 export type SiteLinks = {
   home: string

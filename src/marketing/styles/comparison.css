@@ -1,7 +1,7 @@
 /*
- * The page for people who move from Conductor Cloud: its column, its top,
- * the legend, and the marks of the statuses and the due days. The values
- * follow the mockup marketing/from-conductor/one-table in
+ * The page for people who move from Conductor: its column, its top, the
+ * legend, and the marks of the statuses and the due days. The values follow
+ * the mockup marketing/from-conductor/one-table in
  * docs/mockups/src/components/parity/. comparison-table.css styles the
  * table.
  */
@@ -65,37 +65,10 @@
   text-wrap: pretty;
 }
 
-/* The scope note is a quiet box with a full outline and no coloured edge. */
-.parity-scope {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--ui-border2);
-  border-radius: var(--ui-radius-xxl);
-  background: var(--ui-sidebar);
-}
-
-.parity-scope-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--ui-primary);
-}
-
-.parity-scope-text {
-  margin: 0;
-  color: var(--ui-ink2);
-  font-size: 14px;
-  line-height: 1.55;
-  text-wrap: pretty;
-}
-
-.parity-scope-title {
-  color: var(--ui-ink);
-  font-weight: var(--ui-weight-heading);
-}
-
+/*
+ * The days of the cloud workspaces of Conductor, and the line of the last
+ * check under them.
+ */
 .parity-facts {
   margin: 0;
   color: var(--ui-muted);
@@ -103,7 +76,7 @@
   line-height: 1.55;
 }
 
-/* A day never breaks across two lines. */
+/* A day or the time of the check never breaks across two lines. */
 .parity-facts time {
   white-space: nowrap;
 }

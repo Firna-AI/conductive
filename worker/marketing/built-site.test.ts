@@ -1,30 +1,19 @@
 import { beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
-import { parityAreas } from '../../src/marketing/from-conductor/areas'
-import {
-  parityLinkCopy,
-  parityPageCopy,
-} from '../../src/marketing/from-conductor/copy'
-import { parityFeatures } from '../../src/marketing/from-conductor/features'
-import { parityStatuses } from '../../src/marketing/from-conductor/statuses'
+import { parityLinkCopy } from '../../src/marketing/from-conductor/copy'
 import { docsPath, pageHrefs, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import type { SiteBinding } from '../test-support/site-binding'
+import { checkBuiltComparison } from './built-comparison.test-support'
 import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
 import { checkPricingPage } from './built-pricing.test-support'
 import { checkMacDownloads } from './built-site-downloads.test-support'
 import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
 import { termsConsentResponse } from './consent'
-import {
-  decodeHtml,
-  headings,
-  inlineStyles,
-  links,
-  words,
-} from './html.test-support'
+import { decodeHtml, inlineStyles, links } from './html.test-support'
 import { siteResponse } from './site'
 
 const SITE = 'https://conductive.test'
@@ -146,39 +135,12 @@ it('serves public pricing from the header and footer with the site actions', asy
   await checkPricingPage(get, APP_ORIGIN)
 })
 
-it('serves the complete Cloud comparison with its public entry links', async () => {
+it('serves the complete Conductor comparison with its public entry links', async () => {
   const response = await get(sitePaths.fromConductor)
   expect(response.status).toBe(200)
   expect(response.headers.get('Set-Cookie')).toBeNull()
   const page = await response.text()
-  for (const text of [
-    parityPageCopy.title,
-    ...Object.values(parityPageCopy.scope),
-  ]) {
-    expect(words(page)).toContain(text)
-  }
-  const tables = [...page.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/g)]
-  expect(tables).toHaveLength(1)
-  const table = tables[0]?.[1] ?? ''
-  expect(headings(table, 'col')).toEqual(Object.values(parityPageCopy.columns))
-  const groups = [...table.matchAll(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/g)]
-  expect(groups).toHaveLength(parityAreas.length)
-  expect(headings(table, 'rowgroup')).toEqual(
-    parityAreas.map((area) => area.title),
-  )
-  const rows = groups.flatMap(([, body]) =>
-    [...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].map(([, row]) => row),
-  )
-  expect(rows).toHaveLength(parityFeatures.length)
-  for (const id of ['attachments', 'cloud-desktop', 'direct-links']) {
-    const feature = parityFeatures.find((item) => item.id === id)!
-    const row = rows.find((item) =>
-      headings(item, 'row').includes(feature.name),
-    )
-    expect(words(row ?? ''), id).toContain(parityStatuses[feature.status].label)
-    const area = parityAreas.find((item) => item.key === feature.area)!
-    expect(headings(row ?? '', 'row'), id).toEqual([area.title, feature.name])
-  }
+  await checkBuiltComparison(page)
   const home = await (await get(sitePaths.home)).text()
   const intro = home.slice(0, home.indexOf('<h1'))
   expect(

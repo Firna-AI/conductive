@@ -79,7 +79,9 @@ The same rule prevents Mac commands and their later approvals and results.
 
 ## Image installer
 
-`installWorkspaceTools` takes source assets and an authorized image command callback.
+`workspaceToolsCommand` builds the install command from source assets.
+`installWorkspaceTools` runs that command with an authorized image callback.
+The software image version hashes that same command with its privilege wrapper.
 The [asset module](image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
 Static Vite `?raw` imports embed the allowed sources in the Worker bundle.
 The asset module has no runtime filesystem dependency.
@@ -117,7 +119,7 @@ It reads the configured account default model when the owner has no saved prefer
 Creation calls the normal workspace lifecycle with a separate owner and sender.
 It waits for creation to finish before it returns the workspace and session.
 
-Each image build calls `installWorkspaceTools` with `WORKSPACE_TOOL_SOURCES`
+Each org build that needs the software step calls `installWorkspaceTools` with `WORKSPACE_TOOL_SOURCES`
 before it installs the rest of the image software.
 The two runner providers register [`WORKSPACE_TOOLS_MCP`](../../src/shared/agent-tools.ts) beside `computer`.
 The [runner](../../runner/README.md) supplies the machine origin, workspace token,

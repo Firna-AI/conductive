@@ -2,7 +2,7 @@
 
 The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the public docs, the Terms page,
-and the Privacy page. It also has the Conductor Cloud comparison page,
+and the Privacy page. It also has the Conductor comparison page,
 [the pricing page](pricing-page.md), and a page for an unknown address.
 Visitors need no sign-in. The pages run no
 script and set no cookie. Every sign-in link leads to the app, on the
@@ -164,12 +164,12 @@ both apply.
 
 ## The comparison page
 
-The page at `/from-conductor` shows people who move from Conductor Cloud
-the status of each Conductor Cloud feature in Conductive.
-[Conductor Cloud comparison](../../docs/protocol/conductor-cloud-comparison.md)
+The page at `/from-conductor` shows people who move from Conductor the
+status in Conductive of each Conductor feature, local and cloud.
+[Conductor comparison](../../docs/protocol/conductor-comparison.md)
 states its requirements. The link above the home headline and the "From
-Conductor Cloud" link in the Product column of the footer lead to it. Its
-last call to action has the sentence and the two actions of the home page.
+Conductor" link in the Product column of the footer lead to it. Its last
+call to action has the sentence and the two actions of the home page.
 
 [The comparison page](comparison.md) gives the one source of its rows, the
 steps to change a row and keep it true, and its key code.
