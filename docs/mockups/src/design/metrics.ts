@@ -52,7 +52,7 @@ export const metrics = {
    * sign-in page. Its tile fills that height, so the clear space that the
    * brand asks for is half of it.
    */
-  lockupHeight: '30px',
+  lockupHeight: '25px',
   /**
    * The height of a screen: the window. A picture of a screen on the
    * marketing site sets it to the height of its frame.
