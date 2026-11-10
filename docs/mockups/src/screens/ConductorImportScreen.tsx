@@ -13,7 +13,7 @@ import {
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { ActionButton } from '../components/common/actions'
-import { ScreenLink } from '../components/common/ScreenLink'
+import { LinkedControl } from '../components/common/LinkedControl'
 import { importedWorkspaces } from '../fixtures/importedWorkspaces'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
@@ -26,7 +26,7 @@ import {
   type PageStep,
 } from './conductorImportParts'
 import { WorkspaceScreen } from './WorkspaceScreen'
-import { readyWorkspace } from './workspaceState'
+import { importedWorkspace, readyWorkspace } from './workspaceState'
 
 export const conductorImportSchema = {
   type: 'object',
@@ -73,33 +73,93 @@ export const firstImport: ConductorImportState = {
   viewer: 'admin',
 }
 
-/** Import, with the count of the selection. The first import leads on. */
-function ImportButton(props: { state: ConductorImportState }) {
+/**
+ * Where the own controls of the import flow lead, in one state of the
+ * flow. Null keeps a control static.
+ */
+export type ImportLinks = Readonly<{
+  /**
+   * The question before the read, which Import of the offer, Choose
+   * workspaces, and Ask again open.
+   */
+  consent: string | null
+  /** The read, after Allow. */
+  reading: string | null
+  /** The answer Don't Allow. */
+  denied: string | null
+  /** The upload, after Import of the list. */
+  progress: string | null
+  /** The imported workspace that the mockups draw, which its chip opens. */
+  workspace: string | null
+  /** The list after the import, which the tile of Acme opens. */
+  list: string | null
+}>
+
+/**
+ * Whether a state equals the first import in every field of its schema
+ * apart from the step. Every saved step of the flow does, so only such a
+ * state has a drawn step to open.
+ */
+function matchesFirstImport(state: ConductorImportState): boolean {
+  return conductorImportSchema.required.every(
+    (field) => field === 'step' || state[field] === firstImport[field],
+  )
+}
+
+/**
+ * The links of the import flow, from its full state. A step opens only
+ * from a state that matches the first import apart from the step, so no
+ * link changes the selection, the rows, or the person signed in. The chip
+ * opens its workspace only for the viewer of that example, and the tile of
+ * Acme opens the list after the import only for an admin, whom that list
+ * shows. Every other state keeps the control static.
+ */
+function importLinks(state: ConductorImportState): ImportLinks {
+  const steps = matchesFirstImport(state)
+  return {
+    consent: steps ? paths.macImportConsent : null,
+    reading: steps ? paths.macImportReading : null,
+    denied: steps ? paths.macImportDenied : null,
+    progress: steps ? paths.macImportProgress : null,
+    workspace:
+      state.viewer === importedWorkspace.viewer ? paths.imported : null,
+    list: state.viewer === 'admin' ? paths.importedList : null,
+  }
+}
+
+/** Import, with the count of the selection, which opens `to`. */
+function ImportButton(props: {
+  state: ConductorImportState
+  to: string | null
+}) {
   const count = selectedOf(props.state, rowsOf(props.state)).size
   const label =
     count === 1 ? 'Import 1 workspace' : `Import ${count} workspaces`
-  const button = (
-    <ActionButton disabled={count === 0} icon={ArrowDownToLine} tone="primary">
-      {count === 0 ? 'Import' : label}
-    </ActionButton>
-  )
-  const first = props.state.rows === 'first' && props.state.selection === 'two'
-  return first ? (
-    <ScreenLink asChild to={paths.macImportProgress}>
-      {button}
-    </ScreenLink>
-  ) : (
-    button
+  return (
+    <LinkedControl to={props.to}>
+      <ActionButton
+        disabled={count === 0}
+        icon={ArrowDownToLine}
+        tone="primary"
+      >
+        {count === 0 ? 'Import' : label}
+      </ActionButton>
+    </LinkedControl>
   )
 }
 
 /**
  * The page of the import, beside the sidebar of the org. The import makes
  * each workspace at once, so the sidebar shows Import from Conductor from
- * the upload on, and on a later visit.
+ * the upload on, and on a later visit. From then on the tile of Acme opens
+ * the list with the import, or stays static where none matches.
  */
-function ImportPage(props: { state: ConductorImportState; step: PageStep }) {
-  const { state } = props
+function ImportPage(props: {
+  state: ConductorImportState
+  step: PageStep
+  links: ImportLinks
+}) {
+  const { state, links } = props
   const member = state.viewer === 'member'
   const afterImport =
     state.step === 'progress' ||
@@ -111,7 +171,11 @@ function ImportPage(props: { state: ConductorImportState; step: PageStep }) {
   const list = state.step === 'list' && state.rows !== 'none'
   return (
     <AppFrame
-      rail={{ ...acmeRail, person: member ? people[memberViewer] : undefined }}
+      rail={{
+        ...acmeRail,
+        person: member ? people[memberViewer] : undefined,
+        currentTo: afterImport ? links.list : undefined,
+      }}
       sidebar={
         <Sidebar
           org={orgs.acme}
@@ -121,25 +185,33 @@ function ImportPage(props: { state: ConductorImportState; step: PageStep }) {
       }
     >
       <Page
-        actions={list ? <ImportButton state={state} /> : undefined}
+        actions={
+          list ? <ImportButton state={state} to={links.progress} /> : undefined
+        }
         subtitle={orgs.acme.name}
         title="Import from Conductor"
         viewport="desktop"
       >
-        <ImportPageBody state={state} step={props.step} />
+        <ImportPageBody links={links} state={state} step={props.step} />
       </Page>
     </AppFrame>
   )
 }
 
-function pageOf(state: ConductorImportState): ReactNode {
+function pageOf(state: ConductorImportState, links: ImportLinks): ReactNode {
   switch (state.step) {
     case 'offer':
       return <WorkspaceScreen state={readyWorkspace} viewport="desktop" />
     case 'settings':
-      return <AccountScreen state={accountGeneral} viewport="desktop" />
+      return (
+        <AccountScreen
+          importTo={links.consent}
+          state={accountGeneral}
+          viewport="desktop"
+        />
+      )
     default:
-      return <ImportPage state={state} step={state.step} />
+      return <ImportPage links={links} state={state} step={state.step} />
   }
 }
 
@@ -151,14 +223,21 @@ function pageOf(state: ConductorImportState): ReactNode {
  */
 export function ConductorImportScreen(props: { state: ConductorImportState }) {
   const { step } = props.state
+  const links = importLinks(props.state)
   return (
     <MacScreen
       active={step !== 'consent'}
-      banner={step === 'offer' ? <ImportOffer /> : undefined}
+      banner={
+        step === 'offer' ? <ImportOffer importTo={links.consent} /> : undefined
+      }
       mode="window"
-      notification={step === 'consent' ? <ConsentAlert /> : undefined}
+      notification={
+        step === 'consent' ? (
+          <ConsentAlert allowTo={links.reading} denyTo={links.denied} />
+        ) : undefined
+      }
     >
-      {pageOf(props.state)}
+      {pageOf(props.state, links)}
     </MacScreen>
   )
 }

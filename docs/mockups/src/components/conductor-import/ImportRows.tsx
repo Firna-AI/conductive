@@ -1,6 +1,5 @@
 import type { ConductorRow } from '../../fixtures/conductorImport'
 import type { Workspace } from '../../fixtures/workspaces'
-import { paths } from '../../paths'
 import { WorkspaceChip } from '../chat/WorkspaceChip'
 import { ScreenLink } from '../common/ScreenLink'
 import { workspaceLabel } from '../workspaces/label'
@@ -26,12 +25,17 @@ export function RowFacts(props: { row: ConductorRow }) {
 }
 
 /**
- * The workspace that the import made, as a chip with its state, which opens
- * it where the mockups draw it.
+ * The workspace that the import made, as a chip with its state. The chip of
+ * Coupon totals at checkout, the one imported workspace that the mockups
+ * draw, opens `to`, its screen for the person signed in. Null keeps it
+ * static, and every other chip stays static.
  */
-export function ImportedChip(props: { workspace: Workspace }) {
+export function ImportedChip(props: {
+  workspace: Workspace
+  to: string | null
+}) {
   const { workspace } = props
-  const to = workspace.key === 'coupon-totals' ? paths.imported : undefined
+  const to = workspace.key === 'coupon-totals' ? props.to : null
   return (
     <span className={styles.chip}>
       <WorkspaceChip

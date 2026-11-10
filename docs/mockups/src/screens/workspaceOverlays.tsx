@@ -15,7 +15,8 @@ import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { importedScreensOf, neverActivated } from './importedWorkspace'
+import { importedScreensOf } from './importedScreens'
+import { neverActivated } from './importedWorkspace'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
 
@@ -71,10 +72,11 @@ export function workspaceOverlay(
       // A workspace from Conductor that was never activated has no cloud
       // computer, so its check finds no work and its question is its own.
       if (neverActivated(state)) {
+        const screens = importedScreensOf(state)
         return (
           <ImportedArchiveDialog
-            archiveTo={paths.importedArchived}
-            cancelTo={importedScreensOf(state).chat}
+            archiveTo={screens.afterArchive}
+            cancelTo={screens.chat}
             viewport={viewport}
             workspace={workspace}
           />

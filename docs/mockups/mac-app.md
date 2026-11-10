@@ -92,5 +92,16 @@ mean that the web app imports.
   `mac-app/import/progress` shows. The import makes each workspace at once,
   so the sidebar shows them from the start of the upload.
 
+The links of the flow come from its full state. A control that opens a
+step, such as Import, Choose workspaces, Allow, Don't Allow, and Ask
+again, links only from a state that equals `mac-app/import` in every field
+apart from the step, as every saved step does. So no link changes the
+selection, the rows, or the person signed in. Another state of the serve
+controls, such as a member with two selected rows, keeps the control
+static. The chip of Coupon totals at checkout opens `app/imported` only
+for the viewer of that entry, an admin. From the upload on, and on a later
+visit, the sidebar shows the import, so the tile of Acme opens
+`app/imported/list` for an admin and stays static for a member.
+
 The imported workspace itself shows in the web app and in the Mac app, as
 `app/imported` shows in [the catalogue](catalogue.md).

@@ -149,6 +149,7 @@ export const paths = {
   preview: 'app/tools/preview',
   desktop: 'app/tools/desktop',
   imported: 'app/imported',
+  importedList: 'app/imported/list',
   importedOldSession: 'app/imported/old-session',
   importedOldSessionActive: 'app/imported/old-session/active',
   importedOldSessionStopped: 'app/imported/old-session/stopped',

@@ -2,16 +2,17 @@ import { ArrowDownToLine, X } from 'lucide-react'
 import { orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
 import { ActionButton, IconButton } from '../common/actions'
+import { LinkedControl } from '../common/LinkedControl'
 import { ScreenLink } from '../common/ScreenLink'
 import styles from './ImportOffer.module.css'
 
 /**
  * The one-time offer of the Mac app when it finds the data of Conductor on
  * the Mac, as a bar at the top of the main area. It reads no data of
- * Conductor yet. Import asks first, and the close button dismisses the
- * offer for good.
+ * Conductor yet. Import asks first, at `importTo`, and null keeps it
+ * static. The close button dismisses the offer for good.
  */
-export function ImportOffer() {
+export function ImportOffer(props: { importTo: string | null }) {
   return (
     <div
       aria-label="Import from Conductor"
@@ -23,9 +24,9 @@ export function ImportOffer() {
         Import your Conductor workspaces, with their chats, into{' '}
         {orgs.acme.name}.
       </span>
-      <ScreenLink asChild to={paths.macImportConsent}>
+      <LinkedControl to={props.importTo}>
         <ActionButton tone="primary">Import</ActionButton>
-      </ScreenLink>
+      </LinkedControl>
       <ScreenLink asChild to={paths.macWindow}>
         <IconButton icon={X} label="Dismiss the offer" />
       </ScreenLink>

@@ -191,6 +191,7 @@ function MobileList(props: { state: WorkspaceListState }) {
     )
   }
   const fresh = newOrgs[list]
+  // No entry draws the org switcher over the list after an import.
   return (
     <MobileFrame>
       <HomeList
@@ -201,6 +202,7 @@ function MobileList(props: { state: WorkspaceListState }) {
         newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
         sections={fresh ? newOrgSections() : acmeSections(list)}
+        switcherTo={list === 'imported' ? null : undefined}
         viewer={viewer}
       />
       {sheets[menu]}
@@ -255,10 +257,14 @@ export function WorkspaceListScreen(props: {
   const open = listMenu(menu)
   const drag = listDrag(menu)
   const rail = rails[menu] ?? acmeRail
+  // After an import, the tile of Acme keeps the list with the import. No
+  // entry draws the org switcher of a narrow window over that list.
   return (
     <AppFrame
       overlay={listPalette(palette, props.viewport)}
-      rail={rail}
+      rail={
+        list === 'imported' ? { ...rail, currentTo: paths.importedList } : rail
+      }
       sidebar={
         <Sidebar
           drag={drag}
@@ -282,6 +288,7 @@ export function WorkspaceListScreen(props: {
           menuStyle="anchored"
           org={orgs.acme}
           sections={sections}
+          switcherTo={list === 'imported' ? null : undefined}
           viewer={viewer}
         />
       </div>

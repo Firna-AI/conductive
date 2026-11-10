@@ -3,7 +3,7 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { FolderOpen, ShieldCheck } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import { EmptyState } from '../components/common/EmptyState'
-import { ScreenLink } from '../components/common/ScreenLink'
+import { LinkedControl } from '../components/common/LinkedControl'
 import {
   ImportList,
   importable,
@@ -22,8 +22,7 @@ import {
   type ConductorRow,
 } from '../fixtures/conductorImport'
 import { importedWorkspaces } from '../fixtures/importedWorkspaces'
-import { paths } from '../paths'
-import type { ConductorImportState } from './ConductorImportScreen'
+import type { ConductorImportState, ImportLinks } from './ConductorImportScreen'
 import styles from './conductorImportParts.module.css'
 
 /** The rows that the list finds in a state. */
@@ -80,7 +79,10 @@ function Waiting(props: { text: string; busy: boolean }) {
 }
 
 /** The list, with what the import does above it, or no workspace to list. */
-function ListBody(props: { state: ConductorImportState }) {
+function ListBody(props: {
+  state: ConductorImportState
+  chipTo: string | null
+}) {
   const rows = rowsOf(props.state)
   if (rows.length === 0) {
     return (
@@ -99,6 +101,7 @@ function ListBody(props: { state: ConductorImportState }) {
       </p>
       <ImportList
         admin={props.state.viewer === 'admin'}
+        chipTo={props.chipTo}
         rows={rows}
         selected={selectedOf(props.state, rows)}
       />
@@ -112,11 +115,16 @@ export type PageStep = Exclude<
   'offer' | 'settings'
 >
 
-/** What the page of the import shows in each step after the entry. */
+/**
+ * What the page of the import shows in each step after the entry. Its
+ * controls lead where `links` says.
+ */
 export function ImportPageBody(props: {
   state: ConductorImportState
   step: PageStep
+  links: ImportLinks
 }) {
+  const { links } = props
   switch (props.step) {
     case 'consent':
       return <Waiting busy={false} text="Waiting for your answer" />
@@ -126,9 +134,9 @@ export function ImportPageBody(props: {
       return (
         <EmptyState
           action={
-            <ScreenLink asChild to={paths.macImportConsent}>
+            <LinkedControl to={links.consent}>
               <ActionButton>Ask again</ActionButton>
-            </ScreenLink>
+            </LinkedControl>
           }
           body={`${productName} reads your Conductor data on this Mac only after you allow it.`}
           icon={ShieldCheck}
@@ -136,10 +144,12 @@ export function ImportPageBody(props: {
         />
       )
     case 'progress':
-      return <ImportProgress items={importItems(false)} />
+      return (
+        <ImportProgress chipTo={links.workspace} items={importItems(false)} />
+      )
     case 'done':
-      return <ImportResult items={importItems(true)} />
+      return <ImportResult chipTo={links.workspace} items={importItems(true)} />
     case 'list':
-      return <ListBody state={props.state} />
+      return <ListBody chipTo={links.workspace} state={props.state} />
   }
 }

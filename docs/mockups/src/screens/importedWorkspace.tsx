@@ -15,7 +15,7 @@ import { oldSessions, openOldSession } from '../fixtures/conductorImport'
 import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
 import { newSession } from '../fixtures/sessions'
 import { startErrors } from '../fixtures/starting'
-import { paths } from '../paths'
+import { importedScreensOf } from './importedScreens'
 import type { WorkspaceState } from './workspaceState'
 
 /** The workspace came from an import of Conductor. */
@@ -41,104 +41,6 @@ export function neverActivated(state: WorkspaceState): boolean {
 export function hasFileLists(state: WorkspaceState): boolean {
   if (!isImported(state)) return true
   return state.sandbox === 'ready' || state.sandbox === 'stopped'
-}
-
-/**
- * The screens of an imported workspace in one state of its cloud computer,
- * where the mockups draw them. Null marks a screen that no entry draws, so
- * its control stays static. A state whose chat lists the old sessions names
- * both its chat and the Markdown of an old session in that state, so each
- * document has a way back to the same state.
- */
-export type ImportedScreens = Readonly<
-  {
-    files: string | null
-    terminal: string | null
-    preview: string | null
-    history: string | null
-  } & (
-    { chat: string; document: string } | { chat: string | null; document: null }
-  )
->
-
-/**
- * Every state of the cloud computer of an imported workspace, with its
- * screens. The record names each state, with no fallback, so a new state
- * fails the typecheck until it names its screens. No imported entry draws
- * a refused start, or an archive after the activation.
- */
-const importedScreens: Readonly<
-  Record<WorkspaceState['sandbox'], ImportedScreens>
-> = {
-  inactive: {
-    chat: paths.imported,
-    document: paths.importedOldSession,
-    files: paths.importedFiles,
-    terminal: paths.importedTerminal,
-    preview: paths.importedPreview,
-    history: null,
-  },
-  starting: {
-    chat: paths.importedActivating,
-    document: null,
-    files: null,
-    terminal: null,
-    preview: null,
-    history: null,
-  },
-  error: {
-    chat: paths.importedFailed,
-    document: paths.importedOldSessionFailed,
-    files: paths.importedFailedFiles,
-    terminal: null,
-    preview: null,
-    history: null,
-  },
-  ready: {
-    chat: paths.importedReady,
-    document: paths.importedOldSessionActive,
-    files: paths.importedReadyFiles,
-    terminal: paths.importedReadyTerminal,
-    preview: paths.importedReadyPreview,
-    history: paths.importedHistory,
-  },
-  stopped: {
-    chat: paths.importedStopped,
-    document: paths.importedOldSessionStopped,
-    files: paths.importedStoppedFiles,
-    terminal: paths.importedStoppedTerminal,
-    preview: null,
-    history: null,
-  },
-  refused: {
-    chat: null,
-    document: null,
-    files: null,
-    terminal: null,
-    preview: null,
-    history: null,
-  },
-  archived: {
-    chat: null,
-    document: null,
-    files: null,
-    terminal: null,
-    preview: null,
-    history: null,
-  },
-  'archived-inactive': {
-    chat: paths.importedArchived,
-    document: paths.importedArchivedOldSession,
-    files: null,
-    terminal: null,
-    preview: null,
-    history: null,
-  },
-}
-
-/** The screens of an imported workspace in its state. */
-export function importedScreensOf(state: WorkspaceState): ImportedScreens {
-  return importedScreens[state.sandbox]
 }
 
 /**
@@ -202,25 +104,24 @@ export type ImportedChat = {
  * every first start, the composer queues messages. A failed activation
  * keeps the composer under its notice, as a failed first start does. After
  * an archive before the activation, its bar takes the place of the
- * composer, and the old sessions stay links.
+ * composer, and the old sessions stay links. Activate and Try again open
+ * the activation of the state, and stay static where none is drawn.
  */
 export function importedChat(state: WorkspaceState): ImportedChat {
   const empty = (
     <OldSessionLinks links={oldSessionLinks(state)} sessions={oldSessions} />
   )
+  const { activation } = importedScreensOf(state)
   switch (state.sandbox) {
     case 'inactive':
-      return {
-        empty,
-        replaceComposer: <ActivateBar to={paths.importedActivating} />,
-      }
+      return { empty, replaceComposer: <ActivateBar to={activation} /> }
     case 'error':
       return {
         empty,
         notice: (
           <ActivationFailedNotice
             message={startErrors[state.startError]}
-            to={paths.importedActivating}
+            to={activation}
           />
         ),
       }
@@ -235,14 +136,15 @@ export function importedChat(state: WorkspaceState): ImportedChat {
  * What the files and tools panels of an imported workspace show while it
  * has no cloud computer: before the activation, after a failed one, and
  * after an archive before the activation. Otherwise the panels show what
- * they show in any workspace.
+ * they show in any workspace. Their action opens the activation of the
+ * state, as the chat does.
  */
 export function importedPanel(
   state: WorkspaceState,
   phone: boolean,
 ): ReactNode | undefined {
   if (!isImported(state)) return undefined
-  const to = paths.importedActivating
+  const to = importedScreensOf(state).activation
   switch (state.sandbox) {
     case 'inactive':
       return <ImportedPanel phone={phone} state="inactive" to={to} />

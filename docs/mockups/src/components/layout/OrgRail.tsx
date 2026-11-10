@@ -36,6 +36,13 @@ export type RailState = {
    * mockups.
    */
   person?: Person
+  /**
+   * The screen that the tile of the current org opens, in place of the
+   * list of the org, such as the list after an import. Null keeps the tile
+   * static, where the mockups draw no matching list. Without it, the tile
+   * opens the list of the org.
+   */
+  currentTo?: string | null
 }
 
 /** The rail of the canonical views: every org, with Acme open. */
@@ -85,14 +92,21 @@ function orgLink(
   }
 }
 
+/**
+ * An org of the rail. `to` replaces the page of the org, and null keeps
+ * the tile static. A static tile of the current org keeps its mark.
+ */
 function OrgItem(props: {
   org: Org
   current: boolean
   hint: boolean
   state?: OrgState
+  to?: string | null
 }) {
   const { org } = props
-  const { to, label } = orgLink(org, props.state)
+  const link = orgLink(org, props.state)
+  const { label } = link
+  const to = props.to === undefined ? link.to : (props.to ?? undefined)
   const avatar = <OrgTile current={props.current} org={org} size={26} />
   const tile =
     props.state === 'deleted' ? (
@@ -107,9 +121,13 @@ function OrgItem(props: {
           {tile}
         </RailLink>
       ) : (
-        <span className={styles.link} title={org.name}>
+        <span
+          aria-current={props.current ? 'page' : undefined}
+          className={classes(styles.link, props.current && styles.current)}
+          title={label}
+        >
           {tile}
-          <span className={a11y.hidden}>{org.name}</span>
+          <span className={a11y.hidden}>{label}</span>
         </span>
       )}
       {props.hint ? (
@@ -156,6 +174,7 @@ export function OrgRail(props: RailState) {
             key={org.key}
             org={org}
             state={orgState(props, org.key)}
+            to={props.current === org.key ? props.currentTo : undefined}
           />
         ))}
         <li className={styles.item}>

@@ -370,7 +370,9 @@ question Activate this workspace takes the place of the composer. Its
 child pages:
 
 - `app/imported/list` has the workspace list after the import, with the
-  section Import from Conductor at the top.
+  section Import from Conductor at the top. The tile of Acme in its rail
+  opens the same list. No entry draws the org switcher over this list, so
+  its org switcher on a phone and in a narrow window stays static.
 - `app/imported/old-session` has the Markdown file of an old session in the
   Markdown view of the app, before the activation. Its `active`, `failed`,
   and `stopped` variants have the same file after the activation, after a
@@ -402,12 +404,20 @@ child pages:
   variant has the file of an old session in that state.
 
 The controls of an imported workspace open only screens of the same
-workspace in the same state: the tabs of a phone, the list tabs of its
-Files panel, its tool tabs, its session history, its old documents, and
-its selected row. One record in `src/screens/importedWorkspace.tsx` names
-the screens of every state, with no fallback, and a state that no entry
-draws, such as a refused start, keeps each control static. The terminal of
-the activated workspace waits at a prompt on its own branch.
+workspace in the same state, for the same viewer and org: the tabs of a
+phone, the list tabs of its Files panel, its tool tabs, its session
+history, its old documents, its selected row, Activate and Try again, the
+Archive question, the way back of a phone, the owner, and the tile of Acme
+in the rail. One record in `src/screens/importedScreens.ts` names the
+screens of every state, with no fallback, and a state that no entry draws,
+such as a refused start, keeps each control static. Only the state before
+the activation matches a drawn list, `app/imported/list`, so the way back
+and the tile of Acme open it there and stay static in the other states. No
+entry draws the menu of the owner for an imported workspace, so the owner
+stays static. Every imported entry shows an admin of Acme while Acme is
+active. Another viewer or org in the serve controls, such as a member,
+keeps every control of the record static. The terminal of the activated
+workspace waits at a prompt on its own branch.
 
 [The Mac app](mac-app.md#the-import-from-conductor) gives the pages of the
 import itself, under `mac-app/import`. The flow

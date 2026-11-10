@@ -587,6 +587,11 @@ These are agent calls from Milestone 1, within the decisions in force.
   notices, and viewer. An example without a matching drawn destination
   keeps that control static. Reason: a catalogue link must not replace
   the user's draft or org with another example.
+- The imported header and org rail use matching list and owner destinations,
+  or keep an undrawn control static. Only the inactive admin example has
+  the drawn import list. The import flow's own controls also keep their
+  viewer and selection. Reason: a catalogue link must not hide the imported
+  section or change the signed-in person.
 - Terminal fixtures use the current workspace's repository and branch.
   An explicit workspace record supplies running-process output. Other
   terminals show an idle prompt. Native examples keep their existing
@@ -839,6 +844,12 @@ timing. It opens only a workspace whose own upload is complete.
       navigation, including the phone view of the dialog.
 - [x] Fix review 3: derive terminal identity and process output from its
       workspace, while preserving native fixture output.
+- [x] Fix review 4: keep imported header and org-list navigation in a
+      matching state and viewer, without changing native defaults.
+- [x] Fix review 5: keep the import flow's own controls in their saved
+      viewer and selection, or static when no matching example exists.
+- [x] Keep the phone org switcher static in the import list until a
+      matching org-sheet example exists. Preserve native list defaults.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 

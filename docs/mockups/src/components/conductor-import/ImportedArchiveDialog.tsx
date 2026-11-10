@@ -3,7 +3,7 @@ import { Archive } from 'lucide-react'
 import type { Workspace } from '../../fixtures/workspaces'
 import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
-import { ScreenLink } from '../common/ScreenLink'
+import { LinkedControl } from '../common/LinkedControl'
 
 /**
  * The question of Archive for a workspace from Conductor that was never
@@ -17,26 +17,25 @@ export function ImportedArchiveDialog(props: {
   workspace: Workspace
   /** The screen of the workspace that Cancel returns to. Null keeps it static. */
   cancelTo: string | null
-  /** The screen of the archived workspace that Archive leads to. */
-  archiveTo: string
+  /**
+   * The screen of the archived workspace that Archive leads to. Null keeps
+   * it static.
+   */
+  archiveTo: string | null
   viewport: Viewport
 }) {
   return (
     <ConfirmDialog
       actions={
         <>
-          {props.cancelTo === null ? (
+          <LinkedControl to={props.cancelTo}>
             <ActionButton>Cancel</ActionButton>
-          ) : (
-            <ScreenLink asChild to={props.cancelTo}>
-              <ActionButton>Cancel</ActionButton>
-            </ScreenLink>
-          )}
-          <ScreenLink asChild to={props.archiveTo}>
+          </LinkedControl>
+          <LinkedControl to={props.archiveTo}>
             <ActionButton icon={Archive} tone="primary">
               Archive
             </ActionButton>
-          </ScreenLink>
+          </LinkedControl>
         </>
       }
       title={`Archive ${props.workspace.name}?`}

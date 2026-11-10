@@ -4,7 +4,7 @@ import { people } from '../../fixtures/members'
 import { repositories } from '../../fixtures/repositories'
 import type { Workspace, WorkspaceStatus } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
-import { ScreenLink } from '../common/ScreenLink'
+import { LinkedControl } from '../common/LinkedControl'
 import { IconButton } from '../common/actions'
 import { ImportFlag } from '../conductor-import/ImportedParts'
 import { workspaceLabel } from '../workspaces/label'
@@ -22,6 +22,18 @@ function State(props: { status: WorkspaceStatus }) {
     </span>
   )
 }
+
+/**
+ * The screens that the controls of a header open, where they differ from
+ * the native ones, as in a workspace from Conductor. Null keeps a control
+ * static, where the mockups draw no matching screen.
+ */
+type HeaderLinks = Readonly<{
+  /** The workspace list that Back opens on a phone. */
+  list: string | null
+  /** The open menu of the owner, which the owner opens for an admin. */
+  owner: string | null
+}>
 
 /**
  * The name, number, repository, owner, and state of the open
@@ -46,12 +58,17 @@ export function WorkspaceHeader(props: {
   canReassign: boolean
   /** The list that Back opens on a phone, such as that of a suspended org. */
   back?: string
+  /**
+   * The screens of Back and of the owner, in place of `back` and the native
+   * screens. With them, no control falls back to a native screen.
+   */
+  links?: HeaderLinks
   /** The result of the last press on the label, while the header shows it. */
   copy?: CopyResult
   /** The user hid the right column of the desktop with the toggle. */
   rightHidden?: boolean
 }) {
-  const { workspace, name } = props
+  const { workspace, name, links } = props
   const repository = repositories[workspace.repository].name
   const owner = (
     <OwnerPicker
@@ -59,6 +76,7 @@ export function WorkspaceHeader(props: {
       open={props.ownerOpen}
       owner={people[workspace.owner]}
       readOnly={!props.canReassign}
+      to={links ? links.owner : undefined}
     />
   )
   const copyLink = (
@@ -72,9 +90,9 @@ export function WorkspaceHeader(props: {
   if (props.viewport === 'mobile') {
     return (
       <header className={styles.mobile}>
-        <ScreenLink asChild to={props.back ?? paths.shell}>
+        <LinkedControl to={links ? links.list : (props.back ?? paths.shell)}>
           <IconButton icon={ChevronLeft} label="All workspaces" />
-        </ScreenLink>
+        </LinkedControl>
         <div className={styles.titles}>
           <h1 className={styles.title}>{name}</h1>
           <span className={styles.line}>

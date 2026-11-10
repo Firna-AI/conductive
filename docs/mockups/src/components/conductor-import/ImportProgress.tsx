@@ -42,9 +42,13 @@ function Upload(props: { item: ImportItem }) {
 /**
  * The upload of an import. The import made each workspace at once, so its
  * chip already opens it. The Mac app uploads the work of each workspace in
- * turn, and the bar counts the bytes of the whole import.
+ * turn, and the bar counts the bytes of the whole import. `chipTo` is the
+ * screen of the drawn imported workspace, and null keeps every chip static.
  */
-export function ImportProgress(props: { items: readonly ImportItem[] }) {
+export function ImportProgress(props: {
+  items: readonly ImportItem[]
+  chipTo: string | null
+}) {
   const total = props.items.reduce((sum, item) => sum + item.row.upload, 0)
   const sent = props.items.reduce((sum, item) => sum + item.sent, 0)
   const count = props.items.length
@@ -66,7 +70,7 @@ export function ImportProgress(props: { items: readonly ImportItem[] }) {
       <ul aria-label="Imported workspaces" className={styles.list}>
         {props.items.map((item) => (
           <li className={styles.row} key={item.workspace.key}>
-            <ImportedChip workspace={item.workspace} />
+            <ImportedChip to={props.chipTo} workspace={item.workspace} />
             <Upload item={item} />
           </li>
         ))}
@@ -77,9 +81,13 @@ export function ImportProgress(props: { items: readonly ImportItem[] }) {
 
 /**
  * The end of an import: how many workspaces it brought in, where they wait,
- * and a chip of each one, which opens it.
+ * and a chip of each one, which opens it. `chipTo` is the screen of the
+ * drawn imported workspace, and null keeps every chip static.
  */
-export function ImportResult(props: { items: readonly ImportItem[] }) {
+export function ImportResult(props: {
+  items: readonly ImportItem[]
+  chipTo: string | null
+}) {
   return (
     <div className={styles.progress}>
       <Notice
@@ -90,7 +98,7 @@ export function ImportResult(props: { items: readonly ImportItem[] }) {
       <ul aria-label="Imported workspaces" className={styles.list}>
         {props.items.map((item) => (
           <li className={styles.row} key={item.workspace.key}>
-            <ImportedChip workspace={item.workspace} />
+            <ImportedChip to={props.chipTo} workspace={item.workspace} />
             <span className={styles.bytes}>
               {item.row.sessions} sessions · {formatSize(item.row.upload)}
             </span>

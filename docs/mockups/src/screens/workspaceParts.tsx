@@ -33,12 +33,8 @@ import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
 import { idlePrompt, terminalProcesses } from '../fixtures/terminal'
 import type { Workspace, WorkspaceStatus } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import {
-  hasFileLists,
-  importedPanel,
-  importedScreensOf,
-  isImported,
-} from './importedWorkspace'
+import { importedScreensOf } from './importedScreens'
+import { hasFileLists, importedPanel, isImported } from './importedWorkspace'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'

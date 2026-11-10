@@ -160,6 +160,27 @@ sessions as tabs above the chat, and four tabs at the bottom.
   static. An imported workspace passes the screens of its state from one
   record that names every state, so its tabs never open another workspace
   or another state.
+- `WorkspaceHeader` takes the same record as `links`. Back of a phone then
+  opens the list of the record, and the owner opens the owner screen of the
+  record. Neither falls back to the list of Acme or to the owner menu of
+  the mockups. `OwnerPicker` takes that screen as `to`. The record gives
+  screens only for the viewer and the org of the imported entries, an
+  admin of Acme while Acme is active. So a member in the serve controls
+  gets static controls.
+- `RailState` takes the screen of the tile of the current org as
+  `currentTo`. The views of an imported workspace, the list after the
+  import, and the import pages after the import give it. `ListHeader` and
+  `HomeList` take the screen of the org switcher as `switcherTo`, which the
+  list after the import gives as null. Null keeps a control static. A
+  caller that gives no screen keeps the native one.
+- `LinkedControl` in `src/components/common/` makes one control, such as a
+  button, a link to a screen, or keeps it static where the screen is null.
+- The import flow of the Mac app derives the links of its own controls
+  from its full state. A control opens a step only from a state that
+  equals the first import in every field apart from the step, as every
+  saved step does. The chip of the drawn imported workspace opens it only
+  for the viewer of that entry. Every other state keeps the control
+  static.
 - The terminal of a workspace belongs to it. `terminalProcesses` in
   `src/fixtures/terminal.ts` holds the process of each workspace that runs
   one, today the dev server of Checkout address autocomplete. Every other

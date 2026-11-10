@@ -84,7 +84,9 @@ the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
   `src/components/common/`, which renders Mokly's `MockLink`. A Firna control
-  becomes a link through `ScreenLink asChild`. Tabs are links, so each view
+  becomes a link through `ScreenLink asChild`. `LinkedControl` does the same,
+  and keeps the control static where its screen is null, because no entry
+  draws a matching screen. Tabs are links, so each view
   has its own path. A link to a page outside the app reads its address from
   `useOutsideHref`.
 - Layout styles are CSS Modules beside their component. They read the design

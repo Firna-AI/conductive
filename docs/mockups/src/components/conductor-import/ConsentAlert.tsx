@@ -1,17 +1,40 @@
-import { useId } from 'react'
+import { useId, type ReactNode } from 'react'
 import { productName } from '../../brand'
-import { paths } from '../../paths'
 import { MacAppIcon } from '../brand/Logo'
 import { ScreenLink } from '../common/ScreenLink'
 import styles from './ConsentAlert.module.css'
+
+/**
+ * A button of the alert, which opens `to`. Null keeps it static, as a span
+ * with the same look, as a still link of the catalogue is.
+ */
+function AlertButton(props: {
+  className: string
+  to: string | null
+  children: ReactNode
+}) {
+  if (props.to === null) {
+    return <span className={props.className}>{props.children}</span>
+  }
+  return (
+    <ScreenLink className={props.className} to={props.to}>
+      {props.children}
+    </ScreenLink>
+  )
+}
 
 /**
  * The alert of macOS in which the Mac app asks before its first read of the
  * data of Conductor: the app icon, the question, what the app reads, and
  * Don't Allow and Allow, with Allow as the default button. The Mac app
  * draws it, not the page, so only the person at the Mac can allow the read.
+ * Allow opens `allowTo`, and Don't Allow opens `denyTo`. Null keeps a
+ * button static.
  */
-export function ConsentAlert() {
+export function ConsentAlert(props: {
+  allowTo: string | null
+  denyTo: string | null
+}) {
   const titleId = useId()
   const textId = useId()
   return (
@@ -32,15 +55,15 @@ export function ConsentAlert() {
           you choose.
         </p>
         <div className={styles.buttons}>
-          <ScreenLink className={styles.button} to={paths.macImportDenied}>
+          <AlertButton className={styles.button} to={props.denyTo}>
             Don&apos;t Allow
-          </ScreenLink>
-          <ScreenLink
+          </AlertButton>
+          <AlertButton
             className={`${styles.button} ${styles.default}`}
-            to={paths.macImportReading}
+            to={props.allowTo}
           >
             Allow
-          </ScreenLink>
+          </AlertButton>
         </div>
       </section>
     </div>

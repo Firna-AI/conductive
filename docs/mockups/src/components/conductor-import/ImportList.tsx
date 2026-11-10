@@ -38,7 +38,12 @@ function Unavailable(props: { row: ConductorRow; admin: boolean }) {
 }
 
 /** One workspace of Conductor: its box, its name, its facts, and its size. */
-function Row(props: { row: ConductorRow; selected: boolean; admin: boolean }) {
+function Row(props: {
+  row: ConductorRow
+  selected: boolean
+  admin: boolean
+  chipTo: string | null
+}) {
   const { row } = props
   const canImport = importable(row)
   return (
@@ -63,7 +68,7 @@ function Row(props: { row: ConductorRow; selected: boolean; admin: boolean }) {
         {row.chosen ? null : <Unavailable admin={props.admin} row={row} />}
       </span>
       {row.imported ? (
-        <ImportedChip workspace={row.imported} />
+        <ImportedChip to={props.chipTo} workspace={row.imported} />
       ) : (
         <span className={styles.size}>{formatSize(row.upload)}</span>
       )}
@@ -76,12 +81,14 @@ function Row(props: { row: ConductorRow; selected: boolean; admin: boolean }) {
  * and the size of the selection. Select all shows the mixed mark while
  * only some rows are selected. A row whose repository the org did not
  * choose cannot import, and says why. A row that an earlier import brought
- * in links to its workspace, and has no box.
+ * in links to its workspace, and has no box. `chipTo` is the screen of the
+ * drawn imported workspace, and null keeps every chip static.
  */
 export function ImportList(props: {
   rows: readonly ConductorRow[]
   selected: ReadonlySet<string>
   admin: boolean
+  chipTo: string | null
 }) {
   const choices = props.rows.filter(importable)
   const picked = choices.filter((row) => props.selected.has(row.id))
@@ -104,6 +111,7 @@ export function ImportList(props: {
         {props.rows.map((row) => (
           <Row
             admin={props.admin}
+            chipTo={props.chipTo}
             key={row.id}
             row={row}
             selected={props.selected.has(row.id)}

@@ -50,21 +50,34 @@ function NewWorkspaceAction(props: { to?: string }) {
  * The header of the list page on a phone. A phone has no rail, so the org
  * name opens the org switcher. A deleted org has no settings to open.
  * `settingsTo` is the page of the settings, such as those of a suspended
- * org.
+ * org. `switcherTo` is the screen of the org switcher. Null keeps the
+ * switcher static, where no entry draws it over the list. Without it, the
+ * switcher opens the org switcher over the list of Acme.
  */
 export function ListHeader(props: {
   org: Org
   settings?: boolean
   settingsTo?: string
+  switcherTo?: string | null
 }) {
+  const to = props.switcherTo === undefined ? paths.orgs : props.switcherTo
+  const switcher = (
+    <>
+      <OrgTile current org={props.org} size={24} />
+      <span className={a11y.hidden}>Switch org: </span>
+      <span className={styles.orgName}>{props.org.name}</span>
+      <ChevronDown aria-hidden className={styles.chevron} size={15} />
+    </>
+  )
   return (
     <header className={styles.header}>
-      <ScreenLink className={styles.switcher} to={paths.orgs}>
-        <OrgTile current org={props.org} size={24} />
-        <span className={a11y.hidden}>Switch org: </span>
-        <span className={styles.orgName}>{props.org.name}</span>
-        <ChevronDown aria-hidden className={styles.chevron} size={15} />
-      </ScreenLink>
+      {to === null ? (
+        <span className={styles.switcher}>{switcher}</span>
+      ) : (
+        <ScreenLink className={styles.switcher} to={to}>
+          {switcher}
+        </ScreenLink>
+      )}
       {props.settings === false ? null : <SettingsLink to={props.settingsTo} />}
     </header>
   )
@@ -77,7 +90,8 @@ export function ListHeader(props: {
  * command palette. Its key shows only in a desktop window. A list that did
  * not load shows its failure in place of the sections.
  * `newWorkspaceTo` is the New workspace page of the org, such as that
- * of a new org.
+ * of a new org. `switcherTo` is the screen of the org switcher, as
+ * `ListHeader` takes it.
  */
 export function HomeList(props: {
   org: Org
@@ -92,6 +106,7 @@ export function HomeList(props: {
   keys?: boolean
   /** The workspace list of the org did not load. */
   failed?: boolean
+  switcherTo?: string | null
 }) {
   const suspended = props.suspended ?? false
   return (
@@ -99,6 +114,7 @@ export function HomeList(props: {
       <ListHeader
         org={props.org}
         settingsTo={suspended ? paths.suspendedSettings : undefined}
+        switcherTo={props.switcherTo}
       />
       <div className={styles.scroll} data-mokly-scroll="workspace-page">
         {suspended ? <SuspendedOrgNotice org={props.org} /> : null}

@@ -10,6 +10,7 @@ import type { OldSession } from '../../fixtures/conductorImport'
 import { AgentMark } from '../chat/AgentMark'
 import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
+import { LinkedControl } from '../common/LinkedControl'
 import type { MenuEntry } from '../common/Menu'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
@@ -108,17 +109,25 @@ export function oldSessionHistory(
 }
 
 /**
+ * Activate or Try again, which opens the activation at `to`. Null keeps
+ * the button static, where the mockups draw no activation for the state.
+ */
+function ActivationButton(props: { label: string; to: string | null }) {
+  return (
+    <LinkedControl to={props.to}>
+      <ActionButton tone="primary">{props.label}</ActionButton>
+    </LinkedControl>
+  )
+}
+
+/**
  * The question in place of the composer while an imported workspace has no
  * cloud computer. Activate starts one and copies the work in.
  */
-export function ActivateBar(props: { to: string }) {
+export function ActivateBar(props: { to: string | null }) {
   return (
     <Notice
-      action={
-        <ScreenLink asChild to={props.to}>
-          <ActionButton tone="primary">Activate</ActionButton>
-        </ScreenLink>
-      }
+      action={<ActivationButton label="Activate" to={props.to} />}
       body="A cloud computer starts with your work from Conductor."
       icon={Power}
       title="Activate this workspace"
@@ -131,14 +140,13 @@ export function ActivateBar(props: { to: string }) {
  * sessions and the stored work, and Try again activates it again.
  * `message` is the message that the app saved for the failure.
  */
-export function ActivationFailedNotice(props: { message: string; to: string }) {
+export function ActivationFailedNotice(props: {
+  message: string
+  to: string | null
+}) {
   return (
     <Notice
-      action={
-        <ScreenLink asChild to={props.to}>
-          <ActionButton tone="primary">Try again</ActionButton>
-        </ScreenLink>
-      }
+      action={<ActivationButton label="Try again" to={props.to} />}
       body={`${props.message} Your work from Conductor is kept.`}
       icon={CircleAlert}
       title="The workspace couldn't be activated"
@@ -156,7 +164,7 @@ export function ActivationFailedNotice(props: { message: string; to: string }) {
 export function ImportedPanel(props: {
   state: 'inactive' | 'failed'
   phone: boolean
-  to: string
+  to: string | null
 }) {
   const failed = props.state === 'failed'
   const label = failed ? 'Try again' : 'Activate'
@@ -164,9 +172,7 @@ export function ImportedPanel(props: {
     <EmptyState
       action={
         props.phone ? (
-          <ScreenLink asChild to={props.to}>
-            <ActionButton tone="primary">{label}</ActionButton>
-          </ScreenLink>
+          <ActivationButton label={label} to={props.to} />
         ) : undefined
       }
       body={

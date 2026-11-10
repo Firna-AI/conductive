@@ -28,11 +28,8 @@ import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
 import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
-import {
-  importedChat,
-  importedScreensOf,
-  isImported,
-} from './importedWorkspace'
+import { importedScreensOf } from './importedScreens'
+import { importedChat, isImported } from './importedWorkspace'
 import { placeLostUpdate } from './lostUpdates'
 import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
@@ -98,7 +95,8 @@ export function WorkspaceScreen(props: {
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   // A workspace from Conductor has no session of its own until a message,
-  // and its controls stay in its own screens.
+  // and its controls, also Back, the owner, and the org, stay in its own
+  // screens.
   const imported = isImported(state) ? importedChat(state) : undefined
   const links = isImported(state) ? importedScreensOf(state) : undefined
   const rightHidden = state.rightColumn === 'hidden'
@@ -145,6 +143,7 @@ export function WorkspaceScreen(props: {
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
+      links={links}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       rightHidden={rightHidden}
@@ -255,6 +254,7 @@ export function WorkspaceScreen(props: {
         ...acmeRail,
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
+        currentTo: links ? links.list : undefined,
       }}
       sidebar={workspaceSidebar(
         workspace,
