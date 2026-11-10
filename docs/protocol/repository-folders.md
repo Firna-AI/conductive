@@ -1,7 +1,8 @@
 # Repository folders
 
 This doc holds the requirements and the decisions in force for the folder
-and the shell variable of each repository in a sandbox. It belongs to
+and the shell variable of each repository in a sandbox, and for the
+context folder of each workspace. It belongs to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
 org image, the startup script, and the start of a workspace. The terms are
 those of the [architecture doc](../architecture.md#terms). A decision
@@ -49,3 +50,57 @@ number names a dated record, as
 - A workspace keeps the folders and the variables of the org image that it
   starts from. Each resume, and each restart near day 14 of a stop, uses
   them, also after a later build or a change of the chosen repositories.
+
+## The context folder
+
+- Each workspace has a context folder, `.context`, at the top of the
+  folder of its own repository (decision 243). Git ignores it. Agents keep
+  notes, screenshots, and files for other sessions of the workspace there.
+- Its attachments folder, `.context/attachments/`, holds the attached
+  files of each message, as
+  [Attachments](messages-and-attachments.md#attachments) says
+  (decision 242).
+- Reason: notes and attached files stay next to the code and out of
+  Changes, as in Conductor. One owner, the runner, keeps the folder, its
+  rule, and the text that names it to the agents.
+- At each start, the runner adds the rule `/.context/` to the local
+  exclude file of the repository, such as `.git/info/exclude`. Then it
+  makes the context folder and the attachments folder, when they do not
+  exist. Reason: the user that runs the agents then owns both folders.
+- The runner does both before it reports the files of the workspace. So
+  All files and Changes list no file of the folder that the repository
+  does not track. Members find such files in the terminal.
+- The exclude file holds the rule once, also after many starts. The rule
+  covers only the folder at the top of the repository. A `.context` folder
+  deeper in the repository stays visible to Git.
+- When a step fails, the runner warns and continues its start.
+- Git keeps tracking each file in `.context/` that the repository already
+  tracks. It ignores only the other files there.
+- The runner leaves a file or a link named `.context` alone. Such a
+  workspace cannot take attached files. The turn of each message with
+  files fails and names the cause. Reason: such a repository is rare, and
+  a second place for the files doubles the path rules.
+- A command that deletes ignored files, such as `git clean -fdx`, deletes
+  the folder with its notes and attached files. Reason: Conductor has the
+  same limit, and the app still stores each attached file outside the
+  cloud computer.
+- Each build of the org image installs the newest runner, as
+  [The agent runner](agent-runner.md#the-agent-runner) says. A cloud
+  computer with an older runner gets no rule and no folder at its start.
+  Its agents are not told about the folder.
+- These ways were rejected:
+  - A `.context/` line in the `.gitignore` of each repository. It adds a
+    tracked change on every branch.
+  - A rule that the build of the org image writes. It does not come back
+    after an agent removes it.
+  - A global Git ignore file. It covers every repository of the cloud
+    computer, and it can clash with an ignore file of the org.
+  - A `.gitignore` with `*` as the only rule for the whole folder. It stops
+    working when an agent makes the folder again, and it can replace a
+    tracked file.
+  - Instructions that tell each agent to add the rule. One skipped step
+    puts notes in Changes.
+  - A notes folder outside the repository folder. Notes and attached files
+    then live in two places.
+  - A step of the Worker's start command. A defect in it can fail each
+    start, and an older runner still does not name the folder.

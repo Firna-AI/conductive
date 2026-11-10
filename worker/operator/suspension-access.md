@@ -30,12 +30,12 @@ The suspension stays on the user record. Each of these entries reads it:
   refuses a token whose workspace owner is suspended. An open runner
   connection checks that rule before each message and every 15 seconds
   while it is idle, so it closes, as the
-  [chat backend](../chat/README.md#access) says. The agent tools, the git
+  [chat backend](../chat/access.md) says. The agent tools, the git
   credential route, and the Mac command route refuse the token too.
 - The user as the starter of a session or the sender of a turn. In one
   read, `resolveLogin` refuses the login of a suspended starter and the
   message of a suspended sender, as the
-  [chat backend](../chat/README.md#access) says. The agent tools and the
+  [chat backend](../chat/access.md) says. The agent tools and the
   Mac commands refuse that sender.
 
 A stopped workspace of the user gets no disk retention restart. So Boat

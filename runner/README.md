@@ -43,17 +43,9 @@ These facts belong to this implementation, not to the protocol docs.
   takes deferred input. Without an author, the process keeps the sandbox values.
   A malformed author gives a local warning and keeps those values. The turn continues.
   A workspace gets this behaviour only from an org image built with this runner.
-- `agentInstructions` builds the agent instructions of each agent from the
-  configuration. Claude gets its seven base rules and that text as
-  `systemPrompt`. Codex keeps its default base instructions and gets the
-  text as `developerInstructions` on `thread/start` and `thread/resume`.
-- The runner saves the text of a session before its first agent start. Later
-  starts reuse it exactly, also after a restart or a change of configuration
-  or wording. A saved session without text takes the current text once.
-- Each message to an agent starts with a sender line, then an empty line:
-  `Sender: <display name> (@<login>)`, or `Sender: @<login>` without a
-  display name. No adapter maps a user message to an event, so the chat
-  never shows the sender line.
+- The [agent input guide](agent-input.md) describes the context folder,
+  the instructions that each session keeps, the sender line, and attached
+  files.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
   process then takes the waiting input on the same conversation and turn
@@ -236,6 +228,8 @@ tools that time the first agent start after a resume.
   The HTTP and upgrade handlers share the header rules and target connection code.
 - `src/runner.ts`: `Runner` joins the connection, agents, file and port
   reports, and report requests.
+- `src/context-folder.ts`: `prepareContextFolder` adds the local exclude
+  rule and makes the context folders before startup reports.
 - `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
 - [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
   [output field policy](../src/shared/output-fields.ts): the one filter
