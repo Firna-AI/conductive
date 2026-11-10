@@ -28,6 +28,6 @@
 - **Left out:** A retry, a sleep, a skip, or a longer time limit, because the `testing` skill does not allow them without the user, and they hide the cause. Change nothing, because the failure can come from a real lifecycle defect.
 - **Wider fix:** A, when the pump is the cause: a pump that advances no alarm while an operation runs removes this class of race from every lifecycle test.
 - **Previous examples:** `plans/follow-ups/restore-watch-test-flake.md`, the same fixture and a similar early alarm. `plans/follow-ups/tests-time-out-under-machine-load.md` names another test of this file, which timed out under load.
-- **Related:** `plans/follow-ups/restore-watch-test-flake.md` may have the same cause, the pump of `fixture.run`. One fix in the pump can close both.
+- **Related:** `plans/follow-ups/restore-watch-test-flake.md` may have the same cause, the pump of `fixture.run`. One fix in the pump can close both. `plans/follow-ups/provisioning-test-flake.md` is a third lifecycle test of the backend fixture that failed in the same branch's CI.
 - **Recommendation:** B. It finds the cause first, and it fixes the lifecycle when the defect is real.
 - **Action:** fix after merge, apply B, because the branch that saw the failure changed no lifecycle code, and one fix in a separate branch reaches every open branch.

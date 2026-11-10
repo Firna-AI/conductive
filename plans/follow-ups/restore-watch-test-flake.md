@@ -5,7 +5,7 @@
 - **Added:** 2026-11-09, during the Milestone 8o primary merge for PR #64.
 - **Location:** `worker/lifecycle/restore-watch.test.ts:65` and `:82`, `worker/lifecycle/completed-resume-test-support.ts`, the alarm driver in `worker/lifecycle/backend-test-support.ts`, and `backendPump` in `worker/lifecycle/backend-pump.test-support.ts:3`.
 - **Reason:** The unchanged test passed both reruns, so a separate task must identify its nondeterminism.
-- **Related:** `plans/follow-ups/disk-retention-stale-stop-test-flake.md` failed in the same CI run and may have the same cause, the pump of `fixture.run`. One fix in the pump can close both.
+- **Related:** `plans/follow-ups/disk-retention-stale-stop-test-flake.md` failed in the same CI run and may have the same cause, the pump of `fixture.run`. One fix in the pump can close both. `plans/follow-ups/provisioning-test-flake.md` is a third lifecycle test of the backend fixture that failed in the same branch's CI.
 
 - **Terms:**
   - **Restore watch:** The lifecycle reads sandbox hydration and writes the terminal restore marker when disk restoration ends.
