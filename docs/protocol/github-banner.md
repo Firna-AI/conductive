@@ -1,11 +1,11 @@
 # GitHub banner
 
 This doc holds the requirements and the decisions in force for the pull
-request bar of a workspace. It also covers the Checks tab and the GitHub
-events behind them. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+request bar of a workspace. It also covers the Checks tab, the GitHub
+state of a workspace, and the GitHub events behind them. The terms are
+those of the [architecture doc](../architecture.md#terms). A decision
+number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says.
 
 ## The GitHub App
 
@@ -100,6 +100,27 @@ Rules for the bar:
 - A finished check shows how long it ran.
 - While the branch has no pull request, the Checks tab shows that it waits
   for one.
+- For the bar and the GitHub state, a failed, cancelled, timed-out, or
+  action-required check is a failure. A queued or running check runs. Each
+  other check counts as passed.
+- The list mark of the workspace shows its
+  [GitHub state](#the-github-state) in one colour, as
+  [The list mark](workspace-life.md#the-list-mark) says.
+
+## The GitHub state
+
+- The GitHub state of a workspace is one value for the pull request of its
+  branch: checks failed, checks running, checks passed, or merged.
+- The merge wins over the checks. A failure wins over a check that runs.
+  Checks passed means that each check counts as passed.
+- A merge conflict, changes requested, a draft, and a block do not change
+  the GitHub state. Reason: the user named only the checks and the merge.
+- No GitHub state applies while the branch has no pull request, or while
+  its open pull request has no check.
+- A pull request closed without a merge has no GitHub state either. A red
+  list mark for it, as GitHub draws a closed pull request, was rejected,
+  because red means a failed check in the list. The state of its checks
+  was rejected, because a closed pull request needs no action.
 
 ## Layouts
 

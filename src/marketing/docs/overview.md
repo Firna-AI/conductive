@@ -85,7 +85,7 @@ Work in an org with people you trust with your agent and GitHub logins.
 Each workspace has a number, such as `W-12`.
 Select the number in its header to copy its link.
 Paste the link into a chat in the same org.
-The link shows the workspace's number, name, and state in a small box.
+The link shows the workspace's number and name with the same mark as the workspace list.
 
 - [Manage orgs and members](/docs/orgs-and-members)
 - [Understand access to credentials](/docs/security)

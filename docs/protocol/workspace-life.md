@@ -6,9 +6,14 @@ states, the stop and resume, the archive, and the restore of a workspace.
 It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
 which covers the provider, the org image, and the startup script. The
 terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+[architecture doc](../architecture.md#terms).
+
+A decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. A list mark
+decision number, such as list mark decision 1, names the dated record of
+one decision. That decision belongs to the change that adds the list mark.
+Its plan keeps these records while the change is open. Its pull request
+keeps them after the merge.
 
 ## Create a workspace
 
@@ -64,14 +69,50 @@ says.
 
 ## Workspace states
 
-- The workspace list shows one state for each workspace: working, needs
-  input, finished with unread output, ready, starting, stopped, or error.
+- Each workspace has one state: working, needs input, finished with unread
+  output, ready, starting, stopped, or error.
 - Needs input shows while the agent waits for the user, such as for help,
   an approval, or an answer (decision 68). The workspace header and its
   row in the list show it, in the web app and in the Mac app.
-- Each state has its own mark shape, so no state depends on colour alone.
-  Bold text marks unread output.
+- The workspace header and the operator section give each state its own
+  mark shape, so no state there depends on colour alone. Reason: they also
+  show the state of the cloud computer. So the header can show ready beside
+  a bar with failed checks.
 - Archived workspaces sit in the Archived group at the end of the list.
+
+### The list mark
+
+- The list mark of a workspace is a grid of 3 × 3 cells. It shows in the
+  list, in the rows of the command palette, and in the chips. It means the
+  same in each place.
+- Its colour gives the [GitHub state](github-banner.md#the-github-state)
+  of the workspace (list mark decision 1). It is red when the checks
+  failed, amber while they run, green when they passed, and purple after
+  the merge.
+- Without a GitHub state, the mark is dim grey.
+- A mark shape for each state was rejected for the list. Reason: the list
+  and the pull request bar can then disagree, and the user wants the
+  checks at a glance.
+- The motion of the mark shows whether the agent works (list mark
+  decision 1). A light runs around the outer ring of cells while the agent
+  works. The whole mark pulses slowly while the agent needs input. In each
+  other state, the mark is still.
+- Reason: the pulse keeps needs input in the list, as decision 68 requires.
+  A still middle column for needs input was rejected, because the user
+  asked for a mark of one full colour.
+- With reduced motion, the ring stays lit while the agent works. The middle
+  column stays lit while the agent needs input. The other cells stay dim,
+  so the state of the agent stays visible without motion.
+- Bold text alone marks unread output. A green mark for unread output was
+  rejected, because green means passed checks.
+- An archived workspace shows a fainter grey mark, whatever its GitHub
+  state. Reason: a chip of an archived workspace must show the archive, as
+  [Chips](workspace-links.md#chips) says.
+- In each place, screen readers hear the GitHub state in words before the
+  state, such as "Checks failed, Working". Reason: only the colour shows
+  the GitHub state. For an archived workspace, they hear no GitHub state.
+- A change of the GitHub state does not change the activity time of the
+  row.
 
 ## Stop and resume
 

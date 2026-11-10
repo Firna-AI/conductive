@@ -119,6 +119,28 @@ The mockup milestone added these calls on 10 November 2026:
 23. The header keeps its green "Ready" mark also beside a red bar, because
     the user chose to keep the header as it is.
 
+The merge of the routines work added these calls on 10 November 2026:
+
+24. Routine rows keep their existing state shapes, including queued,
+    failed, and skipped. Reason: this change covers workspace rows,
+    palette workspace rows, and workspace chips. The routines work on
+    `origin/main` uses the state of the run, not its GitHub checks.
+25. The four routine workspace fixtures give `github: null`. Reason:
+    their screens show the `no-commits` bar, so their marks must agree.
+
+The documentation milestone added these calls on 10 November 2026:
+
+26. The GitHub banner doc owns the summary rules. Workspace states links
+    to them. Reason: one home avoids duplicate rules and keeps the
+    workspace lifecycle doc near 250 lines. The check rules describe the
+    existing bar behaviour.
+27. The palette and chip docs use the term "list mark". The chip change
+    rule also names the GitHub state. Reason: the approved design gives
+    those places the same mark as the workspace list.
+28. The mark, agent mark, and workspace number details move to
+    `docs/mockups/design-marks.md`, with their words unchanged. Reason:
+    the merged design page passed 300 lines.
+
 ## Contracts
 
 - `GitHubSummary` in `src/shared/github.ts`: `'checks-running'`,
@@ -133,13 +155,13 @@ The mockup milestone added these calls on 10 November 2026:
 Contract owners:
 
 - [Life of a workspace](../docs/protocol/workspace-life.md#workspace-states).
-- [GitHub banner](../docs/protocol/github-banner.md#checks).
+- [GitHub state](../docs/protocol/github-banner.md#the-github-state).
 - [Data and trust](../docs/architecture/data-and-trust.md#where-data-lives)
   and [Components](../docs/architecture/components.md#d1).
 - The [GitHub banner backend README](../worker/github/README.md), the
   [App API README](../worker/app-api/README.md), the
   [migrations README](../migrations/README.md), and
-  [the design](../docs/mockups/design.md).
+  [the design](../docs/mockups/design-marks.md).
 
 Replaced ways:
 
@@ -147,7 +169,8 @@ Replaced ways:
   Consumers: the workspace row and the palette rows of the mockups, the
   workspace row and the palette rows of the app, and `WorkspaceChip`.
   Moved in Milestones 1 and 4. The header and the operator section keep
-  `StatusGlyph`.
+  `StatusGlyph`. Routine rows also keep `StatusGlyph`, including their
+  run-only states.
 - The check rules inside `pullBanner` → `githubSummary`. Consumer:
   `pullBanner` in `worker/github/banner.ts`. Moved in Milestone 3, which
   also deletes `failedCheck` when no caller is left.
@@ -201,27 +224,32 @@ Depends on: 1
 The protocol docs state the list mark decision and the design calls that
 change a requirement.
 
-- [ ] Rewrite [Workspace states](../docs/protocol/workspace-life.md#workspace-states)
+- [x] Rewrite [Workspace states](../docs/protocol/workspace-life.md#workspace-states)
       with list mark decision 1 and design calls 1 to 10. Define the list
       mark decision numbers at the top of the doc, as the gateway doc does.
-- [ ] Add one line to [Checks](../docs/protocol/github-banner.md#checks)
+- [x] Add one line to [Checks](../docs/protocol/github-banner.md#checks)
       that links to Workspace states.
-- [ ] Read [command-palette.md](../docs/protocol/command-palette.md#rows)
+- [x] Read [command-palette.md](../docs/protocol/command-palette.md#rows)
       and [workspace-links.md](../docs/protocol/workspace-links.md#chips).
       Change each sentence on marks that the new mark makes wrong.
-- [ ] Add the copy of the GitHub state to the D1 rows of
+- [x] Add the copy of the GitHub state to the D1 rows of
       [Data and trust](../docs/architecture/data-and-trust.md#where-data-lives)
       and [Components](../docs/architecture/components.md#d1).
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact, such as the list sentence of
       `workspaces.md`, under the rules of
       [Website docs](../docs/protocol/website-docs.md).
-- [ ] Update the notes of the "Sidebar" and "Status indicators" rows in
+- [x] Update the notes of the "Sidebar" and "Status indicators" rows in
       `src/marketing/from-conductor/areas/navigation-and-appearance.ts`,
       under the [claim rules](../docs/protocol/conductor-comparison.md#statuses).
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+- [x] Split the mark details from `docs/mockups/design.md` into a linked
+      page, so the merged design guide stays below 300 lines.
+- Merge evidence: `.context/workspace-marks-show-github-state/merge-ui/report.md`.
+- Evidence: `.context/workspace-marks-show-github-state/m2-internal/` and
+  `.context/workspace-marks-show-github-state/m2-external/`.
 
 ## Milestone 3: The GitHub summary in the workspace record
 

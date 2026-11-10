@@ -121,18 +121,18 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 
 ## Rows
 
-- A workspace row shows the state mark, the name, the repository, and the
+- A workspace row shows the list mark, the name, the repository, and the
   age of the latest activity, as the workspace list does.
 - When a word of the query is in the label of the number of a workspace,
   its row also shows that label, before the name (decision 212). Reason:
   the person can then tell apart the workspaces that match a part of a
   number, such as `39`.
-- The state mark and the bold name of an unread workspace mean what they
-  mean in the list, as
-  [Workspace states](workspace-life.md#workspace-states) says.
+- The list mark and the bold name of an unread workspace mean what they
+  mean in the list, as [The list mark](workspace-life.md#the-list-mark)
+  says.
 - The results show no highlight of the letters that match.
 - A coloured bar at the left edge of a workspace row, as in Conductor, was
-  rejected, because the state mark already gives the state.
+  rejected, because the list mark already gives the state.
 - An action row shows an icon and its label. A Switch to row shows the
   tile of its org.
 - A setting row shows an icon and its label. On the All tab and in a
