@@ -13,7 +13,7 @@ export const plansAndPricingFeatures: readonly ParityFeature[] = [
     area: 'plans-and-pricing',
     name: 'Pro plan',
     status: 'different',
-    note: 'Conductive has no paid tiers. New users need app access through approval or an invite.',
+    note: 'Conductive has no paid tiers. New users get app access through approval, an invite, or open sign-up.',
   },
   {
     id: 'team-plan',
@@ -26,8 +26,8 @@ export const plansAndPricingFeatures: readonly ParityFeature[] = [
     id: 'enterprise-plan',
     area: 'plans-and-pricing',
     name: 'Enterprise plan',
-    status: 'not-planned',
-    note: 'Conductive has no Enterprise plan. Provisioning, support agreements, and added enterprise controls have no delivery plan.',
+    status: 'considering',
+    note: 'Enterprise provisioning, support agreements, and additional controls are under consideration. Conductive is free today.',
   },
   {
     id: 'no-fee-for-cloud-compute',
@@ -41,6 +41,6 @@ export const plansAndPricingFeatures: readonly ParityFeature[] = [
     area: 'plans-and-pricing',
     name: 'Plan and billing pages',
     status: 'different',
-    note: 'Conductive has no paid plans or billing pages. New users need approval or an invite for app access.',
+    note: 'Conductive has no paid plans or billing pages. New users get app access through approval, an invite, or open sign-up.',
   },
 ]

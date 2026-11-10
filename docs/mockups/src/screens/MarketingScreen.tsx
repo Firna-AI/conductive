@@ -1,12 +1,17 @@
 import type { Viewport } from '@mokly/mokly'
 import { waitlistText } from '../../../../src/marketing/access-copy'
-import { features, smallerFeatures } from '../../../../src/marketing/features'
+import {
+  features,
+  macAppSection,
+  smallerFeatures,
+} from '../../../../src/marketing/features'
 import { parityLinkCopy } from '../../../../src/marketing/from-conductor/copy'
 import { classes } from '../components/common/classes'
 import { ClosingCall } from '../components/marketing/ClosingCall'
 import { FeatureGrid } from '../components/marketing/FeatureGrid'
 import { FeatureSection } from '../components/marketing/FeatureSection'
 import { Hero } from '../components/marketing/Hero'
+import { MacDownloads } from '../components/marketing/MacDownloads'
 import type { SiteSignUp } from '../components/marketing/SiteActions'
 import { SitePage } from '../components/marketing/SitePage'
 import { paths } from '../paths'
@@ -15,12 +20,13 @@ import styles from './MarketingScreen.module.css'
 
 /**
  * The home page of the marketing site, public at the root of the product
- * domain: the hero with the app, the features with real screens, the
- * smaller features, and a last call to action. Every picture is
- * a real screen of the catalogue, and none of it links into the app. The
- * features are the site's records in `src/marketing/features.ts`, so the
- * mockup and the site show the same words. The main action names the
- * waitlist, or open sign-up while it is on.
+ * domain: the hero with the app, the features with real screens, the Mac
+ * app with its downloads, the smaller features, and a last call to action.
+ * Every picture is a real screen of the catalogue, and none of it links
+ * into the app. The features are the site's records in
+ * `src/marketing/features.ts`, so the mockup and the site show the same
+ * words. The main action names the waitlist, or open sign-up while it is
+ * on.
  */
 export function MarketingScreen(props: {
   viewport: Viewport
@@ -36,7 +42,7 @@ export function MarketingScreen(props: {
         notice={{ text: parityLinkCopy.home, to: paths.fromConductor }}
         picture={hero.picture}
         signIn={paths.signIn}
-        text="Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser."
+        text="Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser or from the Mac app."
         title="Give every coding task its own cloud computer."
         viewport={viewport}
       />
@@ -51,6 +57,17 @@ export function MarketingScreen(props: {
             viewport={viewport}
           />
         ))}
+        <FeatureSection
+          feature={macAppSection}
+          id="mac-app"
+          viewport={viewport}
+        >
+          <MacDownloads
+            downloads={macAppSection.downloads}
+            requirement={macAppSection.requirement}
+            viewport={viewport}
+          />
+        </FeatureSection>
         <FeatureGrid
           items={smallerFeatures}
           label="And more"

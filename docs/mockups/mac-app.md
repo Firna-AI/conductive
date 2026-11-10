@@ -7,8 +7,14 @@ The Mac app is the web app in a window of macOS, from decision 62. Its
 screens live under `mac-app`, and their parts in `src/components/mac/`.
 
 - `MacScreen` lays the screen of a Mac out at 1440 × 900 and scales it to
-  the view in steps of `--mac-scale`, because a view runs no script. The
-  app has no phone layout, so a phone view shows the same screen, smaller.
+  the width of its box in steps of `--mac-scale`, because a view runs no
+  script. The box is a size container, as the app frame is, so a picture
+  of the marketing site shows the screen at its own size. The app has no
+  phone layout, so a phone view shows the same screen, smaller.
+- The Mac app section of [the marketing site](marketing-site.md) shows a
+  picture of `mac-app/commands`. A change to that screen needs a new
+  capture, with the
+  [capture steps](../../src/marketing/pictures/README.md#capture-the-pictures).
 - The window has no title bar. The red, yellow, and green window buttons
   sit inset at the top left of the left panel, above every layer of the
   app, as macOS draws them. `WindowControls` keeps their space, then shows

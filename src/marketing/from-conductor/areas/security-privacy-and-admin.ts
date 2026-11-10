@@ -19,8 +19,8 @@ export const securityPrivacyAndAdminFeatures: readonly ParityFeature[] = [
     id: 'sso-and-scim',
     area: 'security-privacy-and-admin',
     name: 'SSO and SCIM',
-    status: 'not-planned',
-    note: 'GitHub is the only sign-in, with no SSO or SCIM. New accounts need approval or an invite for app access.',
+    status: 'considering',
+    note: 'SSO and SCIM are under consideration. Sign in with GitHub today, then get app access through approval, an invite, or open sign-up.',
   },
   {
     id: 'admin-roles',

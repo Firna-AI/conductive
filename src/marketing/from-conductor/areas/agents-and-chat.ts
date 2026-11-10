@@ -19,8 +19,9 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'mentions',
     area: 'agents-and-chat',
     name: 'Mentions',
-    status: 'considering',
-    note: 'File, teammate, and pull request mentions in the message box are under consideration.',
+    status: 'planned',
+    note: 'File mentions in the message box are planned. Teammate and pull request mentions remain under consideration.',
+    due: null,
   },
   {
     id: 'attachments',
@@ -98,7 +99,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Context meter and compaction',
     status: 'considering',
-    note: 'A context meter and a command to shorten chat history are under consideration.',
+    note: 'Agents shorten context automatically. A visible context meter and a manual compaction control are under consideration.',
   },
   {
     id: 'chat-navigation',
@@ -112,7 +113,15 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Answers show basic Markdown, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
+    note: 'Answers show Markdown, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
+  },
+  {
+    id: 'copy-session-transcripts',
+    area: 'agents-and-chat',
+    name: 'Copy session transcripts',
+    status: 'planned',
+    note: 'Copying concise or full session transcripts as Markdown from the session menu is planned.',
+    due: null,
   },
   {
     id: 'chat-summaries',

@@ -25,6 +25,13 @@ decision number names a dated record, as
   [The main action of the site](../protocol/sign-ups.md#the-main-action-of-the-site)
   says. The site does not name Boat, and users need no Boat account
   (decision 80).
+- The home page has a Mac app section. It links the DMG for Apple silicon
+  first, then the DMG for Intel, from the latest release of the public
+  source repository on GitHub. It names the oldest macOS version that the
+  app runs on. The footer links the section. In the desktop layout, the
+  header links it too.
+- The DMGs come from GitHub, not from the Worker.
+  [Releases](../protocol/desktop-app.md#releases) states their addresses.
 
 ## The comparison page
 

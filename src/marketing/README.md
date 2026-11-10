@@ -190,9 +190,9 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - Run the site tests with `npm run test -- worker/marketing src/marketing`.
   The built-site test builds Astro once in a temporary folder. It checks
   both labels in the four main actions of the home page. The capture
-  test uses fake pages and needs no browser. The label test uses fake
-  pages with the start-label marker. It moves the Worker clock past the
-  60 seconds, and it makes the settings read fail.
+  tests use fake pages and a fake browser, so they need no Chrome. The
+  label test uses fake pages with the start-label marker. It moves the
+  Worker clock past the 60 seconds, and it makes the settings read fail.
 - Work on the pages with `npm run site:dev`. It serves them at
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.
@@ -265,7 +265,9 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
   queries, frame classes, and picture-size CSS.
 - [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
-  the shared picture list, capture pages, bounds, and file names.
+  the shared picture list.
+- [`marketingPictureCaptures.ts`](../../docs/mockups/src/screens/marketingPictureCaptures.ts):
+  capture pages, bounds, and file names.
 - [`tools/marketing-pictures/run.ts`](../../tools/marketing-pictures/run.ts):
   the capture command, build, and cleanup.
 - [`capture-pictures.ts`](../../tools/marketing-pictures/capture-pictures.ts),
@@ -274,6 +276,7 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   [`encode-pictures.ts`](../../tools/marketing-pictures/encode-pictures.ts):
   capture pages, browser control, Chrome connection, and lossless encoding.
 - `picture-capture.test.ts`: capture pages, bounds, and file names.
+- `picture-page.test.ts`: the animation reset before each capture.
 - [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
   real builds served through the Worker, including their policy, their
   files, and the comparison page with its two entry links.
