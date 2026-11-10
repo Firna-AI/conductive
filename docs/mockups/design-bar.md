@@ -24,8 +24,10 @@ the actions on top of the Checks tab of a phone, and Continue.
   - On a phone the row opens the Checks tab. `ChecksActions` in
     `BarActions.tsx` draws the actions, the line, and the link to GitHub at
     the top of that tab, at touch size.
-  - `ContinueDialog` asks before Continue when the sandbox has local work,
-    with the list of the Archive question. `ContinuedLine` in
+  - `ContinueDialog` asks before Continue when the sandbox has local work.
+    `LocalWorkList` in `src/components/workspace/` lists that work for the
+    app and the mockups: each changed file that is not committed, and the
+    commits that no remote branch holds. `ContinuedLine` in
     `src/components/chat/` draws the note of Continue in each session,
     centred and muted, as the first line of a linked session. It takes no
     fixtures.

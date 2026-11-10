@@ -19,6 +19,7 @@ import type { ChatDependencies } from './types'
 import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
 import { attachmentWorkspace } from './attachment-claim-data'
+import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
 import { readRunnerBranches } from './branch-data'
 
@@ -80,6 +81,8 @@ export function chatDependencies(
       ),
     attachmentSandboxId: async (id, userId) =>
       (await attachmentWorkspace(env.DB, id, userId))?.sandboxId ?? null,
+    resolveAttachmentPaths: (id, userId, attachments) =>
+      resolveAttachmentPaths(env, id, userId, attachments),
     receiveFileResult: async () => undefined,
     runnerAttached: () => undefined,
     runnerDetached: () => undefined,

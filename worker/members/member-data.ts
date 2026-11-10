@@ -102,7 +102,7 @@ export async function removeMembership(
   const result = await db.batch<{ id: string }>([
     db
       .prepare(
-        `UPDATE workspaces SET owner_user_id = (${recipient}), updated_at = ?
+        `UPDATE workspaces SET owner_user_id = (${recipient}), updated_at = MAX(updated_at, ?)
        WHERE org_id = ? AND owner_user_id = ? AND EXISTS (${recipient}) AND ${permission}
        RETURNING id`,
       )

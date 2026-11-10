@@ -6,9 +6,10 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
-import { mayArchive } from '../../app/permissions'
+import { usePassedDeadlines } from '../../app/deadlines'
+import { mayArchive, mayRestore } from '../../app/permissions'
 import { routes } from '../../app/router'
-import { useStore, valueOf } from '../../app/store'
+import { useStore } from '../../app/store'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
@@ -16,12 +17,11 @@ import {
 import { failedFirstStart } from '../../app/first-start'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp, useOrgAccess, useOrgModel } from '../context'
+import { useApp, useOrgAccess } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
-import { ArchiveDialog } from './ArchiveDialog'
 import { ChatArea } from './ChatArea'
 import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
@@ -29,10 +29,11 @@ import { KeptFilesConnection } from './files/kept-files'
 import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
-import { sandboxView } from './sandbox-view'
+import { archivedRestore, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
+import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
@@ -104,46 +105,36 @@ export function WorkspaceScreen(props: {
   )
   const { model, notices, chat, toolEvents } = shown
   const startError = useStore(model.startError)
-  const listed = valueOf(useStore(useOrgModel(props.org.id).workspaces))?.find(
-    (item) => item.id === props.workspaceId,
-  )
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
-  // The Archive question keeps one place in each state of the screen. So a
-  // question that the row of the workspace started during the first read,
-  // with the name of the list, shows once and stays when the read ends.
-  const named = detail.state === 'ready' ? detail.value.workspace : listed
-  const withQuestion = (content: ReactNode) => (
-    <>
-      {content}
-      {named ? (
-        <ArchiveDialog archive={model.archive} workspace={named} />
-      ) : null}
-    </>
-  )
+  const lifecycle = useArchiveActions(props.org.id, props.viewer)
+  // Restore ends at its last day while the page shows, with no other event.
+  const passed = usePassedDeadlines([
+    detail.state === 'ready' ? detail.value.workspace.restoreUntil : null,
+  ])
   if (detail.state === 'loading') {
-    return withQuestion(
+    return (
       <div className={workspaceStyles.center}>
         <Spinner
           accessibilityLabel="Opening the workspace"
           color={theme.colors.muted}
           size={14}
         />
-      </div>,
+      </div>
     )
   }
   if (detail.state === 'failed') {
     if (detail.error.status === 404) {
-      return withQuestion(
+      return (
         <Unavailable
           body="It may have moved to another org."
           orgId={props.org.id}
-        />,
+        />
       )
     }
-    return withQuestion(
+    return (
       <EmptyState
         action={
           <ActionButton onPress={() => void model.open()} tone="primary">
@@ -153,12 +144,13 @@ export function WorkspaceScreen(props: {
         body={detail.error.message}
         icon={CircleAlert}
         title="The workspace didn't open"
-      />,
+      />
     )
   }
   const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   const { suspended } = access
+  const restoreEnded = passed(workspace.restoreUntil)
   // A failed first start keeps the workspace, its chat, and its queue for
   // every member, with its saved cause and Try again.
   const sandboxParts = sandboxView({
@@ -167,6 +159,7 @@ export function WorkspaceScreen(props: {
     startError,
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
+    restore: archivedRestore(workspace, suspended, restoreEnded),
   })
   const context: WorkspaceContext = {
     org: props.org,
@@ -183,8 +176,12 @@ export function WorkspaceScreen(props: {
     chat,
     toolEvents: toolEvents.subscribe,
     archive: mayArchive(access, workspace, props.viewer)
-      ? () => void model.archive.start()
+      ? () => lifecycle.archive(workspace)
       : null,
+    restore: mayRestore(access, workspace, restoreEnded)
+      ? () => lifecycle.restore(workspace)
+      : null,
+    running: lifecycle.running(workspace.id),
     onReassigned: (updated) => model.reassigned(updated),
   }
   const phone = viewport === 'phone'
@@ -232,8 +229,7 @@ export function WorkspaceScreen(props: {
   )
   // The question of Continue, the actions of the screen for the palette, and
   // the resume of a stopped sandbox when a file or diff tab opens. Each
-  // layout draws them. The Archive question has its own place, as
-  // `withQuestion` says.
+  // layout draws them.
   const dialog = (
     <>
       <ContinueDialog />
@@ -267,15 +263,15 @@ export function WorkspaceScreen(props: {
     )
     // An archived workspace on a phone shows only its chat: no pull request
     // row and no Checks, so it reads no GitHub state and no files.
-    if (archived) return withQuestion(screen)
-    return withQuestion(
+    if (archived) return screen
+    return (
       <KeptFilesConnection context={context}>
         <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
-      </KeptFilesConnection>,
+      </KeptFilesConnection>
     )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
-  return withQuestion(
+  return (
     <KeptFilesConnection context={context}>
       <WorkspaceGitHub context={context}>
         <WorkspaceMacBar context={context} />
@@ -293,6 +289,6 @@ export function WorkspaceScreen(props: {
           {dialog}
         </div>
       </WorkspaceGitHub>
-    </KeptFilesConnection>,
+    </KeptFilesConnection>
   )
 }

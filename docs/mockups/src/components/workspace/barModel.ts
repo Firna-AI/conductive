@@ -32,7 +32,8 @@ export type BarAction =
   | { kind: 'merge'; method: MergeMethod; busy: boolean }
   /** `waiting`: a turn runs, so Continue is not available yet. */
   | { kind: 'continue'; busy: boolean; waiting: boolean }
-  | { kind: 'archive'; disabled: boolean }
+  /** `busy`: the Archive runs. Archive asks no question. */
+  | { kind: 'archive'; busy: boolean; disabled: boolean }
 
 /** The link to GitHub: the pull request, or the page that creates one. */
 export type GitHubLinkKind = 'open' | 'create'
@@ -68,6 +69,8 @@ export type BarFacts = {
   readOnly: boolean
   /** The owner of the workspace and the admins of the org may archive it. */
   archivable: boolean
+  /** The Archive of the workspace runs, so its button shows busy. */
+  archiving: boolean
 }
 
 /** The fix of a state that the agent can act on, without local work. */
@@ -143,13 +146,15 @@ function mergeMessage(facts: BarFacts): BarMessageKind | undefined {
 
 /**
  * After the merge, every member sees Continue, and the owner and the admins
- * also see Archive. Continue waits while a turn runs.
+ * also see Archive. Continue waits while a turn runs. Archive runs at once.
  */
 function afterMerge(facts: BarFacts): Pick<BarModel, 'actions' | 'message'> {
   const busy = facts.appAction === 'continuing'
   const waiting = facts.turnRuns && !busy
   const actions: BarAction[] = [{ kind: 'continue', busy, waiting }]
-  if (facts.archivable) actions.push({ kind: 'archive', disabled: busy })
+  if (facts.archivable) {
+    actions.push({ kind: 'archive', busy: facts.archiving, disabled: busy })
+  }
   if (waiting) return { actions, message: 'continue-waits' }
   const failed = facts.appAction === 'continue-failed'
   return { actions, message: failed ? 'continue-failed' : undefined }

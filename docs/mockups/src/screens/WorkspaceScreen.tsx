@@ -41,8 +41,13 @@ import {
   ToolContent,
   workspaceSidebar,
 } from './workspaceParts'
-import { workspaceOverlay } from './workspaceOverlays'
-import { activityOf, drawnState, sandboxNotice } from './workspaceSandbox'
+import { workspaceOverlay, workspaceToast } from './workspaceOverlays'
+import {
+  activityOf,
+  archiveRestore,
+  drawnState,
+  sandboxNotice,
+} from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
 import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
@@ -56,10 +61,11 @@ const widenedRight = 560
  * request, the file lists, and the tools. Desktop shows them side by side; a
  * phone shows one at a time, with tabs to switch. In a suspended org the
  * chat history stays, and nothing in the workspace can change: no message,
- * no new session, no rename, no owner change, and no Archive. `overlay`
- * lies over the workspace in place of the overlay of its state, such as a
- * dialog that another screen opens over it. The chat and the overlay find
- * the workspaces of their chips in the list of the screen.
+ * no new session, no rename, no owner change, no Archive, and no Restore.
+ * `overlay` lies over the workspace in place of the overlay of its state,
+ * such as a dialog that another screen opens over it. The chat and the
+ * overlay find the workspaces of their chips in the list of the screen.
+ * The toast of the state lies over everything.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
@@ -89,6 +95,8 @@ export function WorkspaceScreen(props: {
   // Decision 42: the workspace's owner and the org's admins archive it.
   const archivable =
     !readOnly && mayArchiveWorkspace(membership, workspace.owner)
+  // Every member restores it while the app keeps its cloud computer.
+  const restorable = archiveRestore(state) === 'available'
   const bar = barOf(state, { archivable, readOnly })
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
@@ -179,6 +187,7 @@ export function WorkspaceScreen(props: {
     ),
   })
   const tool = <ToolContent state={state} viewport={viewport} />
+  const toast = workspaceToast(state, workspace, viewport)
   if (viewport === 'mobile') {
     if (state.palette !== 'closed') {
       // A phone opens the palette from the list, so it offers no actions
@@ -216,6 +225,7 @@ export function WorkspaceScreen(props: {
           />
         )}
         {overlay}
+        {toast}
       </MobileFrame>
     )
   }
@@ -226,6 +236,7 @@ export function WorkspaceScreen(props: {
         context={{
           open: { workspace, status },
           archivable,
+          restorable,
           rightColumn: !rightHidden,
         }}
         view={state.palette}
@@ -234,19 +245,29 @@ export function WorkspaceScreen(props: {
     )
   return (
     <AppFrame
-      overlay={palette ?? overlay}
+      overlay={
+        <>
+          {palette ?? overlay}
+          {toast}
+        </>
+      }
       rail={{
         ...acmeRail,
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
-      sidebar={workspaceSidebar(
-        workspace,
+      sidebar={workspaceSidebar({
+        // The toast of an Archive shows at once, so the row shows that Archive.
+        workspace:
+          state.toast === 'archived'
+            ? { ...workspace, updated: 'now' }
+            : workspace,
         status,
         suspended,
-        membership,
-        createdWorkspaces(state),
-      )}
+        viewer: membership,
+        created: createdWorkspaces(state),
+        restoreOpen: state.archive === 'kept',
+      })}
     >
       <WorkspaceBody
         center={

@@ -10,10 +10,11 @@ This page lists each protocol doc and what it covers.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
-    shell variable of each repository in a sandbox.
+    shell variable of each repository in a sandbox, and the context folder
+    of each workspace.
   - [Life of a workspace](../protocol/workspace-life.md): the start steps,
-    the time limits, the states, the stop and resume, the archive, and
-    Continue.
+    the time limits, the states, the stop and resume, the archive, the
+    restore, and Continue.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
@@ -45,6 +46,9 @@ This page lists each protocol doc and what it covers.
   sandbox.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
+- [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
+  extra hours, the seller and the tax, the pricing page, and the planned
+  billing changes. Use is free until billing starts.
 - [Mac app](../protocol/desktop-app.md): the shell for macOS, its sign-in, and
   Mac commands.
   - [Mac packages and updates](../protocol/desktop-packages-and-updates.md)

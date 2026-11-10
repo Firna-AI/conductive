@@ -1,4 +1,4 @@
-import { readArchiveCheck } from '../app-api/archive'
+import { readContinueWork } from './continue-work'
 import { HttpError } from '../http'
 import { providerForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
@@ -72,7 +72,7 @@ export async function advanceContinue(
     return
   }
   if (job.phase === 'check') {
-    const localWork = await readArchiveCheck(
+    const localWork = await readContinueWork(
       options.env,
       options.dependencies,
       job.binding.orgId,

@@ -1,6 +1,6 @@
 import type { Delay } from '../app/events'
 import type { Readable } from '../app/store'
-import type { ArchiveCheckResponse } from '../shared/workspaces'
+import type { LocalWork } from '../shared/workspaces'
 import {
   continueOutcome,
   mergeOutcome,
@@ -21,7 +21,7 @@ export type PromptResult = 'sent' | 'failed' | 'blocked' | 'unavailable'
 interface ContinueQuestion {
   branch: string
   baseBranch: string
-  localWork: ArchiveCheckResponse
+  localWork: LocalWork
 }
 
 export interface BarActionsSnapshot {

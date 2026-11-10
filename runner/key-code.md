@@ -10,7 +10,9 @@ part.
   The HTTP and upgrade handlers share the header rules and target connection code.
 - `src/runner.ts`: `Runner` joins the connection, agents, file and port
   reports, and report requests.
-- `src/instructions.ts`: `agentInstructions`, as [its guide](agent-instructions.md#key-code) says.
+- [Agent input](agent-input.md#key-code): the context folder, the agent
+  instructions with their branches, and the sender line and the branch line
+  of each message.
 - [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
   [output field policy](../src/shared/output-fields.ts): the one filter
   shared with the Worker. The runner supplies the workspace and turn tokens.

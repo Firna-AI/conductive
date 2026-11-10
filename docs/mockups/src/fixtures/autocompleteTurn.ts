@@ -6,6 +6,7 @@
 
 import type { ChatItem, ToolKind } from './conversations'
 import { changedFiles } from './files'
+import { bullets } from './listConversations'
 
 function tool(
   id: string,
@@ -61,13 +62,15 @@ const autocompleteEnd: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'done',
-    blocks: ['Done. Checkout now suggests addresses as you type.'],
-    bullets: [
-      'Choosing a suggestion fills the street, city, and postcode.',
-      'Manual entry still works when there is no match.',
-      'Removed the old postcode lookup, which the suggestions replace.',
-      'Unit tests cover `useAddressAutocomplete`, and the checkout end-to-end tests pass.',
-      'Opened pull request #482.',
+    blocks: [
+      'Done. Checkout now suggests addresses as you type.',
+      bullets(
+        'Choosing a suggestion fills the street, city, and postcode.',
+        'Manual entry still works when there is no match.',
+        'Removed the old postcode lookup, which the suggestions replace.',
+        'Unit tests cover `useAddressAutocomplete`, and the checkout end-to-end tests pass.',
+        'Opened pull request #482.',
+      ),
     ],
   },
   { kind: 'turn-end', id: 'turn-end', duration: '4m 12s', files: changedFiles },

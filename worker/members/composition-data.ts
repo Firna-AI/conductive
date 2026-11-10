@@ -25,7 +25,7 @@ export async function stopOrgLifecycleRecords(
   await db.batch([
     db
       .prepare(
-        `UPDATE workspaces SET state = 'stopped', updated_at = ? WHERE org_id = ?
+        `UPDATE workspaces SET state = 'stopped', updated_at = MAX(updated_at, ?) WHERE org_id = ?
       AND sandbox_id IS NULL AND archived_at IS NULL AND state != 'archived' AND ${owned}`,
       )
       .bind(now, orgId, orgId, generation),

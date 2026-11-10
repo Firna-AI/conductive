@@ -4,7 +4,7 @@ import type {
   WorkspaceChatResolvers,
 } from './chat/workspace-integration'
 import { AttachmentWorkspace } from './chat/attachment-workspace'
-import { lifecycleDependencies, workspaceRuntime } from './lifecycle/runtime'
+import { lifecycleDependencies } from './lifecycle/runtime'
 import { WorkspaceFeatures } from './features/workspace'
 import { WorkspaceGitHub } from './features/github'
 import {
@@ -18,13 +18,13 @@ import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
 import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
 import { featureResult } from './features/result'
-import { WorkspaceArchive } from './features/archive'
-import { WorkspaceContinue } from './lifecycle/continue'
+import { archiveWorkspace } from './lifecycle/archive-workspace'
+import { continueBusy } from './lifecycle/continue-admission'
+import type { WorkspaceContinue } from './lifecycle/continue'
+import { createWorkspaceContinue } from './lifecycle/continue-composition'
 import { pendingContinue } from './lifecycle/continue-types'
-import { resumeWorkspace } from './lifecycle/workspace-resume'
 import type { User } from '../src/shared/api'
 import type { ContinueWorkspaceRequest } from '../src/shared/workspaces'
-import { assertReceiverActive } from './members/receiver-fence'
 import { orgLifecycleActive } from './members/composition-data'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import { expireWorkspacePreviews, runWorkspaceAlarms } from './workspace-alarms'
@@ -34,7 +34,6 @@ export class Workspace extends AttachmentWorkspace {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver
-  private readonly archives: WorkspaceArchive
   private readonly continuation: WorkspaceContinue
   private readonly now: () => number
 
@@ -86,35 +85,13 @@ export class Workspace extends AttachmentWorkspace {
       this.features,
       now,
     )
-    this.archives = new WorkspaceArchive(env, dependencies, {
-      ...this.integration,
-      run: (operation) => this.run(operation),
-      revoke: (id) => this.features.revokeWorkspace(id, true),
-    })
-    this.continuation = new WorkspaceContinue({
+    this.continuation = createWorkspaceContinue({
       matches,
-      assertActive: () => assertReceiverActive(this.integration.storage),
-      activity: async () => {
-        await this.controller.lifecycleActivity()
-      },
       env,
       dependencies,
-      storage: this.integration.storage,
-      chat: this.chat,
+      integration: this.integration,
+      github: this.github,
       run: (operation) => this.run(operation),
-      schedule: (at) => this.integration.alarms.set('continue', at),
-      refresh: (workspace, signal) => this.github.refresh(workspace, signal),
-      defaultBranch: (workspace, userId) =>
-        this.github.defaultBranch(workspace, userId),
-      scheduleRefresh: (workspace) => this.github.scheduleFresh(workspace),
-      resume: async (orgId, id, userId) => {
-        await resumeWorkspace(
-          workspaceRuntime(env, dependencies),
-          orgId,
-          id,
-          userId,
-        )
-      },
     })
   }
 
@@ -246,18 +223,44 @@ export class Workspace extends AttachmentWorkspace {
     return this.fetchChat(request)
   }
 
-  checkWorkspaceArchive(orgId: string, workspaceId: string, userId: string) {
-    return this.archives.check(orgId, workspaceId, userId)
-  }
-
   archiveWorkspace(
     orgId: string,
     workspaceId: string,
     userId: string,
-    discard: boolean,
     origin: string,
   ) {
-    return this.archives.archive(orgId, workspaceId, userId, discard, origin)
+    return featureResult(() =>
+      this.run(async () => {
+        if (await pendingContinue(this.integration.storage))
+          throw continueBusy()
+        return archiveWorkspace(
+          this.env,
+          { ...lifecycleDependencies(), now: this.now },
+          orgId,
+          workspaceId,
+          userId,
+          origin,
+          {
+            archiveLifecycle: () =>
+              this.controller.archiveLifecycle(workspaceId),
+            reserveArchive: () => this.controller.reserveArchive(workspaceId),
+          },
+        )
+      }),
+    )
+  }
+
+  restoreWorkspace(
+    orgId: string,
+    workspaceId: string,
+    userId: string,
+    origin: string,
+  ) {
+    return featureResult(() =>
+      this.run(() =>
+        this.controller.restoreWorkspace(orgId, workspaceId, userId, origin),
+      ),
+    )
   }
 
   continueWorkspace(

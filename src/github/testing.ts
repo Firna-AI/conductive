@@ -115,6 +115,7 @@ export function controlsOf(
     turnRuns: false,
     readOnly: false,
     archivable: true,
+    archiving: false,
     ...input,
   })
   return { view, onAction }

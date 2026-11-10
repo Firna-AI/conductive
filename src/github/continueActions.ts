@@ -1,12 +1,29 @@
 import type { ApiClient } from '../app/api/client'
-import { count, nested, ParseError, record, text } from '../app/api/parse'
-import { readArchiveCheck, readWorkspace } from '../app/api/read-workspaces'
+import {
+  count,
+  nested,
+  ParseError,
+  record,
+  text,
+  texts,
+} from '../app/api/parse'
+import { readWorkspace } from '../app/api/read-workspaces'
 import {
   workspacePaths,
   type ContinueWorkspaceRequest,
   type ContinueWorkspaceResponse,
+  type LocalWork,
 } from '../shared/workspaces'
 import type { WorkspaceTarget } from './githubClient'
+
+/** Checks the local work that the question of Continue lists. */
+function readLocalWork(value: unknown): LocalWork {
+  const body = record(value, 'local work')
+  return {
+    uncommittedFiles: texts(body, 'uncommittedFiles'),
+    unpushedCommits: count(body, 'unpushedCommits'),
+  }
+}
 
 /** Checks a reply of the Continue routes against the contract. */
 function readContinueResponse(value: unknown): ContinueWorkspaceResponse {
@@ -19,7 +36,7 @@ function readContinueResponse(value: unknown): ContinueWorkspaceResponse {
         state: 'confirmation-required',
         branch: text(reply, 'branch'),
         baseBranch: text(reply, 'baseBranch'),
-        localWork: nested(reply, 'localWork', readArchiveCheck),
+        localWork: nested(reply, 'localWork', readLocalWork),
       }
     case 'continued':
       return {

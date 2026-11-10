@@ -103,6 +103,12 @@ it.each(['claude', 'codex'] as const)(
     expect(initialPrompt).toContain(
       'CONDUCTIVE_REPOSITORY_ZETA_DIR: "/cloud/zeta"',
     )
+    expect(initialPrompt).toContain(
+      'Context folder: "/cloud/workspace/.context"',
+    )
+    expect(initialPrompt).toContain(
+      'Git ignores the context folder. Keep notes, screenshots, and files for other sessions of this workspace there. Attached files arrive in its attachments folder.',
+    )
     expect(initialPrompt).not.toMatch(/do-not-copy|Boat|Claude Code/)
     expect(savedBeforeStart[0]).toEqual([
       {
@@ -123,7 +129,7 @@ it.each(['claude', 'codex'] as const)(
         ? {
             role: 'user',
             content:
-              'Sender: Alice Example Member (@alice)\n\n  Keep this text.\n\nAnd this line.  \nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png"}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt"}',
+              'Sender: Alice Example Member (@alice)\n\n  Keep this text.\n\nAnd this line.  \nThe sender attached these files. Read each file before you answer.\nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
           }
         : {
             input: [
@@ -134,13 +140,18 @@ it.each(['claude', 'codex'] as const)(
               },
               {
                 type: 'text',
-                text: 'Attached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png"}',
+                text: 'The sender attached these files. Read each file before you answer. Each image is also in this message.',
+                text_elements: [],
+              },
+              {
+                type: 'text',
+                text: 'Attached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}',
                 text_elements: [],
               },
               { type: 'localImage', path: '/uploads/image.png' },
               {
                 type: 'text',
-                text: 'Attached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt"}',
+                text: 'Attached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
                 text_elements: [],
               },
             ],
@@ -213,6 +224,9 @@ it.each(['claude', 'codex'] as const)(
     )
     expect(currentPrompt).toContain(
       'Workspace repository folder: "/cloud/new-workspace"',
+    )
+    expect(currentPrompt).toContain(
+      'Context folder: "/cloud/new-workspace/.context"',
     )
     expect(currentPrompt).toContain('Workspace branch: "bob/new-task"')
     expect(currentPrompt).toContain('Target branch: "new-target"')

@@ -1081,6 +1081,28 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
   missing mention behavior prove the connection dependency, and the report
   truthfully states that the later list assertion did not run.
 
+### Archive and context integration calls
+
+- Design call on 10 November 2026: Preserve main's immediate Archive and 14-day Restore in place of the old Archive question and immediate deletion. Reason: The captured main requirements now govern Archive, while Continue keeps its approved independent work question.
+- Design call on 10 November 2026: Keep the pending-Continue Archive fence inside the serialized lifecycle operation. Reason: The existing move reservation must exclude Archive until the move settles.
+- Design call on 10 November 2026: Move the live work reader to continue-work.ts and name its shared result LocalWork. Reason: Continue still needs all-branch plus HEAD counts after the obsolete Archive check route is removed.
+- Design call on 10 November 2026: Move unchanged Continue constructor wiring to continue-composition.ts. Reason: Workspace can retain main's direct Archive and Restore methods below the existing file limit.
+- Design call on 10 November 2026: Keep the shared workspace presenter as the only missing-restoreUntil fallback. Reason: The fault proof showed that main already returns null for older open-workspace replies, so a Continue-specific fallback duplicates that behavior.
+- Design call on 10 November 2026: Combine current Codex branch input with main's attachment read instruction, paths, sizes, and local image items. Reason: Each provider input must retain both the branch context and the full attachment representation.
+- Design call on 10 November 2026: Keep Restore on its retained computer, provider account, and runner version pin. Reason: The actual Archive path creates no snapshot, and uncertain creation replays its original encrypted allocation body.
+- Design call on 10 November 2026: Use the combined Terms revision 2026-11-10-gateway-actions-archive-restore. Reason: The combined Terms now include main's free-until-billing and active posting requirements beside the gateway and action facts.
+- Design call on 10 November 2026: Preserve current consent expectations through TERMS_VERSION and historical consent literals unchanged. Reason: Current acceptance follows the combined notice, while the earlier-revision checks retain their original evidence.
+- Design call on 10 November 2026: Keep published pricing separate from billing activation. Reason: Main publishes plans but keeps service free until the member chooses a paid plan.
+- Design call on 10 November 2026: Keep the retained-disk secret warning in public and legal text. Reason: Archive revokes connections while copied secrets can remain on the retained disk.
+- Design call on 10 November 2026: Carry Archive busy state through the shared bar model. Reason: The model owns the visible action state, including main's current in-progress Archive.
+- Design call on 10 November 2026: Keep the current serialized Archive operation as the authority while Continue keeps its existing rules. Reason: The integration needs no additional Continue rejection or permission rule.
+- Design call on 10 November 2026: Make the Archive mockup lead directly to the just-archived state. Reason: Main's current mockup defines immediate Archive without a running-screen fixture.
+- Design call on 10 November 2026: Extract Continue's live work list and unchanged styles into LocalWorkList. Reason: The obsolete Archive dialog can be removed without losing Continue's files, commit count, or question.
+- Design call on 10 November 2026: Combine runner agent-input.md with the branch facts and remove the unused overlapping agent-instructions.md. Reason: One guide keeps every current input and branch-context fact with working inbound pointers.
+- Design call on 10 November 2026: Keep the git credential sender in git-credentials.md and retain its old routes heading as a pointer. Reason: Both parents' facts have one full home and old anchors still work.
+- Design call on 10 November 2026: Move the unchanged chip bullets, lifecycle key-code list, and alarm block into their linked guides. Reason: Each touched guide stays short while retaining every fact and its earlier navigation.
+- Design call on 10 November 2026: Keep the complete final CI watch in the last pull-request task of Milestone 11. Reason: The plan snapshot and deletion must precede the final push that CI verifies, and the duplicate watch requirement must not create a circular task order.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1381,7 +1403,7 @@ Depends on: 9
       its failure, and run its asynchronous case ten times.
 - [x] Smoke-test the existing desktop and phone action flows against the
       frozen combined source. Preserve drafts, uploads, and session routing.
-- [ ] Commit and push the combined result. Run a fresh scoped review of
+- [x] Commit and push the combined result. Run a fresh scoped review of
       integration changes under the implementation-review workflow.
 - [x] Preserve the original account-routing CI failure evidence and the
       checked caller trace. Apply no speculative patch or weaker check.
@@ -1403,7 +1425,7 @@ Depends on: 10 implementation and local verification
 - [x] Run bounded affected tests, builds, types, and static checks. Prove
       any new or materially changed async regression and run it ten times.
 - [x] Smoke-test the current combined desktop and phone action flows.
-- [ ] Commit and push the combined tree. Complete a fresh integration
+- [x] Commit and push the combined tree. Complete a fresh integration
       review on that fixed source. Record all checked outcomes.
 
 The gateway review was interrupted before a verdict because GitHub found
@@ -1421,7 +1443,7 @@ Depends on: 10a implementation and local verification
       Preserve Continue notes and one Files owner.
 - [x] Run types, bounded affected tests, and static checks on the frozen
       combined tree. Preserve existing assertions and exact source.
-- [ ] Commit and push. Complete a fresh fixed-source review and watch CI.
+- [x] Commit and push. Complete a fresh fixed-source review and watch CI.
 
 ## Milestone 10c: Final review correction
 
@@ -1443,9 +1465,38 @@ Depends on: 10b implementation and review
 GitHub reported the pushed `ead84a4c` as conflicting, so no full CI run
 started on that head. Its bounded backend and UI verification passed.
 
+## Milestone 10d: Archive and context base conflict integration
+
+Depends on: 10c implementation and local verification
+
+- [x] Integrate captured main `6fd184c53e77dee208687512244ebcaf5fa120e9`.
+      Preserve immediate Archive, 14-day Restore, context-folder file
+      handling, nested lists, pricing, and GitHub App return routing.
+- [x] Preserve Continue's independent local-work question, actual running
+      turn guard, queued-message behavior, member fetch, branch context,
+      account/version identity, and durable move reservation.
+- [x] Remove obsolete Archive warning/deletion behavior only where the
+      captured main requirement supersedes it. Move live Continue helpers
+      and lists into their current homes. Keep all current assertions.
+- [x] Align mockups, internal docs, all public guides, legal processing and
+      retention text, and the combined current consent revision.
+- [x] Run bounded affected types, tests, builds, static checks, meaningful
+      regression proofs and ten runs for materially changed async cases.
+      Smoke-test the combined current Archive/Restore and Continue flows.
+- [ ] Commit and push the current combined source. Audit every resolution
+      against both captured parents. Milestone 11 owns the complete final
+      PR CI watch after the plan snapshot and deletion.
+
+The checked review fix is committed as `d9a8b7d2`. The previously reviewed
+head passed all Complete gate and Desktop jobs. New main conflicts now
+require this integration before the final head can run CI. The original
+completed milestone text above remains dated history.
+
+Evidence: `.context/pull-request-bar-actions/archive-base-integration/`.
+
 ## Milestone 11: Final record and pull request completion
 
-Depends on: 10, 10a, 10b, and 10c
+Depends on: 10, 10a, 10b, 10c, and 10d
 
 - [ ] Record all checked outcomes and follow-ups. Preserve each dated
       design call and the current test-cost record in the PR description.

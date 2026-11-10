@@ -27,7 +27,8 @@ import styles from './BarActions.module.css'
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
  * merges as the viewer, Continue moves the workspace to a new branch, and
- * Archive opens its question. Each one leads to the screen that follows.
+ * Archive archives the workspace at once. Each one leads to the screen that
+ * follows.
  */
 function BarButton(props: { action: BarAction; localWork: boolean }) {
   const { action } = props
@@ -70,8 +71,10 @@ function BarButton(props: { action: BarAction; localWork: boolean }) {
           {barLabels.archive}
         </ActionButton>
       ) : (
-        <ScreenLink asChild to={paths.archivePushed}>
-          <ActionButton icon={Archive}>{barLabels.archive}</ActionButton>
+        <ScreenLink asChild to={paths.justArchived}>
+          <ActionButton busy={action.busy} icon={Archive}>
+            {barLabels.archive}
+          </ActionButton>
         </ScreenLink>
       )
   }

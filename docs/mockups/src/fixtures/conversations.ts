@@ -16,6 +16,7 @@ import {
 import { barConversations, type ContinuedItem } from './barConversations'
 import type { ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
+import { listConversations, type MessageList } from './listConversations'
 import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
@@ -39,8 +40,8 @@ type ToolCallStatus = 'done' | 'running' | 'stopped'
 /** A table in a message of the agent. A short row keeps only its own cells. */
 export type MessageTable = { kind: 'table' } & TableCells<string>
 
-/** A block of a message of the agent: a paragraph, or a table. */
-export type AgentBlock = string | MessageTable
+/** A block of a message of the agent: a paragraph, a table, or a list. */
+export type AgentBlock = string | MessageTable | MessageList
 
 export type ChatItem =
   | {
@@ -57,10 +58,8 @@ export type ChatItem =
   | {
       kind: 'agent'
       id: string
-      /** The paragraphs and the tables of the message, in order. */
+      /** The paragraphs, the tables, and the lists of the message, in order. */
       blocks: readonly AgentBlock[]
-      /** A list after the blocks. */
-      bullets?: readonly string[]
     }
   | {
       kind: 'tool'
@@ -183,4 +182,5 @@ export const conversations: Readonly<
   }),
   ...tableConversations,
   ...barConversations({ history, cutOff: cutOffTurn }),
+  ...listConversations,
 }

@@ -12,9 +12,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   title: 'Working in an org',
   blocks: [
     list(
-      text`Every member of an org sees all of its workspaces, and can send
-        messages in each of them. After a pull request merges, every
-        member can use Continue to start the next task in that workspace.`,
+      text`Every member of an org sees all of its workspaces. In an active
+        org, members can send messages in workspaces that are not archived.
+        After a pull request merges, every member can use Continue to start
+        the next task in that workspace.`,
       text`Each session runs on the agent login of the member who started
         it. The messages of other members use that login only when its
         owner allows it. Otherwise, the message of another member starts a

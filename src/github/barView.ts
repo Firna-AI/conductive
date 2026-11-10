@@ -47,6 +47,8 @@ export interface BarInput {
   /** An archived workspace or a suspended org: the bar shows only links. */
   readOnly: boolean
   archivable: boolean
+  /** The Archive of the workspace runs. */
+  archiving: boolean
 }
 
 export interface BarMessage {
@@ -216,6 +218,7 @@ export function barViewOf(input: BarInput): BarView {
     turnRuns: input.turnRuns,
     readOnly: input.readOnly,
     archivable: input.archivable,
+    archiving: input.archiving,
   })
   const named = failingChecks(snapshot).length > 0
   const actions = model.actions.filter(

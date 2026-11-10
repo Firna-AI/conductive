@@ -111,6 +111,9 @@ Each folder of a path is a part of the address. Another address under
 - A switch between the preview and the source keeps the tab, so it starts
   nothing. The address of the screen at its first show starts nothing
   there either, because the open of the workspace resumes the sandbox.
+- A Restore moves no address, so it starts nothing, also while the address
+  names a file or diff tab. The next visit that opens a tab resumes the
+  sandbox.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
 
@@ -181,15 +184,17 @@ the ordered stream of the workspace.
   state just after Continue, shows as loading. The store then reads the
   state of the branch once.
 - On desktop, the bar tops the right column, with its main action and the
-  line of a refusal or a stop under it. After a merge, its Archive opens the
-  Archive question of the screen. It shows only when
-  `WorkspaceContext.archive` offers Archive, so a suspended org shows none.
+  line of a refusal or a stop under it. After a merge, its Archive archives
+  the workspace at once, with one request, and stays busy while that
+  request runs. It shows only when `WorkspaceContext.archive` offers
+  Archive, so a suspended org shows none.
 - An agent action sends its prompt through `WorkspaceContext.chat`. A prompt
   that did not go out shows the chat of its session, where the composer
   names the cause: the chat in place of a file on desktop, and the chat tab
   on a phone.
 - `ContinueDialog` asks the question of Continue, after its check found
-  local work, beside the Archive question.
+  local work. `LocalWorkList` of the mockups lists that work, as in the
+  mockup of the question.
 - On a phone, the row sits under the header on every tab. It is one link to
   the Checks tab, whose top holds the actions, the line under the bar, and
   the links to GitHub. A branch without a pull request opens that tab when

@@ -5,8 +5,8 @@ import { control, touchControl } from '../../docs/mockups/src/design/metrics'
 /**
  * A compact labelled Firna button, as the mockups draw it: 26 px high in the
  * dense desktop layout, and 44 px high with `touch` on a phone. The main
- * action of the bar takes the primary tone. A busy button shows a spinner
- * in place of its icon, and takes no press.
+ * action of the bar takes the primary tone. `busy` shows that its write
+ * runs: the button shows a spinner in place of its icon, and takes no press.
  */
 export function ActionButton(props: {
   children: string

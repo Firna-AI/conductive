@@ -21,6 +21,7 @@ function view(
     turnRuns: false,
     readOnly: false,
     archivable: true,
+    archiving: false,
     ...input,
   })
 }
@@ -231,6 +232,7 @@ describe('the actions of the bar', () => {
           turnRuns: false,
           readOnly: false,
           archivable: true,
+          archiving: false,
         }),
       )
     expect([named([]), named(['passed', 'cancelled'])]).toEqual([

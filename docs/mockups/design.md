@@ -15,9 +15,10 @@ The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. Archive covers the time on hover only, without moving the
-row content. Selection and keyboard focus alone keep the time visible.
-A right click on a row opens the menu of the workspace. The centre column
-has a slim header that names the
+row content, and Restore does so in the Archived group. Selection and
+keyboard focus alone keep the time visible. A right click on a row opens
+the menu of the workspace. The centre column has a slim header that names
+the
 workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
@@ -80,15 +81,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Shift+F10 and the Menu key on a focused row open it below the row. No
   row has a button for the menu. The row under the pointer keeps its
   hover, with Archive over the time when the person can archive the
-  workspace. A phone layout opens the menu and its choices in a sheet. A
+  workspace, and with Restore over the time of an archived row until its
+  last day of Restore. The menu has no Restore. A phone layout opens the
+  menu and its choices in a sheet. A
   long press on a phone still lifts the row for a drag, and opens no menu.
   Rename puts a field in place of the name and the time, with the name
   selected. `RowMenu.module.css` styles the field and the menu at the
   pointer.
 - `FailureToast` in `src/components/common/` draws the toast that names a
-  change of the list that failed, with the message of the server, at the
-  bottom right of a desktop and at the bottom of a phone, as
-  `app/workspace-menu/rename/failed` shows.
+  change of the list that failed, with the message of the server, in the
+  `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -132,6 +134,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `ToastLayer` in `src/components/common/` draws a toast of Firna open
+  where the app shows its toasts: at the bottom right of a desktop, and
+  across the bottom of a phone. An action that a user can undo, such as
+  Archive, asks no question and offers the undo in its toast.
+  `ArchivedToast` in `src/components/workspace/` gives the toast after
+  Archive, over the workspace and over the list.
 - [The pull request bar](design-bar.md) gives its one main action in each
   state, the line under the bar, the actions on top of the Checks tab of a
   phone, and the question and the note of Continue.
@@ -172,55 +180,6 @@ sessions as tabs above the chat, and four tabs at the bottom.
     repository, so the name keeps its room. The button
     keeps the height of that line, and its touch area of 44 px reaches up
     over the name and down to the bottom edge of the header.
-- `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
-  the org as a chip in a line of text: a small rounded pill with the
-  `StatusGlyph` of the workspace, its label in a muted colour, and its
-  current name. Its height is the height of the line less 2 px, so a line
-  with a chip keeps its height. A chip is never wider than its line or
-  than 22 times the size of its font, and a long name is cut short. It
-  takes no fixtures, so the app can use it too.
-  - `MessageText` shows the chips in sent messages and in answers, as
-    links to the screens of the workspaces. A Markdown link to a
-    workspace shows as the chip alone, and a link in code stays code. A
-    link to another org, or to a workspace that the list does not hold,
-    stays plain text, and a long link breaks to fit the line.
-  - The chat finds each workspace in the list of the org, with the
-    archived ones and with the states of the list, through
-    `ChatWorkspaces`. A phone finds the same workspaces with no list on
-    the screen. An archived workspace keeps its chip, with the archived
-    mark.
-  - A pasted link becomes a chip in the message box at once: in the chat,
-    and in New workspace as a page or a dialog. `MessageField` gives each
-    box its field. A draft with a workspace link or a file mention shows
-    in `ChipTextField`: plain text with each chip as one unit, with the
-    sizes and the line limits of the plain text field. The draft keeps the
-    plain link.
-  - `InlineChip.module.css` beside it holds the pill of every chip in a
-    line of text, so a workspace chip and a file chip have the same size.
-  - In a message box each chip starts with the cell of its icon, from
-    `ChipIconCell` in `ChipRemove.tsx`. While a pointer is over the cell, a
-    × takes the place of the icon, and a press removes the chip. Where no
-    pointer hovers, as on a phone, the icon stays, and `ChipEndRemove`
-    puts a × at the end of the chip. Attached files follow the same rule,
-    and on a phone they keep their × button of touch size.
-- `FileChip` in `src/components/chat/` draws a file or a folder of the
-  workspace as a chip of the same size: the icon that All files gives it,
-  and its name. Its title is the whole path. `EntryIcon` in
-  `src/components/files/` gives the icon to All files, the chips, and the
-  list. It is the one icon map of the mockups and the app: a folder, a
-  Markdown file, a code file, or another file. A file is code when the
-  code view of the app gives it syntax colours, as `fileKind` in
-  `src/files/code/file-kind.ts` of the app says, so one list of languages
-  sets both. The user chose this on 10 November 2026. A sent message shows
-  each file chip as a link to the tab of the
-  file, and an answer shows none. It takes no fixtures, so the app can use
-  it too.
-- `FileMentionList` in `src/components/chat/` draws the list of `@` above
-  the message box: the icon, the name, and the folder of each entry that
-  matches the query, with the first row highlighted. One line takes the
-  place of the rows while the tree loads, when no tree is available, and
-  when nothing matches. `fileMentions.ts` beside it reads the mentions of
-  a text and orders the rows.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
@@ -230,9 +189,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason. `sandboxNoticeState.ts`
-  beside it owns the types of the bar and the panels, which the app
-  imports too.
+  action. The notice takes any refusal reason. An archived workspace
+  offers Restore until its last day, and the bar gives that day. After
+  it, the bar gives the day when Restore ended while a failed delete of
+  the cloud computer tries again, and it says that the cloud computer is
+  deleted only after the delete. `sandboxNoticeState.ts` beside it owns
+  the types of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.
@@ -276,9 +238,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The mockups, chat, and composer of a new workspace share it.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
-- [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables of a reply and of a file preview, and the fold of the work
-  of a turn. It also gives the data that the chat does not have, and the
+- [The chat](design-chat.md) gives the chips of attached files, of
+  workspaces, and of files, the list of `@`, the Markdown tables of a reply
+  and of a file preview, and the fold of the work of a turn. It also gives the data that the chat does not have, and the
   files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A

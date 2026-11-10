@@ -26,6 +26,17 @@ export const promptFacts: PromptFacts = {
 }
 
 /**
+ * The local work of the sandbox that the question of Continue lists, and
+ * that the Changes list shows.
+ */
+export const unpushedWork = {
+  /** Changed files that are not committed. */
+  files: ['src/app/checkout/AddressForm.tsx', 'tests/checkout/address.test.ts'],
+  /** Commits held by no remote branch, across all local branches. */
+  commits: 1,
+} as const
+
+/**
  * The branch of the workspace after Continue. It follows the create rule:
  * the GitHub login of the workspace owner, a city name, and four random
  * characters, also when another member pressed Continue.

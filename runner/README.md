@@ -43,9 +43,9 @@ These facts belong to this implementation, not to the protocol docs.
   takes deferred input. Without an author, the process keeps the sandbox values.
   A malformed author gives a local warning and keeps those values. The turn continues.
   A workspace gets this behaviour only from an org image built with this runner.
-- The [agent instructions guide](agent-instructions.md) gives the saved
-  instructions of each session, the sender line, and the branch line of
-  each message.
+- The [agent input guide](agent-input.md) describes the context folder,
+  the instructions that each session keeps with their branches, the sender
+  line and the branch line of each message, and attached files.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
   process then takes the waiting input on the same conversation and turn

@@ -83,6 +83,7 @@ export function useScreenControls(
     turnRuns,
     readOnly: context.readOnly,
     archive: context.archive,
+    archiving: context.running === 'archive',
     showChat,
   })
 }

@@ -6,6 +6,11 @@ import {
   type SectionKey,
 } from '../../fixtures/sections'
 import {
+  archivedWorkspaceList,
+  keptArchives,
+} from '../../fixtures/archivedWorkspaces'
+import {
+  checkoutAutocomplete,
   workspaceList,
   type ActivityStatus,
   type Workspace,
@@ -18,6 +23,11 @@ export type WorkspaceRow = {
   selected: boolean
   /** The screen that opening this workspace shows, when the mockups draw it. */
   to?: string
+  /**
+   * An archived workspace whose last day of Restore has not passed, so that
+   * its row offers Restore, except in a suspended org.
+   */
+  restoreOpen?: boolean
 }
 
 export type SidebarSection = {
@@ -146,28 +156,68 @@ export function suspendedSections(open?: Workspace): SidebarSection[] {
   }))
 }
 
+/** The sections of a list and the rows of its open Archived group. */
+export type ArchivedList = {
+  sections: SidebarSection[]
+  archived: WorkspaceRow[]
+}
+
+/**
+ * The sections without a workspace that Archive moved to the Archived
+ * group. In a suspended org the other rows show stopped.
+ */
+function sectionsWithout(key: string, suspended: boolean): SidebarSection[] {
+  return sectionKeys.map((sectionKey) => ({
+    section: sections[sectionKey],
+    rows: workspaceList
+      .filter((item) => item.section === sectionKey && item.key !== key)
+      .map((item) => (suspended ? suspendedRow(item) : rowFor(item))),
+  }))
+}
+
 /**
  * The sections after the open workspace was archived. It leaves its section
- * for the open Archived group. In a suspended org the other rows show
- * stopped.
+ * for the open Archived group. `restoreOpen` says whether its last day of
+ * Restore has not passed.
  */
 export function archivedSections(
   open: Workspace,
   suspended = false,
-): {
-  sections: SidebarSection[]
-  archived: WorkspaceRow[]
-} {
-  const list = sectionKeys.map((key) => ({
-    section: sections[key],
-    rows: workspaceList
-      .filter((item) => item.section === key && item.key !== open.key)
-      .map((item) => (suspended ? suspendedRow(item) : rowFor(item))),
-  }))
+  restoreOpen = true,
+): ArchivedList {
   const archived: WorkspaceRow = {
     workspace: open,
     status: 'archived',
     selected: true,
+    restoreOpen,
   }
-  return { sections: list, archived: [archived] }
+  return {
+    sections: sectionsWithout(open.key, suspended),
+    archived: [archived],
+  }
+}
+
+/**
+ * The list of Acme after the archive of Checkout address autocomplete, with
+ * the Archived group open and no workspace open. The last archived workspace
+ * comes first and opens its archived screen.
+ */
+export function archivedGroup(): ArchivedList {
+  const last: WorkspaceRow = {
+    workspace: checkoutAutocomplete,
+    status: 'archived',
+    selected: false,
+    to: paths.archive,
+    restoreOpen: true,
+  }
+  const older = archivedWorkspaceList.map((workspace): WorkspaceRow => ({
+    workspace,
+    status: 'archived',
+    selected: false,
+    restoreOpen: keptArchives.has(workspace.key),
+  }))
+  return {
+    sections: sectionsWithout(checkoutAutocomplete.key, false),
+    archived: [last, ...older],
+  }
 }

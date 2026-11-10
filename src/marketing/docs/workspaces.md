@@ -176,20 +176,65 @@ For another failure, follow the reason shown under the bar.
 
 ## Archive a workspace
 
-Only the workspace owner and org admins can archive it.
+In an active org, only the workspace owner and org admins can archive it.
 On a computer, point to the workspace's row in the org's workspace list.
 Select **Archive workspace** when its icon appears over the time.
+
+You can also open the row's menu:
+
+- On a computer, right-click the row.
+- With a keyboard, press **Shift+F10** while the row has focus.
+
+Then select **Archive**.
+
 After a merge, you can also select **Archive** in the pull request bar.
+The command palette offers **Archive workspace** for the workspace you have open.
+Open the palette with **⌘K** on Mac or **Ctrl+K** on other computers.
 
-Conductive checks for uncommitted files and unpushed commits.
-The check includes commits on earlier local branches kept by Continue.
-If it finds work, the question lists it.
-Cancel the archive to keep that work.
-Choose **Archive anyway** only when you want to discard it.
+Archive works while the computer is running, stopped, starting, or has an error.
+Archive does not check for uncommitted files or unpushed commits.
+It asks no confirmation question.
+Archive stops the computer and its agent work at once.
 
-Archive deletes the cloud computer and its files.
-Its chat stays read-only in **Archived**.
-Push important work to GitHub before you archive.
+Conductive keeps the computer and its files for 14 days after Archive.
+The chat stays read-only in **Archived**.
+File lists, Terminal, previews, and other workspace tools stay unavailable while it is archived.
+
+The notification after Archive names the workspace and offers **Restore**.
+Use that action if you archived the workspace by mistake.
+
+## Restore an archived workspace
+
+Every member of an active org can restore an archived workspace within 14 days of Archive.
+Restore is unavailable while the org is suspended or deleted.
+Restore is available only while Conductive keeps the workspace's cloud computer.
+
+You can use **Restore** from these places:
+
+- The notification after Archive.
+- The bar of the archived workspace.
+- Its row in the **Archived** group, when you point to it on a computer.
+
+The command palette offers **Restore workspace** for the archived workspace you have open.
+On a phone, open its row.
+Then select **Restore** in the workspace bar.
+The archived bar gives the Archive date and the last day of Restore.
+
+Restore brings back the workspace with its files and agent sessions.
+It returns to its section and its place in the list.
+The workspace comes back stopped.
+Restore does not start its computer.
+
+If the workspace is already open, select **Resume** to continue.
+Opening it later starts the computer as for another stopped workspace.
+Restore keeps the workspace's owner.
+If that owner is suspended, ask an org admin to reassign the workspace before resuming.
+
+Restore ends after 14 days, even while the computer's deletion is still in progress.
+The archived bar shows when Restore ended until deletion completes.
+It says the computer is deleted only after that deletion completes.
+The chat stays read-only after the computer and its files are deleted.
+Keep work in GitHub if you need it after the Restore window ends.
 
 - [Review files and changes](/docs/files-and-changes)
 - [Work with pull requests](/docs/pull-requests)

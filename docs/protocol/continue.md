@@ -64,9 +64,9 @@ says.
 
 ## Local work
 
-- Before the branch change, Continue checks the sandbox for local work, as
-  Archive does. The check counts the changed files, also untracked files,
-  and the commits that no remote branch holds, on every local branch.
+- Before the branch change, Continue checks the sandbox for local work.
+  The check counts the changed files, also untracked files, and the
+  commits that no remote branch holds, on every local branch.
 - When the check finds local work, a question lists it. The member can
   continue anyway or cancel.
 - Reason: the member sees the work before it leaves the current branch.

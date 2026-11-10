@@ -146,7 +146,7 @@ workspace token as a bearer token, and the current turn ID in the
 `X-Conductive-Turn-Id` header. The handler reads no request body and needs
 no content type. `Workspace.credentialSender` maps that turn to a sender,
 in the chat queue, as
-[The git credential sender](workspace-object.md#the-git-credential-sender)
+[The git credential sender](#the-git-credential-sender)
 says, with its tests.
 
 For the GitHub CLI outside an agent turn, the helper omits the turn header.
@@ -172,6 +172,13 @@ It also checks that both authorizations selected the same person.
 [`image-sources/credential.ts`](image-sources/credential.ts). It does this
 on the machine hostname only, after the Mac command route and before the
 runner socket, with the private error response wrapper.
+
+### The git credential sender
+
+[The git credential sender](git-credentials.md) gives how
+`Workspace.credentialSender` maps the turn ID of a git credential request
+to a sender: the grant of a create, the grant of a Continue fetch, and the
+running chat turn. It also names the tests of the route.
 
 ## Key code
 

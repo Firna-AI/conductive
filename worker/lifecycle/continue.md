@@ -56,8 +56,9 @@ reservation exists:
   [`workspace-integration.ts`](../chat/workspace-integration.ts) holds each
   turn in the chat queue, so no turn overlaps the branch change. Messages
   are still accepted, as normal chat rules allow.
-- `WorkspaceArchive` in [`archive.ts`](../features/archive.ts) refuses
-  Archive with 409 `workspace_continuing`.
+- `Workspace.archiveWorkspace` in [`workspace.ts`](../workspace.ts) refuses
+  Archive with 409 `workspace_continuing` while a Continue job is pending.
+  The check runs in the same serialized run as the Archive.
 - The lifecycle steps of the alarm run only to advance a queued start,
   such as the resume of Continue. A Resume of a member joins that start, or
   reads the running state.

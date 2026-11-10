@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
-import { FileDiff, GitBranchPlus, GitCommitHorizontal } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/workspace/ArchiveDialog.module.css'
+import { GitBranchPlus } from 'lucide-react'
 import { continueQuestion } from '../../../docs/mockups/src/components/workspace/barCopy'
+import { LocalWorkList } from '../../../docs/mockups/src/components/workspace/LocalWorkList'
 import type { BarActions } from '../../github/barActions'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
@@ -36,30 +36,7 @@ function Question(props: { actions: BarActions }) {
       title={continueQuestion.title}
     >
       <DialogText>{continueQuestion.intro(question.baseBranch)}</DialogText>
-      <ul aria-label="Work that is not pushed" className={styles.list}>
-        {uncommittedFiles.map((file) => (
-          <li className={styles.item} key={file}>
-            <FileDiff aria-hidden className={styles.icon} size={14} />
-            <span className={styles.path}>{file}</span>
-            <span className={styles.detail}>
-              {continueQuestion.notCommitted}
-            </span>
-          </li>
-        ))}
-        {unpushedCommits > 0 ? (
-          <li className={styles.item}>
-            <GitCommitHorizontal
-              aria-hidden
-              className={styles.icon}
-              size={14}
-            />
-            <span className={styles.path}>
-              {continueQuestion.commits(unpushedCommits)}
-            </span>
-            <span className={styles.detail}>{continueQuestion.notPushed}</span>
-          </li>
-        ) : null}
-      </ul>
+      <LocalWorkList commits={unpushedCommits} files={uncommittedFiles} />
       <DialogText>{continueQuestion.outcome(unpushedCommits)}</DialogText>
     </Dialog>
   )

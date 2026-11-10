@@ -22,6 +22,9 @@ export function barOf(
     turnRuns: isRunning(state),
     readOnly: viewer.readOnly,
     archivable: viewer.archivable,
+    // The mockups show the archived workspace after its Archive, with no
+    // busy state between.
+    archiving: false,
   })
 }
 

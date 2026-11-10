@@ -38,8 +38,13 @@ export interface BarScreen {
   turnRuns: boolean
   /** An archived workspace or a suspended org: only links show. */
   readOnly: boolean
-  /** Opens the Archive question, or null when the member may not archive. */
+  /**
+   * Archives the workspace at once, with no question, or null when the
+   * member may not archive.
+   */
   archive: (() => void) | null
+  /** The Archive of the workspace runs, so its button shows busy. */
+  archiving: boolean
   /**
    * Shows the chat when a prompt did not go out, so the reason shows: the
    * session whose composer names a missing login or a failed send, or the
@@ -55,7 +60,7 @@ export interface BarScreen {
  */
 export function useBarControls(screen: BarScreen): BarControls | null {
   const { github, actions, localWork, turnRuns, readOnly } = screen
-  const { archive, showChat } = screen
+  const { archive, archiving, showChat } = screen
   const shown = useSyncExternalStore(actions.subscribe, actions.getSnapshot)
   const { state } = github
   return useMemo(() => {
@@ -89,7 +94,18 @@ export function useBarControls(screen: BarScreen): BarControls | null {
       turnRuns,
       readOnly,
       archivable: archive !== null,
+      archiving,
     })
     return { view, onAction }
-  }, [state, shown, localWork, turnRuns, readOnly, archive, actions, showChat])
+  }, [
+    state,
+    shown,
+    localWork,
+    turnRuns,
+    readOnly,
+    archive,
+    archiving,
+    actions,
+    showChat,
+  ])
 }

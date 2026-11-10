@@ -1,5 +1,6 @@
 import type { Agent } from '../../src/shared/agents'
 import { productName } from '../../docs/mockups/src/brand'
+import { contextFolderPath } from './context-folder'
 
 export interface WorkspaceContext {
   cwd: string
@@ -27,6 +28,8 @@ export function agentInstructions(
     ...Object.entries(context.repositoryDirectories ?? {})
       .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
       .map(([name, directory]) => `${name}: ${JSON.stringify(directory)}`),
+    `Context folder: ${JSON.stringify(contextFolderPath(context.cwd))}`,
+    'Git ignores the context folder. Keep notes, screenshots, and files for other sessions of this workspace there. Attached files arrive in its attachments folder.',
     ...(context.workspaceBranch
       ? [`Workspace branch: ${JSON.stringify(context.workspaceBranch)}`]
       : []),

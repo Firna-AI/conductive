@@ -5,7 +5,8 @@ how the lifecycle code builds and refreshes the org image. The org image is
 the saved snapshot that every new sandbox of an org starts from. It also
 gives the provider retry policy that builds, refreshes, and workspace
 starts share. [Build sandboxes](#build-sandboxes) describes their starting
-image and the clone token of each copy.
+image and the clone token of each copy. [Key code](#key-code) names the
+files of the image code.
 
 ## Build sandboxes
 
@@ -114,7 +115,7 @@ transient. Other errors keep their existing handling.
   step still uses the first window.
 - The window does not limit a whole job or a healthy command.
 - The whole-job deadline takes precedence over a retry wait. The limits
-  are in [Workspaces and sandboxes](../../docs/protocol/workspace-life.md).
+  are in [Time limits of builds and starts](../../docs/protocol/workspace-life.md#time-limits-of-builds-and-starts).
 - Cancellation and terminal cleanup do not wait for a pending retry.
 - A source command start never retries. It fails closed, as the source
   loader says.
@@ -186,6 +187,7 @@ states the rule.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
   which starts changed settings after the first good build finishes cleanup.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
+- [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
 - [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
   replays a saved allocation request and saves the recovered sandbox ID.
   Failed image jobs retain their unresolved allocation phase until cleanup

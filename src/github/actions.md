@@ -51,8 +51,8 @@ knows:
   prompt lists them.
 - An archived workspace and a suspended org show only the links.
 - After the merge, every member sees Continue. Archive needs the Archive
-  of the screen. Continue waits while a turn runs in any session, open or
-  closed.
+  of the screen, which archives at once and asks no question. Continue
+  waits while a turn runs in any session, open or closed.
 
 `promptOf` in [barPrompts.ts](barPrompts.ts) fills `agentPrompt` of the
 mockups' `barCopy.ts` with the number, the target branch, the blocking

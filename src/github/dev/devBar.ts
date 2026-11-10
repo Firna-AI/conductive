@@ -108,6 +108,7 @@ export function useDevBar(props: {
     turnRuns,
     readOnly: false,
     archive: props.archive,
+    archiving: false,
     showChat: props.showChat,
   })
   return { controls, actions, chat: parts.chat }

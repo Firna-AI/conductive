@@ -81,11 +81,11 @@ Try again replaces the failed first computer without accepting the stored messag
 
 ## Access
 
-[Chat access](access.md) gives the gates that the Durable Object runs
-itself: the browser gate, the second check of each write in the queue, the
-grants of the open tabs, the runner token rule, the workspace version pin,
-the binding of the object, the login lookups and checks, and an org
-suspension.
+[Chat backend access](access.md) gives the gates that the Durable Object
+runs itself. It covers the browser gate and its second check in the
+queue, the grants of open tabs, the runner token checks, the workspace
+version pin, the binding of the object, the login lookups and checks, and
+an org suspension.
 
 ## History and event order
 
@@ -227,6 +227,8 @@ tests through the production Worker entry.
   version 2 command.
   [The agent runner](integration/runner/README.md#the-agent-runner) gives
   the rules of both versions.
+- `attachment-paths.ts`: the captured repository folder lookup and the
+  absolute attachment paths of each runner send.
 - `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
   send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the

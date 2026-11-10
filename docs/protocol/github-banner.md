@@ -16,9 +16,17 @@ number names a dated record, as
   repositories that the user wants to use.
 - After an install, or a change of an install, GitHub returns the user to
   `https://app.conductive.build/github/setup`.
-- From a browser, the return opens the screen where the install started:
-  Get started or Account. A return that names neither screen opens the app
-  as usual.
+- From a browser, the return opens the screen where the user started the
+  install or the change: Get started, Account, or the screen of a list with
+  Manage access, such as Create org or the Repositories tab of org
+  settings. A return without a known screen opens Home.
+- A browser starts each install or change at the app, which keeps the
+  screen in a cookie for up to 1 hour and then sends the browser to GitHub.
+  The cookie is HttpOnly, Secure, and SameSite=Lax. The return deletes it.
+- The return opens only a screen of the app origin. It never opens an API
+  route or another site.
+- A screen in `state` alone was rejected. Reason: GitHub drops `state` when
+  the user changes an install that exists.
 - The return needs no sign-in, and it trusts no value that GitHub adds.
   The app reads the installs with the user's own GitHub token.
 - Get started and Account read the installs again each time that the user
@@ -180,7 +188,7 @@ continues, and archives.
 - Every member sees Continue (decision 224), as [Continue](continue.md)
   says.
 - Only the workspace owner and the admins see Archive (decisions 16
-  and 42). Archive asks first, as
+  and 42). It archives at once and asks no question, as
   [Archive](workspace-life.md#archive) says.
 - While a turn runs in a session of the workspace, Continue is not
   available, and a message under the bar says that it waits for the agent.

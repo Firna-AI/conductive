@@ -71,7 +71,7 @@ it('presses only the Archive action once when the desktop Archive button is clic
   act(() => button.click())
 
   expect(actions.onAction.mock.calls).toEqual([
-    [{ kind: 'archive', disabled: false }],
+    [{ kind: 'archive', busy: false, disabled: false }],
   ])
   expect(actions.retry).not.toHaveBeenCalled()
   expect(actions.onOpenChecks).not.toHaveBeenCalled()

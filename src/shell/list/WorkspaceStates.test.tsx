@@ -68,6 +68,8 @@ describe('workspace states', () => {
             chat,
             toolEvents: new ToolEvents().subscribe,
             archive: null,
+            restore: null,
+            running: null,
             onReassigned: () => undefined,
           }}
         />,

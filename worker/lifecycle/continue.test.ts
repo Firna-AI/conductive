@@ -4,6 +4,7 @@ import { sessionPaths } from '../../src/shared/sessions'
 import { WORKSPACE_ID } from '../chat/harness.test-support'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { continueFixture } from './continue.test-support'
+import { continueJobKey, type ContinueJob } from './continue-types'
 import { readWorkspace } from './workspace-data'
 
 let harness: TestHarness
@@ -156,11 +157,30 @@ it('repairs publication after a committed transaction loses its reply without a 
     ({ event }) => event.type === 'workspace.continued',
   )
   expect(after).toHaveLength(1)
+  const saved = await f.storage.get<ContinueJob>(
+    continueJobKey(pending.continueId),
+  )
+  if (!saved?.outcome?.ok || saved.outcome.value.state !== 'continued')
+    throw new Error('Missing committed Continue reply.')
+  await f.storage.put(continueJobKey(pending.continueId), {
+    ...saved,
+    outcome: {
+      ok: true,
+      value: {
+        ...saved.outcome.value,
+        workspace: {
+          ...saved.outcome.value.workspace,
+          restoreUntil: undefined,
+        },
+      },
+    },
+  })
   const commands = f.boat.commands.length
   f.reconstruct()
   await f.finish()
   expect(await f.result(pending.continueId)).toMatchObject({
     state: 'continued',
+    workspace: { restoreUntil: null },
   })
   expect(
     (await f.history(session.id)).events.filter(

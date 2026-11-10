@@ -1,4 +1,4 @@
-import type { ArchiveCheckResponse } from '../../src/shared/workspaces'
+import type { LocalWork } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
 import { shellQuote } from './commands'
 
@@ -6,7 +6,7 @@ export function localWorkCommand(directory: string): string {
   return `set -eu\ncd ${shellQuote(directory)}\ngit status --porcelain=v1 -z --untracked-files=all\nprintf '\\0'\ngit rev-list --count HEAD --branches --not --remotes`
 }
 
-export function localWorkResult(output: string): ArchiveCheckResponse {
+export function localWorkResult(output: string): LocalWork {
   const separator = output.lastIndexOf('\0')
   const count = output.slice(separator + 1).trim()
   if (

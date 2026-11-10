@@ -70,6 +70,7 @@ function BarButton(props: {
     case 'archive':
       return (
         <ActionButton
+          busy={action.busy}
           disabled={action.disabled}
           icon={Archive}
           onPress={press}

@@ -18,7 +18,7 @@ the bar or the row and the Checks tab, as
 ```tsx
 const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe, delay })
 const actions = useBarActions({ orgId, workspaceId }, ports)
-const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly, archive, showChat })
+const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly, archive, archiving, showChat })
 
 // Desktop: the top of the right column, and the Checks tab.
 <PullRequestBar controls={controls} github={github} now={now} />
@@ -58,8 +58,10 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
 - `controls` gives the actions, the link, and the message of the state that
   shows, from the one action state of the screen, as
   [The actions of the bar](actions.md) says. The bar and the row draw only
-  what it gives. Archive shows when `archive` opens the app's Archive flow,
-  with its check for unpushed work. The bar itself archives nothing.
+  what it gives. After a merge, Archive shows only to the workspace owner
+  and the admins. `archive` runs the app's Archive, which archives at once
+  with one request, and `archiving` makes the button busy while it runs.
+  The bar itself archives nothing.
 - `checksHref` is the app address of the Checks tab, because tabs are links.
   `onOpenChecks` lets the app's router open the tab in place. A branch
   without a pull request opens the tab too, when the bar has an action or a

@@ -36,6 +36,8 @@ export const workspaceStateSchema = {
     'resize',
     'rightColumn',
     'overlay',
+    'archive',
+    'toast',
     'viewer',
     'lostUpdate',
     'tree',
@@ -55,9 +57,10 @@ export const workspaceStateSchema = {
      */
     name: { enum: ['title', 'untitled'] },
     /**
-     * The cloud computer. An archived workspace has none. `refused` is a
-     * stopped cloud computer whose start the app refuses, such as while the
-     * owner of the workspace is suspended.
+     * The cloud computer. `archived` is a cloud computer that Archive
+     * stopped, as `archive` says, and the workspace shows none of it.
+     * `refused` is a stopped cloud computer whose start the app refuses,
+     * such as while the owner of the workspace is suspended.
      */
     sandbox: {
       enum: ['ready', 'starting', 'stopped', 'error', 'refused', 'archived'],
@@ -168,10 +171,9 @@ export const workspaceStateSchema = {
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, the
-     * question of Archive, with work that is not pushed or with none, the
-     * tab menu of the first session, or the question of Continue with work
-     * that is not pushed.
+     * before a running session closes, the owner of the workspace, the tab
+     * menu of the first session, or the question of Continue with work that
+     * is not pushed.
      */
     overlay: {
       enum: [
@@ -179,12 +181,23 @@ export const workspaceStateSchema = {
         'history',
         'close-session',
         'reassign',
-        'archive-unpushed',
-        'archive-pushed',
         'tab-menu',
         'continue-unpushed',
       ],
     },
+    /**
+     * The cloud computer of an archived workspace: kept, until the app
+     * deletes it 14 days after the Archive, kept past the last day of
+     * Restore while its delete tries again, or deleted. Until that last day,
+     * every member of an org that is not suspended may restore the
+     * workspace.
+     */
+    archive: { enum: ['kept', 'ended', 'deleted'] },
+    /**
+     * A toast at the bottom of the screen: none, or the toast just after
+     * Archive, which names the workspace and offers Restore.
+     */
+    toast: { enum: ['none', 'archived'] },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -252,6 +265,8 @@ export const readyWorkspace: WorkspaceState = {
   resize: 'none',
   rightColumn: 'shown',
   overlay: 'none',
+  archive: 'kept',
+  toast: 'none',
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',

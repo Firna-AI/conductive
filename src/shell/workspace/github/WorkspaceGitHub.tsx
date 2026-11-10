@@ -92,7 +92,8 @@ function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
 /**
  * The pull request bar at the top of the right column, with its actions, or
  * the row under the header of a phone, which opens the Checks tab, where
- * the actions show at the top.
+ * the actions show at the top. After a merge, Archive archives the
+ * workspace at once, and its button shows busy while it runs.
  */
 export function PullRequestPart(props: { context: WorkspaceContext }) {
   const { context } = props

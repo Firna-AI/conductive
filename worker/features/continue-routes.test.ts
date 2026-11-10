@@ -115,7 +115,7 @@ it('resumes Continue through real routes, fences sends and Archive, expires reco
     })
     const archived = await f.request(
       workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
-      { method: 'POST', body: JSON.stringify({ discardUnpushedWork: true }) },
+      { method: 'POST', body: '{}' },
     )
     expect(archived.status).toBe(409)
     expect(await archived.json()).toMatchObject({

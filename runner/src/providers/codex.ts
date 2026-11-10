@@ -1,7 +1,10 @@
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
 import { TOOL_ENV } from '../../../tools/context'
 import { object, string } from '../parse'
-import { attachmentDescription } from './attachment-description'
+import {
+  attachmentDescription,
+  attachmentReadInstruction,
+} from './attachment-description'
 import { codexBinary } from './binaries'
 import { codexNotification } from './codex-events'
 import { readComputerServer } from './computer-mcp'
@@ -21,6 +24,19 @@ function input(command: ProviderInput, branches?: RunnerBranches | null) {
       text: providerMessage(command.message, command.branches, branches),
       text_elements: [],
     },
+    ...(command.attachments.length
+      ? [
+          {
+            type: 'text',
+            text:
+              attachmentReadInstruction +
+              (command.message.attachments.some((file) => file.kind === 'image')
+                ? ' Each image is also in this message.'
+                : ''),
+            text_elements: [],
+          },
+        ]
+      : []),
     ...command.attachments.flatMap((attachment) => {
       const metadata = command.message.attachments.find(
         (item) => item.id === attachment.attachmentId,
