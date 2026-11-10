@@ -49,10 +49,22 @@ two privacy rebuilds, its entry points, and its focused checks.
   the save. No answer brings a stored secret back.
 - The browser keeps only the panel widths (`panels.ts`). A browser that
   refuses its storage keeps them until the page closes.
-- The open of a workspace, the Archive check, and the settings reads of
-  the Cloud computer tab count a generation. An answer that arrives after
-  their screen closed or the user cancelled starts no stream, writes no
-  older state, opens no question, and schedules no request.
+- The open of a workspace and the settings reads of the Cloud computer
+  tab count a generation. An answer that arrives after their screen
+  closed or the user cancelled starts no stream, writes no older state,
+  and schedules no request.
+- Archive and Restore raise `updatedAt` of the workspace, also at the same
+  clock. So a record from the other side of an Archive or a Restore shows
+  only when its `updatedAt` is newer, whatever its source: a read, a
+  Resume reply, an event, a reply of Archive or Restore, or the list. A
+  record below the `updatedAt` of the newest Archive or Restore that shows
+  changes nothing, also on the same side. A reply of Archive or Restore
+  changes only its own fields. An Archive or a Restore while the first
+  read of an open waits makes that open resume nothing, because Restore
+  starts nothing.
+- A control that ends at a time, such as Restore until its last day, ends
+  at that time through `usePassedDeadlines` in `deadlines.ts`, with the
+  clock and the timers of `AppServices`, and with no other event.
 - A read mark counts no generation, because one request serves every
   visit of its kept model. An answer after a close still sets the
   confirmed number, which a later open uses. While the model stays closed,

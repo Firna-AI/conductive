@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { WorkspaceEvent } from '../shared/events'
 import {
+  WORKSPACE_RESTORE_MS,
   workspacePath,
   workspacePaths,
   type WorkspaceState,
@@ -114,56 +115,58 @@ describe('the order of the open workspace', () => {
     live(1, { type: 'workspace.updated', workspace: newer })
     const listed = { ...newer, name: 'The latest listed name' }
     org.putWorkspace(listed)
-    await workspace.archive.start()
-    await workspace.archive.confirm()
-    expect(valueOf(workspace.detail.get())?.workspace).toEqual({
-      ...newer,
+    // The Worker saved the newer record, so its Archive is newer still. The
+    // reply holds the name and the owner from before that record.
+    const lifecycle = {
       state: 'archived',
-      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+      archivedAt: FAKE_TIME + 2_000,
+      restoreUntil: FAKE_TIME + 2_000 + WORKSPACE_RESTORE_MS,
+      updatedAt: FAKE_TIME + 2_000,
+    } as const
+    server.json('POST', workspacePaths.archive(orgId, workspaceId), {
+      workspace: { ...starting.workspace, ...lifecycle },
+      start: null,
+      error: null,
     })
-    expect(org.workspace(workspaceId)).toEqual({
-      ...listed,
-      state: 'archived',
-      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
-    })
+    await workspace.archive.archive()
+    const shown = () => valueOf(workspace.detail.get())?.workspace
+    expect(shown()).toEqual({ ...newer, ...lifecycle })
+    expect(org.workspace(workspaceId)).toEqual({ ...listed, ...lifecycle })
     expect(state()).toBe('archived')
     held.release('POST', resumePath)
     await resuming
-    expect(state()).toBe('archived')
-    expect(valueOf(workspace.detail.get())?.workspace).toEqual({
-      ...newer,
-      state: 'archived',
-      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
-    })
-    expect(org.workspace(workspaceId)).toEqual({
-      ...listed,
-      state: 'archived',
-      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
-    })
+    expect(shown()).toEqual({ ...newer, ...lifecycle })
+    expect(org.workspace(workspaceId)).toEqual({ ...listed, ...lifecycle })
     live(2, { type: 'workspace.updated', workspace: starting.workspace })
-    expect(valueOf(workspace.detail.get())?.workspace).toEqual({
-      ...newer,
-      state: 'archived',
-      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
-    })
-    expect(org.workspace(workspaceId)).toEqual({
-      ...listed,
-      state: 'archived',
-      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
-    })
+    expect(shown()).toEqual({ ...newer, ...lifecycle })
+    expect(org.workspace(workspaceId)).toEqual({ ...listed, ...lifecycle })
     workspace.close()
   })
 
   test('shows a list Archive without an event and keeps it over a pending Resume', async () => {
     const { server, held, org, workspace, live, events, page } =
       await opened('error')
+    const before = valueOf(workspace.detail.get())?.workspace
+    if (!before) throw new Error('The workspace did not open.')
     server.json('POST', resumePath, { ...starting, eventNumber: 1 })
     const resuming = workspace.resume()
     await flushMicrotasks()
     org.putWorkspace(archived)
+    // The list gives the fields of the Archive. The detail keeps its own
+    // other fields, which its stream orders.
     const expected = {
       state: 'ready',
-      value: { workspace: archived, start: null, error: null },
+      value: {
+        workspace: {
+          ...before,
+          state: 'archived',
+          archivedAt: archived.archivedAt,
+          restoreUntil: archived.restoreUntil,
+          updatedAt: archived.updatedAt,
+        },
+        start: null,
+        error: null,
+      },
     }
     expect(workspace.detail.get()).toEqual(expected)
     held.release('POST', resumePath)

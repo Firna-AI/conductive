@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { flushMicrotasks } from '../../app/test-kit'
+import { workspaceViewPath } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { historySessions, tabSessions } from './archive-view'
 import { chatFor, shown } from './test-kit'
@@ -50,5 +52,41 @@ describe('the session history of an archived workspace', () => {
     expect(writes()).toEqual([])
     expect(snapshot().sessions).toEqual(before.sessions)
     expect(snapshot().history).toEqual(before.history)
+  })
+
+  it('ends the tabs of the browser at a Restore, shows an open session, and reads the saved view again', async () => {
+    const chat = chatFor({
+      workspaceState: 'archived',
+      conversation: 'history',
+    })
+    await chat.controller.start()
+    await chat.controller.reopen(closed)
+    const snapshot = () => chat.controller.getSnapshot()
+    const shownTabs = () => ({
+      tabs: tabSessions(snapshot()).map((session) => session.id),
+      active: snapshot().activeSessionId,
+      views: chat.requests(
+        'GET',
+        workspaceViewPath(FAKE_IDS.org, FAKE_IDS.workspace),
+      ).length,
+    })
+    const archived = shownTabs()
+    const workspace = snapshot().workspace
+    if (!workspace) throw new Error('The chat has no workspace.')
+    chat.emit({
+      type: 'workspace.updated',
+      workspace: {
+        ...workspace,
+        state: 'stopped',
+        archivedAt: null,
+        restoreUntil: null,
+        updatedAt: workspace.updatedAt + 1,
+      },
+    })
+    await flushMicrotasks()
+    expect({ archived, restored: shownTabs() }).toEqual({
+      archived: { tabs: [open, 'debounce', closed], active: closed, views: 1 },
+      restored: { tabs: [open, 'debounce'], active: open, views: 2 },
+    })
   })
 })

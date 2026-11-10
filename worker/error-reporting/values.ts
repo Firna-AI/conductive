@@ -2,6 +2,7 @@ import type { WorkerWarning } from '../warning-types'
 import type { ErrorSummary } from '../warning-values'
 import type { BuildPhase } from '../lifecycle/build-data'
 import type { WorkspaceStartJob } from '../lifecycle/start-types'
+import type { WorkspaceArchiveState } from '../lifecycle/archive-types'
 import { knownWorkerErrorCode } from './codes'
 
 const phases = {
@@ -24,7 +25,17 @@ const phases = {
   cleanup: true,
   'cleanup-build': true,
   done: true,
-} satisfies Record<BuildPhase | WorkspaceStartJob['phase'], true>
+  initializing: true,
+  resolve: true,
+  stop: true,
+  retained: true,
+  resume: true,
+  wait: true,
+  purge: true,
+} satisfies Record<
+  BuildPhase | WorkspaceStartJob['phase'] | WorkspaceArchiveState['phase'],
+  true
+>
 const enums: Readonly<Record<string, readonly string[]>> = {
   phase: Object.keys(phases),
   errorKind: ['provider', 'http', 'command', 'error', 'unknown'],
@@ -81,6 +92,7 @@ function warningValues(warning: WorkerWarning): Values {
       return { exitCode: warning.exitCode, timedOut: warning.timedOut }
     case 'workspace_start_failed':
     case 'image_build_failed':
+    case 'workspace_archive_failed':
       return { phase: warning.phase, ...summaryValues(warning.error) }
     case 'workspace_title_request_failed':
     case 'workspace_title_save_failed':

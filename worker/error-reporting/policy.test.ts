@@ -4,6 +4,7 @@ import { WarningId, errorSummary } from '../warning-values'
 import { CommandFailed } from '../warnings'
 import { cleanupBusy } from '../members/cleanup-lease'
 import { WorkspaceStartError } from '../lifecycle/workspace-start'
+import { warnArchiveFailure } from '../lifecycle/archive-failure'
 import { userCommandFailure } from './causes'
 import { captureUnexpectedWorkerFailure, captureWorkerWarning } from './policy'
 import {
@@ -79,4 +80,21 @@ it('reports typed safe warning values and keeps IDs, normal refusals, user scrip
   })
   expect(fixture.serialized()).not.toContain(id)
   expect(fixture.serialized()).not.toContain('private')
+  const archive = reportingFixture()
+  withWorkerErrorScope(archive.runtime, { component: 'workspace' }, () => {
+    const error = reportingError()
+    warnArchiveFailure({ workspaceId: id, phase: 'purge' }, error)
+    captureUnexpectedWorkerFailure('org_cleanup_failed', error)
+  })
+  await flushReporting(archive.runtime)
+  expect(archive.envelopes).toHaveLength(1)
+  expect(archive.envelopes[0][1][0][1]).toMatchObject({
+    tags: {
+      classification: 'workspace_archive_failed',
+      'warning.phase': 'purge',
+      'warning.errorKind': 'error',
+    },
+  })
+  expect(archive.serialized()).not.toContain(id)
+  expect(archive.serialized()).not.toContain('private')
 })

@@ -12,8 +12,9 @@ the members UI of the org settings.
 | `navigation` | The address bar: `browserNavigation(window)`, or `memoryNavigation` in tests   |
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
 
-The workspace screen draws the frame, the header, the start steps, the
-Archive question, and the states of the sandbox. The real chat fills the
+The workspace screen draws the frame, the header, the start steps, and the
+states of the sandbox, with Restore on the bar of an archived workspace
+until its last day. The real chat fills the
 centre by default. The `tabs`, `transcript`, and `composer` slots replace it
 with the shell's own chat column, as
 [The chat of the workspace](../shell/workspace/README.md#the-chat-of-the-workspace)
@@ -22,7 +23,8 @@ of `WorkspaceContext`, which gives the org, the workspace, the viewer, the
 sandbox state, whether the workspace is read-only, what a part shows while
 the sandbox does not run, the layout, the address after the workspace, the
 ordered event stream, the saved view of the kept chat, the events of the
-tools, and the Archive action. The feature clients send through the
+tools, the Archive and Restore actions, and the one of them that runs. The
+feature clients send through the
 services of the org, from `useOrgServices`, whose client and fetch mark the
 org on `org_suspended`. The shell gives
 its own `files`, `tools`, `pullRequest`, and `owner` parts, as

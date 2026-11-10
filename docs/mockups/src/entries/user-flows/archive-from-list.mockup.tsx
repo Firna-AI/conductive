@@ -3,7 +3,7 @@ import { defineUseCase } from '@mokly/mokly'
 export const archiveFromList = defineUseCase({
   title: 'Archive a workspace from the list',
   description:
-    'The user archives a finished workspace from its row, without opening it.',
+    'The user archives a finished workspace from its row, without opening it, and brings it back with Restore.',
   relatedDocs: [],
   steps: [
     {
@@ -20,15 +20,15 @@ export const archiveFromList = defineUseCase({
     },
     {
       screenPath: 'app/workspace-menu/archive',
-      title: 'Answer the question',
+      title: 'Archive at once',
       description:
-        'Archive checks the cloud computer, then lists the work that is not on GitHub. The user chooses Archive anyway.',
+        'Archive takes the workspace from its section to the Archived group, with no check and no question. A toast names it and offers Restore, and the list stays where it was.',
     },
     {
-      screenPath: 'app/workspace-menu/archive/archived',
-      title: 'The row moves',
+      screenPath: 'app/workspace-menu/archive/restored',
+      title: 'Restore',
       description:
-        'The workspace leaves its section for the Archived group, and the list stays where it was.',
+        'Restore in the toast puts the workspace back in its section, at its place, stopped.',
     },
   ],
 })

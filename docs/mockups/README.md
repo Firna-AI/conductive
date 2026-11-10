@@ -109,8 +109,8 @@ shows them in the New workspace dialog.
 
 [Orgs and members](orgs-and-logins.md#orgs-and-members) gives what the
 screens show of orgs and members: the roles, the logins of the sessions,
-the owners of the workspaces, the menu of a workspace row, Archive, and
-Delete org.
+the owners of the workspaces, the menu of a workspace row, Archive and
+Restore, and Delete org.
 
 No screen shows the value of an env var. Each env var of an org has a
 Secret mark: an admin switches it in the row, and a new variable starts

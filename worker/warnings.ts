@@ -24,6 +24,14 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'workspace_archive_failed':
+      return {
+        kind: warning.kind,
+        message: warningMessage(warning),
+        workspaceId: warning.workspaceId.text,
+        phase: warning.phase,
+        error: errorFields(warning.error),
+      }
     case 'workspace_title_request_failed':
       return {
         kind: warning.kind,

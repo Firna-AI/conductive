@@ -10,6 +10,7 @@ import {
 } from '../stream/workspace-stream'
 import type { ChatStore } from './chat-snapshot'
 import { applyEnvelopes } from './apply-events'
+import { isArchived, reloadView } from './archive-view'
 import { viewWriter, type ChatContext } from './context'
 import type { ChatSources } from './sources'
 
@@ -75,7 +76,9 @@ export function createChatContext(
       timers,
       deliver: (envelopes) => {
         if (!live()) return
+        const archived = isArchived(store.get())
         applyEnvelopes(context, envelopes)
+        if (archived && !isArchived(store.get())) void reloadView(context)
         if (changesWorkspace(envelopes)) void refreshDevices(context)
       },
     }),
