@@ -13,6 +13,9 @@ Native peers keep synchronous send faults inside the runtime.
 The shared scheduled-alarm helper runs only stored due alarms.
 Reset removes the native records, aborts the real object context, and evicts its fresh idle instance.
 Restart saves clock metadata and keeps committed native SQLite records through the same context reset.
+A call that runs while a reset or a restart aborts the object fails, as on the platform.
+So a test awaits each restart and reset before it calls the object again.
+A host call that gets a text reply from the local Workers runtime fails with the call name, the reply status, and that text.
 Instance identity checks prove that reconstruction creates a fresh object.
 Production request timeouts stay unchanged.
 

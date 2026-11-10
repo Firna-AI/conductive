@@ -97,6 +97,41 @@ export function readNativePacket(value: unknown): NativePacket {
   throw new Error('Invalid native test bridge packet.')
 }
 
+interface NativeReply {
+  ok: boolean
+  status: number
+  text(): Promise<string>
+}
+
+/**
+ * Reads the reply to one host call into a native object. The local Workers
+ * runtime sends an error as a text reply. So the error names the call, the
+ * status, and that text.
+ */
+export async function readNativeReply(
+  response: NativeReply,
+  call: NativeInvocation,
+): Promise<NativePacket> {
+  const text = await response.text()
+  const value = response.ok ? jsonValue(text) : undefined
+  if (value === undefined) {
+    const { id, path } = call.reference
+    throw new Error(
+      `The native call ${[id, ...path].join('.')} returned status ${response.status} with this text: ${text}`,
+    )
+  }
+  return readNativePacket(value)
+}
+
+function jsonValue(text: string): unknown {
+  try {
+    const value: unknown = JSON.parse(text)
+    return value
+  } catch {
+    return undefined
+  }
+}
+
 export async function* nativePackets(body: ReadableStream<Uint8Array>) {
   const reader = body.getReader()
   const decoder = new TextDecoder()
