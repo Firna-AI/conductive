@@ -11,9 +11,10 @@ key for itself, the command also gets a second default key that the
 browser lets through (decision 191). The palette key ⌘K becomes one of
 these shortcuts, and the palette rows show the key of each command. The
 change adds no new feature behind a key, such as a theme or a zen mode.
-Decisions 192 to 195 are open: the browser's own keys in a tab, the
-workspace row move, the keys of Windows and Linux, and a search on the
-tab.
+On 2026-11-10 the user answered the last open decisions: 192 = B, 193 =
+D, 194 = A, and 195 = E. With the answers the user also set a
+requirement: the shortcuts must not take the keys of the terminal or of
+the message field. "Where a key goes" applies it.
 
 On 2026-11-09 this plan's decisions moved from 180 to 184 to 190 to 194,
 because `main` uses 181, 182, 184, and 185 for the workspace titles of PR
@@ -231,6 +232,7 @@ Replaced ways:
   codebase, and it goes with B.
 - **Action:** ask the user, because each option trades Conductor's keys
   against the browser's keys, and no option is clearly best.
+- **Answer:** B, chosen by the user on 2026-11-10.
 
 ### Decision 193: Arrow keys of a focused workspace row or divider
 
@@ -291,6 +293,8 @@ Replaced ways:
   link, so ⌥⌘↓ then moves the workspace for the whole org.
 - **Action:** ask the user, because each option except C changes
   behaviour that is on `main`, and that needs the user's approval.
+- **Answer:** D, chosen by the user on 2026-11-10. This approves the
+  change of the row move and the divider keys on `main`.
 
 ### Decision 194: The keys of Windows and Linux
 
@@ -353,6 +357,8 @@ Replaced ways:
   Under B, Ctrl+Shift with Left or Right selects a word, so its arrow keys
   do not run from the message field.
 - **Action:** ask the user, because no key family is clearly best.
+- **Answer:** A, chosen by the user on 2026-11-10. Milestone 1 chooses the
+  keys of the clashes by hand.
 
 ### Decision 195: Finding one command on the Keyboard shortcuts tab
 
@@ -408,6 +414,7 @@ Replaced ways:
   which has no clear way to enter a key.
 - **Action:** ask the user, because A adds behaviour that no requirement
   covers.
+- **Answer:** E, chosen by the user on 2026-11-10.
 
 ## Design
 
@@ -527,6 +534,34 @@ installed app, and the browser's name. An unknown browser uses all three
 tables.
 
 Decision 193 sets what ⌥⌘↑ and ⌥⌘↓ do on a focused workspace row.
+The user chose D: the row move takes Alt with Up or Down and no other
+modifier, and the divider takes the arrows with no modifier or with
+Shift, through the matcher of the model. The list shows them as fixed.
+
+User requirement, 2026-11-10: "make sure we don't clobber things like the
+terminal or chat input". Agent calls of the same day apply it:
+
+- The terminal keeps every key that a program in it can read. On a Mac,
+  only keys with ⌘ go to the app from the terminal. On Windows and Linux,
+  the terminal keeps every key with Ctrl or Alt, so no shortcut runs
+  while it has the focus. Reason: shells read Alt keys too, such as Alt+B,
+  Alt+F, and Alt+1 for a count, and readline reads Alt+Shift with a
+  letter as Alt with that letter. So the Alt+Shift keys of decision 194
+  and Alt+1 to Alt+9 stay with the terminal. This replaces the rule above
+  that the terminal keeps only the keys with Ctrl.
+- A key that runs a command goes no further. The listener stops the
+  browser's own action, and it stops the press before an element of the
+  page hears it. Reason: the message field and the terminal act on keys
+  after the listener. For example, the message field deletes a line on
+  ⌘⌫ and formats text on ⌘U, and the terminal sends each key to the
+  shell. `KeyPress` gets a way to stop the press.
+- Each default key is checked against the keys that the text fields use
+  on each system, and against the keys that a shell reads. A default key
+  that is a text key on one system gets another key there. Milestone 1
+  records the check.
+- The recorder treats the text keys of the system as fixed keys, as the
+  Text group lists them.
+- The tab says once which keys the terminal keeps.
 
 
 ### The Keyboard shortcuts tab
@@ -536,6 +571,11 @@ Agent calls of Milestone 1, 2026-11-09:
 - The Mac app pages come first, because no open decision changes what the
   Mac app shows. The browser and phone pages wait for decisions 192 and
   194. Until then, only the Mac app shows the third Account tab.
+- Agent call, 2026-11-10: with decisions 192 and 194 answered, the
+  browser and phone pages get the tab too. Decision 195 E adds a search
+  field at the top of the tab in every host. It filters the rows by their
+  labels and their search words with the palette's matcher, and a search
+  without a match says so.
 - The copy of the tab: "Select a shortcut to change it." as the intro,
   "Add shortcut" on a row with no key, "Press the keys" in the recorder,
   "Hide Conductive always uses ⌘H." for a refused fixed key, "Model picker
@@ -640,6 +680,10 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
       Chrome and Firefox where a check needs a browser. Mark each key that
       no source confirms. Record the evidence under
       `.context/keyboard-shortcuts/`.
+  - [ ] Check each default key against the keys that the text fields use
+        on each system and the keys that a shell reads, from the user
+        requirement of 2026-11-10. Choose another key where a default
+        clashes.
 - [x] Draw the Keyboard shortcuts tab of the Account page in the Mac app,
       with its fixed menu keys, and its states: recording, a conflict with
       Replace, a changed row with Reset, and a failed save. No open
@@ -652,6 +696,10 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
       keys. Add the tab to the Account tabs of the browser pages. Draw the
       palette rows with their keys in a browser.
 - [ ] After decision 193: draw the keys of the row move and the divider.
+- [ ] Decision 195 E: draw the search field of the tab and a search
+      without a match, in the Mac app, in a browser, and on a phone.
+- [ ] Draw the line of the tab that says which keys the terminal keeps,
+      from the user requirement of 2026-11-10.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark.
   - [x] The Mac app pages: `mac-app/shortcuts`, its child pages, and
@@ -671,7 +719,11 @@ Depends on: 1
 
 - [ ] Write `docs/protocol/keyboard-shortcuts.md`: the commands, the
       fixed keys, where a key goes, the kept keys and the second keys
-      (decision 191), the tab (decision 190), and the storage scope.
+      (decision 191), the browser's own keys (decision 192), the row move
+      and the divider (decision 193), the keys of Windows and Linux
+      (decision 194), the tab and its search (decisions 190 and 195),
+      the keys that the terminal and the text fields keep (user
+      requirement of 2026-11-10), and the storage scope.
 - [ ] Update `docs/protocol/command-palette.md`: the palette key is a
       shortcut with ⌘K or Ctrl+K as its default, and the rows show the
       keys. Remove "Only the palette has a key" and the rejection of keys
@@ -695,14 +747,18 @@ Depends on: 2
       keymap of a person, the conflicts, and the decision for one key
       press.
 - [ ] Add the host to `AppServices`: the Mac app, an installed app, or a
-      browser tab with its browser. Add the physical key to `KeyPress`.
+      browser tab with its browser. Add the physical key to `KeyPress`,
+      and a way to stop the press before an element of the page hears it.
 - [ ] Node tests: the decision for a key press, the keymap with changes,
       the conflicts, and the kept keys. Name the break that each test
-      catches.
+      catches. Cover the keys that the terminal keeps on each keyboard,
+      and the text keys in a text field.
 
 ## Milestone 4: Storage on the Worker
 
-Depends on: 2
+Depends on: 2, 3. Agent call, 2026-11-10: the Worker checks each command
+and each key with the shared ids and key text of Milestone 3, so it waits
+for them.
 
 - [ ] Add the migration of the shortcut table, with a free prefix after
       the newest migration on `main`, and its line in
@@ -733,6 +789,9 @@ Depends on: 1, 3
       `aria-keyshortcuts`. Hide the hints in the phone layout.
 - [ ] Happy-dom tests: one key runs its command, a dialog keeps the key,
       the terminal keeps a Ctrl key, and a browser tab skips a kept key.
+      Also: the terminal keeps an Alt key on Windows and Linux, a key that
+      runs a command does not reach the message field or the terminal,
+      and a text key in the message field still edits the text.
 - [ ] Update `src/app/README.md`, `src/app/screens.md`, and the README of
       each changed area.
 
@@ -747,6 +806,8 @@ Depends on: 1, 4, 5
       as the tab menu key ⇧F10.
 - [ ] Add the recorder, Replace, Reset, Reset all, the kept-key line, and
       the save errors. Save through the account model.
+- [ ] Add the search field of decision 195 with the palette's matcher,
+      and the line of a search without a match.
 - [ ] Apply the person's changes to the keymap from the account reply.
 - [ ] Add the Keyboard shortcuts row to the palette's Settings tab.
 - [ ] Happy-dom tests: a recorded key saves and runs, Replace moves a key,
