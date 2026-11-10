@@ -202,7 +202,10 @@ Replaced ways:
 
 ### 2. Decide who may Restore an archived workspace
 
-Open. Added on 10 November 2026 from the options check.
+Added on 10 November 2026 from the options check.
+
+- **Chosen by the user on 10 November 2026:** B: "2 = B". Every member of
+  the org may Restore.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design, from the options check of this plan.
@@ -227,19 +230,38 @@ Open. Added on 10 November 2026 from the options check.
     workspace asks the owner or an admin. Effort: Small.
   - **B.** Every member of the org, as for a resume. A member can bring
     back a workspace that its owner archived on purpose. The owner can
-    archive it again. Effort: Small.
-- **Left out:** Only the member who archived. It needs a new record of who
-  archived, and an admin cannot undo a mistake of the owner. A keeps the
-  control of the owner without these costs.
+    archive it again. A member who restores by mistake cannot archive
+    again, because Archive stays with the owner and the admins. Effort:
+    Small.
+  - **C.** Added by the options check: as B, and the app records the member
+    of each Archive and each Restore. The archived bar names who archived,
+    and the restored workspace names who restored it, as decision 72 names
+    who stopped the agent. It needs two columns with a migration, a mockup
+    variant, and a protocol line. Effort: Medium.
+  - **D.** Added by the options check: a member who is not the owner or an
+    admin may restore only a workspace that an admin archived. It needs
+    the record of C, so that members can predict the rule. Effort: Medium.
+- **Left out:**
+  - Only the member who archived. A already holds every person who
+    archives, and this rule stops the owner after an admin archived.
+  - Added by the options check: only the owner, or only the admins. One of
+    the two people who may archive then cannot undo it from the toast.
+  - Added by the options check: the member who restores becomes the owner.
+    It breaks the rule that only an admin gives a workspace a new owner.
 - **Wider fix:** None. This item is a permission rule, not a class of
   defect.
 - **Previous examples:** Decision 42 chose the owner and the admins for
   Archive. Decision 30 lets only an admin restore a deleted org.
 - **Recommendation:** A. Restore undoes Archive, so the same people decide
   both, and the owner keeps control of their own workspace, as decision 42
-  wants.
+  wants. The options check on 10 November 2026 recommended B: Restore
+  deletes nothing, and it gives a member only the access that a resume gave
+  before the Archive. It named C for an owner who must see who brought back
+  their workspace. Its report is in
+  `.context/archive-with-restore/options-check-decision-2.md`.
 - **Action:** ask the user, because A adds a refusal at a new route, and
-  no requirement says who may Restore.
+  no requirement says who may Restore. The user answered on 10 November
+  2026.
 
 ## Design calls
 
@@ -276,8 +298,9 @@ Agent calls on 10 November 2026:
 - After Archive, a toast names the workspace and offers Restore. The
   archived bar of the workspace and its row in the Archived group offer
   Restore until the delete. The command palette offers Restore workspace
-  where it offers Archive workspace. Reason: Archive asks no question, so
-  the undo must be close at hand. The shared toast has an action button.
+  among the actions of an archived workspace. Reason: Archive asks no
+  question, so the undo must be close at hand. The shared toast has an
+  action button.
 - Each workspace reply gives `restoreUntil`: the time of the delete while
   the app keeps the cloud computer, or null. The Worker derives it from
   `archived_at` and the kept cloud computer, and stores no new column.
@@ -306,8 +329,9 @@ workspace after the delete. Remove the drawings of the Archive question.
         the toast and its Restore.
   - [ ] The Archived group open, with Restore on the hover of a row.
   - [ ] An archived workspace after the delete, with no Restore.
-- [ ] Show Restore only to the people that decision 2 names. This TODO
-      waits for the answer to decision 2.
+- [ ] Show Restore to every member of an org that is not suspended, as
+      decision 2 chose. Check that the archived workspace of the entry
+      `orgs/suspended/workspace` shows no Restore.
 - [ ] Draw Restore workspace among the actions of an archived workspace in
       the command palette entries.
 - [ ] Remove the Archive question: the overlays `archive-unpushed` and
@@ -340,12 +364,15 @@ requirements, before the code changes.
 - [ ] In "Stop and resume" of the same doc, state the restart of an
       archived cloud computer: only when Boat's 14 days end before the
       delete, with no secrets and no startup script.
-- [ ] Update `docs/protocol/orgs-and-members.md`: the people that
-      decision 2 names Restore, and a row of the Archived group offers
-      Restore until the delete.
+- [ ] Update `docs/protocol/orgs-and-members.md`: every member may
+      Restore, as decision 2 chose, and a row of the Archived group offers
+      Restore until the delete. Update the reason of decision 42 at line
+      154, because Archive now deletes the cloud computer only after 14
+      days.
 - [ ] Update `docs/protocol/github-banner.md` and
-      `docs/protocol/command-palette.md`: Archive asks no question, and the
-      palette offers Restore workspace.
+      `docs/protocol/command-palette.md`: Archive asks no question. The
+      palette offers Restore workspace to every member, while Archive
+      workspace stays with the owner and the admins.
 - [ ] Update the rows `archive` and `workspaces-page-and-restore` in
       `src/marketing/from-conductor/areas/workspaces-and-branches.ts`,
       under the claim rules of
@@ -383,8 +410,8 @@ check route stays until Milestone 5, because the app still calls it.
       comes later than 14 days after its last confirmed stop. That restart
       resumes with no secrets, runs no startup script, and stops.
 - [ ] Add `POST /api/orgs/:org/workspaces/:id/restore` and
-      `workspacePaths.restore`. It allows the people that decision 2 names,
-      in an active org. It refuses a workspace without a kept
+      `workspacePaths.restore`. It allows every member of an active org,
+      as decision 2 chose. It refuses a workspace without a kept
       cloud computer with 409 and a message that says why. It clears
       `archived_at`, sets the stopped state, publishes `workspace.updated`,
       and returns the workspace. A repeat returns the restored workspace.
@@ -403,8 +430,7 @@ check route stays until Milestone 5, because the app still calls it.
         gives the cloud computer a fresh token.
   - [ ] The alarm deletes the cloud computer after 14 days, and a Restore
         after the delete gets 409.
-  - [ ] Restore follows decision 2 for a member who is not the owner or
-        an admin.
+  - [ ] A member who is not the owner or an admin can Restore.
   - [ ] A restored workspace that stays closed gets its day-14 restart.
   - [ ] The restart of an archived cloud computer gets no secrets. A
         workspace that Archive stopped gets no restart.
@@ -426,16 +452,17 @@ Milestone 1 show.
       shows while it runs. A failure shows a toast that names it.
 - [ ] After Archive, show the toast with Restore.
 - [ ] Show Restore on the archived bar, in the row of the Archived group,
-      and in the palette, to the people that decision 2 names, until
-      `restoreUntil`. Without `restoreUntil`, show the bar of today.
+      and in the palette, to every member of an org that is not
+      suspended, until `restoreUntil`. Without `restoreUntil`, show the
+      bar of today.
 - [ ] Delete `src/shell/workspace/ArchiveDialog.tsx`, the check steps of
       `ArchiveModel`, `readArchiveCheck` in `src/app/api/read-workspaces.ts`,
       and `docs/mockups/src/components/workspace/ArchiveDialog.module.css`.
 - [ ] Update the dev routes in `src/app/dev/workspace-routes.ts` and the
       fake routes in `src/test-support/fake-workspace-routes.ts`.
 - [ ] Add tests: the workspace model archives with one request and
-      restores. The bar and the row show Restore only before `restoreUntil`
-      and only to the people that decision 2 names.
+      restores. The bar and the row show Restore to a member who is not
+      the owner or an admin, and only before `restoreUntil`.
 - [ ] Smoke-test with `npm run dev`: archive a stopped workspace, restore
       it from the toast, archive it again, and restore it from the Archived
       group. Save the screenshots under `.context/archive-with-restore/`.
