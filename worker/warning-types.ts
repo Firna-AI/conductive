@@ -5,6 +5,14 @@ import type { WorkspaceArchiveState } from './lifecycle/archive-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
 
 export const SIMPLE_WARNINGS = {
+  workspace_alarm_failed:
+    'Workspace alarm work failed. Its durable deadline will retry.',
+  routine_schedule_failed:
+    'A routine schedule could not run. The next scan will try again.',
+  routine_queued_start_failed:
+    'A queued routine run could not start. The next scan will try again.',
+  routine_background_start_failed:
+    'A pull request run could not start in the background.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   github_app_slug_invalid:
     'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',

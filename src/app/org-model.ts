@@ -6,6 +6,7 @@ import {
   type OrgSettings,
   type Repository,
 } from '../shared/org-settings'
+import { routinesPath, type RoutineRun } from '../shared/routines'
 import { sectionsPath, type Section } from '../shared/sections'
 import {
   workspacesPath,
@@ -14,6 +15,7 @@ import {
 } from '../shared/workspaces'
 import { items, record } from './api/parse'
 import { readSection } from './api/read-core'
+import { readRoutines, type ListedRoutine } from './api/read-routines'
 import { readWorkspaces } from './api/read-workspaces'
 import {
   readBuildResponse,
@@ -36,12 +38,14 @@ import {
   type OrgSuspension,
 } from './suspension'
 
-export type OrgPart = 'list' | 'repositories' | 'builds' | 'members'
+export type OrgPart =
+  'list' | 'repositories' | 'builds' | 'members' | 'routines'
 
 /**
  * How soon a shown part reads again. These are choices of the app, not
- * product limits: soon while a workspace or a build is active, and slowly
- * otherwise, so that changes from other tabs and people show.
+ * product limits: soon while a workspace, a routine run, or a build is
+ * active, and slowly otherwise, so that changes from other tabs and people
+ * show.
  */
 const activeWait = 5_000
 const idleWait = 30_000
@@ -62,6 +66,18 @@ export const workspacesWait: RefreshWait<readonly Workspace[]> = (
     ? activeWait
     : idleWait
 
+/** A run that waits for its workspace counts as active, as a start does. */
+const activeRunStates: ReadonlySet<RoutineRun['state']> = new Set([
+  'queued',
+  ...activeStates,
+])
+
+const routinesWait: RefreshWait<readonly ListedRoutine[]> = (routines) =>
+  routines?.some(
+    (routine) => routine.lastRun && activeRunStates.has(routine.lastRun.state),
+  )
+    ? activeWait
+    : idleWait
 const listWait: RefreshWait<ListData> = (list) =>
   workspacesWait(list?.workspaces)
 
@@ -95,8 +111,8 @@ function partOf<T, P>(
 
 /**
  * The data of one org: its list of sections and workspaces, its
- * repositories, the builds and settings of its cloud computer, and its
- * members. A part reads while a screen shows it, as
+ * repositories, the builds and settings of its cloud computer, its
+ * members, and its routines. A part reads while a screen shows it, as
  * `watch` says. The Cloud computer tab reads the settings itself. Each
  * request of the org that the API refuses with `org_suspended` goes to
  * `suspension`, so a page with an old org list learns of the suspension.
@@ -110,6 +126,7 @@ export class OrgModel {
     readonly repositories: Resource<readonly Repository[]>
     readonly builds: Resource<BuildsResponse>
     readonly members: Resource<MembersResponse>
+    readonly routines: Resource<readonly ListedRoutine[]>
     /**
      * The settings of the cloud computer. Every opening of the Cloud
      * computer tab shares them, so a save from a closed tab still shows.
@@ -121,6 +138,7 @@ export class OrgModel {
   readonly repositories: Readable<Loadable<readonly Repository[]>>
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
+  readonly routines: Readable<Loadable<readonly ListedRoutine[]>>
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
   readonly workspaceActions: WorkspaceActions
@@ -155,22 +173,27 @@ export class OrgModel {
       members: new Resource<MembersResponse>(() =>
         api.get(membersPath(orgId), readMembers),
       ),
+      routines: new Resource<readonly ListedRoutine[]>(() =>
+        api.get(routinesPath(orgId), readRoutines),
+      ),
       settings: new Resource<OrgSettings>(() =>
         api.get(orgSettingsPaths.settings(orgId), readSettings),
       ),
     }
-    const { list, repositories, builds, members } = this.resources
+    const { list, repositories, builds, members, routines } = this.resources
     this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
     this.workspaces = partOf(list.store, (value) => value.workspaces)
     this.repositories = repositories.store
     this.builds = builds.store
     this.members = members.store
+    this.routines = routines.store
     this.parts = {
       list: new Refresher(list, listWait, this.services),
       repositories: new Refresher(repositories, onEntry, this.services),
       builds: new Refresher(builds, buildsWait, this.services),
       members: new Refresher(members, onEntry, this.services),
+      routines: new Refresher(routines, routinesWait, this.services),
     }
   }
 

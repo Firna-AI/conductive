@@ -178,3 +178,16 @@ export async function senderLoginAccess(
     reuseAllowed: row?.reuseDenied !== 1,
   }
 }
+
+/** The transcript keeps the workspace name captured with its session. */
+export function transcriptWorkspaceName(
+  db: D1Database,
+  workspaceId: string,
+): Promise<{ name: string | null } | null> {
+  return db
+    .prepare(
+      `SELECT ${workspaceNameColumn('workspaces')} FROM workspaces WHERE id = ?`,
+    )
+    .bind(workspaceId)
+    .first<{ name: string | null }>()
+}

@@ -114,12 +114,19 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     note: 'Answers show Markdown, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
   },
   {
+    id: 'chat-links',
+    area: 'agents-and-chat',
+    name: 'Chat links',
+    status: 'planned',
+    note: 'Clickable web links and labelled Markdown links are planned for chat. Local server links will open the workspace preview.',
+    due: null,
+  },
+  {
     id: 'copy-session-transcripts',
     area: 'agents-and-chat',
     name: 'Copy session transcripts',
-    status: 'in-progress',
-    note: 'Copying concise or full session transcripts as Markdown from the session menu is in progress.',
-    due: null,
+    status: 'available',
+    note: 'Copy a session as Markdown with Copy concise transcript or Copy full transcript in its tab menu. Both also work in archived workspaces.',
   },
   {
     id: 'chat-summaries',

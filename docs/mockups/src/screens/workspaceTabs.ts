@@ -14,9 +14,12 @@ import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 
-/** A workspace that the create flow made has no edits and one session. */
+/**
+ * A workspace that the create flow or a routine run made has one session,
+ * and no edits of its own.
+ */
 export function isNew(state: WorkspaceState): boolean {
-  return state.workspace === 'saved-carts'
+  return state.workspace === 'saved-carts' || state.run !== undefined
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */

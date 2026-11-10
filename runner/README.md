@@ -278,6 +278,7 @@ tools that time the first agent start after a resume.
   one turn.
 - `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
   indexes and objects for Git comparisons. The real index stays unchanged.
+- `src/git.ts`: Git commands and merge-base selection, which prefers the fetched remote-tracking base over a local branch.
 - `src/git-paths.ts`: shared Git namespace states for paths and parents.
 - `src/measure.ts`, `src/compare.ts`, `scripts/`, and `service/`: the
   first-start measurement and its comparison, the build, the install

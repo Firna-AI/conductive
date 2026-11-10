@@ -1,0 +1,27 @@
+# Disk retention test observes an extra stop
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, during the second main merge into `calummoore/routines-feature-brainstorm`.
+- **Location:** `worker/lifecycle/disk-retention.test.ts:86`, `worker/lifecycle/backend-test-platform.ts`, `worker/lifecycle/backend-pump.test-support.ts`, and `worker/lifecycle/durable-alarm.ts`.
+- **Reason:** The test is unchanged from both merge parents, and the same file passes alone without changes.
+- **Source:** Implementation.
+- **Category:** Test.
+- **Terms:**
+  - **Disk retention:** The short restart that keeps the disk of a stopped workspace.
+  - **Native fixture:** The production workspace object in Miniflare, with controlled time and alarms.
+- **Background:** The test starts a workspace, exercises failed maintenance, and resumes it through a user action. It then advances one native alarm and checks that no stale maintenance stop follows that resume.
+- **Problem:** One targeted suite observed an extra stop after the resume. The test file is byte-identical to both parent versions. The disk-retention implementation is unchanged from the routines parent in this merge.
+- **Failure:** `worker/lifecycle/disk-retention.test.ts > keeps a stopped disk through startup and stop failures without a stale stop after user open` failed at line 86. The assertion reported `expected [ 'bx_1', 'bx_1', 'bx_1' ] to have a length of 2 but got 3`. The failing case took 2,642 ms. It did not reach the 15-second time limit.
+- **Run:** `npm run test -- worker/lifecycle worker/routines worker/files src/app src/shell/list` exited 1. It reported 530 passes, one failure, and no skips across 196 files.
+- **Rerun:** `npm run test -- worker/lifecycle/disk-retention.test.ts --reporter=verbose` exited 0. Both cases passed, with no skips. The marked case took 4,386 ms. No code, assertion, time limit, or runner setting changed between those runs.
+- **Suspected source:** Native alarm ordering or the controlled clock may advance a valid idle stop before the assertion. A stale maintenance stop remains another possible cause. Neither cause is proved.
+- **Impact if no action:** The gate can fail intermittently. A real stale stop could interrupt a resumed workspace, so the investigation must distinguish it from a fixture error.
+- **Root question:** How can the test prove that maintenance never stops a workspace after its user resumes it?
+- **Options:**
+  - **A.** Reproduce the extra stop in a separate branch. Capture its alarm owner, lifecycle state, and controlled time. Fix the proved cause while retaining every assertion. Effort: Medium.
+- **Left out:** A longer time limit cannot explain this assertion failure. Removing the assertion, adding a retry, or adding a sleep breaks the standing test rules. No other correction is justified before the cause is known.
+- **Wider fix:** None. The source is unknown, so no structural fix is justified yet.
+- **Previous examples:** `plans/follow-ups/tests-time-out-under-machine-load.md` records a time-limit failure in the other case of this file. `plans/follow-ups/org-native-test-under-load.md` records a native alarm transition failure. A shared cause is unproved.
+- **Recommendation:** A. The stop owner and clock state can distinguish a product defect from a fixture error.
+- **Action:** fix after merge, apply A, because one isolated run passes and this merge adds no change to the test or maintenance implementation.

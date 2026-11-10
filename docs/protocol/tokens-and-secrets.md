@@ -60,9 +60,10 @@ decision number names a decision of the change that adds the
 - Reason: an org image or a saved disk can hold an older runner. A filter
   of secret values in the runner was rejected, because an older runner
   does not have it.
-- The app keeps the real path of each file and the real name of the
-  default branch. Reads, diffs, and the file lists use them. The browser
-  gets these real values, so a secret value can show in the data that the
+- The app keeps the real path of each file, the real name of the default
+  branch of each repository, and the real name of the base branch of each
+  workspace. Reads, diffs, and the file lists use them. The browser gets
+  these real values, so a secret value can show in the data that the
   browser gets and sends (decision 145).
 - Screens show a separate label of each path and branch name. The label
   hides each exact copy of a secret value.

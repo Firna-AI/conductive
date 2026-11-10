@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, from the brainstorm of the branch `calummoore/desktop-app-website-mention`, which adds the Mac app downloads to the marketing site.
-- **Location:** `src/chat/device/command-text.ts:130`, and the line about the web app in `docs/mockups/mac-app.md:46`.
+- **Location:** `src/shared/transcript/command-words.ts:112`, and the line about the web app in `docs/mockups/mac-app.md:46`.
 - **Reason:** the user asked for the Mac app on the marketing site, and a link in the web app adds behaviour that needs its own mockup and decision.
 
 - **Terms:**

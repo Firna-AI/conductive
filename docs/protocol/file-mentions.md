@@ -21,7 +21,7 @@ at `app/file-mentions` and in the flow `user-flows/mention-a-file`.
 - The list opens above the message box, as wide as the box.
 - Each row shows the icon of its entry, the name, and the folder that
   holds it, in a muted colour. A row shows labels only, as
-  [Labels of paths](access-and-security.md#secrets-that-users-enter) says.
+  [Labels of paths](tokens-and-secrets.md#secrets-that-users-enter) says.
 - The rows come from the file tree that the workspace keeps, which All
   files shows. It holds the tracked files, the untracked files that Git
   does not ignore, and their folders, as

@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, expect, it } from 'vitest'
-import { agentKey } from '../../src/chat/state/item-keys'
-import { emptyTranscript, foldEvent } from '../../src/chat/state/transcript'
+import { agentKey } from '../../src/shared/transcript/item-keys'
+import {
+  emptyTranscript,
+  foldEvent,
+} from '../../src/shared/transcript/transcript'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { WORKSPACE_ID } from './harness.test-support'

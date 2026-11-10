@@ -1,9 +1,10 @@
+import type { ReactNode } from 'react'
 import { LinkedLine } from '../../../docs/mockups/src/components/chat/LinkedLine'
 import { nameLabel } from '../../shared/name-label'
 import type { Session } from '../../shared/sessions'
 import type { ChatSnapshot } from '../state/chat-snapshot'
 import controls from '../ui/controls.module.css'
-import type { TranscriptInsert } from './transcript-entries'
+import type { TranscriptInsert } from '../../shared/transcript/transcript-entries'
 
 /**
  * The first line of a linked session: it names the session that it started
@@ -15,7 +16,7 @@ export function sourceInsert(
   snapshot: ChatSnapshot,
   session: Session | null,
   onOpen: (sessionId: string) => void,
-): TranscriptInsert | null {
+): TranscriptInsert<ReactNode> | null {
   const sourceId = session?.sourceSessionId ?? null
   if (sourceId === null) return null
   const source = [...snapshot.sessions, ...snapshot.history].find(
@@ -25,7 +26,7 @@ export function sourceInsert(
   return {
     key: 'source',
     after: null,
-    node: (
+    content: (
       <LinkedLine
         link={
           <button

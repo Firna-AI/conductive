@@ -11,6 +11,10 @@ export interface DeviceConnection {
   userId: string
   sessionId: string
   lastSeen: number
+  nextCheckAt?: number
+  heartbeatAt?(): number | null
+  persist?(): Promise<void>
+  retire?(): Promise<void>
   send(message: WorkerToDevice): void
   close(code?: number, reason?: string): void
 }

@@ -1,7 +1,11 @@
 import type { StreamEnvelope } from '../api/read-workspace'
 import type { ChatContext } from './context'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
-import { asSessionEvent, sessionOf, type ChatEnvelope } from './session-log'
+import {
+  asSessionEvent,
+  sessionOf,
+  type ChatEnvelope,
+} from '../../shared/transcript/session-events'
 import { mergeSession } from './session-records'
 import { withWorkspaceChange } from './workspace-records'
 

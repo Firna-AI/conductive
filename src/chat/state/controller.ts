@@ -1,9 +1,11 @@
 import type { AgentChoice } from '../../shared/agents'
 import type { DeviceApprovalAction } from '../../shared/device'
+import type { TranscriptDetail } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
 import { answerCommand, refreshDevices } from '../device/device-actions'
 import { browserTimers } from '../stream/workspace-stream'
+import { copyTranscript, type CopyServices } from '../transcript-copy'
 import {
   ChatStore,
   initialSnapshot,
@@ -228,6 +230,24 @@ export class ChatController {
   readonly moveTab = (tab: WorkspaceTab, place: TabPlace): void => {
     if (!this.readOnly()) moveTab(this.context, tab, place)
   }
+  /**
+   * Copies the transcript of a session, as `copyTranscript` says. Call it
+   * during the press, so that its clipboard write starts at once. It only
+   * reads, so a read-only workspace copies too, and the shown tab, the
+   * view, and the loaded history stay as they are.
+   */
+  readonly copyTranscript = (
+    services: CopyServices,
+    sessionId: string,
+    detail: TranscriptDetail,
+  ): Promise<void> =>
+    copyTranscript({
+      services,
+      api: this.context.api,
+      target: this.target,
+      sessionId,
+      detail,
+    })
   readonly dismissNotice = () =>
     this.store.update((snapshot) => ({ ...snapshot, notice: null }))
 }

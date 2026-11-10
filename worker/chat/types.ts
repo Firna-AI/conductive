@@ -65,6 +65,7 @@ export interface StoredTurn {
   senderId: string
   messageIds: string[]
   state: 'queued' | 'running' | 'stopping' | 'finished' | 'stopped' | 'failed'
+  error?: { code: string; message: string }
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
   startedAt?: number
@@ -121,13 +122,13 @@ export interface RunnerPeer {
 }
 
 export interface ActiveRunner {
+  id: string
   peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
   protocolVersion: RunnerProtocolVersion | null
   loginKinds?: readonly RunnerLoginKind[]
   ready: boolean
-  delivered: Set<string>
 }
 
 export interface BrowserPeer {
@@ -189,8 +190,10 @@ export interface ChatDependencies {
   browserOpened(workspaceId: string, tabId: string): Promise<void>
   browserClosed(workspaceId: string, tabId: string): Promise<void>
   now: () => number
-  scheduleBrowserCheck: ConnectionScheduler
-  scheduleRunnerCheck: ConnectionScheduler
+  scheduleBrowserCheck?: ConnectionScheduler
+  browserAlarm?: (at: number | null) => Promise<void>
+  scheduleRunnerCheck?: ConnectionScheduler
+  runnerAlarm?: (at: number | null) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   readConnectionAccess: (

@@ -69,6 +69,33 @@ pull request bar, and the owner picker. A host can give its own parts, as
   options, so Sam waits again, and the codes and the pause are those of
   the options. An operator never waits, so a pause or a new code of the
   operator section cannot reach the waitlist screen.
+- Acme has the
+  routines of the mockups, each with the runs that its page in the mockups
+  lists. `?runs=failed` or `?runs=skipped` gives Review pull requests the
+  failed or the skipped runs of the mockups. A skipped run names the
+  account outside Acme by its login. The fake has no workspaces for these
+  runs, so the workspace list stays as the mockups draw it, and the link
+  of such a run opens no workspace. `?run=pull-request` or `?run=schedule`
+  makes `checkout-autocomplete` the workspace of one run, so its header
+  shows the line of that run, with the pull request of a pull request run.
+  The other orgs have no
+  routines, so their Routines page shows its empty state. A save of a
+  routine checks the prompt, each custom cron, and the time zone, as the
+  Worker does. A removal of a repository on the Repositories tab turns off
+  each routine in it, with the reason that the routine page shows, as the
+  Worker does. Its author filter knows the members of the org and a few
+  bots, such as `dependabot[bot]`. Any other login gets the refusal of a
+  login that names no GitHub account, with its trigger and its list.
+- Run now makes the workspace of the run as Create workspace does, in the
+  section of the routine, and the run takes the state of that workspace.
+  Without the agent login of the routine's model, as with `?login=none`,
+  the run fails with no workspace. A prompt that contains `fail` stands for
+  a cloud computer that did not start: the run fails and keeps its
+  workspace, in the error state with Try again, as the Worker does. The
+  recorded server has no chat for
+  a workspace that the fake made, so its chat does not load, and the line
+  of its routine does not show.
+  The dev backend records each run's agent and owner when Run now starts it.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -253,8 +280,14 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 
 ## Key code
 
+- `clipboard.ts`: `copyText`, the clipboard write for plain or pending text.
+  It starts a pending `ClipboardItem` write during the user press when the
+  browser supports it. The fallback waits for the text and calls `writeText`.
+  Both paths propagate failures. `AppServices.copy` accepts a string or a
+  promise of a string. Live services and development hosts use this owner.
+
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the file uploads, the
-models, the waitlist and its codes, and the workspace list. It also covers
-the event streams, the drag, the operator section, the command palette, the
-layers, the frames, and New workspace.
+models, the waitlist and its codes, the routines, and the workspace list.
+It also covers the event streams, the drag, the operator section, the
+command palette, the layers, the frames, and New workspace.

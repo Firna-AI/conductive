@@ -1,0 +1,61 @@
+/* The width follows the app frame, as the right column of a workspace does. */
+.column {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  width: clamp(272px, 30cqw, 360px);
+  min-height: 0;
+  border-left: 1px solid var(--ui-border);
+  background: var(--ui-panel);
+}
+
+/* The name of the column, as a label of the design. */
+.bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: var(--ui-bar-height);
+  margin: 0;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-border);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: var(--ui-label-case);
+  box-sizing: border-box;
+}
+
+.scroll {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emptyBox {
+  display: flex;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+}
+
+/* Show older runs, under the last run of the column. */
+.older {
+  display: flex;
+  padding: 10px 12px 16px;
+  border-top: 1px solid var(--ui-border);
+}
+
+/* On a phone the button takes the width of the list. */
+.olderPhone {
+  display: flex;
+  flex-direction: column;
+}

@@ -28,6 +28,7 @@ function tabBar(renaming: string | null): string {
       mobile={false}
       onCancelRename={() => {}}
       onClose={() => {}}
+      onCopy={() => {}}
       onMove={() => {}}
       onNew={() => {}}
       onRename={() => {}}

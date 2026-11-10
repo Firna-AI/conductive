@@ -85,7 +85,7 @@ const { controller, state } = useMacSettings(services.api)
 
 ## Tests
 
-Run `npm run test -- src/chat/device`. The tests drive the settings
+Run `npm run test -- src/chat/device src/shared/transcript/command-placement.test.ts`. The tests drive the settings
 controller on a fake Mac, and mount the parts with `mount` from
 `src/test-support/`.
 
@@ -101,9 +101,13 @@ menu of Allow over the region. Build the Mac app first, then run
 - `device-api.ts`: the routes, through the app's `ApiClient`, and the
   readers.
 - `device-actions.ts`: the reads and the answers of the chat.
-- `placement.ts`: the place of each card in its turn.
+- [`command-placement.ts`](../../shared/transcript/command-placement.ts):
+  the place of each card in its turn.
 - `PendingCommands.tsx`, `CommandChoices.tsx`, and `CommandCard.tsx`: the
   requests, their region, and the menu of Allow.
+- [`command-words.ts`](../../shared/transcript/command-words.ts): the pure
+  command names, state labels, notes, time limits, and output text.
+  `command-text.ts` adds the icons and colours of each state.
 - `LiteralText.tsx`: each command and folder, exactly.
 - `mac-settings.ts`: the reads and the changes of the Mac's settings for
   `ThisMacSection.tsx`, `SavedChoices.tsx`, and `AllowAllBar.tsx`.

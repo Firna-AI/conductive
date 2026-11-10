@@ -9,6 +9,12 @@ import type { WorkspaceStorage, WorkspaceTransaction } from './platform-storage'
 function alarmTransaction(storage: WorkspaceTransaction): AlarmTransaction {
   return {
     read: () => storage.list('number', { prefix: 'alarm:' }),
+    deferred: () =>
+      storage.get('number', 'security:regular-alarms-deferred-until'),
+    defer: (at) =>
+      at === null
+        ? storage.delete('security:regular-alarms-deferred-until')
+        : storage.put('number', 'security:regular-alarms-deferred-until', at),
     put: (key, at) => storage.put('number', key, at),
     delete: (key) => storage.delete(key),
     setAlarm: (at) => storage.setAlarm(at),
