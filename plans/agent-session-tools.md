@@ -17,9 +17,7 @@ The change does not cover these things: files in a tool message, a call
 that stops a turn or closes a session, a Copy link item for a session, and
 a session address that follows each change of the shown tab.
 
-Decisions 255 and 256 have new options from the options check, and
-decisions 258, 259, and 260 are open. Each milestone names the open
-decisions that it waits for.
+The user answered every decision of this plan on 10 November 2026.
 
 Contract owners:
 
@@ -77,7 +75,7 @@ the same day by the options check, which added F, G, and H.
 - **Related:** Decision 256 reads inside this reach. Decision 258 follows from the reach to stopped workspaces. Decision 260 follows from the reach to every live workspace.
 - **Recommendation:** F, from the options check. It keeps the reach that the user chose, and it stops chat reads by a copied token or between turns at Small cost. The first recommendation was B. G closes the path of a steered pull request run, at Large cost.
 - **Action:** ask the user, because F, G, and H change the choice of D, which the user made before these options existed.
-- **Chosen:** D, by Cal on 10 November 2026, in the words "1 = D". The answer on F, G, and H is open.
+- **Chosen:** D, by Cal on 10 November 2026, in the words "1 = D". After the options check, Cal kept D on the same day: "255 = D". So the reads need only the workspace token, and the protocol docs state the risks of D.
 
 ### 256. How an agent gets the result of delegated work
 
@@ -109,7 +107,7 @@ the same day by the options check, which added E, F, G, and H.
 - **Related:** Decision 255 sets which sessions a read reaches. Decision 260: E makes a loop of two agents likely.
 - **Recommendation:** G, from the options check, added to the chosen read. Decision 255 D gives sandbox code in every cloud computer the output of commands that ran on a member's Mac, and G keeps that output in its own workspace. The first recommendation was B.
 - **Action:** ask the user, because G changes the text of the chosen read, which the user asked to be the same as the copy.
-- **Chosen:** a `read_session` tool with the text of the transcript copy, by Cal on 10 November 2026: "add read_session (or similar, could be a different name) option, so it can read the chat - we already have ability to copy transcript so maybe we can use the same thing here". The copy offers both kinds, so the choice covers B and C. The answer on G is open.
+- **Chosen:** a `read_session` tool with the text of the transcript copy, by Cal on 10 November 2026: "add read_session (or similar, could be a different name) option, so it can read the chat - we already have ability to copy transcript so maybe we can use the same thing here". The copy offers both kinds, so the choice covers B and C. After the options check, Cal answered on the same day: "we should not be showing the output of a mac command in the prompt - have a workspace for that". That workspace is "Mac Command Output Privacy", at `https://app.conductor.build/workspace/fb0f5422-5c2b-42c0-9926-b5a2235a212a`. It removes the output of Mac commands from the chat history. So this plan does not apply G. `read_session` keeps the text of the copy, and it gets that change through the shared builder.
 
 ### 257. How a reader knows that an agent sent a message
 
@@ -169,6 +167,7 @@ added E and F.
 - **Related:** Decision 255 sets which workspaces a message reaches.
 - **Recommendation:** B. Any member can already start each workspace of the org with an open, and a delegated task then runs without a member.
 - **Action:** ask the user, because a start spends the daily starts that all orgs share, and no requirement lets anything other than a member's open start a workspace.
+- **Chosen:** B, by Cal on 10 November 2026: "258 = B".
 
 ### 259. What the link of the `Sent by:` line shows
 
@@ -198,6 +197,7 @@ same day by the options check, which added D and E.
 - **Related:** Decision 257: this decision sets the words of its `Sent by:` line.
 - **Recommendation:** B. It names the session at the lowest cost and keeps the existing chip, as the run text names its routine in plain text. C gives the title inside one widget.
 - **Action:** ask the user, because the options change what the chat shows, and the request names a widget but not its content.
+- **Chosen:** C, by Cal on 10 November 2026: "259 = C". So the line holds `Sent by:` and the session link, and the link shows as a session chip.
 
 ### 260. Agents that message each other without end
 
@@ -221,6 +221,7 @@ Added on 10 November 2026 from the options check of decisions 255 to 259.
 - **Related:** Decision 255 gives the reach. Option E of decision 256 makes a loop likely.
 - **Recommendation:** A. An agent does not answer without end unless an instruction tells it to, and decision 8 chose no limit for the same kind of risk. B is the guard to add when loops show up.
 - **Action:** ask the user, because B and C add a rejection, and A accepts a cost risk that no requirement covers.
+- **Chosen:** A, by Cal on 10 November 2026: "260 = A".
 
 ## Design
 
@@ -231,8 +232,8 @@ decision.
 
 | MCP tool | CLI command | Route on the machine host | Needs |
 | --- | --- | --- | --- |
-| `list_sessions` | `conductive sessions list` | `GET /v1/tools/workspaces/{workspaceId}/sessions` | workspace token, and an active turn with decision 255 F |
-| `read_session` | `conductive sessions read` | `GET /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/transcript` | workspace token, and an active turn with decision 255 F |
+| `list_sessions` | `conductive sessions list` | `GET /v1/tools/workspaces/{workspaceId}/sessions` | workspace token |
+| `read_session` | `conductive sessions read` | `GET /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/transcript` | workspace token |
 | `create_session` | `conductive sessions create` | `POST /v1/tools/workspaces/{workspaceId}/sessions` | active turn |
 | `send_message` | `conductive sessions send` | `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/messages` | active turn |
 
@@ -246,6 +247,8 @@ decision.
 - Agent call: `create_session` and `send_message` need an active turn.
   Reason: the create call needs one today, and the Worker takes the sender
   from the turn.
+- Decision 255 D: `list_sessions` and `read_session` need only the
+  workspace token, as the list calls of today do.
 - Agent call: the `conductive` CLI gets the same four commands as the MCP
   server. Reason: the protocol says that both tools give the same calls.
 - Agent call: both tools give the agent the error code and the message of
@@ -253,14 +256,15 @@ decision.
   refusals that an agent can act on, such as a closed session. Today
   `tools/client.ts` gives one general message for each error except HTTP
   401.
-- Decision 260: limits on agent messages. Open.
+- Decision 260 A: no limit on the sessions and messages that agents make.
+  The tool descriptions tell an agent not to answer a `Sent by:` message
+  only to confirm it.
 
 ### Reach and the sender
 
 - Decision 255 D: each call reaches every workspace of the org of the
   calling workspace, and nothing outside it. The Worker reads the target
-  workspace from its own records, and only within that org. The options
-  F, G, and H are open.
+  workspace from its own records, and only within that org.
 - Agent call: a read reaches an archived workspace, as the copy route
   does. A create or a send refuses an archived workspace with the existing
   `workspace_archived` error. Reason: an archived chat is read-only.
@@ -299,9 +303,13 @@ decision.
   that took it. Reason: these rules apply to every message today.
 - Agent call: an empty `create_session` starts no cloud computer. Reason:
   an empty session carries no work.
-- Decision 258: what a message to a workspace that does not run does.
-  Open. With option B, the reply comes at once, and the message waits in
-  the workspace for the start. Reason: `create_workspace` waits for its
+- Decision 258 B: a message from `send_message`, or a first message from
+  `create_session`, starts its workspace in the same cases as an open: a
+  stopped workspace, and a workspace whose later start failed. It uses the
+  same checks as an open. A failed first start keeps waiting for Try
+  again.
+- Agent call: the reply comes at once, and the message waits in the
+  workspace for the start. Reason: `create_workspace` waits for its
   creation, but a start can take minutes and the message is already safe.
 
 ### The `Sent by:` line
@@ -310,16 +318,18 @@ decision.
   `Sent by:` line at the end of the text of each message from
   `send_message`, of each first message from `create_session`, and of each
   first message from `create_workspace`.
-- Decision 259: the words of the line, and what its link shows. Open.
+- Decision 259 C: the line is `Sent by:` and the link of the sending
+  session. The link shows as a session chip.
 - Agent call: the text before the line stays exact. Reason: the agent and
   the session title read the text that the agent wrote.
 - Agent call: the title request of a new workspace reads only the text
   before the line. Reason: the title model must name the task, not the
   sender. This is a fix of decision 257 D, from the options check.
-- Agent call: the repeat check of a request ID compares only the text
-  before the line. Reason: a rename of the sending session between two
-  tries must not refuse the second try. This is a fix of decision 257 D,
-  from the options check.
+- Agent call: the repeat check of a request ID stays as it is. Reason:
+  with decision 259 C, the line holds only the session link, so a repeat
+  from the same turn makes the same text. The options check proposed a fix
+  for the title in the line of option 259 B, which the user did not
+  choose.
 - Agent call: the agent instructions say what the workspace tools can do
   and what a `Sent by:` line means. Reason: today they name only the
   create, list, and Mac calls.
@@ -327,7 +337,9 @@ decision.
 ### Reads
 
 - Decision 256: `read_session` returns the Markdown of the copy items, from
-  the same builder. Option G is open.
+  the same builder. The workspace "Mac Command Output Privacy" removes the
+  output of Mac commands from the chat history, and `read_session` gets
+  that change through the builder.
 - Agent call: `read_session` gives the concise transcript by default, and
   the full transcript on request. Reason: the concise text is smaller, and
   the copy offers both.
@@ -359,7 +371,16 @@ decision.
 - Agent call: the tool replies give the link of each session that they
   name, as the workspace replies give workspace links. Reason: an agent can
   then point to a session that it started.
-- Decision 259: what the chip of a session link shows. Open.
+- Decision 259 C: a session link shows as a session chip. The chip gives
+  the state mark and the label of its workspace, and the title of the
+  session. For a session of another workspace, the app reads the sessions
+  of that workspace when the chat loads, so that title does not change
+  live.
+- Agent call: the app reads the sessions of each linked workspace once for
+  each load of a chat, with the session route that the app already has.
+  Reason: one read serves every link to that workspace.
+- Agent call: a link to an unknown session shows the chip of its
+  workspace. Reason: the link still opens that workspace.
 
 ### Images
 
@@ -373,23 +394,25 @@ decision.
 
 Tags: mockup
 
-Depends on: none. The drawing of the link waits for decision 259.
+Depends on: none
 
-Draw the `Sent by:` line of a tool message, the link of a session, and the
-open of a session link, on desktop and on a phone.
+Draw the `Sent by:` line of a tool message, the session chip of decision
+259 C, and the open of a session link, on desktop and on a phone.
 
 - [ ] Read the `mockups` and `product-ui` skills and
       `docs/mockups/README.md`.
+- [ ] In `app/workspace-links`, draw the session chip: the state mark and
+      the label of its workspace, and the title of the session. Draw a
+      session without a title, which shows "Untitled", and a long title.
 - [ ] In `app/workspace-links`, add a message from an agent tool whose text
-      ends with the `---` line and the `Sent by:` line, as decision 259
-      chooses. Draw it in a session of the same workspace and of another
+      ends with the `---` line and the `Sent by:` line with a session chip.
+      Draw it for a session of the same workspace and of another
       workspace, on desktop and on a phone.
-- [ ] In `app/workspace-links`, add a session link in an agent answer and a
+- [ ] In `app/workspace-links`, add a session chip in an agent answer and a
       pasted session link in the message field.
-- [ ] In `user-flows`, add "open a session link": a press on the link of a
-      `Sent by:` line opens the workspace of that session and shows the
-      session. Include a closed session, which opens the workspace page.
-- [ ] Draw the mark of a waiting message only when decision 258 chooses F.
+- [ ] In `user-flows`, add "open a session link": a press on a session chip
+      opens the workspace of that session and shows the session. Include a
+      closed session, which opens the workspace page.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`.
 - [ ] Update the design and the TODOs of this plan for each problem that the
@@ -397,39 +420,42 @@ open of a session link, on desktop and on a phone.
 
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1. Waits for decisions 255, 256, 258, 259, and 260.
+Depends on: 1
 
 State the requirements and the decisions of the four calls, the reads, the
 `Sent by:` line, and session links. Read the `documentation` skill first.
 
 - [ ] Update `docs/protocol/agent-tools.md`: the four calls, their reach
-      and the active turn rule (decision 255), the sender, the inputs and
+      (decision 255), the token and turn rules, the sender, the inputs and
       defaults, the refusals, the replies with session links, the
-      `Sent by:` line (decisions 257 and 259), work for a workspace that
-      does not run (decision 258), and limits (decision 260). Remove the
-      line that leaves out chat reads and messages.
+      `Sent by:` line (decisions 257 and 259), the start of a workspace
+      that does not run (decision 258), and no limit (decision 260). Remove
+      the line that leaves out chat reads and messages.
 - [ ] Update `docs/protocol/session-transcripts.md`: the machine route gives
       the transcript to the workspace token (decision 256), with the size
-      limit, the start line, and the rule of option G when it is chosen.
+      limit and the start line.
 - [ ] Update `docs/protocol/tokens-and-secrets.md`: the calls that the
       workspace token allows.
 - [ ] Update `docs/protocol/isolation.md` with the risks of decision 255.
-      Any process with the token can read every chat of the org, unless
-      option F holds. While a turn of its workspace runs, it can start
-      sessions and turns in every live workspace, on the logins of their
-      starters.
+      Any process with the token can read every chat of the org at any
+      time. A copy of the token keeps that read after its copier leaves the
+      org. While a turn of its workspace runs, such a process can also
+      start sessions and turns in every live workspace, on the logins of
+      their starters.
 - [ ] Add the reach of decision 255 to the open risks of
       `docs/protocol/routines.md`: a steered pull request run can read
-      chats and start turns in other workspaces, unless option G holds.
+      every chat of the org and start turns in every live workspace.
 - [ ] Update `docs/protocol/agent-instructions.md`: the instructions name
       the four calls and say what a `Sent by:` line means.
 - [ ] Update `docs/protocol/workspace-links.md` and
       `docs/protocol/agents-and-sessions.md`: the session address, what it
-      opens, and its chip (decision 259).
+      opens, and its session chip (decision 259 C).
 - [ ] Update `docs/protocol/messages-and-attachments.md`: a message from an
       agent tool follows the message rules and ends with the `Sent by:`
       line.
-- [ ] Update `docs/protocol/workspace-life.md` as decision 258 chooses.
+- [ ] Update `docs/protocol/workspace-life.md`: a tool message starts a
+      workspace that does not run, in the same cases as an open (decision
+      258 B).
 - [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
       Update each sentence that restates a changed fact.
 - [ ] Read each guide under `src/marketing/docs/` in full, with
@@ -453,13 +479,12 @@ Add the list and the read of sessions to the Worker. Read the
       `src/shared/agent-tools.ts`. Add one helper for the session address
       that the Worker and the app share.
 - [ ] Let `worker/tools/handler.ts` accept the two GET routes. Check that
-      the target workspace belongs to the org of the caller, that the org
-      is active, and the turn rule of decision 255.
+      the target workspace belongs to the org of the caller and that the
+      org is active.
 - [ ] Add a read method to the workspace Durable Object for the session
       list and the transcript. Reuse the builder of
       `worker/chat/session-transcript.ts` with a machine access in place
-      of the browser access. Apply option G of decision 256 when it is
-      chosen.
+      of the browser access.
 - [ ] Return the newest part of a long transcript within the size limit,
       with its line range and the start line. Set the limit from the
       documented tool result limits of both agents.
@@ -473,10 +498,10 @@ Add the list and the read of sessions to the Worker. Read the
 
 ## Milestone 4: Session writes for agents
 
-Depends on: 3. Waits for decisions 258, 259, and 260.
+Depends on: 3
 
 Add the create and the send of sessions to the Worker, with the calling
-turn, the `Sent by:` line, and the rules of decisions 258 and 260.
+turn, the `Sent by:` line, and the start of decision 258 B.
 
 - [ ] Let `callingToolTurn` return the session of the turn.
 - [ ] Let `worker/tools/handler.ts` accept the two POST routes. Check the
@@ -488,17 +513,17 @@ turn, the `Sent by:` line, and the rules of decisions 258 and 260.
 - [ ] Apply the defaults and the request IDs of the design.
 - [ ] Add the `Sent by:` line to each message of the two calls and to the
       first message of `create_workspace`, as decisions 257 and 259 say.
-- [ ] Let the title request in `worker/chat/workspace-titles.ts` and the
-      repeat check in `worker/chat/messages.ts` read only the text before
-      the line.
-- [ ] Apply decision 258 to a workspace that does not run, and decision 260.
+- [ ] Let the title request in `worker/chat/workspace-titles.ts` read only
+      the text before the line.
+- [ ] Start a workspace that does not run, as decision 258 B says, with the
+      checks of an open. An empty `create_session` starts nothing.
 - [ ] Add tests beside the code: the sender is the sender of the calling
       turn, a message that the starter's login refuses opens a linked
       session, a closed session refuses, an archived workspace refuses, a
       workspace of another org refuses, a message joins a running turn, the
       text of the `Sent by:` line, the first message of `create_workspace`,
-      the title request, a repeat after a rename, and a workspace that does
-      not run.
+      the title request, a stopped workspace starts, and a failed first
+      start keeps waiting.
 - [ ] Update `worker/tools/README.md`.
 
 ## Milestone 5: CLI, MCP commands, and agent instructions
@@ -515,8 +540,9 @@ Give both workspace tools the four calls, and tell the agents about them.
 - [ ] Give the agent the error code and the message of each Worker refusal
       in `tools/client.ts`, for every call.
 - [ ] Write the tool descriptions: what a session link holds, the default
-      workspace, the active turn rule, and that a workspace link in an
-      answer shows as a chip.
+      workspace, the active turn rule, and that a workspace or session link
+      in an answer shows as a chip. Tell an agent not to answer a
+      `Sent by:` message only to confirm it (decision 260 A).
 - [ ] Update the workspace tools line of `runner/src/instructions.ts` and its
       tests: the four calls, and what a `Sent by:` line means.
 - [ ] Add CLI and MCP tests in `worker/tools/` against the handler.
@@ -530,16 +556,18 @@ Tags: ui
 
 Depends on: 1, 2, 3
 
-Open a session from its address, and show its link as decision 259
-chooses.
+Open a session from its address, and show each session link as the
+session chip of decision 259 C.
 
 - [ ] Read the `product-ui` and `typescript` skills.
 - [ ] Parse the session address in `src/app/router.ts`. Show that session
       in the workspace, then replace the address with the workspace
       address. A closed or unknown session opens the workspace page.
-- [ ] Show the link of a session in messages, answers, and the message
-      field, as decision 259 chooses and the mockups draw.
-- [ ] Add tests beside the code for the address and the link.
+- [ ] Show each session link as a session chip in messages, answers, and
+      the message field, as the mockups draw. Read the sessions of each
+      linked workspace once for each load of the chat. A link to an unknown
+      session shows the chip of its workspace.
+- [ ] Add tests beside the code for the address and the session chip.
 - [ ] Update `src/app/README.md`, `src/chat/README.md`, and
       `src/shell/workspace/README.md` where they describe the changed code.
 
