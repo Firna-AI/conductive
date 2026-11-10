@@ -11,8 +11,8 @@ inbox through Resend. The team can reply to the primary verified email of
 the person's GitHub account.
 
 The user chose this approach in a brainstorm on 10 November 2026, with
-decisions 270, 271, and 272. The user answered decisions 274 and 276 on the
-same day. Decisions 273 and 275 are open. The change does not cover these:
+decisions 270, 271, and 272. The user answered decisions 273 to 276 on the
+same day. The change does not cover these:
 
 - A log of the recent errors of the app. The user chose it for a follow-up
   item, in decision 271.
@@ -151,7 +151,7 @@ Added on 9 November 2026 by the brainstorm of this change.
 
 ### 273. Choose whether the Terms cover feedback
 
-Added on 10 November 2026 while this plan was written. Open.
+Added on 10 November 2026 while this plan was written.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -203,6 +203,8 @@ Added on 10 November 2026 while this plan was written. Open.
   the old Terms for up to 7 days. The line near Send covers that gap.
 - **Action:** ask the user, because the option changes the legal terms of
   the service, and no requirement covers feedback.
+- **Chosen:** B, by the user on 10 November 2026. So the Terms get one
+  paragraph and a new revision, and the dialog gets no line near Send.
 
 ### 274. Choose how the team opens screenshots safely
 
@@ -277,7 +279,7 @@ Added on 10 November 2026 from the options check.
 
 ### 275. Choose where and how long the team keeps feedback
 
-Added on 10 November 2026 from the options check. Open.
+Added on 10 November 2026 from the options check.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -338,6 +340,7 @@ Added on 10 November 2026 from the options check. Open.
 - **Action:** ask the user, because the keep rule and the naming of the
   host are legal choices of the operator. A and B also need the host of
   the team inbox.
+- **Chosen:** C, by the user on 10 November 2026.
 
 ### 276. Choose how often one person can send feedback
 
@@ -420,7 +423,7 @@ Added on 10 November 2026 from the options check.
 ## Design
 
 Each line below is my design call of 10 November 2026, with its reason. A
-line that waits for an open decision names it.
+line that applies a decision of the user names that decision.
 
 ### The palette row
 
@@ -450,8 +453,7 @@ line that waits for an open decision names it.
 - It uses the dialog of the app: a dialog on desktop and a sheet on a
   phone.
 - It has a message box, Add screenshots, a line that names the context, a
-  reply line, Cancel, and Send feedback. Decision 273 can add a line near
-  Send.
+  reply line, Cancel, and Send feedback.
 - The message box takes the focus. It follows
   [the send key](../docs/protocol/create-a-workspace.md#the-send-key) of
   every composer. Reason: one key rule in every composer.
@@ -558,20 +560,26 @@ line that waits for an open decision names it.
 ### The legal pages and the docs
 
 - The Privacy page names the feedback data, its route through Resend to
-  the team inbox, and the reply address. Decision 275 gives the host and
-  the time. The page also gets a new effective date.
-- The row of `FEEDBACK_EMAIL` in `docs/deployment.md` says that the team
-  inbox must match what the Privacy page says about its host.
+  the team inbox, and the reply address. It also gets a new effective
+  date.
+- The page says that the team keeps each feedback email while it helps to
+  improve Conductive, and deletes it when it stops helping or when the
+  sender asks. It names the host of the team inbox by its kind, "the email
+  provider of the operator", as decision 275 chose. So a move of the team
+  inbox to another host needs no change of the page.
 - The Privacy page gets a sentence on how Resend sends data out of the UK.
   Reason: the page names Resend as a recipient, but its section on
   transfers does not name it, and feedback adds free text and screenshots.
-- Decision 273 gives the Terms text.
+- The Terms get one paragraph in "Your work": the operator can use
+  feedback to improve Conductive, with no duty to the sender. A new Terms
+  revision applies it at the next sign-in of each person, as decision 273
+  chose.
 - The architecture doc names Resend under "External services", with the
   invitation, approval, and feedback emails.
 - The protocol doc `docs/protocol/command-palette.md` has 259 lines, above
   the length target. Its sections Actions and Settings move to a new page
   in the same change.
-- The row "Help and feedback" of the Conductor Cloud comparison page
+- The row "Help and feedback" of the Conductor comparison page
   becomes Available in the last implementation milestone. Its note names
   the palette row. Reason: the claim rule of Available holds when the pull
   request merges, if the team inbox is set by then.
@@ -587,8 +595,7 @@ Depends on: none
 
 Draw the palette row, the Feedback dialog with its states, and the user
 flow, for desktop and for a phone. Read the `mockups` and `product-ui`
-skills first. The line that decision 273 can add near Send waits for its
-answer.
+skills first.
 
 - [ ] Add the Help group with Send feedback to the Actions tab of
       `app/command-palette/actions`, and a search for "feedback" to
@@ -627,21 +634,22 @@ the dialog, the routes, and the email. Delegate the legal pages to the
       Help group, the Send feedback row, and its three exceptions there.
 - [ ] Add the body limit of the feedback route to
       [Request bodies](../docs/protocol/access-and-security.md#request-bodies).
-- [ ] Add `FEEDBACK_EMAIL` to the secrets of `docs/deployment.md`. Say
-      that the team inbox must match what the Privacy page says about its
-      host.
+- [ ] Add `FEEDBACK_EMAIL` to the secrets of `docs/deployment.md`.
 - [ ] Add Resend to "External services" in
       `docs/architecture/components.md`. Add the new protocol docs to the
       list in `docs/architecture.md`.
 - [ ] Read both legal pages in full. Update each sentence that the
       feedback facts change: the uses of data, the recipients, the
-      retention, the GitHub emails, and the effective date. The host and
-      the time wait for decision 275.
+      keep rule and the host of decision 275, the GitHub emails, and the
+      effective date.
 - [ ] Add how Resend transfers data out of the UK to "Transfers to other
       countries", from the published terms of Resend. Name the source in
       the commit.
-- [ ] Apply decision 273 to the Terms page and `TERMS_VERSION`. This TODO
-      waits for the answer.
+- [ ] Add the feedback paragraph of decision 273 to "Your work" of the
+      Terms page, and set a new `TERMS_VERSION`.
+- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+      sentence that the changed facts restate, such as the actions of the
+      palette.
 - [ ] Update `plans/follow-ups/privacy-invitation-email-data.md`: remove
       the parts that `origin/main` and this change complete.
 - [ ] Check each relative link of the changed Markdown files.
