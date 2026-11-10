@@ -105,8 +105,10 @@ The mockups `app/feedback`, its child pages, and
   and the frames of an animation. A JPEG keeps its orientation in a new
   small EXIF segment. The parser of each format, such as `png-metadata.ts`,
   holds the rules of that format.
-- An unreadable or broken image gets the notice of another type. The
-  notices belong to the last pick, paste, or drop, and a send clears them.
+- An unreadable or broken image gets the notice of another type. A new
+  pick, paste, or drop clears the notices that show. A queued file can
+  report a refusal later, including a file from an earlier addition.
+  Each notice names its file. A send clears the notices.
 - A paste adds files only when the clipboard holds files and no plain
   text, through `pastedFiles` in `../shell/feedback/screenshot-input.ts`.
   While the dialog shows, `useScreenshotDrop` takes a drop anywhere on the

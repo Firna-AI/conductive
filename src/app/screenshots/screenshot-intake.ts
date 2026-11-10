@@ -25,7 +25,7 @@ export interface RefusedScreenshot {
 export interface IntakeState {
   /** The files that wait or that the intake reads now. Send waits for them. */
   readonly pending: number
-  /** The files of the last pick, paste, or drop that the dialog did not add. */
+  /** Visible refusals. A new addition clears them; a pending file can report later. */
   readonly refused: readonly RefusedScreenshot[]
 }
 
@@ -80,7 +80,8 @@ export class ScreenshotIntake {
 
   /**
    * Takes the files of one pick, paste, or drop, after those that wait.
-   * Their refusals replace those of the last pick, paste, or drop.
+   * Clears visible refusals. A queued file can report a refusal later,
+   * including a file from an earlier pick, paste, or drop.
    */
   add(files: readonly File[]): Promise<void> {
     if (files.length === 0) return this.queue

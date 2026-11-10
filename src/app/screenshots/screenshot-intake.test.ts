@@ -24,6 +24,35 @@ function file(content: BlobPart, name: string): File {
 
 describe('the screenshot intake of the Feedback dialog', () => {
   test('takes the files of picks that overlap one at a time, in their order, so the limit takes the screenshot that reaches 7,000,000 bytes and refuses the next one', async () => {
+    const overlap = await openFeedback()
+    const invalid = overlap.intake.add([file('%PDF-1.7', 'earlier.pdf')])
+    const valid = overlap.intake.add([file(redPixelPng(), 'later.png')])
+    await Promise.all([invalid, valid])
+    expect({
+      state: overlap.intake.state.get(),
+      names: overlap.model.state
+        .get()
+        .draft.screenshots.map(({ name }) => name),
+    }).toEqual({
+      state: {
+        pending: 0,
+        refused: [{ name: 'earlier.pdf', reason: 'other-type' }],
+      },
+      names: ['later.png'],
+    })
+    const next = overlap.intake.add([file(redPixelPng(), 'next.png')])
+    expect(overlap.intake.state.get()).toEqual({ pending: 1, refused: [] })
+    await next
+    expect({
+      state: overlap.intake.state.get(),
+      names: overlap.model.state
+        .get()
+        .draft.screenshots.map(({ name }) => name),
+    }).toEqual({
+      state: { pending: 0, refused: [] },
+      names: ['later.png', 'next.png'],
+    })
+
     const { model, intake } = await openFeedback()
     const first = intake.add([file(pngOfSize(4_000_000), 'first.png')])
     const second = intake.add([

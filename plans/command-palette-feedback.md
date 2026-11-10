@@ -544,8 +544,11 @@ line that applies a decision of the user names that decision.
   - A file whose structure breaks, or that the browser cannot read, gets
     the notice of another type. Reason: its metadata cannot be found with
     certainty, so it cannot go without it.
-  - The notices of refused files belong to the last pick, paste, or drop.
-    The next one replaces them, and a send clears them.
+  - A pick, paste, or drop clears visible refusal notices. A queued file
+    reports its refusal when processing finishes, including a file from an
+    earlier addition. A send clears the notices. This revised call of
+    10 November 2026 follows review finding 1, option D. Reason: every
+    refused file must get its notice, as the protocol requires.
   - The file picker offers the four image types. The first bytes still
     decide.
   - The dialog stays open when the address changes, such as after Back in
@@ -903,6 +906,10 @@ Evidence and README notes: `.context/command-palette-feedback/reports/m5.md`.
 
 Depends on: every other milestone
 
+- [x] Apply option D of review finding 1. Correct the four narrower notice
+      descriptions and add the overlapping late-refusal case to the
+      existing intake test. Keep the protocol and runtime behavior.
+
 - [x] Align the existing consent tests with the combined Terms revision.
       Keep every consent and identity assertion. Use the current revision
       for callback-injection input and expected stored acceptance, so a
@@ -929,7 +936,8 @@ Evidence of the merge of `origin/main` with the routines and release 0.6.0:
 - [x] Search `origin/main` for decisions 270 to 276. No collision was
       found. On a collision,
       renumber the decisions of this plan and their citations.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch. Implementation
+      commit `4a3795a5` is pushed. Review fixes use follow-up commits.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
