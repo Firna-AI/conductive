@@ -27,6 +27,7 @@ export function agentLoginPath(agent: Agent): string {
 export type SaveAgentLoginRequest =
   | { agent: 'claude'; kind: 'token' | 'api-key'; secret: string }
   | { agent: 'codex'; kind: 'api-key'; secret: string }
+  | { agent: Agent; kind: 'endpoint'; endpoint: string; secret: string }
 
 export type AgentLoginStatus =
   | { agent: Agent; connected: false }
@@ -41,6 +42,14 @@ export type AgentLoginStatus =
       agent: 'codex'
       connected: true
       kind: 'api-key'
+      noReuse: boolean
+      updatedAt: Timestamp
+    }
+  | {
+      agent: Agent
+      connected: true
+      kind: 'endpoint'
+      host: string
       noReuse: boolean
       updatedAt: Timestamp
     }

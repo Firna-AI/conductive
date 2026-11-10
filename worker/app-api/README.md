@@ -45,8 +45,16 @@ View writes cannot change this branch.
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- An own endpoint save uses `readEndpointAddress` from
+  [`endpoint-address.ts`](../../src/shared/endpoint-address.ts). It encrypts
+  one JSON value with the trimmed endpoint and the whitespace-free key,
+  under the same context. Only the endpoint origin stays in plain text.
+  Save, account, and preference replies give only the host, kind, share
+  setting, and last secret-save time. They never give the full address.
+  A saved own endpoint is connected in the account metadata, but chat
+  marks it unavailable until the gateway supports forwarding to it.
 - A new login or a change of kind sets `noReuse` to true for a Claude
-  subscription token and false for an API key. Replacing a secret of the
+  subscription token and false for an API key or an own endpoint. Replacing a secret of the
   same kind keeps its preference. A `PATCH` changes only that login's
   preference for the signed-in account. It needs no secret and keeps `updatedAt` as the
   last secret-save time. It returns the current metadata, including a
@@ -143,6 +151,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   `boot-account.test-support.ts` holds the account helpers of that test.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
+- `agent-endpoint-login.test.ts` checks both agents, encrypted addresses
+  and keys, safe account metadata, the address rule, and share defaults.
 - `agent-login-reuse.test.ts` checks the login-kind defaults, the private
   preference update, and unchanged secret data and timestamps.
 - `feature-github-install.test.ts` checks the install link of the GitHub

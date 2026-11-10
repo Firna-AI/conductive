@@ -62,6 +62,7 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   that step on. With `github-app` or `org`, the user has no org until
  *   Create org runs. In each first run, no agent login is connected.
  * - `login=none`: no agent login is connected.
+ * - `login=endpoint`: both agents have a shared own endpoint login.
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.
@@ -101,6 +102,7 @@ export interface DevOptions {
   /** The first step of Get started that is not done, or `null`. */
   firstRun: GetStartedStep | null
   noAgentLogin: boolean
+  endpointLogins: boolean
   deleted: boolean
   suspended: boolean
   operator: boolean
@@ -153,6 +155,7 @@ export function readDevOptions(search: string): DevOptions {
     // A person who waits has a new account, unless the options say otherwise.
     firstRun: firstRun ?? (waiting === null ? null : 'github-app'),
     noAgentLogin: params.get('login') === 'none',
+    endpointLogins: params.get('login') === 'endpoint',
     deleted: params.get('deleted') === '1',
     suspended: params.get('suspended') === '1',
     operator,

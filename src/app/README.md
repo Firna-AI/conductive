@@ -18,7 +18,7 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
+  `?login=none`, `?login=endpoint`, `?deleted=1`, `?suspended=1`, `?operator=1`,
   `?waiting=1`, `?paused=1`, or
   `?paths=masked`. `dev/options.ts` lists them. `dev/attachment-routes.ts`
   keeps the uploaded files of both composers. With `?upload=wait` each
@@ -268,3 +268,9 @@ open first. It covers the dev fake, the API client, the file uploads, the
 models, the waitlist and its codes, the routines, and the workspace list.
 It also covers the event streams, the drag, the operator section, the
 command palette, the layers, the frames, and New workspace.
+
+- `api/read-core.ts`: `readLogin` reads own endpoint metadata for both agents.
+  It keeps only the host, kind, share choice, and update time.
+  `dev/account-routes.ts` uses the shared address rule and keeps no secret
+  or full endpoint in development state. `?login=endpoint` seeds shared
+  own endpoint logins for both agents.

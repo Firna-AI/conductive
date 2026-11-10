@@ -1,5 +1,5 @@
 import type { Agent } from '../../src/shared/agents'
-import { agentLoginKind } from '../chat/login-kind'
+import { nativeAgentLoginKind } from '../chat/login-kind'
 import {
   agentLoginContext,
   loginSecret,
@@ -24,7 +24,7 @@ export async function gatewayLogin(
   )
     .bind(workspaceId, starterId, agent)
     .first<{ kind: string; ciphertext: string; updatedAt: number }>()
-  const kind = row ? agentLoginKind(agent, row.kind) : null
+  const kind = row ? nativeAgentLoginKind(agent, row.kind) : null
   return row && kind ? { ...row, loginKind: kind, userId: starterId } : null
 }
 

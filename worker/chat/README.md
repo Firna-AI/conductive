@@ -177,6 +177,14 @@ tests through the production Worker entry.
 [Chat backend key code](key-code.md) names the files, the types, and the
 functions of the chat backend that a reader opens first.
 
+`queries.ts` reads native-provider logins for runner dispatch.
+It refuses own endpoint logins before decryption.
+`login-availability.ts` also marks those logins as unavailable in session records.
+Runner delivery uses the existing unavailable-login failure for both protocol versions.
+`login-kind.ts` keeps saved login kinds separate from native-provider kinds that can run.
+The reuse check excludes own endpoints, so a private endpoint stays unavailable too.
+`endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for both agents and runner protocols.
+
 ## Related docs
 
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)

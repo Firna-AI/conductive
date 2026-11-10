@@ -4,15 +4,19 @@ import {
   agentLoginPath,
   type AccountResponse,
   type SaveAgentLoginResponse,
-  type SaveAgentLoginRequest,
   type SetNewWorkspaceViewResponse,
 } from '../../src/shared/account'
 import { MODELS_PATH } from '../../src/shared/agents'
+import {
+  ENDPOINT_ADDRESS_ERROR,
+  readEndpointAddress,
+} from '../../src/shared/endpoint-address'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { choice, invalidInput } from '../chat/inputs'
+import { agentLoginKind } from '../chat/login-kind'
 import { loginSecret, agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
-import { requiredString } from '../http'
+import { HttpError, requiredString } from '../http'
 import { isOperator } from '../operator/access'
 import { encrypt } from '../security/crypto'
 import type { RequestContext } from '../security/gate'
@@ -89,14 +93,26 @@ export async function bootRoute(
   }
   if (request.method !== 'PUT') return null
   const body = context.body
-  if (
-    body?.agent !== agent ||
-    (body.kind !== 'api-key' && !(agent === 'claude' && body.kind === 'token'))
-  )
+  if (body?.agent !== agent || typeof body.kind !== 'string')
     return invalidInput()
-  const kind: SaveAgentLoginRequest['kind'] = body.kind
+  const loginKind = agentLoginKind(agent, body.kind)
+  if (!loginKind) return invalidInput()
+  const address =
+    loginKind.kind === 'endpoint' ? readEndpointAddress(body.endpoint) : null
+  const publicLogin = (() => {
+    if (loginKind.kind !== 'endpoint') return loginKind
+    if (!address) {
+      throw new HttpError(
+        400,
+        ENDPOINT_ADDRESS_ERROR.code,
+        ENDPOINT_ADDRESS_ERROR.message,
+      )
+    }
+    return { ...loginKind, host: address.host }
+  })()
+  const secret = loginSecret(requiredString(body.secret))
   const ciphertext = await encrypt(
-    loginSecret(requiredString(body.secret)),
+    address ? JSON.stringify({ endpoint: address.endpoint, secret }) : secret,
     agentLoginContext(userId, agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
@@ -105,13 +121,16 @@ export async function bootRoute(
     env.DB,
     userId,
     agent,
-    kind,
+    loginKind.kind,
     ciphertext,
     updatedAt,
+    address?.origin ?? null,
   )
-  const login: SaveAgentLoginResponse =
-    agent === 'claude'
-      ? { agent, connected: true, kind, noReuse, updatedAt }
-      : { agent, connected: true, kind: 'api-key', noReuse, updatedAt }
+  const login: SaveAgentLoginResponse = {
+    ...publicLogin,
+    connected: true,
+    noReuse,
+    updatedAt,
+  }
   return Response.json(login)
 }

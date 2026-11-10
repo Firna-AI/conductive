@@ -80,6 +80,12 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 `attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
 The browser posts one raw file as `application/octet-stream` with its known byte length.
 
+`endpoint-address.ts` owns `readEndpointAddress`, the shared endpoint
+address rule for saves and forms. It returns the trimmed address, its
+origin, and its host, or null for a refused address.
+`ENDPOINT_ADDRESS_ERROR` gives the one refusal code and field message.
+Own endpoint logins stay outside the runner protocol.
+
 `files.ts` defines full trees, tree updates, and branch changes.
 A full tree contains real paths relative to the repository root.
 Real `path`, `previousPath`, and `baseBranch` fields stay unchanged for
@@ -227,7 +233,7 @@ The git credential payload is not defined yet.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
-- [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
+- [Account contracts](account.ts) include the repository list available before an org exists. An own endpoint write carries its endpoint and key. Its status carries only the host and normal login metadata. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.

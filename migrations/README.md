@@ -167,6 +167,12 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611101600_agent_login_endpoints.sql` rebuilds `agent_logins` to accept
+the `endpoint` kind for both agents. The nullable `endpoint_origin` column
+is required only for that kind. The full endpoint stays inside the
+ciphertext with its key. The rebuild copies every existing row, ciphertext,
+timestamp, and `no_reuse` choice. Existing rows get a null origin.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

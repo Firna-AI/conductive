@@ -25,8 +25,9 @@ state the rules.
   one D1 query for all requested sessions, with a JSON input. It returns a
   map of `SessionLoginMetadata` by session ID: the `loginAvailable` and the
   `loginShared` of each session. A session with no valid login gets false
-  for both. `agentLoginKind` in `login-kind.ts` gives this path and
-  `readAgentLogin` one rule for a valid login kind.
+  for both. `nativeAgentLoginKind` in `login-kind.ts` gives this path and
+  `readAgentLogin` one rule for a usable native-provider login kind.
+  Own endpoint logins are unavailable until the gateway can forward them.
 - `SessionLogins.refresh` runs the metadata path for the starters of all open
   sessions when a new tab subscribes. An archived workspace skips it.
 - `SessionLogins.metadata` runs the metadata path for one session before

@@ -7,7 +7,7 @@ import {
 } from '../data/workspace-token-access'
 import { decrypt, hash } from '../security/crypto'
 import { workspaceNameColumn } from '../data/workspace-name'
-import { agentLoginKind } from './login-kind'
+import { nativeAgentLoginKind } from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
 const workspaceColumns = `w.id, w.org_id AS orgId, w.archived_at AS archivedAt`
@@ -95,14 +95,14 @@ export async function readAgentLogin(
   )
     .bind(userId, agent)
     .first<{ kind: string; ciphertext: string }>()
-  const loginKind = row ? agentLoginKind(agent, row.kind) : null
+  const loginKind = row ? nativeAgentLoginKind(agent, row.kind) : null
   if (!row || !loginKind) return null
-  const secret = await decrypt(
+  const plaintext = await decrypt(
     row.ciphertext,
     agentLoginContext(userId, agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
-  return { ...loginKind, secret: loginSecret(secret) }
+  return { ...loginKind, secret: loginSecret(plaintext) }
 }
 
 export async function senderLoginAccess(
@@ -127,7 +127,7 @@ export async function senderLoginAccess(
        EXISTS(SELECT 1 FROM org_members JOIN users login_owner ON login_owner.id = org_members.user_id
          WHERE org_id = w.org_id AND user_id = ? AND login_owner.suspended_at IS NULL) AS loginOwnerAllowed,
        EXISTS(SELECT 1 FROM agent_logins WHERE user_id = ? AND agent = ?
-         AND no_reuse = 1 AND user_id != ?) AS reuseDenied,
+         AND kind != 'endpoint' AND no_reuse = 1 AND user_id != ?) AS reuseDenied,
        EXISTS(SELECT 1 FROM workspace_tokens t WHERE t.workspace_id = w.id
          AND t.token_hash = ? AND ${workspaceTokenAccessPredicate}) AS runnerAllowed
      FROM workspaces w WHERE w.id = ?`,

@@ -1,7 +1,7 @@
 import type { Agent } from '../../src/shared/agents'
 import type { Session } from '../../src/shared/sessions'
 import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'
-import { agentLoginKind } from './login-kind'
+import { nativeAgentLoginKind } from './login-kind'
 
 export interface SessionLoginTarget {
   sessionId: string
@@ -42,7 +42,7 @@ export async function readLoginMetadata(
     .all<{ sessionId: string; agent: Agent; kind: string; noReuse: number }>()
   return new Map<string, SessionLoginMetadata>(
     rows.results
-      .filter((row) => agentLoginKind(row.agent, row.kind) !== null)
+      .filter((row) => nativeAgentLoginKind(row.agent, row.kind) !== null)
       .map((row): [string, SessionLoginMetadata] => [
         row.sessionId,
         { loginAvailable: true, loginShared: row.noReuse === 0 },

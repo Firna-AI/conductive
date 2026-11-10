@@ -3,6 +3,7 @@ import {
   agentLoginPath,
   type AccountResponse,
   type AgentLoginStatus,
+  type SaveAgentLoginRequest,
   type GitHubInstallationsResponse,
   type SaveAgentLoginResponse,
   type SetDefaultModelResponse,
@@ -11,6 +12,10 @@ import {
 } from '../../shared/account'
 import type { Agent } from '../../shared/agents'
 import {
+  ENDPOINT_ADDRESS_ERROR,
+  readEndpointAddress,
+} from '../../shared/endpoint-address'
+import {
   GET_STARTED_PATH,
   type GetStartedResponse,
 } from '../../shared/onboarding'
@@ -18,7 +23,7 @@ import { coreFixtures } from '../../test-support/fixtures/core'
 import { choice, flag, nested, record } from '../api/parse'
 import { AGENTS, readChoice, readNewWorkspaceView } from '../api/read-core'
 import type { DevBackend } from './backend'
-import { json, noContent, requiredText, type Route } from './router'
+import { json, noContent, requiredText, RouteError, type Route } from './router'
 import { completeStep } from './state'
 
 /** The saved status of one agent login of the account. */
@@ -45,11 +50,11 @@ function putLogin(backend: DevBackend, login: AgentLoginStatus): void {
  * Whether a saved login keeps other members out of the sessions of its
  * owner, as the Worker decides. A new secret of the same kind keeps the
  * choice. A new login, or one of another kind, takes the default of its
- * kind: on for a subscription token, off for an API key.
+ * kind: on for a subscription token, off for an API key or an own endpoint.
  */
 function noReuseOf(
   saved: AgentLoginStatus,
-  kind: 'token' | 'api-key',
+  kind: SaveAgentLoginRequest['kind'],
 ): boolean {
   return saved.connected && saved.kind === kind
     ? saved.noReuse
@@ -58,7 +63,7 @@ function noReuseOf(
 
 /**
  * Save an agent login. The secret goes nowhere, and the answer holds only
- * the kind of the login and its share choice. It completes the last step
+ * the login metadata and its share choice. It completes the last step
  * of Get started.
  */
 function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
@@ -68,7 +73,23 @@ function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
   const updatedAt = backend.now()
   const saved = savedLogin(backend, agent)
   let login: AgentLoginStatus
-  if (agent === 'codex') {
+  if (fields.kind === 'endpoint') {
+    const address = readEndpointAddress(fields.endpoint)
+    if (!address)
+      throw new RouteError(
+        400,
+        ENDPOINT_ADDRESS_ERROR.code,
+        ENDPOINT_ADDRESS_ERROR.message,
+      )
+    login = {
+      agent,
+      connected: true,
+      kind: 'endpoint',
+      host: address.host,
+      noReuse: noReuseOf(saved, 'endpoint'),
+      updatedAt,
+    }
+  } else if (agent === 'codex') {
     const kind = choice(fields, 'kind', ['api-key'])
     const noReuse = noReuseOf(saved, kind)
     login = { agent, connected: true, kind, noReuse, updatedAt }

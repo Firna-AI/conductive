@@ -18,6 +18,7 @@ import {
 } from '../../test-support/fixtures/operator'
 import { waitingUser } from '../../test-support/fixtures/waitlist'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { endpointLoginFixtures } from '../../test-support/fixtures/agent-logins'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
 import { referralCodeOf } from './access-codes'
@@ -227,7 +228,9 @@ export function seedState(options: DevOptions): DevState {
       operator: options.operator,
       agentLogins: noLogin
         ? AGENTS.map((agent): AgentLoginStatus => ({ agent, connected: false }))
-        : core.account.agentLogins,
+        : options.endpointLogins
+          ? endpointLoginFixtures(FAKE_TIME)
+          : core.account.agentLogins,
     },
     getStarted: {
       orgId: noOrg ? null : FAKE_IDS.org,

@@ -9,6 +9,9 @@ The gateway calls `checkTurnToken` through the trusted workspace runtime before 
 It replaces the token with the starter's real login.
 Runner delivery gives a token in each `turn` command to a runner of protocol version 2.
 A runner of protocol version 1 still gets the real login.
+Both runner protocols refuse own endpoint logins before dispatch.
+The gateway login reader also refuses them before decryption.
+The account API can save and read their metadata while gateway forwarding remains unavailable.
 The packaged runner and new full image builds use version 2.
 The [model gateway protocol](../../docs/protocol/model-gateway.md) states the requirements.
 
@@ -132,6 +135,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   Web Crypto verifies the signature in constant time.
   The turn keeps only a random nonce and the login version for this derivation.
 - [login.ts](login.ts): `gatewayLogin` checks starter access and reads the login row with its `updated_at` version.
+  It accepts only native-provider login kinds.
   `decryptGatewayLogin` releases the login only after the turn check accepts that version.
 - [types.ts](types.ts): `TurnTokenCheck` and `TurnTokenEndpoint` define the trusted check result and RPC method.
 - [../workspace-lifecycle.ts](../workspace-lifecycle.ts): `checkTurnToken` selects the workspace from stored chat metadata.
@@ -145,6 +149,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [delivery-runtime.test.ts](delivery-runtime.test.ts): the same version 2 `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
 - [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed version 2 send keeps the token state, so the resend carries the same token before the waiting message.
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
+- [endpoint-login.test.ts](endpoint-login.test.ts): refusal of a saved own endpoint login without a request to either native provider.
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-stream.test.ts](codex-stream.test.ts): a 100,000,000-byte object, the shared 413, and refusal after an early answer.

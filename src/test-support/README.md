@@ -69,6 +69,9 @@ The default org is `acme`. The default workspace is `checkout-autocomplete`.
 `FAKE_IDS` in `fixtures/core.ts` names the shared sample IDs.
 Options select the org role, workspace state, conversation, and GitHub banner state.
 Replace a reply to draw a missing login, a first run, or a deleted org.
+`endpointLoginFixtures(updatedAt)` in `fixtures/agent-logins.ts` supplies
+connected own endpoint metadata for both agents. The development seed uses
+it for `?login=endpoint`. The fixture holds no key or full address.
 The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
 `server.signIn(user)` serves the session of another person, with app access, as a sign-in of that person does.
 The session reply has app access, and `GET /api/waitlist` answers with `accessState` of `fixtures/waitlist.ts`: no pause, and the invite code of the mockups with 2 of its 5 invites used.

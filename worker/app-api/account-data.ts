@@ -1,10 +1,18 @@
 import type {
   AgentLoginStatus,
   NewWorkspaceView,
+  SaveAgentLoginRequest,
 } from '../../src/shared/account'
 import type { Agent, AgentChoice } from '../../src/shared/agents'
+import { agentLoginKind } from '../chat/login-kind'
 
-type ConnectedLogin = Extract<AgentLoginStatus, { connected: true }>
+interface LoginRow {
+  agent: Agent
+  kind: string
+  endpointOrigin: string | null
+  noReuse: number
+  updatedAt: number
+}
 
 export async function accountLogins(
   db: D1Database,
@@ -12,28 +20,30 @@ export async function accountLogins(
 ): Promise<AgentLoginStatus[]> {
   const { results } = await db
     .prepare(
-      `SELECT agent, kind, no_reuse AS noReuse, updated_at AS updatedAt FROM agent_logins
+      `SELECT agent, kind, endpoint_origin AS endpointOrigin,
+       no_reuse AS noReuse, updated_at AS updatedAt FROM agent_logins
        WHERE user_id = ? ORDER BY agent`,
     )
     .bind(userId)
-    .all<Omit<ConnectedLogin, 'connected' | 'noReuse'> & { noReuse: number }>()
+    .all<LoginRow>()
   return (['claude', 'codex'] as const).map((agent): AgentLoginStatus => {
     const login = results.find((item) => item.agent === agent)
-    if (!login) return { agent, connected: false }
-    if (login.agent === 'claude')
-      return {
-        ...login,
-        agent: 'claude',
-        connected: true,
-        noReuse: login.noReuse === 1,
-      }
-    return {
-      ...login,
-      agent: 'codex',
-      kind: 'api-key',
-      connected: true,
+    const loginKind = login ? agentLoginKind(agent, login.kind) : null
+    if (!login || !loginKind) return { agent, connected: false }
+    const metadata = {
+      connected: true as const,
       noReuse: login.noReuse === 1,
+      updatedAt: login.updatedAt,
     }
+    if (loginKind.kind === 'endpoint') {
+      if (!login.endpointOrigin) return { agent, connected: false }
+      return {
+        ...loginKind,
+        ...metadata,
+        host: new URL(login.endpointOrigin).host,
+      }
+    }
+    return { ...loginKind, ...metadata }
   })
 }
 
@@ -100,20 +110,30 @@ export async function saveAccountLogin(
   db: D1Database,
   userId: string,
   agent: Agent,
-  kind: 'token' | 'api-key',
+  kind: SaveAgentLoginRequest['kind'],
   ciphertext: string,
   now: number,
+  endpointOrigin: string | null = null,
 ): Promise<boolean> {
   const noReuse = await db
     .prepare(
-      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, no_reuse, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
-       kind = excluded.kind, ciphertext = excluded.ciphertext,
+      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, endpoint_origin, no_reuse, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
+       kind = excluded.kind, ciphertext = excluded.ciphertext, endpoint_origin = excluded.endpoint_origin,
        no_reuse = CASE WHEN agent_logins.kind = excluded.kind
          THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
        updated_at = excluded.updated_at RETURNING no_reuse`,
     )
-    .bind(userId, agent, kind, ciphertext, kind === 'token' ? 1 : 0, now, now)
+    .bind(
+      userId,
+      agent,
+      kind,
+      ciphertext,
+      endpointOrigin,
+      kind === 'token' ? 1 : 0,
+      now,
+      now,
+    )
     .first<number>('no_reuse')
   return noReuse === 1
 }
