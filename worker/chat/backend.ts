@@ -1,8 +1,9 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import {
+  presentWorkspaceMessage,
+  type WorkspaceEvent,
+  type WorkspaceEventEnvelope,
+} from './workspace-events'
 import type { UserMessage } from '../../src/shared/messages'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
@@ -17,7 +18,8 @@ import {
 import { subscribeBrowser } from './browser-subscription'
 import { afterNumber, chatRoute } from './http-routes'
 import { BrowserTabs } from './browser-tabs'
-import { tokenWorkspace } from './queries'
+import { authorizeChatRunner } from './runner-authorization'
+import { WorkspaceTitles } from './workspace-titles'
 import { WorkspaceOperations } from './workspace-operations'
 import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
@@ -43,6 +45,7 @@ export class WorkspaceChat {
   private readonly runner: RunnerChannel
   private readonly browsers: BrowserTabs
   private readonly operations: WorkspaceOperations
+  private readonly titles: WorkspaceTitles
   private workspaceId: string | null = null
 
   async workspaceSummary(workspaceId?: string): Promise<ChatWorkspaceSummary> {
@@ -85,6 +88,12 @@ export class WorkspaceChat {
     this.env = env
     this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
     this.store = new ChatStore(storage, this.dependencies.now)
+    this.titles = new WorkspaceTitles(
+      env,
+      this.store,
+      this.dependencies,
+      (events) => this.publish(events),
+    )
     this.browsers = new BrowserTabs(this.dependencies)
     this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
       this.publish(events),
@@ -128,6 +137,7 @@ export class WorkspaceChat {
           access.context,
           this.operation(access.workspace.id),
           this.dependencies,
+          access.presentation,
         )
         if (write) await this.runner.flush()
         return privateResponse(response)
@@ -148,28 +158,7 @@ export class WorkspaceChat {
   }
 
   async connectRunner(request: Request, peer: RunnerPeer): Promise<void> {
-    const url = new URL(request.url)
-    if (
-      !this.env.MACHINE_ORIGIN ||
-      url.origin !== this.env.MACHINE_ORIGIN ||
-      url.pathname !== MACHINE_PATHS.runner
-    ) {
-      throw new HttpError(
-        403,
-        'machine_forbidden',
-        'The connection is not available.',
-      )
-    }
-    const bearer = request.headers
-      .get('Authorization')
-      ?.match(/^Bearer (.+)$/i)?.[1]
-    const workspace = bearer ? await tokenWorkspace(this.env.DB, bearer) : null
-    if (!workspace)
-      throw new HttpError(
-        401,
-        'workspace_token_required',
-        'The connection is not available.',
-      )
+    const workspace = await authorizeChatRunner(this.env, request)
     this.bind(workspace.id)
     await this.runner.open(workspace, peer)
   }
@@ -263,7 +252,11 @@ export class WorkspaceChat {
       operation: this.operation(access.workspace.id),
       access,
       after,
-      peer,
+      peer: {
+        send: (message) =>
+          peer.send(presentWorkspaceMessage(message, access.presentation)),
+        close: () => peer.close(),
+      },
     })
   }
 
@@ -292,5 +285,6 @@ export class WorkspaceChat {
 
   private publish = (events: readonly WorkspaceEventEnvelope[]): void => {
     this.browsers.publish(events)
+    this.titles.accepted(events)
   }
 }

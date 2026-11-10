@@ -7,18 +7,22 @@ import { DesktopView } from '../components/tools/DesktopView'
 import { PortPreview, PreviewEmpty } from '../components/tools/PortPreview'
 import { TerminalView } from '../components/tools/TerminalView'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
+import { replacesLists } from '../components/workspace/sandboxNoticeState'
 import {
   archivedSections,
   suspendedSections,
   workspaceSections,
+  type OpenWorkspace,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import {
   creatingLog,
+  firstSecondLog,
   resumingLog,
   type StartingLog,
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
+import type { Membership } from '../fixtures/members'
 import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -61,19 +65,22 @@ function backFrom(open: FileTabView): BackLink {
   }
 }
 
-/** The steps of a sandbox start, while the sandbox starts. */
+/**
+ * The steps of a sandbox start, while the sandbox starts. A new workspace
+ * that still shows Untitled is in the first second of its start.
+ */
 export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
-  return isNew(state) ? creatingLog : resumingLog
+  if (!isNew(state)) return resumingLog
+  return state.name === 'untitled' ? firstSecondLog : creatingLog
 }
 
 /**
- * The files panel. After a stop or a failed start, All files and Changes
- * keep the lists that the workspace saved. While the sandbox starts, or
- * when its start is refused, the sandbox state takes the place of the
- * lists. On a phone, an open file shows as a page of the Files tab. An
- * archived workspace has no file lists: its files went with the cloud
- * computer.
+ * The files panel. After a stop or a failed resume, All files and Changes
+ * keep the lists that the workspace saved. Otherwise, while the sandbox is
+ * not running, the sandbox state takes the place of the lists. On a phone,
+ * an open file shows as a page of the Files tab. An archived workspace has
+ * no file lists: its files went with the cloud computer.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -90,7 +97,7 @@ export function FilesContent(props: {
     return <FilePage back={backFrom(open)} view={open} />
   }
   const placeholder =
-    panel && (panel.problem === 'starting' || panel.problem === 'refused') ? (
+    panel && replacesLists(panel) ? (
       <SandboxPanel phone={phone} state={panel} />
     ) : undefined
   return (
@@ -137,17 +144,27 @@ export function ToolContent(props: {
  * The sidebar beside an open workspace, which shows its current status. An
  * archived workspace sits in the open Archived group. In a suspended org
  * every row shows stopped, and nothing in the sidebar changes the org.
+ * `created` adds the workspaces that the create flow made by then.
  */
 export function workspaceSidebar(
   workspace: Workspace,
   status: ActivityStatus,
   suspended: boolean,
+  viewer: Membership,
+  created: readonly OpenWorkspace[] = [],
 ): ReactNode {
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
-      : workspaceSections({ workspace, status })
-    return <Sidebar org={orgs.acme} sections={sections} suspended={suspended} />
+      : workspaceSections({ workspace, status }, undefined, created)
+    return (
+      <Sidebar
+        org={orgs.acme}
+        sections={sections}
+        suspended={suspended}
+        viewer={viewer}
+      />
+    )
   }
   const list = archivedSections(workspace, suspended)
   return (
@@ -156,6 +173,7 @@ export function workspaceSidebar(
       org={orgs.acme}
       sections={list.sections}
       suspended={suspended}
+      viewer={viewer}
     />
   )
 }

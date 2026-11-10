@@ -40,6 +40,11 @@ started from, also after a resume. So the pull request of each change to
 these files says that an existing workspace needs a new workspace to get
 the change.
 
+For an existing shell, `tmux set-option -g mouse on` enables scrolling
+immediately. Run it inside that workspace's Terminal tab. The setting lasts
+until the sandbox stops. A rebuilt image gives new workspaces the setting
+at each start.
+
 One quoted privileged-command helper owns the root commands.
 Both units require a nonsecret enable marker under `/run`.
 An image build or refresh has no marker, so it starts no terminal and no
@@ -52,11 +57,14 @@ The shell server loads the workspace variables from
 `/run/ascii-secrets/env.sh`, and moves to `CONDUCTIVE_REPOSITORY_DIR`, the
 repository folder. Then it starts one tmux server on the socket
 `/run/conductive-terminal/tmux.sock`. The server reads no tmux
-configuration file. It changes one default option: it keeps running when
-no session exists. So the screen shows the default tmux status line, and
-Ctrl-b is the tmux prefix key. Each new shell gets the workspace variables
+configuration file. It keeps running when no session exists, and it enables
+mouse support so wheel and trackpad scrolling reach the output history.
+The screen shows the default tmux status line, and Ctrl-b is the tmux prefix
+key. Each new shell gets the workspace variables
 from this server. The server also sets `PROMPT_COMMAND` in the global tmux
-environment to the folder hook below.
+environment to the prompt hook below. The hook changes Bash's full-path
+prompt escape to its folder-name escape. This keeps the prompt's colours
+and other text, while showing only the current folder name.
 
 The launcher loads the same variables, moves to the repository folder, and
 checks the password before it runs ttyd. For each connection, ttyd runs a
@@ -71,8 +79,8 @@ The client never starts a tmux server. Without a running server, the client
 exits, and ttyd closes the connection.
 
 A shell that starts before the restore ends also stays in the old view
-when the restore ends. Its prompt still shows the normal path, because
-Bash keeps the path text in `$PWD`. Bash's `pwd -P` also reads that text,
+when the restore ends. Bash still keeps the normal path in `$PWD`.
+Bash's `pwd -P` also reads that text,
 so only `readlink /proc/$$/cwd` shows the real folder. The folder hook
 fixes such a shell, and it moves a shell only for the restore.
 
@@ -85,7 +93,7 @@ provider error when the command fails or times out. The
 the workspace object calls it. `/run` is memory, so each start begins
 without the marker.
 
-Bash runs the folder hook before each prompt. The hook does nothing until
+Bash runs the prompt hook before each prompt. Its folder check waits until
 the restore marker exists. At the first prompt after that, it checks the
 shell once. When the real folder of the shell is not the folder that
 `$PWD` names, the hook moves the shell there with `builtin cd`, and it

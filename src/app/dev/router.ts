@@ -12,6 +12,8 @@ export const ID = {
   section: ':section',
   repository: ':repository',
   build: ':build',
+  user: ':user',
+  invite: ':invite',
 } as const
 
 /** The IDs in a path, by name, such as `params.org` for `:org`. */
@@ -19,6 +21,8 @@ export type Params = Readonly<Record<string, string>>
 
 interface RouteRequest {
   params: Params
+  /** The query of the address, such as the search of a list. */
+  query: URLSearchParams
   /** The JSON body, or `null` when the request has none. */
   body: unknown
 }
@@ -152,12 +156,15 @@ export function routeFetch(
     init?: RequestInit,
   ): Promise<Response | null> {
     const request = new Request(new URL(input, FAKE_ORIGIN), init)
-    const path = new URL(request.url).pathname
+    const url = new URL(request.url)
+    const path = url.pathname
     guard(path, request.method)
     for (const route of routes) {
       if (route.method !== request.method) continue
       const params = match(route.path, path)
-      if (params) return route.answer({ params, body: await readBody(request) })
+      if (!params) continue
+      const body = await readBody(request)
+      return route.answer({ params, query: url.searchParams, body })
     }
     return null
   }

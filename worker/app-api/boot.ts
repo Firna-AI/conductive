@@ -1,9 +1,11 @@
 import {
   ACCOUNT_PATHS,
+  NEW_WORKSPACE_VIEWS,
   agentLoginPath,
   type AccountResponse,
   type SaveAgentLoginResponse,
   type SaveAgentLoginRequest,
+  type SetNewWorkspaceViewResponse,
 } from '../../src/shared/account'
 import { MODELS_PATH } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
@@ -11,14 +13,17 @@ import { choice, invalidInput } from '../chat/inputs'
 import { loginSecret, agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
 import { requiredString } from '../http'
+import { isOperator } from '../operator/access'
 import { encrypt } from '../security/crypto'
 import type { RequestContext } from '../security/gate'
 import {
   accountDefault,
   accountLogins,
+  accountNewWorkspaceView,
   removeAccountLogin,
   saveAccountDefault,
   saveAccountLogin,
+  saveAccountNewWorkspaceView,
   updateAccountLoginReuse,
 } from './account-data'
 import { githubInstallUrl } from './feature-github'
@@ -42,10 +47,12 @@ export async function bootRoute(
     if (path === ACCOUNT_PATHS.account) {
       return Response.json({
         user: context.user,
+        operator: isOperator(env, context.user.githubId),
         defaultChoice:
           (await accountDefault(env.DB, userId)) ??
           configuredDefaultChoice(env),
         agentLogins: await accountLogins(env.DB, userId),
+        newWorkspaceView: await accountNewWorkspaceView(env.DB, userId),
         githubAppUrl: githubInstallUrl(env),
       } satisfies AccountResponse)
     }
@@ -54,6 +61,12 @@ export async function bootRoute(
     const selected = choice(context.body?.choice)
     await saveAccountDefault(env.DB, userId, selected, dependencies.now())
     return Response.json({ choice: selected })
+  }
+  if (path === ACCOUNT_PATHS.newWorkspaceView && request.method === 'PUT') {
+    const view = NEW_WORKSPACE_VIEWS.find((view) => view === context.body?.view)
+    if (view === undefined) return invalidInput()
+    await saveAccountNewWorkspaceView(env.DB, userId, view, dependencies.now())
+    return Response.json({ view } satisfies SetNewWorkspaceViewResponse)
   }
   const agent = (['claude', 'codex'] as const).find(
     (agent) => path === agentLoginPath(agent),

@@ -15,7 +15,7 @@ refusal with its reason: `SandboxPanelState` is a `SandboxNoticeState` or
 the wait of a start. These types have one owner, the mockups'
 `src/components/workspace/sandboxNoticeState.ts`, which the app and the
 mockups both import. A phone shows the bar only on the Chat tab. So on a
-phone, the panels of Files, Terminal, Preview, and Desktop show the reason
+phone, the panels of Files, Terminal, and Preview show the reason
 in place of "Your chat history is available.", as they show the action of
 the bar. A desktop panel keeps its short text beside the bar.
 

@@ -75,6 +75,10 @@ depends on where the code runs:
 - `routeChat` matches the `sessions` path of a workspace and each path below
   it. It also matches the `history` and `events` paths. Each other path goes
   on to the app request gate.
+- Before forwarding, the chat and feature routers call `sessionGate` on
+  the original request. It checks the session and app access without
+  reading the body. A waiting session gets 403 `access_required` before
+  any workspace lookup or call.
 - `routeChat` decodes the workspace ID of the path once. An ID that does not
   decode gets `404 workspace_not_found`.
 - `forwardWorkspaceRequest` sends the original request to
@@ -190,10 +194,13 @@ methods of `Workspace`.
 
 ### Stop and summary
 
-- When the lifecycle state becomes `stopped` or `error`, or a failed create
-  clears the lifecycle, `stopWorkspace` closes the runner. It ends each
+- When the lifecycle state becomes `stopped` or `error`,
+  `stopWorkspace` closes the runner. It ends each
   running or stopping turn as stopped. Queued turns stay for the resume.
   Device cleanup starts too.
+- A failed admitted create keeps the same workspace and normal access to chat.
+  Later messages remain queued. A replacement create uses a fresh computer token.
+  Its readiness releases the existing commands in their saved order.
 - During org deletion, a missing workspace ends only the state projection.
   Device reconciliation still settles the request and sends its broker cancellation.
 - `workspaceSummary` gives the last event number, the last event number

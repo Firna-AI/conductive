@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { MemoryChatStorage } from './memory-storage.test-support'
 import type { SessionLoginMetadata } from './login-availability'
@@ -50,6 +50,7 @@ export async function createRunnerLimitsFixture(
   let connectionSequence = 0
   let store = new ChatStore(storage, () => 25)
   const dependencies: ChatDependencies = {
+    readAutomaticTitleWorkspace: async () => ({ name: null }),
     filterRunnerOutput: async (_transaction, _workspace, input) => ({
       events: [input],
       save: async () => undefined,
@@ -69,7 +70,6 @@ export async function createRunnerLimitsFixture(
     scheduleRunnerCheck: () => () => undefined,
     readRunnerAccess: async () => true,
     readConnectionAccess: async () => [],
-    firstStartIncomplete: async () => false,
     randomId: () => `command-${++commandSequence}`,
     randomConnectionId: () => `connection-${++connectionSequence}`,
     readLoginMetadata: async () => new Map<string, SessionLoginMetadata>(),

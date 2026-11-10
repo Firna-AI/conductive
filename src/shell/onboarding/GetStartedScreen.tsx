@@ -1,14 +1,15 @@
 import { ArrowRight } from 'lucide-react'
 import { getStartedCopy as copy } from '../../../docs/mockups/src/screens/getStartedCopy'
 import styles from '../../../docs/mockups/src/screens/GetStartedScreen.module.css'
+import { useFirstBuild, type FirstBuild } from '../../app/first-build'
 import { nextStep, stepState } from '../../app/get-started'
 import { personName } from '../../app/people'
 import { routes } from '../../app/router'
-import { useStore } from '../../app/store'
+import { useStore, valueOf } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp } from '../context'
+import { useApp, useOrgModel } from '../context'
 import { Page } from '../layout/Page'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
@@ -16,16 +17,35 @@ import { AgentStep } from './AgentStep'
 import { InstallStep } from './InstallStep'
 import { OrgStep } from './OrgStep'
 
-/** The way into the org of Get started, once every step is done. */
+/** The words of the finish in each state of the first build of the org. */
+const finishes: Readonly<Record<FirstBuild['state'], (org: string) => string>> =
+  {
+    running: copy.finishPreparing,
+    succeeded: copy.finish,
+    failed: copy.finishFailed,
+    none: copy.finishNoBuild,
+  }
+
+/**
+ * The way into the org of Get started, once every step is done. The org
+ * opens also while it has no good build, and the words say that it is
+ * ready only after a build succeeded. They wait for the builds. After a
+ * failed build or with no build, the action of the org step is the main
+ * action, so Open is a secondary button.
+ */
 function Finish(props: { org: OrgSummary }) {
   const go = useGo()
+  const first = valueOf(useFirstBuild(useOrgModel(props.org.id)))
+  const fix = first?.state === 'failed' || first?.state === 'none'
   return (
     <div className={styles.finish}>
-      <p className={styles.finishText}>{copy.finish(props.org.name)}</p>
+      <p className={styles.finishText}>
+        {first ? finishes[first.state](props.org.name) : null}
+      </p>
       <ActionButton
         icon={ArrowRight}
         onPress={() => go(routes.org(props.org.id))}
-        tone="primary"
+        tone={fix ? 'secondary' : 'primary'}
       >
         {copy.open(props.org.name)}
       </ActionButton>
@@ -65,7 +85,9 @@ function Steps(props: { response: GetStartedResponse }) {
  * org: the user installs the GitHub App, creates an org, and connects
  * Claude or Codex. The step of the GitHub App comes from the API, and each
  * done step loads it again. The org step and the agent step follow the org
- * list and the account. The words are the mockup's, from one copy module.
+ * list and the account. The org step and the finish also show the first
+ * build of the org, from its builds. The words are the mockup's, from one
+ * copy module.
  */
 export function GetStartedScreen(props: { user: User }) {
   const app = useApp()

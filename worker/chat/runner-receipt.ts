@@ -1,5 +1,5 @@
 import type { RunnerEventEnvelope } from '../../src/shared/runner'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { HttpError } from '../http'
 import { InvalidRunnerReport, RunnerFileReports } from '../files/runner-reports'
 import {
@@ -11,6 +11,7 @@ import { refuseRunnerEvent } from './runner-refusal'
 import type { ChatTransaction } from './store'
 import { prepareAgentEvent } from './turn-events'
 import { observeRepairPart } from './repair-refusal'
+import { storeWorkspaceTitle } from './workspace-title'
 
 import type { ChatDependencies, RunnerWorkspaceRecord } from './types'
 /** Only validation errors become permanent refusals. Storage and sends must retry. */
@@ -65,6 +66,7 @@ export async function storeRunnerReceipt(
       message,
       output,
       randomId,
+      dependencies.readAutomaticTitleWorkspace,
     )
     ready ||= result.ready
     accepted ||= result.accepted
@@ -130,6 +132,7 @@ async function applyRunnerEvent(
   message: IncomingRunnerEnvelope,
   parsed: RunnerEventEnvelope,
   randomId: () => string,
+  readWorkspace: ChatDependencies['readAutomaticTitleWorkspace'],
 ): Promise<{ ready: boolean; accepted: boolean }> {
   const event = parsed.event
   let apply: (() => Promise<void>) | undefined
@@ -176,8 +179,15 @@ async function applyRunnerEvent(
   } else if (apply) {
     await apply()
   } else if (!('sessionId' in event)) {
-    await transaction.emit(event, parsed.occurredAt)
-    if (event.type === 'start.updated' || event.type === 'workspace.title')
+    if (event.type === 'workspace.title')
+      await storeWorkspaceTitle(
+        transaction,
+        event,
+        readWorkspace,
+        parsed.occurredAt,
+      )
+    else await transaction.emit(event, parsed.occurredAt)
+    if (event.type === 'start.updated')
       await transaction.repairs.remove(event.type)
   }
   return { ready: false, accepted: true }

@@ -16,12 +16,14 @@ import { accountRoutes } from './account-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
+import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
 import { routeFetch, RouteError, type Route } from './router'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
+import { waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
 /**
@@ -52,6 +54,7 @@ export function createFakeServices(search: string): AppServices {
     : []
   const routes = [
     ...signedOut,
+    ...waitlistRoutes(backend),
     ...accountRoutes(backend),
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
@@ -59,6 +62,7 @@ export function createFakeServices(search: string): AppServices {
     ...createRoutes(backend),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
+    ...operatorRoutes(backend),
   ]
   const fetch = routeFetch(
     routes,
@@ -82,6 +86,7 @@ export function createFakeServices(search: string): AppServices {
     storage: windowStorage(window),
     newId,
     leave: (url) => window.location.assign(url),
+    appOrigin: window.location.origin,
     copy: (text) => navigator.clipboard.writeText(text),
   }
 }

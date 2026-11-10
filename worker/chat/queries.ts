@@ -6,24 +6,41 @@ import {
   workspaceTokenResourcePredicate,
 } from '../data/workspace-token-access'
 import { decrypt, hash } from '../security/crypto'
+import { workspaceNameColumn } from '../data/workspace-name'
 import { agentLoginKind } from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
 const workspaceColumns = `w.id, w.org_id AS orgId, w.archived_at AS archivedAt`
 
+const automaticTitleWorkspacePredicate = `archived_at IS NULL AND state != 'archived'
+  AND EXISTS (SELECT 1 FROM orgs WHERE orgs.id = workspaces.org_id
+    AND orgs.deleted_at IS NULL AND orgs.suspended_at IS NULL)`
+
+export async function readAutomaticTitleWorkspace(
+  db: D1Database,
+  workspaceId: string,
+): Promise<{ name: string | null } | null> {
+  return db
+    .prepare(
+      `SELECT ${workspaceNameColumn('workspaces')} FROM workspaces WHERE id = ? AND ${automaticTitleWorkspacePredicate}`,
+    )
+    .bind(workspaceId)
+    .first<{ name: string | null }>()
+}
+
 export function findChatWorkspace(
   db: D1Database,
   orgId: string,
   workspaceId: string,
-): Promise<WorkspaceRecord | null> {
+): Promise<(WorkspaceRecord & { number: number }) | null> {
   return db
     .prepare(
-      `SELECT ${workspaceColumns} FROM workspaces w
+      `SELECT ${workspaceColumns}, w.number FROM workspaces w
      JOIN orgs ON orgs.id = w.org_id
      WHERE w.id = ? AND w.org_id = ? AND orgs.deleted_at IS NULL`,
     )
     .bind(workspaceId, orgId)
-    .first<WorkspaceRecord>()
+    .first<WorkspaceRecord & { number: number }>()
 }
 
 export async function updateWorkspaceTitle(
@@ -35,25 +52,10 @@ export async function updateWorkspaceTitle(
   await db
     .prepare(
       `UPDATE workspaces SET name = ?, updated_at = ?
-    WHERE id = ? AND archived_at IS NULL AND EXISTS
-    (SELECT 1 FROM orgs WHERE orgs.id = workspaces.org_id AND orgs.deleted_at IS NULL)`,
+    WHERE id = ? AND name = '' AND ${automaticTitleWorkspacePredicate}`,
     )
     .bind(name, now, workspaceId)
     .run()
-}
-
-export async function firstStartIncomplete(
-  db: D1Database,
-  workspaceId: string,
-): Promise<boolean> {
-  return Boolean(
-    await db
-      .prepare(
-        "SELECT 1 FROM workspace_creation_attempts WHERE workspace_id = ? AND state != 'succeeded'",
-      )
-      .bind(workspaceId)
-      .first(),
-  )
 }
 
 export async function tokenWorkspace(

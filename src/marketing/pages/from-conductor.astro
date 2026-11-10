@@ -1,0 +1,30 @@
+---
+import ClosingCall from '../components/ClosingCall.astro'
+import ParityIntro from '../components/ParityIntro.astro'
+import ParityLegend from '../components/ParityLegend.astro'
+import ParityTable from '../components/ParityTable.astro'
+import { parityPageCopy } from '../from-conductor/copy'
+import SiteLayout from '../layouts/SiteLayout.astro'
+
+/*
+ * The page for people who move from Conductor Cloud: which of its features
+ * work in the product today, which are on the way, and which work
+ * differently. The mockup marketing/from-conductor/one-table is its visual
+ * spec, and both read the modules in from-conductor/.
+ */
+const copy = parityPageCopy
+---
+
+<SiteLayout title={copy.documentTitle} description={copy.description}>
+  <main class="main">
+    <div class="parity-page">
+      <ParityIntro />
+      <div class="parity-list">
+        <ParityLegend />
+        <ParityTable />
+      </div>
+      <p class="parity-footnote">{copy.affiliation}</p>
+      <ClosingCall title={copy.closing.title} text={copy.closing.text} />
+    </div>
+  </main>
+</SiteLayout>

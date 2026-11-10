@@ -10,10 +10,7 @@ import type {
   WorkspaceToRunner,
   RunnerEventEnvelope,
 } from '../../src/shared/runner'
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
   ConnectionGrant,
   ConnectionIdentity,
@@ -26,6 +23,7 @@ import type {
 } from './login-availability'
 import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
+import type { TitleModelCall } from './title-model'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -119,6 +117,10 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  readAutomaticTitleWorkspace: (
+    workspaceId: string,
+  ) => Promise<{ name: string | null } | null>
+  runTitleModel?: TitleModelCall
   filterRunnerOutput(
     transaction: ChatTransaction,
     workspace: RunnerWorkspaceRecord,
@@ -157,7 +159,6 @@ export interface ChatDependencies {
     identities: readonly ConnectionIdentity[],
     now: number,
   ) => Promise<readonly ConnectionGrant[]>
-  firstStartIncomplete: (workspaceId: string) => Promise<boolean>
   randomId: () => string
   randomConnectionId: () => string
   readLoginMetadata: (

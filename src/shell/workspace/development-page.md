@@ -22,9 +22,11 @@ this server is the repository root, so it also serves the
 | `repair`   | The failed repairs of the stored history: `name`, `start`, `all-files`, and `changes`, joined by commas. The default, `name,changes`, is the picture of `app/chat/lost-updates`. `none` stores none. |
 | `viewport` | `desktop`, or `phone`. The default follows the window. |
 | `scheme`   | `dark`, or `light`. The default follows the system. |
-| `view`     | The tab of a phone: `files`, the default, or `chat`, `terminal`, `preview`, or `desktop`. |
+| `view`     | The tab of a phone: `files`, the default, or `chat`, `terminal`, or `preview`. `desktop` opens the hidden Desktop address, which shows Terminal. |
 | `list`     | The list of the Files panel: `changes`, the default, or `all`, or `checks`. |
 | `controls` | `off` hides the controls, as for a picture. |
+| `start`    | Opens the new workspace of the create flow in a state of its first start, with its queued messages: `waiting`, `failed`, `time-limit`, or `retrying`, as `app/new-workspace` draws them. The app's own Files part then shows. |
+| `viewer`   | `member` signs in Priya, a member who is not the owner. |
 
 For example, `?viewport=phone&view=terminal&repair=name,start,all-files,changes`
 draws the bars of the name and the start steps on the Terminal tab of a

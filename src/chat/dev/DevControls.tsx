@@ -9,7 +9,7 @@ import {
 } from './dev-options'
 import { reconnectMac } from './dev-mac'
 import { failStart, makeReady, stopSandbox } from './dev-sandbox'
-import { writeTitle } from './dev-sessions'
+import { WORKSPACE_TITLE, writeTitle } from './dev-sessions'
 import styles from './DevPage.module.css'
 
 /** Opens the page again with one option changed. */
@@ -76,7 +76,7 @@ export function DevControls(props: {
     ['Make the sandbox ready', () => makeReady(backend)],
     ['Stop the sandbox', () => stopSandbox(backend)],
     ['Fail the start', () => failStart(backend)],
-    ['Agent writes the title', () => writeTitle(backend, 'Saved carts')],
+    ['Write the title', () => writeTitle(backend, WORKSPACE_TITLE)],
     ['Drop the connection', () => backend.stream.drop()],
     ['Resend the last event', () => backend.stream.resendLast()],
     ['Send parts out of order', () => outOfOrder(backend)],

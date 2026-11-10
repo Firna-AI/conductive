@@ -8,8 +8,13 @@ import {
 } from '../../shared/members'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import { deleteOrgPath, restoreOrgPath } from '../../shared/orgs'
+import { workspacesPath } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
+import {
+  senderSnapshot,
+  workspaceFixtures,
+} from '../../test-support/fixtures/workspaces'
 import { ApiRequestError, createMembersApi, type MembersApi } from './client'
 
 const org = FAKE_IDS.org
@@ -126,6 +131,20 @@ describe('createMembersApi', () => {
     await expect(
       createMembersApi(server.fetch).members(org),
     ).rejects.toMatchObject({ status: 200, code: 'invalid_response' })
+  })
+
+  it('reads_a_workspace_with_no_name_as_null', async () => {
+    const server = new FakeApiServer()
+    const { workspace } = workspaceFixtures().created
+    const untitled = {
+      ...workspace,
+      owner: senderSnapshot(workspace.owner),
+      name: null,
+    }
+    server.json('GET', workspacesPath(org), { workspaces: [untitled] })
+    await expect(
+      createMembersApi(server.fetch).workspaces(org),
+    ).resolves.toEqual({ workspaces: [untitled] })
   })
 
   it('keeps_only_the_names_and_the_marks_of_the_env_vars_and_reads_a_missing_mark_as_secret', async () => {

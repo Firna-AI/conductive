@@ -127,7 +127,10 @@ The card counts the runs of the install script, as the tab of an admin
 does: a refresh is neither the newest build nor a row of the history. The
 line about where new workspaces start uses the current image, also when a
 refresh made it. The view names the software of the base image from
-`settings.baseImage`. An older reply without it names no software.
+`settings.baseImage`. An older reply without it names no software. The
+notice of a changed install script takes its words from the builds through
+`changedScriptNotice` in `../app/first-build.ts`, as the tab of an admin
+does. The view shows no Build computer.
 
 ### Scope
 

@@ -1,7 +1,4 @@
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type { AppEnv } from '../env'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import {
@@ -52,14 +49,17 @@ export class WorkspaceOperations {
     const sender = requireFirstMessage(identity, first)
     return store.change(
       first.workspaceId,
-      (transaction) =>
-        admitFirstMessage(
+      async (transaction) => {
+        const message = await admitFirstMessage(
           transaction,
           first,
           sender,
           dependencies,
           identity?.archivedAt !== null,
-        ),
+        )
+        await transaction.saveFirstMessageAdmission(first)
+        return message
+      },
       publish,
     )
   }

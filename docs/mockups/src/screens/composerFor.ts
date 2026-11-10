@@ -1,7 +1,8 @@
 import type { ComposerState } from '../components/chat/Composer'
 import { attachmentDraft, draftAttachments } from '../fixtures/attachments'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
-import { heldDraft } from '../fixtures/starting'
+import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
+import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { otherStarter, sessionLoginFor } from './sessionStarter'
@@ -14,6 +15,7 @@ const runningConversations = new Set([
   'first-turn',
   'output-left-out-running',
   'linked',
+  'link-sent',
 ])
 
 /** An agent turn runs on a ready sandbox. */
@@ -30,16 +32,20 @@ export function isRunning(state: WorkspaceState): boolean {
  * the picker marks the models of the other agent as opening a new session.
  * A message for an agent that is not connected waits, and Send is off.
  *
- * A session runs on the login of its starter, and a line under the box
- * names that login. When the starter is another member, the own login of
- * the viewer does not matter. When the login of that starter is not
+ * A session runs on the login of its starter. When the starter is another
+ * member, a label in the bar names that login, and the own login of the
+ * viewer does not matter. When the login of that starter is not
  * available, or that starter keeps it for their own messages, Send opens a
- * new linked session on the own login of the viewer. Such a message does
- * not steer a running turn of the session, and Stop still ends that turn.
+ * new linked session on the own login of the viewer, and the bar has no
+ * login label. Such a message does not steer a running turn of the
+ * session, and Stop still ends that turn.
  *
- * While the sandbox of a new workspace starts for the first time, Send
- * waits in every session, and the box keeps the message. A resume of a
- * stopped workspace takes messages, which wait for the sandbox.
+ * While the sandbox is not ready, Send queues the message in the
+ * workspace, also during the first start and after a failed first start of
+ * a new workspace. The message waits for the sandbox.
+ *
+ * A message with a pasted link to another workspace shows the link as a
+ * chip, and the draft keeps the plain link.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -59,8 +65,10 @@ export function composerFor(
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (withFiles) draft = attachmentDraft
   else if (!fresh && (noLogin || linkedState)) draft = followUpDraft
-  else if (!fresh && state.composer === 'draft') {
-    draft = isNew(state) ? heldDraft : followUpDraft
+  else if (!fresh && state.composer === 'workspace-link') {
+    draft = workspaceLinkDraft
+  } else if (!fresh && state.composer === 'draft') {
+    draft = isNew(state) ? savedCartsDraft : followUpDraft
   }
   return {
     choice: workspace.choice,
@@ -72,7 +80,6 @@ export function composerFor(
     sendTo: opensLinked ? paths.linkedSession : undefined,
     startsSession: opensLinked,
     blocked: needsLogin,
-    waits: isNew(state) && state.sandbox === 'starting',
-    sessionLogin: sessionLoginFor(workspace, opensLinked ? undefined : starter),
+    sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),
   }
 }

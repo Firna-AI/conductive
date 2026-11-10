@@ -8,7 +8,7 @@ repository.
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It sends numbered events. It gets turns, messages, interrupts, model
 changes, file requests, and report requests.
-[Chat and events](../docs/protocol/chat-and-events.md#the-agent-runner)
+[Agent runner](../docs/protocol/agent-runner.md)
 states its requirements, and the
 [shared contracts](../src/shared/README.md) define its messages.
 
@@ -34,6 +34,17 @@ These facts belong to this implementation, not to the protocol docs.
   their settings, runtime context, and process lifetime.
 - Each agent program gets the login of its turn through a route that its
   tool processes do not inherit, as [Agent logins](agent-logins.md) says.
+- `agentInstructions` builds the agent instructions of each agent from the
+  configuration. Claude gets its seven base rules and that text as
+  `systemPrompt`. Codex keeps its default base instructions and gets the
+  text as `developerInstructions` on `thread/start` and `thread/resume`.
+- The runner saves the text of a session before its first agent start. Later
+  starts reuse it exactly, also after a restart or a change of configuration
+  or wording. A saved session without text takes the current text once.
+- Each message to an agent starts with a sender line, then an empty line:
+  `Sender: <display name> (@<login>)`, or `Sender: @<login>` without a
+  display name. No adapter maps a user message to an event, so the chat
+  never shows the sender line.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
   process then takes the waiting input on the same conversation and login.
@@ -71,10 +82,19 @@ These facts belong to this implementation, not to the protocol docs.
 - The Claude adapter holds new input while 64 sent messages wait for a
   result that lists them. Each result frees only the messages that it
   lists. Closing discards held input. The engine matches result lists exactly.
+- A Claude SDK result with the origin `task-notification` belongs to a
+  background task, such as a background command or subagent. The adapter
+  ignores such a result when it lists no sent message that still waits. An
+  ignored result does not take the message list of an earlier SDK frame. It
+  does not end the active turn, and it frees no sent message. When such a
+  result lists sent messages that still wait, it answers them as usual. So
+  each result stays with the
+  [messages that it answers](../docs/protocol/chat-and-events.md#what-the-chat-shows).
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
-  counter, the unconfirmed events, the tree and changes revisions, the
-  conversation references, and `turns` records of accepted turns. It also
+  counter, the unconfirmed events, the tree and changes revisions, and
+  `turns` records of accepted turns. It holds the conversation reference and
+  the agent instructions of each session. It also
   holds the last `start.updated` and `workspace.title` events, and the ID of
   each answered [report request](#report-requests). It holds no other
   command data and no login. The runner saves a turn record before the
@@ -131,7 +151,7 @@ the outbox size check.
 
 The workspace sends a `report.refresh` command when it needs a fresh full
 report of one kind.
-[Lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
+[Lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the requirements.
 
 - The runner takes a request without a session or a login. The agents never
@@ -228,6 +248,7 @@ tools that time the first agent start after a resume.
   and their defaults, the state file, and the reconnect after each drop.
 - `src/runner.ts`: `Runner` joins the connection, agents, file reports,
   and report requests.
+- `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
 - [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
   [output field policy](../src/shared/output-fields.ts): the one filter
   shared with the Worker. The runner supplies tokens and logins.
@@ -250,6 +271,7 @@ tools that time the first agent start after a resume.
 - `src/engine-pending.ts`: accepted turn saves and the ends of pending starts.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
+  `message.ts` puts the sender line before the text of each message.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
   The [tool entry points](agent-tools.md#key-code) cover both MCP servers.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
@@ -265,8 +287,10 @@ tools that time the first agent start after a resume.
 ## Related docs
 
 - [Architecture: sandbox software](../docs/architecture.md#sandbox-software)
-- [Chat and events: the agent runner](../docs/protocol/chat-and-events.md#the-agent-runner)
-- [Chat and events: lost workspace updates](../docs/protocol/chat-and-events.md#lost-workspace-updates)
+- [Agent runner](../docs/protocol/agent-runner.md)
+- [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Chat and events: agents](../docs/protocol/chat-and-events.md#agents)
+- [Agent instructions](../docs/protocol/agent-instructions.md)
 - [Access and security: agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
 - [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)

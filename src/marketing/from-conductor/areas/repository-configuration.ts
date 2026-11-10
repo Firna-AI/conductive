@@ -1,0 +1,60 @@
+import type { ParityFeature } from '../model'
+
+export const repositoryConfigurationFeatures: readonly ParityFeature[] = [
+  {
+    id: 'settings-screen',
+    area: 'repository-configuration',
+    name: 'Settings screen',
+    status: 'available',
+    note: 'Use Account and org settings to change preferences. The command palette finds settings pages.',
+  },
+  {
+    id: 'layered-settings-files',
+    area: 'repository-configuration',
+    name: 'Layered settings files',
+    status: 'different',
+    note: 'Account preferences and admin controlled org settings replace settings file layers. Repository skills and instructions still stay in the repository.',
+  },
+  {
+    id: 'shared-repository-settings',
+    area: 'repository-configuration',
+    name: 'Shared repository settings',
+    status: 'different',
+    note: 'Admins set shared scripts and environment variables in org settings. Every workspace gets those settings.',
+  },
+  {
+    id: 'default-branch-per-repository',
+    area: 'repository-configuration',
+    name: 'Default branch per repository',
+    status: 'available',
+    note: 'New workspaces use the default branch set on GitHub. A separate branch setting in Conductive is under consideration.',
+  },
+  {
+    id: 'repository-environment-variables',
+    area: 'repository-configuration',
+    name: 'Repository environment variables',
+    status: 'different',
+    note: 'Admins set environment variables for the org. Separate variable settings for each repository are under consideration.',
+  },
+  {
+    id: 'conductor-variables',
+    area: 'repository-configuration',
+    name: 'Workspace environment variables',
+    status: 'different',
+    note: 'Scripts get variables for repository folders. Conductor’s variable names are not supported.',
+  },
+  {
+    id: 'repository-prompts',
+    area: 'repository-configuration',
+    name: 'Repository prompts',
+    status: 'considering',
+    note: 'Keep project instructions in the repository. Editable repository prompts in settings are under consideration.',
+  },
+  {
+    id: 'instruction-files-and-skills',
+    area: 'repository-configuration',
+    name: 'Instruction files and skills',
+    status: 'available',
+    note: 'Keep instruction files and skills in the repository. Personal Mac configuration files are not copied.',
+  },
+]

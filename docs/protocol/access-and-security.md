@@ -14,8 +14,10 @@ says.
   app then gives both the identity and the repository access.
 - Cloudflare Access was rejected. Users sign in with GitHub, and Access
   cannot sign in inside a frame.
-- Anyone with a GitHub account can sign up (decisions 22 and 48). A
-  suspended account cannot sign in, as
+- A new GitHub sign-in creates an account without app access, and the
+  person waits on the waitlist (decision 160).
+  [Waitlist](waitlist.md) states what the person can reach and the ways in.
+  A suspended account cannot sign in, as
   [Operator actions](operator-actions.md#sessions-and-sign-in) says.
 - The sign-up check on the age and the email of a GitHub account was
   dropped (decision 48).
@@ -53,6 +55,9 @@ says.
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
+- The gate of `app.conductive.build` also checks app access, as
+  [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
+  says (decision 161).
 - The health check and GitHub sign-in with its callback need no sign-in.
   The callback checks its `state` value instead.
 - The Mac app's public sign-in exchange also needs no sign-in.
@@ -130,6 +135,14 @@ Later screens add the frame and connection sources that they need.
   this section do.
 - A request reaches an org, its workspaces, and their sandboxes only for a
   member of that org.
+- An operator is the one exception. An operator can suspend or lift any
+  user or org, as [Operator actions](operator-actions.md) says. In the
+  [operator section](operator-section.md#what-the-section-shows), an
+  operator also reads counts, names, IDs, dates, roles, states, and codes
+  across every org (decisions 142, 144, 147, and 160).
+- The operator section shows no chat, file, env value, agent login, or
+  email address. Its org search takes the ID of a cloud computer or a
+  preview address only to find its org.
 - An open tab loses its workspace connection within 30 seconds after its
   user loses access: a removal from the org, a sign-out, or a deleted
   org (decision 70). The workspace checks the access of its open tabs
@@ -273,10 +286,12 @@ Later screens add the frame and connection sources that they need.
 ## The workspace token
 
 - Each workspace has its own workspace token.
-- With the token, the sandbox of the workspace can do four things:
+- With the token, the sandbox of the workspace can do five things:
   - connect its agent runner to the Durable Object of its own workspace
   - get a GitHub token for its own workspace
   - create and list workspaces through the agent tools
+  - list the repositories of its org image, the sections of its org, and
+    the models of the app, through the agent tools
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
 - The token allows nothing else. It can never answer a request for a Mac
@@ -293,42 +308,9 @@ Later screens add the frame and connection sources that they need.
 
 ## GitHub tokens
 
-- The git credential helper asks the Worker for a fresh GitHub token for
-  each git operation, at `/v1/git/credential` on `api.conductive.build`.
-  It proves itself with the workspace token.
-- Reason: a GitHub App user token expires after 8 hours, and the secrets
-  of a sandbox change only at a resume.
-- The token is a GitHub App user token of the person who sent the current
-  turn, so pushes and pull requests show as that person (decision 50).
-  The helper gets it fresh for each call, and the sandbox never stores
-  it.
-- A user token reaches every repository where that person installed the
-  GitHub App and has access.
-- A build or a refresh copies each repository of the image with Git in the
-  build sandbox (decision 90). Each copy uses its own GitHub App
-  installation token, which can only read the contents of that one
-  repository.
-- The Worker gives the token only to the Git command of that copy. The
-  Worker and Git do not write it to command text, command history, a
-  remote URL, a Git config, a file, or a saved snapshot.
-- The Git command gets the token with a one-use build grant. The grant
-  works once, and only for its own build and repository.
-- The Worker revokes the token as soon as the Git command ends, also when
-  the command fails. The build goes on only after GitHub confirms the
-  revocation. The build starts no checkout, software step, install script,
-  snapshot, or other repository code before that.
-- Risk: a build sandbox starts from the last org image. A program with root
-  access that an earlier install left in that image can read the clone
-  token of a later copy. That token can only read its own repository, which
-  the image already holds. The Worker revokes it when the copy ends.
-- Reason: Git in the build sandbox copies a repository of any size, and the
-  Git data does not pass through the Worker. Larger uploads and stored
-  progress were rejected, because one repository or one Git response must
-  still fit in one Worker job. A Git proxy in the Worker and a Workflow
-  were rejected, because each puts a new service in the path of the Git
-  data.
-- A workspace sandbox never gets an installation token. Its Git gets
-  GitHub tokens only from the git credential helper.
+[GitHub tokens](github-tokens.md) states the rules for Git, the GitHub CLI,
+and repository copies in image builds and refreshes.
+The GitHub CLI works outside an agent turn with the workspace owner's account.
 
 ## Secrets that users enter
 

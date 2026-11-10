@@ -15,18 +15,25 @@ export class ClaudeEvents {
   private userIds: string[] = []
   private errorKind: ReturnType<typeof assistantError> = null
   private readonly ids: Map<string, string>
+  private readonly hasOutstanding: (uuid: string) => boolean
   private readonly emit: (event: ProviderEvent) => void
   private readonly messages: ClaudeMessages
   stopped = false
 
-  constructor(ids: Map<string, string>, emit: (event: ProviderEvent) => void) {
+  constructor(
+    ids: Map<string, string>,
+    emit: (event: ProviderEvent) => void,
+    hasOutstanding: (uuid: string) => boolean,
+  ) {
     this.ids = ids
+    this.hasOutstanding = hasOutstanding
     this.emit = emit
     this.messages = new ClaudeMessages(emit)
   }
 
   accept(value: unknown): void {
     const input = object(value)
+    if (input.type === 'result' && !this.answersOutstandingInput(input)) return
     if (typeof input.session_id === 'string')
       this.emit({ type: 'conversation', id: input.session_id })
     if (Array.isArray(input.user_message_uuids)) {
@@ -94,6 +101,23 @@ export class ClaudeEvents {
       this.stopped = false
       this.errorKind = null
     }
+  }
+
+  private answersOutstandingInput(input: Record<string, unknown>): boolean {
+    const origin = input.origin
+    if (
+      typeof origin !== 'object' ||
+      origin === null ||
+      !('kind' in origin) ||
+      origin.kind !== 'task-notification'
+    )
+      return true
+    const uuids = Array.isArray(input.user_message_uuids)
+      ? array(input.user_message_uuids, string)
+      : typeof input.user_message_uuid === 'string'
+        ? [input.user_message_uuid]
+        : []
+    return uuids.some(this.hasOutstanding)
   }
 
   private partial(event: Record<string, unknown>): void {

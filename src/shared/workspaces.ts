@@ -31,11 +31,13 @@ export type WorkspaceState =
 
 export interface Workspace {
   id: string
+  number: number
+  link: string
   orgId: string
   repositoryId: string
   sectionId: string
   owner: MessageSender
-  name: string
+  name: string | null
   branch: string
   choice: AgentChoice
   state: WorkspaceState

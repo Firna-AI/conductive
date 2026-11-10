@@ -20,6 +20,7 @@ import {
 } from '../../../docs/mockups/src/components/chat/lostCopy'
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { useFold, type Fold } from './useFold'
 
 const tools: Readonly<
   Record<ToolCall['kind'], { icon: LucideIcon; done: string; running: string }>
@@ -38,7 +39,8 @@ const endings: Readonly<Partial<Record<ToolCall['state'], string>>> = {
   failed: 'Failed',
 }
 
-function CallLine(props: { call: ToolCall }) {
+/** One tool call in an open list: its icon, its verb, its target, and its result. */
+export function CallLine(props: { call: ToolCall }) {
   const theme = useSharedUiTheme()
   const { call } = props
   const tool = tools[call.kind]
@@ -65,45 +67,67 @@ function CallLine(props: { call: ToolCall }) {
   )
 }
 
+/** A count for the line of a fold, such as "1 tool call": none for zero. */
+function counted(count: number, noun: string): string[] {
+  return count === 0 ? [] : [`${count} ${noun}${count === 1 ? '' : 's'}`]
+}
+
 /**
- * A run of consecutive tool calls as one line that folds them. A finished
- * run stays folded, and a run with a call in progress or not done shows each
- * call. Once the user opens or folds it, it keeps that choice. When the
- * runner left out output of a call, the folded line gives the total of the
- * calls' current counts, and each call gives its own.
+ * The line of a fold: a chevron, the count of its tool calls and of its
+ * messages, such as "8 tool calls, 7 messages", the icons of the kinds of
+ * its tool calls, and the total output that the runner left out of them,
+ * from the calls' current counts. It leaves out a zero count. A run of tool
+ * calls and the work of an ended turn share it.
  */
-export function ToolGroup(props: { calls: readonly ToolCall[] }) {
+export function FoldLine(props: {
+  calls: readonly ToolCall[]
+  messages?: number
+  line: Fold['line']
+}) {
   const { calls } = props
-  const live = calls.some((call) => call.state !== 'done')
-  const [chosen, setChosen] = useState<boolean | null>(null)
-  const open = chosen ?? live
   const kinds = [...new Set(calls.map((call) => call.kind))]
-  const count = `${calls.length} tool ${calls.length === 1 ? 'call' : 'calls'}`
   const leftOut = calls.reduce(
     (total, call) => total + call.omittedDetailBytes,
     0,
   )
+  const label = [
+    ...counted(calls.length, 'tool call'),
+    ...counted(props.messages ?? 0, 'message'),
+  ].join(', ')
   return (
-    <details
-      className={styles.group}
-      onToggle={(event) => {
-        if (event.currentTarget.open !== open) {
-          setChosen(event.currentTarget.open)
-        }
-      }}
-      open={open}
+    <summary
+      className={classes(styles.summary, leftOut > 0 && styles.wraps)}
+      {...props.line}
     >
-      <summary className={classes(styles.summary, leftOut > 0 && styles.wraps)}>
-        <ChevronRight className={styles.chevron} size={14} />
-        {count}
+      <ChevronRight className={styles.chevron} size={14} />
+      {label}
+      {kinds.length > 0 ? (
         <span aria-hidden className={styles.kinds}>
           {kinds.map((kind) => {
             const Icon = tools[kind].icon
             return <Icon key={kind} size={13} />
           })}
         </span>
-        {leftOut > 0 ? <LeftOut text={leftOutOfRun(leftOut)} /> : null}
-      </summary>
+      ) : null}
+      {leftOut > 0 ? <LeftOut text={leftOutOfRun(leftOut)} /> : null}
+    </summary>
+  )
+}
+
+/**
+ * A run of consecutive tool calls as one line that folds them. A finished
+ * run stays folded, and a run with a call in progress or not done shows each
+ * call. Once the user opens or folds it, it keeps that choice, and its line
+ * keeps its place.
+ */
+export function ToolGroup(props: { calls: readonly ToolCall[] }) {
+  const { calls } = props
+  const live = calls.some((call) => call.state !== 'done')
+  const [chosen, setChosen] = useState<boolean | null>(null)
+  const fold = useFold(chosen ?? live, setChosen)
+  return (
+    <details className={styles.group} {...fold.details}>
+      <FoldLine calls={calls} line={fold.line} />
       <ul className={styles.calls}>
         {calls.map((call) => (
           <li className={styles.call} key={call.id}>

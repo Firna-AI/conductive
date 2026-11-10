@@ -241,6 +241,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     login: turn('close', 'bob', 'codex').login,
     choice: { agent: 'codex', model: 'test-model', effort: 'high' },
     conversationId: null,
+    instructions: '',
     tools: fakeToolContext,
     event: () => {},
     warn: h.options.warn,

@@ -13,9 +13,11 @@ draft moves, the login of each session, and the linked sessions.
   that the backend did not keep from the draft that moved, wherever it is.
 - Each session runs on the agent login of its starter, the member who
   started it, as [Messages](../../docs/protocol/chat-and-events.md#messages)
-  says. The line under the composer names that login: "Uses your Claude
-  login", or "Uses Cal's Claude login" to another member. The name comes from
-  the session record, so a starter who left the org keeps a name.
+  says. When a message spends the login of another member, a label in the
+  bar of the composer names that login, such as "Cal's login". The name
+  comes from the session record, so a starter who left the org keeps a
+  name. A message on the reader's own login, also one that starts a linked
+  session, shows no label.
 - A message in the reader's own session needs that session's login. The
   record's `loginAvailable` decides, because the account that the chat read
   can be older. A login that its starter keeps private still works for that
@@ -25,14 +27,13 @@ draft moves, the login of each session, and the linked sessions.
   keeps it private, or an older record names no starter, a message starts a
   new linked session on the reader's own login. The record's
   `loginAvailable` and `loginShared` decide. The notice over the composer
-  says so before Send, with the reason, the line under the composer names
-  the reader's own login, and the composer offers no steering. Stop still
-  ends a running turn. Without an own login, the Connect notice shows in
-  its place, and Send is off. `linkedCopy.ts` of the mockups holds the
-  words of the notice.
+  says so before Send, with the reason, the composer names no login, and
+  it offers no steering. Stop still ends a running turn. Without an own
+  login, the Connect notice shows in its place, and Send is off.
+  `linkedCopy.ts` of the mockups holds the words of the notice.
 - The reply of Send and of Try again names the session that took the
   message. The session record of the reply follows the
-  [record order rule](README.md#rules-for-this-code).
+  [record order rule](loads-and-sends.md#record-order).
   The message waits as pending there until the stream or the history shows
   it, and a second reply with the same message adds nothing.
 - Only the tab that sent moves to the linked session, and only while it

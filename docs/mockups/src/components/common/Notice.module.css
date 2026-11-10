@@ -24,6 +24,15 @@
   color: var(--ui-rose);
 }
 
+/* The spinner keeps the 16 px box of an icon. */
+.busy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
 /* A narrow box moves the action under the text. */
 .text {
   display: flex;

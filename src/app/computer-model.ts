@@ -5,7 +5,7 @@ import {
   type OrgSettings,
   type UpdateOrgSettingsRequest,
 } from '../shared/org-settings'
-import { readBuildResponse, readSettings } from './api/read-settings'
+import { readSettings } from './api/read-settings'
 import { BuildLogFollower, type BuildLog } from './build-log-follower'
 import type { Delay } from './events'
 import { latestBuild, type OrgModel } from './org-model'
@@ -199,22 +199,14 @@ export class ComputerModel {
   }
 
   /**
-   * Build computer, and Try again after a failed build. The new build goes
-   * to the builds, so a tab that shows follows its log. A build that ended
-   * already reads the builds again while the tab shows.
+   * Build computer, and Try again after a failed build, as
+   * `OrgModel.startBuild` sends them. A tab that shows follows the log of
+   * the new build. A build that ended already reads the builds again only
+   * while the tab shows.
    */
-  async startBuild(): Promise<void> {
+  startBuild(): Promise<void> {
     const run = this.generation
-    const started = await this.api.send(
-      'POST',
-      orgSettingsPaths.builds(this.org.orgId),
-      {},
-      readBuildResponse,
-    )
-    this.org.putBuild(started.build)
-    if (run === this.generation && started.build.state !== 'running') {
-      void this.org.reload('builds')
-    }
+    return this.org.startBuild(() => run === this.generation)
   }
 
   /**

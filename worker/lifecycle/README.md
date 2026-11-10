@@ -21,10 +21,12 @@ gives the create, read, resume, and activity routes of a workspace to
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
   starts a stopped sandbox briefly, so that Boat keeps its disk.
+- Repair overdue disk alarms and image refreshes from the 15-minute Cron Trigger.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
   the current turn.
+- Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
 
@@ -72,6 +74,7 @@ The [operator backend](../operator/README.md#suspend-an-org) can suspend an org.
 Every start and build phase checks this with user suspension.
 Guarded admission, publication, token replacement, source grants, and refresh claims also check stored org state.
 Cleanup can still recover uncertain allocations and remove resources.
+A pending start, outcome publication, or failed-computer cleanup keeps suspension pending and its native alarm armed.
 Suspended orgs get no disk retention restart, including after an owner change.
 
 ## Settings
@@ -110,10 +113,16 @@ object holds the lifecycle state, the turn records, and the events.
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
-  workspace record. In the `records` phase of a create, `insertWorkspace`
+  workspace record. `workspaceRecord` gives an origin-free saved snapshot.
+  `workspaceView` adds the canonical web link for an explicit app origin.
+  In the `records` phase of a create, `insertWorkspace`
   writes the new row and its runtime record in one D1 batch. The new row
   lists first in its section, as
   [List order](../app-api/README.md#list-order) says.
+  The D1 allocation trigger assigns the next org number inside that insert transaction.
+  Cleanup keeps the org counter. A read after the insert gets the assigned number.
+- [`archive-workspace.ts`](archive-workspace.ts): `archiveWorkspace`, the guarded archive, cleanup, event, and response with an explicit app origin.
+- [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):
@@ -152,8 +161,11 @@ object holds the lifecycle state, the turn records, and the events.
   for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
-- [`failed-creations.ts`](failed-creations.ts): the hidden drafts of failed
-  creates, and `failedCreationForSender`.
+- [`retry-creation.ts`](retry-creation.ts): `retryFailedCreation` reuses the
+  first-message admission and workspace identity after a failed first start.
+  [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.
+- [`start-admission.ts`](start-admission.ts): `enqueueWorkspaceStart` admits
+  initial starts, replacements, and resumes in the coordinator's serial task.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
 - [`durable-turns.ts`](durable-turns.ts): `recoverLifecycleTurns`, which
@@ -219,6 +231,8 @@ object holds the lifecycle state, the turn records, and the events.
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
+- [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
+  which starts changed settings after the first good build finishes cleanup.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
 - [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
   replays a saved allocation request and saves the recovered sandbox ID.
@@ -246,6 +260,7 @@ object holds the lifecycle state, the turn records, and the events.
   `authenticateWorkspaceToken`.
 - [`runtime.ts`](runtime.ts): `LifecycleEnvironment`, `workspaceRuntime`,
   and `imageRuntime`.
+- [`repair.ts`](repair.ts) and [`repair-data.ts`](repair-data.ts): bounded Cron repair with shared eligibility rules and persisted retry signals.
 - [`worker/workspace.ts`](../workspace.ts): the composed `Workspace` class.
   [`worker/workspace-lifecycle.ts`](../workspace-lifecycle.ts) exposes its lifecycle methods.
 - [Member receivers](../members/workspace-receiver.ts) install durable generations, drain active phases, and restore maintenance timers.

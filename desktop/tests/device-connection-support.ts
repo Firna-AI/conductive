@@ -7,7 +7,10 @@ import {
 } from '../../src/shared/device.ts'
 import type { WorkerToDevice } from '../../src/shared/device.ts'
 import { createDeviceConnection } from '../src/device/connection.js'
-import type { DeviceCredential } from '../src/device/connection.js'
+import type {
+  DeviceAccount,
+  DeviceCredential,
+} from '../src/device/connection.js'
 import type { SocketEvents } from '../src/device/transport.js'
 import { fakeClock } from './device-support.js'
 
@@ -35,8 +38,8 @@ export function connectionFixture() {
   const dispose = vi.fn()
   const warn = vi.fn()
   const authenticate = vi.fn<
-    (value: string, signal: AbortSignal) => Promise<string | undefined>
-  >(async () => 'user-one')
+    (value: string, signal: AbortSignal) => Promise<DeviceAccount | undefined>
+  >(async () => ({ userId: 'user-one', appAccess: true }))
   const readCredential = vi.fn(async () => credential)
   const connect = vi.fn((_value: string, callbacks: SocketEvents) => {
     const socket = { close: vi.fn(), send: vi.fn(() => true) }

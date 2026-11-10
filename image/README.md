@@ -16,9 +16,11 @@ archive packager and the live check.
 - Install the runner archive after a check of its SHA-256 digest.
 - Install and enable the agent runner's systemd service.
 - Make the git credential helper the system credential helper of git.
+- Install the GitHub CLI and its wrapper, which gets a fresh token for each command.
 - Start no runner in a build sandbox. The service runs it only in a
   workspace sandbox.
-- Package the runner archive and its digest on a developer machine.
+- Package the runner archive and its digest on a developer machine or in
+  the deploy workflow.
 - Check the chat path and time the first agent start in a real sandbox.
 
 The [terminal backend](../worker/terminal/README.md) owns ttyd, tmux, their
@@ -48,11 +50,16 @@ Put no credential in the URL or in the archive. Each saved snapshot keeps
 the unpacked archive.
 
 [`package-runner.mjs`](package-runner.mjs) makes the archive on a
-developer machine, as
+developer machine or in the deploy workflow, as
 [Developer scripts](developer-scripts.md#package-the-archive) says. It
-writes the URL and the digest of the archive to `<archive>.json`.
+writes the URL and the digest of the archive to `<archive>.json`. Its
+`--base-url` option names the URL after the digest of the archive. The
+deploy workflow uses that option.
 
-To supply an archive:
+Each deploy from `main` publishes the archive of its commit when the
+archive is new. It sets both variables to that archive, as
+[Deployment inputs](../docs/deployment.md#the-archive-in-each-deploy)
+says. To supply an archive by hand:
 
 1. Publish the exact archive at its URL, on a public HTTPS host.
 2. Set the Worker variables `CONDUCTIVE_RUNNER_ARCHIVE_URL` and
@@ -88,6 +95,7 @@ each resume, together with the org's env vars:
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
 | `CONDUCTIVE_DEFAULT_BRANCH` | The default branch of the workspace's repository. |
+| `CONDUCTIVE_WORKSPACE_BRANCH` | The workspace branch that the app tracks, from the Worker's record of the workspace. |
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |
@@ -162,25 +170,8 @@ reads it, as [What it does](../runner/README.md#what-it-does) says.
 
 ## Git credentials
 
-`install.sh` installs `git-credential-helper.sh` as
-`/usr/local/bin/conductive-git-credential`. This wrapper keeps the
-caller's `CONDUCTIVE_TURN_ID`, loads the sandbox variables, and runs
-`git-credential-helper.mjs` with the private Node.
-
-- The helper answers only a `get` request for `https` on `github.com`. It
-  ignores every other request.
-- It posts to the git credential route, `/v1/git/credential`, at
-  `CONDUCTIVE_MACHINE_ORIGIN`, with the workspace token as a bearer token. It sends the turn ID in the
-  `X-Conductive-Turn-Id` header. It sends no request body. It refuses
-  redirects, and it stops after 30 seconds.
-- It gives git the token as the password of the user `x-access-token`.
-- The Worker returns a fresh GitHub user token of the sender of that turn.
-  The helper saves nothing, so each git operation asks again.
-- Without a current turn, or when the Worker refuses, the helper writes one
-  fixed message. Git then gets no credential from the helper.
-
-The Worker serves that route on the machine hostname, as the
-[lifecycle README](../worker/lifecycle/README.md#machine-route) says.
+[GitHub access](github.md) describes the git credential helper and the
+GitHub CLI wrapper, their token rules, and their tests.
 
 ## Secrets
 
@@ -209,16 +200,6 @@ The Worker serves that route on the machine hostname, as the
   output.
 
 ## Development
-
-Run the credential helper test with
-`npm run test -- worker/lifecycle/git-credential-helper.test.ts`. It
-installs copies of the shipped launcher and helper, with a saved variables
-file, in a temporary folder under `.context/`. It maps only
-`/opt/conductive` and `/run/ascii-secrets` to that folder, and it refuses
-a launcher that uses any other absolute path. It runs the launcher with
-`/bin/sh`, and checks the outgoing credential request and its turn ID.
-Both shell fixtures decode their files from the command of
-`installImageSoftware` through one shared test helper.
 
 Run the installer tests with
 `npm run test -- worker/lifecycle/image-runtime.test.ts worker/lifecycle/image-software.test.ts`.
@@ -260,6 +241,7 @@ build, a disk retention restart, and an unfinished start start no runner.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and
   [`git-credential-helper.mjs`](git-credential-helper.mjs): the git
   credential helper.
+- [`github-cli.sh`](github-cli.sh): gives the GitHub CLI a fresh token for each command.
 - [`image-runtime.ts`](../worker/lifecycle/image-runtime.ts): the pinned
   Node release, its digest, and its paths.
 - [`image-software.ts`](../worker/lifecycle/image-software.ts): stages these

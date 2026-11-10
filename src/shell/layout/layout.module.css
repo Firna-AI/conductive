@@ -17,3 +17,11 @@
   overflow: hidden;
   background: var(--ui-surface);
 }
+
+/*
+ * The main area of a desktop frame takes the focus for a new screen, as the
+ * start of the next Tab. It is not a control, so it shows no focus ring.
+ */
+.screen:focus {
+  outline: none;
+}

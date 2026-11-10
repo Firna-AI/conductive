@@ -9,6 +9,16 @@ import type {
 import { useNavigation } from '../../app/navigation'
 
 /**
+ * A press of the main button without a modifier key, which the app handles
+ * itself. A link leaves every other click to the browser, such as a click
+ * with Cmd or Ctrl that opens a new tab.
+ */
+export function isPlainClick(event: MouseEvent): boolean {
+  if (event.button !== 0) return false
+  return !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+}
+
+/**
  * A link to a screen of the app. A plain click changes the address without
  * a page load. A click with a modifier key opens the address as the browser
  * does, such as in a new tab.
@@ -36,9 +46,7 @@ export function AppLink({
   const navigation = useNavigation()
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
     props.onClick?.(event)
-    if (event.defaultPrevented) return
-    if (event.button !== 0) return
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    if (event.defaultPrevented || !isPlainClick(event)) return
     event.preventDefault()
     if (props.replace) navigation.replace(props.to)
     else navigation.push(props.to)

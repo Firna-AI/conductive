@@ -22,6 +22,20 @@ export const getStartedCopy = {
     action: 'Create org',
     done: 'Created',
   },
+  /**
+   * The cloud computer of the org, in the org step. Create org starts its
+   * first build when the org has a repository.
+   */
+  computer: {
+    label: 'Cloud computer',
+    preparing: (elapsed: string) => `Preparing · ${elapsed}`,
+    ready: 'Ready',
+    failed: (duration: string) => `Failed after ${duration}`,
+    none: 'No build yet',
+    retry: 'Try again',
+    log: 'Open the log',
+    build: 'Build computer',
+  },
   agent: {
     title: '3. Connect Claude or Codex',
     description:
@@ -29,5 +43,12 @@ export const getStartedCopy = {
     done: 'Connected',
   },
   finish: (org: string) => `${org} is ready for a new workspace.`,
+  /** The finish while the first build of the org runs. */
+  finishPreparing: (org: string) =>
+    `${org}'s cloud computer is still being prepared.`,
+  /** The finish after the first build of the org failed. */
+  finishFailed: (org: string) => `${org}'s cloud computer didn't build.`,
+  /** The finish of an org with no build, such as after a start that failed. */
+  finishNoBuild: (org: string) => `${org}'s cloud computer needs a build.`,
   open: (org: string) => `Open ${org}`,
 } as const

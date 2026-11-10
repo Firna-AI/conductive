@@ -4,6 +4,7 @@ import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
 import {
   RUNNER_PROTOCOL_VERSION,
   type RunnerEvent,
+  type RunnerEventEnvelope,
   type RunnerToWorkspace,
 } from '../../../src/shared/runner'
 import { SocketInbox } from '../adapter-sockets.test-support'
@@ -71,14 +72,20 @@ export class OuterFakeRunner {
     })
   }
 
-  emit(event: RunnerEvent): void {
-    this.send({
+  emit(event: RunnerEvent): RunnerEventEnvelope {
+    const envelope: RunnerEventEnvelope = {
       type: 'event',
       streamId: this.streamId,
       eventNumber: ++this.eventNumber,
       occurredAt: 1_800_000_000_000 + this.eventNumber,
       event,
-    })
+    }
+    this.send(envelope)
+    return envelope
+  }
+
+  resend(envelope: RunnerEventEnvelope): void {
+    this.send(envelope)
   }
 
   private send(message: RunnerToWorkspace): void {
