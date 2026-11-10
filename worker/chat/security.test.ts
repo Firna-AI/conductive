@@ -211,6 +211,7 @@ describe('workspace chat security', () => {
     expect(runner.commands).toHaveLength(2)
     const retried = runner.commands[1]
     if (retried?.type !== 'turn') throw new Error('Expected a retry turn.')
+    if (!retried.login) throw new Error('The version 1 turn has no login.')
     expect(retried.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     expect(
       (await fixture.history(session.id)).events.filter(

@@ -58,9 +58,10 @@ export function backendPump(
               state.job !== undefined &&
               state.alarmAt !== null &&
               (state.alarmAt <= now() ||
-                state.instanceId !== existing.get(state.id)?.instanceId ||
-                state.alarmGeneration >
-                  (existing.get(state.id)?.alarmGeneration ?? -1)),
+                (state.startPending &&
+                  (state.instanceId !== existing.get(state.id)?.instanceId ||
+                    state.alarmGeneration >
+                      (existing.get(state.id)?.alarmGeneration ?? -1)))),
           )
           .sort((a, b) => (a.alarmAt ?? Infinity) - (b.alarmAt ?? Infinity))[0]
         if (!next || (next.alarmAt ?? Infinity) > now() + 60_000) {
