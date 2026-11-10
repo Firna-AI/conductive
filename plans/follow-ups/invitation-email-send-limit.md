@@ -27,6 +27,6 @@
 - **Left out:** A limit in the Members tab alone, because a crafted request skips it.
 - **Wider fix:** C. Each kind of email that a person starts then has a limit by default.
 - **Previous examples:** The plan `plans/command-palette-feedback.md` asks the same question for feedback emails, as its decision 224. The follow-up item `plans/follow-ups/draft-attachment-quota.md` asks it for the draft files of the chat.
-- **Related:** Decision 224 of `plans/command-palette-feedback.md` offers option G, which is option C here. When the user chooses that option there, that plan covers this item, and its pull request deletes this file.
+- **Related:** The feedback emails have the same problem. On 10 November 2026, the user chose no limit for them for now, and a later limit of 10 feedback sends in an hour for each person, which counts only feedback emails. So that limit does not cover invitations, and this item stays open.
 - **Recommendation:** C. One rule in the sender protects every email that a person starts, and it keeps room in the quota for the approval emails.
 - **Action:** ask the user, because each option except A adds a new refusal.

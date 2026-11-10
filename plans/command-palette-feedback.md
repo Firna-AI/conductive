@@ -11,13 +11,15 @@ inbox through Resend. The team can reply to the primary verified email of
 the person's GitHub account.
 
 The user chose this approach in a brainstorm on 10 November 2026, with
-decisions 218, 219, and 220. Decisions 221 to 224 are open. The change does
-not cover these:
+decisions 218, 219, and 220. The user answered decisions 222 and 224 on the
+same day. Decisions 221 and 223 are open. The change does not cover these:
 
 - A log of the recent errors of the app. The user chose it for a follow-up
   item, in decision 219.
 - Other entry points, such as the Help menu of the Mac app.
 - A copy of the feedback in the app's database, or a page that lists it.
+- A limit on how often a person can send. The user chose it for a
+  follow-up item, in decision 224.
 
 Contract owners:
 
@@ -202,7 +204,7 @@ Added on 10 November 2026 while this plan was written. Open.
 
 ### 222. Choose how the team opens screenshots safely
 
-Added on 10 November 2026 from the options check. Open.
+Added on 10 November 2026 from the options check.
 
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design.
@@ -269,6 +271,7 @@ Added on 10 November 2026 from the options check. Open.
   E best protects the devices of the team.
 - **Action:** ask the user, because D adds a refusal of a file type to the
   dialog and the route.
+- **Chosen:** D, by the user on 10 November 2026.
 
 ### 223. Choose where and how long the team keeps feedback
 
@@ -336,7 +339,7 @@ Added on 10 November 2026 from the options check. Open.
 
 ### 224. Choose how often one person can send feedback
 
-Added on 10 November 2026 from the options check. Open.
+Added on 10 November 2026 from the options check.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Design.
@@ -407,6 +410,10 @@ Added on 10 November 2026 from the options check. Open.
   protects the other emails.
 - **Action:** ask the user, because F adds a new refusal. The limits also
   need the Resend plan of the deployment.
+- **Chosen:** A, by the user on 10 November 2026, with B for a follow-up
+  item. The user set the limit of B to 10, and said that it counts only
+  feedback emails. With the period of B, that is 10 feedback sends in an
+  hour for each person. The last milestone writes the follow-up item.
 
 ## Design
 
@@ -449,9 +456,11 @@ line that waits for an open decision names it.
 - Send waits for text in the message box.
 - Add screenshots opens the file picker. A paste of an image into the
   message box, or a drop on the dialog, adds it too. Each screenshot shows
-  as a chip with its name, its size, and Remove. Decision 222 sets the
-  file types. With its options B to E, the dialog runs the same byte check
-  as the Worker, from shared code, so a renamed file fails at once.
+  as a chip with its name, its size, and Remove.
+- The dialog takes PNG, JPEG, GIF, and WebP files, as decision 222 chose.
+  It runs the same check of the first bytes as the Worker, from shared
+  code. So a renamed file of another type fails at once, with a message
+  that names the four types.
 - The dialog removes the metadata of each image before the send, such as
   the place where a photo was taken. Reason: a screenshot needs none, and
   a photo can hold the location of the person.
@@ -467,7 +476,6 @@ line that waits for an open decision names it.
   that email at each sign-in.
 - A send shows its progress. A failed send keeps the text and the
   screenshots, and names what failed. A new press of Send tries again.
-  Decision 224 can add a state that says when to try again.
 - After a send, the dialog closes and a toast thanks the person.
 - A close without a send keeps the draft in the memory of the tab. The
   next open shows it. A send clears it. Reason: an Escape by mistake loses
@@ -505,7 +513,8 @@ line that waits for an open decision names it.
   more memory, and an isolate has 128 MB for all of its requests, as
   decision 144 found.
 - The Worker refuses blank text with HTTP 400, and screenshots over 7 MB
-  in all with HTTP 413. Decision 222 sets the refusal of a file type.
+  in all with HTTP 413. It refuses a file whose first bytes are not a PNG,
+  JPEG, GIF, or WebP image with HTTP 400, as decision 222 chose.
   Reason: the dialog never sends them, so only a crafted request meets
   these refusals.
 - Without a team inbox, the route answers HTTP 503. A refused email gives
@@ -515,15 +524,16 @@ line that waits for an open decision names it.
   a person sees only the waitlist, which has no palette.
 - The Worker keeps no copy of the feedback. Outside a local app origin,
   its log holds no feedback text.
-- Decision 224 sets the limit on sends.
+- No limit on the number of sends, as decision 224 chose. An operator
+  suspends a person who misuses it. A follow-up item adds a limit of 10
+  feedback sends in an hour for each person.
 
 ### The email
 
 - The shared mail sender of the Worker sends it, from
   `Conductive feedback <feedback@mail.conductive.build>`. The sender gets
   a sender name, a reply address, and attachments. The invitation and
-  approval emails stay as they are. Option D of decision 224 would send
-  feedback through Cloudflare in place of Resend.
+  approval emails stay as they are.
 - It goes to the team inbox of the Worker secret `FEEDBACK_EMAIL`. Reason:
   a personal address stays out of the repository.
 - Its reply address is the primary verified email of the person, when the
@@ -531,9 +541,11 @@ line that waits for an open decision names it.
 - Its subject is "Feedback from <login>". Its plain text holds the
   message, then the context, with links to the operator pages of the user
   and the org.
-- Each screenshot goes as an attachment. The Worker gives Resend the name
-  and the type of each file, as decision 222 sets them, so Resend never
-  takes the type from a name that a request chose.
+- Each screenshot goes as an attachment. The shared mail sender takes an
+  attachment only as a checked image kind with its bytes, and it writes the
+  file name and the type itself, as decision 222 chose. So no caller can
+  pass a name or a type from a request, and Resend never takes the type
+  from such a name.
 - The delivery key holds the user ID, the draft ID, and a hash of the
   body, as the key of an invitation does. Reason: a second press of Send
   after a lost reply sends one email. A changed draft gets a new key,
@@ -573,8 +585,8 @@ Depends on: none
 
 Draw the palette row, the Feedback dialog with its states, and the user
 flow, for desktop and for a phone. Read the `mockups` and `product-ui`
-skills first. The texts that decisions 221, 222, and 224 add wait for
-their answers.
+skills first. The line that decision 221 can add near Send waits for its
+answer.
 
 - [ ] Add the Help group with Send feedback to the Actions tab of
       `app/command-palette/actions`, and a search for "feedback" to
@@ -582,11 +594,10 @@ their answers.
 - [ ] Add the page `app/feedback`. Its canonical screen is the dialog with
       a message and one screenshot, over the workspace list.
 - [ ] Add the child page `app/feedback/states`: the empty dialog, the
-      dialog without a reply address, a send in progress, a failed send,
-      and a screenshot over the limit.
-- [ ] Add the child page `app/feedback/refusals` for the refusals that the
-      answers of decisions 222 and 224 add: a file of another type, and a
-      send above the limit. This TODO waits for those answers.
+      dialog without a reply address, a send in progress, and a failed
+      send.
+- [ ] Add the child page `app/feedback/refusals`: a screenshot over the
+      limit, and a file that is not a PNG, JPEG, GIF, or WebP image.
 - [ ] Add the user flow `user-flows/send-feedback`: open the palette,
       search "feedback", write a message, paste a screenshot, send, and
       see the toast. It reuses the screens of the pages above.
@@ -641,21 +652,24 @@ Add the two routes, the email, and the body limit, with their tests.
 
 - [ ] Add the shared types and limits in `src/shared/feedback.ts`.
 - [ ] Give the shared mail sender in `worker/mail-sender.ts` a sender
-      name, a reply address, and attachments. Keep the invitation and
-      approval emails as they are, with their tests.
+      name, a reply address, and attachments. An attachment is a checked
+      image kind with its bytes, and the sender writes its name and type,
+      as decision 222 chose. Keep the invitation and approval emails as
+      they are, with their tests.
+- [ ] Add the check of the first bytes of PNG, JPEG, GIF, and WebP files
+      to `src/shared/`, so that the dialog and the Worker share it.
 - [ ] Add `GET /api/feedback` and `POST /api/feedback` after the app
       request gate, with the checks, the context, and the email of the
       design.
-- [ ] Apply decisions 222 and 224 to the route. This TODO waits for the
-      answers.
 - [ ] Declare the 10 MB body limit of `POST /api/feedback` at the Worker
       entry.
 - [ ] Add `FEEDBACK_EMAIL` to `AppEnv`, with the local log and the 503
       without it.
 - [ ] Test with the fake Resend: the email fields, the reply address with
       and without an email, the attachments, one email for a repeated
-      draft, a new email for a changed draft, each refusal, the IDs of an
-      org of which the person is not a member, and the local log.
+      draft, a new email for a changed draft, each refusal, a renamed file
+      of another type, the IDs of an org of which the person is not a
+      member, and the local log.
 - [ ] Update the [Worker README](../worker/README.md) and the
       [app API README](../worker/app-api/README.md).
 
@@ -692,8 +706,8 @@ Build the row, the dialog, and the toast as the mockups draw them.
       desktop frame and the phone frame. The palette passes its org and
       the open workspace to the dialog.
 - [ ] Build the screenshots: the picker, the paste, the drop, the chips,
-      the removal of metadata, and the 7 MB limit. Apply decisions 222
-      and 224.
+      the removal of metadata, the 7 MB limit, and the shared check of the
+      four image types.
 - [ ] Test the palette results: the Help group on each kind of page, and
       a search by each search word.
 - [ ] Test the dialog in happy-dom: a send with a toast, a failed send
@@ -719,6 +733,9 @@ Depends on: every other milestone
       gets HTTP 503, and the comparison row is not true.
 - [ ] Add the follow-up item `plans/follow-ups/feedback-recent-app-errors.md`
       for option D of decision 219.
+- [ ] Add the follow-up item `plans/follow-ups/feedback-send-limit.md` for
+      option B of decision 224: 10 feedback sends in an hour for each
+      person. Invitations do not count.
 - [ ] Search `origin/main` for decisions 218 to 224. On a collision,
       renumber the decisions of this plan and their citations.
 - [ ] Commit with Conventional Commits and push the branch.
