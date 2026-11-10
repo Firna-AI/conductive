@@ -107,12 +107,7 @@ export async function backendFixture(sharedHarness?: TestHarness) {
       actors.set(id, actor)
       starts.set(
         id,
-        backendStart(
-          actor,
-          dependencies.now,
-          (at) => advanceTo(at, id),
-          () => accepted.get(id),
-        ),
+        backendStart(actor, () => accepted.get(id)),
       )
     }
     return actor.endpoint()

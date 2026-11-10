@@ -68,6 +68,8 @@ export function backendActor(
   const native = harness.native.actor(id, options)
   const advance = async (at?: number) => {
     await native.ready
+    // The admission notification can precede the final alarm write.
+    await native.api.chat.store.settled()
     const alarm = await native.api.storage.getAlarm()
     await advanceTo(at ?? Math.max(now(), alarm ?? now()))
   }
