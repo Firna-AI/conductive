@@ -16,6 +16,7 @@ import { joinedMember } from '../operator/suspension-test-support'
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import { heldOperation } from '../test-support/held-operation'
 import { updateShellWorkspace } from '../app-api/feature-workspaces-data'
+import { computerRecords } from './computer-ledger.test-support'
 
 const fixtureForTest = setupBackendTests()
 
@@ -102,6 +103,14 @@ it('restores without starting, orders same-time transitions, and resumes with a 
   )
   expect(fixture.boat.resumeIds).toEqual([])
   expect(requireFeatureResult(await saved.restore())).toEqual(restored)
+  expect(await computerRecords(fixture.runtime.env.DB)).toMatchObject([
+    {
+      sandboxId: saved.sandboxId,
+      providerAccount: 'boat',
+      deletedAt: null,
+      cleanupPending: 0,
+    },
+  ])
   await fixture.run(() =>
     resumeCompletedWorkspace(
       fixture.runtime,
@@ -228,6 +237,14 @@ it('ends Restore exactly at expiry while deletion retries and publishes confirme
     ok: false,
     error: { status: 409, code: 'workspace_restore_unavailable' },
   })
+  expect(await computerRecords(fixture.runtime.env.DB)).toMatchObject([
+    {
+      sandboxId: saved.sandboxId,
+      providerAccount: 'boat',
+      deletedAt: null,
+      cleanupPending: 1,
+    },
+  ])
   expect(
     (await readWorkspace(fixture.runtime.env.DB, fixture.org.id, saved.id))
       .sandboxId,
@@ -235,6 +252,14 @@ it('ends Restore exactly at expiry while deletion retries and publishes confirme
   await saved.actor.restart()
   await fixture.advanceTo(expiresAt + 30_000, saved.id)
   expect(fixture.boat.deletedIds).toEqual([saved.sandboxId])
+  expect(await computerRecords(fixture.runtime.env.DB)).toMatchObject([
+    {
+      sandboxId: saved.sandboxId,
+      providerAccount: 'boat',
+      deletedAt: expiresAt + 30_000,
+      cleanupPending: 0,
+    },
+  ])
   expect(await saved.restore()).toMatchObject({
     ok: false,
     error: { status: 409 },

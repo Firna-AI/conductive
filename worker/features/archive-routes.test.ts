@@ -96,12 +96,26 @@ it('archives without checking unpushed work and preserves read-only chat while r
   ).toBe(403)
   expect((await archive(false)).status).toBe(200)
   expect(active.boat.deletedIds).toEqual([])
+  expect(
+    await active.env.DB.prepare(
+      'SELECT deleted_at FROM computer_ledger WHERE sandbox_id = ?',
+    )
+      .bind('bx_archive')
+      .first('deleted_at'),
+  ).toBeNull()
   const archived = await archive(true)
   expect(archived.status).toBe(200)
   expect(await archived.json()).toMatchObject({
     workspace: { state: 'archived' },
   })
   expect(active.boat.deletedIds).toEqual([])
+  expect(
+    await active.env.DB.prepare(
+      'SELECT deleted_at FROM computer_ledger WHERE sandbox_id = ?',
+    )
+      .bind('bx_archive')
+      .first('deleted_at'),
+  ).toBeNull()
   const history = await active.request(
     chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, sessionId),
   )

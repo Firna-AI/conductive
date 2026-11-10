@@ -1,6 +1,7 @@
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import { activeOrgPredicate } from '../data/org-access'
 import { DISK_KEEPALIVE_MS } from './durable-types'
+import { computerDeletedStatement } from './computer-ledger'
 
 export interface ArchiveResource {
   workspaceId: string
@@ -103,22 +104,29 @@ export async function detachArchiveDisk(
   row: ArchiveResource,
   now: number,
 ) {
-  const result = await db
-    .prepare(
-      `UPDATE workspaces SET sandbox_id = NULL, next_disk_keepalive_at = NULL,
-    updated_at = MAX(?, updated_at + 1) WHERE id = ? AND org_id = ?
-    AND archived_at = ? AND sandbox_id = ? AND provider_account = ?`,
-    )
-    .bind(
+  if (row.sandboxId === null) return false
+  const result = await db.batch([
+    computerDeletedStatement(
+      db,
+      { sandboxId: row.sandboxId, providerAccount: row.providerAccount },
       now,
-      row.workspaceId,
-      row.orgId,
-      row.archivedAt,
-      row.sandboxId,
-      row.providerAccount,
-    )
-    .run()
-  return result.meta.changes === 1
+    ),
+    db
+      .prepare(
+        `UPDATE workspaces SET sandbox_id = NULL, next_disk_keepalive_at = NULL,
+       updated_at = MAX(?, updated_at + 1) WHERE id = ? AND org_id = ?
+       AND archived_at = ? AND sandbox_id = ? AND provider_account = ?`,
+      )
+      .bind(
+        now,
+        row.workspaceId,
+        row.orgId,
+        row.archivedAt,
+        row.sandboxId,
+        row.providerAccount,
+      ),
+  ])
+  return result[1].meta.changes === 1
 }
 
 export async function scheduleArchiveRepair(

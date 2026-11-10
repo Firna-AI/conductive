@@ -106,7 +106,8 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'context-folder',
     area: 'workspaces-and-branches',
     name: '.context folder',
-    status: 'considering',
-    note: 'Automatic workspace notes folders are under consideration. Agents can create a notes folder in the repository.',
+    status: 'planned',
+    note: 'A .context folder for notes, screenshots, shared files, and attachments is planned. Git will ignore it.',
+    due: null,
   },
 ]

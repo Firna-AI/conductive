@@ -10,6 +10,7 @@ import { LifecycleBoat } from './lifecycle-boat-test-support'
 import { providerForAccount } from '../sandbox/client'
 import { record } from '../chat/inputs'
 import { readWorkspace } from './workspace-data'
+import { computerRecords } from './computer-ledger.test-support'
 
 const fixtureForTest = setupBackendTests()
 const day = 86_400_000
@@ -131,6 +132,20 @@ it('stops, bridges, and purges an equal-ID disk only through its saved provider 
   })
   await fixture.advanceTo(archived.workspace.restoreUntil, saved.id)
   expect(second.deletedIds).toEqual([])
+  expect(await computerRecords(fixture.runtime.env.DB)).toMatchObject([
+    {
+      sandboxId: disk.id,
+      providerAccount: 'boat',
+      deletedAt: null,
+      cleanupPending: 0,
+    },
+    {
+      sandboxId: disk.id,
+      providerAccount: 'boat-second',
+      deletedAt: null,
+      cleanupPending: 1,
+    },
+  ])
   expect(
     await readWorkspace(fixture.runtime.env.DB, fixture.org.id, saved.id),
   ).toMatchObject({ sandboxId: disk.id, providerAccount: 'boat-second' })
@@ -143,6 +158,20 @@ it('stops, bridges, and purges an equal-ID disk only through its saved provider 
   expect(second.resumeIds).toEqual([disk.id])
   expect(second.stopIds).toEqual([disk.id])
   expect(second.deletedIds).toEqual([disk.id])
+  expect(await computerRecords(fixture.runtime.env.DB)).toMatchObject([
+    {
+      sandboxId: disk.id,
+      providerAccount: 'boat',
+      deletedAt: null,
+      cleanupPending: 0,
+    },
+    {
+      sandboxId: disk.id,
+      providerAccount: 'boat-second',
+      deletedAt: archived.workspace.restoreUntil + 30_000,
+      cleanupPending: 0,
+    },
+  ])
   expect(fixture.boat.server.requests).toHaveLength(primaryRequests)
   expect(fixture.boat.states.has(saved.sandboxId)).toBe(true)
   expect(

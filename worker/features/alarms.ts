@@ -2,7 +2,7 @@ import type { ReceiverStorage } from '../members/receiver-storage'
 
 export type AlarmSource =
   | 'lifecycle'
-  | `lifecycle:${'start' | 'publication' | 'changed' | 'cleanup' | 'access' | 'image' | 'run' | 'archive'}`
+  | `lifecycle:${'start' | 'publication' | 'changed' | 'cleanup' | 'access' | 'image' | 'run' | 'archive' | 'computer-stops'}`
   | 'devices'
   | 'previews'
   | 'github'

@@ -15,6 +15,7 @@ import { cleanupDeletedOrgs } from '../members/cleanup'
 import { SOFTWARE } from './backend-test-support'
 import type { NativeCommitView } from '../test-support/native-commit'
 import { boatRoute } from '../sandbox/routes'
+import { computerRecords } from './computer-ledger.test-support'
 
 const fixtureForTest = setupBackendTests()
 
@@ -36,6 +37,14 @@ it('finishes Archive after a provider confirms the retained computer is missing 
   }
   const response = await saved.archive()
   expect(response.workspace.restoreUntil).toBeNull()
+  expect(await computerRecords(fixture.runtime.env.DB)).toMatchObject([
+    {
+      sandboxId: saved.sandboxId,
+      providerAccount: 'boat',
+      deletedAt: TEST_TIME,
+      cleanupPending: 0,
+    },
+  ])
   expect(
     await readWorkspace(fixture.runtime.env.DB, fixture.org.id, saved.id),
   ).toMatchObject({ sandboxId: null, state: 'archived' })
@@ -70,6 +79,19 @@ it.each(['beforeCommit', 'afterCommit'] as const)(
     const start = fixture.starts.get(id)
     if (!actor || !start) throw new Error('Missing interrupted create')
     await start.advance()
+    const allocation = await start.job()
+    if (!allocation) throw new Error('Missing uncertain allocation')
+    expect(await computerRecords(fixture.runtime.env.DB)).toMatchObject([
+      {
+        allocationKey: allocation.attempt,
+        sandboxId: null,
+        providerAccount: allocation.providerAccount,
+        ownerUserId: fixture.user.id,
+        purpose: 'workspace',
+        purposeId: id,
+        deletedAt: null,
+      },
+    ])
     expect(
       (await readWorkspace(fixture.runtime.env.DB, fixture.org.id, id))
         .sandboxId,
@@ -105,6 +127,17 @@ it.each(['beforeCommit', 'afterCommit'] as const)(
     expect(
       await readWorkspace(fixture.runtime.env.DB, fixture.org.id, id),
     ).toMatchObject({ sandboxId: 'bx_1', state: 'archived' })
+    expect(await computerRecords(fixture.runtime.env.DB)).toMatchObject([
+      {
+        allocationKey: allocation.attempt,
+        sandboxId: 'bx_1',
+        providerAccount: allocation.providerAccount,
+        ownerUserId: fixture.user.id,
+        purpose: 'workspace',
+        purposeId: id,
+        deletedAt: null,
+      },
+    ])
     requireFeatureResult(await actions.restore())
     expect(
       requireFeatureResult(
@@ -179,6 +212,14 @@ it('restores archive timers after Org Restore and purges archived disks with Del
     pending: [],
   })
   expect(fixture.boat.deletedIds).toContain(saved.sandboxId)
+  expect(await computerRecords(env.DB)).toMatchObject([
+    {
+      sandboxId: saved.sandboxId,
+      providerAccount: 'boat',
+      deletedAt: TEST_TIME + 26 * 86_400_000,
+      cleanupPending: 0,
+    },
+  ])
   await fixture.setTime(TEST_TIME + 32 * 86_400_000)
   expect(await cleanupDeletedOrgs(env, dependencies, hooks)).toEqual({
     purged: [fixture.org.id],

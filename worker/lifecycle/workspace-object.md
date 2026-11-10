@@ -4,7 +4,8 @@ This page belongs to the [workspace lifecycle README](README.md). It
 describes the Durable Object of each workspace and of each image
 coordinator. It gives their names, the lifecycle steps, the alarm, the
 start logs, the event socket, and the event publication. It also gives the
-creates and resumes and the git credential sender.
+creates and resumes. [Routes](routes.md#the-git-credential-sender) gives
+the git credential sender.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
@@ -15,6 +16,7 @@ one role:
 
 - The workspace ID names the workspace object of one workspace.
 - `org-image:<orgId>` names the image coordinator of one org.
+- `org-computer-stops:<orgId>` names the detached Stop task of one org.
 
 Its public methods are internal RPC, not HTTP routes. This folder uses the
 `WorkspaceLifecycleEndpoint` interface of
@@ -29,13 +31,21 @@ says:
   goes out, after a check of the org membership, and marks its session as
   running. `finishLifecycleTurn`, or a report that the turn ended, removes
   it. These records keep the running sessions. They give no GitHub access,
-  as [The git credential sender](#the-git-credential-sender) says.
+  as [The git credential sender](routes.md#the-git-credential-sender) says.
 - `reportRunnerLifecycle` takes each runner event that ordered runner
   ingestion accepts. `runnerLifecycleDisconnected` takes a disconnect.
 - `acknowledgeLifecycleFirstMessage` clears the pending first message of
   the create. The admission keeps its own copy for repeats.
 
-The `alarm` of the class serves both roles. For an image coordinator, it
+The `alarm` of the class serves these roles. The detached Stop task keeps
+concrete computer IDs and retries every 30 seconds until each Stop is confirmed.
+A successful reply that still runs keeps its retry.
+The task checks its org's live ledger before each dispatch.
+An owner change or suspension lift keeps its queued work.
+An absent or deleted ledger entry ends that work.
+A retained archived computer is still the computer of its workspace. That
+workspace's lifecycle handles its suspension, so the Stop task has no case of its own for Archive.
+For an image coordinator, the alarm
 advances the running build or refresh by one step, or starts the daily
 refresh. A transient Boat error keeps the job step for the next alarm,
 within the [retry window](image-builds.md#provider-retries), except a source
@@ -267,24 +277,9 @@ create and resume. The workspace object runs that start:
 
 ## The git credential sender
 
-`Workspace.credentialSender` maps the turn ID of a git credential request
-to a sender, in the chat queue. The [machine route](README.md#machine-route)
-gives the handler, which reads that turn ID from a request header.
-
-- A create that prepares its repository has its own grant. The start job
-  is a create in the `fetch` or `branch` phase, not cancelled or failed,
-  and its `turnId` matches. The grant gives the sender of the admitted
-  first message.
-- Otherwise the turn must be the running stored chat turn: the active
-  turn of an open session. `activeStoredTurn` in
-  [`access.ts`](../devices/access.ts) reads it. So access ends with the
-  turn, also after a queued Stop, a session close, or a login failure.
-- A stopped or archived workspace gives no sender. The lifecycle admission
-  keeps no turn record for the queued first message.
-
-`machine.test.ts` runs the route with `machineCredentialFixture` in
-[`machine-test-support.ts`](machine-test-support.ts), over the production
-chat and runner boundaries.
+[The git credential sender](routes.md#the-git-credential-sender) gives how
+`Workspace.credentialSender` maps the turn of a git credential request to
+its sender, beside the machine route.
 
 ## Turn recovery
 

@@ -1,5 +1,6 @@
 import { activeAdminPredicate } from './org-data'
 import { CLEANUP_LEASE_MS, lifecycleWritePredicate } from './lifecycle-data'
+import { computerDeletedStatement } from '../lifecycle/computer-ledger'
 
 const RESTORE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -125,14 +126,11 @@ export async function recordSuspendedResources(
     db
       .prepare(
         `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, provider_account, sort_order)
-       SELECT org_id, 'sandbox', sandbox_id, provider_account, 0 FROM workspaces
-         WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}
-       UNION ALL SELECT org_id, 'sandbox', sandbox_id, provider_account, 1 FROM image_builds
-         WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}
-       UNION ALL SELECT org_id, 'sandbox', sandbox_id, provider_account, 0 FROM lifecycle_sandbox_cleanup
-         WHERE org_id = ? AND ${lifecycleWritePredicate}`,
+       SELECT org_id, 'sandbox', sandbox_id, provider_account, CASE WHEN purpose = 'build' THEN 1 ELSE 0 END
+       FROM computer_ledger WHERE org_id = ? AND deleted_at IS NULL
+         AND create_rejected = 0 AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}`,
       )
-      .bind(orgId, ...ownership, orgId, ...ownership, orgId, ...ownership),
+      .bind(orgId, ...ownership),
     db
       .prepare(
         `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, provider_account)
@@ -216,13 +214,26 @@ export async function markResourceRemoved(
   resource: CleanupResource,
   now: number,
 ) {
-  await db
-    .prepare(
-      `UPDATE org_deletion_resources SET removed_at = ?
-       WHERE org_id = ? AND kind = ? AND resource_id = ? AND provider_account = ?`,
-    )
-    .bind(now, orgId, resource.kind, resource.id, resource.providerAccount)
-    .run()
+  await db.batch([
+    db
+      .prepare(
+        `UPDATE org_deletion_resources SET removed_at = ?
+         WHERE org_id = ? AND kind = ? AND resource_id = ? AND provider_account = ?`,
+      )
+      .bind(now, orgId, resource.kind, resource.id, resource.providerAccount),
+    ...(resource.kind === 'sandbox'
+      ? [
+          computerDeletedStatement(
+            db,
+            {
+              sandboxId: resource.id,
+              providerAccount: resource.providerAccount,
+            },
+            now,
+          ),
+        ]
+      : []),
+  ])
 }
 
 export async function markPurgeStarted(

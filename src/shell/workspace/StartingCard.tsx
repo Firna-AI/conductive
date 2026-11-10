@@ -15,14 +15,10 @@ function stepTime(step: StartStep): string | null {
   return formatElapsed(step.completedAt - step.startedAt)
 }
 
-/** The time limit of each create and resume, which the Worker applies. */
-const startLimit = 'Each start has a 20-minute limit.'
-
 /**
  * The start of a sandbox at the end of the chat: a quiet card with a moving
- * mark, then each step so far with its time, the time since the start
- * began, and the time limit of each start. The steps come from the
- * workspace as they happen.
+ * mark, then each step so far with its time, and the time since the start
+ * began. The steps come from the workspace as they happen.
  */
 export function StartingCard(props: { start: WorkspaceStart }) {
   const theme = useSharedUiTheme()
@@ -65,7 +61,6 @@ export function StartingCard(props: { start: WorkspaceStart }) {
           {formatElapsed(now - start.startedAt)}
         </span>
       </div>
-      <p className={styles.limit}>{startLimit}</p>
     </section>
   )
 }

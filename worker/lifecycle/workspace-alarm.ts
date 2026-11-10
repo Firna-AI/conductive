@@ -12,6 +12,7 @@ import { retryAllocationCleanup } from './start-allocation-cleanup'
 import { startAlarmDeadline } from './start-provider-retry'
 import type { WorkspaceAccessStop } from './workspace-suspension'
 import type { WorkspaceArchive } from './archive-state'
+import type { ComputerStopTask } from './computer-stop-task'
 
 export async function runWorkspaceAlarm(input: {
   storage: WorkspaceStorage
@@ -26,6 +27,7 @@ export async function runWorkspaceAlarm(input: {
   lifecycle: DurableLifecycle
   accessStop: WorkspaceAccessStop
   archive: WorkspaceArchive
+  computerStops: ComputerStopTask
 }): Promise<void> {
   const { storage, env, dependencies, alarms, lifecycle } = input
   const run = await alarms.begin(dependencies.now(), (source) =>
@@ -36,6 +38,11 @@ export async function runWorkspaceAlarm(input: {
     !due.size || recoveringRun || due.has(source)
   let completedStart = false
   try {
+    if (
+      requested('lifecycle:computer-stops') &&
+      (await input.computerStops.read())
+    )
+      await input.computerStops.advance()
     if (!(await lifecycle.read())) await alarms.set('lifecycle:access', null)
     if (await input.images.read()) {
       if (requested('lifecycle:image') || due.has('lifecycle')) {

@@ -193,9 +193,18 @@ export class WorkspaceArchive {
           job.providerAccount,
         )
         const allocation = state
-        const sandbox = await createResource(provider, {
+        const input = await readWorkspaceAllocation(env, job)
+        const sandbox = await createResource(env.DB, provider, {
           kind: 'sandbox',
-          input: await readWorkspaceAllocation(env, job),
+          mayHaveAllocated: true,
+          ownership: {
+            orgId: job.orgId,
+            providerAccount: job.providerAccount,
+            ownerUserId: job.creation?.user.id ?? input.labels?.user ?? null,
+            purpose: 'workspace',
+            purposeId: job.workspaceId,
+          },
+          input,
           persist: () => this.save(allocation),
         })
         state = {

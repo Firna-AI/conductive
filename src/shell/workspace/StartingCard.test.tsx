@@ -35,12 +35,4 @@ describe('StartingCard', () => {
       '› Starting from the cloud computer of Acme 4s › Creating branch calummoore/lisbon-7k2q Since the start: 6s',
     )
   })
-
-  test('names the 20-minute limit of each start under its steps', async () => {
-    const app = await startedApp(new FakeApiServer())
-    const html = renderScreen(app, <StartingCard start={start} />)
-    expect(textOf(html)).toContain(
-      'Since the start: 6s Each start has a 20-minute limit.',
-    )
-  })
 })

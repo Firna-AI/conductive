@@ -12,6 +12,7 @@ import type {
 } from './durable-types'
 import type { LifecycleActivitySnapshot } from './input-activity-state'
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
+import type { ComputerIdentity } from './computer-ledger'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
   archiveLifecycle(workspaceId: string): Promise<void>
@@ -22,6 +23,10 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
     userId: string,
     origin: string,
   ): Promise<WorkspaceResponse>
+  queueComputerStops(
+    orgId: string,
+    computers: readonly ComputerIdentity[],
+  ): Promise<ComputerIdentity[]>
   lifecycleActivity(checkOnly?: true): Promise<LifecycleActivityResult>
   extendLifecycleInput(
     operation: () => Promise<LifecycleReconciliation>,

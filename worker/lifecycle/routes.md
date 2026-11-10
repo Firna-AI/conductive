@@ -159,7 +159,7 @@ workspace token as a bearer token, and the current turn ID in the
 `X-Conductive-Turn-Id` header. The handler reads no request body and needs
 no content type. `Workspace.credentialSender` maps that turn to a sender,
 in the chat queue, as
-[The git credential sender](workspace-object.md#the-git-credential-sender)
+[The git credential sender](#the-git-credential-sender)
 says, with its tests.
 
 For the GitHub CLI outside an agent turn, the helper omits the turn header.
@@ -182,3 +182,24 @@ It also checks that both authorizations selected the same person.
 [`image-sources/credential.ts`](image-sources/credential.ts). It does this
 on the machine hostname only, after the Mac command route and before the
 runner socket, with the private error response wrapper.
+
+### The git credential sender
+
+`Workspace.credentialSender` maps the turn ID of a git credential request
+to a sender, in the chat queue. The [machine route](#machine-route)
+gives the handler, which reads that turn ID from a request header.
+
+- A create that prepares its repository has its own grant. The start job
+  is a create in the `fetch` or `branch` phase, not cancelled or failed,
+  and its `turnId` matches. The grant gives the sender of the admitted
+  first message.
+- Otherwise the turn must be the running stored chat turn: the active
+  turn of an open session. `activeStoredTurn` in
+  [`access.ts`](../devices/access.ts) reads it. So access ends with the
+  turn, also after a queued Stop, a session close, or a login failure.
+- A stopped or archived workspace gives no sender. The lifecycle admission
+  keeps no turn record for the queued first message.
+
+`machine.test.ts` runs the route with `machineCredentialFixture` in
+[`machine-test-support.ts`](machine-test-support.ts), over the production
+chat and runner boundaries.

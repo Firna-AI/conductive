@@ -4,10 +4,29 @@ This page belongs to the [workspace lifecycle README](README.md). It says
 how the lifecycle code builds and refreshes the org image. The org image is
 the saved snapshot that every new sandbox of an org starts from. It also
 gives the provider retry policy that builds, refreshes, and workspace
-starts share. The README's
-[Builds and refreshes](README.md#builds-and-refreshes) section says where a
-build sandbox starts, and the risk to the clone token of each copy.
-[Key Code](#key-code) names the files of the image code.
+starts share. [Build sandboxes](#build-sandboxes) describes their starting
+image and the clone token of each copy. [Key Code](#key-code) names the
+files of the image code.
+
+## Build sandboxes
+
+- A build sandbox starts from the current org image, or as a new default
+  sandbox for the first build. Its env holds only the folder variables.
+- Risk: a program with root access that an earlier install left in that
+  image can read the clone token of a later copy. That token can only read
+  its own repository, which the image already holds. The Worker revokes it
+  when the copy ends, as
+  [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens)
+  says.
+- Repository copies use the [shared GitHub App credential flow](../github/app-credentials.ts).
+  The [source loader](repository-layout.md#the-source-loader) gives the token and revocation steps.
+
+The [operator backend](../operator/README.md#suspend-an-org) can suspend an org.
+Every start and build phase checks this with user suspension.
+Guarded admission, publication, token replacement, source grants, and refresh claims also check stored org state.
+Cleanup can still recover uncertain allocations and remove resources.
+A pending start, outcome publication, or failed-computer cleanup keeps suspension pending and its native alarm armed.
+Suspended orgs get no disk retention restart, including after an owner change.
 
 ## Build jobs
 
@@ -44,7 +63,12 @@ The line `[N output bytes omitted]` takes their place in the event order.
   the install script with Bash, and saves a snapshot. A refresh only loads
   the repositories of the current image again, and saves a snapshot.
 - The org image changes only when the new snapshot is ready. Each job
-  deletes its build sandbox at the end, and keeps its history and log.
+  deletes every live ledger computer of that org and build, and keeps its history and log.
+  A failed Delete keeps cleanup scheduled until each computer is removed.
+  Cleanup attempts every live computer even when another Delete fails.
+  It reports that failure after the independent Deletes finish.
+  Missing computers count as removed.
+  Confirmed ledger deletions keep later retries from repeating finished work.
 - A creation claim captures a published image and its repository's default
   branch. One D1 transaction stores its start plan, env vars, and startup
   script, and leases the snapshot, before the workspace row exists.
@@ -150,6 +174,7 @@ states the rule.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
   which starts changed settings after the first good build finishes cleanup.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
+- [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
 - [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
   replays a saved allocation request and saves the recovered sandbox ID.
   Failed image jobs retain their unresolved allocation phase until cleanup

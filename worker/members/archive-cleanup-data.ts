@@ -1,4 +1,5 @@
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
+import { computerDeletedStatement } from '../lifecycle/computer-ledger'
 
 export interface ExpiredArchive {
   workspaceId: string
@@ -59,6 +60,11 @@ export async function clearExpiredOrgDisk(
       AND resource_id = ? AND provider_account = ? AND kind = 'sandbox' AND ${guard}`,
       )
       .bind(now, orgId, row.sandboxId, row.providerAccount, orgId, token, now),
+    computerDeletedStatement(
+      db,
+      { sandboxId: row.sandboxId, providerAccount: row.providerAccount },
+      now,
+    ),
   ])
   return result[0].meta.changes === 1
 }
