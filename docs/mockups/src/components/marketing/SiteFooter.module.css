@@ -19,12 +19,13 @@
   box-sizing: border-box;
 }
 
+/* The gap under the lockup is the clear space of half a tile. */
 .brand {
   display: flex;
   flex: 1;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: calc(var(--ui-lockup-height) / 2);
 }
 
 .tagline {
