@@ -5,7 +5,11 @@ import { createToolsHarness, type ToolsHarness } from '../previews/test-support'
 import { decrypt } from '../security/crypto'
 import { TEST_TIME } from '../test-support/harness'
 import { createTerminalHandler } from './handler'
-import { installTerminalService, startWorkspaceTerminal } from './service'
+import {
+  installTerminalService,
+  startWorkspaceTerminal,
+  terminalStartCommand,
+} from './service'
 
 let harness: ToolsHarness
 beforeAll(async () => {
@@ -18,7 +22,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('installs an enabled ttyd service without an image password and starts with a workspace secret in run storage', async () => {
+it('installs an enabled ttyd service without an image password and caches a workspace secret from run storage', async () => {
   const seed = await harness.seed()
   const commands: string[] = []
   await installTerminalService(
@@ -53,15 +57,13 @@ it('installs an enabled ttyd service without an image password and starts with a
     .bind(seed.workspaceId)
     .first<{ ciphertext: string }>()
   expect(row?.ciphertext.startsWith('v1.')).toBe(true)
-  const command: { command: string } = await harness.requests[0].json()
-  expect(command.command).not.toContain('/run/conductive-terminal/password')
-  expect(new URL(harness.requests[1].url).searchParams.get('path')).toBe(
+  const command = terminalStartCommand()
+  expect(command).not.toContain('/run/conductive-terminal/password')
+  expect(new URL(harness.requests[0].url).searchParams.get('path')).toBe(
     '/home/user/.conductive-terminal/password',
   )
-  expect(command.command).toContain(
-    'systemctl start conductive-terminal.service',
-  )
-  expect(command.command).not.toContain('/etc/conductive')
+  expect(command).toContain('systemctl start conductive-terminal.service')
+  expect(command).not.toContain('/etc/conductive')
   expect(commands[0]).not.toContain(row?.ciphertext)
   await harness.env.DB.prepare(
     `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, name, branch,
@@ -77,9 +79,7 @@ it('installs an enabled ttyd service without an image password and starts with a
     'workspace-two',
     harness.dependencies,
   )
-  const otherCommand: { command: string } = await harness.requests[2].json()
-  expect(otherCommand.command).toBe(command.command)
-  expect(harness.requests[2].url).not.toBe(harness.requests[0].url)
+  expect(harness.requests[1].url).not.toBe(harness.requests[0].url)
   expect(
     await harness.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM terminal_credentials',
@@ -111,10 +111,10 @@ it('returns ready, starting, and stopped terminal states without exposing a pass
     const response = await handler.fetch(seed.request(path))
     expect(await response.json()).toEqual({ state, socketPath: null })
   }
-  expect(harness.requests).toHaveLength(2)
+  expect(harness.requests).toHaveLength(1)
 })
 
-it('authenticates the ttyd handshake on the server and counts only terminal input as activity', async () => {
+it('authenticates the ttyd handshake and forwards automatic replies without reporting activity', async () => {
   const seed = await harness.seed()
   await startWorkspaceTerminal(
     harness.env,
@@ -138,7 +138,7 @@ it('authenticates the ttyd handshake on the server and counts only terminal inpu
   expect(response.status).toBe(101)
   expect(response.headers.get('Sec-WebSocket-Protocol')).toBe('tty')
   expect(response.headers.get('Authorization')).toBe(null)
-  const upstreamRequest = harness.requests[3]
+  const upstreamRequest = harness.requests[2]
   expect(upstreamRequest.url).toBe('https://sandbox-7681.on.boat.dev/ws')
   expect(upstreamRequest.headers.get('Cookie')).toBe(
     '_port_auth=server-port-token',
@@ -179,11 +179,16 @@ it('authenticates the ttyd handshake on the server and counts only terminal inpu
   browser.emit('1{"columns":100,"rows":30}')
   expect(await resize).toBe('1{"columns":100,"rows":30}')
   expect(await harness.status()).toEqual({ activity: TEST_TIME })
+  const reply = upstream.nextMessage()
+  browser.emit('0\u001b[1;1R')
+  expect(await reply).toBe('0\u001b[1;1R')
+  await harness.activity()
+  expect(await harness.status()).toEqual({ activity: TEST_TIME })
   const input = upstream.nextMessage()
   browser.emit(Uint8Array.of(48, 108, 115, 13).buffer)
   expect(await input).toEqual(Uint8Array.of(48, 108, 115, 13).buffer)
   await harness.activity()
-  expect(await harness.status()).toEqual({ activity: TEST_TIME + 1000 })
+  expect(await harness.status()).toEqual({ activity: TEST_TIME })
   browser.close(1000, 'closed')
   await upstream.end
   expect(upstream.closed?.code).toBe(1000)

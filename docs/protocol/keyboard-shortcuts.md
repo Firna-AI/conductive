@@ -204,7 +204,7 @@ app.
 - The menu bar of the Mac app has no item for a command that keys run,
   such as a Search item. Reason: the page hears each key itself. A menu
   cannot run an action inside the page, because the page has no bridge, as
-  [Permissions](desktop-app.md#permissions) says.
+  [Permissions](desktop-commands.md#permissions) says.
 
 ## Key hints
 

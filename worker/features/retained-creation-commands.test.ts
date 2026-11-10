@@ -105,6 +105,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
   expect(commands).toEqual([
     expect.stringContaining('git checkout'),
     expect.stringContaining('/run/conductive/startup.sh'),
+    expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
   expect(commands[0]).not.toBe(
     active.boat.commandRequests[commandsBefore - 1]?.command,
@@ -184,6 +185,7 @@ it('runs interrupted saved startup after Restore instead of following its dead j
     .map((request) => request.command)
   expect(commands).toEqual([
     expect.stringContaining('/run/conductive/startup.sh'),
+    expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
   expect(commands[0]).not.toBe(
     active.boat.commandRequests[commandsBefore - 1]?.command,

@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import {
   sessionsPath,
   sessionPath,
@@ -17,7 +16,6 @@ import {
   createChatFixture,
   WORKSPACE_ID,
 } from './harness.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -28,7 +26,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('orders session reads and writes with the workspace event sequence', async () => {
   const fixture = await createChatFixture(harness)
   const created = await fixture.fetch(
@@ -109,9 +106,8 @@ it('orders session reads and writes with the workspace event sequence', async ()
     type: 'event',
     envelope: { eventNumber: 11 },
   })
-  tab.close()
+  await tab.close()
 })
-
 it('reads the stored active turn start time after dispatch and a runner start', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
@@ -139,7 +135,7 @@ it('reads the stored active turn start time after dispatch and a runner start', 
     messageIds: [accepted.message.id],
   })
   await fixture.drain()
-  fixture.restart()
+  await fixture.restart()
   expect(await read()).toMatchObject({
     activeTurnId: command.turnId,
     activeTurnStartedAt: TEST_TIME - 100,

@@ -1,3 +1,4 @@
+import { readyIds } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
 import type {
   ChangeModelRequest,
@@ -52,7 +53,7 @@ export async function chooseModel(
     choice,
     draft: {
       text: draft.text,
-      attachmentIds: draft.attachments.map((attachment) => attachment.id),
+      attachmentIds: readyIds(draft.files),
     },
     newSessionId: context.newId(),
   }

@@ -115,7 +115,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   number, such as `39`.
 - The state mark and the bold name of an unread workspace mean what they
   mean in the list, as
-  [Workspace states](workspaces-and-sandboxes.md#workspace-states) says.
+  [Workspace states](workspace-life.md#workspace-states) says.
 - The results show no highlight of the letters that match.
 - A coloured bar at the left edge of a workspace row, as in Conductor, was
   rejected, because the state mark already gives the state.
@@ -218,7 +218,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   Sign-in, GitHub, Agents, and New workspaces. It ends with Keyboard
   shortcuts, the third tab of the Account page.
 - In the Mac app, the Account group also holds
-  [This Mac](desktop-app.md#saved-choices).
+  [This Mac](desktop-commands.md#saved-choices).
 - A row of the org settings opens its tab. A row of the Account group
   opens the tab of the Account page that holds its section.
 
@@ -240,9 +240,14 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   gives what the palette shows while its workspace data loads or did not
   load, and when a tab or a search has no row.
 
+## Empty states
+
+- [Empty states](command-palette-states.md#empty-states) gives the messages
+  of an empty tab or a search without a match.
+
 ## Access
 
 - The palette shows only data that the app already shows the person.
 - The palette sends no request that reaches another org.
-  [Orgs and workspaces](access-and-security.md#orgs-and-workspaces) states
+  [Orgs and workspaces](isolation.md#orgs-and-workspaces) states
   which requests reach an org.

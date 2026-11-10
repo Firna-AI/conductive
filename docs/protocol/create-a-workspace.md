@@ -5,8 +5,10 @@ of a workspace. It covers New workspace, as a page or as a dialog, the
 preference that chooses between them, the create, the branch, and a failed
 first start. It belongs to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
-org image, the start steps, and the rest of the life of a workspace. The
-terms are those of the [architecture doc](../architecture.md#terms). A
+provider, the org image, and the startup script.
+[Life of a workspace](workspace-life.md) covers the start steps and the
+rest of the life of a workspace. The terms are those of the
+[architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
@@ -25,9 +27,10 @@ decision number names a dated record, as
 - The Account page has three tabs, General, Preferences, and Keyboard
   shortcuts, each with its own address. Preferences holds the New
   workspaces section, with Model and effort and the choice of how New
-  workspace opens (decision 142). General holds the other sections of the
-  account. [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md)
-  gives the third tab.
+  workspace opens (decision 142 of PR #73). General holds the other
+  sections of the account.
+  [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md) gives
+  the third tab.
 - Reason: all the settings of new workspaces then sit together. The
   section on General, with only the new choice on Preferences, was
   rejected, because the user then looks in two places.
@@ -115,8 +118,8 @@ decision number names a dated record, as
 ### The send key
 
 - On a computer, Enter sends the message from every composer, and
-  Shift+Enter adds a line (decision 143). The composers are the chat of a
-  workspace, the New workspace page, and the dialog.
+  Shift+Enter adds a line (decision 143 of PR #73). The composers are the
+  chat of a workspace, the New workspace page, and the dialog.
 - So Enter creates the workspace from the page and from the dialog.
 - On a phone, and in every window with the phone layout, Enter adds a
   line in every composer.
@@ -132,9 +135,9 @@ decision number names a dated record, as
 
 - A new workspace needs a good org image, because it starts from the org
   image (decision 13). While the org has no good image, such as during its
-  [first build](workspaces-and-sandboxes.md#the-first-build), New workspace
+  [first build](org-image.md#the-first-build), New workspace
   shows a notice over the composer. Send and Create then stay off
-  (decision 150).
+  (decision 150 of PR #92).
 - The notice shows the state of the newest build of the org:
   - While a build runs, it says that the cloud computer is being prepared,
     with the time since the build began.
@@ -154,13 +157,13 @@ decision number names a dated record, as
   computer needs a build. The composer keeps the message.
 - Reason: the user learns the state before the send, in place of a refused
   create. A create that waits for the first build was left out for now
-  (decision 152). Such a wait changes the start limit and the path that
+  (decision 152 of PR #92). Such a wait changes the start limit and the path that
   creates every workspace.
 
 ## The create
 
 - The app accepts the first message before the sandbox is ready, as
-  [Chat and events](chat-and-events.md#messages) says.
+  [Chat and events](messages-and-attachments.md#messages) says.
 - The create answers when the workspace and its first message are stored,
   before the sandbox starts (decision 91). The answer holds the workspace,
   its session ID, and the queued first message, so that the new workspace
@@ -178,7 +181,7 @@ decision number names a dated record, as
   repository (decision 89). It then fetches that branch and creates the
   workspace branch from it.
 - The push uses the GitHub user token of the sender of the current turn,
-  as [GitHub tokens](access-and-security.md#github-tokens) says. No
+  as [GitHub tokens](tokens-and-secrets.md#github-tokens) says. No
   command and no Git config holds the token.
 - A repository with any ref gets no first commit from the app.
 - When another push reaches the repository first, the start keeps that
@@ -201,8 +204,8 @@ decision number names a dated record, as
   says (decision 182).
 - A create call of an agent can give the workspace a name, as
   [Create and list calls](agent-tools.md#create-and-list-calls) says.
-- [Messages](chat-and-events.md#messages) says how a title from the first
-  message then names the workspace.
+- [Messages](messages-and-attachments.md#messages) says how a title from
+  the first message then names the workspace.
 
 ## A failed first start
 
@@ -220,4 +223,4 @@ decision number names a dated record, as
   new workspace token (decision 130). The sandbox starts from the newest
   good org image, with the current startup script and env vars.
 - When that sandbox is ready, the agent gets the queued messages, as
-  [Messages](chat-and-events.md#messages) says.
+  [Messages](messages-and-attachments.md#messages) says.

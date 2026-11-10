@@ -63,116 +63,15 @@ requirements of each feature.
 
 ## Components
 
-### Marketing site
-
-- The static public pages at the root of `conductive.build`. The
-  [marketing site page](architecture/marketing-site.md) gives their
-  responsibilities and boundaries.
-
-### Web app
-
-- A React app, built with Vite, that uses the `@firna/ui` components.
-- It lives on `app.conductive.build`, behind the GitHub sign-in.
-- It shows the orgs, the workspaces, the chat, the files, the tools, and
-  the org settings. It follows the phone and the desktop layouts of the
-  [mockups](mockups/README.md) (decision 15).
-- For an operator, it also shows the operator section at `/operator`. The
-  section gives counts across every org. It finds any org or user, and it
-  suspends or lifts it. It also approves people who wait, makes and
-  disables codes, and pauses sign-ups.
-  [Operator section](protocol/operator-section.md) states its rules.
-- Tabs are links, so each tool and each file view has its own address.
-- The browser stores only the panel widths. All other state comes from
-  the Worker. A tab keeps the chats that it showed in memory, as
-  [Chat and events](protocol/chat-and-events.md#events) says.
-
-### Mac app
-
-- An Electron shell for macOS, as [Mac app](protocol/desktop-app.md) says.
-- Its packages and its updates come from the GitHub releases of the
-  public source repository, as
-  [Packages and updates](protocol/desktop-app.md#packages-and-updates)
-  says.
-
-### Worker
-
-- One Cloudflare Worker serves the web app, the marketing site, the API,
-  the proxies to sandboxes, and the GitHub webhook endpoint.
-- It holds the GitHub App key, the Boat key, the key that signs the session
-  cookies, and the key that encrypts the stored secrets. The browser never
-  holds them.
-- It reaches Boat through one provider adapter, so that a later change can
-  add another provider. It calls only a fixed list of Boat routes.
-- It runs one gate for each hostname before every route and every
-  WebSocket upgrade. [Access and security](protocol/access-and-security.md)
-  states the gates.
-
-### D1
-
-- D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, and the active preview hostnames. It
-  also holds the app access of each user, the codes and their uses, the
-  pause, and the state of each approval email.
-- Boat labels alone cannot hold these records, because a label is fixed
-  after a create or a fork.
-
-### Workspace Durable Object
-
-- One Durable Object for each workspace. It runs in Western Europe, near
-  Boat's machines.
-- It holds the open tabs, the connection of the agent runner, and the
-  messages that wait for the sandbox.
-- It also holds the start steps, the stop timer, and the banner state.
-- Its storage keeps the chat history, so a stopped or archived workspace
-  still shows its chat.
-- It revokes the preview hostnames of its workspace.
-
-### Boat
-
-- Boat runs the sandboxes and keeps the saved snapshots (decision 2).
-  Sprites on Fly.io was the other option. Boat costs less, and it already
-  has forks, saved snapshots, port URLs, desktop streams, and environments.
-- Every org runs in the app's Boat account (decision 80). That account
-  holds every org image and every sandbox of every org. Its plan limits
-  apply to all orgs together.
-- The app does not depend on Boat webhooks. The agent runner reports when
-  a sandbox is ready. The Worker reads the state of a sandbox from Boat's
-  API when it needs it.
-- A stop ends every process. Boat keeps the disk and the enabled system
-  services, and restarts those services after each resume and fork.
-
-### Sandbox software
-
-Every org image holds the app's own sandbox software:
-
-- the agent runner, a Node program that runs as an always-on service
-- the terminal service, on a private port
-- the agent tools: an MCP server and a CLI that create and list workspaces
-- a git credential helper that gets a fresh GitHub token for each git
-  operation
-
-The agent runner runs Claude through the Claude Agent SDK, with the agent
-program that the SDK bundles at its own version. A pinned version guards
-against a change in how the agent program reads logins. The runner runs
-Codex through the Codex SDK or the Codex App Server (decision 36).
-
-### External services
-
-- **GitHub App:** one app gives the sign-in, the repository access, and the
-  webhooks of every org.
-- **Anthropic and OpenAI:** the model use of each turn bills to the own
-  Claude or OpenAI account of the starter of its session.
-- **Workers AI:** the Cloudflare model service writes the title of each new
-  workspace from its first message. Its use bills to the Cloudflare account
-  of the app (decision 184).
-- **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. The app is free, with no limits (decision 81).
+The [components page](architecture/components.md) describes each
+component and its responsibilities. It covers the apps, the Worker and
+its storage, Boat, the sandbox software, and the external services.
 
 ## Hostnames
 
 | Hostname                | What it serves                                                              |
 | ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages           |
+| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages                        |
 | `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
 | `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
 | `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
@@ -207,56 +106,74 @@ the merge.
 
 ## Protocol docs
 
-- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the
-  life of a workspace, and the number and the link of each workspace.
-- [Org image](protocol/org-image.md): the org image, its builds and its
-  refreshes, and the first build of a new org.
-- [Workspace tools](protocol/workspace-tools.md): the tools of a workspace.
-- [Create a workspace](protocol/create-a-workspace.md): New workspace as a
-  page or as a dialog, the create, the branch, and a failed first start.
-- [Repository folders](protocol/repository-folders.md): the folder and the
-  shell variable of each repository in a sandbox.
-- [Chat and events](protocol/chat-and-events.md): messages, what the chat
-  shows, and the events.
-- [Agents and sessions](protocol/agents-and-sessions.md): the agents and
-  their logins, the sessions, and the names of workspaces and sessions.
-- [Workspace links](protocol/workspace-links.md): Copy link, and the chips
-  that show workspace links in chat.
-- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
-  messages in the chat, with their tables.
-- [Agent runner](protocol/agent-runner.md): the connection of the runner,
-  its events and their limits, its turns, and the repair of lost workspace
-  updates.
+- [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
+  image and the life of a workspace.
+  - [Create a workspace](protocol/create-a-workspace.md): New workspace as a
+    page or as a dialog, the create, the branch, and a failed first start.
+  - [Repository folders](protocol/repository-folders.md): the folder and the
+    shell variable of each repository in a sandbox.
+  - [Life of a workspace](protocol/workspace-life.md)
+  - [Workspace tools](protocol/workspace-tools.md)
+- [Chat and events](protocol/chat-and-events.md): sessions, messages, what
+  the chat shows, and the events.
+  - [Messages and attachments](protocol/messages-and-attachments.md)
+  - [Agent runner](protocol/agent-runner.md): the connection of the runner,
+    its events and their limits, its turns, and the repair of lost workspace
+    updates.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
+  - [Isolation of orgs and sandboxes](protocol/isolation.md)
+  - [Tokens and secrets](protocol/tokens-and-secrets.md)
+  - [Terminal, previews, and desktop](protocol/terminal-previews-and-desktop.md)
 - [GitHub banner](protocol/github-banner.md): the pull request bar and its
   events.
-- [GitHub tokens](protocol/github-tokens.md): git and CLI account scope.
 - [Agent tools](protocol/agent-tools.md): the tools that agents use in a
   sandbox.
-- [Agent instructions](protocol/agent-instructions.md): the text that each
-  agent session gets, the sender line of each message, and the base
-  prompt of Claude agents.
 - [Orgs and members](protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
-- [Mac app](protocol/desktop-app.md): the shell for macOS and its sign-in.
+- [Mac app](protocol/desktop-app.md): the shell for macOS, its sign-in, and
+  Mac commands.
+  - [Mac packages and updates](protocol/desktop-packages-and-updates.md)
+  - [Mac app sign-in](protocol/desktop-sign-in.md)
+  - [Permissions and Mac commands](protocol/desktop-commands.md)
 - [Operator actions](protocol/operator-actions.md): the operator, the
   suspension of a user or an org, the lift of a suspension, and abuse
   reports.
 - [Operator section](protocol/operator-section.md): the pages of the
   operator in the web app, their counts, and their searches.
-- [Waitlist](protocol/waitlist.md): app access, the waitlist screen, the
-  ways in, the pause, and the approval email.
-- [Invite and referral codes](protocol/waitlist-codes.md): the codes of
-  the waitlist, the join link, and the use of a code.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](protocol/command-palette-states.md):
   what the palette shows while its workspace data loads or did not load,
   and when a tab or a search has no row.
 - [Keyboard shortcuts](protocol/keyboard-shortcuts.md): the commands that
-  keys run, where a key goes, and where the changes of a person live, with
-  [the keys](protocol/keyboard-shortcuts-keys.md) and
-  [the settings tab](protocol/keyboard-shortcuts-tab.md).
+  keys run, where a key goes, and where the changes of a person live.
+  - [Keyboard shortcuts: the keys](protocol/keyboard-shortcuts-keys.md)
+  - [Keyboard shortcuts: the settings tab](protocol/keyboard-shortcuts-tab.md)
+
+- [Org image](protocol/org-image.md): the org image, its builds and its
+  refreshes, and the first build of a new org.
+
+- [Agents and sessions](protocol/agents-and-sessions.md): the agents and
+  their logins, the sessions, and the names of workspaces and sessions.
+
+- [Workspace links](protocol/workspace-links.md): Copy link, and the chips
+  that show workspace links in chat.
+
+- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
+  messages in the chat, with their tables.
+
+- [GitHub tokens](protocol/github-tokens.md): git and CLI account scope.
+
+- [Agent instructions](protocol/agent-instructions.md): the text that each
+  agent session gets, the sender line of each message, and the base
+  prompt of Claude agents.
+
+- [Waitlist](protocol/waitlist.md): app access, the waitlist screen, the
+  ways in, the pause, and the approval email.
+
+- [Invite and referral codes](protocol/waitlist-codes.md): the codes of
+  the waitlist, the join link, and the use of a code.
+
 - [Conductor Cloud comparison](protocol/conductor-cloud-comparison.md): the
   public page with the status of each Conductor Cloud feature.

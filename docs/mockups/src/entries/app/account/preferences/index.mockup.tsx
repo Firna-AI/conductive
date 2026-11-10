@@ -7,7 +7,7 @@ export const preferences = defineScreen({
   description:
     'The Preferences tab of the account holds the New workspaces section: the model and the effort that new workspaces start with, and how New workspace opens on a computer, as the page or as a dialog over the current screen. A helper line under the choice says that a phone always opens the page. Each change saves at once. A new account gets the page.',
   rationale:
-    'The user asked for a Preferences screen in the user settings on 8 November 2026, with a choice to open New workspace as a dialog. The user chose option B of decision 142: the New workspaces section moves here from General, so all the settings of new workspaces sit together. The choice belongs to the account, so it follows the user to each browser and to the Mac app. A phone shows a dialog as a sheet that fills the screen, as the page already does, so a phone always opens the page.',
+    'The user asked for a Preferences screen in the user settings on 8 November 2026, with a choice to open New workspace as a dialog. The user chose option B of decision 142 of PR #73: the New workspaces section moves here from General, so all the settings of new workspaces sit together. The choice belongs to the account, so it follows the user to each browser and to the Mac app. A phone shows a dialog as a sheet that fills the screen, as the page already does, so a phone always opens the page.',
   relatedDocs: [],
   propSchema: accountSchema,
   props: { ...accountGeneral, tab: 'preferences' },

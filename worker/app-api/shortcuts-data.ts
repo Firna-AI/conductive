@@ -42,16 +42,14 @@ function readRows(rows: readonly ShortcutRow[]): ShortcutPreferences {
       })
       preferences[row.keyboard].push(...changes)
       if (Array.isArray(keys) && keys.length > (changes[0]?.keys.length ?? 0)) {
-        warnWorker(
-          'Some stored shortcut keys are no longer valid and were skipped.',
-        )
+        warnWorker({ kind: 'shortcut_keys_skipped' })
       }
     } catch (error) {
       if (!(
         error instanceof SyntaxError || error instanceof ShortcutContractError
       ))
         throw error
-      warnWorker('An unreadable stored shortcut change was skipped.')
+      warnWorker({ kind: 'shortcut_change_skipped' })
     }
   }
   return preferences

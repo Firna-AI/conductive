@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { ApiError } from '../../app/api/client'
+import { uploadingFile, type DraftFile } from '../../app/draft-files'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { sessionPaths } from '../../shared/sessions'
 import {
@@ -180,19 +182,23 @@ describe('session parts', () => {
     )
   })
 
-  it('keeps Send off while a file uploads', () => {
-    const composer = (attaching: boolean) =>
+  it('keeps Send off while a file uploads or failed', () => {
+    const composer = (files: readonly DraftFile[]) =>
       renderToStaticMarkup(
         <Composer
-          attaching={attaching}
           blocked={false}
           choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
-          draft={{ ...blankDraft('draft'), text: 'See the screenshot.' }}
+          draft={{
+            ...blankDraft('draft'),
+            text: 'See the screenshot.',
+            files,
+          }}
           models={[]}
           onAttach={() => {}}
           onChangeText={() => {}}
           onChooseModel={() => {}}
-          onRemoveAttachment={() => {}}
+          onRemoveFile={() => {}}
+          onRetryFile={() => {}}
           onSend={() => {}}
           onStop={() => {}}
           running={false}
@@ -200,9 +206,13 @@ describe('session parts', () => {
           stopping={false}
         />,
       )
-    expect(composer(true)).toMatch(/aria-label="Send" aria-disabled="true"/)
-    expect(composer(false)).not.toMatch(
-      /aria-label="Send" aria-disabled="true"/,
+    const file = new File(['png'], 'overlap.png', { type: 'image/png' })
+    const off = /aria-label="Send" aria-disabled="true"/
+    const error = new ApiError(502, 'upload_failed', 'The upload failed.')
+    expect(composer([uploadingFile('file-1', file)])).toMatch(off)
+    expect(composer([{ state: 'failed', id: 'file-1', file, error }])).toMatch(
+      off,
     )
+    expect(composer([])).not.toMatch(off)
   })
 })

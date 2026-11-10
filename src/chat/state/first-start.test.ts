@@ -105,6 +105,15 @@ describe('messages while the sandbox of a workspace is not ready', () => {
       'queued',
     )
     await chat.controller.start()
+    chat.controller.setDraft(first, 'Keep these newer cart changes.')
+    await chat.controller.attachFiles(first, [
+      new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
+    ])
+    const draft = chat.draftOf(first)
+    expect(draft).toMatchObject({
+      text: 'Keep these newer cart changes.',
+      files: [{ state: 'ready', attachment: { id: 'attachment-1' } }],
+    })
     const savedError = () => chat.controller.getSnapshot().savedError
     const read = savedError()
     chat.emit({
@@ -128,6 +137,7 @@ describe('messages while the sandbox of a workspace is not ready', () => {
       kept: limit,
       cleared: null,
     })
+    expect(chat.draftOf(first)).toEqual(draft)
   })
 
   it('keeps the text, the file, and the ID of a message that the Worker refuses', async () => {
@@ -156,7 +166,7 @@ describe('messages while the sandbox of a workspace is not ready', () => {
     await chat.controller.send(first)
     expect(chat.draftOf(first)).toMatchObject({
       text: 'Keep a saved cart for 30 days.',
-      attachments: [{ id: 'attachment-1' }],
+      files: [{ state: 'ready', attachment: { id: 'attachment-1' } }],
       sending: false,
     })
     expect(chat.controller.getSnapshot().notice).toEqual({

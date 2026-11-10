@@ -1,12 +1,7 @@
 import { expect, it } from 'vitest'
-
 import { checkCommitBoundaries } from './commit-boundary.test-support'
-import {
-  choice,
-  context,
-  createRunnerLimitsFixture,
-} from './runner-limits.test-support'
-
+import { createRunnerLimitsFixture } from './runner-limits.test-support'
+import { choice, context } from './runner-fixtures.test-support'
 it('keeps first position indexes atomic with a completed answer receipt', async () => {
   await checkCommitBoundaries(async () => {
     const fixture = await createRunnerLimitsFixture()
@@ -33,7 +28,8 @@ it('keeps first position indexes atomic with a completed answer receipt', async 
       { occurredAt: 11 },
     )
     return {
-      storage: fixture.storage,
+      failNextCommit: fixture.failNextCommit,
+      clearFaults: fixture.clearFaults,
       action: async (error) => {
         await expect(
           fixture.receive(

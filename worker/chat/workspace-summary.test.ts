@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
   createChatFixture,
@@ -7,7 +6,6 @@ import {
   type ChatFixture,
 } from './harness.test-support'
 import { record, string } from './inputs'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -18,15 +16,13 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 async function restoreLegacySummary(fixture: ChatFixture) {
   await fixture.storage.put('chat:v1:workspace-summary', {
     lastOutputEventNumber: 0,
     activeTurns: [],
   })
-  fixture.restart()
+  await fixture.restart()
 }
-
 it('projects the stored cursor, visible output and dispatched work without treating queued input or metadata as output', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
@@ -79,7 +75,7 @@ it('projects the stored cursor, visible output and dispatched work without treat
     working: false,
   }
   expect(await fixture.chat.workspaceSummary(WORKSPACE_ID)).toEqual(expected)
-  fixture.restart()
+  await fixture.restart()
   expect(await fixture.chat.workspaceSummary(WORKSPACE_ID)).toEqual(expected)
   const history = await fixture.history(session.id)
   expect(
@@ -91,7 +87,6 @@ it('projects the stored cursor, visible output and dispatched work without treat
     ),
   ).toBe('An unread answer')
 })
-
 it('recovers a legacy summary title and original turn end beyond the first history page', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
@@ -129,8 +124,8 @@ it('recovers a legacy summary title and original turn end beyond the first histo
     ),
   ).toEqual({
     runningTurns: [],
-    lastTurnEndedAt: 1_800_000_000_000,
-    title: { name: 'Title on a later page', occurredAt: 1_800_000_000_000 },
+    lastTurnEndedAt: 1800000000000,
+    title: { name: 'Title on a later page', occurredAt: 1800000000000 },
   })
   expect(await fixture.chat.workspaceSummary(WORKSPACE_ID)).toEqual({
     throughEventNumber: 47,

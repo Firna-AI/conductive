@@ -1,10 +1,8 @@
 import { expect, it } from 'vitest'
-
-import { MemoryChatStorage } from './memory-storage.test-support'
+import { nativeChatStore } from './native-store.test-support'
 import { ChatStore } from './store'
-
 it('keeps a history snapshot cutoff when newer answers and final tool states arrive between pages', async () => {
-  const storage = new MemoryChatStorage()
+  const { storage } = await nativeChatStore()
   const store = new ChatStore(storage, () => 25)
   const context = { sessionId: 'session', turnId: 'turn' }
   const tool = {

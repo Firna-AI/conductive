@@ -11,8 +11,14 @@ import {
 import type { AgentChoice } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import type { SaveShortcutsRequest } from '../../src/shared/shortcuts'
+import { TERMS_VERSION } from '../../src/shared/terms'
 import { readAccount } from '../../src/app/api/read-core'
+import { saveSession, saveUser, type GitHubIdentity } from '../data/users'
+import { SESSION_COOKIE } from '../security/cookies'
+import { sign } from '../security/crypto'
+import { saveGitHubTokens } from '../security/github-tokens'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
+import { seedAppAccess } from '../test-support/app-access'
 
 export const operatorModels = [
   {
@@ -124,17 +130,25 @@ export async function expectAccountState(
     githubComplete: boolean
   },
 ): Promise<void> {
-  const response = await harness.request(ACCOUNT_PATHS.account, cookie)
+  const [response, started] = await Promise.all([
+    harness.request(ACCOUNT_PATHS.account, cookie),
+    harness.request(GET_STARTED_PATH, cookie),
+  ])
   expect(response.status).toBe(200)
   const body: unknown = await response.json()
-  const { user } = readAccount(body)
+  const { user, ...account } = readAccount(body)
   const { agentLoginComplete, ...expectedAccount } = expected
   expect(user.githubLogin).toBe(profile.githubLogin)
   expect(body, `${profile.githubLogin} account`).toEqual({
     user,
     ...expectedAccount,
   })
-  const started = await harness.request(GET_STARTED_PATH, cookie)
+  expect(account.defaultChoice, `${profile.githubLogin} default model`).toEqual(
+    expected.defaultChoice,
+  )
+  expect(account.agentLogins, `${profile.githubLogin} agent logins`).toEqual(
+    expected.agentLogins,
+  )
   expect(started.status).toBe(200)
   expect(await started.json(), `${profile.githubLogin} Get started`).toEqual({
     orgId: profile.orgId,
@@ -222,4 +236,39 @@ export async function expectInvalidWorkspaceView(
   expect(await response.json()).toMatchObject({
     error: { code: 'invalid_input' },
   })
+}
+
+export async function seedBootIdentity(
+  harness: TestHarness,
+  profile: GitHubIdentity = {
+    githubId: 7,
+    githubLogin: 'octocat',
+    displayName: 'Octocat',
+    avatarUrl: null,
+    primaryVerifiedEmail: null,
+    githubCreatedAt: null,
+  },
+): Promise<string> {
+  const [, , userId, sessionId] = harness.reserveTokens(4)
+  const expiresAt = TEST_TIME + 604_800_000
+  await saveUser(harness.env.DB, userId, profile, TEST_TIME, TERMS_VERSION)
+  await seedAppAccess(harness.env.DB, [userId], TEST_TIME)
+  await saveGitHubTokens(
+    harness.env,
+    userId,
+    {
+      accessToken: 'github-test-token',
+      expiresAt: null,
+      refreshToken: null,
+      refreshExpiresAt: null,
+    },
+    TEST_TIME,
+  )
+  await saveSession(harness.env.DB, sessionId, userId, expiresAt, TEST_TIME)
+  const token = await sign(
+    { sessionId, expiresAt },
+    'session',
+    harness.env.SESSION_SIGNING_KEY,
+  )
+  return `${SESSION_COOKIE}=${token}`
 }

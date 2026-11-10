@@ -9,6 +9,7 @@ import {
   expectAccountState,
   isolationAccountStates,
   putAccountValue,
+  seedBootIdentity,
   type AccountState,
 } from './boot-account.test-support'
 
@@ -17,7 +18,7 @@ export async function expectAccountIsolation(
   choice: AgentChoice,
   otherChoice: AgentChoice,
 ): Promise<void> {
-  const first = await harness.login()
+  const first = await seedBootIdentity(harness)
   const org = await harness.createOrg(first)
   await harness.env.DB.prepare(
     `INSERT INTO github_installations (id, account_login, account_type, created_at)
@@ -39,13 +40,14 @@ export async function expectAccountIsolation(
       { step: 'agent-login', complete: false },
     ],
   })
-  harness.github.profile = {
-    id: 8,
-    login: 'other',
-    name: 'Other',
-    avatar_url: null,
-  }
-  const other = await harness.login()
+  const other = await seedBootIdentity(harness, {
+    githubId: 8,
+    githubLogin: 'other',
+    displayName: 'Other',
+    avatarUrl: null,
+    primaryVerifiedEmail: null,
+    githubCreatedAt: null,
+  })
   expect(await (await harness.request(GET_STARTED_PATH, other)).json()).toEqual(
     {
       orgId: null,
