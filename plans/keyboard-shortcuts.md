@@ -1109,7 +1109,7 @@ Depends on: 1, 3
       `.context/keyboard-shortcuts/reports/m5a-ui.md`.
 - [x] Offer each command from the part of the page that owns its control.
       Add the key-only commands as offers that the palette does not list.
-- [ ] Apply decision 193 to the row move, the divider, and the keys of
+- [x] Apply decision 193 to the row move, the divider, and the keys of
       the workspaces and the tabs.
   - [x] The row move and the divider match their keys exactly.
   - [x] The keys of the workspaces and the tabs run their commands.
