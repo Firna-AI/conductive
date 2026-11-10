@@ -6,7 +6,7 @@ import {
   pictureFileName,
   type PictureCapture,
   type PictureScheme,
-} from '../../docs/mockups/src/screens/marketingPictureList'
+} from '../../docs/mockups/src/screens/marketingPictureCaptures'
 import { capturePictures } from '../../tools/marketing-pictures/capture-pictures'
 
 function filePath(capture: PictureCapture, scheme: PictureScheme): string {
