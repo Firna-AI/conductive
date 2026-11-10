@@ -1,10 +1,34 @@
 import type { AgentBlock } from '../../fixtures/conversations'
+import type { MessageList } from '../../fixtures/listConversations'
 import { MarkdownTable } from '../common/MarkdownTable'
 import { MessageText } from './MessageText'
 
 /** A cell of a table in a message, with the text of a paragraph. */
 function messageCell(text: string) {
   return <MessageText text={text} />
+}
+
+/**
+ * A list with the lists under its items. An item with a list keeps its own
+ * text in a paragraph, and the list follows it inside the item, as the app
+ * draws a Markdown list that the agent indents under an item.
+ */
+function ListView(props: { list: MessageList }) {
+  const items = props.list.items.map((item, index) => (
+    <li key={index}>
+      {item.list ? (
+        <>
+          <p>
+            <MessageText text={item.text} />
+          </p>
+          <ListView list={item.list} />
+        </>
+      ) : (
+        <MessageText text={item.text} />
+      )}
+    </li>
+  ))
+  return props.list.numbered ? <ol>{items}</ol> : <ul>{items}</ul>
 }
 
 /**
@@ -16,6 +40,7 @@ function messageCell(text: string) {
 export function AgentBlocks(props: {
   blocks: readonly AgentBlock[]
   bullets?: readonly string[]
+  list?: MessageList
 }) {
   return (
     <>
@@ -43,6 +68,7 @@ export function AgentBlocks(props: {
           ))}
         </ul>
       ) : null}
+      {props.list ? <ListView list={props.list} /> : null}
     </>
   )
 }

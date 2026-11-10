@@ -155,6 +155,16 @@ const browserTurn: readonly ChatItem[] = [
   { kind: 'turn-end', id: 'turn-end', duration: '3m 26s', files: [] },
 ]
 
+/** The keys of the chats of the table pages. */
+export const tableConversationKeys = [
+  'table-resources',
+  'table-header',
+  'table-rows',
+  'table-short-row',
+  'table-wide',
+  'tables-in-work',
+] as const
+
 /**
  * The chats of the table pages. The resource table shows finished, before
  * its separator row arrives, and with its first rows while the agent still

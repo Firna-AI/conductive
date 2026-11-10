@@ -59,6 +59,17 @@
   margin-top: 2px;
 }
 
+/* A block after the text of a list item, such as a second paragraph. */
+.agent li > * + * {
+  margin-top: 8px;
+}
+
+/* A list under the text of its item, as close as the next item. */
+.agent li > * + ol,
+.agent li > * + ul {
+  margin-top: 2px;
+}
+
 .event {
   display: flex;
   align-items: center;

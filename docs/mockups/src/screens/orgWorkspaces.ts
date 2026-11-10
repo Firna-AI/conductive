@@ -5,7 +5,7 @@ import {
   type OpenWorkspace,
   type WorkspaceRow,
 } from '../components/workspaces/sections'
-import type { ConversationKey } from '../fixtures/conversations'
+import type { ConversationKey } from '../fixtures/conversationKeys'
 import { savedCarts } from '../fixtures/workspaces'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
