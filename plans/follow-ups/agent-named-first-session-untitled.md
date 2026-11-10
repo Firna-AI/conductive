@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, from the options check of the plan `plans/start-from-github.md` on the branch `calummoore/new-chat-start-from-brainstorm`.
-- **Location:** `worker/chat/session-titles.ts:17`, `worker/chat/workspace-title.ts:32`, and `docs/protocol/agents-and-sessions.md:64`.
+- **Location:** `worker/chat/session-titles.ts:17`, `worker/chat/workspace-title.ts:23`, and `docs/protocol/agents-and-sessions.md:65`.
 - **Reason:** The plan that found it changes how new workspaces start, not how sessions get their titles.
 
 - **Source:** Review. **Category:** Product bug.
@@ -13,7 +13,7 @@
 - **Background:**
   - `docs/protocol/agents-and-sessions.md` says that a new session has no title, and that its tab shows "Untitled".
   - The same doc says that the first session takes the title of the workspace when the workspace takes a title as its name. Each other session takes its title from its first message with text.
-  - `docs/protocol/chat-and-events.md` says that the app sends the title request only while the workspace has no name.
+  - `docs/protocol/messages-and-attachments.md` says that the app sends the title request only while the workspace has no name.
   - `docs/protocol/agent-tools.md` says that a create call of an agent can give the new workspace a name.
   - In `worker/chat/session-titles.ts`, `applyMessageSessionTitle` skips the first session. Only `applyWorkspaceSessionTitle`, which `storeWorkspaceTitle` in `worker/chat/workspace-title.ts` calls after a title request, gives the first session a title.
 - **Problem:** A workspace that an agent names in its create call starts no title request. So its first session seems to keep no title, and its tab shows "Untitled" beside a named workspace. No reproduction confirms this yet.

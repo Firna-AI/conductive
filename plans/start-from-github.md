@@ -22,14 +22,16 @@ Contract owners:
 - [Create a workspace](../docs/protocol/create-a-workspace.md).
 - [Agent instructions](../docs/protocol/agent-instructions.md).
 - [Agent tools](../docs/protocol/agent-tools.md) and
-  [The workspace token](../docs/protocol/access-and-security.md#the-workspace-token).
+  [The workspace token](../docs/protocol/tokens-and-secrets.md#the-workspace-token).
 - [GitHub banner](../docs/protocol/github-banner.md) and
   [Workspace tools](../docs/protocol/workspace-tools.md).
-- [Chat and events](../docs/protocol/chat-and-events.md).
+- [Chat and events](../docs/protocol/chat-and-events.md) and
+  [Messages and attachments](../docs/protocol/messages-and-attachments.md).
 - [Conductor Cloud comparison](../docs/protocol/conductor-cloud-comparison.md#statuses),
   for the rows in `src/marketing/from-conductor/areas/`.
-- The Terms page in `src/marketing/terms.ts` and the Privacy page in
-  `src/marketing/privacy.ts`.
+- The Terms page in `src/marketing/terms.ts`, and the Privacy page in
+  `src/marketing/privacy.ts` with its data uses in
+  `src/marketing/privacy-uses.ts`.
 
 ## Terms
 
@@ -41,17 +43,21 @@ Contract owners:
   pull request bar compare with. Today it is always the default branch.
 - **Fork pull request:** a pull request from another GitHub copy of the
   repository. The app cannot push to that copy.
-- **Milestone 8p:** the open milestone "Chat attachments" of
-  `plans/boat-native-remote-workspaces.md`. It builds file storage and the
-  copy of attached files into the cloud computer.
+- **Milestone 8p:** the milestone "Chat attachments" of
+  `plans/boat-native-remote-workspaces.md`. It merged on 10 November 2026.
+  The Worker stores each attached file in R2 and copies it into the cloud
+  computer when the turn of its message starts.
 
 ## Decisions
 
 Decisions 213 to 216 hold the answers of the brainstorm. Decisions 217 to
 220 are open. Each number is the next free one on 10 November 2026. The
-options check of 10 November 2026 added options to decisions 217, 218, and
-219, changed the recommendations of 217 and 218, and found decision 220. Its
-report is in `.context/start-from-github/options-check.md`.
+first options check added options to decisions 217, 218, and 219, changed
+the recommendations of 217 and 218, and found decision 220. Its report is in
+`.context/start-from-github/options-check.md`. Milestone 8p merged later
+that day, so decisions 217 and 220 changed. A second options check added
+options to both. Its report is in
+`.context/start-from-github/options-check-2.md`.
 
 ### Decision 213: what a picked branch or pull request does
 
@@ -82,7 +88,7 @@ first message, and the workspace records the issue.
   only when it chooses. B, a prefilled message, because it makes a long first
   message without the comments.
 - The user asked whether the issue would be a Markdown file. Decision 217
-  holds that question, because attached files do not work in production yet.
+  holds that question.
 
 ### Decision 215: an active workspace already uses the picked branch
 
@@ -113,25 +119,25 @@ it, and the agent learns it.
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `worker/chat/runner-delivery.ts:166`, `worker/chat/dependencies.ts:51`, and `runner/src/providers/message.ts:3`.
-- **Background:** Decision 214 gives the agent the title, the body, and the comments of a picked issue with the first message. The user asked whether this would be a Markdown file. An attached file reaches both agents only as a line `Attached file: <path>`, and production still refuses every attachment with `503 attachments_unavailable`, because Milestone 8p is open. The runner adds the sender line to the text that reaches the agent. A runner change reaches an org only with its next image build, because a refresh installs no new software.
-- **Problem:** The form that the user asked about does not work in production yet. Most other forms need a new runner, which older images do not have.
-- **Impact if no action:** Issue starts cannot ship, or the agent of an older image gets no issue text while the chip shows the issue.
+- **Location:** `worker/chat/attachments.md`, `src/app/draft-files.ts:10`, `worker/chat/runner-delivery.ts:194`, and `runner/src/providers/attachment-description.ts`.
+- **Background:** Decision 214 gives the agent the title, the body, and the comments of a picked issue with the first message. The user asked whether this would be a Markdown file. Milestone 8p merged on 10 November 2026, so attached files now work in production. The Worker stores each file in R2 and copies it into the cloud computer when the first turn starts. With the message, the agent gets the name, the media type, and the path of each file, not its text. Each draft file keeps its browser `File`, so Try again can upload it again. A change to the runner reaches an org only with its next image build.
+- **Problem:** No rule says in which form the issue text reaches the agent.
+- **Impact if no action:** The implementer picks a form, and the agent of an older image can get no issue text while the chip shows the issue.
 - **Root question:** How does the agent get the title, the body, and the comments of a picked issue with the first message?
 - **Options:**
-  - **A.** Wait for Milestone 8p. Then the Worker saves the issue as an attached Markdown file of the first message. Cost: issue starts wait for 8p, which has no date. The agent gets only a path, so it reads the issue only when it opens the file. Effort: Small, after 8p.
-  - **B.** The Worker reads the issue at the create and stores its text with the first message. The runner adds the text under the sender line. Cost: the Worker keeps a copy of the issue text, which the Privacy page must list. Only a new runner adds the text. Effort: Medium.
-  - **C.** A Markdown file through the runner. The Worker reads the issue at the create and keeps its text until the first turn, also for Try again. The runner writes it as a file and names it as an attached file. Cost: the stored copy of B, a path in place of the text, and a file path built before Milestone 8p chooses one. Effort: Medium.
-  - **D.** The runner reads the issue with the GitHub CLI at the first turn, as the sender of the turn. It adds the text under the sender line, and the message stores only the issue reference. Cost: the first turn depends on a GitHub call, and only a new runner reads the issue. Effort: Medium.
-  - **E.** The Worker reads the issue text in the GitHub read that checks the start point at the create. It stores the capped text beside the first message. When it sends the first turn, it joins the text to the member's text in the runner's copy of the message. Every runner, also an older one, gives it to the agent under the sender line. The stored message, the chat, and the name keep only the member's text. Cost: the Worker keeps a copy, which the Privacy page must list, and the Worker and the runner both build text for the agent. Effort: Medium.
-  - **F.** The start command reads the issue with the GitHub CLI, as the sender of the first turn. It writes the capped text as a Markdown file outside the repository folder, and the Worker names that file as an attachment of the first turn. Cost: the agent gets only a path, the start depends on a GitHub read, and only images built after 9 November 2026 have the CLI. Effort: Medium.
-  - **G.** As E, but the Worker reads the issue each time it sends the first turn, and it stores no copy. Cost: the send runs in the serial queue of the workspace chat, so the read must move out of that queue. Each failed read gives the agent only the reference. Effort: Large.
-- **Left out:** A fact in the agent instructions that only names the issue, because decision 214 gives the agent the whole issue text. The system instructions as the place of the text, because text that any GitHub user can write would then weigh as much as the app's own rules.
-- **Wider fix:** E. One Worker step turns each kind of start point into text for the agent, so a later source, such as a Linear issue, adds one reader.
-- **Previous examples:** The sender line, which the runner adds to the text that reaches the agent and which the chat never shows. See [The sender line](../docs/protocol/agent-instructions.md#the-sender-line).
-- **Related:** Decision 219: both decide which data of the start point leaves the stored message. Decision 220: its option C reuses the step of option E.
-- **Recommendation:** E. It ships with this plan, works with the runner of an older image, gives the agent the text and not a path, and reuses the read that the create already makes. The plan first recommended D, and the options check changed it to E.
-- **Action:** ask the user, because the user asked about the file form, and the options trade a stored copy against timing and older images.
+  - **A.** A Markdown file. At the pick, the browser gets the issue as Markdown from a Worker route, which reads it with the member's GitHub token. The browser uploads it as an attached file of the first message, as for any file. The first turn copies it into the cloud computer. Cost: the agent gets a path, so it reads the issue only when it opens the file. The text is from the time of the pick, and the Privacy sentence about attached files must name a picked issue. Effort: Medium.
+  - **B.** The Worker stores the issue text with the first message, and the runner adds it under the sender line. Cost: a stored copy, and only a new runner adds the text. Effort: Medium.
+  - **D.** The runner reads the issue with the GitHub CLI at the first turn. Cost: the first turn depends on a GitHub call, and only a new runner reads it. Effort: Medium.
+  - **E.** The Worker reads the issue in the GitHub read that checks the start point at the create. It stores the capped text beside the first message, and joins it to the member's text in the copy that it sends to the runner. Every runner, also an older one, gives it to the agent. Cost: a stored copy, which the Privacy page must list, and the Worker then builds text for the agent. Effort: Medium.
+  - **F.** The start command reads the issue with the GitHub CLI and writes a file outside the repository, which the Worker names as an attachment of the first turn. Cost: the agent gets only a path, the start depends on a GitHub read, and only images built after 9 November 2026 have the CLI. Effort: Medium.
+  - **G.** As E, but the Worker reads the issue each time it sends the first turn, and it stores no copy. Cost: the read must move out of the serial queue of the workspace chat. Effort: Large.
+  - **H.** As A, and a new runner also gives the agent the text of the issue file after its path line. The Worker marks each file that the app makes with a new optional field of the runner attachment. An older runner drops that field and gives only the path. Cost: only a new image gives the text at once, and the runner command gets a new field. Effort: Large.
+- **Left out:** C, a file that the runner writes, because A is better on every point: the merged path already copies files, with no runner change. A fact in the agent instructions that only names the issue, because decision 214 gives the agent the whole issue text. The system instructions as the place of the text, because text that any GitHub user can write would then weigh as much as the app's own rules. A separate chat message from the app with the issue text, because decision 214 shows the issue as a chip on the member's message.
+- **Wider fix:** A. One path then serves every file, and a later source, such as a Linear issue, becomes one more attached file. H extends that path with the text in the message.
+- **Previous examples:** The attached files of Milestone 8p, which reach the agent of every runner by their path.
+- **Related:** Decision 219: both decide which data of the start point leaves the stored message. Decision 220: it covers the sessions that this form does not reach.
+- **Recommendation:** A. It reuses the attachment path, works with every image, and keeps the issue in the cloud computer for a later read. The plan first recommended D, and the first options check changed it to E. After the merge of Milestone 8p, the plan recommends A. The second options check recommends H, because under A the agent reads the issue only when it opens the file. E best gives the text at once to every image.
+- **Action:** ask the user, because the user asked about the file form, and the options trade the text in the message against one path for every file.
 
 ### Decision 218: a target branch change while a pull request is open
 
@@ -159,7 +165,7 @@ it, and the agent learns it.
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `docs/protocol/chat-and-events.md:159` and `worker/chat/workspace-title.ts:32`.
+- **Location:** `docs/protocol/messages-and-attachments.md:131` and `worker/chat/workspace-title.ts:32`.
 - **Background:** A small model writes the name of a new workspace from the text of its first message. The title request holds no other data of the workspace. The first session takes that name as its title. With a start point, the message can be short, such as "Fix this" or "Continue".
 - **Problem:** A short message gives a poor name, although the title of the issue or the pull request describes the task.
 - **Impact if no action:** Such workspaces get names such as "Fix This". No screen can rename a workspace yet, so the poor name stays.
@@ -175,26 +181,29 @@ it, and the agent learns it.
 - **Recommendation:** B. The name then fits the task, and the member's words still shape it.
 - **Action:** ask the user, because B changes the rule that the title request holds only the message text.
 
-### Decision 220: what a later session learns about the issue
+### Decision 220: how an agent finds the issue without its text
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `docs/protocol/chat-and-events.md:47`.
-- **Background:** Decision 214 gives the issue text to the agent with the first message. A workspace can hold later sessions, such as a session of the other agent or a session on the login of another member. Such a session starts with none of the earlier history. Each new session gets the agent instructions, which hold only facts that do not change during the work.
-- **Problem:** A later session of an issue workspace knows nothing of the issue.
-- **Impact if no action:** Its agent works without the task until a member repeats it.
-- **Root question:** How does a later session of an issue workspace learn the issue?
+- **Location:** `docs/protocol/messages-and-attachments.md:30` and `runner/src/instructions.ts:33`.
+- **Background:** Decision 214 gives the issue text to the agent with the first message. A workspace can hold later sessions, such as a session of the other agent or a session on the login of another member. Such a session starts with none of the earlier history. A long session can also lose the issue text when the agent summarizes it. Each session keeps its agent instructions, also after a summary. The instructions hold only facts that do not change during the work.
+- **Problem:** An agent whose conversation does not hold the issue text knows nothing of the issue.
+- **Impact if no action:** That agent works without the task until a member repeats it.
+- **Root question:** How does an agent of an issue workspace find the issue when its own conversation does not hold the issue text?
 - **Options:**
   - **A.** Nothing. A member tells the agent. Effort: Small.
-  - **B.** The agent instructions of each new session name the issue: its number, its title, and its link. The agent reads it with the GitHub CLI. Cost: the agent gets a reference, not the text. Only a new runner builds the fact, so older images miss it. Effort: Small.
-  - **C.** The Worker adds the issue text to the first message of each new session, as option E of decision 217 does for the first session. Cost: each new session gets the whole capped text again. Under another option of decision 217, it needs a runner change. Effort: Small.
-- **Left out:** None.
-- **Wider fix:** None. This is a design question.
-- **Previous examples:** None found.
-- **Related:** Decision 217: option C here depends on its option E.
-- **Recommendation:** C. Every session then gets the whole issue, as decision 214 chose for the first one.
-- **Action:** ask the user, because C extends decision 214 to later sessions, and no requirement covers them.
+  - **B.** The agent instructions of each new session name the issue: its number, its title, and its link. Cost: any GitHub user can write and change an issue title, so the instructions then hold text that a GitHub user wrote and a fact that can change. Only a new runner builds it. Effort: Small.
+  - **C.** The Worker gives each new session the issue text in the form of decision 217. Cost: a GitHub read and a stored copy for each new session, and under its option A a file on a message that the member did not attach. Effort: Medium.
+  - **D.** As B, but the fact gives only the issue number and its link. The agent reads the issue with the GitHub CLI when it needs it. Cost: one call to learn what the issue says, and only a new runner builds the fact. Effort: Small.
+  - **E.** The Worker adds a short reference, the issue number and its link, to its copy of the first message of each new session. Every runner gives it to the agent. Cost: a summary can drop it, and the agent instructions doc rejected a block in the first message of each session for that reason. Effort: Medium.
+  - **F.** The composer of each new session in an issue workspace starts with the issue attached, in the form of decision 217. The member can remove it before the send. Cost: a GitHub read for each new session, a new composer state with a mockup, and no issue text when the member removes it. Effort: Large.
+- **Left out:** A workspace tool that returns the start point, because D is better on every point: the same reference with no new route and no wider workspace token. An issue number in the branch name, or a GitHub link from the branch to the issue, because no fact tells the agent to look there. The issue file of the first message used again, because only the first message of a new workspace can use its upload.
+- **Wider fix:** D. When its fact names the start point of each kind, a later source adds one kind and no new path.
+- **Previous examples:** The agent instructions already name the workspace branch, a fact that never changes. See [The branches](../docs/protocol/agent-instructions.md#the-branches).
+- **Related:** Decision 217: option C here follows the form chosen there.
+- **Recommendation:** D. Every session keeps the reference after a summary, and the instructions hold no text that a GitHub user can write or change. The plan first recommended C, then B. The second options check changed it to D. C best gives each session the whole text, and E also reaches an older image.
+- **Action:** ask the user, because D adds a fact to the agent instructions, and no requirement covers these sessions.
 
 ## Design calls
 
@@ -261,6 +270,9 @@ My calls, made on 10 November 2026:
 - The issue reference is a new field of the message, not a new attachment
   kind. Reason: an older runner closes its connection on an unknown
   attachment kind, and it ignores an unknown field.
+- Under option A or H of decision 217, the issue chip and its file are one
+  unit. A removal of either removes both. Reason: a chip must not show an
+  issue whose text the agent never gets.
 - An org with an older image gets the Worker parts at once: the lists, the
   create, the Changes list, and the pull request bar. The runner and tool
   parts reach it with its next image build. Until then, its agent
@@ -312,17 +324,17 @@ State the requirements and the decisions in force for the work below.
       decision 216 and how the agent finds it.
 - [ ] In `docs/protocol/agent-tools.md`, add the target branch call. Its
       rule while a pull request is open, and whether the workspace token
-      allows a new call in `docs/protocol/access-and-security.md`, wait for
+      allows a new call in `docs/protocol/tokens-and-secrets.md`, wait for
       decision 218.
 - [ ] In `docs/protocol/github-banner.md` and
       `docs/protocol/workspace-tools.md`, compare with the target branch.
-- [ ] In `docs/protocol/chat-and-events.md`, state what the agent gets from an
-      issue, and the issue chip. The delivery waits for decision 217, the name
-      for decision 219, and later sessions for decision 220.
+- [ ] In `docs/protocol/messages-and-attachments.md`, state what the agent
+      gets from an issue, and the issue chip. The form waits for decision 217,
+      the name for decision 219, and later sessions for decision 220.
 - [ ] Read the Terms and Privacy pages in full. Update each sentence that
       restates a changed fact, such as the branch name and the issue text.
-- [ ] Set the comparison rows for issue starts and "GitHub issues" to Planned
-      for decision 214, and "Target branch" to Planned for decision 216.
+- [x] The comparison rows of issue starts, "GitHub issues", and "Target
+      branch" show Planned. Pull request #144 set them on 10 November 2026.
 - [ ] Update the features in `README.md`. Check each relative link of each
       changed Markdown file.
 
