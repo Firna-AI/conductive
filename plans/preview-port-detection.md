@@ -1,6 +1,6 @@
 # Detected ports in the Preview tool
 
-Status: Active. On branch `calummoore/preview-port-detection-brainstorm`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #154](https://github.com/Firna-AI/remote-code/pull/154) is open as a draft. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The Preview tool asks the user to type the port of a web server in the
 cloud computer. The protocol says that the app does not discover ports. A
@@ -718,14 +718,14 @@ The complete gate passed on the final merged tree. The final runner build
 also passed, in `.context/preview-port-detection/final-runner-build.log`.
 
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
+- [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 
@@ -737,3 +737,8 @@ also passed, in `.context/preview-port-detection/final-runner-build.log`.
       preview.
 - [ ] Check that a workspace created before that build shows the port
       field as today.
+
+Verification status: the review findings are fixed and independently checked.
+The draft pull request keeps this plan because the required signed-in
+listener inventory is still open. The complete gate and Mac checks run on
+the pull request head. The plan deletion waits for the required inventory.
