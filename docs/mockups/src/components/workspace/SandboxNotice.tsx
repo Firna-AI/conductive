@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, CircleAlert, CirclePause } from 'lucide-react'
+import { Archive, CircleAlert, CirclePause, Power } from 'lucide-react'
 import { archivedOn } from '../../fixtures/archive'
 import { startErrors } from '../../fixtures/starting'
 import { paths } from '../../paths'
@@ -22,6 +22,8 @@ type Problem = {
   title: string
   /** The text of the bar under the chat. */
   body: string
+  /** The title of the files and tools panels, when it is not the title. */
+  panelTitle?: string
   /** The text of the files and tools panels. */
   panelBody: string
   /** The one way forward, when the sandbox can come back. */
@@ -71,7 +73,17 @@ const problems: Readonly<Record<SandboxProblem, Problem>> = {
     icon: Archive,
     title: `Archived on ${archivedOn}`,
     body: 'Its cloud computer is deleted, and the chat is read-only.',
+    panelTitle: 'Archived',
     panelBody: 'The files and the tools went with the cloud computer.',
+    tone: 'neutral',
+  },
+  inactive: {
+    icon: Power,
+    title: 'Activate this workspace',
+    body: 'A cloud computer starts with your work from Conductor.',
+    panelTitle: 'Not active',
+    panelBody: 'Activate the workspace to open its files and tools.',
+    action: 'Activate',
     tone: 'neutral',
   },
 }
@@ -80,7 +92,9 @@ const problems: Readonly<Record<SandboxProblem, Problem>> = {
  * The one way forward. The Try again of a failed first start leads to the
  * start of a new cloud computer in that workspace, which the mockups draw
  * for Saved carts. A branch that is gone stays gone until someone restores
- * it on GitHub, so its Try again leads to no drawn screen.
+ * it on GitHub, so its Try again leads to no drawn screen. The screens of a
+ * workspace from Conductor draw their own Activate, with the link of their
+ * state, so Activate here leads to no drawn screen either.
  */
 function RecoveryButton(props: { label: string; state: SandboxNoticeState }) {
   const { state } = props
@@ -108,6 +122,7 @@ function barBody(state: SandboxNoticeState, body: string): string {
       return state.message ? `${state.message} ${body}` : body
     case 'stopped':
     case 'archived':
+    case 'inactive':
       return body
   }
 }
@@ -118,7 +133,8 @@ function barBody(state: SandboxNoticeState, body: string): string {
  * stays under it. A refused start shows the words of the refusal, and no
  * action, because the start stays refused until its cause changes. A start
  * that failed shows the message that the app saved for it, such as the
- * 20-minute limit of a start, before the body.
+ * 20-minute limit of a start, before the body. A workspace from Conductor
+ * asks to activate it before its first activation.
  */
 export function SandboxBar(props: SandboxNoticeState) {
   const problem = problems[props.problem]
@@ -157,7 +173,6 @@ export function SandboxPanel(props: {
     )
   }
   const problem = problems[state.problem]
-  const archived = state.problem === 'archived'
   return (
     <EmptyState
       action={
@@ -171,7 +186,7 @@ export function SandboxPanel(props: {
           : keptBody(state, problem.panelBody)
       }
       icon={problem.icon}
-      title={archived ? 'Archived' : problem.title}
+      title={problem.panelTitle ?? problem.title}
     />
   )
 }

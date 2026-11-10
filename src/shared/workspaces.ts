@@ -2,6 +2,7 @@ import type { AgentChoice } from './agents'
 import { orgPath, type Timestamp } from './api'
 import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
 import type { WorkspaceBranchChoice } from './workspace-branches'
+import type { ConductorImportOrigin } from './conductor-import'
 
 export function workspacesPath(orgId: string): string {
   return `${orgPath(orgId)}/workspaces`
@@ -25,6 +26,7 @@ export type WorkspaceState =
   | 'input'
   | 'unread'
   | 'ready'
+  | 'inactive'
   | 'starting'
   | 'stopped'
   | 'error'
@@ -45,6 +47,7 @@ export interface Workspace {
   createdAt: Timestamp
   updatedAt: Timestamp
   archivedAt: Timestamp | null
+  conductorImport?: ConductorImportOrigin
 }
 
 export interface StartStep {

@@ -23,13 +23,24 @@ export interface SandboxView {
 }
 
 /**
+ * Whether the sandbox is down, so that a refused start shows until its
+ * cause ends: it stopped, its start failed, or a workspace from Conductor
+ * waits for its first activation, which is a start too.
+ */
+function down(sandbox: SandboxState): boolean {
+  return sandbox === 'stopped' || sandbox === 'error' || sandbox === 'inactive'
+}
+
+/**
  * The view of the sandbox. A suspended org refuses each start and each new
  * access to the sandbox, also while the stop of its cloud computer runs.
  * Another refused start shows while the sandbox is down, until its cause
  * ends. An archived workspace keeps its bar in a suspended org too. A
  * failed start carries the message that the workspace saved for it. A
  * failed first start marks its bar, which keeps the composer under it, and
- * its panels, which show it in place of the lists.
+ * its panels, which show it in place of the lists. A workspace from
+ * Conductor asks to activate it before its first activation, in place of
+ * the composer and of the lists.
  */
 export function sandboxView(input: {
   sandbox: SandboxState
@@ -44,7 +55,7 @@ export function sandboxView(input: {
   const refusal =
     suspended && sandbox !== 'archived'
       ? orgRefusal
-      : sandbox === 'stopped' || sandbox === 'error'
+      : down(sandbox)
         ? refusedStart(input.startError)
         : null
   const bar: SandboxNoticeState | null =

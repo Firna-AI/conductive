@@ -1,4 +1,8 @@
 import { describe, expect, test } from 'vitest'
+import {
+  replacesComposer,
+  replacesLists,
+} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import { ApiError } from '../../app/api/client'
 import { sandboxView } from './sandbox-view'
 
@@ -54,6 +58,41 @@ describe('the sandbox view of an open workspace', () => {
         panel: { problem: 'error', message: saved, firstStart: true },
         orgNotice: false,
       },
+    })
+  })
+
+  test('a workspace from Conductor before its activation asks to activate it in place of the composer and the lists, unless the org or the owner refuses its start', () => {
+    const inactive = {
+      sandbox: 'inactive',
+      savedError: null,
+      firstStart: false,
+    } as const
+    const asks = sandboxView({
+      ...inactive,
+      suspended: false,
+      startError: null,
+    })
+    expect({
+      asks,
+      replacesComposer: asks.bar === null ? null : replacesComposer(asks.bar),
+      replacesLists: asks.panel === null ? null : replacesLists(asks.panel),
+      org: sandboxView({ ...inactive, suspended: true, startError: null }).bar,
+      owner: sandboxView({
+        ...inactive,
+        suspended: false,
+        startError: new ApiError(403, 'user_suspended', ownerWords),
+      }).bar,
+    }).toEqual({
+      asks: {
+        refusal: null,
+        bar: { problem: 'inactive' },
+        panel: { problem: 'inactive' },
+        orgNotice: false,
+      },
+      replacesComposer: true,
+      replacesLists: true,
+      org: { problem: 'refused', reason: orgWords },
+      owner: { problem: 'refused', reason: ownerWords },
     })
   })
 })

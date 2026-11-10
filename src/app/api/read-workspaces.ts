@@ -1,4 +1,5 @@
 import type { Attachment, UserMessage } from '../../shared/messages'
+import { readWorkspaceImport } from '../../shared/conductor-import'
 import type {
   ArchiveCheckResponse,
   CreateWorkspaceResponse,
@@ -28,6 +29,7 @@ export const WORKSPACE_STATES = [
   'input',
   'unread',
   'ready',
+  'inactive',
   'starting',
   'stopped',
   'error',
@@ -51,6 +53,7 @@ export function readWorkspace(value: unknown): Workspace {
     createdAt: count(workspace, 'createdAt'),
     updatedAt: count(workspace, 'updatedAt'),
     archivedAt: maybeCount(workspace, 'archivedAt'),
+    ...readWorkspaceImport(workspace.conductorImport),
   }
 }
 

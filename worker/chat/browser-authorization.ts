@@ -42,6 +42,15 @@ export async function authorizeChatBrowser(
       'workspace_not_found',
       'The workspace is not available.',
     )
+  if (
+    workspace.state === 'inactive' &&
+    !['GET', 'HEAD'].includes(request.method)
+  )
+    throw new HttpError(
+      409,
+      'workspace_not_active',
+      'Activate this workspace to start a session.',
+    )
   return {
     context,
     workspace,

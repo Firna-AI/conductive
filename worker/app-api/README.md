@@ -113,6 +113,13 @@ The machine tools use the configured app origin instead.
 
 ## Development
 
+Imported workspace records use the trusted
+[record writer](../conductor-import/workspace-data.ts).
+The list and workspace read return `inactive` before activation.
+Their optional `conductorImport` field keeps source identity, importer, and activation completion time.
+It remains present after Archive. Native responses omit the field.
+The writer creates no first message, session, turn, token, or cloud computer.
+
 Run `npm run test -- worker/app-api worker/chat/integration` from the
 repository root. The integration tests use the production Worker entry,
 local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.

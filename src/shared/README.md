@@ -10,6 +10,11 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `AgentWorkspaceSummary` gives the same number and link.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
+`conductor-import.ts` owns the optional `Workspace.conductorImport` origin.
+It keeps the local Conductor ID, importer user ID, and nullable activation completion time.
+Native workspaces omit it. `readWorkspaceImport` validates that field for each workspace reader.
+An imported workspace starts in `inactive`, with no first message or session.
+
 Each area owns its paths and payloads. Import from that area directly.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
 Its `set` change carries a value and an optional mark. An omitted mark

@@ -643,6 +643,18 @@ They do not reopen a user decision. The earlier dated facts stay as history.
   default branch only in the picker. Preserve the lifecycle code map in a
   linked area page to meet the file-length rule.
 
+- Agent calls for inactive records, 10 November 2026: use inactive as the
+  API literal, matching the approved mockup status. Keep first session,
+  turn, and message IDs null until real identities exist. Preserve native
+  runtime rows and unique keys in a forward migration. Keep the importer
+  distinct from a reassigned owner. Share the approved inactive notice
+  contract in UI-only Milestone 3a before continuing the backend service.
+- Agent call for native restore, 10 November 2026: copy Claude history to
+  the target project key and map only the copied Codex session header's
+  provider identity to conductive. Offline probes preserved the original
+  source bytes and all response items. Actual provider acceptance still
+  needs a real continuation turn, so preparation must not certify it.
+
 ### Mockup design calls, 10 November 2026
 
 These are agent calls from Milestone 1, within the decisions in force.
@@ -1026,11 +1038,30 @@ Depends on: 2
 
 Verification evidence: `.context/import-from-conductor/current/milestone-3-report.md`.
 
+## Milestone 3a: Shared inactive view state
+
+Tags: ui
+
+Depends on: 1, 2, 3
+
+Implementation found that the approved Not active views use an import-only
+notice while the app shares a narrower native notice contract. Align that
+contract before the imported record can flow through the app. This keeps
+the approved visuals and changes no backend requirement.
+
+- [x] Add the existing inactive status to the app's sandbox view state.
+- [x] Align the shared notice contract and both renderers with the approved
+      Activate bar and Not active panels. Preserve native states.
+- [x] Verify the typecheck and targeted view-state checks. Update the area
+      README and the affected mockup note if its contract description changes.
+
+Verification evidence: `.context/import-from-conductor/current/inactive-contract-report.md`.
+
 ## Milestone 4: Imported workspaces and their data
 
 Depends on: 2
 
-- [ ] Let a workspace record exist with no first message and no cloud
+- [x] Let a workspace record exist with no first message and no cloud
       computer, with the "from Conductor" flag and the local Conductor ID,
       with its migration. Record Not active and whether activation
       completed, so Archive can choose the correct words.
@@ -1048,6 +1079,8 @@ Depends on: 2
       prefix.
 - [ ] Add Worker tests, as the `testing` skill says.
 - [ ] Update `worker/app-api/README.md` and `worker/chat/README.md`.
+
+Records checkpoint evidence: `.context/import-from-conductor/current/milestone-4-records-report.md`.
 
 ## Milestone 5: Activation
 
@@ -1125,7 +1158,7 @@ Depends on: 1, 4, 5, 6
 - [ ] Build the imported workspace: its flag, the links to its old
       sessions, their Markdown view, and the Activate question.
 - [ ] Show Not active with no premature file count or project file list.
-      Keep the shared notice contract and its app switch aligned.
+      Use the shared notice contract from Milestone 3a.
 - [ ] Keep the old-session links in the session history after a new chat
       fills the tab. Keep phone navigation in the same workspace and
       lifecycle state, including its Markdown view and archived state.

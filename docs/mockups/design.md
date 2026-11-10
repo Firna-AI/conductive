@@ -216,11 +216,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   workspace. `workspaceList` keeps only the states of the app, because the
   tests of the app read it.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
-  cloud computer: stopped, error, archived, and refused. A refused start
-  shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason. `sandboxNoticeState.ts`
-  beside it owns the types of the bar and the panels, which the app
-  imports too.
+  cloud computer: stopped, error, archived, refused, and inactive. A refused
+  start shows "The sandbox can't start" with the words of its cause and no
+  action. The notice takes any refusal reason. Inactive is a workspace from
+  Conductor before its first activation, with the words of the Activate
+  question and the Not active panels. `sandboxNoticeState.ts` beside it
+  owns the types of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.

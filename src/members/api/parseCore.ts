@@ -7,6 +7,7 @@ import type {
 } from '../../shared/members'
 import type { MessageSender } from '../../shared/messages'
 import type { OrgSummary } from '../../shared/orgs'
+import { readWorkspaceImport } from '../../shared/conductor-import'
 import type {
   Workspace,
   WorkspaceState,
@@ -45,6 +46,7 @@ const workspaceStates: Readonly<Record<WorkspaceState, WorkspaceState>> = {
   input: 'input',
   unread: 'unread',
   ready: 'ready',
+  inactive: 'inactive',
   starting: 'starting',
   stopped: 'stopped',
   error: 'error',
@@ -135,6 +137,7 @@ export function parseWorkspace(value: unknown): Workspace {
     createdAt: count(source, 'createdAt'),
     updatedAt: count(source, 'updatedAt'),
     archivedAt: countOrNull(source, 'archivedAt'),
+    ...readWorkspaceImport(source.conductorImport),
   }
 }
 

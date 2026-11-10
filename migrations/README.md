@@ -144,6 +144,12 @@ they stay.
 Existing creation plans keep `new`. A chosen existing branch keeps its mode
 through admission, object restart, and failed-first-start retry.
 
+`202611101135_imported_workspace_records.sql` rebuilds only `workspace_runtime`.
+Its first session, turn, and message IDs can be null. All native row values and uniqueness stay.
+It adds source, importer, and activation completion columns to `workspaces`.
+A unique org and source ID index deduplicates imports. Native source IDs remain null.
+The workspace table and its numbering and computer ledger triggers remain in place.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

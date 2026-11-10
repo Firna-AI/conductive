@@ -18,6 +18,7 @@ const stateLabels: Readonly<Record<WorkspaceState, string>> = {
   input: 'Needs input',
   unread: 'Done, unread',
   ready: 'Ready',
+  inactive: 'Not active',
   starting: 'Starting',
   stopped: 'Stopped',
   error: "Couldn't start",

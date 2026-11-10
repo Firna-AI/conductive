@@ -10,9 +10,13 @@ import type { Action } from '../ui/useAction'
 import type { Viewport } from '../ui/viewport'
 import { appFeatures } from './app-features'
 
-/** The cloud computer of the open workspace, as the panels show it. */
+/**
+ * The cloud computer of the open workspace, as the panels show it.
+ * `inactive` is a workspace from Conductor before its first activation,
+ * which has no cloud computer yet.
+ */
 export type SandboxState =
-  'ready' | 'starting' | 'stopped' | 'error' | 'archived'
+  'ready' | 'inactive' | 'starting' | 'stopped' | 'error' | 'archived'
 
 /**
  * The kept chat as the owner of the saved workspace view: the open tabs,
@@ -44,8 +48,9 @@ export interface WorkspaceContext {
    */
   panel: SandboxPanelState | null
   /**
-   * Resume, or Try again after a failed start. A phone shows it on a part
-   * that shows the state of the sandbox in place of its content.
+   * Resume, Try again after a failed start, or Activate before the first
+   * activation. A phone shows it on a part that shows the state of the
+   * sandbox in place of its content.
    */
   resume: Action<[]>
   viewport: Viewport
@@ -118,6 +123,7 @@ export function useFeatures(): WorkspaceFeatures {
 /** The sandbox state that a workspace state shows in the panels. */
 export function sandboxState(workspace: Workspace): SandboxState {
   switch (workspace.state) {
+    case 'inactive':
     case 'starting':
     case 'stopped':
     case 'error':

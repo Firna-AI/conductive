@@ -30,7 +30,7 @@ export async function resumeWorkspace(
   await requireActiveWorkspaceOwner(env.DB, row.ownerUserId, orgId)
   if (await retryFailedCreation(runtime, row, userId))
     return workspaceResponse(runtime, orgId, workspaceId)
-  if (!row.sandboxId)
+  if (!row.sandboxId || row.firstTurnId === null)
     throw new HttpError(
       409,
       'sandbox_unavailable',

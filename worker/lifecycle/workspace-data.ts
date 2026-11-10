@@ -30,8 +30,11 @@ export interface WorkspaceRow {
   agent: Workspace['choice']['agent']
   model: string
   effort: Workspace['choice']['effort']
-  sessionId: string
-  firstTurnId: string
+  sessionId: string | null
+  firstTurnId: string | null
+  conductorLocalId: string | null
+  importerUserId: string | null
+  activatedAt: number | null
 }
 
 const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
@@ -40,7 +43,9 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId,
   w.provider_account AS providerAccount, w.state,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
-  r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
+  r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId,
+  w.conductor_local_id AS conductorLocalId, w.imported_by_user_id AS importerUserId,
+  w.activation_completed_at AS activatedAt`
 
 export async function readWorkspace(
   db: D1Database,
@@ -94,6 +99,15 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
+    ...(row.conductorLocalId !== null && row.importerUserId !== null
+      ? {
+          conductorImport: {
+            localWorkspaceId: row.conductorLocalId,
+            importerUserId: row.importerUserId,
+            activatedAt: row.activatedAt,
+          },
+        }
+      : {}),
   }
 }
 

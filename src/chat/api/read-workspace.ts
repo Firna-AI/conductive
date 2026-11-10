@@ -1,4 +1,5 @@
 import type { ChatEvent } from '../../shared/chat-events'
+import { readWorkspaceImport } from '../../shared/conductor-import'
 import type { WorkspaceEvent } from '../../shared/events'
 import type {
   OrderedWorkspaceResponse,
@@ -52,6 +53,7 @@ const readState = oneOf<WorkspaceState>({
   input: true,
   unread: true,
   ready: true,
+  inactive: true,
   starting: true,
   stopped: true,
   error: true,
@@ -75,6 +77,7 @@ function readWorkspace(value: unknown): Workspace {
     createdAt: count(source.createdAt),
     updatedAt: count(source.updatedAt),
     archivedAt: nullable(count)(source.archivedAt),
+    ...readWorkspaceImport(source.conductorImport),
   }
 }
 

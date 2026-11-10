@@ -12,7 +12,8 @@ say. A host can give its own parts instead, as
 [Composition](../../app/README.md#composition) says. The visual spec is the
 `app` page of the [mockup catalogue](../../../docs/mockups/README.md). The
 states of the cloud computer are in `app/shell`, and the notices are in
-`app/chat/lost-updates`.
+`app/chat/lost-updates`. A workspace from Conductor before its first
+activation is in `app/imported`.
 
 The workspace list offers Archive over the time of each permitted row on
 hover only. Selection and keyboard focus alone keep the time visible.
@@ -226,6 +227,9 @@ fake API, with its address options, its controls, and the test command.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
   the refused notice. `sandbox-view.ts` chooses the bar and the panels,
   also for a suspended org and for the saved message of a failed start.
+  Before the first activation of a workspace from Conductor, the bar asks
+  Activate this workspace in place of the composer, and the panels show
+  Not active in place of the lists. Its Activate runs `resume`.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
 

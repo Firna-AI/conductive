@@ -37,14 +37,17 @@ workspace, and the mixed mark of Select all.
   line of a linked session, which opens its old document. A session that
   could not resume starts fresh, and its first message names its old chat
   in `.context/conductor/`. An activation whose work does not fit the free
-  disk names both sizes in the notice of a failed activation. The shared sandbox
-  notices of `sandboxNoticeState.ts` stay as they are, because the app
-  draws them too. Before an activation, or after a failed one, the
-  workspace has no cloud computer to check, so `ImportedArchiveDialog`
-  asks Archive with no check. It says that the workspace can no longer be
-  activated and that its old sessions stay readable. After that Archive,
-  `ArchivedImportBar` names the day and the readable old sessions, and no
-  deleted cloud computer, because the workspace never had one.
+  disk names both sizes in the notice of a failed activation. The shared
+  notices of `sandboxNoticeState.ts` have the state inactive, with the
+  words of `ActivateBar` and `ImportedPanel`, so the app draws them too.
+  The screens of an imported workspace keep these two parts, whose
+  controls link to the screens of their state. Before an activation, or
+  after a failed one, the workspace has no cloud computer to check, so
+  `ImportedArchiveDialog` asks Archive with no check. It says that the
+  workspace can no longer be activated and that its old sessions stay
+  readable. After that Archive, `ArchivedImportBar` names the day and the
+  readable old sessions, and no deleted cloud computer, because the
+  workspace never had one.
 - `MobileTabBar`, `ToolsPanel`, the list tabs of `FilesPanel`, and
   `WorkspaceTabs` take optional links for a workspace whose screens are not
   those of every workspace. A tab with no screen there, or with null, stays

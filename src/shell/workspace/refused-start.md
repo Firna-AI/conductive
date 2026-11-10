@@ -3,12 +3,13 @@
 This page is part of the [workspace screen](README.md) guide.
 
 `WorkspaceScreen` reads `model.startError`. While the sandbox is stopped or
-failed, a start error whose code is in `refusalCodes` of `SandboxNotice.tsx`
-shows the refused bar and panels: "The sandbox can't start", with no
-action. The bar shows the reason of the error. The codes are
-`user_suspended` and `org_suspended`. Other start errors keep the stopped
-and error notices. The header, the history, and the owner control stay.
-The Resume action and its failure toast stay as they were.
+failed, or a workspace from Conductor waits for its first activation, a
+start error whose code is in `refusalCodes` of `SandboxNotice.tsx` shows
+the refused bar and panels: "The sandbox can't start", with no action. The
+bar shows the reason of the error. The codes are `user_suspended` and
+`org_suspended`. Other start errors keep the notice of the state. The
+header, the history, and the owner control stay. The Resume action and its
+failure toast stay as they were.
 
 The bar and the panels take one notice, so each panel gets the whole
 refusal with its reason: `SandboxPanelState` is a `SandboxNoticeState` or

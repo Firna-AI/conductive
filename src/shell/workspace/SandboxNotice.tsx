@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, CircleAlert, CirclePause } from 'lucide-react'
+import { Archive, CircleAlert, CirclePause, Power } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import {
@@ -59,6 +59,8 @@ interface Problem {
   title: string
   /** The text of the bar under the chat. */
   body: string
+  /** The title of the files and tools panels, when it is not the title. */
+  panelTitle?: string
   /** The text of the files and tools panels. */
   panelBody: string
   /** The one way forward, when the sandbox can come back. */
@@ -118,7 +120,18 @@ function problemOf(problem: SandboxProblem, archivedOn: string): Problem {
         icon: Archive,
         title: `Archived on ${archivedOn}`,
         body: 'Its cloud computer is deleted, and the chat is read-only.',
+        panelTitle: 'Archived',
         panelBody: 'The files and the tools went with the cloud computer.',
+        tone: 'neutral',
+      }
+    case 'inactive':
+      return {
+        icon: Power,
+        title: 'Activate this workspace',
+        body: 'A cloud computer starts with your work from Conductor.',
+        panelTitle: 'Not active',
+        panelBody: 'Activate the workspace to open its files and tools.',
+        action: 'Activate',
         tone: 'neutral',
       }
   }
@@ -139,6 +152,7 @@ function barBody(notice: SandboxNoticeState, body: string): string {
       return notice.message ? `${notice.message} ${body}` : body
     case 'stopped':
     case 'archived':
+    case 'inactive':
       return body
   }
 }
@@ -165,7 +179,8 @@ export function RefusedBar(props: { reason: string }) {
  * under it. A refused start shows the words of the refusal, and no action,
  * because the start stays refused until its cause changes. A start that
  * failed shows the message that the workspace saved for it, such as its
- * time limit, before the body.
+ * time limit, before the body. A workspace from Conductor asks to activate
+ * it before its first activation, and its Activate runs `resume`.
  */
 export function SandboxBar(props: {
   notice: SandboxNoticeState
@@ -204,8 +219,8 @@ export function SandboxPanel(props: {
   state: SandboxPanelState
   workspace: Workspace
   /**
-   * Resume, or Try again, which a phone shows. Null where the panel shows
-   * only a start or a refusal, which have no action.
+   * Resume, Try again, or Activate, which a phone shows. Null where the
+   * panel shows only a start or a refusal, which have no action.
    */
   resume: Action<[]> | null
   phone: boolean
@@ -243,7 +258,7 @@ export function SandboxPanel(props: {
           : keptBody(state, problem.panelBody)
       }
       icon={problem.icon}
-      title={state.problem === 'archived' ? 'Archived' : problem.title}
+      title={problem.panelTitle ?? problem.title}
     />
   )
 }

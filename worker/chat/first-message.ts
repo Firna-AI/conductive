@@ -33,7 +33,8 @@ export function firstMessageIdentity(
     JOIN orgs o ON o.id = w.org_id
     JOIN users u ON u.id = r.created_by_user_id
     JOIN org_members m ON m.org_id = w.org_id AND m.user_id = u.id
-    WHERE w.id = ? AND w.org_id = r.org_id AND o.deleted_at IS NULL`,
+    WHERE w.id = ? AND w.org_id = r.org_id AND o.deleted_at IS NULL
+      AND r.session_id IS NOT NULL AND r.first_turn_id IS NOT NULL AND r.first_message_id IS NOT NULL`,
   )
     .bind(workspaceId)
     .first<FirstMessageIdentity>()

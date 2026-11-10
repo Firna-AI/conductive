@@ -96,6 +96,12 @@ The native cleanup pointer can therefore change without losing an older failed c
 
 The [lifecycle code map](code-map.md) lists the lifecycle entry points.
 
+The trusted [import record writer](../conductor-import/workspace-data.ts)
+publishes a verified imported workspace without a cloud computer or first chat identity.
+Its runtime session, turn, and message IDs stay null.
+The list and read projections preserve `inactive` and its import origin.
+Normal create admission still requires every first-message ID.
+
 [create-request.ts](create-request.ts) chooses the branch of a new workspace.
 The [shared branch contract](../../src/shared/workspace-branches.ts) permits
 New branch or an existing branch. Omission keeps New branch.
