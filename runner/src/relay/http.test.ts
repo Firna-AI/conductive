@@ -8,6 +8,11 @@ it('accepts only the private hostname of its own port', async () => {
     response.end('ready'),
   )
   const relay = await relayFixture()
+  expect(relay.server.address()).toEqual({
+    address: '127.0.0.1',
+    family: 'IPv4',
+    port: relay.port,
+  })
   for (const host of [
     `localhost:${relay.port}`,
     `127.0.0.1:${relay.port}`,

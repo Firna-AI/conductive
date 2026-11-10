@@ -59,7 +59,7 @@ it('serves terminal and fresh desktop URLs and launches a preview through its se
       if (
         url.pathname.endsWith('/commands') &&
         record(await request.clone().json()).command ===
-          'systemctl is-active --quiet conductive-preview-relay.service'
+          'systemctl is-active --quiet conductive-preview-relay.socket'
       )
         return Response.json({
           ok: true,

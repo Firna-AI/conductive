@@ -31,9 +31,9 @@ const unavailable = {
   },
 }
 
-it('refuses an open when the relay unit does not run without hosting a port', async () => {
+it('refuses an open when the relay socket is inactive without hosting a port', async () => {
   const seed = await harness.seed()
-  harness.setRelayRunning(false)
+  harness.setRelaySocketActive(false)
   const handler = createPreviewHandler(harness.env, harness.dependencies)
   const response = await handler.fetch(
     seed.request(previewsPath(seed.orgId, seed.workspaceId), {
@@ -50,7 +50,7 @@ it('refuses an open when the relay unit does not run without hosting a port', as
     seed.request(previewsPath(seed.orgId, seed.workspaceId)),
   )
   expect(await listed.json()).toEqual({ previews: [] })
-  harness.setRelayRunning(true)
+  harness.setRelaySocketActive(true)
   const opened = await handler.fetch(
     seed.request(previewsPath(seed.orgId, seed.workspaceId), {
       method: 'POST',
@@ -58,7 +58,7 @@ it('refuses an open when the relay unit does not run without hosting a port', as
     }),
   )
   expect(opened.status).toBe(201)
-  harness.setRelayRunning(false)
+  harness.setRelaySocketActive(false)
   harness.requests.length = 0
   const stopped = await handler.fetch(
     seed.request(previewsPath(seed.orgId, seed.workspaceId), {
@@ -73,9 +73,9 @@ it('refuses an open when the relay unit does not run without hosting a port', as
   ])
 })
 
-it('refuses a proxy cache miss when the relay unit does not run without forwarding the request', async () => {
+it('refuses a proxy cache miss when the relay socket is inactive without forwarding the request', async () => {
   const setup = await openPreview(harness)
-  harness.setRelayRunning(false)
+  harness.setRelaySocketActive(false)
   harness.requests.length = 0
   const handler = createPreviewHandler(harness.env, harness.dependencies)
   const response = await handler.proxy(setup.previewRequest(setup.previewUrl))
@@ -87,7 +87,7 @@ it('refuses a proxy cache miss when the relay unit does not run without forwardi
 })
 
 it.each([401, 'network failure'] as const)(
-  'drops the relay descriptor after %s so the next request checks the unit',
+  'drops the relay descriptor after %s so the next request checks the socket',
   async (failure) => {
     const setup = await openPreview(harness)
     const base = harness.dependencies.fetch
@@ -100,7 +100,7 @@ it.each([401, 'network failure'] as const)(
       setup.previewRequest(setup.previewUrl),
     )
     expect(failed.status).toBe(502)
-    harness.setRelayRunning(false)
+    harness.setRelaySocketActive(false)
     harness.requests.length = 0
     const next = await setup.handler.proxy(
       setup.previewRequest(`${setup.previewUrl}/module.js`),

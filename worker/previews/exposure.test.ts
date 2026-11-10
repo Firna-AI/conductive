@@ -37,7 +37,7 @@ it('hosts the relay in localhost mode and reuses it for modules and page loads',
   ])
   expect(commands).toEqual([
     {
-      command: 'systemctl is-active --quiet conductive-preview-relay.service',
+      command: 'systemctl is-active --quiet conductive-preview-relay.socket',
       timeoutSeconds: 600,
     },
   ])

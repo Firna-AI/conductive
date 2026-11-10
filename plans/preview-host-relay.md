@@ -162,12 +162,18 @@ reason follows each call.
 
 ### How the relay gets into a sandbox
 
-- The image build installs the relay with an enabled systemd unit,
-  `conductive-preview-relay.service`, with `Restart=always`, as decision
-  214 chose. The unit runs as `user`, with the private Node, and with no
-  workspace marker, because the relay needs no workspace variable. Boat
-  starts the enabled services after each resume and fork.
-- Reason for a unit of its own: a restart of the runner, which each
+- The image build installs the relay, as decision 214 chose. The units are
+  my design calls.
+- A socket unit, `conductive-preview-relay.socket`, holds
+  `127.0.0.1:7682`. The service unit, `conductive-preview-relay.service`,
+  runs the relay as `user` with the private Node, with `Restart=always`.
+  The relay takes the listening socket from systemd. Reason: the port stays
+  open while the relay restarts, so new connections wait for it, and no
+  other process can take the port. This came from review finding 4.
+- The units need no workspace marker, because the relay needs no
+  workspace variable. Boat starts the enabled units after each resume and
+  fork.
+- Reason for units of its own: a restart of the runner, which each
   workspace start does, must not drop the open previews.
 - A workspace gets the relay only from an image build that has it. A
   refresh installs no software, and a workspace keeps the software of its
@@ -217,11 +223,18 @@ reason follows each call.
   sockets.
 - Its error answers are short plain text that names no provider. Reason:
   they show in the preview frame, and user-facing text never names Boat.
+- It adds `X-Conductive-Relay: 1` to each answer that it sends, and it
+  replaces any mark that the server sets. The Worker replaces each answer
+  without the mark with its own unavailable error, and drops its
+  descriptor. The response allowlist keeps the mark from the browser.
+  Reason: an answer without the mark did not come from the relay, such as
+  a gateway error of Boat while the relay is down. This came from review
+  finding 3.
 
 ### The route choice in the Worker
 
-- The open checks the state of the relay unit with one command call.
-  Reason: a user server on port 7682 must not count as the relay.
+- The open checks the state of the relay's socket unit with one command
+  call. Reason: a user server on port 7682 must not count as the relay.
 - When the unit runs, Boat hosts port 7682 in localhost mode, and the
   preview uses the relay. No preview uses the direct route.
 - When the unit does not run, the open answers 409
@@ -231,9 +244,10 @@ reason follows each call.
   decision 214. The message names no provider.
 - A page load does not run the check again. Reason: the relay finds the
   address of the server for each connection, so the check only adds a
-  command call to each page load. A failed upstream request, or a 401 or
-  403 from Boat, still drops the descriptor, so the next request checks
-  again.
+  command call to each page load. A failed upstream request, or an answer
+  without the relay mark, drops the descriptor, so the next request checks
+  again. A marked 401, 403, or 502 comes from the previewed server, so it
+  keeps the descriptor.
 - The Worker no longer runs `ss`, and it no longer reads or writes the
   listener mode of a preview.
 

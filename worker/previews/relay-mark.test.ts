@@ -33,7 +33,7 @@ it.each(['HTTP', 'WebSocket'])(
       forwarded++
       return new Response('Private provider gateway page.', { status: 502 })
     }
-    harness.setRelayRunning(false)
+    harness.setRelaySocketActive(false)
     harness.requests.length = 0
     const response = await setup.handler.proxy(
       setup.previewRequest(setup.previewUrl, {
@@ -78,7 +78,7 @@ it('rejects an unmarked successful WebSocket handshake before bridging it', asyn
   expect(await response.json()).toEqual(providerUnavailable)
   expect(harness.serverSockets).toHaveLength(0)
   expect(harness.upstreamSockets[0].closed?.code).toBe(1008)
-  harness.setRelayRunning(false)
+  harness.setRelaySocketActive(false)
   harness.requests.length = 0
   const next = await setup.handler.proxy(setup.previewRequest())
   expect(next.status).toBe(409)

@@ -167,7 +167,7 @@ export async function hostedActivityPort(
   if (
     url.pathname.endsWith('/commands') &&
     record(await request.clone().json()).command ===
-      'systemctl is-active --quiet conductive-preview-relay.service'
+      'systemctl is-active --quiet conductive-preview-relay.socket'
   )
     return Response.json({
       ok: true,

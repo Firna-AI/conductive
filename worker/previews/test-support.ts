@@ -96,7 +96,7 @@ export async function createToolsHarness() {
   let activity = toolsActivity(core.env.DB, () => now)
   let desktopSequence = 0
   let terminalSequence = 0
-  let relayRunning = true
+  let relaySocketActive = true
   const passwords = new Map<string, string>()
   const requests: Request[] = []
   const serverSockets: TestSocket[] = []
@@ -162,12 +162,12 @@ export async function createToolsHarness() {
           const body: { command: string } = await request.clone().json()
           if (
             body.command ===
-            'systemctl is-active --quiet conductive-preview-relay.service'
+            'systemctl is-active --quiet conductive-preview-relay.socket'
           ) {
             return Response.json({
               ok: true,
               type: 'command.finished',
-              exitCode: relayRunning ? 0 : 3,
+              exitCode: relaySocketActive ? 0 : 3,
               stdout: '',
               stderr: '',
               timedOut: false,
@@ -221,8 +221,8 @@ export async function createToolsHarness() {
     requests,
     serverSockets,
     upstreamSockets,
-    setRelayRunning: (value: boolean) => {
-      relayRunning = value
+    setRelaySocketActive: (value: boolean) => {
+      relaySocketActive = value
     },
     setNow: (value: number) => {
       now = value
@@ -243,7 +243,7 @@ export async function createToolsHarness() {
       dependencies.fetch = fetch
       desktopSequence = 0
       terminalSequence = 0
-      relayRunning = true
+      relaySocketActive = true
       passwords.clear()
     },
     seed: async () => {

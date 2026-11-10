@@ -6,7 +6,7 @@ export async function requirePreviewRelay(
   provider: WorkspaceTools,
 ): Promise<void> {
   const result = await provider.command(
-    'systemctl is-active --quiet conductive-preview-relay.service',
+    'systemctl is-active --quiet conductive-preview-relay.socket',
   )
   if (result.timedOut) throw new ProviderError('unavailable', 502)
   if (result.exitCode !== 0)

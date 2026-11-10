@@ -19,7 +19,7 @@ when the copy ends, as
 says.
 
 The software step of a build calls `installImageSoftware`. It writes the
-scripts and both service units of this folder to `/opt/conductive/staged/`.
+scripts, both service units, and the relay socket unit to `/opt/conductive/staged/`.
 Each staged script holds the quoted full path of the private Node in place
 of `@CONDUCTIVE_NODE@`. Then the step runs these commands, in this order:
 
@@ -44,11 +44,16 @@ system permissions. The installed runner and relay services run as `user`.
    It installs the runner and relay start scripts.
    It installs the git credential helper and the GitHub CLI wrapper.
    It installs `conductive-runner.service` and `conductive-preview-relay.service`.
+   It installs `conductive-preview-relay.socket`.
 5. It makes `conductive-git-credential` the system credential helper of
    git, and sets `credential.useHttpPath`.
-6. It enables the runner and relay services. It starts neither service.
+6. It enables the runner service, the relay socket, and the relay service.
+   It starts no unit.
 
-Boat starts the enabled relay service after each resume and fork.
+Boat starts the enabled relay socket and service after each resume and fork.
+The service requires the socket to start first.
+systemd keeps `127.0.0.1:7682` open while the relay service restarts.
+The service stays enabled, so the relay starts without waiting for a preview request.
 The relay uses the private Node.
 Its start script reads no workspace variable or workspace marker.
 

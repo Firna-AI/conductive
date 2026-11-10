@@ -136,8 +136,8 @@ So a preview of a workspace whose owner is suspended gets the same 404.
 So does each request of a viewer who is suspended, leaves or is removed from
 the org, or signs out.
 
-Each preview open checks the relay unit with one command call:
-`systemctl is-active --quiet conductive-preview-relay.service`.
+Each preview open checks the relay socket unit with one command call:
+`systemctl is-active --quiet conductive-preview-relay.socket`.
 A proxy cache miss runs the same check. Concurrent requests share its pending result.
 Document loads, iframe loads, and module requests reuse the cached descriptor.
 A sandbox change, a failed upstream request, or an unmarked response clears the descriptor.
@@ -146,14 +146,16 @@ A failed request is never replayed automatically. The next request checks again.
 The relay marks every HTTP response and WebSocket handshake with `X-Conductive-Relay: 1`.
 The Worker replaces an unmarked answer with the provider-unavailable error.
 No provider page reaches the browser.
-The next request checks the relay unit again.
+The next request checks the relay socket unit again.
 Marked errors keep the descriptor, including 401, 403, and the relay's 502 for a stopped dev server.
 The response header allowlist removes the mark before the browser gets the answer.
 
-When the relay unit does not run, the open and the proxy refuse with
+When the relay socket unit is missing or inactive, the open and the proxy refuse with
 409 `preview_relay_unavailable`. The message says:
 "Previews need newer cloud computer software. Start a new workspace after an admin runs Build computer."
 The image build installs the relay. An existing workspace keeps its image's software.
+systemd holds the relay port in the socket unit while the service restarts.
+The Worker checks the socket state, so a service restart does not trigger the software refusal.
 
 Boat hosts only the relay port for previews, in localhost mode.
 Each HTTP request and WebSocket upgrade goes to that port's Boat address.
@@ -225,7 +227,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [connection.ts](connection.ts) wraps both HTTP directions with authorization and backpressure.
 - [authorization.ts](authorization.ts) shares fresh reads across queued data.
 - [ports.ts](ports.ts) caches relay descriptors and clears them after an upstream failure or a sandbox change.
-- [relay.ts](relay.ts) checks the relay unit and refuses previews when it does not run.
+- [relay.ts](relay.ts) checks the relay socket unit and refuses previews when it is missing or inactive.
 - [store.ts](store.ts) and [workspace-store.ts](workspace-store.ts) hold the D1 queries.
   `publicPreview` in `store.ts` builds `Preview.url`.
   `savePreviewSandbox` records the sandbox for active previews after a relay resolution.

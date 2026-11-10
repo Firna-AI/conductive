@@ -30,9 +30,11 @@ install -m 644 /opt/conductive/staged/git-credential-helper.mjs /opt/conductive/
 install -m 755 /opt/conductive/staged/github-cli.sh /usr/local/bin/gh
 install -m 644 /opt/conductive/staged/conductive-runner.service /etc/systemd/system/conductive-runner.service
 install -m 644 /opt/conductive/staged/conductive-preview-relay.service /etc/systemd/system/conductive-preview-relay.service
+install -m 644 /opt/conductive/staged/conductive-preview-relay.socket /etc/systemd/system/conductive-preview-relay.socket
 git config --system --replace-all credential.helper /usr/local/bin/conductive-git-credential
 git config --system credential.useHttpPath true
 systemctl daemon-reload
 systemctl enable conductive-runner.service
+systemctl enable conductive-preview-relay.socket
 systemctl enable conductive-preview-relay.service
 # Installation starts no service. The runner also needs workspace settings.

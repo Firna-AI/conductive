@@ -16,10 +16,22 @@ it('installs the runner and relay and starts both with the private runtime', asy
     'git config --system credential.useHttpPath true',
     'systemctl daemon-reload',
     'systemctl enable conductive-runner.service',
+    'systemctl enable conductive-preview-relay.socket',
     'systemctl enable conductive-preview-relay.service',
   ])
   expect(await fixture.relayService()).toContain(
     'ExecStart=/opt/conductive/preview-relay-start.sh',
+  )
+  expect(await fixture.relayService()).toContain(
+    'Requires=conductive-preview-relay.socket',
+  )
+  expect(await fixture.relayService()).toContain(
+    'After=network-online.target conductive-preview-relay.socket',
+  )
+  expect(await fixture.relaySocket()).toBe(
+    '[Unit]\nDescription=Conductive preview relay socket\n\n' +
+      '[Socket]\nListenStream=127.0.0.1:7682\n\n' +
+      '[Install]\nWantedBy=sockets.target\n',
   )
   const relay = await fixture.relayStart()
   expect(relay.exitCode, relay.stderr).toBe(0)

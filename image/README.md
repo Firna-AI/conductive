@@ -16,6 +16,7 @@ archive packager and the live check.
   reuse it when the image already holds it.
 - Install the runner archive after a check of its SHA-256 digest.
 - Install and enable the systemd services of the agent runner and preview relay.
+- Install and enable the preview relay's socket unit.
 - Make the git credential helper the system credential helper of git.
 - Install the GitHub CLI and its wrapper, which gets a fresh token for each command.
 - Start no runner in a build sandbox. The service runs it only in a
@@ -164,7 +165,10 @@ its password, and its automatic restart in its
 workspace shell keeps running when a terminal connection drops.
 
 The preview relay runs in `conductive-preview-relay.service` as `user`.
-Boat starts this enabled service after each resume and fork.
+Boat starts its enabled socket and service after each resume and fork.
+The service requires `conductive-preview-relay.socket` to start first.
+The socket holds `127.0.0.1:7682` while the service restarts.
+Both units stay enabled, so the relay starts without waiting for a preview request.
 Its start script runs `runner/relay.mjs` with the private Node.
 It reads no workspace variable or workspace marker.
 Its service restarts it after each exit.
@@ -249,7 +253,7 @@ build, a disk retention restart, and an unfinished start start no runner.
 - [`install-runtime.sh`](install-runtime.sh): installs the private Node.
   Its arguments are the download URL, the digest, and the version folder.
 - [`install.sh`](install.sh): installs the runner archive, its service,
-  the relay service, and the git helper.
+  the relay service and socket, and the git helper.
   Its arguments are the archive URL and the digest.
 - [`runner-start.sh`](runner-start.sh) and
   [`conductive-runner.service`](conductive-runner.service): start the agent
@@ -257,6 +261,8 @@ build, a disk retention restart, and an unfinished start start no runner.
 - [`preview-relay-start.sh`](preview-relay-start.sh) and
   [`conductive-preview-relay.service`](conductive-preview-relay.service):
   start the preview relay with the private Node.
+- [`conductive-preview-relay.socket`](conductive-preview-relay.socket):
+  holds the relay port and passes its listener to the relay service.
 - [The terminal backend](../worker/terminal/service.ts): owns the terminal
   install command, its two services, and its workspace start hook.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and

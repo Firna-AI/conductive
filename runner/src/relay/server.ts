@@ -1,4 +1,5 @@
 import { createServer, type Server } from 'node:http'
+import process from 'node:process'
 
 import { PREVIEW_RELAY_PORT } from '../../../src/shared/previews'
 import { sandboxAddresses } from './connect'
@@ -24,5 +25,8 @@ export function startPreviewRelay(options: PreviewRelayOptions = {}): Server {
   server.on('upgrade', (request, socket, head) => {
     void relayUpgrade(request, socket, head, listenPort(), addresses())
   })
-  return server.listen(port, '127.0.0.1')
+  return process.env.LISTEN_FDS === '1' &&
+    process.env.LISTEN_PID === String(process.pid)
+    ? server.listen({ fd: 3 })
+    : server.listen(port, '127.0.0.1')
 }

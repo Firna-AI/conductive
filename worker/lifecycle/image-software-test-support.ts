@@ -122,6 +122,11 @@ cp ${shellQuote(archive)} "$output"
         join(root, 'etc/systemd/system/conductive-preview-relay.service'),
         'utf8',
       ),
+    relaySocket: () =>
+      readFile(
+        join(root, 'etc/systemd/system/conductive-preview-relay.socket'),
+        'utf8',
+      ),
     githubCli: (args: readonly string[]) =>
       imageTestProcess(
         '/bin/sh',
