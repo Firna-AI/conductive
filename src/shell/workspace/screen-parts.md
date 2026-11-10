@@ -35,7 +35,14 @@ says.
   file tab shows, else the one before, else the chat.
 - A file of a finished turn opens its diff tab. A phone shows it in the
   Files tab.
-- An archived workspace shows no file tabs and no file page.
+- The chat gets the kept files of the workspace as `mentions`, for the
+  list of `@` and the file chips, as
+  [File mentions](../../../docs/protocol/file-mentions.md) says. It keeps
+  them connected while it shows. A file chip opens the file tab, as a
+  press in All files does. A folder chip opens the folder in All files and
+  shows the right column on desktop, or the Files tab on a phone.
+- An archived workspace shows no file tabs and no file page, and its chat
+  gets no files.
 - A `center` part of the host takes the place of the whole chat, also of
   its tabs.
 - When the features give the `tabs`, `transcript`, or `composer` slot, the

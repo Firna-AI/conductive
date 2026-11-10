@@ -1,0 +1,88 @@
+/* The message box, which the list of `@` lies just above. */
+.anchor {
+  position: relative;
+}
+
+/*
+ * The list lies over the chat just above the message box, as wide as the
+ * box, in the surface of a menu. It scrolls when its rows pass a third of
+ * the window, so the box and the text stay in view.
+ */
+.list {
+  display: flex;
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  bottom: calc(100% + 6px);
+  left: 0;
+  flex-direction: column;
+  gap: 1px;
+  max-height: min(320px, 40dvh);
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-composer);
+  box-shadow: 0 10px 28px var(--ui-shadow);
+  box-sizing: border-box;
+  overscroll-behavior: contain;
+}
+
+/* The listbox of the rows, inside the box. */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Each row: the icon, the name, and the folder of the entry. */
+.row {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: var(--ui-row-height);
+  min-height: var(--ui-touch-min);
+  padding: 0 8px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  white-space: nowrap;
+  cursor: default;
+}
+
+.row:hover,
+.highlighted {
+  background: var(--ui-soft);
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+/* A long name gives way to the folder only after the folder is cut. */
+.name {
+  overflow: hidden;
+  flex-shrink: 0;
+  max-width: 70%;
+  text-overflow: ellipsis;
+}
+
+.folder {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+}
+
+/* The line in place of the rows: loading, unavailable, or no match. */
+.line {
+  margin: 0;
+  padding: 7px 8px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-md);
+}
