@@ -9,7 +9,7 @@ import { APP, WID, type DeviceFixture } from './runtime.test-support'
 export function deviceClock(fixture: DeviceFixture) {
   const broker = deviceBrokerName('sender')
   const request = async (
-    action: 'clock' | 'alarm',
+    action: 'clock' | 'alarm' | 'ready',
     target: string,
     body?: unknown,
   ) => {
@@ -31,6 +31,22 @@ export function deviceClock(fixture: DeviceFixture) {
     },
     scheduled: async () => deviceNumber((await request('clock', broker)).alarm),
     runAlarm: () => request('alarm', broker, {}),
+    ready: (target = broker) => request('ready', target),
+    hibernate: async (whileAsleep?: () => Promise<void>) => {
+      const before = await request('ready', broker)
+      await fixture.runtime.unsafeEvictDurableObject(
+        'device-tests',
+        'Workspace',
+        {
+          name: broker,
+          webSockets: 'hibernate',
+        },
+      )
+      await whileAsleep?.()
+      const after = await request('ready', broker)
+      expect(after.instance).not.toBe(before.instance)
+      return after
+    },
     restartBroker: async () => {
       const response = await fixture.runtime.dispatchFetch(
         APP + deviceTestPath('restart', broker),

@@ -139,7 +139,9 @@ hooks that report runner events to the lifecycle.
 runner stop at a stopped or error state, and the workspace summary. It
 also gives the kept chat and queued messages of a failed admitted create.
 
-## Milestone 9: files
+<a id="milestone-9-files"></a>
+
+## Files
 
 - The Durable Object joins file parts with `RunnerFileReports` on
   `ChatTransaction.files`. It stores each complete report before the confirm.
@@ -149,6 +151,7 @@ also gives the kept chat and queued messages of a failed admitted create.
   `false` result means that no runner got the request.
 - `runnerAttached(workspaceId, connectionId, send)` attaches the file broker when a physical runner is ready.
   The callback keeps the physical identity across commands. `runnerDetached(connectionId)` removes that connection.
+  A ready runner that the object restores after a wake attaches again with the same connection ID.
 - `receiveFileResult(value, connectionId)` gets each `file.read.result` and
   `file.diff.result` message from that physical connection without payload checks. Validate the message in the
   hook. File results never enter the history.
@@ -170,6 +173,8 @@ also gives the kept chat and queued messages of a failed admitted create.
   refresh.
 - [The GitHub server integration](../../github/README.md#server-integration)
   gives the routes, the scheduled reads, and the refresh operation.
+
+<a id="milestone-7r-the-agent-runner"></a>
 
 ## The agent runner
 

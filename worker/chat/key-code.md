@@ -36,7 +36,7 @@ first.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object. With the body that the gate already read, it runs
   `gateAccess` in place of `gate`, and finds the workspace again.
-  `WorkspaceChat.fetch` uses this form in the queue for each browser write.
+  `browserRequest` uses this form in the queue for each browser write.
 - `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
   token checks before the runner connection opens.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
@@ -61,6 +61,12 @@ first.
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event. A connection keeps the protocol
   version of its `hello`, 1 or 2, and its `welcome` repeats that version.
+- `runner-connections.ts` and `runner-connection-store.ts`:
+  `RunnerConnections`, the native acceptance, restore, close, and idle
+  alarm of the current runner, and the chunked durable record of a
+  physical runner socket. That record keeps the negotiated protocol
+  version. So after a wake, the runner gets the commands of its version
+  with no second `hello` or `welcome`.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. One workspace record keeps each shown answer end
@@ -76,7 +82,8 @@ first.
   marks the move as done, so later receipts do not scan older stream
   records again.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
-  runner connection before each message and while it is idle.
+  runner connection before each message. `RunnerConnections.alarm` runs it
+  while the connection is idle.
 - [`runner-version-data.ts`](runner-version-data.ts): `readRunnerProtocolVersion`, the workspace pin read before a runner's welcome or commands.
   [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes a runner below that pin, and starts the stream before the `welcome`.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
@@ -87,7 +94,8 @@ first.
   command. Version 2 gets a turn token in each `turn` command, after the
   running state commits, and no credential in a `message` command.
   `gatewayRunnerCommand` in `runner-gateway-command.ts` builds that
-  version 2 command.
+  version 2 command. Delivery skips a command whose `deliveredTo` names
+  the current connection.
   [The agent runner](integration/runner/README.md#the-agent-runner) gives
   the rules of both versions.
 - `attachment-paths.ts`: the captured repository folder lookup and the
@@ -97,7 +105,7 @@ first.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.
-- `delivery-state.ts`: dispatch state before sending and queued-state restoration.
+- `delivery-state.ts`: dispatch state before sending, queued-state restoration, and the `deliveredTo` receipt of a sent command.
 - `port-reports.ts`: the listener-list parser, final port-label excerpts, and
   displayed-label checks. Private labels stay complete for the output filter.
   Runner reports require a sorted unique array. Only a workspace stop
@@ -124,8 +132,12 @@ first.
   and at the end of each queued task. So the workspace lifecycle gets each
   end by its turn ID, from one path, whatever ended the turn.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
-- `browser-tabs.ts`: open tabs, their grants, the refresh and expiry
-  timers, and the grant check before each send. By default,
+- `browser-connections.ts` and `browser-registration.ts`:
+  `BrowserConnections`, the native acceptance, restore, and close of tab
+  sockets, and the read of a saved registration.
+- `browser-tabs.ts`: open tabs, their grants, the batch refresh, the
+  `browser` alarm deadlines of physical tab sockets, and the grant check
+  before each send. By default,
   `WorkspaceChat` gives it `readConnectionAccess` from
   [`worker/security/connection-access.ts`](../security/connection-access.ts).
 - `router.ts`: `routeChat`, `routeRunner`, and `forwardWorkspaceRequest`,

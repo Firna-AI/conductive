@@ -39,6 +39,7 @@ It can run before a manual test advance.
 `advanceTo` uses `advanceScheduledAlarms` from `scheduled-alarms.test-support.ts`.
 It advances the clock and runs only stored due alarms, in time order.
 It deletes each alarm before the production `Workspace.alarm` dispatcher runs.
+Then it awaits `settledAlarms`, because the native alarm handler returns before its tracked work ends.
 Do not call a native controller alarm directly.
 
 `backend-pump.test-support.ts` advances a waiting create or resume.

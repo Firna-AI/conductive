@@ -10,6 +10,10 @@ import {
 } from '../lifecycle/start-job-codec'
 import { CREATE_CHECKPOINT_KEY } from './creation-checkpoint'
 import {
+  scheduleWorkspaceAlarm,
+  suspendWorkspaceAlarms,
+} from '../features/alarms'
+import {
   ARCHIVE_STATE_KEY,
   type WorkspaceArchiveState,
 } from '../lifecycle/archive-types'
@@ -53,13 +57,8 @@ export class WorkspaceMembersReceiver {
     ownership: ReceiverOwnership,
     workspaceId: string | null,
   ): Promise<void> {
-    await mutateReceiver(
-      this.storage,
-      ownership,
-      'suspended',
-      async (transaction) => {
-        await transaction.deleteAlarm()
-      },
+    await mutateReceiver(this.storage, ownership, 'suspended', (transaction) =>
+      suspendWorkspaceAlarms(transaction, 'draining'),
     )
     this.chat.closeConnections()
     await this.chat.runLifecycle(async () => {
@@ -73,9 +72,6 @@ export class WorkspaceMembersReceiver {
       ownership,
       'suspended',
       async (transaction) => {
-        await transaction.delete([
-          ...(await transaction.list({ prefix: 'alarm:' })).keys(),
-        ])
         const job = await transaction.get<StoredWorkspaceStartJob>(
           'lifecycle:start-job',
         )
@@ -112,7 +108,7 @@ export class WorkspaceMembersReceiver {
             runnerConnected: false,
             nextDiskKeepaliveAt: null,
           } satisfies DurableLifecycleState)
-        await transaction.deleteAlarm()
+        await suspendWorkspaceAlarms(transaction, 'drained')
       },
     )
   }
@@ -162,9 +158,7 @@ export class WorkspaceMembersReceiver {
           await transaction.put('alarm:lifecycle:archive', this.now())
         if (await transaction.get<string>('lifecycle:cleanup'))
           await transaction.put('alarm:lifecycle', this.now() + 5_000)
-        const alarms = await transaction.list<number>({ prefix: 'alarm:' })
-        if (alarms.size)
-          await transaction.setAlarm(Math.min(...alarms.values()))
+        await scheduleWorkspaceAlarm(transaction, { resumeRegular: true })
       },
     )
   }

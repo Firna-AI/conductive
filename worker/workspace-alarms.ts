@@ -22,19 +22,27 @@ export async function runWorkspaceAlarms(
     devices(): Promise<void>
     publishRevocations(): Promise<void>
   },
+  options: { securityHandled?: boolean; fallbackLifecycle?: boolean } = {},
 ): Promise<void> {
   const startedAt = now()
   const run = await alarms.begin(
     startedAt,
-    (source) => !source.startsWith('lifecycle'),
+    (source) =>
+      !source.startsWith('lifecycle') &&
+      (!options.securityHandled ||
+        !['browser', 'runner', 'devices'].includes(source)),
   )
   const { due } = run
   try {
-    if (!due.size || [...due].some((source) => source.startsWith('lifecycle')))
+    if (
+      (!due.size && options.fallbackLifecycle !== false) ||
+      [...due].some((source) => source.startsWith('lifecycle'))
+    )
       await tasks.lifecycle()
     if (due.has('github')) await tasks.github()
     if (due.has('previews')) await tasks.previews()
-    await alarms.run('devices', startedAt, tasks.devices)
+    if (!options.securityHandled)
+      await alarms.run('devices', startedAt, tasks.devices)
     await tasks.publishRevocations()
   } finally {
     await run.finish(now())
