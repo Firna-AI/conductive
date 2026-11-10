@@ -347,6 +347,77 @@ and changed the recommendation from H to I.
   sections, and a transferred workspace keeps no cloud ID, so only C could
   give them, and C is a guess.
 
+### 11. A size limit for imported files
+
+Added on 10 November 2026, from the user's question "is there a file size
+limit?". The design first set a limit of 100 MB as an agent call, but a
+new limit needs the user's approval. The options check of the same day
+changed the root question, added E and F, and changed the recommendation
+from B to B with E.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:** The import package holds the changed and untracked files
+  that Git sees. A user can have large untracked files that `.gitignore`
+  does not exclude, such as data sets, videos, or build output. GitHub
+  refuses a file over 100 MiB in a push. The runner connection carries any
+  total size in parts, so a large package only takes longer to send. The
+  import list shows the upload size of each workspace. Nobody has measured
+  the free disk of a new cloud computer.
+- **Problem:** No requirement bounds the size of an imported file, a
+  package, or the unpacked work on the disk of the cloud computer.
+- **Impact if no action:** One very large file can make an import and its
+  activation slow, and it can fill the disk of the cloud computer.
+- **Root question:** How does the import treat large files, with no lost
+  work, no slow import or activation, and no full disk in the cloud
+  computer?
+- **Options:**
+  - **A.** No limit. Every file that Git sees comes along, whatever its
+    size. Effort: Small.
+  - **B.** A changed or untracked file over 100 MiB stays on the Mac, and
+    the import result lists it. The rule never applies to the Git bundle,
+    the agent session files, or the Markdown files, which must stay whole.
+    Effort: Small.
+  - **C.** B, and the Mac app asks before it uploads a workspace whose
+    package passes 1 GB. Effort: Small.
+  - **D.** No fixed limit. The list shows each file over 100 MiB with a box
+    that starts as "left out", and the user can include it. Effort: Medium.
+  - **E.** Activation first checks that the bucket data fits the free disk
+    of the cloud computer, with room to unpack it. When it does not fit,
+    activation stops before it changes the checkout, keeps the bucket data,
+    and names both sizes. It works with A, B, C, or D. It is a new failure.
+    Effort: Medium.
+  - **F.** The Worker keeps a byte total for the bucket data of each
+    imported workspace. It gives each upload link for a stated part size,
+    checks the size that the bucket stored, and gives no more links when
+    the total passes a fixed bound. It works with any option. It is a new
+    rejection at the server. Effort: Medium.
+- **Left out:** A limit in the runner connection, because it acts only
+  after the upload already cost the time and the storage. A bound that
+  refuses a whole workspace, because one large file then keeps the code
+  out too. A rule by file or folder name, because a data set or a video has
+  no fixed name. Compression, because it sets no bound. A move of large
+  files into Git LFS, because it adds commits to the user's branch. A fetch
+  from the Mac when the cloud computer needs a file, because it fails when
+  the Mac is off. A download link for the runner, because the security
+  rules allow no such credential in a cloud computer.
+- **Wider fix:** F. A bound where the Worker gives each upload link holds
+  for every client and for each later path into the shared bucket.
+- **Previous examples:** Decision 132 of the main plan set a limit of 25 MB
+  for each chat attachment. Decisions 65 and 93 put the default body limit
+  at the Worker entry, so that a new route cannot forget it.
+- **Related:** Decision 5: an agent session file must stay whole, or its
+  session cannot resume.
+- **Recommendation:** B with E. B leaves out only the single files that
+  cannot be part of a branch on GitHub without Git LFS, which are usually
+  data, not code. E is the only option that protects the disk. F protects
+  the codebase best. Choose D if a skipped file must be able to reach the
+  cloud computer. The plan first recommended B alone.
+- **Action:** ask the user, because each option except A adds a new limit,
+  a new failure, or a new rejection.
+
 ## Design
 
 Each call below is an agent call of 9 November 2026, unless it names a
@@ -390,6 +461,11 @@ decision or the user.
   it into one Markdown file: the messages, the agent's answers, and short
   lines for its tool steps (decision 7). It uploads the file with the
   bucket data.
+- The Mac app copies a symbolic link as a link, and never follows it.
+  Reason: a link to a large folder outside the worktree would otherwise
+  upload that whole folder.
+- A file that GitHub holds in Git LFS comes from GitHub at activation. A
+  changed Git LFS file travels as a changed file, under decision 11.
 - The Markdown files stay under a prefix of their own in the bucket for
   the life of the workspace. Activation does not delete them. Reason: a
   file can pass the 8 MB row limit of a storage object, and the links must
@@ -397,7 +473,7 @@ decision or the user.
 - The Mac app builds the bucket data of decision 8 with Git, and uploads
   it straight to the bucket with short-lived upload links. No Worker
   request carries the bytes.
-- A file over 100 MB stays behind, and the result lists it.
+- Decision 11 says which files are too large to import.
 - Each part, each session page, and each request stays small, as the
   performance rules below say.
 
@@ -411,7 +487,11 @@ decision or the user.
   the branch.
 - The runner connects to the workspace, as at every start. Before the
   first turn, the workspace sends it the bucket data over that connection,
-  in parts below 1 MiB, each with its byte range and its SHA-256. The
+  in parts below 1 MiB, each with its byte range and its SHA-256. Both ends
+  of the connection take only JSON text, so each part is Base64 text, and
+  the bound counts the encoded part. The workspace sends the next part only
+  after the runner confirms the last one, so that no side holds the whole
+  package in memory. The
   runner checks each part and writes it to disk. Reason: this path needs
   no new provider route and gives the cloud computer no new credential.
   Milestone 8p of the main plan has the same choice for attachments, and
@@ -462,6 +542,7 @@ product code. Save their results under `.context/import-from-conductor/`.
 - [ ] Read the layout of one `session_messages` row on the user's Mac,
       after the user agrees.
 - [ ] Count the local sessions whose agent file is gone.
+- [ ] Measure the free disk of a new cloud computer, for decision 11.
 - [ ] Prove one resume of a transferred Claude session file and of a Codex
       rollout file in a cloud computer, with each login kind that
       Conductive offers: a Claude subscription token, an Anthropic API key,
@@ -483,8 +564,8 @@ session waits for decision 5.
       the one-time offer when the Mac app finds Conductor data.
 - [ ] Add the consent dialog, the list with Select all, the rows that
       cannot import, and the already imported rows.
-- [ ] Add the import progress and the result, with the files that stayed
-      behind.
+- [ ] Add the import progress and the result, with the files that
+      decision 11 leaves out.
 - [ ] Add an imported workspace: its flag, the links to its old sessions,
       the Markdown view of one old session, the Activate
       question, activation progress, and a failed activation.
