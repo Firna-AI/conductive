@@ -73,9 +73,14 @@ mean that the web app imports.
 
 - When the Mac app finds the data of Conductor, `ImportOffer` offers the
   import once, as a bar of the Mac app at the top of the main area, as
-  `mac-app/import/offer` shows. The close button dismisses it.
+  `mac-app/import/offer` shows. Import is the neutral button of the bar,
+  as Stop is in the bar of the 15 minutes. The close button dismisses it.
 - The account of the Mac app has the section Import from Conductor under
   This Mac, from `ImportSection`, as `mac-app/import/settings` shows.
+- The command palette of the Mac app lists Import from Conductor with the
+  actions of Acme, in the All and Actions tabs, as
+  `mac-app/import/palette` shows. The palette of a browser never shows
+  it.
 - Before its first read of the data of Conductor, the Mac app asks in an
   alert of macOS of its own, from `ConsentAlert`, as
   `mac-app/import/consent` shows. The page cannot answer it, because the

@@ -109,6 +109,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `paletteSearch.ts` beside it holds the rule of a search. A search also
   finds a workspace by the label of its number, such as `W-395` or `39`.
   A workspace row then shows the label before the name, as a chip does.
+  In the window of the Mac app, the palette reads `useMacApp()`. It adds
+  `macActions`, today Import from Conductor, to the actions of the org,
+  and its tabs open the Mac pages of the palette or stay static.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
   and Try again.

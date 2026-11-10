@@ -9,6 +9,7 @@ import {
 import {
   accountSettings,
   appActions,
+  macActions,
   orgActions,
   orgSettings,
   orgSettingsLabel,
@@ -62,12 +63,14 @@ export type PaletteContent = {
 /**
  * Where the palette opens: over an open workspace, whose actions come
  * first, or over a page without one. Only the owner of the workspace and
- * the admins of the org can archive it.
+ * the admins of the org can archive it. `mac` marks the window of the Mac
+ * app, which adds its own actions.
  */
 export type PaletteContext = {
   open?: OpenWorkspace
   archivable: boolean
   rightColumn?: boolean
+  mac?: boolean
 }
 
 /**
@@ -100,11 +103,16 @@ function commandRows(
   return commands.map((command) => ({ kind: 'command', command, detail }))
 }
 
+/** The actions of the org, with those of the Mac app in its window. */
+function orgActionsOf(context: PaletteContext): readonly Command[] {
+  return context.mac ? [...orgActions, ...macActions] : orgActions
+}
+
 function actionsOf(context: PaletteContext): Command[] {
   const own = context.open
     ? workspaceActions(context.archivable, context.rightColumn)
     : []
-  return [...own, ...orgActions, ...appActions]
+  return [...own, ...orgActionsOf(context), ...appActions]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
@@ -221,7 +229,7 @@ function groupsOf(
         : []
       return [
         ...own,
-        { label: orgs.acme.name, rows: commandRows(orgActions) },
+        { label: orgs.acme.name, rows: commandRows(orgActionsOf(context)) },
         { label: 'Orgs', rows: commandRows(appActions) },
       ]
     }

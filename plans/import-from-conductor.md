@@ -817,8 +817,7 @@ timing. It opens only a workspace whose own upload is complete.
       branch picker with branches and open pull requests.
 - [x] Add the settings entry and the one-time offer when the Mac app finds
       Conductor data.
-- [ ] Add the palette entry. Blocked by the unmerged branch
-      `calummoore/command-palette-mockups`.
+- [x] Add the palette entry.
 - [x] Add the consent dialog, the list with Select all, the rows that
       cannot import, and the already imported rows.
 - [x] Add the normal import progress and result.

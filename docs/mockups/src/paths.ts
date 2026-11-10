@@ -173,6 +173,8 @@ export const paths = {
   importedArchive: 'app/imported/archive',
   importedArchiveFailed: 'app/imported/archive/failed',
   macWindow: 'mac-app/window',
+  macImportPalette: 'mac-app/import/palette',
+  macImportPaletteAll: 'mac-app/import/palette/all',
   macImportConsent: 'mac-app/import/consent',
   macImportReading: 'mac-app/import/consent/reading',
   macImportDenied: 'mac-app/import/consent/denied',

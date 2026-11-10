@@ -54,6 +54,19 @@ export const paletteTabPaths: Readonly<Record<PaletteTab, string>> = {
 }
 
 /**
+ * The page of each tab in the window of the Mac app, so that a tab keeps
+ * the actions of the Mac app. A tab that no Mac page draws stays static.
+ */
+export const macPaletteTabPaths: Readonly<
+  Record<PaletteTab, string | undefined>
+> = {
+  all: paths.macImportPaletteAll,
+  workspaces: undefined,
+  actions: paths.macImportPalette,
+  settings: undefined,
+}
+
+/**
  * The words in the search field of each tab while it is empty. A phone has
  * no room for the long words of the All tab, so it shows only "Search".
  */

@@ -10,7 +10,8 @@ import styles from './ImportOffer.module.css'
  * The one-time offer of the Mac app when it finds the data of Conductor on
  * the Mac, as a bar at the top of the main area. It reads no data of
  * Conductor yet. Import asks first, at `importTo`, and null keeps it
- * static. The close button dismisses the offer for good.
+ * static. Import is the neutral button of a bar, as Stop is in the bar of
+ * the 15 minutes. The close button dismisses the offer for good.
  */
 export function ImportOffer(props: { importTo: string | null }) {
   return (
@@ -25,7 +26,7 @@ export function ImportOffer(props: { importTo: string | null }) {
         {orgs.acme.name}.
       </span>
       <LinkedControl to={props.importTo}>
-        <ActionButton tone="primary">Import</ActionButton>
+        <ActionButton>Import</ActionButton>
       </LinkedControl>
       <ScreenLink asChild to={paths.macWindow}>
         <IconButton icon={X} label="Dismiss the offer" />
