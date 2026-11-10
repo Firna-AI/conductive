@@ -1,8 +1,10 @@
 import type { Viewport } from '@mokly/mokly'
 import { Page } from '../components/layout/Page'
+import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { DeleteRoutineDialog } from '../components/routines/DeleteRoutineDialog'
 import { RunsPanel } from '../components/routines/RunsPanel'
 import { offersRunNow } from '../components/routines/triggerCopy'
+import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { editsOf } from '../fixtures/routineTriggers'
 import { routines, type Routine } from '../fixtures/routines'
 import { hasOlderRuns, runLists } from '../fixtures/runLists'
@@ -43,8 +45,10 @@ function flowLinks(state: RoutineState, routine: Routine) {
  * model, beside the Runs list. Desktop shows the runs in a column at the
  * right. A phone shows a saved routine in two tabs, Routine and Runs.
  * Every member sees the routine and its runs, and only its owner changes
- * it (decision 502). A suspended org shows them read-only to everyone. A
- * routine that the page cannot read shows why in place of the routine.
+ * it (decision 502). A suspended org shows them read-only to everyone,
+ * under its notice: at the top of the form on desktop, and above either tab
+ * on a phone. A routine that the page cannot read shows why in place of the
+ * routine.
  */
 export function RoutineScreen(props: {
   state: RoutineState
@@ -58,7 +62,7 @@ export function RoutineScreen(props: {
       <RoutineFrame state={state} viewport={viewport}>
         <RoutineNotShown
           read={state.read}
-          routines={suspended ? paths.suspendedRoutines : paths.routines}
+          suspended={suspended}
           viewport={viewport}
         />
       </RoutineFrame>
@@ -85,6 +89,9 @@ export function RoutineScreen(props: {
       viewport={viewport}
     />
   )
+  const notice = suspended ? (
+    <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+  ) : null
   const runs = (
     <RunsPanel
       links={suspended ? {} : runLinks}
@@ -142,6 +149,7 @@ export function RoutineScreen(props: {
         {mobile ? (
           <div className={styles.phoneScroll}>
             <div className={styles.phoneContent}>
+              {notice}
               {runsTab ? runs : form}
               {!runsTab && access === 'owner' && routine.saved ? (
                 <PhoneDelete to={links.deleteTo} />
@@ -151,7 +159,10 @@ export function RoutineScreen(props: {
         ) : (
           <div className={styles.body}>
             <div className={styles.formScroll}>
-              <div className={styles.form}>{form}</div>
+              <div className={styles.form}>
+                {notice}
+                {form}
+              </div>
             </div>
             {runs}
           </div>

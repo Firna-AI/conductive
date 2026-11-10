@@ -15,6 +15,8 @@ const tabPages: Readonly<Partial<Record<string, TabPages>>> = {
   'dependency-updates': { routine: paths.routineAdmin },
   'copy-review': { routine: paths.routineOwnerLeft },
   'error-triage': { routine: paths.routineTurnedOff },
+  'refund-tests': { routine: paths.routineRepositoryRemoved },
+  'refund-tests-again': { routine: paths.routineRepositoryChosen },
 }
 
 /**
@@ -28,7 +30,7 @@ export function RoutineTabs(props: {
   suspended: boolean
 }) {
   const pages: TabPages = props.suspended
-    ? { routine: paths.suspendedRoutine }
+    ? { routine: paths.suspendedRoutine, runs: paths.suspendedRoutineRuns }
     : (tabPages[props.routine.key] ?? {})
   return (
     <LinkTabs

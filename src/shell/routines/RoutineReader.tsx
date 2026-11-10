@@ -88,7 +88,7 @@ export function RoutineReader(props: {
       <RoutineNote
         access={access}
         org={org}
-        repositoryName={repositoryName}
+        repositories={props.repositories}
         routine={routine}
       />
       <RoutineFacts

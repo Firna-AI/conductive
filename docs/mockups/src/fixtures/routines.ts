@@ -7,7 +7,11 @@
 
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type Person } from './members'
-import type { RepositoryKey } from './repositories'
+import {
+  formerRepository,
+  repositories,
+  type RepositoryKey,
+} from './repositories'
 import type { SectionKey } from './sections'
 
 export type Weekday =
@@ -57,11 +61,20 @@ type PullRequestTrigger = {
 
 export type Trigger = ScheduleTrigger | PullRequestTrigger
 
+/**
+ * The routine turned off when an admin removed its repository from the
+ * chosen repositories of the org. The reason stays until the owner turns
+ * the routine on: while the org still does not choose the repository, and
+ * after an admin chose it again.
+ */
+type RepositoryRemoved = 'not-chosen' | 'chosen-again'
+
 export type Routine = {
   key: string
   /** The name. A new routine has none, and saves as "Untitled routine". */
   name: string
-  repository: RepositoryKey
+  /** A chosen repository of Acme, or the one that Acme chose before. */
+  repository: RepositoryKey | typeof formerRepository.key
   /** The section that the run workspaces join (decision 504). */
   section: SectionKey
   /**
@@ -79,6 +92,8 @@ export type Routine = {
    * failed first turn count. A finished first turn resets the count.
    */
   failedRunsInARow?: number
+  /** Why the routine turned off after its repository was removed. */
+  repositoryRemoved?: RepositoryRemoved
   active: boolean
   /** The one time zone of every schedule of the routine. */
   timeZone: string
@@ -99,6 +114,8 @@ export const routineKeys = [
   'dependency-updates',
   'copy-review',
   'error-triage',
+  'refund-tests',
+  'refund-tests-again',
 ] as const
 
 export type RoutineKey = (typeof routineKeys)[number]
@@ -113,6 +130,26 @@ export const lena = { name: 'Lena Park' }
 
 const opened: Trigger = { kind: 'pull-request', event: 'opened' }
 const pushed: Trigger = { kind: 'pull-request', event: 'pushed' }
+
+/**
+ * Cal's routine in acme/admin-dashboard, which turned off when an admin
+ * removed that repository from the chosen repositories of Acme.
+ */
+const refundTests: Routine = {
+  key: 'refund-tests',
+  name: 'Test the refund tools',
+  repository: formerRepository.key,
+  section: 'infra',
+  owner: people.cal,
+  repositoryRemoved: 'not-chosen',
+  active: false,
+  timeZone: london,
+  triggers: [{ kind: 'weekdays', time: { hour: 7, minute: 30 } }],
+  prompt:
+    'Run the tests of the order and refund tools. Open an issue for each test that fails, with its output.',
+  choice: defaultChoice,
+  saved: true,
+}
 
 /** The routine that the flow creates and starts with Run now. */
 const morningSummary: Routine = {
@@ -211,6 +248,20 @@ export const routines: Readonly<Record<RoutineKey, Routine>> = {
     choice: defaultChoice,
     saved: true,
   },
+  'refund-tests': refundTests,
+  // An admin chose acme/admin-dashboard again, and the routine stays off.
+  'refund-tests-again': {
+    ...refundTests,
+    key: 'refund-tests-again',
+    repositoryRemoved: 'chosen-again',
+  },
+}
+
+/** The full name of the repository of a routine, such as acme/storefront. */
+export function repositoryOf(routine: Routine): string {
+  return routine.repository === formerRepository.key
+    ? formerRepository.name
+    : repositories[routine.repository].name
 }
 
 /** The failed runs in a row that turn a routine off (decision 513 B). */

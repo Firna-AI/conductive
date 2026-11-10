@@ -1,9 +1,8 @@
 import { ChevronRight } from 'lucide-react'
 import type { PersonKey } from '../../fixtures/members'
 import type { Run, RunState } from '../../fixtures/routineRuns'
-import type { Routine } from '../../fixtures/routines'
+import { repositoryOf, type Routine } from '../../fixtures/routines'
 import { orgs } from '../../fixtures/orgs'
-import { repositories } from '../../fixtures/repositories'
 import { classes } from '../common/classes'
 import { ExternalLink } from '../common/ExternalLink'
 import { ScreenLink } from '../common/ScreenLink'
@@ -31,7 +30,7 @@ type RowProps = {
 
 /** The address of a pull request of the routine's repository on GitHub. */
 function pullRequestUrl(routine: Routine, number: number): string {
-  return `https://github.com/${repositories[routine.repository].name}/pull/${number}`
+  return `https://github.com/${repositoryOf(routine)}/pull/${number}`
 }
 
 /**

@@ -17,6 +17,7 @@ import {
 } from './routineRuns'
 
 const weekly: RunTrigger = { kind: 'schedule', schedule: 'weekly' }
+const weekdays: RunTrigger = { kind: 'schedule', schedule: 'weekdays' }
 
 const review = routines['review-prs']
 
@@ -139,6 +140,7 @@ export const runListKeys = [
   'run-now',
   'suspended',
   'turned-off',
+  'refund-tests',
 ] as const
 
 export type RunListKey = (typeof runListKeys)[number]
@@ -218,4 +220,12 @@ export const runLists: Readonly<Record<RunListKey, readonly Run[]>> = {
   suspended: reviewRuns.map(afterSuspension),
   /** The failed runs that turned an hourly routine off. */
   'turned-off': turnedOffRuns,
+  /**
+   * The runs of the routine that tests the refund tools, before an admin
+   * removed its repository from the chosen repositories of Acme.
+   */
+  'refund-tests': runsOf(routines['refund-tests'], [
+    { key: 'refund-2', trigger: weekdays, state: 'stopped', when: '2d' },
+    { key: 'refund-1', trigger: weekdays, state: 'archived', when: '3d' },
+  ]),
 }

@@ -215,7 +215,10 @@ Each path is relative to `src/app/`, the folder of this page.
   `RoutineReader.tsx` the read-only view of every other member, with Turn
   off and Delete for an admin. `useRoutineSave.ts` is Save, with the login
   that a save refused. `RoutineFrame.tsx` puts the Runs list beside the
-  form on desktop, and on the Runs tab of a phone.
+  form on desktop, and on the Runs tab of a phone. It alone shows the
+  notice of a suspended org, in every view of the page. `RoutineNote.tsx`
+  is the note above a routine, which reads the saved repository from the
+  repository list of the org.
 - `../shell/routines/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
   the mark, the state, the trigger, the pull request, and the time of each
   run, and the link to its workspace. `run-copy.ts`: the mark of a run, the

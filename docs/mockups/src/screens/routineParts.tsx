@@ -1,5 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
-import { PowerOff, UserX } from 'lucide-react'
+import { FolderX, PowerOff, UserX } from 'lucide-react'
 import { Notice } from '../components/common/Notice'
 import { Menu } from '../components/common/Menu'
 import { Sheet } from '../components/common/Sheet'
@@ -15,12 +15,15 @@ import {
   TriggerList,
 } from '../components/routines/TriggerList'
 import { eventLabels, hasSchedule } from '../components/routines/triggerCopy'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { SectionText } from '../components/settings/Section'
 import { agents } from '../fixtures/agents'
-import { orgs, suspendedOrg } from '../fixtures/orgs'
+import { orgs } from '../fixtures/orgs'
 import type { TriggerEdit } from '../fixtures/routineTriggers'
-import { offAfterFailedRuns, type Routine } from '../fixtures/routines'
+import {
+  offAfterFailedRuns,
+  repositoryOf,
+  type Routine,
+} from '../fixtures/routines'
 import { paths } from '../paths'
 import type { RoutineAccess } from './routineState'
 import styles from './RoutineScreen.module.css'
@@ -80,10 +83,50 @@ function FailedRunsNotice(props: { routine: Routine; ownerViews: boolean }) {
 }
 
 /**
- * The note above the routine: the notice of a suspended org, the reason
- * why it turned off after failed runs, the reason why the person signed in
- * reads it without fields, or, for its owner, the notice of a routine that
- * moved from a member who left (decision 508 E).
+ * Why a routine turned off when an admin removed its repository from the
+ * chosen repositories of the org. While the org does not choose that
+ * repository, the notice names it, and the owner reads to choose another
+ * one. After the routine has a chosen repository again, the notice names
+ * none, because an admin can choose the repository again, or the owner can
+ * save another one. The routine then stays off until its owner turns it
+ * on. Another person reads who can act.
+ */
+function RepositoryRemovedNotice(props: {
+  routine: Routine
+  ownerViews: boolean
+}) {
+  const { routine, ownerViews } = props
+  const owner = routine.owner.name
+  const org = orgs.acme.name
+  let body: string
+  if (routine.repositoryRemoved === 'not-chosen') {
+    const removed = `${repositoryOf(routine)} is no longer a chosen repository of ${org}.`
+    body = ownerViews
+      ? `${removed} Choose another repository, then turn it on.`
+      : `${removed} Only ${owner} can choose another one.`
+  } else {
+    const removed = `Its repository stopped being a chosen repository of ${org}.`
+    body = ownerViews
+      ? `${removed} It stays off until you turn it on.`
+      : `${removed} Only ${owner} can turn it on again.`
+  }
+  return (
+    <Notice
+      body={body}
+      icon={FolderX}
+      title="This routine turned off"
+      tone="danger"
+    />
+  )
+}
+
+/**
+ * The note above the routine: the reason why it turned off after failed
+ * runs or after its repository was removed, the reason why the person
+ * signed in reads it without fields, or, for its owner, the notice of a
+ * routine that moved from a member who left (decision 508 E). A suspended
+ * org has no note, because the page shows the notice of the org, and
+ * nobody can act.
  */
 function Note(props: {
   routine: Routine
@@ -91,16 +134,15 @@ function Note(props: {
   suspended: boolean
 }) {
   const { routine } = props
-  if (props.suspended) return <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+  const ownerViews = props.access === 'owner'
+  if (props.suspended) return null
   if (offAfterFailedRuns(routine)) {
-    return (
-      <FailedRunsNotice
-        ownerViews={props.access === 'owner'}
-        routine={routine}
-      />
-    )
+    return <FailedRunsNotice ownerViews={ownerViews} routine={routine} />
   }
-  if (props.access !== 'owner') {
+  if (!routine.active && routine.repositoryRemoved !== undefined) {
+    return <RepositoryRemovedNotice ownerViews={ownerViews} routine={routine} />
+  }
+  if (!ownerViews) {
     return <ReadOnlyNote access={props.access} routine={routine} />
   }
   if (!routine.movedFrom) return null
@@ -116,8 +158,9 @@ function Note(props: {
 /**
  * The form of a routine: its fields, its triggers, and its prompt. Only the
  * owner gets fields. Every other member reads the same facts. In a
- * suspended org every person reads them under the notice of the org, and
- * no line names the logins of runs, because no run starts.
+ * suspended org every person reads them under the notice of the org, which
+ * the page draws, and no line names the logins of runs, because no run
+ * starts.
  */
 export function RoutineForm(props: {
   routine: Routine

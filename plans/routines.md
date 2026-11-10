@@ -1810,16 +1810,20 @@ Depends on: every other milestone
 
 Prove the whole change, review it, and open the pull request.
 
-Merge resolutions and verification: `.context/routines/reports/m10-merge.md`.
+Review: two rounds, recorded in the pull request description.
 
-- [ ] Smoke-test with the browser harness of
+Merge resolutions and verification: `.context/routines/reports/m10-merge.md`
+and `.context/routines/reports/m10-merge-2.md`. Smoke test:
+`.context/routines/reports/m10-smoke-2.md`.
+
+- [x] Smoke-test with the browser harness of
       `worker/chat/integration/run-browser-harness.mjs`: create a routine,
       use Run now, and open the run workspace.
 - [x] Change `TERMS_VERSION` in `src/shared/terms.ts`, because Milestone 2
       changed the Terms for routines, so that each user accepts them again.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review

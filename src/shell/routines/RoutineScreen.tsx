@@ -3,7 +3,6 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { SearchX } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import { newRoutineDraft } from '../../app/routine-draft'
 import { routineModel } from '../../app/routine-model'
 import { routes, type RoutineTab } from '../../app/router'
@@ -131,7 +130,7 @@ function SavedRoutine(props: {
 /**
  * A new routine: active, in the first chosen repository and General, with
  * the owner's default model and the time zone of the browser. A suspended
- * org creates nothing, so it shows only its notice.
+ * org creates nothing, so its page shows only the notice of the frame.
  */
 function NewRoutine(props: { org: OrgSummary; user: User }) {
   const { org } = props
@@ -143,13 +142,7 @@ function NewRoutine(props: { org: OrgSummary; user: User }) {
   const { suspended } = useOrgAccess(org)
   const { timeZone } = useServices()
   useEffect(() => orgModel.watch('repositories', 'list', 'members'), [orgModel])
-  if (suspended) {
-    return (
-      <RoutineFrame org={org} title="New routine">
-        <SuspendedOrgNotice org={org} />
-      </RoutineFrame>
-    )
-  }
+  if (suspended) return <RoutineFrame org={org} title="New routine" />
   if (
     !account ||
     repositories.state === 'loading' ||

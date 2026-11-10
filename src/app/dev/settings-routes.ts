@@ -94,10 +94,16 @@ function updateSettings(
   return json({ settings: org.settings } satisfies OrgSettingsResponse)
 }
 
+/**
+ * Chooses a repository of the org, or removes it. A removal turns off each
+ * routine in the repository with the reason that its page shows, as the
+ * Worker does.
+ */
 function setRepository(
   org: OrgState,
   repositoryId: string,
   selected: boolean,
+  now: number,
 ): Response {
   const changed = org.repositories.some(
     (repository) =>
@@ -106,6 +112,19 @@ function setRepository(
   org.repositories = org.repositories.map((repository) =>
     repository.id === repositoryId ? { ...repository, selected } : repository,
   )
+  if (!selected) {
+    org.routines = org.routines.map((routine) =>
+      routine.repositoryId === repositoryId
+        ? {
+            ...routine,
+            active: false,
+            inactiveReason: 'repository_removed',
+            nextRunAt: null,
+            updatedAt: now,
+          }
+        : routine,
+    )
+  }
   if (changed) org.settingsRevision += 1
   updateNeedsBuild(org)
   return json({ repositories: org.repositories } satisfies RepositoriesResponse)
@@ -127,13 +146,13 @@ export function settingsRoutes(backend: DevBackend): Route[] {
       method: 'PUT',
       path: repositoryPath(ID.org, ID.repository),
       answer: ({ params }) =>
-        setRepository(orgOf(params), params.repository, true),
+        setRepository(orgOf(params), params.repository, true, backend.now()),
     },
     {
       method: 'DELETE',
       path: repositoryPath(ID.org, ID.repository),
       answer: ({ params }) =>
-        setRepository(orgOf(params), params.repository, false),
+        setRepository(orgOf(params), params.repository, false, backend.now()),
     },
     {
       method: 'GET',

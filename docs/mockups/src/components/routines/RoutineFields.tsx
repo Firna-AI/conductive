@@ -4,8 +4,7 @@ import { Input } from '@firna/ui/input'
 import { Switch } from '@firna/ui/switch'
 import type { LucideIcon } from 'lucide-react'
 import { ChevronDown, FolderGit2, Rows3 } from 'lucide-react'
-import { repositories } from '../../fixtures/repositories'
-import type { Routine } from '../../fixtures/routines'
+import { repositoryOf, type Routine } from '../../fixtures/routines'
 import { sections } from '../../fixtures/sections'
 import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
@@ -93,7 +92,7 @@ export function RoutineFields(props: { routine: Routine; viewport: Viewport }) {
           <Picker
             icon={FolderGit2}
             name="Repository"
-            value={repositories[routine.repository].name}
+            value={repositoryOf(routine)}
           />
         </Field>
         <Field label="Section">
@@ -123,7 +122,7 @@ export function RoutineFacts(props: { routine: Routine; schedules: boolean }) {
     <DetailList
       rows={[
         { term: 'State', value: routine.active ? 'Active' : 'Off' },
-        { term: 'Repository', value: repositories[routine.repository].name },
+        { term: 'Repository', value: repositoryOf(routine) },
         { term: 'Section', value: sections[routine.section].name },
         { term: 'By', value: routine.owner.name },
         ...(props.schedules

@@ -110,7 +110,7 @@ The gated handler fills those labels from the actual start capture for
 runner results, direct opens, cached reports, and provider fallback.
 The browser receives no secret list. Raw operational paths can therefore
 contain marked values; the access protocol states this exposure.
-The broker checks the response type, connection, requested path, default branch, and file byte count.
+The broker checks the response type, connection, requested path, requested base branch, and file byte count.
 Pending reads fail when their connection closes or when their request signal aborts.
 The owner must handle socket health and detach a connection that has failed.
 

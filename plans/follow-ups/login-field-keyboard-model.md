@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-10, from branch `calummoore/routines-feature-brainstorm`, finding 105 of its review.
+- **Added:** 2026-11-10, from branch `calummoore/routines-feature-brainstorm`, finding 105 of its review. Finding 107 of its second review found it again, with the focus loss after Enter.
 - **Location:** `src/shell/routines/LoginField.tsx:106`, `:141`, and `:163`, `src/shell/routines/LoginSuggestions.tsx:68`, and `src/shell/routines/refused-login.test.tsx:112`.
 - **Reason:** The best option sets a keyboard model for the field that no requirement covers.
 
@@ -16,8 +16,8 @@
   - `LoginField` finds the buttons of `SuggestionMenu` with `querySelectorAll('button')` and reads `document.activeElement` to move the focus.
   - The `@firna/ui` text input calls `stopPropagation` on each keydown (`node_modules/@firna/ui/dist/node/primitives/dom/TextInput.js:99`). A probe showed that ArrowDown and Escape typed in the text box reach `onKeyPress` and `onKeyDownCapture` of the wrapper, but never its `onKeyDown`.
   - No protocol doc, plan, or mockup sets the keys of this field. The mockup sets only the look of the rows.
-- **Problem:** One component depends on the markup of another for its keys. Also, ArrowDown and Escape in the text box never reach the handler at `LoginField.tsx:141`, so keyboard users cannot reach the suggestions or the members entry. The text box also has no `aria-expanded` or `aria-controls` (`LoginField.tsx:163`), so a screen reader does not say that suggestions opened.
-- **Impact if no action:** Keyboard users must use the pointer to pick a suggestion, and a change to the markup of the suggestions can change the keys.
+- **Problem:** One component depends on the markup of another for its keys. Also, ArrowDown and Escape in the text box never reach the handler at `LoginField.tsx:141`, so keyboard users cannot reach the suggestions or the members entry. The text box also has no `aria-expanded` or `aria-controls` (`LoginField.tsx:163`), so a screen reader does not say that suggestions opened. And when Enter adds a typed login, the default submit of the text box then moves the focus to the document body, so the owner must focus the field again before the next login.
+- **Impact if no action:** Keyboard users must use the pointer to pick a suggestion, and focus the field again after each typed login. A change to the markup of the suggestions can change the keys.
 - **Root question:** How can the keys move between the login text box and its suggestions, without one component depending on another's markup or events?
 - **Options:**
   - **A.** Keep the menu model. `SuggestionMenu` exposes focus actions through its ref and keeps its button refs. Take the keys from the `onKeyPress` of `InputFrame`, as `src/shell/list/SectionHeader.tsx:49` does. Effort: Small.

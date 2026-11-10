@@ -169,7 +169,8 @@ export const privacyDocument: LegalDocument = {
             the next start of a cloud computer.`,
           text`${productName} keeps the real path of each file, because it
             needs that path to open the file. It also keeps the real name of
-            the default branch of each repository. Screens hide each exact copy
+            the default branch of each repository, and of the base branch of
+            each workspace. Screens hide each exact copy
             of a secret value in these paths and names. Your browser still gets
             the real values, so a secret value can show in the data that your
             browser gets and sends (decision 145).`,

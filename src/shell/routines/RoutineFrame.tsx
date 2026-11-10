@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
+import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import styles from '../../../docs/mockups/src/screens/RoutineScreen.module.css'
 import { routes, type RoutineTab } from '../../app/router'
 import type { OrgSummary } from '../../shared/orgs'
+import { useOrgAccess } from '../context'
 import { Page } from '../layout/Page'
 import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
@@ -17,7 +19,9 @@ export interface RoutineTabs {
  * the actions, over the form. A desktop centres the form, with the Runs
  * list in a column at the right. A phone shows a saved routine in two tabs,
  * Routine and Runs, and a new routine without tabs, because it has no runs
- * yet.
+ * yet. The frame alone shows the notice of a suspended org, in every view
+ * of the page: at the top of the form on desktop, and above the content of
+ * either tab on a phone.
  */
 export function RoutineFrame(props: {
   org: OrgSummary
@@ -32,11 +36,14 @@ export function RoutineFrame(props: {
   runs?: ReactNode
   /** The tabs of a saved routine on a phone. */
   tabs?: RoutineTabs
-  children: ReactNode
+  /** The content, which a page of a suspended org can leave out. */
+  children?: ReactNode
 }) {
   const { org, tabs } = props
   const phone = useViewport() === 'phone'
+  const { suspended } = useOrgAccess(org)
   const runsTab = phone && tabs?.current === 'runs'
+  const notice = suspended ? <SuspendedOrgNotice org={org} /> : null
   return (
     <Page
       actions={props.actions}
@@ -68,13 +75,17 @@ export function RoutineFrame(props: {
       {phone ? (
         <div className={styles.phoneScroll}>
           <div className={styles.phoneContent}>
+            {notice}
             {runsTab ? props.runs : props.children}
           </div>
         </div>
       ) : (
         <div className={styles.body}>
           <div className={styles.formScroll}>
-            <div className={styles.form}>{props.children}</div>
+            <div className={styles.form}>
+              {notice}
+              {props.children}
+            </div>
           </div>
           {props.runs}
         </div>

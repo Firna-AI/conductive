@@ -38,6 +38,7 @@ export const paths = {
   suspendedLeaveConfirm: 'app/orgs/suspended/leave/confirm',
   suspendedRoutines: 'app/orgs/suspended/routines',
   suspendedRoutine: 'app/orgs/suspended/routines/routine',
+  suspendedRoutineRuns: 'app/orgs/suspended/routines/routine/runs',
   sections: 'app/sections',
   workspaceMenu: 'app/workspace-menu',
   workspaceMenuArchive: 'app/workspace-menu/archive',
@@ -112,6 +113,9 @@ export const paths = {
   routineAdmin: 'app/routines/routine/admin',
   routineOwnerLeft: 'app/routines/routine/owner-left',
   routineTurnedOff: 'app/routines/routine/turned-off',
+  routineRepositoryRemoved: 'app/routines/routine/repository-removed',
+  routineRepositoryChosen:
+    'app/routines/routine/repository-removed/chosen-again',
   routineDelete: 'app/routines/routine/delete',
   routineUnavailable: 'app/routines/routine/unavailable',
   routineNotLoaded: 'app/routines/routine/not-loaded',

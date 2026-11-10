@@ -139,7 +139,7 @@ export function RoutineEditor(
         <RoutineNote
           access="owner"
           org={org}
-          repositoryName={repositoryName}
+          repositories={props.repositories}
           routine={routine}
         />
       ) : null}

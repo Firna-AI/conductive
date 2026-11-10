@@ -252,7 +252,14 @@ New workspace opens. Its child pages:
   because it was deleted or the address is wrong, with Open Routines.
   `not-loaded` has the page after the read of the routine failed, with
   the load failure of the other lists of the app and Try again. The
-  `read` state of the routine screen draws both.
+  `read` state of the routine screen draws both. `repository-removed` has
+  a routine that turned off when an admin removed its repository from the
+  chosen repositories of Acme. While Acme does not choose that repository,
+  the notice names it, for Cal and, in the `member` variant, for Priya.
+  The `chosen-again` and `chosen-again-member` variants have the routine
+  after an admin chose the repository again: it stays off until Cal turns
+  it on, and the notice names no repository, because the page cannot tell
+  that repository from another one that Cal saved.
 - `app/routines/triggers` has the open Add trigger menu. Its child page
   `app/routines/triggers/schedules` has the Hourly, Daily, and Weekly
   editors with the time zone, and a custom cron that the form refuses.

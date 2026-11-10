@@ -153,6 +153,11 @@ what the palette does.
   keeps its edit. So a save sends only the fields that the user changed,
   and a field that changed elsewhere, such as Active after a turn-off,
   shows its new value.
+- In such a form, a field that went out for a save keeps its value while
+  the save waits, also when a newer saved value arrives in that time, so
+  no read acts as the answer of the save. When the save succeeds, each
+  field that still equals what went out takes the field of the latest
+  saved value. When the save fails, the draft stays.
 - Save keeps the focus when a save leaves nothing to save
   (`ActionButton` with `keepFocus`). A browser takes the focus from a
   natively disabled button, so Save stays a native button while it has

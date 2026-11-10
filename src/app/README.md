@@ -81,6 +81,8 @@ pull request bar, and the owner picker. A host can give its own parts, as
   The other orgs have no
   routines, so their Routines page shows its empty state. A save of a
   routine checks the prompt, each custom cron, and the time zone, as the
+  Worker does. A removal of a repository on the Repositories tab turns off
+  each routine in it, with the reason that the routine page shows, as the
   Worker does. Its author filter knows the members of the org and a few
   bots, such as `dependabot[bot]`. Any other login gets the refusal of a
   login that names no GitHub account, with its trigger and its list.

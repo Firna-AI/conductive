@@ -1,7 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import type { RoutineRow } from '../../fixtures/routineRows'
-import { repositories } from '../../fixtures/repositories'
-import { offAfterFailedRuns } from '../../fixtures/routines'
+import { offAfterFailedRuns, repositoryOf } from '../../fixtures/routines'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { StatusText, type StatusTone } from '../common/StatusText'
@@ -56,7 +55,7 @@ function State(props: { row: RoutineRow }) {
 function Row(props: { row: RoutineRow; to?: string; viewport: Viewport }) {
   const { row, to } = props
   const { routine } = row
-  const detail = `${repositories[routine.repository].name} · ${triggersSummary(routine.triggers)}`
+  const detail = `${repositoryOf(routine)} · ${triggersSummary(routine.triggers)}`
   const mobile = props.viewport === 'mobile'
   const content = (
     <>
