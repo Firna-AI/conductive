@@ -19,8 +19,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'mentions',
     area: 'agents-and-chat',
     name: 'Mentions',
-    status: 'planned',
-    note: 'File mentions in the message box are planned. Teammate and pull request mentions remain under consideration.',
+    status: 'in-progress',
+    note: 'File and folder mentions in the message box are in progress. Teammate and pull request mentions remain under consideration.',
     due: null,
   },
   {
