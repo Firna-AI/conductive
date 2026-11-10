@@ -1,5 +1,4 @@
 import {
-  RUNNER_PROTOCOL_VERSION,
   type RunnerEventEnvelope,
   type RunnerHello,
 } from '../../src/shared/runner'
@@ -31,7 +30,8 @@ export function parseRunnerTransport(
   | { type: 'file.diff.result'; value: unknown } {
   const input = record(value)
   if (input.type === 'hello') {
-    if (input.protocolVersion !== RUNNER_PROTOCOL_VERSION) return invalidInput()
+    if (input.protocolVersion !== 1 && input.protocolVersion !== 2)
+      return invalidInput()
     return {
       type: input.type,
       protocolVersion: input.protocolVersion,

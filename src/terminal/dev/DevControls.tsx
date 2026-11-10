@@ -132,6 +132,16 @@ export function DevControls(props: {
         Turn on focus reports
       </button>
       <button
+        // The mouse reports of tmux: presses, drags, and the SGR encoding.
+        onClick={() =>
+          props.onTerminalOutput('\x1b[?1000h\x1b[?1002h\x1b[?1006h')
+        }
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Turn on mouse reports
+      </button>
+      <button
         onClick={() =>
           change(
             'workspace',

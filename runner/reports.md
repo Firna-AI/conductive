@@ -7,8 +7,8 @@ report of one kind.
 [Lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the requirements.
 
-- The runner takes a request without a session or a login. The agents never
-  get it. So a running turn keeps its agent process and its input.
+- The runner takes a request without a session or a credential. The agents
+  never get it. So a running turn keeps its agent process and its input.
 - After the `welcome`, the runner takes commands while the refresh after the
   connect still runs. So a request does not wait for `runner.ready`.
 - A `files.snapshot` or `changes.updated` request scans the repository again.

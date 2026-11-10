@@ -128,6 +128,19 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   the path in its prompt was rejected, because it also moves a shell
   outside a restore. A check of the provider's path of the old view was
   rejected, because the provider does not document that path.
+- A plain drag selects text on the screen, and the user can copy it, such
+  as with Cmd+C on a Mac. This also holds while a program in the shell,
+  such as tmux, uses the mouse (decision 246).
+- The wheel, the right button, and the middle button still reach such a
+  program, so the wheel scrolls the output history. A held Cmd on a Mac,
+  or Ctrl on Windows and Linux, gives a click or a drag to the program.
+- Reason: the user expects to select and copy as in the rest of the page.
+  A copy through the clipboard writes of the program was rejected, because
+  any process in the sandbox could then write the user's clipboard.
+- When the connection ends, the user can still select and copy the text
+  that stays on the screen (decision 245).
+- Reason: the screen keeps its output so that the user can still use it,
+  such as an error message.
 - When the user ends the shell, such as with `exit`, the next connection
   opens a new shell.
 - A stop of the sandbox ends the shell and its commands, as
@@ -137,70 +150,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 
 ## Port previews
 
-- A preview shows in a frame inside the app, with an "Open in new tab"
-  link. Reason: Safari blocks the cookies of the previewed app inside a
-  frame.
-- The port form lists the servers that listen in the sandbox, from the
-  report of the runner (decision 220). The form shows when no preview is
-  open, and after "+".
-  [Listening ports](agent-runner.md#listening-ports) says which ports the
-  list holds.
-- Reason: a user often does not know the port, such as when an agent
-  started the server. The report is ready when the form shows, and it
-  needs no call to Boat.
-- A check by the Worker through a Boat command while the form shows was
-  rejected. It runs about 720 commands an hour for each open form, and Boat
-  keeps each command record for 90 days. An answer of the runner on
-  request was rejected, because no update arrives between two requests.
-- Both a check and a report were rejected, because two paths must stay in
-  step. An install of the newest runner at each start was rejected,
-  because a start then takes longer and can fail in a new way. It also
-  breaks the rule that only a build installs the software of a sandbox,
-  which decision 148 kept for the terminal programs.
-- Each server is a button with its port, its program name, and its folder,
-  when the report gives them (decision 221). A folder that does not fit
-  keeps its end, after "…".
-- Reason: the port alone does not say which server it is, and two servers
-  of one program differ only by their folder. The full command line was
-  rejected, because it can hold a token or a password.
-- The title of the page of each server was rejected, because the runner
-  then sends each server a request that the user did not make.
-- A click on a server opens its preview with the same request and checks
-  as a typed port. A port that has an open preview leaves the list,
-  because its tab shows it.
-- A server joins or leaves the list within about 4 seconds after it starts
-  or stops. Each open tab gets each new list, and a tab that opens later
-  shows the latest list.
-- The port field stays below the list, as a smaller "Other port" row. It
-  uses the same preview checks for ports that the list leaves out.
-- When the runner reports no server, the form asks the user to start one
-  in the terminal, or to ask the agent. The field stays.
-- When the app has no report, the form shows only the field. This holds
-  for a sandbox whose runner does not report ports, such as one from an
-  older org image, because only a build installs a new runner.
-- When the sandbox stops, the workspace sends `ports.updated` with
-  `ports: null` to the open tabs. A null list means that the app has no
-  report. Reason: an old list would offer servers that the stop ended.
-- The tab of an open preview shows the port and at most 10 characters of
-  the name. A longer name shows 9 characters and "…". The tab shows no
-  folder. A port that the latest list does not name shows `Port 3000`.
-- The tooltip and the accessible name of the tab give the port, the full
-  name, and the folder. Reason: the user asked for a short tab label, and
-  the cut label must not hide which server the tab shows.
-- Nothing opens by itself, and no notice of a server shows outside the
-  Preview tool.
-- A name and a folder are text that screens show. So the filters of
-  [Secrets that users enter](tokens-and-secrets.md#secrets-that-users-enter)
-  hide each secret value in them.
-- Some servers accept only requests to their local address, such as a dev
-  server that checks `Host`. Such a server works in a preview with no change
-  to its repository (decision 218).
-  [Port previews](terminal-previews-and-desktop.md#port-previews)
-  states the `Host` and the `Origin` that the server gets.
-- A workspace whose cloud computer has no running relay refuses previews.
-  The user starts a new workspace after an admin runs Build computer.
-- The sandbox keeps port 7682 for the relay. A preview of port 7682 shows
-  an error.
+The [port-preview requirements](port-previews.md) give the detected-server
+list, manual opening, preview tabs, and the relay requirement.
 
 ## Desktop
 

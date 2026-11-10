@@ -88,7 +88,7 @@ where each kind of data lives.
 ## Trust boundaries
 
 The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
-separate the orgs, the Boat key, and the sandboxes.
+separate the orgs, the Boat key, the model gateway, and the sandboxes.
 
 ## Decision numbers
 
@@ -96,6 +96,9 @@ A decision number, such as decision 36, names the dated record of one
 decision. The plan of the change that wrote these docs keeps the records
 while the change is open. The pull request of that change keeps them after
 the merge.
+
+A decision of a later change carries the short name of that change, such
+as gateway decision 6. The doc that cites it defines the name.
 
 ## Protocol docs
 

@@ -14,17 +14,23 @@ them, and this page lists each protocol doc and what it covers.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
+    - [Port previews](../protocol/port-previews.md): detected servers, manual
+      opening, preview tabs, and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, its port reports, and the repair
     of lost workspace updates.
+    - [Listening ports](../protocol/listening-ports.md): the scanner's
+      eligibility, labels, limits, and full reports.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+- [Model gateway](../protocol/model-gateway.md): the turn token, and the
+  Worker routes that add the agent login to each model request.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar and its
   events.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a

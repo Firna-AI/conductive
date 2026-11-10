@@ -2,7 +2,10 @@ import { randomUUID } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
 import { homedir } from 'node:os'
 
-import type { RunnerLogin, RunnerTurn } from '../../src/shared/runner'
+import type {
+  RunnerLogin,
+  RunnerMessageDuringTurnV2,
+} from '../../src/shared/runner'
 import { oneOf } from './parse'
 import { warmClaude } from './providers/binaries'
 import { createClaudeFactory } from './providers/claude'
@@ -68,10 +71,16 @@ async function measure(): Promise<void> {
     }
     if (!choice.model) throw new Error('Set the measurement model.')
     const turnId = randomUUID()
+    const sessionId = randomUUID()
     provider = await factory({
       cwd: process.env.CONDUCTIVE_REPOSITORY ?? process.cwd(),
       home: process.env.CONDUCTIVE_HOME ?? homedir(),
-      login,
+      sessionId,
+      endpoint:
+        agent === 'claude'
+          ? 'https://api.anthropic.com'
+          : 'https://api.openai.com/v1',
+      credential: { type: 'native', login },
       choice,
       conversationId: null,
       instructions: '',
@@ -83,13 +92,11 @@ async function measure(): Promise<void> {
       event,
       warn: (message) => process.stderr.write(`${message}\n`),
     })
-    const sessionId = randomUUID()
-    const command: RunnerTurn = {
-      type: 'turn',
+    const command: RunnerMessageDuringTurnV2 = {
+      type: 'message',
       commandId: randomUUID(),
       sessionId,
       turnId,
-      login,
       attachments: [],
       message: {
         id: randomUUID(),

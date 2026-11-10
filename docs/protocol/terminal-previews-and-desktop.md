@@ -5,6 +5,7 @@ of the terminal, the port previews, and the desktop. It also covers the
 proxies to a sandbox. It belongs to
 [Access and security](access-and-security.md), which covers sign-in, the
 gates of the Worker, the request bodies, and the content security policy.
+[Tools of a workspace](workspace-tools.md) states what these tools show.
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
