@@ -47,6 +47,13 @@ The CLI is ready to use without a separate login step.
 | --- | --- |
 | In an agent turn | The person whose message started the turn |
 | In the shared Terminal | The workspace owner |
+| In a script outside an agent turn | The workspace owner |
+
+Commits name the person in the table as both author and committer.
+Conductive uses their GitHub display name, or their login when the display name is missing or unusable.
+Each commit uses their private GitHub no-reply address, `<id>+<login>@users.noreply.github.com`.
+Here, `<id>` is their GitHub user ID and `<login>` is their GitHub login.
+GitHub links the commit to their account without showing their private email.
 
 Every member connected to that Terminal uses the same owner identity.
 An explicit `GH_TOKEN` or `GITHUB_TOKEN` value can replace the supplied CLI login.
