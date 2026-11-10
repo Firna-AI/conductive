@@ -167,6 +167,7 @@ export function HomeList(props: {
           readOnly={suspended}
           selectedId={null}
           variant="page"
+          viewer={props.user}
         />
       </div>
     </>

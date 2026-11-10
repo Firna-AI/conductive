@@ -1,0 +1,46 @@
+---
+import type { MarkdownHeading } from 'astro'
+import Icon from './Icon.astro'
+
+/*
+ * "On this page": a link to each level-two heading of a guide, which is
+ * also where a reader copies the address of a section. A desktop shows a
+ * list. A phone shows a native disclosure under the lead, closed at first,
+ * which opens without a script. The page holds both, and its stylesheet
+ * shows the one for the width of the window. Both name their navigation
+ * through `aria-label`, so they need no IDs.
+ */
+type Props = { sections: readonly MarkdownHeading[] }
+
+const { sections } = Astro.props
+---
+
+<nav aria-label="On this page" class="docs-toc">
+  <span class="docs-toc-heading">On this page</span>
+  <ul class="docs-toc-list">
+    {sections.map((section) => (
+      <li>
+        <a class="docs-toc-link" href={`#${section.slug}`}>
+          {section.text}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
+<details class="docs-toc-box">
+  <summary class="docs-toc-bar">
+    On this page
+    <Icon name="chevron-down" size={16} class="docs-chevron" />
+  </summary>
+  <nav aria-label="On this page">
+    <ul class="docs-toc-list">
+      {sections.map((section) => (
+        <li>
+          <a class="docs-toc-link" href={`#${section.slug}`}>
+            {section.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</details>

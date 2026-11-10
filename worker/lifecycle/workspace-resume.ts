@@ -42,6 +42,7 @@ export async function resumeWorkspace(
     workspaceId,
     orgId,
     kind: 'resume',
+    providerAccount: row.providerAccount,
     requestedByUserId: userId,
     imageName: null,
     startupScript: settings.startupScript,

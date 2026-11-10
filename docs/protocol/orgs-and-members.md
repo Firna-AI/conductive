@@ -107,6 +107,8 @@ says.
   section.
 - A workspace moves to another section by drag and drop. On a phone, a
   long press lifts the row.
+- Move to section in the
+  [menu of a workspace row](workspace-menu.md#move-to-section) moves it too.
 - Deleting a section moves its workspaces to General. Reason: no workspace
   gets lost.
 - The app keeps the archived workspaces in the Archived group at the end
@@ -150,6 +152,8 @@ says.
 - Every member can send messages in every workspace of the org. Each
   session runs on the agent login of its starter, as
   [Chat and events](agents-and-sessions.md#agents) says.
+- Every member can move a workspace to another section and rename it,
+  while the workspace is not archived.
 - A member who is not an admin sees the Members tab and the owner of each
   workspace, without the actions of an admin.
 - Only the workspace owner and the admins can archive a workspace
@@ -164,6 +168,9 @@ says.
 - Each workspace belongs to the person who created it, until an admin
   reassigns it. A move to a suspended member fails, as
   [Owners and admins](operator-actions.md#owners-and-admins) says.
+- An admin reassigns a workspace with the owner picker of its header, or
+  with Reassign to in the
+  [menu of its row](workspace-menu.md#reassign-to).
 - The header of a workspace names its workspace owner.
 - Model use on an account of the app was rejected. Each session runs on
   the own agent login of its starter.

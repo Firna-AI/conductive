@@ -10,6 +10,7 @@ import type { FirstWorkspaceMessage } from './workspace-runtime'
 interface WorkspaceStartData {
   workspaceId: string
   orgId: string
+  providerAccount: string
   imageName: string | null
   startupScript: SavedScript
   environmentCiphertext: string | null

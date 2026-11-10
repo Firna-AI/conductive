@@ -36,15 +36,19 @@ it.each(['pushed', 'merged'] as const)(
     ).first<string>('workspace_id')
     const start = fixture.starts.get(id!)!
     expect(await start.job()).toMatchObject({
+      providerAccount: 'boat',
       baseBranch: event === 'merged' ? 'release/next' : 'feature/review',
       startSha: event === 'merged' ? undefined : 'a'.repeat(40),
     })
     expect(
       await fixture.runtime.env.DB.prepare(
-        'SELECT base_branch AS baseBranch FROM workspace_creation_plans',
+        `SELECT base_branch AS baseBranch, start_sha AS startSha,
+          provider_account AS providerAccount FROM workspace_creation_plans`,
       ).first(),
     ).toEqual({
       baseBranch: event === 'merged' ? 'release/next' : 'feature/review',
+      startSha: event === 'merged' ? null : 'a'.repeat(40),
+      providerAccount: 'boat',
     })
     await start.restart()
     for (let phase = 0; phase < 20; phase++) {

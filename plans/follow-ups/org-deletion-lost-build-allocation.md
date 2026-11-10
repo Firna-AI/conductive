@@ -49,7 +49,7 @@
     - each `lifecycle_sandbox_cleanup` row of the org, as a sandbox
     - each unresolved workspace allocation, which then needs a D1 record, because today only the workspace object holds it
 
-    The stop step resolves each saved request with the deleted-org provider. It replays the request, records the returned ID as a sandbox, and stops it. A failure keeps the resource for the next cleanup run, as a failed stop does now. The other sandboxes still stop at once.
+    After the deleted-org lease check, the stop step resolves each saved request through the provider of its stored account. It replays the request, records the returned ID as a sandbox, and stops it. A failure keeps the resource for the next cleanup run, as a failed stop does now. The other sandboxes still stop at once.
 
     The purge deletes each such sandbox before it deletes the records of its owner. It also clears the workspace object of each workspace owner, even when the workspace row is gone, so that its cleanup alarm ends. The `kind` column of `org_deletion_resources` allows only `sandbox` and `snapshot`, at `migrations/202611071400_org_deletion_cleanup.sql:11`. So B needs a migration for that column and for the D1 record of a workspace allocation. Effort: Large.
   - **C.** Add one shared recovery queue for the saved create requests of every build and every start. Delete org drains it before it fills the deletion list. This needs a new table, a migration, a queue driver, and tests for each owner. It replaces the separate cleanup owners that builds and starts have now. Effort: Large.

@@ -11,6 +11,7 @@ it('masks split and short secrets without changing an inserted start-log marker'
   const { storage } = await nativeLifecycleStorage()
   const starts = durableStartStorage(storage, () => TEST_TIME, env)
   const job: WorkspaceStartJob = {
+    providerAccount: 'boat',
     workspaceId: 'log-workspace',
     orgId: 'log-org',
     kind: 'resume',

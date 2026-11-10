@@ -1,7 +1,9 @@
 import type { Org } from '../../fixtures/orgs'
 import type { Membership } from '../../fixtures/members'
 import { paths } from '../../paths'
+import { classes } from '../common/classes'
 import { LoadFailure } from '../common/LoadFailure'
+import type { RowFocus } from './rowControls'
 import type {
   ListDrag,
   ListMenu,
@@ -22,6 +24,7 @@ import styles from './Sidebar.module.css'
  * link, New workspace, Routines, Search, and the sections of the org.
  * A suspended org keeps Routines and Search, with read-only sections.
  * A list that did not load shows its failure in place of the sections.
+ * An open menu of a row may pass the edge of the sidebar.
  */
 export function Sidebar(props: {
   org: Org
@@ -36,6 +39,10 @@ export function Sidebar(props: {
   drag?: ListDrag
   /** The archived workspaces, which show in an open Archived group. */
   archived?: readonly WorkspaceRow[]
+  /** The Archived group shows collapsed, with its count. */
+  archivedCollapsed?: boolean
+  /** The row whose menu, field, or hover the view draws. */
+  focus?: RowFocus
   /** The operator suspended the org. */
   suspended?: boolean
   /** The workspace list of the org did not load. */
@@ -43,6 +50,7 @@ export function Sidebar(props: {
   viewer: Membership
 }) {
   const suspended = props.suspended ?? false
+  const drawing = props.focus?.drawing.kind
   return (
     <>
       <div className={styles.top}>
@@ -53,7 +61,13 @@ export function Sidebar(props: {
           to={suspended ? paths.suspendedSettings : undefined}
         />
       </div>
-      <div className={styles.scroll} data-mokly-scroll="workspace-list">
+      <div
+        className={classes(
+          styles.scroll,
+          drawing === 'menu' && styles.unclipped,
+        )}
+        data-mokly-scroll="workspace-list"
+      >
         <div className={styles.links}>
           {suspended ? null : (
             <NewWorkspaceLink
@@ -74,8 +88,10 @@ export function Sidebar(props: {
         ) : (
           <SectionList
             archived={props.archived}
+            archivedCollapsed={props.archivedCollapsed}
             drag={props.drag}
             menu={props.menu}
+            focus={props.focus}
             readOnly={suspended}
             sections={props.sections}
             variant="sidebar"

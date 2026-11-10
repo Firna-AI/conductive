@@ -1,6 +1,8 @@
 /** The catalogue paths that screens link to. */
 export const paths = {
   marketing: 'marketing',
+  docs: 'marketing/docs',
+  docsGetStarted: 'marketing/docs/get-started',
   terms: 'marketing/terms',
   privacy: 'marketing/privacy',
   notFound: 'marketing/not-found',
@@ -37,6 +39,9 @@ export const paths = {
   suspendedRoutines: 'app/orgs/suspended/routines',
   suspendedRoutine: 'app/orgs/suspended/routines/routine',
   sections: 'app/sections',
+  workspaceMenu: 'app/workspace-menu',
+  workspaceMenuArchive: 'app/workspace-menu/archive',
+  workspaceMenuArchived: 'app/workspace-menu/archive/archived',
   palette: 'app/command-palette',
   paletteWorkspaces: 'app/command-palette/workspaces',
   paletteRepository: 'app/command-palette/workspaces/repository',

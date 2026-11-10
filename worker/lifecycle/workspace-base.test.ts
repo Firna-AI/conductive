@@ -19,6 +19,7 @@ it('keeps the pull request base on resume and on the disk retention restart', as
         firstMessage: FIRST_MESSAGE,
       },
       h.user,
+      undefined,
       { branch: 'feature/review', startSha: 'a'.repeat(40) },
     ),
   )
