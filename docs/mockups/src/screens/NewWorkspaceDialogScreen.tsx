@@ -2,6 +2,7 @@ import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame } from '../components/layout/AppFrame'
 import { NewWorkspaceDialog } from '../components/new-workspace/NewWorkspaceDialog'
 import { ChooseRepositoriesNotice } from '../components/new-workspace/notices'
+import { formWait } from '../components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
 import { defaultSection, sections } from '../fixtures/sections'
 import {
@@ -19,11 +20,7 @@ import {
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
-import {
-  formWait,
-  repositoryMenu,
-  waitingNotice,
-} from './newWorkspaceRepositories'
+import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace } from './workspaceState'
 
@@ -131,7 +128,7 @@ export function NewWorkspaceDialogScreen(props: {
       place={`${org.name} · ${sections[defaultSection].name}`}
       placeholder={taskPlaceholder}
       ready={draft.text !== '' && !waits(state) && !building && !waiting}
-      repository={chosen ? page.repository : undefined}
+      repository={chosen ? page.repository.name : undefined}
       repositoryMenu={
         chosen && state.repositoryMenu === 'open'
           ? repositoryMenu(page, state.waitingBuild)

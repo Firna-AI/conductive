@@ -7,32 +7,34 @@ export async function readBuildChanges(
   orgId: string,
   providerAccount: string,
 ): Promise<BuildsResponse['changes']> {
-  const image = await db
-    .prepare(
-      `SELECT j.repositories_json AS repositoriesJson
-       ${publishedImageSource} WHERE s.org_id = ? AND i.provider_account = ?`,
-    )
-    .bind(orgId, providerAccount)
-    .first<{ repositoriesJson: string }>()
   const reference = await db
     .prepare(
-      `SELECT s.install_script != COALESCE((
-         SELECT j.install_script FROM image_builds b
+      `WITH account_builds AS (
+         SELECT id, kind, state, started_at FROM image_builds
+         WHERE org_id = ? AND provider_account = ?
+       ), image AS (
+         SELECT s.org_id, j.repositories_json ${publishedImageSource}
+         JOIN account_builds scoped ON scoped.id = b.id
+       )
+       SELECT image.repositories_json AS repositoriesJson,
+       s.install_script != COALESCE((
+         SELECT j.install_script FROM account_builds b
          JOIN image_build_jobs j ON j.build_id = b.id
-         WHERE b.org_id = s.org_id AND b.kind = 'build'
-           AND (? = 0 OR b.state = 'succeeded')
+         WHERE b.kind = 'build'
+           AND (image.repositories_json IS NULL OR b.state = 'succeeded')
          ORDER BY b.started_at DESC, b.id DESC LIMIT 1
        ), s.install_script) AS installScript
-       FROM settings s WHERE s.org_id = ?`,
+       FROM settings s LEFT JOIN image ON image.org_id = s.org_id
+       WHERE s.org_id = ?`,
     )
-    .bind(image ? 1 : 0, orgId)
-    .first<{ installScript: number }>()
+    .bind(orgId, providerAccount, orgId)
+    .first<{ repositoriesJson: string | null; installScript: number }>()
   const installScript = reference?.installScript === 1
-  if (!image)
+  if (!reference || reference.repositoriesJson === null)
     return { installScript, addedRepositories: [], removedRepositories: [] }
-  const captured = readRepositories(JSON.parse(image.repositoriesJson)).filter(
-    (repository) => repository.orgId === orgId,
-  )
+  const captured = readRepositories(
+    JSON.parse(reference.repositoriesJson),
+  ).filter((repository) => repository.orgId === orgId)
   const selected = await selectedRepositories(db, orgId)
   const capturedIds = new Set(captured.map((repository) => repository.id))
   const selectedIds = new Set(selected.map((repository) => repository.id))

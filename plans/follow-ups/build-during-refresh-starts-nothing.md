@@ -27,6 +27,6 @@
 - **Left out:** A refusal that asks the admin to try again after the refresh. The admin must then press twice, and B meets the goal without a new rejection.
 - **Wider fix:** B. Each request for a build then waits for the running job, also for a future kind of job.
 - **Previous examples:** `plans/follow-ups/added-build-can-be-lost.md` describes an added build that a refresh at the end of a cleanup swallows, for the same reason in `startImageBuild`.
-- **Related:** `plans/follow-ups/added-build-can-be-lost.md`, same cause: `startImageBuild` returns the running job in place of a new build. One stored request for a build can fix both.
+- **Related:** `plans/follow-ups/added-build-can-be-lost.md`, same cause: `startImageBuild` returns the running job in place of a new build. One stored request for a build can fix both. When B also keeps the build request of a repository add during a refresh after a failed build, update the exception in `docs/protocol/org-image.md` (section "Added repositories") and the sentences about **Try again** in `src/marketing/docs/cloud-computer.md` (section "Choose repositories") in the same change.
 - **Recommendation:** B. The press then always leads to a build, as the protocol says.
 - **Action:** fix after merge, apply B, because the problem is on `origin/main` and outside the change that found it.

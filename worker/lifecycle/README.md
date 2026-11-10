@@ -261,8 +261,9 @@ The native cleanup pointer can therefore change without losing an older failed c
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
 - [`build-changes-data.ts`](build-changes-data.ts): `readBuildChanges`, the
   saved install script change and the added and removed repositories in
-  `BuildsResponse.changes`. It reads the published image's repositories
-  from the same source as creation admission.
+  `BuildsResponse.changes`. It reads the script reference and the published
+  image's repositories for one provider account. The repository read uses
+  the same source as creation admission.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,

@@ -48,7 +48,9 @@ The repository list has **Manage access** for the GitHub App's access on GitHub.
 Your account and the app must both be able to reach a repository to select it.
 
 Adding a repository starts a build automatically.
-If a build or refresh is running, one more build starts after it succeeds.
+If a build or refresh is running, one more build usually starts after it succeeds.
+When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
+Select **Try again** to build it.
 A newly added repository becomes usable after a successful build includes it.
 Until then, **New workspace** shows it as unavailable, with a note that says when it will be ready.
 

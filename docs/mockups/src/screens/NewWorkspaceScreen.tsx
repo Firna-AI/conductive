@@ -5,6 +5,7 @@ import { Sheet } from '../components/common/Sheet'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
+import { formWait } from '../components/new-workspace/waitingRepository'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { firstBuildStates } from '../fixtures/computer'
 import { memberViewer, you } from '../fixtures/members'
@@ -18,11 +19,7 @@ import {
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
-import {
-  formWait,
-  repositoryMenu,
-  waitingNotice,
-} from './newWorkspaceRepositories'
+import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { Start } from './newWorkspaceStart'
 
 export const newWorkspaceSchema = {

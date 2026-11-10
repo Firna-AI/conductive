@@ -378,6 +378,15 @@ Calls of Milestone 4, 2026-11-10, from the screens:
   [A kept draft can hold a removed repository](follow-ups/kept-draft-removed-repository.md)
   records it.
 
+Calls of the review, 2026-11-10:
+
+- The condition of the added build stays org-wide: the newest build of
+  any provider account must have succeeded. Reason: a failed build of any
+  account points to an install script problem, and the install script is
+  org-wide.
+- The install script comparison and the repository lists of `changes`
+  use the provider account of the org image that they describe.
+
 ## Milestone 1: Mockups
 
 Tags: mockup

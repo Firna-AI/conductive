@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import {
+  type FormRepositories,
+  formWait,
+} from '../components/new-workspace/waitingRepository'
+import {
   newOrgSections,
   suspendedSections,
   workspaceSections,
@@ -21,8 +25,7 @@ import type { NewWorkspaceState } from './NewWorkspaceScreen'
 import { newWorkspaceChoice } from './newWorkspaceParts'
 import {
   acmeFormRepositories,
-  type FormRepositories,
-  formWait,
+  namedRepository,
 } from './newWorkspaceRepositories'
 
 /**
@@ -58,7 +61,7 @@ function acmePage(state: NewWorkspaceState): PageOrg {
 /** The repositories that Firna chose, which its first build clones. */
 const firnaReady = newOrg.repositories
   .filter((repository) => repository.used)
-  .map((repository) => repository.name)
+  .map((repository) => namedRepository(repository.name))
 
 /**
  * The org of the page: Acme in use or suspended, or Firna, the new org of
@@ -76,7 +79,7 @@ export function pageOrg(state: NewWorkspaceState): PageOrg {
         org: orgs.firna,
         ready: firnaReady,
         waiting: [],
-        repository: newOrg.repositories[0].name,
+        repository: namedRepository(newOrg.repositories[0].name),
         draft: newOrgDraft,
         choice: defaultChoice,
         built:

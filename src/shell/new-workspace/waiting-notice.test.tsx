@@ -13,6 +13,7 @@ import { click } from '../test-mount'
 import {
   buildsOf,
   chosen,
+  menuRows,
   newWorkspace,
   shown,
   withDashboard,
@@ -97,5 +98,38 @@ describe('the notice of a waiting repository in New workspace', () => {
     expect(failed.navigation.history.at(-1)).toBe(
       routes.settings(FAKE_IDS.org, 'cloud-computer'),
     )
+  })
+
+  test('a ready repository with the full name of a waiting repository keeps Send on, with no notice', async () => {
+    holdAnimationFrames()
+    const only = chosen(['storefront'])
+    // GitHub renamed acme/storefront, and a new repository took the name. The
+    // org keeps the old name, so two chosen repositories share it, and only
+    // the new one waits for its build.
+    const twin = only.repositories
+      .filter((item) => item.id === 'storefront')
+      .map((item) => ({ ...item, id: 'new-storefront', githubId: 100 }))
+    const { view } = await newWorkspace({
+      builds: buildsOf('building', ['new-storefront']),
+      repositories: { repositories: [...only.repositories, ...twin] },
+    })
+    expect({ page: shown(view), rows: menuRows(view) }).toEqual({
+      page: {
+        notices: [],
+        spinner: false,
+        picker: 'Repository: acme/storefront',
+        send: true,
+        note: true,
+      },
+      rows: [
+        { name: 'acme/storefront', note: null, off: false, checked: true },
+        {
+          name: 'acme/storefront',
+          note: 'Ready after the build',
+          off: true,
+          checked: false,
+        },
+      ],
+    })
   })
 })

@@ -5,8 +5,8 @@ import {
   ChooseRepositoriesButton,
   chooseRepositoriesFirst,
 } from '../components/new-workspace/notices'
+import { formWait } from '../components/new-workspace/waitingRepository'
 import type { PageOrg } from './newWorkspacePageParts'
-import { formWait } from './newWorkspaceRepositories'
 import styles from './NewWorkspaceScreen.module.css'
 
 /**
@@ -65,7 +65,7 @@ export function Start(props: {
             : `An admin of ${page.org.name} chooses its repositories first.`}
       </p>
       {props.chosen ? (
-        <RepositoryPicker menu={props.menu} repository={page.repository} />
+        <RepositoryPicker menu={props.menu} repository={page.repository.name} />
       ) : props.admin ? (
         <ChooseRepositoriesButton />
       ) : null}

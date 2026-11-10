@@ -65,11 +65,12 @@ starts no added build. A refresh after a failed build gets none either.
 `readBuildHistory` in [`build-data.ts`](build-data.ts) returns
 `BuildsResponse.changes` with the build history. `readBuildChanges` in
 [`build-changes-data.ts`](build-changes-data.ts) compares the raw saved
-install script with the newest successful build's script. Before the first
-image, it uses the newest build instead. A refresh never becomes this
+install script with the newest successful build's script in the requested
+provider account. Before that account's first image, it uses the newest
+build in the same account, in any state. A refresh never becomes this
 script reference. The added and removed repository lists compare the
-chosen repositories with the published image's repositories. Both lists
-stay empty before the first image.
+chosen repositories with that account's published image. Both lists stay
+empty before the first image.
 
 D1 keeps at most 4 MiB of each build log: the first and the last output.
 A write that passes that budget removes whole rows from the middle.

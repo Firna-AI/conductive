@@ -240,7 +240,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   its build, from decisions 240 and 241. The repository menu of New
   workspace keeps it in place, off, with the note of when it is ready as
   the muted detail of its row. A form whose repository waits keeps Send
-  off under a notice. `RepositoryNotice` in `src/components/settings/`
+  off under a notice. `WaitingRepositoryNotice` in
+  `src/components/new-workspace/waitingRepository.tsx` draws that notice,
+  and `formWait` beside it says what the form waits for. The app shares
+  that module. `RepositoryNotice` in `src/components/settings/`
   draws the notice of the Repositories and Cloud computer tabs, with a
   spinner while the build of an added repository runs. An admin gets its
   Try again or Build computer on the Repositories tab only, because the
