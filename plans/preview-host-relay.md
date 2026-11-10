@@ -10,7 +10,9 @@ refuses that hostname. `mokly serve` accepts only `localhost:<port>` and
 `127.0.0.1:<port>`, on purpose, as its own protocol says. Vite and webpack
 dev servers also block unknown hostnames by default. The user chose a relay
 in the sandbox (decision 213). The relay gives each server its local
-address as `Host`, as a browser on the sandbox would send it.
+address as `Host`, as a browser on the sandbox would send it. On the same
+day, the user chose that a sandbox where the relay does not run refuses
+previews (decision 214), because the app is not live yet.
 
 The same branch fixes the preview frame, which showed the 403 as a blank
 page. On 10 November 2026, the user chose option A of that item: the frame
@@ -29,9 +31,12 @@ Replaced ways:
 - The direct route, where Boat hosts the previewed port itself → the relay
   route. Consumers: `PrivatePorts` in `worker/previews/ports.ts`, the
   listener check in `worker/previews/listeners.ts`, `portRequest` and the
-  origin helpers, the `listener_mode` value of each preview, and their
-  tests. Moved in Milestone 3. Decision 214 decides whether the direct route
-  stays for a sandbox without the relay.
+  origin helpers, the reads and writes of `listener_mode` and
+  `listener_sandbox_id` in `worker/previews/store.ts`,
+  `worker/previews/handler.ts`, and `worker/security/connection-access.ts`,
+  and their tests. Moved and deleted in Milestone 3. The two D1 columns stay
+  unused until a follow-up item drops them, because the old Worker reads
+  them until the new one replaces it.
 
 ## Decisions
 
@@ -134,9 +139,9 @@ E, and changed the recommendation from A to D.
   protects the codebase best, but it is Large and reopens decision 148. If
   the image must stay the only way that the relay gets in, A is the best
   option.
-- **Action:** ask the user, because each option adds a requirement that no
-  protocol doc has. A and D also keep an old route for sandboxes outside
-  the repository.
+- **Chosen:** B, by the user on 10 November 2026. Reason: the app is not
+  live yet, so a refusal until the next build and a new workspace costs
+  little, and the Worker keeps one route.
 
 ## Design
 
@@ -145,30 +150,28 @@ reason follows each call.
 
 ### The relay program
 
-- The relay is one Node program with no npm dependency. It runs on the
-  private Node of the image. Reason: every option of decision 214 can ship
-  one such file, and the relay needs only HTTP, sockets, and addresses.
-- The preview backend owns the relay file, as the terminal backend owns
-  its software. The answer to decision 214 gives its folder and its build.
+- The relay is a Node program in the runner package, under
+  `runner/src/relay/`, built as the bundle `relay.mjs` of the runner
+  archive. It uses only the built-in modules of Node. Reason: the user
+  chose a relay beside the agent runner, and decision 214 installs it with
+  the image build, which already installs the runner archive.
 - It listens on `127.0.0.1:7682`. Reason: loopback keeps it off the sandbox
   network. Port 7682 sits beside the terminal's 7681 and is rare for apps.
 - `src/shared/previews.ts` holds the relay port and the header name.
-  Reason: the Worker and the relay both import that folder.
+  Reason: the Worker and the runner both import that folder.
 
 ### How the relay gets into a sandbox
 
-This part follows the answer to decision 214.
-
-- With option A, B, or C, the image build installs the relay file and an
-  enabled systemd unit, `conductive-preview-relay.service`, with
-  `Restart=always`. The unit runs as `user`, with no workspace marker,
-  because the relay needs no workspace variable. Boat starts the enabled
-  services after each resume and fork. Reason for a unit of its own: a
-  restart of the runner, which each workspace start does, must not drop
-  the open previews.
-- With option D, one privileged command of the Worker writes the file to
-  `/run/conductive/` and starts it with `systemd-run` as the transient unit
-  `conductive-preview-relay`, as `user`, with a restart on failure.
+- The image build installs the relay with an enabled systemd unit,
+  `conductive-preview-relay.service`, with `Restart=always`, as decision
+  214 chose. The unit runs as `user`, with the private Node, and with no
+  workspace marker, because the relay needs no workspace variable. Boat
+  starts the enabled services after each resume and fork.
+- Reason for a unit of its own: a restart of the runner, which each
+  workspace start does, must not drop the open previews.
+- A workspace gets the relay only from an image build that has it. A
+  refresh installs no software, and a workspace keeps the software of its
+  image, as the terminal software does.
 
 ### The request contract
 
@@ -184,7 +187,8 @@ This part follows the answer to decision 214.
   headers keep their meaning. Reason: only the Worker knows the fetch
   metadata and the preview hostname.
 - The Worker maps a redirect to `http` or `https` on `localhost:<port>`,
-  `127.0.0.1:<port>`, or `[::1]:<port>` to the preview hostname.
+  `127.0.0.1:<port>`, or `[::1]:<port>` to the preview hostname. The map of
+  the Boat address goes, because no previewed server sees that address.
 
 ### The rules of the relay
 
@@ -216,19 +220,22 @@ This part follows the answer to decision 214.
 
 ### The route choice in the Worker
 
-- The Worker checks whether the relay runs by the state of its unit, not
-  by a listener on port 7682. Reason: a user server on that port must not
-  count as the relay. The open reads the unit state and `ss -H -ltn` in one
-  command call.
-- When the relay runs, the preview uses the relay route. Boat hosts port
-  7682 in localhost mode, and the preview stores `relay` as its listener
-  mode. The column holds text, so no migration is needed.
-- In the relay route, a page load does not run the check again. Reason:
-  the relay finds the address of the server for each connection, so the
-  check only adds a command call to each page load. A failed upstream
-  request, or a 401 or 403 from Boat, still drops the descriptor, so the
-  next request checks again.
-- When the relay does not run, decision 214 applies.
+- The open checks the state of the relay unit with one command call.
+  Reason: a user server on port 7682 must not count as the relay.
+- When the unit runs, Boat hosts port 7682 in localhost mode, and the
+  preview uses the relay. No preview uses the direct route.
+- When the unit does not run, the open answers 409
+  `preview_relay_unavailable`, with the message "Previews need newer cloud
+  computer software. Start a new workspace after an admin runs Build
+  computer." The proxy answers its requests with the same error. This is
+  decision 214. The message names no provider.
+- A page load does not run the check again. Reason: the relay finds the
+  address of the server for each connection, so the check only adds a
+  command call to each page load. A failed upstream request, or a 401 or
+  403 from Boat, still drops the descriptor, so the next request checks
+  again.
+- The Worker no longer runs `ss`, and it no longer reads or writes the
+  listener mode of a preview.
 
 ### Security
 
@@ -274,20 +281,22 @@ meet them.
 
 ## Milestone 2: The relay
 
-Depends on: 1, and the answer to decision 214
+Depends on: 1
 
-The relay program exists, with its tests, and it reaches a sandbox in the
-way that decision 214 gives. No Worker preview code uses it yet.
+The relay runs in each sandbox of a new org image. No Worker preview code
+uses it yet.
 
 - [ ] Add the relay port and the header name to `src/shared/previews.ts`.
-- [ ] Add the relay program as one file with no npm dependency, in the
-      folder that the answer to decision 214 gives. Typecheck and lint it.
-- [ ] With option A, B, or C of decision 214: stage the relay file, its
-      start script, and `conductive-preview-relay.service` in the software
-      step of `worker/lifecycle/image-software.ts`. `image/install.sh`
-      installs them, enables the unit, and starts nothing. Update the
-      image software test.
-- [ ] Test the relay against real loopback servers:
+- [ ] Add the relay under `runner/src/relay/` with its entry point. Add the
+      `relay` entry to `runner/scripts/build.mjs` and to the `runner`
+      entries of `knip.jsonc`.
+- [ ] Add `relay.mjs` to the archive in `image/package-runner.mjs`. Check
+      the file in `image/install.sh`.
+- [ ] Add `image/conductive-preview-relay.service` and its start script.
+      Stage both in the software step of
+      `worker/lifecycle/image-software.ts`. `image/install.sh` installs them,
+      enables the unit, and starts nothing. Update the image software test.
+- [ ] Test the relay in `runner/` against real loopback servers:
   - [ ] Only the Boat `Host` of port 7682 gets an answer. `localhost:7682`
         and `evil.example:7682` get 403.
   - [ ] A missing, invalid, or out-of-range port header, and port 7682,
@@ -303,49 +312,53 @@ way that decision 214 gives. No Worker preview code uses it yet.
   - [ ] A server on `::1` only gets the request. With no server, the
         answer is 502.
   - [ ] A client that goes away ends the upstream request.
-- [ ] Update the README of the folder of the relay. With option A, B, or
-      C, also update `image/README.md` and `image/install.md`.
+- [ ] Update `runner/README.md`, `image/README.md`, and `image/install.md`.
+      Say that a workspace gets the relay only from a new image build.
 
 ## Milestone 3: The Worker uses the relay
 
 Depends on: 1, 2
 
-Previews in a sandbox where the relay runs go through it. Decision 214
-sets the behaviour where it does not run.
+Every preview goes through the relay. A sandbox where the relay does not
+run refuses previews, as decision 214 chose.
 
-- [ ] Add the route choice to `worker/previews/listeners.ts` and
-      `worker/previews/ports.ts`, as the design says.
-- [ ] With option D of decision 214: the open starts the relay as a
-      transient unit when it does not run, then checks again.
+- [ ] Replace the listener check in `worker/previews/listeners.ts` and
+      `worker/previews/ports.ts` with the check of the relay unit, as the
+      design says.
+- [ ] Refuse an open, and the requests of a preview, with 409
+      `preview_relay_unavailable` when the relay does not run.
 - [ ] Build the relay request in `worker/previews/headers.ts` and
       `worker/previews/origins.ts`: the relay address, the port header, the
-      `Origin` map, and the redirect map. Map a redirect to the local
-      address in every route, as the protocol now says.
-- [ ] Apply decision 214 to a sandbox where the relay does not run. State
-      that rule in "Port previews" of `docs/protocol/access-and-security.md`,
-      in the same change as the code. Update "Sandbox software" in
-      `docs/architecture.md` when the answer changes how the relay gets in.
+      `Origin` map, and the redirect map for the local address. Keep the
+      terminal behaviour.
+- [ ] Delete the direct route: the `ss` check, the listener modes of
+      previews, the map of the Boat address in preview redirects, and the
+      reads and writes of `listener_mode` and `listener_sandbox_id`. Add a
+      follow-up item that drops both columns after this change deploys.
+- [ ] Update the docs in the same change as the code:
+  - [ ] `docs/protocol/access-and-security.md`: the refusal of decision
+        214, with its reason and the rejected options. Remove the redirect
+        rule for the private address.
+  - [ ] `docs/protocol/workspace-tools.md`: the refusal, in place of the
+        words "while the relay runs".
+  - [ ] `docs/architecture.md`: list the relay in the software of each org
+        image.
+  - [ ] `docs/architecture/flows.md`: name the relay on the preview path.
 - [ ] Test in `worker/previews/` with the fake Boat server:
-  - [ ] When the relay runs, the open hosts port 7682 in localhost mode.
-        Each request and each WebSocket upgrade goes to its Boat address
-        with the port header.
-  - [ ] A user server on port 7682 without the relay unit does not count
-        as the relay.
+  - [ ] When the relay unit runs, the open hosts port 7682 in localhost
+        mode. Each request and each WebSocket upgrade goes to its Boat
+        address with the port header.
+  - [ ] When the relay unit does not run, the open and the proxy answer
+        409 `preview_relay_unavailable`, and no request reaches Boat's
+        address.
   - [ ] A same-origin `Origin` becomes `http://localhost:<port>`. A foreign
         `Origin` stays.
   - [ ] A redirect to `http://localhost:<port>/x` or
         `http://127.0.0.1:<port>/x` reaches the browser on the preview
         hostname.
-  - [ ] A page load in the relay route runs no check.
-  - [ ] A sandbox where the relay does not run gets the behaviour of
-        decision 214.
-- [ ] Update `worker/previews/README.md`: the relay route, and the rule for
-      a sandbox without the relay in place of the `.on.boat.dev` rule.
-      Name the relay where `docs/architecture/flows.md` describes the
-      preview path.
-- [ ] With option A or D of decision 214: add a follow-up item that
-      removes the direct route when no active preview uses it, as the
-      stored listener mode shows.
+  - [ ] A page load runs no check of the relay unit.
+- [ ] Update `worker/previews/README.md`: the relay route and the refusal,
+      in place of the `.on.boat.dev` rule.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
@@ -367,10 +380,9 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After a deploy, start a workspace. With option A, B, or C of
-      decision 214, run a new org image build first. Run
+- [ ] After a deploy, run a new org image build, then start a workspace. Run
       `mokly serve` and a Vite dev server with its default settings. Open a
       preview of each. Check the page, the live reload, and a form POST.
       Check that the relay sees `Host` as `<label>-7682.on.boat.dev`.
-- [ ] Check a preview in a workspace from an older image, with the
-      behaviour of decision 214.
+- [ ] Check that a preview in a workspace from an older image shows the
+      refusal of decision 214.
