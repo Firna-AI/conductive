@@ -118,8 +118,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'copy-session-transcripts',
     area: 'agents-and-chat',
     name: 'Copy session transcripts',
-    status: 'planned',
-    note: 'Copying concise or full session transcripts as Markdown from the session menu is planned.',
+    status: 'in-progress',
+    note: 'Copying concise or full session transcripts as Markdown from the session menu is in progress.',
     due: null,
   },
   {

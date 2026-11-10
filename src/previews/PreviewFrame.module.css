@@ -1,10 +1,17 @@
-/* A page without its own background shows white, as in a browser tab. */
+/*
+ * A page without its own background shows the canvas that a browser tab
+ * shows. `Canvas` follows the app's colour scheme. When the scheme of the
+ * page differs, the browser paints an opaque canvas in the page's scheme.
+ * So a page with no scheme shows white, and a dark page, such as the
+ * browser's JSON view in dark mode, shows dark. A fixed white made the light
+ * text of a dark page white on white.
+ */
 .frame {
   display: block;
   width: 100%;
   height: 100%;
   border: 0;
-  background: #ffffff;
+  background: Canvas;
 }
 
 .link {

@@ -25,6 +25,12 @@
     - the palette key, in `docs/protocol/command-palette.md`
     - the masked file paths, in `docs/protocol/tokens-and-secrets.md` and `src/marketing/privacy.ts`
     - the lift of a suspension, in `docs/protocol/operator-actions.md` and `docs/protocol/operator-section.md`
+  - The preview relay change of `calummoore/port-preview-error-v2` took 213 and 214 on 10 November 2026. Main used 213 to 217 for the provider groundwork within hours, so before its merge the branch renumbered them:
+    - 213 became 218, the local `Host` and `Origin` that a previewed server gets.
+    - 214 became 219, the refusal of previews in a sandbox without the relay.
+  - Decision 148 names two records:
+    - the rule that only an image build installs the terminal files, in `plans/boat-native-remote-workspaces.md`
+    - the Overview that lists no suspensions, in `docs/protocol/operator-section.md` and the operator mockup
   - Decisions 150 and 151 each name two records:
     - the fold of the work of an ended turn, in `docs/protocol/chat-and-events.md` and `docs/protocol/agent-tools.md`
     - the first build of a new org, in `docs/protocol/org-image.md`, `docs/protocol/orgs-and-members.md`, and `docs/protocol/create-a-workspace.md`

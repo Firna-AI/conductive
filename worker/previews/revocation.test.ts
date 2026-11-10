@@ -7,6 +7,7 @@ import {
 } from '../../src/shared/previews'
 import { TEST_TIME } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
+import { relayResponse } from './relay.test-support'
 import { launchPreview } from './launch-test-support'
 import { barrier, bodySource, openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
@@ -79,7 +80,7 @@ it('cancels local HTTP streams on preview close, workspace revocation, and expir
   harness.dependencies.fetch = async (request) =>
     new URL(request.url).hostname === 'boat.dev'
       ? base(request)
-      : new Response(source.stream)
+      : relayResponse(source.stream)
   for (const action of ['close', 'workspace', 'expiry']) {
     const opened = await setup.handler.fetch(
       setup.request(previewsPath(setup.orgId, setup.workspaceId), {
@@ -124,7 +125,7 @@ it('blocks HTTP response data revoked by another handler after the stream opened
   harness.dependencies.fetch = async (request) =>
     new URL(request.url).hostname === 'boat.dev'
       ? base(request)
-      : new Response(source.stream)
+      : relayResponse(source.stream)
   const response = await setup.handler.proxy(
     setup.previewRequest(setup.previewUrl),
   )
@@ -163,7 +164,7 @@ it('rejects streamed uploads after workspace revocation or stop', async () => {
       const reader = request.body?.getReader()
       if (!reader) throw new Error('Missing request body')
       attached.resolve(reader)
-      return new Response('ok')
+      return relayResponse('ok')
     }
     const init = { method: 'POST', body: source.stream, duplex: 'half' }
     const pending = setup.handler.proxy(

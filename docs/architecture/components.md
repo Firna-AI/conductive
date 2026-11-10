@@ -120,6 +120,7 @@ Every org image holds the app's own sandbox software:
 
 - the agent runner, a Node program that runs as an always-on service
 - the terminal service, on a private port
+- the preview relay, on a private port
 - the agent tools: an MCP server and a CLI that create and list workspaces
 - a git credential helper that gets a fresh GitHub token for each git
   operation
@@ -139,6 +140,12 @@ address, as
 says. A runner of protocol version 1 gives the agent programs the agent
 login itself. Each sandbox keeps the runner of the org image that it starts
 from.
+
+The preview relay forwards each preview request to a local port of the
+sandbox. The previewed server then gets its local address as `Host`
+(decision 218).
+[Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
+states the rules of the relay.
 
 ## External services
 

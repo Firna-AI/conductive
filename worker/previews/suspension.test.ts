@@ -5,6 +5,7 @@ import { previewsPath } from '../../src/shared/previews'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
 import { handoffRequest, launchForm } from './launch-test-support'
+import { relayResponse } from './relay.test-support'
 import { barrier, bodySource, openPreview } from './stream-test-support'
 import { activeMember, suspendWorkspaceOwner } from './suspension-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
@@ -94,7 +95,7 @@ it('checks owner suspension before issuing grants or forwarding preview data fro
   harness.dependencies.fetch = async (request) =>
     new URL(request.url).hostname === 'boat.dev'
       ? base(request)
-      : new Response(source.stream)
+      : relayResponse(source.stream)
   const response = await setup.handler.proxy(setup.previewRequest())
   const reader = response.body?.getReader()
   const before = reader?.read()
