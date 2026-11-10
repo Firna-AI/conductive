@@ -149,12 +149,23 @@ If a share-setting change fails, the switch returns to its saved value.
 ## Understand access to credentials
 
 Conductive stores agent logins encrypted.
-Your ChatGPT sign-in stays outside the cloud computer.
-With a ChatGPT plan, Codex uses a temporary turn token through Conductive's model gateway.
-Code and members with terminal access can use that token while its turn runs.
-Other login kinds can reach older cloud computers.
+A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
+Each turn there gets a temporary credential called a turn token.
+Code and members with terminal access can read or copy that credential.
+They can use it only through Conductive while the turn runs.
+A copied token cannot start a new model request after the turn ends.
+Your ChatGPT sign-in never enters a cloud computer.
+An older cloud computer cannot run Codex with ChatGPT.
 The share switch does not hide credentials available on the computer.
 
+An older cloud computer starts from an earlier setup that still permits software to receive the agent login itself.
+Code and members with terminal access can read or copy that login during a turn.
+A copied login can remain usable after the turn ends.
+Installing newer software on that computer does not remove this risk.
+A new build gives the protection to new cloud computers created from its setup.
+Use **Build computer** and a new workspace to get the newer protection.
+
+The share switch does not hide either kind of credential from code or members with terminal access.
 Work in an org with people you trust with your agent and GitHub logins.
 
 - [Understand sessions and chat](/docs/sessions-and-chat)

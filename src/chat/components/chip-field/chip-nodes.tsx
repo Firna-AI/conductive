@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react'
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
   $create,
+  $getNodeByKey,
   $getState,
   $setState,
   createState,
   DecoratorNode,
   TextNode,
   type LexicalNode,
+  type NodeKey,
 } from 'lexical'
 import { WorkspaceChip } from '../../../../docs/mockups/src/components/chat/WorkspaceChip'
 import { chipOf, useChatLinks } from '../../links/LinksContext'
@@ -29,14 +32,27 @@ const linkStates = [
 
 /**
  * The chip in the field: the pure chip of the mockups, with the current
- * name and state of its workspace. It opens nothing. Until the field turns
- * a chip whose workspace left the list into text, it shows the link.
+ * name and state of its workspace. It opens nothing. The × of its state
+ * mark removes it as one step of undo, while the field takes changes.
+ * Until the field turns a chip whose workspace left the list into text, it
+ * shows the link.
  */
-function FieldChip(props: { source: string; href: string }) {
+function FieldChip(props: { source: string; href: string; nodeKey: NodeKey }) {
+  const [editor] = useLexicalComposerContext()
   const { links } = useChatLinks()
   const target = linkTarget(props.href, links)
   if (!target) return props.source
-  return <WorkspaceChip workspace={chipOf(target.workspace)} />
+  const chip = chipOf(target.workspace)
+  const remove = () => {
+    if (!editor.isEditable()) return
+    editor.update(() => $getNodeByKey(props.nodeKey)?.remove())
+  }
+  return (
+    <WorkspaceChip
+      removal={{ name: `${chip.label} ${chip.name}`, onRemove: remove }}
+      workspace={chip}
+    />
+  )
 }
 
 /**
@@ -80,6 +96,7 @@ export class WorkspaceChipNode extends DecoratorNode<ReactNode> {
     return (
       <FieldChip
         href={$getState(this, hrefState)}
+        nodeKey={this.getKey()}
         source={$getState(this, sourceState)}
       />
     )

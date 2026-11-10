@@ -144,11 +144,11 @@ deployment at `conductive.build`. It does not wait for CI, as
   [Website docs](docs/protocol/website-docs.md) gives the rules for the
   words of a guide.
 - The comparison page at `conductive.build/from-conductor` gives each
-  listed Conductor Cloud feature a status. Its rows live in
+  listed Conductor feature a status. Its rows live in
   `src/marketing/from-conductor/`. When a change ships, starts, or drops a
   listed feature, update the status of its row in the same change. The
   claim rules are in
-  [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md#statuses).
+  [Conductor comparison](docs/protocol/conductor-comparison.md#statuses).
 
 ## Product
 

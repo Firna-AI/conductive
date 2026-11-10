@@ -4,7 +4,8 @@ This page belongs to the [workspace lifecycle README](README.md). It
 describes the Durable Object of each workspace and of each image
 coordinator. It gives their names, the lifecycle steps, the alarm, the
 start logs, the event socket, and the event publication. It also gives the
-creates and resumes and the git credential sender.
+creates and resumes. [Routes](routes.md#the-git-credential-sender) gives
+the git credential sender.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
@@ -32,7 +33,7 @@ says:
   through the `turnEnded` hook. `turnDispatchFailed` also calls it for a
   turn that did not go out. These records keep the running sessions. They
   give no GitHub access, as
-  [The git credential sender](#the-git-credential-sender) says.
+  [The git credential sender](routes.md#the-git-credential-sender) says.
 - `reportRunnerLifecycle` takes only the runner events `runner.ready`,
   `turn.started`, and `start.updated`. `runnerLifecycleDisconnected` takes
   a disconnect.
@@ -45,6 +46,8 @@ A successful reply that still runs keeps its retry.
 The task checks its org's live ledger before each dispatch.
 An owner change or suspension lift keeps its queued work.
 An absent or deleted ledger entry ends that work.
+A retained archived computer is still the computer of its workspace. That
+workspace's lifecycle handles its suspension, so the Stop task has no case of its own for Archive.
 For an image coordinator, the alarm
 advances the running build or refresh by one step, or starts the daily
 refresh. A transient Boat error keeps the job step for the next alarm,
@@ -52,6 +55,10 @@ within the [retry window](image-builds.md#provider-retries), except a source
 command start. For a workspace object, it:
 
 - runs the queued start of a create or a resume, one phase at a time
+- finishes Archive initialization and uncertain allocation recovery before normal start work,
+  also after the Restore window, until the workspace row holds the recovered ID
+- stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline
+- clears Restore when the provider confirms that a retained computer is missing
 - repairs the running turns from the committed chat before its deadline
   and idle decisions, as
   [Turn recovery](recovery-and-shown-state.md#turn-recovery) says
@@ -76,7 +83,9 @@ scheduler of the object alarm. Each owner of a timed task stores its own
 due time there. The lifecycle owners are the lifecycle state, the start,
 and the publication of a create result. The `changed` retry, the delete of
 a failed create, the access stop, and the image coordinator are lifecycle
-owners too. The Mac devices, the previews, and GitHub store their due
+owners too. Archive owns `lifecycle:archive` separately. Its saved phases keep
+allocation recovery, stop confirmation, retention, and deletion across reconstruction.
+Its publication retries include confirmed deletion, even while the state stays archived. The Mac devices, the previews, and GitHub store their due
 times there too.
 
 - Each write that changes a due time sets the object alarm to the earliest
@@ -272,24 +281,9 @@ create and resume. The workspace object runs that start:
 
 ## The git credential sender
 
-`Workspace.credentialSender` maps the turn ID of a git credential request
-to a sender, in the chat queue. The [machine route](README.md#machine-route)
-gives the handler, which reads that turn ID from a request header.
-
-- A create that prepares its repository has its own grant. The start job
-  is a create in the `fetch` or `branch` phase, not cancelled or failed,
-  and its `turnId` matches. The grant gives the sender of the admitted
-  first message.
-- Otherwise the turn must be the running stored chat turn: the active
-  turn of an open session. `activeStoredTurn` in
-  [`access.ts`](../devices/access.ts) reads it. So access ends with the
-  turn, also after a queued Stop, a session close, or a login failure.
-- A stopped or archived workspace gives no sender. The lifecycle admission
-  keeps no turn record for the queued first message.
-
-`machine.test.ts` runs the route with `machineCredentialFixture` in
-[`machine-test-support.ts`](machine-test-support.ts), over the production
-chat and runner boundaries.
+[The git credential sender](routes.md#the-git-credential-sender) gives how
+`Workspace.credentialSender` maps the turn of a git credential request to
+its sender, beside the machine route.
 
 ## Turn recovery
 

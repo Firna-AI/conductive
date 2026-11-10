@@ -1,7 +1,10 @@
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
 import { TOOL_ENV } from '../../../tools/context'
 import { object, string } from '../parse'
-import { attachmentDescription } from './attachment-description'
+import {
+  attachmentDescription,
+  attachmentReadInstruction,
+} from './attachment-description'
 import { codexBinary } from './binaries'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
@@ -18,6 +21,19 @@ import type { ProviderFactory, ProviderInput } from './types'
 function input(command: ProviderInput) {
   return [
     { type: 'text', text: providerMessage(command.message), text_elements: [] },
+    ...(command.attachments.length
+      ? [
+          {
+            type: 'text',
+            text:
+              attachmentReadInstruction +
+              (command.message.attachments.some((file) => file.kind === 'image')
+                ? ' Each image is also in this message.'
+                : ''),
+            text_elements: [],
+          },
+        ]
+      : []),
     ...command.attachments.flatMap((attachment) => {
       const metadata = command.message.attachments.find(
         (item) => item.id === attachment.attachmentId,

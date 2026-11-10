@@ -10,11 +10,15 @@ import { isRunnerV1Login } from '../../src/shared/runner'
 import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { parseCodexTokens, parseCodexIdentity } from '../codex-auth/tokens'
-import type { RunnerDispatchCommand } from './types'
+import type { ResolvedCommand } from './types'
 
-export function legacyRunnerCommand(
-  command: RunnerDispatchCommand,
-): RunnerCommandV1 {
+export function compatibilityFailure(login: RunnerLogin): string {
+  if (login.agent === 'codex' && login.kind === 'token')
+    return 'This cloud computer cannot run Codex with ChatGPT. Ask an admin to build the org image again. Then start a new workspace. You can also connect an OpenAI API key.'
+  return 'This cloud computer cannot use this agent login. Ask an admin to build the org image again. Then start a new workspace.'
+}
+
+export function legacyRunnerCommand(command: ResolvedCommand): RunnerCommandV1 {
   if (command.type !== 'turn' && command.type !== 'message') return command
   if (!isRunnerV1Login(command.login))
     throw new Error('The runner cannot use this login kind.')
@@ -23,7 +27,7 @@ export function legacyRunnerCommand(
 
 /** The caller holds the chat queue and has committed the turn's running state. */
 export async function gatewayRunnerCommand(
-  command: RunnerDispatchCommand,
+  command: ResolvedCommand,
   workspaceId: string,
   forRunningTurn: WorkspaceTurnTokens['forRunningTurn'],
 ): Promise<RunnerCommandV2 | null> {

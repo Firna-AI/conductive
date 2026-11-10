@@ -12,6 +12,7 @@ import {
   type DispatchState,
 } from './ordered-dispatch'
 import {
+  compatibilityFailure,
   gatewayRunnerCommand,
   legacyRunnerCommand,
 } from './runner-gateway-command'
@@ -21,15 +22,10 @@ import type {
   ActiveRunner,
   ChatDependencies,
   PendingCommand,
-  RunnerDispatchCommand,
+  PreparedCommand,
+  ResolvedCommand,
 } from './types'
 import { AttachmentPreparation } from './attachment-delivery'
-
-function compatibilityFailure(login: RunnerLogin): string {
-  if (login.agent === 'codex' && login.kind === 'token')
-    return 'This cloud computer cannot run Codex with ChatGPT. Ask an admin to build the org image again. Then start a new workspace. You can also connect an OpenAI API key.'
-  return 'This cloud computer cannot use this agent login. Ask an admin to build the org image again. Then start a new workspace.'
-}
 
 export class RunnerDelivery {
   private readonly preparations: AttachmentPreparation
@@ -104,7 +100,7 @@ export class RunnerDelivery {
     advance: () => void,
   ): Promise<DispatchState> {
     if (!isCurrent() || active.delivered.has(command.commandId)) return 'skip'
-    let prepared: DispatchResult<RunnerDispatchCommand>
+    let prepared: DispatchResult<PreparedCommand>
     try {
       prepared = await this.command(active, command)
     } catch (error) {
@@ -113,12 +109,23 @@ export class RunnerDelivery {
       return 'skip'
     }
     if (prepared.state !== 'send') return prepared.state
-    const outbound = prepared.command
-    if (outbound.type === 'turn' || outbound.type === 'message') {
-      const state = await this.preparations.check(active, outbound, isCurrent)
+    const checked = prepared.command
+    if (checked.type === 'turn' || checked.type === 'message') {
+      const state = await this.preparations.check(active, checked, isCurrent)
       if (state !== 'send') return state
     }
     await this.store.reportTurnEnds()
+    const outbound: ResolvedCommand =
+      checked.type === 'turn' || checked.type === 'message'
+        ? {
+            ...checked,
+            attachments: await this.dependencies.resolveAttachmentPaths(
+              active.workspace.id,
+              checked.message.sender.id,
+              checked.attachments,
+            ),
+          }
+        : checked
     const publish = async (
       event: WorkspaceEventEnvelope['event'],
       occurredAt?: number,
@@ -185,7 +192,7 @@ export class RunnerDelivery {
   private async command(
     active: ActiveRunner,
     command: PendingCommand,
-  ): Promise<DispatchResult<RunnerDispatchCommand>> {
+  ): Promise<DispatchResult<PreparedCommand>> {
     const state = await this.store.read(active.workspace.id, (view) =>
       commandDispatchState(view, command),
     )
@@ -231,16 +238,27 @@ export class RunnerDelivery {
       )
       return this.unavailable(active.workspace.id, command)
     }
+    const fields = {
+      commandId: command.commandId,
+      sessionId: command.sessionId,
+      turnId: command.turnId,
+      message: { ...message, state: 'sent' as const },
+      attachments: command.attachments,
+      login,
+    }
+    if (command.type === 'message')
+      return { state: 'send', command: { type: 'message', ...fields } }
+    const turn = await this.store.read(active.workspace.id, (view) =>
+      view.turn(command.turnId),
+    )
     return {
       state: 'send',
       command: {
-        type: command.type,
-        commandId: command.commandId,
-        sessionId: command.sessionId,
-        turnId: command.turnId,
-        message: { ...message, state: 'sent' },
-        attachments: command.attachments,
-        login,
+        type: 'turn',
+        ...fields,
+        commitAuthor: turn
+          ? await this.dependencies.readCommitAuthor(turn.senderId)
+          : null,
       },
     }
   }
@@ -248,7 +266,7 @@ export class RunnerDelivery {
   private unavailable(
     workspaceId: string,
     command: PendingCommand,
-  ): Promise<DispatchResult<RunnerDispatchCommand>> {
+  ): Promise<DispatchResult<PreparedCommand>> {
     return this.store.read(workspaceId, async (view) => ({
       state: (await view.command(command.commandId)) ? 'wait' : 'skip',
     }))

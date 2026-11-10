@@ -20,8 +20,14 @@ export async function enqueueWorkspaceStart(
   intent: WorkspaceStartIntent,
 ): Promise<boolean> {
   const retry = intent.kind === 'retry-failed-create'
+  const retained = intent.kind === 'resume-retained-create'
   const completed = await storage.creationResult()
-  if (job.kind === 'create' && completed && (completed.ok || !retry))
+  if (
+    job.kind === 'create' &&
+    completed &&
+    !retained &&
+    (completed.ok || !retry)
+  )
     return false
   if (await storage.job()) return false
   await requireActiveStartUsers(env.DB, job)

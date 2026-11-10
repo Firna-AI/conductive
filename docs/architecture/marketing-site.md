@@ -8,8 +8,8 @@ decision number names a dated record, as
 ## Responsibilities
 
 - Static pages at the root of `conductive.build`: the home page, the public
-  docs, the Terms and Privacy pages, and the Conductor Cloud comparison
-  page. Visitors see them without a sign-in.
+  docs, the pricing page, the Terms and Privacy pages, and the Conductor
+  comparison page. Visitors see them without a sign-in.
 - Astro builds these pages ahead of time. The Worker serves the built files
   on `conductive.build`. It fills in the values of each request, such as
   the app address in the sign-in links and the year in the footer.
@@ -46,14 +46,31 @@ decision number names a dated record, as
 ## The comparison page
 
 - The page at `conductive.build/from-conductor` shows people who move from
-  Conductor Cloud the status of each Conductor Cloud feature in Conductive.
-  [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)
+  Conductor the status of each Conductor feature in Conductive, local and
+  cloud. [Conductor comparison](../protocol/conductor-comparison.md)
   states its requirements.
-- Its rows are content of the site. The team checks them against the
-  product, and a change to a row is a change to the repository.
-- No component computes a status while the site runs. The page reads
-  nothing from the app, the API, or a sandbox.
+- Its rows and the time of their last full check are content of the site.
+  The team checks the rows against the product and sets that time. A
+  change to either is a change to the repository.
+- No component computes a status or the check time while the site runs.
+  The page reads nothing from the app, the API, or a sandbox.
 - The site build and the mockup catalogue read the same rows, so the page
   and its mockup show the same words.
 - The page shows a status and a short note for each row. The evidence
   behind a status stays out of the page and out of its rows.
+
+## The pricing page
+
+- The page at `conductive.build/pricing` shows the plans, the prices, and
+  the cloud hours. [Pricing](../protocol/pricing.md) states its
+  requirements.
+- Its plans and words are content of the site, as the rows of the
+  comparison page are. A change to a price is a change to the repository.
+- No component computes a price or reads a plan while the site runs. The
+  page reads nothing from the app, the API, a sandbox, or a payment
+  provider.
+- The site build and the mockup catalogue read the same plans and words, so
+  the page and its mockup show the same prices.
+- The page sells nothing. It has no checkout, and it links no payment
+  provider. Billing is a planned change, as
+  [Planned changes](../protocol/pricing.md#planned-changes) says.

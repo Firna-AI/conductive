@@ -1,8 +1,10 @@
 import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
 import type { AgentChatEvent } from './chat-events'
+import type { CommitAuthor } from './commit-author'
 import type { RunnerFileEvent } from './files'
 import type { UserMessage } from './messages'
+import type { RunnerPortsUpdated } from './ports'
 import type { RunnerFileCommand, RunnerFileResponse } from './runner-files'
 import type { WorkspaceStart } from './workspaces'
 
@@ -47,6 +49,7 @@ export interface RunnerEventEnvelope {
 export type RunnerEvent =
   | AgentChatEvent
   | RunnerFileEvent
+  | RunnerPortsUpdated
   | { type: 'runner.ready' }
   | { type: 'start.updated'; start: WorkspaceStart }
   | { type: 'workspace.title'; name: string }
@@ -177,7 +180,7 @@ export type RunnerTurnCredential =
 
 export interface RunnerAttachment {
   attachmentId: string
-  /** The backend puts the attachment here before it sends the message. */
+  /** Absolute path in the workspace repository, after the backend copies the file. */
   path: string
 }
 
@@ -191,6 +194,7 @@ interface RunnerTurnV1 {
   /** The session starter owns this login, whoever sent the message. */
   login: RunnerLoginV1
   credential?: never
+  commitAuthor: CommitAuthor | null
 }
 
 interface RunnerMessageDuringTurnV1 {
@@ -238,7 +242,11 @@ export interface RunnerChangeModel {
 }
 
 export type RunnerReportKind =
-  'files.snapshot' | 'changes.updated' | 'start.updated' | 'workspace.title'
+  | 'files.snapshot'
+  | 'changes.updated'
+  | 'start.updated'
+  | 'workspace.title'
+  | 'ports.updated'
 
 /** Request a complete current report. Transport redelivery keeps the command ID. */
 export interface RunnerReportRefresh {

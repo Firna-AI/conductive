@@ -11,6 +11,7 @@ import {
   checkRunnerEnvelopeBytes,
   checkRunnerEventLimits,
 } from './runner-event-limits'
+import { checkDisplayedPortReport } from './port-reports'
 
 export interface IncomingRunnerEnvelope {
   type: 'event'
@@ -82,6 +83,8 @@ export function parseRunnerOutputEnvelope(
   input: RunnerEventEnvelope,
 ): RunnerEventEnvelope {
   const parsed = parseRunnerPayload(input)
+  if (parsed.event.type === 'ports.updated')
+    checkDisplayedPortReport(parsed.event)
   if (
     parsed.event.type !== 'files.snapshot' &&
     parsed.event.type !== 'files.changed' &&

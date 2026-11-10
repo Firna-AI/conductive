@@ -19,9 +19,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'mentions',
     area: 'agents-and-chat',
     name: 'Mentions',
-    status: 'in-progress',
-    note: 'File and folder mentions in the message box are in progress. Teammate and pull request mentions remain under consideration.',
-    due: null,
+    status: 'available',
+    note: 'Type @ to mention workspace files or folders in chat. Teammate and pull request mentions remain under consideration.',
   },
   {
     id: 'attachments',
@@ -156,6 +155,13 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     name: 'Agent-to-agent messages',
     status: 'considering',
     note: 'Agents can create another workspace with a first message. Messages to existing sessions are under consideration.',
+  },
+  {
+    id: 'codex-personalities',
+    area: 'agents-and-chat',
+    name: 'Codex personalities',
+    status: 'considering',
+    note: 'Codex personality settings are under consideration. Describe the working style that you want in your message.',
   },
   {
     id: 'voice-mode',

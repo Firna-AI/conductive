@@ -65,6 +65,10 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
           token: client.token,
           ...(tokenMode ? { account: codexAccount } : {}),
         },
+        commitAuthor: {
+          name: 'Octocat',
+          email: '7+octocat@users.noreply.github.com',
+        },
       })
       expect(client.token.startsWith(prefix)).toBe(true)
       expect(turnTokenRoute(client.token)).toEqual({

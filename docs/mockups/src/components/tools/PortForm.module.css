@@ -1,0 +1,118 @@
+/*
+ * The servers fill the panel from its top and scroll, as the file lists do,
+ * so a long list never pushes the Other port row out of the panel.
+ */
+.list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 6px 8px 16px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.intro {
+  margin: 0;
+  padding: 4px 8px 6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row is a button in the height and the hover fill of a file row. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: var(--ui-row-height);
+  min-height: var(--ui-touch-min);
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--ui-radius-md);
+  background: none;
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: var(--ui-text-md);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.row:hover {
+  background: var(--ui-soft);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}
+
+/* The ports line up in one column, so the names start at one edge. */
+.number {
+  flex-shrink: 0;
+  min-width: 5ch;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  flex-shrink: 0;
+  max-width: 50%;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+}
+
+/*
+ * The folder ends the row. The right-to-left box puts the "…" of a folder
+ * that does not fit at its start, so its end stays, and the inner
+ * left-to-right span keeps the order of the path.
+ */
+.folder {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  direction: rtl;
+}
+
+/* The smaller row of the port field, under the servers. */
+.other {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 8px 0;
+  border-top: 1px solid var(--ui-border);
+}
+
+.otherLabel {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}
+
+.open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.port {
+  width: 88px;
+}

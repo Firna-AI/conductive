@@ -18,6 +18,8 @@ import {
   textParts,
   type WorkspaceLinks,
 } from '../../links/workspace-links'
+import { mentionParts, type Mention } from '../../mentions/mention-text'
+import { findMentioned, type MentionTree } from '../../mentions/MentionsContext'
 import {
   $createLinkTextNode,
   $createWorkspaceChipNode,
@@ -25,6 +27,21 @@ import {
   $isWorkspaceChipNode,
 } from './chip-nodes'
 import { joinFieldParts, type FieldPart } from './field-text'
+import {
+  $createFileMentionNode,
+  $createMentionTextNode,
+  $isFileMentionNode,
+} from './file-mention-nodes'
+
+/**
+ * What the field finds its chips in: the workspaces of the org, and the
+ * file tree of the workspace. `tree` is null in a field that takes no
+ * mentions, such as the message of New workspace.
+ */
+export interface FieldSources {
+  links: WorkspaceLinks
+  tree: MentionTree | null
+}
 
 /** Text as the nodes of a plain text field: text, line breaks, and tabs. */
 function $rawNodes(text: string): LexicalNode[] {
@@ -40,16 +57,8 @@ function $rawNodes(text: string): LexicalNode[] {
     )
 }
 
-/**
- * The nodes of a plain text from a paste or a draft. A link to a workspace
- * of the list becomes a chip. A link to a page of a workspace of the org
- * that the list does not hold yet stays text that can become a chip later.
- * Every other link stays text.
- */
-export function $fieldNodes(
-  text: string,
-  links: WorkspaceLinks,
-): LexicalNode[] {
+/** The nodes of plain text, where each workspace link can be a chip. */
+function $linkNodes(text: string, links: WorkspaceLinks): LexicalNode[] {
   return textParts(text).flatMap((part): LexicalNode[] => {
     if (part.kind !== 'link') return $rawNodes(part.text)
     if (linkTarget(part.href, links)) {
@@ -62,10 +71,41 @@ export function $fieldNodes(
   })
 }
 
+/**
+ * The node of a mention: a chip when the tree holds its entry, else text
+ * that can become a chip when the tree holds it later.
+ */
+function $mentionNode(mention: Mention, tree: MentionTree): LexicalNode {
+  return findMentioned(tree, mention.path, mention.folder)
+    ? $createFileMentionNode(mention.source)
+    : $createMentionTextNode(mention.source)
+}
+
+/**
+ * The nodes of a plain text from a paste or a draft. A link to a workspace
+ * of the list becomes a chip. A link to a page of a workspace of the org
+ * that the list does not hold yet stays text that can become a chip later.
+ * Every other link stays text. Where the field takes mentions, a mention of
+ * an entry of the tree becomes a chip, and every other mention stays text
+ * that can become a chip later.
+ */
+export function $fieldNodes(
+  text: string,
+  sources: FieldSources,
+): LexicalNode[] {
+  const { tree } = sources
+  if (!tree) return $linkNodes(text, sources.links)
+  return mentionParts(text).flatMap((part): LexicalNode[] =>
+    part.kind === 'text'
+      ? $linkNodes(part.text, sources.links)
+      : [$mentionNode(part, tree)],
+  )
+}
+
 /** Puts a plain text in the field, with its chips, in place of its content. */
-export function $setFieldText(text: string, links: WorkspaceLinks): void {
+export function $setFieldText(text: string, sources: FieldSources): void {
   const paragraph = $createParagraphNode()
-  paragraph.append(...$fieldNodes(text, links))
+  paragraph.append(...$fieldNodes(text, sources))
   $getRoot().clear().append(paragraph)
 }
 
@@ -73,6 +113,9 @@ export function $setFieldText(text: string, links: WorkspaceLinks): void {
 function partOf(node: LexicalNode, from = 0, to?: number): FieldPart | null {
   if ($isWorkspaceChipNode(node)) {
     return { kind: 'chip', source: node.getTextContent() }
+  }
+  if ($isFileMentionNode(node)) {
+    return { kind: 'chip', source: node.getTextContent(), mention: true }
   }
   if ($isLineBreakNode(node)) return { kind: 'text', text: '\n' }
   if ($isTextNode(node)) {

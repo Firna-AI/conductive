@@ -39,6 +39,7 @@ export function turn(
       state: 'sent',
     },
     attachments: [],
+    commitAuthor: null,
     credential:
       agent === 'claude'
         ? { agent, kind: 'token', token: `secret-${sender}` }
@@ -57,8 +58,13 @@ export function duringTurn(command: RunnerTurn): RunnerMessageDuringTurnV2 {
   }
 }
 
-export async function runnerHarness() {
+export async function runnerHarness(
+  beforeStart?: (
+    repository: Awaited<ReturnType<typeof repositoryFixture>>,
+  ) => Promise<void>,
+) {
   const repository = await repositoryFixture()
+  await beforeStart?.(repository)
   const endpoint = new FakeDurableObjectEndpoint({
     workspaceId: 'workspace-1',
     workspaceToken: 'workspace-secret',

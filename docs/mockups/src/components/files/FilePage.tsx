@@ -101,16 +101,33 @@ function ViewSwitch() {
   )
 }
 
+/** The page shows the diff of a changed file. */
+function isDiff(view: FileTabView): boolean {
+  return view === 'diff' || view === 'masked-diff'
+}
+
 /**
  * A file, a code preview, or a diff as a full page: a tab of the centre
  * column on desktop, and a page of the Files tab on a phone. The header
  * shows the label of the path, and the actions on the file. A file whose
  * name the app does not know shows "File".
+ *
+ * `placeholder` shows in place of the content, such as the state of a
+ * sandbox that starts. The page then reads nothing, so its header has no
+ * Download, no Copy, and no line count. A diff keeps its changed lines,
+ * which come from the list of changes.
  */
-export function FilePage(props: { view: FileTabView; back?: BackLink }) {
+export function FilePage(props: {
+  view: FileTabView
+  back?: BackLink
+  placeholder?: ReactNode
+}) {
   const spec = specFor(props.view)
   const { folder, name } = splitPath(spec.path)
   const Icon = spec.icon
+  const waiting = props.placeholder !== undefined
+  const closed = spec.closed === true || waiting
+  const meta = waiting && !isDiff(props.view) ? undefined : spec.meta
   return (
     <section aria-label={name} className={styles.page}>
       <div className={styles.header}>
@@ -126,21 +143,21 @@ export function FilePage(props: { view: FileTabView; back?: BackLink }) {
             {folder ? <span className={styles.folder}>{folder}/</span> : null}
             <span className={styles.name}>{name}</span>
           </span>
-          {spec.closed ? null : (
+          {closed ? null : (
             <IconButton icon={Download} label={`Download ${name}`} />
           )}
         </div>
         <div className={styles.end}>
-          {spec.meta ? <span className={styles.meta}>{spec.meta}</span> : null}
+          {meta ? <span className={styles.meta}>{meta}</span> : null}
           <IconButton
-            disabled={spec.closed}
+            disabled={closed}
             icon={Copy}
             label={`Copy the text of ${name}`}
           />
           {props.view === 'markdown' ? <ViewSwitch /> : null}
         </div>
       </div>
-      <div className={styles.body}>{spec.content}</div>
+      <div className={styles.body}>{props.placeholder ?? spec.content}</div>
     </section>
   )
 }

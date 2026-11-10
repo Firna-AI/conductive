@@ -2,15 +2,18 @@ import { useState, type Ref } from 'react'
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary'
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
 import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin'
 import fieldStyles from '../../../../docs/mockups/src/components/chat/ChipTextField.module.css'
 import { classes } from '../../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../../docs/mockups/src/components/common/touch'
 import { useChatLinks } from '../../links/LinksContext'
+import { useMentionTree } from '../../mentions/MentionsContext'
 import { LinkTextNode, WorkspaceChipNode } from './chip-nodes'
 import local from './chip-field.module.css'
 import { $setFieldText } from './field-content'
+import { FileMentionNode, MentionTextNode } from './file-mention-nodes'
+import { MentionPlugin, MentionReconcilePlugin } from './mention-plugins'
+import { UndoPlugin } from './undo-plugin'
 import {
   CopyPlugin,
   EditablePlugin,
@@ -56,13 +59,21 @@ export interface ChipTextFieldProps {
    * with a kept draft. See `CaretAtEndPlugin`.
    */
   caretAtEnd?: boolean
+  /**
+   * Where the list of `@` opens, just above the message box. A field inside
+   * the files of a chat, as `MentionsProvider` gives them, offers the list.
+   */
+  mentionHost?: HTMLElement | null
 }
 
 /**
  * The text field of a message box that holds a chip for each workspace
  * link: plain text, where each chip is one unit of the text. A paste and a
  * draft that comes back turn each workspace link into a chip, and typed
- * text stays text. The draft stays plain text, with the link of each chip.
+ * text stays text. Inside the files of a chat, `@` also opens the list of
+ * the files and folders of the workspace, and a pick, a paste, or a draft
+ * shows each mention of an entry as a file chip. The draft stays plain
+ * text, with the link of each chip and the mention of each file chip.
  * The field has the type and the line heights of the plain text field, and
  * it grows from `lines` to `maxLines`, then scrolls. On a phone its text is
  * larger. The chips find their workspaces through `LinksProvider`. The
@@ -70,14 +81,15 @@ export interface ChipTextFieldProps {
  */
 export function ChipTextField(props: ChipTextFieldProps) {
   const { links } = useChatLinks()
+  const tree = useMentionTree()
   const touch = useControlSizes().field === 'lg'
   const editable = props.editable ?? true
   const [initialConfig] = useState(() => ({
     namespace: 'Message',
-    nodes: [WorkspaceChipNode, LinkTextNode],
+    nodes: [WorkspaceChipNode, LinkTextNode, FileMentionNode, MentionTextNode],
     theme: { paragraph: local.paragraph },
     editable,
-    editorState: () => $setFieldText(props.value, links),
+    editorState: () => $setFieldText(props.value, { links, tree }),
     onError: (error: Error) => {
       throw error
     },
@@ -109,7 +121,7 @@ export function ChipTextField(props: ChipTextFieldProps) {
           }
         />
       </div>
-      <HistoryPlugin />
+      <UndoPlugin />
       <ValuePlugin
         onChangeText={props.onChangeText}
         owner={props.owner}
@@ -122,6 +134,12 @@ export function ChipTextField(props: ChipTextFieldProps) {
       <ReconcilePlugin />
       <FocusPlugin handle={props.handle} />
       {props.caretAtEnd ? <CaretAtEndPlugin /> : null}
+      {tree ? (
+        <>
+          <MentionPlugin host={props.mentionHost ?? null} />
+          <MentionReconcilePlugin />
+        </>
+      ) : null}
     </LexicalComposer>
   )
 }

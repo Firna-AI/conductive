@@ -26,7 +26,8 @@ import {
 export interface SandboxResourceIntent {
   kind: 'sandbox'
   input: SandboxStart
-  ownership: ComputerOwnership
+  /** Null only for a computer that no org owns. Its own record keeps it. */
+  ownership: ComputerOwnership | null
   mayHaveAllocated: boolean
   persist(input: SandboxStart): Promise<void>
 }
@@ -63,10 +64,12 @@ export async function createResource(
 ): Promise<Sandbox | SavedSnapshot> {
   if (intent.kind === 'sandbox') {
     await intent.persist(intent.input)
+    const ownership = intent.ownership
+    if (!ownership) return provider.create(intent.input)
     const firstDispatch = await recordComputerIntent(
       db,
       intent.input.idempotencyKey,
-      intent.ownership,
+      ownership,
       intent.mayHaveAllocated,
     )
     let sandbox: Sandbox
@@ -87,16 +90,11 @@ export async function createResource(
         await rejectComputerIntent(
           db,
           intent.input.idempotencyKey,
-          intent.ownership.providerAccount,
+          ownership.providerAccount,
         )
       throw error
     }
-    await attachComputer(
-      db,
-      intent.input.idempotencyKey,
-      sandbox.id,
-      intent.ownership,
-    )
+    await attachComputer(db, intent.input.idempotencyKey, sandbox.id, ownership)
     return sandbox
   }
   if (intent.recorded) {
@@ -146,9 +144,11 @@ export function buildSandboxIntent(
     },
     input: {
       snapshotName:
-        job.previousProviderAccount === job.providerAccount
-          ? (job.previousImageName ?? undefined)
-          : undefined,
+        (job.previousProviderAccount === job.providerAccount
+          ? job.previousImageName
+          : null) ??
+        job.softwareImageName ??
+        undefined,
       name: `image-${job.buildId}`,
       env: repositoryEnvironment(
         capturedRepositoryLocations(

@@ -23,18 +23,37 @@ afterEach(() => {
 it('starts and resumes ChatGPT turns from a credential file through the gateway', async () => {
   vi.stubEnv('OPENAI_API_KEY', 'inherited-real-key')
   vi.stubEnv('CODEX_HOME', '/inherited-home')
+  vi.stubEnv('GIT_AUTHOR_NAME', 'Inherited Author')
+  vi.stubEnv('GIT_AUTHOR_EMAIL', 'inherited-author@example.test')
+  vi.stubEnv('GIT_COMMITTER_NAME', 'Inherited Committer')
+  vi.stubEnv('GIT_COMMITTER_EMAIL', 'inherited-committer@example.test')
   const h = await codexTokenFixture(
     'HTTPS://MACHINE.test/v1/model/codex/backend-api/',
   )
+  h.options.commitAuthor = {
+    name: 'ChatGPT Author',
+    email: 'chatgpt-author@example.test',
+  }
   const directories: string[] = []
   for (const conversationId of [null, 'saved-thread']) {
-    expect(parseWorkspaceMessage(h.command)).toEqual(h.command)
+    expect(parseWorkspaceMessage(h.command, () => {})).toEqual(h.command)
     const provider = await createCodexFactory(h.start)({
       ...h.options,
       conversationId,
     })
     onTestFinished(() => provider.close())
     const request = h.servers.requests.at(-1)
+    expect({
+      GIT_AUTHOR_NAME: request?.env.GIT_AUTHOR_NAME,
+      GIT_AUTHOR_EMAIL: request?.env.GIT_AUTHOR_EMAIL,
+      GIT_COMMITTER_NAME: request?.env.GIT_COMMITTER_NAME,
+      GIT_COMMITTER_EMAIL: request?.env.GIT_COMMITTER_EMAIL,
+    }).toEqual({
+      GIT_AUTHOR_NAME: 'ChatGPT Author',
+      GIT_AUTHOR_EMAIL: 'chatgpt-author@example.test',
+      GIT_COMMITTER_NAME: 'ChatGPT Author',
+      GIT_COMMITTER_EMAIL: 'chatgpt-author@example.test',
+    })
     const codexHome = request?.env.CODEX_HOME ?? ''
     expect(codexHome).not.toBe(codexStorageHome(h.options.home))
     expect(codexHome).toMatch(/\/session-homes\/session-[a-f0-9]{64}$/)

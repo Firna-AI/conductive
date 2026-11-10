@@ -73,7 +73,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It gives each turn its turn token. For each model request, it tells the
   model gateway whether the token still works and which login the turn
   uses.
-- It also holds the start steps, the stop timer, and the banner state.
+- It also holds the start steps, the stop timer, the delete timer of an
+  archived workspace, and the banner state.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace
@@ -125,11 +126,19 @@ Every org image holds the app's own sandbox software:
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 
+The Worker builds one software image for each version of this software,
+when the deploy run asks. The software image holds the base image and this
+software, and no org data. A build of an org without an org image starts
+from it, so that build installs none of this software.
+
 The agent runner runs Claude through the Claude Agent SDK, with the agent
 program that the SDK bundles at its own version. A pinned version guards
 against a change in how the agent program reads its credential and its
 model address. The runner runs Codex through the Codex SDK or the Codex
 App Server (decision 36).
+
+The runner finds the listening ports in the sandbox itself, with no Boat
+call (decision 220).
 
 A runner of protocol version 2 or later makes both agent programs send
 their model requests to the [model gateway](../protocol/model-gateway.md). It
@@ -147,6 +156,11 @@ sandbox. The previewed server then gets its local address as `Host`
 [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
 states the rules of the relay.
 
+The Worker gives each sandbox the commit author of its workspace owner.
+The agent runner gives each agent the commit author of the sender of its
+turn. [Commit author](../protocol/github-tokens.md#commit-author) states
+the rules.
+
 ## External services
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the
@@ -163,4 +177,5 @@ states the rules of the relay.
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. The app is free, with no limits (decision 81).
+  snapshot. Use of the app is free until billing starts, as
+  [Pricing](../protocol/pricing.md) says.

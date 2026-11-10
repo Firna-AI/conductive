@@ -79,6 +79,9 @@ decision number names a decision of the change that adds the
 - Every Boat call names that organization. A Boat user can reach several
   organizations, so a change of the active one in Boat moves no work of
   the app.
+- The deploy run never gets the key. It asks the Worker to build the
+  [software image](org-image.md#the-software-image) with a token of its
+  own.
 
 ## What a sandbox holds
 
@@ -88,8 +91,13 @@ decision number names a decision of the change that adds the
   env vars of its org.
 - The sandbox gets them at create and at each resume. A changed secret
   applies at the next start.
+- The restart of an archived sandbox near day 14 gets neither of them, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says.
 - No saved snapshot holds these secrets. Builds and refreshes get none of
   them.
+- The software image holds no org data and no secret, because every org
+  uses it. Its build sandbox starts with no env var, no token, and no
+  repository.
 - A sandbox gets no agent login at a start. The next section says how
   each turn uses an agent login.
 - GitHub access reaches a workspace sandbox only through the git credential

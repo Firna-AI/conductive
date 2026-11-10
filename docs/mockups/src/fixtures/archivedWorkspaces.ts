@@ -19,10 +19,10 @@ export const postcodeLookup = workspace(
 )
 
 /**
- * The archived workspaces of Acme, the last archived first. Their cloud
- * computers are deleted, and their chats stay read-only. The list keeps
- * them in its Archived group, which stays closed until the user opens it,
- * and a chip still finds each of them, with the archived state.
+ * The archived workspaces of Acme, the last archived first. Their chats
+ * stay read-only. The list keeps them in its Archived group, which stays
+ * closed until the user opens it, and a chip still finds each of them,
+ * with the archived state.
  */
 export const archivedWorkspaceList: readonly Workspace[] = [
   workspace('checkout-redesign', 'Checkout page redesign', {
@@ -58,3 +58,13 @@ export const archivedWorkspaceList: readonly Workspace[] = [
   ),
   postcodeLookup,
 ]
+
+/**
+ * The archived workspaces whose cloud computers the app still keeps: each
+ * was archived less than 14 days ago, so Restore brings it back. The app
+ * deleted the cloud computers of the older ones.
+ */
+export const keptArchives: ReadonlySet<string> = new Set([
+  'checkout-redesign',
+  'black-friday-banner',
+])

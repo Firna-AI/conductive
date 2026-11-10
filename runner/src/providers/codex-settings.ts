@@ -5,7 +5,11 @@ import type { JsonRpc } from './rpc'
 import type { ProviderOptions } from './types'
 
 export function codexSettings(options: ProviderOptions) {
-  const env = providerEnvironment(options.home, options.tools)
+  const env = providerEnvironment(
+    options.home,
+    options.tools,
+    options.commitAuthor,
+  )
   const tokenMode =
     options.credential.type === 'gateway' &&
     options.credential.agent === 'codex' &&

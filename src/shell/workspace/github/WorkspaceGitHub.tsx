@@ -69,7 +69,7 @@ function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
 /**
  * The pull request bar at the top of the right column, or the row under the
  * header of a phone, whose pull request opens the Checks tab. After a merge,
- * Archive opens the app's Archive question.
+ * Archive archives the workspace at once.
  */
 export function PullRequestPart(props: { context: WorkspaceContext }) {
   const { context } = props
@@ -94,6 +94,7 @@ export function PullRequestPart(props: { context: WorkspaceContext }) {
     <PullRequestBar
       github={github}
       now={now}
+      archiving={context.running === 'archive'}
       onArchive={context.archive}
       viewer={{ id: context.viewer.id, role: context.org.role }}
       workspace={context.workspace}

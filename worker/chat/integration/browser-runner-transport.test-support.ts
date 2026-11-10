@@ -12,6 +12,7 @@ import type { OuterRuntime } from './outer-runtime.test-support'
 import { requestRunner } from './runner-socket.test-support'
 
 export class BrowserRunnerTransport {
+  readonly warnings: string[] = []
   private socket: WebSocket | undefined
   private connecting: Promise<void> | undefined
   private stopped = true
@@ -102,7 +103,9 @@ export class BrowserRunnerTransport {
         if (typeof event.data !== 'string')
           throw new Error('Expected a text runner command.')
         const input: unknown = JSON.parse(event.data)
-        const message = parseWorkspaceMessage(input)
+        const message = parseWorkspaceMessage(input, (warning) =>
+          this.warnings.push(warning),
+        )
         if (message.type === 'welcome') {
           this.welcomed = true
           this.error = null

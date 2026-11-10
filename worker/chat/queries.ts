@@ -53,7 +53,7 @@ export async function updateWorkspaceTitle(
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE workspaces SET name = ?, updated_at = ?
+      `UPDATE workspaces SET name = ?, updated_at = MAX(updated_at, ?)
     WHERE id = ? AND name = '' AND ${automaticTitleWorkspacePredicate}`,
     )
     .bind(name, now, workspaceId)

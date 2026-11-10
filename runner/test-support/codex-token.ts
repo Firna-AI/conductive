@@ -63,6 +63,7 @@ export async function codexTokenFixture(requiredBase?: string) {
     sessionId: command.sessionId,
     endpoint: 'https://machine.test/v1/model/codex',
     credential: { type: 'gateway', ...command.credential },
+    commitAuthor: command.commitAuthor,
     choice: command.message.choice,
     conversationId: null,
     instructions: '',

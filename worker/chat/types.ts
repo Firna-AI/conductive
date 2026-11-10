@@ -1,14 +1,15 @@
 import type { Agent, AgentChoice } from '../../src/shared/agents'
+import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { PendingTurn } from '../lifecycle/workspace-runtime'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
 import type { Attachment, MessageDraft } from '../../src/shared/messages'
 import type {
   RunnerAttachment,
   RunnerChangeModel,
+  RunnerCommandV1,
   RunnerInterrupt,
   RunnerLogin,
   RunnerLoginKind,
-  RunnerCommandV1,
   WorkspaceToRunnerV1,
   WorkspaceToRunnerV2,
   RunnerEventEnvelope,
@@ -81,6 +82,20 @@ export interface ModelSessionCreation {
   draft: MessageDraft
 }
 
+/** Only live runner commands carry absolute attachment paths. */
+export interface StoredAttachment {
+  attachmentId: string
+  relativePath: string
+}
+
+export type PreparedMessageCommand = (
+  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments' | 'login'>
+  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments' | 'login'>
+) & { attachments: readonly StoredAttachment[]; login: RunnerLogin }
+
+export type PreparedCommand =
+  PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
+
 /** Credentials enter only the live command, after this record is read. */
 export type PendingCommand =
   | {
@@ -89,16 +104,16 @@ export type PendingCommand =
       sessionId: string
       turnId: string
       messageId: string
-      attachments: readonly RunnerAttachment[]
+      attachments: readonly StoredAttachment[]
     }
   | RunnerInterrupt
   | RunnerChangeModel
 
-type DispatchCommand<Command> = Command extends { login: unknown }
-  ? Omit<Command, 'login'> & { login: RunnerLogin }
+type ResolveCommand<Command> = Command extends PreparedMessageCommand
+  ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }
   : Command
 
-export type RunnerDispatchCommand = DispatchCommand<RunnerCommandV1>
+export type ResolvedCommand = ResolveCommand<PreparedCommand>
 
 export interface RunnerPeer {
   send(message: WorkspaceToRunnerV1 | WorkspaceToRunnerV2): void
@@ -122,7 +137,7 @@ export interface BrowserPeer {
 
 export interface ResolvedAttachments {
   attachments: readonly Attachment[]
-  paths: readonly RunnerAttachment[]
+  paths: readonly StoredAttachment[]
 }
 
 /** Await this publisher inside a runner callback. Use appendWorkspaceEvent outside it. */
@@ -132,6 +147,7 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,
   ) => Promise<{ name: string | null } | null>
@@ -203,9 +219,14 @@ export interface ChatDependencies {
     workspaceId: string,
     userId: string,
     messageId: string,
-    attachments: readonly RunnerAttachment[],
+    attachments: readonly StoredAttachment[],
     sandboxId: string | null,
   ) => Promise<string | null>
+  resolveAttachmentPaths: (
+    workspaceId: string,
+    userId: string,
+    attachments: readonly StoredAttachment[],
+  ) => Promise<readonly RunnerAttachment[]>
   attachmentSandboxId: (
     workspaceId: string,
     userId: string,

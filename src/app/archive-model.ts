@@ -1,95 +1,61 @@
 import {
   workspacePaths,
-  type ArchiveCheckResponse,
+  type Workspace,
   type WorkspaceResponse,
 } from '../shared/workspaces'
-import type { ApiError } from './api/client'
-import { readArchiveCheck, readWorkspaceResponse } from './api/read-workspaces'
+import { readWorkspaceResponse } from './api/read-workspaces'
 import type { OrgModel } from './org-model'
-import { asApiError, Store } from './store'
 
-/** The Archive question: the check runs first, then the user confirms. */
-export type ArchiveFlow =
-  | { step: 'closed' }
-  | { step: 'checking' }
-  | { step: 'check-failed'; error: ApiError }
-  | {
-      step: 'confirm'
-      check: ArchiveCheckResponse
-      archiving: boolean
-      error: ApiError | null
-    }
-
-/** The check found work that Archive would delete. */
-export function hasUnpushedWork(check: ArchiveCheckResponse): boolean {
-  return check.uncommittedFiles.length > 0 || check.unpushedCommits > 0
-}
+/** The write of a workspace that ends it or brings it back. */
+export type ArchiveAction = 'archive' | 'restore'
 
 /**
- * Archive of one workspace (decision 16). It checks the sandbox for work
- * that is not committed or not pushed, lists it, and archives only after
- * the user confirms. Found work needs the explicit discard. A cancel makes
- * a check that still runs obsolete, so its answer opens no question.
+ * Archive and Restore of one workspace. Archive stops its cloud computer at
+ * once, with no check and no question. Restore puts it back in its
+ * section, stopped, and starts nothing. Each sends one request, and
+ * `changed` takes its reply. One write of the workspace runs at a time,
+ * over every model of the org: a press while one runs sends nothing and
+ * gives null. `WorkspaceActions.running` shows the write that runs. A
+ * failed write throws to its caller, which names the failure.
  */
 export class ArchiveModel {
-  readonly flow = new Store<ArchiveFlow>({ step: 'closed' })
   private readonly org: OrgModel
   private readonly workspaceId: string
-  private readonly archived: (detail: WorkspaceResponse) => void
-  /** Each start and each cancel counts one up, so an old answer is ignored. */
-  private generation = 0
+  private readonly changed: (detail: WorkspaceResponse) => void
 
   constructor(
     org: OrgModel,
     workspaceId: string,
-    archived: (detail: WorkspaceResponse) => void,
+    changed: (detail: WorkspaceResponse) => void,
   ) {
     this.org = org
     this.workspaceId = workspaceId
-    this.archived = archived
+    this.changed = changed
   }
 
-  async start(): Promise<void> {
-    const run = ++this.generation
-    this.flow.set({ step: 'checking' })
-    let check: ArchiveCheckResponse
-    try {
-      check = await this.org.services.api.get(
-        workspacePaths.archiveCheck(this.org.orgId, this.workspaceId),
-        readArchiveCheck,
-      )
-    } catch (error) {
-      if (run === this.generation) {
-        this.flow.set({ step: 'check-failed', error: asApiError(error) })
-      }
-      return
-    }
-    if (run !== this.generation) return
-    this.flow.set({ step: 'confirm', check, archiving: false, error: null })
+  archive(): Promise<Workspace | null> {
+    return this.send('archive')
   }
 
-  cancel(): void {
-    this.generation += 1
-    this.flow.set({ step: 'closed' })
+  restore(): Promise<Workspace | null> {
+    return this.send('restore')
   }
 
-  async confirm(): Promise<void> {
-    const flow = this.flow.get()
-    if (flow.step !== 'confirm' || flow.archiving) return
-    const run = this.generation
-    this.flow.set({ ...flow, archiving: true, error: null })
+  private async send(action: ArchiveAction): Promise<Workspace | null> {
+    const actions = this.org.workspaceActions
+    if (actions.running.get().has(this.workspaceId)) return null
+    actions.setRunning(this.workspaceId, action)
     try {
       const detail = await this.org.services.api.send(
         'POST',
-        workspacePaths.archive(this.org.orgId, this.workspaceId),
-        { discardUnpushedWork: hasUnpushedWork(flow.check) },
+        workspacePaths[action](this.org.orgId, this.workspaceId),
+        {},
         readWorkspaceResponse,
       )
-      this.archived(detail)
-      if (run === this.generation) this.flow.set({ step: 'closed' })
-    } catch (error) {
-      if (run !== this.generation) return
-      this.flow.set({ ...flow, archiving: false, error: asApiError(error) })
+      this.changed(detail)
+      return detail.workspace
+    } finally {
+      actions.setRunning(this.workspaceId, null)
     }
   }
 }

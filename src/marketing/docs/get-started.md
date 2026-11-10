@@ -231,7 +231,7 @@ New workspaces use the changed setup after its build succeeds.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
-Use **Startup script** for commands that must run at each workspace start and resume.
+Use **Startup script** for commands needed when you start or resume a workspace.
 It starts in the workspace's repository folder.
 Use **Environment variables** for values your application needs.
 Changed values apply at the next start of each workspace's cloud computer.

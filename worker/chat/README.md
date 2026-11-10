@@ -86,8 +86,10 @@ Try again replaces the failed first computer without accepting the stored messag
 
 ## Access
 
-[Chat access](access.md) gives the browser gates, the runner token checks,
-the workspace version pin, and the login checks.
+[Chat backend access](access.md) gives the gates that the Durable Object
+runs itself. It covers the browser gate and its second check in the
+queue, the grants of open tabs, the runner token checks, the workspace
+version pin, the login lookups, and an org suspension.
 
 ## History and event order
 
@@ -165,7 +167,8 @@ tests through the production Worker entry.
   sets the hooks, and gives the Mac devices the shared state writer.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
-  lifecycle events.
+  lifecycle events. Its stop transaction clears the port report with
+  `ports: null`, including when the workspace has no previews.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
 - `session-titles.ts`: the empty-name rule for the first session's workspace
@@ -205,7 +208,8 @@ tests through the production Worker entry.
   that can still start a secret, so a new stream cannot complete such a
   secret. That state, the filtered events, and the raw cursor of the
   stream commit in one transaction. The shared field policy keeps
-  operational paths and masks display labels.
+  operational paths and masks display labels. It masks each complete port
+  name and folder before the workspace display excerpt and the second parse.
 - `runner-output.ts` also moves the answer ends of older stream records
   into the workspace record, at the first accepted receipt without that
   record. Held text stays with its own stream, because the held text of
@@ -224,7 +228,8 @@ tests through the production Worker entry.
   command. Version 2 gets a turn token in each `turn` command, after the
   running state commits, and no credential in a `message` command.
   `gatewayRunnerCommand` in `runner-gateway-command.ts` builds that
-  version 2 command. Internal `RunnerDispatchCommand` holds the full login.
+  version 2 command. Internal `PreparedCommand` holds the full login and
+  relative attachment paths. `ResolvedCommand` holds the live absolute paths.
   The derived version 1 wire type excludes Codex ChatGPT sign-ins.
   `runnerSupportsLogin` in the shared runner contract owns the exhaustive
   rule for each login kind and protocol version. An absent `loginKinds`
@@ -233,12 +238,18 @@ tests through the production Worker entry.
   one failed end before any login or turn token reaches the runner.
   [The agent runner](integration/runner/README.md#the-agent-runner) gives
   the rules of both versions.
+- `attachment-paths.ts`: the captured repository folder lookup and the
+  absolute attachment paths of each runner send.
 - `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
   send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.
 - `delivery-state.ts`: dispatch state before sending and queued-state restoration.
+- `port-reports.ts`: the listener-list parser, final port-label excerpts, and
+  displayed-label checks. Private labels stay complete for the output filter.
+  Runner reports require a sorted unique array. Only a workspace stop
+  publishes a null list.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
   `parseRunnerEnvelope` applies the byte limits to the raw message.
@@ -279,7 +290,7 @@ tests through the production Worker entry.
   `SessionLogins`, and the defaults of older session records.
 - `session-record.ts`: `sessionFor`, the read of one session record.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
-  the internal `RunnerDispatchCommand`, and the peer types.
+  `PreparedCommand`, `ResolvedCommand`, and the peer types.
 
 ## Related docs
 
