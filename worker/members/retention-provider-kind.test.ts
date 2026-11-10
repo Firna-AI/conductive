@@ -10,7 +10,7 @@ import { withCleanupLease } from './cleanup-lease'
 import { deletionFixture } from './deletion-test-support'
 import { maintainDeletedOrg } from './maintenance'
 import { lifecycleFixture, stopWorkspace } from './maintenance-test-support'
-import { write } from './members-test-support'
+import { seedWorkspace, write } from './members-test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -22,9 +22,16 @@ beforeEach(async () => {
 afterAll(async () => harness.dispose())
 
 it('keeps a deleted E2B disk out of retention without blocking maintenance', async () => {
-  const { org, admin, client } = await deletionFixture(harness)
+  const { org, admin, member, client } = await deletionFixture(harness)
   const lifecycle = lifecycleFixture(client)
   await stopWorkspace(harness, 'workspace-one', 13)
+  await seedWorkspace(harness, org, member.user, 'archived-disk')
+  await stopWorkspace(harness, 'archived-disk', 13)
+  await harness.env.DB.prepare(
+    "UPDATE workspaces SET state = 'archived', archived_at = ? WHERE id = ?",
+  )
+    .bind(TEST_TIME - 86_400_000, 'archived-disk')
+    .run()
   const deleted = await client.request(
     deleteOrgPath(org.id),
     admin.session,
@@ -41,11 +48,11 @@ it('keeps a deleted E2B disk out of retention without blocking maintenance', asy
   })
   await harness.env.DB.batch([
     harness.env.DB.prepare(
-      'UPDATE workspaces SET provider_account = ? WHERE id = ?',
-    ).bind('e2b', 'workspace-one'),
+      'UPDATE workspaces SET provider_account = ? WHERE id IN (?, ?)',
+    ).bind('e2b', 'workspace-one', 'archived-disk'),
     harness.env.DB.prepare(
-      "UPDATE org_deletion_resources SET provider_account = ? WHERE org_id = ? AND resource_id = ? AND kind = 'sandbox'",
-    ).bind('e2b', org.id, 'sandbox-workspace-one'),
+      "UPDATE org_deletion_resources SET provider_account = ? WHERE org_id = ? AND resource_id IN (?, ?) AND kind = 'sandbox'",
+    ).bind('e2b', org.id, 'sandbox-workspace-one', 'sandbox-archived-disk'),
   ])
   client.setTime(TEST_TIME + 23 * 3_600_000)
   const fetch = vi.fn(async () => Response.json({}, { status: 503 }))

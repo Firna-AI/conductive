@@ -86,7 +86,16 @@ export function ChatArea(props: {
   const sandboxBar = notice ? (
     <>
       {props.orgNotice}
-      <SandboxBar notice={notice} resume={props.resume} workspace={workspace} />
+      <SandboxBar
+        notice={notice}
+        restore={
+          context.restore
+            ? { run: context.restore, pending: context.running === 'restore' }
+            : null
+        }
+        resume={props.resume}
+        workspace={workspace}
+      />
     </>
   ) : null
   const keepsComposer = notice !== null && !replacesComposer(notice)

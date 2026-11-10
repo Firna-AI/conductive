@@ -2,11 +2,32 @@ import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.m
 import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
 import markdownStyles from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
 import { LinkedText } from '../links/LinkedText'
-import { textBlocks, type TextBlock } from './agent-text'
+import { textBlocks, type TextBlock, type TextItem } from './agent-text'
 
 /** A cell of a table in an answer, with the formatting of a paragraph. */
 function tableCell(text: string) {
   return <LinkedText strong text={text} />
+}
+
+/**
+ * The items of a list. An item of one paragraph shows its text alone, as in
+ * the file preview. Another item shows its blocks: its text, and the lists,
+ * paragraphs, code blocks, and tables that the agent indents under it.
+ */
+function ListItems(props: { items: readonly TextItem[] }) {
+  return props.items.map((item, index) => {
+    const [first] = item
+    const tight = item.length === 1 && first.kind === 'p'
+    return (
+      <li key={index}>
+        {tight ? (
+          <LinkedText strong text={first.text} />
+        ) : (
+          <AgentBlocks blocks={item} />
+        )}
+      </li>
+    )
+  })
 }
 
 function Block(props: { block: TextBlock }) {
@@ -19,18 +40,17 @@ function Block(props: { block: TextBlock }) {
         </p>
       )
     case 'ul':
-    case 'ol': {
-      const List = block.kind
       return (
-        <List>
-          {block.items.map((item, index) => (
-            <li key={index}>
-              <LinkedText strong text={item} />
-            </li>
-          ))}
-        </List>
+        <ul>
+          <ListItems items={block.items} />
+        </ul>
       )
-    }
+    case 'ol':
+      return (
+        <ol start={block.start}>
+          <ListItems items={block.items} />
+        </ol>
+      )
     case 'code':
       return <pre className={markdownStyles.block}>{block.text}</pre>
     case 'table':
@@ -55,7 +75,7 @@ export function AgentBlocks(props: { blocks: readonly TextBlock[] }) {
 
 /**
  * An answer of the agent: paragraphs, lists, code, and tables, as it writes
- * them. The text of a paragraph, a list item, or a table cell has `code`
+ * them. A list item holds the blocks that the agent indents under it. The text of a paragraph, a list item, or a table cell has `code`
  * and **strong** parts, as `chatParts` reads it. Each workspace link outside
  * code is a chip, and so is a Markdown link to a workspace, also with a bold
  * or code label.

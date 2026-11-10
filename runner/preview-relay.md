@@ -1,6 +1,5 @@
 # Preview relay
 
-
 The preview relay connects preview requests to servers in the sandbox.
 It gives each server `Host: localhost:<port>`.
 It streams HTTP bodies and WebSocket traffic.
@@ -52,6 +51,7 @@ The provider credential and routing headers never reach the previewed app.
 The relay strips `e2b-traffic-access-token`, `x-access-token`,
 `e2b-sandbox-id`, and `e2b-sandbox-port` on HTTP and WebSocket requests.
 The Worker's port credential also strips those names from replies.
+Both use the exact header list from the shared ingress contract.
 
 ## Development
 

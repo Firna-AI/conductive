@@ -94,7 +94,11 @@ A disposable HTTP server binds IPv4 loopback, IPv6 loopback, and a network
 port. The private preview descriptor first reaches the E2B TCP relay.
 That relay reaches the shared HTTP preview relay on its configured port.
 The HTTP relay then reaches the probe server with a localhost Host header.
-The check verifies removal of provider and routing headers.
+The probe gets the descriptor's exact private header names and the shared
+preview-port header. HTTP and WebSocket requests retain the traffic token
+and send harmless values for each other checked header. Routing values
+use the actual sandbox ID and outer relay port. The controller records
+success only when the probe finds none of these headers.
 It also checks binary WebSocket traffic through both layers.
 A request without the traffic credential must get 403.
 Network mode must reach the network-bound server directly.

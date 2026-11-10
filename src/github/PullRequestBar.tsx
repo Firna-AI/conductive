@@ -24,10 +24,12 @@ export interface PullRequestBarProps {
   workspace: Pick<Workspace, 'owner' | 'state'>
   viewer: GitHubViewer
   /**
-   * Opens the app's Archive flow, with its check for unpushed work, or null
-   * when the app offers no Archive, as in a suspended org.
+   * Archives the workspace at once, with no question, or null when the app
+   * offers no Archive, as in a suspended org.
    */
   onArchive: (() => void) | null
+  /** The Archive runs, so its button shows busy. */
+  archiving?: boolean
 }
 
 /**
@@ -96,7 +98,7 @@ export function PullRequestBar(props: PullRequestBarProps) {
       ) : null}
       <span className={styles.actions}>
         {archive ? (
-          <ActionButton icon={Archive} onPress={archive}>
+          <ActionButton busy={props.archiving} icon={Archive} onPress={archive}>
             Archive
           </ActionButton>
         ) : null}

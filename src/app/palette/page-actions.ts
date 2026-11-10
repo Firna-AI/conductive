@@ -47,6 +47,8 @@ export interface WorkspacePage {
   chat: boolean
   /** The page offers the Desktop tool, which the app can hide. */
   desktopTool: boolean
+  /** The archived bar of the page offers Restore. */
+  offersRestore: boolean
 }
 
 /** The actions that the screen of an open workspace offers. */
@@ -70,7 +72,8 @@ const goToActions: readonly WorkspaceActionId[] = [
  * New session. Session history stays, because it changes nothing. The Go
  * to rows need the tabs of the right column, which an archived workspace
  * does not show. Go to Desktop also needs the Desktop tool. Archive
- * follows `mayArchive`.
+ * follows `mayArchive`. Restore workspace follows the archived bar of the
+ * chat, which offers it to every member until its last day.
  */
 export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
   const { access, workspace } = page
@@ -85,5 +88,6 @@ export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
     )
   }
   if (mayArchive(access, workspace, page.viewer)) ids.push('archive-workspace')
+  if (page.chat && page.offersRestore) ids.push('restore-workspace')
   return ids
 }

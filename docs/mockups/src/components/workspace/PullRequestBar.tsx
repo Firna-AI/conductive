@@ -107,7 +107,7 @@ export function PullRequestBar(props: {
       ) : null}
       <span className={styles.spacer} />
       {state === 'merged' && props.archivable ? (
-        <ScreenLink asChild to={paths.archivePushed}>
+        <ScreenLink asChild to={paths.justArchived}>
           <ActionButton icon={Archive}>Archive</ActionButton>
         </ScreenLink>
       ) : null}

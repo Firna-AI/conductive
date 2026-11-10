@@ -320,6 +320,12 @@ These are agent calls within the approved requirements.
 - Only a source-certified no-resource refusal permits another create or
   snapshot attempt. The existing lifecycle retry sets its time. Unknown
   outcomes never repeat a mutation.
+- Main's archived-workspace restore window applies to either provider.
+  E2B keeps Stop, Restore, and expiry deletion. Only Boat gets a vendor
+  disk restart during that window.
+- Main's shared software-image cache stays account-scoped. Without a
+  matching ready image, the first build keeps the existing full install
+  from its own provider base. E2B never starts from a Boat cache entry.
 
 ## Milestone 1: Mockups
 
@@ -576,7 +582,13 @@ The complete change passes the gate and the review.
       terminal, and model changes. Match a runner-version lookup with the
       saved provider account as well as the org and image name.
 - [x] Run the targeted tests and the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Fix the confirmed command-completion race, use one provider header
+      list in preview checks, and link current provider plan limits.
+      Repeat the affected checks and the complete gate.
+- [ ] Integrate main's archive restore and shared software images. Keep
+      E2B archive recovery read-only and skip its vendor disk restarts.
+      Verify same-account software-image selection and template fallback.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
@@ -590,6 +602,7 @@ The complete change passes the gate and the review.
 
 Evidence: `.context/e2b-backup-provider/complete-gate-1.log` and
 `combined-smoke/result.json`. Real E2B checks above remain blocked.
+Round 1 review and checks: `.context/reviews/calummoore/e2b-backup-sandbox-provider/`.
 
 ## Post-merge follow-up (non-blocking)
 

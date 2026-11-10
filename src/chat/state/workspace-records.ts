@@ -3,8 +3,22 @@ import type {
   Workspace,
   WorkspaceStart,
 } from '../../shared/workspaces'
+import { afterRestore, isArchived } from './archive-view'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
+
+/**
+ * The snapshot with a newer workspace record. A record that leaves the
+ * archived state ends the read-only tabs, as `afterRestore` says.
+ */
+function withRecord(
+  snapshot: ChatSnapshot,
+  workspace: Workspace,
+): ChatSnapshot {
+  const restored = isArchived(snapshot) && workspace.state !== 'archived'
+  const next = { ...snapshot, workspace }
+  return restored ? afterRestore(next) : next
+}
 
 /**
  * Shows the workspace record, its start steps, and its saved error of a
@@ -23,8 +37,7 @@ export function confirmWorkspace(
   if (!newer) return false
   context.workspaceOrder.through = reply.eventNumber
   context.store.update((snapshot) => ({
-    ...snapshot,
-    workspace: reply.workspace,
+    ...withRecord(snapshot, reply.workspace),
     start: reply.start,
     savedError: reply.error?.message ?? null,
   }))
@@ -59,8 +72,7 @@ export function withWorkspaceChange(
   switch (change.type) {
     case 'workspace.updated':
       return {
-        ...snapshot,
-        workspace: change.workspace,
+        ...withRecord(snapshot, change.workspace),
         savedError:
           change.error === undefined
             ? snapshot.savedError

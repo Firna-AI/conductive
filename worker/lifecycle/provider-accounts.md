@@ -71,6 +71,10 @@ accounts stay two entries.
 - The Stop or the Delete of a computer in an account that the Worker does
   not configure stays pending. `ProviderAccountError` stops the call before
   any provider request. The ledger entry gets no deletion mark.
+- A software image build belongs to no org, so the ledger holds no entry
+  for its computer. Its `createResource` intent has no ownership. The
+  [software image record](../software-image/README.md) keeps the account
+  and the ID of that computer until its cleanup deletes it.
 
 D1 holds the workspace, token, build, and log records. The storage of each
 object holds the lifecycle state, the turn records, and the events.
@@ -84,6 +88,10 @@ Definite first create refusals stay as rejected allocation records.
 A refused replay keeps an earlier uncertain request live.
 Each failed computer has its own cleanup flag.
 The native cleanup pointer can therefore change without losing an older failed computer.
+Archive and Restore keep the ledger entry of a retained computer live.
+At the end of Restore, the delete goes through the ledger-aware cleanup of [`cleanup.ts`](cleanup.ts).
+`detachArchiveDisk` then marks the exact account and ID deleted in the same D1 batch that detaches the disk.
+A confirmed missing archived disk uses that batch too.
 
 ## Org images
 

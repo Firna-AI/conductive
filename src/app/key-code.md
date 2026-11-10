@@ -74,24 +74,33 @@ Each path is relative to `src/app/`, the folder of this page.
 - `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
   writes, their changes, moves, and the Archived group.
 - `workspace-actions.ts`: `OrgModel.workspaceActions`, the Rename write,
-  owner-only confirmation, and list-owned Archive flows for unopened rows.
-  `list-changes.ts` confirms only the fields of each action.
-  Archive also advances `updatedAt` when the acknowledged time is newer.
+  owner-only confirmation, the Archive and Restore flows of unopened rows,
+  and `running`, the Archive or the Restore that runs for each workspace.
+  `list-changes.ts` confirms only the fields of each action. The reply of
+  Archive or Restore changes the row only when its `updatedAt` is newer.
 - `../shell/workspace/shown-workspaces.ts`: `ShownWorkspaces.rename`,
   `reassigned`, and `archive` use a kept model when one exists. They open
   no workspace and create no model for an unopened row.
+- `../shell/workspace/useArchiveActions.ts`: `useArchiveActions`, Archive
+  and Restore for each control, with their toasts. The toast of a done
+  Archive offers Restore only while the workspace can come back.
+- `deadlines.ts`: `usePassedDeadlines`, which renders a screen again at
+  each deadline, such as the last day of a Restore, through the clock and
+  the timers of `AppServices`.
 - `../shell/list/`: the workspace list. `WorkspaceRow.tsx` draws a row,
   with its Archive shortcut over the time on hover, and the Rename field
   of `WorkspaceNameField.tsx`. A right click or the menu keys open the menu
   of a row. `useRowMenus.tsx` gives each row the actions that the person
   can use, from `workspaceMenuItems` of the mockups, and draws the open
   `RowMenu.tsx`. The Archive shortcut and Archive in the menu share one
-  flow, `ShownWorkspaces.archive`, so one action shows one question. The
-  list draws that question for a row that the page does not show.
+  flow, `ShownWorkspaces.archive`, so a second press while it runs sends
+  nothing. A row of the Archived group shows its Restore shortcut over the
+  time on hover until the last day of Restore.
   `SectionHeader.tsx` draws a section header with its menu and Rename
   section. `useListActions.ts` runs the list changes, with a toast for a
   failure. `RowMenu.test.tsx`, `RowMenuAccess.test.tsx`,
-  `RowActions.test.tsx`, and `RowRename.test.tsx` mount the whole app.
+  `RowActions.test.tsx`, `RowArchive.test.tsx`, and `RowRename.test.tsx`
+  mount the whole app.
   [Workspace menu](../../docs/protocol/workspace-menu.md) states the menu
   of a workspace row.
 - `../shell/ui/Menu.tsx`: `MenuButton`, the menu of the shell, a sheet on
@@ -100,16 +109,22 @@ Each path is relative to `src/app/`, the folder of this page.
   choices beside it, and `menu-place.ts` keeps both inside the window.
   `menu-keys.ts`: `opensMenu`, the menu keys of a row and of a tab.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace, its
-  `startError` and `reassigned`, and Archive.
-  `WorkspaceModel.renamed` takes the confirmed name into the kept detail.
-  Local action fields stay over pending open and Resume replies.
-  `workspace-detail.ts` maps its stream and Archive records to detail.
+  `startError` and `reassigned`, and Archive and Restore, each with one
+  request. `WorkspaceModel.renamed` takes the confirmed name into the kept
+  detail. `workspace-detail-order.ts`: `DetailOrder`, the order of the
+  detail: its read and Resume replies, its stream, its local changes,
+  which stay over pending replies, and the Archive and Restore records of
+  the list. `workspace-detail.ts` maps the stream, Archive, and Restore
+  records to the detail. `olderAcrossArchive` orders the two sides of an
+  Archive by `updatedAt`, and `archiveFloor` keeps each record from before
+  the newest Archive or Restore out, on both sides.
   `workspace-activity.ts` counts input reports through `WorkspaceActivity`.
 - `suspension.ts` and `permissions.ts`: the suspension of an org, the
   client that reports its refusals, also the replies of its fetch, and the
   rules of what a person may change.
 - `workspace-read-marks.ts`: `WorkspaceReadMarks`, the read marks of one
-  kept workspace model, with its shown and confirmed numbers.
+  kept workspace model, with its shown and confirmed numbers. They stop
+  while the workspace is archived, and go again after a Restore.
 - `new-workspace-model.ts`: the first message that creates a workspace.
   `creations.ts`: `Creations`, the life of the create requests of an org in
   this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
@@ -165,6 +180,8 @@ Each path is relative to `src/app/`, the folder of this page.
   `api/read-operator-providers.ts`: their readers. The
   [operator section](../shell/operator/README.md) gives the screens.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
+  `routeOf` gives the screen of an address, and `useRoute` the screen of
+  the current one.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
   the tab opened last, from `AppModel.lastOrg`, or else the first org that
   is not deleted.

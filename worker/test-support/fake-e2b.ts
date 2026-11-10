@@ -43,7 +43,8 @@ export class FakeE2b {
         return new Response(null, { status: 403 })
       return this.envd.fetch(request)
     }
-    const body: unknown = request.body ? await request.json() : null
+    const bodyText = await request.text()
+    const body: unknown = bodyText ? JSON.parse(bodyText) : null
     this.bodies.push(body)
     if (this.response) return this.response()
     if (this.failure) {

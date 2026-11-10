@@ -56,22 +56,34 @@ plan limits.
   stopped", as `app/shell/stopped/during-turn` shows.
 - Each branch starts with the GitHub login of the owner of its workspace,
   such as `calummoore/lisbon-7k2q`, from decision 53.
-- Archive, from decision 16, deletes the cloud computer and keeps the chat
-  read-only in the Archived group at the end of the list. It checks first
-  for work that is not committed or not pushed. The pull request bar offers
-  it after a merge. Only the workspace's owner and the org's admins see
-  Archive, from decision 42. An archived workspace has no file lists and no
-  tools, so a phone shows only its chat.
+- Archive stops the cloud computer at once, with no check and no question,
+  and keeps the chat read-only in the Archived group at the end of the
+  list, from decision 1 of PR #138. The pull request bar offers it after a
+  merge. Only the workspace's owner and the org's admins see Archive, from
+  decision 42. An archived workspace has no file lists and no tools, so a
+  phone shows only its chat.
+- Restore puts an archived workspace back in its section, stopped, with its
+  files and sessions. The toast after Archive offers it, and the archived
+  bar and the row in the Archived group offer it until its last day, 14
+  days after the Archive. The bar gives that last day. Every member of an
+  org that is not suspended sees Restore, from decision 2 of PR #138, as
+  `app/command-palette/actions/archived` shows. After the last day, nothing
+  offers Restore. The bar gives the day when Restore ended while a failed
+  delete of the cloud computer tries again, as `app/archive/restore-ended`
+  shows. After the delete, the bar says that the cloud computer is deleted,
+  as `app/archive/deleted` shows.
 - The menu of a workspace row follows the same roles, as
   `app/workspace-menu/roles` shows. Every member moves and renames a
   workspace that is not archived. Only an admin sees Reassign to, and only
-  the owner and the admins see Archive. The archived row of an admin
-  offers only Reassign to. An archived row of a member and every row of a
-  suspended org have no menu.
-- No workspace shows as expiring. On the `boat` account, near day 14 of a
-  stop, the app starts the cloud computer briefly and stops it again, from
-  decision 43. The `e2b` account keeps a stopped cloud computer with no
-  time limit.
+  the owner and the admins see Archive, which archives at once. The
+  archived row of an admin offers only Reassign to. An archived row of a
+  member and every row of a suspended org have no menu. The menu has no
+  Restore: the row keeps it, for every member of an org that is not
+  suspended.
+- No stopped workspace shows as expiring. On the `boat` account, near day
+  14 of a stop, the app starts the cloud computer briefly and stops it
+  again, from decision 43. The `e2b` account keeps a stopped cloud
+  computer with no time limit.
 - Any user creates orgs. Create org of the first run returns to Get started.
 - Create org needs at least one repository, from decision 151, because it
   starts the first build of the cloud computer. The hint under
@@ -89,9 +101,10 @@ plan limits.
 - The operator can suspend an org, from decision 129. Its members still
   open it and read its chats, and its notice gives the abuse address.
   Nothing in it can change, so its screens show no action that it refuses,
-  also for an admin. No notice promises its files. A deleted org that is
-  also suspended shows the notice above its page, keeps the date when
-  everything is deleted, and offers no Restore, as
+  also for an admin. No notice promises its files. An archived workspace
+  offers no Restore, as `app/orgs/suspended/workspace/archived` shows. A
+  deleted org that is also suspended shows the notice above its page, keeps
+  the date when everything is deleted, and offers no Restore, as
   `app/orgs/suspended/deleted` shows.
 - A person whom the last-admin rule of decision 123 lets leave sees Leave
   org on the General tab of a suspended org, as `app/orgs/suspended/leave`

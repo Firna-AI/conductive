@@ -57,15 +57,20 @@ that doc says.
   page lists the GitHub accounts of the person, personal and org. There
   the person changes the repositories that the app reaches on an account,
   or installs the app on another account.
+- After a save on GitHub, the return opens the screen of the list again,
+  as [The GitHub App](github-banner.md#the-github-app) says.
 - A link to the settings page of each installation was rejected, because
   it gives no link when no account has the app, and it cannot install the
   app on another account.
 - The org rail and General settings show the saved initials.
-- The product is free, with no limits (decisions 45 and 81). It has no
-  plans, no billing, and no limits of its own on workspaces, minutes, or
-  members.
-- Limits for each user and billing were rejected for now. Billing can come
-  later (decision 81).
+- Use of the product is free until billing starts, as
+  [Before billing starts](pricing.md#before-billing-starts) says. Until
+  then, the app has no billing, and no limits of its own on workspaces,
+  hours, or members.
+- When billing starts, each org has a plan, and the org pays for its
+  members and its cloud hours (decision 250).
+  [The plans](pricing.md#the-plans) give the price, the hours, and the
+  limits of each plan.
 - A waitlist stands in front of the app (decision 160). A new account
   waits for app access, as [Waitlist](waitlist.md) says.
 
@@ -126,14 +131,18 @@ that doc says.
   long press lifts the row.
 - Move to section in the
   [menu of a workspace row](workspace-menu.md#move-to-section) moves it too.
-- Deleting a section moves its workspaces to General. Reason: no workspace
-  gets lost.
+- Deleting a section moves its workspaces to General, also the archived
+  ones. Reason: no workspace gets lost, and a Restore always has a section
+  to go back to.
 - The app keeps the archived workspaces in the Archived group at the end
   of the list. The users do not edit that group.
 - A workspace row offers Archive only to its owner and the org's admins.
   Only hover reveals its archive icon over the time without moving the row
   content. Selection and keyboard focus alone keep the time visible.
   The workspace header has no archive control.
+- A row of the Archived group offers Restore in the same way, to every
+  member, until Restore of its workspace ends, as
+  [Restore](workspace-life.md#restore) says.
 
 ## Members and roles
 
@@ -172,8 +181,18 @@ that doc says.
   workspace, without the actions of an admin.
 - Only the workspace owner and the admins can archive a workspace
   (decision 42).
-- Archive by every member was rejected, because a member could then delete
-  the sandbox and the unpushed work of another member.
+- Archive by every member was rejected, because the app deletes the
+  sandbox 14 days after an Archive. A member could then start the delete
+  of the unpushed work of another member.
+- Every member of an org that is not suspended can restore an archived
+  workspace (decision 2 of PR #138).
+- Reason: Restore deletes nothing. It gives a member only the access that
+  a resume gave before the Archive.
+- Restore only by the owner and the admins, as for Archive, was rejected
+  for that reason. So a member can restore a workspace that its owner
+  archived. Only the owner or an admin can archive it again.
+- Restore keeps the owner of the workspace. A new owner for the member who
+  restores was rejected, because only an admin reassigns a workspace.
 
 ## Workspace owners
 

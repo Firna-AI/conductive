@@ -120,16 +120,17 @@ If a share-setting change fails, the switch returns to its saved value.
 ## Understand access to credentials
 
 Conductive stores agent logins encrypted.
-New workspaces from a current computer build keep agent logins outside their cloud computers.
-Each running turn gets a temporary credential.
+A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
+Each turn there gets a temporary credential called a turn token.
 Through Conductive, it can use the login of the member who started the session.
 
-Programs and members with terminal access can read or copy that credential.
+Programs and members with terminal access can read or copy that token.
 A copy can spend the login while the turn runs, including from outside the computer.
-A program that keeps running can read credentials of later turns, including turns in other members' sessions.
+A copied token cannot start a new model request after the turn ends.
+A program that keeps running can read tokens of later turns, including turns in other members' sessions.
 
-Older cloud computers can still receive the agent login itself.
-Programs and members with terminal access can read or copy it while a turn runs.
+An older cloud computer starts from an earlier setup that still permits software to receive the agent login itself.
+Programs and members with terminal access can read or copy that login during a turn.
 A copied login can remain usable after the turn ends.
 If a login is exposed, revoke it with its provider.
 Removing it from Conductive does not revoke a copy held elsewhere.
@@ -140,7 +141,7 @@ Stopping or resuming an older computer does not remove its login exposure risk.
 Installing newer software in that computer does not remove that risk either.
 A new workspace does not revoke logins already copied from an older computer.
 
-The share switch does not remove these access risks.
+The share switch does not hide either kind of credential from programs or members with terminal access.
 Work in an org with people you trust with your agent and GitHub logins.
 
 - [Understand sessions and chat](/docs/sessions-and-chat)

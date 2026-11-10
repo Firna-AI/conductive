@@ -9,6 +9,7 @@ import {
 } from '../data/user-access'
 import { orgProviderForAccount, providerForAccount } from '../sandbox/client'
 import { readOrgProviderAccount } from '../data/org-provider-account'
+import { softwareVersion } from '../software-image/version'
 import type { SandboxProvider } from '../sandbox/provider'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
 import {
@@ -151,6 +152,10 @@ export async function startImageBuild(
       repositoryLocations: locations,
       previousRepositoryLocations: previousLocations,
       software,
+      softwareVersion:
+        input.kind === 'build' && !image?.imageName
+          ? await softwareVersion(software)
+          : undefined,
       previousImageName: image?.imageName ?? null,
       previousRunnerProtocolVersion: previous?.runnerProtocolVersion ?? null,
       now,

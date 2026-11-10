@@ -119,8 +119,9 @@ support:
 1. The EU cluster. E2B gives it after the project has a payment method.
 2. Filesystem-only pauses and snapshots. E2B refuses them until support
    turns them on.
-3. A sandbox disk of 51 GB, as Boat's default size has. E2B Pro gives
-   20 GiB.
+3. A sandbox disk of 51 GB, as Boat's default size has. Confirm with
+   support which plan and project settings supply this size for tests.
 
-Move the project to E2B Pro before a real org runs on E2B. On Hobby, a
-sandbox runs for at most 1 hour, and at most 20 run at once.
+Move the project to E2B Pro before a real org runs on E2B. E2B's current
+[Billing and limits](https://docs.e2b.dev/billing) gives the plan limits
+for disk capacity, sandbox runtime, and the number of sandboxes at once.

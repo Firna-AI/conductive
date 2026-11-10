@@ -134,19 +134,18 @@ export async function commandStatus(
     !/^\d+$/.test(meta.startTicks)
   )
     return invalidResponse()
-  const end = await jsonFile(
-    session,
-    commandPath(processId, 'exit.json'),
-    budget,
-  )
-  let state: CommandStatus['state']
+  let end = await jsonFile(session, commandPath(processId, 'exit.json'), budget)
+  let state: CommandStatus['state'] = 'running'
   let exitCode: number | null = null
   let timedOut: boolean | null = null
-  if (end === undefined)
-    state = (await alive(session, meta.pid, meta.startTicks, budget))
-      ? 'running'
-      : 'lost'
-  else {
+  if (end === undefined) {
+    const running = await alive(session, meta.pid, meta.startTicks, budget)
+    if (!running) {
+      state = 'lost'
+      end = await jsonFile(session, commandPath(processId, 'exit.json'), budget)
+    }
+  }
+  if (end !== undefined) {
     if (
       !isRecord(end) ||
       end.processId !== processId ||

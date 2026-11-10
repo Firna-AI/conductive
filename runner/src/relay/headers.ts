@@ -1,5 +1,8 @@
 import type { IncomingMessage } from 'node:http'
-import type { PreviewIngressIdentity } from '../../../src/shared/preview-ingress'
+import {
+  E2B_PRIVATE_HEADERS,
+  type PreviewIngressIdentity,
+} from '../../../src/shared/preview-ingress'
 
 import {
   PREVIEW_RELAY_PORT,
@@ -8,6 +11,7 @@ import {
 } from '../../../src/shared/previews'
 
 const portHeader = PREVIEW_RELAY_PORT_HEADER.toLowerCase()
+const privateHeaders = new Set<string>(E2B_PRIVATE_HEADERS)
 const hopHeaders = [
   'connection',
   'keep-alive',
@@ -91,10 +95,7 @@ export function requestHeaders(
       lower === 'host' ||
       lower === portHeader ||
       lower === 'forwarded' ||
-      lower === 'e2b-traffic-access-token' ||
-      lower === 'x-access-token' ||
-      lower === 'e2b-sandbox-id' ||
-      lower === 'e2b-sandbox-port' ||
+      privateHeaders.has(lower) ||
       lower.startsWith('x-forwarded-')
     )
       continue

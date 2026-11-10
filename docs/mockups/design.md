@@ -15,9 +15,10 @@ The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. Archive covers the time on hover only, without moving the
-row content. Selection and keyboard focus alone keep the time visible.
-A right click on a row opens the menu of the workspace. The centre column
-has a slim header that names the
+row content, and Restore does so in the Archived group. Selection and
+keyboard focus alone keep the time visible. A right click on a row opens
+the menu of the workspace. The centre column has a slim header that names
+the
 workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
@@ -58,11 +59,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   +, the heading of the empty chat that + opens, and each model of the
   other agent say it.
 - While a sandbox starts, also for the first time, Send queues each
-  message in the workspace. Each queued message shows "Sends when the
-  sandbox is ready", as `app/new-workspace/waiting` shows. After a failed
-  first start, the bar of the error sits above the composer, so members
-  can still queue messages, as `app/new-workspace/error` shows. Every
-  other bar of the sandbox takes the place of the composer.
+  message in the workspace, as `app/new-workspace/waiting` shows. A queued
+  message has no label of its own, because the start steps under the chat
+  already show the wait. After a failed first start, the bar of the error
+  sits above the composer, so members can still queue messages, as
+  `app/new-workspace/error` shows. Every other bar of the sandbox takes
+  the place of the composer.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button or its tab, at the pointer of
   a right click, or in a `Sheet` on a phone. Firna's own menu rows are
@@ -79,15 +81,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Shift+F10 and the Menu key on a focused row open it below the row. No
   row has a button for the menu. The row under the pointer keeps its
   hover, with Archive over the time when the person can archive the
-  workspace. A phone layout opens the menu and its choices in a sheet. A
+  workspace, and with Restore over the time of an archived row until its
+  last day of Restore. The menu has no Restore. A phone layout opens the
+  menu and its choices in a sheet. A
   long press on a phone still lifts the row for a drag, and opens no menu.
   Rename puts a field in place of the name and the time, with the name
   selected. `RowMenu.module.css` styles the field and the menu at the
   pointer.
 - `FailureToast` in `src/components/common/` draws the toast that names a
-  change of the list that failed, with the message of the server, at the
-  bottom right of a desktop and at the bottom of a phone, as
-  `app/workspace-menu/rename/failed` shows.
+  change of the list that failed, with the message of the server, in the
+  `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -131,6 +134,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `ToastLayer` in `src/components/common/` draws a toast of Firna open
+  where the app shows its toasts: at the bottom right of a desktop, and
+  across the bottom of a phone. An action that a user can undo, such as
+  Archive, asks no question and offers the undo in its toast.
+  `ArchivedToast` in `src/components/workspace/` gives the toast after
+  Archive, over the workspace and over the list.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
@@ -226,9 +235,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason. `sandboxNoticeState.ts`
-  beside it owns the types of the bar and the panels, which the app
-  imports too.
+  action. The notice takes any refusal reason. An archived workspace
+  offers Restore until its last day, and the bar gives that day. After
+  it, the bar gives the day when Restore ended while a failed delete of
+  the cloud computer tries again, and it says that the cloud computer is
+  deleted only after the delete. `sandboxNoticeState.ts` beside it owns
+  the types of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.

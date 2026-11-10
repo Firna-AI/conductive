@@ -16,7 +16,7 @@ export async function maintainDeletedOrg(
 ) {
   const dates = await deletedOrgDates(env.DB, orgId)
   if (!dates) throw cleanupBusy()
-  const workspaces = await retentionDisks(env, orgId)
+  const workspaces = await retentionDisks(env, orgId, dependencies.now())
   await runLifecycleHook(env, orgId, token, dependencies, (ownership) =>
     hooks.maintainDeletedOrg({
       ownership,
@@ -36,7 +36,7 @@ export async function maintainDeletedOrg(
       ),
     }),
   )
-  const current = await retentionDisks(env, orgId)
+  const current = await retentionDisks(env, orgId, dependencies.now())
   if (
     current.length !== workspaces.length ||
     current.some(
@@ -51,8 +51,8 @@ export async function maintainDeletedOrg(
   }
 }
 
-async function retentionDisks(env: AppEnv, orgId: string) {
-  return (await workspaceDisks(env.DB, orgId)).filter(
+async function retentionDisks(env: AppEnv, orgId: string, now: number) {
+  return (await workspaceDisks(env.DB, orgId, now)).filter(
     (disk) =>
       configuredProviderAccount(env, disk.providerAccount).kind === 'boat',
   )

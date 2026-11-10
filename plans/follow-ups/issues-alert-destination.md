@@ -1,0 +1,31 @@
+# No one hears about a new issue
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, from branch `calummoore/cloudflare-worker-error-tracking`, item 2 of the change that turns on Issues.
+- **Location:** None. Automations live in the Cloudflare dashboard. A destination that gets user data also changes the section "Who gets your data" of `src/marketing/privacy.ts`.
+- **Reason:** Each option except A sends user data to a provider or for a use that the Privacy page does not name, and the setup needs the owner's Cloudflare account.
+
+- **Terms:**
+  - **Issues:** the error tracking of Cloudflare Workers, in open beta. `observability.issues` in `wrangler.jsonc` turns it on.
+  - **Automation:** a rule of Issues in the Cloudflare dashboard. It sends an issue to a destination when the issue passes a count, or when it comes back after a quiet period. It runs once for each issue, not for each failure.
+  - **Privacy page:** the public privacy notice of the marketing site, in `src/marketing/privacy.ts`.
+- **Background:**
+  - Issues lists the failures of the Worker on the Worker page of the Cloudflare dashboard. It tells nobody until an automation exists.
+  - Cloudflare offers four kinds of destination: a team chat, an incident tool, a generic webhook, and a coding agent. The coding agents are Claude Code, Cursor, and Devin.
+  - The data sent can include error messages, stack lines, request details, and logs.
+  - The preview proxy passes each `5xx` reply of a program in a sandbox through. So some issues come from the users' own programs.
+  - The Privacy page names each provider that gets user data. It names no chat or incident tool. It names Anthropic for agent work on the user's own requests only.
+- **Problem:** Without an automation, a failure stays unseen until someone opens the dashboard.
+- **Impact if no action:** Users can meet a broken route for days before the team sees it.
+- **Root question:** How does the team learn that a new issue exists?
+- **Options:**
+  - **A.** Add no automation. A person checks the Issues page. No new provider gets data. Effort: Small.
+  - **B.** Send each new issue to a team chat channel, such as Slack. The team sees it within minutes. The chat provider gets the issue data, so the Privacy page must name it. Effort: Small.
+  - **C.** Send each new issue to a coding agent. The agent reads the stack and the logs, and it can open a pull request. The agent provider gets the issue data for a new use, so the Privacy page must say so. Deeper reads need the MCP server of Cloudflare and a token. Effort: Medium.
+  - **D.** Send each new issue to a webhook route of the Worker that emails the operators through Resend. Resend is already a named provider, but the Privacy page must name this new email. The route needs a webhook secret, tests, and docs. Effort: Medium.
+- **Left out:** An email straight from Cloudflare. The Issues docs list no email destination.
+- **Wider fix:** None. The item is a choice of channel, not a class of defect.
+- **Previous examples:** `plans/follow-ups/deploy-alerts-for-started-runs.md` asks the same question for failed deploys.
+- **Recommendation:** B. A chat alert is the smallest change that tells the team at once, and it runs once for each issue.
+- **Action:** ask the user, because each option except A sends user data to a provider or for a use that the Privacy page does not name.

@@ -39,8 +39,8 @@ shows stopped. Its child pages:
 
 - `app/orgs/suspended/workspace` has a workspace with the refused bar of the
   org. Its `archived` variant has an archived workspace, with the notice of
-  the org above the archived bar. Its `files` variant has the Files tab of a
-  phone, whose panel shows the words of the org.
+  the org above the archived bar and no Restore. Its `files` variant has
+  the Files tab of a phone, whose panel shows the words of the org.
 - `app/orgs/suspended/new-workspace` has the New workspace page, which an
   old tab can still open. The refused bar takes the place of the composer.
 - `app/orgs/suspended/settings` has the four tabs, read-only also for an

@@ -5,7 +5,8 @@ how the lifecycle code builds and refreshes the org image. The org image is
 the saved snapshot that every new sandbox of an org starts from. It also
 gives the provider retry policy that builds, refreshes, and workspace
 starts share. [Build sandboxes](#build-sandboxes) describes their starting
-image and the clone token of each copy.
+image and the clone token of each copy. [Key Code](#key-code) names the
+files of the image code.
 
 ## Build sandboxes
 
@@ -67,7 +68,14 @@ A write that passes that budget removes whole rows from the middle.
 The line `[N output bytes omitted]` takes their place in the event order.
 
 - A build loads the chosen repositories, installs the image software, runs
-  the install script with Bash, and saves a snapshot. A refresh only loads
+  the install script with Bash, and saves a snapshot. A first build that
+  pins a matching ready software image of its own account starts from it
+  and skips the software step. A first build in an account with no such
+  image, such as `e2b`, installs the software on the provider base of that
+  account. Admission records the pin in the job insert. The pin stays
+  until the job reaches `done`, including its cleanup. The
+  [software image backend](../software-image/README.md) owns these images.
+  A refresh only loads
   the repositories of the current image again, and saves a snapshot.
 - The org image changes only when the new snapshot is ready. Each job
   deletes every live ledger computer of that org and build, and keeps its history and log.
@@ -109,7 +117,7 @@ transient. Other errors keep their existing handling.
   step still uses the first window.
 - The window does not limit a whole job or a healthy command.
 - The whole-job deadline takes precedence over a retry wait. The limits
-  are in [Workspaces and sandboxes](../../docs/protocol/workspace-life.md).
+  are in [Time limits of builds and starts](../../docs/protocol/workspace-life.md#time-limits-of-builds-and-starts).
 - Cancellation and terminal cleanup do not wait for a pending retry.
 - A source command start never retries. It fails closed, as the source
   loader says.
@@ -181,6 +189,7 @@ states the rule.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
   which starts changed settings after the first good build finishes cleanup.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
+- [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
 - [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
   replays a saved allocation request and saves the recovered sandbox ID.
   Failed image jobs retain their unresolved allocation phase until cleanup
@@ -195,3 +204,7 @@ states the rule.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
 - [`image-software.ts`](image-software.ts): the runner archive check and
   install/start commands.
+- [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
+  private Node of the org image, and its paths. The
+  [runtime guide](../../image/runtime.md#update-the-node-release) says how to
+  update it.

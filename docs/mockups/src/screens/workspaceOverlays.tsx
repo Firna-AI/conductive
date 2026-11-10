@@ -7,14 +7,10 @@ import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
-import {
-  ArchiveDialog,
-  headerArchiveLinks,
-} from '../components/workspace/ArchiveDialog'
+import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
-import { unpushedWork } from '../fixtures/archive'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -68,24 +64,6 @@ export function workspaceOverlay(
       return null
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
-    case 'archive-unpushed':
-      return (
-        <ArchiveDialog
-          links={headerArchiveLinks}
-          question={{ kind: 'unpushed', work: unpushedWork }}
-          viewport={viewport}
-          workspace={workspace}
-        />
-      )
-    case 'archive-pushed':
-      return (
-        <ArchiveDialog
-          links={headerArchiveLinks}
-          question={{ kind: 'pushed' }}
-          viewport={viewport}
-          workspace={workspace}
-        />
-      )
     case 'history':
       return mobile ? (
         <Sheet title="Session history">
@@ -110,5 +88,25 @@ export function workspaceOverlay(
       return mobile && row.menuTab ? (
         <TabMenuSheet tab={row.menuTab} tabs={row.tabs} />
       ) : null
+  }
+}
+
+/**
+ * The toast of the state, over the whole screen. Just after Archive, the
+ * toast names the workspace and offers Restore, which does what Restore on
+ * the archived bar does.
+ */
+export function workspaceToast(
+  state: WorkspaceState,
+  workspace: Workspace,
+  viewport: Viewport,
+): ReactNode {
+  switch (state.toast) {
+    case 'none':
+      return null
+    case 'archived':
+      return (
+        <ArchivedToast name={workspace.name} phone={viewport === 'mobile'} />
+      )
   }
 }

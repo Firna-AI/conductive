@@ -4,13 +4,7 @@ import { createServer } from 'node:http'
 import { join } from 'node:path'
 
 const directory = process.argv[2]
-const sensitive = [
-  'e2b-traffic-access-token',
-  'x-access-token',
-  'x-e2b-sandbox-id',
-  'x-e2b-port',
-  'x-conductive-preview-port',
-]
+const sensitive = JSON.parse(process.argv[3]).map((name) => name.toLowerCase())
 const clean = (request) =>
   sensitive.every((name) => request.headers[name] === undefined)
 const servers = []

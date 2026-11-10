@@ -1,50 +1,16 @@
 import { defineScreen } from '@mokly/mokly'
-import { WorkspaceScreen } from '../../../screens/WorkspaceScreen'
-import {
-  readyWorkspace,
-  workspaceStateSchema,
-} from '../../../screens/workspaceState'
+import { ArchiveScreen, archiveSchema } from '../../../screens/ArchiveScreen'
 
 export const archive = defineScreen({
   title: 'Archive',
   description:
-    'Archive from the row of a workspace whose turn the user stopped. The check found work that is not on GitHub: two changed files that are not committed, and a commit that is not pushed. The dialog lists them, and Archive anyway deletes them with the cloud computer. Cancel keeps the workspace, so the user can push first. On a phone the question is a sheet.',
+    'Cal archived Checkout address autocomplete on 5 November, after its merge. Archive stopped its cloud computer at once, with no check and no question. The workspace sits in the open Archived group at the end of the list, and its chat is read-only. The bar in place of the composer gives the last day of Restore, 19 November. Restore puts the workspace back in its section, with its files and sessions. Every member of Acme sees Restore. The right column of a desktop keeps only the pull request, and a phone shows only the chat. The child pages show the toast just after Archive, the Archived group, a Restore, the end of Restore, and the deleted cloud computer.',
   rationale:
-    'The user chose option D of decision 16: Archive deletes the cloud computer and keeps the chat read-only in an Archived group, the pull request bar offers Archive after a merge, and Archive first checks for work that is not committed or not pushed. No workspace shows as expiring, because near day 14 the app starts each stopped cloud computer on the boat account briefly and stops it again, as the user chose in decision 43. The e2b account keeps a stopped cloud computer with no time limit. Only the owner of the workspace and the admins of the org see Archive, as the user chose in decision 42.',
+    'The user chose option C of decision 1 of PR #138 on 10 November 2026, with 14 days in place of 7: Archive stops the cloud computer and keeps it, with no check and no question, so an archived workspace can come back. The check of option D of decision 16 needed a running cloud computer, so Archive of most older workspaces failed. 14 days after the Archive, the app deletes the cloud computer. The user chose option B of decision 2 of PR #138 on the same day: every member of an org that is not suspended may restore, because Restore deletes nothing. Only the owner of the workspace and the admins of the org see Archive, as decision 42 says. Provider disk retention is separate. E2B keeps a stopped disk with no time limit, but the app still deletes an archived computer after 14 days.',
   relatedDocs: [],
-  propSchema: workspaceStateSchema,
-  props: {
-    ...readyWorkspace,
-    conversation: 'interrupted',
-    banner: 'none',
-    overlay: 'archive-unpushed',
-  },
+  propSchema: archiveSchema,
+  props: { view: 'archived' },
   render: (props, context) => (
-    <WorkspaceScreen state={props} viewport={context.viewport} />
+    <ArchiveScreen state={props} viewport={context.viewport} />
   ),
-  variants: [
-    {
-      slug: 'pushed',
-      title: 'Everything pushed',
-      description:
-        'Archive from the pull request bar after the merge. The check found nothing that is not pushed, so the question says so, and Archive goes ahead.',
-      props: {
-        conversation: 'history',
-        banner: 'merged',
-        overlay: 'archive-pushed',
-      },
-    },
-    {
-      slug: 'archived',
-      title: 'Archived',
-      description:
-        'The workspace is archived: it left its section for the Archived group at the end of the list, its chat is read-only, and its file lists and tools went with the cloud computer, so a phone shows only the chat, and the right column of a desktop keeps only the pull request.',
-      props: {
-        sandbox: 'archived',
-        conversation: 'history',
-        banner: 'merged',
-        overlay: 'none',
-      },
-    },
-  ],
 })

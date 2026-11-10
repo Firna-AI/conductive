@@ -13,11 +13,12 @@ export async function recoverResourceForCleanup(
     return await createResource(db, provider, intent)
   } catch (error) {
     if (!(error instanceof ProviderAllocationAbsent)) throw error
-    await rejectComputerIntent(
-      db,
-      intent.input.idempotencyKey,
-      intent.ownership.providerAccount,
-    )
+    if (intent.ownership)
+      await rejectComputerIntent(
+        db,
+        intent.input.idempotencyKey,
+        intent.ownership.providerAccount,
+      )
     return null
   }
 }

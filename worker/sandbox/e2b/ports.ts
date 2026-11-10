@@ -1,5 +1,9 @@
 import { isRecord } from '../../http'
 import { PREVIEW_RELAY_PORT } from '../../../src/shared/previews'
+import {
+  E2B_PRIVATE_HEADER_NAMES,
+  E2B_PRIVATE_HEADERS,
+} from '../../../src/shared/preview-ingress'
 import { ProviderError } from '../errors'
 import type { PortMode, PrivatePort } from '../provider'
 import { runSupervised } from './commands'
@@ -61,13 +65,8 @@ export async function privatePort(
   return {
     origin: `https://${listeningPort}-${sandboxSegment(sandboxId)}.${context.domain}`,
     credential: {
-      headers: { 'e2b-traffic-access-token': token },
-      stripHeaders: [
-        'e2b-traffic-access-token',
-        'x-access-token',
-        'e2b-sandbox-id',
-        'e2b-sandbox-port',
-      ],
+      headers: { [E2B_PRIVATE_HEADER_NAMES.trafficToken]: token },
+      stripHeaders: E2B_PRIVATE_HEADERS,
       stripCookies: [],
       stripQueryParameters: [],
     },

@@ -1,5 +1,6 @@
 import WebSocket from 'ws'
 import source from './preview-probe.mjs?raw'
+import { E2B_PRIVATE_HEADER_NAMES } from '../../src/shared/preview-ingress'
 
 import {
   PREVIEW_RELAY_MARK_HEADER,
@@ -16,8 +17,45 @@ import { readBoundedJson } from '../../worker/http/bounded-body'
 import { CheckError, integer, object } from '../live-input'
 import { command, jsonFile, probeDirectory, upload } from './live-command'
 
-function headers(descriptor: PrivatePort, target: number): Headers {
+interface PreviewRequests {
+  fetch: typeof fetch
+  websocket(url: URL, headers: Headers): WebSocket
+}
+
+const previewRequests: PreviewRequests = {
+  fetch: (input, init) => fetch(input, init),
+  websocket: (url, headers) =>
+    new WebSocket(url.href, {
+      headers: Object.fromEntries(headers),
+      handshakeTimeout: 30_000,
+    }),
+}
+
+function outerPort(descriptor: PrivatePort): number {
+  const port = Number(new URL(descriptor.origin).hostname.split('-', 1)[0])
+  if (!Number.isInteger(port) || port < 1 || port > 65535)
+    throw new CheckError('The E2B relay returned an invalid port.')
+  return port
+}
+
+function headers(
+  descriptor: PrivatePort,
+  target: number,
+  sandboxId?: string,
+): Headers {
   const value = new Headers(descriptor.credential.headers)
+  if (sandboxId) {
+    const routing = new Map<string, string>([
+      [E2B_PRIVATE_HEADER_NAMES.sandboxId, sandboxId],
+      [E2B_PRIVATE_HEADER_NAMES.sandboxPort, String(outerPort(descriptor))],
+    ])
+    for (const name of descriptor.credential.stripHeaders)
+      if (!value.has(name))
+        value.set(
+          name,
+          routing.get(name.toLowerCase()) ?? 'conductive-live-header-probe',
+        )
+  }
   value.set(PREVIEW_RELAY_PORT_HEADER, String(target))
   return value
 }
@@ -25,10 +63,12 @@ function headers(descriptor: PrivatePort, target: number): Headers {
 async function httpProbe(
   descriptor: PrivatePort,
   target: number,
+  requests: PreviewRequests,
+  sandboxId?: string,
   relayed = true,
 ): Promise<void> {
-  const response = await fetch(`${descriptor.origin}/probe`, {
-    headers: headers(descriptor, target),
+  const response = await requests.fetch(`${descriptor.origin}/probe`, {
+    headers: headers(descriptor, target, sandboxId),
     redirect: 'manual',
     signal: AbortSignal.timeout(30_000),
   })
@@ -49,15 +89,17 @@ async function httpProbe(
 async function websocketProbe(
   descriptor: PrivatePort,
   target: number,
+  sandboxId: string,
+  requests: PreviewRequests,
 ): Promise<void> {
   const url = new URL('/socket', descriptor.origin)
   url.protocol = 'wss:'
   const expected = Buffer.from([0, 255, 128, 1])
   await new Promise<void>((resolve, reject) => {
-    const socket = new WebSocket(url, {
-      headers: Object.fromEntries(headers(descriptor, target)),
-      handshakeTimeout: 30_000,
-    })
+    const socket = requests.websocket(
+      url,
+      headers(descriptor, target, sandboxId),
+    )
     const deadline = setTimeout(() => {
       socket.terminate()
       reject(new CheckError('The E2B preview WebSocket did not answer.'))
@@ -77,22 +119,30 @@ async function websocketProbe(
   })
 }
 
-export async function checkPreview(provider: SandboxProvider, id: string) {
-  await upload(provider, id, 'preview-probe.mjs', source)
-  await provider.startCommand(
-    id,
-    `${shellQuote(imageNodeExecutable())} ${probeDirectory}/preview-probe.mjs ${probeDirectory}`,
-  )
-  const ports = await jsonFile(provider, id, `${probeDirectory}/ports.json`)
-  const ipv4 = integer(ports.ipv4),
-    ipv6 = integer(ports.ipv6),
-    network = integer(ports.network)
+export async function checkPreview(
+  provider: SandboxProvider,
+  id: string,
+  requests: PreviewRequests = previewRequests,
+) {
   const descriptor = await provider.privatePort(
     id,
     PREVIEW_RELAY_PORT,
     'localhost',
   )
-  const denied = await fetch(`${descriptor.origin}/probe`, {
+  const sensitive = [
+    ...descriptor.credential.stripHeaders,
+    PREVIEW_RELAY_PORT_HEADER,
+  ]
+  await upload(provider, id, 'preview-probe.mjs', source)
+  await provider.startCommand(
+    id,
+    `${shellQuote(imageNodeExecutable())} ${probeDirectory}/preview-probe.mjs ${probeDirectory} ${shellQuote(JSON.stringify(sensitive))}`,
+  )
+  const ports = await jsonFile(provider, id, `${probeDirectory}/ports.json`)
+  const ipv4 = integer(ports.ipv4),
+    ipv6 = integer(ports.ipv6),
+    network = integer(ports.network)
+  const denied = await requests.fetch(`${descriptor.origin}/probe`, {
     headers: { [PREVIEW_RELAY_PORT_HEADER]: String(ipv4) },
     redirect: 'manual',
     signal: AbortSignal.timeout(30_000),
@@ -102,24 +152,23 @@ export async function checkPreview(provider: SandboxProvider, id: string) {
       'The E2B ingress did not require its traffic credential.',
     )
   await denied.body?.cancel()
-  await httpProbe(descriptor, ipv4)
-  await httpProbe(descriptor, ipv6)
-  await websocketProbe(descriptor, ipv4)
+  await httpProbe(descriptor, ipv4, requests, id)
+  await httpProbe(descriptor, ipv6, requests, id)
+  await websocketProbe(descriptor, ipv4, id, requests)
   await httpProbe(
     await provider.privatePort(id, network, 'network'),
     network,
+    requests,
+    undefined,
     false,
   )
-  const outerPort = Number(new URL(descriptor.origin).hostname.split('-', 1)[0])
-  if (!Number.isInteger(outerPort) || outerPort < 1 || outerPort > 65535)
-    throw new CheckError('The E2B relay returned an invalid port.')
   return {
     privateIngress: true,
     httpIpv4: true,
     httpIpv6: true,
     websocketBinary: true,
     directNetwork: true,
-    outerPort,
+    outerPort: outerPort(descriptor),
   }
 }
 

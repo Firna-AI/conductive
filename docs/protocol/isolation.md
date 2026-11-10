@@ -74,37 +74,13 @@ says.
 
 ## The app's Boat key
 
-- One Boat key, the app's own, runs every sandbox and every org image of
-  the orgs on `boat` (decision 80). The Worker holds it as a Worker secret.
-- The key never goes to the browser, into a sandbox, into a log, or into
-  a saved snapshot. Reason: the key reaches the sandboxes of every org on
-  `boat`.
-- The key is limited to one Boat environment and to the actions that the
-  app uses.
-- The app's Boat account is a Boat organization of its own. It holds no
-  other Boat work of the operator (decisions 5 and 80).
-- Every Boat call names that organization. A Boat user can reach several
-  organizations, so a change of the active one in Boat moves no work of
-  the app.
+[The app's Boat key](provider-keys.md#the-apps-boat-key) holds these
+requirements.
 
 ## The app's E2B key
 
-- One E2B key, the app's own, runs every sandbox and every org image of
-  the orgs on `e2b` (e2b decision 222). The Worker holds it as a Worker
-  secret.
-- The key never goes to the browser, into a sandbox, into a log, or into
-  a saved snapshot. Reason: the key reaches the sandboxes of every org on
-  `e2b`.
-- The app's E2B account is an E2B project of its own, in E2B's EU
-  cluster. It holds no other E2B work of the operator. Reason: the
-  workspace objects run in Western Europe.
-- Every E2B sandbox has private traffic. A request to any of its ports
-  needs the traffic token of that sandbox, as
-  [Port previews](terminal-previews-and-desktop.md#port-previews) says.
-- The Worker keeps the traffic token of each E2B sandbox encrypted in its
-  own storage. The token never goes into a log. Reason: E2B gives the
-  token when it creates or resumes the sandbox, and a later read of the
-  token resumes a stopped sandbox.
+[The app's E2B key](provider-keys.md#the-apps-e2b-key) holds these
+requirements.
 
 ## What a sandbox holds
 
@@ -114,11 +90,16 @@ says.
   env vars of its org.
 - The sandbox gets them at create and at each resume. A changed secret
   applies at the next start.
+- The restart of an archived sandbox near day 14 gets neither of them, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says.
 - No saved snapshot holds these secrets. Builds and refreshes get none of
   them.
 - A saved snapshot on E2B keeps only the disk of its sandbox, never its
   memory. Reason: the memory of a build can hold a secret, such as the
   token of a repository copy.
+- The software image holds no org data and no secret, because every org
+  uses it. Its build sandbox starts with no env var, no token, and no
+  repository.
 - A sandbox gets no agent login at a start. The next section says how
   each turn uses an agent login.
 - GitHub access reaches a workspace sandbox only through the git credential
