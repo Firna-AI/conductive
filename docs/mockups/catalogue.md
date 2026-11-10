@@ -19,7 +19,7 @@ how a screen is built, and links to the other pages.
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, the first run, the Connect forms, a Codex access token, and a share not saved |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
@@ -42,7 +42,7 @@ how a screen is built, and links to the other pages.
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
-`app/orgs/suspended`, `app/account`, `app/new-workspace`,
+`app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
@@ -122,10 +122,15 @@ the tabs of the org settings are. Its child pages:
   switch starts on Subscription token. Its `api-key` variant has that form
   with API key selected.
 - `app/account/connect-codex` has the Connect form of Codex, whose switch
-  starts on API key. Its `access-token` variant has that form with Access
-  token selected, and its Connect opens `app/account/codex-token`.
-- `app/account/codex-token` has Codex connected by an access token, whose
-  share switch starts off.
+  starts on API key. Its child page `app/account/connect-codex/chatgpt` has
+  that form with ChatGPT plan selected, before the sign-in starts, with Get
+  a code. Its `code` variant shows the one-time code while the page waits
+  for the sign-in. Its `expired` variant has a code that expired, and its
+  `refused` variant a sign-in that OpenAI refused, each with Get a new code.
+- `app/account/codex-token` has Codex connected by a sign-in to a ChatGPT
+  plan, whose share switch starts off, with a note on the terms of OpenAI.
+  Its `not-usable` variant has a sign-in that OpenAI did not renew: the row
+  says Signed out, with the cause and Sign in again.
 - `app/account/share-not-saved` shows General after a login share setting
   failed to save, with its saved value and the cause beside the switch.
 - `app/account/invites` has the invite code while sign-ups are paused.

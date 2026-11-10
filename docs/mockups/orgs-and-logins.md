@@ -103,26 +103,50 @@ plan limits.
   account.
 - The account connects Claude with a subscription token from
   `claude setup-token` or an API key. It connects Codex with an OpenAI API
-  key or with a Codex access token from a ChatGPT Business or Enterprise
-  workspace, from decision 170. `AgentConnectForm` opens under the row of
-  the agent, as `app/account/connect-claude` and `app/account/connect-codex`
-  show. Its switch chooses the kind of the login, and the first kind starts
+  key or with a device code sign-in to the ChatGPT plan of the member,
+  from decision 175. `AgentConnectForm` opens under the row of the agent,
+  as `app/account/connect-claude` and `app/account/connect-codex` show. Its
+  switch chooses the kind of the login, and the first kind starts
   selected: Subscription token, then API key, for Claude, and API key, then
-  Access token, for Codex. The words above the field say what to paste and
-  where to make it.
+  ChatGPT plan, for Codex. For a token or a key, the words above the field
+  say what to paste and where to make it.
+- ChatGPT plan has no field. Its words say that Codex then runs on the
+  plan, and that device code sign-in must be on first in the ChatGPT
+  security settings, as `app/account/connect-codex/chatgpt` shows. They
+  quote no label of ChatGPT, so they stay true after a rename. Get a code
+  shows a one-time code in large type, the link to
+  `auth.openai.com/codex/device`, the warning never to share the code and
+  to enter only a code that the page shows, and a line that the page waits
+  for the sign-in, as its `code` variant shows. A code works for 15
+  minutes. An expired code and a refused sign-in each offer Get a new
+  code, as its `expired` and `refused` variants show. `ChatGptSignIn` in
+  `src/components/settings/` draws the steps.
+- The app renews a ChatGPT sign-in alone. When OpenAI does not renew it,
+  the app can no longer use the login. Its row then says Signed out in
+  place of Connected, gives the cause under the row, and offers Sign in
+  again, which opens the ChatGPT sign-in form, as
+  `app/account/codex-token/not-usable` shows. The cause comes from the
+  field `unusableCause` of the login status. `LoginNotUsable.tsx` in
+  `src/components/settings/` draws it.
+- `chatGptSignInCopy.ts` in `src/components/settings/` gives the words of
+  the ChatGPT sign-in, the note under its share switch, the row of a
+  sign-in that stopped working, and the causes of the Worker. It imports no
+  fixture, so the app and the Worker can import the same words.
 - A connected login shows its kind and Remove. The name of the kind
-  depends on the agent: a Claude token is a "Subscription token", a Codex
-  token is an "Access token", and a key is an "API key". `loginLabels` in
-  `src/fixtures/logins.ts` holds the names. On a phone, the state and the
-  kind go on a second line under the name of the agent, so that the kind
-  shows in full.
+  depends on the agent: a Claude token is a "Subscription token", the
+  ChatGPT sign-in of Codex is "ChatGPT plan", and a key is an "API key".
+  `loginLabels` in `src/fixtures/logins.ts` holds the names. On a phone,
+  the state and the kind go on a second line under the name of the agent,
+  so that the kind shows in full.
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude
   subscription token and on for an API key, as `app/account` shows. A
-  Codex access token starts off too, from decision 171, as
-  `app/account/codex-token` shows. The switch saves at once. A change that
-  the app did not save shows its cause beside the switch, as
+  ChatGPT plan of Codex starts off too, from decisions 171 and 175, as
+  `app/account/codex-token` shows. Under its switch, a note says that only
+  the owner may use a ChatGPT plan, under the terms of OpenAI. `shareNotes`
+  in `src/fixtures/logins.ts` holds the notes. The switch saves at once. A
+  change that the app did not save shows its cause beside the switch, as
   `app/account/share-not-saved` shows. The part lives in
   `src/components/settings/LoginShare.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and

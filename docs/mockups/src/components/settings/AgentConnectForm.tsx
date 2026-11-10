@@ -6,7 +6,6 @@ import type { AgentKey } from '../../fixtures/agents'
 import {
   anthropicKeyPage,
   claudeTokenCommand,
-  codexTokenPage,
   connectKinds,
   loginLabels,
   openAiKeyPage,
@@ -17,24 +16,33 @@ import { ActionButton } from '../common/actions'
 import { ExternalLink } from '../common/ExternalLink'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
+import { ChatGptSignIn } from './ChatGptSignIn'
+import type { SignInStep } from './chatGptSignInCopy'
 import styles from './AgentConnectForm.module.css'
 
 const testHint = `${productName} tests it once, and never shows it again.`
 
 /**
- * What a form asks for: the words that say what to paste and where to get
- * it, then the label and the placeholder of the field.
+ * A secret to paste: the words that say what to paste and where to get it,
+ * then the label and the placeholder of the field.
  */
-type SecretAsk = { text: ReactNode; label: string; placeholder: string }
+type SecretAsk = {
+  type: 'secret'
+  text: ReactNode
+  label: string
+  placeholder: string
+}
+
+/** What a form asks for: a secret, or the ChatGPT sign-in, with no field. */
+type Ask = SecretAsk | { type: 'chatgpt-sign-in' }
 
 /** What each agent asks for, by the kind that the switch selects. */
-type AgentAsks = Readonly<
-  Record<AgentKey, Readonly<Record<LoginKind, SecretAsk>>>
->
+type AgentAsks = Readonly<Record<AgentKey, Readonly<Record<LoginKind, Ask>>>>
 
 const asks: AgentAsks = {
   claude: {
     token: {
+      type: 'secret',
       text: (
         <>
           Run <code className={styles.code}>{claudeTokenCommand}</code> on your
@@ -45,6 +53,7 @@ const asks: AgentAsks = {
       placeholder: 'Paste the token',
     },
     'api-key': {
+      type: 'secret',
       text: (
         <>
           Paste an API key of your Anthropic account.{' '}
@@ -59,6 +68,7 @@ const asks: AgentAsks = {
   },
   codex: {
     'api-key': {
+      type: 'secret',
       text: (
         <>
           Paste an API key of your OpenAI account.{' '}
@@ -68,33 +78,59 @@ const asks: AgentAsks = {
       label: 'OpenAI API key',
       placeholder: 'Paste the key',
     },
-    token: {
-      text: (
-        <>
-          Paste an access token from your ChatGPT Business or Enterprise
-          workspace, with the Codex scope. The owner of that workspace must
-          allow access tokens and local Codex use.{' '}
-          <ExternalLink href={codexTokenPage}>Make one in ChatGPT</ExternalLink>
-        </>
-      ),
-      label: 'Codex access token',
-      placeholder: 'Paste the token',
-    },
+    token: { type: 'chatgpt-sign-in' },
   },
+}
+
+/**
+ * The field of a secret, with the hint that the app tests it once, then
+ * Cancel, when the form can close, and Connect, which leads to `connectTo`.
+ */
+function SecretFields(props: {
+  ask: SecretAsk
+  connectTo: string
+  cancel: boolean
+}) {
+  const { field } = useControlSizes()
+  return (
+    <>
+      <p className={styles.text}>{props.ask.text}</p>
+      <Input
+        autoComplete="off"
+        hint={testHint}
+        label={props.ask.label}
+        onChangeText={noop}
+        placeholder={props.ask.placeholder}
+        secureTextEntry
+        size={field}
+        value=""
+      />
+      <div className={styles.actions}>
+        {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
+        <ScreenLink asChild to={props.connectTo}>
+          <ActionButton tone="primary">Connect</ActionButton>
+        </ScreenLink>
+      </div>
+    </>
+  )
 }
 
 /**
  * The form that connects an agent, open under its row. Its switch chooses
  * the kind of the login: a subscription token or an API key for Claude,
- * and an API key or an access token for Codex. `kind` is the kind that the
- * switch selects, by default the first kind of the agent. Connect leads to
- * `connectTo`. Cancel shows when the form can close.
+ * and an API key or the ChatGPT plan for Codex. `kind` is the kind that the
+ * switch selects, by default the first kind of the agent. A secret has its
+ * field and Connect. The ChatGPT plan has the steps of its sign-in, from
+ * `signIn`, by default before the start. The main button, Connect or the
+ * button that gets a code, leads to `connectTo`. Cancel shows when the form
+ * can close.
  */
 export function AgentConnectForm(props: {
   agent: AgentKey
   kind?: LoginKind
   connectTo: string
   cancel: boolean
+  signIn?: SignInStep
 }) {
   const { field } = useControlSizes()
   const kinds = connectKinds[props.agent]
@@ -112,23 +148,19 @@ export function AgentConnectForm(props: {
         size={field}
         value={kind}
       />
-      <p className={styles.text}>{ask.text}</p>
-      <Input
-        autoComplete="off"
-        hint={testHint}
-        label={ask.label}
-        onChangeText={noop}
-        placeholder={ask.placeholder}
-        secureTextEntry
-        size={field}
-        value=""
-      />
-      <div className={styles.actions}>
-        {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
-        <ScreenLink asChild to={props.connectTo}>
-          <ActionButton tone="primary">Connect</ActionButton>
-        </ScreenLink>
-      </div>
+      {ask.type === 'secret' ? (
+        <SecretFields
+          ask={ask}
+          cancel={props.cancel}
+          connectTo={props.connectTo}
+        />
+      ) : (
+        <ChatGptSignIn
+          cancel={props.cancel}
+          codeTo={props.connectTo}
+          step={props.signIn ?? 'start'}
+        />
+      )}
     </div>
   )
 }

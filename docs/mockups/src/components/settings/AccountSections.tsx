@@ -3,6 +3,7 @@ import { ArrowUpRight, LogOut } from 'lucide-react'
 import { agentKeys, agents, type AgentKey } from '../../fixtures/agents'
 import {
   loginLabels,
+  shareNotes,
   shareNotSavedCause,
   sharedByDefault,
   type AgentLogins,
@@ -17,6 +18,12 @@ import { LinkTabs } from '../common/LinkTabs'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
+import type { SignInStep } from './chatGptSignInCopy'
+import {
+  LoginNotUsable,
+  SignedOutStatus,
+  type UnusableLogin,
+} from './LoginNotUsable'
 import { LoginShare } from './LoginShare'
 import { Section } from './Section'
 import styles from './AccountSections.module.css'
@@ -87,22 +94,28 @@ export type OpenAgentForm = {
   agent: AgentKey
   /** The kind that its switch selects, by default the first of the agent. */
   kind?: LoginKind
+  /** Where the main button leads: Connect, or the button that gets a code. */
   connectTo: string
   /** The form can close, because it did not open as the next step. */
   cancel: boolean
+  /** The step of the ChatGPT sign-in, when the switch selects it. */
+  signIn?: SignInStep
 }
 
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
  * login. `form` opens the Connect form of an agent under its row.
  * `removable` gives each connected login its Remove, and `shares` its
- * share setting, as on the account.
+ * share setting, as on the account. `unusable` names a connected login
+ * that the app can no longer use: its row says Signed out, with the cause
+ * and Sign in again.
  */
 export function AgentList(props: {
   logins: AgentLogins
   form?: OpenAgentForm
   removable?: boolean
   shares?: LoginShares
+  unusable?: UnusableLogin
 }) {
   const ids = useId()
   return (
@@ -110,6 +123,8 @@ export function AgentList(props: {
       {agentKeys.map((key) => {
         const login = props.logins[key]
         const form = props.form?.agent === key ? props.form : undefined
+        const unusable =
+          login && props.unusable?.agent === key ? props.unusable : undefined
         const nameId = `${ids}-${key}`
         let action = form ? null : <ActionButton>Connect</ActionButton>
         if (login) {
@@ -131,7 +146,7 @@ export function AgentList(props: {
               <span className={styles.detail}>
                 {login ? (
                   <>
-                    {connected}
+                    {unusable ? <SignedOutStatus /> : connected}
                     <span className={styles.kind}>
                       {loginLabels[key][login]}
                     </span>
@@ -140,12 +155,19 @@ export function AgentList(props: {
               </span>
               {action}
             </div>
+            {unusable ? (
+              <LoginNotUsable
+                cause={unusable.cause}
+                signInTo={unusable.signInTo}
+              />
+            ) : null}
             {login && props.shares ? (
               <LoginShare
                 error={
                   props.shares.notSaved === key ? shareNotSavedCause : null
                 }
                 nameId={nameId}
+                note={shareNotes[key][login]}
                 onChange={noop}
                 shared={sharedByDefault[key][login]}
               />
@@ -156,6 +178,7 @@ export function AgentList(props: {
                 cancel={form.cancel}
                 connectTo={form.connectTo}
                 kind={form.kind}
+                signIn={form.signIn}
               />
             ) : null}
           </li>
@@ -168,12 +191,14 @@ export function AgentList(props: {
 /**
  * The agents that every org uses, Claude and Codex: each connected login
  * with its kind, Remove, and its share setting, or Connect, which opens the
- * form of the agent.
+ * form of the agent. `unusable` names a login that the app can no longer
+ * use.
  */
 export function AgentsSection(props: {
   logins: AgentLogins
   form?: OpenAgentForm
   shares: LoginShares
+  unusable?: UnusableLogin
 }) {
   return (
     <Section description="Every org uses these agents." title="Agents">
@@ -182,6 +207,7 @@ export function AgentsSection(props: {
         logins={props.logins}
         removable
         shares={props.shares}
+        unusable={props.unusable}
       />
     </Section>
   )

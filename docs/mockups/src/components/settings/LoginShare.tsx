@@ -18,8 +18,10 @@ const hints = {
  *
  * The switch shows the saved value, or the new value while `saving`. After
  * a change that the app did not save, `error` gives the cause, and the
- * switch shows the saved value again. The spoken name of the switch starts
- * with the name of the agent, from the element with the id `nameId`.
+ * switch shows the saved value again. `note` adds a line under the hint,
+ * such as the terms of a provider that lets only the owner use the login.
+ * The spoken name of the switch starts with the name of the agent, from
+ * the element with the id `nameId`.
  */
 export function LoginShare(props: {
   nameId: string
@@ -27,6 +29,7 @@ export function LoginShare(props: {
   onChange: (shared: boolean) => void
   saving?: boolean
   error?: string | null
+  note?: string
 }) {
   const labelId = useId()
   const { field } = useControlSizes()
@@ -39,6 +42,7 @@ export function LoginShare(props: {
         <span className={styles.hint}>
           {props.shared ? hints.shared : hints.kept}
         </span>
+        {props.note ? <span className={styles.hint}>{props.note}</span> : null}
         {props.error ? (
           <span className={styles.error} role="alert">
             <CircleAlert aria-hidden className={styles.icon} size={13} />

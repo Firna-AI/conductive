@@ -1,31 +1,32 @@
+import { chatGptSignInCopy } from '../components/settings/chatGptSignInCopy'
 import type { AgentKey } from './agents'
 
 /**
  * How a user connects an agent: Claude with a subscription token from
  * `claude setup-token` or an Anthropic API key, and Codex with an OpenAI
- * API key or a Codex access token from a ChatGPT Business or Enterprise
- * workspace (decisions 24, 37, and 170). Both tokens are of the kind
- * `token`.
+ * API key or a device code sign-in to the ChatGPT plan of the user
+ * (decisions 24, 37, and 175). The Claude token and the ChatGPT sign-in
+ * are both of the kind `token`.
  */
 export const loginKinds = ['token', 'api-key'] as const
 
 export type LoginKind = (typeof loginKinds)[number]
 
 /**
- * The name of each kind of login, by agent. OpenAI calls the token of Codex
- * an access token, so members find it under that name in ChatGPT.
+ * The name of each kind of login, by agent. The ChatGPT sign-in of Codex
+ * shows as the plan that Codex then runs on.
  */
 export const loginLabels: Readonly<
   Record<AgentKey, Readonly<Record<LoginKind, string>>>
 > = {
   claude: { token: 'Subscription token', 'api-key': 'API key' },
-  codex: { token: 'Access token', 'api-key': 'API key' },
+  codex: { token: 'ChatGPT plan', 'api-key': 'API key' },
 }
 
 /**
  * The kinds of each agent in the order of the switch of its Connect form.
- * The first kind starts selected. Most members have an OpenAI API key, and
- * a Codex access token needs a Business or Enterprise workspace, so the API
+ * The first kind starts selected. An OpenAI API key needs no step before
+ * it, and the ChatGPT sign-in needs a setting of ChatGPT first, so the API
  * key comes first for Codex.
  */
 export const connectKinds: Readonly<
@@ -46,16 +47,28 @@ export const accountLogins: Readonly<Record<AgentKey, LoginKind>> = {
 
 /**
  * Whether a new login lets other members use it in the sessions of its
- * owner, by agent and kind (decisions 116 and 171). A Claude subscription
- * is for one person, and a personal Codex access token acts as the member
- * who made it, so both tokens start off. An API key starts on, because its
- * owner may let a team use it.
+ * owner, by agent and kind (decisions 116, 171, and 175). A Claude
+ * subscription is for one person, and the terms of OpenAI forbid making a
+ * ChatGPT account available to anyone else, so both tokens start off. An
+ * API key starts on, because its owner may let a team use it.
  */
 export const sharedByDefault: Readonly<
   Record<AgentKey, Readonly<Record<LoginKind, boolean>>>
 > = {
   claude: { token: false, 'api-key': true },
   codex: { token: false, 'api-key': true },
+}
+
+/**
+ * The note under the share switch of a kind whose provider lets only its
+ * owner use it, by agent and kind: a ChatGPT plan, under the terms of
+ * OpenAI (decision 175).
+ */
+export const shareNotes: Readonly<
+  Record<AgentKey, Readonly<Partial<Record<LoginKind, string>>>>
+> = {
+  claude: {},
+  codex: { token: chatGptSignInCopy.shareNote },
 }
 
 /**
@@ -73,5 +86,21 @@ export const anthropicKeyPage = 'https://console.anthropic.com/settings/keys'
 /** The page where a user makes an OpenAI API key for Codex. */
 export const openAiKeyPage = 'https://platform.openai.com/api-keys'
 
-/** The page of ChatGPT where a member makes a Codex access token. */
-export const codexTokenPage = 'https://chatgpt.com/admin/access-tokens'
+/** The page of OpenAI where a user enters the code of a ChatGPT sign-in. */
+export const chatGptDevicePage = 'https://auth.openai.com/codex/device'
+
+/** The one-time code that OpenAI gave for a ChatGPT sign-in. */
+export const chatGptCode = 'HZQW-7KMT'
+
+/**
+ * The cause of a ChatGPT sign-in that OpenAI refused, because device code
+ * sign-in is off for the ChatGPT account of the user.
+ */
+export const signInRefusedCause: string = chatGptSignInCopy.causes.refused
+
+/**
+ * The cause of a Codex login that the app can no longer use, as the field
+ * `unusableCause` of the login status carries it: OpenAI did not renew the
+ * ChatGPT sign-in.
+ */
+export const codexUnusableCause: string = chatGptSignInCopy.causes.notRenewed
