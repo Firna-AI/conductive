@@ -404,7 +404,7 @@ Depends on: 1, 2, 3, and 4
 
 - [x] Run the targeted tests and `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -417,6 +417,10 @@ Depends on: 1, 2, 3, and 4
 
 Evidence: `.context/pricing-page/complete-gate.log` and
 `.context/pricing-page/reports/worker-tests.md`.
+
+Review: one test-coverage finding was independently checked and fixed in
+`b2cf7c79`. The fresh re-review found no in-scope findings. Reports:
+`.context/reviews/calummoore/billing-brainstorm/`.
 
 ## Post-merge follow-up (non-blocking)
 
