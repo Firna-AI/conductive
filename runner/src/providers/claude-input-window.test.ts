@@ -139,6 +139,7 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
     endpoint:
       fakeToolContext.machineOrigin + '/v1/model/' + first.message.choice.agent,
     credential: { type: 'gateway', ...first.credential },
+    commitAuthor: null,
     choice: first.message.choice,
     conversationId: null,
     instructions: '',

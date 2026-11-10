@@ -1,10 +1,11 @@
-# Conductor Cloud comparison
+# Conductor comparison
 
 This doc holds the requirements and the decisions in force for the public
-page that compares Conductor Cloud with Conductive. Conductor is a Mac app
-for parallel coding agents at `conductor.build`. Conductor Cloud is its set
-of cloud workspaces. Its read-only day is 13 November 2026, and its
-shut-down day is 20 November 2026. The terms are those of the
+page that compares Conductor with Conductive. Conductor is a Mac app for
+parallel coding agents at `conductor.build`. Its local workspaces run on
+the Mac of its user. Conductor Cloud is its set of cloud workspaces. The
+read-only day of Conductor Cloud is 13 November 2026, and its shut-down day
+is 20 November 2026. The terms are those of the
 [architecture doc](../architecture.md#terms). The
 [mockup catalogue](../mockups/catalogue.md) draws the page at
 `marketing/from-conductor/one-table`, and that mockup is its visual spec.
@@ -14,11 +15,15 @@ shut-down day is 20 November 2026. The terms are those of the
 - The page lives at `https://conductive.build/from-conductor`, on the
   [marketing site](../architecture/marketing-site.md). Visitors need no
   sign-in.
-- It shows people who move from Conductor Cloud which of its features work
-  in Conductive today, which are on the way, and which work differently.
+- It shows people who move from Conductor which of its features work in
+  Conductive today, which are on the way, and which work differently.
 - A page of the marketing site won over a Markdown page in the repository,
   a public GitHub board, and a view in the app. Reason: visitors decide
   before they sign up, and links and searches reach the site.
+- The page and its two entry links call the product that visitors come
+  from "Conductor", not "Conductor Cloud".
+- "Conductor" won over "Conductor Cloud". Reason: the list covers every
+  Conductor feature, so the words of the page match its rows.
 - The page has the header and the footer of the site. It ends with the
   last call to action of the site. Its main action, "Sign up", starts the
   GitHub sign-in. A new account then waits for app access, as
@@ -47,25 +52,36 @@ shut-down day is 20 November 2026. The terms are those of the
 
 ## Scope
 
-- The page lists Conductor Cloud features only. A note at the top of the
-  page says so.
-- Conductor Cloud features only won over all Conductor features, and over
-  two lists, one for each kind of Conductor user. Reason: Conductive
-  replaces Conductor Cloud.
-- A feature that works only in local Conductor workspaces on a Mac is out.
-  It stays out also when another device controls it, such as remote
-  control from a phone.
-- A cloud feature with a Mac client stays in, such as a copy of the files
-  of a cloud workspace to a Mac.
+- The page lists every Conductor feature, local and cloud, in one table.
+  No note limits the list to one kind of Conductor workspace.
+- Every Conductor feature in one list won over Conductor Cloud features
+  only, and over two lists, one for each kind of Conductor user. Reason:
+  the user chose it.
 - The top of the page gives the read-only day and the shut-down day of
   Conductor Cloud. Their words stay true after each day.
-- The page shows the date of the last full check of its rows against the
-  product.
+- The page calls them the days of the cloud workspaces of Conductor,
+  because they do not apply to its local workspaces.
+
+## The check time
+
+- The check time is the date and the time of the last full check of every
+  row against the product.
+- The top of the page ends with the check time, on a line of its own, such
+  as "Last checked 10 November 2026 at 02:07 UTC".
+- The check time is in UTC on the 24-hour clock, to the minute, with "UTC"
+  in its words. Reason: a page without a script cannot read the time zone
+  of the visitor.
+- Only a full check of every row moves the check time. A change to one row
+  between two full checks does not move it.
+- The time of the last full check won over the time of the last change
+  that Git records, and over a day on each row. Reason: it stays true after
+  each check, also when no row changes, and it needs no change to the build
+  or the deploy.
 
 ## The table
 
 - One table lists every feature, under one header row with the columns
-  Area, Conductor Cloud feature, In Conductive, and Notes.
+  Area, Conductor feature, In Conductive, and Notes.
 - One table with an Area column won over a table for each area, sections
   by status, and cards by task. Reason: a visitor reads every feature in
   one run and compares the statuses down one column.
@@ -77,6 +93,36 @@ shut-down day is 20 November 2026. The terms are those of the
   It can name a limit together with the way around it.
 - A legend before the table gives the meaning of each status, in words
   that match its claim rule. It also gives the rule for due dates.
+
+## Row links
+
+- Each row has an address: the address of the page, `#`, and the id of the
+  row, such as `/from-conductor#file-tree`.
+- A row keeps its id when its name, its status, or its note changes, so a
+  shared address keeps working.
+- Each id of the page is unique.
+- A quiet link icon after the name of the feature links to the address of
+  its row.
+- A visitor copies the address with the menu of the browser, or from the
+  address bar after a click.
+- A link icon won over a copy button that needs a script, and over the name
+  of each feature as the link. Reason: the page still runs no script and
+  keeps its security policy, and the icon stays quiet.
+- On a device that can hover, the icon shows only while the pointer is over
+  the name, the status, or the note of its row. It also shows while the
+  link has keyboard focus, and on the opened row.
+- The pointer over the merged Area cell shows no icon, because that cell
+  spans every row of its area.
+- On a device without hover, the icon always shows.
+- In the phone layout, the touch area of the link is at least 44 px by
+  44 px. The touch area moves no text.
+- The opened row is the row whose address the visitor opens. It stops a
+  small gap under the top of the window.
+- The opened row has a quiet fill and no coloured edge.
+- On a computer, the fill covers the name, the status, and the note of the
+  opened row, never the merged Area cell. In the phone layout, the fill
+  covers the whole row.
+- An address with an unknown id opens the top of the page.
 
 ## Layouts
 
@@ -111,6 +157,7 @@ access. It promises no use at once to a person who waits.
 - An unchosen proposal, such as a brainstorm with open decisions, is not a
   plan. Its row stays Under consideration.
 - A row keeps the status that a recorded decision gives.
+- A new row gets Not planned only with a decision of the user.
 - Each status shows a word and an icon. The colour only supports them.
 - Several statuses with optional real dates won over the earlier call to
   show no dates. Reason: the page must reassure Conductor users that a
@@ -140,3 +187,12 @@ access. It promises no use at once to a person who waits.
 - Each icon colour has a contrast of at least 3 to 1 with its background,
   in both colour schemes.
 - A keyboard reaches each link of the page in reading order.
+- Each row link is named "Link to" and the name of its feature, such as
+  "Link to File tree", so that its name says where it leads.
+- The row header keeps the name of the feature as its only accessible name.
+  Reason: a screen reader reads the row header with each cell of its row,
+  so more words there repeat for each cell.
+- The keyboard and screen readers reach each row link also while its icon
+  is hidden.
+- A row link with keyboard focus shows the focus ring of the other links of
+  the site.
