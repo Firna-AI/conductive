@@ -39,6 +39,7 @@ export async function existingWorkspace(
     user,
     id,
     fixture.repositoryId,
+    null,
   )
   await env.DB.prepare(
     `INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id,

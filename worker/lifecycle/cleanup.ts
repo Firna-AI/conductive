@@ -3,6 +3,10 @@ import { orgSandboxProvider } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
 import { firstOrgAdmin } from './settings-data'
+import {
+  computerDeletedStatement,
+  pendingComputerCleanup,
+} from './computer-ledger'
 
 export interface SandboxCleanup {
   workspaceId: string
@@ -27,22 +31,23 @@ export async function retrySandboxCleanup(
   dependencies: AppDependencies,
   workspaceId: string,
 ): Promise<boolean> {
-  const cleanup = await env.DB.prepare(
-    'SELECT org_id AS orgId, sandbox_id AS sandboxId FROM lifecycle_sandbox_cleanup WHERE workspace_id = ?',
-  )
-    .bind(workspaceId)
-    .first<{ orgId: string; sandboxId: string }>()
-  if (!cleanup) return true
-  const admin = await firstOrgAdmin(env.DB, cleanup.orgId)
-  if (!admin) return false
-  const provider = await orgSandboxProvider(
-    env,
-    admin.userId,
-    cleanup.orgId,
-    dependencies.fetch,
-  )
-  await deleteSandboxIfPresent(provider, cleanup.sandboxId)
-  await clearSandboxCleanup(env.DB, workspaceId, cleanup.sandboxId)
+  for (const cleanup of await pendingComputerCleanup(env.DB, workspaceId)) {
+    const admin = await firstOrgAdmin(env.DB, cleanup.orgId)
+    if (!admin) return false
+    const provider = await orgSandboxProvider(
+      env,
+      admin.userId,
+      cleanup.orgId,
+      dependencies.fetch,
+    )
+    await deleteSandboxIfPresent(
+      env.DB,
+      provider,
+      cleanup.sandboxId,
+      dependencies.now(),
+    )
+    await clearSandboxCleanup(env.DB, workspaceId, cleanup.sandboxId)
+  }
   return true
 }
 
@@ -60,8 +65,10 @@ export async function clearSandboxCleanup(
 }
 
 export async function deleteSandboxIfPresent(
+  db: D1Database,
   provider: SandboxProvider,
   id: string,
+  now: number,
 ): Promise<void> {
   try {
     await provider.delete(id)
@@ -69,6 +76,7 @@ export async function deleteSandboxIfPresent(
     if (!(error instanceof ProviderError && error.kind === 'not_found'))
       throw error
   }
+  await computerDeletedStatement(db, id, now).run()
 }
 
 export async function deleteSnapshotIfPresent(

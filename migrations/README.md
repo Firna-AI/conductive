@@ -59,6 +59,16 @@ The three default model columns can be all set or all unset.
 The nullable `new_workspace_view` column holds `page` or `dialog`.
 An unset view uses the page. An unset model uses the configured app default.
 
+`202611091127_computer_ledger.sql` adds the retained computer ledger.
+It copies known IDs from workspaces, builds, cleanup records, preview listeners,
+terminal credentials, image source jobs, and the deleted-org resource journal.
+An allocation starts with its request key and no provider ID.
+The lifecycle attaches the ID after the provider reply.
+Confirmed deletions keep their entries until the org purge.
+An owner or parent ID has no foreign key, so its removal keeps the computer record.
+Identity-write triggers also retain assigned IDs from imports and repairs.
+A workspace owner trigger keeps its live computer records with the current owner.
+
 `202611091200_waitlist.sql` adds app access, invite and referral codes, code
 uses, and the sign-up pause. Each existing account gets app access from
 its join time and one referral code with five uses. The user record also

@@ -16,6 +16,17 @@
   - `worker/chat/runner-repairs.test.ts:23`: "requests all four workspace reports without a login, coalesces losses, and resets only on complete reports".
   - `worker/lifecycle/provisioning.test.ts`: "recovers an accepted create after its caller closes and the actor restarts".
   - `worker/lifecycle/disk-retention.test.ts`: "keeps a stopped disk through startup and stop failures without a stale stop after user open".
+
+  Another full-gate failure came from `worker/operator/suspension-race.test.ts` during the primary integration of PR #106.
+  Its case was "cancels an in-flight allocation and cleans its delayed computer after actor recovery".
+  It reported `Test timed out in 15000ms`. The full run had 1,968 passed tests and this one failure.
+  All three tests in that file then passed in one unchanged isolated rerun.
+  This additional case has one isolated rerun, not a ten-run result.
+  No source, assertion, or timeout changed.
+  The suspected source is the same admission and alarm readiness ordering as the provisioning case.
+  The queued-job notification can precede the final alarm schedule.
+  A manual advance can then run no phase before the test waits for creation admission.
+  This explanation remains an inference from the fixture code.
 - **Problem:** A gate run fails on one of these tests now and then, also when the change has nothing to do with it. The pull request then waits for a rerun.
 - **Impact if no action:** Every branch and every merge into `main` pays reruns and delay, and a real failure can hide among the known flakes.
 - **Root question:** How do these tests give the same result under the load of the full gate as alone?

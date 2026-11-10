@@ -162,7 +162,7 @@ export async function finishFailedStart(
   if (sandboxId) {
     try {
       if (!provider) throw new Error('Provider unavailable')
-      await deleteSandboxIfPresent(provider, sandboxId)
+      await deleteSandboxIfPresent(env.DB, provider, sandboxId, now())
       await clearSandboxCleanup(env.DB, job.workspaceId, sandboxId)
     } catch {
       cleanupPending = true

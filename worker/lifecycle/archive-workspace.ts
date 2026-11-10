@@ -52,7 +52,12 @@ export async function archiveWorkspace(
         orgId,
         dependencies.fetch,
       )
-      await deleteSandboxIfPresent(provider, row.sandboxId)
+      await deleteSandboxIfPresent(
+        env.DB,
+        provider,
+        row.sandboxId,
+        dependencies.now(),
+      )
     }
     await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
     await markWorkspaceArchived(
