@@ -15,6 +15,7 @@ import {
 import { accountRoutes } from './account-routes'
 import { attachmentRoutes } from './attachment-routes'
 import { createBackend, guardScope } from './backend'
+import { branchRoutes } from './branch-routes'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
 import { operatorRoutes } from './operator-routes'
@@ -63,6 +64,7 @@ export function createFakeServices(search: string): AppServices {
     ...workspaceRoutes(backend),
     ...createRoutes(backend),
     ...attachmentRoutes(backend, options.upload),
+    ...branchRoutes(backend, options.branches),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
     ...operatorRoutes(backend),

@@ -17,14 +17,30 @@ const resumePlan: readonly PlannedStep[] = [
   { id: 'restore', label: 'Resuming with your files as you left them' },
 ]
 
-/** A new workspace starts from the org image, fetches, and makes its branch. */
+/**
+ * A new workspace starts from the org image, fetches, and makes its branch.
+ * With `existing`, it fetches that branch and checks it out with tracking
+ * instead, as the mockups draw it.
+ */
 export function createPlan(
   orgName: string,
   repository: Repository,
   branch: string,
+  existing = false,
 ): PlannedStep[] {
+  const image = {
+    id: 'image',
+    label: `Starting from the cloud computer of ${orgName}`,
+  }
+  if (existing) {
+    return [
+      image,
+      { id: 'fetch', label: `Fetching ${branch} of ${repository.fullName}` },
+      { id: 'branch', label: `Checking out ${branch} with tracking` },
+    ]
+  }
   return [
-    { id: 'image', label: `Starting from the cloud computer of ${orgName}` },
+    image,
     {
       id: 'fetch',
       label: `Fetching ${repository.defaultBranch} of ${repository.fullName}`,
