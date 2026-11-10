@@ -55,7 +55,7 @@ export const securityPrivacyAndAdminFeatures: readonly ParityFeature[] = [
     area: 'security-privacy-and-admin',
     name: 'Keychain storage',
     status: 'different',
-    note: 'Agent logins and environment values are stored encrypted on the service. Saved logins and values never return to your browser.',
+    note: 'Agent logins and environment values are stored encrypted on the service. Settings never return saved logins or values to your browser.',
   },
   {
     id: 'proxy-support',

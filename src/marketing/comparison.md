@@ -33,6 +33,12 @@ Keep each row true:
   the way around it.
 - Name no sandbox provider, internal name, or decision number in a note.
   Copy no Conductor text.
+- Check each note that names a protection of logins, tokens, or
+  environment values against
+  [Access and security](../../docs/protocol/access-and-security.md),
+  [Tokens and secrets](../../docs/protocol/tokens-and-secrets.md), the
+  Terms, the Privacy page, and the [Security guide](docs/security.md).
+  Claim no protection that they do not state.
 - Give a due date only for a dated commitment that the team recorded.
   Never add an example date.
 - Keep the evidence of each status and the scope audit out of the rows and

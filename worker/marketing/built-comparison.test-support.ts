@@ -50,6 +50,14 @@ export async function checkBuiltComparison(page: string) {
       ),
       'check line time',
     ).toEqual([parityCheckedAt])
+    // The words must stay readable when a full check moves the time, so the
+    // check asserts their form. dates.test.ts asserts the exact words.
+    expect(
+      checkLine?.textContent?.replace(/\s+/g, ' ').trim(),
+      'check line words',
+    ).toMatch(
+      /^Last checked \d{1,2} (January|February|March|April|May|June|July|August|September|October|November|December) \d{4} at ([01]\d|2[0-3]):[0-5]\d UTC$/,
+    )
 
     const featureRows = [...document.querySelectorAll('table tbody tr')]
     expect(
