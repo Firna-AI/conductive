@@ -77,7 +77,7 @@ export const addedRepository = 'acme/admin-dashboard'
  * The repository that an admin of Acme removes. The cloud computer of Acme
  * holds it until the next build.
  */
-export const removedRepository = 'acme/marketing-site'
+const removedRepository = 'acme/marketing-site'
 
 /**
  * The saved repository changes of Acme that its cloud computer does not

@@ -10,7 +10,7 @@ import { latestBuild } from './org-model'
  * after a start that failed. The newest build is the newest run of the
  * install script, so a refresh never counts as a build that runs.
  */
-export function repositoryWaitOf(builds: BuildsResponse): RepositoryWait {
+function repositoryWaitOf(builds: BuildsResponse): RepositoryWait {
   const newest = latestBuild(builds)
   if (newest?.state === 'failed') return 'failed'
   const added = builds.changes.addedRepositories.length > 0

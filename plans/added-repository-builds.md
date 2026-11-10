@@ -546,11 +546,11 @@ Depends on: 4
 
 Depends on: every other milestone
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       complete gate, `npm run check`.
-- [ ] Delete `plans/follow-ups/new-workspace-offers-unbuilt-repositories.md`,
+- [x] Delete `plans/follow-ups/new-workspace-offers-unbuilt-repositories.md`,
       because this change fixes it.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
