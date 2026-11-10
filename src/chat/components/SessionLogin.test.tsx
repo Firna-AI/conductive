@@ -1,14 +1,36 @@
 import { describe, expect, it } from 'vitest'
+import composerStyles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import type { OrgRole } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { coreFixtures, FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { loginGone, loginPrivate, withSessions } from '../state/linked-kit'
-import { renderChat } from './render-kit'
+import { renderChat, textOf } from './render-kit'
 
 const id = FAKE_IDS.session
 const sendOff = /aria-label="Send" aria-disabled="true"/
+/** The end of every login label, such as "Cal's login". */
+const loginLabel = "'s login"
+
+/** The words of the composer up to Send, so of the box and its bar. */
+function beforeSend(markup: string): string {
+  return textOf(markup.slice(0, markup.indexOf('aria-label="Send"')))
+}
+
+/**
+ * The words of the whole composer: the box and its bar.
+ * It fails when the chat shows no composer, so no check of it can pass on a
+ * chat without one.
+ */
+function composerText(markup: string): string {
+  const start = markup.indexOf(`class="${composerStyles.wrap}"`)
+  expect(start).toBeGreaterThan(-1)
+  return textOf(markup.slice(markup.lastIndexOf('<', start)))
+}
+
+/** Any name of a login, in any words, such as "Uses your Claude login". */
+const anyLogin = /login/i
 
 /** The account of the reader of a role, with no agent login. */
 function noLogins(role: OrgRole) {
@@ -19,18 +41,20 @@ function noLogins(role: OrgRole) {
 const firstRecord = () => workspaceFixtures().sessions.sessions[0]
 
 describe('the login of a session', () => {
-  it("names whose login a session uses: your own to its starter, also a private one, and the starter's name to another member, also after the starter left the org", async () => {
+  it("names the starter's login inside the composer box to another member, also after the starter left the org, and no login to the starter, also a private one", async () => {
     const own = await renderChat({})
-    expect(own.text()).toContain('Uses your Claude login')
+    expect(own.text()).not.toContain(loginLabel)
+    expect(composerText(own.markup())).not.toMatch(anyLogin)
     const ownPrivate = await renderChat({
       setup: (server) => withSessions(server, loginPrivate),
     })
     ownPrivate.chat.controller.setDraft(id, 'Add tests.')
-    expect(ownPrivate.text()).toContain('Uses your Claude login')
+    expect(ownPrivate.text()).not.toContain(loginLabel)
+    expect(composerText(ownPrivate.markup())).not.toMatch(anyLogin)
     expect(ownPrivate.text()).not.toContain('Your message starts a new session')
     expect(ownPrivate.markup()).not.toMatch(sendOff)
     const member = await renderChat({ role: 'member' })
-    expect(member.text()).toContain("Uses Cal's Claude login")
+    expect(beforeSend(member.markup())).toContain("Cal's login")
     const { members } = coreFixtures('member')
     const left = await renderChat({
       role: 'member',
@@ -40,7 +64,7 @@ describe('the login of a session', () => {
           members: members.members.filter((item) => item.user.id !== 'cal'),
         }),
     })
-    expect(left.text()).toContain("Uses Cal's Claude login")
+    expect(left.text()).toContain("Cal's login")
   })
 
   it('follows the session record, not an older account, for the login of its own starter', async () => {
@@ -68,12 +92,12 @@ describe('the login of a session', () => {
         server.json('GET', ACCOUNT_PATHS.account, noLogins('member')),
     })
     member.chat.controller.setDraft(id, 'Add tests.')
-    expect(member.text()).toContain("Uses Cal's Claude login")
+    expect(member.text()).toContain("Cal's login")
     expect(member.text()).not.toContain('Connect Claude')
     expect(member.markup()).not.toMatch(sendOff)
   })
 
-  it('says before Send that a message starts a new session, and why, and offers no steering of the running turn', async () => {
+  it('says before Send that a message starts a new session, and why, names no login, and offers no steering of the running turn', async () => {
     const reasons = [
       [loginGone, "Cal's Claude login is not available."],
       [loginPrivate, "Cal's Claude login is for Cal's messages only."],
@@ -89,9 +113,12 @@ describe('the login of a session', () => {
       expect({
         case: reason,
         notice: text.includes(`Your message starts a new session ${reason}`),
-        line: text.includes('Uses your Claude login'),
+        label: text.includes(loginLabel),
+        composerLogin: anyLogin.test(composerText(member.markup())),
         stop: text.includes('Stop'),
-        steer: text.includes('The agent reads this at its next step.'),
+        steer: member
+          .markup()
+          .includes('placeholder="Steer the agent while it works"'),
         placeholder: member
           .markup()
           .includes('placeholder="Message the agent"'),
@@ -99,7 +126,8 @@ describe('the login of a session', () => {
       }).toEqual({
         case: reason,
         notice: true,
-        line: true,
+        label: false,
+        composerLogin: false,
         stop: true,
         steer: false,
         placeholder: true,
@@ -121,7 +149,8 @@ describe('the login of a session', () => {
     expect(older.text()).toContain(
       'Your message starts a new session The login for this session is not available.',
     )
-    expect(older.text()).toContain('Uses your Claude login')
+    expect(older.text()).not.toContain(loginLabel)
+    expect(composerText(older.markup())).not.toMatch(anyLogin)
     const noLogin = await renderChat({
       role: 'member',
       setup: (server) => {
@@ -142,7 +171,8 @@ describe('the login of a session', () => {
     })
     privateNoLogin.chat.controller.setDraft(id, 'Add tests.')
     expect(privateNoLogin.text()).toContain('Connect Claude to use Opus 5.5')
-    expect(privateNoLogin.text()).toContain('Uses your Claude login')
+    expect(privateNoLogin.text()).not.toContain(loginLabel)
+    expect(composerText(privateNoLogin.markup())).not.toMatch(anyLogin)
     expect(privateNoLogin.markup()).toMatch(sendOff)
   })
 })

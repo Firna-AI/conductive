@@ -18,8 +18,14 @@
   - **B.** Add `docs/mockups/src/**` to the `push` and `pull_request` path lists of `.github/workflows/desktop-ci.yml`. Add the same path to the list in `desktop/README.md`. Cost: Mac runner minutes on each pull request that changes only the mockups. Effort: Small.
   - **C.** Add only the mockup paths that the app imports, such as `docs/mockups/src/render.css`, `docs/mockups/src/components/**`, and `docs/mockups/src/design/**`. Cost: fewer Mac runs than B, but the list must follow each new import of the app. Effort: Small.
   - **D.** Add a real-browser runner, such as Vitest browser mode with Chromium, to the root gate. Run the layout checks there on every pull request. Cost: new dependencies, a browser in the Linux job and on each developer machine, and a new gate step. Effort: Large.
-- **Left out:** A check that reads the CSS source text, because it mirrors the implementation and cannot see the layout.
+  - **E.** Run the existing Mac workflow for every pull request and applicable push. This removes source-path filter drift, but spends Mac CI time on unrelated documentation changes. Effort: Small.
+  - **F.** Determine affected Mac input files from the app import graph. This follows later source moves, but needs a maintained CI script. Effort: Medium.
+- **Left out:** A check that reads the CSS source text, because it mirrors the implementation and cannot see the layout. Manual dispatch does not give automatic coverage. It also starts the signed-package job in this workflow, so it is a poor substitute for source-change coverage.
 - **Wider fix:** D, because it runs a layout check on every pull request, whatever paths it changes.
 - **Previous examples:** The change that added the toggle of the right column, on 2026-11-08, put its hide rule in `docs/mockups/src/` only. Only its other changes under `src/**` made the Mac job run.
 - **Recommendation:** B. It closes the gap with one line in each of two files, and mockup-only pull requests are few.
 - **Action:** ask the user, because the option changes when an existing gate runs, and the Mac runner minutes are a cost that the user chose to limit.
+
+- **Related:** `plans/follow-ups/dialog-content-outside-window.md` will add a browser layout regression. Its initial test-file edit starts the existing workflow. Later CSS-only edits still need the coverage decision.
+
+The second-pass check of the New workspace dialog on 9 November 2026 found the same gap. It proposed E and F as other approaches. It recorded that shared components and styles under `docs/mockups/` can alter the real app while the ordinary mockup build checks rendering and types without these browser interactions. E also prevents path-filter drift while retaining the current Mac journeys.

@@ -57,3 +57,25 @@ export function formatMoment(
 ): string {
   return `${formatShortDay(time, now, timeZone)} at ${formatClock(time, timeZone)}`
 }
+
+/** A time with its year, as a row of the details gives it: 8 Nov 2026 at 15:04. */
+export function formatLongMoment(time: number, timeZone?: string): string {
+  return `${formatLongDay(time, timeZone)} at ${formatClock(time, timeZone)}`
+}
+
+const DAY = 86_400_000
+
+/**
+ * How long a GitHub account has existed, in its largest whole unit: 2 days,
+ * 3 weeks, 5 months, or 9 years. An account of less than a day says so.
+ * The operator judges a new person from it.
+ */
+export function formatAge(createdAt: number, now: number): string {
+  const days = Math.floor((now - createdAt) / DAY)
+  if (days < 1) return 'Under a day'
+  if (days < 14) return days === 1 ? '1 day' : `${days} days`
+  if (days < 61) return `${Math.floor(days / 7)} weeks`
+  if (days < 365) return `${Math.floor(days / 30.4375)} months`
+  const years = Math.floor(days / 365.25)
+  return years === 1 ? '1 year' : `${years} years`
+}

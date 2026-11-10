@@ -11,6 +11,7 @@ type LargestOrg = OperatorOverview['largestOrgs'][number]
 interface Totals {
   usersTotal: number
   usersLastWeek: number
+  waiting: number
   orgsTotal: number
   orgsLastWeek: number
   workspacesTotal: number
@@ -50,6 +51,9 @@ export async function readOperatorOverview(
            SELECT COUNT(*) AS usersTotal,
              COUNT(CASE WHEN created_at BETWEEN ?1 AND ?2 THEN 1 END) AS usersLastWeek
            FROM users
+         ) CROSS JOIN (
+           SELECT COUNT(*) AS waiting FROM users u WHERE u.suspended_at IS NULL
+             AND NOT EXISTS (SELECT 1 FROM user_app_access a WHERE a.user_id = u.id)
          ) CROSS JOIN (
            SELECT COUNT(*) AS orgsTotal,
              COUNT(CASE WHEN created_at BETWEEN ?1 AND ?2 THEN 1 END) AS orgsLastWeek
@@ -99,6 +103,7 @@ export async function readOperatorOverview(
   return {
     readAt,
     users: { total: totals.usersTotal, lastWeek: totals.usersLastWeek },
+    waiting: totals.waiting,
     orgs: { total: totals.orgsTotal, lastWeek: totals.orgsLastWeek },
     workspaces: {
       total: totals.workspacesTotal,

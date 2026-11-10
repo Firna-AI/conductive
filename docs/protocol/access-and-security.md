@@ -26,8 +26,10 @@ These docs belong to this doc:
   app then gives both the identity and the repository access.
 - Cloudflare Access was rejected. Users sign in with GitHub, and Access
   cannot sign in inside a frame.
-- Anyone with a GitHub account can sign up (decisions 22 and 48). A
-  suspended account cannot sign in, as
+- A new GitHub sign-in creates an account without app access, and the
+  person waits on the waitlist (decision 160).
+  [Waitlist](waitlist.md) states what the person can reach and the ways in.
+  A suspended account cannot sign in, as
   [Operator actions](operator-actions.md#sessions-and-sign-in) says.
 - The sign-up check on the age and the email of a GitHub account was
   dropped (decision 48).
@@ -65,6 +67,9 @@ These docs belong to this doc:
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
+- The gate also checks app access, as
+  [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
+  says (decision 161).
 - The two attachment upload routes take raw bytes in place of a JSON body
   (decision 144). [Attachment uploads](#attachment-uploads) states their
   conditions. Every other write needs a JSON body.
@@ -147,7 +152,7 @@ rejected, because it needs a new secret, CORS rules, and a new host.
   as `mediaType`. The upload of a draft file also carries the ID of the
   first message as `messageId`.
 - For these routes, the gate keeps all its other checks:
-  - the host and the sign-in
+  - the host, the sign-in, and app access
   - the `Origin` header
   - the membership of the org
   - the checks that refuse a write to the org, such as during a suspension
@@ -183,5 +188,5 @@ Later screens add the frame and connection sources that they need.
 
 ## GitHub tokens
 
-- [GitHub tokens](tokens-and-secrets.md#github-tokens) states how a
-  workspace sandbox and a build get their GitHub tokens.
+- [GitHub tokens](github-tokens.md) states how Git, the GitHub CLI, and
+  repository copies get their GitHub tokens. Outside a turn, the GitHub CLI uses the workspace owner's account.

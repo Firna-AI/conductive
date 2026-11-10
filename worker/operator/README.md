@@ -6,46 +6,13 @@ It reads app-wide numbers.
 It can suspend a user or an org after an abuse report. A user
 suspension signs the user out, stops every cloud computer that the user
 owns, and blocks each new start.
+It also lists and approves people who wait, manages invite codes, and
+pauses sign-ups. [Waitlist routes](#waitlist-codes-and-sign-ups) describes
+these entry points.
 
 ## Overview
 
-Send `GET /api/operator/overview` to the app hostname.
-`operatorOverviewPath` in [`src/shared/operator.ts`](../../src/shared/operator.ts)
-builds the path. The normal app request gate runs first.
-The route then checks the signed-in user's numeric GitHub ID with
-`isOperator` in [`access.ts`](access.ts).
-It answers 403 `operator_required` when the ID is not in `OPERATOR_GITHUB_IDS`.
-Without that setting, nobody is an operator.
-The account reply uses the same reader for its `operator` boolean.
-The reader ignores spaces around each ID in the comma list.
-
-The reply is an `OperatorOverview` from
-[`src/shared/operator.ts`](../../src/shared/operator.ts):
-
-- `readAt` gives the read time in Unix milliseconds.
-- `users`, `orgs`, and `workspaces` each give `total` and `lastWeek`.
-  The week covers the last 7 times 24 hours through `readAt`.
-- `running` gives separate counts for `workspaces` and unfinished image `builds`.
-  Builds include both builds and refreshes whose job phase is not `done`.
-- `workspaceStates` gives `running`, `stopped`, `failed`, and `archived`.
-  Running includes starting, ready, working, unread, and input.
-  An archived workspace contributes only to Archived.
-  Failed counts the error state.
-  The four counts add up to the workspace total.
-- `newWorkspacesByDay` and `newUsersByDay` each give 30 `{ date, count }` entries.
-  Dates use `YYYY-MM-DD` in UTC, from oldest to newest.
-  The last entry covers the current UTC day through `readAt`.
-  A day without a record has a zero count.
-- `largestOrgs` gives up to five orgs with `id`, `name`, `initials`, `members`, `workspaces`, and `running`.
-  Initials are null when the org has no custom initials.
-  The workspace count includes archived workspaces.
-  The order is workspace count first, largest first, then org name.
-  This list leaves out deleted orgs.
-
-[`overview.ts`](overview.ts) reads every count from D1 in one batch.
-The counts include all records that still exist, also those of deleted orgs.
-Only `largestOrgs` leaves deleted orgs out.
-The route keeps no history and calls no sandbox provider.
+The [overview guide](overview.md) gives the route, access check, counts, and response.
 
 ## Orgs and users
 
@@ -94,6 +61,21 @@ Match is null for a name match or no search.
 
 User entries give `githubId`, `login`, `name`, `joinedAt`, `orgs`, `workspaces`, and `status`.
 User status is `active` or `suspended`.
+Both user entries and user pages also include `OperatorUserAccess` from
+[`operator-waitlist.ts`](../../src/shared/operator-waitlist.ts).
+`appAccess` is a waiting record with `waitingSince`, or a granted record
+with `grantedAt` and its source. The source identifies the approving
+operator, invite label, referral owner, or org and inviting admin.
+It also represents operator and existing-account grants.
+`githubCreatedAt` gives the GitHub account creation time, or null.
+`hasVerifiedEmail` is a boolean. It reveals no address.
+`approvalEmail` gives `state` and `updatedAt`. Its states are `none`,
+`pending`, `sent`, and `failed`. An absent email record has no time.
+`referralCode` is null without a code. Otherwise it gives the code,
+counts, disabled state and actor, and recipients with their GitHub IDs,
+logins, names, and use times. A recipient without a GitHub name has the
+name null. The code count retains uses by deleted accounts.
+The recipient list includes only accounts that still exist.
 
 The org page gives its identity, creation time, and selected repository count.
 It gives `workspaceStates`, `running`, and members with their identities, names, roles, and suspension flags.
@@ -118,6 +100,14 @@ All times use Unix milliseconds.
 An unknown org gets 404 `org_not_found`.
 An unknown or non-numeric GitHub ID gets 404 `user_not_found`.
 These reads return no chat, file, env value, agent login, or email address.
+
+## Waitlist, codes, and sign-ups
+
+The [waitlist guide](waitlist.md) gives the routes, approval rules, codes, and sign-up pause.
+
+### Approval email delivery
+
+[Approval email delivery](waitlist.md#approval-email-delivery) gives delivery and retry details.
 
 ## Suspend a user
 
@@ -245,6 +235,13 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 - [`access.ts`](access.ts): `isOperator`, the shared operator reader for routes and account replies.
 - [`overview.ts`](overview.ts): `readOperatorOverview`, the app-wide counts in one D1 batch.
 - [`directory-route.ts`](directory-route.ts): the org and user read dispatch.
+- [`waitlist-route.ts`](waitlist-route.ts): the waitlist, approval, code, and pause dispatch.
+- [`waitlist-directory.ts`](waitlist-directory.ts): waiting account search and cursor pages.
+- [`approval-data.ts`](approval-data.ts): the atomic approval batch and email state queries.
+- [`approval-email.ts`](approval-email.ts): the approval message, immediate send, and scheduled retries.
+- [`code-data.ts`](code-data.ts): code search, creation, disable, and public mapping.
+- [`signup-pause.ts`](signup-pause.ts): the pause read and conditional changes.
+- [`user-access-data.ts`](user-access-data.ts): user grant sources, email state, and referral recipients.
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
 - [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview and org page.
@@ -284,6 +281,7 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 ### Related Docs
 
 - [Operator section](../../docs/protocol/operator-section.md): access, overview numbers, and directory pages.
+- [Waitlist](../../docs/protocol/waitlist.md) and [codes](../../docs/protocol/waitlist-codes.md): app access and email rules.
 - [Operator actions](../../docs/protocol/operator-actions.md): the
   requirements of the operator, the suspension, and abuse reports.
 - [Access and security](../../docs/protocol/access-and-security.md#sign-in)

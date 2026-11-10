@@ -6,6 +6,7 @@ import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
 import { turn } from '../../test-support/harness'
 import { fakeToolContext } from '../../test-support/providers'
+import { agentInstructions } from '../instructions'
 import { createClaudeFactory } from './claude'
 import { createCodexFactory } from './codex'
 import * as environment from './environment'
@@ -50,6 +51,10 @@ function attachedTurn(agent: Agent) {
     login: command.login,
     choice: command.message.choice,
     conversationId: null,
+    instructions: agentInstructions({
+      cwd: '/test/repository',
+      defaultBranch: 'main',
+    })[agent],
     tools: fakeToolContext,
     event: () => {},
     warn: () => {},
@@ -67,7 +72,7 @@ it('gives Claude original attachment metadata and copied paths', async () => {
   onTestFinished(() => provider.close())
   await provider.send(command)
   expect((await sdk.nextUser()).message.content).toBe(
-    'Change the file.\n' +
+    'Sender: @alice\n\nChange the file.\n' +
       'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/home/user/.conductive-attachment-pdf.pdf"}\n' +
       'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/home/user/.conductive-attachment-image.png"}',
   )
@@ -84,7 +89,11 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
   ).toMatchObject({
     params: {
       input: [
-        { type: 'text', text: 'Change the file.', text_elements: [] },
+        {
+          type: 'text',
+          text: 'Sender: @alice\n\nChange the file.',
+          text_elements: [],
+        },
         {
           type: 'text',
           text: 'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/home/user/.conductive-attachment-pdf.pdf"}',

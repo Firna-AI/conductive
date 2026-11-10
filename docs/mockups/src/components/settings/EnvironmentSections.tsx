@@ -6,7 +6,10 @@ import { ActionButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import { MonoBlock, Section } from './Section'
 
-/** The script in a code field, which an admin edits. */
+/**
+ * The script in a code field, which an admin edits. The field shows at
+ * least three lines, also for the empty script of a new org.
+ */
 function ScriptField(props: { title: string; script: string }) {
   const theme = useSharedUiTheme()
   const { field } = useControlSizes()
@@ -15,7 +18,7 @@ function ScriptField(props: { title: string; script: string }) {
       accessibilityLabel={props.title}
       inputStyle={{ fontFamily: theme.fonts.mono, fontSize: 12.5 }}
       multiline
-      numberOfLines={props.script.split('\n').length}
+      numberOfLines={Math.max(3, props.script.split('\n').length)}
       onChangeText={noop}
       size={field}
       value={props.script}

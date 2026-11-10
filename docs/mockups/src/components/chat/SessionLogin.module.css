@@ -1,14 +1,15 @@
 /*
- * A muted caption under the composer box, at the inset of its hint. A long
- * name wraps the text, also a name without spaces on a phone, and the icon
- * stays on the first line.
+ * A muted label in the bar of the composer, after the model picker. When the
+ * bar is narrow, as on a phone during a turn, the name ends with an ellipsis,
+ * so that the controls keep their room.
  */
-.line {
-  display: flex;
-  align-items: flex-start;
-  gap: 5px;
-  margin: 0;
-  padding-left: 14px;
+.label {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 4px;
   color: var(--ui-muted);
   font-size: var(--ui-text-sm);
   line-height: 16px;
@@ -16,11 +17,12 @@
 
 .icon {
   flex-shrink: 0;
-  margin-top: 2px;
   color: var(--ui-faint);
 }
 
 .text {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

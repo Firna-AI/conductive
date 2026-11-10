@@ -40,7 +40,7 @@ function LiftedRow(props: {
       style={{
         left: drag.x - drag.offsetX,
         top: drag.y - drag.offsetY,
-        width: drag.width,
+        width: drag.box.width,
       }}
     >
       <WorkspaceRow
@@ -48,7 +48,7 @@ function LiftedRow(props: {
         now={props.now}
         selected={false}
         variant={props.variant}
-        workspace={drag.workspace}
+        workspace={drag.item}
       />
     </div>,
     document.body,
@@ -69,6 +69,7 @@ export function SectionList(props: {
   selectedId: string | null
   now: number
   actions: SectionActions
+  archiveAction?: (workspace: Workspace) => (() => void) | undefined
   move: (workspaceId: string, target: DropTarget) => void
   readOnly: boolean
 }) {
@@ -102,14 +103,10 @@ export function SectionList(props: {
         {announcement}
       </span>
       {props.groups.map(({ section, workspaces }) => {
-        const target =
-          drag?.target.sectionId === section.id ? drag.target : null
-        const rest = workspaces.filter((item) => item.id !== drag?.workspace.id)
+        const target = drag?.place.sectionId === section.id ? drag.place : null
+        const rest = workspaces.filter((item) => item.id !== drag?.item.id)
         const line = drag ? (
-          <DropLine
-            name={nameLabel(drag.workspace.name)}
-            section={section.name}
-          />
+          <DropLine name={nameLabel(drag.item.name)} section={section.name} />
         ) : null
         return (
           <section
@@ -140,19 +137,20 @@ export function SectionList(props: {
                             : bind(workspace, { sectionId: section.id, index })
                         }
                         drag={
-                          drag?.workspace.id === workspace.id
+                          drag?.item.id === workspace.id
                             ? 'placeholder'
                             : undefined
                         }
                         linkRef={rows.linkRef(workspace.id)}
                         now={props.now}
+                        onArchive={props.archiveAction?.(workspace)}
                         onKeyDown={
                           props.readOnly
                             ? undefined
                             : (event) => onKeyDown(workspace, event)
                         }
-                        onLinkBlur={rows.blur}
-                        onLinkFocus={(event) => rows.focus(workspace.id, event)}
+                        onBlur={rows.blur}
+                        onFocus={(event) => rows.focus(workspace.id, event)}
                         rowRef={layout.row(workspace.id, section.id)}
                         selected={workspace.id === props.selectedId}
                         variant={props.variant}

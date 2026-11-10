@@ -20,6 +20,16 @@ export interface PaletteQuery {
   archived: boolean
 }
 
+/**
+ * The two reads of the palette that load and fail apart: the list of the
+ * sections and the workspaces, and the repositories, whose names a search
+ * looks at. They are parts of the org, which Try again reads again. The
+ * list comes first, because without it no workspace row shows.
+ */
+export const paletteReads = ['list', 'repositories'] as const
+
+export type PaletteRead = (typeof paletteReads)[number]
+
 /** What the palette reads from the app. */
 export interface PaletteSource {
   /** The orgs of the person, in the order of the org rail. */
@@ -30,7 +40,8 @@ export interface PaletteSource {
   suspended: boolean
   /** The sections and the workspaces of the org, as they load. */
   list: Loadable<ListData>
-  repositories: readonly Repository[]
+  /** The repositories of the org, with their names, as they load. */
+  repositories: Loadable<readonly Repository[]>
   /** The workspace that the page shows. Recent workspaces leaves it out. */
   openWorkspaceId: string | null
   /** Where Create org leads, as the org rail says. */

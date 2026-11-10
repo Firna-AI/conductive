@@ -45,14 +45,19 @@ function optionNames(): string[] {
   return options().map(accessibleName)
 }
 
-const goTo = [
-  'All files',
-  'Changes',
-  'Checks',
-  'Terminal',
-  'Preview',
-  'Desktop',
-].map((tab) => `Go to ${tab}`)
+/** The first two texts of each option, in the order that the row shows them. */
+function rowStarts(): string[][] {
+  return options().map((option) =>
+    Array.from(option.children, (part) => part.textContent ?? '')
+      .filter((text) => text !== '')
+      .slice(0, 2),
+  )
+}
+
+// The app hides Desktop, so the palette offers no Go to Desktop.
+const goTo = ['All files', 'Changes', 'Checks', 'Terminal', 'Preview'].map(
+  (tab) => `Go to ${tab}`,
+)
 
 const otherOrgs = ['Create org', 'Switch to Futex', 'Switch to Firna']
 
@@ -132,12 +137,18 @@ describe('the rows of the command palette', () => {
     })
   })
 
-  test('a search finds active and archived workspaces, the tabs keep the query, the filters choose the repository and the state, and an empty tab says why', async () => {
+  test('a search finds active and archived workspaces, also by number with the label before the name, the tabs keep the query, the filters choose the repository and the state, and an empty tab says why', async () => {
     const server = new FakeApiServer({ workspaceState: 'archived' })
     await openPaletteTab(routes.org(org), { server })
     pressPaletteKey('other', document.body)
+    typeText(searchField(), '39')
+    const number = { groups: groupLabels(), starts: rowStarts() }
     typeText(searchField(), 'storefront')
-    const search = { groups: groupLabels(), opens: openedWorkspaces() }
+    const search = {
+      groups: groupLabels(),
+      opens: openedWorkspaces(),
+      starts: rowStarts(),
+    }
     click(byRole('tab', 'Workspaces'))
     const kept = { text: searchField().value, groups: groupLabels() }
     typeText(searchField(), '')
@@ -154,6 +165,7 @@ describe('the rows of the command palette', () => {
     const focusBack = document.activeElement === searchField()
     typeText(searchField(), 'refund')
     expect({
+      number,
       search,
       kept,
       sections,
@@ -163,9 +175,26 @@ describe('the rows of the command palette', () => {
       archived,
       noMatch: status(),
     }).toEqual({
+      number: {
+        groups: ['Workspaces', 'Archived'],
+        starts: [
+          ['W-397', 'Invoice PDF fonts'],
+          ['W-399', 'Retry failed webhooks'],
+          ['W-398', 'Apple Pay button'],
+          ['W-396', 'Upgrade to Next.js 16'],
+          ['W-391', 'Move retries to a queue'],
+          ['W-395', 'Checkout address autocomplete'],
+        ],
+      },
       search: {
         groups: ['Workspaces', 'Archived'],
         opens: ['fix-cart-flake', 'apple-pay', 'next-16', workspace],
+        starts: [
+          ['Fix flaky cart test', 'acme/storefront'],
+          ['Apple Pay button', 'acme/storefront'],
+          ['Upgrade to Next.js 16', 'acme/storefront'],
+          ['Checkout address autocomplete', 'acme/storefront'],
+        ],
       },
       kept: { text: 'storefront', groups: ['Checkout', 'Infra'] },
       sections: ['General', 'Checkout', 'Infra'],

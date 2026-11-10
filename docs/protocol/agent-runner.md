@@ -1,13 +1,16 @@
-# The agent runner
+# Agent runner
 
 This doc holds the requirements and the decisions in force for the agent
-runner in each sandbox. It covers the connection of the runner, its events
-and their limits, its turns, and lost workspace updates. It belongs to
+runner, our program in each sandbox. It covers the connection of the
+runner, its events and their limits, its turns, and the repair of lost
+workspace updates. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
+
+## The agent runner
 
 - The runner starts with the sandbox, and starts again after each resume.
 - The runner opens one outbound WebSocket to the Durable Object of its
@@ -123,7 +126,7 @@ says.
   belong to no session. A later full report of the same kind replaces each
   of them. But a report of the workspace name sets that name only while
   the workspace has no name, as
-  [Workspace and session names](chat-and-events.md#workspace-and-session-names) says.
+  [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
 - When the workspace refuses an update of one of these kinds, the update is
   lost. The workspace stores its marker. Then it asks the runner once for a
   fresh full report of that kind (decision 96).

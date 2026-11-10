@@ -20,6 +20,7 @@ export async function readChatWorkspaceResponse(
   store: ChatStore,
   orgId: string,
   workspaceId: string,
+  origin: string,
   readLifecycle: () => Promise<DurableLifecycleState | undefined>,
   readLog: () => Promise<MaskedStartLog>,
 ): Promise<OrderedChatWorkspaceResponse> {
@@ -42,7 +43,7 @@ export async function readChatWorkspaceResponse(
   return {
     response: {
       workspace: {
-        ...workspaceView(row),
+        ...workspaceView(row, origin),
         ...(title &&
         canFillWorkspaceTitle(
           await readAutomaticTitleWorkspace(env.DB, workspaceId),

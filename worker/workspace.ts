@@ -17,16 +17,10 @@ import type { GitHubRefresh, GitHubWorkspace } from './github/contracts'
 import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
 import { activeStoredTurn } from './devices/access'
-import { readWorkspace, workspaceView } from './lifecycle/workspace-data'
+import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
 import { readArchiveCheck } from './app-api/archive'
-import {
-  archiveWorkspaceAccess,
-  markWorkspaceArchived,
-} from './app-api/archive-data'
-import { orgSandboxProvider } from './sandbox/client'
-import { deleteSandboxIfPresent } from './lifecycle/cleanup'
-import { HttpError } from './http'
 import { featureResult } from './features/result'
+import { archiveWorkspace } from './lifecycle/archive-workspace'
 import { orgLifecycleActive } from './members/composition-data'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import { expireWorkspacePreviews, runWorkspaceAlarms } from './workspace-alarms'
@@ -138,13 +132,18 @@ export class Workspace extends AttachmentWorkspace {
     )
   }
 
-  readChatWorkspaceResponse(orgId: string, workspaceId: string) {
+  readChatWorkspaceResponse(
+    orgId: string,
+    workspaceId: string,
+    origin: string,
+  ) {
     return this.chat.runLifecycle(() =>
       readChatWorkspaceResponse(
         this.env,
         this.chat.store,
         orgId,
         workspaceId,
+        origin,
         () => this.controller.readLifecycle(),
         () => this.controller.readLifecycleStartLog(),
       ),
@@ -157,7 +156,7 @@ export class Workspace extends AttachmentWorkspace {
   ): Promise<void> {
     if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id)) return
     await this.chat.runLifecycle(async () => {
-      const workspace = workspaceView(
+      const workspace = workspaceRecord(
         await readWorkspace(this.env.DB, orgId, workspaceId),
       )
       await this.chat.commitWorkspaceEvent(workspaceId, {
@@ -229,71 +228,38 @@ export class Workspace extends AttachmentWorkspace {
     workspaceId: string,
     userId: string,
     discard: boolean,
+    origin: string,
   ) {
     return featureResult(() =>
-      this.run(async () => {
-        const dependencies = { ...lifecycleDependencies(), now: this.now }
-        const row = await archiveWorkspaceAccess(
+      this.run(() =>
+        archiveWorkspace(
           this.env,
+          { ...lifecycleDependencies(), now: this.now },
           orgId,
           workspaceId,
           userId,
-        )
-        if (row.archivedAt === null) {
-          const check = await readArchiveCheck(
-            this.env,
-            dependencies,
-            orgId,
-            workspaceId,
-            userId,
-          )
-          if (
-            !discard &&
-            (check.uncommittedFiles.length || check.unpushedCommits)
-          )
-            throw new HttpError(
-              409,
-              'workspace_has_unpushed_work',
-              'Check the saved work before you archive this workspace.',
-            )
-          await this.features.revokeWorkspace(workspaceId, true)
-          await this.chat.stopWorkspace(workspaceId)
-          if (row.sandboxId) {
-            await archiveWorkspaceAccess(this.env, orgId, workspaceId, userId)
-            const provider = await orgSandboxProvider(
-              this.env,
-              userId,
-              orgId,
-              dependencies.fetch,
-            )
-            const db = this.env.DB
-            const now = this.now()
-            await deleteSandboxIfPresent(db, provider, row.sandboxId, now)
-          }
-          await archiveWorkspaceAccess(this.env, orgId, workspaceId, userId)
-          await markWorkspaceArchived(
-            this.env,
-            orgId,
-            workspaceId,
-            userId,
-            this.now(),
-          )
-          await this.integration.storage.delete([
-            'lifecycle:start-job',
-            'lifecycle:create-publication',
-          ])
-          this.controller.cancelLifecycleWaiters()
-          await this.controller.clearLifecycle()
-        }
-        const workspace = workspaceView(
-          await readWorkspace(this.env.DB, orgId, workspaceId),
-        )
-        await this.chat.commitWorkspaceEvent(workspaceId, {
-          type: 'workspace.updated',
-          workspace,
-        })
-        return { workspace, start: null, error: null }
-      }),
+          discard,
+          origin,
+          {
+            revokePreviews: () =>
+              this.features.revokeWorkspace(workspaceId, true),
+            stopChat: () => this.chat.stopWorkspace(workspaceId),
+            clearLifecycle: async () => {
+              await this.integration.storage.delete([
+                'lifecycle:start-job',
+                'lifecycle:create-publication',
+              ])
+              this.controller.cancelLifecycleWaiters()
+              await this.controller.clearLifecycle()
+            },
+            publish: (workspace) =>
+              this.chat.commitWorkspaceEvent(workspaceId, {
+                type: 'workspace.updated',
+                workspace,
+              }),
+          },
+        ),
+      ),
     )
   }
 }

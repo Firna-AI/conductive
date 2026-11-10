@@ -2,12 +2,14 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { join, parse } from 'node:path'
 import {
   capturePagePath,
-  marketingPictures,
   pictureCaptures,
   pictureFileName,
   pictureSchemes,
-  screenSizes,
   type PictureCapture,
+} from '../../docs/mockups/src/screens/marketingPictureCaptures.ts'
+import {
+  marketingPictures,
+  screenSizes,
 } from '../../docs/mockups/src/screens/marketingPictureList.ts'
 import type { Page, Viewport } from './page.ts'
 

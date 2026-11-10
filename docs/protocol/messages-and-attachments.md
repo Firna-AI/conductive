@@ -48,18 +48,24 @@ says.
   member says before the send that the message starts a new session. When
   that member has no login for the agent, the composer shows the notice of
   a missing login instead.
-- Reason: the composer names the login of each message before the send. A
+- Reason: the composer shows before the send which login a message uses. A
   record without the share setting was rejected, because the composer then
   names the login of the starter until the send.
-- The composer names the member whose login its message runs on, such as
-  "Uses Priya's Claude login", or "Uses your Claude login" to Priya.
+- When a message runs on the login of another member, the composer names
+  that member inside the message box, such as "Priya's login". A line under
+  the box was rejected, because the box then moved between sessions.
+- The composer names no login when a message runs on the user's own login.
+  A name for the own login was rejected, because it tells the user nothing
+  new.
 - The composer attaches files to a message, as [Attachments](#attachments)
   says.
+- [The send key](create-a-workspace.md#the-send-key) gives the key that
+  sends a message from the composer (decision 143 of PR #73).
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.
 - The first message of a new workspace creates the workspace, as
-  [Create a workspace](workspace-life.md#create-a-workspace)
+  [Create a workspace](create-a-workspace.md)
   says. The app accepts that message before the sandbox is ready
   (decision 14).
 - The app also accepts a later message while the sandbox is not ready
@@ -71,7 +77,7 @@ says.
 - A message that waits for the sandbox shows that it waits. A queue in the
   browser was rejected, because a closed tab would lose the message.
 - Reason: a failed first start keeps its workspace and its queued messages,
-  as [Create a workspace](workspace-life.md#create-a-workspace)
+  as [Create a workspace](create-a-workspace.md#a-failed-first-start)
   says. So members can add work at once, and an accepted message survives
   a reload of the tab. A hold of later messages in the composer until the
   first start succeeds was rejected for these reasons.
@@ -80,6 +86,9 @@ says.
   too while the starter shares the login. Such a message goes to the agent
   at once, unless files must reach the cloud computer first, as
   [Attachments](#attachments) says. The agent reads it at its next tool call.
+- The composer uses its placeholder to show that a message steers the
+  running turn. It shows no steer hint under the message box.
+  Reason: a hint under the box moves it when the user starts to type.
 - In a turn without tool calls, the agent reads such a message when the
   turn ends.
 - A message that the workspace accepted stays in its session, also when the
@@ -115,8 +124,8 @@ says.
 - Reason: a tab that missed newer events can still show an older Try again.
   A check in the chat alone was rejected, because such a tab could send an
   older message again. The agent would then answer out of order.
-- When the app accepts the first message of a new workspace, it asks a
-  small model of Workers AI for a title (decision 184). The request asks
+- For a workspace with no name, the app asks a small model of Workers AI
+  for a title after accepting its first message (decision 184). The request asks
   for three to five words. Workers AI is the model service of Cloudflare,
   on the account that hosts the app.
 - The model writes the title from the text of that message. The request
@@ -124,7 +133,7 @@ says.
   member. The chat does not show it.
 - The reply to the message does not wait for the title. The workspace
   then takes the title as its name, as
-  [Workspace and session names](chat-and-events.md#workspace-and-session-names) says.
+  [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
 - When the request fails, the name of the workspace does not change. The
   app then asks again when it accepts the next message with text in the
   workspace. It asks only while the workspace has no name.
@@ -189,10 +198,14 @@ says.
   purge of a deleted org (decision 132).
 - A failed first start deletes no file of the first message. The files stay
   with the accepted message in the failed workspace, as
-  [Create a workspace](workspace-life.md#create-a-workspace)
+  [Create a workspace](create-a-workspace.md#a-failed-first-start)
   says. Try again uses them in the same workspace.
 - The app deletes an unsent file 7 days after its upload (decision 132). A
   file is unsent while no accepted message uses it.
 - When a send names a draft file that the app deleted, the composer shows
   that file as a failed upload. Its Try again uploads the file again from
   the device.
+
+## Workspace links
+
+[Workspace links](workspace-links.md) states how each composer, sent message, and agent answer shows workspace links.

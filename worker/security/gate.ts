@@ -6,6 +6,7 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { readJsonObject } from '../http/json-body'
 import { appOrigin } from './app-origin'
+import { requireAppAccess } from './app-access'
 import { readCookie, SESSION_COOKIE } from './cookies'
 import { verify } from './crypto'
 import { DESKTOP_ORIGIN, DESKTOP_SESSION_COOKIE } from './desktop-contract'
@@ -53,11 +54,11 @@ export function checkOrigin(request: Request, env: AppEnv): void {
   }
 }
 
-export async function gateAccess(
+export async function sessionGate(
   request: Request,
   env: AppEnv,
   now: number,
-): Promise<Omit<RequestContext, 'body' | 'rawUploadBytes'>> {
+): Promise<Pick<RequestContext, 'user' | 'sessionId'>> {
   checkHost(request, env)
   checkOrigin(request, env)
   const token = readCookie(request, sessionCookie(request))
@@ -76,6 +77,17 @@ export async function gateAccess(
       'Sign in with GitHub to continue.',
     )
   }
+  await requireAppAccess(request, env.DB, user.id)
+  return { user, sessionId }
+}
+
+export async function gateAccess(
+  request: Request,
+  env: AppEnv,
+  now: number,
+  originalRequest: Request = request,
+): Promise<Omit<RequestContext, 'body' | 'rawUploadBytes'>> {
+  const { user, sessionId } = await sessionGate(originalRequest, env, now)
   const path = new URL(request.url).pathname
   const match = path.match(new RegExp(`^${API_PATHS.orgs}/([^/]+)(?:/|$)`))
   let org: Org | null = null
@@ -98,14 +110,15 @@ export async function gate(
   request: Request,
   env: AppEnv,
   now: number,
+  originalRequest: Request = request,
 ): Promise<RequestContext> {
-  const access = await gateAccess(request, env, now)
-  const raw = rawUploadRoute(request)
+  const access = await gateAccess(request, env, now, originalRequest)
+  const raw = rawUploadRoute(originalRequest)
   if (raw)
     return {
       ...access,
       body: null,
-      rawUploadBytes: rawUploadLength(request, raw.maxBytes),
+      rawUploadBytes: rawUploadLength(originalRequest, raw.maxBytes),
     }
   const body = ['GET', 'HEAD', 'OPTIONS'].includes(request.method)
     ? null

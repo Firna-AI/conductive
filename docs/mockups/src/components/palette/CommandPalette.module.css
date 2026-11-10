@@ -155,6 +155,20 @@ a.highlighted:hover {
   white-space: nowrap;
 }
 
+/*
+ * The label of the number of a workspace, such as W-395, before its name
+ * when the query matches it. It keeps its room, so rows that match a part
+ * of a number stay apart, also on a phone.
+ */
+.number {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* The repository gives up its room before the name. */
 .repository {
   flex: 0 100 auto;
@@ -219,6 +233,22 @@ a.highlighted:hover {
   margin: 0;
   color: var(--ui-muted);
   font-size: var(--ui-text-sm);
+}
+
+/*
+ * The status part of workspace data that did not load. It stands first in
+ * the results, in place of the workspace groups, and the other groups
+ * follow it.
+ */
+.status {
+  padding-top: 8px;
+}
+
+/* The spinner, centred in the place of the groups. */
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 12px;
 }
 
 /* On a phone the palette is a page that fills the screen. */

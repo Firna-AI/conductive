@@ -29,7 +29,7 @@ export function attachmentConversations(chats: {
       {
         kind: 'agent',
         id: 'files-plan',
-        paragraphs: [
+        blocks: [
           "The screenshot shows the suggestions over the postcode field, and the log has no errors. So I'll fix the layout of the form.",
         ],
       },

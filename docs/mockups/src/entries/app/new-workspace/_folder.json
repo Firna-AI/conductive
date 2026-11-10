@@ -1,7 +1,10 @@
 {
   "order": [
+    "first-build",
     "not-created",
     "files",
+    "dialog",
+    "workspace-link",
     "creating",
     "waiting",
     "first-turn",

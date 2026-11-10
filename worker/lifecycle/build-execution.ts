@@ -22,6 +22,7 @@ import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { privilegedCommand } from '../terminal/privileged'
 import { recoverImageBuildAllocation } from './image-allocation'
 import { liveBuildComputerIds } from './computer-ledger'
+import { startAddedImageBuild } from './first-image-build'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -141,6 +142,7 @@ export async function cleanupBuild(
     await deleteSnapshotIfPresent(provider, job.previousImageName)
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
+  await startAddedImageBuild(runtime, job)
   await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
   return true
 }

@@ -22,16 +22,3 @@
   color: var(--ui-ink);
   text-decoration-color: currentColor;
 }
-
-/* A fact that waits for the operator or the lawyer. */
-.draft {
-  padding: 1px 5px;
-  border: 1px solid var(--ui-warning-border);
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-amber-soft);
-  color: var(--ui-ink);
-  font-family: var(--ui-font-mono);
-  font-size: 0.86em;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}

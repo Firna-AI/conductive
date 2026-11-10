@@ -9,6 +9,9 @@ Run `npm run test -- worker/operator` from the repository root, with Node
 They check overview access, state counts, time windows, daily counts, and org order.
 The directory tests check search keys, cursor pages, status, names, and operator access.
 The lift tests check events, access, retained revocations, Restore, and native disk alarms.
+The waitlist tests check approvals, atomic rollback, parallel approval,
+pending email retries, the 24-hour boundary, code search, pause changes,
+and user access details. They use the harness clock and fake Resend replies.
 Native operator tests use `nativeSuspensionRuntime` from
 [`native-runtime.test-support.ts`](native-runtime.test-support.ts).
 It supplies the fixture provider for calls from Node.

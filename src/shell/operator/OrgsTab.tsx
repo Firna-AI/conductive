@@ -78,7 +78,6 @@ const orgs: DirectoryKind<OperatorOrgSummary> = {
   many: 'orgs',
   keys: 'Search by name, org ID, cloud computer ID, or preview address.',
   columns,
-  rowKey: (row) => row.id,
   matches: lookupLine,
 }
 
@@ -94,7 +93,13 @@ export function OrgsTab(props: { search: string }) {
   const { now, timeZone } = useServices()
   const phone = useViewport() === 'phone'
   const [directory] = useState(
-    () => new OperatorDirectory(app, operatorOrgsPath, readOrgsPage),
+    () =>
+      new OperatorDirectory(
+        app,
+        operatorOrgsPath,
+        readOrgsPage,
+        (row) => row.id,
+      ),
   )
   const today = now()
   const day = (time: number) => formatShortDay(time, today, timeZone)

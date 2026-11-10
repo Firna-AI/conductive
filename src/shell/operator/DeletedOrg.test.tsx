@@ -35,10 +35,12 @@ async function openPinecrest(suspended: boolean) {
   return mountShell(server, routes.operatorOrg(id))
 }
 
+/** The tabs of the section, which come before the notices of a page. */
+const tabs = 'Overview Orgs Users Waitlist Invite codes'
+
 /** The text of the notices at the top of the page, before its details. */
 function notices(text: string): string {
-  const start =
-    text.indexOf('Overview Orgs Users') + 'Overview Orgs Users'.length
+  const start = text.indexOf(tabs) + tabs.length
   return text.slice(start, text.indexOf('Details')).trim()
 }
 

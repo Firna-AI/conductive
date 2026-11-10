@@ -38,5 +38,12 @@ export const paletteWorkspaces = defineScreen({
         'The filters choose acme/marketing-site and Archived. Acme has no archived workspace in that repository, so one line says where they show. With the Active filter, the line says "Workspaces of" and the repository, or the org while the filter shows all repositories.',
       props: { view: 'workspaces-empty' },
     },
+    {
+      slug: 'unavailable',
+      title: 'Workspaces not loaded',
+      description:
+        'The workspace list of Acme did not load. The notice "The workspaces didn\'t load" fills the tab, with the message of the server and Try again, which reads the list again and shows the workspaces. On desktop, the list behind the palette shows the same failure.',
+      props: { view: 'workspaces-unavailable' },
+    },
   ],
 })

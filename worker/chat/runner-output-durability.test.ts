@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { TOOL_DETAIL_MAX_BYTES } from '../../src/shared/chat-events'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { outputFixture } from './runner-output.test-support'

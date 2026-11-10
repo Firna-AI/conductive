@@ -6,7 +6,7 @@ import { chatEventsOf, SessionLog } from '../../src/chat/state/session-log'
 import type {
   ChatHistoryResponse,
   WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+} from './workspace-events'
 import type { RunnerEvent } from '../../src/shared/runner'
 import { createRunnerLimitsFixture } from './runner-limits.test-support'
 import { choice, context } from './runner-fixtures.test-support'

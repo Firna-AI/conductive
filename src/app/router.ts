@@ -1,4 +1,5 @@
 import type { Agent } from '../shared/agents'
+import { INVITE_CODE_ERROR_PARAMETER } from '../shared/waitlist'
 
 export const SETTINGS_TABS = [
   'general',
@@ -9,15 +10,26 @@ export const SETTINGS_TABS = [
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
+export const ACCOUNT_TABS = ['general', 'preferences'] as const
+
+export type AccountTab = (typeof ACCOUNT_TABS)[number]
+
+/**
+ * The tabs of the operator section that list and search: the orgs, the
+ * users, the people who wait, and the codes.
+ */
+const OPERATOR_LISTS = ['orgs', 'users', 'waitlist', 'codes'] as const
+
+type OperatorList = (typeof OPERATOR_LISTS)[number]
+
 /**
  * A page of the operator section: a tab, or the page of one org or one
- * user. A tab of a list keeps its search, which is empty for the newest
- * first.
+ * user. A tab of a list keeps its search, which is empty for the whole
+ * list.
  */
 export type OperatorView =
   | { page: 'overview' }
-  | { page: 'orgs'; search: string }
-  | { page: 'users'; search: string }
+  | { page: OperatorList; search: string }
   | { page: 'org'; id: string }
   | { page: 'user'; githubId: number }
 
@@ -25,7 +37,8 @@ export type OperatorView =
 export type Route =
   | { screen: 'home' }
   | { screen: 'get-started' }
-  | { screen: 'account'; connect: Agent | null }
+  /** `connect` opens the Connect form of that agent on General. */
+  | { screen: 'account'; tab: AccountTab; connect: Agent | null }
   | { screen: 'create-org'; first: boolean }
   | { screen: 'org'; orgId: string }
   | { screen: 'new-workspace'; orgId: string; sectionId: string | null }
@@ -39,12 +52,17 @@ export type Route =
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
   /** The operator section. The shell shows it only to an operator. */
   | { screen: 'operator'; view: OperatorView }
+  /**
+   * The join link of an invite code. `error` is the error code of the API
+   * when the code of the link did not work at the sign-in.
+   */
+  | { screen: 'join'; code: string; error: string | null }
   | { screen: 'not-found' }
 
 const encode = encodeURIComponent
 
 /** The address of a list of the operator, with its search in `q`. */
-function operatorList(list: 'orgs' | 'users', search: string): string {
+function operatorList(list: OperatorList, search: string): string {
   const query = new URLSearchParams()
   if (search !== '') query.set('q', search)
   return query.size ? `/operator/${list}?${query}` : `/operator/${list}`
@@ -54,8 +72,11 @@ function operatorList(list: 'orgs' | 'users', search: string): string {
 export const routes = {
   home: () => '/',
   getStarted: () => '/get-started',
+  /** General, with the Connect form of `connect` open. */
   account: (connect?: Agent) =>
     connect ? `/account?connect=${connect}` : '/account',
+  accountTab: (tab: AccountTab) =>
+    tab === 'general' ? '/account' : `/account/${tab}`,
   createOrg: (first = false) => (first ? '/orgs/new?first=1' : '/orgs/new'),
   org: (orgId: string) => `/orgs/${encode(orgId)}`,
   newWorkspace: (orgId: string, sectionId?: string) =>
@@ -73,13 +94,19 @@ export const routes = {
   operator: () => '/operator',
   operatorOrgs: (search = '') => operatorList('orgs', search),
   operatorUsers: (search = '') => operatorList('users', search),
+  operatorWaitlist: (search = '') => operatorList('waitlist', search),
+  operatorCodes: (search = '') => operatorList('codes', search),
   operatorOrg: (orgId: string) => `/operator/orgs/${encode(orgId)}`,
   operatorUser: (githubId: number) => `/operator/users/${githubId}`,
 } as const
 
-function settingsTab(value: string | undefined): SettingsTab | null {
-  if (value === undefined) return 'general'
-  return SETTINGS_TABS.find((tab) => tab === value) ?? null
+/** The tab of a path segment. No segment is the first tab. */
+function tabOf<Tab extends string>(
+  tabs: readonly [Tab, ...Tab[]],
+  value: string | undefined,
+): Tab | null {
+  if (value === undefined) return tabs[0]
+  return tabs.find((tab) => tab === value) ?? null
 }
 
 function agentParam(value: string | null): Agent | null {
@@ -101,15 +128,14 @@ function operatorView(
   parts: readonly string[],
   query: URLSearchParams,
 ): OperatorView | null {
-  const [list, id, ...rest] = parts
+  const [first, id, ...rest] = parts
   const search = query.get('q')?.trim() ?? ''
-  if (list === undefined) return { page: 'overview' }
-  if (rest.length > 0) return null
-  if (list === 'orgs') {
-    return id === undefined ? { page: 'orgs', search } : { page: 'org', id }
-  }
+  if (first === undefined) return { page: 'overview' }
+  const list = OPERATOR_LISTS.find((item) => item === first)
+  if (list === undefined || rest.length > 0) return null
+  if (id === undefined) return { page: list, search }
+  if (list === 'orgs') return { page: 'org', id }
   if (list !== 'users') return null
-  if (id === undefined) return { page: 'users', search }
   const githubId = githubIdOf(id)
   return githubId === null ? null : { page: 'user', githubId }
 }
@@ -141,11 +167,28 @@ export function parseRoute(pathname: string, search: string): Route {
     const view = operatorView(decoded.slice(1), query)
     return view ? { screen: 'operator', view } : { screen: 'not-found' }
   }
+  if (first === 'join') {
+    return orgId === undefined || area !== undefined
+      ? { screen: 'not-found' }
+      : {
+          screen: 'join',
+          code: orgId,
+          error: query.get(INVITE_CODE_ERROR_PARAMETER),
+        }
+  }
   if (first === 'get-started' && orgId === undefined) {
     return { screen: 'get-started' }
   }
-  if (first === 'account' && orgId === undefined) {
-    return { screen: 'account', connect: agentParam(query.get('connect')) }
+  if (first === 'account' && area === undefined) {
+    // The segment after `account` names the tab.
+    const tab = tabOf(ACCOUNT_TABS, orgId)
+    if (tab) {
+      return {
+        screen: 'account',
+        tab,
+        connect: agentParam(query.get('connect')),
+      }
+    }
   }
   if (first !== 'orgs' || orgId === undefined) return { screen: 'not-found' }
   if (orgId === 'new' && area === undefined) {
@@ -159,7 +202,7 @@ export function parseRoute(pathname: string, search: string): Route {
     return { screen: 'workspace', orgId, workspaceId: id, view: rest }
   }
   if (area === 'settings' && rest.length === 0) {
-    const tab = settingsTab(id)
+    const tab = tabOf(SETTINGS_TABS, id)
     if (tab) return { screen: 'settings', orgId, tab }
   }
   return { screen: 'not-found' }

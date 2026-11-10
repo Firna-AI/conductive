@@ -249,6 +249,7 @@ export function testServices(
     storage: new MemoryStorage(),
     newId: () => `client-${++id}`,
     leave: () => undefined,
+    appOrigin: FAKE_ORIGIN,
     copy: async () => undefined,
     delay: new ManualDelay().delay,
     onFocus: new ManualFocus().onFocus,

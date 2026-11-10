@@ -37,7 +37,10 @@ async function queuedClaudeTurn() {
   const sent: string[] = []
   for (let id = 1; id <= 64; id++) {
     const message = await sdk.nextUser()
-    expect(message.message).toEqual({ role: 'user', content: `Message ${id}.` })
+    expect(message.message).toEqual({
+      role: 'user',
+      content: `Sender: @alice\n\nMessage ${id}.`,
+    })
     sent.push(string(message.uuid))
   }
   return { ...h, runner, sdk, sent }
@@ -62,7 +65,10 @@ it('holds the 65th Claude message until a result frees input and completes the e
   await h.runner.idle()
   expect(delivered).toBe(true)
   const last = await pending
-  expect(last?.message).toEqual({ role: 'user', content: 'Message 65.' })
+  expect(last?.message).toEqual({
+    role: 'user',
+    content: 'Sender: @alice\n\nMessage 65.',
+  })
   expect(h.sent).not.toContain(last?.uuid)
   await h.runner.idle()
   const completed = () =>
@@ -132,6 +138,7 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
     login: first.login,
     choice: first.message.choice,
     conversationId: null,
+    instructions: '',
     tools: fakeToolContext,
     event: () => {},
     warn: h.options.warn,
@@ -182,7 +189,7 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
   })
   expect((await next).message).toEqual({
     role: 'user',
-    content: 'Change the file.',
+    content: 'Sender: @alice\n\nChange the file.',
   })
 })
 

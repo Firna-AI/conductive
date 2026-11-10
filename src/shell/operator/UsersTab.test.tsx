@@ -23,7 +23,7 @@ function usersBox(view: HTMLElement): string {
 }
 
 describe('the Users tab of the operator section', () => {
-  test('lists the newest users with their count, the state of a suspended user or else the name, and links to their pages', async () => {
+  test('lists the newest users with their count, the state of a suspended user or of a person who waits or else the name, and links to their pages', async () => {
     const server = new FakeApiServer()
     serveOperator(server)
     const { view } = await mountShell(server, routes.operatorUsers())
@@ -35,13 +35,23 @@ describe('the Users tab of the operator section', () => {
       opened: view.querySelector('main h1')?.textContent,
     }).toEqual({
       box: [
-        'Users 14 users, newest first. User Joined Orgs Workspaces',
+        'Users 24 users, newest first. User Joined Orgs Workspaces',
         'RO @rho-9 Rhea Okafor 15 Jan 1 2',
+        'Z @zed-k Waiting 15 Jan 0 0',
         'SO @tide-sam Sam Ortiz 14 Jan 1 3',
+        'BV @bram-v Waiting 11 Jan 0 0',
         'AP @ana-p Ana Pereira 10 Jan 1 3',
         'JQ @joe-q Joe Quinn 10 Jan 1 1',
+        'SH @samir-h Waiting 8 Jan 0 0',
+        'LH @lena-h Waiting 7 Jan 0 0',
+        'OP @ovi-dev Waiting 6 Jan 0 0',
+        'NQ @nadia-q Waiting 5 Jan 0 0',
         'KT @kt-null Kai Tanaka 4 Jan 2 2',
+        'KW @kenji-w Waiting 4 Jan 0 0',
         'V @vex-ops 4 Jan 1 6',
+        'P @pkwan Waiting 3 Jan 0 0',
+        'JM @jules-m Waiting 2 Jan 0 0',
+        'SO @sam-okafor Waiting 1 Jan 0 0',
         'DK @dana-k Suspended 28 Dec 2026 2 14',
         'MS @mira-s Mira Santos 10 Dec 2026 3 23',
         'LW @li-wei Li Wei 27 Sept 2026 3 31',

@@ -1,4 +1,4 @@
-import type { WorkspaceEvent } from '../../src/shared/events'
+import type { WorkspaceEvent } from '../chat/workspace-events'
 import type { WorkspaceChat } from '../chat/backend'
 import type { WorkspaceFiles } from '../files/workspace'
 

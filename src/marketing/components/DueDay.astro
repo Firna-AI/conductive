@@ -1,0 +1,23 @@
+---
+import { parityPageCopy } from '../from-conductor/copy'
+import { dayWords } from '../from-conductor/dates'
+import type { ComingFeature } from '../from-conductor/model'
+import Icon from './Icon.astro'
+
+/**
+ * The due day of a feature that is on the way, or "No date yet" when the
+ * team has recorded no dated commitment for it.
+ */
+type Props = { feature: ComingFeature }
+
+const { due } = Astro.props.feature
+---
+
+{due === null ? (
+  <span class="due-day due-day-none">{parityPageCopy.noDate}</span>
+) : (
+  <span class="due-day">
+    <Icon name="calendar-check" size={13} class="due-day-icon" />
+    {parityPageCopy.due} <time datetime={due}>{dayWords(due, 'short')}</time>
+  </span>
+)}

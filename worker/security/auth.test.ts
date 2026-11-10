@@ -44,11 +44,12 @@ it('starts GitHub authorization with browser state and PKCE', async () => {
 })
 
 it('signs in a GitHub user without an email or an account-age check', async () => {
-  const session = await harness.login()
+  const session = await harness.login({ appAccess: false })
   const response = await harness.request(API_PATHS.session, session)
   expect(response.status).toBe(200)
   expect(await response.json()).toMatchObject({
     user: { githubId: 7, githubLogin: 'octocat' },
+    appAccess: false,
   })
   expect(session).not.toContain('github-test-token')
   const calls = harness.github.requests
@@ -178,9 +179,10 @@ it('stores verified emails from every GitHub page without exposing them in the s
       { email: 'FIRST@example.com', verified: true },
     ],
   ]
-  const session = await harness.login()
+  const session = await harness.login({ appAccess: false })
   const response = await harness.request(API_PATHS.session, session)
   expect(await response.json()).toEqual({
+    appAccess: false,
     user: {
       id: expect.any(String),
       githubId: 7,

@@ -1,12 +1,26 @@
+import type { MacChip } from '../../docs/mockups/src/brand'
 import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList'
-import type { IconName } from './icon-shapes'
+import type { FeatureIconName } from './icon-shapes'
 
 /**
- * The words of the features of the home page. The site renders them as HTML,
- * and the mockups render them with React in
- * docs/mockups/src/screens/MarketingScreen.tsx, so both show the same
- * words, icons, and pictures, in the same order.
+ * The words of the site that the mockups also show: the lines that sum up
+ * the product, and the features of the home page. The site renders them as
+ * HTML, and the mockups render them with React in
+ * docs/mockups/src/screens/MarketingScreen.tsx and its parts, so both show
+ * the same words, icons, and pictures, in the same order.
  */
+
+/** The lines that sum up the product. Both name the browser and the Mac app. */
+export const productSummary = {
+  /**
+   * The sentence under the headline of the home page. It is also the
+   * description of the home page, which a search result can show.
+   */
+  heroText:
+    'Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser or from the Mac app.',
+  /** The line under the lockup in the footer of each page. */
+  tagline: 'Coding agents on cloud computers, in your browser or the Mac app.',
+} as const
 
 /** One feature of the app: what it does, and a real screen that shows it. */
 export type Feature = {
@@ -43,8 +57,8 @@ export const features: readonly Feature[] = [
   },
   {
     label: 'Tools',
-    title: 'A terminal, port previews, and a live desktop.',
-    text: 'Run commands on the cloud computer, open any port in a preview, and watch the agent use a browser on the desktop.',
+    title: 'A terminal and port previews.',
+    text: 'Run commands on the cloud computer, and open any port in a preview.',
     picture: 'tools',
   },
   {
@@ -62,12 +76,46 @@ export const features: readonly Feature[] = [
   },
 ]
 
+/** A download of the Mac app: the chip of its DMG, and its button. */
+type MacDownload = {
+  readonly chip: MacChip
+  readonly label: string
+}
+
+/**
+ * A feature with the downloads of the Mac app, and the oldest macOS version
+ * that the app runs on.
+ */
+export type MacAppSection = Feature & {
+  /** The downloads in their order. The first one is the main action. */
+  readonly downloads: readonly MacDownload[]
+  /** The oldest macOS version that the app runs on, as one sentence. */
+  readonly requirement: string
+}
+
+/**
+ * The section of the Mac app, after the features. It is not an entry of
+ * `features`, because the site draws each entry of `features` as a feature
+ * without downloads. Each claim is one that the plan decides.
+ */
+export const macAppSection: MacAppSection = {
+  label: 'Mac app',
+  title: 'Work from the Mac app.',
+  text: 'The app opens in its own window, and agents keep working in the cloud. An agent can ask to run a command on your Mac, and the command runs only after you allow it.',
+  picture: 'mac',
+  downloads: [
+    { chip: 'arm64', label: 'Download for Mac (Apple silicon)' },
+    { chip: 'x64', label: 'Download for Mac (Intel)' },
+  ],
+  requirement: 'Runs on macOS 13 or later.',
+}
+
 /**
  * A smaller feature: an icon, a short title, and one sentence. The icon is
  * the name of a lucide icon, which each surface draws in its own way.
  */
 export type FeatureItem = {
-  readonly icon: IconName
+  readonly icon: FeatureIconName
   readonly title: string
   readonly text: string
 }

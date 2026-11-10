@@ -122,34 +122,43 @@ These docs belong to this doc:
   Reason: the launch address needs a sign-in session, and the browser may
   hold none.
 
+## GitHub App install
+
+- [GitHub App install](desktop-sign-in.md#github-app-install) states the
+  browser return after an install and the refresh in the Mac app.
+
+## Sign-in
+
+[Sign-in](desktop-sign-in.md#sign-in) holds these requirements.
+
+## The sign-in session
+
+[The sign-in session](desktop-sign-in.md#the-sign-in-session) holds these requirements.
+
+## The Worker and the desktop origin
+
+[The Worker and the desktop origin](desktop-sign-in.md#the-worker-and-the-desktop-origin) holds these requirements.
+
+## Permissions
+
+[Permissions](desktop-commands.md#permissions) holds these requirements.
+
+## Mac commands
+
+[Mac commands](desktop-commands.md#mac-commands) holds these requirements.
+
 ## Packages and updates
 
-- The electron-builder tool packages a DMG and a ZIP for each processor
-  type, arm64 and x64 (decision 62).
-- Each package carries the app icon of the [brand files](../brand/README.md).
-- Development and pull request packages have an ad-hoc signature and no
-  notarization. They need no Apple signing credentials.
-- Release packages use a Developer ID Application signature and Hardened
-  Runtime. Apple notarizes the app before ZIP packaging. Each DMG is also
-  signed and notarized. Each app and DMG has a stapled notarization ticket.
-- Release packaging fails if credentials are missing, the signing team is
-  wrong, or signature, ticket, or Gatekeeper verification fails.
-- GitHub builds release packages on version tags and manual runs, after the
-  normal Mac checks. Signing credentials belong to the protected
-  `desktop-release` environment. Its branch rules permit `main` and `v*` tags.
-  Each runner uses a temporary Keychain and removes its temporary credentials.
-- Risk: macOS refuses to open a downloaded ad-hoc build until
-  the user allows it.
-- The Mac app updates itself with electron-updater, from the GitHub
-  releases of a public repository. Reason: this repository is private, and
-  the updater needs a public feed.
-- No release is published yet. Until the first release, each build keeps
-  the updater off.
-- The updater never runs in development.
-- When the feed is enabled, the Mac app downloads new versions
-  automatically, as Mokly does.
-- Each downloaded version offers Restart now or Later once.
-- The update installs when the app quits, also after Later.
-- A failed update check does not stop the app, and it shows no error.
-- Risk: an update installs in place only into a build with a Developer ID
-  signature. A build with an ad-hoc signature cannot update itself.
+[Packages and updates](desktop-packages-and-updates.md) holds the Mac packages, releases, fixed DMG names, and updates.
+
+### Packages
+
+[Packages](desktop-packages-and-updates.md#packages) holds the signing and system requirements.
+
+### Releases
+
+[Releases](desktop-packages-and-updates.md#releases) holds publication, download addresses, and immutable releases.
+
+### Updates in the app
+
+[Updates in the app](desktop-packages-and-updates.md#updates-in-the-app) holds automatic and manual checks.

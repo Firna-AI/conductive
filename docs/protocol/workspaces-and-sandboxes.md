@@ -1,18 +1,21 @@
 # Workspaces and sandboxes
 
 This doc holds the requirements and the decisions in force for workspaces
-and their sandboxes. It also covers the org image that every sandbox starts
-from, and the tools of a workspace. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+and their sandboxes, and for the org image that every sandbox starts from.
+[Workspace tools](workspace-tools.md) covers the tools of a workspace. The
+terms are those of the [architecture doc](../architecture.md#terms). A
+decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says.
 
 These docs belong to this doc:
 
+- [Org image](org-image.md): its builds, refreshes, and first build.
+- [Create a workspace](create-a-workspace.md): New workspace as a page or
+  as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](repository-folders.md): the folder and the shell
   variable of each repository in a sandbox.
-- [Life of a workspace](workspace-life.md): the create, the start steps,
-  the time limits, the states, the stop and resume, and the archive.
+- [Life of a workspace](workspace-life.md): the start steps, the time
+  limits, the states, the stop and resume, and the archive.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
   terminal, the port previews, and the desktop.
 
@@ -41,38 +44,11 @@ These docs belong to this doc:
 
 ## The org image
 
-- Each org has one org image that holds a prepared copy of every
-  repository that the org chose (decision 13).
-- One image for each repository was rejected, because each image costs
-  its own saved snapshot and starts.
-- The Repositories tab of the org settings chooses the repositories
-  (decision 10). A change of the repositories takes effect at the next
-  build.
-- The install script prepares the image. It is a script, not a terminal
-  session, and it runs only in a build.
-- Bash runs the install script.
-- The Cloud computer tab lists the operating system and software that the
-  base image includes before the install script runs.
-- "Build computer" starts a build. A build runs the install script on a
-  copy of the image, with every chosen repository cloned (decision 12).
-- A build replaces the org image only when it succeeds. A failed build
-  keeps the last good image (decision 9).
-- While a build runs, its log streams on the Cloud computer tab. New
-  workspaces keep starting from the last good image.
-- A failed build shows the end of its log and Try again. The Settings link
-  of the sidebar then shows a mark.
-- After the user saves a changed install script, the tab asks for a build,
-  because the script runs only in a build.
-- The Cloud computer tab lists the builds, each with its time, its result,
-  and its length.
-- A push to the default branch of a chosen repository refreshes the org
-  image, at most once in 30 minutes. A daily timer refreshes it too. Each
-  automatic refresh needs an admin who is not suspended, as
-  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
-- A refresh fetches the new commits of every chosen repository. It does
-  not run the install script.
-- Reason: a new workspace then needs only a small fetch. The limit of one
-  refresh in 30 minutes saves starts, because each refresh is a start.
+[The org image](org-image.md#the-org-image) holds its builds and refreshes.
+
+### The first build
+
+[The first build](org-image.md#the-first-build) holds the first and added builds of a new org.
 
 ## Repository folders
 
@@ -100,7 +76,84 @@ These docs belong to this doc:
 - [Access and security](tokens-and-secrets.md#secrets-that-users-enter)
   says how the app keeps the values.
 
-## Files and changes
+## Create a workspace
+
+- [Create a workspace](create-a-workspace.md) holds the requirements of the
+  page, the dialog, the create, the branch, and a failed first start.
+
+## Workspace numbers and links
+
+- The workspace header omits the branch name on desktop and on a phone.
+  Reason: this keeps the header compact.
+- Each workspace has a number in its org (decision 212). The numbers of an
+  org count up from 1, in the order in which its workspaces were created.
+- The app never gives a number twice in one org. This holds also after a
+  failed first start and after a Restore of the org.
+- Reason: a person who said `W-12` must not find another workspace there
+  later.
+- The label of a number is `W-` and the number, such as `W-395`, in every
+  org. Org initials before the number, such as `AC-395`, were rejected,
+  because the label then changes when an admin changes the initials.
+- A part of the workspace ID or of the branch name in place of a number
+  was rejected, because people cannot easily say it.
+- The label shows on the [Copy link](workspace-links.md#copy-link) button
+  of the workspace header and in each [chip](workspace-links.md#chips). A
+  [search of the command palette](command-palette.md#search) that matches
+  the label shows it too.
+- The rows of the workspace list show no label. A label in each row was
+  rejected, because the names then lose room in the sidebar and on a
+  phone.
+- Each workspace has a link: the web address of its page at the app
+  origin, such as
+  `https://app.conductive.build/orgs/<org ID>/workspaces/<workspace ID>`.
+- The link names the org and the workspace by their IDs, never by a number
+  or a name. So the label and the name can change later (decision 212).
+- The workspace record gives the number in `number` and the link in
+  `link`. Copy link, the chips, and the agent tools use this link.
+- Reason: the page of the Mac app runs on its own origin, and a sandbox
+  does not know the app origin.
+
+## Tools of a workspace
+
+- [Workspace tools](workspace-tools.md) holds the requirements of the
+  tools of a workspace.
+
+### Files and changes
 
 - [Files and changes](workspace-tools.md#files-and-changes) states the
   file lists of a workspace and the file reports of the runner.
+
+### Terminal
+
+- [Terminal](workspace-tools.md#terminal) holds the requirements of the
+  shell of a workspace.
+
+### Port previews
+
+- [Port previews](workspace-tools.md#port-previews) holds the
+  requirements of the previews of the ports of a sandbox.
+
+### Desktop
+
+- [Desktop](workspace-tools.md#desktop) holds the requirements of the
+  live desktop of a sandbox, which the app hides for now.
+
+## Start steps
+
+[Start steps](workspace-life.md#start-steps) holds these workspace requirements.
+
+## Time limits of builds and starts
+
+[Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts) holds these workspace requirements.
+
+## Workspace states
+
+[Workspace states](workspace-life.md#workspace-states) holds these workspace requirements.
+
+## Stop and resume
+
+[Stop and resume](workspace-life.md#stop-and-resume) holds these workspace requirements.
+
+## Archive
+
+[Archive](workspace-life.md#archive) holds these workspace requirements.

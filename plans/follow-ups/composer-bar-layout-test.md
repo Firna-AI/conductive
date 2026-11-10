@@ -1,0 +1,33 @@
+# No test sees an overlap in the composer bar
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-09, from branch `calummoore/claude-login-notice-removal`, pull request #75, review round 2, finding 1.
+- **Location:** `docs/mockups/src/components/chat/ModelPicker.module.css`, `docs/mockups/src/components/chat/SessionLogin.module.css`, and the bar in `src/chat/components/Composer.tsx`. The gate is the `check` script of `package.json`.
+- **Reason:** Each test option adds a browser to the gate, and the user decides each new gate step.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Composer bar:** the row at the bottom of the message box, with Attach, the model picker, the login label, Stop during a turn, and Send.
+  - **Login label:** the muted name in the bar, such as "Cal's login", when a message spends the login of another member.
+  - **Browser test:** a test that opens a page in a real browser, so that it can measure the layout.
+- **Background:**
+  - On a phone during a turn, the composer bar is full.
+  - The review of pull request #75 found that the button of the model picker ran under the login label: by 26 pixels at 390 pixels wide, and by 35 pixels at 375. On `main` before that change, the picker already ran under Stop at 320 pixels.
+  - The fix lets the button shrink. Its text then gives way with an ellipsis: the effort first, then the model. A one-time measurement from 320 to 430 pixels showed no overlap after the fix.
+  - The chat tests render markup with `react-dom/server`, which has no layout. So no test of the repository can see an overlap.
+  - The web app has no browser test harness, and `npm run check` runs no browser test. The desktop package has `playwright-core` for its own checks.
+  - A later review of the Conductor Cloud comparison mockups found another phone overlap. Two legend columns let "Under consideration" cover the next icon at 366 pixels, the catalogue's phone frame width. A single phone column and shared status wrapping fix that layout. One-time measurements check it from 320 to 430 pixels. This is another case that a future layout harness could protect.
+- **Problem:** No test fails when one control of the composer bar covers another. A later change, such as a new item in the bar or a longer text, can bring an overlap back unseen.
+- **Impact if no action:** An overlap can reach phone users again. Only a person who looks at a phone screen sees it.
+- **Root question:** How does the project notice that one control of the composer bar covers another?
+- **Options:**
+  - **A.** Add no test. Look at the mockup state `app/composer/login` on a phone after each change to the bar. Effort: Small.
+  - **B.** Add the first browser test of the web app. It renders the composer at 375 pixels during a turn with another member's login, and fails when one control of the bar covers another. It needs a harness, Chrome in the test step of `npm run check` and of CI, and 10 recorded runs. Effort: Medium.
+  - **C.** Add a layout check of the mockup catalogue. After the mockup build, it opens each phone screen with a composer and fails when two controls of the bar overlap. It covers every state that the catalogue draws, and it needs the same browser in the gate. Effort: Medium.
+- **Left out:** A test with `jsdom`: it has no layout, so it cannot see an overlap.
+- **Wider fix:** C. It covers every composer state that the catalogue draws. B covers one state.
+- **Previous examples:** Commit `8f72972` fixed a similar overflow of a narrow bar in `src/github/PullRequestBar.module.css`.
+- **Recommendation:** B. It is the regression test for this defect, and its harness can serve later layout tests. C protects more states, but it is a test for the whole class, so it costs more to keep.
+- **Action:** ask the user, because each test option adds a browser to the gate, and the user decides each new gate step.

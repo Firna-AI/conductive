@@ -4,11 +4,14 @@ import { HttpError } from '../http'
 import { gate, gateAccess, type RequestContext } from '../security/gate'
 import { findChatWorkspace } from './queries'
 import type { WorkspaceRecord } from './types'
+import { appOrigin } from '../security/app-origin'
+import type { WorkspaceLinkContext } from '../data/workspace-link'
 
 export interface BrowserAccess {
   context: RequestContext
   workspace: WorkspaceRecord
   suffix: string
+  presentation: WorkspaceLinkContext
 }
 
 export async function authorizeChatBrowser(
@@ -42,6 +45,12 @@ export async function authorizeChatBrowser(
   return {
     context,
     workspace,
+    presentation: {
+      origin: appOrigin(request, env),
+      orgId: workspace.orgId,
+      workspaceId: workspace.id,
+      number: workspace.number,
+    },
     suffix: path.slice(workspacePath(context.org.id, workspace.id).length),
   }
 }

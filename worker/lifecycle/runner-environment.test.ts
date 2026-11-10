@@ -18,6 +18,7 @@ import {
   workspaceEnvironmentSettings,
 } from './settings-data'
 import { runningEnvironment } from './start-environment'
+import { readWorkspace } from './workspace-data'
 import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 
 const backendFixture = setupBackendTests()
@@ -82,6 +83,7 @@ it('captures the create branch and masks legacy encrypted settings in its stream
   expect(boat.starts[0]).toMatchObject({
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'release-main',
+      CONDUCTIVE_WORKSPACE_BRANCH: created.workspace.branch,
       ORG_SECRET: initialSecret,
     },
   })
@@ -111,6 +113,7 @@ it('captures fresh resume settings, preserves the ready computer capture, and pi
   const { id, actor: platform } = await seededCompletedWorkspace(fixture, {
     environmentCiphertext,
   })
+  const workspace = await readWorkspace(runtime.env.DB, org.id, id)
   const actor = platform.endpoint()
   const resumes: Request[] = []
   runtime.dependencies.fetch = async (request) => {
@@ -136,6 +139,7 @@ it('captures fresh resume settings, preserves the ready computer capture, and pi
   expect(request).toMatchObject({
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'resume-main',
+      CONDUCTIVE_WORKSPACE_BRANCH: workspace.branch,
       ORG_SECRET: resumedSecret,
       PUBLIC_MODE: 'production',
       PUBLIC_FLAG: '1',
@@ -175,6 +179,7 @@ it('captures fresh resume settings, preserves the ready computer capture, and pi
   expect(retention).toMatchObject({
     env: {
       CONDUCTIVE_DEFAULT_BRANCH: 'resume-main',
+      CONDUCTIVE_WORKSPACE_BRANCH: workspace.branch,
       ORG_SECRET: retentionSecret,
       CONDUCTIVE_DISK_KEEPALIVE: '1',
     },

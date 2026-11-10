@@ -20,6 +20,7 @@ export interface TerminalScriptOptions {
 }
 
 /**
+ * Bash shows only the current folder name in the prompt.
  * Bash checks once, at the first prompt after the restore marker exists.
  * If the real folder differs from `$PWD`, it moves there and keeps `OLDPWD`.
  * The check flag stays local to this shell, so new shells check for themselves.
@@ -27,7 +28,8 @@ export interface TerminalScriptOptions {
 export function terminalPromptCommand(
   restoreMarker = TERMINAL_RESTORE_MARKER,
 ): string {
-  return `builtin test -n "\${__conductive_restore_checked-}" || ! builtin test -f ${shellArgument(restoreMarker)} || { __conductive_restore_checked=1; [ -z "\${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=\${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }; }`
+  return `PS1=\${PS1//\\\\w/\\\\W}
+builtin test -n "\${__conductive_restore_checked-}" || ! builtin test -f ${shellArgument(restoreMarker)} || { __conductive_restore_checked=1; [ -z "\${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=\${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }; }`
 }
 
 const terminalScriptDefaults: TerminalScriptOptions = {
@@ -110,6 +112,6 @@ set -a
 . ${shellArgument(options.environmentFile)}
 set +a
 cd "$CONDUCTIVE_REPOSITORY_DIR"
-exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-option -g mouse on ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
 `
 }

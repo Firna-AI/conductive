@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { AppEnv } from '../env'
 import { warnWorker } from '../warnings'
 import { errorSummary } from '../warning-values'

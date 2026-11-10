@@ -1,20 +1,21 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef } from 'react'
 import { Button } from '@firna/ui/button'
-import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import { filesWait } from '../../app/draft-files'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import {
-  SessionLoginLine,
+  SessionLoginLabel,
   type SessionLogin,
 } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import type { Draft } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
 import { DraftFiles, OversizeNotice } from './AttachmentChips'
+import { ChipTextField } from './chip-field/ChipTextField'
 import local from './chat.module.css'
 import { ModelPicker } from './ModelPicker'
+import { useSendKey } from './send-key'
 
 export interface ComposerProps {
   draft: Draft
@@ -29,7 +30,10 @@ export interface ComposerProps {
   sending: boolean
   /** A notice says why a message cannot go yet, so Send is off. */
   blocked: boolean
-  /** Whose agent login the session uses, which a line under the box names. */
+  /**
+   * The agent login of another member that the session uses, which a label
+   * in the bar names. A message on the reader's own login has no label.
+   */
   login?: SessionLogin
   /**
    * A message starts a new linked session, so it does not steer a running
@@ -52,11 +56,13 @@ export interface ComposerProps {
  * uploads or failed. Files over the size limit get a notice over the box,
  * which can open the file picker again. While a turn runs, a message
  * steers the turn, and Stop sits beside Send. While the sandbox is not
- * ready, Send still sends, and the workspace queues the message. A line
- * under the box names whose agent login the session uses. On desktop, Enter
- * sends and Shift+Enter starts a new line.
- * The composer reads Enter before the text field does, so Enter never adds
- * a line to a message that it sends.
+ * ready, Send still sends, and the workspace queues the message. When a
+ * message spends the agent login of another member, a label after the
+ * model picker names that login, so the box keeps its place. Enter follows
+ * the shared rule of `useSendKey`: on desktop, Enter sends and Shift+Enter
+ * starts a new line. The text field asks the send key before it adds a
+ * line, so Enter never adds a line to a message that it sends. A pasted
+ * workspace link shows as a chip, and the draft keeps the plain link.
  */
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
@@ -64,15 +70,8 @@ export function Composer(props: ComposerProps) {
   const { draft } = props
   const empty = draft.text.trim() === '' && draft.files.length === 0
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
-  const touch = control.field === 'lg'
   const steers = props.running && props.startsSession !== true
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (touch || event.key !== 'Enter' || event.shiftKey) return
-    if (event.nativeEvent.isComposing) return
-    if (!(event.target instanceof HTMLTextAreaElement)) return
-    event.preventDefault()
-    if (!off) props.onSend()
-  }
+  const sendKey = useSendKey(!off, props.onSend)
   return (
     <>
       <OversizeNotice
@@ -80,7 +79,7 @@ export function Composer(props: ComposerProps) {
         refused={draft.refused}
       />
       <div className={styles.wrap}>
-        <div className={styles.composer} onKeyDownCapture={onKeyDown}>
+        <div className={styles.composer}>
           {draft.files.length > 0 ? (
             <DraftFiles
               files={draft.files}
@@ -88,19 +87,17 @@ export function Composer(props: ComposerProps) {
               onRetry={props.onRetryFile}
             />
           ) : null}
-          <InputFrame
-            accessibilityLabel="Message"
-            focusIndicator="none"
+          <ChipTextField
+            label="Message"
+            lines={2}
             maxLines={8}
-            multiline
-            numberOfLines={2}
             onChangeText={props.onChangeText}
+            onEnter={sendKey}
+            owner={draft.id}
             placeholder={
               steers ? 'Steer the agent while it works' : 'Message the agent'
             }
-            size={control.field}
             value={draft.text}
-            variant="seamless"
           />
           <div className={styles.bar}>
             <IconButton
@@ -126,6 +123,7 @@ export function Composer(props: ComposerProps) {
               onChoose={props.onChooseModel}
               sessionAgent={props.sessionAgent}
             />
+            {props.login ? <SessionLoginLabel {...props.login} /> : null}
             <span className={styles.spacer} />
             {props.running ? (
               <ActionButton
@@ -149,12 +147,6 @@ export function Composer(props: ComposerProps) {
             />
           </div>
         </div>
-        {props.login ? <SessionLoginLine {...props.login} /> : null}
-        {steers && draft.text !== '' ? (
-          <span className={styles.hint}>
-            The agent reads this at its next step.
-          </span>
-        ) : null}
       </div>
     </>
   )

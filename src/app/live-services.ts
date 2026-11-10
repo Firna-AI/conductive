@@ -1,3 +1,4 @@
+import { appDomain } from '../../docs/mockups/src/brand'
 import { createApiClient } from './api/client'
 import { xhrFileTransport } from './api/xhr-files'
 import { browserDelay, socketEventSource } from './events'
@@ -10,6 +11,17 @@ import {
   windowVisibility,
   type AppServices,
 } from './services'
+
+/**
+ * The origin of the app host. A browser loads the app from that host. The
+ * Mac app loads the app from its own origin, so it names the app host of
+ * the brand.
+ */
+function appHostOrigin(location: Location): string {
+  return location.protocol === 'https:' || location.protocol === 'http:'
+    ? location.origin
+    : `https://${appDomain}`
+}
 
 /**
  * The services of the deployed app: the Worker on the origin of the page.
@@ -35,6 +47,7 @@ export function createLiveServices(target: Window): AppServices {
     storage: windowStorage(target),
     newId: () => target.crypto.randomUUID(),
     leave: (url) => target.location.assign(url),
+    appOrigin: appHostOrigin(target.location),
     copy: (text) => target.navigator.clipboard.writeText(text),
   }
 }

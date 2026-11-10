@@ -39,8 +39,8 @@
 - **Wider fix:** E. All persistence tests use production storage, and no later test can select the removed handwritten store.
 - **Previous examples:** `plans/follow-ups/chat-tests-on-real-object.md` and `plans/follow-ups/lifecycle-tests-on-real-object.md` describe the same weakness.
 - **Related:**
-  - [Chat tests](chat-tests-on-real-object.md): reuse the same native workspace harness and transaction fault controls.
-  - [Lifecycle tests](lifecycle-tests-on-real-object.md): reuse the same clock, real eviction, and due-alarm advance rule.
+  - [Chat tests](https://github.com/Firna-AI/remote-code/blob/87784a5a406bc20cb37d602613977cb3ce283ffd/plans/follow-ups/chat-tests-on-real-object.md): reuse the same native workspace harness and transaction fault controls.
+  - [Lifecycle tests](https://github.com/Firna-AI/remote-code/blob/87784a5a406bc20cb37d602613977cb3ce283ffd/plans/follow-ups/lifecycle-tests-on-real-object.md): reuse the same clock, real eviction, and due-alarm advance rule.
 - **Recommendation:** E. One native harness prevents fixture drift across the workspace features.
 - **Action:** fix after merge, apply E, as the user approved on 9 November 2026. The fixture migration reaches existing GitHub tests beyond the push-delivery change.
 

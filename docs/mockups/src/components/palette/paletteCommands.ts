@@ -12,7 +12,6 @@ import {
   ListChecks,
   LogIn,
   MessageSquarePlus,
-  Monitor,
   Plus,
   Server,
   Settings2,
@@ -62,7 +61,6 @@ const rightColumnActions: readonly Command[] = [
     words: ['port'],
     to: paths.preview,
   },
-  { label: 'Go to Desktop', lead: icon(Monitor), to: paths.desktop },
 ]
 
 /**
@@ -177,7 +175,7 @@ export const accountSettings: readonly Command[] = [
     label: 'New workspaces',
     lead: icon(SlidersHorizontal),
     words: ['model', 'effort', 'default'],
-    to: paths.account,
+    to: paths.accountPreferences,
   },
 ]
 

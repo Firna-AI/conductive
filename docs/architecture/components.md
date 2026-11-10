@@ -8,18 +8,7 @@ says.
 
 ## Marketing site
 
-- A few static pages at the root of `conductive.build`, with the Terms and
-  Privacy pages. Visitors see them without a sign-in.
-- Astro builds these pages ahead of time. The Worker serves the built files
-  on `conductive.build`. It fills in the values of each request, such as
-  the app address in the sign-in links and the year in the footer.
-- [The marketing site README](../../src/marketing/README.md) describes how the
-  Worker serves them.
-- The same build also makes the page that asks for the
-  [agreement to the Terms](../protocol/access-and-security.md#sign-in) before
-  the GitHub sign-in. The Worker serves that page on `app.conductive.build`.
-- The main action is "Start free with GitHub". The site does not name
-  Boat, and users need no Boat account (decision 80).
+The [marketing site page](marketing-site.md) gives the responsibilities and boundaries of the public site.
 
 ## Web app
 
@@ -30,7 +19,8 @@ says.
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
-  suspends or lifts it.
+  suspends or lifts it. It also approves people who wait, makes and
+  disables codes, and pauses sign-ups.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
@@ -40,6 +30,8 @@ says.
 ## Mac app
 
 - An Electron shell for macOS, as [Mac app](../protocol/desktop-app.md) says.
+- Its packages and updates come from the GitHub releases of the public source repository, as
+  [Packages and updates](../protocol/desktop-packages-and-updates.md) says.
 
 ## Worker
 
@@ -58,7 +50,8 @@ says.
 
 - D1 holds the records of the app: users, orgs, members, sections,
   repositories, workspaces, settings, the active preview hostnames, and the
-  records of attached files.
+  records of attached files. D1 also holds app access, codes and their uses,
+  the sign-up pause, and the state of approval emails.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -124,8 +117,8 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
   Claude or OpenAI account of the starter of its session.
-- **Workers AI:** the Cloudflare model service writes the title of each new
-  workspace from its first message. Its use bills to the Cloudflare account
-  of the app (decision 184).
+- **Workers AI:** the Cloudflare model service writes a title for a
+  workspace that has no name, from its first message. Its use bills to the
+  Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. The app is free, with no limits (decision 81).

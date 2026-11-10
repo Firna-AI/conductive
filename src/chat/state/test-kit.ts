@@ -113,6 +113,7 @@ export function chatFor(
      * of the chat, with no progress, as `fetchFiles` says.
      */
     files?: FileTransport
+    readOnly?: () => boolean
   } = {},
 ) {
   const server = new FakeApiServer(options)
@@ -144,6 +145,7 @@ export function chatFor(
       )
     },
     timers,
+    readOnly: options.readOnly,
     newId: () => {
       ids += 1
       return `client-${ids}`

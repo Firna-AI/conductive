@@ -2,6 +2,7 @@
  * Chat transcripts. Text in backticks renders as inline code.
  */
 
+import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
@@ -16,11 +17,20 @@ import {
   newWorkspaceConversations,
   savedCartsMessage,
 } from './newWorkspaceConversations'
+import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
+import { workConversations } from './workConversations'
+import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
 type ToolCallStatus = 'done' | 'running' | 'stopped'
+
+/** A table in a message of the agent. A short row keeps only its own cells. */
+export type MessageTable = { kind: 'table' } & TableCells<string>
+
+/** A block of a message of the agent: a paragraph, or a table. */
+export type AgentBlock = string | MessageTable
 
 export type ChatItem =
   | {
@@ -30,11 +40,15 @@ export type ChatItem =
       /** The files of the message, which show under it. */
       attachments?: readonly Attachment[]
       queued?: boolean
+      /** Sent while a turn runs: it joins that turn as a new part. */
+      during?: true
     }
   | {
       kind: 'agent'
       id: string
-      paragraphs: readonly string[]
+      /** The paragraphs and the tables of the message, in order. */
+      blocks: readonly AgentBlock[]
+      /** A list after the blocks. */
       bullets?: readonly string[]
     }
   | {
@@ -129,6 +143,17 @@ export const conversationKeys = [
   'linked',
   'sent-files',
   'queued-files',
+  'link-sent',
+  'link-answer',
+  'other-org-link',
+  'steered',
+  'mac-in-work',
+  'table-resources',
+  'table-header',
+  'table-rows',
+  'table-short-row',
+  'table-wide',
+  'tables-in-work',
 ] as const
 
 export type ConversationKey = (typeof conversationKeys)[number]
@@ -151,7 +176,7 @@ const autocompleteStart: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'plan',
-    paragraphs: ["I'll start with the checkout form and the places proxy."],
+    blocks: ["I'll start with the checkout form and the places proxy."],
   },
   tool('read-form', 'read', 'src/app/checkout/AddressForm.tsx'),
   tool('read-proxy', 'read', 'src/app/api/places/route.ts'),
@@ -159,7 +184,7 @@ const autocompleteStart: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'approach',
-    paragraphs: [
+    blocks: [
       "The proxy already returns predictions, so the work is in the form. I'll add a `useAddressAutocomplete` hook, show suggestions under the first address line, and fill the other fields when one is chosen.",
     ],
   },
@@ -187,7 +212,7 @@ const autocompleteEnd: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'done',
-    paragraphs: ['Done. Checkout now suggests addresses as you type.'],
+    blocks: ['Done. Checkout now suggests addresses as you type.'],
     bullets: [
       'Choosing a suggestion fills the street, city, and postcode.',
       'Manual entry still works when there is no match.',
@@ -227,6 +252,10 @@ const cutOffTurn: readonly ChatItem[] = [
  */
 export const followUpDraft = linkedSession.firstMessage
 
+/** The steer message that the user types while a turn runs. */
+export const steerDraft =
+  'Also debounce the lookups to 250 ms, so we stay under the rate limit.'
+
 export const conversations: Readonly<
   Record<ConversationKey, readonly ChatItem[]>
 > = {
@@ -260,8 +289,11 @@ export const conversations: Readonly<
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations,
   ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
+  ...workspaceLinkConversations(history),
+  ...workConversations({
+    start: autocompleteStart,
+    tests: autocompleteTests,
+    steer: steerDraft,
+  }),
+  ...tableConversations,
 }
-
-/** The steer message that the user types while a turn runs. */
-export const steerDraft =
-  'Also debounce the lookups to 250 ms, so we stay under the rate limit.'

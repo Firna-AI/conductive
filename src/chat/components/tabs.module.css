@@ -1,18 +1,29 @@
-/* The field that renames the current session, in the size of its title. */
-.rename {
-  width: 168px;
-  min-width: 0;
-  height: 20px;
-  padding: 0 4px;
-  border: 1px solid var(--ui-border2);
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-surface);
-  color: var(--ui-ink);
-  font: inherit;
-  outline: none;
-  box-sizing: border-box;
+/*
+ * A tab that a drag can move. A long press must not open the menu of a link
+ * or select text, and a finger still scrolls the row sideways.
+ */
+.dragSurface {
+  touch-action: pan-x;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
-.rename:focus {
-  border-color: var(--ui-primary);
+/*
+ * The frame of the lifted tab above the page. Its centre follows the
+ * pointer, and it takes no pointer input. It keeps the width of the whole
+ * title, up to the width of the window less the gap of 4 px at each side
+ * that `LiftedTab` keeps, where a longer title goes on to more lines.
+ */
+.floating {
+  position: fixed;
+  z-index: 60;
+  width: max-content;
+  max-width: calc(100vw - 8px);
+  pointer-events: none;
+  transform: translateX(-50%) rotate(-1.5deg);
+}
+
+/* On a phone, the lifted tab keeps the touch size of the tabs of the row. */
+.touch {
+  --ui-touch-min: 44px;
 }

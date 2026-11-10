@@ -1,8 +1,10 @@
 import { API_PATHS, type Org, type User } from '../../src/shared/api'
+import { workspaceLink } from '../data/workspace-link'
 import type { Workspace } from '../../src/shared/workspaces'
 import type { AppDependencies } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import type { InvitationEmail } from '../invitation-mailer'
+import { saveGitHubTokens } from '../security/github-tokens'
 import { workspaceNameColumn } from '../data/workspace-name'
 import {
   TEST_ORIGIN,
@@ -10,6 +12,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { membersGate } from './gate'
+import { seedAppAccess } from '../test-support/app-access'
 import { membersSeed } from './fixture-data.test-support'
 import { maintainDisksForTests } from './maintenance-test-support'
 import { workspaceCreator } from './ownership'
@@ -103,9 +106,38 @@ export async function signIn(
   return { session, user: value.user }
 }
 
-export async function memberFixture(harness: TestHarness) {
+export async function memberFixture(
+  harness: TestHarness,
+  { appAccess = true } = {},
+) {
   const seed = await membersSeed(harness)
   await harness.env.DB.batch(seed.statements)
+  if (appAccess)
+    await seedAppAccess(
+      harness.env.DB,
+      [
+        seed.fixture.admin.user.id,
+        seed.fixture.member.user.id,
+        seed.fixture.other.user.id,
+      ],
+      TEST_TIME,
+    )
+  await Promise.all(
+    [seed.fixture.admin, seed.fixture.member, seed.fixture.other].map(
+      ({ user }) =>
+        saveGitHubTokens(
+          harness.env,
+          user.id,
+          {
+            accessToken: `github-test-token-${user.id}`,
+            refreshToken: null,
+            expiresAt: null,
+            refreshExpiresAt: null,
+          },
+          TEST_TIME,
+        ),
+    ),
+  )
   harness.github.profile = seed.profile
   return seed.fixture
 }
@@ -159,7 +191,7 @@ async function readWorkspace(
   id: string,
 ): Promise<Workspace> {
   const row = await harness.env.DB.prepare(
-    `SELECT w.id, w.org_id AS orgId, w.repository_id AS repositoryId, w.section_id AS sectionId,
+    `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId, w.section_id AS sectionId,
      ${workspaceNameColumn('w')}, w.branch, w.state, w.created_at AS createdAt, w.updated_at AS updatedAt,
      w.archived_at AS archivedAt, u.id AS userId, u.github_login AS githubLogin,
      u.display_name AS displayName, u.avatar_url AS avatarUrl
@@ -167,7 +199,7 @@ async function readWorkspace(
   )
     .bind(orgId, id)
     .first<
-      Omit<Workspace, 'owner' | 'choice'> & {
+      Omit<Workspace, 'owner' | 'choice' | 'link'> & {
         userId: string
         githubLogin: string
         displayName: string | null
@@ -182,6 +214,8 @@ async function readWorkspace(
     )
   return {
     id: row.id,
+    number: row.number,
+    link: workspaceLink(harness.env.APP_ORIGIN, orgId, id),
     orgId: row.orgId,
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,

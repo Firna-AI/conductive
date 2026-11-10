@@ -1,6 +1,6 @@
 import type { WorkspaceChat } from '../chat/backend'
 import type { WorkspaceCallbackObservers } from '../chat/workspace-callbacks'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from '../chat/workspace-events'
 
 export type NativeChatObservers = WorkspaceCallbackObservers
 

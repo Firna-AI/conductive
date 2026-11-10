@@ -21,6 +21,16 @@ requirements of each feature.
   an operator lifts it. It stops the sandboxes of the workspaces that the
   user owns, or of every workspace of the org, and blocks new starts. A
   user suspension also ends the sign-in sessions of the user.
+- **App access:** the right of a user to use the app: to create or join an
+  org, and to start cloud computers. A new account starts without it.
+- **Waitlist:** the users without app access. Each of them sees only the
+  waitlist screen until an approval, a code, or an org invitation gives
+  app access.
+- **Invite code:** a code that an operator makes, with a use limit. Each
+  use gives app access to one person who waits.
+- **Referral code:** the personal code of each user with app access. It
+  gives app access to up to 5 people who wait. The screens of users call
+  it an invite code.
 - **Workspace:** one task in an org. It has one repository, one branch,
   one sandbox, and one or more sessions.
 - **Workspace owner:** the person who is responsible for a workspace. It is
@@ -61,7 +71,7 @@ its storage, Boat, the sandbox software, and the external services.
 
 | Hostname                | What it serves                                                              |
 | ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms and Privacy pages                        |
+| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages                        |
 | `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
 | `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
 | `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
@@ -79,39 +89,13 @@ GitHub events, and stops.
 
 ## Where data lives
 
-| Data                                                                         | Home                                     |
-| ---------------------------------------------------------------------------- | ---------------------------------------- |
-| Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
-| The org of each sandbox and each saved snapshot                              | D1                                       |
-| Env var values and agent logins                                              | The Worker's storage, encrypted          |
-| The Boat key and the other keys of the Worker                                | Worker secrets                           |
-| Chat history and banner state                                                | The workspace Durable Object             |
-| Files attached to chat messages                                              | The attachment storage, an R2 bucket     |
-| The records of attached files                                                | D1                                       |
-| The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
-| The prepared repositories and the installed software                         | The org image, in the app's Boat account |
-| Panel widths                                                                 | The browser, or the Mac app              |
+The [data locations](architecture/data-and-trust.md#where-data-lives) give
+where each kind of data lives.
 
 ## Trust boundaries
 
-- The org is the boundary between tenants. A request reaches an org only
-  for a member of that org. An operator is the one exception, as
-  [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
-  says.
-- The one Boat key reaches the sandboxes and the saved snapshots of every
-  org (decision 80). So the Worker's own records keep the orgs apart, as
-  [Access and security](protocol/isolation.md#orgs-and-workspaces)
-  says.
-- The Boat key never goes to the browser, into a sandbox, into a log, or
-  into a saved snapshot.
-- Sandbox code is untrusted. Agents write and run it, and previews show it
-  only on the preview domain.
-- A sandbox gets none of the secrets of the app's Boat account. At a
-  start, it gets only the secrets of its workspace and its org.
-- During a turn, the sandbox also holds the agent login of the starter of
-  its session. The members of one org can reach that login, as
-  [Access and security](protocol/isolation.md#agent-logins-in-a-sandbox)
-  says.
+The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
+separate the orgs, the Boat key, and the sandboxes.
 
 ## Decision numbers
 
@@ -123,14 +107,19 @@ the merge.
 ## Protocol docs
 
 - [Workspaces and sandboxes](protocol/workspaces-and-sandboxes.md): the org
-  image, the life of a workspace, and the tools of a workspace.
-  - [Repository folders](protocol/repository-folders.md)
+  image and the life of a workspace.
+  - [Create a workspace](protocol/create-a-workspace.md): New workspace as a
+    page or as a dialog, the create, the branch, and a failed first start.
+  - [Repository folders](protocol/repository-folders.md): the folder and the
+    shell variable of each repository in a sandbox.
   - [Life of a workspace](protocol/workspace-life.md)
-  - [Tools of a workspace](protocol/workspace-tools.md)
-- [Chat and events](protocol/chat-and-events.md): sessions, messages, the
-  agent runner, and the events.
+  - [Workspace tools](protocol/workspace-tools.md)
+- [Chat and events](protocol/chat-and-events.md): sessions, messages, what
+  the chat shows, and the events.
   - [Messages and attachments](protocol/messages-and-attachments.md)
-  - [The agent runner](protocol/agent-runner.md)
+  - [Agent runner](protocol/agent-runner.md): the connection of the runner,
+    its events and their limits, its turns, and the repair of lost workspace
+    updates.
 - [Access and security](protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](protocol/isolation.md)
@@ -144,6 +133,7 @@ the merge.
   roles, the first run, and the end of an org.
 - [Mac app](protocol/desktop-app.md): the shell for macOS, its sign-in, and
   Mac commands.
+  - [Mac packages and updates](protocol/desktop-packages-and-updates.md)
   - [Mac app sign-in](protocol/desktop-sign-in.md)
   - [Permissions and Mac commands](protocol/desktop-commands.md)
 - [Operator actions](protocol/operator-actions.md): the operator, the
@@ -153,3 +143,33 @@ the merge.
   operator in the web app, their counts, and their searches.
 - [Command palette](protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
+- [Command palette: empty and unavailable states](protocol/command-palette-states.md):
+  what the palette shows while its workspace data loads or did not load,
+  and when a tab or a search has no row.
+
+- [Org image](protocol/org-image.md): the org image, its builds and its
+  refreshes, and the first build of a new org.
+
+- [Agents and sessions](protocol/agents-and-sessions.md): the agents and
+  their logins, the sessions, and the names of workspaces and sessions.
+
+- [Workspace links](protocol/workspace-links.md): Copy link, and the chips
+  that show workspace links in chat.
+
+- [Chat Markdown](protocol/chat-markdown.md): the formatting of agent
+  messages in the chat, with their tables.
+
+- [GitHub tokens](protocol/github-tokens.md): git and CLI account scope.
+
+- [Agent instructions](protocol/agent-instructions.md): the text that each
+  agent session gets, the sender line of each message, and the base
+  prompt of Claude agents.
+
+- [Waitlist](protocol/waitlist.md): app access, the waitlist screen, the
+  ways in, the pause, and the approval email.
+
+- [Invite and referral codes](protocol/waitlist-codes.md): the codes of
+  the waitlist, the join link, and the use of a code.
+
+- [Conductor Cloud comparison](protocol/conductor-cloud-comparison.md): the
+  public page with the status of each Conductor Cloud feature.

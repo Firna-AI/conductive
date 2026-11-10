@@ -21,6 +21,7 @@ export type BuildPhase =
   | 'snapshot'
   | 'publish'
   | 'cleanup'
+  | 'cleanup-build'
   | 'done'
 
 export interface BuildJob {

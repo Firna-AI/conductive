@@ -1,7 +1,7 @@
 {
   "name": "@conductive/desktop",
   "private": true,
-  "version": "0.1.0-alpha.1",
+  "version": "0.3.0",
   "description": "The Conductive Mac app",
   "homepage": "https://conductive.build",
   "author": "Conductive",

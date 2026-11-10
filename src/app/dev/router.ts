@@ -13,6 +13,7 @@ export const ID = {
   repository: ':repository',
   build: ':build',
   user: ':user',
+  invite: ':invite',
 } as const
 
 /** The IDs in a path, by name, such as `params.org` for `:org`. */

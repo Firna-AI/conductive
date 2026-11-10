@@ -1,8 +1,10 @@
 import type { Org } from '../../src/shared/api'
 import { TERMS_VERSION } from '../../src/shared/terms'
 import { SESSION_COOKIE } from '../security/cookies'
+import { saveGitHubTokens } from '../security/github-tokens'
 import { encrypt, hash, sign } from '../security/crypto'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
+import { seedAppAccess } from '../test-support/app-access'
 import { agentLoginContext } from './queries'
 
 export async function seedChatFixture(
@@ -118,6 +120,26 @@ export async function seedChatFixture(
       ),
     ...logins,
   ])
+  await seedAppAccess(
+    db,
+    people.map((user) => user.id),
+    TEST_TIME,
+  )
+  await Promise.all(
+    people.map((user) =>
+      saveGitHubTokens(
+        harness.env,
+        user.id,
+        {
+          accessToken: 'github-test-token',
+          expiresAt: null,
+          refreshToken: null,
+          refreshExpiresAt: null,
+        },
+        TEST_TIME,
+      ),
+    ),
+  )
   const cookies = await Promise.all(
     people.map(
       async (user) =>
