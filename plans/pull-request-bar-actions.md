@@ -1246,7 +1246,7 @@ Depends on: every other milestone
       now offers Squash and merge.
 - [x] Run the targeted tests and the complete gate, `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -1269,10 +1269,16 @@ Depends on: every other milestone
       integration. Read every guide and align each changed feature fact.
 - [x] Preserve main's computer ledger and durable Stop task with Continue.
       Keep both lifecycle RPC methods and verify the combined boundaries.
-- [ ] Run the affected tests and the complete gate on the combined review
+- [x] Run the affected tests and the complete gate on the combined review
       fixes. Re-review the fix once under the same review workflow.
 
 Evidence: `.context/pull-request-bar-actions/verification/report-final-local.md`.
+
+Review summary, 10 November 2026: findings 1 and 2 are fixed. Findings 3
+and 4 are independent follow-ups. The two review rounds and each fresh
+finding check are complete. Finding 4 uses the checked Worker-only option
+B, which also covers older runners. Its Rare outcome is fix after merge.
+
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
