@@ -17,14 +17,6 @@
   overflow-wrap: anywhere;
 }
 
-.queued {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--ui-muted);
-  font-size: var(--ui-text-sm);
-}
-
 /* A long link or a long piece of code breaks to fit the line. */
 .agent {
   display: flex;
@@ -48,12 +40,28 @@
   margin: 0;
 }
 
+/* A numbered list takes the place and the indent of a bulleted list. */
+.agent ol,
 .agent ul {
   margin: 0;
   padding-left: 20px;
 }
 
 .agent li + li {
+  margin-top: 2px;
+}
+
+/*
+ * A block after the text of a list item, such as a second paragraph or a
+ * table. The rules name the blocks of an item, so a chip or code in the
+ * text of an item keeps its place in the line.
+ */
+.agent li > :is(p, pre, div, ol, ul) + :is(p, pre, div) {
+  margin-top: 8px;
+}
+
+/* A list under the text of its item, as close as the next item. */
+.agent li > :is(p, pre, div, ol, ul) + :is(ol, ul) {
   margin-top: 2px;
 }
 

@@ -142,6 +142,7 @@ export function parseWorkspaceMessage(
         'changes.updated',
         'start.updated',
         'workspace.title',
+        'ports.updated',
       ]),
     }
   }

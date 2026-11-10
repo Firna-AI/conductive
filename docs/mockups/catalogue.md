@@ -7,6 +7,7 @@ how a screen is built, and links to the other pages.
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, the Mac app downloads, and Sign up |
 | `marketing/docs`    | The overview of the public docs, then a guide, with its Docs menu or its contents open on a phone |
+| `marketing/pricing` | The pricing page: four plans with their prices and cloud hours, the tax line, and how cloud hours count |
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
@@ -24,7 +25,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lost data, lost updates, and unread files |
+| `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lists in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -35,7 +36,7 @@ how a screen is built, and links to the other pages.
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
-| `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
+| `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
 | `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command, link a workspace, mention a file |
@@ -45,7 +46,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, and `app/file-mentions` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, `app/file-mentions`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -217,7 +218,10 @@ opens the folds. `app/chat/tables` draws tables in replies: the resources
 of the cloud computer, a short row whose last cell spans the missing
 columns, a wide table that scrolls sideways inside the reply, and the
 reply while the agent writes it, before its separator row arrives and
-after its table appears. `app/chat/lost-data` draws the data that the
+after its table appears. `app/chat/lists` draws a reply with a numbered
+list of choices, each with its options in a list under its text, as the
+user chose on 10 November 2026, and an open message line in the work of a
+turn with a plan whose steps sit under each item. `app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the
 runner left out, and the lines of runner events that the workspace
 refused.
@@ -227,50 +231,14 @@ workspace asks for a fresh full report, and nothing shows. Only when that
 report is lost too does a notice name the data that stays unavailable,
 beside that data: under the file lists for a file list, and under the
 header for other data, such as the workspace name. The `failed-repair`
-value of the `lostUpdate` state draws it, and no other screen shows a
-notice for a lost update. `app/chat/unavailable-files` draws the files that
-the cloud computer could not read: a finished turn and a stopped turn
+value of the `lostUpdate` state draws it. The only other notice for a lost
+update is the one of the list of servers, under the port form of the
+Preview tool, as `app/tools/preview-repair` shows.
+`app/chat/unavailable-files` draws the files that the cloud computer
+could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
 
-`app/workspace-links` draws the workspace numbers and the chips of
-decisions 211 and 212. Its canonical screen has a message and an answer
-with chips in Checkout address autocomplete, `W-395`. Its child pages:
-
-- `app/workspace-links/copy-link` has the header of Saved carts, `W-402`,
-  just after a press on the label, with the note "Link copied". Its
-  `failed` variant has a copy that failed, with the note "The link didn't
-  copy. Try again." in the danger colour.
-- `app/workspace-links/messages` has a pasted link as a chip in the
-  message box. Its `sent` variant has the sent message while the agent
-  works, and its `other-org` variant has a link of another org as plain
-  text.
-
-The message box of New workspace shows a pasted link as a chip in
-`app/new-workspace/workspace-link`, a child page of `app/new-workspace`,
-and in the `workspace-link` child page of `app/new-workspace/dialog`.
-The flow `user-flows/link-a-workspace` goes from the copy to the answer,
-and ends with a press on the chip, which opens
-`app/new-workspace/first-turn`.
-
-`app/file-mentions` draws the list of `@` and the file chips of decisions
-213 to 217. Its canonical screen has the query `@addr` in Checkout address
-autocomplete, with the best matches above the message box. Its child
-pages:
-
-- `app/file-mentions/list` has the list without a query, folders first.
-  Its `no-match` variant says "Nothing matches “zipcode”", its `loading`
-  variant says "Loading files…", and its `unavailable` variant says that
-  the list of all files is unavailable.
-- `app/file-mentions/chips` has a file chip and a folder chip in the
-  message box. Its `pointer` variant has the pointer over the icon of the
-  file chip, where a × takes the place of the icon. Its `sent` variant has
-  the sent message with both chips. Its `workspace-chip` and
-  `attached-file` variants show the same × on a pasted workspace link and
-  on an attached file.
-
-On a phone each chip of the composer keeps its icon and ends with a ×.
-The flow `user-flows/mention-a-file` goes from the query to the sent
-message, and ends with a press on the file chip, which opens
-`app/files/code`.
+[Workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+gives those catalogue pages and their related flows.

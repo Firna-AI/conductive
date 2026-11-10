@@ -16,8 +16,6 @@ import {
   TERMINAL_RESTORE_MARKER,
 } from './scripts'
 
-export const TERMINAL_PORT = 7681
-
 export function terminalInstallCommand(): string {
   return privilegedCommand(`set -eu
 apt-get update

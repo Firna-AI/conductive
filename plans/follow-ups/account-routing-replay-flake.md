@@ -15,6 +15,13 @@
   - On 10 November 2026, CI run 42815054593 failed the test on commit `add2da53`. The failure text was `SyntaxError: Unexpected token 'E', "Error: The"... is not valid JSON`, from `parseJSONFromBytes` in undici. The other 2,134 tests passed.
   - The test passed 3 of 3 in local runs on the same commit. A rerun of the failed CI job passed.
   - That pull request changed only `wrangler.jsonc` and Markdown.
+  - On 10 November 2026, CI run `42824852311` failed the same case on
+    `2a2cc2f4`, on branch `calummoore/manage-access-redirect`. The other
+    2,183 app and Worker tests passed. The failure was again
+    `SyntaxError: Unexpected token 'E', "Error: The"... is not valid JSON`.
+  - That branch changes no account routing code or test. After it merged
+    main at `08cbe3cd`, the case passed in a targeted run of eight files
+    and 25 tests. This was not an unchanged rerun. The cause stays unknown.
 - **Problem:** The test read a reply as JSON, but the reply was text that starts with "Error: The". It looks like an error text of the local Workers runtime, not the JSON of a route. A gate run then fails with no change in the code under test.
 - **Impact if no action:** A branch can fail its gate on this test and wait for a rerun. A real failure can hide among the flakes.
 - **Root question:** How does this test get the same result on every run?

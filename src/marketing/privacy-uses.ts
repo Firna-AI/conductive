@@ -60,7 +60,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         suspension keeps your cloud computers stopped until an operator
         lifts it.`,
       text`Your session: a cookie of the app keeps you signed in. A
-        second cookie protects the GitHub sign-in while it runs.`,
+        second cookie protects the GitHub sign-in while it runs. A third
+        cookie keeps the screen that you left for GitHub, for up to 1 hour.`,
       text`Your orgs: the orgs, members, roles, invitations, sections,
         repositories, workspaces, scripts, and settings that you and your
         team make. They run the service. Each org invitation keeps the
@@ -82,7 +83,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
       text`Your work: ${productName} keeps your messages and the answers
         of the agents as the chat history of each workspace. It also
         keeps the last file list and the last summary of changes of each
-        workspace. The files that you attach to a message stay in the
+        workspace. With the chat history, it keeps each list of the
+        servers that run in the cloud computer of a workspace: the port,
+        a short program name, and the folder of each server. The files
+        that you attach to a message stay in the
         storage of ${productName} at Cloudflare. When the agent starts
         work on the message, ${productName} copies them to the cloud
         computer of the workspace.`,
