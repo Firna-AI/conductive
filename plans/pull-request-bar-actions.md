@@ -1,6 +1,6 @@
 # Pull request bar actions
 
-Status: Active. [PR #176](https://github.com/Firna-AI/remote-code/pull/176) is open on `calummoore/github-status-bar-actions`. All original source and delivery tasks are complete. A later main change adds routines and now creates confirmed PR conflicts. The required integration and renewed final delivery are below.
+Status: Complete. [PR #176](https://github.com/Firna-AI/remote-code/pull/176) remains open on `calummoore/github-status-bar-actions`. All implementation and review milestones are complete. The source integrates main through `247c772a` in `b9a824dc`. Complete gate and both Mac jobs passed for that source. The final delivery commits preserve this snapshot, remove the plan, and receive their own watched CI before the final report.
 
 The pull request bar at the top of the right column shows the GitHub state
 of the workspace branch. Today each action in the bar links to GitHub, and
@@ -1645,12 +1645,10 @@ Depends on: 12
       current public, legal and comparison facts without a new policy.
 - [x] Run bounded affected checks and required material regression proofs
       and repeats. Keep source, types, tests and protocol contracts aligned.
-- [ ] Audit the two-parent merge and resolutions. Commit and push all
+- [x] Audit the two-parent merge and resolutions. Commit and push all
       current source for the final record and complete final-head CI.
 
-The routines merge `51616db4` is pushed and locally verified. Main's later
-hibernation change creates confirmed conflicts before its CI can start.
-The earlier green `b1dd3619` remains evidence for that earlier tree only.
+The routines merge `51616db4` and hibernation merge `b9a824dc` are pushed and audited. The hibernation merge has exactly two captured parents. All 23 remerge paths preserve their combined behavior. The earlier green `b1dd3619` remains evidence for that earlier tree only.
 
 Evidence: `.context/pull-request-bar-actions/hibernation-base-integration/backend-phase2-report.md`, `root-incoming-preservation.json`, and the internal/public owner reports.
 
@@ -1658,12 +1656,12 @@ Evidence: `.context/pull-request-bar-actions/hibernation-base-integration/backen
 
 Depends on: 14
 
-- [ ] Record current outcomes, all dated calls, test costs and follow-ups
+- [x] Record current outcomes, all dated calls, test costs and follow-ups
       in PR #176. Preserve every earlier choice and completed milestone.
-- [ ] Commit the new completed plan snapshot and push the verified source.
-- [ ] Delete this restored plan when all other required work is complete.
+- [x] Commit the new completed plan snapshot and push the verified source.
+- [x] Delete this restored plan when all other required work is complete.
       Keep a new snapshot permalink in the PR record.
-- [ ] Update the PR record and watch Complete gate and both Desktop jobs
+- [x] Update the PR record and watch Complete gate and both Desktop jobs
       on the final pushed head. Keep the branch checked out. Leave the PR
       open for the user to merge.
 
