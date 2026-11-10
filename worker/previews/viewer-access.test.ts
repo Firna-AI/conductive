@@ -9,6 +9,7 @@ import {
   launchPreview,
 } from './launch-test-support'
 import { bodySource, openPreview } from './stream-test-support'
+import { relayResponse } from './relay.test-support'
 import { activeMember } from './suspension-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
@@ -49,7 +50,7 @@ it.each([
     harness.dependencies.fetch = async (request) =>
       new URL(request.url).hostname === 'boat.dev'
         ? base(request)
-        : new Response(sources.shift()?.stream ?? 'still available')
+        : relayResponse(sources.shift()?.stream ?? 'still available')
     const denied = await setup.handler.proxy(browser.request())
     const allowed = await setup.handler.proxy(setup.previewRequest())
     const deniedReader = denied.body?.getReader()

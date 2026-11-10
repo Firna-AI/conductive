@@ -1,0 +1,8 @@
+[Unit]
+Description=Conductive preview relay socket
+
+[Socket]
+ListenStream=127.0.0.1:7682
+
+[Install]
+WantedBy=sockets.target

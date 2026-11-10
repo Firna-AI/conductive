@@ -27,6 +27,9 @@ as the Preview page, as
   preview. The address holds no secret.
 - The frame and the link send no referrer. The frame may not navigate the
   app's page.
+- Behind a page without its own background, the frame shows what a
+  browser tab shows. A page with no colour scheme shows white. A dark
+  page, such as the browser's JSON view in dark mode, shows dark.
 - A failed request shows its message and leaves the tool usable.
 
 ## Mount the tool
