@@ -418,6 +418,18 @@ from B to B with E.
 - **Action:** ask the user, because each option except A adds a new limit,
   a new failure, or a new rejection.
 
+### 12. One upload path for attachments and the import
+
+- **Root question:** How do all files that users upload reach the bucket?
+- **Options:** **A.** Keep decision 132 of the main plan: attachments go
+  through the server, with 25 MB for each file. **B.** Attachments use the
+  import's direct upload in parts, with the file limit of decision 11.
+  **C.** Separate paths, with the attachment limit just under the 100 MB
+  request ceiling.
+- **Recommendation:** B.
+- **Chosen:** A, by the user on 10 November 2026, "for now". Decision 132
+  of the main plan stays as it is.
+
 ## Design
 
 Each call below is an agent call of 9 November 2026, unless it names a
