@@ -115,6 +115,11 @@ Every org image holds the app's own sandbox software:
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 
+The Worker builds one software image for each version of this software,
+when the deploy run asks. The software image holds the base image and this
+software, and no org data. A build of an org without an org image starts
+from it, so that build installs none of this software.
+
 The agent runner runs Claude through the Claude Agent SDK, with the agent
 program that the SDK bundles at its own version. A pinned version guards
 against a change in how the agent program reads logins. The runner runs
