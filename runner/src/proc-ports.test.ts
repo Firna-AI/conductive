@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { PREVIEW_RELAY_PORT } from '../../src/shared/previews'
 import { procFixture } from '../test-support/proc'
 import { ProcPortScanner } from './proc-ports'
 
@@ -25,6 +26,7 @@ it('finds only same-user wildcard and loopback listeners and returns sorted uniq
       { port: 3003, uid: 0 },
       { port: 3004, state: '01' },
       { port: 7681 },
+      { port: PREVIEW_RELAY_PORT },
       { port: 8911, inode: '23780' },
       { port: 8911, ipv6: true, inode: '21646' },
       { port: 47984, address: '0100007F', inode: '93782' },

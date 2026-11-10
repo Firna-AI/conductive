@@ -10,7 +10,7 @@ export const portPreview = defineScreen({
   description:
     'Port 3000 of the sandbox in a frame. Open in new tab opens the same preview in its own tab, where the previewed app can keep its cookies. Each tab shows the port and the name of its server, cut to 10 characters, such as "storybook…". The tooltip and the spoken name of a tab give the port, the full name, and the folder.',
   rationale:
-    'The user chose detected servers on 10 November 2026, with decisions 218 C and 219 D, and asked for a short tab label that is cut with "…". The list of the port form shows the folder, so the tab does not. A port that the latest list does not name keeps the label "Port 3000".',
+    'The user chose detected servers on 10 November 2026, with decisions 220 C and 221 D, and asked for a short tab label that is cut with "…". The list of the port form shows the folder, so the tab does not. A port that the latest list does not name keeps the label "Port 3000".',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {

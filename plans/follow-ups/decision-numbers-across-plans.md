@@ -25,6 +25,12 @@
     - the palette key, in `docs/protocol/command-palette.md`
     - the masked file paths, in `docs/protocol/access-and-security.md` and `src/marketing/privacy.ts`
     - the lift of a suspension, in `docs/protocol/operator-actions.md` and `docs/protocol/operator-section.md`
+  - The preview relay change of `calummoore/port-preview-error-v2` took 213 and 214 on 10 November 2026. Main used 213 to 217 for the provider groundwork within hours, so before its merge the branch renumbered them:
+    - 213 became 218, the local `Host` and `Origin` that a previewed server gets.
+    - 214 became 219, the refusal of previews in a sandbox without the relay.
+  - The port-detection change of `calummoore/preview-port-detection-brainstorm` also took 213 and 214 on 10 November 2026. It first renumbered them to 218 and 219 for the provider work. The preview relay then merged with those numbers, so this branch renumbered its records again:
+    - 218 became 220, the runner's reports of listening ports. The user chose option C on 10 November 2026.
+    - 219 became 221, the program names and folders of listening ports. The user chose option D on 10 November 2026.
   - Decision 148 names two records:
     - the rule that only an org image build installs the terminal programs, in `plans/boat-native-remote-workspaces.md`. The user chose to keep that rule on 8 November 2026.
     - the rule that the operator Overview lists no suspensions, in `docs/protocol/operator-section.md` and `docs/mockups/src/entries/app/operator/index.mockup.tsx`

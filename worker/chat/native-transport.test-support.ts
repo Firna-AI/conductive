@@ -11,6 +11,7 @@ import type { NativeSendRule } from '../test-support/native-peers'
 
 export function nativeChatTransport(actor: NativeActor) {
   let sequence = 0
+  let workGeneration = 0
   let sendRule: NativeSendRule | null = null
   let observer: ((message: WorkspaceToRunner) => void) | undefined
   const pending = new Set<Promise<unknown>>()
@@ -36,6 +37,7 @@ export function nativeChatTransport(actor: NativeActor) {
     closedConnections: 0,
   }
   const track = (work: Promise<unknown>, input = false) => {
+    workGeneration++
     pending.add(work)
     if (input) inputWork.add(work)
     void work.then(
@@ -118,11 +120,19 @@ export function nativeChatTransport(actor: NativeActor) {
     await Promise.allSettled([...inputWork])
   }
   const drain = async () => {
+    let observed: number
     do {
+      observed = workGeneration
+      // Admit each batched input before taking the pending-work snapshot.
       await flushInput()
       await Promise.allSettled([...pending])
       await actor.api.controls.drain()
-    } while ((await pump()) > 0 || pending.size)
+    } while (
+      (await pump()) > 0 ||
+      pending.size ||
+      incoming.size ||
+      observed !== workGeneration
+    )
     if (errors.length) throw errors.shift()
   }
   return {

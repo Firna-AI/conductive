@@ -123,7 +123,7 @@ says.
 ## Listening ports
 
 - The runner reports the TCP ports that listen in its sandbox, for the
-  [port previews](workspace-tools.md#port-previews) (decision 218). Each
+  [port previews](workspace-tools.md#port-previews) (decision 220). Each
   `ports.updated` event holds the full list.
 - The list holds each port in the listen state on a wildcard or a loopback
   address, owned by the user of the runner. Reason: a specific address
@@ -138,7 +138,7 @@ says.
 - Reason: a short test server of an agent does not change the list. A
   server that restarts after each edit, such as under `nodemon`, keeps its
   row, so the rows below it do not move.
-- Each port has a name or none, and a folder or none (decision 219). They
+- Each port has a name or none, and a folder or none (decision 221). They
   stay the same for the life of the socket of the port. A port whose
   process the runner cannot read has no name.
 - The name is the file name of the program. For a known interpreter, such

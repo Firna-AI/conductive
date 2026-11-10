@@ -75,7 +75,10 @@ For example, enter `3000` if your server reports port 3000.
 Use the port of your server when it reports a different one.
 
 An older cloud computer can show only the **Port** field.
-The same manual steps work there.
+Use the manual steps there.
+If Preview says it needs newer cloud computer software, ask an admin to run **Build computer**.
+After that build succeeds, create a new workspace.
+An existing workspace keeps its installed software after a resume.
 
 - [Prepare a new cloud computer for the server list](/docs/cloud-computer#apply-setup-changes)
 

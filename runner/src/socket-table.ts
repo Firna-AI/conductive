@@ -1,7 +1,16 @@
+import { PREVIEW_RELAY_PORT } from '../../src/shared/previews'
 import { TERMINAL_PORT } from '../../src/shared/terminal'
 
-// The terminal, ascii-agent, and Sunshine belong to the sandbox image.
-const internalPorts = new Set([TERMINAL_PORT, 8911, 47984, 47989, 47990, 48010])
+// The terminal, preview relay, ascii-agent, and Sunshine belong to the image.
+const internalPorts = new Set([
+  TERMINAL_PORT,
+  PREVIEW_RELAY_PORT,
+  8911,
+  47984,
+  47989,
+  47990,
+  48010,
+])
 
 export interface ListeningSocket {
   identity: string

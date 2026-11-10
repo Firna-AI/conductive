@@ -141,7 +141,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   link. Reason: Safari blocks the cookies of the previewed app inside a
   frame.
 - The port form lists the servers that listen in the sandbox, from the
-  report of the runner (decision 218). The form shows when no preview is
+  report of the runner (decision 220). The form shows when no preview is
   open, and after "+".
   [Listening ports](agent-runner.md#listening-ports) says which ports the
   list holds.
@@ -158,7 +158,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   breaks the rule that only a build installs the software of a sandbox,
   which decision 148 kept for the terminal programs.
 - Each server is a button with its port, its program name, and its folder,
-  when the report gives them (decision 219). A folder that does not fit
+  when the report gives them (decision 221). A folder that does not fit
   keeps its end, after "…".
 - Reason: the port alone does not say which server it is, and two servers
   of one program differ only by their folder. The full command line was
@@ -172,7 +172,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   or stops. Each open tab gets each new list, and a tab that opens later
   shows the latest list.
 - The port field stays below the list, as a smaller "Other port" row. It
-  opens any port, also one that the list leaves out.
+  uses the same preview checks for ports that the list leaves out.
 - When the runner reports no server, the form asks the user to start one
   in the terminal, or to ask the agent. The field stays.
 - When the app has no report, the form shows only the field. This holds
@@ -192,6 +192,15 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - A name and a folder are text that screens show. So the filters of
   [Secrets that users enter](tokens-and-secrets.md#secrets-that-users-enter)
   hide each secret value in them.
+- Some servers accept only requests to their local address, such as a dev
+  server that checks `Host`. Such a server works in a preview with no change
+  to its repository (decision 218).
+  [Port previews](terminal-previews-and-desktop.md#port-previews)
+  states the `Host` and the `Origin` that the server gets.
+- A workspace whose cloud computer has no running relay refuses previews.
+  The user starts a new workspace after an admin runs Build computer.
+- The sandbox keeps port 7682 for the relay. A preview of port 7682 shows
+  an error.
 
 ## Desktop
 
