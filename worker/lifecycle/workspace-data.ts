@@ -6,7 +6,7 @@ import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
-import { leasedImage } from './image-leases'
+import { leasedImage, type LeasedImage } from './image-leases'
 import type { RepositoryLocation } from './repository-locations'
 
 export interface WorkspaceRow {
@@ -22,6 +22,7 @@ export interface WorkspaceRow {
   name: string | null
   branch: string
   sandboxId: string | null
+  providerAccount: string
   state: WorkspaceState
   createdAt: number
   updatedAt: number
@@ -36,7 +37,8 @@ export interface WorkspaceRow {
 const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
   w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
   u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
-  ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId, w.state,
+  ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId,
+  w.provider_account AS providerAccount, w.state,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
@@ -100,6 +102,7 @@ export async function insertWorkspace(
   input: {
     id: string
     orgId: string
+    providerAccount: string
     repositoryId: string
     sectionId?: string
     user: User
@@ -113,7 +116,7 @@ export async function insertWorkspace(
     now: number
     repositoryLocations?: readonly RepositoryLocation[]
   },
-): Promise<string> {
+): Promise<LeasedImage> {
   if (!input.sectionId) {
     await db
       .prepare(
@@ -139,8 +142,8 @@ export async function insertWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
+       name, branch, provider_account, state, created_at, updated_at, last_activity_at, position)
+       SELECT ?, ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
          (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
           WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
        WHERE ${activeOrgIdPredicate('?')}`,
@@ -153,6 +156,7 @@ export async function insertWorkspace(
         section.id,
         input.name ?? '',
         input.branch,
+        input.providerAccount,
         input.now,
         input.now,
         input.now,
@@ -190,10 +194,13 @@ export async function assignSandbox(
   orgId: string,
   workspaceId: string,
   sandboxId: string,
+  providerAccount: string,
 ): Promise<void> {
   await db
-    .prepare('UPDATE workspaces SET sandbox_id = ? WHERE id = ? AND org_id = ?')
-    .bind(sandboxId, workspaceId, orgId)
+    .prepare(
+      'UPDATE workspaces SET sandbox_id = ?, provider_account = ? WHERE id = ? AND org_id = ?',
+    )
+    .bind(sandboxId, providerAccount, workspaceId, orgId)
     .run()
 }
 

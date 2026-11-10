@@ -34,6 +34,49 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
   }
 }
 
+/** A confirmed row action keeps every field that its reply does not own. */
+function workspaceChanged(
+  workspaceId: string,
+  fields: Partial<Pick<Workspace, 'name' | 'owner' | 'state' | 'archivedAt'>>,
+): ListChange {
+  return (list) => ({
+    ...list,
+    workspaces: list.workspaces.map((item) =>
+      item.id === workspaceId ? { ...item, ...fields } : item,
+    ),
+  })
+}
+
+export function workspaceRenamed(
+  workspaceId: string,
+  name: string | null,
+): ListChange {
+  return workspaceChanged(workspaceId, { name })
+}
+
+export function workspaceReassigned(
+  workspaceId: string,
+  owner: Workspace['owner'],
+): ListChange {
+  return workspaceChanged(workspaceId, { owner })
+}
+
+export function workspaceArchived(workspace: Workspace): ListChange {
+  return (list) => ({
+    ...list,
+    workspaces: list.workspaces.map((current) =>
+      current.id === workspace.id
+        ? {
+            ...current,
+            state: workspace.state,
+            archivedAt: workspace.archivedAt,
+            updatedAt: Math.max(current.updatedAt, workspace.updatedAt),
+          }
+        : current,
+    ),
+  })
+}
+
 /** A new section at the end. A read that has it already keeps its own. */
 export function sectionAdded(section: Section): ListChange {
   return (list) =>

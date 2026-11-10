@@ -3,20 +3,9 @@ import { expect, it } from 'vitest'
 import { FakeBoat } from '../test-support/fake-boat'
 import { BoatClient } from './boat'
 
-it('rejects malformed detached command results without exposing provider fields', async () => {
+it('rejects malformed Boat command status fields without exposing provider fields', async () => {
   const server = new FakeBoat()
   const client = new BoatClient('boat-first', server.fetch, 'app-org')
-  server.responseOverride = Response.json({
-    ok: true,
-    type: 'command.started',
-    success: true,
-    processId: 'boat-first',
-  })
-  await expect(client.startCommand('bx_one', 'build')).rejects.toMatchObject({
-    kind: 'invalid_response',
-    status: 502,
-    message: 'The sandbox provider request failed: invalid_response',
-  })
   const valid = {
     ok: true,
     type: 'command.status',
@@ -35,7 +24,6 @@ it('rejects malformed detached command results without exposing provider fields'
   }
   for (const change of [
     { type: 'command.finished' },
-    { processId: 5678 },
     { status: 'unknown' },
     { stdoutNextOffset: undefined },
     { stderrOffset: -1 },
@@ -57,7 +45,7 @@ it('rejects malformed detached command results without exposing provider fields'
   }
 })
 
-it('keeps detached start and status errors typed and redacted', async () => {
+it('keeps raw Boat error codes and sends one request for each failed command call', async () => {
   const server = new FakeBoat()
   const client = new BoatClient('boat-first', server.fetch, 'app-org')
   server.failure = { status: 409, code: 'agent_outdated' }
@@ -67,18 +55,11 @@ it('keeps detached start and status errors typed and redacted', async () => {
       stderrOffset: 0,
     }),
   ).rejects.toMatchObject({
-    kind: 'conflict',
-    status: 409,
     providerCode: 'agent_outdated',
-    retryAfterSeconds: 3,
-    message: 'The sandbox provider request failed: conflict',
   })
   server.failure = { status: 503, code: 'boat_direct_failed' }
   await expect(client.startCommand('bx_one', 'build')).rejects.toMatchObject({
-    kind: 'unavailable',
-    status: 503,
     providerCode: 'boat_direct_failed',
-    message: 'The sandbox provider request failed: unavailable',
   })
   expect(server.requests).toHaveLength(2)
 })

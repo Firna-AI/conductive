@@ -11,7 +11,7 @@ import { publishCreationResult } from './creation-publication'
 import { HttpError } from '../http'
 import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
-import { orgSandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
 import {
@@ -151,11 +151,12 @@ export class WorkspaceStartCoordinator {
       const admin = await firstOrgAdmin(this.env.DB, job.orgId)
       if (!admin)
         throw new HttpError(404, 'org_not_found', 'The org is not available.')
-      provider = await orgSandboxProvider(
+      provider = await orgProviderForAccount(
         this.env,
         admin.userId,
         job.orgId,
         this.dependencies.fetch,
+        job.providerAccount,
       )
       if (job.cancelled && !job.failure)
         await requireActiveOrg(this.env.DB, job.orgId)
@@ -166,7 +167,7 @@ export class WorkspaceStartCoordinator {
           this.storage,
           job,
           provider,
-          this.dependencies.now,
+          this.dependencies,
           this.finishResumeFailure,
         )
         if (result) await this.finish(result)
@@ -179,6 +180,14 @@ export class WorkspaceStartCoordinator {
       if (providerRetryExpired(job.providerRetry, this.dependencies.now()))
         throw new ProviderRetryExhausted()
       const row = await readWorkspace(this.env.DB, job.orgId, job.workspaceId)
+      if (row.sandboxId && row.providerAccount !== job.providerAccount)
+        provider = await orgProviderForAccount(
+          this.env,
+          admin.userId,
+          job.orgId,
+          this.dependencies.fetch,
+          row.providerAccount,
+        )
       if (row.archivedAt !== null || row.state === 'archived') {
         await this.cancel()
         return false
@@ -243,7 +252,7 @@ export class WorkspaceStartCoordinator {
         this.storage,
         failedJob,
         provider,
-        this.dependencies.now,
+        this.dependencies,
         this.finishResumeFailure,
       )
       if (result) await this.finish(result)

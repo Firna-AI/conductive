@@ -1,6 +1,7 @@
 import { routes } from '../../../src/app/router'
 import { isRecord } from '../../http'
-import { sandboxProvider } from '../../sandbox/client'
+import { providerForAccount } from '../../sandbox/client'
+import { readWorkspace } from '../../lifecycle/workspace-data'
 import type { OuterRuntime } from './outer-runtime.test-support'
 import { BrowserRunnerAgent } from './browser-runner-agent.test-support'
 import { BrowserRunnerTransport } from './browser-runner-transport.test-support'
@@ -111,9 +112,17 @@ export function browserRunners(fixture: OuterRuntime) {
     async stop(workspaceId: string) {
       const runtime = runtimes.get(workspaceId)
       if (!runtime) throw new Error('The fake workspace is not available.')
-      await sandboxProvider(fixture.env, fixture.boat.fetch).stop(
-        runtime.sandboxId,
+      const workspace = await readWorkspace(
+        fixture.env.DB,
+        OUTER_ORG,
+        workspaceId,
       )
+      if (!workspace.sandboxId) throw new Error('The sandbox ID is missing.')
+      await providerForAccount(
+        fixture.env,
+        fixture.boat.fetch,
+        workspace.providerAccount,
+      ).stop(workspace.sandboxId)
       runtime.agent.stop()
       await runtime.transport.stop()
       return {

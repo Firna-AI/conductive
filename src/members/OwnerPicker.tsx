@@ -1,26 +1,11 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { nameLabel } from '../shared/name-label'
-import type { OrgMember } from '../shared/members'
 import type { Workspace } from '../shared/workspaces'
-import { errorMessage, type MembersApi } from './api/client'
+import type { MembersApi } from './api/client'
+import { useOwnerChoices } from './OwnerChoices'
 import { OwnerButton, ReadOnlyOwner } from './OwnerButton'
-import { personName } from './people'
-import { useMountedRef } from './useMounted'
 import { ChoiceMenu } from './ui/ChoiceMenu'
 import { ViewportScope, type Viewport } from './ui/controls'
-import { PersonAvatar } from './ui/PersonAvatar'
-
-/**
- * Each session runs on the agent login of its starter, the member who
- * started it.
- */
-const loginNote =
-  'Each session runs on the agent login of the member who started it.'
-
-type Members =
-  | { status: 'loading' }
-  | { status: 'failed'; message: string }
-  | { status: 'ready'; members: readonly OrgMember[] }
 
 export type OwnerPickerProps = {
   api: MembersApi
@@ -30,13 +15,6 @@ export type OwnerPickerProps = {
   viewport: Viewport
   /** The owner changed. The workspace is the API's answer. */
   onReassigned: (workspace: Workspace) => void
-}
-
-/** The line in place of the members while they load or after a failure. */
-function statusText(members: Members): string | undefined {
-  if (members.status === 'loading') return 'Loading the members'
-  if (members.status === 'failed') return 'The members did not load.'
-  return undefined
 }
 
 /**
@@ -59,65 +37,21 @@ export function OwnerPicker(props: OwnerPickerProps) {
 function ScopedOwnerPicker(props: OwnerPickerProps) {
   const { api, workspace } = props
   const compact = props.viewport === 'mobile'
-  const mounted = useMountedRef()
-  const loads = useRef(0)
   const [open, setOpen] = useState(false)
-  const [members, setMembers] = useState<Members>({ status: 'loading' })
-  const [busy, setBusy] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
+  const choices = useOwnerChoices({
+    api,
+    workspace,
+    onReassigned: props.onReassigned,
+    close: () => setOpen(false),
+  })
+  const show = choices.open
   const changeOpen = useCallback(
     (next: boolean) => {
       setOpen(next)
-      setError(null)
-      if (!next) return
-      // A list that loaded before stays while the menu loads it again.
-      setMembers((current) =>
-        current.status === 'failed' ? { status: 'loading' } : current,
-      )
-      // Only the newest load of a mounted picker changes the list.
-      const load = ++loads.current
-      const newest = () => mounted.current && load === loads.current
-      api.members(workspace.orgId).then(
-        (response) => {
-          if (newest())
-            setMembers({ status: 'ready', members: response.members })
-        },
-        (reason: unknown) => {
-          if (newest())
-            setMembers({ status: 'failed', message: errorMessage(reason) })
-        },
-      )
+      if (next) show()
     },
-    [api, workspace.orgId, mounted],
+    [show],
   )
-
-  async function select(userId: string) {
-    if (userId === workspace.owner.id) {
-      setOpen(false)
-      return
-    }
-    setBusy(userId)
-    setError(null)
-    try {
-      const updated = await api.reassignWorkspace(
-        workspace.orgId,
-        workspace.id,
-        {
-          userId,
-        },
-      )
-      if (!mounted.current) return
-      setOpen(false)
-      props.onReassigned(updated)
-    } catch (reason) {
-      if (mounted.current) {
-        setError(`The owner did not change. ${errorMessage(reason)}`)
-      }
-    } finally {
-      if (mounted.current) setBusy(null)
-    }
-  }
 
   if (!props.canReassign) {
     return (
@@ -126,32 +60,17 @@ function ScopedOwnerPicker(props: OwnerPickerProps) {
       </ViewportScope>
     )
   }
-  const list = members.status === 'ready' ? members.members : []
   return (
     <ViewportScope inline viewport={props.viewport}>
       <ChoiceMenu
+        {...choices.panel}
         align="end"
-        busy={busy}
-        choices={list.map((member) => ({
-          value: member.user.id,
-          label: personName(member.user),
-          mark: <PersonAvatar person={member.user} size={18} />,
-        }))}
-        error={
-          members.status === 'failed' ? members.message : (error ?? undefined)
-        }
-        group="Owner"
-        label="Owner"
-        note={loginNote}
         onOpenChange={changeOpen}
-        onSelect={(userId) => void select(userId)}
         open={open}
-        selected={workspace.owner.id}
         sheetTitle={nameLabel(workspace.name)}
-        status={statusText(members)}
         trigger={(trigger) => (
           <OwnerButton
-            busy={busy !== null}
+            busy={choices.busy}
             compact={compact}
             trigger={trigger}
             workspace={workspace}
