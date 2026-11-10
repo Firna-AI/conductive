@@ -26,8 +26,8 @@ export const plansAndPricingFeatures: readonly ParityFeature[] = [
     id: 'enterprise-plan',
     area: 'plans-and-pricing',
     name: 'Enterprise plan',
-    status: 'not-planned',
-    note: 'Conductive has no Enterprise plan. Provisioning, support agreements, and added enterprise controls have no delivery plan.',
+    status: 'considering',
+    note: 'Enterprise provisioning, support agreements, and additional controls are under consideration. Conductive is free today.',
   },
   {
     id: 'no-fee-for-cloud-compute',
