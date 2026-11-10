@@ -40,6 +40,15 @@ export const macShortcutsRecording = defineScreen({
       props: { keyChange: 'refused' },
     },
     {
+      slug: 'space-key',
+      title: 'Space pressed',
+      description:
+        'The person pressed Space while the recorder waited. Space presses a focused button, so it is a fixed shortcut, and the recorder did not take it. The row says that Press a focused button always uses Space, and the recorder still waits for other keys, with Remove and Cancel.',
+      rationale:
+        'The user answered on 10 November 2026 that Space, Enter with any modifier, and the Enter of the keypad are fixed shortcuts on both keyboards. They press or choose a focused control, and Enter with a modifier also sends or adds a line in the message field, so each key keeps one meaning. One fixed row, Press a focused button, holds Space, so the line names that row.',
+      props: { keyChange: 'refused-space' },
+    },
+    {
       slug: 'conflict',
       title: 'Shortcut in use',
       description:

@@ -37,6 +37,15 @@ export const browserShortcutsRecording = defineScreen({
       props: { keyChange: 'refused' },
     },
     {
+      slug: 'enter-key',
+      title: 'Enter with a modifier pressed',
+      description:
+        'The person pressed ⇧⌘Enter while the recorder waited. Enter with any modifier is a fixed shortcut, so the recorder did not take it. No row lists ⇧⌘Enter, so the row says only that ⇧⌘Enter is a fixed shortcut. The recorder still waits for other keys, with Remove and Cancel. On a phone, the line follows the recorder, Remove, and Cancel.',
+      rationale:
+        'The user answered on 10 November 2026 that Enter with any modifier, the Enter of the keypad, and Space are fixed shortcuts on both keyboards, because they press or choose a focused control, and Enter also sends or adds a line in the message field. The line names a fixed row only when one row holds the key. A key that no row lists, such as ⇧⌘Enter, or that several rows hold, such as Enter, gets the short line. A key of the keypad records as the key that it types, so the Enter of the keypad gives "Enter is a fixed shortcut."',
+      props: { keyChange: 'refused-enter' },
+    },
+    {
       slug: 'conflict',
       title: 'Shortcut in use',
       description:

@@ -20,6 +20,13 @@ export type HeldShortcut = {
   replaceTo?: string
 }
 
+/**
+ * A fixed shortcut that the recorder did not take, with the label of the
+ * one fixed row that holds it. A shortcut that several rows hold, or that
+ * no row lists, has no label.
+ */
+export type RefusedShortcut = { shortcut: Shortcut; label?: string }
+
 /** The icon of each kind of line under the shortcuts of a row. */
 const messageIcons = {
   info: Info,
@@ -154,6 +161,27 @@ export function ConflictLine(props: { held: HeldShortcut }) {
   return (
     <RowMessage tone="warning">
       {props.held.owner} uses <KeyChips shortcut={props.held.shortcut} />.
+    </RowMessage>
+  )
+}
+
+/**
+ * The line under a row whose recorder did not take a fixed shortcut. It
+ * names the fixed row of the shortcut, as in "Undo always uses ⌘Z.", or
+ * says only that the shortcut is fixed, as in "Enter is a fixed shortcut."
+ */
+export function RefusedLine(props: { refused: RefusedShortcut }) {
+  const { label, shortcut } = props.refused
+  const keys = <KeyChips shortcut={shortcut} />
+  return (
+    <RowMessage tone="info">
+      {label === undefined ? (
+        <>{keys} is a fixed shortcut.</>
+      ) : (
+        <>
+          {label} always uses {keys}.
+        </>
+      )}
     </RowMessage>
   )
 }

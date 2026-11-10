@@ -176,9 +176,9 @@ app.
   [Text keys](keyboard-shortcuts-keys.md#text-keys) lists the text keys. So
   ⌘K opens the palette from the message field. ⌘C still copies there.
 - A key without ⌘, Ctrl, or Alt runs its command only outside text fields.
-- Enter with any modifiers, also the Enter of the keypad, runs its
-  command only outside text fields. Reason: the message field also sends
-  on ⌘Enter and Ctrl+Enter, and a rename saves on each Enter.
+- Enter with any modifier and Space with no modifier run no command,
+  because they are [fixed keys](keyboard-shortcuts-keys.md#fixed-keys). So
+  the message field and a focused control get them.
 - On a Mac, a key with ⌥ and without ⌘ or ⌃ also runs only outside text
   fields. Reason: such a key types a character, such as ¡ for ⌥1.
 - While a port preview or the live desktop has the focus, every key goes
@@ -245,9 +245,13 @@ app.
 - A save takes a list of changes for one keyboard. It saves all of them
   or none. So Replace and Reset all never save half.
 - The Worker checks each command and each key of a save, and that a
-  command has at most four keys. It rejects a fixed key. A list with one
-  wrong change saves nothing.
+  command has at most four keys. It rejects a fixed key, and a keypad key
+  other than a digit, as
+  [How a key matches](keyboard-shortcuts-keys.md#how-a-key-matches) says.
+  A list with one wrong change saves nothing.
 - The account reply skips a stored command that the app no longer has.
+  It also drops a stored key that a save would reject, such as a key that
+  became fixed.
 - Another open tab or window of the person uses a change after its next
   read of the account.
 - A person reads and changes only their own changes.

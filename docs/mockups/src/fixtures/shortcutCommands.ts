@@ -2,7 +2,9 @@ import type { Shortcut } from '../components/common/KeyChips'
 import {
   fixed,
   fixedGroups,
+  focusedButtonKeys,
   focusedKeys,
+  messageKeys,
   tabMenuKeys,
   type FixedSpec,
 } from './fixedShortcuts'
@@ -144,6 +146,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('account-page', 'Account page', '⌘,'),
       command('create-org', 'Create org'),
       fixed('Close a dialog or a menu', ['Esc']),
+      focusedButtonKeys,
     ],
   },
   {
@@ -201,8 +204,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('model-picker', 'Model picker', '⌘/'),
       command('next-effort', 'Next effort level', '⌃⌘/'),
       command('stop-agent', 'Stop the agent', '⌃⌘⌫'),
-      fixed('Send', ['Enter']),
-      fixed('New line', ['⇧Enter'], ['Shift+Enter']),
+      ...messageKeys,
     ],
   },
   ...fixedGroups,

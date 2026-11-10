@@ -50,7 +50,8 @@ app.
   keys shows + after its keys, because a command holds at most four keys.
   Add shortcut and + record one more key.
 - Each key shows as its keyboard prints it, such as ⌥⌘/ on a Mac and
-  Ctrl+Shift+T on Windows and Linux. Enter, Esc, and Tab show as words.
+  Ctrl+Shift+T on Windows and Linux. Enter, Esc, Space, and Tab show as
+  words.
 
 ## The lines
 
@@ -108,8 +109,9 @@ app.
 - The recorder does not take a fixed key. The row then names that fixed
   key, as in "Hide Conductive always uses ⌘H." The recorder then waits for
   another key.
-- When several fixed rows share the key, such as Enter or Esc, the row says
-  only that the key is fixed.
+- When several fixed rows share the key, such as Enter or Esc, or no row
+  lists it, such as ⇧⌘Enter, the row says only that the key is fixed, as in
+  "⇧⌘Enter is a fixed shortcut."
 - Each recorded key saves at once, as a change on the Preferences tab does.
 
 ## Conflicts

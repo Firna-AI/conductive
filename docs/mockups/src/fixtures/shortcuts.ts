@@ -99,14 +99,20 @@ export function commandLabel(id: CommandId): string {
 }
 
 /**
- * The fixed shortcut that a key is on a host, such as Hide Conductive for
- * ⌘H in the Mac app.
+ * The label of the one fixed row of a keyboard that holds a key, such as
+ * Hide Conductive for ⌘H. Each keyboard has one list of fixed keys in every
+ * host, so a browser also names a row of the Mac app. A key that several
+ * rows hold, such as Enter, or that no row lists, such as ⇧⌘Enter, has no
+ * label.
  */
 export function fixedLabel(
   shortcut: Shortcut,
-  host: ShortcutHost,
+  keyboard: Keyboard,
 ): string | undefined {
-  return shortcutGroups(host)
+  const holders = shortcutSpecs
     .flatMap((group) => group.rows)
-    .find((row) => row.kind === 'fixed' && row.keys.includes(shortcut))?.label
+    .filter(
+      (spec) => spec.kind === 'fixed' && spec[keyboard].includes(shortcut),
+    )
+  return holders.length === 1 ? holders[0]?.label : undefined
 }

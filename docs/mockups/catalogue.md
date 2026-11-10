@@ -225,9 +225,10 @@ account.
   - `app/account/shortcuts/recording` has a row that records new keys,
     with Remove beside Cancel. Its `adding` variant has the recorder of +,
     which adds a shortcut and shows only Cancel. Its `fixed-key` variant
-    has ⌘Z, a text key that the recorder did not take. Its `conflict`
-    variant has a recorded shortcut of another command, with Replace and
-    Cancel.
+    has ⌘Z, a text key that the recorder did not take. Its `enter-key`
+    variant has ⇧⌘Enter, a fixed key that no row lists, so the line says
+    only that it is fixed. Its `conflict` variant has a recorded shortcut
+    of another command, with Replace and Cancel.
   - `app/account/shortcuts/changes` has changed rows with Reset, and Reset
     all. Its `reset-conflict` variant has a search for "model" and the
     Reset of Model picker, whose default shortcut Keyboard shortcuts now
@@ -251,8 +252,10 @@ account.
   - `mac-app/shortcuts/recording` has a row that records new keys, with
     Remove beside Cancel. Its `adding` variant has the recorder of +, which
     adds a shortcut and shows only Cancel. Its `fixed-key` variant has a
-    fixed shortcut that the recorder did not take. Its `conflict` variant
-    has a recorded shortcut of another command, with Replace and Cancel.
+    fixed shortcut that the recorder did not take. Its `space-key` variant
+    has Space, which presses a focused button, so the line names that row.
+    Its `conflict` variant has a recorded shortcut of another command, with
+    Replace and Cancel.
   - `mac-app/shortcuts/changes` has changed rows with Reset, and Reset
     all. Its `reset-conflict` variant has a search for "model" and the
     Reset of Model picker, whose default shortcut Keyboard shortcuts now

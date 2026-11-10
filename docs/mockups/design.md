@@ -186,27 +186,32 @@ sessions as tabs above the chat, and four tabs at the bottom.
   shortcut is a button that records new keys, + adds one, and a row
   without a shortcut shows Add shortcut. The commands that a person can
   change come first, and the fixed shortcuts follow them with no control.
-  A fixed row among other commands shows Fixed shortcut. The Navigation
-  group ends with the keys that open the menu of a focused tab, and the
-  Workspace group with the fixed keys of a focused workspace row and of a
-  focused divider. Each of their labels names the control that has the
-  focus. A group of fixed shortcuts says it once, under its title. The
-  Text group lists the text keys of the keyboard, with the keys that move
-  or delete by word or by line in one row each, and its line says that the
-  other text keys are fixed too. A narrow box, on a phone or in a narrow
-  window, puts the label of a row on its first line, and the shortcuts and
-  the control at the end on a second line. The recorder is a field with a
-  full outline in the accent colour. While it replaces a shortcut, Remove
-  stands beside Cancel. A recorder that adds a shortcut shows only
-  Cancel. A line under the row names a fixed shortcut that the recorder
-  did not take, the command that has the recorded shortcut, or a failed
-  save. A row that names the command of a recorded shortcut shows only
-  Replace and Cancel. A changed row shows Reset. When another command
-  holds a default shortcut of the row, Reset shows that shortcut in the
-  field of the recorder, the line that names the command, and Replace and
-  Cancel. Reset all asks first with `ConfirmDialog`, because nothing
-  brings the changes back. The error of a failed Reset all stands under
-  the lines and Reset all, across the width of the tab.
+  A fixed row among other commands shows Fixed shortcut. The General group
+  ends with Esc and with Enter and Space, which press a focused button. The
+  Navigation group ends with the keys that open the menu of a focused tab,
+  and the Workspace group with the fixed keys of a focused workspace row and
+  of a focused divider. Each of their labels names the control that has the
+  focus. The Chat group ends with the keys of the message field, and its
+  Send row shows Enter with ⌘ or Ctrl, so the tab shows that Enter with a
+  modifier is fixed too. A group of fixed shortcuts says it once, under its
+  title. The Text group lists the text keys of the keyboard, with the keys
+  that move or delete by word or by line in one row each, and its line
+  says that the other text keys are fixed too. A narrow box, on a phone or
+  in a narrow window, puts the label of a row on its first line, and the
+  shortcuts and the control at the end on a second line. The recorder is a
+  field with a full outline in the accent colour. While it replaces a
+  shortcut, Remove stands beside Cancel. A recorder that adds a shortcut
+  shows only Cancel. A line under the row names a fixed shortcut that the
+  recorder did not take, the command that has the recorded shortcut, or a
+  failed save. The line of a fixed shortcut names its fixed row. When
+  several rows hold the shortcut, or no row lists it, the line says only
+  that the shortcut is fixed. A row that names the command of a recorded
+  shortcut shows only Replace and Cancel. A changed row shows Reset. When
+  another command holds a default shortcut of the row, Reset shows that
+  shortcut in the field of the recorder, the line that names the command,
+  and Replace and Cancel. Reset all asks first with `ConfirmDialog`,
+  because nothing brings the changes back. The error of a failed Reset all
+  stands under the lines and Reset all, across the width of the tab.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
 - Each workspace has a number in its org, and `workspaceLabel` in

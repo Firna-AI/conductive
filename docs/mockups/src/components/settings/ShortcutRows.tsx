@@ -11,9 +11,11 @@ import {
   KeyButton,
   Linked,
   Recorder,
+  RefusedLine,
   RemoveButton,
   RowLayout,
   RowMessage,
+  type RefusedShortcut,
 } from './ShortcutParts'
 import styles from './ShortcutsSections.module.css'
 
@@ -45,7 +47,7 @@ export type CommandRowState =
       /** The pressed shortcut, which Remove takes off. None after Add. */
       replaces?: Shortcut
       /** The last fixed shortcut that the recorder did not take. */
-      refused?: { shortcut: Shortcut; label: string }
+      refused?: RefusedShortcut
       cancelTo: string
     }
   | {
@@ -174,12 +176,7 @@ export function CommandShortcuts(props: {
           keys={recordingKeys(label, state, tab)}
           label={label}
           message={
-            state.refused ? (
-              <RowMessage tone="info">
-                {state.refused.label} always uses{' '}
-                <KeyChips shortcut={state.refused.shortcut} />.
-              </RowMessage>
-            ) : undefined
+            state.refused ? <RefusedLine refused={state.refused} /> : undefined
           }
         />
       )

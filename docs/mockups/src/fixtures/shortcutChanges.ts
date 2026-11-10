@@ -66,13 +66,43 @@ export function shownShortcut(
 export const recordingCommand: CommandId = 'keyboard-shortcuts'
 
 /**
- * A fixed shortcut that the recorder does not take: ⌘H hides the Mac app.
- * A browser has no menus of the Mac app, so there the person pressed the
- * Undo of the text fields.
+ * The states of the tab where the recorder did not take a fixed shortcut:
+ * a shortcut of one fixed row, Space, and Enter with a modifier.
  */
-export function refusedShortcut(host: ShortcutHost): Shortcut {
-  if (host === 'mac-app') return '⌘H'
-  return keyboardOf(host) === 'mac' ? '⌘Z' : 'Ctrl+Z'
+export const refusedChanges = [
+  'refused',
+  'refused-space',
+  'refused-enter',
+] as const
+
+export type RefusedChange = (typeof refusedChanges)[number]
+
+/** Whether a state of the tab draws a fixed shortcut that the recorder did not take. */
+export function isRefusedChange(change: string): change is RefusedChange {
+  return refusedChanges.some((refused) => refused === change)
+}
+
+/**
+ * The fixed shortcut that the recorder did not take in a state. ⌘H hides
+ * the Mac app. A browser has no menus of the Mac app, so there the person
+ * pressed the Undo of the text fields. Space presses a focused button.
+ * Enter is fixed with every modifier, also where no row lists the key,
+ * such as ⇧⌘Enter.
+ */
+export function refusedShortcut(
+  host: ShortcutHost,
+  change: RefusedChange,
+): Shortcut {
+  const mac = keyboardOf(host) === 'mac'
+  switch (change) {
+    case 'refused':
+      if (host === 'mac-app') return '⌘H'
+      return mac ? '⌘Z' : 'Ctrl+Z'
+    case 'refused-space':
+      return 'Space'
+    case 'refused-enter':
+      return mac ? '⇧⌘Enter' : 'Ctrl+Shift+Enter'
+  }
 }
 
 /** A recorded shortcut of another command, which Replace moves here. */

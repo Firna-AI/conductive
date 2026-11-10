@@ -1,6 +1,8 @@
 import {
   heldDefault,
+  isRefusedChange,
   recordingCommand,
+  refusedChanges,
   refusedShortcut,
   resetCommand,
   shortcutsOf,
@@ -22,12 +24,12 @@ import {
   type CommandRow,
   type ShortcutGroup,
 } from '../../fixtures/shortcuts'
-import type { Shortcut } from '../common/KeyChips'
 import { SearchField } from '../common/SearchField'
 import { NoResults } from '../palette/PaletteEmpty'
 import { Section } from './Section'
 import { ShortcutIntro } from './ShortcutIntro'
 import { shortcutPages, type ShortcutPages } from './shortcutPages'
+import type { RefusedShortcut } from './ShortcutParts'
 import {
   CommandShortcuts,
   FixedShortcuts,
@@ -43,15 +45,16 @@ import styles from './ShortcutsSections.module.css'
 /**
  * The change of a shortcut on the tab, in progress or last: none, a row
  * that records new keys in place of a shortcut, the same row after a fixed
- * shortcut that it did not take, a row that records one more shortcut, a
- * recorded shortcut of another command, a Reset whose default shortcut
- * another command holds, the question before Reset all, a Reset all that
- * failed, or a save that failed.
+ * shortcut that it did not take, such as Space or Enter with a modifier, a
+ * row that records one more shortcut, a recorded shortcut of another
+ * command, a Reset whose default shortcut another command holds, the
+ * question before Reset all, a Reset all that failed, or a save that
+ * failed.
  */
 export const keyChanges = [
   'none',
   'recording',
-  'refused',
+  ...refusedChanges,
   'adding',
   'conflict',
   'reset-conflict',
@@ -69,7 +72,7 @@ type RowContext = {
   keyboard: Keyboard
   pages: ShortcutPages
   /** The fixed shortcut that the recorder did not take, with its label. */
-  refused?: { shortcut: Shortcut; label: string }
+  refused?: RefusedShortcut
 }
 
 /** The state of the row of a command, from the changes and the last change. */
@@ -77,12 +80,12 @@ function rowState(row: CommandRow, context: RowContext): CommandRowState {
   const { changes, change, pages } = context
   const keys = shortcutsOf(row.id, changes, context.keyboard)
   const records = row.id === recordingCommand
-  if (records && (change === 'recording' || change === 'refused')) {
+  if (records && (change === 'recording' || isRefusedChange(change))) {
     return {
       kind: 'recording',
       keys,
       replaces: keys[0],
-      refused: change === 'refused' ? context.refused : undefined,
+      refused: context.refused,
       cancelTo: pages.tab,
     }
   }
@@ -126,11 +129,17 @@ function rowState(row: CommandRow, context: RowContext): CommandRowState {
   }
 }
 
-/** The fixed shortcut that the recorder of a host refuses, with its label. */
-function refusedOn(host: ShortcutHost): RowContext['refused'] {
-  const shortcut = refusedShortcut(host)
-  const label = fixedLabel(shortcut, host)
-  return label ? { shortcut, label } : undefined
+/**
+ * The fixed shortcut that the recorder of a host did not take in a state,
+ * with the label of its one fixed row. Other states have none.
+ */
+function refusedOn(
+  host: ShortcutHost,
+  change: KeyChange,
+): RefusedShortcut | undefined {
+  if (!isRefusedChange(change)) return undefined
+  const shortcut = refusedShortcut(host, change)
+  return { shortcut, label: fixedLabel(shortcut, keyboardOf(host)) }
 }
 
 /** The line of a group whose every row is fixed, in place of a label on each row. */
@@ -172,7 +181,7 @@ export function ShortcutsTab(props: {
     change: props.change,
     keyboard: keyboardOf(host),
     pages,
-    refused: refusedOn(host),
+    refused: refusedOn(host, props.change),
   }
   return (
     <>

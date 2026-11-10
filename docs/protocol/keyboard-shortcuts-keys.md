@@ -167,6 +167,14 @@ browser the keys of its tabs and of its address bar, as
 - A letter or a digit whose key types another script, such as Cyrillic or
   Greek, matches by its physical key. Reason: on a Russian layout, Ctrl+K
   arrives as Ctrl+л, so every letter key would fail, also the palette key.
+- A keypad key counts as the key that it types. So the keypad / with ⌘ is
+  ⌘/, the keypad 8 with Num Lock off is ↑, and the keypad Enter is Enter, a
+  fixed key. Reason: each press then has one key, so the conflict line,
+  Replace, Reset, and the fixed keys see every key that a press can run. A
+  keypad key of its own was rejected, because two keys could then run on
+  one press.
+- A keypad digit stays a key of the keypad, so ⌘ with the keypad 8 does
+  not run Open workspace 8. Reason: a digit matches by its physical key.
 - A punctuation key, such as the / of ⌘/, can sit at another place on
   another layout. The person can then record another key.
 - On German and French layouts, [ and ] need AltGr. So the bracket keys of
@@ -178,6 +186,9 @@ No person can give a fixed key to a command. The fixed keys are:
 
 - Enter, which sends, and Shift+Enter, which adds a line, as
   [The send key](create-a-workspace.md#the-send-key) says (decision 143)
+- Enter with any modifier, the keypad Enter, and Space with no modifier,
+  which press or choose a focused control, such as a button, a switch, or
+  a menu item
 - Escape, which closes a dialog, a menu, or the palette
 - Up, Down, Home, End, and Enter in a menu and in the palette, and Left and
   Right on the tabs of the palette, as
@@ -193,6 +204,12 @@ No person can give a fixed key to a command. The fixed keys are:
 - the text keys of each system, as [Text keys](#text-keys) lists them
 - the keys of the menus of the Mac app: ⌘Q, ⌘H, ⌥⌘H, ⌘M, ⌘R, ⇧⌘R, ⌘0,
   ⌘+, ⌘-, ⌃⌘F, and ⌥⌘I
+
+Enter with a modifier and Space are fixed on both keyboards, so that a
+focused control keeps them. A recorded key that runs only where no control
+has the focus was rejected, because the key would then do two things. For
+example, ⌘Enter would run a command, but send an unfinished message from
+the message field.
 
 Each keyboard has one list of fixed keys, the same in every host and on
 every system. So the Mac list holds the keys of the menus of the Mac app
@@ -237,8 +254,3 @@ On Windows and Linux:
 
 In a single-line text field on Linux, Ctrl+U is a text key too, as
 [Keys chosen by hand](#keys-chosen-by-hand) says.
-
-In every text field, Enter with any modifiers, also the Enter of the
-keypad, stays with the field, as
-[Where a key goes](keyboard-shortcuts.md#where-a-key-goes) says. Of these
-keys, only Enter and Shift+Enter are fixed keys.

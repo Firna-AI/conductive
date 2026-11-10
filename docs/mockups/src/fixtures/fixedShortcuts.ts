@@ -92,6 +92,26 @@ export const tabMenuKeys: FixedSpec = {
 }
 
 /**
+ * The keys that press or choose a focused control, such as a button, a
+ * switch, or a menu item, on both keyboards. Enter is fixed with any
+ * modifier and from the keypad, and Space without a modifier. The row
+ * shows Enter and Space, and the Send row shows Enter with ⌘ or Ctrl.
+ */
+export const focusedButtonKeys: FixedSpec = {
+  ...fixed('Press a focused button', ['Enter', 'Space']),
+  words: ['click', 'toggle', 'checkbox', 'switch'],
+}
+
+/**
+ * The keys of the message field. Enter sends, also with a modifier such as
+ * ⌘ or Ctrl, and Shift+Enter adds a line.
+ */
+export const messageKeys: readonly FixedSpec[] = [
+  fixed('Send', ['Enter', '⌘Enter'], ['Enter', 'Ctrl+Enter']),
+  fixed('New line', ['⇧Enter'], ['Shift+Enter']),
+]
+
+/**
  * The keys that the text fields of each system use to edit and to move in
  * text, which a person could record by mistake. The rows group the keys
  * that move or delete by word or by line. The Mac app adds Paste and match

@@ -1016,9 +1016,12 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
 - [x] Draw the key of each org in the hover hint of its tile in the org
       rail, from the questions of Milestone 5 part B. Evidence:
       `.context/keyboard-shortcuts/shots/round4/`.
-- [ ] Draw the user's answers to review items 4 and 10: the fixed row of
+- [x] Draw the user's answers to review items 4 and 10: the fixed row of
       the keys of a focused control, the refused line of such a key, and
-      the name of a keypad digit.
+      the name of a keypad digit. Evidence:
+      `.context/keyboard-shortcuts/shots/round5/`. No page draws a keypad
+      digit. Agent call, 2026-11-10: a keypad digit shows as "Num 8", so
+      that it differs from the top-row 8.
       Evidence: `.context/keyboard-shortcuts/shots/round3/`.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark.
@@ -1065,8 +1068,9 @@ block only the Linux rules, which follow the answers.
 - [x] Check each relative link of each changed Markdown file. Evidence:
       `.context/keyboard-shortcuts/m2/link-check.log`.
 - [ ] Add the Linux rules after decisions 196 and 197.
-- [ ] State the user's answers to review items 4 and 10 under "Fixed
-      keys" and "How a key matches".
+- [x] State the user's answers to review items 4 and 10 under "Fixed
+      keys" and "How a key matches". The guides and the legal pages were
+      read in full; none restates a changed fact.
 
 ## Milestone 3: The key model
 
@@ -1090,9 +1094,10 @@ the layout switch rule until the answers.
       `.context/keyboard-shortcuts/reports/m3-non-ui.md`.
 - [ ] Add the Linux tab keys and the layout switch rule after decisions 196
       and 197.
-- [ ] Apply the user's answers to review items 4 and 10 in the model and
+- [x] Apply the user's answers to review items 4 and 10 in the model and
       the shared contracts, with tests: the fixed rule of the keys of a
-      focused control, and one key text for each press.
+      focused control, and one key text for each press. Evidence:
+      `.context/keyboard-shortcuts/reports/answers-model.md`.
 
 ## Milestone 4: Storage on the Worker
 
