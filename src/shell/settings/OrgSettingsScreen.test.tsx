@@ -63,6 +63,11 @@ async function computerText(
   server.json('GET', orgSettingsPaths.builds(FAKE_IDS.org), {
     builds: [newest, goodBuild],
     currentImageBuildId: goodBuild.id,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   })
   server.json('GET', buildPath(FAKE_IDS.org, newest.id), {
     build: newest,

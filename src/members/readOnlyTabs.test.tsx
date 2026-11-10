@@ -144,7 +144,7 @@ describe('the read-only settings of a member', () => {
       startupScript: '',
       envVars: [{ name: 'DATABASE_URL', secret: true }],
       updatedAt: 0,
-      needsBuild: true,
+      needsBuild: false,
     }
     const event = (eventNumber: number, text: string): BuildLogEvent => ({
       eventNumber,
@@ -161,8 +161,9 @@ describe('the read-only settings of a member', () => {
         builds={{
           builds,
           currentImageBuildId: 'b1',
+          // An admin saved the install script after the image was built.
           changes: {
-            installScript: false,
+            installScript: true,
             addedRepositories: [],
             removedRepositories: [],
           },

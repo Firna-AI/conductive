@@ -9,13 +9,12 @@ import { MemberComputerView } from './MemberComputerView'
 
 const now = Date.UTC(2026, 10, 9, 12)
 
-/** An admin saved the install script after the newest build started. */
 const settings: OrgSettings = {
   installScript: 'npm ci',
   startupScript: '',
   envVars: [],
   updatedAt: 0,
-  needsBuild: true,
+  needsBuild: false,
 }
 
 function build(id: string, state: ImageBuild['state']): ImageBuild {
@@ -32,14 +31,18 @@ function build(id: string, state: ImageBuild['state']): ImageBuild {
   }
 }
 
-function view(builds: BuildsResponse) {
+/**
+ * The tab of a member with `builds`. The settings say `needsBuild`, which
+ * the Worker also sets after a change of the repositories.
+ */
+function view(builds: BuildsResponse, needsBuild = false) {
   return (
     <MemberComputerView
       builds={builds}
       log={[]}
       now={now}
       org={{ id: 'firna', name: 'Firna', role: 'member' }}
-      settings={settings}
+      settings={{ ...settings, needsBuild }}
       timeZone="UTC"
       viewport="desktop"
     />
@@ -101,5 +104,20 @@ describe('the notice of a changed install script for a member', () => {
         ...check(view(item.builds), item.present, item.absent),
       }).toEqual({ case: item.name, missing: [], unwanted: [] })
     }
+  })
+
+  it('does_not_show_for_a_change_of_the_repositories_alone', () => {
+    const repositoryChange: BuildsResponse = {
+      builds: [build('b1', 'succeeded')],
+      currentImageBuildId: 'b1',
+      changes: {
+        installScript: false,
+        addedRepositories: [{ id: 'icons', fullName: 'firna/icons' }],
+        removedRepositories: [],
+      },
+    }
+    expect(
+      check(view(repositoryChange, true), [], ['The install script changed']),
+    ).toEqual({ missing: [], unwanted: [] })
   })
 })

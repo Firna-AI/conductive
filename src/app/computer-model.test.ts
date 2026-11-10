@@ -2,11 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { buildPath, orgSettingsPaths } from '../shared/org-settings'
 import type { FetchLike } from './api/client'
 import { FakeApiServer } from '../test-support/fake-api'
-import {
-  coreFixtures,
-  FAKE_IDS,
-  FAKE_TIME,
-} from '../test-support/fixtures/core'
+import { coreFixtures, FAKE_IDS } from '../test-support/fixtures/core'
 import { ComputerModel } from './computer-model'
 import { latestBuild, OrgModel } from './org-model'
 import { valueOf } from './store'
@@ -31,11 +27,15 @@ const running = {
 }
 const settingsPath = orgSettingsPaths.settings(org)
 const buildsPath = orgSettingsPaths.builds(org)
-const changed = { settings: { ...fixture.settings.settings, needsBuild: true } }
+/** The builds while the saved install script differs from the image's. */
+const scriptChanged = {
+  ...fixture.builds,
+  changes: { ...fixture.builds.changes, installScript: true },
+}
 
-function needsBuild(computer: ComputerModel) {
-  const settings = computer.settings.get()
-  return settings.state === 'ready' ? settings.value.needsBuild : settings.state
+/** Whether the builds of the org say that the install script changed. */
+function scriptChange(model: OrgModel) {
+  return valueOf(model.builds.get())?.changes.installScript
 }
 
 function settingsReads(server: FakeApiServer): number {
@@ -58,10 +58,13 @@ async function buildingTab(server: FakeApiServer, fetch?: FetchLike) {
   return { model, computer, delay }
 }
 
-/** The build ends with success, and the server clears `needsBuild`. */
+/**
+ * The build ends with success, so the org image ran the saved install
+ * script.
+ */
 function buildSucceeds(server: FakeApiServer): void {
   server.json('GET', buildPath(org, FAKE_IDS.build), fixture.build)
-  server.json('GET', settingsPath, fixture.settings)
+  server.json('GET', buildsPath, fixture.builds)
 }
 
 describe('ComputerModel', () => {
@@ -137,30 +140,23 @@ describe('ComputerModel', () => {
     })
   })
 
-  test('a build that succeeds while the tab shows reads the settings again, until the tab closes', async () => {
+  test('a build that succeeds while the tab shows reads the builds again, so the change of the install script ends', async () => {
     const server = new FakeApiServer()
-    server.json('GET', settingsPath, changed)
+    server.json('GET', buildsPath, scriptChanged)
+    // The timer of the log runs, and no timer of the builds runs.
     const { model, computer, delay } = await buildingTab(server)
-    expect(needsBuild(computer)).toBe(true)
+    expect(scriptChange(model)).toBe(true)
     buildSucceeds(server)
     await delay.runAll()
     await flushMicrotasks()
-    expect(needsBuild(computer)).toBe(false)
+    expect(scriptChange(model)).toBe(false)
     computer.stop()
-    // Another build ends after the tab closed, as the sidebar sees it.
-    model.putBuild({
-      ...fixture.build.build,
-      id: 'build-2',
-      startedAt: FAKE_TIME,
-    })
-    await flushMicrotasks()
-    expect(settingsReads(server)).toBe(2)
   })
 
-  test('a tab that opens after its build ended shows the end, and the settings of the server', async () => {
+  test('a tab that opens after its build ended shows the end, and the changes of the server', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
-    server.json('GET', settingsPath, changed)
+    server.json('GET', buildsPath, scriptChanged)
     const { model, computer } = await buildingTab(server, held.fetch)
     // The user leaves the tab while the build runs, and the build succeeds.
     computer.stop()
@@ -171,33 +167,59 @@ describe('ComputerModel', () => {
     reopened.start()
     await flushMicrotasks()
     const builds = valueOf(model.builds.get())
-    expect({
-      latest: builds && latestBuild(builds)?.state,
-      needsBuild: needsBuild(reopened),
-    }).toEqual({ latest: 'succeeded', needsBuild: false })
+    const latest = builds && latestBuild(builds)?.state
     held.release('GET', buildsPath)
+    await flushMicrotasks()
+    expect({ latest, scriptChange: scriptChange(model) }).toEqual({
+      latest: 'succeeded',
+      scriptChange: false,
+    })
     reopened.stop()
   })
 
-  test('a settings read that fails after a build keeps the shown settings', async () => {
+  test('a settings read that fails keeps the shown settings', async () => {
     const server = new FakeApiServer()
-    server.json('GET', settingsPath, changed)
-    const { computer, delay } = await buildingTab(server)
-    buildSucceeds(server)
+    const computer = new ComputerModel(
+      new OrgModel(testServices(server), org),
+      new ManualDelay().delay,
+    )
+    computer.start()
+    await flushMicrotasks()
     server.json(
       'GET',
       settingsPath,
       { error: { code: 'server_error', message: 'The request failed.' } },
       500,
     )
-    await delay.runAll()
-    await flushMicrotasks()
+    // Try again of the settings reads them again.
+    await computer.load()
     expect({
       reads: settingsReads(server),
       settings: computer.settings.get(),
     }).toEqual({
       reads: 2,
-      settings: { state: 'ready', value: changed.settings },
+      settings: { state: 'ready', value: fixture.settings.settings },
+    })
+    computer.stop()
+  })
+
+  test('a save of the install script reads the builds again, so its change shows at once', async () => {
+    const server = new FakeApiServer()
+    const model = new OrgModel(testServices(server), org)
+    const computer = new ComputerModel(model, new ManualDelay().delay)
+    computer.start()
+    await flushMicrotasks()
+    const before = scriptChange(model)
+    const installScript = 'apt-get install -y ripgrep\n'
+    server.json('PATCH', settingsPath, {
+      settings: { ...fixture.settings.settings, installScript },
+    })
+    server.json('GET', buildsPath, scriptChanged)
+    await computer.saveScript('installScript', installScript)
+    await flushMicrotasks()
+    expect({ before, after: scriptChange(model) }).toEqual({
+      before: false,
+      after: true,
     })
     computer.stop()
   })
@@ -223,23 +245,26 @@ describe('ComputerModel', () => {
   test('a settings read that started before a save keeps the saved settings', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
-    const { computer, delay } = await buildingTab(server, held.fetch)
-    server.json('GET', buildPath(org, FAKE_IDS.build), fixture.build)
+    const computer = new ComputerModel(
+      new OrgModel(testServices(server, { fetch: held.fetch }), org),
+      new ManualDelay().delay,
+    )
+    computer.start()
+    await flushMicrotasks()
     held.hold('GET', settingsPath)
-    // The log timer sees the end of the build, so the settings read again.
-    await delay.runAll()
+    // Try again of the settings reads them, and its answer is late.
+    const reading = computer.load()
     const saved = {
       settings: {
         ...fixture.settings.settings,
         installScript: 'apt-get install -y ripgrep\n',
-        needsBuild: true,
       },
     }
     server.json('PATCH', settingsPath, saved)
     await computer.saveScript('installScript', saved.settings.installScript)
     // The read answers with the settings from before the save.
     held.release('GET', settingsPath)
-    await flushMicrotasks()
+    await reading
     expect({
       reads: settingsReads(server),
       settings: computer.settings.get(),

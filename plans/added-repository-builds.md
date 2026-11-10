@@ -358,6 +358,26 @@ Calls of Milestone 2, 2026-11-10, from the protocol docs:
   and
   [The clone token risk misses a new repository](follow-ups/clone-token-risk-new-repository.md).
 
+Calls of Milestone 4, 2026-11-10, from the screens:
+
+- The app reads the builds again after each repository save, also a
+  removal, and after each install script save, so that each notice shows
+  at once.
+- The app no longer reads the settings again when a build ends. That read
+  existed only to refresh `needsBuild`. The builds, which the app reads
+  again at the end of a build, now carry the changes.
+- The New workspace notice is built from the mockup `Notice` and the
+  shared words, because the mockup notice imports catalogue links. The
+  members UI keeps its own `Notice` with the shared words, as its README
+  asks.
+- A waiting repository keeps its place in the repository menu.
+- In a suspended org, the notice names no admin, because nobody can act.
+- The app does not check again that the org has an image. The Worker
+  sends empty repository lists while the org has no image.
+- A kept draft whose repository the org removed keeps its old behaviour.
+  [A kept draft can hold a removed repository](follow-ups/kept-draft-removed-repository.md)
+  records it.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -493,26 +513,26 @@ Show the waiting repositories and the repository notice, as the mockups
 of Milestone 1 draw them. Read the `product-ui` and `typescript` skills
 first.
 
-- [ ] New workspace: the repository menu, the first ready repository,
+- [x] New workspace: the repository menu, the first ready repository,
       Send off for a waiting repository, and the notice when no
       repository is ready.
-- [ ] The repository notice on the Repositories tab and on the Cloud
+- [x] The repository notice on the Repositories tab and on the Cloud
       computer tab, in `src/shell/settings/` for an admin and in
       `src/members/` for a member. Each tab reads the builds.
-- [ ] Move the consumers of `needsBuild` to `changes.installScript`. The
+- [x] Move the consumers of `needsBuild` to `changes.installScript`. The
       install script notice then shows only for a script change.
-- [ ] Use the shared parts of the mockups:
+- [x] Use the shared parts of the mockups:
       `docs/mockups/src/components/settings/RepositoryNotice.tsx` and the
       words in `repositoryChangeCopy.ts`.
-- [ ] Fade only the label of an off menu row in `src/shell/ui/`, as the
+- [x] Fade only the label of an off menu row in `src/shell/ui/`, as the
       mockup menu does.
-- [ ] Give the Repositories tab of an admin the new description, as the
+- [x] Give the Repositories tab of an admin the new description, as the
       mockups do.
-- [ ] Read the builds again after an add, in `src/app/settings-actions.ts`.
-- [ ] Add the screen tests of each state.
-- [ ] Update `src/app/README.md`, `src/app/screens.md`, and
+- [x] Read the builds again after an add, in `src/app/settings-actions.ts`.
+- [x] Add the screen tests of each state.
+- [x] Update `src/app/README.md`, `src/app/screens.md`, and
       `src/members/README.md`.
-- [ ] Run the targeted tests, `npm run typecheck`, and `npm run lint`.
+- [x] Run the targeted tests, `npm run typecheck`, and `npm run lint`.
 
 ## Milestone 5: Remove `needsBuild`
 

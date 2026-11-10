@@ -5,6 +5,11 @@ import {
   type Draft,
   type NewWorkspaceModel,
 } from '../../app/new-workspace-model'
+import { mayChangeSettings } from '../../app/permissions'
+import {
+  waitingRepositoriesOf,
+  type WaitingRepositories,
+} from '../../app/repository-changes'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
@@ -17,6 +22,7 @@ import {
   useBlockingNotice,
   useFirstBuildNotice,
 } from './notices'
+import { waitingNotice } from './waiting'
 
 /** A New workspace form, as the page and the dialog show it. */
 export interface NewWorkspaceForm {
@@ -24,13 +30,21 @@ export interface NewWorkspaceForm {
   create: CreateState
   /** The repositories that the org chose, or `undefined` while they load. */
   repositories: readonly Repository[] | undefined
-  /** The repository that the user picked, else the first chosen one. */
+  /**
+   * The repository that the user picked, else the first chosen one that is
+   * ready, else the first chosen one.
+   */
   repository: Repository | undefined
+  /** The chosen repositories that wait for a build, which the menu shows off. */
+  waiting: WaitingRepositories
   choice: AgentChoice | undefined
   models: readonly AgentModel[]
   /** The notice of a failed create, with Try again, or `null`. */
   failure: ReactNode
-  /** The first-build notice, or `null` after a good image is available. */
+  /**
+   * The notice of a build that the form waits for, or `null`: the first
+   * build of the org, or the build of the repository of the form.
+   */
   buildNotice: ReactNode
   /** The notice of a missing agent login, or `null`. It holds the message. */
   notice: ReactNode
@@ -44,10 +58,12 @@ export interface NewWorkspaceForm {
  * The state of a New workspace form, which the page and the dialog share,
  * so that they cannot drift: the repository, the model, the notices, one
  * readiness for every way to send, and the send. The readiness reads the
- * text and the files of the draft, the agent login, the org image, the repository, the
- * model, and the suspension of the org. When the server accepts the create,
- * the app opens the new workspace, also when the form closed while the
- * create ran. `open` goes to another page from a notice, such as Connect.
+ * text and the files of the draft, the agent login, the org image, the
+ * repository, the model, and the suspension of the org. The form picks the
+ * first ready repository, and a kept draft keeps its own, also while it
+ * waits for a build. When the server accepts the create, the app opens the
+ * new workspace, also when the form closed while the create ran. `open`
+ * goes to another page from a notice, such as Connect.
  */
 export function useNewWorkspaceForm(
   org: OrgSummary,
@@ -60,18 +76,33 @@ export function useNewWorkspaceForm(
   const account = useStore(app.account.account)
   const models = useStore(app.models)
   const loaded = valueOf(useStore(orgModel.repositories))
+  const builds = valueOf(useStore(orgModel.builds))
   const draft = useStore(model.draft)
   const create = useStore(model.create)
-  const { suspended } = useOrgAccess(org)
+  const access = useOrgAccess(org)
   useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
   const repositories = loaded?.filter((item) => item.selected)
-  const repositoryId = draft.repositoryId ?? repositories?.[0]?.id
+  const waiting = waitingRepositoriesOf(builds)
+  const firstReady =
+    repositories?.find((item) => !waiting.ids.has(item.id)) ?? repositories?.[0]
+  const repositoryId = draft.repositoryId ?? firstReady?.id
   const repository = repositories?.find((item) => item.id === repositoryId)
   const choice = draft.choice ?? account?.defaultChoice
   const notice = useBlockingNotice(choice, models, open)
-  const buildNotice = useFirstBuildNotice(org, open)
+  // The first build and a waiting repository never show together: the
+  // Worker lists no waiting repository before the first good build.
+  const buildNotice =
+    useFirstBuildNotice(org, open) ??
+    waitingNotice({
+      org,
+      admin: mayChangeSettings(access),
+      repositories: repositories ?? [],
+      repository,
+      waiting,
+      open,
+    })
   const defaults =
-    !suspended &&
+    !access.suspended &&
     notice === null &&
     buildNotice === null &&
     repositoryId !== undefined &&
@@ -90,6 +121,7 @@ export function useNewWorkspaceForm(
     create,
     repositories,
     repository,
+    waiting,
     choice,
     models,
     failure: createFailure(create, defaults !== null, send),
