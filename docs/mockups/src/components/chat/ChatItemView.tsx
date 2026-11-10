@@ -51,7 +51,7 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
     case 'agent':
       return (
         <div className={styles.agent}>
-          <AgentBlocks blocks={item.blocks} bullets={item.bullets} />
+          <AgentBlocks blocks={item.blocks} />
         </div>
       )
     case 'tool':

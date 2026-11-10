@@ -25,7 +25,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lost data, lost updates, and unread files |
+| `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lists in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -218,7 +218,10 @@ opens the folds. `app/chat/tables` draws tables in replies: the resources
 of the cloud computer, a short row whose last cell spans the missing
 columns, a wide table that scrolls sideways inside the reply, and the
 reply while the agent writes it, before its separator row arrives and
-after its table appears. `app/chat/lost-data` draws the data that the
+after its table appears. `app/chat/lists` draws a reply with a numbered
+list of choices, each with its options in a list under its text, as the
+user chose on 10 November 2026, and an open message line in the work of a
+turn with a plan whose steps sit under each item. `app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the
 runner left out, and the lines of runner events that the workspace
 refused.
