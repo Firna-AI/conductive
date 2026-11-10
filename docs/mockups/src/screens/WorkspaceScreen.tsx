@@ -18,6 +18,7 @@ import { ToolsPanel } from '../components/workspace/ToolsPanel'
 import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
+import { mayArchiveWorkspace } from '../components/workspaces/permissions'
 import { conversations } from '../fixtures/conversations'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
@@ -41,7 +42,7 @@ import { workspaceOverlay } from './workspaceOverlays'
 import { activityOf, drawnState, sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { tabsFor, workspaceName } from './workspaceTabs'
+import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
@@ -76,8 +77,10 @@ export function WorkspaceScreen(props: {
   const readOnly = archived || suspended
   const admin = state.viewer === 'admin'
   const viewer = viewerOf(state)
+  const membership = { person: viewer, role: state.viewer }
   // Decision 42: the workspace's owner and the org's admins archive it.
-  const archivable = !readOnly && (admin || workspace.owner === viewer)
+  const archivable =
+    !readOnly && mayArchiveWorkspace(membership, workspace.owner)
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
@@ -117,7 +120,6 @@ export function WorkspaceScreen(props: {
   )
   const workspaceHeader = (
     <WorkspaceHeader
-      archivable={archivable}
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
@@ -147,6 +149,7 @@ export function WorkspaceScreen(props: {
     <WorkspaceTabs
       drag={row.drag}
       full={row.full}
+      historyEntries={historyFor(state)}
       historyOpen={state.overlay === 'history'}
       menuTab={row.menuTab}
       readOnly={readOnly}
@@ -227,6 +230,7 @@ export function WorkspaceScreen(props: {
         workspace,
         status,
         suspended,
+        membership,
         createdWorkspaces(state),
       )}
     >

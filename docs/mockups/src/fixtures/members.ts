@@ -52,6 +52,11 @@ export const roleLabels: Readonly<Record<Role, string>> = {
 
 export type Membership = { person: PersonKey; role: Role }
 
+/** The signed-in person of a screen's chosen role. */
+export function viewerMembership(role: Role): Membership {
+  return { person: role === 'admin' ? you : memberViewer, role }
+}
+
 /**
  * An invite that waits for its person to accept it, with a GitHub account
  * that has its email verified.

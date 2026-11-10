@@ -107,7 +107,7 @@ export function fileMentionConversations(history: readonly ChatItem[]) {
         detail: '15 passed',
         status: 'done',
       },
-      { kind: 'agent', id: 'mention-answer', paragraphs: mentionAnswer },
+      { kind: 'agent', id: 'mention-answer', blocks: mentionAnswer },
       {
         kind: 'turn-end',
         id: 'mention-turn-end',

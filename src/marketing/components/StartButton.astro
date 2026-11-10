@@ -1,11 +1,12 @@
 ---
+import { siteActionCopy } from '../access-copy'
 import { signInHref } from '../request-values'
 import GitHubMark from './GitHubMark.astro'
 
 /*
- * The main action of the site, which starts the GitHub sign-in of the app.
- * A new person waits for app access, so the words promise a place on the
- * waitlist, not use at once.
+ * The main action of the site, Sign up, which starts the GitHub sign-in of
+ * the app. The first sign-in of a new person creates the account, which then
+ * waits for app access.
  */
 type Props = { size: 'md' | 'lg'; class?: string }
 
@@ -24,5 +25,5 @@ const { size, class: className } = Astro.props
   <span class="button-icon">
     <GitHubMark size={16} />
   </span>
-  <span>Join the waitlist</span>
+  <span>{siteActionCopy.signUp}</span>
 </a>

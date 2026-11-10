@@ -24,6 +24,7 @@
 - **Left out:** Draw the screens live on the site, because the content security policy of the site allows only hashed style elements. One more doc rule, because three doc rules did not stop the class.
 - **Wider fix:** B, the cheapest check that catches a stale picture from any cause, with no browser in the gate.
 - **Previous examples:** Commits `9ad3d12` and `e9827da`, and the removed session Rename button that remained in ten marketing pictures.
+- **Related:** `plans/follow-ups/marketing-pictures-unstable-capture.md` records capture noise. A comparison of captures needs stable pixels.
 - **Recommendation:** B. It catches every stale picture before the merge, at the cost of one more step in the gate.
 - **Action:** ask the user, because each option other than A adds a gate or a build error.
 - **Answer:** On 9 November 2026, the user chose to keep this work as a follow-up item for a later change, and to merge the change that found it without it. No option is chosen yet, so the item still needs a decision.

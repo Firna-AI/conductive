@@ -5,6 +5,7 @@
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
+  scroll-margin-top: 16px;
 }
 
 /* A quiet stage with a full hairline outline and a faint dot grid. */

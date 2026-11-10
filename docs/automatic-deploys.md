@@ -107,7 +107,8 @@ Each run takes these steps, in this order:
 5. It applies the D1 migrations with
    `npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc`.
 6. It deploys the Worker with `npx wrangler deploy`. Two `--var` options
-   set the runner variables to the archive.
+   set the runner variables to the archive. The deploy also publishes the
+   model list and app default from `wrangler.jsonc`.
 7. It checks that `https://app.conductive.build/api/health` answers
    `{"status":"ok"}`. When that answer does not come within about a
    minute, the run fails.
@@ -116,9 +117,12 @@ A failed step stops the run. So a build error stops the run before it
 changes anything live.
 
 - The `--var` options set only `CONDUCTIVE_RUNNER_ARCHIVE_URL` and
-  `CONDUCTIVE_RUNNER_ARCHIVE_SHA256`. Every other variable stays on the
-  Worker, because `wrangler.jsonc` sets `keep_vars`. The deploy changes no
-  secret.
+  `CONDUCTIVE_RUNNER_ARCHIVE_SHA256`. The values in `wrangler.jsonc`
+  replace the corresponding Worker variables. This includes
+  `CONDUCTIVE_MODELS` and `CONDUCTIVE_DEFAULT_CHOICE`, as
+  [Models](deployment.md#models) says. Other dashboard variables stay on
+  the Worker, because `wrangler.jsonc` sets `keep_vars`. The deploy changes
+  no secret.
 - The deploy tags the new Worker version with the short commit hash. So
   the Cloudflare dashboard shows which commit is live.
 - The summary of each run names the commit, the archive URL, and whether

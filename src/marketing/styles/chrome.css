@@ -21,6 +21,10 @@
   margin-left: auto;
 }
 
+/*
+ * A label never wraps, so each link keeps one line when a narrow desktop
+ * window leaves the header little room.
+ */
 .header-link {
   display: inline-flex;
   align-items: center;
@@ -32,6 +36,7 @@
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .header-link:hover {
