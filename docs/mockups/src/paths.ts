@@ -140,6 +140,7 @@ export const paths = {
   maskedPathsUnnamed: 'app/chat/masked-paths/unnamed',
   terminal: 'app/tools',
   preview: 'app/tools/preview',
+  previewAnotherPort: 'app/tools/preview/another-port',
   desktop: 'app/tools/desktop',
   macPrompt: 'mac-app/commands',
   macAllowAll: 'mac-app/commands/allow-all',

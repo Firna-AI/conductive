@@ -190,7 +190,9 @@ fake API, with its address options, its controls, and the test command.
   control of the screen: +, the clock of the history, a tab of the right
   column, or Archive.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
-  ordered stream, with the kept revokes of previews.
+  ordered stream. It keeps the revokes of previews, the latest report of the
+  listening ports, and the first failed repair of that report since it. A
+  tool that shows later gets them first, in event order.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
   the ordered stream.

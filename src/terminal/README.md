@@ -102,6 +102,9 @@ tool reads no events.
   `WorkspaceEvent` itself, in the order of the subscription. It drops the
   events of other workspaces. The tool's own actions, such as a request
   result, go to the same reducer.
+- A tool whose definition has `fromEnvelope` gets the action that it gives
+  for each envelope, in place of the event. So a tool can read the time of
+  an event, as the Preview tool does for a failed repair of its list.
 - A subscription can deliver its stored history at once, inside the
   subscribe call. The store is already connected then, so the reducer gets
   each event of that history.
@@ -135,8 +138,10 @@ After the [Get started](../../README.md#get-started) setup:
 
 The address holds the settings: `tool` (`terminal`, `preview`, `desktop`),
 `state`, `layout` (`panel`, `phone`), `scheme` (`dark`, `light`), `workspace`,
-and `preview`. The panel layout has the 440 × 389 size of the tools in the
-right column. The phone layout has the 390 × 636 size of a tool page on a
+`preview`, and `ports`. `ports` chooses the stored report of the listening
+ports: `servers`, `empty`, `unknown`, or `failed`, which adds a failed repair
+3 minutes before the fake time of the Preview tool. The panel layout has the
+440 × 389 size of the tools in the right column. The phone layout has the 390 × 636 size of a tool page on a
 phone. The page lists each request and each call of the terminal transport.
 
 The buttons send fake events: revoke a preview, start the sandbox, end the
