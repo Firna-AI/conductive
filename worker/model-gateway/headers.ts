@@ -32,6 +32,15 @@ function connectionHeaders(headers: Headers) {
   )
 }
 
+export function hasClaudeMarkers(headers: Headers): boolean {
+  return (
+    headers.get('user-agent')?.startsWith('claude-cli/') === true &&
+    (headers.get('anthropic-beta') ?? '')
+      .split(',')
+      .some((value) => value.trim() === 'claude-code-20250219')
+  )
+}
+
 export function upstreamHeaders(headers: Headers, login: RunnerLogin): Headers {
   const result = new Headers()
   const connection = connectionHeaders(headers)
@@ -45,9 +54,18 @@ export function upstreamHeaders(headers: Headers, login: RunnerLogin): Headers {
     )
       result.set(name, value)
   })
-  if (login.agent === 'claude' && login.kind === 'api-key')
+  if (login.agent === 'claude' && login.kind === 'api-key') {
     result.set('x-api-key', login.secret)
-  else result.set('authorization', `Bearer ${login.secret}`)
+    const beta = result.get('anthropic-beta')
+    if (beta !== null)
+      result.set(
+        'anthropic-beta',
+        beta
+          .split(',')
+          .filter((value) => value.trim() !== 'oauth-2025-04-20')
+          .join(','),
+      )
+  } else result.set('authorization', `Bearer ${login.secret}`)
   return result
 }
 

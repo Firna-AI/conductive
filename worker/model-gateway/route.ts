@@ -1,7 +1,7 @@
 import type { AppDependencies } from '../env'
 import { scheduleConnectionCheck } from '../security/connection-access'
 import { gatewayError, GatewayRequestError } from './errors'
-import { downstreamHeaders, upstreamHeaders } from './headers'
+import { downstreamHeaders, hasClaudeMarkers, upstreamHeaders } from './headers'
 import { allowedModelRoute, gatewayPath } from './paths'
 import { redactErrorBody } from './redact'
 import { GatewayRequestLifetime } from './request-lifetime'
@@ -28,6 +28,8 @@ export async function routeModelGateway(
     request.headers.has('Upgrade')
   )
     return gatewayError(agent, 'model_route_not_found')
+  if (agent === 'claude' && !hasClaudeMarkers(request.headers))
+    return gatewayError(agent, 'model_client_not_allowed')
   const bearer = request.headers
     .get('authorization')
     ?.match(/^Bearer (.+)$/i)?.[1]
@@ -58,7 +60,9 @@ export async function routeModelGateway(
         )
       if (
         token !==
-        (agent === 'claude' && login.kind === 'api-key' ? apiKey : bearer)
+        (agent === 'claude' && login.kind === 'api-key'
+          ? apiKey || bearer
+          : bearer)
       )
         throw new GatewayRequestError(
           'turn_token_invalid',

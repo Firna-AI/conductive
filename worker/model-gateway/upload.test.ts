@@ -8,6 +8,7 @@ import {
 } from '../http/request-body.test-support'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
+  claudeClientHeaders,
   deferred,
   gatewayHttp,
   gatewayPath,
@@ -41,6 +42,7 @@ it('streams exactly 100,000,000 upload bytes to the upstream without trusting Co
         `${MACHINE_ORIGIN}${gatewayPath('claude')}`,
         source.body,
         {
+          ...claudeClientHeaders,
           'x-api-key': client.token,
           'Content-Length': '1',
         },
@@ -94,6 +96,7 @@ it('returns the shared 413 and cancels the upstream even when its answer arrives
   const response = client
     .fetch(
       streamedRequest(`${MACHINE_ORIGIN}${gatewayPath('claude')}`, body, {
+        ...claudeClientHeaders,
         'x-api-key': client.token,
         'Content-Length': '1',
       }),

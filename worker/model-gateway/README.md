@@ -22,19 +22,39 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 The gateway preserves the query and the request body.
 It refuses every other suffix and method locally, including the connection probe and model discovery.
 
-A turn token starts with the prefix of a real login of its kind.
-So the agent program uses its normal login mode, and sends the token in the header of that mode.
+The Claude route accepts only a request with both markers of the `claude` program.
+One marker is the exact value `claude-code-20250219` as an item of the comma-separated `anthropic-beta` list.
+The check ignores spaces around each item.
+The other marker is a `User-Agent` that starts with `claude-cli/`, with any client version.
+The `x-app` and `x-claude-code-*` headers are not markers.
+The route checks the markers after the method and the suffix, and before it reads the turn token.
+A request that lacks either marker gets HTTP 403 with `model_client_not_allowed`, in the Anthropic error shape.
+It gets no D1 workspace check, no turn check, and no upstream call.
+The Codex route has no marker check.
 
-| Login kind | Token prefix | Request header |
-| --- | --- | --- |
-| Claude API key | `sk-ant-api-` | `x-api-key` |
-| Claude subscription token | `sk-ant-oat01-` | `Authorization: Bearer` |
-| OpenAI API key | `sk-` | `Authorization: Bearer` |
+A turn token starts with the prefix of a real login of its kind.
+So an agent program can use its normal login mode, and send the token in the header of that mode.
+Claude can also read the token from its [profile](../../docs/protocol/model-gateway.md#how-the-agents-reach-the-gateway).
+In profile mode, Claude sends each token as a bearer token, also for an API key.
+
+| Login kind | Token prefix | Turn token header | Upstream login header |
+| --- | --- | --- | --- |
+| Claude API key | `sk-ant-api-` | `x-api-key` or `Authorization: Bearer` | `x-api-key` |
+| Claude subscription token | `sk-ant-oat01-` | `Authorization: Bearer` | `Authorization: Bearer` |
+| OpenAI API key | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 
 The signature covers the prefix.
-A token with the prefix or the header of another login kind gets `turn_token_invalid`.
-The real login replaces the token in the header for that login kind.
-The gateway passes `anthropic-beta` unchanged.
+A token whose prefix does not match the login kind of its turn gets `turn_token_invalid`.
+A token in a header that the table does not give for its login kind gets the same refusal.
+The upstream gets the real login in the header of the last column.
+
+For a Claude API key, the gateway removes only the `oauth-2025-04-20` value from the `anthropic-beta` list.
+It keeps each other value.
+Claude sends two of these values only in profile mode: `prompt-caching-scope-2026-01-05` and `cache-diagnosis-2026-04-07`.
+They stay because the body of a profile request uses their features.
+That body uses a `cache_control` scope of `global` and a top-level `diagnostics` field.
+Do not remove them to match the normal API-key mode of Claude.
+The other login kinds keep `anthropic-beta` unchanged.
 
 The Codex upload reader checks for one valid JSON object as bytes arrive.
 It checks each top-level `background` key after JSON string unescaping, including repeated keys.
@@ -80,13 +100,16 @@ The HTTP route tests inject fake Anthropic and OpenAI upstreams through the fetc
 Their manual clock drives stream checks without a real delay.
 `AppDependencies.scheduleGatewayCheck` supplies that clock in tests.
 Production uses the shared connection scheduler.
+The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-support.ts) adds `claudeClientHeaders`, the markers of the `claude` program, to each Claude request.
 
 ### Key Code
 
-- [route.ts](route.ts): `routeModelGateway` selects a route, checks its turn, replaces authentication, and forwards one request.
+- [route.ts](route.ts): `routeModelGateway` selects a route, checks the Claude markers, checks its turn, replaces authentication, and forwards one request.
 - [workspace-access.ts](workspace-access.ts): `gatewayWorkspaceAllowed` checks the workspace and resource predicates in D1 before object access.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
+  `hasClaudeMarkers` checks the markers of the `claude` program.
+  For a Claude API key, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.
 - [upload.ts](upload.ts): streaming upload and draining after an early reply.
 - [codex-body.ts](codex-body.ts): `CodexBodyScanner` checks the streamed JSON grammar and top-level `background` fields.
 - [json-tokens.ts](json-tokens.ts): `JsonTokens` reads JSON tokens and unescapes keys without keeping token text.
@@ -125,4 +148,6 @@ Production uses the shared connection scheduler.
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-stream.test.ts](codex-stream.test.ts): a 100,000,000-byte object, the shared 413, and refusal after an early answer.
+- [claude-client.test.ts](claude-client.test.ts): missing and partial Claude markers, refused before workspace access, a turn check, or an upstream call.
+- [claude-profile.test.ts](claude-profile.test.ts): bearer profile requests for both Claude login kinds, the upstream login header, the `anthropic-beta` result, unchanged body bytes, and a changed prefix.
 - [runtime.test.ts](runtime.test.ts): production workspace RPC on SQLite, with eviction after a saved gateway Stop, one interrupt after reconnect, duplicate runner ends, the saved failure cause, and Retry.

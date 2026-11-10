@@ -15,6 +15,11 @@ import { runningGatewayTurn } from './fixture.test-support'
 import { routeModelGateway } from './route'
 import { gatewayWorkspaceAllowed } from './workspace-access'
 
+export const claudeClientHeaders = {
+  'anthropic-beta': 'claude-code-20250219',
+  'user-agent': 'claude-cli/2.1.318 (external, sdk-ts, agent-sdk/0.3.318)',
+} as const
+
 export function gatewayPath(agent: 'claude' | 'codex', suffix?: string) {
   return agent === 'claude'
     ? `${MACHINE_PATHS.claudeGateway}${suffix ?? '/v1/messages'}`
@@ -75,6 +80,7 @@ export async function gatewayHttp(
   ) => {
     const headers = new Headers({
       'Content-Type': 'application/json',
+      ...(choice.agent === 'claude' ? claudeClientHeaders : {}),
       ...authorization,
     })
     new Headers(init.headers).forEach((value, name) => headers.set(name, value))
