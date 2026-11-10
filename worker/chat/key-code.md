@@ -88,6 +88,8 @@ first.
   version 2 command.
   [The agent runner](integration/runner/README.md#the-agent-runner) gives
   the rules of both versions.
+- `attachment-paths.ts`: the captured repository folder lookup and the
+  absolute attachment paths of each runner send.
 - `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
   send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the

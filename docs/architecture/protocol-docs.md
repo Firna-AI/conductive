@@ -9,7 +9,8 @@ them, and this page lists each protocol doc and what it covers.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
-    shell variable of each repository in a sandbox.
+    shell variable of each repository in a sandbox, and the context folder
+    of each workspace.
   - [Life of a workspace](../protocol/workspace-life.md)
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.

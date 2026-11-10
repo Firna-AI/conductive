@@ -1,4 +1,11 @@
-# Chat access
+# Chat backend access
+
+This guide belongs to the [chat backend](README.md). It gives the gates
+that the Durable Object runs itself: the browser gate and its second
+check in the queue, the grants of open tabs, the runner token checks, and
+the login lookups. It also gives what an org suspension refuses.
+[Access and security](../../docs/protocol/access-and-security.md) states
+the requirements.
 
 The Durable Object runs the gates itself.
 

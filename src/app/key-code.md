@@ -56,6 +56,13 @@ Each path is relative to `src/app/`, the folder of this page.
   workspace show until the org has a good image. `changedScriptNotice`
   gives the words of the notice of a changed install script, which the
   Cloud computer tab of an admin and of a member show.
+- `repository-changes.ts`: the saved repository changes that the org
+  image lacks, from `BuildsResponse.changes`. `repositoryWaitOf` gives
+  their state, `repositoryChangesOf` the changes of the repository
+  notice, `waitingRepositoriesOf` the waiting repositories of New
+  workspace, and `changeWaits` whether the build history stays closed.
+  `../shell/settings/RepositoryChangeNotice.tsx` draws the notice of an
+  admin, and `../members/RepositoryNotice.tsx` the notice of a member.
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the New workspace view, the GitHub App installations,
   and the repositories that Create org offers. A screen watches the
@@ -232,7 +239,8 @@ Each path is relative to `src/app/`, the folder of this page.
   `NewWorkspaceDialog.tsx`: the dialog.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
   and the dialog share: the repository, the notices, the readiness, and
-  the send. `parts.tsx`: their repository menu.
+  the send. `parts.tsx`: their repository menu. `waiting.tsx`: the notice
+  of a repository that waits for its build.
   The model of each form is the `owner` of its chip field. The shared chip
   field supplies their focus handle. `CaretAtEndPlugin`
   restores the saved caret position when keyboard focus enters. Without a

@@ -24,6 +24,20 @@ export const changedInstallScript = installScript.replace(
   'redis-server ffmpeg\n',
 )
 
+/**
+ * The install script after an admin removes repositories and takes out
+ * their lines, so that the next build does not look for their folders.
+ */
+export function installScriptWithout(removed: readonly string[]): string {
+  const folders = removed.map(
+    (name) => `cd ~/code/${name.slice(name.indexOf('/') + 1)} `,
+  )
+  return installScript
+    .split('\n')
+    .filter((line) => !folders.some((folder) => line.startsWith(folder)))
+    .join('\n')
+}
+
 /** It runs in each workspace's cloud computer at each start and resume. */
 export const startupScript = `#!/usr/bin/env bash
 set -euo pipefail

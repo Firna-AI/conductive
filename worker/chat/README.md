@@ -98,8 +98,10 @@ Try again replaces the failed first computer without accepting the stored messag
 
 ## Access
 
-[Chat access](access.md) gives the browser gates, the runner token checks,
-the workspace version pin, and the login checks.
+[Chat backend access](access.md) gives the gates that the Durable Object
+runs itself. It covers the browser gate and its second check in the
+queue, the grants of open tabs, the runner token checks, the workspace
+version pin, the login lookups, and an org suspension.
 
 ## History and event order
 
