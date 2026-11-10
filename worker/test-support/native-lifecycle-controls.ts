@@ -1,4 +1,4 @@
-import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerLifecycleEvent } from '../lifecycle/runner-lifecycle'
 import { HttpError } from '../http'
 import type { Workspace } from '../workspace'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
@@ -28,7 +28,9 @@ export interface NativeLifecycleControls {
     job: StoredWorkspaceStartJob,
     intent?: WorkspaceStartIntent,
   ): Promise<boolean>
-  captureRunnerReport(event: RunnerEvent): Promise<NativeRunnerReportResult>
+  captureRunnerReport(
+    event: RunnerLifecycleEvent,
+  ): Promise<NativeRunnerReportResult>
   cancelWaiters(): Promise<void>
 }
 

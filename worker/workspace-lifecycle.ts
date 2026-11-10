@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers'
-import type { RunnerEvent } from '../src/shared/runner'
+import type { RunnerLifecycleEvent } from './lifecycle/runner-lifecycle'
 import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
@@ -224,7 +224,7 @@ export class WorkspaceLifecycle
       : { ok: false, reason: 'turn_not_active' }
   }
 
-  async reportRunnerLifecycle(event: RunnerEvent): Promise<void> {
+  async reportRunnerLifecycle(event: RunnerLifecycleEvent): Promise<void> {
     return this.run(() => this.controller.reportRunnerLifecycle(event))
   }
 

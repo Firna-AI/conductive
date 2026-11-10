@@ -147,17 +147,17 @@ export class AttachmentPreparation {
     workspaceId: string,
     outbound: Extract<PendingCommand, { messageId: string }>,
     error: unknown,
-  ): Promise<boolean> {
-    const failed = await this.store.change(
+  ): Promise<void> {
+    await this.store.change(
       workspaceId,
       async (view) => {
         const turn = await view.turn(outbound.turnId)
         if (!turn || (turn.state !== 'queued' && turn.state !== 'running'))
-          return undefined
+          return
         const session = await view.session(outbound.sessionId)
-        if (!session || session.activeTurnId !== turn.id) return undefined
+        if (!session || session.activeTurnId !== turn.id) return
         const running = turn.state === 'running'
-        const failed = await view.emit({
+        await view.emit({
           type: 'turn.failed',
           sessionId: session.id,
           turnId: turn.id,
@@ -186,21 +186,8 @@ export class AttachmentPreparation {
             sessionId: session.id,
             turnId: turn.id,
           })
-        return failed
       },
       this.publish,
     )
-    if (!failed) return false
-    await this.dependencies.runnerEventStored(
-      failed,
-      async (event, occurredAt) => {
-        await this.store.change(
-          workspaceId,
-          (view) => view.emit(event, occurredAt),
-          this.publish,
-        )
-      },
-    )
-    return true
   }
 }

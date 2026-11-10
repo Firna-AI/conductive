@@ -96,17 +96,20 @@ export function createWorkspaceIntegration(
     runnerDetached: (connectionId) => files.runner.detach(connectionId),
     runnerHello: async (_id, publish) =>
       controller.recoverLifecycle(callbackPublisher(publish)),
-    turnEnded: async (_id, turnId, publish) => {
-      try {
-        const fence = await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY)
-        if (fence && fence.mode !== 'active') return
-        await controller.finishLifecycleTurn(turnId, callbackPublisher(publish))
-      } finally {
-        context.waitUntil(devices.reconcile())
-      }
-    },
     ...observeWorkspaceCallbacks(
       {
+        turnEnded: async (_id, turnId, publish) => {
+          try {
+            const fence = await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY)
+            if (fence && fence.mode !== 'active') return
+            await controller.finishLifecycleTurn(
+              turnId,
+              callbackPublisher(publish),
+            )
+          } finally {
+            context.waitUntil(devices.reconcile())
+          }
+        },
         receiveFileResult: async (value, connectionId) => {
           files.runner.receive(connectionId, value)
         },

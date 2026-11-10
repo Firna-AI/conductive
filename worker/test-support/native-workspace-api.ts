@@ -64,6 +64,7 @@ interface NativeWorkspaceControls {
   nextIds(ids: string[]): Promise<void>
   setTime(at: number): Promise<void>
   advance(at: number): Promise<number>
+  settled(): Promise<void>
   drain(): Promise<void>
   drainBackground(): Promise<void>
   reset(): Promise<void>
