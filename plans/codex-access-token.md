@@ -25,7 +25,10 @@ workspace 400, the Worker model proxy of decision 120 on branch
 [`plans/model-gateway.md`](https://github.com/Firna-AI/remote-code/blob/5399faaa/plans/model-gateway.md), which that branch deleted when its work completed. This branch merged that branch on the same day.
 The plan reads the request as option D of decision 172. For decision 173,
 the user chose B on 10 November 2026: Codex runs its own token mode
-through new gateway routes, with a turn token. Decision 174 is open.
+through new gateway routes, with a turn token. On the same day, the user
+chose A for decision 175: the Codex login is a device code sign-in to the
+member's ChatGPT plan, which the Worker runs and renews. It replaces the
+access token. Decision 174 is open.
 
 Related work: the plan `plans/own-endpoint-logins.md` on branch
 `calummoore/cli-proxy-setup` adds an own endpoint login to the same connect
@@ -267,6 +270,37 @@ changed the recommendation from A to D.
 - **Recommendation:** D. It gives the result of A for the Codex token, and it also covers the `message` command, the earlier version 2 runners, and the own endpoint login, at a small extra cost in code that this branch already changes. The plan first recommended A, which stays the direct fix.
 - **Action:** ask the user, because it adds a new rejection of a turn.
 
+### 175. Which login connects a ChatGPT plan to Codex
+
+Added on 10 November 2026, after the user showed the device code sign-in
+setting of ChatGPT and said that this is the sign-in that the change works
+towards. The user's account has no admin console for access tokens.
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** decisions 170 and 173, and `docs/protocol/tokens-and-secrets.md`.
+- **Terms:**
+  - **Device code sign-in:** the sign-in of Codex for headless machines. The user types a short code on `auth.openai.com/codex/device`, and OpenAI gives the program a ChatGPT sign-in with a refresh token.
+- **Background:**
+  - Decision 170 A chose access tokens, which only Business and Enterprise workspaces can make.
+  - Device code sign-in works with each ChatGPT plan, also Plus and Pro, when the user turns it on in the security settings of ChatGPT.
+  - The refresh token of a ChatGPT sign-in works only once, so only one program may renew it.
+  - The gateway routes to the ChatGPT Codex backend serve both kinds of sign-in.
+- **Problem:** The planned login kind does not fit the user's account, and the device code sign-in has no plan.
+- **Impact if no action:** Codex cannot run on the user's ChatGPT plan.
+- **Root question:** How does a member connect their ChatGPT plan to Codex in Conductive, so that Codex runs on that plan and the login stays out of the sandbox?
+- **Options:**
+  - **A.** Device code sign-in that the Worker runs. The account page shows a code and the OpenAI link. The Worker gets the sign-in, stores it encrypted, and renews it alone. The gateway adds it to each request to the ChatGPT backend, and Codex in the cloud computer holds only placeholders. The finished access token work changes to this kind. Effort: Large. Risk: it changes decision 37, because the Worker acts as the Codex program toward OpenAI, which can block this use.
+  - **B.** The member runs `codex login --device-auth` on their own computer and pastes the login file, which the Worker stores and renews alone. Effort: Large. Cost: the member's own Codex must sign in again after the first renewal, and OpenAI says not to share that file.
+  - **C.** A, and keep the access token kind for Business and Enterprise. Effort: Large. Cost: two Codex login kinds.
+- **Left out:** A device code sign-in inside each cloud computer puts the real login in the sandbox, which decision 172 rules out. Access tokens only fail the goal. Sign in with ChatGPT has no date.
+- **Wider fix:** None. This is a choice of login kinds.
+- **Previous examples:** Decision 170 left device code sign-in out. Decision 37 recorded OpenAI's waitlist for hosted apps.
+- **Recommendation:** A. It gives the sign-in that the user showed, the gateway keeps the login out of the sandbox, and the Worker alone renews the single-use refresh token.
+- **Action:** ask the user, because A changes decision 37 and the login kind of decision 170.
+- **Chosen by the user on 10 November 2026:** A. It replaces the access token of decision 170 A. The token route of decision 173 B carries over: Codex runs its own ChatGPT sign-in mode through the gateway.
+
 ## Design
 
 These are the agent's calls of 9 November 2026. Each gives its reason.
@@ -288,6 +322,24 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
 - The Codex form lists "API key" first and selects it. "Access token" comes
   second. Reason: most members have an API key, and a token needs a
   Business or Enterprise workspace.
+- The calls of 10 November 2026 for decision 175 A:
+  - The ChatGPT sign-in keeps the stored kind `token` of Codex, so the
+    contracts, the migration, and the share default of decision 171 C
+    stay. Only its words and its secret change. The secret holds the
+    access token, the refresh token, the ID token, the account ID, and the
+    expiry, encrypted as one value.
+  - The Worker runs the device code flow with the client ID and the
+    addresses of the pinned Codex 0.167.0. It renews the access token
+    alone, one renewal at a time for each login, and stores the new
+    refresh token before it uses the new access token.
+  - Codex in the cloud computer runs its ChatGPT sign-in mode with a login
+    file for each session. The file holds the turn token in place of the
+    access token, and a placeholder refresh token. The runner removes it
+    at the end of the turn, as gateway decision 11 K does for Claude. The
+    gateway puts in the real access token, and it renews the token and
+    retries when OpenAI answers 401, so Codex never renews.
+  - A new ChatGPT sign-in is not shared, because OpenAI's terms forbid
+    making an account available to anyone else.
 - The calls of 10 November 2026 for decision 173 B:
   - Codex reaches the gateway through gateway addresses in its settings
     and in `CODEX_AUTHAPI_BASE_URL`, not through a relay in the runner.
@@ -403,6 +455,32 @@ are in `.context/codex-access-token/mockups/`.
 - [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
+## Milestone 1b: Mockups for the ChatGPT sign-in
+
+Tags: mockup
+
+Depends on: none
+
+Decision 175 A replaces the access token with a device code sign-in to
+the member's ChatGPT plan. The Codex form and the connected Codex row
+change.
+
+- [ ] Replace the access token state of `app/account/connect-codex` with
+      the ChatGPT sign-in: the switch names it, a button starts the sign-in,
+      and the form then shows the code, the link to
+      `https://auth.openai.com/codex/device`, and a waiting state.
+- [ ] Draw the states of the sign-in: the code shown, the code expired, the
+      sign-in refused, and the turn on of device code sign-in in the
+      security settings of ChatGPT as the help text.
+- [ ] Change `app/account/codex-token` to a Codex login connected by a
+      ChatGPT sign-in, with its share switch off.
+- [ ] Update the kind names in `docs/mockups/src/fixtures/logins.ts` and
+      the section "Logins" of `docs/mockups/orgs-and-logins.md`.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at phone and
+      desktop sizes.
+- [ ] Update the design and the TODOs of this plan for each problem that the
+      mockups show.
+
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
@@ -473,7 +551,7 @@ kind `token`. The database stores it.
 - [x] Update the login lines of `worker/app-api/README.md` and
       `worker/chat/README.md`.
 
-## Milestone 4: Gateway routes and runner token mode
+## Milestone 4: ChatGPT sign-in in the Worker, the gateway, and the runner
 
 Depends on: 3
 
@@ -484,9 +562,9 @@ Blocked on 9 November 2026 by decision 172. The variable route passes the
 token to processes that Codex starts, and the bearer setting skips the
 requests of the token mode. The runner holds no change. The evidence is in
 `.context/codex-access-token/runner/report.md`. The user chose the gateway
-on 10 November 2026 (decision 172 D) and its token mode route
-(decision 173 B). The TODOs below build that route. Decision 174 stays
-open and changes no TODO here.
+on 10 November 2026 (decision 172 D), the token mode route (decision
+173 B), and the device code sign-in (decision 175 A). The TODOs below build
+that route. Decision 174 stays open and changes no TODO here.
 
 - [x] Find the model provider settings that the pinned Codex needs for an
       access token. Read its protocol schema with
@@ -494,38 +572,38 @@ open and changes no TODO here.
 - [x] Try the route of `experimental_bearer_token` in the `config` of
       `thread/start` and `thread/resume`. Use it when Codex accepts the
       token on it. Codex skips the requests of the token mode on it.
-- [ ] Gateway, `worker/model-gateway/`: add the routes of the Codex token
-      mode for a turn whose login is a Codex access token, on a fixed list:
-      the `whoami` request of `auth.openai.com`, the rule bundle, the account
-      check and routing, the model list, and `POST` of the Codex model
-      route of `chatgpt.com/backend-api/codex`. Put in the real token, and
-      pass only the headers that these routes need, such as
-      `chatgpt-account-id`.
-- [ ] Gateway: keep Codex on the gateway. Follow the workspace routing in
-      the Worker, and give Codex no routed origin. Refuse a WebSocket
-      upgrade, so that Codex falls back to HTTP. Handle the zstd bodies, or
-      turn request compression off in the runner.
-- [ ] Gateway: give the turn token of a Codex access token the `at-` form,
-      so that Codex picks its token mode.
-- [ ] Runner: accept a Codex credential of the kind `token`. Start the app
-      server with the turn token in `CODEX_ACCESS_TOKEN`, the gateway
-      address in `CODEX_AUTHAPI_BASE_URL`, and the gateway in the ChatGPT
-      base address of its settings. Set the shell environment rule that
-      removes both variables from shell commands. Keep the API key route
-      as it is.
-- [ ] When a workspace rule moves Codex off the gateway, the turn fails
-      with a cause, and the real token never leaves the Worker.
-- [ ] Tests: the gateway routes and their refusals, the header list, the
-      `at-` turn token, the routing in the Worker, and the runner's token
-      start. Check that the output filter hides the turn token.
-- [ ] Protocol: state in `docs/protocol/model-gateway.md` the routes of the
-      token kind, the turn token and the gateway address in the environment
-      of Codex for this kind (decision 173 B), and the owner metadata that
-      reaches the sandbox. State in `docs/protocol/isolation.md` that the
-      hooks and MCP commands of a ChatGPT workspace rule run in the sandbox
-      of the org. Update the risks in `docs/protocol/tokens-and-secrets.md`.
-- [ ] Read both legal pages and every public guide in full, and update each
-      sentence that restates a changed fact.
+- [ ] Worker: add the device code flow for the account page. A start call
+      asks OpenAI for a code, as the pinned Codex 0.167.0 does, and returns
+      the code and the link. A poll call reports the state, and on success
+      exchanges the authorization for the sign-in and stores it encrypted
+      as the Codex `token` secret.
+- [ ] Worker: renew the access token alone, one renewal at a time for each
+      login. Store the new refresh token before the new access token is
+      used. A refused renewal marks the login as not usable, with a cause.
+- [ ] Gateway: add the routes of the ChatGPT sign-in mode on a fixed list:
+      the rule bundle, the account check, the model list, and the Codex
+      model route. Put in the real access token and its
+      `chatgpt-account-id`. Follow the routing in the Worker. Refuse a
+      WebSocket upgrade. Handle the zstd bodies, or turn compression off.
+      On a 401 from OpenAI, renew once and retry.
+- [ ] Runner: accept a Codex credential of the kind `token`. Write a login
+      file for the session in its own Codex home, with the turn token in
+      place of the access token and a placeholder refresh token. Point the
+      ChatGPT base address of Codex at the gateway. Remove the file at the
+      end of the turn. Keep the API key route as it is.
+- [ ] Remove the parts that serve only an access token: the `whoami`
+      route, the `at-` turn token, and the `CODEX_ACCESS_TOKEN` start.
+- [ ] Tests: the device code flow and its failures, the renewal and its
+      race, the gateway routes and their refusals, the retry after a 401,
+      and the runner's login file and its removal.
+- [ ] Protocol: state the ChatGPT sign-in in
+      `docs/protocol/tokens-and-secrets.md`, with the risk that OpenAI sends
+      hosted apps to its waitlist and can block this use (decision 175
+      changes decision 37). State its routes and the login file of a turn
+      in `docs/protocol/model-gateway.md`, and its share default reason in
+      `docs/protocol/isolation.md`.
+- [ ] Read both legal pages in full, and update each sentence that restates
+      a changed fact. List the public guide sentences for Milestone 5b.
 - [ ] Update `runner/agent-logins.md`, `runner/README.md`, and
       `worker/model-gateway/README.md`.
 
@@ -559,15 +637,33 @@ it.
 - [x] Smoke-test the account page in `npm run dev` at phone and desktop
       sizes. Save the screenshots under `.context/codex-access-token/`.
 
+## Milestone 5c: Connect form for the ChatGPT sign-in
+
+Tags: ui
+
+Depends on: 1b, 4
+
+The account page connects Codex with a device code sign-in, as Milestone
+1b draws it.
+
+- [ ] Replace the access token field of the Codex form with the sign-in
+      button, the code, the link, and the states of Milestone 1b.
+- [ ] Use the start and poll calls of Milestone 4.
+- [ ] Change the Codex kind name from "Access token" to the name of
+      Milestone 1b.
+- [ ] Add tests for each state of the sign-in.
+- [ ] Smoke-test the account page in `npm run dev` at phone and desktop
+      sizes.
+
 ## Milestone 5b: Public guides and comparison
 
-Depends on: 4
+Depends on: 4, 5c
 
 The public guides and the comparison page say that Codex connects with a
-Codex access token.
+device code sign-in to the member's ChatGPT plan.
 
 - [ ] Update `src/marketing/docs/agent-logins.md` and
-      `src/marketing/docs/get-started.md` for the Codex access token, as
+      `src/marketing/docs/get-started.md` for the ChatGPT sign-in, as
       [Website docs](../docs/protocol/website-docs.md) says.
 - [ ] Update the Codex row in `src/marketing/from-conductor/` from "in
       progress" to its shipped status, as
