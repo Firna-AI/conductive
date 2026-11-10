@@ -3,8 +3,10 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { CODEX, WORKSPACE_ID } from '../chat/harness.test-support'
 import { sessionPaths } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
-import { gatewayHttp } from './http.test-support'
+import { gatewayHttp, gatewayPath } from './http.test-support'
+import { codexTokenPaths } from './paths'
 import { turnTokenRoute } from './token'
+import { codexAccount } from './codex-login.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -18,14 +20,30 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
     ['claude', 'api-key', 'sk-ant-api-', 'x-api-key'],
     ['claude', 'token', 'sk-ant-oat01-', 'authorization'],
     ['codex', 'api-key', 'sk-', 'authorization'],
+    ['codex', 'token', 'sk-', 'authorization'],
   ] as const) {
     await harness.reset()
+    const tokenRequests: Request[] = []
+    const tokenMode = agent === 'codex' && kind === 'token'
     const client = await gatewayHttp(
       harness,
       agent === 'codex' ? CODEX : undefined,
       kind,
       2,
+      tokenMode
+        ? async (request) => {
+            tokenRequests.push(request)
+            return Response.json({ chatgpt_account_id: 'account' })
+          }
+        : undefined,
     )
+    const request = () =>
+      tokenMode
+        ? client.request(gatewayPath('codex', codexTokenPaths.models), {
+            method: 'GET',
+            body: null,
+          })
+        : client.request()
     try {
       expect(client.runner.received[0]).toMatchObject({
         type: 'welcome',
@@ -41,7 +59,12 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
           state: 'sent',
         }),
         attachments: [],
-        credential: { agent, kind, token: client.token },
+        credential: {
+          agent,
+          kind,
+          token: client.token,
+          ...(tokenMode ? { account: codexAccount } : {}),
+        },
       })
       expect(client.token.startsWith(prefix)).toBe(true)
       expect(turnTokenRoute(client.token)).toEqual({
@@ -62,10 +85,14 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
         message: { ...accepted.message, state: 'sent' },
         attachments: [],
       })
-      const response = await client.request()
+      const response = await request()
       expect(response.status).toBe(200)
       await response.text()
-      const upstream = agent === 'codex' ? client.openai : client.anthropic
+      const upstream = tokenMode
+        ? { requests: tokenRequests }
+        : agent === 'codex'
+          ? client.openai
+          : client.anthropic
       expect(upstream.requests).toHaveLength(1)
       expect(upstream.requests[0].headers.get(header)).toBe(
         header === 'authorization' ? `Bearer ${client.secret}` : client.secret,
@@ -93,7 +120,7 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
         { turnId: client.turn.turnId },
       )
       expect(stop.status).toBe(200)
-      const revoked = await client.request()
+      const revoked = await request()
       expect(revoked.status).toBe(409)
       expect(await revoked.json()).toMatchObject({
         error: { code: 'turn_not_active' },

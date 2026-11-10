@@ -114,8 +114,18 @@ decision number names a decision of the change that adds the
   [The agent runner](agent-runner.md#the-agent-runner) states which runner
   versions a workspace accepts.
 - A newer runner gets a turn token as the credential of each turn. An
-  older runner gets the agent login itself. This rule holds for each
+  older runner gets a supported agent login itself. This rule holds for each
   runner connection.
+- Before a turn or a later message reaches a runner, the app checks
+  that the runner can use its login kind (decision 174).
+- A ChatGPT turn needs a runner that declares support for that sign-in.
+  An older runner, including an earlier version 2 runner, cannot use it.
+- A runner that cannot use the login gets no turn or message command
+  and no credential. The turn fails once with a recovery cause.
+- The cause offers a new workspace after an admin rebuilds the org
+  image, or an OpenAI API key. A reconnect does not send the failed turn again.
+- A ChatGPT sign-in never reaches a sandbox, including one whose older
+  runner can still receive other agent logins.
 - The version pin of a workspace is the lowest runner protocol version that
   it accepts. The workspace takes the pin from the org image that its
   cloud computer starts from. A stop and a resume keep the pin. A
@@ -132,14 +142,12 @@ decision number names a decision of the change that adds the
 - Each agent login has a share setting (decision 116). It says whether the
   messages of other members can run on that login.
 - The kind of a login sets the default of its share setting. A new Claude
-  subscription login does not let other members use it. A new Codex access
-  token does not let them use it either (decision 171). A new API key lets
+  subscription login does not let other members use it. A new ChatGPT
+  sign-in does not let them use it either (decisions 171 and 175). A new API key lets
   them use it.
 - Reason: Anthropic's consumer terms forbid making a Claude account
-  available to anyone else. Section 3.1 of the
-  [OpenAI Services Agreement](https://cdn.openai.com/osa/openai-services-agreement.pdf)
-  says: "Customer will not share Account access credentials or individual
-  login credentials between multiple users." The owner of an API key may
+  available to anyone else. OpenAI's terms also forbid making an account
+  available to anyone else. The owner of an API key may
   let a team use it. Sharing every login by default was rejected for these
   reasons.
 - A replaced login keeps its share setting while its kind stays the same. A
@@ -160,6 +168,11 @@ decision number names a decision of the change that adds the
 - The session record shows whether the login of its starter can be used,
   and whether the starter shares it. It holds no part of the login.
 - The runner never writes a login to disk.
+- On a ChatGPT turn, the rules of the signed-in ChatGPT workspace
+  apply to Codex (decisions 173 and 175).
+- Risk: hooks and MCP commands from those rules run in the sandbox of
+  the org. Its members trust that ChatGPT workspace admin with their code
+  and the credentials that the sandbox can reach.
 - Risk: while the starter shares the login, the other members of a session
   spend it. Anthropic's rules for hosted products ask each end user to sign
   in with their own credentials. So a shared Claude subscription stays a
@@ -200,6 +213,11 @@ decision number names a decision of the change that adds the
 - Claude reads the token from a file that only the sandbox user can read.
   Each process of the sandbox runs as that user, so it can read the file
   (gateway decision 11).
+- Codex reads its ChatGPT turn token from the login file of its session.
+  Only the sandbox user can read it. Processes of that user can copy it
+  while the turn runs (decision 175).
+- The email, account ID, and ChatGPT workspace name of the signed-in account also reach
+  the sandbox. A process or member with a terminal can read them.
 - Such a process or member can spend the login of the starter through the
   gateway while the turn runs. A copy of the token works in the same way
   outside the sandbox. A request that still runs at the end of the turn
@@ -226,8 +244,8 @@ decision number names a decision of the change that adds the
 ### A sandbox with a version pin of 1
 
 - The workspace of a sandbox with a version pin of 1 accepts an older
-  runner and a newer runner. An older runner gets the agent login itself
-  with each turn (gateway decision 2).
+  runner and a newer runner. An older runner gets a supported agent login
+  itself with each turn (gateway decision 2). It never gets a ChatGPT sign-in.
 - Reason: an older runner cannot use a turn token, and a sandbox keeps the
   runner of its org image. A refusal of each turn of an older runner was
   rejected, because each workspace with an older runner would then lose

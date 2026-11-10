@@ -91,38 +91,48 @@ decision number names a decision of the change that adds the
 
 - A user connects Claude with a subscription token from
   `claude setup-token`, or with an Anthropic API key (decisions 24 and 37).
-- A user connects Codex with a Codex access token from a ChatGPT Business
-  or Enterprise workspace, or with an OpenAI API key (decision 170).
-- The app offers no Sign in with ChatGPT, because OpenAI offers it only to
-  the partners that it admits.
-- The login file that `codex login` writes was rejected as a Codex login.
-  Reason: OpenAI sends hosted apps to the waitlist of Sign in with ChatGPT,
-  and it says not to share that file. The refresh token in that file works
-  only once. So after the first renewal in a sandbox, the copy that the app
-  stores stops working.
+- A user connects Codex with a device code sign-in to their ChatGPT plan,
+  or with an OpenAI API key (decision 175).
+- The account page starts the device code sign-in. It shows the code,
+  the OpenAI verification page, and the expiry. A code expires after 15 minutes.
+- The Worker alone holds the pending device state, encrypted for that
+  signed-in user. A poll reports waiting, connected, expired, or failed
+  with a cause. The Worker removes the pending secret when the flow ends.
+- The Worker stores the access token, refresh token, ID token, account ID,
+  and expiry encrypted as one login. No browser response returns them.
+- The real ChatGPT sign-in never enters a sandbox. A runner without its
+  support gets no credential, as [Isolation](isolation.md#agent-logins-in-a-sandbox) says.
+- Only the Worker renews this login. It renews before expiry and serializes
+  renewals for each login. It saves the rotated refresh token before
+  using the new access token. A refused renewal makes the login unusable
+  with a cause, until the user signs in again.
+- A copied login file was rejected. Its single-use refresh token would
+  compete with the member's own Codex for renewal.
+- Risk: OpenAI sends hosted apps to its Sign in with ChatGPT waitlist.
+  This device code flow uses the sign-in of the Codex program instead
+  (decision 175 changes decision 37). OpenAI can block this use.
 - Anthropic gave the operator permission to use `claude setup-token`
   tokens (decision 37).
 - Anthropic confirmed to the operator on 9 November 2026 that the
   [model gateway](model-gateway.md) can carry subscription tokens (gateway
   decision 1). OpenAI confirmed to the operator on the same day that the
   gateway can carry OpenAI API keys.
+- That OpenAI confirmation covers API keys only. It does not cover a
+  ChatGPT sign-in through the app.
 - Risk: Anthropic plans to make bare mode the default, and bare mode reads
   no subscription login. A later release of the agent program can then
   stop the tokens.
-- Risk: each Codex access token expires. It also stops working when
-  someone revokes it in ChatGPT, and while its owner has no local Codex
-  use. A turn that starts on such a token fails.
-- Risk: OpenAI meant access tokens for trusted scripts, schedulers, and
-  private CI runners. It warns that shared machines can expose a token to
-  people outside the ChatGPT workspace.
-- Risk: a personal access token acts as the person who made it. The
-  records of their ChatGPT workspace show each turn on the token as their
-  work. While they share the token, this includes the messages of other
-  members.
+- Risk: a revoked sign-in or a refused renewal stops later requests.
+  The member must sign in again. Sandbox code can still copy and spend
+  the turn token while its turn runs.
 - Risk: an admin of a ChatGPT workspace can enforce Codex settings, such as
-  the approval policy, the sandbox mode, and the allowed MCP servers. On a
-  token of that workspace, these settings can replace the settings that
-  the runner gives Codex.
+  the approval policy, the sandbox mode, hooks, and the allowed MCP servers. On a
+  sign-in to that workspace, these settings can replace the settings that
+  the runner gives Codex. Hooks and MCP commands run in the sandbox of
+  the org, with its access. A rule that moves Codex off the gateway fails
+  the turn (decision 173).
+- Risk: the email, account ID, and workspace name of the signed-in account reach
+  the sandbox. Its processes and members with terminal access can read them.
 - A sign-in inside a sandbox was rejected, because the login would stay on
   the disk of one workspace.
 - A user's agent logins serve all of that user's orgs (decision 21).

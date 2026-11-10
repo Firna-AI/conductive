@@ -25,15 +25,20 @@ removes it. Each request sends `EmptyRequest` and returns the current list.
 confirmations, and resend rules. Its comments state the delivery contract.
 `RunnerProtocolVersion` is 1 or 2. The Worker accepts both versions.
 The `welcome` repeats the version of the runner's `hello`.
+The optional `hello.loginKinds` declares the login kinds the runner can use.
+A version 2 runner without it has only legacy support.
+ChatGPT sign-in needs an explicit declaration. Version 1 cannot declare it usable.
 `RUNNER_PROTOCOL_VERSION` is 2. The packaged runner sends it, and
 each full image build records it.
 The credential of a turn belongs to the session starter, whoever sent the
 message:
 
 - `RunnerTurnV1` and `RunnerMessageDuringTurnV1` carry the real agent
-  login in `login`, with its agent, kind, and secret.
+  login in `login`, with its agent, kind, and secret. Their typed login
+  excludes Codex ChatGPT sign-in.
 - `RunnerTurnV2` carries a turn token in `credential`, with the agent and
-  the login kind. It has no `login`.
+  the login kind. A Codex ChatGPT credential also carries public account
+  claims for its temporary login file. It has no `login`.
 - `RunnerMessageDuringTurnV2` carries no credential and no login.
 
 `RunnerTurn`, `RunnerMessageDuringTurn`, `RunnerCommand`, and
@@ -42,6 +47,9 @@ shapes of one version. The runner imports the `V2` forms and uses
 a turn token.
 The [model gateway](../../worker/model-gateway/README.md#model-requests)
 gives the form of a turn token.
+
+`account.ts` defines the start and poll contracts of the Codex device code
+sign-in. Replies contain the public code and state, never the sign-in tokens.
 `RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
@@ -176,7 +184,7 @@ The git credential payload is not defined yet.
 
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
-- [Account contracts](account.ts) include the repository list available before an org exists. Both agents accept the kinds `token` and `api-key`. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `defaultAgentLoginNoReuse` gives the typed default for each agent and kind. The Worker and the dev backend use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
+- [Account contracts](account.ts) include the repository list available before an org exists. Stored login statuses keep `token` and `api-key` for both agents. A Codex save request accepts only `api-key`; ChatGPT uses the device flow. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `defaultAgentLoginNoReuse` gives the typed default for each stored agent and kind. The Worker and the dev backend use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.

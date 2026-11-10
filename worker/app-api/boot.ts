@@ -91,7 +91,8 @@ export async function bootRoute(
   const body = context.body
   if (
     body?.agent !== agent ||
-    (body.kind !== 'api-key' && body.kind !== 'token')
+    (body.kind !== 'api-key' && body.kind !== 'token') ||
+    (agent === 'codex' && body.kind === 'token')
   )
     return invalidInput()
   const kind: SaveAgentLoginRequest['kind'] = body.kind

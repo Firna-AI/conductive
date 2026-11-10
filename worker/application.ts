@@ -41,6 +41,8 @@ import { productionGitHubWebhook } from './github/composition'
 import { appFrameSources, runnerSoftware } from './configuration'
 import { appSiteResponse } from './marketing/assets'
 import { retryApprovalEmails } from './operator/approval-email'
+import { freshCodexLogin } from './codex-auth/renew'
+import { cleanupCodexDevices } from './codex-auth/device-store'
 import { warnWorker } from './warnings'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
@@ -142,6 +144,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             ...workspaceRuntime(gatewayEnv, dependencies),
             workspaceAllowed: (id) =>
               gatewayWorkspaceAllowed(gatewayEnv.DB, id),
+            codexLogin: (userId, failed) =>
+              freshCodexLogin(gatewayEnv, userId, dependencies, failed),
           })
           if (gatewayResponse) return respond(gatewayResponse)
           const runnerResponse = await routeRunner(request, env)
@@ -200,6 +204,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
   return {
     fetch: requestBodyEntry(application.fetch),
     async scheduled(_event: ScheduledController, env: AppEnv): Promise<void> {
+      await cleanupCodexDevices(env.DB, dependencies.now())
       await cleanupDeletedOrgs(
         env,
         dependencies,

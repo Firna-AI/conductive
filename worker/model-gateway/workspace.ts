@@ -125,7 +125,14 @@ export class WorkspaceTurnTokens {
       }
       if (!turnTokenMatchesKind(token, login.loginKind))
         return { ok: false, reason: 'turn_token_invalid' }
-      return { ok: true, login: await decryptGatewayLogin(this.env, login) }
+      return {
+        ok: true,
+        login: await decryptGatewayLogin(this.env, login),
+        ...(login.loginKind.agent === 'codex' &&
+        login.loginKind.kind === 'token'
+          ? { loginOwnerId: login.userId }
+          : {}),
+      }
     })
   }
 

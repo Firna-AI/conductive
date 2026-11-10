@@ -33,8 +33,21 @@ function parseCredential(value: unknown): RunnerTurnCredential {
       token,
     }
   }
-  if (input.agent === 'codex' && input.kind === 'api-key') {
-    return { agent: 'codex', kind: 'api-key', token }
+  if (input.agent === 'codex') {
+    const kind = oneOf(input.kind, ['token', 'api-key'])
+    if (kind === 'api-key') return { agent: 'codex', kind, token }
+    const account = object(input.account)
+    return {
+      agent: 'codex',
+      kind,
+      token,
+      account: {
+        accountId: string(account.accountId),
+        email: nullable(account.email),
+        planType: nullable(account.planType),
+        userId: nullable(account.userId),
+      },
+    }
   }
   throw new Error('The turn credential type is not supported.')
 }

@@ -4,10 +4,11 @@ import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
 import { readAccount } from '../../src/app/api/read-core'
 import { agentLoginContext, readAgentLogin } from '../chat/queries'
 import { CODEX, createChatFixture } from '../chat/harness.test-support'
-import { messageCommands } from '../chat/turn-lifecycle.test-support'
 import { decrypt, encrypt } from '../security/crypto'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { saveAccountLogin } from './account-data'
+import { connectCodexDevice, oauthTokens } from './codex-device.test-support'
+import { TEST_TIME } from '../test-support/harness'
 
 /** A token that a narrow window wrapped when the user copied it. */
 const WRAPPED = 'sk-ant-oat01-first part\n second part'
@@ -86,20 +87,16 @@ it('reads a token that an older save stored with spaces and line breaks', async 
   })
 })
 
-it('delivers a saved Codex token to its starter turn with its kind and normalized secret', async () => {
+it('keeps a ChatGPT sign-in out of an older runner and explains how to run the turn', async () => {
   const fixture = await createChatFixture(harness)
-  const saved = await harness.request(
-    agentLoginPath('codex'),
-    fixture.ownerCookie,
-    {
-      method: 'PUT',
-      body: JSON.stringify({
-        agent: 'codex',
-        kind: 'token',
-        secret: 'codex-access first\n second',
-      }),
-    },
-  )
+  const saved = await connectCodexDevice(harness, fixture.ownerCookie)
+  const secret = JSON.stringify({
+    accessToken: oauthTokens().access_token,
+    refreshToken: 'refresh-first',
+    idToken: oauthTokens().id_token,
+    accountId: 'chatgpt-account',
+    expiresAt: TEST_TIME + 3_600_000,
+  })
   expect(saved.status).toBe(200)
   const session = await fixture.createSession(CODEX)
   expect(session).toMatchObject({ loginAvailable: true, loginShared: false })
@@ -107,19 +104,38 @@ it('delivers a saved Codex token to its starter turn with its kind and normalize
   runner.emit({ type: 'runner.ready' })
   await fixture.drain()
   await fixture.send(session.id, 'codex-token', fixture.ownerCookie, CODEX)
-  expect(messageCommands(runner, 'codex-token')).toMatchObject([
+  expect(runner.commands).toEqual([])
+  expect(
+    (await fixture.history(session.id)).events
+      .map(({ event }) => event)
+      .filter((event) => event.type === 'turn.failed'),
+  ).toMatchObject([
     {
-      type: 'turn',
-      login: {
-        agent: 'codex',
-        kind: 'token',
-        secret: 'codex-accessfirstsecond',
+      type: 'turn.failed',
+      error: {
+        message:
+          'This cloud computer cannot run Codex with ChatGPT. Ask an admin to build the org image again. Then start a new workspace. You can also connect an OpenAI API key.',
       },
+      retryMessageId: 'codex-token',
+      durationMs: 0,
     },
   ])
   expect(await readAgentLogin(harness.env, fixture.owner.id, 'codex')).toEqual({
     agent: 'codex',
     kind: 'token',
-    secret: 'codex-accessfirstsecond',
+    secret,
   })
+  const oldCiphertext = await encrypt(
+    'old-pasted-access-token',
+    agentLoginContext(fixture.owner.id, 'codex'),
+    harness.env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  await harness.env.DB.prepare(
+    "UPDATE agent_logins SET ciphertext = ? WHERE user_id = ? AND agent = 'codex'",
+  )
+    .bind(oldCiphertext, fixture.owner.id)
+    .run()
+  expect(
+    await readAgentLogin(harness.env, fixture.owner.id, 'codex'),
+  ).toBeNull()
 })

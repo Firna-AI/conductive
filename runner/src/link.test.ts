@@ -57,9 +57,17 @@ it('retains numbered events across gaps, wrong confirms, reconnect, and restart'
   const store = await EventStore.open(storage)
   const link = new RunnerLink(store, options)
   await link.connect()
-  expect(endpoint.received[0]).toMatchObject({
+  expect(endpoint.received[0]).toEqual({
     type: 'hello',
     protocolVersion: 2,
+    workspaceId: 'workspace-1',
+    streamId: store.snapshot.streamId,
+    loginKinds: [
+      { agent: 'claude', kind: 'token' },
+      { agent: 'claude', kind: 'api-key' },
+      { agent: 'codex', kind: 'token' },
+      { agent: 'codex', kind: 'api-key' },
+    ],
   })
   await link.emit({ type: 'workspace.title', name: 'First' })
   await link.emit({ type: 'workspace.title', name: 'Second' })

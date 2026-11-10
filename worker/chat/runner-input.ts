@@ -1,6 +1,8 @@
 import {
+  RUNNER_SUPPORTED_LOGIN_KINDS,
   type RunnerEventEnvelope,
   type RunnerHello,
+  type RunnerLoginKind,
 } from '../../src/shared/runner'
 import { parseAgentEvent } from './agent-events'
 import { counter, identifier, invalidInput, number, record } from './inputs'
@@ -36,6 +38,9 @@ export function parseRunnerTransport(
       protocolVersion: input.protocolVersion,
       workspaceId: identifier(input.workspaceId),
       streamId: identifier(input.streamId),
+      ...(input.loginKinds === undefined
+        ? {}
+        : { loginKinds: parseLoginKinds(input.loginKinds) }),
     }
   }
   if (input.type === 'file.read.result' || input.type === 'file.diff.result') {
@@ -52,6 +57,17 @@ export function parseRunnerTransport(
     event: input.event,
     raw: value,
   }
+}
+
+function parseLoginKinds(value: unknown): readonly RunnerLoginKind[] {
+  if (!Array.isArray(value)) return invalidInput()
+  return value.flatMap((item) => {
+    const input = record(item)
+    const kind = RUNNER_SUPPORTED_LOGIN_KINDS.find(
+      (kind) => kind.agent === input.agent && kind.kind === input.kind,
+    )
+    return kind ? [kind] : []
+  })
 }
 
 export function parseRunnerEnvelope(

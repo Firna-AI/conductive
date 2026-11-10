@@ -55,8 +55,13 @@ const refusals = {
   ],
 } as const
 
-export function gatewayError(agent: Agent, code: GatewayRefusal): Response {
-  const [status, message] = refusals[code]
+export function gatewayError(
+  agent: Agent,
+  code: GatewayRefusal,
+  cause?: string,
+): Response {
+  const [status, defaultMessage] = refusals[code]
+  const message = cause ?? defaultMessage
   const type =
     status >= 500
       ? 'api_error'

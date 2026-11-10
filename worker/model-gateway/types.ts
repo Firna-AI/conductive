@@ -1,7 +1,7 @@
 import type { RunnerLogin } from '../../src/shared/runner'
 
 export type TurnTokenCheck =
-  | { ok: true; login: RunnerLogin }
+  | { ok: true; login: RunnerLogin; loginOwnerId?: string }
   | {
       ok: false
       reason:

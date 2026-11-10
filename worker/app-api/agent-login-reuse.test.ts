@@ -6,6 +6,7 @@ import {
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
+import { connectCodexDevice } from './codex-device.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -24,10 +25,12 @@ afterAll(async () => harness.dispose())
 it('reads a private Codex token and resets sharing only when its kind changes', async () => {
   const cookie = await harness.login()
   const save = (kind: 'token' | 'api-key', secret = 'codex-secret') =>
-    harness.request(agentLoginPath('codex'), cookie, {
-      method: 'PUT',
-      body: JSON.stringify({ agent: 'codex', kind, secret }),
-    })
+    kind === 'token'
+      ? connectCodexDevice(harness, cookie)
+      : harness.request(agentLoginPath('codex'), cookie, {
+          method: 'PUT',
+          body: JSON.stringify({ agent: 'codex', kind, secret }),
+        })
   const update = (noReuse: boolean) =>
     harness.request(agentLoginPath('codex'), cookie, {
       method: 'PATCH',

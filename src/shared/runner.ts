@@ -28,6 +28,7 @@ export interface RunnerHello {
   protocolVersion: RunnerProtocolVersion
   workspaceId: string
   streamId: string
+  loginKinds?: readonly RunnerLoginKind[]
 }
 
 /** Each stream numbers events from 1. Retries keep the same number and payload. */
@@ -91,11 +92,88 @@ interface RunnerResend {
 
 /** This type is server-only. The runner keeps the login in memory for this turn. */
 export type RunnerLoginKind =
-  | { agent: 'claude'; kind: 'token' | 'api-key' }
-  | { agent: 'codex'; kind: 'token' | 'api-key' }
+  | { agent: 'claude'; kind: 'token' }
+  | { agent: 'claude'; kind: 'api-key' }
+  | { agent: 'codex'; kind: 'token' }
+  | { agent: 'codex'; kind: 'api-key' }
+
+type RunnerLoginRules = {
+  [Login in RunnerLoginKind as `${Login['agent']}:${Login['kind']}`]: {
+    login: Login
+    versions: Record<RunnerProtocolVersion, boolean | 'advertised'>
+  }
+}
+
+const RUNNER_LOGIN_SUPPORT = {
+  'claude:token': {
+    login: { agent: 'claude', kind: 'token' },
+    versions: { 1: true, 2: true },
+  },
+  'claude:api-key': {
+    login: { agent: 'claude', kind: 'api-key' },
+    versions: { 1: true, 2: true },
+  },
+  'codex:token': {
+    login: { agent: 'codex', kind: 'token' },
+    versions: { 1: false, 2: 'advertised' },
+  },
+  'codex:api-key': {
+    login: { agent: 'codex', kind: 'api-key' },
+    versions: { 1: true, 2: true },
+  },
+} as const satisfies RunnerLoginRules
+
+export const RUNNER_SUPPORTED_LOGIN_KINDS: readonly RunnerLoginKind[] =
+  Object.values(RUNNER_LOGIN_SUPPORT).flatMap((rule) =>
+    rule.versions[RUNNER_PROTOCOL_VERSION] ? [rule.login] : [],
+  )
+
+export function runnerSupportsLogin(
+  protocolVersion: RunnerProtocolVersion,
+  login: RunnerLoginKind,
+  advertised?: readonly RunnerLoginKind[],
+): boolean {
+  const support = Object.values(RUNNER_LOGIN_SUPPORT).find(
+    (rule) =>
+      rule.login.agent === login.agent && rule.login.kind === login.kind,
+  )?.versions[protocolVersion]
+  if (support === false || support === undefined) return false
+  if (protocolVersion === 2 && advertised !== undefined)
+    return advertised.some(
+      (kind) => kind.agent === login.agent && kind.kind === login.kind,
+    )
+  return support === true
+}
+
+type RunnerLoginRule =
+  (typeof RUNNER_LOGIN_SUPPORT)[keyof typeof RUNNER_LOGIN_SUPPORT]
+export type RunnerLoginV1 = Extract<
+  RunnerLoginRule,
+  { versions: { 1: true } }
+>['login'] & { secret: string }
+
+export function isRunnerV1Login(login: RunnerLogin): login is RunnerLoginV1 {
+  return runnerSupportsLogin(1, login)
+}
 
 export type RunnerLogin = RunnerLoginKind & { secret: string }
-export type RunnerTurnCredential = RunnerLoginKind & { token: string }
+
+export interface RunnerCodexAccount {
+  accountId: string
+  email: string | null
+  planType: string | null
+  userId: string | null
+}
+
+export type RunnerTurnCredential =
+  | { agent: 'claude'; kind: 'token' | 'api-key'; token: string }
+  | { agent: 'codex'; kind: 'api-key'; token: string }
+  | {
+      agent: 'codex'
+      kind: 'token'
+      token: string
+      account: RunnerCodexAccount
+    }
 
 export interface RunnerAttachment {
   attachmentId: string
@@ -111,7 +189,7 @@ interface RunnerTurnV1 {
   message: UserMessage
   attachments: readonly RunnerAttachment[]
   /** The session starter owns this login, whoever sent the message. */
-  login: RunnerLogin
+  login: RunnerLoginV1
   credential?: never
 }
 
@@ -122,7 +200,7 @@ interface RunnerMessageDuringTurnV1 {
   turnId: string
   message: UserMessage
   attachments: readonly RunnerAttachment[]
-  login: RunnerLogin
+  login: RunnerLoginV1
   credential?: never
 }
 

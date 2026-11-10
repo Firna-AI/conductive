@@ -22,6 +22,7 @@ import { Repository } from './repository'
 import { SerialQueue } from './serial-queue'
 import { workspaceToolRuntime } from './providers/workspace-tools'
 import { clearClaudeCredentials } from './providers/claude-profile'
+import { clearCodexCredentials } from './providers/codex-credentials'
 import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
 
@@ -149,6 +150,7 @@ export class Runner {
   async connect(): Promise<void> {
     if (!this.warmed) {
       await clearClaudeCredentials(this.options.home)
+      await clearCodexCredentials(this.options.home)
       await this.options.warm()
       this.warmed = true
     }

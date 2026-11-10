@@ -7,6 +7,8 @@ import type {
   RunnerChangeModel,
   RunnerInterrupt,
   RunnerLogin,
+  RunnerLoginKind,
+  RunnerCommandV1,
   WorkspaceToRunnerV1,
   WorkspaceToRunnerV2,
   RunnerEventEnvelope,
@@ -92,6 +94,12 @@ export type PendingCommand =
   | RunnerInterrupt
   | RunnerChangeModel
 
+type DispatchCommand<Command> = Command extends { login: unknown }
+  ? Omit<Command, 'login'> & { login: RunnerLogin }
+  : Command
+
+export type RunnerDispatchCommand = DispatchCommand<RunnerCommandV1>
+
 export interface RunnerPeer {
   send(message: WorkspaceToRunnerV1 | WorkspaceToRunnerV2): void
   close(): void
@@ -102,6 +110,7 @@ export interface ActiveRunner {
   workspace: RunnerWorkspaceRecord
   streamId: string | null
   protocolVersion: RunnerProtocolVersion | null
+  loginKinds?: readonly RunnerLoginKind[]
   ready: boolean
   delivered: Set<string>
 }

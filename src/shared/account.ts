@@ -11,6 +11,7 @@ export const ACCOUNT_PATHS = {
   defaultModel: '/api/account/default-model',
   newWorkspaceView: '/api/account/new-workspace-view',
   agentLogins: '/api/account/agent-logins',
+  codexDevice: '/api/account/agent-logins/codex/device',
   githubInstallations: '/api/account/github-installations',
   githubRepositories: '/api/account/github-repositories',
   deleteAccount: '/api/account/delete',
@@ -23,13 +24,31 @@ export function agentLoginPath(agent: Agent): string {
   return `${ACCOUNT_PATHS.agentLogins}/${agent}`
 }
 
+export function codexDevicePath(handle: string): string {
+  return `${ACCOUNT_PATHS.codexDevice}/${encodeURIComponent(handle)}`
+}
+
+export interface StartCodexDeviceResponse {
+  handle: string
+  userCode: string
+  verificationUrl: string
+  expiresAt: Timestamp
+  pollIntervalMs: number
+}
+
+export type PollCodexDeviceResponse =
+  | { state: 'waiting'; pollIntervalMs: number }
+  | { state: 'connected'; login: AgentLoginStatus }
+  | { state: 'expired' }
+  | { state: 'failed'; cause: string }
+
 /** Secrets occur only in writes and runner commands, never in account responses. */
 export type SaveAgentLoginRequest =
   | { agent: 'claude'; kind: 'token' | 'api-key'; secret: string }
-  | { agent: 'codex'; kind: 'token' | 'api-key'; secret: string }
+  | { agent: 'codex'; kind: 'api-key'; secret: string }
 
 type AgentLoginKinds = {
-  [A in Agent]: Extract<SaveAgentLoginRequest, { agent: A }>['kind']
+  [A in Agent]: Extract<AgentLoginStatus, { agent: A; connected: true }>['kind']
 }
 
 const loginNoReuseDefaults: {
@@ -61,6 +80,7 @@ export type AgentLoginStatus =
       kind: 'token' | 'api-key'
       noReuse: boolean
       updatedAt: Timestamp
+      unusableCause?: string
     }
 
 export interface GitHubInstallation {

@@ -9,6 +9,8 @@ import {
 import { terminalEvent } from '../chat/turn-lifecycle.test-support'
 import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { requestBodyEntry } from '../http/request-body'
+import type { HttpFetch } from '../env'
+import { freshCodexLogin } from '../codex-auth/renew'
 import { FakeAnthropic } from '../test-support/fake-anthropic'
 import { FakeOpenAI } from '../test-support/fake-openai'
 import type { TestHarness } from '../test-support/harness'
@@ -32,6 +34,7 @@ export async function gatewayHttp(
   choice: AgentChoice = CLAUDE,
   kind: 'api-key' | 'token' = 'api-key',
   protocolVersion: RunnerProtocolVersion = 1,
+  upstream?: HttpFetch,
 ) {
   const turn = await runningGatewayTurn(harness, choice, {
     kind,
@@ -56,15 +59,24 @@ export async function gatewayHttp(
         now: clock.now,
         randomToken: () => 'unused',
         scheduleGatewayCheck: clock.schedule,
-        fetch: (request) =>
-          new URL(request.url).hostname === 'api.anthropic.com'
-            ? anthropic.fetch(request)
-            : openai.fetch(request),
+        fetch:
+          upstream ??
+          ((request) =>
+            new URL(request.url).hostname === 'api.anthropic.com'
+              ? anthropic.fetch(request)
+              : openai.fetch(request)),
       },
       workspaceAllowed(id) {
         workspaceLookups.push(id)
         return gatewayWorkspaceAllowed(fixture.env.DB, id)
       },
+      codexLogin: (userId, failed) =>
+        freshCodexLogin(
+          fixture.env,
+          userId,
+          { now: clock.now, fetch: upstream ?? openai.fetch },
+          failed,
+        ),
       workspace(id) {
         workspaceCalls.push(id)
         return endpoint

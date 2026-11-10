@@ -75,7 +75,8 @@ export const termsDocument: LegalDocument = {
             can hold your messages, files, and code. ${productName} adds the
             login, and sends each request on to Anthropic or OpenAI. An older
             cloud computer starts from an earlier org image. ${productName}
-            still permits older software there that receives the login itself.
+            still permits older software there that receives supported agent
+            logins themselves. A ChatGPT sign-in is never sent there.
             With that older software, the agents send their model requests to
             Anthropic or OpenAI from the cloud computer. Installing newer
             software in that cloud computer does not remove this risk. A new

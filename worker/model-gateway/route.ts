@@ -1,5 +1,9 @@
 import type { AppDependencies } from '../env'
+import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import { scheduleConnectionCheck } from '../security/connection-access'
+import type { CodexTokens } from '../codex-auth/tokens'
+import { codexGatewayAuth } from './codex-auth'
+import { codexTokenUpstream } from './codex-upstream'
 import { gatewayError, GatewayRequestError } from './errors'
 import { downstreamHeaders, hasClaudeMarkers, upstreamHeaders } from './headers'
 import { allowedModelRoute, gatewayPath } from './paths'
@@ -13,6 +17,7 @@ export interface GatewayRuntime {
   dependencies: AppDependencies
   workspaceAllowed(id: string): Promise<boolean>
   workspace(id: string): TurnTokenEndpoint
+  codexLogin?(userId: string, failedAccessToken?: string): Promise<CodexTokens>
 }
 
 export async function routeModelGateway(
@@ -51,12 +56,19 @@ export async function routeModelGateway(
     })
     let failure: 'model_gateway_unavailable' | 'model_upstream_unavailable' =
       'model_gateway_unavailable'
+    let chatgpt = false
     try {
-      const { login } = await lifetime.start()
+      const { login, loginOwnerId } = await lifetime.start()
+      chatgpt = login.agent === 'codex' && login.kind === 'token'
       if (login.agent !== agent)
         throw new GatewayRequestError(
           'agent_mismatch',
           'Use the model route for this turn.',
+        )
+      if (!allowedModelRoute(agent, request.method, suffix, login.kind))
+        throw new GatewayRequestError(
+          'model_route_not_found',
+          'The model route is not available.',
         )
       if (
         token !==
@@ -69,6 +81,25 @@ export async function routeModelGateway(
           'The turn token is not valid.',
         )
       failure = 'model_upstream_unavailable'
+      const auth =
+        agent === 'codex' && login.kind === 'token'
+          ? await codexGatewayAuth(async (failed) => {
+              if (!runtime.codexLogin || !loginOwnerId)
+                throw new GatewayRequestError(
+                  'agent_login_unavailable',
+                  chatGptSignInCopy.causes.notRenewed,
+                )
+              const fresh = await lifetime.wait(
+                runtime.codexLogin(loginOwnerId, failed),
+              )
+              const checked = await lifetime.wait(
+                endpoint.checkTurnToken(token),
+              )
+              if (!checked.ok)
+                throw new GatewayRequestError(checked.reason, 'The turn ended.')
+              return fresh
+            })
+          : null
       const origin =
         agent === 'claude'
           ? 'https://api.anthropic.com'
@@ -81,21 +112,39 @@ export async function routeModelGateway(
         redirect: 'manual' as const,
         signal: lifetime.signal,
       }
-      const upstream = await lifetime.wait(
-        runtime.dependencies
-          .fetch(new Request(`${origin}${suffix}${url.search}`, init))
-          .then((response) => lifetime.received(response)),
-      )
+      const upstream = auth
+        ? await codexTokenUpstream(
+            request,
+            suffix,
+            login,
+            lifetime,
+            runtime.dependencies.fetch,
+            auth,
+          )
+        : await lifetime.wait(
+            runtime.dependencies
+              .fetch(new Request(`${origin}${suffix}${url.search}`, init))
+              .then((response) => lifetime.received(response)),
+          )
       await lifetime.wait(lifetime.upload.finish())
       lifetime.signal.throwIfAborted()
-      const headers = downstreamHeaders(upstream.headers, login.secret)
+      let headers = downstreamHeaders(
+        upstream.headers,
+        login.secret,
+        agent === 'codex' && login.kind === 'token',
+      )
+      for (const secret of auth?.secrets ?? [])
+        headers = downstreamHeaders(headers, secret, true)
       if (!upstream.body) {
         lifetime.complete()
         return new Response(null, { status: upstream.status, headers })
       }
-      const body = upstream.ok
+      let body = upstream.ok
         ? upstream.body
         : redactErrorBody(upstream.body, login.secret)
+      if (!upstream.ok)
+        for (const secret of auth?.secrets ?? [])
+          body = redactErrorBody(body, secret)
       return new Response(gatewayStream(body, lifetime), {
         status: upstream.status,
         headers,
@@ -105,6 +154,11 @@ export async function routeModelGateway(
       return gatewayError(
         agent,
         error instanceof GatewayRequestError ? error.code : failure,
+        chatgpt &&
+          error instanceof GatewayRequestError &&
+          error.code === 'agent_login_unavailable'
+          ? chatGptSignInCopy.causes.notRenewed
+          : undefined,
       )
     }
   } catch {

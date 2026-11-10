@@ -1,8 +1,5 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
-import type {
-  RunnerTurn,
-  RunnerMessageDuringTurn,
-} from '../../src/shared/runner'
+import type { RunnerTurn } from '../../src/shared/runner'
 import { HttpError } from '../http'
 import { attachmentCopyKey } from './attachment-record'
 import { commandDispatchState, type DispatchState } from './ordered-dispatch'
@@ -10,7 +7,7 @@ import type { ChatStore } from './store'
 import { TurnCompletion } from './turn-completion'
 import type { ActiveRunner, ChatDependencies, PendingCommand } from './types'
 
-type MessageCommand = RunnerTurn | RunnerMessageDuringTurn
+type MessageCommand = Pick<RunnerTurn, 'message' | 'attachments'>
 interface Preparation {
   runner: ActiveRunner
   isCurrent: () => boolean

@@ -6,6 +6,7 @@ import { API_PATHS } from '../../src/shared/api'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { readAccount } from '../../src/app/api/read-core'
 import { readAgentLogin } from '../chat/queries'
+import { connectCodexDevice } from './codex-device.test-support'
 import {
   createHarness,
   TEST_TIME,
@@ -210,11 +211,8 @@ it('keeps account data and Get started isolated from other users and deleted org
     secret: 'other-claude-key',
   })
   await expectBoth(firstSaved, otherConnected)
-  await putAccountValue(harness, other, agentLoginPath('codex'), {
-    agent: 'codex',
-    kind: 'token',
-    secret: 'other-codex-token',
-  })
+  const codexConnected = await connectCodexDevice(harness, other)
+  expect(codexConnected.status).toBe(200)
   await expectBoth(firstSaved, otherSaved)
   await putAccountValue(harness, other, ACCOUNT_PATHS.defaultModel, { choice })
   await expectBoth(firstSaved, otherSaved)

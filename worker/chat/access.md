@@ -63,7 +63,9 @@ The Durable Object runs the gates itself.
   `matchesObject` refuses, because `WORKSPACES.idFromName` names another
   object.
 - Both agents accept the login kinds `token` and `api-key`. A `token` is a
-  Claude subscription token or a Codex access token.
+  Claude subscription token or a Codex ChatGPT sign-in.
+- The runner's declared login kinds and the shared protocol rule also
+  govern delivery. An older runner gets no ChatGPT sign-in command.
 - Every login lookup goes through `SessionLogins`. Its credential path uses
   `readLogin` in `login-access.ts`, the only caller of `resolveLogin`. It
   reads the agent login of a starter or of a linked-session member, for one
@@ -78,7 +80,7 @@ The Durable Object runs the gates itself.
   empty linked session, and queued member commands cannot receive the
   starter's login while the starter does not share it.
 - Its metadata path, `readLoginMetadata`, reads only the membership, the
-  suspension, the stored login kind, and the share setting of each starter,
+  suspension, the stored login kind, its failure state, and the share setting of each starter,
   in one D1 query. It returns a map of `SessionLoginMetadata` by session
   ID. A valid login gives `loginAvailable: true`, and `loginShared` is true
   when `no_reuse` is 0. A missing or invalid login gives false for both.

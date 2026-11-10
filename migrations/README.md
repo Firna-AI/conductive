@@ -119,6 +119,11 @@ page gives the readers and the rules of these records.
 `202611100000_codex_access_token.sql` rebuilds `agent_logins` to accept a Codex access token with the kind `token`.
 It keeps every row, column, and other rule, including `no_reuse`, the primary key, and the user deletion cascade.
 
+`202611100001_codex_chatgpt_login.sql` adds the refresh claim and safe failure cause to `agent_logins`.
+It preserves the encrypted secret and its login timestamps.
+It adds `codex_devices` for encrypted, account-owned device authorizations and their safe terminal results.
+Its expiry index serves scheduled cleanup. User deletion removes these records through the user foreign key.
+
 `202611100900_computer_ledger.sql` adds the retained computer ledger. Each
 entry names its computer by the provider account and the sandbox ID
 together, so equal IDs in two accounts stay two entries.
@@ -178,7 +183,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Workspace link chips | `202611091200`–`202611091259` |
 | Chat attachment metadata | `202611081800`–`202611081859` |
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
-| Codex access tokens | `202611100000`–`202611100059` |
+| Codex logins | `202611100000`–`202611100059` |
 | Computer ledger account merge | `202611100900`–`202611100959` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |

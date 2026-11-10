@@ -8,8 +8,11 @@ An unknown or unavailable workspace gets `turn_token_invalid` without a Durable 
 The gateway calls `checkTurnToken` through the trusted workspace runtime before each upstream request.
 It replaces the token with the starter's real login.
 Runner delivery gives a token in each `turn` command to a runner of protocol version 2.
-A runner of protocol version 1 still gets the real login.
+A runner of protocol version 1 gets only the real login kinds it supports.
+It never gets a ChatGPT sign-in.
 The packaged runner and new full image builds use version 2.
+The runner also declares its login kinds in `hello.loginKinds`.
+A version 2 runner without ChatGPT support gets no ChatGPT turn credential.
 The [model gateway protocol](../../docs/protocol/model-gateway.md) states the requirements.
 
 ## Model requests
@@ -18,7 +21,10 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 | --- | --- | --- |
 | `/v1/model/claude` | `POST /v1/messages`, `POST /v1/messages/count_tokens` | `https://api.anthropic.com` |
 | `/v1/model/codex` | `POST /responses` | `https://api.openai.com/v1` |
+| `/v1/model/codex`, ChatGPT sign-in only | `GET /backend-api/wham/config/bundle`, `GET /backend-api/wham/accounts/check`, `GET /backend-api/codex/models` | `https://chatgpt.com` |
+| `/v1/model/codex`, ChatGPT sign-in only | `POST /backend-api/codex/responses` | The workspace's HTTPS backend origin, or `https://chatgpt.com` |
 
+The `/responses` suffix is for an OpenAI API key only.
 The gateway preserves the query and the request body.
 It refuses every other suffix and method locally, including the connection probe and model discovery.
 
@@ -32,8 +38,9 @@ A request that lacks either marker gets HTTP 403 with `model_client_not_allowed`
 It gets no D1 workspace check, no turn check, and no upstream call.
 The Codex route has no marker check.
 
-A turn token starts with the prefix of a real login of its kind.
-So an agent program can use its normal login mode, and send the token in the header of that mode.
+A Claude or API-key turn token keeps its native prefix.
+A ChatGPT turn token is an opaque `sk-gt1` token that Codex reads from its login file.
+Each agent sends the token in the header of its login mode.
 Claude can also read the token from its [profile](../../docs/protocol/model-gateway.md#how-the-agents-reach-the-gateway).
 In profile mode, Claude sends each token as a bearer token, also for an API key.
 
@@ -42,6 +49,7 @@ In profile mode, Claude sends each token as a bearer token, also for an API key.
 | Claude API key | `sk-ant-api-` | `x-api-key` or `Authorization: Bearer` | `x-api-key` |
 | Claude subscription token | `sk-ant-oat01-` | `Authorization: Bearer` | `Authorization: Bearer` |
 | OpenAI API key | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
+| Codex ChatGPT sign-in | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 
 The signature covers the prefix.
 A token whose prefix does not match the login kind of its turn gets `turn_token_invalid`.
@@ -56,7 +64,7 @@ That body uses a `cache_control` scope of `global` and a top-level `diagnostics`
 Do not remove them to match the normal API-key mode of Claude.
 The other login kinds keep `anthropic-beta` unchanged.
 
-The Codex upload reader checks for one valid JSON object as bytes arrive.
+The Codex model upload reader checks for one valid JSON object as bytes arrive.
 It checks each top-level `background` key after JSON string unescaping, including repeated keys.
 That field must be absent or hold the literal `false`.
 Nested keys pass unchanged.
@@ -69,11 +77,43 @@ Request headers use fixed names and the `anthropic-*`, `x-claude-code-*`, and `x
 The fixed names include content metadata and the Codex session and turn headers.
 Transport framing stays with fetch, so the client `Content-Length` does not pass.
 The gateway removes incoming authentication, cookies, proxy metadata, private application headers, and connection-nominated headers.
+For a ChatGPT sign-in, it also replaces `chatgpt-account-id` with the
+stored account ID. The request cannot choose another account.
 Response headers use the content type, retry, request ID, and provider rate-limit rules.
 No provider cookie passes.
 Allowed response header values redact the real login.
 Error bodies redact both plain and JSON-escaped login bytes across chunk boundaries.
 Success body chunks pass directly, with no text decoding or copy.
+
+For a ChatGPT sign-in, the fixed request names also include
+`chatgpt-account-id`, `version`, `x-codex-routing-hint`,
+`x-codex-turn-state`, and `x-openai-subagent`.
+This kind accepts none of the Anthropic, Claude, or Stainless name patterns.
+Its response list also includes `etag`, `x-models-etag`, `x-codex-turn-state`,
+`x-reasoning-included`, `openai-model`, and the two Codex safety buffering headers.
+The gateway refuses WebSocket upgrades, so Codex falls back to HTTP streaming.
+The runner disables zstd request compression for this kind.
+
+The account-check response keeps the account metadata.
+It replaces each account's backend origin and routing override with `NO_CONSTRAINT`.
+The pinned Codex then keeps the gateway origin and the paths of its settings.
+Before each token model request, the Worker reads the account check itself.
+It selects exactly one entry for the request's account ID.
+It accepts `NO_CONSTRAINT`, `us`, or `us_cr` as the override.
+A backend is `NO_CONSTRAINT` or an HTTPS origin with no credentials, path, query, or fragment.
+The Worker adds `x-openai-account-routing-override` for `us` and `us_cr`.
+The client cannot supply this header.
+Failed or invalid account discovery sends no model request.
+The same request lease covers discovery, upload, and the streamed answer.
+The Worker reads a fresh ChatGPT login before forwarding a request.
+It renews before expiry through [Codex authentication](../codex-auth/README.md).
+An OpenAI 401 triggers one renewal and one replay of that request.
+The replay uses the stored rotated credential and the same body bytes.
+The request keeps one in-memory replay branch until that first answer.
+A failed renewal or another 401 returns `agent_login_unavailable` with HTTP 403.
+Codex then cannot start its own placeholder refresh through 401 recovery.
+Both used access tokens, and the other stored tokens, redact from allowed
+response headers and error bodies.
 
 The upload reads through the entry's 100,000,000-byte budget.
 The Codex scanner retains no body, key, or value text between chunks.
@@ -107,6 +147,9 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [route.ts](route.ts): `routeModelGateway` selects a route, checks the Claude markers, checks its turn, replaces authentication, and forwards one request.
 - [workspace-access.ts](workspace-access.ts): `gatewayWorkspaceAllowed` checks the workspace and resource predicates in D1 before object access.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
+- [codex-upstream.ts](codex-upstream.ts): ChatGPT metadata forwarding and model routing in the Worker.
+- [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, and the redaction set for the request.
+- [codex-routing.ts](codex-routing.ts): account selection, backend validation, and the routing-free account reply.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
   `hasClaudeMarkers` checks the markers of the `claude` program.
   For a Claude API key, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.
@@ -147,6 +190,8 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
+- [codex-token.test.ts](codex-token.test.ts): ChatGPT metadata, Worker routing, header filtering, route refusals, and failed discovery.
+- [codex-renew.test.ts](codex-renew.test.ts): one 401 replay, rotated-token redaction, and terminal login failure.
 - [codex-stream.test.ts](codex-stream.test.ts): a 100,000,000-byte object, the shared 413, and refusal after an early answer.
 - [claude-client.test.ts](claude-client.test.ts): missing and partial Claude markers, refused before workspace access, a turn check, or an upstream call.
 - [claude-profile.test.ts](claude-profile.test.ts): bearer profile requests for both Claude login kinds, the upstream login header, the `anthropic-beta` result, unchanged body bytes, and a changed prefix.

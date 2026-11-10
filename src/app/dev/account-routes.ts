@@ -1,12 +1,15 @@
 import {
   ACCOUNT_PATHS,
   agentLoginPath,
+  codexDevicePath,
   defaultAgentLoginNoReuse,
   type AccountResponse,
   type AgentLoginStatus,
   type GitHubInstallationsResponse,
   type SaveAgentLoginResponse,
   type SaveAgentLoginRequest,
+  type StartCodexDeviceResponse,
+  type PollCodexDeviceResponse,
   type SetDefaultModelResponse,
   type SetNewWorkspaceViewResponse,
   type UpdateAgentLoginResponse,
@@ -20,7 +23,7 @@ import { coreFixtures } from '../../test-support/fixtures/core'
 import { choice, flag, nested, record } from '../api/parse'
 import { AGENTS, readChoice, readNewWorkspaceView } from '../api/read-core'
 import type { DevBackend } from './backend'
-import { json, noContent, requiredText, type Route } from './router'
+import { json, noContent, requiredText, RouteError, type Route } from './router'
 import { completeStep } from './state'
 
 /** The saved status of one agent login of the account. */
@@ -70,6 +73,13 @@ function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
   const updatedAt = backend.now()
   const saved = savedLogin(backend, agent)
   const kind = choice(fields, 'kind', ['token', 'api-key'])
+  if (agent === 'codex' && kind === 'token') {
+    throw new RouteError(
+      400,
+      'invalid_input',
+      'Start the ChatGPT sign-in to connect Codex.',
+    )
+  }
   const noReuse = noReuseOf(saved, kind)
   const login: AgentLoginStatus = {
     agent,
@@ -133,7 +143,60 @@ function loginRoutes(backend: DevBackend, agent: Agent): Route[] {
  */
 export function accountRoutes(backend: DevBackend): Route[] {
   const { state } = backend
+  const devices = new Map<
+    string,
+    { expiresAt: number; waiting: boolean; login?: AgentLoginStatus }
+  >()
+  let deviceSequence = 0
   return [
+    {
+      method: 'POST',
+      path: ACCOUNT_PATHS.codexDevice,
+      answer: () => {
+        const handle = `dev-codex-${++deviceSequence}`
+        const expiresAt = backend.now() + 900_000
+        devices.set(handle, { expiresAt, waiting: true })
+        return json({
+          handle,
+          userCode: 'WXYZ-1234',
+          verificationUrl: 'https://auth.openai.com/codex/device',
+          expiresAt,
+          pollIntervalMs: 5000,
+        } satisfies StartCodexDeviceResponse)
+      },
+    },
+    {
+      method: 'POST',
+      path: codexDevicePath(':handle'),
+      answer: ({ params }) => {
+        const device = devices.get(params.handle)
+        if (!device)
+          throw new RouteError(
+            404,
+            'codex_device_not_found',
+            'The ChatGPT sign-in is not available.',
+          )
+        let result: PollCodexDeviceResponse
+        if (device.expiresAt <= backend.now()) result = { state: 'expired' }
+        else if (device.waiting) {
+          device.waiting = false
+          result = { state: 'waiting', pollIntervalMs: 5000 }
+        } else {
+          const login: AgentLoginStatus = device.login ?? {
+            agent: 'codex',
+            connected: true,
+            kind: 'token',
+            noReuse: noReuseOf(savedLogin(backend, 'codex'), 'token'),
+            updatedAt: backend.now(),
+          }
+          device.login = login
+          putLogin(backend, login)
+          completeStep(state, 'agent-login')
+          result = { state: 'connected', login }
+        }
+        return json(result)
+      },
+    },
     {
       method: 'GET',
       path: ACCOUNT_PATHS.account,

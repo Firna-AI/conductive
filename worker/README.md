@@ -44,6 +44,8 @@ On the app hostname, the Worker serves these API routes:
 - The session, sign-out, the org list, a new org, and one org.
 - The waitlist state and code use, through the [waitlist backend](waitlist/README.md).
 - The account, its default model, its agent logins, the model list, and Get started.
+- The start and poll of a Codex ChatGPT device code sign-in, through
+  [Codex authentication](codex-auth/README.md).
 - The sections, the repositories, the members, and the workspace list of an org.
 - Leave org, under the existing last-active-admin rule.
 - The create, read, resume, and activity routes of a workspace.
@@ -87,7 +89,9 @@ These handlers use their own machine credentials and skip the browser gate.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
 It adds the starter's login to allowed Anthropic and OpenAI requests.
 Its request upload and model answer both stream.
-The chat backend gives a turn token to a runner of protocol version 2, and the real login to a runner of version 1.
+The chat backend checks the login kinds of the runner before delivery.
+Version 2 gets a turn token. Version 1 gets only supported real logins.
+ChatGPT sign-in requires declared support and never goes to a version 1 runner.
 The [tools composition](tools/composition.ts) reads the active stored turn.
 It keeps the inherited owner separate from the sender of the first message.
 
@@ -95,6 +99,7 @@ The preview domain forwards each private preview to its workspace object.
 Its authorizer redeems the one-use viewer grant before any sandbox request.
 The object owns preview expiry and revocation beside its other alarm sources.
 A Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
+It also removes expired Codex device sign-in records.
 It also retries pending approval emails until delivery or 24 hours from
 approval. [Approval delivery](operator/README.md#approval-email-delivery)
 describes the saved messages and delivery keys.
@@ -130,6 +135,8 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
+- [codex-auth/README.md](codex-auth/README.md) owns device authorization,
+  encrypted ChatGPT sign-ins, and serialized refresh-token renewal.
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.

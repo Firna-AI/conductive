@@ -4,6 +4,10 @@ The [agent runner](README.md) registers two stdio MCP servers for each
 agent process. The [agent-tool requirements](../docs/protocol/agent-tools.md)
 define their behavior.
 
+For a Codex ChatGPT turn, the rules of its ChatGPT workspace can limit
+these servers or add managed MCP commands. Codex applies those rules in
+the org's sandbox, as [Codex logins](codex-logins.md#chatgpt-sign-in) says.
+
 ## Computer tools
 
 Both agents get the `computer` MCP server of the sandbox. Boat writes its

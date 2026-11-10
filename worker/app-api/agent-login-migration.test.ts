@@ -48,6 +48,9 @@ it('keeps existing logins and accepts Codex tokens after the table rebuild', asy
         created_at: 11,
         updated_at: 12,
         no_reuse: 0,
+        refresh_claim: null,
+        refresh_claim_until: null,
+        failure_cause: null,
       },
       {
         user_id: 'owner',
@@ -57,6 +60,9 @@ it('keeps existing logins and accepts Codex tokens after the table rebuild', asy
         created_at: 21,
         updated_at: 22,
         no_reuse: 1,
+        refresh_claim: null,
+        refresh_claim_until: null,
+        failure_cause: null,
       },
     ])
     await expect(codexToken()).resolves.toMatchObject({ success: true })

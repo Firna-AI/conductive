@@ -12,10 +12,10 @@ const codeMinutes = 15
 
 /**
  * The words of the ChatGPT sign-in of Codex on the Account page: the steps
- * in the Connect form, the note under the share switch of a ChatGPT plan,
- * and the row of a sign-in that stopped working. This module imports no
- * fixture, so the app and the Worker can import the same words. The
- * sign-in has no secret field, so it has no hint that the app tests it.
+ * in the Connect form, and the row of a sign-in that stopped working. This
+ * module imports no fixture, so the app and the Worker can import the same
+ * words. The sign-in has no secret field, so it has no hint that the app
+ * tests it.
  */
 export const chatGptSignInCopy = {
   intro:
@@ -30,7 +30,6 @@ export const chatGptSignInCopy = {
   waiting: 'Waiting for you to sign in',
   expired: 'The code expired.',
   newCode: 'Get a new code',
-  /** The note under the share switch of a ChatGPT plan (decision 175). */
   /** The state of a login that the app can no longer use. */
   signedOut: 'Signed out',
   signInAgain: 'Sign in again',
