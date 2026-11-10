@@ -9,9 +9,9 @@ const flow = ['user-flows/archive-from-list']
 export const workspaceMenuArchive = defineScreen({
   title: 'Archive from the list',
   description:
-    'Archive in the menu of Apple Pay button checks its cloud computer for work that is not on GitHub, then asks first, with the question of Archive: a changed file that is not committed, and two commits that are not pushed. Cancel leaves the workspace as it was. Archive anyway deletes the cloud computer and keeps the chat. The workspace does not open, and the list stays where it was. On a phone the question is a sheet.',
+    'Archive in the menu of Apple Pay button archived it at once, with no check and no question. Its row left Checkout for the Archived group at the end of the list, which stays collapsed, with its count, because the workspace did not open. A toast names the workspace and offers Restore. The list stays where it was. On a phone the toast spans the bottom of the screen.',
   rationale:
-    'The menu reuses Archive with its check and its question, from decision 16, as app/archive shows. Only the owner and the admins see Archive, from decision 42. The question opens over the page that shows the list, so the menu archives a workspace without opening it, as Archive on its row does. For the open workspace, the menu opens the same question as the other ways to archive it, so one action asks one question.',
+    'The menu runs the same Archive as the row and the pull request bar, from decision 1 of PR #138: it stops the cloud computer and keeps it for 14 days, so the toast can offer Restore. Only the owner and the admins see Archive, from decision 42. The workspace does not open, so Archive from the list starts no cloud computer. The menu keeps its four actions, and Restore stays on the row, the bar, the toast, and the palette.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
   props: { list: 'workspaces', menu: 'workspace-archive', palette: 'closed' },
@@ -21,20 +21,20 @@ export const workspaceMenuArchive = defineScreen({
   ),
   variants: [
     {
-      slug: 'check-failed',
-      title: 'Check did not finish',
+      slug: 'stopped',
+      title: 'A stopped workspace',
       description:
-        'Archive in the menu of Checkout address autocomplete, whose cloud computer is stopped. The stopped cloud computer refused the command that checks the work, so the question says that the check did not finish, with the message of the server. It offers no Archive. Try again runs the check again, and Cancel leaves the workspace as it was.',
+        'Archive in the menu of Checkout address autocomplete, whose cloud computer is stopped, archives it at once too. Its row moves to the collapsed Archived group, and the toast offers Restore. Archive starts no cloud computer.',
       rationale:
-        'Archive never deletes a cloud computer without its check. The app keeps the question of a failed check and the advice of the server, and it does not start the cloud computer by itself.',
-      props: { menu: 'workspace-check-failed' },
+        'Archive runs no check, so it needs no running cloud computer. A workspace that stopped after 30 idle minutes archives as any other.',
+      props: { menu: 'workspace-archive-stopped' },
     },
     {
-      slug: 'archived',
-      title: 'Archived from the list',
+      slug: 'restored',
+      title: 'Restored from the toast',
       description:
-        'Archive anyway took Apple Pay button from Checkout to the Archived group at the end of the list. The group stays collapsed, with its count, because the workspace did not open. The list stays where it was.',
-      props: { menu: 'workspace-archived' },
+        'Restore in the toast put Apple Pay button back in Checkout, at its place, with its files and sessions. Archive stopped its cloud computer, so the row shows it stopped. The workspace does not open, and the list stays where it was. Opening the workspace resumes its cloud computer.',
+      props: { menu: 'workspace-restored' },
       useCasePaths: flow,
     },
   ],

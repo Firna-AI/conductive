@@ -1,5 +1,6 @@
 import type { ChatItem } from './conversations'
 import { changedFiles } from './files'
+import { bullets } from './listConversations'
 import { safariTest } from './mac'
 
 /**
@@ -65,11 +66,11 @@ function steeredTurn(chats: {
       id: 'done',
       blocks: [
         'Done. Checkout suggests addresses as you type, and each lookup waits 250 ms after the last key press.',
-      ],
-      bullets: [
-        'Choosing a suggestion fills the street, city, and postcode.',
-        'Manual entry still works when there is no match.',
-        'Opened pull request #482.',
+        bullets(
+          'Choosing a suggestion fills the street, city, and postcode.',
+          'Manual entry still works when there is no match.',
+          'Opened pull request #482.',
+        ),
       ],
     },
     {

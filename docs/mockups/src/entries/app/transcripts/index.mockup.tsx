@@ -8,7 +8,7 @@ import {
 export const transcripts = defineScreen({
   title: 'Copy a transcript',
   description:
-    'Transcript copied. Cal opened the menu of the Address autocomplete tab, which does not show, and chose Copy full transcript. The menu closed, and a toast at the bottom right says "Transcript copied". The clipboard holds the session as Markdown, with every fold open. Untitled, the new session, stays the shown tab, so the chat in view does not change. On a phone, the menu was a sheet, and the toast shows at the same corner of the screen.',
+    'Transcript copied. Cal opened the menu of the Address autocomplete tab, which does not show, and chose Copy full transcript. The menu closed, and a toast at the bottom right says "Transcript copied". The clipboard holds the session as Markdown, with every fold open. Untitled, the new session, stays the shown tab, so the chat in view does not change. On a phone, the menu was a sheet, and the toast spans the bottom of the screen.',
   rationale:
     'The user chose option B of decision 213 on 9 November 2026: the server builds the Markdown from the stored events of the session, so a tab that never showed copies its whole session too. The user chose option B of decision 215 on the same day: Copy concise transcript copies the chat as it shows at first, with each fold closed, and Copy full transcript copies it with every fold open. A design call of the same day keeps the shown tab, as Rename session does, because Conductor fixed a copy that switched to the tab of the menu. The menu closes on the press, so a toast gives the result, in the words of Copy link. It is the toast of the app, at the place of its other toasts.',
   relatedDocs: ['docs/protocol/session-transcripts.md'],

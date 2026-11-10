@@ -5,6 +5,8 @@ import type {
   ChatItem,
   MessageTable,
 } from '../../fixtures/conversations'
+import type { MessageList } from '../../fixtures/listConversations'
+import { classes } from '../common/classes'
 import { AgentBlocks } from './AgentBlocks'
 import { MessageText } from './MessageText'
 import styles from './ToolGroup.module.css'
@@ -12,16 +14,15 @@ import styles from './ToolGroup.module.css'
 type AgentItem = Extract<ChatItem, { kind: 'agent' }>
 
 /**
- * The paragraphs before the first table of a message, and the blocks from
- * that table on. A message without a table has no rest.
+ * The blocks before the first table of a message, and the blocks from that
+ * table on. A message without a table has no rest.
  */
 function splitAtTable(blocks: readonly AgentBlock[]) {
-  const table = blocks.findIndex((block) => typeof block !== 'string')
+  const table = blocks.findIndex(
+    (block) => typeof block !== 'string' && block.kind === 'table',
+  )
   const end = table < 0 ? blocks.length : table
-  return {
-    lead: blocks.slice(0, end).filter((block) => typeof block === 'string'),
-    rest: blocks.slice(end),
-  }
+  return { lead: blocks.slice(0, end), rest: blocks.slice(end) }
 }
 
 /** The cells of a table as text, row by row, with a dot between two cells. */
@@ -36,37 +37,59 @@ function TableText(props: { table: MessageTable }) {
 }
 
 /**
- * The rest of a message with a table, as text in the closed line: each
- * block, then each bullet, with a space between them.
+ * A list of a message line, with the lists under its items. Each item of a
+ * numbered list writes its number, because a browser numbers a list item
+ * of spans by the items of the list of the fold.
  */
-function RestText(props: {
-  blocks: readonly AgentBlock[]
-  bullets?: readonly string[]
-}) {
-  const parts = [...props.blocks, ...(props.bullets ?? [])]
-  return parts.map((part, index) => (
-    <Fragment key={index}>
-      {typeof part === 'string' ? (
-        <MessageText text={part} />
-      ) : (
-        <TableText table={part} />
-      )}{' '}
-    </Fragment>
-  ))
+function LineList(props: { list: MessageList }) {
+  const { list } = props
+  return (
+    <span className={classes(styles.bullets, list.numbered && styles.numbered)}>
+      {list.items.map((item, index) => (
+        <span className={styles.bullet} key={index}>
+          {list.numbered ? (
+            <>
+              <span className={styles.number}>{index + 1}.</span>{' '}
+            </>
+          ) : null}
+          <MessageText text={item.text} />{' '}
+          {item.list ? <LineList list={item.list} /> : null}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/** A block of a message line: a paragraph, a list, or a table as text. */
+function LineBlock(props: { block: AgentBlock }) {
+  const { block } = props
+  if (typeof block === 'string') {
+    return (
+      <span className={styles.paragraph}>
+        <MessageText text={block} />{' '}
+      </span>
+    )
+  }
+  if (block.kind === 'list') return <LineList list={block} />
+  return (
+    <>
+      <TableText table={block} />{' '}
+    </>
+  )
 }
 
 /**
  * A message of the agent in an open fold: an icon and the first words of
  * the message on one line, cut with an ellipsis. A click opens the line to
- * the full text, with its paragraphs, bullets, and tables.
+ * the full text, with its paragraphs, lists, and tables. A list shows the
+ * lists that the agent indents under its items.
  *
  * A `<summary>` holds only phrasing content, so a table never goes into the
  * line. The closed line shows the first table, and all that follows it, as
- * text. When the message opens, the line keeps the paragraphs before the
- * table, and the table and the rest of the message show under the line.
+ * text. When the message opens, the line keeps the blocks before the table,
+ * and the table and the rest of the message show under the line.
  */
 export function MessageLine(props: { message: AgentItem; open: boolean }) {
-  const { bullets } = props.message
   const { lead, rest } = splitAtTable(props.message.blocks)
   const table = rest.length > 0
   return (
@@ -74,22 +97,13 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
       <summary className={styles.messageLine}>
         <MessageSquareText aria-hidden className={styles.icon} size={13} />
         <span className={styles.messageText}>
-          {lead.map((paragraph) => (
-            <span className={styles.paragraph} key={paragraph}>
-              <MessageText text={paragraph} />{' '}
-            </span>
+          {lead.map((block, index) => (
+            <LineBlock block={block} key={index} />
           ))}
           {table ? (
             <span className={styles.preview}>
-              <RestText blocks={rest} bullets={bullets} />
-            </span>
-          ) : null}
-          {!table && bullets ? (
-            <span className={styles.bullets}>
-              {bullets.map((bullet) => (
-                <span className={styles.bullet} key={bullet}>
-                  <MessageText text={bullet} />{' '}
-                </span>
+              {rest.map((block, index) => (
+                <LineBlock block={block} key={index} />
               ))}
             </span>
           ) : null}
@@ -97,7 +111,7 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
       </summary>
       {table ? (
         <div className={styles.messageBody}>
-          <AgentBlocks blocks={rest} bullets={bullets} />
+          <AgentBlocks blocks={rest} />
         </div>
       ) : null}
     </details>

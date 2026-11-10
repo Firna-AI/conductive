@@ -72,6 +72,7 @@ describe('a read-only chat', () => {
             sandboxBar: (
               <SandboxBar
                 notice={orgRefusal}
+                restore={null}
                 resume={noResume}
                 workspace={workspace}
               />
@@ -161,6 +162,7 @@ describe('a read-only chat', () => {
                   sandboxBar: (
                     <SandboxBar
                       notice={orgRefusal}
+                      restore={null}
                       resume={noResume}
                       workspace={workspace}
                     />

@@ -3,20 +3,16 @@ import type { Viewport } from '@mokly/mokly'
 import { Square } from 'lucide-react'
 import { nameLabel } from '../../../../src/shared/name-label'
 import { ActionButton } from '../components/common/actions'
-import { AppToast } from '../components/common/AppToast'
+import { ToastLayer } from '../components/common/ToastLayer'
 import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
-import {
-  ArchiveDialog,
-  headerArchiveLinks,
-} from '../components/workspace/ArchiveDialog'
+import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { transcriptToasts } from '../components/workspace/transcriptCopy'
-import { unpushedWork } from '../fixtures/archive'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -56,14 +52,27 @@ function CloseSessionDialog(props: { viewport: Viewport }) {
  * The toast after a copy of a session transcript from the tab menu, if any.
  * It lies over the workspace at the place of the toasts of the app.
  */
-export function transcriptToast(state: WorkspaceState): ReactNode {
+export function transcriptToast(
+  state: WorkspaceState,
+  viewport: Viewport,
+): ReactNode {
   switch (state.copyTranscript) {
     case 'none':
       return null
     case 'copied':
-      return <AppToast title={transcriptToasts.copied} tone="success" />
+      return (
+        <ToastLayer
+          phone={viewport === 'mobile'}
+          toast={{ title: transcriptToasts.copied, tone: 'success' }}
+        />
+      )
     case 'failed':
-      return <AppToast title={transcriptToasts.failed} tone="error" />
+      return (
+        <ToastLayer
+          phone={viewport === 'mobile'}
+          toast={{ title: transcriptToasts.failed, tone: 'error' }}
+        />
+      )
   }
 }
 
@@ -86,24 +95,6 @@ export function workspaceOverlay(
       return null
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
-    case 'archive-unpushed':
-      return (
-        <ArchiveDialog
-          links={headerArchiveLinks}
-          question={{ kind: 'unpushed', work: unpushedWork }}
-          viewport={viewport}
-          workspace={workspace}
-        />
-      )
-    case 'archive-pushed':
-      return (
-        <ArchiveDialog
-          links={headerArchiveLinks}
-          question={{ kind: 'pushed' }}
-          viewport={viewport}
-          workspace={workspace}
-        />
-      )
     case 'history':
       return mobile ? (
         <Sheet title="Session history">
@@ -132,5 +123,25 @@ export function workspaceOverlay(
           tabs={row.tabs}
         />
       ) : null
+  }
+}
+
+/**
+ * The toast of the state, over the whole screen. Just after Archive, the
+ * toast names the workspace and offers Restore, which does what Restore on
+ * the archived bar does.
+ */
+export function workspaceToast(
+  state: WorkspaceState,
+  workspace: Workspace,
+  viewport: Viewport,
+): ReactNode {
+  switch (state.toast) {
+    case 'none':
+      return null
+    case 'archived':
+      return (
+        <ArchivedToast name={workspace.name} phone={viewport === 'mobile'} />
+      )
   }
 }

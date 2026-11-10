@@ -1,6 +1,7 @@
 import { Fragment, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
+import type { ArchiveAction } from '../../app/archive-model'
 import { stepTarget, type SectionGroup } from '../../app/sections'
 import type { Workspace } from '../../shared/workspaces'
 import { nameLabel } from '../../shared/name-label'
@@ -60,9 +61,11 @@ function LiftedRow(props: {
  * The sections of the org, each a group of workspaces that the people of
  * the org made, then the Archived group. A workspace moves to another
  * section by drag and drop, by a long press on a phone, or by Alt and an
- * arrow key. `menus` gives each row its menu, and `archiveAction` its
- * Archive shortcut. A read-only list, as in a suspended org, moves nothing
- * and shows no section menu.
+ * arrow key. `menus` gives each row its menu, `archiveAction` its Archive
+ * shortcut, and `restoreAction` the Restore shortcut of an archived row.
+ * `running` names the Archive or the Restore of a row that runs, which its
+ * shortcut shows busy. A read-only list, as in a suspended org, moves
+ * nothing and shows no section menu.
  */
 export function SectionList(props: {
   groups: readonly SectionGroup[]
@@ -72,6 +75,8 @@ export function SectionList(props: {
   now: number
   actions: SectionActions
   archiveAction?: (workspace: Workspace) => (() => void) | undefined
+  restoreAction?: (workspace: Workspace) => (() => void) | undefined
+  running?: (workspaceId: string) => ArchiveAction | null
   move: (workspaceId: string, target: DropTarget) => void
   readOnly: boolean
   menus?: RowMenus
@@ -149,6 +154,9 @@ export function SectionList(props: {
                         menu={props.menus?.(workspace)}
                         now={props.now}
                         onArchive={props.archiveAction?.(workspace)}
+                        acting={
+                          (props.running?.(workspace.id) ?? null) !== null
+                        }
                         onKeyDown={
                           props.readOnly
                             ? undefined
@@ -177,7 +185,9 @@ export function SectionList(props: {
         <ArchivedGroup
           menus={props.menus}
           now={props.now}
+          restoreAction={props.restoreAction}
           rows={props.archived}
+          running={props.running}
           selectedId={props.selectedId}
           variant={props.variant}
         />

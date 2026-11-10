@@ -17,8 +17,14 @@ Use a separate workspace when a task needs a separate copy of the files.
 You need a connected login for the agent you choose.
 Other members can also send messages under the session's login-sharing rules.
 
+An archived workspace offers read-only chat instead of a message box.
+Restore the workspace before starting a session or sending another message.
+Restore is available for 14 days after Archive while its computer is kept.
+Select **Resume** if the restored workspace is already open.
+
 - [Create a workspace](/docs/workspaces#create-a-workspace-from-a-message)
 - [Connect an agent login](/docs/agent-logins)
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 ## Send a message
 

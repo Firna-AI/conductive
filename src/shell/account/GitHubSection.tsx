@@ -16,7 +16,7 @@ const title = 'GitHub'
 /** The accounts where the GitHub App is installed, or the way to install it. */
 function Installations(props: { response: GitHubInstallationsResponse }) {
   const { installations, installUrl } = props.response
-  const openInstall = useGitHubInstall('account')
+  const openInstall = useGitHubInstall()
   const leave = () => openInstall(installUrl)
   if (installations.length === 0) {
     return (
