@@ -26,7 +26,7 @@ how a screen is built, and links to the other pages.
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
-| `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
+| `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the bar after the delete, and the restored workspace |
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
@@ -154,8 +154,8 @@ shows stopped. Its child pages:
 
 - `app/orgs/suspended/workspace` has a workspace with the refused bar of the
   org. Its `archived` variant has an archived workspace, with the notice of
-  the org above the archived bar. Its `files` variant has the Files tab of a
-  phone, whose panel shows the words of the org.
+  the org above the archived bar and no Restore. Its `files` variant has
+  the Files tab of a phone, whose panel shows the words of the org.
 - `app/orgs/suspended/new-workspace` has the New workspace page, which an
   old tab can still open. The refused bar takes the place of the composer.
 - `app/orgs/suspended/settings` has the four tabs, read-only also for an
@@ -253,7 +253,9 @@ list of Acme. Its child pages:
   again fills the tab.
 - `app/command-palette/actions` has the Actions tab over the list. Its
   `workspace` variant has the tab over an open workspace, whose actions
-  come first.
+  come first. Its `archived` variant has the tab over an archived
+  workspace, as Priya, a member who is not an admin, sees it: Session
+  history and Restore workspace.
 - `app/command-palette/settings` has the Settings tab.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its `no-results` variant has a search without results.
@@ -283,6 +285,18 @@ changes, a draft, and a pull request closed without a merge. A conflict and
 requested changes tint the bar amber. `app/banner/no-commits` has a branch
 without commits, whose bar offers no Create pull request, as in
 `app/new-workspace/creating` and `first-turn`.
+
+`app/archive` draws Archive and Restore of Checkout address autocomplete,
+from decisions 1 and 2 of PR #138. Its canonical screen has the archived
+workspace, whose bar gives the last day of Restore, with Restore.
+Its `just-archived` variant has the workspace just after Archive from the
+pull request bar, with the toast and its Restore. Archive on a row of the
+list and in the palette leads there too. Its `group` variant has the list
+with the Archived group open, and Restore on the hover of a row. Its
+`deleted` variant has the archived workspace after the app deleted its
+cloud computer, with no Restore. It moved from `app/archive/archived` and
+declares `movedFrom`. Its `restored` variant has the workspace back in its
+section, stopped, where each Restore leads.
 
 `app/chat` shows a finished turn, whose work folds into one line. Its child
 pages: `app/chat/turns` has the running turn, steer, interrupt, and a

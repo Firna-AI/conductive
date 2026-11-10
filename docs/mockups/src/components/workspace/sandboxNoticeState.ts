@@ -12,15 +12,25 @@
 export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
 
 /**
+ * What an archived workspace can get back. `available`: the app keeps its
+ * stopped cloud computer, and every member may restore the workspace until
+ * the app deletes it. `refused`: the app keeps it, but a suspended org
+ * refuses Restore, so the notice promises no files.
+ */
+export type ArchiveRestore = 'available' | 'refused'
+
+/**
  * What the bar of a sandbox that is not running shows. A refused start
  * carries the words of the app's refusal, so one notice serves every
  * reason. A start that failed can carry the message that the workspace
  * saved for it, such as the 20-minute limit of a start. `firstStart` marks
  * the failed first start of a new workspace. The workspace keeps its chat
- * and its queued messages, and it has no files yet.
+ * and its queued messages, and it has no files yet. An archived workspace
+ * without `restore` has no cloud computer left, so nothing comes back.
  */
 export type SandboxNoticeState =
-  | { problem: 'stopped' | 'archived' }
+  | { problem: 'stopped' }
+  | { problem: 'archived'; restore?: ArchiveRestore }
   | { problem: 'error'; message?: string | null; firstStart?: boolean }
   | { problem: 'refused'; reason: string }
 

@@ -61,7 +61,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   Boat's machines.
 - It holds the open tabs, the connection of the agent runner, and the
   messages that wait for the sandbox.
-- It also holds the start steps, the stop timer, and the banner state.
+- It also holds the start steps, the stop timer, the delete timer of an
+  archived workspace, and the banner state.
 - Its storage keeps the chat history, so a stopped or archived workspace
   still shows its chat.
 - It revokes the preview hostnames of its workspace.

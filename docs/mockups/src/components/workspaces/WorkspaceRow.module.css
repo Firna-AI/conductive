@@ -17,7 +17,9 @@
   box-sizing: border-box;
 }
 
-.container:hover .row {
+/* `.hovered` draws the pointer over the row in a picture of the screen. */
+.container:hover .row,
+.hovered .row {
   background: var(--ui-soft);
 }
 
@@ -29,7 +31,8 @@
 }
 
 .selected,
-.container:hover .selected {
+.container:hover .selected,
+.hovered .selected {
   background: var(--ui-selected);
 }
 
@@ -66,6 +69,7 @@
   text-align: right;
 }
 
+/* The one action of an `.archivable` row: Archive, or Restore when archived. */
 .archive {
   position: absolute;
   top: 50%;
@@ -76,11 +80,13 @@
   transform: translateY(-50%);
 }
 
-.archivable:hover .time {
+.archivable:hover .time,
+.archivable.hovered .time {
   visibility: hidden;
 }
 
-.archivable:hover .archive {
+.archivable:hover .archive,
+.archivable.hovered .archive {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;

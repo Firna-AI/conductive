@@ -144,15 +144,18 @@ export function ToolContent(props: {
  * The sidebar beside an open workspace, which shows its current status. An
  * archived workspace sits in the open Archived group. In a suspended org
  * every row shows stopped, and nothing in the sidebar changes the org.
- * `created` adds the workspaces that the create flow made by then.
  */
-export function workspaceSidebar(
-  workspace: Workspace,
-  status: ActivityStatus,
-  suspended: boolean,
-  viewer: Membership,
-  created: readonly OpenWorkspace[] = [],
-): ReactNode {
+export function workspaceSidebar(props: {
+  workspace: Workspace
+  status: ActivityStatus
+  suspended: boolean
+  viewer: Membership
+  /** The workspaces that the create flow made by then. */
+  created: readonly OpenWorkspace[]
+  /** The app still keeps the cloud computer of the archived workspace. */
+  kept: boolean
+}): ReactNode {
+  const { workspace, status, suspended, viewer, created } = props
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
@@ -166,7 +169,7 @@ export function workspaceSidebar(
       />
     )
   }
-  const list = archivedSections(workspace, suspended)
+  const list = archivedSections(workspace, suspended, props.kept)
   return (
     <Sidebar
       archived={list.archived}

@@ -107,14 +107,18 @@ says.
   section.
 - A workspace moves to another section by drag and drop. On a phone, a
   long press lifts the row.
-- Deleting a section moves its workspaces to General. Reason: no workspace
-  gets lost.
+- Deleting a section moves its workspaces to General, also the archived
+  ones. Reason: no workspace gets lost, and a Restore always has a section
+  to go back to.
 - The app keeps the archived workspaces in the Archived group at the end
   of the list. The users do not edit that group.
 - A workspace row offers Archive only to its owner and the org's admins.
   Only hover reveals its archive icon over the time without moving the row
   content. Selection and keyboard focus alone keep the time visible.
   The workspace header has no archive control.
+- A row of the Archived group offers Restore in the same way, to every
+  member, until Restore of its workspace ends, as
+  [Restore](workspace-life.md#restore) says.
 
 ## Members and roles
 
@@ -151,8 +155,18 @@ says.
   workspace, without the actions of an admin.
 - Only the workspace owner and the admins can archive a workspace
   (decision 42).
-- Archive by every member was rejected, because a member could then delete
-  the sandbox and the unpushed work of another member.
+- Archive by every member was rejected, because the app deletes the
+  sandbox 14 days after an Archive. A member could then start the delete
+  of the unpushed work of another member.
+- Every member of an org that is not suspended can restore an archived
+  workspace (decision 2 of PR #138).
+- Reason: Restore deletes nothing. It gives a member only the access that
+  a resume gave before the Archive.
+- Restore only by the owner and the admins, as for Archive, was rejected
+  for that reason. So a member can restore a workspace that its owner
+  archived. Only the owner or an admin can archive it again.
+- Restore keeps the owner of the workspace. A new owner for the member who
+  restores was rejected, because only an admin reassigns a workspace.
 
 ## Workspace owners
 

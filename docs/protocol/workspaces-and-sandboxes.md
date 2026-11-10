@@ -15,7 +15,7 @@ These docs belong to this doc:
 - [Repository folders](repository-folders.md): the folder and the shell
   variable of each repository in a sandbox.
 - [Life of a workspace](workspace-life.md): the start steps, the time
-  limits, the states, the stop and resume, and the archive.
+  limits, the states, the stop and resume, the archive, and the restore.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
   terminal, the port previews, and the desktop.
 

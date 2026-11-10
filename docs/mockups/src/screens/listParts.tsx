@@ -20,6 +20,7 @@ import {
   type ListDrag,
   type ListMenu,
   type SidebarSection,
+  type WorkspaceRow,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import {
@@ -86,6 +87,8 @@ export function HomeList(props: {
   menu?: ListMenu
   menuStyle: MenuStyle
   drag?: ListDrag
+  /** The archived workspaces, which show in an open Archived group. */
+  archived?: readonly WorkspaceRow[]
   suspended?: boolean
   newWorkspaceTo?: string
   /** Show ⌘K, the key of the palette, beside Search. */
@@ -112,6 +115,7 @@ export function HomeList(props: {
           <LoadFailure title="The workspaces didn't load" />
         ) : (
           <SectionList
+            archived={props.archived}
             drag={props.drag}
             menu={props.menu}
             menuStyle={props.menuStyle}

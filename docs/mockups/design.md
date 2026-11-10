@@ -15,7 +15,8 @@ The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. Archive covers the time on hover only, without moving the
-row content. Selection and keyboard focus alone keep the time visible.
+row content, and Restore does so in the Archived group. Selection and
+keyboard focus alone keep the time visible.
 The centre column has a slim header that names the
 workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
@@ -110,6 +111,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `ToastLayer` in `src/components/common/` draws a toast of Firna open at
+  the bottom right of the screen, where the app shows its toasts. An action
+  that a user can undo, such as Archive, asks no question and offers the
+  undo in its toast.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
@@ -178,9 +183,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason. `sandboxNoticeState.ts`
-  beside it owns the types of the bar and the panels, which the app
-  imports too.
+  action. The notice takes any refusal reason. An archived workspace
+  offers Restore until the app deletes its cloud computer, and the bar
+  gives that last day. `sandboxNoticeState.ts` beside it owns the types of
+  the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.

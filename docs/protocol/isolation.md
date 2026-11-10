@@ -85,6 +85,8 @@ says.
   env vars of its org.
 - The sandbox gets them at create and at each resume. A changed secret
   applies at the next start.
+- The restart of an archived sandbox near day 14 gets neither of them, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says.
 - No saved snapshot holds these secrets. Builds and refreshes get none of
   them.
 - A sandbox gets no agent login at a start. The next section says how a

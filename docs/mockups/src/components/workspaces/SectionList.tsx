@@ -179,7 +179,12 @@ export function SectionList(props: {
         )
       })}
       {props.archived ? (
-        <ArchivedGroup open rows={props.archived} variant={props.variant} />
+        <ArchivedGroup
+          open
+          readOnly={props.readOnly ?? false}
+          rows={props.archived}
+          variant={props.variant}
+        />
       ) : null}
     </div>
   )

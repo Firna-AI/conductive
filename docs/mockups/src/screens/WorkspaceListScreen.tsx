@@ -9,6 +9,7 @@ import {
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
 import {
+  archivedGroup,
   newOrgSections,
   suspendedSections,
   workspaceSections,
@@ -49,8 +50,8 @@ export const workspaceListSchema = {
     /**
      * The workspaces of Acme, the first org of a new user or another new
      * org, both without workspaces, a deleted org, Acme after the operator
-     * suspended it, a deleted org that the operator suspended, or Acme
-     * after its list did not load.
+     * suspended it, a deleted org that the operator suspended, Acme after
+     * its list did not load, or Acme with its Archived group open.
      */
     list: {
       enum: [
@@ -61,6 +62,7 @@ export const workspaceListSchema = {
         'suspended',
         'deleted-suspended',
         'failed',
+        'archived',
       ],
     },
     /**
@@ -180,16 +182,21 @@ function MobileList(props: { state: WorkspaceListState }) {
     )
   }
   const fresh = newOrgs[list]
+  // A phone has no pointer over a row of the Archived group.
+  const group = list === 'archived' ? archivedGroup(false) : undefined
   return (
     <MobileFrame>
       <HomeList
+        archived={group?.archived}
         drag={listDrag(menu)}
         failed={list === 'failed'}
         menu={listMenu(menu)}
         menuStyle="sheet"
         newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
-        sections={fresh ? newOrgSections() : workspaceSections()}
+        sections={
+          fresh ? newOrgSections() : (group?.sections ?? workspaceSections())
+        }
         viewer={viewer}
       />
       {sheets[menu]}
@@ -240,7 +247,8 @@ export function WorkspaceListScreen(props: {
       </AppFrame>
     )
   }
-  const sections = workspaceSections()
+  const group = list === 'archived' ? archivedGroup(true) : undefined
+  const sections = group?.sections ?? workspaceSections()
   const open = listMenu(menu)
   const drag = listDrag(menu)
   const rail = rails[menu] ?? acmeRail
@@ -250,6 +258,7 @@ export function WorkspaceListScreen(props: {
       rail={rail}
       sidebar={
         <Sidebar
+          archived={group?.archived}
           drag={drag}
           failed={list === 'failed'}
           menu={open}
@@ -264,6 +273,7 @@ export function WorkspaceListScreen(props: {
       </div>
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
+          archived={group?.archived}
           drag={drag}
           failed={list === 'failed'}
           keys

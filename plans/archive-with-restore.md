@@ -312,7 +312,69 @@ Agent calls on 10 November 2026:
   the branch holds the first fix for the same report. The pull request
   gets a new title and description when the work completes.
 
-## Milestone 1: Mockups
+Agent calls from the mockups of Milestone 1, on 10 November 2026:
+
+- Restore from the open workspace shows the stopped state with Resume.
+  Restore starts nothing by itself. Reason: Resume avoids a start that the
+  user did not ask for, as "Stop and resume" says. The mockup
+  `app/archive/restored` shows it.
+- The bar of an archived workspace names the day of the Archive. While the
+  app keeps the cloud computer, the bar gives the last day of Restore,
+  with Restore. After the delete, the bar keeps the words of today and
+  gives no day of the delete. Reason: `restoreUntil` is null after the
+  delete, and a workspace archived before this change lost its cloud
+  computer at the Archive.
+- In a suspended org, the bar of an archived workspace offers no Restore
+  and promises only the chat history, as a refused start does. Reason: a
+  suspended org refuses each change, and no notice of a suspended org
+  promises its files.
+- Over an archived workspace, the palette offers only Session history and
+  Restore workspace as the actions of the workspace. Reason: the palette
+  offers only what the page offers, and an archived workspace has no new
+  session, no lists, and no tools.
+- The toast after Archive says "<name> is archived." in the success tone,
+  with Restore, as the toast after Delete section names its section.
+  Restore is the action button of the shared toast. Reason: one form for
+  the toasts that confirm a change of the list.
+- The mockup type `docs/mockups/src/components/workspace/sandboxNoticeState.ts`,
+  which the app imports, gives an archived workspace an optional
+  `restore`: `available` or `refused`. Without it, the bar is the bar of a
+  deleted cloud computer, so the app shows the bar of today until
+  Milestone 4 passes the field. Reason: one type stays the contract of the
+  bar for the mockups and the app.
+
+Agent calls from the documentation of Milestone 2, on 10 November 2026:
+
+- The protocol docs cite the decisions of this plan as "decision 1 of PR
+  #138" and "decision 2 of PR #138". Reason: "decision 1" and "decision 2"
+  already name records of the earlier plan, such as "Boat runs every
+  sandbox (decision 2)".
+- Milestone 2 changes only the README lines that restate what Archive
+  does. The entries of the code and the lists of routes change with their
+  code in Milestones 3 and 4. Reason: a README must not describe code that
+  does not exist yet.
+- `docs/protocol/workspace-life.md` keeps its headings "Stop and resume"
+  and "Archive", and Restore gets its own section. Reason: five other docs
+  link to those headings.
+- The comparison row `workspaces-page-and-restore` gets Works differently.
+  Reason: Restore works through the Archived group of the list, and no
+  separate page of every workspace ships.
+- The protocol rejects a saved snapshot at Archive for its cost, not for
+  the secret values that it can hold. Reason: the disk that Archive keeps
+  can hold the same values, as decision 1 says under "Left out".
+- `worker/lifecycle/README.md` moves the entries of the image code to
+  `worker/lifecycle/image-builds.md`, and the entries of the input activity
+  to `worker/lifecycle/routes.md`. Reason: the README passed 300 lines, and
+  Milestone 3 adds the entries of Archive.
+- The two sections of `docs/protocol/command-palette.md` that only link to
+  its states page become one. Reason: the doc passed its target of about
+  250 lines, and no doc links to the removed heading.
+- Restore ends 14 days after the Archive, also while a failed delete of the
+  cloud computer retries. The bar says that the cloud computer is deleted
+  only after the delete, and before that gives the day when Restore ended.
+  Reason: each promise of the bar stays true. Milestone 2a draws that bar.
+
+## Milestone 1: Mockups (completed)
 
 Tags: mockup
 
@@ -322,80 +384,124 @@ Draw Archive with no question, the toast with Restore, Restore on the
 archived bar and in the Archived group, the palette action, and an archived
 workspace after the delete. Remove the drawings of the Archive question.
 
-- [ ] Rework the entry `docs/mockups/src/entries/app/archive/index.mockup.tsx`.
+- [x] Rework the entry `docs/mockups/src/entries/app/archive/index.mockup.tsx`.
       Its canonical screen is an archived workspace whose bar gives the
       last day of Restore, with Restore. Its variants:
-  - [ ] The workspace just after Archive from the pull request bar, with
+  - [x] The workspace just after Archive from the pull request bar, with
         the toast and its Restore.
-  - [ ] The Archived group open, with Restore on the hover of a row.
-  - [ ] An archived workspace after the delete, with no Restore.
-- [ ] Show Restore to every member of an org that is not suspended, as
+  - [x] The Archived group open, with Restore on the hover of a row.
+  - [x] An archived workspace after the delete, with no Restore.
+  - [x] The workspace after Restore, where each Restore leads: back in its
+        section, stopped, with Resume. The mockups showed that Restore
+        needed a screen to lead to.
+- [x] Show Restore to every member of an org that is not suspended, as
       decision 2 chose. Check that the archived workspace of the entry
       `orgs/suspended/workspace` shows no Restore.
-- [ ] Draw Restore workspace among the actions of an archived workspace in
+- [x] Draw Restore workspace among the actions of an archived workspace in
       the command palette entries.
-- [ ] Remove the Archive question: the overlays `archive-unpushed` and
+- [x] Remove the Archive question: the overlays `archive-unpushed` and
       `archive-pushed` in `docs/mockups/src/screens/workspaceOverlays.tsx` and
       `docs/mockups/src/screens/workspaceState.ts`,
       the component `docs/mockups/src/components/workspace/ArchiveDialog.tsx`,
       and the fixtures of the check in `docs/mockups/src/fixtures/archive.ts`.
       Keep `ArchiveDialog.module.css` until Milestone 4, because the app
       dialog imports it.
-- [ ] Write the words of the bar, the row, and the toast under the copy
+- [x] Write the words of the bar, the row, and the toast under the copy
       rules of the `product-ui` skill. Name no provider.
-- [ ] Update `docs/mockups/catalogue.md`, `docs/mockups/orgs-and-logins.md`,
+- [x] Update `docs/mockups/catalogue.md`, `docs/mockups/orgs-and-logins.md`,
       and the rationale of each changed entry with decision 1 of this
       plan.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at desktop
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at desktop
       and phone sizes, in light and dark.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
-## Milestone 2: Documentation and protocol
+Evidence: `.context/archive-with-restore/m1-evidence.md`.
+
+## Milestone 2: Documentation and protocol (completed)
 
 Depends on: 1
 
 State Archive with no check, Restore, and the delete after 14 days as
 requirements, before the code changes.
 
-- [ ] Rewrite "Archive" in `docs/protocol/workspace-life.md`:
+- [x] Rewrite "Archive" in `docs/protocol/workspace-life.md`:
       the stop at Archive, no check and no question, Restore for 14 days,
       the delete after 14 days, the reason, and the rejected options. Keep
       the rule that an archived workspace has no file lists and no tools.
-- [ ] In "Stop and resume" of the same doc, state the restart of an
+- [x] In "Stop and resume" of the same doc, state the restart of an
       archived cloud computer: only when Boat's 14 days end before the
       delete, with no secrets and no startup script.
-- [ ] Update `docs/protocol/orgs-and-members.md`: every member may
+- [x] Update `docs/protocol/orgs-and-members.md`: every member may
       Restore, as decision 2 chose, and a row of the Archived group offers
       Restore until the delete. Update the reason of decision 42 at line
       154, because Archive now deletes the cloud computer only after 14
       days.
-- [ ] Update `docs/protocol/github-banner.md` and
+- [x] Update `docs/protocol/github-banner.md` and
       `docs/protocol/command-palette.md`: Archive asks no question. The
       palette offers Restore workspace to every member, while Archive
       workspace stays with the owner and the admins.
-- [ ] Update the rows `archive` and `workspaces-page-and-restore` in
+- [x] Update the rows `archive` and `workspaces-page-and-restore` in
       `src/marketing/from-conductor/areas/workspaces-and-branches.ts`,
       under the claim rules of
       [Statuses](../docs/protocol/conductor-cloud-comparison.md#statuses).
       Main already shows `workspaces-page-and-restore` as Planned, with
       Restore within 14 days. Give it the status that holds when this
       pull request merges, and drop the check from the note of `archive`.
-- [ ] Read the Terms page `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page `src/marketing/terms.ts` and the Privacy page
       `src/marketing/privacy.ts` in full, with `src/marketing/privacy-uses.ts`
       and `src/marketing/legal-text.ts`. Update each sentence that
       restates Archive, the delete of a cloud computer, or how long the app
       keeps the files of a workspace. Add the 14 days of an archived cloud
       computer to the section "How long Conductive keeps data" of the
       Privacy page.
-- [ ] Update `worker/app-api/README.md`, `worker/lifecycle/README.md`,
+- [x] Update `worker/app-api/README.md`, `worker/lifecycle/README.md`,
       `worker/lifecycle/workspace-object.md`, `src/shell/workspace/README.md`,
       and `docs/architecture.md` where they restate Archive.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: `.context/archive-with-restore/m2-evidence.md`.
+
+## Milestone 2a: Restore window ended mockup
+
+Tags: mockup
+
+Depends on: 1, 2
+
+The app preparation found one gap: the Restore deadline can pass while a
+failed delete retries. The computer still exists, so the bar must not say
+it is deleted. This implements the chosen 14-day window without adding a
+new action or extending retention.
+
+- [ ] Add the ended Restore state to the shared sandbox notice and a child
+      entry below `app/archive`, because its parent already has five views.
+- [ ] Show the date when Restore ended, keep the chat read-only, and offer
+      no Restore. Keep the deleted state for a confirmed deletion.
+- [ ] Check desktop and phone layouts in light and dark. Save captures
+      under `.context/archive-with-restore/` and run mockup checks.
+- [ ] Record this routine design call and the evidence. Keep Milestone 1
+      completed.
+
+## Milestone 2b: Integrate the workspace row menu
+
+Depends on: 2a
+
+Main added workspace row menus while this plan was in progress. Preserve
+Rename, Move, Reassign, their permissions, focus, and unrelated tests. Only
+the Archive question changes under the user's approved decision.
+
+- [ ] Integrate main and resolve each conflict while preserving the row
+      menu and the completed Archive/Restore mockups and protocol.
+- [ ] Update `docs/protocol/workspace-menu.md` and the new menu mockup flow
+      so Archive runs at once. Keep the menu's existing set of actions.
+      Restore stays on the row shortcut, bar, toast, and palette.
+- [ ] Update implementation briefs for main's new `useRowMenus`,
+      `WorkspaceActions`, workspace detail, and moved README owners.
+- [ ] Run focused mockup, type, and link checks on the integrated tree.
 
 ## Milestone 3: Worker: Archive keeps the cloud computer, and Restore
 
-Depends on: 2
+Depends on: 2, 2a, 2b
 
 Archive stops and keeps the cloud computer with no check. The workspace
 object deletes it 14 days later. A new route restores the workspace. The
@@ -447,7 +553,7 @@ check route stays until Milestone 5, because the app still calls it.
 
 Tags: ui
 
-Depends on: 1, 3
+Depends on: 1, 2a, 2b, 3
 
 The app archives with one request and offers Restore, as the mockups of
 Milestone 1 show.
@@ -491,7 +597,7 @@ Depends on: 4
 
 ## Milestone 6: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3, 4, 5
+Depends on: 1, 2, 2a, 2b, 3, 4, 5
 
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
       the targeted tests and the complete gate, `npm run check`.

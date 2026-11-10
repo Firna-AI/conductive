@@ -19,9 +19,7 @@ Each handler returns `null` for a path that it does not own. The
 access, org creation with initials and repository choices, shared settings,
 repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
-The [archive route](archive.ts) uses the real workspace object to check saved work and remove its sandbox.
-If the sandbox cannot run the check, the route returns `409 sandbox_unavailable` and asks the user to open the workspace.
-The failed check keeps the workspace and its sandbox, including when the user confirms a discard.
+The [archive route](archive.ts) archives a workspace through the real workspace object, as [Archive](../../docs/protocol/workspace-life.md#archive) says.
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.

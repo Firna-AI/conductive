@@ -5,7 +5,7 @@ import {
 } from '../components/palette/paletteViews'
 import { WorkspaceListScreen } from './WorkspaceListScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
-import { readyWorkspace } from './workspaceState'
+import { readyWorkspace, type WorkspaceState } from './workspaceState'
 
 export const commandPaletteSchema = {
   type: 'object',
@@ -14,15 +14,31 @@ export const commandPaletteSchema = {
   properties: {
     /**
      * The page under the palette: the list of Acme, or the open workspace
-     * Checkout address autocomplete, whose actions come first.
+     * Checkout address autocomplete, whose actions come first. `archived`
+     * is the same workspace after its Archive, while the app keeps its
+     * cloud computer, as Priya, a member who is not an admin, sees it.
      */
-    over: { enum: ['list', 'workspace'] },
+    over: { enum: ['list', 'workspace', 'archived'] },
     /** The tab, the filter, or the query that the palette shows. */
     view: { enum: openPaletteViews },
   },
 } as const
 
 export type CommandPaletteState = SchemaProps<typeof commandPaletteSchema>
+
+/** The open workspace under the palette: as it is, or archived. */
+const openWorkspaces: Readonly<
+  Record<Exclude<CommandPaletteState['over'], 'list'>, WorkspaceState>
+> = {
+  workspace: readyWorkspace,
+  archived: {
+    ...readyWorkspace,
+    sandbox: 'archived',
+    conversation: 'history',
+    banner: 'merged',
+    viewer: 'member',
+  },
+}
 
 /**
  * The command palette open over a page of the app. The list and the
@@ -36,10 +52,10 @@ export function CommandPaletteScreen(props: {
   viewport: Viewport
 }) {
   const { over, view } = props.state
-  if (over === 'workspace') {
+  if (over !== 'list') {
     return (
       <WorkspaceScreen
-        state={{ ...readyWorkspace, palette: view }}
+        state={{ ...openWorkspaces[over], palette: view }}
         viewport={props.viewport}
       />
     )

@@ -1,10 +1,10 @@
 # Workspace screen
 
 The workspace screen shows one open workspace: its header, the start
-steps, the states of its cloud computer, the Archive question, and its
-chat. On desktop the chat column sits beside the right column. A phone
-shows one view at a time, with a tab bar. The chat fills the centre by
-default, as [The chat of the workspace](#the-chat-of-the-workspace) says.
+steps, the states of its cloud computer, and its chat. On desktop the chat
+column sits beside the right column. A phone shows one view at a time,
+with a tab bar. The chat fills the centre by default, as
+[The chat of the workspace](#the-chat-of-the-workspace) says.
 The shell gives its own parts: the Files screens, the tools, the pull
 request bar, and the owner picker, as [The Files part](#the-files-part),
 [The tools part](#the-tools-part), and [The GitHub part](#the-github-part)
@@ -16,8 +16,9 @@ states of the cloud computer are in `app/shell`, and the notices are in
 
 The workspace list offers Archive over the time of each permitted row on
 hover only. Selection and keyboard focus alone keep the time visible.
-The header has no Archive button. The list uses the same Archive question
-as the command palette and the pull request bar.
+The header has no Archive button. The list, the command palette, and the
+pull request bar archive in the same way, as
+[Archive](../../../docs/protocol/workspace-life.md#archive) says.
 
 ## The kept workspace
 
@@ -230,6 +231,8 @@ fake API, with its address options, its controls, and the test command.
   the repair, and the notice of a failed repair.
 - [Start steps](../../../docs/protocol/workspace-life.md#start-steps)
   and [Workspace states](../../../docs/protocol/workspace-life.md#workspace-states).
+- [Archive](../../../docs/protocol/workspace-life.md#archive) and
+  [Restore](../../../docs/protocol/workspace-life.md#restore).
 - [Workspace numbers and links](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-numbers-and-links)
   and [Workspace links](../../../docs/protocol/workspace-links.md): the
   number, the link, and Copy link.
