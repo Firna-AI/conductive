@@ -2,29 +2,34 @@
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-10, from the branch `calummoore/tool-calls-collapsing-issue`, which fixed the open and close cycle of a run of tool calls, decision 1 of that branch.
-- **Location:** `docs/protocol/chat-and-events.md`, section "The work of a turn".
+- **Added:** 2026-11-10, from the branch `calummoore/tool-calls-collapsing-issue`, which fixed the open and close cycle of a run of tool calls, review finding 2 of that branch.
+- **Location:** `docs/protocol/chat-and-events.md`, section "The work of a turn", and `src/chat/components/transcript-entries.ts`, which marks the run that grows.
 - **Reason:** Each option adds a requirement to a protocol doc, and only the user chooses a requirement.
 
-- **Source:** Implementation. **Category:** Docs or spec.
+- **Source:** Review. **Category:** Docs or spec.
 - **Terms:**
   - **Run of tool calls:** consecutive tool calls of the agent that the chat shows under one line, such as "9 tool calls". A click on the line opens or closes the list of calls.
   - **Turn:** one period of work by the agent. While it runs, the chat shows "Working" or "Thinking" at its end.
   - **Work fold:** the one line, such as "8 tool calls, 7 messages", that holds the work before the answer when a turn ends.
 - **Background:**
-  - The protocol doc says that each run of tool calls has its own line that folds it while a turn runs. It does not say when a run opens or folds on its own.
+  - The protocol doc says that each run of tool calls has its own line that folds it while a turn runs. It does not say when a run opens or folds on its own. It also does not say that a run keeps the open or closed choice of the user, which the code does.
   - Before 10 November 2026, the chat showed the calls of a run only while one of them ran. Between two calls, the run folded, and the next call opened it again. So the run opened and closed in a cycle while the agent worked.
   - The user reported it: "tool calls get collapsed before the end of the agent work", and the run "opens again at the next tool call, in a cycle". Those words can mean option B.
   - The fix keeps the newest run of a running turn open while the agent can still add calls to it. A message that waits for the turn does not end that run. The run folds when other work follows it, such as a message or a Mac command card, or when the turn ends. Each other run shows its calls only while one of them is not done. `src/chat/transcript.md` gives the rule of the code.
   - The mockup of a running turn, `app/chat/turns`, shows an earlier run folded after a message, and the current run open.
+  - In every option, a run with a running, stopped, or failed call shows its calls, a click of the user wins over the automatic state, and the work fold takes over when the turn ends.
 - **Problem:** The repository rules ask for the missing requirement when a bug reaches the user. The protocol doc still does not say which runs show their calls while the agent works.
 - **Impact if no action:** A later change can bring the cycle back, and a review has no requirement to check it against. The behaviour of earlier runs also stays a guess.
-- **Root question:** While the agent works, which runs of tool calls show their calls, and when does a run fold on its own?
+- **Root question:** While the agent works, which of its tool calls stay in view, and what may fold them before the turn ends?
 - **Options:**
-  - **A.** The newest run shows its calls while the agent can still add calls to it, also between two calls. A run folds on its own when other work follows it, such as a message, or when the turn ends. The code does this now. Add the requirement to the protocol doc. Effort: Small.
-  - **B.** Every run of a running turn shows its calls until the turn ends. Nothing folds on its own while the agent works. Change the code in `src/chat/components/transcript-entries.ts`, the running mockup, the first test in `src/chat/components/WorkFold.dom.test.tsx`, and the docs. A long turn gets long while it runs. Effort: Small.
-- **Left out:** A fold after a short pause with no new call fails the goal, because a longer pause still folds the run. A run that never opens on its own hides the work that the user watches, which the user rejected on 8 November 2026 when they chose the work fold. No requirement at all breaks the rule that a protocol doc states what a user sees.
-- **Wider fix:** None. The code already takes the open state from whether the run can still grow, not from the moment between two calls.
+  - **A.** The newest run shows its calls while the agent can still add calls to it, also between two calls. A run folds on its own when other work follows it, such as a message, or when the turn ends. The code does this now. Add the requirement to the protocol doc. Also apply the fix in `plans/follow-ups/tool-run-growth-after-refusal.md`. Effort: Small.
+  - **B.** Every run of a running turn shows its calls until the turn ends. Nothing folds on its own while the agent works. Change the code in `src/chat/components/transcript-entries.ts`, the mockup rule in `docs/mockups/src/components/chat/groupItems.ts`, the first test in `src/chat/components/WorkFold.dom.test.tsx`, and the docs. A long turn takes more space while it runs. Effort: Small.
+  - **C.** Show each call on its own line while the turn runs, with no run line. The work fold takes the calls when the turn ends. Change the presentation, the mockups, the tests, and the protocol. The user can no longer fold a run while the agent works. Effort: Medium.
+  - **D.** As A, but only the start of a newer run folds an earlier run. A message, a Mac command card, or a lost line after the newest run does not fold it. Change the search in `src/chat/components/transcript-entries.ts` and the mockup rule, which also opens the run of the mockups `app/chat/tables/header` and `app/chat/tables/rows`. Earlier runs still fold before the turn ends. Effort: Small.
+  - **E.** As B, but a run folds on its own after it leaves the part of the chat that the reader sees. It needs a watch of the visible area for each run and a stand-in for that area in the tests. The open state then depends on where each reader scrolled, so the rule is harder to state and to test. Effort: Medium.
+- **Left out:** A fold after a short pause fails the goal, because a longer pause still folds the run. A run that never opens on its own hides the work that the user watches, which the user rejected on 8 November 2026 when they chose the work fold. One fold for all the work of a running turn breaks that same choice. A run that shows only its newest calls folds calls of the growing run. A return to the old rule is the reported cycle. No requirement at all breaks the rule that a protocol doc states what a user sees.
+- **Wider fix:** None. The repository rules already send each new requirement to the user.
 - **Previous examples:** On 8 November 2026, the user chose to fold the work of an ended turn into one line, and to keep the runs of a running turn as they were.
-- **Recommendation:** A. It fixes the cycle and keeps the chat of a long running turn short, as the running mockup shows. Choose B if nothing should fold until the agent stops.
+- **Related:** `plans/follow-ups/tool-run-growth-after-refusal.md`, work that waits for this answer. Options B, C, D, and E remove the code of that item, so it closes. Only option A keeps it.
+- **Recommendation:** B. It meets the report "tool calls get collapsed before the end of the agent work" in every case, gives one simple rule, and closes the related item. A, the first recommendation, keeps the chat of a long running turn shorter, but it still folds a run when a message follows it.
 - **Action:** ask the user, because each option adds a requirement to a protocol doc, and only the user chooses a requirement.

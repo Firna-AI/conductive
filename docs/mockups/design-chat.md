@@ -58,8 +58,9 @@ not have, and the files that the cloud computer could not read.
     cut off. A part without an agent message does not fold, and a run
     folds only when it holds a tool call or a message. While a turn runs,
     each message shows, and each run of tool calls folds on its own.
-    The run that the working line follows shows each call, also between
-    two calls, because the agent can still add calls to it.
+    The run that the agent can still add calls to shows each call, also
+    between two calls. In the mockups, that is the run that the working
+    line follows. A message that waits for the turn does not end it.
   - `WorkFold` draws the fold. Its line reads "11 tool calls, 2 messages",
     with the icons of the tool kinds and the left-out output. `FoldLine` in
     `ToolGroup.tsx` draws the line of both kinds of fold. A Mac command
