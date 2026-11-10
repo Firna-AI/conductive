@@ -2,8 +2,6 @@ import {
   APP_HOST_PAGES,
   SITE_FOLDER,
   SITE_ICONS,
-  SITE_MARKERS,
-  SITE_START_LABELS,
 } from '../../src/shared/site-build'
 import { isSiteAsset, siteAssetResponse } from './assets'
 import { readSiteFiles, type SiteAssets } from './files'
@@ -11,11 +9,7 @@ import { pageResponse, siteUnavailable } from './page'
 
 export async function siteResponse(
   request: Request,
-  site: {
-    appOrigin: string
-    assets?: SiteAssets
-    readStartLabel?: () => Promise<string>
-  },
+  site: { appOrigin: string; assets?: SiteAssets },
   now: number,
 ): Promise<Response> {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -44,18 +38,9 @@ export async function siteResponse(
     return await pageResponse(
       site.assets,
       known ? file : files.get('404.html'),
-      async (page) => {
-        const values = {
-          appOrigin: site.appOrigin,
-          year: String(new Date(now).getUTCFullYear()),
-        }
-        return page.includes(SITE_MARKERS.startLabel)
-          ? {
-              ...values,
-              startLabel:
-                (await site.readStartLabel?.()) ?? SITE_START_LABELS.waitlist,
-            }
-          : values
+      {
+        appOrigin: site.appOrigin,
+        year: String(new Date(now).getUTCFullYear()),
       },
       {
         status: known ? 200 : 404,

@@ -3,7 +3,7 @@ import { expect, it } from 'vitest'
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { FIRST_MESSAGE } from '../lifecycle/durable-test-support'
 import { createWorkspace } from '../lifecycle/workspaces'
-import { heldOperation } from '../lifecycle/platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import { resumeWorkspace } from '../lifecycle/workspace-resume'
 import { resumeCompletedWorkspace } from '../lifecycle/completed-resume-test-support'
 import { stopWorkspaceSandbox } from '../lifecycle/workspace-actions'
@@ -62,10 +62,10 @@ it('cancels an in-flight allocation and cleans its delayed computer after actor 
   }
   expect(await actor.job()).toMatchObject({ cancelled: true })
   fixture.boat.deleteFailures = 1
-  actor.restart()
+  await actor.restart()
   await actor.advance()
   expect(fixture.boat.starts).toHaveLength(1)
-  actor.restart()
+  await actor.restart()
   await actor.advance()
   expect(fixture.boat.states.has('bx_1')).toBe(false)
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
@@ -137,7 +137,7 @@ it('rejects a suspended resume caller after its queued job survives an actor res
   })
   await endpoint.lifecycleStopped()
   const queued = fixture.nextQueued()
-  void resumeWorkspace(
+  const resuming = resumeWorkspace(
     fixture.runtime,
     fixture.org.id,
     workspace.id,
@@ -146,7 +146,8 @@ it('rejects a suspended resume caller after its queued job survives an actor res
   await queued
   const actor = fixture.starts.get(workspace.id)
   if (!actor) throw new Error('Missing recovered resume actor')
-  actor.restart()
+  await resuming
+  await actor.restart()
   await suspendUser(fixture.runtime, member.githubId, fixture.user.id)
   await actor.advance()
   expect(fixture.boat.resumeIds).toEqual([])

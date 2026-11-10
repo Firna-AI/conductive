@@ -166,16 +166,18 @@ this doc, on desktop and on a phone.
 
 ## The main action of the site
 
-- The main action of the marketing site reads "Start free with GitHub"
-  during open sign-up, and "Join the waitlist" at all other times
-  (decision 230). Reason: the words then promise only what a sign-in
-  gives.
-- Each main action of the site uses these words, also the one in the
-  footer.
-- When the Worker cannot read the switch, the site shows "Join the
-  waitlist", and the Worker writes a warning to its log. Reason: this
-  default promises less.
-- After a change of the switch, the site can show the earlier words for up
-  to 60 seconds. The sign-in and the gate use the current state at once.
-- Reason: a read of the switch before each page delays the page. The words
-  can be late, but the sign-in still decides who gets in.
+- The main action of the marketing site reads "Sign up" in each state of
+  sign-ups: while the waitlist is on, during open sign-up, and during the
+  pause. Each main action of the site uses these words, also the one in
+  the footer.
+- Reason: the user chose "Sign up" on 10 November 2026, so that no button
+  of the site names the waitlist.
+- Words that follow the state of sign-ups were rejected: "Start free with
+  GitHub" during open sign-up, and "Join the waitlist" at other times.
+  Reason: the user chose one set of words for each button of the site.
+- So the pages of the site do not change with the waitlist switch or the
+  pause. A change of either takes effect at the next sign-in or request,
+  as [Open sign-up](#open-sign-up) says.
+- The sentence under the last call to action says that the app opens when
+  the account gets access. Reason: the sentence then promises no use at
+  once, and it is true in each state of sign-ups.

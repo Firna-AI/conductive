@@ -12,6 +12,7 @@ import {
   fakeSite,
 } from '../test-support/fake-site'
 import * as warnings from '../warnings'
+import { links } from './html.test-support'
 import { siteResponse } from './site'
 
 const SITE = 'https://conductive.test'
@@ -51,7 +52,12 @@ it('serves listed pages with the current page headers and UTC year', async () =>
   expect(response.headers.get('Content-Security-Policy')).toBe(
     "default-src 'none'; style-src 'sha256-N0UkUL/Sf88/FQj7pihopUaI2rfuaJAoRYFutBQygRk=' 'sha256-pH+7ADTsLNyJGZR831L0cyFo51lbyK7ynbNAtbXngYw='; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
   )
-  expect(await response.text()).toContain('© 2027 Conductive')
+  const page = await response.text()
+  expect(page).toContain('© 2027 Conductive')
+  expect(page).toContain('Terms')
+  expect(links(page).find((link) => link.text === 'Sign in')?.href).toBe(
+    `${APP_ORIGIN}/`,
+  )
 })
 
 it('serves only site files and maps the favicon with method and headers intact', async () => {
@@ -145,9 +151,7 @@ it('returns 503 and a safe warning for failed files instead of forwarding app HT
     }
   }
   expect(warn.mock.calls).toEqual(
-    Array.from({ length: 8 }, () => [
-      'The built marketing site is not available.',
-    ]),
+    Array.from({ length: 8 }, () => [{ kind: 'marketing_site_unavailable' }]),
   )
 })
 

@@ -7,9 +7,8 @@ Conductive.
 [Conductor Cloud comparison](../../../docs/protocol/conductor-cloud-comparison.md)
 states its requirements. The link above the home headline and the "From
 Conductor Cloud" link in the Product column of the footer lead to it. Its
-last call to action is the one of the site: the shared sentence of
-`access-copy.ts`, and the main action, whose words follow the state of
-sign-up, as the [marketing site README](../README.md) says.
+last call to action has the sentence and the two actions of the home page,
+as the [marketing site README](../README.md) says.
 
 ## The rows
 

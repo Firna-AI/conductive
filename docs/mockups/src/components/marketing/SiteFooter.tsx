@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { siteActionCopy } from '../../../../../src/marketing/access-copy'
 import { parityLinkCopy } from '../../../../../src/marketing/from-conductor/copy'
 import { abuseAddress } from '../../../../../src/marketing/legal-text'
 import { productName } from '../../brand'
@@ -7,7 +8,6 @@ import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { MailLink } from './CatalogueText'
 import { LegalLinks } from './LegalLinks'
-import { useStartLabel } from './SiteActions'
 import type { SiteLinks } from './SiteHeader'
 import { Wordmark } from './Wordmark'
 import styles from './SiteFooter.module.css'
@@ -22,9 +22,9 @@ function Column(props: { title: string; children: ReactNode }) {
 }
 
 /**
- * The foot of the site: the wordmark, sections, comparison link, main
- * action, sign-in, abuse contact, and legal pages beside the copyright.
- * The main action follows the state of sign-up.
+ * The foot of the site: the wordmark, the sections and the page for people
+ * who move from Conductor Cloud, the sign-in, the address for abuse
+ * reports, and the legal pages beside the copyright.
  */
 export function SiteFooter(props: {
   links: SiteLinks
@@ -33,7 +33,6 @@ export function SiteFooter(props: {
   viewport: Viewport
 }) {
   const mobile = props.viewport === 'mobile'
-  const startLabel = useStartLabel()
   return (
     <footer className={classes(styles.footer, mobile && styles.mobile)}>
       <div className={styles.inner}>
@@ -69,7 +68,7 @@ export function SiteFooter(props: {
         <Column title="Account">
           <li>
             <ScreenLink className={styles.link} to={props.links.signIn}>
-              {startLabel}
+              {siteActionCopy.signUp}
             </ScreenLink>
           </li>
           <li>

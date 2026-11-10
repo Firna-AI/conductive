@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, expect, it } from 'vitest'
-
 import type { HeldOutput } from '../../src/shared/output-sanitizer'
 import { encrypt } from '../security/crypto'
 import { FakeRunner } from '../test-support/fake-runner'
@@ -7,7 +6,6 @@ import { createHarness, type TestHarness } from '../test-support/harness'
 import { WORKSPACE_ID } from './harness.test-support'
 import { outputFixture } from './runner-output.test-support'
 import { chatKey } from './storage-keys'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -15,7 +13,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('migrates legacy released context across streams and keeps unpublished text in its original stream', async () => {
   const f = await outputFixture(harness, { TOKEN: 'private-value' })
   const delta = { type: 'assistant.delta' as const, ...f.context }
@@ -78,6 +75,8 @@ it('migrates legacy released context across streams and keeps unpublished text i
     { messageId: 'released-answer', text: 'value' },
     { messageId: 'held-answer', text: '[redacted]' },
   ])
-  expect(JSON.stringify([...f.storage.records])).not.toContain('private-')
+  expect(JSON.stringify([...(await f.snapshot()).records])).not.toContain(
+    'private-',
+  )
   expect(pending.pendingEvents()).toEqual([])
 })

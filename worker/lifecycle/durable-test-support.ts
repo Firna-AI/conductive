@@ -20,6 +20,10 @@ export function lifecycleFixture() {
   let now = 1_800_000_000_000
   let persisted: DurableLifecycleState | undefined
   let alarmAt: number | null = null
+  const alarms = new Map<string, number>()
+  const schedule = () => {
+    alarmAt = alarms.size ? Math.min(...alarms.values()) : null
+  }
   const storage: LifecycleStorage = {
     get: async () => structuredClone(persisted),
     put: async (_key, value) => {
@@ -31,10 +35,24 @@ export function lifecycleFixture() {
       return existed
     },
     setAlarm: async (value) => {
-      alarmAt = value
+      alarms.set('state', value)
+      schedule()
     },
     deleteAlarm: async () => {
-      alarmAt = null
+      alarms.delete('state')
+      schedule()
+    },
+    changedAlarm: async (at, keepEarlier = true) => {
+      if (at === null) alarms.delete('changed')
+      else
+        alarms.set(
+          'changed',
+          Math.min(
+            at,
+            keepEarlier ? (alarms.get('changed') ?? Infinity) : Infinity,
+          ),
+        )
+      schedule()
     },
   }
   const hooks = {
@@ -52,6 +70,9 @@ export function lifecycleFixture() {
     recoverTurns: vi
       .fn<() => Promise<LifecycleTurnRecovery | undefined>>()
       .mockResolvedValue(undefined),
+    lastTurnEndedAt: vi
+      .fn<() => Promise<number | null>>()
+      .mockResolvedValue(null),
   }
   const create = () =>
     new DurableLifecycle(storage, () => now, {

@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { API_PATHS } from '../../src/shared/api'
 import { orgSuspensionPath } from '../../src/shared/operator'
 import {
@@ -8,18 +7,13 @@ import {
   sessionsPath,
 } from '../../src/shared/sessions'
 import { createChatFixture, WORKSPACE_ID } from '../chat/harness.test-support'
-import { heldOperation } from '../lifecycle/platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import {
   createHarness,
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
-import {
-  heldJsonBody,
-  observeNextQueuedTask,
-} from './chat-write-race.test-support'
 import { recordOrgSuspension } from './org-data'
-
 const refusal = {
   error: {
     code: 'org_suspended',
@@ -38,7 +32,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('refuses a chat rename whose body finishes after the operator suspension reply', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
@@ -58,11 +51,11 @@ it('refuses a chat rename whose body finishes after the operator suspension repl
   ).json()
   const beforeHistory = await fixture.history(session.id)
   const value = { title: 'After suspension' }
-  const held = heldJsonBody(
+  const held = await fixture.heldRequest(
     fixture.request(path, value, fixture.ownerCookie, 'PATCH'),
     value,
   )
-  const changing = fixture.chat.fetch(held.request)
+  const changing = held.fetch()
   try {
     await held.reading
     harness.env.OPERATOR_GITHUB_IDS = '7'
@@ -96,7 +89,6 @@ it('refuses a chat rename whose body finishes after the operator suspension repl
     (await harness.request(API_PATHS.session, fixture.ownerCookie)).status,
   ).toBe(200)
 })
-
 it('refuses a chat reopen that passed authorization before waiting in the real chat queue', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
@@ -112,7 +104,7 @@ it('refuses a chat reopen that passed authorization before waiting in the real c
   const held = heldOperation()
   const holding = fixture.chat.store.run(held.wait)
   await held.entered
-  const observer = observeNextQueuedTask(fixture.chat)
+  const observer = await fixture.observeNextQueued()
   const changing = fixture.fetch(
     sessionPaths.reopen(fixture.org.id, WORKSPACE_ID, session.id),
     {},
@@ -129,7 +121,7 @@ it('refuses a chat reopen that passed authorization before waiting in the real c
     held.release()
     await holding
     await changing
-    observer.restore()
+    await observer.restore()
   }
   const response = await changing
   expect(response.status).toBe(403)

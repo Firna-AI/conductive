@@ -30,11 +30,8 @@ On the root domain, the Worker serves Astro's built site through the assets
 binding. Listed pages use paths such as `/terms`. Listed files other than
 HTML and the file list load under `/_site/`. `/favicon.ico` also serves the
 brand favicon. Other paths get the built unknown-address page with `404`.
-A page with the start-label marker also gets the label of the main action
-from the sign-up settings. The Worker keeps that label for up to 60 seconds.
 The [marketing README](../src/marketing/README.md#how-the-worker-serves-it)
-gives the methods, markers, label, headers, policy, and unavailable-build
-response.
+gives the methods, markers, headers, policy, and unavailable-build response.
 
 The app host serves the built agreement page through GitHub sign-in.
 It also serves listed site files under `/_site/`. Other site paths get the
@@ -122,7 +119,6 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
 - [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk and image alarms from the Cron Trigger.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
-- [marketing/start-label.ts](marketing/start-label.ts) reads the label of the main action of the site, with a 60-second copy for each D1 binding.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
@@ -131,8 +127,11 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
-- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Messages use fixed safe text and numeric repair counts. They hold no token, raw error, request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
-- [features/alarms.ts](features/alarms.ts) keeps separate durable alarm deadlines for lifecycle, devices, previews, and GitHub.
+- [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. It writes one structured object with fixed text and selected safe fields. It copies no extra caller field, token, error message, request body, command output, or response body. `WarningRecord` names the logged object type. `CommandFailed` carries a failed command's state, exit code, and time-out.
+- [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too.
+- [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name.
+- [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of each alarm run of a workspace object. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
+- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the devices, the previews, and GitHub. [Workspace Durable Object](lifecycle/workspace-object.md) gives its rules.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.

@@ -3,6 +3,7 @@ import { waitlistText } from '../../../../src/marketing/access-copy'
 import {
   features,
   macAppSection,
+  productSummary,
   smallerFeatures,
 } from '../../../../src/marketing/features'
 import { parityLinkCopy } from '../../../../src/marketing/from-conductor/copy'
@@ -12,7 +13,6 @@ import { FeatureGrid } from '../components/marketing/FeatureGrid'
 import { FeatureSection } from '../components/marketing/FeatureSection'
 import { Hero } from '../components/marketing/Hero'
 import { MacDownloads } from '../components/marketing/MacDownloads'
-import type { SiteSignUp } from '../components/marketing/SiteActions'
 import { SitePage } from '../components/marketing/SitePage'
 import { paths } from '../paths'
 import { marketingPicture } from './marketingPictures'
@@ -23,26 +23,22 @@ import styles from './MarketingScreen.module.css'
  * domain: the hero with the app, the features with real screens, the Mac
  * app with its downloads, the smaller features, and a last call to action.
  * Every picture is a real screen of the catalogue, and none of it links
- * into the app. The features are the site's records in
- * `src/marketing/features.ts`, so the mockup and the site show the same
- * words. The main action names the waitlist, or open sign-up while it is
- * on.
+ * into the app. The hero sentence and the features are the site's records
+ * in `src/marketing/features.ts`, so the mockup and the site show the same
+ * words.
  */
-export function MarketingScreen(props: {
-  viewport: Viewport
-  signUp?: SiteSignUp
-}) {
+export function MarketingScreen(props: { viewport: Viewport }) {
   const { viewport } = props
   const mobile = viewport === 'mobile'
   const hero = marketingPicture('hero', viewport)
   return (
-    <SitePage signUp={props.signUp} viewport={viewport}>
+    <SitePage viewport={viewport}>
       <Hero
         device={hero.device}
         notice={{ text: parityLinkCopy.home, to: paths.fromConductor }}
         picture={hero.picture}
         signIn={paths.signIn}
-        text="Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser or from the Mac app."
+        text={productSummary.heroText}
         title="Give every coding task its own cloud computer."
         viewport={viewport}
       />

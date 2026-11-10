@@ -8,9 +8,9 @@ export const openSignUp = defineUseCase({
   steps: [
     {
       screenPath: 'marketing/open-sign-up',
-      title: 'Start free with GitHub',
+      title: 'Sign up',
       description:
-        'The waitlist is off, so the main action promises use at once. Both actions lead to the GitHub sign-in.',
+        'The waitlist is off. The home page stays the same, and Sign up leads to the GitHub sign-in.',
     },
     {
       screenPath: 'app/sign-in',

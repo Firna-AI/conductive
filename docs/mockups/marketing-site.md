@@ -8,24 +8,32 @@ header, a hero with a short link, a short headline, one sentence, and a
 large picture of the app, then one section for each feature, the Mac app
 with its downloads, the smaller features, a last call to action, and a footer. The short link above the
 headline, "From Conductor Cloud? Compare the features", leads to the page
-for people who move from Conductor Cloud. Both actions, "Join the waitlist"
-and "Sign in", lead to `app/sign-in`. A new person waits for app access,
-so the main action promises a place on the waitlist, not use at once.
-The title of the last call to action, "Give your next task its own cloud
-computer.", promises no use at once either. The sentence under it comes
-from `access-copy.ts` of the site, and it fits both states of sign-up.
-During open sign-up, each sign-in gets app access at once, so the main
-action reads "Start free with GitHub", as `marketing/open-sign-up` shows.
-`startLabel` and the label of open sign-up beside it in
-`src/components/marketing/SiteActions.tsx` hold its words for the header,
-the hero, the last call to action, and the footer. `SitePage` takes the
-state of sign-up of the page, and each main action reads it. The parts
-live in `src/components/marketing/`.
+for people who move from Conductor Cloud.
 
-The header links to the public source repository on GitHub in both layouts.
-On desktop, it also has Features and Download, which lead to the features
-and to the Mac app section of the home page. The Product column of the
-footer has Features and Mac app, which lead to the same sections.
+The hero and the last call to action show the two actions of the site. The
+main action, "Sign up", has the GitHub mark and leads to `app/sign-in`,
+where a new person gets an account that waits for app access, except
+during open sign-up. The second action, "Download for Mac", has the
+download icon and leads to the Mac app section, because the site runs no
+script to pick the chip of the visitor. No button of the site names the
+waitlist, as the user chose on 10 November 2026. The words stay the same
+in each state of sign-ups, as `marketing/open-sign-up` shows. The sentence
+under the last call to action says that the app opens when the account
+gets access, so the page promises no use at once, and the sentence fits
+each state. The title of the
+last call to action, "Give your next task its own cloud computer.",
+promises no use at once either. `siteActionCopy` in
+[`access-copy.ts`](../../src/marketing/access-copy.ts) holds the words of
+both actions for the header, the hero, the last call to action, and the
+footer, and the site reads the same words. The parts live in
+`src/components/marketing/`.
+
+The header links to the public source repository on GitHub in both layouts,
+and it has Sign in. On desktop, it also has the main action, and Features
+and Download, which lead to the features and to the Mac app section of the
+home page. The Product column of the footer has Features and Mac app,
+which lead to the same sections. Its Account column has Sign up and Sign
+in.
 
 The site keeps still captures of the workspace screen, the org settings cloud computer tab, the phone workspace list, and the Mac app.
 Changes to those screens require recapture with the [capture steps](../../src/marketing/pictures/README.md#capture-the-pictures).

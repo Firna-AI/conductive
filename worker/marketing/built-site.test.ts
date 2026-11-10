@@ -1,10 +1,7 @@
-import { createHash } from 'node:crypto'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { afterAll, beforeAll, expect, it } from 'vitest'
+import { beforeAll, expect, it } from 'vitest'
 
-import { productName } from '../../docs/mockups/src/brand'
+import { macDmgNames, productName } from '../../docs/mockups/src/brand'
+import { macAppSection } from '../../src/marketing/features'
 import { parityAreas } from '../../src/marketing/from-conductor/areas'
 import {
   parityLinkCopy,
@@ -12,16 +9,16 @@ import {
 } from '../../src/marketing/from-conductor/copy'
 import { parityFeatures } from '../../src/marketing/from-conductor/features'
 import { parityStatuses } from '../../src/marketing/from-conductor/statuses'
-import { pageHrefs, sitePaths } from '../../src/marketing/links'
-import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import {
-  SITE_FOLDER,
-  SITE_ICONS,
-  SITE_START_LABELS,
-} from '../../src/shared/site-build'
+  pageHrefs,
+  sitePaths,
+  sourceRepositoryHref,
+} from '../../src/marketing/links'
+import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
+import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import type { SiteBinding } from '../test-support/site-binding'
-import { buildSiteAssets } from './built-site.test-support'
+import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
 import { termsConsentResponse } from './consent'
 import {
   decodeHtml,
@@ -35,17 +32,11 @@ import { siteResponse } from './site'
 const SITE = 'https://conductive.test'
 const APP_ORIGIN = 'https://app.conductive.test'
 const NOW = Date.UTC(2027, 0, 15)
-let folder: string | undefined
 let assets: SiteBinding
 
 beforeAll(async () => {
-  folder = await mkdtemp(join(tmpdir(), 'conductive-site-'))
-  assets = await buildSiteAssets(folder)
+  assets = await buildSiteAssets()
 }, 30_000)
-
-afterAll(async () => {
-  if (folder) await rm(folder, { recursive: true, force: true })
-})
 
 const get = (path: string) =>
   siteResponse(
@@ -54,22 +45,7 @@ const get = (path: string) =>
     NOW,
   )
 
-function expectedPolicy(page: string) {
-  const hashes = inlineStyles(page).map(
-    (css) => `'sha256-${createHash('sha256').update(css).digest('base64')}'`,
-  )
-  return [
-    "default-src 'none'",
-    `style-src ${hashes.join(' ')}`,
-    "img-src 'self'",
-    "font-src 'self'",
-    "base-uri 'none'",
-    "form-action 'none'",
-    "frame-ancestors 'none'",
-  ].join('; ')
-}
-
-it('sends every sign-in to the app with the words of the state of sign-up, and shows the request year', async () => {
+it('sends every sign-in to the app and shows the request year', async () => {
   const response = await get('/')
   expect(response.status).toBe(200)
   expect(response.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
@@ -77,26 +53,11 @@ it('sends every sign-in to the app with the words of the state of sign-up, and s
   expect(html).toContain('Give every coding task its own cloud computer.')
   expect(html).toContain('Give your next task its own cloud computer.')
   const signIns = links(html).filter((link) =>
-    ['Join the waitlist', 'Sign in'].includes(link.text),
+    ['Sign up', 'Sign in'].includes(link.text),
   )
-  expect(signIns).toHaveLength(8)
+  expect(signIns).toHaveLength(6)
   for (const link of signIns) expect(link.href).toBe(`${APP_ORIGIN}/`)
   expect(html).toContain(`© 2027 ${productName}`)
-  const open = await siteResponse(
-    new Request(new URL('/', SITE)),
-    {
-      appOrigin: APP_ORIGIN,
-      assets,
-      readStartLabel: async () => SITE_START_LABELS.openSignup,
-    },
-    NOW,
-  )
-  const actions = links(await open.text())
-    .filter((link) => link.href === `${APP_ORIGIN}/`)
-    .map((link) => link.text)
-  expect(actions.filter((text) => text !== 'Sign in')).toEqual(
-    Array.from({ length: 4 }, () => 'Start free with GitHub'),
-  )
 })
 
 it('opens the Terms and Privacy footer links without draft text', async () => {
@@ -115,6 +76,53 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
     expect(page, name).not.toMatch(
       /lawyer review|A lawyer reviews|To confirm:|To write:|draft-field/,
     )
+  }
+})
+
+/** The address that always gives the file `name` of the latest release. */
+const latestRelease = (name: string) =>
+  `${sourceRepositoryHref}/releases/latest/download/${name}`
+
+it('leads the header, action, and footer links of the Mac app to both chip downloads', async () => {
+  const home = await (await get('/')).text()
+  const comparison = await (await get(sitePaths.fromConductor)).text()
+  /** The last call to action of a page: from its title to the footer. */
+  const closing = (page: string, title: string) =>
+    page.slice(page.indexOf(title), page.indexOf('<footer'))
+  const hero = home.slice(home.indexOf('<h1'), home.indexOf(' id="features"'))
+  const cases = [
+    ['header', home.slice(0, home.indexOf('</header>')), 'Download'],
+    ['hero', hero, 'Download for Mac'],
+    [
+      'home closing',
+      closing(home, 'Give your next task its own cloud computer.'),
+      'Download for Mac',
+    ],
+    [
+      'comparison closing',
+      closing(comparison, parityPageCopy.closing.title),
+      'Download for Mac',
+    ],
+    ['footer', home.slice(home.indexOf('<footer')), 'Mac app'],
+  ] as const
+  for (const [part, html, text] of cases) {
+    const href = links(html).find((link) => link.text === text)?.href
+    const address = new URL(href ?? '/missing', SITE)
+    expect(address.pathname, part).toBe(sitePaths.home)
+    const start = home.indexOf(` id="${address.hash.slice(1)}"`)
+    expect(start, part).toBeGreaterThan(-1)
+    const section = home.slice(start, home.indexOf('</section>', start))
+    expect(links(section), part).toEqual([
+      {
+        href: latestRelease(macDmgNames.arm64),
+        text: 'Download for Mac (Apple silicon)',
+      },
+      {
+        href: latestRelease(macDmgNames.x64),
+        text: 'Download for Mac (Intel)',
+      },
+    ])
+    expect(section, part).toContain(macAppSection.requirement)
   }
 })
 

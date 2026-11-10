@@ -9,6 +9,7 @@ import {
   text,
   type LegalDocument,
 } from './legal-text'
+import { privacyUsesSection } from './privacy-uses'
 
 /**
  * The privacy notice follows the list of privacy information in the ICO
@@ -20,7 +21,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 9 November 2026.`,
+  it uses it, and who gets it. Effective date: 10 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -36,97 +37,14 @@ export const privacyDocument: LegalDocument = {
         paragraph`For privacy questions, contact ${mailLink(legalAddress)}.`,
       ],
     },
-    {
-      title: `What ${productName} uses, and why`,
-      blocks: [
-        list(
-          text`Your GitHub account: your GitHub user ID, login, display name,
-            avatar, and the date when you created the account. They sign you
-            in, and they show who owns and who sends each piece of work. The
-            operator sees the age of the account when you wait for app
-            access. Your login and display name also tell the agents who sent
-            each message.`,
-          text`Your GitHub emails: at each sign-in, ${productName} keeps the
-            verified email addresses of your GitHub account, and which one is
-            primary. An org invitation reaches you through one of them. The
-            approval email goes to the primary one.`,
-          text`Your GitHub token: the sign-in gives ${productName} a GitHub
-            token for your account. ${productName} stores it encrypted, for
-            every account, also while you wait for app access. It uses the
-            token to read GitHub for you, and for the git calls of your
-            turns.`,
-          text`The waitlist: a new account without app access waits while the
-            waitlist is on or sign-ups are paused. It sees only the waitlist.
-            When the waitlist is off and sign-ups are not paused, open sign-up
-            gives you app access at sign-in. If you already wait, you get
-            access at your next request. You keep that access when the
-            waitlist turns on again.`,
-          text`App access records: ${productName} records when and how you got
-            app access. The record names the operator who approved you,
-            the invite code that you used, or the org invitation that you
-            accepted, with its org and the admin who sent it. For open
-            sign-up, it names that method and the operator who turned the
-            waitlist off. ${productName} also keeps the time and operator of
-            the last change to the waitlist setting. These records let the
-            operator trace misuse back to a code or a person.`,
-          text`Invite codes: each account with app access has an invite code
-            with 5 invites. ${productName} keeps who used each code, and when.
-            You see how many of your invites are left, but not who used them.
-            The operator sees both.`,
-          text`The approval email: when an operator approves your account,
-            ${productName} sends one email to the primary verified email of
-            your GitHub account, and keeps whether it went. A failed send
-            goes again for up to 24 hours. An account without a verified
-            email gets no email. ${productName} sends no email when the
-            waitlist turns off or when you get app access through open
-            sign-up.`,
-          text`Your agreement: you accept the current version of the terms at
-            each sign-in. ${productName} keeps the latest version that you
-            accepted, and the time when you first accepted it. They show that
-            you accepted the terms.`,
-          text`A suspension: if the operator suspends your account,
-            ${productName} records the time and the operator who suspended
-            it. An operator can lift the suspension, and ${productName}
-            records each lift in the same way. It keeps every record. A
-            suspension keeps your cloud computers stopped until an operator
-            lifts it.`,
-          text`Your session: a cookie of the app keeps you signed in. A
-            second cookie protects the GitHub sign-in while it runs.`,
-          text`Your orgs: the orgs, members, roles, invites, sections,
-            repositories, workspaces, scripts, and settings that you and your
-            team make. They run the service.`,
-          text`Keys and logins: the env var values of each org, and your
-            Claude or OpenAI logins. ${productName} stores them encrypted. It
-            uses your login only for the turns of the sessions that you start.
-            The messages of other members in those sessions use it only when
-            you let other members use that login.`,
-          text`Your work: ${productName} keeps your messages and the answers
-            of the agents as the chat history of each workspace. It also
-            keeps the last file list and the last summary of changes of each
-            workspace. The files that you attach go to the cloud computer of
-            the workspace.`,
-          text`Your code: it stays in the cloud computers that ${productName}
-            runs for your org. ${productName} reads a file or a diff when you
-            open it, to show it to you.`,
-          text`GitHub events: the state of the pull requests and the checks
-            of your branches, which GitHub sends to ${productName}.`,
-          text`Panel widths: your browser keeps the widths of the panels of
-            the app. They stay in your browser.`,
-        ),
-        paragraph`Where data protection law requires a lawful basis, the
-          operator relies on performance of a contract to provide the
-          service to you. It relies on legitimate interests to operate and
-          secure the service and prevent abuse. It also uses personal data
-          when necessary to comply with a legal obligation.`,
-      ],
-    },
+    privacyUsesSection,
     {
       title: 'Who gets your data',
       blocks: [
         list(
           text`Cloudflare runs ${productName} and stores its data.
-            Cloudflare's AI model service also writes a short name for each
-            new workspace from the text of its first message.`,
+            If a workspace has no name, Cloudflare's AI model service can
+            write a short name from the text of its first message.`,
           text`GitHub signs you in, and gives ${productName} access to your
             repositories through its GitHub App. The Mac app also checks
             GitHub for updates and downloads new versions. These requests
@@ -139,7 +57,9 @@ export const privacyDocument: LegalDocument = {
             your files, and your agent sessions are in them. ${productName}
             sends the provider the requests that start, stop, and use them.`,
           text`Anthropic and OpenAI get your messages, your files, and your
-            code when an agent works on them. With each message, they also get
+            code when an agent works on them. Each Mac command request and its
+            result also go to the agent and to Anthropic or OpenAI.
+            With each message, they also get
             the GitHub login and the display name of its sender. They also get
             the name of the workspace branch, which starts with the GitHub
             login of the first owner of the workspace. Each session uses the
@@ -148,8 +68,9 @@ export const privacyDocument: LegalDocument = {
             lets other members use it. When that member does not share the
             login, your message starts a new session on your own login. The
             terms of that provider apply.`,
-          text`The members of your orgs see the workspaces of the org and
-            their chats. A member with a terminal in a cloud computer can read
+          text`The members of your orgs see the workspaces of the org,
+            their chats, and each Mac command request and result.
+            A member with a terminal in a cloud computer can read
             the agent login and the GitHub token of a turn that runs there. A
             program that a tool of the agent starts, such as a dev server, can
             keep the agent login after the turn ends. A member with a terminal
@@ -204,12 +125,16 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         paragraph`When an admin deletes an org, ${productName} deletes the data
           of the org after 7 days, unless an admin restores it.`,
+        paragraph`${productName} keeps each file that you send with a message
+          until it deletes the workspace of the message. It deletes an unsent
+          file 7 days after you upload it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and
           suspension records do not automatically expire when you stop
-          using ${productName}. Workspace chat history stays while its org
-          exists, including while a cloud computer is stopped.`,
+          using ${productName}. Workspace chat history and Mac command records
+          stay while their org exists, including while a cloud computer is
+          stopped.`,
         paragraph`A connected agent login stays until you remove or replace
           it. Panel widths stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
@@ -253,10 +178,11 @@ export const privacyDocument: LegalDocument = {
     {
       title: 'Cookies',
       blocks: [
-        paragraph`This site sets no cookies. The app sets one cookie that
-          keeps you signed in, and one that protects the GitHub sign-in while
-          it runs.`,
-        paragraph`The sign-in cookie lasts for up to 7 days. The GitHub
+        paragraph`This site sets no cookies. The web app and the Mac app each
+          set their own cookie that keeps you signed in. Only the Mac app's
+          cookie store holds its session cookie. Another cookie protects the
+          GitHub sign-in while it runs.`,
+        paragraph`Each sign-in cookie lasts for up to 7 days. The GitHub
           sign-in protection cookie lasts for up to 10 minutes. These
           cookies support sign-in and security. They use secure connections
           and cannot be read by page scripts.`,

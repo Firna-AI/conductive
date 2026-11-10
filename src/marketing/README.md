@@ -6,19 +6,37 @@ the Conductor Cloud comparison page, and a page for an unknown address.
 Visitors need no sign-in. The pages run no script and set no cookie.
 Every sign-in link leads to the app, on the `app.` host.
 
-The main action and Sign in lead to the same sign-in. The words of the
-main action promise only what that sign-in gives, as
-[The main action of the site](../../docs/protocol/sign-ups.md#the-main-action-of-the-site)
-says. The Worker fills the start-label marker of a page with "Join the
-waitlist" while a new person waits for app access, as the
-[waitlist protocol](../../docs/protocol/waitlist.md) says. During open
-sign-up, it fills the marker with "Start free with GitHub". Each main
-action writes `requestValues.startLabel`: `components/StartButton.astro`,
-which the header and the page actions use, and the main action of
-`components/SiteFooter.astro`. In a build, that value is the marker.
+The main action, Sign up, and Sign in lead to the same sign-in. A new
+person waits there for app access, as the
+[waitlist protocol](../../docs/protocol/waitlist.md) says, except during
+[open sign-up](../../docs/protocol/sign-ups.md#open-sign-up). No button
+names the waitlist, and the words stay the same in each state of sign-ups,
+as [The main action of the site](../../docs/protocol/sign-ups.md#the-main-action-of-the-site)
+says. The sentence under the last call to action says that the app opens
+when the account gets access, so the page promises no use at once. The
+second action of the hero and of the last call to action, Download for
+Mac, leads to the Mac app section of the home page, because a page runs no
+script to pick the chip of the visitor. The site and the mockups read the
+words of both actions from `siteActionCopy` in `access-copy.ts`.
 
 The shared header links to the public source repository on GitHub.
-The link appears on phones and desktops.
+The link appears on phones and desktops. On desktops, the header also has
+Features and Download, which lead to the features and to the Mac app
+section of the home page. The Product column of the footer links the same
+two sections, so a phone reaches the downloads from the footer. The header
+links never wrap.
+
+The Mac app section follows the features. It links the DMG for Apple
+silicon first, then the DMG for Intel, and names the oldest macOS version
+that the app runs on. Each download is the file with a fixed name in the
+latest release of the source repository on GitHub, as
+[Releases](../../docs/protocol/desktop-app.md#releases) states, so its
+address always gives the newest DMG. Like the GitHub link of the header,
+the downloads are plain links that leave the site.
+
+The hero sentence names the browser and the Mac app. It is also the
+description of the home page. The footer tagline names both too. The site
+and the mockups read both lines from `productSummary` in `features.ts`.
 
 The marketing mockups are the visual spec:
 [`MarketingScreen.tsx`](../../docs/mockups/src/screens/MarketingScreen.tsx),
@@ -55,21 +73,6 @@ assets binding.
 - The Worker replaces the exact app-origin and year markers with escaped
   HTML text. Sign-in links use `APP_ORIGIN`. The footer uses the UTC year
   of the request.
-- A page that holds the start-label marker also gets the label of the
-  main action, as escaped text in each place of the marker. Each page of
-  the site holds it, in the main actions of its header and its footer.
-  `SITE_START_LABELS` in [`site-build.ts`](../shared/site-build.ts) holds
-  both labels. The Worker does not require the marker. A page without it
-  keeps its built words and reads no sign-up settings.
-- The label comes from the switch and the pause in D1. Each Worker app
-  keeps the label of each D1 binding for 60 seconds from the start of its
-  read, on the clock of the Worker dependencies, with no timer. So the
-  site can show a change up to 60 seconds late. Only the label uses this
-  copy. The sign-in and the request gate always read D1.
-- When the read fails, the page gets "Join the waitlist" and keeps its
-  status and headers. The Worker logs a fixed warning. It keeps no copy of
-  a failed read, so the next page reads again. Site files other than
-  pages never read D1.
 - Pages keep `Cache-Control: no-cache`, `Content-Type: text/html; charset=utf-8`,
   `Referrer-Policy: no-referrer`, and `X-Content-Type-Options: nosniff`.
   Their content security policy allows each inline style by its build hash.
@@ -123,7 +126,7 @@ the fact. A search for the old words is not enough, because a legal page
 can restate a fact in other words.
 
 The words of the legal pages, of the page for an unknown address, and of
-the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`,
+the sign-in agreement are text without markup. `terms.ts`, `privacy.ts` with `privacy-uses.ts`,
 and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
 `components/RunningText.astro` build their HTML for the site. The mockups and the sign-in screen of the app render the same text
 with React. So every surface shows the same words.
@@ -188,16 +191,11 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 `components/`. Astro builds them before the Worker serves them.
 
 - Run the site tests with `npm run test -- worker/marketing src/marketing`.
-  The built-site test builds Astro once in a temporary folder. It checks
-  both labels in the four main actions of the home page. The capture
-  tests use fake pages and a fake browser, so they need no Chrome. The
-  label test uses fake pages with the start-label marker. It moves the
-  Worker clock past the 60 seconds, and it makes the settings read fail.
+  The built-site test builds Astro once in a temporary folder. The capture
+  tests use fake pages and a fake browser, so they need no Chrome.
 - Work on the pages with `npm run site:dev`. It serves them at
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.
-  `requestValues.startLabel` gives "Join the waitlist" there, because the
-  Astro server reads no sign-up settings.
   The agreement preview is at `/app-host/terms-consent`.
   The GitHub return previews are at `/app-host/github-setup/installed`
   and `/app-host/github-setup/requested`.
@@ -217,16 +215,11 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 ### Key code
 
 - [`worker/marketing/site.ts`](../../worker/marketing/site.ts): public
-  page paths, site files, the favicon, the unknown-address page, and the
-  values of each page.
-- [`worker/marketing/start-label.ts`](../../worker/marketing/start-label.ts):
-  the label of the main action from the sign-up settings, with its
-  60-second copy and its safe fallback.
+  page paths, site files, the favicon, and the unknown-address page.
 - [`worker/marketing/files.ts`](../../worker/marketing/files.ts): the
   file-list parser and cache for each assets binding.
 - [`worker/marketing/page.ts`](../../worker/marketing/page.ts): built-page
-  reads, headers, content security policy, the safe `503` warning, and
-  values that depend on the text of the page.
+  reads, headers, content security policy, and the safe `503` warning.
 - [`worker/marketing/markers.ts`](../../worker/marketing/markers.ts): exact
   marker replacement with HTML escaping.
 - [`worker/marketing/consent.ts`](../../worker/marketing/consent.ts): the
@@ -243,21 +236,24 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   `ClosingCall.astro`: a status as its icon and word, a due day or "No date
   yet", a sentence of shared copy as markup, and the last call to action of
   a page.
-- `features.ts`: the home page's feature copy.
+- `features.ts`: the words that the site and the mockups share: the hero
+  sentence and the footer tagline, the features, the Mac app section with
+  its downloads, and the smaller features.
 - `from-conductor/`: the one source of the comparison page and its mockup.
   [Its README](from-conductor/README.md) names each module.
-- `access-copy.ts`: the sentence under the last call to action of each
-  page, which fits both states of sign-up.
-- `links.ts`: the source repository address, site paths, and `pageHrefs`
-  for links from another origin.
-- `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
+- `access-copy.ts`: the words of the two actions of the site, and the
+  sentence under the last call to action, which fits each state of
+  sign-ups.
+- `links.ts`: the source repository address, the Mac app download
+  addresses, site paths, and `pageHrefs` for links from another origin.
+- `terms.ts`, `privacy.ts`, `privacy-uses.ts`, `legal-text.ts`: legal pages and the shared
   text model, titles, contact addresses, and sign-in agreement.
-- `request-values.ts`: built-page markers and local Astro preview values,
-  with the start label.
+- `request-values.ts`: built-page markers, local Astro preview values,
+  the sign-in address, and the links to the sections of the home page.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
   CSS for the font, tokens and picture sizes, and the file list writer.
 - [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,
-  icon, marker, and file-list names and types, and the two start labels.
+  icon, marker, and file-list names and types.
 - `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
 - `styles/comparison.css`, `styles/comparison-table.css`: the comparison
   page and its table, in the cascade that `layouts/Document.astro` keeps.
@@ -280,6 +276,3 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 - [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
   real builds served through the Worker, including their policy, their
   files, and the comparison page with its two entry links.
-- [`worker/marketing/start-label.test.ts`](../../worker/marketing/start-label.test.ts):
-  both labels, the 60-second copy, the pause, a failed read, and site files
-  without D1.

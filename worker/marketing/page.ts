@@ -11,9 +11,7 @@ import { fillMarkers } from './markers'
 export async function pageResponse(
   assets: SiteAssets,
   file: SiteFile | undefined,
-  values:
-    | Partial<SiteRequestValues>
-    | ((page: string) => Promise<Partial<SiteRequestValues>>),
+  values: Partial<SiteRequestValues>,
   options: {
     status: number
     cacheControl: 'no-cache' | 'no-store'
@@ -49,9 +47,7 @@ export async function pageResponse(
     !response.headers.get('Content-Type')?.toLowerCase().startsWith('text/html')
   )
     throw new Error('Invalid site page.')
-  const page = await response.text()
-  const resolved = typeof values === 'function' ? await values(page) : values
-  const html = fillMarkers(page, resolved)
+  const html = fillMarkers(await response.text(), values)
   return new Response(options.head ? null : html, {
     status: options.status,
     headers,
@@ -59,7 +55,7 @@ export async function pageResponse(
 }
 
 export function siteUnavailable(): Response {
-  warnWorker('The built marketing site is not available.')
+  warnWorker({ kind: 'marketing_site_unavailable' })
   return new Response(null, {
     status: 503,
     headers: { 'Cache-Control': 'no-store' },

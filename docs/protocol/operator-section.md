@@ -77,7 +77,7 @@ names a dated record, as
   who waits. Reason: decision 144 chose the counts, and the two numbers
   still show who can use the app.
 - Running holds the
-  [workspace states](workspaces-and-sandboxes.md#workspace-states)
+  [workspace states](workspace-life.md#workspace-states)
   starting, ready, working, needs input, and finished with unread output.
   Failed holds the error state.
 - The 7 days are the 7 times 24 hours before the read.

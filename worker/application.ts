@@ -38,7 +38,6 @@ import { isAgentToolPath } from './tools/lists'
 import { productionGitHubWebhook } from './github/composition'
 import { appFrameSources, runnerSoftware } from './configuration'
 import { appSiteResponse } from './marketing/assets'
-import { createMarketingStartLabelReader } from './marketing/start-label'
 import { retryApprovalEmails } from './operator/approval-email'
 import { warnWorker } from './warnings'
 
@@ -49,7 +48,6 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     randomToken,
     ...overrides,
   }
-  const readStartLabel = createMarketingStartLabelReader(dependencies.now)
   const application = {
     async fetch(
       request: Request,
@@ -79,10 +77,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         const surface = hostSurface(request, env)
         appApi = surface === 'app' && path.startsWith('/api/')
         if (surface === 'marketing') {
-          const db = env.DB
-          return await marketingResponse(request, env, dependencies.now(), () =>
-            readStartLabel(db),
-          )
+          return await marketingResponse(request, env, dependencies.now())
         }
         if (surface === 'preview')
           return respond(await routePreview(request, env, dependencies))
@@ -167,7 +162,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         }
         if (isDeviceAppPath(path))
           return respond(await routeDevice(request, env, dependencies.now()))
-        const chatResponse = await routeChat(request, env, dependencies.now())
+        const chatResponse = await routeChat(
+          request,
+          env,
+          dependencies.now,
+          dependencies.randomToken,
+        )
         if (chatResponse) return respond(chatResponse)
         const featureResponse = await routeWorkspaceFeatures(
           request,
@@ -205,9 +205,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       try {
         await retryApprovalEmails(env, dependencies)
       } catch {
-        warnWorker(
-          'The retry of approval emails failed. It runs again at the next timer.',
-        )
+        warnWorker({ kind: 'approval_email_retry_failed' })
       }
     },
   }

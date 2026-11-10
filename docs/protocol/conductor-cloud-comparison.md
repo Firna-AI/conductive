@@ -20,11 +20,11 @@ shut-down day is 20 November 2026. The terms are those of the
   a public GitHub board, and a view in the app. Reason: visitors decide
   before they sign up, and links and searches reach the site.
 - The page has the header and the footer of the site. It ends with the
-  last call to action of the site. Its main action starts the GitHub
-  sign-in, with the words that
-  [The main action of the site](sign-ups.md#the-main-action-of-the-site)
-  gives. Except during open sign-up, a new account then waits for app
-  access, as [Waitlist](waitlist.md) says.
+  last call to action of the site. Its main action, "Sign up", starts the
+  GitHub sign-in. Except during [open sign-up](sign-ups.md#open-sign-up), a
+  new account then waits for app access, as [Waitlist](waitlist.md) says.
+  Its second action, "Download for Mac", leads to the Mac app section of
+  the home page.
 - The page is static content. It runs no script, sets no cookie, has no
   tracking, and reads no user data.
 - So the page has no search, filter, or sort control. A visitor uses the
@@ -35,7 +35,7 @@ shut-down day is 20 November 2026. The terms are those of the
   Conductor. Reason: the page compares another product.
 - The page names no sandbox provider, as
   [The provider](workspaces-and-sandboxes.md#the-provider) says. It names
-  the agents as [Names in the product](chat-and-events.md#names-in-the-product)
+  the agents as [Names in the product](agents-and-sessions.md#names-in-the-product)
   says.
 
 ## Entry points

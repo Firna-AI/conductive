@@ -44,8 +44,8 @@ it('writes the restore marker once after hydration and keeps the watch across a 
   await fixture.advanceTo(startedAt + 5_000, id)
   expect(fixture.boat.sandboxReads.slice(reads)).toEqual(['bx_1'])
   expect(markerCommands(fixture)).toEqual([])
-  expect(actor.storage.alarmAt).toBe(startedAt + 10_000)
-  actor.restart()
+  expect(await actor.storage.getAlarm()).toBe(startedAt + 10_000)
+  await actor.restart()
   fixture.boat.hydrated = true
   await fixture.advanceTo(startedAt + 10_000, id)
   expect(markerCommands(fixture)).toEqual([
@@ -107,8 +107,8 @@ it('ends the restore watch at stop and does not restart it for disk retention', 
   const stoppedReads = fixture.boat.sandboxReads.length
   await fixture.advanceTo(startedAt + 10_000, id)
   expect(fixture.boat.sandboxReads).toHaveLength(stoppedReads)
-  fixture.setTime(runtime.dependencies.now() + DISK_KEEPALIVE_MS)
-  for (let step = 0; step < 5; step++) await actor.endpoint().alarm()
+  await fixture.setTime(runtime.dependencies.now() + DISK_KEEPALIVE_MS)
+  for (let step = 0; step < 5; step++) await actor.endpoint().advance()
   expect(fixture.boat.resumeIds).toEqual(['bx_1'])
   expect((await actor.endpoint().readLifecycle())?.state).toBe('stopped')
   const retainedReads = fixture.boat.sandboxReads.length
@@ -188,15 +188,15 @@ it('keeps the restore watch after Boat read and marker command errors', async ()
     throw new Error('Boat read failed')
   }
   await fixture.advanceTo(startedAt + 5_000, id)
-  expect(actor.storage.alarmAt).toBe(startedAt + 35_000)
+  expect(await actor.storage.getAlarm()).toBe(startedAt + 35_000)
   expect(markerCommands(fixture)).toEqual([])
   fixture.boat.beforeSandboxRead = undefined
   await fixture.advanceTo(startedAt + 35_000, id)
-  expect(actor.storage.alarmAt).toBe(startedAt + 40_000)
+  expect(await actor.storage.getAlarm()).toBe(startedAt + 40_000)
   fixture.boat.hydrated = true
   fixture.boat.synchronousExitCode = 1
   await fixture.advanceTo(startedAt + 40_000, id)
-  expect(actor.storage.alarmAt).toBe(startedAt + 70_000)
+  expect(await actor.storage.getAlarm()).toBe(startedAt + 70_000)
   expect(markerCommands(fixture)).toHaveLength(1)
   fixture.boat.synchronousExitCode = 0
   await fixture.advanceTo(startedAt + 70_000, id)
