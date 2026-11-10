@@ -152,6 +152,7 @@ export const paths = {
   importedOldSession: 'app/imported/old-session',
   importedOldSessionActive: 'app/imported/old-session/active',
   importedOldSessionStopped: 'app/imported/old-session/stopped',
+  importedOldSessionFailed: 'app/imported/old-session/failed',
   importedHistory: 'app/imported/old-session/history',
   importedFiles: 'app/imported/files',
   importedTerminal: 'app/imported/files/terminal',

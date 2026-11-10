@@ -37,9 +37,10 @@ export type FileTabView =
 
 /**
  * The screens of the list tabs for a workspace whose screens are not those
- * of every workspace. A tab without a screen there stays static.
+ * of every workspace. A tab without a screen there, or with null, stays
+ * static.
  */
-export type FileListLinks = Readonly<Partial<Record<FileList, string>>>
+export type FileListLinks = Readonly<Partial<Record<FileList, string | null>>>
 
 /** The All files, Changes, and Checks tabs, as links. */
 function FileTabs(props: {
@@ -56,18 +57,18 @@ function FileTabs(props: {
         tabs={[
           {
             label: 'All files',
-            to: links ? links.all : paths.filesAll,
+            to: links ? (links.all ?? undefined) : paths.filesAll,
             selected: props.view === 'all',
           },
           {
             label: 'Changes',
-            to: links ? links.changes : paths.filesChanges,
+            to: links ? (links.changes ?? undefined) : paths.filesChanges,
             count: props.changes > 0 ? props.changes : undefined,
             selected: props.view === 'changes',
           },
           {
             label: 'Checks',
-            to: links ? links.checks : checksPaths[props.banner],
+            to: links ? (links.checks ?? undefined) : checksPaths[props.banner],
             selected: props.view === 'checks',
           },
         ]}

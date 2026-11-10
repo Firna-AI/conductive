@@ -43,87 +43,102 @@ export function hasFileLists(state: WorkspaceState): boolean {
   return state.sandbox === 'ready' || state.sandbox === 'stopped'
 }
 
-/** The screen of the chat of an imported workspace in each state. */
-export function importedChatPath(state: WorkspaceState): string {
-  switch (state.sandbox) {
-    case 'inactive':
-      return paths.imported
-    case 'starting':
-      return paths.importedActivating
-    case 'error':
-      return paths.importedFailed
-    case 'stopped':
-      return paths.importedStopped
-    case 'archived-inactive':
-      return paths.importedArchived
-    default:
-      return paths.importedReady
-  }
-}
+/**
+ * The screens of an imported workspace in one state of its cloud computer,
+ * where the mockups draw them. Null marks a screen that no entry draws, so
+ * its control stays static. A state whose chat lists the old sessions names
+ * both its chat and the Markdown of an old session in that state, so each
+ * document has a way back to the same state.
+ */
+export type ImportedScreens = Readonly<
+  {
+    files: string | null
+    terminal: string | null
+    preview: string | null
+    history: string | null
+  } & (
+    { chat: string; document: string } | { chat: string | null; document: null }
+  )
+>
 
 /**
- * The screens that the controls of an imported workspace open in its
- * state, where the mockups draw one: its chat, the Files, Terminal, and
- * Preview tabs, and the session history. A control without a screen stays
- * static, so no control opens another workspace or another state.
+ * Every state of the cloud computer of an imported workspace, with its
+ * screens. The record names each state, with no fallback, so a new state
+ * fails the typecheck until it names its screens. No imported entry draws
+ * a refused start, or an archive after the activation.
  */
-export type ImportedLinks = Readonly<{
-  chat: string
-  files?: string
-  terminal?: string
-  preview?: string
-  history?: string
-}>
-
-export function importedLinks(state: WorkspaceState): ImportedLinks {
-  const chat = importedChatPath(state)
-  switch (state.sandbox) {
-    case 'inactive':
-      return {
-        chat,
-        files: paths.importedFiles,
-        terminal: paths.importedTerminal,
-        preview: paths.importedPreview,
-      }
-    case 'error':
-      return { chat, files: paths.importedFailedFiles }
-    case 'ready':
-      return {
-        chat,
-        files: paths.importedReadyFiles,
-        terminal: paths.importedReadyTerminal,
-        preview: paths.importedReadyPreview,
-        history: paths.importedHistory,
-      }
-    case 'stopped':
-      return {
-        chat,
-        files: paths.importedStoppedFiles,
-        terminal: paths.importedStoppedTerminal,
-      }
-    default:
-      return { chat }
-  }
+const importedScreens: Readonly<
+  Record<WorkspaceState['sandbox'], ImportedScreens>
+> = {
+  inactive: {
+    chat: paths.imported,
+    document: paths.importedOldSession,
+    files: paths.importedFiles,
+    terminal: paths.importedTerminal,
+    preview: paths.importedPreview,
+    history: null,
+  },
+  starting: {
+    chat: paths.importedActivating,
+    document: null,
+    files: null,
+    terminal: null,
+    preview: null,
+    history: null,
+  },
+  error: {
+    chat: paths.importedFailed,
+    document: paths.importedOldSessionFailed,
+    files: paths.importedFailedFiles,
+    terminal: null,
+    preview: null,
+    history: null,
+  },
+  ready: {
+    chat: paths.importedReady,
+    document: paths.importedOldSessionActive,
+    files: paths.importedReadyFiles,
+    terminal: paths.importedReadyTerminal,
+    preview: paths.importedReadyPreview,
+    history: paths.importedHistory,
+  },
+  stopped: {
+    chat: paths.importedStopped,
+    document: paths.importedOldSessionStopped,
+    files: paths.importedStoppedFiles,
+    terminal: paths.importedStoppedTerminal,
+    preview: null,
+    history: null,
+  },
+  refused: {
+    chat: null,
+    document: null,
+    files: null,
+    terminal: null,
+    preview: null,
+    history: null,
+  },
+  archived: {
+    chat: null,
+    document: null,
+    files: null,
+    terminal: null,
+    preview: null,
+    history: null,
+  },
+  'archived-inactive': {
+    chat: paths.importedArchived,
+    document: paths.importedArchivedOldSession,
+    files: null,
+    terminal: null,
+    preview: null,
+    history: null,
+  },
 }
 
-/**
- * The screen of the Markdown of the old session in the state of the
- * workspace: before the activation, after it, or while the cloud computer
- * is stopped. Other states have no such screen.
- */
-function oldSessionPath(state: WorkspaceState): string | undefined {
-  switch (state.sandbox) {
-    case 'inactive':
-      return paths.importedOldSession
-    case 'ready':
-      return paths.importedOldSessionActive
-    case 'stopped':
-      return paths.importedOldSessionStopped
-    case 'archived-inactive':
-      return paths.importedArchivedOldSession
-    default:
-      return undefined
-  }
+/** The screens of an imported workspace in its state. */
+export function importedScreensOf(state: WorkspaceState): ImportedScreens {
+  return importedScreens[state.sandbox]
 }
 
 /**
@@ -134,8 +149,8 @@ function oldSessionPath(state: WorkspaceState): string | undefined {
 export function oldSessionLinks(
   state: WorkspaceState,
 ): Readonly<Record<string, string>> {
-  const to = oldSessionPath(state)
-  return to === undefined ? {} : { [openOldSession.key]: to }
+  const { document } = importedScreensOf(state)
+  return document === null ? {} : { [openOldSession.key]: document }
 }
 
 /**
@@ -146,6 +161,7 @@ export function oldSessionLinks(
  */
 export function importedTabs(state: WorkspaceState): WorkspaceTab[] {
   const old = state.tab === 'old-session'
+  const screens = importedScreensOf(state)
   const tabs: WorkspaceTab[] = []
   // Before an activation, and after an archive before it, nothing starts a
   // session.
@@ -154,7 +170,7 @@ export function importedTabs(state: WorkspaceState): WorkspaceTab[] {
       key: newSession.key,
       kind: 'session',
       title: nameLabel(newSession.title),
-      to: importedChatPath(state),
+      to: screens.chat ?? undefined,
       selected: !old,
     })
   }
@@ -163,7 +179,7 @@ export function importedTabs(state: WorkspaceState): WorkspaceTab[] {
       key: 'old-session',
       kind: 'markdown',
       title: openOldSession.title,
-      to: oldSessionPath(state),
+      to: screens.document ?? undefined,
       selected: true,
     })
   }

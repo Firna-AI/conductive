@@ -15,7 +15,7 @@ import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { importedChatPath, neverActivated } from './importedWorkspace'
+import { importedScreensOf, neverActivated } from './importedWorkspace'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
 
@@ -74,7 +74,7 @@ export function workspaceOverlay(
         return (
           <ImportedArchiveDialog
             archiveTo={paths.importedArchived}
-            cancelTo={importedChatPath(state)}
+            cancelTo={importedScreensOf(state).chat}
             viewport={viewport}
             workspace={workspace}
           />

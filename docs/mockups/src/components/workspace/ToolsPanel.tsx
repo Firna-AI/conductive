@@ -8,16 +8,16 @@ import styles from './ToolsPanel.module.css'
  * The desktop panel of the tools, with a tab for each tool that the app
  * offers. `links` gives the screens of the tabs for the workspace that owns
  * the panel, when they are not the screens of every workspace. A tab
- * without a screen there stays static.
+ * without a screen there, or with null, stays static.
  */
 export function ToolsPanel(props: {
   tool: ToolKey
-  links?: Readonly<Partial<Record<ToolKey, string>>>
+  links?: Readonly<Partial<Record<ToolKey, string | null>>>
   children: ReactNode
 }) {
   const tabs = toolTabs.map((tab) => ({
     label: tab.label,
-    to: props.links ? props.links[tab.key] : tab.to,
+    to: props.links ? (props.links[tab.key] ?? undefined) : tab.to,
     selected: tab.key === props.tool,
   }))
   return (

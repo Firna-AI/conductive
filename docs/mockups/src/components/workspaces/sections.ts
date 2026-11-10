@@ -131,16 +131,30 @@ function importedArchive(status: WorkspaceStatus): string | undefined {
 }
 
 /**
+ * The screen of a selected imported row: the screen of its state, none for
+ * a state that no entry draws, or its usual screen when the caller names no
+ * state.
+ */
+function openRow(
+  openTo: string | null | undefined,
+  usual: string | undefined,
+): string | undefined {
+  if (openTo === undefined) return usual
+  return openTo ?? undefined
+}
+
+/**
  * The sections after an import from Conductor: Import from Conductor at
  * the top, with the workspaces of the import and their states, then the
  * other sections. A row opens its workspace, when the mockups draw it.
  * `open` is the workspace that the main area shows, and `openTo` the
- * screen of its current state, which its selected row keeps.
+ * screen of its current state, which its selected row keeps. Null keeps
+ * that row static, for a state that no entry draws.
  */
 export function sectionsWithImport(
   imported: readonly Workspace[],
   open?: OpenWorkspace,
-  openTo?: string,
+  openTo?: string | null,
 ): SidebarSection[] {
   const rows = imported.map((workspace): WorkspaceRow => {
     const isOpen = workspace.key === open?.workspace.key
@@ -150,7 +164,7 @@ export function sectionsWithImport(
       workspace,
       status,
       selected: isOpen,
-      to: isOpen ? (openTo ?? to) : to,
+      to: isOpen ? openRow(openTo, to) : to,
       archiveTo:
         workspace.key === 'coupon-totals'
           ? (importedArchive(status) ?? null)
@@ -164,19 +178,19 @@ export function sectionsWithImport(
  * The sections after an imported workspace was archived before its
  * activation. It leaves Import from Conductor for the open Archived group,
  * where its row keeps `openTo`, and the other workspaces of the import
- * stay in their section.
+ * stay in their section. Null keeps that row static.
  */
 export function archivedWithImport(
   open: Workspace,
   imported: readonly Workspace[],
-  openTo?: string,
+  openTo?: string | null,
 ): { sections: SidebarSection[]; archived: WorkspaceRow[] } {
   const others = imported.filter((item) => item.key !== open.key)
   const archived: WorkspaceRow = {
     workspace: open,
     status: 'archived',
     selected: true,
-    to: openTo,
+    to: openTo ?? undefined,
   }
   return { sections: sectionsWithImport(others), archived: [archived] }
 }

@@ -29,6 +29,13 @@ export const importedOldSession = defineScreen({
       props: { sandbox: 'ready', tab: 'old-session' },
     },
     {
+      slug: 'failed',
+      title: 'After a failed activation',
+      description:
+        "The activation failed, and Cal opened the same old session. The file opens beside the tab of the new session. The header shows Couldn't start, the panels say that the workspace couldn't be activated, and the way back of a phone returns to the failed activation.",
+      props: { sandbox: 'error', tab: 'old-session' },
+    },
+    {
       slug: 'stopped',
       title: 'While stopped',
       description:

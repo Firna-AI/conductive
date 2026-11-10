@@ -372,11 +372,12 @@ child pages:
 - `app/imported/list` has the workspace list after the import, with the
   section Import from Conductor at the top.
 - `app/imported/old-session` has the Markdown file of an old session in the
-  Markdown view of the app, before the activation. Its `active` and
-  `stopped` variants have the same file after the activation and while the
-  activated workspace is stopped, and its `history` variant has the old
-  sessions in the session history. Each link to the file, its tab, and
-  the way back of a phone keep the state of the workspace.
+  Markdown view of the app, before the activation. Its `active`, `failed`,
+  and `stopped` variants have the same file after the activation, after a
+  failed activation, and while the activated workspace is stopped, and its
+  `history` variant has the old sessions in the session history. Each link
+  to the file, its tab, and the way back of a phone keep the state of the
+  workspace.
 - `app/imported/files` has the Files tab of a phone before the activation.
   Its `terminal` and `preview` variants have the other tabs before the
   activation, and its `stopped` and `stopped-terminal` variants have the
@@ -402,8 +403,11 @@ child pages:
 
 The controls of an imported workspace open only screens of the same
 workspace in the same state: the tabs of a phone, the list tabs of its
-Files panel, its tool tabs, and its session history. A control with no such
-screen stays static.
+Files panel, its tool tabs, its session history, its old documents, and
+its selected row. One record in `src/screens/importedWorkspace.tsx` names
+the screens of every state, with no fallback, and a state that no entry
+draws, such as a refused start, keeps each control static. The terminal of
+the activated workspace waits at a prompt on its own branch.
 
 [The Mac app](mac-app.md#the-import-from-conductor) gives the pages of the
 import itself, under `mac-app/import`. The flow

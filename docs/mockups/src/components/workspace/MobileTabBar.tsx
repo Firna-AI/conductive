@@ -7,18 +7,18 @@ import styles from './MobileTabBar.module.css'
  * The workspace tabs of a phone: the chat, the files, and each tool that
  * the app offers. `links` gives the screens of the tabs for the workspace
  * that owns the bar, when they are not the screens of every workspace. A
- * tab without a screen there stays static.
+ * tab without a screen there, or with null, stays static.
  */
 export function MobileTabBar(props: {
   selected: MobileTabKey
-  links?: Readonly<Partial<Record<MobileTabKey, string>>>
+  links?: Readonly<Partial<Record<MobileTabKey, string | null>>>
 }) {
   return (
     <nav aria-label="Workspace" className={styles.bar}>
       {mobileTabs.map((tab) => {
         const selected = tab.key === props.selected
         const Icon = tab.icon
-        const to = props.links ? props.links[tab.key] : tab.to
+        const to = (props.links ? props.links[tab.key] : tab.to) ?? undefined
         const className = classes(styles.tab, selected && styles.selected)
         const content = (
           <>

@@ -29,14 +29,14 @@ import {
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
-import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
+import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
+import { idlePrompt, terminalProcesses } from '../fixtures/terminal'
 import type { Workspace, WorkspaceStatus } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import {
   hasFileLists,
-  importedChatPath,
-  importedLinks,
   importedPanel,
+  importedScreensOf,
   isImported,
 } from './importedWorkspace'
 import { panelState } from './workspaceSandbox'
@@ -69,7 +69,10 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
  * The way back from a file page on a phone: to its list, or to the chat
  * for the Markdown of an old session.
  */
-function backFrom(open: FileTabView, state: WorkspaceState): BackLink {
+function backFrom(
+  open: FileTabView,
+  state: WorkspaceState,
+): BackLink | undefined {
   switch (open) {
     case 'diff':
       return { label: 'Changes', to: paths.filesChanges }
@@ -80,8 +83,11 @@ function backFrom(open: FileTabView, state: WorkspaceState): BackLink {
     case 'code':
     case 'markdown':
       return { label: 'All files', to: paths.filesAll }
-    case 'old-session':
-      return { label: 'Chat', to: importedChatPath(state) }
+    case 'old-session': {
+      // A state that draws no chat keeps the way back static.
+      const { chat } = importedScreensOf(state)
+      return chat === null ? undefined : { label: 'Chat', to: chat }
+    }
   }
 }
 
@@ -110,14 +116,16 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 /**
  * The screen of the open workspace in its state, for its selected row,
  * where the mockups draw one screen for each state: a workspace from
- * Conductor, and the new workspace on a chosen branch.
+ * Conductor, and the new workspace on a chosen branch. Null keeps the row
+ * static for an imported state that no entry draws. Undefined keeps the
+ * row of every other workspace.
  */
-export function openRowPath(state: WorkspaceState): string | undefined {
-  if (isImported(state)) return importedChatPath(state)
+export function openRowPath(state: WorkspaceState): string | null | undefined {
+  if (isImported(state)) return importedScreensOf(state).chat
   if (state.workspace !== 'saved-carts-branch') return undefined
-  return state.sandbox === 'starting'
-    ? paths.newWorkspaceBranchStart
-    : paths.newWorkspaceBranchGone
+  if (state.sandbox === 'starting') return paths.newWorkspaceBranchStart
+  if (state.sandbox === 'error') return paths.newWorkspaceBranchGone
+  return undefined
 }
 
 /**
@@ -155,7 +163,7 @@ export function FilesContent(props: {
       banner={state.banner}
       edited={!isNew(state) && hasFileLists(state)}
       links={
-        isImported(state) ? { all: importedLinks(state).files } : undefined
+        isImported(state) ? { all: importedScreensOf(state).files } : undefined
       }
       open={open}
       paths={state.paths}
@@ -178,16 +186,21 @@ export function ToolContent(props: {
   const panel = panelState(state)
   if (panel) return <SandboxPanel phone={mobile} state={panel} />
   switch (state.tool) {
-    case 'terminal':
-      return isNew(state) ? (
+    case 'terminal': {
+      // The terminal belongs to the open workspace: its own process, or an
+      // idle prompt on its own repository and branch.
+      const lines = terminalProcesses[state.workspace]
+      const workspace = openableWorkspaceRecords[state.workspace]
+      return lines === null ? (
         <TerminalView
           extraKeys={mobile}
           lines={[]}
-          prompt={freshSessionPrompt}
+          prompt={idlePrompt(workspace)}
         />
       ) : (
-        <TerminalView extraKeys={mobile} lines={workspaceSession} />
+        <TerminalView extraKeys={mobile} lines={lines} />
       )
+    }
     case 'preview':
       return state.ports === 'open' ? <PortPreview /> : <PreviewEmpty />
     case 'desktop':
@@ -200,13 +213,13 @@ function sectionsOf(
   open: OpenWorkspace,
   suspended: boolean,
   created: readonly OpenWorkspace[],
-  openTo?: string,
+  openTo?: string | null,
 ): SidebarSection[] {
   if (suspended) return suspendedSections(open.workspace)
   if (open.workspace.from === 'conductor') {
     return sectionsWithImport(importedWorkspaces, open, openTo)
   }
-  return workspaceSections(open, undefined, created, openTo)
+  return workspaceSections(open, undefined, created, openTo ?? undefined)
 }
 
 /**
@@ -224,7 +237,7 @@ export function workspaceSidebar(
   suspended: boolean,
   viewer: Membership,
   created: readonly OpenWorkspace[] = [],
-  openTo?: string,
+  openTo?: string | null,
 ): ReactNode {
   if (status !== 'archived') {
     const open = { workspace, status }

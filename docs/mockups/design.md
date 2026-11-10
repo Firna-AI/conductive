@@ -132,7 +132,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `BranchPicker` beside it is the picker, with a search field, New branch,
   the open pull requests, and the branches without one. It leaves out the
   default branch. The New workspace dialog shows the same choice as a
-  quiet picker beside its repository picker.
+  quiet picker beside its repository picker. The screen of each form, the
+  page or the dialog, derives its branch links from its full state, and
+  the phone view of the dialog keeps the links of the dialog. A state that
+  differs from the base example of its form apart from the branch and the
+  picker, such as another draft, org, notice, or viewer, keeps every
+  branch control static.
 - A workspace from Conductor shows the flag From Conductor, a Firna badge,
   after its label in the header. `src/components/conductor-import/` holds
   its parts: the links to its old sessions in place of an empty chat, the
@@ -151,9 +156,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   deleted cloud computer, because the workspace never had one.
 - `MobileTabBar`, `ToolsPanel`, the list tabs of `FilesPanel`, and
   `WorkspaceTabs` take optional links for a workspace whose screens are not
-  those of every workspace. A tab with no screen there stays static. An
-  imported workspace passes the screens of its state, so its tabs never
-  open another workspace or another state.
+  those of every workspace. A tab with no screen there, or with null, stays
+  static. An imported workspace passes the screens of its state from one
+  record that names every state, so its tabs never open another workspace
+  or another state.
+- The terminal of a workspace belongs to it. `terminalProcesses` in
+  `src/fixtures/terminal.ts` holds the process of each workspace that runs
+  one, today the dev server of Checkout address autocomplete. Every other
+  terminal waits at an idle prompt on the repository and the branch of its
+  own workspace. The port state does not decide it, because a session can
+  open a port while the terminal stays idle.
 - The account has two tabs, General and Preferences, as links, as the org
   settings have. Preferences holds the New workspaces section, whose rows
   put each label beside its control in two columns. A segmented control

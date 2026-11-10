@@ -30,7 +30,7 @@ export const importedReady = defineScreen({
       slug: 'terminal',
       title: 'Terminal',
       description:
-        'The Terminal tab of a phone after the activation, in the cloud computer of the workspace.',
+        'The Terminal tab of a phone after the activation, in the cloud computer of the workspace. It waits at a prompt on storefront and calummoore/karachi-v7, because no session runs a process yet.',
       props: { focus: 'tool', tool: 'terminal' },
     },
     {
@@ -38,7 +38,7 @@ export const importedReady = defineScreen({
       title: 'Preview',
       description:
         'The Preview tab of a phone after the activation. No session has started a web server yet, so no port is open.',
-      props: { focus: 'tool', tool: 'preview', ports: 'none' },
+      props: { focus: 'tool', tool: 'preview' },
     },
     {
       slug: 'stopped',

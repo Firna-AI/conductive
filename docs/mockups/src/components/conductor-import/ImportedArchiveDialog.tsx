@@ -15,8 +15,8 @@ import { ScreenLink } from '../common/ScreenLink'
  */
 export function ImportedArchiveDialog(props: {
   workspace: Workspace
-  /** The screen of the workspace that Cancel returns to. */
-  cancelTo: string
+  /** The screen of the workspace that Cancel returns to. Null keeps it static. */
+  cancelTo: string | null
   /** The screen of the archived workspace that Archive leads to. */
   archiveTo: string
   viewport: Viewport
@@ -25,9 +25,13 @@ export function ImportedArchiveDialog(props: {
     <ConfirmDialog
       actions={
         <>
-          <ScreenLink asChild to={props.cancelTo}>
+          {props.cancelTo === null ? (
             <ActionButton>Cancel</ActionButton>
-          </ScreenLink>
+          ) : (
+            <ScreenLink asChild to={props.cancelTo}>
+              <ActionButton>Cancel</ActionButton>
+            </ScreenLink>
+          )}
           <ScreenLink asChild to={props.archiveTo}>
             <ActionButton icon={Archive} tone="primary">
               Archive

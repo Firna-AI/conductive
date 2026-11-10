@@ -255,8 +255,9 @@ export const checksWorkspace: WorkspaceState = {
 
 /**
  * The workspace from Conductor as it opens after the import: no cloud
- * computer yet, and its branch on GitHub without a pull request. Its
- * entries change from here.
+ * computer yet, and its branch on GitHub without a pull request. No
+ * session has opened a port, also after its activation. Its entries change
+ * from here.
  */
 export const importedWorkspace: WorkspaceState = {
   ...readyWorkspace,
@@ -264,4 +265,5 @@ export const importedWorkspace: WorkspaceState = {
   sandbox: 'inactive',
   banner: 'none',
   files: 'all',
+  ports: 'none',
 }

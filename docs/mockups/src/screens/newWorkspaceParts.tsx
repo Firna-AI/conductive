@@ -53,6 +53,23 @@ export type NewWorkspaceFormState = {
   ]: (typeof newWorkspaceFormProperties)[Key]['enum'][number]
 }
 
+/**
+ * Whether a form state matches the base example of its form in every field
+ * apart from the branch and the picker. `fields` is the list of every field
+ * from the schema of the form, so a field that a schema adds takes part
+ * too.
+ */
+export function matchesBaseForm<S extends NewWorkspaceFormState>(
+  fields: readonly (keyof S)[],
+  state: S,
+  base: S,
+): boolean {
+  return fields.every(
+    (field) =>
+      field === 'branch' || field === 'picker' || state[field] === base[field],
+  )
+}
+
 /** The text of an empty message, on the page and in the dialog. */
 export const taskPlaceholder = 'Describe the task'
 

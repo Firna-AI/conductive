@@ -569,7 +569,8 @@ These are agent calls from Milestone 1, within the decisions in force.
   Reason: Stopped would imply that a cloud computer had already existed.
 - Old sessions appear as document links in the empty chat and in the
   session history. A phone opens their Markdown in Chat, with a way back.
-  Each link keeps the inactive, active, or stopped state of the workspace.
+  Each drawn readable state keeps its own document and return destinations,
+  including a failed activation and an archive before activation.
   Reason: old documents must stay reachable after a new chat fills the tab.
 - Before activation, files and tools show Not active, with no Changes
   count. The activation question takes the place of the composer.
@@ -582,6 +583,15 @@ These are agent calls from Milestone 1, within the decisions in force.
   loading, failure, and no-match states. A phone uses a sheet. Opening
   Change keeps the current choice and draft. Reason: the dialog preference
   must give the same branch choice as the page.
+- Each branch link also keeps the full form state, including its org,
+  notices, and viewer. An example without a matching drawn destination
+  keeps that control static. Reason: a catalogue link must not replace
+  the user's draft or org with another example.
+- Terminal fixtures use the current workspace's repository and branch.
+  An explicit workspace record supplies running-process output. Other
+  terminals show an idle prompt. Native examples keep their existing
+  output. Reason: the imported workspace must not show another branch's
+  terminal or claim that a server is running in its idle example.
 - A failed first start on a branch that is gone keeps the workspace and
   its messages. It names the branch and offers Try again after the user
   restores the branch on GitHub. The existing failed-first-start rule
@@ -823,6 +833,12 @@ timing. It opens only a workspace whose own upload is complete.
 - [x] Keep import fixtures separate from the native section collection
       that the app's tests and development data read.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Fix review 1: keep old-document and return links paired in every
+      drawn readable lifecycle state, with a failed-activation document.
+- [x] Fix review 2: preserve the originating form and full state in branch
+      navigation, including the phone view of the dialog.
+- [x] Fix review 3: derive terminal identity and process output from its
+      workspace, while preserving native fixture output.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 

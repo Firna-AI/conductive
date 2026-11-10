@@ -28,7 +28,11 @@ import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
 import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
-import { importedChat, importedLinks, isImported } from './importedWorkspace'
+import {
+  importedChat,
+  importedScreensOf,
+  isImported,
+} from './importedWorkspace'
 import { placeLostUpdate } from './lostUpdates'
 import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
@@ -96,7 +100,7 @@ export function WorkspaceScreen(props: {
   // A workspace from Conductor has no session of its own until a message,
   // and its controls stay in its own screens.
   const imported = isImported(state) ? importedChat(state) : undefined
-  const links = isImported(state) ? importedLinks(state) : undefined
+  const links = isImported(state) ? importedScreensOf(state) : undefined
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (

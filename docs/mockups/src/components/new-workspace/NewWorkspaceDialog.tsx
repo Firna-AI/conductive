@@ -25,7 +25,7 @@ import {
   type BranchChoice,
   type PickerState,
 } from './BranchPicker'
-import { pickerScreens } from './branchScreens'
+import type { BranchLinks } from './branchScreens'
 import styles from './NewWorkspaceDialog.module.css'
 
 /** The repository of the new workspace, as a compact picker. */
@@ -60,11 +60,17 @@ const branchLabels: Readonly<
 /**
  * The branch of the new workspace, as a quiet picker beside the repository:
  * New branch by default. It opens the picker of the dialog with the current
- * choice still checked, and the picker hangs below it when it is open.
+ * choice still checked, where `links` names that screen, and the picker
+ * hangs below it when it is open.
  */
-function BranchControl(props: { choice: BranchChoice; picker: PickerState }) {
+function BranchControl(props: {
+  choice: BranchChoice
+  picker: PickerState
+  links: BranchLinks
+}) {
   const { label, icon } = branchLabels[props.choice]
   const open = props.picker !== 'closed'
+  const to = props.links.picker
   const button = (
     <ActionButton
       accessibilityLabel={`Branch: ${label}`}
@@ -81,17 +87,17 @@ function BranchControl(props: { choice: BranchChoice; picker: PickerState }) {
   )
   return (
     <span className={styles.anchor}>
-      {open ? (
+      {open || to === null ? (
         button
       ) : (
-        <ScreenLink asChild to={pickerScreens.dialog[props.choice]}>
+        <ScreenLink asChild to={to}>
           {button}
         </ScreenLink>
       )}
       {open ? (
         <BranchPicker
           choice={props.choice}
-          form="dialog"
+          links={props.links}
           placement="below-start"
           state={props.picker}
         />
@@ -126,8 +132,11 @@ function CreateButton(props: { ready: boolean }) {
 export type NewWorkspaceDialogProps = {
   /** The chosen repository, or none while the org has chosen none. */
   repository?: string
-  /** The branch of the new workspace, and the state of its picker. */
-  branch: { choice: BranchChoice; picker: PickerState }
+  /**
+   * The branch of the new workspace, the state of its picker, and the
+   * branch links of the dialog, from its full state.
+   */
+  branch: { choice: BranchChoice; picker: PickerState; links: BranchLinks }
   /** The org and the section that the new workspace joins. */
   place: string
   /** The message and its files. */
@@ -171,6 +180,7 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
               <RepositoryPicker name={props.repository} />
               <BranchControl
                 choice={props.branch.choice}
+                links={props.branch.links}
                 picker={props.branch.picker}
               />
             </>

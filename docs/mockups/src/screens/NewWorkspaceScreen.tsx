@@ -5,6 +5,10 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
 import { BranchPicker } from '../components/new-workspace/BranchPicker'
+import {
+  branchLinks,
+  type BranchLinks,
+} from '../components/new-workspace/branchScreens'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { firstBuildStates } from '../fixtures/computer'
 import { memberViewer, you } from '../fixtures/members'
@@ -13,6 +17,7 @@ import { FirstBuildNotice } from './firstBuildNotice'
 import { pageOrg, railOf, sidebarOf, Start } from './newWorkspacePageParts'
 import {
   formNotices,
+  matchesBaseForm,
   newWorkspaceDrafts,
   newWorkspaceFormProperties,
   taskPlaceholder,
@@ -75,7 +80,11 @@ const createFlows: Readonly<
  * Try again. A suspended org shows the refused bar. Before the first good
  * build, the draft stays and Send is off.
  */
-function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
+function NewChat(props: {
+  state: NewWorkspaceState
+  viewport: Viewport
+  links: BranchLinks
+}) {
   const { state } = props
   const page = pageOrg(state)
   const suspended = state.org === 'suspended'
@@ -121,6 +130,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
           <Start
             admin={state.viewer === 'admin'}
             chosen={state.repositories === 'chosen'}
+            links={props.links}
             page={page}
             phone={props.viewport === 'mobile'}
             state={state}
@@ -140,13 +150,34 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   )
 }
 
-/** A New workspace page with the repositories and the composer of its org. */
+/**
+ * The branch links of the page, from its full state: live only while the
+ * state matches the base example of the page apart from the branch and
+ * the picker.
+ */
+function pageBranchLinks(state: NewWorkspaceState): BranchLinks {
+  const matches = matchesBaseForm(
+    newWorkspaceSchema.required,
+    state,
+    newWorkspaceForm,
+  )
+  return branchLinks('page', state.branch, matches)
+}
+
+/**
+ * A New workspace page with the repositories and the composer of its org.
+ * `branchLinks` are the branch links of the form that the page draws: the
+ * phone view of the dialog passes the links of the dialog, from the full
+ * state of the dialog. Otherwise the page derives its own links.
+ */
 export function NewWorkspaceScreen(props: {
   state: NewWorkspaceState
   viewport: Viewport
+  branchLinks?: BranchLinks
 }) {
   const mac = useMacApp()
   const { state } = props
+  const links = props.branchLinks ?? pageBranchLinks(state)
   const mobile = props.viewport === 'mobile'
   const pageOrgData = pageOrg(state)
   const page = (
@@ -157,7 +188,7 @@ export function NewWorkspaceScreen(props: {
       title="New workspace"
       viewport={props.viewport}
     >
-      <NewChat state={state} viewport={props.viewport} />
+      <NewChat links={links} state={state} viewport={props.viewport} />
     </Page>
   )
   if (mobile) {
@@ -168,6 +199,7 @@ export function NewWorkspaceScreen(props: {
           <Sheet title="Branch">
             <BranchPicker
               choice={state.branch}
+              links={links}
               placement="sheet"
               state={state.picker}
             />

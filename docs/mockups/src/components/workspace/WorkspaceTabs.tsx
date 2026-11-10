@@ -37,9 +37,12 @@ export const historyEntries: readonly MenuEntry[] = closedSessions.map(
 /**
  * The screens of + and of the session history for a workspace whose
  * screens are not those of every workspace. A control without a screen
- * there stays static.
+ * there, or with null, stays static.
  */
-export type SessionLinks = Readonly<{ newSession?: string; history?: string }>
+export type SessionLinks = Readonly<{
+  newSession?: string | null
+  history?: string | null
+}>
 
 /** A button that leads to `to`, or a static one when it has no screen. */
 function Linked(props: { to?: string; children: ReactElement }) {
@@ -171,7 +174,7 @@ export function WorkspaceTabs(props: {
         {dropAt(tabs.length)}
       </ul>
       {readOnly ? null : (
-        <Linked to={links ? links.newSession : paths.sessions}>
+        <Linked to={links ? (links.newSession ?? undefined) : paths.sessions}>
           <IconButton icon={Plus} label="New session" />
         </Linked>
       )}
@@ -179,7 +182,7 @@ export function WorkspaceTabs(props: {
         anchored={!phone}
         entries={props.historyEntries ?? historyEntries}
         open={props.historyOpen ?? false}
-        to={links ? links.history : paths.sessionHistory}
+        to={links ? (links.history ?? undefined) : paths.sessionHistory}
       />
     </nav>
   )

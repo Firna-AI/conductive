@@ -3,6 +3,7 @@ import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import { BranchLine } from '../components/new-workspace/BranchLine'
+import type { BranchLinks } from '../components/new-workspace/branchScreens'
 import {
   ChooseRepositoriesButton,
   chooseRepositoriesFirst,
@@ -75,9 +76,10 @@ export function pageOrg(state: NewWorkspaceState): PageOrg {
 /**
  * The start of an empty chat, with the repository of the new workspace.
  * The line under the repository names the branch, a new one by default,
- * with a quiet link that changes it. The note names the build that the
- * workspace starts from. Before the first good build there is none, and
- * the notice over the composer says why.
+ * with a quiet link that changes it, where `links`, the branch links of
+ * the form, name a screen. The note names the build that the workspace
+ * starts from. Before the first good build there is none, and the notice
+ * over the composer says why.
  */
 export function Start(props: {
   page: PageOrg
@@ -85,6 +87,7 @@ export function Start(props: {
   admin: boolean
   state: NewWorkspaceState
   phone: boolean
+  links: BranchLinks
 }) {
   return (
     <div className={styles.start}>
@@ -114,6 +117,7 @@ export function Start(props: {
       {props.chosen ? (
         <BranchLine
           choice={props.state.branch}
+          links={props.links}
           phone={props.phone}
           picker={props.state.picker}
         />
