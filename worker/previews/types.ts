@@ -29,5 +29,6 @@ export interface WorkspaceTarget {
   orgId: string
   workspaceId: string
   sandboxId: string | null
+  providerAccount: string
   state: WorkspaceState
 }

@@ -1,11 +1,15 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { providerForAccount } from '../sandbox/client'
 import {
   cleanupBusy,
   keepCleanupLease,
   withCleanupLease,
 } from './cleanup-lease'
-import { deletedOrgProvider, ignoreAlreadyRemoved } from './cleanup-provider'
+import {
+  ignoreAlreadyRemoved,
+  requireDeletedOrgCleanup,
+} from './cleanup-provider'
 import {
   cleanupResources,
   markOrgDeleted,
@@ -86,23 +90,29 @@ export async function stopDeletedOrg(
       resource.removedAt === null,
   )
   if (resources.length === 0) return
-  const provider = await deletedOrgProvider(
-    env,
-    orgId,
-    token,
-    dependencies.fetch,
-  )
   const failures: unknown[] = []
   for (const resource of resources) {
     await keepCleanupLease(env, orgId, token, dependencies)
+    await requireDeletedOrgCleanup(env, orgId, token)
     try {
+      const provider = providerForAccount(
+        env,
+        dependencies.fetch,
+        resource.providerAccount,
+      )
       await ignoreAlreadyRemoved(() => provider.stop(resource.id))
     } catch (error) {
       failures.push(error)
       continue
     }
     await keepCleanupLease(env, orgId, token, dependencies)
-    await markResourceStopped(env.DB, orgId, resource.id, dependencies.now())
+    await markResourceStopped(
+      env.DB,
+      orgId,
+      resource.id,
+      resource.providerAccount,
+      dependencies.now(),
+    )
   }
   if (failures.length > 0) throw failures[0]
 }

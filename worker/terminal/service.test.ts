@@ -80,27 +80,38 @@ it('keeps the local password through automatic service restarts and caches only 
 it('refuses to cache a terminal password when the sandbox changes during its password read', async () => {
   const seed = await harness.seed()
   const base = harness.dependencies.fetch
+  let change = "sandbox_id = 'bx_replacement'"
   harness.dependencies.fetch = async (request) => {
     if (new URL(request.url).pathname.endsWith('/files')) {
       await harness.env.DB.prepare(
-        "UPDATE workspaces SET sandbox_id = 'bx_replacement' WHERE id = ?",
+        `UPDATE workspaces SET ${change} WHERE id = ?`,
       )
         .bind(seed.workspaceId)
         .run()
     }
     return base(request)
   }
-  await expect(
-    startWorkspaceTerminal(
-      harness.env,
-      seed.orgId,
-      seed.workspaceId,
-      harness.dependencies,
-    ),
-  ).rejects.toMatchObject({ status: 404 })
-  expect(
+  for (change of [
+    "sandbox_id = 'bx_replacement'",
+    "provider_account = 'boat-second'",
+  ]) {
     await harness.env.DB.prepare(
-      'SELECT COUNT(*) AS count FROM terminal_credentials',
-    ).first<number>('count'),
-  ).toBe(0)
+      "UPDATE workspaces SET sandbox_id = 'bx_one', provider_account = 'boat' WHERE id = ?",
+    )
+      .bind(seed.workspaceId)
+      .run()
+    await expect(
+      startWorkspaceTerminal(
+        harness.env,
+        seed.orgId,
+        seed.workspaceId,
+        harness.dependencies,
+      ),
+    ).rejects.toMatchObject({ status: 404 })
+    expect(
+      await harness.env.DB.prepare(
+        'SELECT COUNT(*) AS count FROM terminal_credentials',
+      ).first<number>('count'),
+    ).toBe(0)
+  }
 })

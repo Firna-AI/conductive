@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, a problem outside the scope of the check of finding 8, branch `conductor/boat-native-remote-workspaces-milestone-5d`, round 1. The same day, the item grew to cover the workspace cleanup owners.
-- **Location:** `worker/members/deletion-data.ts:120-129` (`recordSuspendedResources`), `worker/members/deletion.ts:62-81` (`stopDeletedOrg`), `worker/members/cleanup.ts:58-110` (the purge), `worker/members/purge-data.ts:11-37`, `worker/lifecycle/settings-data.ts:150-160` (`firstOrgAdmin`), `worker/lifecycle/start-allocation-cleanup.ts:16-25` (`retryAllocationCleanup`), `worker/lifecycle/cleanup.ts:25-37` (`retrySandboxCleanup`), and `worker/members/README.md:82-85` (the `suspendOrg` contract).
+- **Location:** `worker/members/deletion-data.ts:120-129` (`recordSuspendedResources`), `worker/members/deletion.ts:62-81` (`stopDeletedOrg`), `worker/members/cleanup.ts:58-110` (the purge), `worker/members/purge-data.ts:11-37`, `worker/lifecycle/settings-data.ts:150-160` (`firstOrgAdmin`), `worker/lifecycle/start-allocation-cleanup.ts:16-25` (`retryAllocationCleanup`), `worker/lifecycle/cleanup.ts:25-37` (`retrySandboxCleanup`), and `worker/members/lifecycle-hooks.md:17-20` (the `suspendOrg` contract).
 - **Reason:** Delete org had this gap before the time-limit work that found it, and the production hooks now drain starts and builds.
 
 - **Source:** Review. **Category:** Product bug.
@@ -16,7 +16,7 @@
 - **Background:**
   - The protocol says that Delete org stops every sandbox of the org at once. It also says that the app deletes everything of the org after 7 days, unless an admin restores the org. See the "Delete org" section of `docs/protocol/orgs-and-members.md`.
   - `stopDeletedOrg` runs the `suspendOrg` hook, then fills the deletion list with `recordSuspendedResources`, then stops each listed sandbox. It fills the list only once, before it marks the org suspended.
-  - The `suspendOrg` contract in `worker/members/README.md` says that the hook must drain pending workspace starts and image builds, and keep their sandbox IDs in D1. It does not say what the drain does with a cleanup owner.
+  - The `suspendOrg` contract in `worker/members/lifecycle-hooks.md` says that the hook must drain pending workspace starts and image builds, and keep their sandbox IDs in D1. It does not say what the drain does with a cleanup owner.
   - `productionMembersHooks` in `worker/members/composition.ts` implements `suspendOrg`. It suspends the lifecycle of the org image and of each workspace of the org, which drains their starts and builds. The main Worker dispatches the Members routes with these hooks, through `worker/routes.ts`. Its Cron Trigger runs the purge with the same hooks.
   - An image build prepares the org's cloud computer image in its own build sandbox. It saves its create request in `image_build_jobs`, as phase `allocating`, before it calls the provider.
   - After a failed build, `cleanupBuild` in `worker/lifecycle/build-execution.ts` replays that saved request and deletes the returned sandbox. So the build row is the cleanup owner of a build.
@@ -49,7 +49,7 @@
     - each `lifecycle_sandbox_cleanup` row of the org, as a sandbox
     - each unresolved workspace allocation, which then needs a D1 record, because today only the workspace object holds it
 
-    The stop step resolves each saved request with the deleted-org provider. It replays the request, records the returned ID as a sandbox, and stops it. A failure keeps the resource for the next cleanup run, as a failed stop does now. The other sandboxes still stop at once.
+    After the deleted-org lease check, the stop step resolves each saved request through the provider of its stored account. It replays the request, records the returned ID as a sandbox, and stops it. A failure keeps the resource for the next cleanup run, as a failed stop does now. The other sandboxes still stop at once.
 
     The purge deletes each such sandbox before it deletes the records of its owner. It also clears the workspace object of each workspace owner, even when the workspace row is gone, so that its cleanup alarm ends. The `kind` column of `org_deletion_resources` allows only `sandbox` and `snapshot`, at `migrations/202611071400_org_deletion_cleanup.sql:11`. So B needs a migration for that column and for the D1 record of a workspace allocation. Effort: Large.
   - **C.** Add one shared recovery queue for the saved create requests of every build and every start. Delete org drains it before it fills the deletion list. This needs a new table, a migration, a queue driver, and tests for each owner. It replaces the separate cleanup owners that builds and starts have now. Effort: Large.

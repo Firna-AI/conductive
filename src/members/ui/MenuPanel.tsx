@@ -85,7 +85,8 @@ function Item<T extends string>(props: {
  * the current one checked, then an error and a note. While a change runs,
  * its choice shows a spinner and the other choices wait. The current choice
  * takes the focus when it shows, also when the choices come after the menu
- * opened.
+ * opened. Without `autoFocus`, as for choices that a hover opened beside a
+ * menu, the focus stays where it is.
  */
 export function MenuPanel<T extends string>(props: {
   label: string
@@ -97,6 +98,8 @@ export function MenuPanel<T extends string>(props: {
   error?: string
   note?: string
   onSelect: (value: T) => void
+  /** The current choice takes the focus when it shows. Defaults to true. */
+  autoFocus?: boolean
 }) {
   const current = props.choices.some(
     (choice) => choice.value === props.selected,
@@ -106,6 +109,7 @@ export function MenuPanel<T extends string>(props: {
     : (props.choices.at(0)?.value ?? null)
   const list = useRef<HTMLDivElement>(null)
   const shown = props.status ? null : focused
+  const autoFocus = props.autoFocus ?? true
 
   // The marked choice takes the focus when it shows, unless the focus is
   // already in the list. In a sheet that opens with its choices, the dialog
@@ -113,11 +117,10 @@ export function MenuPanel<T extends string>(props: {
   // the marked choice after showModal().
   useEffect(() => {
     const menu = list.current
-    if (shown === null || !menu || menu.contains(document.activeElement)) {
-      return
-    }
+    if (!autoFocus || shown === null || !menu) return
+    if (menu.contains(document.activeElement)) return
     menu.querySelector<HTMLElement>('[data-autofocus]')?.focus()
-  }, [shown])
+  }, [shown, autoFocus])
 
   return (
     <>

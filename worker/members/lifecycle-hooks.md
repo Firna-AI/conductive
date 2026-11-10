@@ -17,7 +17,7 @@ Production also supplies `deleteOrgState` to remove the image coordinator payloa
 - `suspendOrg` stops org access before resource enumeration.
   It must reject new starts and writes for the deleted org.
   It must drain pending workspace starts and image builds.
-  It must retain their sandbox IDs and snapshot names in D1.
+  It must retain their sandbox IDs and snapshot names in D1, each with its provider account.
   It must close existing browser and runner access.
   It must disable normal idle, refresh, and disk keepalive timers.
   It must handle builds even when the workspace list is empty.
@@ -41,7 +41,7 @@ Production also supplies `deleteOrgState` to remove the image coordinator payloa
   It also receives the call ownership and the complete workspace ID list.
   It returns disk and org-refresh timers to the active lifecycle.
   It must arm these timers before it returns.
-  The timers must check active org state and current disk/settings records before running.
+  The timers must check active org state and current disk, settings, and org image records before running.
   It must keep normal access closed and start no sandbox during the handoff.
   Replace older timer plans for the same org.
   Concurrent calls must reject older generations, even when request IDs match.

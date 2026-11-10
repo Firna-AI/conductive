@@ -35,6 +35,17 @@ export function useRowFocus() {
         links.delete(workspaceId)
       }
     },
+    /**
+     * Gives the focus to the current link of the row of a workspace, also
+     * after a render replaced the row, as a move to another section does.
+     * It says whether the row has such a link.
+     */
+    focusLink: (workspaceId: string): boolean => {
+      const link = links.get(workspaceId)
+      if (!link?.isConnected) return false
+      link.focus()
+      return true
+    },
     /** A control in the row takes the focus. */
     focus: (workspaceId: string, event: FocusEvent<HTMLElement>) => {
       focused.current = { workspaceId, surface: event.currentTarget }

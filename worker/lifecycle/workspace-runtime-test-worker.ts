@@ -1,5 +1,6 @@
 import { Workspace } from '../workspace'
-import { sandboxProvider } from '../sandbox/client'
+import { providerForAccount } from '../sandbox/client'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { ProviderError } from '../sandbox/errors'
 import { GitHubClient } from '../security/github'
 import { refreshGitHubTokens } from '../security/github-refresh'
@@ -197,7 +198,9 @@ export default {
     try {
       switch (new URL(request.url).pathname) {
         case '/boat':
-          await sandboxProvider(env, send).get('bx_one')
+          await providerForAccount(env, send, DEFAULT_PROVIDER_ACCOUNT).get(
+            'bx_one',
+          )
           break
         case '/signin':
           await new GitHubClient(send).authorize(

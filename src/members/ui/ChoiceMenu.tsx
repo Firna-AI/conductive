@@ -83,8 +83,13 @@ export function ChoiceMenu<T extends string>(props: {
       askToClose()
     }
     document.addEventListener('pointerdown', onPointerDown, true)
-    return () =>
+    // A press inside a preview frame blurs this window without sending
+    // its pointer event to this document.
+    window.addEventListener('blur', askToClose)
+    return () => {
       document.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('blur', askToClose)
+    }
   }, [open, mobile, askToClose])
 
   // A choice that closes the menu gives the focus back to the button.

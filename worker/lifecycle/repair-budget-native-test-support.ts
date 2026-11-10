@@ -49,7 +49,7 @@ export async function exerciseRepairBudget(env: AppEnv, now: number) {
       .bind(now)
       .first<number>('count')
     const movedOrgs = await env.DB.prepare(
-      'SELECT COUNT(*) AS count FROM settings WHERE next_image_refresh_at = ?',
+      'SELECT COUNT(*) AS count FROM org_images WHERE next_image_refresh_at = ?',
     )
       .bind(now)
       .first<number>('count')

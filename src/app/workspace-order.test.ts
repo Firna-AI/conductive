@@ -96,20 +96,67 @@ describe('the order of the open workspace', () => {
   })
 
   test('keeps an Archive that came while Resume waited over the newer reply of the Resume', async () => {
-    const { server, held, workspace, state } = await opened('stopped')
+    const { server, held, org, workspace, live, state } =
+      await opened('stopped')
     server.json('POST', resumePath, { ...starting, eventNumber: 1 })
     const resuming = workspace.resume()
+    const newer = {
+      ...starting.workspace,
+      name: 'A newer workspace name',
+      owner: {
+        id: 'new-owner',
+        githubLogin: 'calummoore',
+        displayName: 'Cal',
+        avatarUrl: null,
+      },
+      updatedAt: FAKE_TIME + 1_000,
+    }
+    live(1, { type: 'workspace.updated', workspace: newer })
+    const listed = { ...newer, name: 'The latest listed name' }
+    org.putWorkspace(listed)
     await workspace.archive.start()
     await workspace.archive.confirm()
+    expect(valueOf(workspace.detail.get())?.workspace).toEqual({
+      ...newer,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
+    expect(org.workspace(workspaceId)).toEqual({
+      ...listed,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
     expect(state()).toBe('archived')
     held.release('POST', resumePath)
     await resuming
     expect(state()).toBe('archived')
+    expect(valueOf(workspace.detail.get())?.workspace).toEqual({
+      ...newer,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
+    expect(org.workspace(workspaceId)).toEqual({
+      ...listed,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
+    live(2, { type: 'workspace.updated', workspace: starting.workspace })
+    expect(valueOf(workspace.detail.get())?.workspace).toEqual({
+      ...newer,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
+    expect(org.workspace(workspaceId)).toEqual({
+      ...listed,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
     workspace.close()
   })
 
   test('shows a list Archive without an event and keeps it over a pending Resume', async () => {
-    const { server, held, org, workspace } = await opened('error')
+    const { server, held, org, workspace, live, events, page } =
+      await opened('error')
     server.json('POST', resumePath, { ...starting, eventNumber: 1 })
     const resuming = workspace.resume()
     await flushMicrotasks()
@@ -123,6 +170,26 @@ describe('the order of the open workspace', () => {
     await resuming
     expect(workspace.detail.get()).toEqual(expected)
     expect(org.workspace(workspaceId)?.state).toBe('archived')
+    events.send(page([], 1))
+    workspace.reassigned({
+      ...archived,
+      owner: { ...archived.owner, id: 'new-owner' },
+    })
+    const reassigned = workspace.detail.get()
+    const listed = org.workspace(workspaceId)
+    live(2, {
+      type: 'workspace.updated',
+      workspace: starting.workspace,
+    })
+    expect(workspace.detail.get()).toEqual(reassigned)
+    expect(org.workspace(workspaceId)).toEqual(listed)
+    if (!starting.start) throw new Error('The starting fixture has no steps.')
+    live(3, { type: 'start.updated', start: starting.start })
+    expect(workspace.detail.get()).toEqual(reassigned)
+    expect(org.workspace(workspaceId)).toEqual(listed)
+    live(4, { type: 'workspace.title', name: 'An older workspace title' })
+    expect(workspace.detail.get()).toEqual(reassigned)
+    expect(org.workspace(workspaceId)).toEqual(listed)
     workspace.close()
   })
 
@@ -153,6 +220,16 @@ describe('the order of the open workspace', () => {
           new URL(request.url).pathname === resumePath,
       ),
     ).toHaveLength(0)
+    server.json(
+      'GET',
+      path,
+      {
+        error: { code: 'network_failure', message: 'The detail did not load.' },
+      },
+      503,
+    )
+    await workspace.open()
+    expect(workspace.detail.get()).toEqual(expected)
     workspace.close()
   })
 

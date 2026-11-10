@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.0](https://github.com/Firna-AI/remote-code/compare/v0.3.0...v0.4.0) (2026-11-10)
+
+
+### Features
+
+* add chat attachments and lifecycle, doc, and chat write fixes ([#90](https://github.com/Firna-AI/remote-code/issues/90)) ([ab58467](https://github.com/Firna-AI/remote-code/commit/ab5846798e6a4994de212b361fdb793a2a2c8ba8))
+* **marketing:** add Mac app downloads to the site ([#130](https://github.com/Firna-AI/remote-code/issues/130)) ([073f71b](https://github.com/Firna-AI/remote-code/commit/073f71b57dbf2b9cc4e6a61d155c8b3d1ac9c0ab))
+
+
+### Bug Fixes
+
+* **marketing:** align Conductor comparison with active work ([#144](https://github.com/Firna-AI/remote-code/issues/144)) ([83dfb14](https://github.com/Firna-AI/remote-code/commit/83dfb14b15fab476d75133a5f9f77db8fbca7064))
+* **marketing:** mark merged chat attachments as available ([#147](https://github.com/Firna-AI/remote-code/issues/147)) ([1a9e75a](https://github.com/Firna-AI/remote-code/commit/1a9e75a7a075f3360aa2b4681761cd85f49a8d4d))
+* **marketing:** refresh Conductor comparison progress ([552222e](https://github.com/Firna-AI/remote-code/commit/552222e992a168f4696793c178c7a59c5164988a))
+
 ## [0.3.0](https://github.com/Firna-AI/remote-code/compare/v0.2.0...v0.3.0) (2026-11-10)
 
 

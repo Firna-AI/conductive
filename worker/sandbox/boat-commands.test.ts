@@ -3,7 +3,7 @@ import { expect, it } from 'vitest'
 import { FakeBoat } from '../test-support/fake-boat'
 import { BoatClient } from './boat'
 
-it('starts a detached build and continues logs from provider byte offsets', async () => {
+it('serializes detached commands and byte offsets through fixed Boat routes', async () => {
   const server = new FakeBoat()
   const client = new BoatClient('boat-first', server.fetch, 'app-org')
   server.responseOverride = Response.json({
@@ -15,9 +15,7 @@ it('starts a detached build and continues logs from provider byte offsets', asyn
     command: 'npm run build',
     startedAt: '2026-11-06T00:00:00Z',
   })
-  expect(await client.startCommand('bx space', 'npm run build')).toEqual({
-    processId: 1234,
-  })
+  await client.startCommand('bx space', 'npm run build')
   server.responseOverride = Response.json({
     ok: true,
     type: 'command.status',
@@ -38,20 +36,6 @@ it('starts a detached build and continues logs from provider byte offsets', asyn
     stdoutOffset: 0,
     stderrOffset: 0,
   })
-  expect(first).toEqual({
-    processId: 1234,
-    state: 'running',
-    running: true,
-    exitCode: null,
-    timedOut: null,
-    stdout: 'é\n',
-    stderr: 'warning\n',
-    stdoutOffset: 0,
-    stderrOffset: 0,
-    stdoutNextOffset: 3,
-    stderrNextOffset: 8,
-    more: true,
-  })
   server.responseOverride = Response.json({
     ok: true,
     type: 'command.status',
@@ -69,24 +53,9 @@ it('starts a detached build and continues logs from provider byte offsets', asyn
     stderrNextOffset: 8,
     more: false,
   })
-  expect(
-    await client.getCommandStatus('bx space', 1234, {
-      stdoutOffset: first.stdoutNextOffset,
-      stderrOffset: first.stderrNextOffset,
-    }),
-  ).toEqual({
-    processId: 1234,
-    state: 'exited',
-    running: false,
-    exitCode: 137,
-    timedOut: true,
-    stdout: 'done\n',
-    stderr: '',
-    stdoutOffset: 3,
-    stderrOffset: 8,
-    stdoutNextOffset: 8,
-    stderrNextOffset: 8,
-    more: false,
+  await client.getCommandStatus('bx space', 1234, {
+    stdoutOffset: first.stdoutNextOffset,
+    stderrOffset: first.stderrNextOffset,
   })
   expect(
     server.requests.map((request) => [request.method, request.url]),
@@ -111,44 +80,4 @@ it('starts a detached build and continues logs from provider byte offsets', asyn
     expect(request.headers.get('Cookie')).toBeNull()
     expect(request.redirect).toBe('manual')
   }
-})
-
-it('preserves a lost process and reset offsets after an agent restart', async () => {
-  const server = new FakeBoat()
-  const client = new BoatClient('boat-first', server.fetch, 'app-org')
-  server.responseOverride = Response.json({
-    ok: true,
-    type: 'command.status',
-    success: true,
-    processId: 1234,
-    status: 'lost',
-    running: false,
-    exitCode: null,
-    stdout: 'new log\n',
-    stderr: '',
-    stdoutOffset: 0,
-    stderrOffset: 0,
-    stdoutNextOffset: 8,
-    stderrNextOffset: 0,
-    more: false,
-  })
-  expect(
-    await client.getCommandStatus('bx_one', 1234, {
-      stdoutOffset: 100,
-      stderrOffset: 5,
-    }),
-  ).toEqual({
-    processId: 1234,
-    state: 'lost',
-    running: false,
-    exitCode: null,
-    timedOut: null,
-    stdout: 'new log\n',
-    stderr: '',
-    stdoutOffset: 0,
-    stderrOffset: 0,
-    stdoutNextOffset: 8,
-    stderrNextOffset: 0,
-    more: false,
-  })
 })

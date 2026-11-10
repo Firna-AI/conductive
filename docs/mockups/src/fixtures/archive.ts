@@ -7,6 +7,14 @@
 /** The day the open workspace was archived. */
 export const archivedOn = '5 November'
 
+/** Work that is not on GitHub yet, which the check of Archive finds. */
+export type UnpushedWork = {
+  /** Changed files that are not committed. */
+  files: readonly string[]
+  /** Commits that are not pushed to the branch. */
+  commits: number
+}
+
 /** The work that is not on GitHub yet, in the cloud computer to delete. */
 export const unpushedWork = {
   /** Changed files that are not committed. */

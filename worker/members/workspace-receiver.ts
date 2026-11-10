@@ -3,7 +3,11 @@ import type { WorkspaceFeatures } from '../features/workspace'
 import type { DurableLifecycleState } from '../lifecycle/durable-types'
 import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 import type { WorkspaceDisk } from './maintenance-contract'
-import type { StoredWorkspaceStartJob } from '../lifecycle/start-job-codec'
+import {
+  readStartJob,
+  serializeStartJob,
+  type StoredWorkspaceStartJob,
+} from '../lifecycle/start-job-codec'
 import { CREATE_CHECKPOINT_KEY } from './creation-checkpoint'
 import {
   scheduleWorkspaceAlarm,
@@ -68,7 +72,10 @@ export class WorkspaceMembersReceiver {
           'lifecycle:start-job',
         )
         if (job?.kind === 'create')
-          await transaction.put(CREATE_CHECKPOINT_KEY, job)
+          await transaction.put(
+            CREATE_CHECKPOINT_KEY,
+            serializeStartJob(readStartJob(job)),
+          )
         await transaction.delete('lifecycle:start-job')
         await transaction.delete('lifecycle:create-publication')
         await transaction.delete('lifecycle:turn-scopes')

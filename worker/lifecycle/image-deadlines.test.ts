@@ -7,7 +7,7 @@ import { readBuild, runningBuild } from './build-data'
 import { startImageBuild } from './image-builds'
 import { finishImageBuild } from './image-test-support'
 import { runImageAlarm } from './image-timers'
-import { readImageSettings } from './settings-data'
+import { readOrgImage } from './org-image-data'
 
 const backendFixture = setupBackendTests()
 
@@ -21,7 +21,7 @@ it('preserves the saved daily refresh deadline after a build fails at hour 23', 
     software: SOFTWARE,
   })
   await finishImageBuild(fixture, good)
-  const image = (await readImageSettings(runtime.env.DB, org.id)).imageName
+  const image = (await readOrgImage(runtime.env.DB, org.id))?.imageName
   await fixture.setTime(TEST_TIME + 82_800_000)
   images.prepareSources = async () => {
     throw new Error('Source transfer failed')
@@ -37,7 +37,7 @@ it('preserves the saved daily refresh deadline after a build fails at hour 23', 
   expect((await readBuild(runtime.env.DB, org.id, failed)).build.state).toBe(
     'failed',
   )
-  expect(await readImageSettings(runtime.env.DB, org.id)).toMatchObject({
+  expect(await readOrgImage(runtime.env.DB, org.id)).toMatchObject({
     imageName: image,
     nextImageRefreshAt: TEST_TIME + 86_400_000,
   })
@@ -59,7 +59,7 @@ it('advances an admitted daily refresh before failure and waits until the next d
   await finishImageBuild(fixture, good)
   await fixture.setTime(TEST_TIME + 86_400_000)
   await runtime.env.DB.prepare(
-    'UPDATE settings SET pending_push_refresh_at = ?, last_push_refresh_at = ? WHERE org_id = ?',
+    "UPDATE org_images SET pending_push_refresh_at = ?, last_push_refresh_at = ? WHERE org_id = ? AND provider_account = 'boat'",
   )
     .bind(TEST_TIME + 86_400_000, TEST_TIME + 84_600_000, org.id)
     .run()
@@ -68,7 +68,7 @@ it('advances an admitted daily refresh before failure and waits until the next d
   await runImageAlarm(images, daily)
   const refresh = fixture.scheduled.at(-1)?.buildId
   if (!refresh) throw new Error('Missing admitted daily refresh')
-  expect(await readImageSettings(runtime.env.DB, org.id)).toMatchObject({
+  expect(await readOrgImage(runtime.env.DB, org.id)).toMatchObject({
     nextImageRefreshAt: TEST_TIME + 172_800_000,
     pendingPushRefreshAt: null,
     lastPushRefreshAt: TEST_TIME + 86_400_000,
@@ -80,7 +80,7 @@ it('advances an admitted daily refresh before failure and waits until the next d
   expect((await readBuild(runtime.env.DB, org.id, refresh)).build.state).toBe(
     'failed',
   )
-  expect(await readImageSettings(runtime.env.DB, org.id)).toMatchObject({
+  expect(await readOrgImage(runtime.env.DB, org.id)).toMatchObject({
     imageBuildId: good,
     nextImageRefreshAt: TEST_TIME + 172_800_000,
   })

@@ -146,8 +146,8 @@ It appends only a repository-relative file path.
 The runner must resolve and confine file paths to its own checkout, including symlinks.
 The Boat API applies its own canonical path checks.
 
-The fallback gets `SandboxProvider` through `orgSandboxProvider`, with the authorized user's ID.
-The provider owns the fixed routes, headers, organization pin, and the app's Boat key.
+The fallback gets `SandboxProvider` through `orgProviderForAccount`, with the authorized user's ID and the provider account of the workspace.
+The provider owns the fixed routes, headers, organization pin, and the key of that account, the app's Boat key in production.
 Its `readFile` requests base64 so a binary file keeps its bytes.
 The [sandbox response policy](../sandbox/README.md#response-byte-limits) defines the reply budgets and the metadata fallback.
 The handler reports the file size with `file_too_large`.
@@ -191,7 +191,7 @@ No migration is required.
 - [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically.
 - [runner.ts](runner.ts) matches file and diff commands to their results.
 - [boat.ts](boat.ts) converts the provider's file read result for the browser.
-- [data.ts](data.ts) reads the workspace and repository relationship from D1.
+- [data.ts](data.ts) reads the workspace and repository relationship from D1, with the sandbox ID and its provider account.
 
 See the [shared contracts](../../src/shared/README.md),
 [backend fakes](../test-support/README.md),
