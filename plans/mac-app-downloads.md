@@ -316,7 +316,7 @@ change of the Terms changes the contract with each user.
 
 Depends on: 4, 5, 6, 8
 
-- [ ] Merge `main` into the branch, as the `git-merge` skill says.
+- [x] Merge `main` into the branch, as the `git-merge` skill says.
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [x] Commit with Conventional Commits and push the branch.
 - [x] Review the diff against `origin/main` with the
@@ -327,9 +327,10 @@ Depends on: 4, 5, 6, 8
 - [x] Open the second pull request as a draft, stacked on the first. It
       keeps this plan until Milestone 4 ends. It is
       [PR #130](https://github.com/Firna-AI/remote-code/pull/130).
-- [ ] When the merge comes on a later day than 9 November 2026, change the
+- [x] When the merge comes on a later day than 9 November 2026, change the
       effective date of the Terms and of the Privacy page, and the date
-      in `TERMS_VERSION`, to that day.
+      in `TERMS_VERSION`, to that day. They are now 10 November 2026 and
+      `2026-11-10-mac-app`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Mark the second pull request ready. Its description gives the decisions

@@ -28,7 +28,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 9 November 2026.`,
+  accepted it. Effective date: 10 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
