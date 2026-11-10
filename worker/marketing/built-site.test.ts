@@ -9,6 +9,7 @@ import { githubSetupResponse } from '../github-setup'
 import type { SiteBinding } from '../test-support/site-binding'
 import { checkBuiltComparison } from './built-comparison.test-support'
 import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
+import { checkPricingPage } from './built-pricing.test-support'
 import { checkMacDownloads } from './built-site-downloads.test-support'
 import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
 import { termsConsentResponse } from './consent'
@@ -69,7 +70,7 @@ it('leads the header, action, and footer links of the Mac app to both chip downl
   await checkMacDownloads(get, SITE)
 })
 
-it('names no sandbox provider on home, legal, docs, and comparison pages', async () => {
+it('names no sandbox provider on home, legal, docs, comparison, and pricing pages', async () => {
   for (const path of [
     sitePaths.home,
     sitePaths.terms,
@@ -77,6 +78,7 @@ it('names no sandbox provider on home, legal, docs, and comparison pages', async
     docsPath,
     `${docsPath}/get-started`,
     sitePaths.fromConductor,
+    sitePaths.pricing,
   ]) {
     const response = await get(path)
     expect(response.status, path).toBe(200)
@@ -94,6 +96,7 @@ it('allows exactly each page inline style hash and serves every file it names', 
     docsPath,
     `${docsPath}/get-started`,
     sitePaths.fromConductor,
+    sitePaths.pricing,
     '/missing',
   ]) {
     const response = await get(path)
@@ -126,6 +129,10 @@ it('serves guide bodies with matching contents and collection navigation', async
 
 it('renders class-coloured code and named keyboard scroll regions', async () => {
   await checkScrollRegions(get)
+})
+
+it('serves public pricing from the header and footer with the site actions', async () => {
+  await checkPricingPage(get, APP_ORIGIN)
 })
 
 it('serves the complete Conductor comparison with its public entry links', async () => {
