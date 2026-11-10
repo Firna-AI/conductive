@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, a new problem of the check of finding 10 of PR #45, branch `conductor/boat-native-remote-workspaces-milestone-15m`, round 1.
-- **Location:** `docs/protocol/isolation.md`, `docs/deployment.md`, `docs/protocol/operator-actions.md`, `docs/mockups/design.md`, and `docs/mockups/catalogue.md`.
+- **Location:** `docs/deployment.md`, `docs/protocol/operator-actions.md`, `docs/mockups/design.md`, and `docs/mockups/catalogue.md`.
 - **Reason:** These topics are outside the approved gateway documentation split. These pages also change in open branches, so one split after their merge avoids conflicts.
 
 - **Terms:**
@@ -33,19 +33,20 @@
     - `docs/protocol/model-gateway.md`: 250 lines.
     - `docs/protocol/operator-section.md`: 254 lines.
     - `docs/protocol/command-palette.md`: 259 lines.
-  - `docs/protocol/isolation.md` has 265 lines. The merge added the rules and the risks of each version pin to its section "Agent logins in a sandbox". That section, with "A sandbox with a version pin of 2 or later" and "A sandbox with a version pin of 1", fills lines 100 to 265. The merge kept the page structure of main, so it did not split the page.
+  - Later on 10 November 2026, the change that adds the session calls of the agent tools split `docs/protocol/isolation.md`. It moved "A sandbox with a version pin of 2 or later" and "A sandbox with a version pin of 1" to `docs/protocol/version-pins.md`, without a change to their words. `docs/protocol/isolation.md` keeps a stub section for each, and has 233 lines.
+  - The same change left three more pages at the target: `docs/protocol/agent-tools.md` with 258 lines, `docs/protocol/session-transcripts.md` with 260, and `docs/protocol/messages-and-attachments.md` with 259.
   - `docs/deployment.md` has 361 lines. It is a deployment guide, not a protocol doc. "The runner archive", with "The archive in each deploy", fills lines 219 to 289. "Models" and "The title model" fill lines 146 to 218.
   - `docs/protocol/operator-actions.md` has 295 lines. "Suspend an org", "What members of a suspended org keep", and "Lift a suspension" fill lines 187 to 287. The other sections hold the operator, the suspension of a user and the access that it ends, and the abuse reports.
   - Two mockup docs pass 300 lines: `docs/mockups/design.md` has 376 lines, and `docs/mockups/catalogue.md` has 335. The `mockups` skill gives their rules. Each has only its title heading, so a split needs topic headings first.
   - Other docs, READMEs, code comments, and follow-up items cite sections of these pages. A split must update each of these citations.
-- **Problem:** Five docs still pass the target: two protocol docs, the deployment guide, and two mockup docs. A reader must scan long pages to find one rule.
+- **Problem:** Four docs still pass the target: one protocol doc, the deployment guide, and two mockup docs. A reader must scan long pages to find one rule.
 - **Impact if no action:** Each branch that touches one of these docs must split it first, and the docs grow harder to read and to keep in line.
 - **Root question:** How do the remaining long docs get to about 250 lines each, with each topic easy to find?
 - **Options:**
-  - **A.** Split each of the five docs into linked pages by topic, in one change. Move each section without a change to its words. Update every relative link inside `docs/`, the doc lists of `docs/architecture.md` and `README.md`, and each link and citation outside `docs/`. Effort: Medium.
+  - **A.** Split each of the four docs into linked pages by topic, in one change. Move each section without a change to its words. Update every relative link inside `docs/`, the doc lists of `docs/architecture.md` and `README.md`, and each link and citation outside `docs/`. Effort: Medium.
   - **B.** Change nothing now. Split each doc in the next change that touches it, as the `documentation` skill requires. Cost: that change carries the link migration of the split. Effort: Small.
-- **Left out:** A split in each open branch, because the branches change the same docs and would conflict. A lint for doc length, because it adds a gate. An exemption for the deployment guide, because the always-on rules split any file that passes 300 lines. A split of the three pages at the target, because about 250 lines is a target, not a gate.
+- **Left out:** A split in each open branch, because the branches change the same docs and would conflict. A lint for doc length, because it adds a gate. An exemption for the deployment guide, because the always-on rules split any file that passes 300 lines. A split of the pages at the target, because about 250 lines is a target, not a gate.
 - **Wider fix:** None. The `documentation` skill already holds the rule.
 - **Previous examples:** `docs/protocol/workspace-tools.md` holds the moved tools requirements, and `docs/protocol/workspaces-and-sandboxes.md` keeps their section anchors as stub sections. The split of main, its merge with the model gateway split, and main's two extractions, which the background describes, are later examples.
-- **Recommendation:** A. One change moves the links of all five docs at once, and no feature branch carries a split that it does not need.
+- **Recommendation:** A. One change moves the links of all four docs at once, and no feature branch carries a split that it does not need.
 - **Action:** fix after merge, apply A, because their topic splits are outside the approved gateway documentation work.

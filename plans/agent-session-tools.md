@@ -19,6 +19,9 @@ a session address that follows each change of the shown tab.
 
 The user answered every decision of this plan on 10 November 2026.
 
+Cal approved the plan and every recorded choice on 10 November 2026, in
+the words "impl all plans and milestones".
+
 Contract owners:
 
 - [Agent tools](../docs/protocol/agent-tools.md).
@@ -333,6 +336,11 @@ decision.
 - Agent call: the agent instructions say what the workspace tools can do
   and what a `Sent by:` line means. Reason: today they name only the
   create, list, and Mac calls.
+- Agent call, from the mockups: the chat shows the `---` line and the
+  `Sent by:` line as plain text in the message of the sender, as it shows
+  the facts of a routine run. Only the link becomes a session chip.
+  Reason: the lines are stored text, and the chat shows the text of a
+  message as it is.
 
 ### Reads
 
@@ -381,6 +389,50 @@ decision.
   Reason: one read serves every link to that workspace.
 - Agent call: a link to an unknown session shows the chip of its
   workspace. Reason: the link still opens that workspace.
+- Agent call, from the mockups: a session chip shows the icon of a session
+  tab between the label of its workspace and the session title. Its title
+  is the whole session title, and screen readers hear "Session" before the
+  title. Reason: without the icon, a session chip looks like a workspace
+  chip, because the session title takes the place of the workspace name.
+  The one session of a new workspace also has the name of the workspace.
+- Agent call, from the mockups: the chip of a closed session looks like the
+  chip of an open session. A press on it in its own workspace keeps the
+  shown tab, as a workspace link to the open workspace does. Reason:
+  decision 259 C names what the chip shows, and the workspace page is
+  already open there.
+- Agent call, from the mockups: the bubble of a sent message is never
+  wider than its column, and in a message field the box around a chip is
+  never wider than the chip. Reason: the mockups showed a long session
+  title that pushed a bubble past the edge of a phone, and a gap after a
+  long chip in the message field. The fix is in the shared chat styles of
+  the mockups, which the app also uses.
+
+### Documentation details
+
+Agent calls of 10 November 2026, checked by the orchestrator:
+
+- `session-calls.md` owns the four session calls. Reason: adding them to
+  `agent-tools.md` would pass the document length target.
+- `version-pins.md` holds the moved version pin rules. Stub headings keep
+  the old inbound links valid. The text keeps its words.
+- The protocol pages near 250 lines stay whole. Reason: a small amount
+  above the target does not need another page.
+- Unknown and cross-org workspaces return `workspace_not_found`. Reason:
+  this keeps the existing scoped lookup and hides another org's records.
+- Machine reads use the copy's `detail` query with concise as the default.
+  Writes use the existing calling-turn and membership errors.
+- An omitted send choice keeps the session's model and effort. Closed
+  sessions remain in the list. The newest failed turn gives `failed`,
+  even without a retry message. A stopped turn gives `idle`.
+- A line over the read budget comes in recoverable pieces. Reason: every
+  part must fit, and the agent must be able to read all the text.
+  Milestone 3 chooses the positions and field names.
+- The access doc states the current Mac output risk without a second
+  filter. The separate privacy change owns its removal.
+- A message that joins a turn keeps that turn's stored sender. Reason:
+  the approved tool messages follow the current message admission rule.
+- The read budget follows published guidance. Reason: each agent can
+  have a different configured limit, so no universal runtime limit exists.
 
 ### Images
 
@@ -399,24 +451,26 @@ Depends on: none
 Draw the `Sent by:` line of a tool message, the session chip of decision
 259 C, and the open of a session link, on desktop and on a phone.
 
-- [ ] Read the `mockups` and `product-ui` skills and
+- [x] Read the `mockups` and `product-ui` skills and
       `docs/mockups/README.md`.
-- [ ] In `app/workspace-links`, draw the session chip: the state mark and
+- [x] In `app/workspace-links`, draw the session chip: the state mark and
       the label of its workspace, and the title of the session. Draw a
       session without a title, which shows "Untitled", and a long title.
-- [ ] In `app/workspace-links`, add a message from an agent tool whose text
+- [x] In `app/workspace-links`, add a message from an agent tool whose text
       ends with the `---` line and the `Sent by:` line with a session chip.
       Draw it for a session of the same workspace and of another
       workspace, on desktop and on a phone.
-- [ ] In `app/workspace-links`, add a session chip in an agent answer and a
+- [x] In `app/workspace-links`, add a session chip in an agent answer and a
       pasted session link in the message field.
-- [ ] In `user-flows`, add "open a session link": a press on a session chip
+- [x] In `user-flows`, add "open a session link": a press on a session chip
       opens the workspace of that session and shows the session. Include a
       closed session, which opens the workspace page.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
+
+Evidence: `.context/agent-session-tools/reports/m1-mockups.md`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -425,48 +479,52 @@ Depends on: 1
 State the requirements and the decisions of the four calls, the reads, the
 `Sent by:` line, and session links. Read the `documentation` skill first.
 
-- [ ] Update `docs/protocol/agent-tools.md`: the four calls, their reach
+- [x] Update `docs/protocol/agent-tools.md`: the four calls, their reach
       (decision 255), the token and turn rules, the sender, the inputs and
       defaults, the refusals, the replies with session links, the
       `Sent by:` line (decisions 257 and 259), the start of a workspace
       that does not run (decision 258), and no limit (decision 260). Remove
       the line that leaves out chat reads and messages.
-- [ ] Update `docs/protocol/session-transcripts.md`: the machine route gives
+- [x] Update `docs/protocol/session-transcripts.md`: the machine route gives
       the transcript to the workspace token (decision 256), with the size
       limit and the start line.
-- [ ] Update `docs/protocol/tokens-and-secrets.md`: the calls that the
+- [x] Update `docs/protocol/tokens-and-secrets.md`: the calls that the
       workspace token allows.
-- [ ] Update `docs/protocol/isolation.md` with the risks of decision 255.
+- [x] Update `docs/protocol/isolation.md` with the risks of decision 255.
       Any process with the token can read every chat of the org at any
       time. A copy of the token keeps that read after its copier leaves the
       org. While a turn of its workspace runs, such a process can also
       start sessions and turns in every live workspace, on the logins of
       their starters.
-- [ ] Add the reach of decision 255 to the open risks of
+- [x] Add the reach of decision 255 to the open risks of
       `docs/protocol/routines.md`: a steered pull request run can read
       every chat of the org and start turns in every live workspace.
-- [ ] Update `docs/protocol/agent-instructions.md`: the instructions name
+- [x] Update `docs/protocol/agent-instructions.md`: the instructions name
       the four calls and say what a `Sent by:` line means.
-- [ ] Update `docs/protocol/workspace-links.md` and
+- [x] Update `docs/protocol/workspace-links.md` and
       `docs/protocol/agents-and-sessions.md`: the session address, what it
       opens, and its session chip (decision 259 C).
-- [ ] Update `docs/protocol/messages-and-attachments.md`: a message from an
+- [x] Update `docs/protocol/messages-and-attachments.md`: a message from an
       agent tool follows the message rules and ends with the `Sent by:`
       line.
-- [ ] Update `docs/protocol/workspace-life.md`: a tool message starts a
+- [x] Update `docs/protocol/workspace-life.md`: a tool message starts a
       workspace that does not run, in the same cases as an open (decision
       258 B).
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
       Update each sentence that restates a changed fact.
-- [ ] Read each guide under `src/marketing/docs/` in full, with
+- [x] Read each guide under `src/marketing/docs/` in full, with
       `docs/protocol/website-docs.md`. Update each sentence that restates a
       changed fact. `security.md` says that the tools "do not offer a call
       to read or message another workspace's chat".
-- [ ] Update the rows "Agents that delegate" and "Agent-to-agent messages"
+- [x] Update the rows "Agents that delegate" and "Agent-to-agent messages"
       under `src/marketing/from-conductor/areas/`. Give each the status and
       the note that hold at the merge, as
       `docs/protocol/conductor-comparison.md#statuses` says.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: `.context/agent-session-tools/reports/m2-internal-docs.md`,
+`.context/agent-session-tools/reports/m2-external-docs.md`, and
+`.context/agent-session-tools/evidence/orchestrator-markdown-links.txt`.
 
 ## Milestone 3: Session reads for agents
 

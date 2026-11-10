@@ -190,8 +190,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
     repository, so the name keeps its room. The button
     keeps the height of that line, and its touch area of 44 px reaches up
     over the name and down to the bottom edge of the header.
-- [Workspace and file chips](design-chat.md#workspace-and-file-chips) gives
-  the workspace links, file mentions, the list of `@`, and chip removal.
+- [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
+  gives the workspace links, the session links, file mentions, the list of
+  `@`, and chip removal.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green

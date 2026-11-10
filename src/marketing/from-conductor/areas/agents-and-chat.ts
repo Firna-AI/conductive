@@ -174,9 +174,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'agent-to-agent-messages',
     area: 'agents-and-chat',
     name: 'Agent-to-agent messages',
-    status: 'planned',
-    note: 'Agents can create another workspace with a first message. Sending messages to existing sessions is planned.',
-    due: null,
+    status: 'available',
+    note: 'Agents can message sessions across the org. Each message links to the session that sent it.',
   },
   {
     id: 'codex-personalities',

@@ -7,6 +7,27 @@ import {
 } from '../workspaces/sections'
 
 /**
+ * A session of a linked workspace, as the chat read it when it loaded: its
+ * ID in the address of the session, its title, or null before it has one,
+ * and whether its tab is closed. `to` is the screen that shows the
+ * session, when the mockups draw it.
+ */
+export type ChatSession = {
+  id: string
+  title: string | null
+  closed: boolean
+  to?: string
+}
+
+/**
+ * A workspace that a chat finds for its chips, with the sessions that the
+ * chat read for it, open and closed. A workspace whose sessions the chat
+ * did not read has none, so a link to one of its sessions shows the chip
+ * of the workspace.
+ */
+export type ChatRow = WorkspaceRow & { sessions?: readonly ChatSession[] }
+
+/**
  * The workspaces of the org that a chat finds for its chips: the rows of
  * the list, with their states and their screens, and the archived
  * workspaces, which the list keeps in its Archived group.
@@ -20,7 +41,7 @@ export function orgRows(sections: readonly SidebarSection[]): WorkspaceRow[] {
   return [...sections.flatMap((section) => section.rows), ...archived]
 }
 
-const ChatWorkspacesContext = createContext<readonly WorkspaceRow[]>(
+const ChatWorkspacesContext = createContext<readonly ChatRow[]>(
   orgRows(workspaceSections()),
 )
 
@@ -30,7 +51,7 @@ const ChatWorkspacesContext = createContext<readonly WorkspaceRow[]>(
  * Without it, a chat finds the workspaces of the list when the app opens.
  */
 export function ChatWorkspaces(props: {
-  rows: readonly WorkspaceRow[]
+  rows: readonly ChatRow[]
   children: ReactNode
 }) {
   return (
@@ -41,6 +62,6 @@ export function ChatWorkspaces(props: {
 }
 
 /** The workspaces of the org that the chat finds for its chips. */
-export function useChatWorkspaces(): readonly WorkspaceRow[] {
+export function useChatWorkspaces(): readonly ChatRow[] {
   return useContext(ChatWorkspacesContext)
 }

@@ -120,7 +120,19 @@ export const privacyDocument: LegalDocument = {
           text`The run of your routine for a pull request reads the comments,
             reviews, and descriptions of other GitHub accounts. Such text can
             steer the agent while the run uses your agent login and GitHub
-            token, and the env vars of the org.`,
+            token, and the env vars of the org. The agent can also read chats
+            and send work to sessions across the org under their login rules.`,
+          text`A workspace token is a credential for the workspace tools.
+            Any program with that token can list sessions and read
+            chats in every workspace of its org without a running turn.
+            A copied token keeps this access after the person who copied it
+            leaves the org. This access lasts while the token remains valid
+            and the org remains active.`,
+          text`During a turn in the calling workspace, the tools can also create
+            sessions and send messages as that turn's sender. That sender
+            must still belong to the org. The session's login rules apply.
+            An agent can send chat text that it reads to Anthropic or OpenAI
+            as part of its work.`,
           text`The members of your orgs also see who started each session,
             whose login it uses, and whether it can use that login. They also
             see whether its starter lets other members use that login.`,
