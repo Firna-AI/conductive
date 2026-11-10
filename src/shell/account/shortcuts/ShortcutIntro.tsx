@@ -13,7 +13,7 @@ import { dimmedKeysLine } from './tab-rows'
 
 /**
  * The keys that the terminal keeps while it has the focus: every key
- * without ⌘ on a Mac, and every key with Ctrl or Alt on Windows and Linux.
+ * without ⌘ on a Mac, and every key on Windows and Linux.
  */
 function TerminalLine(props: { keyboard: ShortcutKeyboard }) {
   if (props.keyboard === 'mac') {
@@ -26,8 +26,7 @@ function TerminalLine(props: { keyboard: ShortcutKeyboard }) {
   }
   return (
     <p className={styles.introLine}>
-      Keys with <KeyChips shortcut="Ctrl" /> or <KeyChips shortcut="Alt" /> go
-      to the terminal while it has the focus.
+      Every key goes to the terminal while it has the focus.
     </p>
   )
 }

@@ -2,9 +2,11 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
+import { ACCOUNT_PATHS } from '../../shared/account'
+import { sessionPaths } from '../../shared/sessions'
 import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { coreFixtures, FAKE_IDS } from '../../test-support/fixtures/core'
 import {
   messageText,
   pressInField,
@@ -20,7 +22,7 @@ import {
   searchField,
 } from '../palette/palette-test-kit'
 import { settle } from '../test-mount'
-import { messageField } from '../workspace/kept-test-kit'
+import { bodiesOf, messageField } from '../workspace/kept-test-kit'
 import { socketsOf } from '../workspace/wiring-test-kit'
 import {
   keysHeardBy,
@@ -31,12 +33,14 @@ import {
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-const { org, workspace } = FAKE_IDS
+const { org, workspace, session } = FAKE_IDS
 
 /** The message field of a workspace in a Chrome tab on Windows, with a draft. */
-async function draftField(draft: string): Promise<HTMLElement> {
+async function draftField(
+  draft: string,
+  server = new FakeApiServer(),
+): Promise<HTMLElement> {
   holdAnimationFrames()
-  const server = new FakeApiServer()
   const { view } = await openPaletteTab(routes.workspace(org, workspace), {
     server,
     events: socketsOf(server).events,
@@ -74,6 +78,46 @@ describe('the shortcut listener', () => {
     }).toEqual({ draft: '', palette: false })
   })
 
+  test('a recorded Enter key with Ctrl stays with the message field, which adds a line on Ctrl+Shift+Enter and sends on Ctrl+Enter', async () => {
+    // The person gave both keys to the palette on the Windows keyboard.
+    const server = new FakeApiServer()
+    server.json('GET', ACCOUNT_PATHS.account, {
+      ...coreFixtures().account,
+      shortcuts: {
+        mac: [],
+        other: [
+          {
+            command: 'command-palette',
+            keys: ['Ctrl+Enter', 'Ctrl+Shift+Enter'],
+          },
+        ],
+      },
+    })
+    const field = await draftField('Ship the fix', server)
+    pressInField(field, 'Enter', {
+      code: 'Enter',
+      ctrlKey: true,
+      shiftKey: true,
+    })
+    const line = { draft: messageText(field), palette: palette() !== null }
+    pressInField(field, 'Enter', { code: 'Enter', ctrlKey: true })
+    await settle()
+    expect({
+      line,
+      palette: palette() !== null,
+      sent: await bodiesOf(
+        server,
+        'POST',
+        sessionPaths.messages(org, workspace, session),
+        0,
+      ),
+    }).toEqual({
+      line: { draft: 'Ship the fix\n', palette: false },
+      palette: false,
+      sent: [expect.objectContaining({ text: 'Ship the fix\n' })],
+    })
+  })
+
   test('a held key runs its command once, and its repeats go no further', async () => {
     await openPaletteTab(routes.org(org))
     const first = pressCommand('command-palette', 'other', document.body)
@@ -88,7 +132,7 @@ describe('the shortcut listener', () => {
     }).toEqual({ first: true, palette: true, repeat: true, heard: [] })
   })
 
-  test('on Windows and Linux, only the screen of the terminal keeps the Ctrl keys, so Ctrl+K runs from Reconnect', async () => {
+  test('on Windows and Linux, only the screen of the terminal keeps its keys, so Ctrl+K runs from Reconnect', async () => {
     holdAnimationFrames()
     // The events of the test open no terminal socket, so the terminal
     // shows Disconnected with Reconnect.

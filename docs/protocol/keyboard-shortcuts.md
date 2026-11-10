@@ -161,12 +161,14 @@ app.
 - The terminal keeps every key that a program in it can read:
   - On a Mac, only a key with ⌘ goes to the app from the terminal. So ⌘K
     opens the palette from the terminal. ⌃Tab goes to the terminal.
-  - On Windows and Linux, the terminal keeps every key with Ctrl or Alt.
-    So no default key runs while the terminal has the focus, also not
-    Ctrl+K.
+  - On Windows and Linux, the terminal keeps every key. So no shortcut
+    runs while the terminal has the focus, also not Ctrl+K.
   - Reason: shells read these keys, such as Ctrl+K to delete to the end of
     the line, Alt+B and Alt+F to move by word, and Alt+1 for a count.
     Readline reads Alt+Shift with a letter as Alt with that letter.
+  - A terminal that keeps only a list of keys, such as the keys with Ctrl
+    or Alt, was rejected. A recorded key outside the list, such as P or
+    F2, would then not reach the program.
   - A ⌘K that clears the terminal, as in the terminal apps of a Mac, was
     rejected, so that the palette key works the same everywhere. `clear`
     or Ctrl+L clears the screen.
@@ -174,6 +176,9 @@ app.
   [Text keys](keyboard-shortcuts-keys.md#text-keys) lists the text keys. So
   ⌘K opens the palette from the message field. ⌘C still copies there.
 - A key without ⌘, Ctrl, or Alt runs its command only outside text fields.
+- Enter with any modifiers, also the Enter of the keypad, runs its
+  command only outside text fields. Reason: the message field also sends
+  on ⌘Enter and Ctrl+Enter, and a rename saves on each Enter.
 - On a Mac, a key with ⌥ and without ⌘ or ⌃ also runs only outside text
   fields. Reason: such a key types a character, such as ¡ for ⌥1.
 - While a port preview or the live desktop has the focus, every key goes

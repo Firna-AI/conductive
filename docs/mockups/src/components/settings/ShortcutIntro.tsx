@@ -16,7 +16,7 @@ import styles from './ShortcutsSections.module.css'
 /**
  * The keys that the terminal keeps while it has the focus, from the user
  * requirement of 10 November 2026: every key without ⌘ on a Mac, and every
- * key with Ctrl or Alt on Windows.
+ * key on Windows.
  */
 function TerminalLine(props: { keyboard: Keyboard }) {
   if (props.keyboard === 'mac') {
@@ -29,8 +29,7 @@ function TerminalLine(props: { keyboard: Keyboard }) {
   }
   return (
     <p className={styles.introLine}>
-      Keys with <KeyChips shortcut="Ctrl" /> or <KeyChips shortcut="Alt" /> go
-      to the terminal while it has the focus.
+      Every key goes to the terminal while it has the focus.
     </p>
   )
 }

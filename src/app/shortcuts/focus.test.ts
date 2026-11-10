@@ -1,14 +1,33 @@
 import { expect, test } from 'vitest'
 import { decideShortcut } from './decision'
 import { buildShortcutKeymap } from './keymap'
+import type { ShortcutPress } from './keys'
 import { context, key, press, tab } from './shortcut-test-support'
-import { isTextShortcut, terminalKeepsShortcut } from './text-keys'
+import {
+  isTextShortcut,
+  terminalKeepsShortcut,
+  type ShortcutFocus,
+} from './text-keys'
 
-test('keeps Mac control keys in the terminal but runs Command keys there', () => {
+test('keeps Mac keys without Command in the terminal but runs Command keys there', () => {
   expect(decideShortcut(context({ focus: 'terminal' }))).toEqual({
     kind: 'command',
     command: 'command-palette',
     closeMenu: false,
+  })
+  // A recorded key without ⌘ runs on the page, and the terminal keeps it.
+  const keymap = buildShortcutKeymap('mac', [
+    { command: 'go-to-checks', keys: [key('P')] },
+  ])
+  const typed = press({ key: 'p', code: 'KeyP', metaKey: false })
+  expect({
+    page: decideShortcut(context({ press: typed, keymap, focus: 'page' })),
+    terminal: decideShortcut(
+      context({ press: typed, keymap, focus: 'terminal' }),
+    ),
+  }).toEqual({
+    page: { kind: 'command', command: 'go-to-checks', closeMenu: false },
+    terminal: { kind: 'pass' },
   })
   expect(
     decideShortcut(
@@ -49,8 +68,26 @@ test('keeps Mac control keys in the terminal but runs Command keys there', () =>
   ).toBe(true)
 })
 
-test('keeps both Control and Alt defaults in Windows and Linux terminals', () => {
+test('keeps every key in Windows and Linux terminals, also a recorded key without Control or Alt', () => {
+  const keymap = buildShortcutKeymap('other', [
+    { command: 'go-to-checks', keys: [key('P'), key('Shift+P'), key('F2')] },
+  ])
+  const recorded = [
+    press({ key: 'p', code: 'KeyP', metaKey: false }),
+    press({ key: 'P', code: 'KeyP', metaKey: false, shiftKey: true }),
+    press({ key: 'F2', code: 'F2', metaKey: false }),
+  ]
   for (const system of ['windows', 'linux'] as const) {
+    const decide = (event: ShortcutPress, focus: ShortcutFocus) =>
+      decideShortcut(
+        context({
+          host: tab('chrome', system),
+          keyboard: 'other',
+          keymap,
+          focus,
+          press: event,
+        }),
+      )
     for (const event of [
       press({ metaKey: false, ctrlKey: true }),
       press({
@@ -61,18 +98,18 @@ test('keeps both Control and Alt defaults in Windows and Linux terminals', () =>
         shiftKey: true,
       }),
       press({ key: '1', code: 'Digit1', metaKey: false, altKey: true }),
+      ...recorded,
     ]) {
+      expect(decide(event, 'terminal'), `${system} ${event.key}`).toEqual({
+        kind: 'pass',
+      })
+    }
+    // The same recorded keys run their command outside the terminal.
+    for (const event of recorded) {
       expect(
-        decideShortcut(
-          context({
-            host: tab('chrome', system),
-            keyboard: 'other',
-            focus: 'terminal',
-            press: event,
-          }),
-        ),
-        `${system} ${event.key}`,
-      ).toEqual({ kind: 'pass' })
+        decide(event, 'page'),
+        `${system} ${event.key} on the page`,
+      ).toEqual({ kind: 'command', command: 'go-to-checks', closeMenu: false })
     }
   }
 })
@@ -167,7 +204,7 @@ test('protects native edit and movement keys in text fields on each system', () 
   ).toBe(false)
 })
 
-test('runs unmodified keys and Mac Option typing only outside text fields', () => {
+test('runs unmodified keys, Mac Option typing, and each Enter key only outside text fields', () => {
   for (const [text, event] of [
     ['K', press({ metaKey: false })],
     ['Shift+K', press({ key: 'K', metaKey: false, shiftKey: true })],
@@ -175,6 +212,9 @@ test('runs unmodified keys and Mac Option typing only outside text fields', () =
       'Alt+1',
       press({ key: '¡', code: 'Digit1', metaKey: false, altKey: true }),
     ],
+    // The message field sends on ⌘Enter, and a rename saves on it.
+    ['Meta+Enter', press({ key: 'Enter', code: 'Enter' })],
+    ['Meta+NumpadEnter', press({ key: 'Enter', code: 'NumpadEnter' })],
   ] as const) {
     const keymap = buildShortcutKeymap('mac', [
       { command: 'go-to-checks', keys: [key(text)] },
@@ -183,10 +223,12 @@ test('runs unmodified keys and Mac Option typing only outside text fields', () =
       decideShortcut(context({ press: event, keymap, focus: 'page' })),
       text,
     ).toEqual({ kind: 'command', command: 'go-to-checks', closeMenu: false })
-    expect(
-      decideShortcut(context({ press: event, keymap, focus: 'text' })),
-      text,
-    ).toEqual({ kind: 'pass' })
+    for (const focus of ['text', 'single-line-text'] as const) {
+      expect(
+        decideShortcut(context({ press: event, keymap, focus })),
+        `${text} in ${focus}`,
+      ).toEqual({ kind: 'pass' })
+    }
   }
 })
 

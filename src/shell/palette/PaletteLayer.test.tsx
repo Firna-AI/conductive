@@ -114,8 +114,7 @@ describe('the command palette', () => {
     },
     {
       platform: 'other',
-      outcome:
-        'the terminal keeps the keys with Ctrl or Alt, and ⌘K stays with the page',
+      outcome: 'the terminal keeps every key, and ⌘K stays with the page',
       hint: 'Ctrl K',
       expected: { otherKey: false, runs: 0, palette: false, heard: ['1', 'k'] },
     },

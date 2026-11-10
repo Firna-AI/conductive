@@ -237,3 +237,8 @@ On Windows and Linux:
 
 In a single-line text field on Linux, Ctrl+U is a text key too, as
 [Keys chosen by hand](#keys-chosen-by-hand) says.
+
+In every text field, Enter with any modifiers, also the Enter of the
+keypad, stays with the field, as
+[Where a key goes](keyboard-shortcuts.md#where-a-key-goes) says. Of these
+keys, only Enter and Shift+Enter are fixed keys.

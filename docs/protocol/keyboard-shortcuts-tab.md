@@ -59,8 +59,8 @@ app.
 - The next line says which keys the terminal keeps, as
   [Where a key goes](keyboard-shortcuts.md#where-a-key-goes) says. On a
   Mac it says "Keys without ⌘ go to the terminal while it has the focus."
-  On Windows and Linux it says "Keys with Ctrl or Alt go to the terminal
-  while it has the focus."
+  On Windows and Linux it says "Every key goes to the terminal while it
+  has the focus."
 - In a normal tab, a key that does not work there is dimmed. Such a key is
   a kept key, or a key that the app leaves to the browser there.
 - One more line then names where the dimmed keys work: in the Mac app on a

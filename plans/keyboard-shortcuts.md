@@ -834,6 +834,14 @@ terminal or chat input". Agent calls of the same day apply it:
 - The recorder treats the text keys of the system as fixed keys, as the
   Text group lists them.
 - The tab says once which keys the terminal keeps.
+- Agent calls of 2026-11-10, from review round 1, findings 1 and 2: on
+  Windows and Linux the terminal keeps every key, also a key that a person
+  records without Ctrl or Alt, such as P or F2; this replaces "every key
+  with Ctrl or Alt" above. In a text field, Enter with any modifier and
+  the keypad Enter stay with the field, because the message field sends on
+  ⌘Enter, Ctrl+Enter, and Alt+Enter, and a rename saves on each Enter.
+  Making every Enter key a fixed key waits for the user, because it adds a
+  rejection: `plans/follow-ups/fixed-keys-of-focused-controls.md`.
 
 
 ### The Keyboard shortcuts tab
