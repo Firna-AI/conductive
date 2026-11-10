@@ -1192,11 +1192,14 @@ Depends on: every other milestone
 
 - [ ] Run the targeted tests and `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Two rounds ran: round 1 found 3 (2 fixed, 1
+      removed); round 2 found 5 (1 fixed, 1 removed, 3 open with the user
+      as items 4 and 10). Findings file:
+      `.context/reviews/calummoore/keyboard-shortcuts-settings/findings.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
