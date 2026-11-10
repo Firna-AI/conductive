@@ -10,8 +10,9 @@ tab is its own shell in the cloud computer. The members of the workspace
 share the tabs, and a workspace holds at most 10 of them.
 
 The user chose the approach in a brainstorm on 10 November 2026: decision
-248 B and decision 249 B. Decision 250, a palette action, is open. The
-brainstorm notes are in `.context/multiple-terminals/brainstorm.md`.
+248 B and decision 249 B. The user chose decision 250 B, a New terminal
+action in the command palette, on the same day. The brainstorm notes are
+in `.context/multiple-terminals/brainstorm.md`.
 
 This change does not cover terminals in the centre tab row, a terminal in
 its own window, split panes, a rename of a terminal, a drag of a terminal
@@ -21,8 +22,7 @@ Contract owners:
 
 - [Tools of a workspace](../docs/protocol/workspace-tools.md#terminal).
 - [Terminal, previews, and desktop](../docs/protocol/terminal-previews-and-desktop.md#terminal).
-- [Command palette](../docs/protocol/command-palette.md#actions), only
-  with decision 250 B, C, or D.
+- [Command palette](../docs/protocol/command-palette.md#actions).
 - The [terminal backend README](../worker/terminal/README.md).
 - The [terminal README](../src/terminal/README.md).
 - The [tools part](../src/shell/workspace/screen-parts.md#the-tools-part).
@@ -118,7 +118,7 @@ Contract owners:
 - **Previous examples:** New session is both a + in the centre tab row and a palette action.
 - **Related:** `plans/follow-ups/terminal-keyboard-trap.md` holds the older problem that D fixes. C and D both start the key work that decision 145 A put off.
 - **Recommendation:** B. The palette already mirrors each control of an open workspace, and New session sets the pattern. C or D also covers a Windows or Linux user whose focus is in a terminal, and D is the wider fix.
-- **Action:** ask the user, because the recommended option changes the list of palette actions, a requirement in force, and no user decision covers that change.
+- **Chosen:** B, by the user on 10 November 2026.
 
 ## Design
 
@@ -242,8 +242,13 @@ All design calls are of 10 November 2026, by the agent.
   Terminal tool mounts only then.
 - The saved view keeps the shown terminal. Reason: the server keeps the
   view state, as it keeps the shown tool.
-- The palette action waits for decision 250. Reason: the brainstorm
-  report gave it as a design call, but it changes a requirement in force.
+- New terminal shows in the palette only while the Terminal tool offers
+  its + button: where the Go to rows show, while the cloud computer runs,
+  and below the limit. Reason: the palette offers only the actions that
+  the page offers, and it has no turned-off rows.
+- New terminal opens a terminal and shows it in the Terminal tool, also
+  when another tool showed. Reason: the action does what the + does, and
+  the user then sees the new shell.
 
 ### Related follow-up items
 
@@ -289,8 +294,8 @@ panel and on a phone. Each mockup has a desktop and a phone variant.
         `plans/follow-ups/terminal-disconnected-mockup.md`.
 - [ ] Keep the preview screens and the hidden Desktop screen reachable,
       on the page of `app/tools` or on child pages.
-- [ ] With decision 250 B only: add "New terminal" to the actions of the
-      command palette mockup. With C or D, update this plan first.
+- [ ] Add "New terminal" after the Go to rows in the actions of the
+      command palette mockup (decision 250 B).
 - [ ] Update `docs/mockups/catalogue.md` for the new pages.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages, and save
       the screenshots under `.context/terminal-tabs/`.
@@ -323,10 +328,10 @@ The requirements and decisions for several terminals.
       access of a socket.
 - [ ] Update `docs/protocol/github-tokens.md` where it says that the
       terminal is shared, so that it names the shared terminals.
-- [ ] With decision 250 B only: add "New terminal" to the actions of
-      `docs/protocol/command-palette.md`. The follow-up item
-      `plans/follow-ups/protocol-docs-split.md` counts that doc as at the
-      target, so it needs no split.
+- [ ] Add "New terminal" after the Go to rows in the actions of
+      `docs/protocol/command-palette.md`, with when it shows (decision 250
+      B). The follow-up item `plans/follow-ups/protocol-docs-split.md`
+      counts that doc as at the target, so it needs no split.
 - [ ] Read `docs/architecture.md`. Change it only when a component or a
       boundary changes.
 - [ ] Read both legal pages in full, `src/marketing/terms.ts` and
@@ -435,12 +440,15 @@ Depends on: 1, 5
 
 Tags: ui
 
-Depends on: 6, and decision 250 B. With decision 250 A, delete this
-milestone. With C or D, rewrite it first.
+Depends on: 6
 
 - [ ] Add "New terminal" after the Go to rows. Run the + of the terminal
-      tabs, and leave the row out at the limit.
-- [ ] Test the row in the palette tests.
+      tabs, and show the new terminal in the Terminal tool.
+- [ ] Offer the row only while the Terminal tool offers its + button.
+- [ ] Test the row in the palette tests: its place, a run, and no row at
+      the limit or while the cloud computer does not run.
+- [ ] Update `src/app/key-code.md` and `src/shell/workspace/README.md`,
+      which list the palette actions.
 
 ## Milestone 8: Public guide and comparison page
 
