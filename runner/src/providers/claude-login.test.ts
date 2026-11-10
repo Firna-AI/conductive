@@ -48,6 +48,7 @@ function fixture(kind: RunnerLogin['kind'] = 'token') {
     cwd: '/repo',
     home: '/private-agent-home',
     login: { agent: 'claude' as const, kind, secret: 'private-test-login' },
+    commitAuthor: null,
     choice: turn().message.choice,
     conversationId: null,
     instructions: '',

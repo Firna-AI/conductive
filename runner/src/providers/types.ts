@@ -1,5 +1,6 @@
 import type { AgentChoice } from '../../../src/shared/agents'
 import type { ToolCall } from '../../../src/shared/chat-events'
+import type { CommitAuthor } from '../../../src/shared/commit-author'
 import type {
   RunnerLogin,
   RunnerMessageDuringTurn,
@@ -41,6 +42,7 @@ export interface ProviderOptions {
   cwd: string
   home: string
   login: RunnerLogin
+  commitAuthor: CommitAuthor | null
   choice: AgentChoice
   conversationId: string | null
   instructions: string

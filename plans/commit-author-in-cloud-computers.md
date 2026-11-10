@@ -425,16 +425,18 @@ Depends on: 2
 The Worker sends the author of the turn sender with each turn command. Old
 runners ignore the new field.
 
-- [ ] Add `commitAuthor`, an author or null, to `RunnerTurn` in
+- [x] Add `commitAuthor`, an author or null, to `RunnerTurn` in
       `src/shared/runner.ts`.
-- [ ] Fill it in `worker/chat/runner-delivery.ts` from the sender of the
+- [x] Fill it in `worker/chat/runner-delivery.ts` from the sender of the
       stored turn. A missing user gives null.
-- [ ] Extend the turn cases of `worker/chat/queue.test.ts`. The owner's
+- [x] Extend the turn cases of `worker/chat/queue.test.ts`. The owner's
       turn carries the owner's author. A turn that the member starts
       carries the member's author. See each new assertion fail first.
-- [ ] Update the fakes and fixtures that build runner turn commands.
-- [ ] Update the runner contract text in `src/shared/README.md`.
-- [ ] Run the targeted tests and the checks of Milestone 2.
+- [x] Update the fakes and fixtures that build runner turn commands.
+- [x] Update the runner contract text in `src/shared/README.md`.
+- [x] Run the targeted tests and the checks of Milestone 2.
+
+Evidence: `.context/commit-author-in-cloud-computers/milestones-3-4/report.md`.
 
 ## Milestone 4: The runner gives each agent the author of its turn
 
@@ -443,21 +445,21 @@ Depends on: 3
 Each agent process gets the author of its turn in the four Git variables.
 The terminal and the scripts keep the owner's author.
 
-- [ ] Parse `commitAuthor` of a turn command in `runner/src/commands.ts`.
+- [x] Parse `commitAuthor` of a turn command in `runner/src/commands.ts`.
       A missing field gives null. A malformed field gives null and a local
       warning.
-- [ ] Pass the author of the command that started the turn to
+- [x] Pass the author of the command that started the turn to
       `providerEnvironment` in `runner/src/providers/environment.ts`. Set
       the four variables there. Without an author, keep the inherited
       values.
-- [ ] Extend `runner/src/providers/workspace-tools.test.ts` for both
+- [x] Extend `runner/src/providers/workspace-tools.test.ts` for both
       agents. Alice's turn gets her author. Bob's message during that turn
       keeps it. Bob's next turn gets his author. A turn without an author
       keeps the inherited values. See each new assertion fail first.
-- [ ] Add the missing and malformed cases to the parse test of runner
+- [x] Add the missing and malformed cases to the parse test of runner
       commands.
-- [ ] Update `runner/README.md`.
-- [ ] Run `npm --prefix runner run typecheck` and `npm --prefix runner test`.
+- [x] Update `runner/README.md`.
+- [x] Run `npm --prefix runner run typecheck` and `npm --prefix runner test`.
 
 ## Milestone 5: Public guides, Privacy page, and comparison row
 
@@ -495,7 +497,8 @@ The public text says who a commit names.
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      Evidence: `.context/commit-author-in-cloud-computers/gate-1.log`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

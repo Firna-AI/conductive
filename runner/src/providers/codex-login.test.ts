@@ -48,6 +48,7 @@ function fixture() {
     cwd: '/repo',
     home: '/private-agent-home',
     login: command.login,
+    commitAuthor: null,
     choice: command.message.choice,
     conversationId: null,
     instructions: '',

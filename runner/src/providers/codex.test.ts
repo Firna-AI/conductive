@@ -239,6 +239,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     cwd: h.root,
     home: h.home,
     login: turn('close', 'bob', 'codex').login,
+    commitAuthor: null,
     choice: { agent: 'codex', model: 'test-model', effort: 'high' },
     conversationId: null,
     instructions: '',

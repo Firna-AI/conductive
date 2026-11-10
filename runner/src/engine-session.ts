@@ -106,6 +106,8 @@ export async function startProvider(
         cwd: options.cwd,
         home: options.home,
         login: turn.first.login,
+        commitAuthor:
+          turn.first.type === 'turn' ? turn.first.commitAuthor : null,
         choice: session.choice,
         conversationId: session.conversationId,
         instructions: session.instructions,

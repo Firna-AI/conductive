@@ -1,4 +1,5 @@
 import type { AgentChoice } from '../../src/shared/agents'
+import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { Attachment, UserMessage } from '../../src/shared/messages'
 import type { RunnerLogin, WorkspaceToRunner } from '../../src/shared/runner'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
@@ -67,7 +68,24 @@ function parseUserMessage(value: unknown): UserMessage {
   }
 }
 
-export function parseWorkspaceMessage(value: unknown): WorkspaceToRunner {
+function parseCommitAuthor(
+  value: unknown,
+  warn: (message: string) => void,
+): CommitAuthor | null {
+  if (value === undefined || value === null) return null
+  try {
+    const author = object(value)
+    return { name: string(author.name), email: string(author.email) }
+  } catch {
+    warn('The turn commit author is invalid. The sandbox author will be used.')
+    return null
+  }
+}
+
+export function parseWorkspaceMessage(
+  value: unknown,
+  warn: (message: string) => void,
+): WorkspaceToRunner {
   const input = object(value)
   const type = string(input.type)
   if (type === 'welcome') {
@@ -146,7 +164,14 @@ export function parseWorkspaceMessage(value: unknown): WorkspaceToRunner {
         path: string(attachment.path),
       }
     })
-    return { type, commandId, sessionId, turnId, message, login, attachments }
+    const fields = { commandId, sessionId, turnId, message, login, attachments }
+    return type === 'turn'
+      ? {
+          type,
+          ...fields,
+          commitAuthor: parseCommitAuthor(input.commitAuthor, warn),
+        }
+      : { type, ...fields }
   }
   throw new Error('The runner command is not supported.')
 }

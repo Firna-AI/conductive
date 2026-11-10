@@ -46,6 +46,7 @@ it('closes Codex startup and in-flight requests when their session signal is can
       cwd: h.root,
       home: h.home,
       login: turn().login,
+      commitAuthor: null,
       choice: turn().message.choice,
       conversationId: null,
       instructions: '',

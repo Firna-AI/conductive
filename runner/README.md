@@ -34,6 +34,12 @@ These facts belong to this implementation, not to the protocol docs.
   their settings, runtime context, and process lifetime.
 - Each agent program gets the login of its turn through a route that its
   tool processes do not inherit, as [Agent logins](agent-logins.md) says.
+- Each agent process gets the commit author of its turn as `GIT_AUTHOR_NAME`,
+  `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL`.
+  A message during the turn keeps that author, also when a new agent process
+  takes deferred input. Without an author, the process keeps the sandbox values.
+  A malformed author gives a local warning and keeps those values. The turn continues.
+  Only workspaces that start from an org image built after this change have this runner.
 - `agentInstructions` builds the agent instructions of each agent from the
   configuration. Claude gets its seven base rules and that text as
   `systemPrompt`. Codex keeps its default base instructions and gets the

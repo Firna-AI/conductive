@@ -36,6 +36,7 @@ export function turn(
       state: 'sent',
     },
     attachments: [],
+    commitAuthor: null,
     login:
       agent === 'claude'
         ? { agent, kind: 'token', secret: `secret-${sender}` }

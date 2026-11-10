@@ -49,6 +49,7 @@ function attachedTurn(agent: Agent) {
     cwd: '/test/repository',
     home: '/test/home',
     login: command.login,
+    commitAuthor: null,
     choice: command.message.choice,
     conversationId: null,
     instructions: agentInstructions({

@@ -75,6 +75,10 @@ describe('workspace chat queue', () => {
     expect(command?.type).toBe('turn')
     if (command?.type !== 'turn') throw new Error('Expected a turn.')
     expect(command.message.sender.id).toBe(fixture.owner.id)
+    expect(command.commitAuthor).toEqual({
+      name: 'Octocat',
+      email: '7+octocat@users.noreply.github.com',
+    })
     expect(command.login).toEqual({
       agent: 'claude',
       kind: 'api-key',
@@ -157,6 +161,7 @@ describe('workspace chat queue', () => {
       throw new Error('Expected a message during the turn.')
     expect(steer.turnId).toBe(initial.turnId)
     expect(steer.message.sender.id).toBe(fixture.member.id)
+    expect(steer).not.toHaveProperty('commitAuthor')
     expect(steer.login).toEqual({
       agent: 'claude',
       kind: 'api-key',
@@ -180,6 +185,10 @@ describe('workspace chat queue', () => {
     expect(next.sessionId).toBe(session.id)
     expect(next.turnId).not.toBe(initial.turnId)
     expect(next.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
+    expect(next.commitAuthor).toEqual({
+      name: 'Teammate',
+      email: '8+teammate@users.noreply.github.com',
+    })
     expect(JSON.stringify(await fixture.history(session.id))).not.toContain(
       'secret-',
     )

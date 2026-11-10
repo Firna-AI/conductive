@@ -58,7 +58,11 @@ export function createClaudeFactory(
         options: {
           cwd: options.cwd,
           systemPrompt: options.instructions,
-          env: providerEnvironment(options.home, options.tools),
+          env: providerEnvironment(
+            options.home,
+            options.tools,
+            options.commitAuthor,
+          ),
           pathToClaudeCodeExecutable: binary(),
           model: options.choice.model,
           ...(options.choice.effort === 'none'

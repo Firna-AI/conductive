@@ -162,6 +162,7 @@ export async function checkClaudeFailures(
     cwd: root,
     home,
     login: turn().login,
+    commitAuthor: null,
     choice: turn().message.choice,
     conversationId: null,
     instructions: '',

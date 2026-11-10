@@ -136,6 +136,7 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
     cwd: h.root,
     home: h.home,
     login: first.login,
+    commitAuthor: null,
     choice: first.message.choice,
     conversationId: null,
     instructions: '',

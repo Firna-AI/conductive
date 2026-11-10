@@ -72,6 +72,7 @@ async function measure(): Promise<void> {
       cwd: process.env.CONDUCTIVE_REPOSITORY ?? process.cwd(),
       home: process.env.CONDUCTIVE_HOME ?? homedir(),
       login,
+      commitAuthor: null,
       choice,
       conversationId: null,
       instructions: '',
@@ -90,6 +91,7 @@ async function measure(): Promise<void> {
       sessionId,
       turnId,
       login,
+      commitAuthor: null,
       attachments: [],
       message: {
         id: randomUUID(),

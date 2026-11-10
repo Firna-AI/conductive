@@ -32,6 +32,8 @@ After a refused file tree, changes list, start steps, or workspace name,
 It carries no login. A redelivery keeps its command ID.
 `runner-transport.ts` defines the injectable socket boundary.
 Runner commands carry the agent login of the session starter, whoever sent the message. Browser response types do not.
+Turn commands also carry the commit author of the member whose message started the turn.
+Message commands carry no commit author.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 
 `messages.ts` owns the attachment metadata and target identity.
