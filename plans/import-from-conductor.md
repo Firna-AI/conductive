@@ -81,7 +81,11 @@ Checked on 8 and 9 November 2026. The notes give each source.
   device connection, where each message holds at most 1,000,000 bytes.
 - Decision 132 of the main plan chose one R2 bucket for message
   attachments. Milestone 8p of the main plan builds it. Today every
-  attachment upload fails.
+  attachment upload fails. Milestone 8p also leaves open how a file gets
+  into a cloud computer: a new provider route that writes files, or the
+  runner connection.
+- A short-lived upload link to R2 needs an R2 access key as a new Worker
+  secret, which `docs/deployment.md` must list.
 - Each workspace record of Conductive needs a first message, a first
   session, and a model. The resume refuses a workspace with no cloud
   computer.
@@ -405,9 +409,21 @@ decision or the user.
 - Activation starts a cloud computer from the newest good org image. Git
   fetches the branch from GitHub, or the default branch when GitHub lacks
   the branch.
-- The runner then applies the bundle, the changed files, and `.context`,
-  and puts the session files in place as decision 5 says. Then the app
-  deletes the bucket data of that workspace.
+- The runner connects to the workspace, as at every start. Before the
+  first turn, the workspace sends it the bucket data over that connection,
+  in parts below 1 MiB, each with its byte range and its SHA-256. The
+  runner checks each part and writes it to disk. Reason: this path needs
+  no new provider route and gives the cloud computer no new credential.
+  Milestone 8p of the main plan has the same choice for attachments, and
+  can use the same path. A short-lived download link would be faster for a
+  large package, but the security rules allow no such credential in a
+  cloud computer today.
+- The runner then fetches the commits from the bundle, checks out the
+  branch at the newest commit of the Mac, and copies the changed files and
+  `.context` over the checkout. It puts the session files in place as
+  decision 5 says, and the Markdown files in `.context/conductor/`. Then
+  the app deletes the bucket data of that workspace, except the Markdown
+  files.
 - A failed activation keeps the workspace, its sessions, and its bucket
   data, and it offers Try again.
 - The import adds `.context/` to the local exclude file of the clone, so
@@ -535,6 +551,8 @@ Depends on: 2
 Depends on: 4
 
 - [ ] Add the activation start: a first start with no first message.
+- [ ] Send the bucket data to the runner over the runner connection, in
+      checked parts below 1 MiB, before the first turn.
 - [ ] Let the runner apply the bundle, the changed files, and `.context`,
       put the Markdown files of the old sessions in `.context/conductor/`,
       and add `.context/` to the local exclude file.
