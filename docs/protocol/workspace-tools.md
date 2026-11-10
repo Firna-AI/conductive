@@ -79,6 +79,13 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   still show them while the sandbox sleeps.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
+- While the sandbox does not run, a file or diff tab reads nothing. While
+  the sandbox is stopped, or after its later start failed, a tab keeps the
+  file that it already shows, as the lists keep their copy.
+- Otherwise the tab shows the state of the sandbox in place of the file,
+  with the Resume or Try again of that state.
+- Opening a file or diff tab resumes a stopped sandbox, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says.
 - When the runner cannot read the repository, it sends `files.unavailable`
   (decision 109). The event holds no other data. A failed scan after a
   connect does not stop `runner.ready`, as

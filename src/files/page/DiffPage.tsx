@@ -29,7 +29,8 @@ const readDiff = (client: FilesClient, path: string, signal: AbortSignal) =>
  *
  * A diff over the read limit offers no Download. A binary diff links to
  * the file tab in place of Download, and the file tab offers Download
- * when the file fits the limit.
+ * when the file fits the limit. The header keeps the changed lines of the
+ * list of changes while a placeholder shows.
  */
 export function DiffPage(props: {
   files: WorkspaceFiles
@@ -37,11 +38,25 @@ export function DiffPage(props: {
   navigation: FilesNavigation
   layout: FilesLayout
   targets?: FileActionTargets
+  /**
+   * Shows in place of the diff, such as the state of a sandbox that does not
+   * run. The page then reads nothing and offers no Download.
+   */
+  placeholder?: ReactNode
+  /** Keeps a diff that the page already shows, in place of the placeholder. */
+  keepShown?: boolean
 }) {
-  const { files, tab } = props
+  const { files, tab, placeholder } = props
   const snapshot = useFilesSnapshot(files)
   const changed = snapshot.changes?.files.find((file) => file.path === tab.path)
-  const { state, retry } = useFollowed(files, readDiff, tab.path)
+  const { state: read, retry } = useFollowed(
+    files,
+    readDiff,
+    tab.path,
+    !placeholder,
+  )
+  const kept = props.keepShown === true && read?.status === 'ready'
+  const state = !placeholder || kept ? read : null
   const actions = useFileActions(files.client, tab.path, props.targets)
   const diff = state?.status === 'ready' ? state.value : null
   const label = pageLabel(snapshot, tab.path, 'diff', diff)
@@ -51,12 +66,18 @@ export function DiffPage(props: {
     changed?.change === 'deleted' ||
     (diff !== null && diff.newContent === null && !diff.binary)
   const download =
-    failed === 'not-found' || failed === 'too-large' || deleted || diff?.binary
+    placeholder ||
+    failed === 'not-found' ||
+    failed === 'too-large' ||
+    deleted ||
+    diff?.binary
       ? undefined
       : actions.download
   const newText = diff && !diff.binary ? diff.newContent : null
   let body: ReactNode = <Loading label="Opening the diff" />
-  if (state?.status === 'failed' && state.error.kind !== 'aborted') {
+  if (placeholder && !state) {
+    body = placeholder
+  } else if (state?.status === 'failed' && state.error.kind !== 'aborted') {
     body = <ReadError error={state.error} onRetry={retry} subject="diff" />
   } else if (diff?.binary) {
     body = (

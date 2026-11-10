@@ -71,9 +71,9 @@ them, and this page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md): the
-  public page for people who move from Conductor Cloud, with the status of
-  each Conductor Cloud feature.
+- [Conductor comparison](../protocol/conductor-comparison.md): the public
+  page for people who move from Conductor, with the status of each
+  Conductor feature.
 - [Routines](../protocol/routines.md): routines and their schedules, with the
   linked pages [Routine runs](../protocol/routine-runs.md),
   [Pull request runs](../protocol/pull-request-runs.md), and
