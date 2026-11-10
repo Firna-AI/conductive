@@ -9,18 +9,6 @@ export async function stopDispatchedTurns(
     const turn = await transaction.turn(session.activeTurnId)
     if (!turn || (turn.state !== 'running' && turn.state !== 'stopping'))
       continue
-    await transaction.emit({
-      type: 'turn.completed',
-      sessionId: session.id,
-      turnId: turn.id,
-      state: 'stopped',
-      durationMs: 0,
-      files: [],
-      omittedFileCount: 0,
-      userMessageIds: turn.messageIds,
-    })
-    await new TurnLifecycle(transaction, session).finish(turn, {
-      state: 'stopped',
-    })
+    await new TurnLifecycle(transaction, session).workspaceStopped(turn)
   }
 }

@@ -45,7 +45,7 @@ export function createCodexFactory(
     const configs = {
       model_provider: 'conductive',
       'model_providers.conductive.name': 'Conductive',
-      'model_providers.conductive.base_url': 'https://api.openai.com/v1',
+      'model_providers.conductive.base_url': options.endpoint,
       'model_providers.conductive.wire_api': 'responses',
       'model_providers.conductive.requires_openai_auth': true,
       cli_auth_credentials_store: 'ephemeral',
@@ -124,7 +124,10 @@ export function createCodexFactory(
       rpc.notify('initialized')
       await rpc.request('account/login/start', {
         type: 'apiKey',
-        apiKey: options.login.secret,
+        apiKey:
+          options.credential.type === 'gateway'
+            ? options.credential.token
+            : options.credential.login.secret,
       })
       const response = object(
         await rpc.request(
