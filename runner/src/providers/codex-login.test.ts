@@ -50,6 +50,7 @@ function fixture() {
     endpoint: 'https://machines.conductive.test/v1/model/codex',
     credential: { type: 'gateway' as const, ...command.credential },
     sessionId: 'session-1',
+    commitAuthor: null,
     choice: command.message.choice,
     conversationId: null,
     instructions: '',

@@ -51,6 +51,7 @@ it('closes Codex startup and in-flight requests when their session signal is can
         '/v1/model/' +
         turn().message.choice.agent,
       credential: { type: 'gateway', ...turn().credential },
+      commitAuthor: null,
       choice: turn().message.choice,
       conversationId: null,
       instructions: '',

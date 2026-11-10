@@ -52,6 +52,7 @@ function providerFixture(agent: Agent) {
       '/v1/model/' +
       command.message.choice.agent,
     credential: { type: 'gateway' as const, ...command.credential },
+    commitAuthor: null,
     choice: command.message.choice,
     conversationId: null,
     instructions: '',

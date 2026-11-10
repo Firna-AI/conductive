@@ -147,6 +147,11 @@ sandbox. The previewed server then gets its local address as `Host`
 [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
 states the rules of the relay.
 
+The Worker gives each sandbox the commit author of its workspace owner.
+The agent runner gives each agent the commit author of the sender of its
+turn. [Commit author](../protocol/github-tokens.md#commit-author) states
+the rules.
+
 ## External services
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the
