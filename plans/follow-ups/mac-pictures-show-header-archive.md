@@ -1,0 +1,31 @@
+# Mac pictures show the removed header Archive
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, from the fix of round 1 finding 1 of the review of branch `calummoore/sandbox-ready-notice-removal`, as a problem outside its scope.
+- **Location:** `src/marketing/pictures/mac-dark.webp` and `src/marketing/pictures/mac-light.webp`, the committed Mac pictures. `docs/mockups/src/components/workspace/WorkspaceHeader.tsx`, the workspace header that the pictures show.
+- **Reason:** The branch that found it changed no part that the Mac picture shows.
+
+- **Terms:**
+  - **Marketing picture:** a still capture of a mockup screen that the public site shows. Git keeps each picture as a file under `src/marketing/pictures/`.
+  - **Mac picture:** the marketing picture of the Mac app on the home page. One file for each colour scheme, `mac-dark.webp` and `mac-light.webp`, serves both layouts.
+- **Background:**
+  - `npm run marketing:pictures` captures every marketing picture again from the built mockups. `src/marketing/pictures.md` gives the command, the list of pictures, and the files.
+  - Commit `c02744f0`, "fix(workspaces): move Archive to workspace rows" (#124), merged on 9 November 2026. It removed the Archive button from the workspace header of the mockups, and it captured the hero pictures again.
+  - Commit `073f71b5`, "feat(marketing): add Mac app downloads to the site" (#130), merged on 10 November 2026. It added the Mac pictures, which show the workspace header with the Archive button.
+  - On 10 November 2026, two captures on a cloud sandbox with Amazon Linux 2023 and Google Chrome 157.0.8103.50 gave byte-identical files.
+  - Against the committed files, `mac-dark.webp` and `mac-light.webp` each differed in about 5,800 pixels. Every changed pixel was in the box from x 1173 to 1613 and from y 16 to 51 of the 2x file: the workspace header.
+  - The committed pictures show an Archive icon between the state "Needs input" and the panel button. The new captures show no Archive icon, and the repository name has more room.
+- **Problem:** The Mac pictures on the home page show a header Archive button that the mockups and the app no longer have.
+- **Impact if no action:** The public site shows a control that the product does not offer.
+- **Root question:** How does the Mac picture match the current workspace header?
+- **Options:**
+  - **A.** Run `npm run marketing:pictures` twice. When both runs give the same Mac files, look at them and commit only `mac-dark.webp` and `mac-light.webp`. Restore each other file that the runs change, unless its screen changed. Effort: Small.
+- **Left out:** Only one repair is real, because the mockups already draw the right header. Keeping the pictures fails the goal. An edit of the pixels by hand is worse on every point than the capture command.
+- **Wider fix:** None here. Option B of `plans/follow-ups/marketing-pictures-go-stale.md` names each stale picture in the gate, and it waits for the user, because it adds a gate.
+- **Previous examples:** The four `starting` pictures kept the removed label "Sends when the sandbox is ready" on branch `calummoore/sandbox-ready-notice-removal`, until its review on 10 November 2026. `plans/follow-ups/marketing-pictures-go-stale.md` lists the earlier stale sets.
+- **Related:**
+  - `plans/follow-ups/marketing-pictures-go-stale.md` asks how the pictures stay in step with their screens. This item is one more case of that class.
+  - `plans/follow-ups/marketing-pictures-unstable-capture.md` records that a capture can change a picture when no screen changed. The same captures changed `hero-desktop-light.webp` in anti-aliased text only, so option A restores such files.
+- **Recommendation:** A. It uses the capture command that the docs give, and it changes only the two stale files.
+- **Action:** fix after merge, apply A, because the branch that found it changed no part that the Mac picture shows.
