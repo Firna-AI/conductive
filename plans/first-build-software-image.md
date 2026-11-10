@@ -397,12 +397,16 @@ Depends on: 1, 2, 3, 4, 5, 6, 7
       Run each new asynchronous test 10 times, as the `testing` skill
       says. Evidence: `.context/first-build-software-image/gate.log` and
       `.context/first-build-software-image/repeat-proof.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Round 1 at `cccc8574` found 14, 15, and 16, and
+      their checks confirmed all three. `1122b976` fixed 15 and 16. 14
+      went to `plans/follow-ups/software-image-cleanup-keeps-running-version.md`.
+      Round 2 at `1122b976` found nothing new. Reports:
+      `.context/reviews/calummoore/global-snapshot-simplification/`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
