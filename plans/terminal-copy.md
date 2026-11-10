@@ -12,9 +12,10 @@ goes to tmux on every platform. On a Mac, no held key selects a part, and
 Cmd+A copies only the whole screen.
 
 The user chose to turn off mouse reports when the connection ends
-(decision 213, option A, 9 November 2026). The way that the user copies
-while connected is open (decision 214). This change does not cover touch
-selection on phones. The brainstorm notes, the scripts, and the evidence
+(decision 213, option A, 9 November 2026). The user also chose normal
+select while connected: a plain drag selects in the page, and the program
+still gets the wheel (decision 214, option C, 10 November 2026). This
+change does not cover touch selection on phones. The brainstorm notes, the scripts, and the evidence
 are in `.context/terminal-copy/`. The options check of both decisions is
 `.context/terminal-copy/options-check-report.md`.
 
@@ -211,8 +212,9 @@ Contract owners:
   programs without a held key. The first round of the brainstorm
   recommended B, before the check found that any sandbox process can push
   a clipboard write through tmux.
-- **Action:** ask the user, because C puts the left clicks and drags of
-  programs behind a held key, which changes behaviour on `main`.
+- **Action:** apply C. The user chose C on 10 November 2026. This choice
+  approves the change of behaviour on `main`: plain left clicks and drags
+  no longer reach programs, and a held key gives them back.
 
 ## Design calls
 
@@ -227,29 +229,59 @@ Contract owners:
 - 9 November 2026, agent's call: the development page gets a button that
   turns on mouse reports. Reason: the smoke tests need to reproduce the
   problem without a sandbox.
-- 9 November 2026, agent's call: when decision 214 is still open at the
-  end of Milestone 2, the pull request ships decision 213 alone, and
-  decision 214 moves to a follow-up item. Reason: the fix of the reported
-  bug then does not wait.
+- 10 November 2026, agent's call: C uses the forced selection of
+  xterm.js. While a program has the mouse, the page sends each plain left
+  press to xterm.js again as a forced press: Option on a Mac, with
+  `macOptionClickForcesSelection`, and Shift elsewhere. Reason: the wheel
+  path of #115 and the mouse encodings of xterm.js stay unchanged. Hiding
+  the mouse request from xterm.js was left out, because the app then needs
+  its own wheel encoding and its own wheel tests.
+- 10 November 2026, agent's call: the held key that gives a click or a
+  drag to the program is Cmd on a Mac and Ctrl on Windows and Linux.
+  Reason: Option and Shift are the keys of the forced selection, a
+  Ctrl-click on a Mac is a right-click, and Alt-drag moves windows on many
+  Linux desktops.
+- 10 November 2026, agent's call: the right and the middle buttons still
+  go to the program. Reason: a selection needs only the left button.
+- 10 November 2026, agent's call: the screen shows the text cursor while a
+  program has the mouse. Reason: a plain drag selects, and xterm.js shows
+  the arrow cursor in that state.
+- 10 November 2026, agent's call: a tap on a phone follows the same rule
+  as a click. Reason: a phone has no Cmd or Ctrl key, and a tap in tmux
+  selects only the pane.
+- 10 November 2026, agent's call: the fix of decision 213 stays, as the
+  user chose. Reason: after the end, the screen then shows the text cursor
+  and selects without a sent-again press.
 
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
 
-The Terminal requirements say that the user can copy the text of the
-screen after the end.
+The Terminal requirements say how the user selects and copies the text of
+the screen, while connected and after the end.
 
 - [ ] In the Terminal section of `docs/protocol/workspace-tools.md`, add
       the requirement: when the connection ends, the user can still select
       and copy a part of the text of the screen (decision 213). Add its
       reason: the screen keeps its output so that the user can use it,
       such as an error.
+- [ ] In the same section, add the requirement: a plain drag selects text
+      in the screen, also while a program, such as tmux, uses the mouse.
+      The wheel still reaches the program. A held Cmd on a Mac, or Ctrl on
+      Windows and Linux, gives a click or a drag to the program
+      (decision 214). Add its reason, and the rejected clipboard writes
+      from the sandbox: any process in the sandbox could then write the
+      user's clipboard.
 - [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates the changed fact.
 - [ ] In `src/terminal/README.md`, extend the Behaviour line about the end
       of the connection: a drag still selects the text, and Cmd+C copies
       it.
+- [ ] In the Behaviour section of `src/terminal/README.md`, add the
+      selection rule of decision 214: a plain drag selects, the wheel and
+      the right and middle buttons reach the program, and a held Cmd or
+      Ctrl gives a click or a drag to the program.
 
 ## Milestone 2: Copy after the end
 
@@ -275,14 +307,37 @@ selects text, and Cmd+C copies it.
 
 ## Milestone 3: Copy while connected
 
-Depends on: 2, and the answer to decision 214
+Tags: ui
 
-The user can select and copy the text of a connected terminal. The answer
-to decision 214 gives the TODOs and the tags. Options D, E, and G need a
-backend milestone before the ui milestone.
+Depends on: 2
 
-- [ ] Write the TODOs of the option that the user chooses for decision
-      214.
+While a program has the mouse, a plain drag selects in the page, and the
+program still gets the wheel. A held Cmd on a Mac, or Ctrl elsewhere,
+gives a click or a drag to the program.
+
+- [ ] Add a DOM test with happy-dom, as `src/app/pointer-drag.test.tsx`
+      does, for the press rule:
+  - [ ] While a program has the mouse, a plain left press reaches
+        xterm.js again as a forced press, with the same position, buttons,
+        and click count. The first press goes no further.
+  - [ ] A press with Cmd on a Mac, or Ctrl elsewhere, a right press, a
+        middle press, and each press while no program has the mouse pass
+        unchanged.
+  - [ ] Show that the test fails before the change.
+- [ ] Turn on `macOptionClickForcesSelection` in the options of the
+      xterm.js `Terminal` in `src/terminal/TerminalScreen.tsx`.
+- [ ] Implement the press rule in the screen, with a capture listener on
+      the xterm.js element. Remove the listener when the screen goes.
+- [ ] Show the text cursor over the screen while a program has the mouse.
+- [ ] Smoke test in Chrome on the development page, with a Mac platform
+      and with Linux. Turn on mouse reports, then check:
+  - [ ] A plain drag selects, and the copy command copies the text.
+  - [ ] A double click selects a word.
+  - [ ] A wheel turn reaches the program as a mouse report.
+  - [ ] A Cmd-drag on a Mac, or a Ctrl-drag on Linux, reaches the program
+        and selects nothing.
+  - [ ] A right press reaches the program.
+  - [ ] Save the results under `.context/terminal-copy/`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
@@ -300,3 +355,12 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] In a deployed workspace with tmux mouse support, on a Mac, check
+      Chrome and Safari: the wheel scrolls the history, a plain drag
+      selects, Cmd+C copies, and a drag after a disconnect selects. It
+      needs the deployed change and a Mac.
+- [ ] Repeat the check in the Mac app after its next release, which
+      bundles the web app.
