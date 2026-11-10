@@ -77,7 +77,7 @@ const mouse = { pointerType: 'mouse', clientY: 10 }
 const finger = { pointerType: 'touch', pointerId: 2, clientY: 10 }
 
 describe('the pointer drag', () => {
-  it('lifts an item after a mouse moves more than 4 px, keeps a smaller move a click, and ends a press whose release never came', async () => {
+  it('lifts an item after a mouse moves more than 4 px, keeps a smaller move a click, and ends a press whose release never came or that opens a menu', async () => {
     const drops: Drop[] = []
     const picks: string[] = []
     await mount(<Row drops={drops} picks={picks} />)
@@ -93,6 +93,16 @@ describe('the pointer drag', () => {
     pointer(window, 'pointermove', { ...mouse, clientX: 150, buttons: 0 })
     pointer(window, 'pointermove', { ...mouse, clientX: 160 })
     const lost = shown()
+    // A press that opens a menu, such as a click with Ctrl on a Mac, ends,
+    // so a move over the open menu lifts nothing.
+    pointer(a, 'pointerdown', { ...mouse, clientX: 50 })
+    const menuOpens = allowed(
+      a,
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
+    )
+    pointer(window, 'pointermove', { ...mouse, clientX: 150 })
+    const overMenu = shown()
+    pointer(window, 'pointerup', { ...mouse, clientX: 150, buttons: 0 })
     pointer(a, 'pointerdown', { ...mouse, clientX: 50 })
     pointer(window, 'pointermove', { ...mouse, clientX: 55 })
     const lifted = shown()
@@ -100,21 +110,33 @@ describe('the pointer drag', () => {
     const over = shown()
     pointer(window, 'pointerup', { ...mouse, clientX: 150, buttons: 0 })
 
-    expect({ small, picks, lost, lifted, over, drops }).toEqual({
+    expect({
+      small,
+      picks,
+      lost,
+      menuOpens,
+      overMenu,
+      lifted,
+      over,
+      drops,
+    }).toEqual({
       small: 'still',
       picks: ['a'],
       lost: 'still',
+      menuOpens: true,
+      overMenu: 'still',
       lifted: 'a at 0',
       over: 'a at 1',
       drops: [{ item: 'a', place: 1, touch: false, moved: true }],
     })
   })
 
-  it('lifts an item after a finger holds it 450 ms, lets a finger that moves first scroll, and keeps a lifted finger from scrolling the page or opening a menu', async () => {
+  it('lifts an item after a finger holds it 450 ms, lets a finger that moves first scroll, and keeps a holding or lifted finger from scrolling the page or opening a menu', async () => {
     const drops: Drop[] = []
     await mount(<Row drops={drops} picks={[]} />)
     const a = byRole('button', 'a')
     const b = byRole('button', 'b')
+    const event = { bubbles: true, cancelable: true }
     vi.useFakeTimers()
     try {
       pointer(a, 'pointerdown', { ...finger, clientX: 50 })
@@ -125,18 +147,29 @@ describe('the pointer drag', () => {
       pointer(window, 'pointercancel', { ...finger, clientX: 59, buttons: 0 })
 
       pointer(b, 'pointerdown', { ...finger, clientX: 150 })
-      act(() => vi.advanceTimersByTime(449))
+      act(() => vi.advanceTimersByTime(300))
+      // A browser can send its menu event while the finger still holds.
+      const menuWhileHolding = allowed(b, new MouseEvent('contextmenu', event))
+      act(() => vi.advanceTimersByTime(149))
       const early = shown()
       act(() => vi.advanceTimersByTime(1))
       const held = shown()
-      const event = { bubbles: true, cancelable: true }
       const pageScrolls = allowed(b, new Event('touchmove', event))
       const menuOpens = allowed(b, new MouseEvent('contextmenu', event))
       pointer(window, 'pointermove', { ...finger, clientX: 157 })
       pointer(window, 'pointerup', { ...finger, clientX: 157, buttons: 0 })
 
-      expect({ scrolled, early, held, pageScrolls, menuOpens, drops }).toEqual({
+      expect({
+        scrolled,
+        menuWhileHolding,
+        early,
+        held,
+        pageScrolls,
+        menuOpens,
+        drops,
+      }).toEqual({
         scrolled: 'still',
+        menuWhileHolding: false,
         early: 'still',
         held: 'b at 1',
         pageScrolls: false,

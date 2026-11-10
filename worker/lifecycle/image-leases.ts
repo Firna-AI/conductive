@@ -1,26 +1,27 @@
 import { HttpError } from '../http'
 
+export interface LeasedImage {
+  imageName: string
+  providerAccount: string
+}
+
 export async function leasedCreationImage(
   db: D1Database,
   orgId: string,
   workspaceId: string,
   repositoryId: string,
-): Promise<{
-  imageName: string
-  defaultBranch: string
-}> {
+): Promise<LeasedImage & { defaultBranch: string }> {
   const row = await db
     .prepare(
-      `SELECT l.snapshot_name AS imageName, p.default_branch AS defaultBranch
+      `SELECT l.snapshot_name AS imageName, l.provider_account AS providerAccount,
+       p.default_branch AS defaultBranch
        FROM image_leases l JOIN workspace_creation_plans p
          ON p.workspace_id = l.workspace_id AND p.image_name = l.snapshot_name
+         AND p.provider_account = l.provider_account
        WHERE l.org_id = ? AND l.workspace_id = ? AND p.repository_id = ?`,
     )
     .bind(orgId, workspaceId, repositoryId)
-    .first<{
-      imageName: string
-      defaultBranch: string
-    }>()
+    .first<LeasedImage & { defaultBranch: string }>()
   if (!row)
     throw new HttpError(
       409,
@@ -34,20 +35,20 @@ export async function leasedImage(
   db: D1Database,
   orgId: string,
   workspaceId: string,
-): Promise<string> {
+): Promise<LeasedImage> {
   const row = await db
     .prepare(
-      'SELECT snapshot_name AS name FROM image_leases WHERE org_id = ? AND workspace_id = ?',
+      'SELECT snapshot_name AS imageName, provider_account AS providerAccount FROM image_leases WHERE org_id = ? AND workspace_id = ?',
     )
     .bind(orgId, workspaceId)
-    .first<{ name: string }>()
+    .first<LeasedImage>()
   if (!row)
     throw new HttpError(
       409,
       'image_required',
       'Ask an org admin to build the cloud computer image first.',
     )
-  return row.name
+  return row
 }
 
 export async function releaseImageLease(
@@ -65,13 +66,14 @@ export async function imageIsLeased(
   db: D1Database,
   orgId: string,
   snapshot: string,
+  providerAccount: string,
 ): Promise<boolean> {
   return Boolean(
     await db
       .prepare(
-        'SELECT workspace_id FROM image_leases WHERE org_id = ? AND snapshot_name = ? LIMIT 1',
+        'SELECT workspace_id FROM image_leases WHERE org_id = ? AND snapshot_name = ? AND provider_account = ? LIMIT 1',
       )
-      .bind(orgId, snapshot)
+      .bind(orgId, snapshot, providerAccount)
       .first(),
   )
 }

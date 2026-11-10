@@ -3,7 +3,7 @@ import { decodeUtf8 } from '../../src/shared/utf8'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
-import { orgSandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount } from '../sandbox/client'
 import type { SandboxFileRead } from '../sandbox/provider'
 import type { FilesWorkspace } from './data'
 import { fileBytes, parseFile } from './content'
@@ -34,11 +34,12 @@ export async function readBoatFile(
   const absolutePath = `${root}/${path}`
   let result: SandboxFileRead
   try {
-    const provider = await orgSandboxProvider(
+    const provider = await orgProviderForAccount(
       env,
       userId,
       workspace.orgId,
       fetch,
+      workspace.providerAccount,
     )
     result = await provider.readFile(
       workspace.sandboxId,

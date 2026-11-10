@@ -58,6 +58,7 @@ export async function queueRuntimeResume(fixture: RuntimeFixture, id: string) {
     serializeStartJob({
       workspaceId: id,
       orgId: row.orgId,
+      providerAccount: row.providerAccount,
       kind: 'resume',
       requestedByUserId: row.ownerUserId,
       imageName: null,

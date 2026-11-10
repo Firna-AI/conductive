@@ -46,8 +46,8 @@ export async function seedOuterRuntime(env: AppEnv) {
        VALUES ('chat-repository', 'chat-org', 101, 'owner/repository', 'main', 91)`,
     ),
     db.prepare(
-      `INSERT INTO settings (org_id, org_image_name, updated_at)
-       VALUES ('chat-org', 'outer-image', 1)`,
+      `INSERT INTO settings (org_id, updated_at)
+       VALUES ('chat-org', 1)`,
     ),
     ...[OUTER_WORKSPACE, OTHER_WORKSPACE].map((id) =>
       db

@@ -34,6 +34,8 @@ export async function insertBuild(
   input: {
     id: string
     orgId: string
+    providerAccount: string
+    previousProviderAccount: string
     kind: ImageBuild['kind']
     userId: string | null
     settingsRevision: number
@@ -52,8 +54,8 @@ export async function insertBuild(
     db
       .prepare(
         `INSERT INTO image_builds (id, org_id, kind, state, settings_revision,
-       runner_protocol_version, started_by_user_id, started_at)
-       SELECT ?, ?, ?, 'running', ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}`,
+       runner_protocol_version, started_by_user_id, started_at, provider_account)
+       SELECT ?, ?, ?, 'running', ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}`,
       )
       .bind(
         input.id,
@@ -65,13 +67,14 @@ export async function insertBuild(
           : RUNNER_PROTOCOL_VERSION,
         input.userId,
         input.now,
+        input.providerAccount,
         input.orgId,
       ),
     db
       .prepare(
         `INSERT INTO image_build_jobs (build_id, phase, install_script, repositories_json, software_json, previous_image_name,
-          repository_locations_json, previous_repository_locations_json)
-       SELECT ?, 'create', ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM image_builds WHERE id = ?)`,
+          repository_locations_json, previous_repository_locations_json, provider_account)
+       SELECT ?, 'create', ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM image_builds WHERE id = ?)`,
       )
       .bind(
         input.id,
@@ -81,17 +84,23 @@ export async function insertBuild(
         input.previousImageName,
         JSON.stringify(input.repositoryLocations),
         JSON.stringify(input.previousRepositoryLocations),
+        input.previousProviderAccount,
         input.id,
       ),
-    ...(input.nextImageRefreshAt === undefined
-      ? []
-      : [
-          db
-            .prepare(
-              `UPDATE settings SET next_image_refresh_at = ? WHERE org_id = ? AND ${activeOrgIdPredicate('settings.org_id')}`,
-            )
-            .bind(input.nextImageRefreshAt, input.orgId),
-        ]),
+    db
+      .prepare(
+        `INSERT INTO org_images (org_id, provider_account, next_image_refresh_at)
+         SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM image_builds WHERE id = ?)
+         ON CONFLICT (org_id, provider_account) DO UPDATE
+         SET next_image_refresh_at = COALESCE(excluded.next_image_refresh_at,
+           org_images.next_image_refresh_at)`,
+      )
+      .bind(
+        input.orgId,
+        input.providerAccount,
+        input.nextImageRefreshAt ?? null,
+        input.id,
+      ),
   ])
   await requireActiveOrg(db, input.orgId)
 }
@@ -104,10 +113,23 @@ export async function publishBuild(
   await db.batch([
     db
       .prepare(
-        `UPDATE settings SET org_image_name = ?, image_build_id = ?, last_refresh_at = ?,
-       next_image_refresh_at = ? WHERE org_id = ? AND ${activeOrgIdPredicate('settings.org_id')}`,
+        `INSERT INTO org_images
+         (org_id, provider_account, image_name, image_build_id, last_refresh_at, next_image_refresh_at)
+         SELECT ?, ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}
+         ON CONFLICT (org_id, provider_account) DO UPDATE SET
+         image_name = excluded.image_name, image_build_id = excluded.image_build_id,
+         last_refresh_at = excluded.last_refresh_at,
+         next_image_refresh_at = excluded.next_image_refresh_at`,
       )
-      .bind(job.snapshotName, job.buildId, now, now + 86_400_000, job.orgId),
+      .bind(
+        job.orgId,
+        job.providerAccount,
+        job.snapshotName,
+        job.buildId,
+        now,
+        now + 86_400_000,
+        job.orgId,
+      ),
     db
       .prepare(
         `UPDATE image_builds SET state = 'succeeded', completed_at = ?, error = NULL, provider_retry_json = NULL WHERE id = ? AND ${activeOrgIdPredicate('image_builds.org_id')}`,

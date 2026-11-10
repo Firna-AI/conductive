@@ -6,7 +6,7 @@ import {
   markWorkspaceArchived,
 } from '../app-api/archive-data'
 import { HttpError } from '../http'
-import { orgSandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount } from '../sandbox/client'
 import { deleteSandboxIfPresent } from './cleanup'
 import { readWorkspace, workspaceRecord, workspaceView } from './workspace-data'
 
@@ -46,11 +46,12 @@ export async function archiveWorkspace(
     await operations.stopChat()
     if (row.sandboxId) {
       await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
-      const provider = await orgSandboxProvider(
+      const provider = await orgProviderForAccount(
         env,
         userId,
         orgId,
         dependencies.fetch,
+        row.providerAccount,
       )
       await deleteSandboxIfPresent(provider, row.sandboxId)
     }
