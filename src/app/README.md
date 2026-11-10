@@ -100,8 +100,9 @@ Workspace readers keep the number and link that the Worker supplies.
 | `navigation` | The address bar: `browserNavigation(window)`, or `memoryNavigation` in tests   |
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
 
-The workspace screen draws the frame, the header, the start steps, the
-Archive question, and the states of the sandbox. The real chat fills the
+The workspace screen draws the frame, the header, the start steps, and the
+states of the sandbox, with Restore on the bar of an archived workspace
+until its last day. The real chat fills the
 centre by default. The `tabs`, `transcript`, and `composer` slots replace it
 with the shell's own chat column, as
 [The chat of the workspace](../shell/workspace/README.md#the-chat-of-the-workspace)
@@ -110,7 +111,8 @@ of `WorkspaceContext`, which gives the org, the workspace, the viewer, the
 sandbox state, whether the workspace is read-only, what a part shows while
 the sandbox does not run, the layout, the address after the workspace, the
 ordered event stream, the saved view of the kept chat, the events of the
-tools, and the Archive action. The feature clients send through the
+tools, the Archive and Restore actions, and the one of them that runs. The
+feature clients send through the
 services of the org, from `useOrgServices`, whose client and fetch mark the
 org on `org_suspended`. The shell gives
 its own `files`, `tools`, `pullRequest`, and `owner` parts, as
@@ -133,7 +135,9 @@ The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
 page of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
-log, and settings of `ComputerModel`. `useMembersApi(orgId)` in
+log, and settings of `ComputerModel`. The Repositories tab of a member gets
+the live builds of `OrgModel`, for its repository notice.
+`useMembersApi(orgId)` in
 `../shell/settings/members-api.ts` gives one members client for each org,
 over the fetch of the org's client, so a refusal of a suspended org marks
 the org. In a suspended org every person gets the read-only tabs, and the
@@ -166,10 +170,22 @@ with the send key that every composer shares, and the waitlist.
   the save. No answer brings a stored secret back.
 - The browser keeps only the panel widths (`panels.ts`). A browser that
   refuses its storage keeps them until the page closes.
-- The open of a workspace, the Archive check, and the settings reads of
-  the Cloud computer tab count a generation. An answer that arrives after
-  their screen closed or the user cancelled starts no stream, writes no
-  older state, opens no question, and schedules no request.
+- The open of a workspace and the settings reads of the Cloud computer
+  tab count a generation. An answer that arrives after their screen
+  closed or the user cancelled starts no stream, writes no older state,
+  and schedules no request.
+- Archive and Restore raise `updatedAt` of the workspace, also at the same
+  clock. So a record from the other side of an Archive or a Restore shows
+  only when its `updatedAt` is newer, whatever its source: a read, a
+  Resume reply, an event, a reply of Archive or Restore, or the list. A
+  record below the `updatedAt` of the newest Archive or Restore that shows
+  changes nothing, also on the same side. A reply of Archive or Restore
+  changes only its own fields. An Archive or a Restore while the first
+  read of an open waits makes that open resume nothing, because Restore
+  starts nothing.
+- A control that ends at a time, such as Restore until its last day, ends
+  at that time through `usePassedDeadlines` in `deadlines.ts`, with the
+  clock and the timers of `AppServices`, and with no other event.
 - A read mark counts no generation, because one request serves every
   visit of its kept model. An answer after a close still sets the
   confirmed number, which a later open uses. While the model stays closed,

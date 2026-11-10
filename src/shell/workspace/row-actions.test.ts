@@ -10,6 +10,7 @@ import {
 } from '../../app/test-kit'
 import { sectionsPath } from '../../shared/sections'
 import {
+  WORKSPACE_RESTORE_MS,
   workspacePath,
   workspacePaths,
   workspacesPath,
@@ -171,7 +172,7 @@ test('owner replies change only the owner for unopened and kept rows', async () 
   expect(valueOf(view.model.detail.get())?.workspace).toEqual(newer)
 })
 
-test('an unopened stopped row archives after confirmation and keeps the current workspace and newer fields', async () => {
+test('an unopened stopped row archives with one request and keeps the current workspace and newer fields', async () => {
   const { server, held, events, org, memory } = await setup()
   serveList(server, { ...before, state: 'stopped' })
   await org.reload('list')
@@ -180,16 +181,24 @@ test('an unopened stopped row archives after confirmation and keeps the current 
   const currentDetail = current.model.detail.get()
   const archive = memory.archive(identity)
   const from = server.requests.length
-  expect(archive.flow.get()).toEqual({ step: 'closed' })
-  await archive.confirm()
-  await archive.start()
-  expect(archive.flow.get()).toMatchObject({ step: 'confirm' })
-  expect(requestLines(server).slice(from)).toEqual([
-    `GET ${workspacePaths.archiveCheck(orgId, workspaceId)}`,
-  ])
   const archivePath = workspacePaths.archive(orgId, workspaceId)
+  // The Worker raises the time of the record at each Archive, so its reply
+  // is newer than each change before it.
+  const archivedAt = FAKE_TIME + 2_000
+  const restoreUntil = archivedAt + WORKSPACE_RESTORE_MS
+  server.json('POST', archivePath, {
+    workspace: {
+      ...before,
+      state: 'archived',
+      archivedAt,
+      restoreUntil,
+      updatedAt: archivedAt,
+    },
+    start: null,
+    error: null,
+  })
   held.holdAnswer('POST', archivePath)
-  const archiving = archive.confirm()
+  const archiving = archive.archive()
   const newer: Workspace = {
     ...before,
     name: 'A newer name',
@@ -204,7 +213,9 @@ test('an unopened stopped row archives after confirmation and keeps the current 
   expect(org.workspace(workspaceId)).toEqual({
     ...newer,
     state: 'archived',
-    archivedAt: before.updatedAt,
+    archivedAt,
+    restoreUntil,
+    updatedAt: archivedAt,
   })
   expect(current.model.detail.get()).toEqual(currentDetail)
   expect(events.opened).toEqual([
@@ -212,15 +223,13 @@ test('an unopened stopped row archives after confirmation and keeps the current 
   ])
   const requests = server.requests.slice(from)
   expect(requestLines(server).slice(from)).toEqual([
-    `GET ${workspacePaths.archiveCheck(orgId, workspaceId)}`,
     `POST ${archivePath}`,
     `GET ${sectionsPath(orgId)}`,
     `GET ${workspacesPath(orgId)}`,
   ])
   expect(
     await requests.find((request) => request.method === 'POST')?.json(),
-  ).toEqual({ discardUnpushedWork: true })
-  expect(archive.flow.get()).toEqual({ step: 'closed' })
+  ).toEqual({})
   expect(memory.archive({ orgId, workspaceId: 'email-dark-mode' })).toBe(
     current.model.archive,
   )
@@ -243,8 +252,7 @@ test('an unopened stopped row archives after confirmation and keeps the current 
     error: null,
   })
   const keptArchive = memory.archive({ orgId, workspaceId: 'email-dark-mode' })
-  await keptArchive.start()
-  await keptArchive.confirm()
+  await keptArchive.archive()
   const expectedWorkspace = {
     ...currentDetail.value.workspace,
     state: 'archived',

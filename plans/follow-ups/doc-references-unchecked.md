@@ -35,3 +35,7 @@
 - **Recommendation:** B. It finds each broken link and code citation in the gate, with no manual step.
 - **Action:** fix after merge, apply B, because the user chose on 10 November 2026 to add this check after the merge of the model gateway branch.
 - **Answer:** On 10 November 2026, the user chose B, after the merge of the model gateway branch, and approved the new gate.
+- **Evidence update, 2026-11-10:** a link check of the merge of `main` at `08cbe3cd` into branch `calummoore/workspace-archive-error` found two relative links on `main` that name a missing heading. The check left out inline code and code blocks.
+  - `docs/protocol/file-mentions.md` links `access-and-security.md#secrets-that-users-enter`. That heading is in `docs/protocol/tokens-and-secrets.md`.
+  - `docs/protocol/terminal-previews-and-desktop.md` links `../architecture.md#sandbox-software`. That heading is in `docs/architecture/components.md`.
+  - Both links are broken on `main` itself, not because of that merge. This note fixes neither. Option B of this item would find both.

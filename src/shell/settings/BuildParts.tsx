@@ -1,4 +1,4 @@
-import { ChevronRight, CircleAlert, Hammer } from 'lucide-react'
+import { ChevronRight, CircleAlert, Hammer, RotateCw } from 'lucide-react'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import styles from '../../../docs/mockups/src/components/settings/BuildSection.module.css'
 import { formatDuration } from '../../app/time'
@@ -57,6 +57,20 @@ export function BuildHistory(props: {
         ))}
       </ul>
     </details>
+  )
+}
+
+/** Try again after a failed build, which only an admin sees. */
+export function TryAgainButton(props: { action: Action<[]> }) {
+  return (
+    <ActionButton
+      busy={props.action.pending}
+      icon={RotateCw}
+      onPress={() => props.action.run()}
+      tone="primary"
+    >
+      Try again
+    </ActionButton>
   )
 }
 

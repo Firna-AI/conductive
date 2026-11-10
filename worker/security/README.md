@@ -24,7 +24,7 @@ Then `gate` reads the JSON body of a write, or the headers of a raw upload route
 The chat Durable Object runs `gateAccess` again in its queue for each browser chat write, through `authorizeChatBrowser`.
 That call reuses the body that `gate` already parsed, because `gateAccess` takes no body argument.
 So a write that waited gets the refusal that a new request would get.
-The [chat backend](../chat/README.md#access) says which requests take this second check.
+The [chat backend](../chat/access.md) says which requests take this second check.
 
 ## JSON request bodies
 

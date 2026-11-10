@@ -30,7 +30,7 @@ export async function updateShellWorkspace(
   const statements = [
     db
       .prepare(
-        `UPDATE workspaces SET name = COALESCE(?, name), section_id = COALESCE(?, section_id), updated_at = ?
+        `UPDATE workspaces SET name = COALESCE(?, name), section_id = COALESCE(?, section_id), updated_at = MAX(updated_at, ?)
      WHERE id = ? AND ${guard}`,
       )
       .bind(

@@ -102,7 +102,7 @@ export type RunnerTurnCredential = RunnerLoginKind & { token: string }
 
 export interface RunnerAttachment {
   attachmentId: string
-  /** The backend puts the attachment here before it sends the message. */
+  /** Absolute path in the workspace repository, after the backend copies the file. */
   path: string
 }
 

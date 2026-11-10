@@ -15,7 +15,7 @@ export async function maintainDeletedOrg(
 ) {
   const dates = await deletedOrgDates(env.DB, orgId)
   if (!dates) throw cleanupBusy()
-  const workspaces = await workspaceDisks(env.DB, orgId)
+  const workspaces = await workspaceDisks(env.DB, orgId, dependencies.now())
   await runLifecycleHook(env, orgId, token, dependencies, (ownership) =>
     hooks.maintainDeletedOrg({
       ownership,
@@ -35,7 +35,7 @@ export async function maintainDeletedOrg(
       ),
     }),
   )
-  const current = await workspaceDisks(env.DB, orgId)
+  const current = await workspaceDisks(env.DB, orgId, dependencies.now())
   if (
     current.length !== workspaces.length ||
     current.some(

@@ -44,7 +44,7 @@ one `RunnerReportKind`.
   commands. A repair needs no `runner.ready` and carries no login, so its
   send runs no login check. Like each send, it first passes the token
   check of `AuthenticatedRunner`, as the
-  [chat backend README](README.md#access) says.
+  [chat backend access guide](access.md) says.
 - Turn, message, interrupt, model, and file commands still wait for
   `runner.ready`.
 - Each new connection gets each `pending` record again, with the same

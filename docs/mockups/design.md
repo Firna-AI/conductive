@@ -15,9 +15,10 @@ The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. Archive covers the time on hover only, without moving the
-row content. Selection and keyboard focus alone keep the time visible.
-A right click on a row opens the menu of the workspace. The centre column
-has a slim header that names the
+row content, and Restore does so in the Archived group. Selection and
+keyboard focus alone keep the time visible. A right click on a row opens
+the menu of the workspace. The centre column has a slim header that names
+the
 workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
@@ -69,7 +70,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   a right click, or in a `Sheet` on a phone. Firna's own menu rows are
   taller than the dense design. A row can lead with a mark, such as an
   avatar, and end with a muted detail and an icon. An item that is off
-  keeps its place, greyed. An item with choices ends with an arrow, and
+  keeps its place, greyed, and its detail keeps the muted colour, so that
+  the reason stays readable. An item with choices ends with an arrow, and
   its submenu opens beside the menu, level with the item.
 - The menu of a workspace row has Move to section, Reassign to, Rename, a
   line, then Archive, as `app/workspace-menu` shows. It lists only the
@@ -80,15 +82,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Shift+F10 and the Menu key on a focused row open it below the row. No
   row has a button for the menu. The row under the pointer keeps its
   hover, with Archive over the time when the person can archive the
-  workspace. A phone layout opens the menu and its choices in a sheet. A
+  workspace, and with Restore over the time of an archived row until its
+  last day of Restore. The menu has no Restore. A phone layout opens the
+  menu and its choices in a sheet. A
   long press on a phone still lifts the row for a drag, and opens no menu.
   Rename puts a field in place of the name and the time, with the name
   selected. `RowMenu.module.css` styles the field and the menu at the
   pointer.
 - `FailureToast` in `src/components/common/` draws the toast that names a
-  change of the list that failed, with the message of the server, at the
-  bottom right of a desktop and at the bottom of a phone, as
-  `app/workspace-menu/rename/failed` shows.
+  change of the list that failed, with the message of the server, in the
+  `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -132,6 +135,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `ToastLayer` in `src/components/common/` draws a toast of Firna open
+  where the app shows its toasts: at the bottom right of a desktop, and
+  across the bottom of a phone. An action that a user can undo, such as
+  Archive, asks no question and offers the undo in its toast.
+  `ArchivedToast` in `src/components/workspace/` gives the toast after
+  Archive, over the workspace and over the list.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
@@ -227,9 +236,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason. `sandboxNoticeState.ts`
-  beside it owns the types of the bar and the panels, which the app
-  imports too.
+  action. The notice takes any refusal reason. An archived workspace
+  offers Restore until its last day, and the bar gives that day. After
+  it, the bar gives the day when Restore ended while a failed delete of
+  the cloud computer tries again, and it says that the cloud computer is
+  deleted only after the delete. `sandboxNoticeState.ts` beside it owns
+  the types of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.
@@ -263,6 +275,21 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `app/new-workspace/first-build` shows. A notice of work that runs, such
   as that build, shows a spinner in place of its icon: `Notice` in
   `src/components/common/` takes `busy`.
+- A chosen repository that the cloud computer does not hold yet waits for
+  its build, from decisions 240 and 241. The repository menu of New
+  workspace keeps it in place, off, with the note of when it is ready as
+  the muted detail of its row. A form whose repository waits keeps Send
+  off under a notice. `WaitingRepositoryNotice` in
+  `src/components/new-workspace/waitingRepository.tsx` draws that notice,
+  and `formWait` beside it says what the form waits for. The app shares
+  that module. `RepositoryNotice` in `src/components/settings/`
+  draws the notice of the Repositories and Cloud computer tabs, with a
+  spinner while the build of an added repository runs. An admin gets its
+  Try again or Build computer on the Repositories tab only, because the
+  build card of the Cloud computer tab has the same action.
+  `repositoryChangeCopy.ts` beside it holds the words of both, which the
+  app shares, as `app/new-workspace/waiting-repository` and
+  `app/org-settings/repositories` show.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no

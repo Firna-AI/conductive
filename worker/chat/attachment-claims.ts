@@ -60,7 +60,7 @@ export async function resolveMessageAttachments(
     attachments.push(publicAttachment(record))
     paths.push({
       attachmentId: id,
-      path: await attachmentPath(record, messageId),
+      relativePath: await attachmentPath(record, messageId),
     })
   }
   return { attachments, paths }

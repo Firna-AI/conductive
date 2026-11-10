@@ -8,6 +8,7 @@ import type {
 } from '../shared/org-settings'
 import { BuildCard } from './BuildCard'
 import { EnvVarsSection, ScriptSection } from './ComputerSections'
+import { RepositoryNotice } from './RepositoryNotice'
 import { softwareSentence } from './software'
 import { ViewportScope, type Viewport } from './ui/controls'
 import { Notice } from './ui/Notice'
@@ -38,9 +39,9 @@ export type MemberComputerViewProps = {
 }
 
 /**
- * The notice under an install script that changed after a build started,
- * with the words that the tab of an admin also shows. Only an admin builds
- * the computer, so the notice has no Build computer.
+ * The notice under an install script that differs from the script that the
+ * org image ran, with the words that the tab of an admin also shows. Only
+ * an admin builds the computer, so the notice has no Build computer.
  */
 function ChangedScript(props: { builds: BuildsResponse }) {
   const notice = changedScriptNotice(props.builds)
@@ -65,23 +66,29 @@ export function MemberComputerIntro(props: {
 
 /**
  * The Cloud computer tab of a member who is not an admin, from data that
- * the caller gives: the builds with the log of the newest build, both
- * scripts as text, and the names of the env vars. It has no Build computer,
- * no Save script, and no Add variable, because only admins change the cloud
- * computer (decision 57). It holds no state and loads nothing, so each new
- * value of its props shows at once, such as a new log event. Mount it in the
- * page column of the org settings.
+ * the caller gives: the repository notice, the builds with the log of the
+ * newest build, both scripts as text, and the names of the env vars. It has
+ * no Build computer, no Save script, and no Add variable, because only
+ * admins change the cloud computer. The notice of the install script shows
+ * only for a change of the script. It holds no state and loads nothing, so
+ * each new value of its props shows at once, such as a new log event. Mount
+ * it in the page column of the org settings.
  */
 export function MemberComputerView(props: MemberComputerViewProps) {
-  const { settings } = props
+  const { settings, builds } = props
   return (
     <ViewportScope viewport={props.viewport}>
       <MemberComputerIntro
         orgName={props.org.name}
         suspended={props.suspended}
       />
+      <RepositoryNotice
+        builds={builds}
+        org={props.org}
+        suspended={props.suspended}
+      />
       <BuildCard
-        builds={props.builds}
+        builds={builds}
         log={props.log}
         now={props.now}
         timeZone={props.timeZone}
@@ -94,8 +101,8 @@ export function MemberComputerView(props: MemberComputerViewProps) {
           .filter((sentence) => sentence !== null)
           .join(' ')}
         notice={
-          settings.needsBuild ? (
-            <ChangedScript builds={props.builds} />
+          builds.changes.installScript ? (
+            <ChangedScript builds={builds} />
           ) : undefined
         }
         script={settings.installScript}

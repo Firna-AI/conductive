@@ -5,6 +5,7 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/settings/RepositoryList.module.css'
 import { useStore } from '../../app/store'
+import { useGitHubInstallLink } from '../account/githubInstall'
 import { useApp } from '../context'
 import { ActionButton, IconButton } from '../ui/actions'
 import { ExternalLink } from '../ui/links'
@@ -13,13 +14,17 @@ import { RepositoryRow, type ListedRepository } from './RepositoryRows'
 /**
  * The page of the GitHub App, which lists the GitHub accounts of the
  * person, personal and org alike. There the person picks an account and
- * chooses the repositories that the app reaches.
+ * chooses the repositories that the app reaches. The return from GitHub
+ * opens the screen of the list again.
  */
 function ManageAccess() {
   const app = useApp()
   const account = useStore(app.account.account)
+  const link = useGitHubInstallLink()
   if (!account) return null
-  return <ExternalLink href={account.githubAppUrl}>Manage access</ExternalLink>
+  return (
+    <ExternalLink href={link(account.githubAppUrl)}>Manage access</ExternalLink>
+  )
 }
 
 /** Added and Remove, or Add, for one repository. */

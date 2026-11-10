@@ -107,28 +107,31 @@ function newestBuild(scene: ComputerScene): BuildResponse | null {
   return null
 }
 
+/** The builds and saved changes of the dev scene. */
+export function computerBuilds(scene: ComputerScene): BuildsResponse {
+  const newest = newestBuild(scene)
+  return {
+    builds: newest ? [newest.build, ...history] : history,
+    currentImageBuildId: 'build-5',
+    changes: {
+      installScript: scene === 'changed',
+      addedRepositories: [],
+      removedRepositories: [],
+    },
+  }
+}
+
 /** The replies that draw the scene, for the routes of an org's cloud computer. */
 export function computerReplies(
   scene: ComputerScene,
   org: string,
 ): { path: string; body: unknown }[] {
   const newest = newestBuild(scene)
-  const builds: BuildsResponse = {
-    builds: newest ? [newest.build, ...history] : history,
-    currentImageBuildId: 'build-5',
-  }
   const replies: { path: string; body: unknown }[] = [
-    { path: orgSettingsPaths.builds(org), body: builds },
+    { path: orgSettingsPaths.builds(org), body: computerBuilds(scene) },
   ]
   if (newest) {
     replies.push({ path: buildPath(org, newest.build.id), body: newest })
-  }
-  if (scene === 'changed') {
-    const { settings } = coreFixtures().settings
-    const body: OrgSettingsResponse = {
-      settings: { ...settings, needsBuild: true },
-    }
-    replies.push({ path: orgSettingsPaths.settings(org), body })
   }
   return replies
 }
@@ -147,6 +150,11 @@ export function liveComputer(): LiveComputer {
     builds: {
       builds: [runningBuild, ...history],
       currentImageBuildId: 'build-5',
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     },
     log: withLog(runningBuild, runningLog.slice(0, 3)).log,
   }
@@ -168,6 +176,14 @@ export function withFinishedBuild(live: LiveComputer): LiveComputer {
   }
   return {
     ...live,
-    builds: { builds: [done, ...history], currentImageBuildId: done.id },
+    builds: {
+      builds: [done, ...history],
+      currentImageBuildId: done.id,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
+    },
   }
 }
