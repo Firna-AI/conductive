@@ -20,11 +20,15 @@ failover, moves no existing workspace between providers, and adds no other
 provider. The brainstorm notes, the sources, and the reports of the options
 checks are in `.context/e2b-backup-provider/`.
 
-Open decisions: the options check of 8 November 2026 added options to
-decisions 142 and 143 after the user answered them. The answers stand until
-the user changes them. Decisions 144 and 145 are open, and they apply only
-when decision 142 stays B or becomes F. Milestones 7, 9, and 10 wait for
-these answers.
+Changed on 10 November 2026: the user chose decision 213 C of
+`plans/sandbox-provider-groundwork.md` on 9 November 2026. It prepares for a
+second provider with Boat as the only one, and it chooses the provider after
+the launch. So it changed decision 142 B. Pull request #137 on main did the
+shared work of Milestone 3, as the archived plan at commit `81a3ab93` says.
+The Desktop tool is hidden for now, so decision 143 waits for its return.
+Decisions 144 and 145 apply only to a cold standby. This plan waits for the
+user's choice of when to add E2B, and in which role. The review of
+10 November 2026 is in `.context/e2b-backup-provider/`.
 
 Contract owners:
 
@@ -205,6 +209,9 @@ the recommendation changed from C to E.
   says that Boat runs every sandbox.
 - **Chosen:** B, by the user on 8 November 2026. The agent recommended C.
   The options check added E, F, and G after this answer.
+- **Changed:** by decision 213 C, chosen by the user on 9 November 2026:
+  prepare for a second provider with Boat only, and choose the provider
+  after the launch.
 
 ### 143. Browsers cannot open a private E2B desktop
 
@@ -594,6 +601,9 @@ through the Worker.
 ## Milestone 3: Provider of each sandbox and snapshot
 
 Depends on: 2
+
+Replaced on 10 November 2026: pull request #137 on main did this work under
+decision 213 C. A rewrite of this plan removes this milestone.
 
 Each record stores the provider of its sandbox or snapshot, and the Worker
 picks the client by that provider. Boat stays the only client, and the
