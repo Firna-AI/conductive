@@ -692,8 +692,8 @@ Depends on: every other milestone
       browser stays off, and a follow-up item records the step.
 - [x] Record a follow-up item for the source maps of Mac builds.
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -731,6 +731,14 @@ prior run and passed its single file rerun. Its existing follow-up keeps
 the exact assertion and rerun result. No source or test rule changed for
 that observation. Manual Markdown links pass. Live Better Stack checks
 remain blocked by the missing credentials.
+
+Implementation commit `4d203249` is pushed. The fresh read-only review of
+the complete diff against `origin/main` found no concrete findings. No
+finding check, fix round, or re-review was required. Its report is
+`.context/reviews/calummoore/betterstack-implementation-brainstorm/round-1-review.md`.
+Every other milestone task is complete. The last two tasks delete this
+plan and open the pull request. Each unchecked post-merge task has its
+standalone follow-up file, with the missing live checks kept unpassed.
 
 ## Post-merge follow-up (non-blocking)
 
