@@ -1,6 +1,6 @@
 # Codex access tokens
 
-Status: Active. On branch `calummoore/openai-subscription-token-support`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/openai-subscription-token-support`, stacked on `conductor/model-gateway-worker-model-proxy-decision-120`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Members who pay for ChatGPT cannot run Codex on their plan in Conductive.
 Codex takes only an OpenAI API key today. This change adds a Codex access
@@ -18,6 +18,13 @@ function gives the share default of each login kind, as the user chose for
 decision 171 on the same day. Milestone 4 is blocked by decision 172: the
 only token route of the pinned Codex passes the token to processes that
 Codex starts.
+
+On 10 November 2026 the user asked to stack this branch on Conductor
+workspace 400, the Worker model proxy of decision 120 on branch
+`conductor/model-gateway-worker-model-proxy-decision-120`, with its plan
+`plans/model-gateway.md`. This branch merged that branch on the same day.
+The plan reads the request as option D of decision 172. Decision 173 asks
+how the gateway runs Codex on an access token.
 
 Related work: the plan `plans/own-endpoint-logins.md` on branch
 `calummoore/cli-proxy-setup` adds an own endpoint login to the same connect
@@ -174,6 +181,89 @@ corrected the risks of A, C, D, and E, and kept the recommendation D.
 - **Previous examples:** Option C of decision 114 moved the Claude login to a private pipe and the Codex API key to a private login request. The Claude program removes its descriptor variable after it reads it.
 - **Recommendation:** D. It keeps decision 114, and it builds a part of the proxy that decision 120 already chose, so no work is lost. The issue of F costs little and can go to OpenAI as well.
 - **Action:** ask the user, because each option changes decision 114, waits for OpenAI, or adds a large build, and no option is clearly best.
+- **Chosen by the user on 10 November 2026:** the user asked to stack this branch on Conductor workspace 400, which builds the Worker model proxy. The plan reads that request as D.
+
+### 173. How the gateway runs Codex on an access token
+
+Added on 10 November 2026, after this branch merged the gateway branch.
+The options check of the same day widened the root question, added options
+D to G, corrected option B, and kept the recommendation B.
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Implementation.
+- **Category:** Security.
+- **Location:** the Codex route in `worker/model-gateway/route.ts`, `worker/model-gateway/paths.ts`, `worker/model-gateway/headers.ts`, `worker/model-gateway/token.ts`, `parseCredential` in `runner/src/commands.ts`, `runner/src/providers/codex.ts`, and `docs/protocol/model-gateway.md`.
+- **Terms:**
+  - **Gateway:** the Worker route of the plan `plans/model-gateway.md`. It checks the turn token of a turn, adds the real login, and forwards each model request to Anthropic or OpenAI.
+  - **Token mode:** the way that Codex works with `CODEX_ACCESS_TOKEN`. It asks OpenAI who owns the token, loads the workspace rules, the routing, and the model list, and sends model requests to the ChatGPT Codex backend.
+  - **Rule bundle:** the Codex rules that a ChatGPT workspace admin sets. Codex loads them in the token mode, from `/backend-api/wham/config/bundle`.
+- **Background:**
+  - The gateway gives Codex the turn token in its login request and the gateway address as its base URL. It forwards only `POST /responses` to `https://api.openai.com/v1`, with the real OpenAI API key. `docs/protocol/model-gateway.md` requires that neither the address nor the turn token is in the environment of Codex.
+  - An access token does not work on that API. In the token mode, Codex calls `https://auth.openai.com/api/accounts/v1/user-auth-credential/whoami`, reads the rule bundle, the account routing, and the model list, and sends zstd-compressed model requests to `https://chatgpt.com/backend-api/codex/responses` with the token and a `chatgpt-account-id` header. It tries a WebSocket first. Milestone 4 recorded these requests with a fake token that starts with `at-`.
+  - Codex reads the whoami address only from the variable `CODEX_AUTHAPI_BASE_URL`. It treats a token that does not start with `at-` as an Agent Identity token, which signs each request with its own key. Nobody has seen a real token, so its shape is unchecked.
+  - The rule bundle can enforce the approval policy, the sandbox mode, the allowed MCP servers, and managed hooks. Codex runs managed hooks with no trust step. When a rule forbids the approval policy `never`, Codex asks for approvals, and the runner refuses each one.
+  - Today the runner refuses a Codex credential of the kind `token` with "The turn credential type is not supported.". It then closes its connection, and the Worker sends the turn again, as decision 174 says.
+  - OpenAI confirmed to the operator on 9 November 2026 that the gateway can carry OpenAI API keys. Nobody asked OpenAI about access tokens, and decision 170 A asks nobody.
+  - The evidence and the check are in `.context/codex-access-token/runner/report.md` and `.context/codex-access-token/options-check-173-report.md`.
+- **Problem:** The gateway has no route for a Codex access token.
+- **Impact if no action:** A member who connects a Codex access token cannot run a turn.
+- **Root question:** How does a turn on the gateway run Codex on a member's access token, with the real token only in the Worker, and with a defined result for each Codex rule of the member's ChatGPT workspace?
+- **Options:**
+  - **A.** The gateway runs the token mode itself. Codex in the sandbox stays in its API key mode with the turn token. The gateway reads the workspace of the token with the whoami request, follows the routing, and forwards each model request to the ChatGPT Codex backend with the token and its `chatgpt-account-id`. Effort: Medium. Risk: no workspace rule applies, and the Worker becomes a client of the ChatGPT backend, which OpenAI's token page does not describe. Only a real token can show what the backend expects.
+  - **B.** Codex runs its own token mode through the gateway. Codex gets a turn token that starts with `at-` as `CODEX_ACCESS_TOKEN`, and the gateway address in `CODEX_AUTHAPI_BASE_URL`. Its requests reach the gateway through gateway addresses in its settings, or through a relay in the runner. The gateway adds the routes of the token mode, passes the ChatGPT headers that the backend needs, follows or rewrites the routing, and accepts or turns off the zstd bodies. Effort: Large. Cost: the turn token and the gateway address are in the environment of Codex and of its helpers while the turn runs, which changes a rule of `docs/protocol/model-gateway.md`. The email, the account ID, and the workspace name of the token owner reach the sandbox. Risk: the managed hooks and MCP commands of the ChatGPT admin run in the sandbox of the org. Risk: a relay needs a local certificate authority, which the gateway doc gives as a reason against an HTTPS proxy. Risk: an Agent Identity token makes the gateway sign each request.
+  - **C.** A, and the gateway also reads the rule bundle, and refuses a token turn when a rule forbids the settings of the runner. Effort: Large. Risk: the gateway must read the rule format of Codex, which can change with each release.
+  - **D.** A, and the gateway fails a token turn when the workspace has any Codex rule, without reading the rule format. Effort: Medium. Cost: members of a workspace with Codex rules cannot run token turns. The other risks of A stay.
+  - **E.** B, but the turn token goes into a login file of Codex in a private Codex home for each session, removed at the end of the turn, not into its environment. Effort: Large. Cost: the gateway address still goes into the environment. Risk: Codex reads the login file again at each reload, and a rule that forces another credential store makes Codex ignore the file.
+  - **F.** B, and a guard in the gateway. The gateway reads the rule bundle, and fails the turn when a rule is not on its fixed list of safe rules, such as a hook, an MCP server, a plugin, or another base address. Codex applies the safe rules. Effort: Large. Cost: a TOML parser, a list that needs a check at each Codex update, and no token turns for workspaces that use hooks, MCP servers, or plugins.
+  - **G.** A, and Codex applies the workspace rules from local files while it stays in its API key mode. The runner writes the rule bundle to `/etc/codex/requirements.toml` and `/etc/codex/managed_config.toml` in a private mount for each app server. Effort: Large. Risk: it must remove the login and provider rules, which reads the rule format, and the admin's hooks still run in the sandbox.
+- **Left out:**
+  - The real access token in the sandbox: decision 172 chose the gateway to keep it out.
+  - Hold the token kind until OpenAI changes Codex: it fails the goal, because no Codex release has a login request for an access token, and no date is known.
+  - OpenAI's workload identity sign-in: it is another login kind than the one that decision 170 chose.
+  - A route that forwards every path of the ChatGPT backend: it breaks the fixed route list of `docs/protocol/model-gateway.md`.
+  - A turn token in the Agent Identity shape: Codex still needs gateway addresses in its environment, and the gateway must sign tokens, so B is better on every point.
+  - A redirect of the OpenAI hosts in the image, with a system certificate authority: every process of the sandbox would then send its own ChatGPT traffic through the Worker.
+- **Wider fix:** B. Codex itself applies the token mode and the workspace rules. Of its two transports, the relay survives the routing and a pinned base address with no rewrite.
+- **Previous examples:** Gateway decision 11 K of 10 November 2026 moved the turn token of Claude from a private descriptor into a file that each process can read while the turn runs.
+- **Recommendation:** B. Codex then uses the access token as OpenAI documents for app-server automation, and it applies the rules of the workspace, while the real token stays in the Worker. F best protects the sandbox of the org, because B lets the hooks and MCP commands of the ChatGPT admin run there.
+- **Action:** ask the user, because A skips the workspace policy, B changes a requirement of the gateway, and no option is clearly best.
+
+### 174. What a token turn does when the runner cannot run it
+
+Added on 10 November 2026 from the options check of decision 173. Its own
+options check of the same day widened the root question, found that a
+refused turn loops, corrected options A to C, added options D to F, and
+changed the recommendation from A to D.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Security.
+- **Location:** `worker/chat/runner-delivery.ts:143` and `:208`, `parseCredential` in `runner/src/commands.ts`, `runner/src/socket.ts:34`, `worker/chat/runner-channel.ts:79`, and the version pins in `docs/protocol/isolation.md`.
+- **Background:**
+  - A runner of protocol version 1 runs in a cloud computer from an older org image. Gateway decision 2 A sends it the real agent login of every kind, in the `turn` and the `message` commands. A runner of version 2 gets a turn token.
+  - Gateway decision 2 A came before the Codex access token kind.
+  - No runner accepts a Codex credential of the kind `token` yet. A version 1 runner never will, because only a new image changes it. A workspace keeps the runner of the image that it started from.
+  - A runner closes its connection when it cannot read a command, and it connects again after 1 second. The Worker then sends the same command again. So a token turn loops about once a second, keeps the cloud computer awake, and sends the real token to a version 1 runner each time, until a member presses Stop.
+  - The evidence is in `.context/codex-access-token/options-check-174-report.md`.
+- **Problem:** The Worker sends a turn to a runner that cannot run its login kind, and the turn loops instead of failing.
+- **Impact if no action:** The real token reaches older sandboxes again and again, the cloud computer stays awake, and the member gets no cause.
+- **Root question:** What does a turn do when the connected runner cannot run its login kind, so that the sandbox gets no login for it and the member learns what to do?
+- **Options:**
+  - **A.** The Worker refuses each version 1 command that would carry a Codex access token, the `turn` and the `message`. It ends the turn with a cause that names two ways out: a new workspace after an admin builds the org image, or an OpenAI API key. The Milestone 3 test that expects the real token in a version 1 turn changes. Effort: Small.
+  - **B.** The Worker keeps the turn waiting until a runner of version 2 connects. Effort: Medium. Cost: no newer runner ever connects to an existing workspace, so the turn and its later messages wait with no end.
+  - **C.** Change nothing. Effort: Small. Risk: the turn loops, and the real token reaches older sandboxes about once a second until Stop.
+  - **D.** One typed rule that lists the login kinds that each runner protocol version can run. The Worker checks it before it builds each command that carries a credential, and ends a turn that the runner cannot run with the cause of A. The version 1 command type takes only the kinds that a version 1 runner reads, so a later kind fails the typecheck until it states its result. Until the runner change of decision 173, each token turn fails with that cause instead of looping. Effort: Medium. Cost: the internal command type splits from the version 1 wire type.
+  - **E.** A, and a notice before the send. When the version pin of the workspace is 1 and the login of the starter is a Codex access token, the composer says so, and the workspace refuses the message with its own error. Effort: Medium. Cost: a session record field, a composer notice with a mockup state, protocol lines, and tests.
+  - **F.** A, and an update of the runner at each start, as option A of `plans/follow-ups/runner-update-at-start.md` says. A token turn can then run in an existing workspace after its next start. Effort: Large. Cost: it changes the rule that a stop and a resume keep the version pin, which that follow-up item asks the user about.
+- **Left out:**
+  - A turn token for a version 1 runner: a version 1 runner sends its credential to OpenAI, which refuses a turn token.
+  - Refuse every version 1 runner: it breaks gateway decision 2 A.
+  - A check when the member saves the login: one login serves every org of its owner (decision 21), so the save cannot know which cloud computer runs a later turn.
+  - The runner fails the turn instead of closing its connection: no change reaches the runner of an older image.
+- **Wider fix:** D. It covers each turn whose login kind the connected runner cannot run, also the version 2 runners from before decision 173 and the own endpoint login of `plans/own-endpoint-logins.md`.
+- **Previous examples:** The design call of 9 November 2026 in `plans/follow-ups/own-endpoints-through-model-gateway.md` gives the own endpoint login the path for an unusable login before dispatch on version 1. The secret-value filter sits in the Durable Object because an older runner has none.
+- **Recommendation:** D. It gives the result of A for the Codex token, and it also covers the `message` command, the earlier version 2 runners, and the own endpoint login, at a small extra cost in code that this branch already changes. The plan first recommended A, which stays the direct fix.
+- **Action:** ask the user, because it adds a new rejection of a turn.
 
 ## Design
 
@@ -196,6 +286,9 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
 - The Codex form lists "API key" first and selects it. "Access token" comes
   second. Reason: most members have an API key, and a token needs a
   Business or Enterprise workspace.
+- The next four calls about the runner route date from before decision
+  172. Decision 172 D replaced them: the real token stays in the Worker,
+  and decision 173 decides the route.
 - The runner keeps the token out of every environment when the pinned Codex
   allows it. Milestone 4 first tries the provider setting
   `experimental_bearer_token`, sent in the `config` of `thread/start` and
@@ -376,8 +469,9 @@ The runner starts Codex on an access token for the turns of the kind
 Blocked on 9 November 2026 by decision 172. The variable route passes the
 token to processes that Codex starts, and the bearer setting skips the
 requests of the token mode. The runner holds no change. The evidence is in
-`.context/codex-access-token/runner/report.md`. The TODOs below change
-with the answer.
+`.context/codex-access-token/runner/report.md`. The user chose the gateway
+on 10 November 2026, so the open TODOs below wait for decisions 173 and
+174, which replace them.
 
 - [x] Find the model provider settings that the pinned Codex needs for an
       access token. Read its protocol schema with
