@@ -25,6 +25,9 @@
     - the palette key, in `docs/protocol/command-palette.md`
     - the masked file paths, in `docs/protocol/access-and-security.md` and `src/marketing/privacy.ts`
     - the lift of a suspension, in `docs/protocol/operator-actions.md` and `docs/protocol/operator-section.md`
+  - Decision 148 names two records:
+    - the rule that only an org image build installs the terminal programs, in `plans/boat-native-remote-workspaces.md`. The user chose to keep that rule on 8 November 2026.
+    - the rule that the operator Overview lists no suspensions, in `docs/protocol/operator-section.md` and `docs/mockups/src/entries/app/operator/index.mockup.tsx`
   - Decisions 150 and 151 each name two records:
     - the fold of the work of an ended turn, in `docs/protocol/chat-and-events.md` and `docs/protocol/agent-tools.md`
     - the first build of a new org, in `docs/protocol/org-image.md`, `docs/protocol/orgs-and-members.md`, and `docs/protocol/create-a-workspace.md`
@@ -52,7 +55,7 @@
 - **Previous examples:**
   - The two renumberings of `plans/automatic-first-build.md` on 9 November 2026.
   - The renumbering of the workspace link chips decisions from 150 and 151 to 211 and 212, on 9 November 2026.
-  - The live repeats of 142, 145, 150, and 151 that **Evidence** lists.
+  - The live repeats of 142, 145, 148, 150, and 151 that **Evidence** lists. The repeat of 148 was found on 10 November 2026, by the options check of the plan `plans/preview-port-detection.md`.
 - **Recommendation:** B. It ends the collisions without a step before each merge.
 - **Action:** ask the user, because the numbering is a repository rule.
 
