@@ -2,6 +2,8 @@
 
 Status: Active. On branch `calummoore/workspace-name-underscores`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
+The user approved all milestones and tasks on 10 November 2026.
+
 The title model is the small Workers AI model that names a new workspace
 from its first message. The workspace and its first session take that
 name. The model writes names such as `add_conductive_app`, so the workspace
@@ -116,17 +118,23 @@ My design calls, of 10 November 2026:
 - A name from a create call leaves the first session "Untitled". This is outside the scope. The follow-up `plans/follow-ups/agent-named-workspace-first-session.md` records it.
 - The post-merge checks go into two existing follow-up items, because the follow-up rules update an item of the same task instead of adding a second one.
 
+My design call, of 10 November 2026, during implementation:
+
+- The latest `main` makes the message requirements page exceed the documentation length target. Move the attachment requirements to `docs/protocol/message-attachments.md`. Keep the existing `Attachments` heading as a link, so each existing citation still resolves. This changes no requirement.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
 
 The protocol docs state the two new requirements and their decisions.
 
-- [ ] In [Messages](../docs/protocol/messages-and-attachments.md#messages), state that the title request asks for no underscores, and that the app changes each underscore of the title to a space (decision 255). Give the rejected alternatives and the reason.
-- [ ] In [Create and list calls](../docs/protocol/agent-tools.md#create-and-list-calls), state that the create call asks the agent for plain words separated by spaces, and tells it to avoid underscores unless the member asks for them. State that the Worker keeps the underscores of the name (decision 256). Give the rejected alternatives and the reason.
-- [ ] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each guide in `src/marketing/docs/` in full. Update each sentence that restates a changed fact.
-- [ ] Read the "Automatic names" row in `src/marketing/from-conductor/areas/workspaces-and-branches.ts`. The change does not ship, start, or drop the feature, so its status stays.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] In [Messages](../docs/protocol/messages-and-attachments.md#messages), state that the title request asks for no underscores, and that the app changes each underscore of the title to a space (decision 255). Give the rejected alternatives and the reason.
+- [x] In [Create and list calls](../docs/protocol/agent-tools.md#create-and-list-calls), state that the create call asks the agent for plain words separated by spaces, and tells it to avoid underscores unless the member asks for them. State that the Worker keeps the underscores of the name (decision 256). Give the rejected alternatives and the reason.
+- [x] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each guide in `src/marketing/docs/` in full. Update each sentence that restates a changed fact.
+- [x] Read the "Automatic names" row in `src/marketing/from-conductor/areas/workspaces-and-branches.ts`. The change does not ship, start, or drop the feature, so its status stays.
+- [x] Check each relative link of each changed Markdown file.
+
+Completed on 10 November 2026. Evidence: `.context/ai-name-underscores/docs-report.md`.
 
 ## Milestone 2: Model titles without underscores
 
@@ -134,12 +142,14 @@ Depends on: 1
 
 The answer of the title model loses its underscores.
 
-- [ ] Add a case to the test of `cleanTitle` in `worker/chat/title-text.test.ts`. The answer `add_conductive_app` gives `add conductive app`, and an underscore beside a space leaves one space. See the case fail.
-- [ ] Add `modelTitleFrom` to `src/shared/session-title.ts`, and end `cleanTitle` with it.
-- [ ] Remove the runner from the comment of `sessionTitleFrom`, because no runner file imports the rule.
-- [ ] Add "with no underscores" to the title prompt in `worker/chat/title-text.ts`.
-- [ ] Update `worker/chat/workspace-titles.md`.
-- [ ] Run `npm run test -- worker/chat/title-text.test.ts worker/chat/title-model.test.ts src/shared/session-title.test.ts`.
+- [x] Add a case to the test of `cleanTitle` in `worker/chat/title-text.test.ts`. The answer `add_conductive_app` gives `add conductive app`, and an underscore beside a space leaves one space. See the case fail.
+- [x] Add `modelTitleFrom` to `src/shared/session-title.ts`, and end `cleanTitle` with it.
+- [x] Remove the runner from the comment of `sessionTitleFrom`, because no runner file imports the rule.
+- [x] Add "with no underscores" to the title prompt in `worker/chat/title-text.ts`.
+- [x] Update `worker/chat/workspace-titles.md`.
+- [x] Run `npm run test -- worker/chat/title-text.test.ts worker/chat/title-model.test.ts src/shared/session-title.test.ts`.
+
+Completed on 10 November 2026. Evidence: `.context/ai-name-underscores/implementation-report.md`.
 
 ## Milestone 3: Guidance for agents
 
@@ -147,18 +157,22 @@ Depends on: 1
 
 The create call tells the agent to avoid underscores unless the user tells it to add them.
 
-- [ ] Add "Use plain words separated by spaces. Avoid underscores unless the user tells you to add them." to the `name` description of `create_workspace` in `tools/mcp-tools.ts`.
-- [ ] Add the same guidance for `--name` to `CLI_HELP` in `tools/cli.ts`.
-- [ ] Update `tools/README.md` and `worker/tools/README.md`: the tools ask the agent to avoid underscores, and the Worker keeps them.
-- [ ] Run `npm run test -- worker/tools worker/software-image/version.test.ts`.
+- [x] Add "Use plain words separated by spaces. Avoid underscores unless the user tells you to add them." to the `name` description of `create_workspace` in `tools/mcp-tools.ts`.
+- [x] Add the same guidance for `--name` to `CLI_HELP` in `tools/cli.ts`.
+- [x] Update `tools/README.md` and `worker/tools/README.md`: the tools ask the agent to avoid underscores, and the Worker keeps them.
+- [x] Run `npm run test -- worker/tools worker/software-image/version.test.ts`.
+
+Completed on 10 November 2026. Evidence: `.context/ai-name-underscores/implementation-report.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
 Depends on: 1, 2, 3
 
-- [ ] Add the new guidance to `plans/follow-ups/full-image-build-for-agent-tools.md`, because an org image gets new tool descriptions only from a full build.
-- [ ] Add a check for spaces in place of underscores to the done line of `plans/follow-ups/workspace-title-smoke-test.md`.
-- [ ] Run `npm run format:check`, `npm run lint`, and `npm run file-length:check`. Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the complete gate, `npm run check`.
+- [x] Add the new guidance to `plans/follow-ups/full-image-build-for-agent-tools.md`, because an org image gets new tool descriptions only from a full build.
+- [x] Add a check for spaces in place of underscores to the done line of `plans/follow-ups/workspace-title-smoke-test.md`.
+- [x] Run `npm run format:check`, `npm run lint`, and `npm run file-length:check`. Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the complete gate, `npm run check`.
+
+Verification evidence: `.context/ai-name-underscores/evidence/complete-gate.log`. The final pull request CI also verifies the tree with the latest `main` changes.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
