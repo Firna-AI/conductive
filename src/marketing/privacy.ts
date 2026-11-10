@@ -78,13 +78,16 @@ export const privacyDocument: LegalDocument = {
             computer, the agents send them directly, with the agent login. In
             both kinds of cloud computer, agent settings in the repository can
             send them to another address instead. Each session uses the
-            login of the member who started it. Your messages in another
+            login of the member who started it. Each run of a routine sends
+            its prompt on the login of the member who owns the routine.
+            Your messages in another
             member's session use that member's login only when that member
             lets other members use it. When that member does not share the
             login, your message starts a new session on your own login. The
             terms of that provider apply.`,
           text`The members of your orgs see the workspaces of the org,
-            their chats, and each Mac command request and result.
+            their chats, and each Mac command request and result. They also see
+            the routines of the org, with their prompts and their runs.
             A member with a terminal in a cloud computer can read
             the GitHub token of a turn that runs there. Outside an agent turn,
             the GitHub CLI uses the workspace owner's account. Each member with
@@ -114,6 +117,10 @@ export const privacyDocument: LegalDocument = {
             send that login to another address. A commit, the agent, or other
             code can change those settings. The setting that lets other members
             use a login does not change this.`,
+          text`The run of your routine for a pull request reads the comments,
+            reviews, and descriptions of other GitHub accounts. Such text can
+            steer the agent while the run uses your agent login and GitHub
+            token, and the env vars of the org.`,
           text`The members of your orgs also see who started each session,
             whose login it uses, and whether it can use that login. They also
             see whether its starter lets other members use that login.`,
@@ -162,6 +169,12 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         paragraph`When an admin deletes an org, ${productName} deletes the data
           of the org after 7 days, unless an admin restores it.`,
+        paragraph`When the owner or an admin archives a workspace,
+          ${productName} stops its cloud computer and keeps it for 14 days.
+          Its disk keeps your code, your files, your agent sessions, and each
+          secret value that a script or an agent wrote there. ${productName}
+          then deletes the cloud computer, unless a member restores the
+          workspace before then.`,
         paragraph`${productName} keeps each file that you send with a message
           until it deletes the workspace of the message. It deletes an unsent
           file 7 days after you upload it.`,
@@ -195,18 +208,20 @@ export const privacyDocument: LegalDocument = {
           text`An env var is secret until an admin clears its mark. Before
             ${productName} puts agent output in the chat history or on a
             screen, it hides each exact copy of a secret value in it. It also
-            hides such a copy in each start log that it shows. It does not
-            hide a changed or encoded value. A change of the mark applies at
+            hides such a copy in each start log that it shows, and in the
+            names and folders of the servers that it lists. It does not hide
+            a changed or encoded value. A change of the mark applies at
             the next start of a cloud computer.`,
           text`${productName} keeps the real path of each file, because it
             needs that path to open the file. It also keeps the real name of
-            the default branch of each repository. Screens hide each exact copy
+            the default branch of each repository, and of the base branch of
+            each workspace. Screens hide each exact copy
             of a secret value in these paths and names. Your browser still gets
             the real values, so a secret value can show in the data that your
             browser gets and sends (decision 145).`,
-          text`Agent output and start logs can show the value of an env var
-            that is not secret. Each member who reads them then sees that
-            value. The agents and each member with a terminal can read every
+          text`Agent output, start logs, and the lists of servers can show
+            the value of an env var that is not secret. Each member who reads
+            them then sees that value. The agents and each member with a terminal can read every
             env var value in the cloud computers. Secret values can also stay
             on the disk of a cloud computer, for example in its agent sessions
             and its agent output.`,
@@ -219,11 +234,16 @@ export const privacyDocument: LegalDocument = {
         paragraph`This site sets no cookies. The web app and the Mac app each
           set their own cookie that keeps you signed in. Only the Mac app's
           cookie store holds its session cookie. Another cookie protects the
-          GitHub sign-in while it runs.`,
+          GitHub sign-in while it runs. When the web app sends you to GitHub
+          to install the GitHub App or change its access, a third cookie
+          keeps the screen that you left, so that the app can return you
+          there.`,
         paragraph`Each sign-in cookie lasts for up to 7 days. The GitHub
-          sign-in protection cookie lasts for up to 10 minutes. These
-          cookies support sign-in and security. They use secure connections
-          and cannot be read by page scripts.`,
+          sign-in protection cookie lasts for up to 10 minutes. The GitHub
+          return cookie lasts for up to 1 hour, and the app deletes it when
+          you come back. These cookies support sign-in, security, and the
+          return from GitHub. They use secure connections and cannot be read
+          by page scripts.`,
       ],
     },
     {

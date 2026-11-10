@@ -24,7 +24,7 @@ Then `gate` reads the JSON body of a write, or the headers of a raw upload route
 The chat Durable Object runs `gateAccess` again in its queue for each browser chat write, through `authorizeChatBrowser`.
 That call reuses the body that `gate` already parsed, because `gateAccess` takes no body argument.
 So a write that waited gets the refusal that a new request would get.
-The [chat backend](../chat/README.md#access) says which requests take this second check.
+The [chat backend](../chat/access.md) says which requests take this second check.
 
 ## JSON request bodies
 
@@ -73,7 +73,7 @@ So a slow read cannot extend a grant.
 An identity without a grant has lost access.
 
 The reader closes nothing and keeps no timer.
-Each caller keeps its own registrations and timers.
+Each caller keeps its own registrations and deadlines.
 Each caller reads the first grant of a connection before it sends data.
 The preview proxy reads again for each request and each data batch, and it keeps no grant.
 The chat tabs and the terminal sockets also follow these rules:
@@ -84,8 +84,11 @@ The chat tabs and the terminal sockets also follow these rules:
 - Close every connection of a batch when its read fails.
 - Ignore a late result for a connection that is already closed.
 
-`scheduleConnectionCheck` is the default timer of both callers.
-Tests replace it with their own `ConnectionScheduler`.
+A physical tab socket keeps its deadlines in the durable `browser` alarm source, as [Alarms](../README.md#alarms) says.
+So a refresh and an expiry also run after a wake, and while the member or lifecycle work of the object waits.
+Each refresh passes its start time as `now`, and each tab closes at its stored deadline.
+The terminal sockets use `scheduleConnectionCheck`, an in-memory timer, because an open terminal bridge keeps the object active.
+An abstract tab peer of a feature test, which has no physical socket, uses the `ConnectionScheduler` that the test injects. The terminal tests inject one too.
 
 ## Terms consent
 
@@ -174,6 +177,7 @@ They also send incorrect `Content-Length` values in both directions.
 The connection reader has no test file in this folder.
 The tests of its callers check it.
 After a change to the reader, run `npm run test -- worker/chat/tab-access.test.ts worker/chat/tab-deadlines.test.ts worker/chat/security.test.ts worker/terminal/access.test.ts`.
+After a change to the alarm deadlines of open connections, also run `npm run test -- worker/chat/adapter.test.ts worker/chat/browser-native-access.test.ts worker/chat/runner-native-access.test.ts worker/features/security-alarms.test.ts worker/devices`.
 
 After a change to the terms consent or to the suspension checks of sign-in, run `npm run test -- worker/security/terms.test.ts worker/security/auth.test.ts worker/operator/route.test.ts`.
 Run `npm run test -- worker/security/waitlist-auth.test.ts worker/security/waitlist-join.test.ts` for the access grants, primary email, and signed join codes.

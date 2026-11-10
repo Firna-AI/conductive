@@ -36,15 +36,14 @@ export const plansAndPricingFeatures: readonly ParityFeature[] = [
     area: 'plans-and-pricing',
     name: 'No fee for cloud compute',
     status: 'available',
-    note: 'Cloud computers have no separate fee today. Paid plans with included cloud hours and charges for extra use are planned.',
+    note: 'Cloud computers have no separate fee today. The coming Free, Plus, Pro, and Ultra plans each include cloud hours, as the pricing page shows.',
   },
   {
     id: 'pricing-page',
     area: 'plans-and-pricing',
     name: 'Pricing page',
-    status: 'in-progress',
-    note: 'A public page with Free, Plus, Pro, and Ultra prices and included cloud hours is in progress.',
-    due: null,
+    status: 'available',
+    note: 'The pricing page shows the Free, Plus, Pro, and Ultra plans, with their prices and included cloud hours.',
   },
   {
     id: 'plan-and-billing-pages',

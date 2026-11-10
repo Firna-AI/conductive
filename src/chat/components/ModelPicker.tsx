@@ -1,7 +1,13 @@
 import { useCallback, useRef, useState } from 'react'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
-import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
+import {
+  effortLabels,
+  modelLabel,
+  type Agent,
+  type AgentChoice,
+  type AgentModel,
+} from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
 import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
@@ -12,7 +18,6 @@ import {
   useAriaShortcut,
   useShortcutHint,
 } from '../../shell/shortcuts/shortcut-hints'
-import { effortLabels, modelLabel } from '../state/format'
 import { useDismiss } from '../ui/dismiss'
 import { Menu } from '../ui/Menu'
 import { effortsOf, modelMenu } from './model-menu'

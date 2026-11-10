@@ -47,6 +47,8 @@ export function LostUpdateBar(props: { repair: FailedRepair }) {
  * The notice of a file list that is not the latest one, after a failed
  * repair or a failed read of the files: a row under the file lists of the
  * Files panel, in the column beside the chat or the Files tab of a phone.
+ * The list of servers of the Preview tool shows the same row under its
+ * port form after a failed repair.
  */
 export function LostUpdateRow(props: { repair: FailedRepair }) {
   return (

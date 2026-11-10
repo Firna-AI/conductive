@@ -1,6 +1,7 @@
 import { Fragment, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
+import type { ArchiveAction } from '../../app/archive-model'
 import { stepTarget, type SectionGroup } from '../../app/sections'
 import { workspaceRowMove } from '../../app/shortcuts/navigation'
 import type { Workspace } from '../../shared/workspaces'
@@ -63,10 +64,12 @@ function LiftedRow(props: {
  * the org made, then the Archived group. A workspace moves to another
  * section by drag and drop, by a long press on a phone, or by Alt with Up
  * or Down and no other modifier. A key with more modifiers, such as ⌥⌘↑,
- * stays free for its shortcut. `menus` gives each row its menu, and
- * `archiveAction` its Archive shortcut. A read-only list, as in a
- * suspended org, moves nothing and shows no section menu. While the page
- * shows the list, the keys of the workspaces open its rows, as
+ * stays free for its shortcut. `menus` gives each row its menu,
+ * `archiveAction` its Archive shortcut, and `restoreAction` the Restore
+ * shortcut of an archived row. `running` names the Archive or the Restore
+ * of a row that runs, which its shortcut shows busy. A read-only list, as
+ * in a suspended org, moves nothing and shows no section menu. While the
+ * page shows the list, the keys of the workspaces open its rows, as
  * `useListKeys` says.
  */
 export function SectionList(props: {
@@ -77,6 +80,8 @@ export function SectionList(props: {
   now: number
   actions: SectionActions
   archiveAction?: (workspace: Workspace) => (() => void) | undefined
+  restoreAction?: (workspace: Workspace) => (() => void) | undefined
+  running?: (workspaceId: string) => ArchiveAction | null
   move: (workspaceId: string, target: DropTarget) => void
   readOnly: boolean
   /** The page shows this list, so it takes the keys of the workspaces. */
@@ -170,6 +175,9 @@ export function SectionList(props: {
                         menu={props.menus?.(workspace)}
                         now={props.now}
                         onArchive={props.archiveAction?.(workspace)}
+                        acting={
+                          (props.running?.(workspace.id) ?? null) !== null
+                        }
                         onKeyDown={
                           props.readOnly
                             ? undefined
@@ -200,7 +208,9 @@ export function SectionList(props: {
           now={props.now}
           onToggle={setOpened}
           open={archived}
+          restoreAction={props.restoreAction}
           rows={props.archived}
+          running={props.running}
           selectedId={props.selectedId}
           variant={props.variant}
         />

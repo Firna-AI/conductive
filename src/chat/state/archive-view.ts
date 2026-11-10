@@ -2,15 +2,16 @@ import type { Session } from '../../shared/sessions'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { hydrate } from './history'
-import { neighbour } from './sessions'
+import { withSessionPlaces } from './tab-order'
+import { neighbour, pickActive } from './sessions'
 
 /**
  * A read-only workspace keeps its chat as it is, and the backend refuses
- * its writes: an archived workspace (decision 16), and a workspace of a
- * suspended org. So its session tabs change in the browser only: the reader
- * opens the stored history of any session as a tab, and closes that tab
- * again. The stored session records never change, so a closed session stays
- * closed. `archiveTabs` holds the IDs of these tabs, and the records stay in
+ * its writes: an archived workspace, and a workspace of a suspended org. So
+ * its session tabs change in the browser only: the reader opens the stored
+ * history of any session as a tab, and closes that tab again. The stored
+ * session records never change, so a closed session stays closed.
+ * `archiveTabs` holds the IDs of these tabs, and the records stay in
  * `sessions` and `history`.
  */
 export function isArchived(snapshot: ChatSnapshot): boolean {
@@ -123,4 +124,41 @@ export function closeLocally(context: ChatContext, sessionId: string): void {
       activeSessionId: active,
     }
   })
+}
+
+/**
+ * The snapshot after its workspace left the archived state, such as after a
+ * Restore. The tabs that changed in the browser only end, so the open
+ * sessions show in their saved order again. An overlay that the archive hid,
+ * such as a question before a close, ends too. A session that the reader
+ * showed from the history gives way to an open one.
+ */
+export function afterRestore(snapshot: ChatSnapshot): ChatSnapshot {
+  const open = snapshot.sessions.some(
+    (item) => item.id === snapshot.activeSessionId,
+  )
+  return {
+    ...snapshot,
+    archiveTabs: null,
+    overlay: { kind: 'none' },
+    activeSessionId: open
+      ? snapshot.activeSessionId
+      : pickActive(snapshot.sessions, snapshot.view),
+  }
+}
+
+/**
+ * Reads the saved view again after a Restore, because the read-only visit
+ * changed its tabs in the browser only. A change of the view after the
+ * Restore wins over the read, and a read that fails keeps the view.
+ */
+export async function reloadView(context: ChatContext): Promise<void> {
+  const before = context.store.get().view
+  const reply = await context.api.view().catch(() => null)
+  if (!context.live() || reply === null) return
+  context.store.update((snapshot) =>
+    snapshot.view === before && !isArchived(snapshot)
+      ? { ...snapshot, view: withSessionPlaces(reply.view, snapshot.sessions) }
+      : snapshot,
+  )
 }

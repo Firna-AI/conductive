@@ -17,9 +17,10 @@ const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe, delay 
 
 // Desktop: the top of the right column, and the Checks tab.
 <PullRequestBar
+  archiving={archiving}
   github={github}
   now={now}
-  onArchive={openArchive}
+  onArchive={archive}
   viewer={{ id: user.id, role: org.role }}
   workspace={workspace}
 />
@@ -51,10 +52,10 @@ const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe, delay 
 - `now` is the clock of the relative times, such as "2h ago" after a merge.
   Give it a value that changes each minute.
 - After a merge, the bar shows Archive only to the workspace owner and the
-  admins (decision 42). `onArchive` opens the app's Archive flow, with its
-  check for unpushed work. The bar itself archives nothing. `archiveKey`
-  gives the key of the app's Archive command, as the tooltip of Archive
-  and a name for `aria-keyshortcuts`.
+  admins. `onArchive` runs the app's Archive, which archives at once with
+  one request, and `archiving` makes the button busy while it runs. The
+  bar itself sends nothing. `archiveKey` gives the key of the app's Archive
+  command, as the tooltip of Archive and a name for `aria-keyshortcuts`.
 - `checksHref` is the app address of the Checks tab, because tabs are links.
   `onOpenChecks` lets the app's router open the tab in place.
 - A failed load shows one Try again on each screen: in the bar on desktop,

@@ -34,7 +34,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Computer builds and rollback',
     status: 'available',
-    note: 'Builds show live logs and history. A failed build keeps the last good image. Selecting an older image is under consideration.',
+    note: 'Builds show live logs and history, and failures keep the last good image. More detailed progress and selecting older images are under consideration.',
   },
   {
     id: 'configure-with-an-agent',
@@ -83,7 +83,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Cloud agent credentials',
     status: 'available',
-    note: 'Each member connects Claude or Codex and can share a login with teammates. Shared admin keys have no delivery plan.',
+    note: 'Members connect and share agent logins. Using keys from cloud computer environment variables is under consideration.',
   },
   {
     id: 'workspace-details',
@@ -127,9 +127,8 @@ export const cloudFeatures: readonly ParityFeature[] = [
     id: 'automatic-port-detection',
     area: 'cloud',
     name: 'Automatic port detection',
-    status: 'in-progress',
-    note: 'Automatic port detection is in progress. The Preview tool will list running servers so you can open their private previews.',
-    due: null,
+    status: 'available',
+    note: 'The Preview tool lists the servers that run in the cloud computer. Click a server to open its private preview.',
   },
   {
     id: 'shared-preview-url',

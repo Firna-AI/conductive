@@ -1,10 +1,7 @@
+import { effortLabels } from '../../../../../src/shared/agents'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
-import {
-  effortLabels,
-  type AgentChoice,
-  type AgentKey,
-} from '../../fixtures/agents'
+import { type AgentChoice, type AgentKey } from '../../fixtures/agents'
 import { noop } from '../../noop'
 import { Menu, type MenuPlacement } from '../common/Menu'
 import { useControlSizes } from '../common/touch'

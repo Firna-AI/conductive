@@ -69,6 +69,33 @@ pull request bar, and the owner picker. A host can give its own parts, as
   options, so Sam waits again, and the codes and the pause are those of
   the options. An operator never waits, so a pause or a new code of the
   operator section cannot reach the waitlist screen.
+- Acme has the
+  routines of the mockups, each with the runs that its page in the mockups
+  lists. `?runs=failed` or `?runs=skipped` gives Review pull requests the
+  failed or the skipped runs of the mockups. A skipped run names the
+  account outside Acme by its login. The fake has no workspaces for these
+  runs, so the workspace list stays as the mockups draw it, and the link
+  of such a run opens no workspace. `?run=pull-request` or `?run=schedule`
+  makes `checkout-autocomplete` the workspace of one run, so its header
+  shows the line of that run, with the pull request of a pull request run.
+  The other orgs have no
+  routines, so their Routines page shows its empty state. A save of a
+  routine checks the prompt, each custom cron, and the time zone, as the
+  Worker does. A removal of a repository on the Repositories tab turns off
+  each routine in it, with the reason that the routine page shows, as the
+  Worker does. Its author filter knows the members of the org and a few
+  bots, such as `dependabot[bot]`. Any other login gets the refusal of a
+  login that names no GitHub account, with its trigger and its list.
+- Run now makes the workspace of the run as Create workspace does, in the
+  section of the routine, and the run takes the state of that workspace.
+  Without the agent login of the routine's model, as with `?login=none`,
+  the run fails with no workspace. A prompt that contains `fail` stands for
+  a cloud computer that did not start: the run fails and keeps its
+  workspace, in the error state with Try again, as the Worker does. The
+  recorded server has no chat for
+  a workspace that the fake made, so its chat does not load, and the line
+  of its routine does not show.
+  The dev backend records each run's agent and owner when Run now starts it.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -106,8 +133,9 @@ The next account read returns both keyboards.
 | `navigation` | The address bar: `browserNavigation(window)`, or `memoryNavigation` in tests   |
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
 
-The workspace screen draws the frame, the header, the start steps, the
-Archive question, and the states of the sandbox. The real chat fills the
+The workspace screen draws the frame, the header, the start steps, and the
+states of the sandbox, with Restore on the bar of an archived workspace
+until its last day. The real chat fills the
 centre by default. The `tabs`, `transcript`, and `composer` slots replace it
 with the shell's own chat column, as
 [The chat of the workspace](../shell/workspace/README.md#the-chat-of-the-workspace)
@@ -116,7 +144,8 @@ of `WorkspaceContext`, which gives the org, the workspace, the viewer, the
 sandbox state, whether the workspace is read-only, what a part shows while
 the sandbox does not run, the layout, the address after the workspace, the
 ordered event stream, the saved view of the kept chat, the events of the
-tools, and the Archive action. The feature clients send through the
+tools, the Archive and Restore actions, and the one of them that runs. The
+feature clients send through the
 services of the org, from `useOrgServices`, whose client and fetch mark the
 org on `org_suspended`. The shell gives
 its own `files`, `tools`, `pullRequest`, and `owner` parts, as
@@ -139,7 +168,9 @@ The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
 page of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
-log, and settings of `ComputerModel`. `useMembersApi(orgId)` in
+log, and settings of `ComputerModel`. The Repositories tab of a member gets
+the live builds of `OrgModel`, for its repository notice.
+`useMembersApi(orgId)` in
 `../shell/settings/members-api.ts` gives one members client for each org,
 over the fetch of the org's client, so a refusal of a suspended org marks
 the org. In a suspended org every person gets the read-only tabs, and the
@@ -174,10 +205,22 @@ command palette and of the keyboard shortcuts.
   the save. No answer brings a stored secret back.
 - The browser keeps only the panel widths (`panels.ts`). A browser that
   refuses its storage keeps them until the page closes.
-- The open of a workspace, the Archive check, and the settings reads of
-  the Cloud computer tab count a generation. An answer that arrives after
-  their screen closed or the user cancelled starts no stream, writes no
-  older state, opens no question, and schedules no request.
+- The open of a workspace and the settings reads of the Cloud computer
+  tab count a generation. An answer that arrives after their screen
+  closed or the user cancelled starts no stream, writes no older state,
+  and schedules no request.
+- Archive and Restore raise `updatedAt` of the workspace, also at the same
+  clock. So a record from the other side of an Archive or a Restore shows
+  only when its `updatedAt` is newer, whatever its source: a read, a
+  Resume reply, an event, a reply of Archive or Restore, or the list. A
+  record below the `updatedAt` of the newest Archive or Restore that shows
+  changes nothing, also on the same side. A reply of Archive or Restore
+  changes only its own fields. An Archive or a Restore while the first
+  read of an open waits makes that open resume nothing, because Restore
+  starts nothing.
+- A control that ends at a time, such as Restore until its last day, ends
+  at that time through `usePassedDeadlines` in `deadlines.ts`, with the
+  clock and the timers of `AppServices`, and with no other event.
 - A read mark counts no generation, because one request serves every
   visit of its kept model. An answer after a close still sets the
   confirmed number, which a later open uses. While the model stays closed,
@@ -226,8 +269,14 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 
 ## Key code
 
+- `clipboard.ts`: `copyText`, the clipboard write for plain or pending text.
+  It starts a pending `ClipboardItem` write during the user press when the
+  browser supports it. The fallback waits for the text and calls `writeText`.
+  Both paths propagate failures. `AppServices.copy` accepts a string or a
+  promise of a string. Live services and development hosts use this owner.
+
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the file uploads, the
-models, the waitlist and its codes, and the workspace list. It also covers
-the event streams, the drag, the operator section, the command palette, the
-layers, the frames, and New workspace.
+models, the waitlist and its codes, the routines, and the workspace list.
+It also covers the event streams, the drag, the operator section, the
+command palette, the layers, the frames, and New workspace.

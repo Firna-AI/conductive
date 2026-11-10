@@ -188,6 +188,8 @@ revokes one preview. Use `nextExpiry(workspaceId)` to schedule the workspace
 alarm after a preview opens. Call `expire()` from that alarm and schedule
 the next expiry. Keep the handler instance with its live connections so these
 hooks also cancel its fetches, HTTP streams, and sockets.
+The confirmed-stop chat transaction then sends `ports.updated` with a null
+list, even when the workspace had no preview to revoke.
 Each data batch waits for a D1 check that starts after the data arrives.
 This also blocks data after another instance revokes the preview, or after
 the owner of the workspace is suspended.
@@ -197,6 +199,9 @@ viewers of the same preview keep theirs.
 The request and response streams read only when their consumer requests data.
 They read one chunk at a time. No cached authorization or time window permits data.
 Completed HTTP connections release their registry entries.
+
+A preview socket uses `bridgeSocket` with an outbound socket to the sandbox.
+An open preview socket or HTTP stream keeps its workspace object active, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
 
 Set `dependencies.onActivity` to report each input to the input owner of the
 workspace, as [Input activity](../lifecycle/README.md#input-activity) says.

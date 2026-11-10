@@ -3,10 +3,7 @@ import { commitAuthor } from '../../src/shared/commit-author'
 import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { randomToken } from '../security/crypto'
-import {
-  readConnectionAccess,
-  scheduleConnectionCheck,
-} from '../security/connection-access'
+import { readConnectionAccess } from '../security/connection-access'
 import { loginResolver } from './login-access'
 import {
   readLoginMetadata,
@@ -19,6 +16,7 @@ import type { ChatDependencies } from './types'
 import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
 import { attachmentWorkspace } from './attachment-claim-data'
+import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
 
 /**
@@ -42,8 +40,6 @@ export function chatDependencies(
     filterRunnerOutput: (transaction, workspace, input) =>
       filterRunnerOutput(env, transaction, workspace, input),
     now: Date.now,
-    scheduleBrowserCheck: scheduleConnectionCheck,
-    scheduleRunnerCheck: scheduleConnectionCheck,
     readRunnerAccess: (id, tokenHash) =>
       runnerTokenAllowed(env.DB, id, tokenHash),
     readRunnerProtocolVersion: (id) => readRunnerProtocolVersion(env.DB, id),
@@ -78,6 +74,8 @@ export function chatDependencies(
       ),
     attachmentSandboxId: async (id, userId) =>
       (await attachmentWorkspace(env.DB, id, userId))?.sandboxId ?? null,
+    resolveAttachmentPaths: (id, userId, attachments) =>
+      resolveAttachmentPaths(env, id, userId, attachments),
     receiveFileResult: async () => undefined,
     runnerAttached: () => undefined,
     runnerDetached: () => undefined,

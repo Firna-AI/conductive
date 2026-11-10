@@ -109,6 +109,11 @@ it('keeps a created org and answers 201 when its first build cannot start', asyn
   expect(await readBuildHistory(active.env.DB, org.id)).toEqual({
     builds: [],
     currentImageBuildId: null,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   })
   expect(warning.mock.calls).toEqual([
     [

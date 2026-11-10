@@ -61,6 +61,7 @@ const workspace: Workspace = {
   createdAt: 0,
   updatedAt: 0,
   archivedAt: null,
+  restoreUntil: null,
 }
 
 function list(props: Partial<MemberListProps>): ReactElement {

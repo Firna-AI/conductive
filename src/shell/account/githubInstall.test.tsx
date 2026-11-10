@@ -2,6 +2,7 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
+import { routes } from '../../app/router'
 import { Store } from '../../app/store'
 import { ManualFocus, requestLines } from '../../app/test-kit'
 import {
@@ -16,6 +17,7 @@ import {
 import { isOperable, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { fakeUser } from '../../test-support/fixtures/core'
+import { installStartScreen } from '../../test-support/github-install'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -103,22 +105,25 @@ function installButton(view: HTMLElement): Promise<HTMLElement> {
 }
 
 describe('the install of the GitHub App', () => {
-  test('a browser opens GitHub with the screen where the install starts', async () => {
+  test('a browser opens GitHub through the Worker, with the screen where the install starts', async () => {
     holdAnimationFrames()
     const left: string[] = []
     const app = await startedApp(newUserServer(), {
       leave: (url) => left.push(url),
     })
-    const getStarted = mountScreen(app, <GetStartedScreen user={fakeUser} />)
+    const getStarted = mountScreen(app, <GetStartedScreen user={fakeUser} />, {
+      href: routes.getStarted(),
+    })
     await press(await installButton(getStarted))
     const account = mountScreen(
       app,
       <AccountScreen connect={null} tab="general" user={fakeUser} />,
+      { href: routes.account() },
     )
     await press(await installButton(account))
-    expect(left).toEqual([
-      `${installUrl}?state=get-started`,
-      `${installUrl}?state=account`,
+    expect(left.map(installStartScreen)).toEqual([
+      routes.getStarted(),
+      routes.account(),
     ])
   })
 

@@ -13,9 +13,10 @@ These docs belong to this doc:
 - [Create a workspace](create-a-workspace.md): New workspace as a page or
   as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](repository-folders.md): the folder and the shell
-  variable of each repository in a sandbox.
+  variable of each repository in a sandbox, and the context folder of each
+  workspace.
 - [Life of a workspace](workspace-life.md): the start steps, the time
-  limits, the states, the stop and resume, and the archive.
+  limits, the states, the stop and resume, the archive, and the restore.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
   moves, reassigns, renames, and archives the workspace.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
@@ -85,6 +86,11 @@ These docs belong to this doc:
 
 - [Create a workspace](create-a-workspace.md) holds the requirements of the
   page, the dialog, the create, the branch, and a failed first start.
+
+## Base branch
+
+- [Base branches](base-branches.md) states the base branch of each
+  workspace and the branch of a pull request run (decisions 505 A and 507 G).
 
 ## Workspace numbers and links
 

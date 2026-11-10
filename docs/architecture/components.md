@@ -15,7 +15,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - A React app, built with Vite, that uses the `@firna/ui` components.
 - It lives on `app.conductive.build`, behind the GitHub sign-in.
-- It shows the orgs, the workspaces, the chat, the files, the tools, and
+- It shows the orgs, the workspaces, the routines, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
@@ -55,10 +55,14 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
 
+- Two Cron Triggers run the timed work. One runs every 15 minutes for
+  deleted orgs, lifecycle repairs, and pending approval emails. One runs
+  every minute for due routine runs and runs that stayed queued.
+
 ## D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, the active preview hostnames, and the
+  repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
   the sign-up pause, and the state of approval emails.
 - Boat labels alone cannot hold these records, because a label is fixed
@@ -73,7 +77,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It gives each turn its turn token. For each model request, it tells the
   model gateway whether the token still works and which login the turn
   uses.
-- It also holds the start steps, the stop timer, and the banner state.
+- It also holds the start steps, the stop timer, the delete timer of an
+  archived workspace, and the banner state.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace
@@ -136,6 +141,9 @@ against a change in how the agent program reads its credential and its
 model address. The runner runs Codex through the Codex SDK or the Codex
 App Server (decision 36).
 
+The runner finds the listening ports in the sandbox itself, with no Boat
+call (decision 220).
+
 A runner of protocol version 2 or later makes both agent programs send
 their model requests to the [model gateway](../protocol/model-gateway.md). It
 gives each agent program the turn token of its turn, and no agent login. A
@@ -173,4 +181,5 @@ the rules.
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. The app is free, with no limits (decision 81).
+  snapshot. Use of the app is free until billing starts, as
+  [Pricing](../protocol/pricing.md) says.

@@ -97,7 +97,7 @@ decision number names a dated record, as
   states the full rules.
 - A revoked or an unknown hostname gets no answer from any sandbox.
 - The preview relay is the app's own service in the sandbox, as
-  [Sandbox software](../architecture.md#sandbox-software) says. Each preview
+  [Sandbox software](../architecture/components.md#sandbox-software) says. Each preview
   request goes through it to the previewed server, the server on the port
   of the preview.
 - An answer that does not come from the preview relay never reaches the browser.

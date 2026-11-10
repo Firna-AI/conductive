@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
+  ArchiveRestore,
   Bot,
   Building2,
   FileDiff,
@@ -46,6 +47,7 @@ const actionIcons: Readonly<Record<OfferedActionId | OwnActionId, LucideIcon>> =
     'go-to-preview': Globe,
     'go-to-desktop': Monitor,
     'archive-workspace': Archive,
+    'restore-workspace': ArchiveRestore,
     'new-section': FolderPlus,
     'hide-sidebar': PanelLeft,
     'show-sidebar': PanelLeft,

@@ -616,6 +616,9 @@ Added on 5 November 2026 from the mockups of Milestone 1.
 - **Action:** ask the user, because the option adds a message queue that
   no requirement covers.
 - **Chosen:** A, by the user on 5 November 2026.
+- **Changed on 10 November 2026:** the user removed the label "Sends when
+  the sandbox is ready" under each waiting message. The queue of option A
+  stays.
 
 ### 15. Make the web app work on phones
 
@@ -4718,7 +4721,7 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
 - The preview proxy sets `Referrer-Policy: no-referrer` on each response.
   Reason: the default policy sends the preview origin, which is the
   credential, to other sites.
-- Each preview has an "Open in new tab" link. Reason: Safari blocks the
+- Each preview has an "Open" link to a new tab. Reason: Safari blocks the
   preview app's own cookies inside a frame.
 - The Worker asks Boat for a new desktop URL on each page load. The URL
   works for 10 minutes and carries its token in the fragment.

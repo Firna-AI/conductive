@@ -48,12 +48,30 @@ const firstBuilds: Readonly<Record<string, BuildsResponse>> = {
   running: {
     builds: [buildOf('first', 'running', 134_000)],
     currentImageBuildId: null,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   },
   failed: {
     builds: [buildOf('first', 'failed', 720_000)],
     currentImageBuildId: null,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   },
-  none: { builds: [], currentImageBuildId: null },
+  none: {
+    builds: [],
+    currentImageBuildId: null,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
+  },
   // A later build runs after the first good build.
   later: {
     builds: [
@@ -61,6 +79,11 @@ const firstBuilds: Readonly<Record<string, BuildsResponse>> = {
       buildOf('first', 'succeeded', 3_600_000),
     ],
     currentImageBuildId: 'first',
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   },
 }
 

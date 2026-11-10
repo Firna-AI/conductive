@@ -72,11 +72,14 @@ export function useHref(): string {
   )
 }
 
+/** The screen of an address of the app. */
+export function routeOf(href: string): Route {
+  const url = new URL(href, 'https://app.invalid')
+  return parseRoute(url.pathname, url.search)
+}
+
 /** The screen of the current address. */
 export function useRoute(): Route {
   const href = useHref()
-  return useMemo(() => {
-    const url = new URL(href, 'https://app.invalid')
-    return parseRoute(url.pathname, url.search)
-  }, [href])
+  return useMemo(() => routeOf(href), [href])
 }

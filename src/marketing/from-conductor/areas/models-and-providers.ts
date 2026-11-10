@@ -30,6 +30,13 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     note: 'Agents powered by Claude and Codex work today. Cursor support is under consideration.',
   },
   {
+    id: 'opencode',
+    area: 'models-and-providers',
+    name: 'OpenCode',
+    status: 'considering',
+    note: 'Agents powered by Claude and Codex work today. OpenCode support is under consideration.',
+  },
+  {
     id: 'api-key-mode',
     area: 'models-and-providers',
     name: 'API key mode',
@@ -43,6 +50,13 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     status: 'in-progress',
     note: 'Connecting agent logins to your own API endpoint is in progress.',
     due: null,
+  },
+  {
+    id: 'bedrock-vertex-ai-and-foundry',
+    area: 'models-and-providers',
+    name: 'Bedrock, Vertex AI, and Foundry',
+    status: 'considering',
+    note: 'Running Claude through Bedrock, Vertex AI, or Foundry is under consideration. Connecting your own API endpoint is in progress.',
   },
   {
     id: 'model-picker',
@@ -69,8 +83,9 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     id: 'fast-mode',
     area: 'models-and-providers',
     name: 'Fast mode',
-    status: 'considering',
-    note: 'A fast mode for supported models is under consideration.',
+    status: 'planned',
+    note: 'A Fast switch in the model menu is planned for supported models.',
+    due: null,
   },
   {
     id: 'default-models',
@@ -84,6 +99,20 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Model catalogue',
     status: 'available',
-    note: 'Fable 5.2 is available. Adding GPT-6 Astra, GPT-6.1 Terra, and GPT-6 Luna to the model picker is in progress.',
+    note: 'Fable 5.2, GPT-6 Astra, GPT-6.1 Terra, and GPT-6 Luna are available in the model picker.',
+  },
+  {
+    id: 'custom-agent-executables',
+    area: 'models-and-providers',
+    name: 'Custom agent executables',
+    status: 'considering',
+    note: 'Each cloud computer includes the supported agents. Running your own agent program is under consideration.',
+  },
+  {
+    id: 'sync-agent-configs',
+    area: 'models-and-providers',
+    name: 'Sync agent configs',
+    status: 'considering',
+    note: 'Copying skills, commands, and MCP servers between Claude and Codex is under consideration. Keep shared instructions in the repository.',
   },
 ]

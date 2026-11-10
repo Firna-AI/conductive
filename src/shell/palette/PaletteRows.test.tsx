@@ -3,12 +3,9 @@
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
-import {
-  accessibleName,
-  byLabel,
-  byRole,
-  queryByRole,
-} from '../../test-support/dom-queries'
+import { requestLines } from '../../app/test-kit'
+import { workspacePaths } from '../../shared/workspaces'
+import { accessibleName, byLabel, byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import {
@@ -96,25 +93,31 @@ describe('the rows of the command palette', () => {
     })
   })
 
-  test('a row closes the palette before it runs, so the Archive question shows alone and the field of a new section takes the focus', async () => {
+  test('a row closes the palette before it runs, so Archive and Restore act at once with no question, and the field of a new section takes the focus', async () => {
     holdAnimationFrames()
+    const server = new FakeApiServer()
     const { view, navigation } = await openPaletteTab(
       routes.workspace(org, workspace),
+      { server },
     )
-    pressCommand('command-palette', 'other', document.body)
-    typeText(searchField(), 'archive')
-    press(searchField(), 'Enter')
-    await settle()
-    const question = queryByRole(
-      'dialog',
-      'Archive with work that is not pushed?',
-    )
-    const archive = {
-      open: palette() !== null,
-      question: question !== null,
-      focus: question?.contains(document.activeElement) ?? false,
+    const lifecycle = [
+      workspacePaths.archive(org, workspace),
+      workspacePaths.restore(org, workspace),
+    ].map((path) => `POST ${path}`)
+    const run = async (search: string) => {
+      pressCommand('command-palette', 'other', document.body)
+      typeText(searchField(), search)
+      press(searchField(), 'Enter')
+      await settle()
+      return {
+        open: palette() !== null,
+        dialog: document.querySelector('[role="dialog"]') !== null,
+        writes: requestLines(server).filter((line) => lifecycle.includes(line)),
+      }
     }
-    press(document.activeElement ?? document.body, 'Escape')
+    const archive = await run('archive')
+    // Over the archived workspace, the palette offers Restore.
+    const restore = await run('restore')
     act(() => navigation.push(routes.org(org)))
     await settle()
     pressCommand('command-palette', 'other', document.body)
@@ -127,12 +130,14 @@ describe('the rows of the command palette', () => {
     )
     expect({
       archive,
+      restore,
       section: {
         open: palette() !== null,
         focus: field.contains(document.activeElement),
       },
     }).toEqual({
-      archive: { open: false, question: true, focus: true },
+      archive: { open: false, dialog: false, writes: lifecycle.slice(0, 1) },
+      restore: { open: false, dialog: false, writes: lifecycle },
       section: { open: false, focus: true },
     })
   })

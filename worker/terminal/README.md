@@ -191,6 +191,10 @@ Frame checks use only the live registration. They run no D1 access query.
 Cleanup removes the registration and its scheduled work.
 Inject `dependencies.terminalSchedule` and `now` to test these deadlines.
 
+Each terminal socket is a bridge. `bridgeSocket` joins the browser socket to an outbound socket to the ttyd port.
+Such a bridge keeps its workspace object active, also while it is idle, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
+So the access timers of the terminal stay in memory.
+
 `scripts.ts` builds the exact password program, launcher, and shell server
 installed in the image. Its trusted options select paths, account names,
 and executables, such as ttyd and tmux. The password program captures
@@ -220,7 +224,8 @@ Terminal status reads remain available.
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
-- [service.ts](service.ts) exports `terminalInstallCommand`, which installs both packages, the three programs, and both units. It also exports the image hook `installTerminalService`, the setup command `terminalStartCommand`, the password read `startWorkspaceTerminal`, the marker writer `markTerminalRestoreEnded`, and `TERMINAL_PORT`.
+- [service.ts](service.ts) exports `terminalInstallCommand`, which installs both packages, the three programs, and both units. It also exports the image hook `installTerminalService`, the setup command `terminalStartCommand`, the password read `startWorkspaceTerminal`, the marker writer `markTerminalRestoreEnded`.
+- [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`.
 - [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the folder hook with `terminalPromptCommand`.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
 - [store.ts](store.ts) binds each cached password to its current sandbox ID and provider account.

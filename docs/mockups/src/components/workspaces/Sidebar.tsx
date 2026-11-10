@@ -15,22 +15,26 @@ import type {
   WorkspaceRow,
 } from './sections'
 import { SectionList } from './SectionList'
-import { NewWorkspaceLink, SearchLink, SettingsLink } from './SidebarLinks'
+import {
+  NewWorkspaceLink,
+  RoutinesLink,
+  SearchLink,
+  SettingsLink,
+} from './SidebarLinks'
 import styles from './Sidebar.module.css'
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, Search, and the sections of the org. A suspended org
- * shows its sections without New workspace and without their menus,
- * because nothing in it can change. A list that did not load shows its
- * failure in place of the sections. An open menu of a row may pass the
- * edge of the sidebar.
+ * link, New workspace, Routines, Search, and the sections of the org.
+ * A suspended org keeps Routines and Search, with read-only sections.
+ * A list that did not load shows its failure in place of the sections.
+ * An open menu of a row may pass the edge of the sidebar.
  */
 export function Sidebar(props: {
   org: Org
   sections: readonly SidebarSection[]
   /** The page that the main area shows, when the sidebar links to it. */
-  current?: 'settings' | 'new-workspace'
+  current?: 'settings' | 'new-workspace' | 'routines'
   /** A build of the org's cloud computer failed. */
   settingsAlert?: boolean
   /** The New workspace page of the org, such as that of a new org. */
@@ -78,6 +82,11 @@ export function Sidebar(props: {
               variant="sidebar"
             />
           )}
+          <RoutinesLink
+            current={props.current === 'routines'}
+            to={suspended ? paths.suspendedRoutines : undefined}
+            variant="sidebar"
+          />
           <SearchLink
             shortcut={paletteShortcut(props.shortcuts)}
             variant="sidebar"

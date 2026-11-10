@@ -65,12 +65,14 @@ export type PaletteContent = {
 /**
  * Where the palette opens: over an open workspace, whose actions come
  * first, or over a page without one. Only the owner of the workspace and
- * the admins of the org can archive it. The Mac app adds This Mac to the
- * settings.
+ * the admins of the org can archive it. Every member of an org that is
+ * not suspended can restore an archived workspace while the app keeps its
+ * cloud computer. The Mac app adds This Mac to the settings.
  */
 export type PaletteContext = {
   open?: OpenWorkspace
   archivable: boolean
+  restorable?: boolean
   rightColumn?: boolean
   mac?: boolean
   /**
@@ -111,11 +113,19 @@ function commandRows(
   return commands.map((command) => ({ kind: 'command', command, detail }))
 }
 
+/** The actions of the open workspace, when the palette has one. */
+function openActions(context: PaletteContext): Command[] {
+  if (!context.open) return []
+  return workspaceActions({
+    archived: context.open.status === 'archived',
+    archivable: context.archivable,
+    restorable: context.restorable ?? false,
+    rightColumn: context.rightColumn ?? true,
+  })
+}
+
 function actionsOf(context: PaletteContext): Command[] {
-  const own = context.open
-    ? workspaceActions(context.archivable, context.rightColumn)
-    : []
-  return [...own, ...orgActions, ...appActions]
+  return [...openActions(context), ...orgActions, ...appActions]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
@@ -224,9 +234,7 @@ function groupsOf(
         ? [
             {
               label: open.workspace.name,
-              rows: commandRows(
-                workspaceActions(context.archivable, context.rightColumn),
-              ),
+              rows: commandRows(openActions(context)),
             },
           ]
         : []

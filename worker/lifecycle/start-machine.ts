@@ -53,7 +53,7 @@ export async function advanceStartMachine(
       workspace: row,
       environment,
       locations,
-      defaultBranch: job.defaultBranch,
+      defaultBranch: job.baseBranch ?? job.defaultBranch,
       diskKeepalive: false,
     })
     await endpoint.lifecycleStep(

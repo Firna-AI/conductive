@@ -127,6 +127,11 @@ describe('the steps of Get started', () => {
     server.json('GET', buildsPath, {
       builds: [failed],
       currentImageBuildId: null,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     server.json('POST', buildsPath, { build: started, log: [] }, 202)
     // The spinners of the tab and of the running build stay on one frame.

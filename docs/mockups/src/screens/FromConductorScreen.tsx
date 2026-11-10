@@ -9,11 +9,10 @@ import { paths } from '../paths'
 import styles from './FromConductorScreen.module.css'
 
 /**
- * The page of the site for people who move from Conductor Cloud: which of
- * its features work in the product today, which are on the way, and which
- * work differently, in one table with a merged cell for each area. The
- * column takes the width of the site header, because the table has four
- * columns.
+ * The page of the site for people who move from Conductor: which of its
+ * features work in the product today, which are on the way, and which work
+ * differently, in one table with a merged cell for each area. The column
+ * takes the width of the site header, because the table has four columns.
  */
 export function FromConductorScreen(props: { viewport: Viewport }) {
   const { viewport } = props

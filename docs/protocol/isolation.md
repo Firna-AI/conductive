@@ -91,6 +91,8 @@ decision number names a decision of the change that adds the
   env vars of its org.
 - The sandbox gets them at create and at each resume. A changed secret
   applies at the next start.
+- The restart of an archived sandbox near day 14 gets neither of them, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says.
 - No saved snapshot holds these secrets. Builds and refreshes get none of
   them.
 - The software image holds no org data and no secret, because every org
@@ -111,6 +113,10 @@ decision number names a decision of the change that adds the
 - The GitHub token of a turn and its Mac requests still follow its sender,
   as [GitHub tokens](tokens-and-secrets.md#github-tokens) and
   [Mac commands](agent-tools.md#mac-commands) say.
+- A routine run uses its owner's agent login and GitHub token while no
+  person watches. Its sandbox follows the same version pin rules below.
+  [Risks that stay open](routines.md#risks-that-stay-open) states the
+  risks of routines.
 - With each turn, the agent runner gets a credential of the starter over
   its connection to the Durable Object. Reason: the sandbox gets its
   secrets only at a start, and the sessions of one sandbox can have

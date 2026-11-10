@@ -34,7 +34,7 @@ export class Repository {
   }
 
   async snapshot(defaultBranch: string): Promise<RepositorySnapshot> {
-    const sha = await this.git.resolve(defaultBranch)
+    const sha = await this.git.mergeBase(defaultBranch)
     return withGitIndex(
       this.git,
       async (index) => {

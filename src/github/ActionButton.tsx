@@ -17,16 +17,18 @@ export interface CommandKey {
 
 /**
  * A compact labelled Firna button, as the mockups draw it: 26 px high in the
- * dense desktop layout, and 44 px high with `touch` on a phone. A button
- * with `commandKey` shows that key in its tooltip and names it to a screen
- * reader. A Firna button takes neither, so a wrapper without a box holds
- * the tooltip, and the ref of the button holds the name.
+ * dense desktop layout, and 44 px high with `touch` on a phone. `busy` shows
+ * that its write runs. A button with `commandKey` shows that key in its
+ * tooltip and names it to a screen reader. A Firna button takes neither, so
+ * a wrapper without a box holds the tooltip, and the ref of the button holds
+ * the name.
  */
 export function ActionButton(props: {
   children: string
   onPress: () => void
   icon?: LucideIcon
   touch?: boolean
+  busy?: boolean
   commandKey?: CommandKey
 }) {
   const size = props.touch ? touchControl : control
@@ -41,6 +43,7 @@ export function ActionButton(props: {
   )
   const button = (
     <Button
+      busy={props.busy}
       buttonRef={nameKey}
       icon={props.icon}
       labelStyle={{

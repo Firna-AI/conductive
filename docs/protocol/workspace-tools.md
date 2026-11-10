@@ -23,10 +23,11 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).
-- Changes lists the files that the branch changes against the default
-  branch. Its summary gives the number of changed files and the lines that
+- Changes lists the files that the branch changes against its base branch,
+  from the merge base of the two, as [Base branches](base-branches.md)
+  says. Its summary gives the number of changed files and the lines that
   they add and remove.
-- A changed file opens its diff against the default branch as a tab.
+- A changed file opens its diff against the base branch as a tab.
 - Each new file or diff tab opens at the end of the tab row of the centre
   column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
@@ -78,6 +79,13 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   still show them while the sandbox sleeps.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
+- While the sandbox does not run, a file or diff tab reads nothing. While
+  the sandbox is stopped, or after its later start failed, a tab keeps the
+  file that it already shows, as the lists keep their copy.
+- Otherwise the tab shows the state of the sandbox in place of the file,
+  with the Resume or Try again of that state.
+- Opening a file or diff tab resumes a stopped sandbox, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says.
 - When the runner cannot read the repository, it sends `files.unavailable`
   (decision 109). The event holds no other data. A failed scan after a
   connect does not stop `runner.ready`, as
@@ -150,20 +158,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 
 ## Port previews
 
-- The user opens a port preview by typing its port. The app does not
-  discover ports.
-- A preview shows in a frame inside the app, with an "Open in new tab"
-  link. Reason: Safari blocks the cookies of the previewed app inside a
-  frame.
-- Some servers accept only requests to their local address, such as a dev
-  server that checks `Host`. Such a server works in a preview with no change
-  to its repository (decision 218).
-  [Port previews](terminal-previews-and-desktop.md#port-previews)
-  states the `Host` and the `Origin` that the server gets.
-- A workspace whose cloud computer has no running relay refuses previews.
-  The user starts a new workspace after an admin runs Build computer.
-- The sandbox keeps port 7682 for the relay. A preview of port 7682 shows
-  an error.
+The [port-preview requirements](port-previews.md) give the detected-server
+list, manual opening, preview tabs, and the relay requirement.
 
 ## Desktop
 

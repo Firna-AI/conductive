@@ -1,5 +1,10 @@
 export const SESSION_COOKIE = '__Host-conductive-session'
 export const OAUTH_COOKIE = '__Host-conductive-oauth'
+/**
+ * The screen where a browser started an install or a change of the GitHub
+ * App, which the return from GitHub opens again.
+ */
+export const GITHUB_RETURN_COOKIE = '__Host-conductive-github-return'
 
 export function readCookie(request: Request, name: string): string | null {
   const values = (request.headers.get('Cookie') ?? '')

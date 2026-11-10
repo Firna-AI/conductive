@@ -99,6 +99,15 @@ mount the chat.
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar
   takes the place of the composer.
+- `copy` gives the clipboard, the clock, and the timers of a copy of a
+  transcript from the tab menu. The app gives its `AppServices`, so a copy
+  writes through `AppServices.copy`. It must be stable, because it keeps
+  the text of a copy that the clipboard refused for one minute, as
+  `copyTranscript` in `transcript-copy.ts` says. Without it, the chat uses
+  `browserCopy`: the clipboard of the browser, `Date.now`, and its timers.
+- The chat shows the result of a copy in a toast of `@firna/ui`: through
+  the `ToastProvider` of the host, such as the one of the app's
+  `ThemeRoot`, else through its own, at the bottom right of the window.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position, except on the message box of a composer,
@@ -122,7 +131,8 @@ mount the chat.
   takes the tabs from `rowOf` with the sessions of `tabSessions` and the
   shown tab of `shownTab`, and the session history from `historySessions`
   with the times of `endedAt`, so an archived workspace navigates without a
-  write.
+  write. It gives `SessionTabs` its `onCopy` from `useTranscriptCopy`, which
+  needs a toast provider above it, such as `ChatToasts`.
 - `useChatController` makes the controller through the shared
   `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
   starts the controller after the render. It stops the controller at

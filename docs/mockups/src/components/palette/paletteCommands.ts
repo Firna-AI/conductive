@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
+  ArchiveRestore,
   Building2,
   FileDiff,
   Files,
@@ -76,15 +77,41 @@ const rightColumnActions: readonly Command[] = [
   },
 ]
 
+/** What the open workspace offers to the person, for its actions. */
+export type OpenActions = {
+  /** The workspace is archived, so it has no new session and no lists. */
+  archived: boolean
+  /** The owner of the workspace and the admins of the org archive it. */
+  archivable: boolean
+  /** Every member restores it while the app keeps its cloud computer. */
+  restorable: boolean
+  /** The page shows the right column. */
+  rightColumn: boolean
+}
+
+const sessionHistory: Command = {
+  label: 'Session history',
+  lead: icon(History),
+  words: ['closed', 'reopen'],
+  to: paths.sessionHistory,
+  shortcut: 'session-history',
+}
+
 /**
  * The actions of the open workspace: a new session, the session history,
- * each tab of the right column, and Archive, which only the owner of the
- * workspace and the admins of the org see.
+ * each tab of the right column, and Archive. An archived workspace keeps
+ * its session history and offers Restore.
  */
-export function workspaceActions(
-  archivable: boolean,
-  rightColumn = true,
-): Command[] {
+export function workspaceActions(open: OpenActions): Command[] {
+  if (open.archived) {
+    const restore: Command = {
+      label: 'Restore workspace',
+      lead: icon(ArchiveRestore),
+      words: ['unarchive'],
+      to: paths.restored,
+    }
+    return open.restorable ? [sessionHistory, restore] : [sessionHistory]
+  }
   const actions: Command[] = [
     {
       label: 'New session',
@@ -93,22 +120,16 @@ export function workspaceActions(
       to: paths.sessions,
       shortcut: 'new-session',
     },
-    {
-      label: 'Session history',
-      lead: icon(History),
-      words: ['closed', 'reopen'],
-      to: paths.sessionHistory,
-      shortcut: 'session-history',
-    },
-    ...(rightColumn ? rightColumnActions : []),
+    sessionHistory,
+    ...(open.rightColumn ? rightColumnActions : []),
   ]
-  if (!archivable) return actions
+  if (!open.archivable) return actions
   return [
     ...actions,
     {
       label: 'Archive workspace',
       lead: icon(Archive),
-      to: paths.archive,
+      to: paths.justArchived,
       shortcut: 'archive-workspace',
     },
   ]

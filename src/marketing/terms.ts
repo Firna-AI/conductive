@@ -50,8 +50,8 @@ export const termsDocument: LegalDocument = {
         paragraph`${productName} is a coding tool in the browser and in the
           Mac app. Each workspace is one task with its own branch and its
           own cloud computer, where agents powered by Claude and Codex work.`,
-        paragraph`${productName} is free for now. It has no plans and no
-          billing.`,
+        paragraph`${productName} is free until billing starts. Nobody pays
+          until they choose a plan.`,
       ],
     },
     {
@@ -67,6 +67,8 @@ export const termsDocument: LegalDocument = {
           text`The agents run on the Claude or OpenAI login that you connect.
             The model use of each message bills to the account of the member
             who started its session, under the terms of Anthropic or OpenAI.
+            The runs of a routine start their sessions on the login of the
+            member who owns the routine.
             A newer cloud computer starts from an org image that requires
             ${productName} to keep agent logins outside the cloud computer.
             ${productName} enforces this requirement for computers that start
@@ -150,14 +152,15 @@ export const termsDocument: LegalDocument = {
           notice.`,
         paragraph`A suspension of an account ends its sign-in. It stops the
           cloud computers of the workspaces that the account owns, closes
-          their previews, and blocks new starts.`,
+          their previews, and blocks new starts. Its routines start no
+          runs.`,
         paragraph`A suspension of an org stops each cloud computer of the org,
-          closes its previews and terminals, and blocks each start and
-          build. Its members keep their accounts and their other orgs. They
-          can still open the org and read its chat history. Nothing in the
-          org can change, except that a member can leave it. An admin can
-          leave only while another admin whose account is not suspended
-          remains.`,
+          closes its previews and terminals, and blocks each start, build,
+          and routine run. Its members keep their accounts and their other
+          orgs. They can still open the org and read its chat history.
+          Nothing in the org can change, except that a member can leave it.
+          An admin can leave only while another admin whose account is not
+          suspended remains.`,
         paragraph`A stopped cloud computer gets no restart to keep its disk
           while its workspace owner or org is suspended. So its disk can be
           deleted, with any work that is not pushed to GitHub.`,

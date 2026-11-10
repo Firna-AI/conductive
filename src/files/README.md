@@ -101,6 +101,12 @@ The screens:
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode.
 - `DiffPage` shows the diff of one changed file.
+- The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
+  of the page, for example with a sandbox state. The page then reads
+  nothing, and its header offers no Download. A diff keeps its changed
+  lines from Changes. With `keepShown`, a page that already shows its file
+  keeps it, with Copy, and the placeholder shows only in place of a page
+  with nothing to show. When the placeholder goes, the page reads at once.
 - `FileTabItem` is the closable tab of a file or a diff, as a list item
   for the tab row of the centre column on desktop. `onClose` asks the shell
   to close the tab. It takes the tab styles of the mockups' `WorkspaceTabs`,
@@ -226,6 +232,11 @@ tests keep their static markup checks in Node.
   block. `pairRuns` in `markdown/markdown-delimiters.ts` pairs its `*` and
   `_` markers by the CommonMark rules. `nestParts` in
   `markdown/markdown-nesting.ts` builds the nested content from the pairs.
+- `markdown/markdown-blocks.ts`: `parseBlocks`, the blocks of a file. It
+  reads each list with `readList` of `../markdown/list-items.ts`, the list
+  reader that the chat shares, and the line tests of
+  `../markdown/lines.ts`. [List parts](../chat/agent-text.md#list-parts)
+  gives the rules of the shared list code.
 - `markdown/markdown-tables.ts`: `parseTable`, which reads one table of a
   file and fills its short rows, and `TableBudget`, the empty cells that
   the tables of one file may add. It reads each row with

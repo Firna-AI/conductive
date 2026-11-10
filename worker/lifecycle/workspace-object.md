@@ -4,7 +4,8 @@ This page belongs to the [workspace lifecycle README](README.md). It
 describes the Durable Object of each workspace and of each image
 coordinator. It gives their names, the lifecycle steps, the alarm, the
 start logs, the event socket, and the event publication. It also gives the
-creates and resumes and the git credential sender.
+creates and resumes. [Routes](routes.md#the-git-credential-sender) gives
+the git credential sender.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
@@ -32,7 +33,7 @@ says:
   through the `turnEnded` hook. `turnDispatchFailed` also calls it for a
   turn that did not go out. These records keep the running sessions. They
   give no GitHub access, as
-  [The git credential sender](#the-git-credential-sender) says.
+  [The git credential sender](routes.md#the-git-credential-sender) says.
 - `reportRunnerLifecycle` takes only the runner events `runner.ready`,
   `turn.started`, and `start.updated`. `runnerLifecycleDisconnected` takes
   a disconnect.
@@ -45,6 +46,8 @@ A successful reply that still runs keeps its retry.
 The task checks its org's live ledger before each dispatch.
 An owner change or suspension lift keeps its queued work.
 An absent or deleted ledger entry ends that work.
+A retained archived computer is still the computer of its workspace. That
+workspace's lifecycle handles its suspension, so the Stop task has no case of its own for Archive.
 For an image coordinator, the alarm
 advances the running build or refresh by one step, or starts the daily
 refresh. A transient Boat error keeps the job step for the next alarm,
@@ -52,6 +55,10 @@ within the [retry window](image-builds.md#provider-retries), except a source
 command start. For a workspace object, it:
 
 - runs the queued start of a create or a resume, one phase at a time
+- finishes Archive initialization and uncertain allocation recovery before normal start work,
+  also after the Restore window, until the workspace row holds the recovered ID
+- stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline
+- clears Restore when the provider confirms that a retained computer is missing
 - repairs the running turns from the committed chat before its deadline
   and idle decisions, as
   [Turn recovery](recovery-and-shown-state.md#turn-recovery) says
@@ -71,66 +78,9 @@ command start. For a workspace object, it:
 - recovers and deletes an unresolved allocation after a start reaches its limit
 - keeps failed or cancelled resume stop cleanup after the start result ends
 
-`WorkspaceAlarms` in [`alarms.ts`](../features/alarms.ts) is the one
-scheduler of the object alarm. Each owner of a timed task stores its own
-due time there. The lifecycle owners are the lifecycle state, the start,
-and the publication of a create result. The `changed` retry, the delete of
-a failed create, the access stop, and the image coordinator are lifecycle
-owners too. The Mac devices, the previews, and GitHub store their due
-times there too.
-
-- Each write that changes a due time sets the object alarm to the earliest
-  stored due time.
-- A due time stays stored until its owner clears it. So a run that fails
-  or ends early still leaves the next alarm, also after a restart of the
-  object.
-- The scheduler clears a due time of the Mac devices after their run
-  succeeds, unless that run stored a new one.
-- `runWorkspaceAlarms` in [`workspace-alarms.ts`](../workspace-alarms.ts)
-  is the outer run of the object alarm. It runs the Mac devices, the
-  previews, and GitHub. It also starts the lifecycle run,
-  `runWorkspaceAlarm` in [`workspace-alarm.ts`](workspace-alarm.ts). The
-  lifecycle run runs the lifecycle owners.
-- Each run reads the due times that have come, and it runs their owners.
-- The lifecycle run also has a run lease, the due time `lifecycle:run`.
-  At its start, before it runs any owner, the run reads all stored due
-  times. Then it stores its own lease 30 seconds after its start. So that
-  read still shows the lease of an earlier run. The outer run and `take`,
-  the read-only query of the due times, store no lease.
-- Each lifecycle run deletes its lease at its end, as the steps below say.
-  Lifecycle runs go through the chat queue one at a time. So a lease that
-  the read finds comes from an earlier run that did not reach its end. A
-  reset of the object or a lost process can cause this. The new run then
-  treats every lifecycle owner as due, also before the time of the old
-  lease.
-- The recovery comes with the next lifecycle run. Another lifecycle due
-  time can start that run before the lease time. Otherwise the old lease
-  wakes the object at its time, because it counts as a due time from
-  then. The outer run then starts the lifecycle run. So the recovery can
-  come up to 30 seconds late.
-- For example, the end of a start clears the due time of the start before
-  the run sets the lifecycle due time. A reset between these two writes
-  can leave no other lifecycle due time.
-- At the end of each run, also when the run fails or ends early, the run
-  does these steps in one storage transaction:
-  1. The lifecycle run deletes its lease. So no due time moves to the time
-     of the lease.
-  2. The run finds each of its due times that had come when the run
-     started and that did not change during the run. The lifecycle run
-     looks only at due times of the lifecycle owners. The outer run looks
-     only at due times of the Mac devices, the previews, and GitHub.
-  3. It moves each due time that it found to the earliest stored due time
-     in the future. When no stored due time is in the future, it moves the
-     due time 30 seconds into the future.
-  4. It sets the object alarm to the earliest stored due time again.
-- A due time that a run cleared, replaced, or added stays as that run
-  left it.
-- The steps prevent an immediate new alarm for a task that a run skipped.
-  For example, the lifecycle run skips some tasks while the access stop or
-  a start is pending.
-- The run lease helps only when a run does not reach the steps at its
-  end. A run that fails with an error still does the steps and deletes
-  its lease. So the lease gives no recovery after that error.
+[The object alarm scheduler](alarm-scheduler.md) gives the shared rules of
+the object alarm: the owners and their due times, the security sources,
+the run lease, and the steps at the end of each run.
 
 The deadline and stop actions use the sandbox state in each Boat reply.
 When Boat refuses an action, they read the sandbox state once. The
@@ -272,24 +222,9 @@ create and resume. The workspace object runs that start:
 
 ## The git credential sender
 
-`Workspace.credentialSender` maps the turn ID of a git credential request
-to a sender, in the chat queue. The [machine route](README.md#machine-route)
-gives the handler, which reads that turn ID from a request header.
-
-- A create that prepares its repository has its own grant. The start job
-  is a create in the `fetch` or `branch` phase, not cancelled or failed,
-  and its `turnId` matches. The grant gives the sender of the admitted
-  first message.
-- Otherwise the turn must be the running stored chat turn: the active
-  turn of an open session. `activeStoredTurn` in
-  [`access.ts`](../devices/access.ts) reads it. So access ends with the
-  turn, also after a queued Stop, a session close, or a login failure.
-- A stopped or archived workspace gives no sender. The lifecycle admission
-  keeps no turn record for the queued first message.
-
-`machine.test.ts` runs the route with `machineCredentialFixture` in
-[`machine-test-support.ts`](machine-test-support.ts), over the production
-chat and runner boundaries.
+[The git credential sender](routes.md#the-git-credential-sender) gives how
+`Workspace.credentialSender` maps the turn of a git credential request to
+its sender, beside the machine route.
 
 ## Turn recovery
 

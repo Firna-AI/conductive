@@ -115,12 +115,11 @@ export function OrgList(props: {
     sections.state === 'ready' && workspaces.state === 'ready'
       ? groupWorkspaces(sections.value, workspaces.value)
       : { sections: [], archived: [] }
-  const { menus, archiveAction, layer } = useRowMenus({
+  const { menus, archiveAction, restoreAction, running, layer } = useRowMenus({
     orgId: props.orgId,
     viewer: props.viewer,
     groups: groups.sections,
     archived: groups.archived,
-    selectedId: props.selectedId,
     readOnly,
     move,
   })
@@ -150,6 +149,8 @@ export function OrgList(props: {
         actions={readOnly ? local.actions : actions}
         archiveAction={archiveAction}
         archived={groups.archived}
+        restoreAction={restoreAction}
+        running={running}
         groups={readOnly ? local.apply(groups.sections) : groups.sections}
         menus={menus}
         move={move}

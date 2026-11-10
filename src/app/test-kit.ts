@@ -250,7 +250,9 @@ export function testServices(
     newId: () => `client-${++id}`,
     leave: () => undefined,
     appOrigin: FAKE_ORIGIN,
-    copy: async () => undefined,
+    copy: async (text) => {
+      await text
+    },
     delay: new ManualDelay().delay,
     onFocus: new ManualFocus().onFocus,
     onInput: new ManualInput().onInput,

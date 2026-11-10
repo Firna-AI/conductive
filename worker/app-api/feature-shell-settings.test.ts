@@ -43,9 +43,11 @@ it('saves shared scripts and encrypted env values through the real Worker and ke
       installScript: '',
       startupScript: '',
       envVars: [{ name: 'LEGACY_TOKEN', secret: true }],
-      needsBuild: false,
     },
   })
+  expect(
+    await (await fixture.request(orgSettingsPaths.builds(OUTER_ORG))).json(),
+  ).toMatchObject({ changes: { installScript: false } })
   const saved = await fixture.request(path, {
     method: 'PATCH',
     body: JSON.stringify({
@@ -84,9 +86,11 @@ it('saves shared scripts and encrypted env values through the real Worker and ke
         { name: 'SERVICE_TOKEN', secret: true },
         { name: '__proto__', secret: false },
       ],
-      needsBuild: true,
     },
   })
+  expect(
+    await (await fixture.request(orgSettingsPaths.builds(OUTER_ORG))).json(),
+  ).toMatchObject({ changes: { installScript: true } })
   expect(savedText).not.toContain('secret-a')
   expect(savedText).not.toContain('production')
   expect(savedText).not.toContain('legacy-private-value')
@@ -195,8 +199,11 @@ it('saves shared scripts and encrypted env values through the real Worker and ke
   })
   expect(removed.status).toBe(200)
   expect(await removed.json()).toMatchObject({
-    settings: { startupScript: '', envVars: [], needsBuild: true },
+    settings: { startupScript: '', envVars: [] },
   })
+  expect(
+    await (await fixture.request(orgSettingsPaths.builds(OUTER_ORG))).json(),
+  ).toMatchObject({ changes: { installScript: true } })
   expect(await workspaceEnvironmentSettings(fixture.env, OUTER_ORG)).toEqual({})
   expect(
     await fixture.env.DB.prepare(

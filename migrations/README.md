@@ -147,7 +147,27 @@ one building attempt per account. `image_build_jobs.software_image_name`
 pins the ready software image that a first build uses.
 The [software image backend](../worker/software-image/README.md) owns these records.
 
-`202611101300_shortcuts.sql` adds `user_shortcuts`.
+`202611101300_routines.sql` adds org-scoped routines and their run records.
+Routine owners reference users, so membership removal can transfer their records.
+Org deletion cascades to both tables.
+Run workspace IDs have no foreign key, so a failed admission can still keep its attempt identity.
+An accepted failed first start keeps its workspace.
+The routine also keeps the former owner's name and its consecutive failure count.
+
+`202611101400_routine_run_failures.sql` keeps the public code and message of a failed workspace creation attempt.
+It also records the owner when a run enters the queue.
+The saved owner prevents an old queued request from using a replacement owner's logins.
+Message indexes support first-turn reports and creation recovery.
+
+`202611101401_routine_run_choice.sql` adds the nullable agent choice of a run.
+The starter records the agent, model, and effort together before it checks the login.
+Existing runs keep null because their original choice is not known.
+
+`202611101500_workspace_base_branches.sql` adds the nullable workspace base branch and the creation plan base branch and start commit.
+A null base branch uses the repository default branch.
+Existing rows keep that fallback.
+
+`202611101600_shortcuts.sql` adds `user_shortcuts`.
 Each row holds one account's changed command for one keyboard, with its
 ordered keys as JSON. An empty list keeps a command without keys.
 The primary key keeps each account, keyboard, and command separate.
@@ -192,9 +212,12 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
 | Computer ledger account merge | `202611100900`–`202611100959` |
 | Software image for first builds | `202611101200`–`202611101259` |
-| Keyboard shortcuts storage | `202611101300`–`202611101359` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
+| Routines: records and routes | `202611101300`–`202611101359` |
+| Routines: runs and Run now | `202611101400`–`202611101459` |
+| Routines: pull request runs | `202611101500`–`202611101559` |
+| Keyboard shortcuts storage | `202611101600`–`202611101659` |
 
 ## Key code
 
