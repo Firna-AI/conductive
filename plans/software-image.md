@@ -20,6 +20,10 @@ What `main` already holds:
 - PR #188 shipped the builds for added repositories: an added repository
   starts a later build, and New workspace shows a waiting repository as
   off.
+- Open PR #194, from workspace #555 on branch
+  `conductor/later-builds-from-software-image`, starts each later build
+  from the software image too (decisions 4 C and 9 B). This branch merged
+  it at `74ecc48`.
 
 This plan adds the rest of the user's design. Each later build and each
 refresh starts from the software image too, so every image job runs the
@@ -45,8 +49,8 @@ Contract owners:
 
 Replaced ways:
 
-- A later build and a refresh start from the last org image → they start
-  from the software image. Consumers: the build admission in
+- A refresh starts from the last org image → it starts from the software
+  image. PR #194 already moved the later build. Consumers: the build admission in
   `worker/lifecycle/build-admission-data.ts` and
   `worker/lifecycle/image-builds.ts`, `buildSandboxIntent` in
   `worker/lifecycle/resource-intents.ts`, the rule in "The software image"
@@ -312,10 +316,10 @@ Depends on: 1
 
 The docs state the requirements of each moment that this plan changes.
 
-- [ ] In "The software image" of `docs/protocol/org-image.md`, state that a
-      later build and a refresh start from the software image too. State
-      the clean refresh of decision 12 G, the skip of an empty install
-      script, and that the tab shows refreshes.
+- [ ] In `docs/protocol/org-image.md`, state that a refresh starts from the
+      software image too, the clean refresh of decision 12 G, the skip of an
+      empty install script, and that the tab shows refreshes. PR #194
+      already states the later build.
 - [ ] In `docs/protocol/repository-folders.md`, state that a refresh keeps
       the folders and the variables of the newest good build.
 - [ ] In `docs/protocol/workspace-life.md` and
@@ -324,10 +328,10 @@ The docs state the requirements of each moment that this plan changes.
 - [ ] In `docs/protocol/github-tokens.md`, state that the copies of an
       image job run in parallel, each with its own token, and that no
       checkout starts before GitHub confirms the revocation of every token.
-      Remove the risk of a build sandbox that starts from the last org
-      image, because no image job does so.
-- [ ] In `docs/architecture.md`, change the terms "Build" and "Refresh",
-      and add an old workspace.
+      Remove the risk of a refresh that starts from the last org image,
+      because no image job does so after this plan.
+- [ ] In `docs/architecture.md`, change the term "Refresh", and add an old
+      workspace. PR #194 already changed the term "Build".
 - [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
@@ -352,15 +356,19 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Pin the ready software image for a later build, as for a first
-      build, and copy each repository fresh.
+- [x] Pin the ready software image for a later build, as for a first
+      build, and copy each repository fresh. Branch:
+      `conductor/later-builds-from-software-image`, PR #194.
 - [ ] Skip the install step when the install script is empty.
-- [ ] Tests: a later build with a ready software image starts from it and
+- [x] Tests: a later build with a ready software image starts from it and
       runs no software command. A later build without one runs the
-      software step after the copy. A build with an empty script runs no
-      install command.
-- [ ] Update `image/install.md`, `worker/lifecycle/README.md`, and
-      `worker/lifecycle/image-builds.md`.
+      software step after the copy. Branch:
+      `conductor/later-builds-from-software-image`, PR #194.
+- [ ] Test: a build with an empty script runs no install command.
+- [x] Update `image/install.md`, `worker/lifecycle/README.md`, and
+      `worker/lifecycle/image-builds.md` for the later build. Branch:
+      `conductor/later-builds-from-software-image`, PR #194.
+- [ ] Update the same docs for the skip of an empty install script.
 
 ## Milestone 5: Clean refreshes
 
