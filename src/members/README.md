@@ -99,6 +99,8 @@ with the message of the API.
   with more room, and it gets shorter to fit. It follows its button when the
   page scrolls or the window changes size. In a long menu, only the choices
   scroll. The heading, an error, and the note stay in view.
+- A desktop menu closes when the window loses focus, including a press
+  inside a preview frame. The menu stays open while its change runs.
 - The menus and the questions note themselves in the open layers of the
   app shell, from `../shell/ui/layers.ts`. So the key of the command
   palette asks an open desktop menu to close, as Escape does. While its
@@ -216,6 +218,9 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - Check a busy desktop menu in a real browser, because happy-dom cannot open
   it. On the dev page, `delay` holds each reply and `fail` with `once=1`
   makes the first change fail.
+- `desktop/tests/owner-menu.spec.ts` checks that a press inside a preview
+  frame closes the desktop menu and keeps focus in the preview. Run it with
+  `npm --prefix desktop run test:electron -- tests/owner-menu.spec.ts`.
 
 ## Limits
 
