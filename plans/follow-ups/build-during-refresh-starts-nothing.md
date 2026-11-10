@@ -1,0 +1,32 @@
+# Build computer during a refresh starts no build
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, from the options check of the plan `plans/added-repository-builds.md`, branch `calummoore/new-repo-build-recreation`.
+- **Location:** `worker/lifecycle/browser.ts:78-89`, `worker/lifecycle/image-builds.ts:90-98`, `src/shell/settings/BuildCard.tsx:116-118`, `src/members/BuildCard.tsx:107`.
+- **Reason:** the problem is on `origin/main` before that plan, which changes only the build of an added repository.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Org image:** the saved snapshot that every new cloud computer of an org starts from.
+  - **Job:** a build or a refresh of the org image. One job runs at a time in each org. A build runs the install script. A refresh only fetches the new commits of the repositories that the org image holds.
+  - **Build card:** the card at the top of the Cloud computer tab of the org settings. Its history lists builds, not refreshes.
+- **Background:**
+  - Build computer and Try again on the Cloud computer tab send `POST` to the builds path. `worker/lifecycle/browser.ts` then calls `startImageBuild` with the kind `build`.
+  - `startImageBuild` in `worker/lifecycle/image-builds.ts` first reads the running job. When a job runs, it schedules that job again and returns its ID. It starts no new job.
+  - A push to a default branch and a daily timer start refreshes. A refresh usually takes a short time.
+  - The build cards list only builds, so a running refresh does not show.
+  - `docs/protocol/org-image.md` says that Build computer starts a build.
+- **Problem:** When an admin presses Build computer or Try again while a refresh runs, the Worker returns the refresh, and no build follows it. The press seems to do nothing.
+- **Impact if no action:** A changed install script, or the retry of a failed build, waits until the admin presses the button again after the refresh.
+- **Root question:** How does a press of Build computer always lead to a build?
+- **Options:**
+  - **A.** The build cards show a running refresh, and Build computer waits until the refresh ends. The press during the refresh still starts nothing. Effort: Medium.
+  - **B.** The Worker records the request, and the image coordinator starts the build when the refresh ends. It needs a stored request, such as a column in `settings`. Effort: Medium.
+  - **C.** The Worker stops the refresh and starts the build at once. A build fetches every repository too, so the refresh loses no work. It needs a stop path for a refresh in each of its phases. Effort: Medium.
+- **Left out:** A refusal that asks the admin to try again after the refresh. The admin must then press twice, and B meets the goal without a new rejection.
+- **Wider fix:** B. Each request for a build then waits for the running job, also for a future kind of job.
+- **Previous examples:** `plans/follow-ups/added-build-can-be-lost.md` describes an added build that a refresh at the end of a cleanup swallows, for the same reason in `startImageBuild`.
+- **Related:** `plans/follow-ups/added-build-can-be-lost.md`, same cause: `startImageBuild` returns the running job in place of a new build. One stored request for a build can fix both.
+- **Recommendation:** B. The press then always leads to a build, as the protocol says.
+- **Action:** fix after merge, apply B, because the problem is on `origin/main` and outside the change that found it.
