@@ -10,7 +10,7 @@ tab is its own shell in the cloud computer. The members of the workspace
 share the tabs, and a workspace holds at most 10 of them.
 
 The user chose the approach in a brainstorm on 10 November 2026: decision
-247 B and decision 248 B. Decision 249, a palette action, is open. The
+248 B and decision 249 B. Decision 250, a palette action, is open. The
 brainstorm notes are in `.context/multiple-terminals/brainstorm.md`.
 
 This change does not cover terminals in the centre tab row, a terminal in
@@ -22,7 +22,7 @@ Contract owners:
 - [Tools of a workspace](../docs/protocol/workspace-tools.md#terminal).
 - [Terminal, previews, and desktop](../docs/protocol/terminal-previews-and-desktop.md#terminal).
 - [Command palette](../docs/protocol/command-palette.md#actions), only
-  with decision 249 B, C, or D.
+  with decision 250 B, C, or D.
 - The [terminal backend README](../worker/terminal/README.md).
 - The [terminal README](../src/terminal/README.md).
 - The [tools part](../src/shell/workspace/screen-parts.md#the-tools-part).
@@ -30,12 +30,12 @@ Contract owners:
 
 ## Decisions
 
-### 247. Several terminals in one workspace
+### 248. Several terminals in one workspace
 
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `worker/terminal/scripts.ts:102`, `src/shell/workspace/tools/ToolsPart.tsx`, `docs/protocol/workspace-tools.md:102`.
+- **Location:** `worker/terminal/scripts.ts:102`, `src/shell/workspace/tools/ToolsPart.tsx`, `docs/protocol/workspace-tools.md:109`.
 - **Terms:**
   - **tmux:** a program in the cloud computer that keeps each shell running when the browser connection drops (decision 118).
   - **ttyd:** the program in the cloud computer that joins a browser socket to a tmux client.
@@ -67,7 +67,7 @@ Contract owners:
 - **Recommendation:** B. It gives separate shells with the fewest changes, because the new parts stay in the Terminal tool and its backend. C and D can come later on the same backend. E costs more and hides shells that still hold ports.
 - **Chosen:** B, by the user on 10 November 2026. The text of B says that every member and device sees the same terminals. The options check added E after that choice and kept B as its recommendation.
 
-### 248. The number of terminals in a workspace
+### 249. The number of terminals in a workspace
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -90,7 +90,7 @@ Contract owners:
 - **Recommendation:** B. A fixed limit keeps the list and the memory small, and 10 is more tabs than the panel shows at once.
 - **Chosen:** B, by the user on 10 November 2026.
 
-### 249. A palette action for a new terminal
+### 250. A palette action for a new terminal
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -98,7 +98,7 @@ Contract owners:
 - **Location:** `docs/protocol/command-palette.md:177`, `src/shell/workspace/WorkspacePaletteActions.tsx`, `src/app/palette/palette-keys.ts:49`.
 - **Background:**
   - The command palette runs the actions of the current page. Its protocol lists the actions of an open workspace: New session, Session history, a Go to row for each tab of the right column, and Archive workspace.
-  - Each palette action does what the same control does in the app. The palette offers only the actions that the page offers, so it has no turned-off rows. Decision 247 B adds a new control, the + of the terminal tabs.
+  - Each palette action does what the same control does in the app. The palette offers only the actions that the page offers, so it has no turned-off rows. Decision 248 B adds a new control, the + of the terminal tabs.
   - Only the palette has a key: ⌘K on a Mac, and Ctrl+K on Windows and Linux. The user chose this for the first version on 8 November 2026 (decision 145 A), and plans more keys in another workspace.
   - On Windows and Linux, Ctrl+K in the terminal goes to the shell. xterm.js also keeps Tab in the terminal.
   - The palette protocol has 259 lines. The follow-up item `plans/follow-ups/protocol-docs-split.md` counts it as at the target, so a new row needs no split.
@@ -200,7 +200,7 @@ All design calls are of 10 November 2026, by the agent.
   today.
 - The tabs keep the order of their numbers, with no drag. A new terminal
   takes the lowest free number. Reason: the names then stay from Terminal
-  1 to Terminal 10, as the limit of decision 248.
+  1 to Terminal 10, as the limit of decision 249.
 - This change adds no rename. Reason: the numbers name each terminal, and
   a rename can come later through a tab menu.
 - Terminal 1 of each workspace is today's shell, and its socket passes no
@@ -242,7 +242,7 @@ All design calls are of 10 November 2026, by the agent.
   Terminal tool mounts only then.
 - The saved view keeps the shown terminal. Reason: the server keeps the
   view state, as it keeps the shown tool.
-- The palette action waits for decision 249. Reason: the brainstorm
+- The palette action waits for decision 250. Reason: the brainstorm
   report gave it as a design call, but it changes a requirement in force.
 
 ### Related follow-up items
@@ -256,7 +256,7 @@ All design calls are of 10 November 2026, by the agent.
   tab can meet the same defect. Its fix covers every terminal, so this
   change does not take it.
 - `plans/follow-ups/decision-numbers-across-plans.md`: before the pull
-  request, renumber decisions 247 to 249 when `origin/main` uses those
+  request, renumber decisions 248 to 250 when `origin/main` uses those
   numbers.
 - `plans/follow-ups/terminal-keyboard-trap.md`: on Windows and Linux, a
   keyboard user cannot move the focus out of a terminal. The options check
@@ -289,7 +289,7 @@ panel and on a phone. Each mockup has a desktop and a phone variant.
         `plans/follow-ups/terminal-disconnected-mockup.md`.
 - [ ] Keep the preview screens and the hidden Desktop screen reachable,
       on the page of `app/tools` or on child pages.
-- [ ] With decision 249 B only: add "New terminal" to the actions of the
+- [ ] With decision 250 B only: add "New terminal" to the actions of the
       command palette mockup. With C or D, update this plan first.
 - [ ] Update `docs/mockups/catalogue.md` for the new pages.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages, and save
@@ -304,7 +304,7 @@ Depends on: 1
 The requirements and decisions for several terminals.
 
 - [ ] Update "Terminal" in `docs/protocol/workspace-tools.md`:
-  - [ ] A workspace has up to 10 terminals (decision 248). Its members
+  - [ ] A workspace has up to 10 terminals (decision 249). Its members
         share them. Each opens in the repository folder.
   - [ ] The + opens a terminal. A close ends its shell for every member,
         after a confirmation. The last terminal has no close.
@@ -313,7 +313,7 @@ The requirements and decisions for several terminals.
   - [ ] The names, from Terminal 1 to Terminal 10.
   - [ ] A workspace whose cloud computer software is older shows one
         terminal.
-  - [ ] Cite decision 247, with the rejected options C, D, and E and
+  - [ ] Cite decision 248, with the rejected options C, D, and E and
         their reasons.
   - [ ] When the doc passes about 250 lines, move "Terminal" to its own
         linked page.
@@ -323,7 +323,7 @@ The requirements and decisions for several terminals.
       access of a socket.
 - [ ] Update `docs/protocol/github-tokens.md` where it says that the
       terminal is shared, so that it names the shared terminals.
-- [ ] With decision 249 B only: add "New terminal" to the actions of
+- [ ] With decision 250 B only: add "New terminal" to the actions of
       `docs/protocol/command-palette.md`. The follow-up item
       `plans/follow-ups/protocol-docs-split.md` counts that doc as at the
       target, so it needs no split.
@@ -435,7 +435,7 @@ Depends on: 1, 5
 
 Tags: ui
 
-Depends on: 6, and decision 249 B. With decision 249 A, delete this
+Depends on: 6, and decision 250 B. With decision 250 A, delete this
 milestone. With C or D, rewrite it first.
 
 - [ ] Add "New terminal" after the Go to rows. Run the + of the terminal
