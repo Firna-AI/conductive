@@ -63,6 +63,7 @@ export async function defaultBranchCredential(
   const turns: string[] = []
   return {
     sender,
+    workspaceId: created.workspace.id,
     turnId: created.first.turnId,
     turns,
     issue: (turnId: string) => {

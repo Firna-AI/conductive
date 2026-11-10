@@ -46,7 +46,7 @@ export async function branchChanges(
   branch: string,
   warn: (message: string) => void = () => {},
 ): Promise<ChangesResponse> {
-  const sha = await git.resolve(branch)
+  const sha = await git.mergeBase(branch)
   return withGitIndex(
     git,
     (index) => changesFromIndex(index, branch, sha, warn),

@@ -192,7 +192,7 @@ The runner reads these variables when the service starts.
 | `CONDUCTIVE_WORKSPACE_TOKEN`  | Yes      | The workspace token. The runner sends it as a bearer token.           |
 | `CONDUCTIVE_RUNNER_URL`       | Yes      | The `https:` or `wss:` URL of the runner route.                       |
 | `CONDUCTIVE_REPOSITORY`       | Yes      | The folder of the workspace repository.                               |
-| `CONDUCTIVE_DEFAULT_BRANCH`   | Yes      | The default branch, as a name that Git resolves in that folder.       |
+| `CONDUCTIVE_DEFAULT_BRANCH`   | Yes      | The workspace base branch, as a name that Git resolves in that folder.       |
 | `CONDUCTIVE_HOME`             | No       | The home folder of the agents. The default is the home of the user.   |
 | `CONDUCTIVE_STATE_PATH`       | No       | The state file. The default is `.conductive/runner-state.json` there. |
 
@@ -203,7 +203,9 @@ The runner reads these variables when the service starts.
   that Boat writes, as [Computer tools](agent-tools.md#computer-tools) says.
 - `CONDUCTIVE_DEFAULT_BRANCH` is the base of the file marks, the Changes
   list, and the changed files of each turn. Each diff request names its own
-  base branch. File reports compare the commit of that branch, the Git ID
+  base branch. Changes, file marks, and diffs use its merge base with `HEAD`.
+  Resolution prefers `refs/remotes/origin/<base branch>` when that ref exists.
+  File reports compare that merge base, the Git ID
   of each file, and a streamed hash of the bytes that a read returns. That
   hash uses the same path checks as a read, and a fixed value for a refused
   or missing target. So an edit, a link into an ignored folder, or a clean

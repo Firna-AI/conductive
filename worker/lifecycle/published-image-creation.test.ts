@@ -48,7 +48,7 @@ it('creates from captured image repositories while current settings and selectio
     env: { CURRENT_ENV: 'current-value' },
   })
   expect(lifecycleCommandBody(boat.commands[0])).toContain(
-    "git fetch origin 'main'",
+    "git fetch origin '+refs/heads/main:refs/remotes/origin/main'",
   )
   const accepted = fixture.starts.get(created.workspace.id)?.lastAccepted()
   expect(accepted).toMatchObject({
@@ -174,7 +174,7 @@ it('leases the image and captured branch from the same publication at claim admi
   expect(boat.starts).toHaveLength(1)
   expect(boat.starts[0]).toMatchObject({ from: 'next-image' })
   expect(lifecycleCommandBody(boat.commands[0])).toContain(
-    "git fetch origin 'published-next'",
+    "git fetch origin '+refs/heads/published-next:refs/remotes/origin/published-next'",
   )
   expect(
     await db

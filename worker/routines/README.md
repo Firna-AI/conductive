@@ -41,7 +41,11 @@ The first session uses the owner's own login, independent of its share setting.
 It calls the existing workspace create and first-message admission paths.
 It does not wait for cloud computer startup.
 The minute schedule scan calls this starter.
-Webhook callers can reuse it but are not connected yet.
+Signed pull request webhooks call the same starter in the request background.
+The dispatch stores a queued run before the webhook reply.
+The minute scan recovers it if the background task did not start it.
+Opened and pushed runs pass the head branch and event commit to the internal create.
+Merged runs pass the pull request base branch.
 
 Failed checks, starts, and first turns update the run and the consecutive failure count in one D1 batch.
 Each terminal outcome counts once.
@@ -74,6 +78,17 @@ Each save resolves those logins again with the owner's GitHub user token.
 An empty `is` list means every org member.
 The `members` flag includes org members beside the named accounts of a nonempty `is` list.
 
+Pull request dispatch matches the repository, installation, and trigger event.
+It applies author filters before it checks the author and sender account IDs.
+An excluded author adds no row.
+An untrusted author or sender adds a skipped row atomically, without a start.
+Named accounts in Author is can pass the trust check beside org members.
+A matching event shares one delivery key across duplicate triggers.
+Own run branches and owner events during a queued, starting, working, or input run do not create another run.
+The insert checks both loop guards atomically, also across overlapping deliveries.
+The guard finds an admitted workspace through its stable first-message ID before the run stores its workspace link.
+The saved trigger facts supply the first message and remain available in run history.
+
 ## Development
 
 Run `npm run test -- worker/routines` from the repository root with Node 24.
@@ -95,6 +110,8 @@ The schedule tests use fixed dates around changes of summer time.
 - [latest-run-data.ts](latest-run-data.ts) reads the newest stored run of each routine.
 - [run-route.ts](run-route.ts) serves Run now and the runs list.
 - [run-runtime.ts](run-runtime.ts) connects the starter to the real workspace object.
+- [pull-request-dispatch.ts](pull-request-dispatch.ts) filters events, stores runs, and schedules background starts.
+- [pull-request-data.ts](pull-request-data.ts) reads matching routines, org accounts, and loop guards.
 - [run-starter.ts](run-starter.ts) starts or skips a stored queued run.
 - [run-record-data.ts](run-record-data.ts) stores run keys, message IDs, owner snapshots, and workspace links.
 - [run-admission-data.ts](run-admission-data.ts) checks current access and finds existing creation attempts.

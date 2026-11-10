@@ -18,6 +18,7 @@ export interface WorkspaceRow {
   avatarUrl: string | null
   name: string
   branch: string
+  baseBranch?: string | null
   sandboxId: string | null
   state: WorkspaceState
   createdAt: number
@@ -33,7 +34,7 @@ export interface WorkspaceRow {
 const columns = `w.id, w.org_id AS orgId, w.repository_id AS repositoryId,
   w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
   u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
-  w.name, w.branch, w.sandbox_id AS sandboxId, w.state,
+  w.name, w.branch, COALESCE(w.base_branch, (SELECT default_branch FROM repositories WHERE id = w.repository_id AND org_id = w.org_id)) AS baseBranch, w.sandbox_id AS sandboxId, w.state,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
@@ -93,6 +94,7 @@ export async function insertWorkspace(
     senderUserId?: string
     city: string
     branch: string
+    baseBranch?: string
     sessionId: string
     turnId: string
     message: SendMessageRequest
@@ -125,8 +127,8 @@ export async function insertWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
+       name, branch, base_branch, state, created_at, updated_at, last_activity_at, position)
+       SELECT ?, ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
          (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
           WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
        WHERE ${activeOrgIdPredicate('?')}`,
@@ -139,6 +141,7 @@ export async function insertWorkspace(
         section.id,
         input.city,
         input.branch,
+        input.baseBranch ?? null,
         input.now,
         input.now,
         input.now,

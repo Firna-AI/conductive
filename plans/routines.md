@@ -1588,43 +1588,53 @@ Depends on: 4
 
 Start runs from pull request events, on a branch from the pull request.
 
-- [ ] Add the migration with `base_branch` and `start_sha` on
+- [x] Add the migration with `base_branch` and `start_sha` on
       `workspace_creation_plans`, and `base_branch` on `workspaces`, in
       the range `202611090200`–`202611090259`.
-- [ ] Let a create start its branch from a base that only the Worker
+- [x] Let a create start its branch from a base that only the Worker
       passes: the plan columns, the fetch of the base branch, the branch
       at the head commit, the `gh-merge-base` setting, and the step
       labels.
-  - [ ] Test a create from the head of a pull request, and a create from
+  - [x] Test a create from the head of a pull request, and a create from
         the base branch after a merge, with the fake Git server.
-- [ ] Keep the base branch at each start: the create, a resume, and the
+- [x] Keep the base branch at each start: the create, a resume, and the
       restart near day 14 give it to the runner.
-  - [ ] Test that a resumed run workspace still compares with the head
+  - [x] Test that a resumed run workspace still compares with the head
         branch of its pull request.
-- [ ] Let the runner compare Changes and each diff from the merge base of
+- [x] Let the runner compare Changes and each diff from the merge base of
       the branch and its base branch.
-  - [ ] Test that a new commit on the base branch does not show as
+  - [x] Test that a new commit on the base branch does not show as
         reverted in Changes.
-- [ ] Add the base branch to the workspace view and to the state of the
+- [x] Add the base branch to the workspace view and to the state of the
       pull request bar.
 
-- [ ] Read the action, the number, `merged`, the head commit, the base
+- [x] Read the action, the number, `merged`, the head commit, the base
       branch, the address, the author, and the sender in `webhookRoute`.
-- [ ] Add the `pullRequest` callback with its own error boundary. Find the
+- [x] Add the `pullRequest` callback with its own error boundary. Find the
       matching routines, skip a routine with a run workspace on the head
       branch, apply the author rule and the author filter of decision
       206 C, store each run or skipped run with its delivery key, and
       start the runs in the background.
-  - [ ] Test with signed recorded payloads, in a new test file, that each
+  - [x] Test with signed recorded payloads, in a new test file, that each
         of the three events starts a run.
-  - [ ] Test that another action, a fork, a repeated delivery, a run's
+  - [x] Test that another action, a fork, a repeated delivery, a run's
         own branch, and the owner's push during a run for the same pull
         request start no run.
-  - [ ] Test that a failed banner refresh still starts the run.
-  - [ ] Test that an author or a sender outside the org gives a skipped
+  - [x] Test that a failed banner refresh still starts the run.
+  - [x] Test that an author or a sender outside the org gives a skipped
         run with its reason, that a bot in "is" starts a run, and that an
         author in "is not" starts no run and adds no row.
-- [ ] Update the GitHub README and the Worker README.
+- [x] Update the GitHub README and the Worker README.
+
+Milestone completed on 10 November 2026. A Codex non-ui implementor
+session built it. It changed the exact expectations of existing tests for
+the intended behaviour: three view replies now hold `baseBranch`, and two
+fetch commands of the create name the remote-tracking ref. The
+orchestrator re-ran 266 Worker tests of `worker/github`, `worker/routines`,
+`worker/lifecycle`, `worker/app-api`, and `worker/scheduled.test.ts`, the
+runner's typecheck and 123 tests, and the typecheck, lint, format,
+file-length, and export checks. The handoff is in
+`.context/routines/reports/m6-worker.md`.
 
 ## Milestone 7: Routines list and sidebar link
 

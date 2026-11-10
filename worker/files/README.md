@@ -4,6 +4,8 @@ This module serves the Files and Changes API for Conductive.
 It keeps the runner's last tree and branch changes in workspace Durable Object storage.
 It joins the numbered parts of each full runner report before it stores the complete report.
 It also sends file and diff requests to the connected runner.
+Diff requests use the stored workspace base branch, with the repository default as a fallback.
+The runner compares from the merge base with the current workspace branch.
 A disconnected file read uses the shared sandbox provider on the server.
 
 The workspace Durable Object owns one `WorkspaceFiles` over the chat storage.
@@ -124,7 +126,8 @@ The outer Worker forwards its request through `fetch`, with its cancellation sig
 Its `read` and `diff` methods return `null` when the runner is disconnected.
 An adapter must preserve that result.
 It must carry request cancellation to the object or detach pending requests when its connection ends.
-The handler gets the default branch from the workspace's repository record in D1.
+The handler reads the stored workspace base from D1.
+A null base uses the repository default branch.
 It does not use a browser-supplied base branch.
 
 The repository root is required because lifecycle and runner code own the checkout folder.
@@ -158,7 +161,8 @@ The storage tests use SQLite Durable Object storage in Miniflare and evict the o
 The API tests use local D1, the existing fake runner, and FakeBoat.
 The part joining and report repair tests run through the chat backend:
 `npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts`.
-No migration is required.
+File reports remain in Durable Object storage.
+The D1 workspace schema holds the base branch.
 
 ### Key Code
 

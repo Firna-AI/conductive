@@ -79,6 +79,7 @@ async function prepareWorkspaceRecords(
       senderUserId: creation.sender.id,
       city: creation.city,
       branch: creation.branch,
+      baseBranch: job.baseBranch,
       sessionId: creation.sessionId,
       turnId: job.turnId,
       message: creation.request,

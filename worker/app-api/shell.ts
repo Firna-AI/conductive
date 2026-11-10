@@ -74,6 +74,7 @@ export async function shellRoute(
     return Response.json({
       view: await savedWorkspaceView(env.DB, workspaceId, userId),
       routine: await workspaceRoutine(env.DB, orgId, workspaceId),
+      baseBranch: workspace.baseBranch,
     })
   if (path === viewPath && request.method === 'PUT') {
     requireWritableWorkspace(workspace)
@@ -88,6 +89,7 @@ export async function shellRoute(
     return Response.json({
       view,
       routine: await workspaceRoutine(env.DB, orgId, workspaceId),
+      baseBranch: workspace.baseBranch,
     })
   }
   if (path === readPath && request.method === 'PUT') {

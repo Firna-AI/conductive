@@ -105,6 +105,8 @@ interface PlanRow {
   environmentCiphertext: string | null
   imageName: string | null
   defaultBranch: string
+  baseBranch: string | null
+  startSha: string | null
   repositoriesJson: string | null
   repositoryLocationsJson: string | null
   messageText: string | null
@@ -126,7 +128,7 @@ export async function recordedCreationJob(
       `SELECT p.repository_id AS repositoryId, p.owner_user_id AS ownerUserId,
     p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.branch,
     p.start_attempt AS attempt, p.startup_script AS startupScript, p.environment_ciphertext AS environmentCiphertext,
-    p.image_name AS imageName, p.default_branch AS defaultBranch, p.agent, p.model, p.effort,
+    p.image_name AS imageName, p.default_branch AS defaultBranch, p.base_branch AS baseBranch, p.start_sha AS startSha, p.agent, p.model, p.effort,
     p.repositories_json AS repositoriesJson, p.repository_locations_json AS repositoryLocationsJson, p.message_text AS messageText,
     p.attachment_ids_json AS attachmentIds, a.created_at AS createdAt
     FROM workspace_creation_plans p JOIN workspace_creation_attempts a ON a.workspace_id = p.workspace_id
@@ -150,6 +152,8 @@ export async function recordedCreationJob(
     startupScript: readSavedScript(plan.startupScript),
     environmentCiphertext: plan.environmentCiphertext,
     defaultBranch: plan.defaultBranch,
+    baseBranch: plan.baseBranch ?? undefined,
+    startSha: plan.startSha ?? undefined,
     repositoryLocations:
       plan.repositoriesJson === null
         ? undefined

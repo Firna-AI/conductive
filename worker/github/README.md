@@ -6,6 +6,10 @@ It stores its state and events in the [chat store](../chat/README.md) of the wor
 The production Worker mounts both browser reads and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
+Verified pull request events also store [routine runs](../routines/README.md).
+The run callback and banner refresh have separate error boundaries.
+The production composition starts stored runs through `waitUntil` after webhook handling.
+Without a request execution context, the minute scan recovers the queued runs.
 
 The [banner protocol](../../docs/protocol/github-banner.md) states the requirements.
 The [shared contracts](../../src/shared/github.ts) define the response bodies.
@@ -128,7 +132,8 @@ A foreign fork's same-named branch cannot update a workspace in the base reposit
 Push routing sends the active repository workspaces to their coordinators as candidates.
 Each coordinator reads the current head branch, head commit, pull request, and base branch.
 It refreshes only when the pushed branch is that head or base.
-The base comes from the pull request, or the repository default when no pull request exists.
+An explicit workspace base takes precedence.
+Otherwise, the base comes from the pull request, or the repository default when no pull request exists.
 An unrelated push returns `null` and stores no snapshot or event.
 SHA-only events read current workspace state without relying on the payload's pull request list.
 The event commit can be a test merge commit instead of the branch tip.
@@ -145,7 +150,8 @@ A failed send to one tab does not fail the refresh.
 
 Pull request lookup prefers an open request for the exact repository and branch.
 It then considers merged and closed requests, in GitHub's newest-created order.
-Without a pull request, a GraphQL comparison uses the explicit head commit and reads the commit count and repository identity.
+Without a pull request, a GraphQL comparison uses the explicit head commit and the workspace base branch.
+It reads the commit count and repository identity.
 It selects no file patches.
 The reader follows every lookup, review, and check connection page.
 The combined GitHub check rollup supplies check runs and status contexts in returned order.
@@ -234,9 +240,10 @@ API references:
 ### Key Code
 
 - [Production composition](../features/github.ts) owns the state adapter and retry alarm.
-- [composition.ts](composition.ts) mounts verified webhooks and image refresh.
+- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background routine starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
-- [webhook.ts](webhook.ts) verifies deliveries and starts workspace refreshes.
+- [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
+- [webhook-routing.ts](webhook-routing.ts) reads pull request facts and GitHub account IDs after signature verification.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
 - [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, and replays delivery receipts.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.

@@ -34,6 +34,14 @@ gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest` serves, the options of its caller, and the rules
 of a create.
 
+The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
+The creation claim keeps them in its saved plan.
+The fetch updates `refs/remotes/origin/<base branch>`.
+The branch phase uses the event commit when it exists, or the fetched head otherwise.
+It sets the branch's `gh-merge-base` Git setting to the workspace base.
+Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
+A null stored base uses the repository default branch.
+
 ### Input activity
 
 [Input activity](routes.md#input-activity) gives how one
@@ -125,6 +133,7 @@ object holds the lifecycle state, the turn records, and the events.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.
+- [`creation-fetch-label.ts`](creation-fetch-label.ts) names the pull request or base branch in the fetch step from saved run facts.
 - [`start-progress.ts`](start-progress.ts): the command steps and the move
   into the saved runner readiness phase.
 - [`start-completion.ts`](start-completion.ts): restores runner-step progress

@@ -59,7 +59,7 @@ export async function advanceStartMachine(
       WORKSPACE_TOKEN: token,
       CONDUCTIVE_WORKSPACE_ID: job.workspaceId,
       CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
-      CONDUCTIVE_DEFAULT_BRANCH: job.defaultBranch,
+      CONDUCTIVE_DEFAULT_BRANCH: job.baseBranch ?? job.defaultBranch,
       CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
         locations,
         row.repositoryId,

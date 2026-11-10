@@ -1,6 +1,7 @@
 import type { RoutineRunTrigger } from '../../src/shared/routines'
 import type { AppDependencies } from '../env'
 import { readRunTrigger } from './stored-run'
+import { pullRequestLoopGuard } from './pull-request-data'
 
 export interface StoredRoutineRun {
   id: string
@@ -37,27 +38,37 @@ export async function recordRoutineRun(
     runKey: string
     trigger: RoutineRunTrigger
     ownerId?: string
+    triggersJson?: string
+    senderGitHubId?: number
+    skip?: { code: string; message: string }
   },
   dependencies: Pick<AppDependencies, 'now' | 'randomToken'>,
 ): Promise<string | null> {
   const now = dependencies.now()
+  const pullRequest =
+    input.trigger.kind === 'pull-request' ? input.trigger : null
   await db
     .prepare(
       `INSERT OR IGNORE INTO routine_runs
-    (id, routine_id, org_id, owner_user_id, run_key, message_id, trigger_json, created_at, updated_at)
-    SELECT ?, r.id, r.org_id, r.owner_user_id, ?, ?, ?, ?, ? FROM routines r
+    (id, routine_id, org_id, owner_user_id, run_key, message_id, trigger_json, state, error_code, error_message, created_at, updated_at)
+    SELECT ?, r.id, r.org_id, r.owner_user_id, ?, ?, ?, ?, ?, ?, ?, ? FROM routines r
     WHERE r.org_id = ? AND r.id = ? AND (? = 1 OR r.active = 1)
       AND (? IS NULL OR r.owner_user_id = ?)
+      AND (? IS NULL OR r.triggers_json = ?)
       AND EXISTS (SELECT 1 FROM orgs o JOIN users u ON u.id = r.owner_user_id
         JOIN org_members m ON m.org_id = o.id AND m.user_id = u.id
         WHERE o.id = r.org_id AND o.deleted_at IS NULL AND o.suspended_at IS NULL
-          AND u.suspended_at IS NULL)`,
+          AND u.suspended_at IS NULL)
+      ${pullRequestLoopGuard}`,
     )
     .bind(
       dependencies.randomToken(),
       input.runKey,
       dependencies.randomToken(),
       JSON.stringify(input.trigger),
+      input.skip ? 'skipped' : 'queued',
+      input.skip?.code ?? null,
+      input.skip?.message ?? null,
       now,
       now,
       input.orgId,
@@ -65,6 +76,12 @@ export async function recordRoutineRun(
       input.trigger.kind === 'run-now' ? 1 : 0,
       input.ownerId ?? null,
       input.ownerId ?? null,
+      input.triggersJson ?? null,
+      input.triggersJson ?? null,
+      pullRequest && input.senderGitHubId !== undefined ? 1 : 0,
+      pullRequest?.headBranch ?? null,
+      input.senderGitHubId ?? null,
+      pullRequest?.number ?? null,
     )
     .run()
   const row = await db

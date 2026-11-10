@@ -32,5 +32,5 @@ if [ -z "$conductive_remote_refs" ]; then
     fi
   fi
 fi
-git fetch origin ${shellQuote(input.defaultBranch)}`
+git fetch origin ${shellQuote(`+refs/heads/${input.defaultBranch}:refs/remotes/origin/${input.defaultBranch}`)}`
 }

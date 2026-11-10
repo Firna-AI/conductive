@@ -101,7 +101,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             )
           if (path === MACHINE_PATHS.githubWebhook)
             return respond(
-              await productionGitHubWebhook(request, env, dependencies),
+              await productionGitHubWebhook(
+                request,
+                env,
+                dependencies,
+                execution,
+              ),
             )
           if (path === MACHINE_PATHS.gitCredential) {
             const machineEnv = env

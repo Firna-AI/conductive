@@ -87,6 +87,16 @@ export async function startRoutineRun(
         },
       },
       admission.owner,
+      run.trigger.kind === 'pull-request'
+        ? {
+            branch:
+              run.trigger.event === 'merged'
+                ? run.trigger.baseBranch
+                : run.trigger.headBranch,
+            startSha:
+              run.trigger.event === 'merged' ? undefined : run.trigger.headSha,
+          }
+        : undefined,
     )
     await runtime.acceptFirstMessage(created.first)
     await attachRunWorkspace(

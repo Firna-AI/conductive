@@ -52,6 +52,10 @@ It also records the owner when a run enters the queue.
 The saved owner prevents an old queued request from using a replacement owner's logins.
 Message indexes support first-turn reports and creation recovery.
 
+`202611090200_workspace_base_branches.sql` adds the nullable workspace base branch and the creation plan base branch and start commit.
+A null base branch uses the repository default branch.
+Existing rows keep that fallback.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -87,6 +91,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 17 Verification | `202611071900`–`202611071959` |
 | Routines: records and routes | `202611090000`–`202611090059` |
 | Routines: runs and Run now | `202611090100`–`202611090159` |
+| Routines: pull request runs | `202611090200`–`202611090259` |
 
 ## Key code
 

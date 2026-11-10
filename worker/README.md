@@ -50,7 +50,10 @@ The run starter joins repeated creates through a stable first-message ID and ret
 The runs list projects the current workspace state and retains failed-start and first-turn causes.
 Three failed runs in a row turn the routine off.
 The minute schedule scan calls the same starter.
-Pull request dispatch does not call the starter yet.
+Signed pull request webhooks store matching runs before the reply.
+Their background tasks call the same starter.
+The minute scan recovers a queued run if its background task did not start it.
+Pull request runs keep their own branch and their workspace base branch.
 
 On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, workspace create/list
@@ -97,6 +100,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [routines/route.ts](routines/route.ts) serves routine records after the request gate.
 - [routines/run-route.ts](routines/run-route.ts) serves Run now and paginated run history.
 - [routines/run-starter.ts](routines/run-starter.ts) starts queued runs with the owner's logins.
+- [routines/pull-request-dispatch.ts](routines/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
 - [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due routines and retries up to 50 old queued runs each minute.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.

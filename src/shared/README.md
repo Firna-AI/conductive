@@ -116,6 +116,7 @@ The git credential payload is not defined yet.
   Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
   Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
 - [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.
+  Replies also carry `baseBranch`, resolved by the Worker. View writes cannot change it.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.
 - [Runner fakes](../../worker/test-support/README.md) use these message types.
