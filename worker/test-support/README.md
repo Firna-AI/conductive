@@ -173,6 +173,7 @@ A callback counts as complete only after the `waitUntil` work that it starts end
   stored Worker envelopes and parsed browser envelopes.
 
 - `harness.ts` owns D1 setup and the HTTP test app.
+  Its HTTP requests provide a fake execution context for credential task ownership.
 - [native-close.test-support.ts](native-close.test-support.ts): `NativeCloseProbe`, the close-first control of the native browser, runner, and Mac fixture entries.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
 - `native-global-setup.ts` builds and provides the current native bundle before tests and watch reruns.

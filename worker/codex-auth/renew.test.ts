@@ -1,21 +1,14 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
-import { saveAccountLogin } from '../app-api/account-data'
-import {
-  deviceFixture,
-  jwt,
-  oauthTokens,
-} from '../app-api/codex-device.test-support'
-import { agentLoginContext } from '../chat/queries'
-import { decrypt, encrypt } from '../security/crypto'
+import { jwt, oauthTokens } from '../app-api/codex-device.test-support'
 import {
   createHarness,
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
 import { freshCodexLogin } from './renew'
-import { parseCodexTokens } from './tokens'
+import { barrier, savedLogin } from './renew.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -31,62 +24,8 @@ beforeEach(async () => {
 })
 afterAll(async () => harness.dispose())
 
-function barrier() {
-  let release = () => {}
-  const promise = new Promise<void>((resolve) => {
-    release = resolve
-  })
-  return { promise, release }
-}
-
-async function savedLogin(expiresAt = TEST_TIME + 30_000) {
-  const fixture = await deviceFixture(harness)
-  const old = oauthTokens('old', expiresAt)
-  const tokens = {
-    accessToken: old.access_token,
-    refreshToken: old.refresh_token,
-    idToken: old.id_token,
-    accountId: 'chatgpt-account',
-    expiresAt,
-  }
-  await saveAccountLogin(
-    harness.env.DB,
-    fixture.account.user.id,
-    'codex',
-    'token',
-    await encrypt(
-      JSON.stringify(tokens),
-      agentLoginContext(fixture.account.user.id, 'codex'),
-      harness.env.BOAT_KEY_ENCRYPTION_KEY,
-    ),
-    TEST_TIME,
-  )
-  const read = async () => {
-    const row = await harness.env.DB.prepare(
-      "SELECT ciphertext, updated_at, refresh_claim, failure_cause FROM agent_logins WHERE user_id = ? AND agent = 'codex'",
-    )
-      .bind(fixture.account.user.id)
-      .first<{
-        ciphertext: string
-        updated_at: number
-        refresh_claim: string | null
-        failure_cause: string | null
-      }>()
-    if (!row) throw new Error('The login is missing.')
-    const tokens = parseCodexTokens(
-      await decrypt(
-        row.ciphertext,
-        agentLoginContext(fixture.account.user.id, 'codex'),
-        harness.env.BOAT_KEY_ENCRYPTION_KEY,
-      ),
-    )
-    return { ...row, tokens }
-  }
-  return { ...fixture, old: tokens, read }
-}
-
 it('serializes renewal across Worker instances and commits rotation before returning the access token', async () => {
-  const fixture = await savedLogin()
+  const fixture = await savedLogin(harness)
   const entered = barrier(),
     respond = barrier(),
     waiting = barrier(),
@@ -100,6 +39,7 @@ it('serializes renewal across Worker instances and commits rotation before retur
     harness.env,
     fixture.account.user.id,
     fixture.dependencies,
+    fixture.tasks,
   )
   const firstStored = first.then(async (tokens) => {
     try {
@@ -114,13 +54,18 @@ it('serializes renewal across Worker instances and commits rotation before retur
   })
   await entered.promise
   const otherEnv = { ...harness.env, DB: new Proxy(harness.env.DB, {}) }
-  const second = freshCodexLogin(otherEnv, fixture.account.user.id, {
-    ...fixture.dependencies,
-    wait: async () => {
-      waiting.release()
-      await committed.promise
+  const second = freshCodexLogin(
+    otherEnv,
+    fixture.account.user.id,
+    {
+      ...fixture.dependencies,
+      wait: async () => {
+        waiting.release()
+        await committed.promise
+      },
     },
-  })
+    fixture.tasks,
+  )
   await waiting.promise
   respond.release()
   const [secondTokens, firstTokens] = await Promise.all([second, firstStored])
@@ -135,12 +80,13 @@ it('serializes renewal across Worker instances and commits rotation before retur
 })
 
 it('renews one rejected access token once and lets overlapping 401 requests use the committed rotation', async () => {
-  const fixture = await savedLogin(TEST_TIME + 3_600_000)
+  const fixture = await savedLogin(harness, TEST_TIME + 3_600_000)
   expect(
     await freshCodexLogin(
       harness.env,
       fixture.account.user.id,
       fixture.dependencies,
+      fixture.tasks,
     ),
   ).toEqual(fixture.old)
   expect(fixture.calls).toHaveLength(0)
@@ -150,12 +96,14 @@ it('renews one rejected access token once and lets overlapping 401 requests use 
       harness.env,
       fixture.account.user.id,
       fixture.dependencies,
+      fixture.tasks,
       fixture.old.accessToken,
     ),
     freshCodexLogin(
       harness.env,
       fixture.account.user.id,
       fixture.dependencies,
+      fixture.tasks,
       fixture.old.accessToken,
     ),
   ])
@@ -166,6 +114,7 @@ it('renews one rejected access token once and lets overlapping 401 requests use 
       harness.env,
       fixture.account.user.id,
       fixture.dependencies,
+      fixture.tasks,
       fixture.old.accessToken,
     ),
   ).toEqual(results[0])
@@ -177,6 +126,7 @@ it('renews one rejected access token once and lets overlapping 401 requests use 
     harness.env,
     fixture.account.user.id,
     fixture.dependencies,
+    fixture.tasks,
     results[0].accessToken,
   )
   await expect(minimalPromise).resolves.toEqual({
@@ -189,10 +139,15 @@ it('renews one rejected access token once and lets overlapping 401 requests use 
 })
 
 it('marks a refused renewal unusable and reconnect clears its failure and claim', async () => {
-  const fixture = await savedLogin()
+  const fixture = await savedLogin(harness)
   fixture.answers.push(new Response('secret-upstream-token', { status: 401 }))
   await expect(
-    freshCodexLogin(harness.env, fixture.account.user.id, fixture.dependencies),
+    freshCodexLogin(
+      harness.env,
+      fixture.account.user.id,
+      fixture.dependencies,
+      fixture.tasks,
+    ),
   ).rejects.toMatchObject({
     code: 'codex_reconnect_required',
     status: 401,
@@ -212,7 +167,12 @@ it('marks a refused renewal unusable and reconnect clears its failure and claim'
     ],
   })
   await expect(
-    freshCodexLogin(harness.env, fixture.account.user.id, fixture.dependencies),
+    freshCodexLogin(
+      harness.env,
+      fixture.account.user.id,
+      fixture.dependencies,
+      fixture.tasks,
+    ),
   ).rejects.toMatchObject({ code: 'codex_reconnect_required' })
   expect(fixture.calls).toHaveLength(1)
   const reconnected = await harness.request(
@@ -241,14 +201,19 @@ it('marks a refused renewal unusable and reconnect clears its failure and claim'
 })
 
 it('never takes over an abandoned refresh claim or switches the connected account', async () => {
-  const fixture = await savedLogin()
+  const fixture = await savedLogin(harness)
   await harness.env.DB.prepare(
     "UPDATE agent_logins SET refresh_claim = 'abandoned', refresh_claim_until = ? WHERE user_id = ? AND agent = 'codex'",
   )
     .bind(TEST_TIME - 1, fixture.account.user.id)
     .run()
   await expect(
-    freshCodexLogin(harness.env, fixture.account.user.id, fixture.dependencies),
+    freshCodexLogin(
+      harness.env,
+      fixture.account.user.id,
+      fixture.dependencies,
+      fixture.tasks,
+    ),
   ).rejects.toMatchObject({ code: 'codex_reconnect_required' })
   expect((await fixture.read()).failure_cause).toBe('ChatGPT access expired.')
   expect(fixture.calls).toHaveLength(0)
@@ -266,7 +231,12 @@ it('never takes over an abandoned refresh claim or switches the connected accoun
     }),
   )
   await expect(
-    freshCodexLogin(harness.env, fixture.account.user.id, fixture.dependencies),
+    freshCodexLogin(
+      harness.env,
+      fixture.account.user.id,
+      fixture.dependencies,
+      fixture.tasks,
+    ),
   ).rejects.toMatchObject({ code: 'codex_reconnect_required' })
   expect((await fixture.read()).tokens).toEqual(fixture.old)
   expect((await fixture.read()).failure_cause).toBe('ChatGPT access expired.')

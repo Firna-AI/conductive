@@ -56,9 +56,12 @@ Check both routes again at each update of the pinned program.
   the gateway. The Worker follows routing and hides routed origins.
 - The gateway refuses the first WebSocket attempt. Codex falls back to
   HTTP streaming without zstd request compression.
-- The gateway renews a refused real token and retries once. A final refusal
-  returns 403 with a reconnect cause. It never sends a final 401 to Codex.
-  Pinned Codex would otherwise try to renew the placeholder refresh token.
+- The gateway sends no 401 on the four ChatGPT routes, so Codex never uses
+  the placeholder refresh token.
+- After the retryable 502 of `POST /backend-api/codex/responses`, pinned
+  Codex must send the request again. Each pin update checks that resend.
+  [How the agents reach the gateway](../docs/protocol/model-gateway.md#how-the-agents-reach-the-gateway)
+  gives the gateway recovery rule.
 - Closing or stopping the process removes its `auth.json` after exit.
   Failed setup and canceled file writes use the same removal path.
   Before its first connection, the runner removes stale login files and

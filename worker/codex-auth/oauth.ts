@@ -7,6 +7,7 @@ export const CODEX_VERIFICATION_URL = 'https://auth.openai.com/codex/device'
 const OAUTH_URL = 'https://auth.openai.com/oauth/token'
 const DEVICE_URL = 'https://auth.openai.com/api/accounts/deviceauth'
 const MIN_POLL_SECONDS = 5
+const TOKEN_TIMEOUT_MS = 20_000
 
 export type CodexAuthDependencies = Pick<AppDependencies, 'fetch' | 'now'> & {
   wait?: (milliseconds: number) => Promise<void>
@@ -86,7 +87,7 @@ export async function exchangeCodexDevice(
   device: DeviceAuthorization,
   dependencies: CodexAuthDependencies,
 ): Promise<CodexTokens | null> {
-  const signal = AbortSignal.timeout(30_000)
+  const signal = AbortSignal.timeout(TOKEN_TIMEOUT_MS)
   const response = await dependencies.fetch(
     post(
       `${DEVICE_URL}/token`,
@@ -127,7 +128,11 @@ export async function refreshCodexTokens(
     client_id: CODEX_CLIENT_ID,
     refresh_token: previous.refreshToken,
   }
-  const value = await readReply(await dependencies.fetch(post(OAUTH_URL, body)))
+  const value = await readReply(
+    await dependencies.fetch(
+      post(OAUTH_URL, body, AbortSignal.timeout(TOKEN_TIMEOUT_MS)),
+    ),
+  )
   const tokens = parseOAuthCodexTokens(
     {
       ...value,

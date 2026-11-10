@@ -46,6 +46,7 @@ it('reads the committed rotation when recovery completes during its pending-stat
             harness.env,
             client.fixture.member.id,
             dependencies,
+            client.tasks,
             client.secret,
           )
           return false

@@ -8,6 +8,8 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { codexDeviceRoute } from './codex-device'
+import type { CodexTaskOwner } from '../codex-auth/tasks'
+import { fakeCodexTasks } from '../codex-auth/tasks.test-support'
 
 export function jwt(claims: Record<string, unknown>): string {
   return `e30.${btoa(JSON.stringify(claims)).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_')}.signature`
@@ -31,6 +33,7 @@ export function oauthTokens(access = 'first', expiry = TEST_TIME + 3_600_000) {
 export async function deviceFixture(
   harness: TestHarness,
   existingCookie?: string,
+  tasks: CodexTaskOwner = fakeCodexTasks().owner,
 ) {
   const cookie = existingCookie ?? (await harness.login())
   const account = readAccount(
@@ -70,6 +73,7 @@ export async function deviceFixture(
         harness.env,
         await gate(request, harness.env, now),
         dependencies,
+        tasks,
       )
       if (!response) throw new Error('The route did not answer.')
       return response
@@ -109,6 +113,7 @@ export async function deviceFixture(
     calls,
     answers,
     dependencies,
+    tasks,
     request,
     start,
     approve,

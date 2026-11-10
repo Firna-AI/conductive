@@ -3,6 +3,7 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { decrypt, encrypt, randomToken } from '../security/crypto'
 import { refreshCodexTokens, type CodexAuthDependencies } from './oauth'
+import type { CodexTaskOwner } from './tasks'
 import {
   claimCodexRefresh,
   failCodexRefresh,
@@ -147,6 +148,7 @@ export async function freshCodexLogin(
   env: AppEnv,
   userId: string,
   dependencies: CodexAuthDependencies,
+  tasks: CodexTaskOwner,
   failedAccessToken?: string,
 ): Promise<CodexTokens> {
   let running = renewals.get(env.DB)
@@ -156,19 +158,28 @@ export async function freshCodexLogin(
   }
   const existing = running.get(userId)
   if (existing) {
-    const result = await existing
+    const result = await tasks.run(() => existing)
     if (
       failedAccessToken !== undefined &&
       result.accessToken === failedAccessToken
     )
-      return freshCodexLogin(env, userId, dependencies, failedAccessToken)
+      return freshCodexLogin(
+        env,
+        userId,
+        dependencies,
+        tasks,
+        failedAccessToken,
+      )
     return result
   }
-  const pending = renew(env, userId, dependencies, failedAccessToken)
-  running.set(userId, pending)
-  try {
-    return await pending
-  } finally {
-    running.delete(userId)
-  }
+  const shared = running
+  const pending = tasks.run(async () => {
+    try {
+      return await renew(env, userId, dependencies, failedAccessToken)
+    } finally {
+      shared.delete(userId)
+    }
+  })
+  shared.set(userId, pending)
+  return pending
 }

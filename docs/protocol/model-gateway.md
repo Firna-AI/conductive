@@ -119,6 +119,9 @@ while the change is open. Its pull request keeps them after the merge.
   of Codex or its helpers. The gateway address is in its settings.
 - Only the Worker renews the real sign-in. It saves each rotated refresh
   token before using the new access token. Each login has one renewal at a time.
+- A renewal and its credential writes continue after the initiating request ends,
+  within the Worker's background-task limit.
+  Uploads and model answers keep their own request lifetime.
 - After an OpenAI 401, a turn can claim one renewal for all its requests.
   The app saves the claim before renewal. Concurrent calls and resends
   share that claim, including after a restart.

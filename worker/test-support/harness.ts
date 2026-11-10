@@ -2,6 +2,7 @@ import { API_PATHS, type Org } from '../../src/shared/api'
 import type { SessionResponse } from '../../src/shared/account'
 import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
+import { fakeCodexTasks } from '../codex-auth/tasks.test-support'
 import type { AppEnv } from '../env'
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
 import { FakeBoat } from './fake-boat'
@@ -57,7 +58,11 @@ export async function createHarness(
         : github.fetch(request),
   })
   const fetch = (path: string, init?: RequestInit) =>
-    app.fetch(new Request(`${TEST_ORIGIN}${path}`, init), env)
+    app.fetch(
+      new Request(`${TEST_ORIGIN}${path}`, init),
+      env,
+      fakeCodexTasks().execution,
+    )
   const request = (path: string, session: string, init: RequestInit = {}) => {
     const headers = new Headers(init.headers)
     headers.set('Cookie', session)

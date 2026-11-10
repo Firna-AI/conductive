@@ -3,6 +3,7 @@ import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/ch
 import { scheduleConnectionCheck } from '../security/connection-access'
 import type { CodexTokens } from '../codex-auth/tokens'
 import type { CodexRotation } from '../codex-auth/rotation'
+import type { CodexTaskOwner } from '../codex-auth/tasks'
 import { codexGatewayAuth } from './codex-auth'
 import { codexTokenUpstream } from './codex-upstream'
 import {
@@ -20,6 +21,7 @@ import type { TurnTokenEndpoint } from './types'
 
 export interface GatewayRuntime {
   dependencies: AppDependencies
+  codexTasks: CodexTaskOwner
   workspaceAllowed(id: string): Promise<boolean>
   workspace(id: string): TurnTokenEndpoint
   codexLogin?(userId: string, failedAccessToken?: string): Promise<CodexTokens>
@@ -133,9 +135,7 @@ export async function routeModelGateway(
                       'model_gateway_unavailable',
                       'The login failure could not be saved.',
                     )
-                  return lifetime.wait(
-                    runtime.codexLoginFailed(loginOwnerId, failed),
-                  )
+                  return runtime.codexLoginFailed(loginOwnerId, failed)
                 },
                 async (failed) => {
                   if (!runtime.codexWaitForRotation || !loginOwnerId)
@@ -173,6 +173,7 @@ export async function routeModelGateway(
                 async () => {
                   await endpoint.checkTurnToken(token, 'complete')
                 },
+                runtime.codexTasks,
               ),
             )
           : null

@@ -1,6 +1,7 @@
 import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import type { CodexRotation } from '../codex-auth/rotation'
 import type { CodexTokens } from '../codex-auth/tokens'
+import type { CodexTaskOwner } from '../codex-auth/tasks'
 import { HttpError } from '../http'
 import { GatewayRequestError } from './errors'
 
@@ -17,6 +18,7 @@ export async function codexGatewayAuth(
   saveFailure: (failedAccessToken: string) => Promise<boolean>,
   waitForRotation: (failedAccessToken: string) => Promise<CodexRotation>,
   completeRecovery: () => Promise<void>,
+  tasks: CodexTaskOwner,
 ): Promise<CodexGatewayAuth> {
   const readCurrent = async (failed?: string) => {
     try {
@@ -32,30 +34,32 @@ export async function codexGatewayAuth(
   const auth: CodexGatewayAuth = {
     current: await readCurrent(),
     secrets: [],
-    async renew(failedAccessToken) {
-      if (await claimRecovery()) {
-        try {
-          auth.current = await readCurrent(failedAccessToken)
-          remember()
-        } finally {
-          await completeRecovery()
+    renew: (failedAccessToken) =>
+      tasks.run(async () => {
+        if (await claimRecovery()) {
+          try {
+            auth.current = await readCurrent(failedAccessToken)
+            remember()
+          } finally {
+            await completeRecovery()
+          }
+          return
         }
-        return
-      }
-      const rotation = await currentRotation(failedAccessToken)
-      if (rotation.state === 'rotated') {
-        auth.current = rotation.tokens
-        remember()
-        return
-      }
-      if (rotation.state === 'pending') return retryLater()
-      return rejectUnchanged(failedAccessToken)
-    },
-    async reject() {
-      const rotation = await currentRotation(auth.current.accessToken)
-      if (rotation.state !== 'unchanged') return retryLater()
-      return rejectUnchanged(auth.current.accessToken)
-    },
+        const rotation = await currentRotation(failedAccessToken)
+        if (rotation.state === 'rotated') {
+          auth.current = rotation.tokens
+          remember()
+          return
+        }
+        if (rotation.state === 'pending') return retryLater()
+        return rejectUnchanged(failedAccessToken)
+      }),
+    reject: () =>
+      tasks.run(async () => {
+        const rotation = await currentRotation(auth.current.accessToken)
+        if (rotation.state !== 'unchanged') return retryLater()
+        return rejectUnchanged(auth.current.accessToken)
+      }),
   }
   async function currentRotation(failed: string) {
     try {

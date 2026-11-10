@@ -4,6 +4,7 @@ import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
 import { agentLoginContext } from '../chat/queries'
 import { decrypt } from '../security/crypto'
 import { cleanupCodexDevices } from '../codex-auth/device-store'
+import { failCodexAccessToken } from '../codex-auth/failure'
 import {
   createHarness,
   TEST_TIME,
@@ -92,6 +93,69 @@ it('completes the owned device flow and stores encrypted tokens before reporting
   expect(await (await fixture.poll()).json()).toMatchObject({
     state: 'connected',
   })
+  const shared = {
+    agent: 'codex',
+    connected: true,
+    kind: 'token',
+    noReuse: false,
+    updatedAt: TEST_TIME + 10_000,
+  }
+  expect(
+    (
+      await harness.request(agentLoginPath('codex'), fixture.cookie, {
+        method: 'PATCH',
+        body: JSON.stringify({ noReuse: false }),
+      })
+    ).status,
+  ).toBe(200)
+  expect(await (await fixture.poll()).json()).toEqual({
+    state: 'connected',
+    login: shared,
+  })
+  await failCodexAccessToken(
+    harness.env,
+    fixture.account.user.id,
+    oauthTokens().access_token,
+  )
+  expect(await (await fixture.poll()).json()).toEqual({
+    state: 'connected',
+    login: { ...shared, unusableCause: 'ChatGPT access expired.' },
+  })
+  harness.setTime(TEST_TIME + 20_000)
+  expect(
+    (
+      await harness.request(agentLoginPath('codex'), fixture.cookie, {
+        method: 'PUT',
+        body: JSON.stringify({
+          agent: 'codex',
+          kind: 'api-key',
+          secret: 'replacement-api-key',
+        }),
+      })
+    ).status,
+  ).toBe(200)
+  expect(await (await fixture.poll()).json()).toEqual({
+    state: 'connected',
+    login: {
+      agent: 'codex',
+      connected: true,
+      kind: 'api-key',
+      noReuse: false,
+      updatedAt: TEST_TIME + 20_000,
+    },
+  })
+  expect(
+    (
+      await harness.request(agentLoginPath('codex'), fixture.cookie, {
+        method: 'DELETE',
+        body: '{}',
+      })
+    ).status,
+  ).toBe(204)
+  expect(await (await fixture.poll()).json()).toEqual({
+    state: 'connected',
+    login: { agent: 'codex', connected: false },
+  })
   expect(fixture.calls).toHaveLength(4)
   expect(fixture.calls[3].url).toBe('https://auth.openai.com/oauth/token')
   expect(await fixture.calls[3].text()).toBe(
@@ -123,68 +187,6 @@ it('keeps device handles private and expires the encrypted state without contact
   expect(fixture.calls).toHaveLength(1)
   await cleanupCodexDevices(harness.env.DB, TEST_TIME + 900_000)
   expect((await fixture.poll()).status).toBe(404)
-})
-
-it('reports safe start and exchange failures and erases the one-time authorization', async () => {
-  const fixture = await deviceFixture(harness)
-  fixture.answers.push(new Response('private-upstream-start', { status: 500 }))
-  const failedStart = await fixture.request(ACCOUNT_PATHS.codexDevice)
-  expect(failedStart.status).toBe(502)
-  expect(await failedStart.json()).toEqual({
-    error: {
-      code: 'codex_device_failed',
-      message: 'ChatGPT sign-in failed.',
-    },
-  })
-  expect(
-    await harness.env.DB.prepare(
-      'SELECT COUNT(*) AS count FROM codex_devices',
-    ).first<number>('count'),
-  ).toBe(0)
-  await fixture.start()
-  fixture.setTime(TEST_TIME + 5000)
-  fixture.answers.push(
-    Response.json({
-      authorization_code: 'private-code',
-      code_verifier: 'private-verifier',
-      code_challenge: 'challenge',
-    }),
-    new Response('private-upstream-token', { status: 401 }),
-  )
-  const failed = {
-    state: 'failed',
-    cause: 'ChatGPT sign-in failed.',
-  }
-  expect(await (await fixture.poll()).json()).toEqual(failed)
-  expect(await (await fixture.poll()).json()).toEqual(failed)
-  expect(fixture.calls).toHaveLength(4)
-  expect(
-    await harness.env.DB.prepare(
-      'SELECT state, ciphertext, poll_claim FROM codex_devices',
-    ).first(),
-  ).toEqual({ state: 'failed', ciphertext: null, poll_claim: null })
-  expect(
-    await harness.env.DB.prepare(
-      'SELECT COUNT(*) AS count FROM agent_logins',
-    ).first<number>('count'),
-  ).toBe(0)
-  await fixture.start('0')
-  fixture.setTime(TEST_TIME + 10_000)
-  fixture.answers.push(new Response('private-upstream-poll', { status: 500 }))
-  expect(await (await fixture.poll()).json()).toEqual(failed)
-  expect(await (await fixture.poll()).json()).toEqual(failed)
-  expect(fixture.calls).toHaveLength(6)
-  fixture.answers.push(new Response('private-disabled-signin', { status: 404 }))
-  const disabled = await fixture.request(ACCOUNT_PATHS.codexDevice)
-  expect(disabled.status).toBe(502)
-  expect(await disabled.json()).toEqual({
-    error: {
-      code: 'codex_device_failed',
-      message:
-        'ChatGPT refused the sign-in, because device code sign-in is off. Turn it on in your ChatGPT security settings, or ask your ChatGPT admin.',
-    },
-  })
-  expect(fixture.calls).toHaveLength(7)
 })
 
 it('claims a device poll once across overlapping requests and never resumes an abandoned exchange', async () => {

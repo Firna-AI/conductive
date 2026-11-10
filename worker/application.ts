@@ -50,6 +50,7 @@ import { appFrameSources, runnerSoftware } from './configuration'
 import { appSiteResponse } from './marketing/assets'
 import { retryApprovalEmails } from './operator/approval-email'
 import { freshCodexLogin } from './codex-auth/renew'
+import { codexTaskOwner } from './codex-auth/tasks'
 import { failCodexAccessToken } from './codex-auth/failure'
 import { waitForCodexRotation } from './codex-auth/rotation'
 import { cleanupCodexDevices } from './codex-auth/device-store'
@@ -70,6 +71,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       env?: AppEnv,
       execution?: Pick<ExecutionContext, 'waitUntil'>,
     ): Promise<Response> {
+      const codexTasks = codexTaskOwner(execution)
       const path = new URL(request.url).pathname
       const upgrade = request.headers.has('Upgrade')
       const health =
@@ -163,11 +165,18 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             return respond(await handleImageSourceCredential(request, env))
           const gatewayEnv = env
           const gatewayResponse = await routeModelGateway(request, {
+            codexTasks,
             ...workspaceRuntime(gatewayEnv, dependencies),
             workspaceAllowed: (id) =>
               gatewayWorkspaceAllowed(gatewayEnv.DB, id),
             codexLogin: (userId, failed) =>
-              freshCodexLogin(gatewayEnv, userId, dependencies, failed),
+              freshCodexLogin(
+                gatewayEnv,
+                userId,
+                dependencies,
+                codexTasks,
+                failed,
+              ),
             codexLoginFailed: (userId, failed) =>
               failCodexAccessToken(gatewayEnv, userId, failed),
             codexWaitForRotation: (userId, failed, pending) =>
@@ -222,7 +231,14 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         if (featureResponse) return respond(featureResponse)
         const context = await membersGate(request, env, dependencies.now())
         return respond(
-          await route(request, env, context, dependencies, execution),
+          await route(
+            request,
+            env,
+            context,
+            dependencies,
+            codexTasks,
+            execution,
+          ),
         )
       } catch (error) {
         const response = errorResponse(error)

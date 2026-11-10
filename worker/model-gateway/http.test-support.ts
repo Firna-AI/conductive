@@ -13,6 +13,8 @@ import type { HttpFetch } from '../env'
 import { freshCodexLogin } from '../codex-auth/renew'
 import { failCodexAccessToken } from '../codex-auth/failure'
 import { waitForCodexRotation } from '../codex-auth/rotation'
+import type { CodexTaskOwner } from '../codex-auth/tasks'
+import { fakeCodexTasks } from '../codex-auth/tasks.test-support'
 import { FakeAnthropic } from '../test-support/fake-anthropic'
 import { FakeOpenAI } from '../test-support/fake-openai'
 import type { TestHarness } from '../test-support/harness'
@@ -40,6 +42,8 @@ export async function gatewayHttp(
   recovery: {
     wait?: (milliseconds: number) => Promise<void>
     beforeRenew?: () => Promise<void>
+    beforeFailure?: () => Promise<void>
+    tasks?: CodexTaskOwner
   } = {},
 ) {
   const turn = await runningGatewayTurn(harness, choice, {
@@ -48,6 +52,7 @@ export async function gatewayHttp(
   })
   const { fixture } = turn
   const clock = new ManualChatClock(fixture.clock.now())
+  const tasks = recovery.tasks ?? fakeCodexTasks().owner
   const anthropic = new FakeAnthropic()
   const openai = new FakeOpenAI()
   const checks: string[] = []
@@ -61,6 +66,7 @@ export async function gatewayHttp(
   }
   const fetch = requestBodyEntry(async (request) => {
     const response = await routeModelGateway(request, {
+      codexTasks: tasks,
       dependencies: {
         now: clock.now,
         randomToken: () => 'unused',
@@ -87,11 +93,14 @@ export async function gatewayHttp(
             wait:
               recovery.wait ?? ((milliseconds) => clock.advance(milliseconds)),
           },
+          tasks,
           failed,
         )
       },
-      codexLoginFailed: (userId, failed) =>
-        failCodexAccessToken(fixture.env, userId, failed),
+      codexLoginFailed: async (userId, failed) => {
+        await recovery.beforeFailure?.()
+        return failCodexAccessToken(fixture.env, userId, failed)
+      },
       codexWaitForRotation: (userId, failed, pending) =>
         waitForCodexRotation(
           fixture.env,
@@ -138,6 +147,7 @@ export async function gatewayHttp(
   }
   return {
     ...turn,
+    tasks,
     fixture: {
       ...fixture,
       clock: {

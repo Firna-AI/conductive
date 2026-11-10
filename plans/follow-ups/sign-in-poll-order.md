@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-10, finding 3 of review round 1 on branch `calummoore/openai-subscription-token-support` (pull request #177), with two problems that its check found.
-- **Location:** `pollCodexSignIn` in `src/app/account-model.ts`, `src/shell/account/codex-sign-in.ts`, `src/shell/onboarding/AgentStep.tsx:34`, `worker/codex-auth/device.ts:38`, and `removeAccountLogin` in `worker/app-api/account-data.ts:149`.
+- **Location:** `pollCodexSignIn` in `src/app/account-model.ts`, `src/shell/account/codex-sign-in.ts`, and `src/shell/onboarding/AgentStep.tsx:34`.
 - **Reason:** the race needs unusual timing, a reload shows the true state, and the likelihood is Rare.
 
 - **Terms:**
@@ -13,21 +13,20 @@
   - A poll that answers "connected" puts the saved login into `AccountModel`.
   - The member can press Cancel, Remove, or change the share setting while a poll still runs.
   - The Worker saves the sign-in only after two OpenAI calls, so a remove can reach the database before the save of a finishing poll.
-  - `removeAccountLogin` leaves unfinished sign-ins of the member alone. A repeated poll of a finished sign-in gets the old snapshot of its device row.
+  - The Worker side of that race, where a finish saves a login that the member removed, is its own decision in `plans/follow-ups/removal-ends-sign-ins.md`.
   - A late completion callback can also close a newer form.
-- **Problem:** A reply that started before a later change can show a login that the member removed, or a wrong kind or share setting. On the Worker side, a later finish can save a login that the member removed.
-- **Impact if no action:** In a rare race, the account page and the Worker can keep a login that the member removed. The member must remove it again.
-- **Root question:** When a ChatGPT sign-in finishes beside a remove, a save, or a share change, how do the account page and the Worker agree on the member's last change?
+- **Problem:** A reply that started before a later change can show a login that the member removed, or a wrong kind or share setting.
+- **Impact if no action:** In a rare race, the account page shows a login that the member removed. A reload shows the true state.
+- **Root question:** When a ChatGPT sign-in finishes beside a remove, a save, or a share change in the same tab, how does the account page keep the member's last change?
 - **Options:**
   - **A.** Check the login change counter before a poll reply is applied, and let only the current sign-in close its form. Effort: Small.
   - **B.** Apply every login reply through one guarded function, with a held-reply test. Effort: Small.
   - **C.** Add server revisions, also of removals, to the login replies. Effort: Medium.
   - **D.** Send the login requests of each agent from `AccountModel` one at a time, so that a remove, a save, a share change, or a poll starts only after the reply before it. Let the completion callback close only the form of its own agent, and keep the Get started refresh. Effort: Small.
   - **E.** After a race, read the logins from the Worker, and show that read. Effort: Small.
-  - **F.** In the Worker, end the member's unfinished sign-ins at each remove or save of the Codex login, in the same database batch. Effort: Medium. Cost: a new Worker behaviour that needs a decision and a protocol line.
-- **Left out:** Dropping every reply after Cancel: it hides a login that the Worker holds. A Cancel route alone: a remove can come while the form polls, with no Cancel.
+- **Left out:** Dropping every reply after Cancel: it hides a login that the Worker holds. A Cancel route alone: a remove can come while the form polls, with no Cancel. A change in the Worker: `plans/follow-ups/removal-ends-sign-ins.md` holds it as its own decision.
 - **Wider fix:** D. One place orders every login request of a tab, so a new login path cannot overlap a change.
 - **Previous examples:** `src/app/account-model.test.ts:77` covers the same order for a share reply after a removal.
-- **Related:** `plans/follow-ups/account-login-status-owner.md` changes the same replies. Its option B must keep this order.
-- **Recommendation:** D. The browser and the Worker then follow the member's order, with no new contract. F also covers another tab, but it needs a decision.
+- **Related:** `plans/follow-ups/account-login-status-owner.md` changes the same replies. Its option B must keep this order. `plans/follow-ups/removal-ends-sign-ins.md` decides the Worker side of the same race. Each of its options works with D.
+- **Recommendation:** D. The requests of one tab then reach the Worker in the member's order, with no new contract.
 - **Action:** fix after merge, apply D.

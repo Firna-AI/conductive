@@ -223,7 +223,7 @@ with the send key that every composer shares, and the waitlist.
 - One ChatGPT sign-in of Codex owns its request for a code, its polls, and
   its timer. Cancel, the other kind in the switch, and the end of its form
   stop it. After that, an answer changes nothing and schedules nothing.
-  A connected answer still shows its login, because the Worker saved it.
+  A connected answer applies the current login status that the Worker returns.
 - One rule, `loginUsable` in `api/read-core.ts`, says whether turns can
   run on a login. A connected login with an `unusableCause` cannot. The
   composers and Get started count such a login as missing.
@@ -262,7 +262,7 @@ with the send key that every composer shares, and the waitlist.
 The account routes of the development backend keep device sign-ins in a
 private route closure. Start returns a fixed display code and a new handle.
 The first poll waits. The next poll connects Codex with the normal share
-default. Later polls keep that result until its 15-minute expiry.
+default. Later polls read the current login without saving it again, until the sign-in expires after 15 minutes.
 The fake uses the shared device response types. It sends no request to OpenAI.
 
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the

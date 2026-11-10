@@ -111,8 +111,12 @@ Each turn can claim one renewal after a 401, across metadata and model requests.
 Its workspace object saves the used and pending flags before renewal,
 in the same queue as token checks. Completion clears only the pending flag.
 Concurrent requests, Codex resends, and object eviction keep the same bound.
-The winning renewal finishes before it clears pending, also if its request disconnects.
-Expiry-driven renewal before a request remains unchanged.
+The required `CodexTaskOwner` registers credential work through the request's `execution.waitUntil`.
+The renewal service owns its shared renewal through commit and local cleanup.
+Gateway authentication owns the recovery claim through its completion, and each terminal failure write.
+These tasks remain registered after the model request disconnects.
+The winning renewal finishes before it clears pending.
+The limit of one forced renewal per turn does not apply to renewal before expiry.
 The three body-less metadata GET routes can replay once with the renewed login.
 `POST /backend-api/codex/responses` never clones its upload and makes only one upstream call.
 After its 401, it cancels the answer, renews the login, drains the remaining
@@ -150,7 +154,7 @@ A separate timer cancels the upload, fetch, and answer when the lease ends.
 A slow check cannot extend that deadline.
 A refusal before the answer starts returns its stable error code.
 A client disconnect also cancels the upstream.
-It adds no retry, model filter, rate limit, or answer size limit.
+It adds no model filter, rate limit, or answer size limit.
 It writes no request body, answer body, or header value to logs.
 
 ## Development
@@ -170,6 +174,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
 - [codex-upstream.ts](codex-upstream.ts): ChatGPT metadata forwarding and model routing in the Worker.
 - [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, observation of concurrent rotation, and the redaction set for the request.
+- [../codex-auth/tasks.ts](../codex-auth/tasks.ts): the required credential task owner, built from the request execution context.
 - [codex-routing.ts](codex-routing.ts): account selection, backend validation, and the routing-free account reply.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
   `hasClaudeMarkers` checks the markers of the `claude` program.
@@ -217,6 +222,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [codex-recovery.test.ts](codex-recovery.test.ts): one recovery claim and its pending state across concurrent calls and eviction.
 - [codex-concurrent.test.ts](codex-concurrent.test.ts): concurrent 401s before and after the D1 claim, safe failure writes during renewal, and bounded observation with an injected clock.
 - [codex-recovery-cancel.test.ts](codex-recovery-cancel.test.ts): a disconnected recovery owner keeps its pending state until rotation finishes.
+- [codex-task-owner.test.ts](codex-task-owner.test.ts): registered credential work commits after request cancellation, including renewal before expiry, recovery, and terminal failure writes.
 - [codex-terminal.test.ts](codex-terminal.test.ts): saved Account failure causes and protection for a newer sign-in.
 - [codex-refusal.test.ts](codex-refusal.test.ts): ChatGPT token refusals are 403 while API-key refusals stay 401.
 - [codex-stream.test.ts](codex-stream.test.ts): a 100,000,000-byte object, the shared 413, and refusal after an early answer.

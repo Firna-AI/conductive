@@ -2,6 +2,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { RunnerLogin } from '../../src/shared/runner'
 import type { HttpFetch } from '../env'
 import type { CodexTokens } from '../codex-auth/tokens'
+import { fakeCodexTasks } from '../codex-auth/tasks.test-support'
 import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { routeModelGateway } from './route'
 import { codexTokenPaths } from './paths'
@@ -72,6 +73,7 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
         },
       }),
       {
+        codexTasks: fakeCodexTasks().owner,
         dependencies: {
           now: clock.now,
           randomToken: () => 'unused',

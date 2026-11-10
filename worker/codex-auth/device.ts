@@ -3,8 +3,10 @@ import type {
   StartCodexDeviceResponse,
 } from '../../src/shared/account'
 import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { accountLogins } from '../app-api/account-data'
 import { agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
+import type { CodexTaskOwner } from './tasks'
 import { HttpError, isRecord } from '../http'
 import { decrypt, encrypt, hash } from '../security/crypto'
 import {
@@ -31,20 +33,20 @@ function deviceContext(userId: string, handleHash: string): string {
   return `codex-device:${userId}:${handleHash}`
 }
 
-function publicDevice(device: StoredCodexDevice): PollCodexDeviceResponse {
+async function publicDevice(
+  env: AppEnv,
+  userId: string,
+  device: StoredCodexDevice,
+): Promise<PollCodexDeviceResponse> {
   if (device.state === 'expired') return { state: 'expired' }
   if (device.state === 'failed')
     return { state: 'failed', cause: device.failureCause ?? FAILED }
-  if (device.state === 'connected' && device.connectedAt !== null)
+  if (device.state === 'connected')
     return {
       state: 'connected',
-      login: {
-        agent: 'codex',
-        connected: true,
-        kind: 'token',
-        noReuse: device.connectedNoReuse === 1,
-        updatedAt: device.connectedAt,
-      },
+      login: (await accountLogins(env.DB, userId)).find(
+        (login) => login.agent === 'codex',
+      ) ?? { agent: 'codex', connected: false },
     }
   return { state: 'waiting', pollIntervalMs: device.pollIntervalMs }
 }
@@ -107,87 +109,90 @@ export async function startCodexDevice(
   }
 }
 
-export async function pollCodexDevice(
+export function pollCodexDevice(
   env: AppEnv,
   userId: string,
   handle: string,
   dependencies: AppDependencies,
+  tasks: CodexTaskOwner,
 ): Promise<PollCodexDeviceResponse> {
-  const handleHash = await hash(handle)
-  const read = () => readCodexDevice(env.DB, userId, handleHash)
-  const device = await read()
-  if (!device)
-    throw new HttpError(
-      404,
-      'codex_device_not_found',
-      'The ChatGPT sign-in is not available.',
-    )
-  const now = dependencies.now()
-  if (device.expiresAt <= now) {
-    await expireCodexDevice(env.DB, userId, handleHash, now)
-    return { state: 'expired' }
-  }
-  if (device.state === 'polling') {
-    if ((device.pollClaimUntil ?? 0) <= now && device.pollClaim !== null) {
-      await failCodexDevice(
-        env.DB,
-        userId,
-        handleHash,
-        device.pollClaim,
-        FAILED,
+  return tasks.run(async () => {
+    const handleHash = await hash(handle)
+    const read = () => readCodexDevice(env.DB, userId, handleHash)
+    const device = await read()
+    if (!device)
+      throw new HttpError(
+        404,
+        'codex_device_not_found',
+        'The ChatGPT sign-in is not available.',
       )
-      return { state: 'failed', cause: FAILED }
+    const now = dependencies.now()
+    if (device.expiresAt <= now) {
+      await expireCodexDevice(env.DB, userId, handleHash, now)
+      return { state: 'expired' }
     }
-    return publicDevice(device)
-  }
-  if (device.state !== 'pending' || device.nextPollAt > now)
-    return publicDevice(device)
-  const claim = dependencies.randomToken()
-  if (!(await claimCodexDevice(env.DB, userId, handleHash, claim, now))) {
+    if (device.state === 'polling') {
+      if ((device.pollClaimUntil ?? 0) <= now && device.pollClaim !== null) {
+        await failCodexDevice(
+          env.DB,
+          userId,
+          handleHash,
+          device.pollClaim,
+          FAILED,
+        )
+        return { state: 'failed', cause: FAILED }
+      }
+      return publicDevice(env, userId, device)
+    }
+    if (device.state !== 'pending' || device.nextPollAt > now)
+      return publicDevice(env, userId, device)
+    const claim = dependencies.randomToken()
+    if (!(await claimCodexDevice(env.DB, userId, handleHash, claim, now))) {
+      const latest = await read()
+      return latest ? publicDevice(env, userId, latest) : { state: 'expired' }
+    }
+    try {
+      if (!device.ciphertext) throw new Error('The device code is missing')
+      const authorization = parseDevice(
+        await decrypt(
+          device.ciphertext,
+          deviceContext(userId, handleHash),
+          env.BOAT_KEY_ENCRYPTION_KEY,
+        ),
+      )
+      const tokens = await exchangeCodexDevice(authorization, dependencies)
+      if (tokens === null) {
+        await releaseCodexDevice(
+          env.DB,
+          userId,
+          handleHash,
+          claim,
+          dependencies.now() + device.pollIntervalMs,
+        )
+      } else {
+        const ciphertext = await encrypt(
+          JSON.stringify(tokens),
+          agentLoginContext(userId, 'codex'),
+          env.BOAT_KEY_ENCRYPTION_KEY,
+        )
+        await finishCodexDevice(
+          env.DB,
+          userId,
+          handleHash,
+          claim,
+          ciphertext,
+          dependencies.now(),
+        )
+      }
+    } catch {
+      await failCodexDevice(env.DB, userId, handleHash, claim, FAILED)
+    }
     const latest = await read()
-    return latest ? publicDevice(latest) : { state: 'expired' }
-  }
-  try {
-    if (!device.ciphertext) throw new Error('The device code is missing')
-    const authorization = parseDevice(
-      await decrypt(
-        device.ciphertext,
-        deviceContext(userId, handleHash),
-        env.BOAT_KEY_ENCRYPTION_KEY,
-      ),
-    )
-    const tokens = await exchangeCodexDevice(authorization, dependencies)
-    if (tokens === null) {
-      await releaseCodexDevice(
-        env.DB,
-        userId,
-        handleHash,
-        claim,
-        dependencies.now() + device.pollIntervalMs,
-      )
-    } else {
-      const ciphertext = await encrypt(
-        JSON.stringify(tokens),
-        agentLoginContext(userId, 'codex'),
-        env.BOAT_KEY_ENCRYPTION_KEY,
-      )
-      await finishCodexDevice(
-        env.DB,
-        userId,
-        handleHash,
-        claim,
-        ciphertext,
-        dependencies.now(),
-      )
+    if (!latest) return { state: 'expired' }
+    if (latest.expiresAt <= dependencies.now()) {
+      await expireCodexDevice(env.DB, userId, handleHash, dependencies.now())
+      return { state: 'expired' }
     }
-  } catch {
-    await failCodexDevice(env.DB, userId, handleHash, claim, FAILED)
-  }
-  const latest = await read()
-  if (!latest) return { state: 'expired' }
-  if (latest.expiresAt <= dependencies.now()) {
-    await expireCodexDevice(env.DB, userId, handleHash, dependencies.now())
-    return { state: 'expired' }
-  }
-  return publicDevice(latest)
+    return publicDevice(env, userId, latest)
+  })
 }

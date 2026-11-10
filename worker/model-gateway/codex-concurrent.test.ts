@@ -121,12 +121,17 @@ it('joins concurrent GET and POST 401s before and after the winning request take
           failureCause: null,
         })
         expect(
-          await freshCodexLogin(harness.env, client.fixture.member.id, {
-            now: client.fixture.clock.now,
-            fetch: async () => {
-              throw new Error('A second refresh is not allowed.')
+          await freshCodexLogin(
+            harness.env,
+            client.fixture.member.id,
+            {
+              now: client.fixture.clock.now,
+              fetch: async () => {
+                throw new Error('A second refresh is not allowed.')
+              },
             },
-          }),
+            client.tasks,
+          ),
         ).toMatchObject({ accessToken: 'rotated-access' })
       } finally {
         ownerRelease.resolve()
@@ -154,6 +159,7 @@ it('leaves a live D1 refresh claim intact when a terminal 401 failure writer run
         return rotatedReply()
       },
     },
+    client.tasks,
     client.secret,
   )
   try {

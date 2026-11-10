@@ -428,6 +428,22 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
     counts as a change. Reason: a login that the Worker stopped after the
     app opened must show Signed out, and a read must not take back a
     local change.
+- The calls of 10 November 2026 for the fixes of review round 2:
+  - Every lasting credential change of the ChatGPT sign-in runs under one
+    required task owner, built for each request from
+    `execution.waitUntil`: the renewal and its save, the recovery after a
+    401, the terminal failure write, and the device code exchange with
+    its save. Uploads and model answers keep their own request lifetime.
+    Reason: Cloudflare can cancel work that no request waits for, and a
+    cancel after OpenAI used a single-use refresh token or code loses the
+    sign-in.
+  - The OAuth renewal, and the device poll with its code exchange, time
+    out after 20 seconds. Reason: the save to the database must also fit
+    in the 30 seconds that Cloudflare gives background work.
+  - A finished sign-in answers each later poll with the current login
+    from the account reader. The device table keeps no copy of the login.
+    Reason: a copy goes stale after a share change, a failure cause, a new
+    API key, or a removal.
 
 Risks:
 
@@ -762,9 +778,9 @@ and the review prove the change.
   - [ ] Update the line of
         `plans/follow-ups/agent-login-in-tool-processes.md` that says no
         run has shown the real programs take their routes.
-- [ ] Run the targeted tests and `npm run check`, after
+- [x] Run the targeted tests and `npm run check`, after
       `npm --prefix desktop ci` and `npm ci --prefix runner`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

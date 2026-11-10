@@ -10,6 +10,9 @@ The device service encrypts pending authorizations under the signed-in
 account and a hash of the browser handle. D1 claims serialize polls and
 exchanges. A terminal state removes the encrypted authorization. The
 scheduled cleanup removes records at their 15-minute expiry.
+Finished polls read the current login through `accountLogins`.
+They return a disconnected login if it was removed after completion.
+The device row keeps no copy of the login status.
 
 The renewal service reads the encrypted `agent_logins` value. A local
 promise joins overlapping calls in one isolate. A D1 claim coordinates
@@ -35,12 +38,19 @@ leave it with an older token snapshot and a cleared flag.
 The observer returns the committed tokens, an unchanged login, or a pending state.
 It never takes a refresh claim or calls OAuth.
 Pending at the deadline gives retryable HTTP 502 without a saved cause.
-The gateway keeps the turn pending until the winning renewal finishes,
-also when the owning request disconnects.
+Sign-in polling, login renewal, and gateway authentication require a `CodexTaskOwner` from the app entry.
+The owner registers work with the request's `execution.waitUntil` before returning its promise.
+The service registers its shared renewal through the token commit and local promise cleanup.
+The gateway registers recovery claims, completion, and terminal failure writes.
+The device poll registers its claim, approved code exchange, and login save.
+These credential tasks remain owned when the initiating request ends.
+The gateway keeps the turn pending until its owned recovery finishes.
+The upload and model answer stay with their request lifetime.
 
 The HTTP client uses fixed OpenAI addresses and the pinned Codex client
-ID. It sends no HTTP retry. Poll and code exchange share a 30-second
-timeout. Renewal also has a 30-second timeout.
+ID. It sends no HTTP retry. The initial code request has a 30-second timeout.
+Device polling and code exchange share a 20-second timeout.
+Renewal also has a 20-second timeout, leaving time for its D1 commit within the background-task budget.
 The device poll interval defaults to 5 seconds and never falls below it.
 
 ## Development
@@ -68,6 +78,7 @@ observer's pending-state check.
 - [`tokens.ts`](tokens.ts): `CodexTokens`, the stored bundle parser, and
   the identity parser for trusted OAuth replies.
 - [`oauth.ts`](oauth.ts): the fixed device, exchange, and renewal requests.
+- [`tasks.ts`](tasks.ts): the required task owner and its execution-context binding.
 
 ### Related docs
 

@@ -9,8 +9,6 @@ export interface StoredCodexDevice {
   pollClaim: string | null
   pollClaimUntil: number | null
   failureCause: string | null
-  connectedNoReuse: number | null
-  connectedAt: number | null
 }
 
 export async function insertCodexDevice(
@@ -47,8 +45,7 @@ export function readCodexDevice(
     .prepare(
       `SELECT ciphertext, state, poll_interval_ms AS pollIntervalMs,
     next_poll_at AS nextPollAt, expires_at AS expiresAt, poll_claim AS pollClaim,
-    poll_claim_until AS pollClaimUntil, failure_cause AS failureCause,
-    connected_no_reuse AS connectedNoReuse, connected_at AS connectedAt
+    poll_claim_until AS pollClaimUntil, failure_cause AS failureCause
     FROM codex_devices WHERE handle_hash = ? AND user_id = ?`,
     )
     .bind(handleHash, userId)
@@ -156,12 +153,10 @@ export async function finishCodexDevice(
     db
       .prepare(
         `UPDATE codex_devices SET state = 'connected', ciphertext = NULL,
-      poll_claim = NULL, poll_claim_until = NULL,
-      connected_no_reuse = (SELECT no_reuse FROM agent_logins WHERE user_id = ? AND agent = 'codex'),
-      connected_at = ?
+      poll_claim = NULL, poll_claim_until = NULL
       WHERE handle_hash = ? AND user_id = ? AND state = 'polling' AND poll_claim = ? AND expires_at > ?`,
       )
-      .bind(userId, now, handleHash, userId, claim, now),
+      .bind(handleHash, userId, claim, now),
   ])
 }
 

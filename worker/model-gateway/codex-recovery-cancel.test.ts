@@ -89,12 +89,17 @@ it('keeps the recovery pending until renewal finishes when its owning request di
     ownerRelease.resolve()
     await oauthEntered.promise
     expect(
-      await freshCodexLogin(harness.env, client.fixture.member.id, {
-        now: client.fixture.clock.now,
-        fetch: async () => {
-          throw new Error('A second refresh is not allowed.')
+      await freshCodexLogin(
+        harness.env,
+        client.fixture.member.id,
+        {
+          now: client.fixture.clock.now,
+          fetch: async () => {
+            throw new Error('A second refresh is not allowed.')
+          },
         },
-      }),
+        client.tasks,
+      ),
     ).toMatchObject({ accessToken: 'rotated-access' })
     finalWaitRelease.resolve()
     const response = await second

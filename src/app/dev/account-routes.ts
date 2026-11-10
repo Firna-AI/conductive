@@ -145,7 +145,7 @@ export function accountRoutes(backend: DevBackend): Route[] {
   const { state } = backend
   const devices = new Map<
     string,
-    { expiresAt: number; waiting: boolean; login?: AgentLoginStatus }
+    { expiresAt: number; state: 'waiting' | 'ready' | 'connected' }
   >()
   let deviceSequence = 0
   return [
@@ -155,7 +155,7 @@ export function accountRoutes(backend: DevBackend): Route[] {
       answer: () => {
         const handle = `dev-codex-${++deviceSequence}`
         const expiresAt = backend.now() + 900_000
-        devices.set(handle, { expiresAt, waiting: true })
+        devices.set(handle, { expiresAt, state: 'waiting' })
         return json({
           handle,
           userCode: 'WXYZ-1234',
@@ -178,21 +178,22 @@ export function accountRoutes(backend: DevBackend): Route[] {
           )
         let result: PollCodexDeviceResponse
         if (device.expiresAt <= backend.now()) result = { state: 'expired' }
-        else if (device.waiting) {
-          device.waiting = false
+        else if (device.state === 'waiting') {
+          device.state = 'ready'
           result = { state: 'waiting', pollIntervalMs: 5000 }
         } else {
-          const login: AgentLoginStatus = device.login ?? {
-            agent: 'codex',
-            connected: true,
-            kind: 'token',
-            noReuse: noReuseOf(savedLogin(backend, 'codex'), 'token'),
-            updatedAt: backend.now(),
+          if (device.state === 'ready') {
+            putLogin(backend, {
+              agent: 'codex',
+              connected: true,
+              kind: 'token',
+              noReuse: noReuseOf(savedLogin(backend, 'codex'), 'token'),
+              updatedAt: backend.now(),
+            })
+            completeStep(state, 'agent-login')
+            device.state = 'connected'
           }
-          device.login = login
-          putLogin(backend, login)
-          completeStep(state, 'agent-login')
-          result = { state: 'connected', login }
+          result = { state: 'connected', login: savedLogin(backend, 'codex') }
         }
         return json(result)
       },

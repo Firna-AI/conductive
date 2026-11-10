@@ -99,6 +99,10 @@ decision number names a decision of the change that adds the
 - The Worker alone holds the pending device state, encrypted for that
   signed-in user. A poll reports waiting, connected, expired, or failed
   with a cause. The Worker removes the pending secret when the flow ends.
+- After a sign-in completes, each poll returns the current Codex login status.
+  A removed login is disconnected. The sign-in state stays connected until expiry.
+- Started sign-in exchanges and renewals keep their credential writes alive
+  after the initiating request ends, within the Worker's background-task limit.
 - The Worker stores the access token, refresh token, ID token, account ID,
   and expiry encrypted as one login. No browser response returns them.
 - The real ChatGPT sign-in never enters a sandbox. A runner without its

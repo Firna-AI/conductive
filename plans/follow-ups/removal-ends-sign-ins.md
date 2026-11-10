@@ -1,0 +1,34 @@
+# A sign-in can finish after the login was removed
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, finding 7 of review round 2 on branch `calummoore/openai-subscription-token-support` (pull request #177).
+- **Location:** `removeAccountLogin` in `worker/app-api/account-data.ts`, `finishCodexDevice` in `worker/codex-auth/device-store.ts`, the poll in `worker/codex-auth/device.ts`, and the table `codex_devices` in `migrations/202611100001_codex_chatgpt_login.sql`.
+- **Reason:** each fix adds a boundary rule that no requirement covers, so only the user decides it.
+
+- **Terms:**
+  - **Device sign-in:** the ChatGPT sign-in of Codex. The Worker gets a code from OpenAI, the member enters it at OpenAI within 15 minutes, and the account page polls the Worker until the Worker exchanges the code and saves the login.
+  - **Device row:** the row of `codex_devices` that keeps one unfinished device sign-in for its member.
+- **Background:**
+  - A member can start a device sign-in while a Codex login exists, for example with "Sign in again", or in a second tab.
+  - `removeAccountLogin` deletes the login row only. It leaves the member's unfinished device rows.
+  - `finishCodexDevice` saves the login while the device row holds its claim. It does not look at the current login.
+  - Review round 2 reproduced it in local D1. Remove answered 204 and left no Codex login. The earlier sign-in then finished and saved a Codex login again. A finish can also replace an OpenAI API key that the member saved after the start.
+  - No protocol doc says which change wins. The section "Agent logins" of `docs/protocol/tokens-and-secrets.md`, the README of `worker/app-api/`, and the public guide `src/marketing/docs/agent-logins.md` are silent.
+  - The renewal and the terminal 401 write of the gateway already save only while the stored login is the one that they read, in `worker/codex-auth/token-store.ts` and `worker/codex-auth/failure.ts`.
+- **Problem:** A device sign-in that finishes after a removal or a save of the Codex login undoes that later change.
+- **Impact if no action:** In a rare race, a member who removed Codex, or switched it to an API key, finds the ChatGPT sign-in connected again. Ordering in one browser tab cannot stop a finish that another tab or a held poll starts.
+- **Root question:** Which change must win when a device sign-in overlaps a removal or a replacement of the Codex login?
+- **Options:**
+  - **A.** Make the removal and the save of the Codex login end the member's unfinished device rows in the same database batch, through one shared helper. Test a held exchange. Cost: the save and the removal functions that both agents share gain Codex device rows. Effort: Small.
+  - **B.** Keep earlier sign-ins valid, and state in the protocol doc and the guide that a sign-in can finish after a removal. Effort: Small.
+  - **C.** Bind each sign-in to a stored login revision that also counts removals, and accept a finish only while that revision is current. Effort: Medium.
+  - **D.** Check the login at the finish. The device row stores the save time of the Codex login when the sign-in starts, or none. Before each call to OpenAI, the poll compares it with the current login. When they differ, the poll ends the sign-in with a new cause, for example "Your Codex login changed. Get a new code." `finishCodexDevice` saves only while the login still matches. Cost: one column in `codex_devices`, and the new cause in `docs/mockups/src/components/settings/chatGptSignInCopy.ts`. A save and then a removal during one sign-in restore the start state, so that sign-in can still finish. Effort: Small.
+  - **E.** Add a trigger on `agent_logins` that ends the member's unfinished device rows at each delete, insert, or secret change of the Codex login. Cost: SQLite drops the triggers of a table when a migration rebuilds it, and an open branch adds such a rebuild. Effort: Small.
+  - **F.** Let the member confirm. The finish saves nothing after a change. The poll gives a new state, and the form asks whether to use this ChatGPT sign-in. Cost: a new poll state and route, a mockup variant, a guide step, and stored tokens that nobody uses for up to 15 minutes. Effort: Medium.
+- **Left out:** Ordering in the browser only: a removal in another tab escapes it. A cancel at OpenAI: the device flow of the pinned Codex 0.167.0 in `worker/codex-auth/oauth.ts` has no request that cancels a code.
+- **Wider fix:** D. It puts the check in the delayed writer, as the renewal and the 401 write do, so a later writer or a later login kind needs no change.
+- **Previous examples:** `worker/codex-auth/token-store.ts` and `worker/codex-auth/failure.ts` guard their writes with the stored login in the same way.
+- **Related:** `plans/follow-ups/sign-in-poll-order.md` orders the login replies inside one tab. It does not settle this Worker case, and each option here works with it.
+- **Recommendation:** D. It keeps the member's later change in each order, at small cost, and no other writer needs a change.
+- **Action:** ask the user, because D adds a boundary rule that no requirement covers: a removal or a save of the Codex login ends the member's unfinished sign-ins, with a new cause on the form.
