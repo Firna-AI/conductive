@@ -1,5 +1,4 @@
 import { expect } from 'vitest'
-
 import type { TestHarness } from '../test-support/harness'
 import { TEST_TIME } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
@@ -8,7 +7,6 @@ import {
   retryUnavailable,
   sessionRecord,
 } from './retry.test-support'
-
 export async function linkedRetryBoundaryFixture(harness: TestHarness) {
   await harness.reset()
   const ids = [
@@ -21,11 +19,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
     'linked-command',
   ]
   const fixture = await createChatFixture(harness, {
-    randomId: () => {
-      const id = ids.shift()
-      if (!id) throw new Error('The test ID sequence is empty.')
-      return id
-    },
+    ids,
   })
   await fixture.createSession()
   await fixture.send('source', 'queued')
@@ -145,7 +139,8 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
     ],
   }
   return {
-    storage: fixture.storage,
+    failNextCommit: fixture.failNextCommit,
+    clearFaults: fixture.clearFaults,
     read,
     before: {
       session: undefined,
@@ -181,9 +176,9 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
         },
       })
     },
-    restart: () => {
+    restart: async () => {
       runner.disconnect()
-      fixture.restart()
+      await fixture.restart()
     },
     verify: {
       rejected: async () => {

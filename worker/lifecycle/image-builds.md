@@ -77,7 +77,7 @@ transient. Other errors keep their existing handling.
   step still uses the first window.
 - The window does not limit a whole job or a healthy command.
 - The whole-job deadline takes precedence over a retry wait. The limits
-  are in [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md).
+  are in [Workspaces and sandboxes](../../docs/protocol/workspace-life.md).
 - Cancellation and terminal cleanup do not wait for a pending retry.
 - A source command start never retries. It fails closed, as the source
   loader says.

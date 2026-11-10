@@ -64,7 +64,7 @@ it.each([
       sandboxId: null,
     })
     expect(fixture.boat.states.size).toBe(1)
-    image.restart()
+    await image.restart()
     await image.tick(endAt)
 
     expect(await image.job()).toMatchObject({
@@ -76,10 +76,10 @@ it.each([
       (await readBuild(fixture.runtime.env.DB, fixture.org.id, image.id)).build,
     ).toMatchObject({ error: message, completedAt: endAt })
     expect(fixture.boat.deletedIds).toEqual([])
-    expect(image.storage.alarmAt).not.toBeNull()
+    expect(await image.storage.getAlarm()).not.toBeNull()
     recovering = true
     fixture.boat.deleteFailures = 1
-    image.restart()
+    await image.restart()
     await image.tick(endAt + 30_000)
     expect(await image.job()).toMatchObject({
       state: 'failed',
@@ -87,7 +87,7 @@ it.each([
       sandboxId: 'bx_1',
     })
     const allocations = requests.length
-    image.restart()
+    await image.restart()
     await image.tick(endAt + 60_000)
     expect(await image.job()).toMatchObject({
       state: 'failed',

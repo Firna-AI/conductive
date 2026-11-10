@@ -57,5 +57,5 @@ as the Preview page, as
   reducer takes the tool's actions and the revoke events.
 - `previewsApi.ts`: list, open, and close requests.
 
-See [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md#port-previews)
-and [Access and security](../../docs/protocol/access-and-security.md#port-previews).
+See [Workspaces and sandboxes](../../docs/protocol/workspace-tools.md#port-previews)
+and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#port-previews).

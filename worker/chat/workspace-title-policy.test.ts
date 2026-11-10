@@ -39,7 +39,6 @@ it.each(['first request', 'retry'] as const)(
     const run = vi
       .fn<TitleModelCall>()
       .mockResolvedValue({ response: 'Automatic replacement' })
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const { fixture, first, acceptFirst, drain } = await createTitleFixture(
       harness,
       run,
@@ -99,7 +98,7 @@ it('ends a title repair and confirms a skipped runner report without changing th
       .bind(WORKSPACE_ID)
       .first('name'),
   ).toBe('Client name')
-  fixture.restart()
+  await fixture.restart()
   await fixture.connect(runner)
   expect(refreshCommands(runner)).toHaveLength(1)
 })

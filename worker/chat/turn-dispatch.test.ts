@@ -1,12 +1,8 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { sessionPaths } from '../../src/shared/sessions'
-import { backendPlatform } from '../lifecycle/backend-test-platform'
 import { LifecycleBoat } from '../lifecycle/lifecycle-boat-test-support'
-import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -17,7 +13,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('undoes dispatch registration when the runner disconnects before the send', async () => {
   let releaseDispatch = () => {}
   let enteredDispatch = () => {}
@@ -29,21 +24,13 @@ it('undoes dispatch registration when the runner disconnects before the send', a
   })
   const failed: string[] = []
   const fixture = await createChatFixture(harness, {
-    runnerReady: async () => {
-      await controller.reportRunnerLifecycle({ type: 'runner.ready' })
-    },
-    runnerDisconnected: async () => {
-      await controller.runnerLifecycleDisconnected()
-    },
-    turnDispatching: async (_id, turn) => {
-      await controller.registerLifecycleTurn(turn)
+    turnDispatching: async () => {
       enteredDispatch()
       await held
       return true
     },
     turnDispatchFailed: async (_id, turnId) => {
       failed.push(turnId)
-      await controller.finishLifecycleTurn(turnId)
     },
   })
   const boat = new LifecycleBoat()
@@ -53,15 +40,8 @@ it('undoes dispatch registration when the runner disconnects before the send', a
   )
     .bind('bx_dispatch', WORKSPACE_ID)
     .run()
-  const controller: WorkspaceController = backendPlatform(
-    fixture.env,
-    {
-      fetch: boat.fetch,
-      now: fixture.clock.now,
-      randomToken: () => 'dispatch-token',
-    },
-    () => {},
-  ).endpoint()
+  harness.setNativeFetch(boat.fetch)
+  const controller = fixture.actor.lifecycle
   const session = await fixture.createSession()
   const accepted = await fixture.send(session.id)
   const turnId = accepted.session.activeTurnId
@@ -94,11 +74,13 @@ it('undoes dispatch registration when the runner disconnects before the send', a
   try {
     runner.emit({ type: 'runner.ready' })
     await entered
-    expect(await controller.readLifecycle()).toMatchObject({
+    expect(
+      (await fixture.snapshot()).records.get('lifecycle:state'),
+    ).toMatchObject({
       state: 'working',
       runningSessions: [session.id],
     })
-    runner.disconnect()
+    await fixture.disconnect(runner)
     releaseDispatch()
     await fixture.drain()
     expect(runner.commands).toEqual([])
@@ -117,7 +99,7 @@ it('undoes dispatch registration when the runner disconnects before the send', a
     )
     expect(stopped.status).toBe(200)
     boat.deadlineIds.length = 0
-    await controller.alarm()
+    await fixture.actor.api.controls.advance(fixture.clock.now() + 5_000)
     expect(boat.deadlineIds).toEqual([])
   } finally {
     releaseDispatch()

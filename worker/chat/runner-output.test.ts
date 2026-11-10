@@ -1,9 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { captureEnvironment, outputFixture } from './runner-output.test-support'
 import { WORKSPACE_ID } from './harness.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -14,7 +12,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('filters an older runner with no private list from the actual start capture and keeps public values visible', async () => {
   const f = await outputFixture(harness, { OLD_TOKEN: 'org-private-value' })
   const tab = await f.tab()
@@ -205,5 +202,5 @@ it('filters an older runner with no private list from the actual start capture a
       message.envelope.event.type !== 'changes.updated',
   )
   expect(JSON.stringify(displayed)).not.toContain('org-private-value')
-  tab.close()
+  await tab.close()
 })
