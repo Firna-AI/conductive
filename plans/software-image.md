@@ -21,7 +21,8 @@ repositories, and run the install script when it is not empty. A daily
 refresh brings each org image to the current app software. A later
 workspace start of an old workspace installs the current app software. An
 old workspace also shows a notice when the org setup changed, with an
-action that runs the install script. The moments that this plan names are
+action that runs the install script. Each first build, later build, and
+refresh copies its repositories in parallel. The moments that this plan names are
 the terms of the [architecture doc](../docs/architecture.md#terms).
 
 Not covered: the start of a later build when an admin adds a repository.
@@ -131,7 +132,9 @@ Each item marked "my call" is a design call of the planning agent, made on
     build of each org image already records its repositories and their
     folders, and each workspace already records its folders.
 11. **Refresh.** A refresh after a push starts from the last org image and
-    copies the new commits, as today. The daily refresh follows decision 7
+    brings the new commits into each folder, as today. It makes a full bare
+    clone of each repository first, because the token must never meet the
+    Git config of the old folder, so its network cost equals a build's. The daily refresh follows decision 7
     E and the open decision 12.
 12. **Workspace start of an old workspace.** When the workspace's app
     software version is older than the current one, the start resumes the
@@ -156,7 +159,21 @@ Each item marked "my call" is a design call of the planning agent, made on
     repository, the start copies only that one repository. The user said
     so on 10 November 2026: "install repo (not repos - because each
     workspace only needs one of them)".
-15. **Docs.** My call: the requirements of the software image go to a new
+15. **Parallel copies.** The user asked on 10 November 2026: "for first
+    build and later build and refresh - we should download all repos in
+    parallel". The source loader keeps one source record for each
+    repository. Each copy gets its own token and one-use grant, and the
+    Worker revokes each token as soon as its fetch command ends. My call:
+    the finalize commands, which put the branches into the folders, start
+    only after GitHub confirms the revocation of every token, so that no
+    checkout runs while any token lives. A failed copy fails the job, and
+    the cleanup revokes each token that still lives. The build log shows
+    one line for each repository when its copy ends. Decision 14 sets how
+    many copies and finalize commands run at once. My call: a definite
+    refusal of a source command start, such as HTTP 429, waits and retries
+    within the provider retry window, because no command runs. A start
+    with no confirmed reply still fails closed.
+16. **Docs.** My call: the requirements of the software image go to a new
     protocol page, `docs/protocol/software-image.md`. Each long protocol
     doc gets only a link and the lines that must change, because
     `plans/follow-ups/protocol-docs-split.md` owns the split of the long
@@ -166,7 +183,8 @@ Each item marked "my call" is a design call of the planning agent, made on
 
 The options check of the `implementation-review` skill ran over decisions
 4, 5, and 6 on 9 November 2026, and over decisions 1, 12, and 13 on 10
-November 2026. Its reports are in `.context/software-image/`.
+November 2026, and over decision 14 on 10 November 2026. Its reports are
+in `.context/software-image/`.
 
 ### 1. First and later builds: confusing software step label
 
@@ -520,6 +538,78 @@ repository plan gets a milestone for it.
 - **Action:** ask the user, because the options of two plans conflict, and
   no rule settles which one wins.
 
+### 14. Parallel copies: how many at once
+
+Open.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Performance.
+- **Location:** `worker/lifecycle/image-sources/materialize.ts`, the source
+  loader, and its table `image_source_jobs`.
+- **Terms:**
+  - **Copy:** the bare Git clone of one repository into a staging folder of
+    the build sandbox, with its own short-lived GitHub token.
+  - **Finalize command:** the local Git fetch from the bare clone into the
+    folder of the repository, and its checkout. It runs after the
+    revocation of the token.
+- **Background:** Moments: the first build, each later build, and each
+  refresh. Today the source loader handles one repository at a time: a
+  token, the copy, the revocation, the finalize command, and then the next
+  repository. A refresh also makes a full bare clone of each repository,
+  because the token must never meet the Git config of the old folder. The
+  user asked to copy all repositories in parallel. The build sandbox has 4
+  vCPU and 8 GB. No rule limits how many repositories an org chooses. The
+  Worker polls each running command once a second, and each poll is one
+  request to the provider.
+- **Problem:** "All at once" has no upper bound, for the copies and for the
+  finalize commands. Both run Git on the whole repository in the same
+  sandbox.
+- **Impact if no action:** The implementation must guess the limit. Too
+  many Git commands at once can run the build sandbox out of memory or
+  pass the provider's request limit, and fail the job.
+- **Root question:** How does an image job load all its repositories fast,
+  and stay within the build sandbox's memory and the provider's request
+  limit? The options check replaced "How many repository copies may an
+  image job run at the same time?", because that question missed the
+  finalize commands.
+- **Options:**
+  - **A.** All at once, as the user asked. This is the fastest for a few
+    repositories, and it has no bound for many. Effort: Small.
+  - **B.** At most 4 copies at once. The next copy starts when one ends.
+    Effort: Small.
+  - **C.** At most 8 copies at once. Effort: Small.
+  - **D.** As B, and the same limit of 4 also holds for the finalize
+    commands. The loader never runs more than 4 Git commands at once.
+    Effort: Small.
+  - **E.** One sandbox command runs all copies of the job, at most 4 at
+    once, and prints one fixed line when each copy ends. The Worker revokes
+    the token of a copy when it reads that line. The Worker mints every
+    token before the command starts, so each token is live at GitHub for
+    longer, and the Worker must read output that it discards today.
+    Effort: Medium.
+  - **F.** A limit by size. The Worker stores the size that GitHub reports
+    for each chosen repository. The loader starts the next copy only while
+    the running copies stay under a total, such as 2 GB, and never runs
+    more than 8 at once. GitHub's size is an estimate. Effort: Medium.
+- **Left out:** One at a time, because it fails the user's request. A cap
+  on how many repositories an org may choose, because D bounds the Git
+  work with no refusal. A retry with fewer copies after the sandbox runs
+  out of memory, because the sandbox fails first.
+- **Wider fix:** D. One limit in one place covers every Git command of the
+  loader, also a later step.
+- **Previous examples:** None found.
+- **Related:** Decision 9: clean later builds copy every repository fresh,
+  so parallel copies cut their main cost. Decision 7: each refresh also
+  makes a full clone of each repository, so the limit holds there too.
+- **Recommendation:** D. The first recommendation was B. D also bounds the
+  finalize commands, which run as much Git as a copy. The number 4 rests
+  on the memory and the provider requests: too little CPU only slows a
+  copy, but too little memory fails the job. F bounds the memory better
+  if orgs with large repositories become common.
+- **Action:** ask the user, because the user asked for all at once, and
+  no rule settles a limit.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -570,6 +660,9 @@ The docs state the requirements of each moment that this plan changes.
       deploy run never gets the key.
 - [ ] In `docs/protocol/github-tokens.md`, limit the risk text to the
       refresh, the one image job that still starts from the last org image.
+      State that the copies of an image job run in parallel, each with its
+      own token, and that no checkout starts before GitHub confirms the
+      revocation of every token.
 - [ ] In `docs/architecture.md`, change the terms "Build" and "Refresh",
       and add the software image and an old workspace to the terms.
 - [ ] In `docs/architecture/components.md`, under "Sandbox software", state
@@ -700,9 +793,31 @@ Depends on: 1, 10
       Milestone 1 draws them.
 - [ ] Show the start step and the warning of Milestone 9.
 
-## Milestone 12: Verification, commit, review, and pull request
+## Milestone 12: Parallel repository copies
 
-Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+Depends on: 2
+
+- [ ] Keep one source record for each repository in `image_source_jobs`,
+      with a migration.
+- [ ] Start the copies in parallel, up to the limit of decision 14. Revoke
+      each token when its fetch command ends.
+- [ ] Start the finalize commands only after GitHub confirms the
+      revocation of every token.
+- [ ] Revoke each live token when a copy fails, also in
+      `cleanupBuildImageSources`.
+- [ ] Write one line to the build log for each repository when its copy
+      ends.
+- [ ] Retry a definite refusal of a source command start within the
+      provider retry window, as design item 15 says.
+- [ ] Tests: two copies run at the same time. The loader never runs more
+      Git commands than the limit of decision 14. No finalize command
+      starts before both revocations. A failed copy revokes the other
+      token. A refused start retries. A refresh copies in parallel too.
+- [ ] Update `worker/lifecycle/repository-layout.md`.
+
+## Milestone 13: Verification, commit, review, and pull request
+
+Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
       Run each new asynchronous test 10 times, as the `testing` skill
