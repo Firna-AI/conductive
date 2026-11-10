@@ -1,6 +1,6 @@
 import { withSession } from './chat-snapshot'
 import type { ChatContext } from './context'
-import { chatEventsOf } from './session-log'
+import { chatEventsOf } from '../../shared/transcript/session-events'
 import { mergeSession } from './session-records'
 
 /** A page of the history that leaves the read where it was. */

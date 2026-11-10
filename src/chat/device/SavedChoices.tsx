@@ -5,7 +5,7 @@ import { ChangeOutcome } from '../../../docs/mockups/src/components/mac/ChangeOu
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
 import mac from '../../../docs/mockups/src/components/settings/ThisMacSection.module.css'
 import { ActionButton } from '../ui/actions'
-import { timeLeft } from './command-text'
+import { timeLeft } from '../../shared/transcript/command-words'
 import type { SettingsChange } from './device-api'
 import { LiteralText } from './LiteralText'
 import local from './device.module.css'

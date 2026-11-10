@@ -70,8 +70,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   a right click, or in a `Sheet` on a phone. Firna's own menu rows are
   taller than the dense design. A row can lead with a mark, such as an
   avatar, and end with a muted detail and an icon. An item that is off
-  keeps its place, greyed. An item with choices ends with an arrow, and
+  keeps its place, greyed, and its detail keeps the muted colour, so that
+  the reason stays readable. An item with choices ends with an arrow, and
   its submenu opens beside the menu, level with the item.
+  A move that the place of a tab rules out keeps its place, greyed.
+  A read-only workspace leaves out each item that it does not allow,
+  from decision 214.
 - The menu of a workspace row has Move to section, Reassign to, Rename, a
   line, then Archive, as `app/workspace-menu` shows. It lists only the
   actions that the person can use, from `workspaceMenu.ts` in
@@ -91,6 +95,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
+  Transcript copy uses the same layer. A copy that worked shows the
+  success mark. A copy that failed shows the error mark with the words
+  "Try again", as `app/transcripts` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -100,15 +107,20 @@ sessions as tabs above the chat, and four tabs at the bottom.
   stands between two tabs and takes no space. When the tabs do not fit at
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, then Move left
-  and Move right. A file or diff tab has only the moves. The menu is the one
-  way to rename a session, so no tab shows a rename button. Rename session
-  opens a field in place of the title of that tab, also when the tab does
-  not show. The field marks that tab, which takes no fill, so only the shown
-  tab is filled. On a phone, a long press that ends without a move opens the
-  menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
-  `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
-  `TabRename.module.css` the rename field. The app shares these modules.
+  tab opens its menu at the pointer: Rename session, a line, Copy concise
+  transcript and Copy full transcript, a line, then Move left and Move
+  right, from decisions 188 and 215. A file or diff tab has only the moves.
+  In a read-only workspace, the menu of a session tab holds only the two
+  copy items, and a file or diff tab opens no menu. A copy keeps the shown
+  tab, and a toast gives its result, as `app/transcripts` shows. The menu
+  is the one way to rename a session, so no tab shows a rename button.
+  Rename session opens a field in place of the title of that tab, also when
+  the tab does not show. The field marks that tab, which takes no fill, so
+  only the shown tab is filled. On a phone, a long press that ends without a
+  move opens the menu as a sheet. `WorkspaceTabs.module.css` styles the row
+  and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
+  a drag, and `TabRename.module.css` the rename field. The app shares these
+  modules.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without
@@ -177,55 +189,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
     repository, so the name keeps its room. The button
     keeps the height of that line, and its touch area of 44 px reaches up
     over the name and down to the bottom edge of the header.
-- `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
-  the org as a chip in a line of text: a small rounded pill with the
-  `StatusGlyph` of the workspace, its label in a muted colour, and its
-  current name. Its height is the height of the line less 2 px, so a line
-  with a chip keeps its height. A chip is never wider than its line or
-  than 22 times the size of its font, and a long name is cut short. It
-  takes no fixtures, so the app can use it too.
-  - `MessageText` shows the chips in sent messages and in answers, as
-    links to the screens of the workspaces. A Markdown link to a
-    workspace shows as the chip alone, and a link in code stays code. A
-    link to another org, or to a workspace that the list does not hold,
-    stays plain text, and a long link breaks to fit the line.
-  - The chat finds each workspace in the list of the org, with the
-    archived ones and with the states of the list, through
-    `ChatWorkspaces`. A phone finds the same workspaces with no list on
-    the screen. An archived workspace keeps its chip, with the archived
-    mark.
-  - A pasted link becomes a chip in the message box at once: in the chat,
-    and in New workspace as a page or a dialog. `MessageField` gives each
-    box its field. A draft with a workspace link or a file mention shows
-    in `ChipTextField`: plain text with each chip as one unit, with the
-    sizes and the line limits of the plain text field. The draft keeps the
-    plain link.
-  - `InlineChip.module.css` beside it holds the pill of every chip in a
-    line of text, so a workspace chip and a file chip have the same size.
-  - In a message box each chip starts with the cell of its icon, from
-    `ChipIconCell` in `ChipRemove.tsx`. While a pointer is over the cell, a
-    × takes the place of the icon, and a press removes the chip. Where no
-    pointer hovers, as on a phone, the icon stays, and `ChipEndRemove`
-    puts a × at the end of the chip. Attached files follow the same rule,
-    and on a phone they keep their × button of touch size.
-- `FileChip` in `src/components/chat/` draws a file or a folder of the
-  workspace as a chip of the same size: the icon that All files gives it,
-  and its name. Its title is the whole path. `EntryIcon` in
-  `src/components/files/` gives the icon to All files, the chips, and the
-  list. It is the one icon map of the mockups and the app: a folder, a
-  Markdown file, a code file, or another file. A file is code when the
-  code view of the app gives it syntax colours, as `fileKind` in
-  `src/files/code/file-kind.ts` of the app says, so one list of languages
-  sets both. The user chose this on 10 November 2026. A sent message shows
-  each file chip as a link to the tab of the
-  file, and an answer shows none. It takes no fixtures, so the app can use
-  it too.
-- `FileMentionList` in `src/components/chat/` draws the list of `@` above
-  the message box: the icon, the name, and the folder of each entry that
-  matches the query, with the first row highlighted. One line takes the
-  place of the rows while the tree loads, when no tree is available, and
-  when nothing matches. `fileMentions.ts` beside it reads the mentions of
-  a text and orders the rows.
+- [Workspace and file chips](design-chat.md#workspace-and-file-chips) gives
+  the workspace links, file mentions, the list of `@`, and chip removal.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
@@ -274,6 +239,21 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `app/new-workspace/first-build` shows. A notice of work that runs, such
   as that build, shows a spinner in place of its icon: `Notice` in
   `src/components/common/` takes `busy`.
+- A chosen repository that the cloud computer does not hold yet waits for
+  its build, from decisions 240 and 241. The repository menu of New
+  workspace keeps it in place, off, with the note of when it is ready as
+  the muted detail of its row. A form whose repository waits keeps Send
+  off under a notice. `WaitingRepositoryNotice` in
+  `src/components/new-workspace/waitingRepository.tsx` draws that notice,
+  and `formWait` beside it says what the form waits for. The app shares
+  that module. `RepositoryNotice` in `src/components/settings/`
+  draws the notice of the Repositories and Cloud computer tabs, with a
+  spinner while the build of an added repository runs. An admin gets its
+  Try again or Build computer on the Repositories tab only, because the
+  build card of the Cloud computer tab has the same action.
+  `repositoryChangeCopy.ts` beside it holds the words of both, which the
+  app shares, as `app/new-workspace/waiting-repository` and
+  `app/org-settings/repositories` show.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no

@@ -135,7 +135,9 @@ The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
 page of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
-log, and settings of `ComputerModel`. `useMembersApi(orgId)` in
+log, and settings of `ComputerModel`. The Repositories tab of a member gets
+the live builds of `OrgModel`, for its repository notice.
+`useMembersApi(orgId)` in
 `../shell/settings/members-api.ts` gives one members client for each org,
 over the fetch of the org's client, so a refusal of a suspended org marks
 the org. In a suspended org every person gets the read-only tabs, and the
@@ -227,6 +229,12 @@ clicks, types, and lets the answers of the fake API settle.
 for the tests of New workspace as a page or a dialog, and of its send key.
 
 ## Key code
+
+- `clipboard.ts`: `copyText`, the clipboard write for plain or pending text.
+  It starts a pending `ClipboardItem` write during the user press when the
+  browser supports it. The fallback waits for the text and calls `writeText`.
+  Both paths propagate failures. `AppServices.copy` accepts a string or a
+  promise of a string. Live services and development hosts use this owner.
 
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the file uploads, the

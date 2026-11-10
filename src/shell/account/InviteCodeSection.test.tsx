@@ -32,7 +32,8 @@ const link = `${FAKE_ORIGIN}${joinPath('K7QHM-3XP2R')}`
 /** The section over a waitlist state, once its read answered. */
 async function showSection(
   state: WaitlistStateResponse,
-  copy: (text: string) => Promise<void> = async () => undefined,
+  copy: (text: string | Promise<string>) => Promise<void> = async () =>
+    undefined,
 ) {
   const server = new FakeApiServer()
   server.json('GET', WAITLIST_PATHS.state, state)
@@ -94,7 +95,7 @@ describe('the invite code of the account', () => {
     holdAnimationFrames()
     const copied: string[] = []
     const view = await showSection(accessState, async (text) => {
-      copied.push(text)
+      copied.push(await text)
     })
     await press(byRole('button', 'Copy the invite link', view))
     await waitFor(() => copied.length > 0, 'the copy')

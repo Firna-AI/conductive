@@ -9,12 +9,15 @@ import type { CreateState } from '../../app/new-workspace-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { formatElapsed, useNow } from '../../app/time'
-import type { AgentChoice, AgentModel } from '../../shared/agents'
+import {
+  modelLabel,
+  type AgentChoice,
+  type AgentModel,
+} from '../../shared/agents'
 import type { ImageBuild } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
-import { modelLabel } from '../ui/ModelPicker'
 
 const agentNames = { claude: 'Claude', codex: 'Codex' } as const
 

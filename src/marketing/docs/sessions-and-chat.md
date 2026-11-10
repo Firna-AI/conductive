@@ -38,6 +38,12 @@ On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
 
+Attached files arrive in `.context/attachments/` in the workspace's repository folder.
+New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
+Git ignores the folder's files unless your repository already tracks them.
+Use **Terminal** to find the ignored files.
+**All files** and **Changes** do not list them.
+
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.
 The workspace keeps accepted messages for the agent.
@@ -98,6 +104,27 @@ A phone shows the session tabs there.
 Closing a session keeps its conversation in **Session history**.
 If its agent is working, closing asks first because it stops the turn.
 Open **Session history** to reopen the conversation.
+
+## Copy a transcript
+
+Copy a session's whole conversation as Markdown for another agent or a document.
+
+1. Open the session tab's menu with a right click.
+   On a phone, use a long press.
+2. Select **Copy concise transcript** or **Copy full transcript**.
+3. Paste the text where you need it.
+
+**Copy concise transcript** keeps the default folds closed.
+A run of tool calls stays open if any call is not done.
+**Copy full transcript** includes the messages and work inside every fold.
+
+You can copy another tab's conversation without changing the selected tab.
+Both options work in archived and other read-only workspaces.
+
+For a closed session, reopen it from **Session history** before copying.
+
+If the copy fails, open the menu again.
+Select the same copy option within one minute to retry.
 
 ## Know whose account a session uses
 

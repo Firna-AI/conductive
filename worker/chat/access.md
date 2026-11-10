@@ -1,4 +1,11 @@
-# Chat access
+# Chat backend access
+
+This guide belongs to the [chat backend](README.md). It gives the gates
+that the Durable Object runs itself: the browser gate and its second
+check in the queue, the grants of open tabs, the runner token checks, and
+the login lookups. It also gives what an org suspension refuses.
+[Access and security](../../docs/protocol/access-and-security.md) states
+the requirements.
 
 The Durable Object runs the gates itself.
 
@@ -19,6 +26,9 @@ The Durable Object runs the gates itself.
   body or for the queue gets the refusal that a new request would get. An
   example is `401 sign_in_required` after a sign-out. The write saves
   nothing. Reads and the events socket take no second check.
+  The transcript is a read, so archived and suspended-org workspaces
+  remain readable. Closed sessions remain readable too. A sandbox token
+  cannot pass the browser sign-in gate.
 - Each open tab holds a `workspace` identity. The
   [shared connection reader](../security/README.md#open-connections) of
   the security area gives it a grant with a deadline. The `workspace` kind
