@@ -122,9 +122,13 @@ If a share-setting change fails, the switch returns to its saved value.
 Conductive stores agent logins encrypted.
 
 A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
+Its model requests and answers pass through Conductive on Cloudflare.
+Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
 Each turn there gets a temporary credential called a turn token.
 Code and members with terminal access can read or copy that credential.
+
 They can use it only through Conductive on the session starter's login while the turn runs.
+A copied token also works from outside the computer during that turn.
 A copied token cannot start a new model request after the turn ends.
 
 An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.

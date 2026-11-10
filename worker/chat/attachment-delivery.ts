@@ -140,7 +140,7 @@ export class AttachmentPreparation {
         if (
           (command.type === 'turn' || command.type === 'message') &&
           command.messageId === original.message.id &&
-          !runner.delivered.has(command.commandId) &&
+          !(await view.commandDelivered(command.commandId, runner.id)) &&
           (await commandDispatchState(view, command)) === 'send'
         )
           return command

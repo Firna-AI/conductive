@@ -71,6 +71,9 @@ streams, and the order of the runner commands.
   work. Closing a session records its waiting turns as stopped in history.
 - A command stays pending until the Durable Object removes it. A new runner
   connection gets each pending command again, with the same command ID.
+- A sent pending command records the ID of its connection in `deliveredTo`.
+  A wake keeps that connection ID, so the command does not go out again.
+  Older records without the field stay readable.
 - An active agent event that lists a message ID removes that message's
   command. The first end of a turn removes each command of that turn. When
   a failed file copy ends a running turn, it then saves one `interrupt` for
