@@ -35,8 +35,9 @@ function stayStopped(): () => void {
  * one store for each shown workspace, so a return shows the lists at once
  * and reads only the events after the last one. While `connects` holds, the
  * hook connects the store after the render, and it stops it at unmount or
- * when `connects` ends. Only `KeptFilesConnection` calls it, and the parts
- * that show files only read the store.
+ * when `connects` ends. Only `KeptFilesConnection` calls it. The parts that
+ * show files only read the store: the Files part, the file pages, the list
+ * of `@` and the file chips of the chat, and the pull request bar.
  */
 export function useWorkspaceFiles(
   context: WorkspaceContext,

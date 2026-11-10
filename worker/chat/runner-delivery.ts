@@ -207,17 +207,28 @@ export class RunnerDelivery {
     }
     const branches = await this.dependencies.readBranches(active.workspace.id)
     if (!branches) throw new RunnerAccessDenied()
+    const fields = {
+      commandId: command.commandId,
+      sessionId: command.sessionId,
+      turnId: command.turnId,
+      message: { ...message, state: 'sent' as const },
+      attachments: command.attachments,
+      login,
+      branches,
+    }
+    if (command.type === 'message')
+      return { state: 'send', command: { type: 'message', ...fields } }
+    const turn = await this.store.read(active.workspace.id, (view) =>
+      view.turn(command.turnId),
+    )
     return {
       state: 'send',
       command: {
-        type: command.type,
-        commandId: command.commandId,
-        sessionId: command.sessionId,
-        turnId: command.turnId,
-        message: { ...message, state: 'sent' },
-        attachments: command.attachments,
-        login,
-        branches,
+        type: 'turn',
+        ...fields,
+        commitAuthor: turn
+          ? await this.dependencies.readCommitAuthor(turn.senderId)
+          : null,
       },
     }
   }

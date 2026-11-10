@@ -119,6 +119,7 @@ export async function startProvider(
           options.tools.machineOrigin,
         ).href,
         credential: { type: 'gateway', ...turn.first.credential },
+        commitAuthor: turn.first.commitAuthor,
         choice: session.choice,
         conversationId: session.conversationId,
         instructions: session.instructions,

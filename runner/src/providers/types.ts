@@ -1,5 +1,6 @@
 import type { AgentChoice } from '../../../src/shared/agents'
 import type { ToolCall } from '../../../src/shared/chat-events'
+import type { CommitAuthor } from '../../../src/shared/commit-author'
 import type {
   RunnerLogin,
   RunnerTurnCredential,
@@ -47,6 +48,7 @@ export interface ProviderOptions {
   credential:
     | ({ type: 'gateway' } & RunnerTurnCredential)
     | { type: 'native'; login: RunnerLogin }
+  commitAuthor: CommitAuthor | null
   choice: AgentChoice
   conversationId: string | null
   instructions: string

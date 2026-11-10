@@ -81,6 +81,7 @@ async function measure(): Promise<void> {
           ? 'https://api.anthropic.com'
           : 'https://api.openai.com/v1',
       credential: { type: 'native', login },
+      commitAuthor: null,
       choice,
       conversationId: null,
       instructions: '',

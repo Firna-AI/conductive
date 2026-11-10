@@ -7,16 +7,22 @@ Before this step, Git in the build sandbox copies each chosen repository
 into its folder, as the
 [source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
 says. That Git comes from the image that the build sandbox starts from.
-The first build starts as a new default sandbox. Each later build or
-refresh starts from the last org image, which holds everything that earlier
-builds installed. The copy uses no part of this folder's software.
+A first build starts from a ready software image of the app software
+version in its provider account. It skips the software step after the copy.
+Without that image, it starts from the provider's base image and runs the
+full software step. Each later build or refresh starts from the last org
+image, which holds everything that earlier builds installed. The copy uses no part of this folder's software.
 
-Risk: a program with root access that an earlier install left in that
-image can read the clone token of a later copy. That token can only read
+In a later build or refresh, a program with root access that an earlier
+install left in the org image can read the clone token of a later copy. That token can only read
 its own repository, which the image already holds. The Worker revokes it
 when the copy ends, as
 [GitHub tokens](../docs/protocol/github-tokens.md)
 says.
+
+The [software image build](../worker/software-image/README.md) runs the same
+agent tools and image software commands as an org build. It has no
+repository or environment variable.
 
 The software step of a build calls `installImageSoftware`. It writes the
 scripts, both service units, and the relay socket unit to `/opt/conductive/staged/`.
@@ -57,7 +63,8 @@ The service stays enabled, so the relay starts without waiting for a preview req
 The relay uses the private Node.
 Its start script reads no workspace variable or workspace marker.
 
-A refresh skips this step, and the terminal installer with it. So a change
+A refresh and a first build from a software image skip this step, and the
+terminal installer with it. So a change
 in this folder or in the terminal software reaches the new workspaces of an
 org only after its next build. A workspace that exists keeps its software.
 A workspace gets the relay only from a new image build.

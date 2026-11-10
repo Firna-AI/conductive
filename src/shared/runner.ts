@@ -1,6 +1,7 @@
 import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
 import type { AgentChatEvent } from './chat-events'
+import type { CommitAuthor } from './commit-author'
 import type { RunnerFileEvent } from './files'
 import type { UserMessage } from './messages'
 import type { RunnerFileCommand, RunnerFileResponse } from './runner-files'
@@ -120,6 +121,7 @@ interface RunnerTurnV1 {
   /** The session starter owns this login, whoever sent the message. */
   login: RunnerLogin
   credential?: never
+  commitAuthor: CommitAuthor | null
 }
 
 interface RunnerMessageDuringTurnV1 {

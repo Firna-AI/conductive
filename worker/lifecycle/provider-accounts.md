@@ -82,6 +82,10 @@ accounts stay two entries.
 - The Stop or the Delete of a computer in an account that the Worker does
   not configure stays pending. `ProviderAccountError` stops the call before
   any provider request. The ledger entry gets no deletion mark.
+- A software image build belongs to no org, so the ledger holds no entry
+  for its computer. Its `createResource` intent has no ownership. The
+  [software image record](../software-image/README.md) keeps the account
+  and the ID of that computer until its cleanup deletes it.
 
 ## Org images
 

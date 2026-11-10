@@ -67,7 +67,7 @@ An inactive cloud computer can stop.
 Its files and sessions stay.
 Your chat history remains available while it starts or stays stopped.
 Open a stopped workspace to start its computer again.
-If it stops while the workspace is open, select **Resume**.
+If it stops while the workspace is open, select **Resume**, or open a file or a change.
 
 - [Review files and changes](/docs/files-and-changes)
 - [Use Terminal and previews](/docs/terminal-and-previews)

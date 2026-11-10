@@ -54,5 +54,9 @@ export function instructionProviders(agent: Agent) {
           ),
     parameters: () =>
       agent === 'claude' ? query().parameters?.options : thread(),
+    environment: () =>
+      agent === 'claude'
+        ? query().parameters?.options?.env
+        : servers.requests.at(-1)?.env,
   }
 }

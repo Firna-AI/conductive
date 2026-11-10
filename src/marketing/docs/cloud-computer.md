@@ -104,8 +104,14 @@ Use a row's change action to replace its value.
 Saved values stay hidden in settings, including values without the **Secret** mark.
 
 Values and marks apply at the next start of each workspace's computer.
-Every workspace receives every environment value of the org.
-Agents and members with terminal access can read them.
+Every workspace receives the org's environment values, except values with a name that Conductive sets itself.
+Agents and members with terminal access can read the values that the computer receives.
+
+Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for commit authors and committers.
+An org variable with one of these names has no effect.
+These values also take priority over an author that a script or an agent writes into Git settings.
+A Git command can still set its own author, for example with `--author`.
+The author of a commit does not prove who made it.
 
 The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
 It does not hide values in file content, diffs, or Terminal.
@@ -116,10 +122,14 @@ A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
-**Continue** keeps that same computer for the workspace's next task.
+A build includes the current Conductive cloud computer software.
+An existing workspace keeps its software after a resume.
+**Continue** keeps that same computer and software for the workspace's next task.
 A new build does not replace the existing computer.
 Installing updated agent software in an older computer does not change its protection for saved agent logins.
-After a current build succeeds, create a new workspace to get that protection.
+
+Ask an admin to run **Build computer**.
+After it succeeds, create a new workspace for newer software and the new protection.
 
 - [Understand agent login protection](/docs/security#protect-agent-and-github-logins)
 

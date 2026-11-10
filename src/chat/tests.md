@@ -92,9 +92,28 @@ owner that keeps the draft of each session, as the chat does.
 `components/ComposerDrafts.dom.test.tsx` switches the sessions of the
 chat after a delete, and moves the draft of a composer with its identity.
 Undo stays with its draft in both.
-`components/chip-field/field-text.test.ts` checks the separator rule. The
-DOM tests focus, type, paste, clear, and read the field through
+`components/chip-field/field-text.test.ts` checks the separator rule, for
+links and for mentions. `components/chip-field/MentionList.dom.test.tsx`
+opens the list of `@`, moves its highlight, picks with Enter and Tab,
+closes it with Esc and a space, starts each query at the top, continues
+a restored query, shows its one-line states, also with the real store of
+the files, and checks that Enter then sends nothing.
+`components/chip-field/FileChips.dom.test.tsx` restores file chips from a
+draft, opens a file and a folder, removes a chip with its ×, also as the
+first change, pastes a mention, and follows the tree.
+`components/chip-field/mention-field-test-kit.tsx` mounts the field with the
+files of a chat: a fake with two plain states, no tree and a tree of
+entries, or the real store of the Files screens over the fake API for the
+states that the cloud computer marks. `components/AttachmentChips.dom.test.tsx`
+removes an attached file with the cell of its icon, also a failed upload
+that keeps its Try again, and on a phone with its × at the end. The DOM
+tests focus, type, paste, clear, and read the field through
 `src/test-support/message-field.ts`.
+`mentions/mention-text.test.ts` reads and writes mentions, and
+`mentions/mention-rows.test.ts` orders the rows of the list.
+`links/chat-parts-mentions.test.ts` reads mentions in a sent message, and
+`links/FileLink.dom.test.tsx` opens a file and a folder from its chip, and
+copies messages with file chips, without hidden text.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
@@ -102,7 +121,10 @@ mounts an answer with chips: in bold, in a list, with a bold or a code
 label, and a link in inline code and in a code block.
 `state/workspace-list.test.ts` checks that a chat without sources reads the
 list while it shows, and not while it is hidden. The workspace screen's
-`LinkChips.test.tsx` checks the chips of a kept chat on a phone.
+`LinkChips.test.tsx` checks the chips of a kept chat on a phone, and its
+`FileMentions.test.tsx` lists the files on a phone before a visit to
+Files, and opens a file and a folder from their chips, also into a hidden
+right column.
 
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
 It changes `readOnly` during a rename and archives a kept chat during a close question.

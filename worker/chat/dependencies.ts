@@ -1,4 +1,6 @@
 import type { AppEnv } from '../env'
+import { commitAuthor } from '../../src/shared/commit-author'
+import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { randomToken } from '../security/crypto'
 import {
@@ -32,6 +34,10 @@ export function chatDependencies(
 ): ChatDependencies {
   return {
     readBranches: (id) => readRunnerBranches(env.DB, id),
+    readCommitAuthor: async (userId) => {
+      const user = await readUser(env.DB, userId)
+      return user ? commitAuthor(user) : null
+    },
     readAutomaticTitleWorkspace: (id) =>
       readAutomaticTitleWorkspace(env.DB, id),
     runTitleModel: titleModelBinding(env),

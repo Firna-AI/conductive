@@ -1,7 +1,7 @@
 # GitHub tokens
 
-This doc states how a cloud computer gets GitHub access, and how the
-Worker acts on GitHub as a member.
+This doc states how a cloud computer gets GitHub access, who its commits
+name as their author, and how the Worker acts on GitHub as a member.
 [Access and security](access-and-security.md) states the shared access
 rules. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
@@ -39,6 +39,66 @@ rules. A decision number names a dated record, as
   A copied token works until it expires, also on that person's repositories
   outside the org.
 
+## Commit author
+
+- Git in a workspace sandbox always has an author name and an author
+  email. A commit needs no Git setup by an agent, a member, or a script.
+- The author of each commit is the person whose GitHub token Git uses
+  (decision 231). [Git and the GitHub CLI](#git-and-the-github-cli) says
+  whose token that is.
+- In an agent turn, the author is the sender of the turn, the member whose
+  message started the turn. A message that another member sends during the
+  turn does not change the author.
+- A sandbox keeps the agent runner of its org image, also after a resume.
+  In a sandbox whose runner gives an agent no turn author, the commits of
+  each agent turn name the workspace owner. The member starts a new
+  workspace after an admin runs Build computer to get the turn sender as
+  the author.
+- Outside an agent turn, such as in the shared terminal or in the startup
+  script, the author is the workspace owner.
+- The author of the first commit that the app pushes to an empty
+  repository is the sender of the turn that creates the workspace.
+  [Create a workspace](create-a-workspace.md#the-branch-and-the-name)
+  states that commit.
+- Reason: the commits then show the same person as the pushes and the
+  pull requests.
+- The workspace owner as the author of every commit was rejected. The
+  commit of a teammate's turn then names the owner, but its push uses the
+  teammate's token.
+- A fixed author of the app with a co-author line for the person was
+  rejected. GitHub then shows the person only as a co-author, not as the
+  author.
+- The author name is the display name of the person's GitHub account,
+  without the spaces at its start and end.
+- The GitHub login replaces a display name that is missing or that Git
+  cannot use. Git cannot use a name made only of spaces and the characters
+  `,`, `:`, `;`, `<`, `>`, `"`, `\`, and `'`.
+- The author email is the GitHub no-reply address of the person,
+  `<id>+<login>@users.noreply.github.com` (decision 232). `<id>` is the
+  numeric ID of the GitHub account, and `<login>` is its login.
+- Reason: GitHub links each commit with this address to the account, and
+  the address shows no private email. So GitHub never refuses the push to
+  keep an email private.
+- The primary verified email was rejected. It shows a private address in
+  the history of the repository, and GitHub refuses the push when the
+  person blocks pushes that expose their email.
+- The name and the email of the person's own Git settings on their Mac
+  were rejected, because a member without the Mac app has none.
+- The committer is the same person as the author.
+- Git gets the author from the four variables `GIT_AUTHOR_NAME`,
+  `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL`.
+- The app's values of these four variables replace an org env var with
+  the same name (decision 233). The app's other own variables do the same,
+  as [Startup script and env vars](workspaces-and-sandboxes.md#startup-script-and-env-vars)
+  says.
+- The app's author also wins over an author that a script or an agent
+  writes into the Git settings.
+- Org env vars that win over the app's author were rejected, because the
+  commits of that org then stop naming the person of the token.
+- Risk: one Git command can still give its own author, with an option or
+  with its own variables. So the author of a commit does not prove who
+  made it.
+
 ## Image builds and refreshes
 
 - A build or a refresh copies each repository of the image with Git in the
@@ -54,10 +114,13 @@ rules. A decision number names a dated record, as
   the command fails. The build goes on only after GitHub confirms the
   revocation. The build starts no checkout, software step, install script,
   snapshot, or other repository code before that.
-- Risk: a build sandbox starts from the last org image. A program with root
-  access that an earlier install left in that image can read the clone
-  token of a later copy. That token can only read its own repository, which
-  the image already holds. The Worker revokes it when the copy ends.
+- Risk: a later build and a refresh start from the last org image. A
+  program with root access that an earlier install left in that image can
+  read the clone token of a later copy. That token can only read its own
+  repository, which the image already holds. The Worker revokes it when
+  the copy ends.
+- A build of an org without an org image starts from the software image or
+  from the base image, where no org code has run.
 - Reason: Git in the build sandbox copies a repository of any size, and the
   Git data does not pass through the Worker. Larger uploads and stored
   progress were rejected, because one repository or one Git response must

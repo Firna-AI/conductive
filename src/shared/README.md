@@ -55,6 +55,8 @@ messages.
 Browser response types carry no login and no turn token.
 `RunnerTurn` and `RunnerMessageDuringTurn` carry the current `branches`: the workspace branch and the target branch.
 The current Worker always sends them. A command of an older producer can omit them.
+Turn commands also carry the commit author of the member whose message started the turn.
+Message commands carry no commit author.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 
 `messages.ts` owns the attachment metadata and target identity.
@@ -189,6 +191,7 @@ The git credential payload is not defined yet.
 
 ## Key code
 
+- [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.

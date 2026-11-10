@@ -49,6 +49,7 @@ export interface BuildJob {
   previousRepositoryLocationsJson: string | null
   softwareJson: string
   previousImageName: string | null
+  softwareImageName: string | null
   previousProviderAccount: string
 }
 
@@ -62,7 +63,8 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.start
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,
   j.repository_locations_json AS repositoryLocationsJson,
   j.previous_repository_locations_json AS previousRepositoryLocationsJson,
-  j.previous_image_name AS previousImageName, j.provider_account AS previousProviderAccount,
+  j.previous_image_name AS previousImageName, j.software_image_name AS softwareImageName,
+  j.provider_account AS previousProviderAccount,
   b.provider_retry_json AS providerRetryJson`
 
 const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,

@@ -42,10 +42,20 @@ it.each(['claude', 'codex'] as const)(
     onTestFinished(() => runner.close())
     await runner.start(false)
     const input = { ...turn('continued', 'bob', agent), branches: current }
+    input.commitAuthor = {
+      name: 'Bob Example',
+      email: '2+bob@users.noreply.github.com',
+    }
     const unchanged = structuredClone(input)
     h.endpoint.send(input)
     await runner.idle()
     expect(provider.prompt()).toBe(fixed)
+    expect(provider.environment()).toMatchObject({
+      GIT_AUTHOR_NAME: 'Bob Example',
+      GIT_AUTHOR_EMAIL: '2+bob@users.noreply.github.com',
+      GIT_COMMITTER_NAME: 'Bob Example',
+      GIT_COMMITTER_EMAIL: '2+bob@users.noreply.github.com',
+    })
     const text = `Sender: @bob\n${line}\n\nChange the file.`
     expect(await provider.input()).toMatchObject(
       agent === 'claude'
@@ -124,6 +134,10 @@ it.each(['claude', 'codex'] as const)(
     onTestFinished(() => runner.close())
     await runner.start(false)
     const first = { ...turn('new', 'alice', agent), branches: original }
+    first.commitAuthor = {
+      name: 'Alice Example',
+      email: '1+alice@users.noreply.github.com',
+    }
     h.endpoint.send(first)
     await runner.idle()
     expect(provider.prompt()).toContain('Workspace branch: "owner/old"')
@@ -157,6 +171,12 @@ it.each(['claude', 'codex'] as const)(
     )
     expect(h.store.snapshot.sessions[0]).toMatchObject({
       instructionBranches: original,
+    })
+    expect(provider.environment()).toMatchObject({
+      GIT_AUTHOR_NAME: 'Alice Example',
+      GIT_AUTHOR_EMAIL: '1+alice@users.noreply.github.com',
+      GIT_COMMITTER_NAME: 'Alice Example',
+      GIT_COMMITTER_EMAIL: '1+alice@users.noreply.github.com',
     })
   },
 )

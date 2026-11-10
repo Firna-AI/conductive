@@ -131,30 +131,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
-- The pull request bar shows one main action in each state, beside its
-  links to GitHub, from decisions 220 to 228. `barModel.ts` in
-  `src/components/workspace/` holds the rule: the action of each state, with
-  the local work, the GitHub access of the viewer, and an action of the app
-  that runs, and Merge needs a merge method. `barCopy.ts` beside it holds
-  the labels, the messages under the bar, and the fixed prompts of the agent
-  actions. Address review names "A reviewer" when GitHub names no login of
-  a reviewer. `barIcons.ts` holds the icon of each agent action. They import
-  no fixture, so the app uses them too.
-  - The main action takes the primary tone. An agent action sends its fixed
-    prompt, so the chat shows it as a message of the member who clicked.
-    Merge names its method, such as "Squash and merge", and a spinner shows
-    while the merge or Continue runs.
-  - A refusal of GitHub, a Continue that stopped, and the wait of Continue
-    for a turn show as one line under the bar. The line takes the tint of
-    its state, and its bottom border stays neutral.
-  - On a phone the row opens the Checks tab. `ChecksActions` in
-    `BarActions.tsx` draws the actions, the line, and the link to GitHub at
-    the top of that tab, at touch size.
-  - `ContinueDialog` asks before Continue when the sandbox has local work,
-    with the list of the Archive question. `ContinuedLine` in
-    `src/components/chat/` draws the note of Continue in each session,
-    centred and muted, as the first line of a linked session. It takes no
-    fixtures.
+- [The pull request bar](design-bar.md) gives its one main action in each
+  state, the line under the bar, the actions on top of the Checks tab of a
+  phone, and the question and the note of Continue.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
@@ -211,9 +190,36 @@ sessions as tabs above the chat, and four tabs at the bottom.
     mark.
   - A pasted link becomes a chip in the message box at once: in the chat,
     and in New workspace as a page or a dialog. `MessageField` gives each
-    box its field. A draft with a workspace link shows in `ChipTextField`:
-    plain text with each chip as one unit, with the sizes and the line
-    limits of the plain text field. The draft keeps the plain link.
+    box its field. A draft with a workspace link or a file mention shows
+    in `ChipTextField`: plain text with each chip as one unit, with the
+    sizes and the line limits of the plain text field. The draft keeps the
+    plain link.
+  - `InlineChip.module.css` beside it holds the pill of every chip in a
+    line of text, so a workspace chip and a file chip have the same size.
+  - In a message box each chip starts with the cell of its icon, from
+    `ChipIconCell` in `ChipRemove.tsx`. While a pointer is over the cell, a
+    × takes the place of the icon, and a press removes the chip. Where no
+    pointer hovers, as on a phone, the icon stays, and `ChipEndRemove`
+    puts a × at the end of the chip. Attached files follow the same rule,
+    and on a phone they keep their × button of touch size.
+- `FileChip` in `src/components/chat/` draws a file or a folder of the
+  workspace as a chip of the same size: the icon that All files gives it,
+  and its name. Its title is the whole path. `EntryIcon` in
+  `src/components/files/` gives the icon to All files, the chips, and the
+  list. It is the one icon map of the mockups and the app: a folder, a
+  Markdown file, a code file, or another file. A file is code when the
+  code view of the app gives it syntax colours, as `fileKind` in
+  `src/files/code/file-kind.ts` of the app says, so one list of languages
+  sets both. The user chose this on 10 November 2026. A sent message shows
+  each file chip as a link to the tab of the
+  file, and an answer shows none. It takes no fixtures, so the app can use
+  it too.
+- `FileMentionList` in `src/components/chat/` draws the list of `@` above
+  the message box: the icon, the name, and the folder of each entry that
+  matches the query, with the first row highlighted. One line takes the
+  place of the rows while the tree loads, when no tree is available, and
+  when nothing matches. `fileMentions.ts` beside it reads the mentions of
+  a text and orders the rows.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green

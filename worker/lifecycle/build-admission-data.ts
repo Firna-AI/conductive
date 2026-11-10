@@ -44,6 +44,7 @@ export async function insertBuild(
     repositoryLocations: readonly RepositoryLocation[]
     previousRepositoryLocations: readonly RepositoryLocation[]
     software: ImageSoftwareArtifact
+    softwareVersion?: string
     previousImageName: string | null
     previousRunnerProtocolVersion: number | null
     now: number
@@ -73,8 +74,12 @@ export async function insertBuild(
     db
       .prepare(
         `INSERT INTO image_build_jobs (build_id, phase, install_script, repositories_json, software_json, previous_image_name,
-          repository_locations_json, previous_repository_locations_json, provider_account)
-       SELECT ?, 'create', ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM image_builds WHERE id = ?)`,
+          repository_locations_json, previous_repository_locations_json, provider_account, software_image_name)
+       SELECT ?, 'create', ?, ?, ?, ?, ?, ?, ?,
+         (SELECT snapshot_name FROM software_images
+          WHERE provider_account = ? AND version = ? AND state = 'ready'
+          ORDER BY started_at DESC, id DESC LIMIT 1)
+       WHERE EXISTS (SELECT 1 FROM image_builds WHERE id = ?)`,
       )
       .bind(
         input.id,
@@ -85,6 +90,8 @@ export async function insertBuild(
         JSON.stringify(input.repositoryLocations),
         JSON.stringify(input.previousRepositoryLocations),
         input.previousProviderAccount,
+        input.providerAccount,
+        input.softwareVersion ?? null,
         input.id,
       ),
     db

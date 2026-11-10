@@ -1041,6 +1041,28 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: State the narrower computer and image-protection facts in the software guide. Reason: An unconditional retention sentence overstated the current protection rule.
 - Design call on 10 November 2026: Keep temporary model credentials, GitHub tokens, and the computer connection credential distinct. Reason: Each credential has a different scope and lifetime.
 
+### Required base conflict integration calls
+
+- Design call on 10 November 2026: Keep current commit author and current branches as separate runtime facts. Reason: The author belongs to a turn, while later input can change branch context.
+- Design call on 10 November 2026: Keep main's author fallback and no-reply identity. Reason: The integration needs no stricter author validation or rejection.
+- Design call on 10 November 2026: Keep the software-image command owner and full journal cleanup with Continue recoverOnly. Reason: The new image workflow and existing lost-command recovery must both remain.
+- Design call on 10 November 2026: Extend existing branch cases with literal author assertions. Reason: The same public boundaries can verify the combined behavior without another test case.
+- Design call on 10 November 2026: Keep the current Terms revision unchanged for the last base update. Reason: The Terms content is unchanged, while new author-processing facts belong in Privacy.
+- Design call on 10 November 2026: Keep main's complete author-processing Privacy text. Reason: It accurately names the identity fields and their repository recipients.
+- Design call on 10 November 2026: Keep both account-access and commit-author identity rows in Security. Reason: GitHub access and Git author labels are separate facts.
+- Design call on 10 November 2026: Say that an org build includes current software. Reason: A ready shared image can avoid repeating the software installation.
+- Design call on 10 November 2026: Keep explicit resume and Continue software retention. Reason: Neither operation replaces the existing computer with a newer image.
+- Design call on 10 November 2026: Keep distinct older-software exceptions for commit names and saved logins. Reason: Those features have separate image and runtime contracts.
+- Design call on 10 November 2026: Combine Managed Git identity copy without changing its row ID, status, or audit time. Reason: Both parents' current identity facts must stay in the same row.
+- Design call on 10 November 2026: Keep KeptFilesConnection as the one connection owner and make chat a reader. Reason: Phone mentions and bar local-work updates need the same ready workspace store.
+- Design call on 10 November 2026: Retain reference counting inside startFiles. Reason: Repeated effects can still share one physical connection.
+- Design call on 10 November 2026: Keep main's page placeholders, saved shown file, and ResumeOnTabOpen. Reason: A connection does not resume a computer, while opening a stopped file tab does.
+- Design call on 10 November 2026: Render ResumeOnTabOpen once inside the common dialog fragment. Reason: Each ready layout must retain both Continue and file-open resume without exceeding the file limit.
+- Design call on 10 November 2026: Move bar conversation keys into main's shared conversationKeys module. Reason: Both mention and action fixtures need their existing keys without a runtime cycle.
+- Design call on 10 November 2026: Move the bar catalogue block unchanged into catalogue-bar.md. Reason: The touched catalogue stays below 300 lines and links to the same routes.
+- Design call on 10 November 2026: Move the bar design block unchanged into design-bar.md. Reason: The touched design guide stays short while retaining its visual requirements.
+- Design call on 10 November 2026: Move the runner Key code block unchanged into runner/key-code.md. Reason: The README keeps its commands and old Key code heading while remaining below 300 lines.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1348,9 +1370,31 @@ Depends on: 9
 
 Evidence: `.context/pull-request-bar-actions/ci-base-integration/`.
 
+## Milestone 10a: Required base conflict integration
+
+Depends on: 10 implementation and local verification
+
+- [x] Integrate captured main `d1abf38e582db8342ba27b7bab6d18c9509f1ca2`.
+      Preserve its file mentions, file-open resume, current Git commit
+      author, shared software image, Issues, and comparison behavior.
+- [x] Keep this branch's one Files owner, phone local-work updates, fixed
+      actions, drafts, uploads, Merge, Continue, notes, counts, current
+      branch context, gateway protection, and account/version pinning.
+- [x] Resolve every conflict against both parents with current protocol,
+      legal, public-guide, mockup, and app behavior aligned.
+- [x] Run bounded affected tests, builds, types, and static checks. Prove
+      any new or materially changed async regression and run it ten times.
+- [x] Smoke-test the current combined desktop and phone action flows.
+- [ ] Commit and push the combined tree. Complete a fresh integration
+      review on that fixed source. Record all checked outcomes.
+
+The gateway review was interrupted before a verdict because GitHub found
+new base conflicts. The complete local gate passed on `5f4d1744` before
+this integration. No passing result is claimed for the later tree yet.
+
 ## Milestone 11: Final record and pull request completion
 
-Depends on: 10
+Depends on: 10 and 10a
 
 - [ ] Record all checked outcomes and follow-ups. Preserve each dated
       design call and the current test-cost record in the PR description.

@@ -126,10 +126,12 @@ That session links back to the earlier conversation.
 It has no copy of the earlier history.
 
 GitHub operations follow the person whose message started the running turn.
+Commits name that person as both author and committer.
+In a workspace with older cloud computer software, agent commits name the workspace owner.
 Mac command requests go to that same person's connected Mac.
 They can differ from the member whose agent login the session uses.
 The agent can identify the member who sent each message.
-Another member's message during a turn changes neither its GitHub account nor its receiving Mac.
+Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
 - [Choose who can use an agent login](/docs/agent-logins#choose-who-can-use-your-login)
 - [Understand account and credential access](/docs/security)

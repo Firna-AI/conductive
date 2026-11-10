@@ -36,12 +36,17 @@ Its sender is the person whose message started that turn.
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
+| Commit in an agent turn | The turn sender, as author and committer |
+| Commit outside a turn, including Terminal and scripts | The workspace owner, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
+
+In a workspace with older cloud computer software, agent commits name the workspace owner.
+[Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
 
 Other members' messages can spend a session starter's account while that person shares the login.
 Without sharing, another member's message starts a new session on their own login.
 The agent can identify the member who sent each message.
-Another member's message during a turn does not switch its GitHub account or receiving Mac.
+Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
 Every member using a workspace's Terminal uses the same owner identity for GitHub commands.
 GitHub access can include repositories outside the Conductive org.
@@ -119,9 +124,15 @@ Only an org admin can change environment variables.
 Conductive stores their values encrypted.
 Settings show their names and **Secret** marks without returning stored values.
 
-Every workspace in the org receives every environment value at start.
-Its agents, programs, and terminal users can read those values.
+Every workspace receives the org's environment values at start, except values with a name that Conductive sets itself.
+Its agents, programs, and terminal users can read the values that the computer receives.
 Builds and repository refreshes do not receive the org's environment values.
+
+Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for commit authors and committers.
+An org variable with one of these names has no effect.
+These values also take priority over an author that a script or an agent writes into Git settings.
+A Git command can still set its own author, for example with `--author`.
+The author of a commit does not prove who made it.
 
 The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
 It starts on for a new variable.

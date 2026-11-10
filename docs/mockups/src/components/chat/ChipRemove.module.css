@@ -1,0 +1,89 @@
+/*
+ * The cell of the icon at the start of a chip of the composer. It is a
+ * square as high as the chip, with a line between it and the text, so the
+ * icon reads as a control of its own.
+ */
+.cell {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--ui-border2);
+  border-radius: calc(var(--ui-radius-md) - 1px) 0 0
+    calc(var(--ui-radius-md) - 1px);
+  background: transparent;
+  color: var(--ui-muted);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.icon {
+  display: inline-flex;
+}
+
+/* The × waits under the icon until a pointer comes over the cell. */
+.x {
+  display: none;
+}
+
+.remove {
+  cursor: pointer;
+}
+
+.remove:hover,
+.remove:focus-visible,
+.pointer {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+.remove:hover .icon,
+.remove:focus-visible .icon,
+.pointer .icon {
+  display: none;
+}
+
+.remove:hover .x,
+.remove:focus-visible .x,
+.pointer .x {
+  display: block;
+}
+
+.remove:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}
+
+/* Where no pointer hovers, the cell only holds the icon. */
+.still {
+  cursor: inherit;
+}
+
+/*
+ * The × at the end of a chip, where no pointer hovers. It is as high as the
+ * chip, so a chip in the text keeps the height of its line.
+ */
+.end {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--ui-border2);
+  border-radius: 0 calc(var(--ui-radius-md) - 1px)
+    calc(var(--ui-radius-md) - 1px) 0;
+  background: transparent;
+  color: var(--ui-muted);
+  font: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+}

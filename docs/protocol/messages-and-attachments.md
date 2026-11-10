@@ -171,6 +171,9 @@ says.
 - The composer shows each upload while it runs. A failed upload offers Try
   again and Remove. Send waits while a file uploads, and while a failed
   upload waits for Try again or Remove.
+- Each attached file has a × that removes it, as
+  [Remove a chip of the composer](file-mentions.md#remove-a-chip-of-the-composer)
+  says. This × is the Remove of a failed upload.
 - An upload works also before the cloud computer of its workspace exists,
   and while that cloud computer starts or is stopped (decision 132).
 - The Worker stores each uploaded file in one R2 bucket of the app, outside

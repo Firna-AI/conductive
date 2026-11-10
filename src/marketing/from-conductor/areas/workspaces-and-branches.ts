@@ -9,6 +9,20 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     note: 'Each workspace has its own branch and cloud computer, with a separate copy of the repository.',
   },
   {
+    id: 'local-workspaces',
+    area: 'workspaces-and-branches',
+    name: 'Local workspaces',
+    status: 'different',
+    note: 'Each workspace runs on its own cloud computer instead of your Mac. Importing local Conductor workspaces through the Mac app is planned.',
+  },
+  {
+    id: 'add-a-project',
+    area: 'workspaces-and-branches',
+    name: 'Add a project',
+    status: 'different',
+    note: 'Admins choose GitHub repositories in org settings, also empty ones. For a local folder, push it to a new GitHub repository first.',
+  },
+  {
     id: 'new-workspace-composer',
     area: 'workspaces-and-branches',
     name: 'New-workspace composer',
@@ -19,8 +33,8 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'start-from-a-branch-pr-or-issue',
     area: 'workspaces-and-branches',
     name: 'Start from a branch, PR, or issue',
-    status: 'planned',
-    note: 'Starting from an existing GitHub branch, pull request, or issue is planned.',
+    status: 'in-progress',
+    note: 'Starting from a GitHub branch or pull request is in progress. Starting from an issue is planned.',
     due: null,
   },
   {
@@ -109,5 +123,19 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     status: 'in-progress',
     note: 'A .context folder for notes, screenshots, shared files, and attachments is in progress. Git will ignore it.',
     due: null,
+  },
+  {
+    id: 'monorepo-working-directories',
+    area: 'workspaces-and-branches',
+    name: 'Monorepo working directories',
+    status: 'considering',
+    note: 'Each workspace has the whole repository. Choosing which folders a workspace checks out is under consideration.',
+  },
+  {
+    id: 'linked-directories',
+    area: 'workspaces-and-branches',
+    name: 'Linked directories',
+    status: 'different',
+    note: 'Each cloud computer holds a copy of every org repository. Agents know their folders, so one agent can work across them.',
   },
 ]

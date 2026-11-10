@@ -12,6 +12,7 @@
     "create-org",
     "mac-command",
     "link-a-workspace",
-    "merge-and-continue"
+    "merge-and-continue",
+    "mention-a-file"
   ]
 }

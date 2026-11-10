@@ -22,6 +22,9 @@ This page lists each protocol doc and what it covers.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
+  - [File mentions](../protocol/file-mentions.md): the list of `@` in the
+    composer, the chips of files and folders, and the removal of each chip
+    of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, and the repair of lost workspace
     updates.
@@ -62,8 +65,8 @@ This page lists each protocol doc and what it covers.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
   messages in the chat, with their tables.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
-  scope of a cloud computer, and the GitHub actions of the Worker as a
-  member.
+  scope of a cloud computer, the author of each commit in a sandbox, and the
+  GitHub actions of the Worker as a member.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, the sender line and the branch line of each message,
   and the base prompt of Claude agents.
@@ -74,6 +77,6 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md): the
-  public page for people who move from Conductor Cloud, with the status of
-  each Conductor Cloud feature.
+- [Conductor comparison](../protocol/conductor-comparison.md): the public
+  page for people who move from Conductor, with the status of each
+  Conductor feature.

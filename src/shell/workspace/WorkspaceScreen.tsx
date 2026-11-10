@@ -26,6 +26,7 @@ import { ChatArea } from './ChatArea'
 import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
 import { KeptFilesConnection } from './files/kept-files'
+import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { sandboxView } from './sandbox-view'
@@ -229,12 +230,15 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  // The question of Continue, and the actions of the screen for the palette.
-  // The Archive question has its own place, as `withQuestion` says.
+  // The question of Continue, the actions of the screen for the palette, and
+  // the resume of a stopped sandbox when a file or diff tab opens. Each
+  // layout draws them. The Archive question has its own place, as
+  // `withQuestion` says.
   const dialog = (
     <>
       <ContinueDialog />
       <WorkspacePaletteActions chat={chat} context={context} />
+      <ResumeOnTabOpen context={context} />
     </>
   )
   if (phone) {

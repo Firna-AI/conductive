@@ -74,6 +74,8 @@ of its fetch.
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
+The [software image area](../software-image/README.md) builds the shared
+image that a build of an org without an org image starts from.
 
 ## Settings
 
@@ -260,7 +262,8 @@ The native cleanup pointer can therefore change without losing an older failed c
   [Workspace Durable Object](workspace-object.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [Image builds](image-builds.md#key-code): the image build, its log, its
-  timers, its coordinator, its software, and the private Node of the image.
+  timers, its coordinator, its software, the shared software images, and
+  the private Node of the image.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
   into a Bash command. [`lifecycleCommand`](command-intents.ts) runs each step once.

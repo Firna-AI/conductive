@@ -47,19 +47,22 @@ Use the expand control of the frame to see the full desktop layout.
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
-share. Its linked pages give the parts of [the chat](design-chat.md) and
-of [the operator section](design-operator.md).
+share. Its linked pages give the parts of [the chat](design-chat.md), of
+[the operator section](design-operator.md), and of
+[the pull request bar](design-bar.md).
 
 ## The catalogue
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
 moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/banner`, `app/chat`, `app/workspace-menu`, and `app/workspace-links`,
-and the New workspace dialog. Its linked page,
+`app/chat`, `app/workspace-menu`, `app/workspace-links`, and
+`app/file-mentions`, and the New workspace dialog. Its linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
-operator section.
+operator section. Its linked page
+[the pull request bar](catalogue-bar.md) gives `app/banner` and its child
+pages.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared
@@ -150,7 +153,7 @@ pictures, the header and the footer, and [the docs pages](marketing-site.md#the-
 It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
-[Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)
+[Conductor comparison](../protocol/conductor-comparison.md)
 states its requirements. It draws the real rows: its rows, statuses, dates,
 and words come from `src/marketing/from-conductor/`, the modules that the
 site also reads, as

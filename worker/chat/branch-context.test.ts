@@ -30,6 +30,10 @@ async function checkBranches(protocolVersion: RunnerProtocolVersion) {
   if (first?.type !== 'turn') throw new Error('Missing first turn.')
   expect('login' in first).toBe(protocolVersion === 1)
   expect('credential' in first).toBe(protocolVersion === 2)
+  expect(first.commitAuthor).toEqual({
+    name: 'Octocat',
+    email: '7+octocat@users.noreply.github.com',
+  })
   expect(first.branches).toEqual({
     workspaceBranch: 'octocat/test',
     targetBranch: 'main',
@@ -48,6 +52,7 @@ async function checkBranches(protocolVersion: RunnerProtocolVersion) {
     type: 'message',
     branches: { workspaceBranch: 'octocat/next', targetBranch: 'trunk' },
   })
+  expect(runner.commands.at(-1)).not.toHaveProperty('commitAuthor')
   runner.disconnect()
   await f.env.DB.prepare(
     'UPDATE repositories SET default_branch = ? WHERE id = ?',
@@ -58,6 +63,9 @@ async function checkBranches(protocolVersion: RunnerProtocolVersion) {
   expect(runner.commands.at(-1)).toMatchObject({
     branches: { workspaceBranch: 'octocat/next', targetBranch: 'stable' },
   })
+  await f.env.DB.prepare('UPDATE users SET display_name = ? WHERE id = ?')
+    .bind(' Current Octocat ', f.owner.id)
+    .run()
   runner.emit({
     type: 'turn.failed',
     sessionId: session.id,
@@ -75,6 +83,10 @@ async function checkBranches(protocolVersion: RunnerProtocolVersion) {
   expect(runner.commands.at(-1)).toMatchObject({
     type: 'turn',
     branches: { workspaceBranch: 'octocat/next', targetBranch: 'stable' },
+    commitAuthor: {
+      name: 'Current Octocat',
+      email: '7+octocat@users.noreply.github.com',
+    },
   })
   const retry = runner.commands.at(-1)
   if (retry?.type !== 'turn') throw new Error('Missing retry turn.')
@@ -105,12 +117,20 @@ async function checkBranches(protocolVersion: RunnerProtocolVersion) {
   expect(runner.commands.at(-1)).toMatchObject({
     type: 'turn',
     branches: { workspaceBranch: 'octocat/next', targetBranch: 'stable' },
+    commitAuthor: {
+      name: 'Current Octocat',
+      email: '7+octocat@users.noreply.github.com',
+    },
   })
   const fresh = await f.createSession()
   await f.send(fresh.id, 'new-session')
   expect(runner.commands.at(-1)).toMatchObject({
     sessionId: fresh.id,
     branches: { workspaceBranch: 'octocat/next', targetBranch: 'stable' },
+    commitAuthor: {
+      name: 'Current Octocat',
+      email: '7+octocat@users.noreply.github.com',
+    },
   })
   expect(JSON.stringify((await f.history(session.id)).events)).not.toContain(
     'Current branches:',

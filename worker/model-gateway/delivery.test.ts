@@ -43,6 +43,10 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
         attachments: [],
         branches: { workspaceBranch: 'octocat/test', targetBranch: 'main' },
         credential: { agent, kind, token: client.token },
+        commitAuthor: {
+          name: 'Octocat',
+          email: '7+octocat@users.noreply.github.com',
+        },
       })
       expect(client.token.startsWith(prefix)).toBe(true)
       expect(turnTokenRoute(client.token)).toEqual({

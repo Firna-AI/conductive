@@ -41,8 +41,9 @@ export const files = defineScreen({
       slug: 'code',
       title: 'Code preview',
       description:
-        'A code file opened from All files: a tab with line numbers and syntax colours. Its row in the list is marked.',
+        'A code file opened from All files: a tab with line numbers and syntax colours. Its row in the list is marked. A press on its chip in a message opens the same tab.',
       props: { tab: 'code' },
+      useCasePaths: ['user-flows/mention-a-file'],
     },
     {
       slug: 'diff',

@@ -24,7 +24,31 @@ import {
 } from './files-navigation'
 import { useFileTargets, useKeptFiles } from './workspace-files'
 
-/** A file tab or a diff tab as a page, which keeps its tab in the saved view. */
+/**
+ * The state of a sandbox that does not run, in place of the content of a
+ * file or diff page. The page hides the bar of the chat, so the state shows
+ * the action of the bar, Resume or Try again, and the words of a refusal.
+ */
+function pagePlaceholder(context: WorkspaceContext): ReactNode {
+  const { panel } = context
+  if (!panel) return undefined
+  return (
+    <SandboxPanel
+      phone
+      resume={context.resume}
+      state={panel}
+      workspace={context.workspace}
+    />
+  )
+}
+
+/**
+ * A file tab or a diff tab as a page, which keeps its tab in the saved view.
+ * While the sandbox does not run, the page reads nothing. A stopped sandbox,
+ * and one whose later start failed, keep the file that the page shows, as
+ * they keep the lists. Otherwise the state of the sandbox takes the place of
+ * the content.
+ */
 function TabPage(props: {
   context: WorkspaceContext
   files: WorkspaceFiles
@@ -32,13 +56,15 @@ function TabPage(props: {
   navigation: FilesNavigation
   layout: FilesLayout
 }) {
-  const { tab } = props
-  useOpenTab(props.context.savedView, tab)
-  const targets = useFileTargets(props.context.org.id)
+  const { tab, context } = props
+  useOpenTab(context.savedView, tab)
+  const targets = useFileTargets(context.org.id)
   const common = {
     files: props.files,
     layout: props.layout,
     navigation: props.navigation,
+    placeholder: pagePlaceholder(context),
+    keepShown: context.panel !== null && !replacesLists(context.panel),
     targets,
   }
   return tab.kind === 'file' ? (

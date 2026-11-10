@@ -10,11 +10,11 @@ how a screen is built, and links to the other pages.
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
-| `marketing/from-conductor` | The page for people who move from Conductor Cloud: one table of Conductor Cloud features, with a merged cell for each area |
+| `marketing/from-conductor` | The page for people who move from Conductor, with no scope note: one table of Conductor features, local and cloud, with a merged cell for each area |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
-| `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
+| `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
@@ -32,19 +32,20 @@ how a screen is built, and links to the other pages.
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
+| `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command, link a workspace, merge and continue |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command, link a workspace, merge and continue, mention a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, and `app/file-mentions` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -193,47 +194,9 @@ In `search/unavailable` and `workspaces/unavailable`, the list behind the
 palette on desktop shows the same failure, because it reads the same
 workspace list.
 
-`app/banner` shows a branch with commits and no pull request. Its bar
-offers Create pull request, which asks the agent to open the pull request,
-and Create on GitHub. Each state shows one main action, from decisions 220
-to 228, and keeps its links to GitHub. The agent gets a fixed prompt for
-each step that changes code, and the app merges, continues, and archives.
-On a phone the row opens the Checks tab, whose top holds the actions and
-the link to GitHub. The `localWork`, `access`, `appAction`, and `branch`
-states of the workspace screen draw them. The child pages:
-
-- `app/banner/checks` has the running, failed, and passed checks and the
-  merge, which moved from `app/banner/checks-running`, `checks-failed`,
-  `ready-to-merge`, and `merged` and declare `movedFrom`. Checks failed
-  offers Fix checks, and Ready to merge offers Squash and merge. After the
-  merge, every member sees Continue, and the owner and the admins also see
-  Archive.
-- `app/banner/blocked` has a merge conflict with Resolve conflicts,
-  requested changes with Address review, a draft, a pull request closed
-  without a merge, and Blocked. A conflict, requested changes, and Blocked
-  tint the bar amber.
-- `app/banner/no-commits` has a branch without commits, whose bar offers no
-  Create pull request, as in `app/new-workspace/creating` and `first-turn`.
-  Its `local-work` variant has changed files that are not committed, so
-  the bar offers Create pull request, without a link to GitHub.
-- `app/banner/merge` has the merge that runs, a refusal for new commits, a
-  refusal for a missing right, another refusal with Open on GitHub, and
-  Ready to merge for a member with read access, without Merge.
-- `app/banner/local-work` has Commit and push in the place of Merge, Fix
-  checks, Resolve conflicts, and Address review, and in a state without an
-  action of its own.
-- `app/banner/sent` has the message of each agent action in the chat, as a
-  message of the member who clicked, while the agent works on it.
-- `app/banner/continue` has the question of Continue with local work, the
-  branch change that runs, a Continue that stopped, Continue while a turn
-  runs, and Continue for a member who may not archive.
-- `app/banner/continued` has the bar after Continue on the new branch, with
-  the note of Continue in the session. Its variants have the changed files
-  that moved to the new branch, and the note of a Continue by another
-  member.
-
-The flow `user-flows/merge-and-continue` goes from Ready to merge through
-the merge and Continue to the next task.
+[The pull request bar](catalogue-bar.md) gives `app/banner`, the bar of a
+workspace with its actions, its child pages, and the flow
+`user-flows/merge-and-continue`.
 
 `app/chat` shows a finished turn, whose work folds into one line. Its child
 pages: `app/chat/turns` has the running turn, steer, interrupt, and a
@@ -284,3 +247,24 @@ and in the `workspace-link` child page of `app/new-workspace/dialog`.
 The flow `user-flows/link-a-workspace` goes from the copy to the answer,
 and ends with a press on the chip, which opens
 `app/new-workspace/first-turn`.
+
+`app/file-mentions` draws the list of `@` and the file chips of decisions
+213 to 217. Its canonical screen has the query `@addr` in Checkout address
+autocomplete, with the best matches above the message box. Its child
+pages:
+
+- `app/file-mentions/list` has the list without a query, folders first.
+  Its `no-match` variant says "Nothing matches “zipcode”", its `loading`
+  variant says "Loading files…", and its `unavailable` variant says that
+  the list of all files is unavailable.
+- `app/file-mentions/chips` has a file chip and a folder chip in the
+  message box. Its `pointer` variant has the pointer over the icon of the
+  file chip, where a × takes the place of the icon. Its `sent` variant has
+  the sent message with both chips. Its `workspace-chip` and
+  `attached-file` variants show the same × on a pasted workspace link and
+  on an attached file.
+
+On a phone each chip of the composer keeps its icon and ends with a ×.
+The flow `user-flows/mention-a-file` goes from the query to the sent
+message, and ends with a press on the file chip, which opens
+`app/files/code`.
