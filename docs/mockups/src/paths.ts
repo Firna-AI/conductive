@@ -49,6 +49,7 @@ export const paths = {
   paletteSettings: 'app/command-palette/settings',
   paletteSearch: 'app/command-palette/search',
   paletteNoResults: 'app/command-palette/search/no-results',
+  feedback: 'app/feedback',
   feedbackEmpty: 'app/feedback/states',
   feedbackSending: 'app/feedback/states/sending',
   account: 'app/account',

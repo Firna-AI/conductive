@@ -50,6 +50,17 @@
   margin-top: 2px;
 }
 
+/* While the reply address loads, a spinner keeps the 14 px box of an icon. */
+.factSpinner {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
 /* The key of Send, in the colour of its label. */
 .key {
   flex-shrink: 0;

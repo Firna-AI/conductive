@@ -1,12 +1,6 @@
 import type { ReactElement } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import {
-  CircleAlert,
-  CornerDownLeft,
-  ImagePlus,
-  Info,
-  Reply,
-} from 'lucide-react'
+import { CircleAlert, CornerDownLeft, ImagePlus, Info } from 'lucide-react'
 import type { Attachment } from '../../fixtures/attachments'
 import { paths } from '../../paths'
 import { AttachmentChips } from '../chat/AttachmentChips'
@@ -21,16 +15,15 @@ import {
   contextLine,
   feedbackPlaceholder,
   imageTypesBody,
-  noReplyLine,
   notAddedTitle,
   notSentTitle,
-  replyLine,
   screenshotLimitBody,
   screenshotsLabel,
   sendFeedbackLabel,
   sendingLabel,
   sendLabel,
 } from './feedbackCopy'
+import { ReplyFailure, ReplyLine, type FeedbackReply } from './FeedbackReply'
 import styles from './FeedbackDialog.module.css'
 
 /**
@@ -46,13 +39,15 @@ export type FeedbackProblem =
 export type FeedbackDialogProps = {
   text: string
   screenshots: readonly Attachment[]
-  /** The primary verified email of the GitHub account, when it has one. */
-  replyTo?: string
+  /** The read of the reply address, which Send waits for. */
+  reply: FeedbackReply
   problem?: FeedbackProblem
   /** The send runs, so the dialog takes no change and stays open. */
   sending?: boolean
   /** The screen that Send leads to, when the mockups draw it. */
   sendTo?: string
+  /** The screen that Try again of a failed read leads to, when drawn. */
+  retryTo?: string
   viewport: Viewport
 }
 
@@ -82,9 +77,9 @@ function linked(control: ReactElement, to: string | undefined): ReactElement {
 
 /**
  * Send, with the hint of its key on a computer, where Enter sends the
- * message and Shift+Enter adds a line. Send waits for text. While the send
- * runs, a spinner leads its label. A new press after a failed send tries
- * again.
+ * message and Shift+Enter adds a line. Send waits for text and for the
+ * reply address. While the send runs, a spinner leads its label. A new
+ * press after a failed send tries again.
  */
 function SendButton(props: {
   ready: boolean
@@ -121,7 +116,9 @@ function SendButton(props: {
  * their sizes, and Remove, as in every composer. Add screenshots opens the
  * file picker, and a paste of an image into the text or a drop on the
  * dialog adds one too. Two lines say what the message also carries and
- * where the team replies. Cancel closes the dialog and keeps the draft.
+ * where the team replies. While the read of the reply address runs or
+ * after it failed, the draft and Cancel stay available, and Send waits.
+ * Cancel closes the dialog and keeps the draft.
  */
 export function FeedbackDialog(props: FeedbackDialogProps) {
   const phone = props.viewport === 'mobile'
@@ -135,7 +132,7 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           {linked(cancel, sending ? undefined : paths.shell)}
           <SendButton
             phone={phone}
-            ready={props.text !== ''}
+            ready={props.text !== '' && props.reply.state === 'ready'}
             sending={sending}
             to={props.sendTo}
           />
@@ -177,11 +174,9 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           <Info aria-hidden className={styles.factIcon} size={14} />
           <span>{contextLine}</span>
         </li>
-        <li className={styles.fact}>
-          <Reply aria-hidden className={styles.factIcon} size={14} />
-          <span>{props.replyTo ? replyLine(props.replyTo) : noReplyLine}</span>
-        </li>
+        <ReplyLine reply={props.reply} />
       </ul>
+      <ReplyFailure reply={props.reply} retryTo={props.retryTo} />
     </ConfirmDialog>
   )
 }

@@ -43,6 +43,15 @@ export function replyLine(email: string): string {
 export const noReplyLine =
   'To get a reply, add a verified email on GitHub, then sign in again.'
 
+/** The reply line while the app reads the reply address. */
+export const replyLoadingLine = 'Loading the reply address'
+
+/**
+ * The title of the notice of a read of the reply address that failed, over
+ * the message of the server and Try again.
+ */
+export const replyNotLoadedTitle = "The reply address didn't load"
+
 /** The button that sends the message, and its label while the send runs. */
 export const sendLabel = 'Send'
 

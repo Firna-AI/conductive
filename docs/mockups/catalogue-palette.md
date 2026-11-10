@@ -56,6 +56,11 @@ child pages:
   verified email. Its `sending` variant has a send that runs, and its
   `failed` variant has a send that did not reach the server. Its `sent`
   variant has the toast over the list after a send.
+- `app/feedback/reply` has the kept draft while the reply address loads,
+  with a spinner on the reply line. Its `failed` variant has a read that
+  did not reach the server: the notice of a failed read, with Try again,
+  takes the place of the reply line. Send waits in both, and the draft and
+  Cancel stay available.
 - `app/feedback/refusals` has a capture of a page that the dialog did not
   add, because the screenshots of the message would pass 7 MB. Its
   `other-type` variant has a photo that is not a PNG, JPEG, GIF, or WebP
@@ -68,7 +73,8 @@ message, a pasted screenshot, and the send, to the toast.
 `wide` layout of `ConfirmDialog`. Its message box holds the chips of
 `AttachmentChips` above the text, and Add screenshots under it. A notice
 under the box names a file that the dialog did not add, or a send that
-failed. `feedbackCopy.ts` beside it holds the words of the row, the
-dialog, and the toast, so the app can share them. `SuccessToast` in
-`src/components/common/` draws the toast after a send, where
-`FailureToast` draws its own.
+failed. `FeedbackReply.tsx` beside it draws the reply line from the read of
+the reply address, and the `LoadFailure` notice of a read that failed.
+`feedbackCopy.ts` holds the words of the row, the dialog, and the toast, so
+the app can share them. `SuccessToast` in `src/components/common/` draws
+the toast after a send, where `FailureToast` draws its own.

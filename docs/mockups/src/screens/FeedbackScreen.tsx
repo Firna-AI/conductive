@@ -6,6 +6,7 @@ import {
   FeedbackDialog,
   type FeedbackProblem,
 } from '../components/feedback/FeedbackDialog'
+import type { FeedbackReply } from '../components/feedback/FeedbackReply'
 import type { Attachment } from '../fixtures/attachments'
 import {
   feedbackMessage,
@@ -28,10 +29,11 @@ export const feedbackSchema = {
      */
     draft: { enum: ['empty', 'message', 'screenshot'] },
     /**
-     * The GitHub account of Cal has a primary verified email, which the team
-     * replies to, or none.
+     * The read of the reply address: ready with the primary verified email
+     * of Cal's GitHub account, which the team replies to, ready with none,
+     * still loading, or failed. Send waits until the read is ready.
      */
-    reply: { enum: ['email', 'none'] },
+    reply: { enum: ['email', 'none', 'loading', 'failed'] },
     /**
      * The dialog before a send, while the send runs, or after the send
      * failed. After a send went, the dialog closes and the toast shows.
@@ -61,6 +63,14 @@ const screenshots: Readonly<
   empty: [],
   message: [],
   screenshot: [feedbackScreenshot],
+}
+
+/** The read of the reply address in each state of the schema. */
+const replies: Readonly<Record<FeedbackState['reply'], FeedbackReply>> = {
+  email: { state: 'ready', email: replyEmail },
+  none: { state: 'ready', email: null },
+  loading: { state: 'loading' },
+  failed: { state: 'failed' },
 }
 
 /**
@@ -99,7 +109,8 @@ export function FeedbackScreen(props: {
     ) : (
       <FeedbackDialog
         problem={problemOf(state)}
-        replyTo={state.reply === 'email' ? replyEmail : undefined}
+        reply={replies[state.reply]}
+        retryTo={paths.feedback}
         screenshots={screenshots[state.draft]}
         sendTo={paths.feedbackSending}
         sending={state.send === 'sending'}

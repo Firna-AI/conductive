@@ -505,6 +505,11 @@ line that applies a decision of the user names that decision.
   sending. A failed read keeps the draft and offers Try again. This is my
   implementation call of 10 November 2026. Milestone 4a draws these states
   before the dialog implementation.
+- While the reply read loads, a spinner leads "Loading the reply
+  address" in the place of the reply line. A failed read shows "The reply
+  address didn't load", the server message, and Try again after the context
+  line. These are my mockup calls of 10 November 2026. Reason: the loading
+  line keeps its place, and the failure uses the app's existing read notice.
 - A send shows its progress. A failed send keeps the text and the
   screenshots, and names what failed. A new press of Send tries again.
 - While the send runs, Send shows a spinner and "Sending". Cancel and Add
@@ -814,15 +819,19 @@ Draw the two reply-read states that the client lifecycle requires. The
 reply information must appear before Send, as decision 272 chose. This
 adds no API route, rejection, email requirement, or stored data.
 
-- [ ] Add `app/feedback/reply`: the reply address loading, then a failed
+- [x] Add `app/feedback/reply`: the reply address loading, then a failed
       read with Try again. Reuse the Feedback dialog on desktop and phone.
-- [ ] Keep text entry, screenshots, and Cancel available while the reply
+- [x] Keep text entry, screenshots, and Cancel available while the reply
       read loads or fails. Show Send as unavailable until the reply read
       is ready. A ready result without an email keeps the existing state.
-- [ ] Choose the short loading and error words with the product copy
+- [x] Choose the short loading and error words with the product copy
       rules. Update the catalogue and the design of this plan.
-- [ ] Run `npm run mockups:check` and visually check the two states.
-- [ ] Record any problem that the mockups show in this plan.
+- [x] Run `npm run mockups:check` and visually check the two states.
+- [x] Record any problem that the mockups show in this plan.
+
+Evidence: `.context/command-palette-feedback/reports/m4a.md`. Both
+states reuse the existing dialog and failed-read notice. No new problem
+changes the approved design.
 
 ## Milestone 5: The palette row and the dialog
 
