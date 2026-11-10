@@ -1,6 +1,10 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test } from 'vitest'
+import { filePaths } from '../../../shared/files'
+import { FakeApiServer } from '../../../test-support/fake-api'
+import { FAKE_IDS } from '../../../test-support/fixtures/core'
+import { toolFixtures } from '../../../test-support/fixtures/tools'
 import {
   messageText,
   pressInField,
@@ -8,7 +12,12 @@ import {
   typeMessage,
 } from '../../../test-support/message-field'
 import { mountField } from './chip-field-test-kit'
-import { entry, mountMentionField, sampleTree } from './mention-field-test-kit'
+import {
+  entry,
+  mountMentionField,
+  realFiles,
+  sampleTree,
+} from './mention-field-test-kit'
 
 describe('the list of @', () => {
   test('@ and a query open the list in the host above the box, with the best matches first and the first highlighted', async () => {
@@ -93,20 +102,51 @@ describe('the list of @', () => {
     expect({ spaced, inWord: view.rows() }).toEqual({ spaced: [], inWord: [] })
   })
 
-  test('one line takes the place of the rows while the tree loads, without a tree, and with no match, and Enter then sends nothing', async () => {
+  test('one line takes the place of the rows while the tree loads and with no match, and Enter then sends nothing', async () => {
     const view = await mountMentionField({ tree: null })
     typeMessage(view.field, 'Fix @addr')
     const loading = view.line()
-    await view.setTree({ tree: null, treeError: null, treeUnavailable: true })
-    const unavailable = view.line()
     await view.setTree([])
     const none = view.line()
     pressInField(view.field, 'Enter')
-    expect({ loading, unavailable, none, sends: view.sends() }).toEqual({
+    expect({ loading, none, sends: view.sends() }).toEqual({
       loading: 'Loading files…',
-      unavailable: 'The list of all files is unavailable',
       none: 'Nothing matches “addr”',
       sends: 0,
+    })
+  })
+
+  test('with the real store of the files, an unavailable tree or a failed read says that the list is unavailable, and a saved tree under the mark keeps its rows', async () => {
+    const lines: (string | null)[] = []
+    const replies: [unknown, number][] = [
+      [{ revision: 0, entries: [], unavailable: true }, 200],
+      [{ code: 'busy', message: 'Try again.' }, 503],
+    ]
+    for (const [reply, status] of replies) {
+      const server = new FakeApiServer()
+      server.json(
+        'GET',
+        filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace),
+        reply,
+        status,
+      )
+      const view = await mountMentionField({ files: await realFiles(server) })
+      typeMessage(view.field, 'Fix @addr')
+      lines.push(view.line())
+    }
+    const server = new FakeApiServer()
+    server.json('GET', filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace), {
+      ...toolFixtures().files,
+      unavailable: true,
+    })
+    const saved = await mountMentionField({ files: await realFiles(server) })
+    typeMessage(saved.field, 'Fix @AddressF')
+    expect({ lines, saved: saved.rows() }).toEqual({
+      lines: [
+        'The list of all files is unavailable',
+        'The list of all files is unavailable',
+      ],
+      saved: ['AddressForm.tsx, src/app/checkout/'],
     })
   })
 
@@ -140,6 +180,39 @@ describe('the list of @', () => {
     })
   })
 
+  test('a new query starts its list at the top, so the first row, which Enter picks, is in view', async () => {
+    const notes = Array.from({ length: 30 }, (_, index) =>
+      entry(`notes/note-${String(index).padStart(2, '0')}.md`),
+    )
+    const view = await mountMentionField({ tree: notes })
+    typeMessage(view.field, 'Read @note')
+    const box = document.querySelector('#file-mention-list')
+    if (box) box.scrollTop = 200
+    typeMessage(view.field, 'Read @note-1')
+    const next = document.querySelector('#file-mention-list')
+    expect({
+      scrolled: box?.scrollTop,
+      top: next?.scrollTop,
+      highlighted: view.highlighted(),
+    }).toEqual({ scrolled: 200, top: 0, highlighted: 'note-10.md, notes/' })
+  })
+
+  test('the listbox owns only its rows, and the line stands outside it', async () => {
+    const view = await mountMentionField()
+    typeMessage(view.field, 'Read @addr')
+    const withRows = document.querySelector('[role="listbox"] [role="status"]')
+    typeMessage(view.field, 'Read @zipcode')
+    expect({
+      withRows,
+      listbox: document.querySelector('[role="listbox"]'),
+      line: view.line(),
+    }).toEqual({
+      withRows: null,
+      listbox: null,
+      line: 'Nothing matches “zipcode”',
+    })
+  })
+
   test('each row shows the icon that All files gives its entry', async () => {
     const view = await mountMentionField({
       tree: [entry('scripts', 'directory'), entry('scripts/app.py')],
@@ -155,6 +228,6 @@ describe('the list of @', () => {
   test('a field without the files of a chat, as in New workspace, opens no list', async () => {
     const view = await mountField()
     typeMessage(view.field, 'Fix @addr')
-    expect(document.querySelector('[role="listbox"]')).toBeNull()
+    expect(document.querySelector('#file-mention-list')).toBeNull()
   })
 })

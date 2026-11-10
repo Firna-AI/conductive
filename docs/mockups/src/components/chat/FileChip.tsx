@@ -10,7 +10,7 @@ import styles from './FileChip.module.css'
 /**
  * A file or a folder of the workspace in a line of text: a small rounded
  * pill with the icon and the name of the entry, as All files draws them
- * (decision 213). Its title is the whole path. Screen readers hear "File"
+ *. Its title is the whole path. Screen readers hear "File"
  * or "Folder" before the name. It has the size of a workspace chip.
  *
  * In a sent message, `opener` makes the chip the element that opens the

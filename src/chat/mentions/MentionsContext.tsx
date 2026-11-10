@@ -28,7 +28,7 @@ interface MentionFiles {
 
 /**
  * The files and folders that the composer of a workspace chat can mention,
- * and what a press on a chip does (decisions 213 and 214). The shell gives
+ * and what a press on a chip does. The shell gives
  * them. Each function stays the same while the workspace shows.
  */
 export interface ChatMentions {

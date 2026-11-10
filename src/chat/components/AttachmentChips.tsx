@@ -33,8 +33,8 @@ function SentChip(props: { file: Attachment }) {
 /**
  * The files attached to the next message. Each file shows its icon in a
  * cell at its start, which a pointer or the keyboard focus turns into a ×
- * that removes the file (decision 215). Where no pointer hovers, the icon
- * stays, and a × button of touch size ends the file (decision 217). The
+ * that removes the file. Where no pointer hovers, the icon
+ * stays, and a × button of touch size ends the file. The
  * chat and both New workspace forms show the files of a draft with it.
  */
 export function DraftFiles(props: {

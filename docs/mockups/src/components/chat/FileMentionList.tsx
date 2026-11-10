@@ -1,5 +1,6 @@
 import { EntryIcon } from '../files/fileIcons'
 import { entryFolder, entryName } from './entryPaths'
+import { allFilesUnavailable } from './lostCopy'
 import { mentionRows } from './fileMentions'
 import { MentionList } from './MentionList'
 
@@ -21,7 +22,7 @@ export function FileMentionList(props: { query: string; tree: MentionTree }) {
   let line: string | null = null
   if (props.tree === 'loading') line = 'Loading files…'
   else if (props.tree === 'unavailable') {
-    line = 'The list of all files is unavailable'
+    line = allFilesUnavailable.title
   } else if (entries.length === 0) line = `Nothing matches “${props.query}”`
   return (
     <MentionList

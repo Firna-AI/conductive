@@ -1,6 +1,8 @@
 import { act, useState } from 'react'
 import type { FileEntry } from '../../../shared/files'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
+import { filesAfterHistory, startFiles } from '../../../files/files-test-kit'
+import type { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { mount } from '../../../test-support/mount'
 import { LinksProvider } from '../../links/LinksContext'
@@ -36,7 +38,12 @@ export const sampleTree: readonly FileEntry[] = [
   entry('README.md'),
 ]
 
-/** A store of the kept files, as the Files screens keep them. */
+/**
+ * A store of the kept files with only two plain states: no tree yet, and a
+ * tree of entries. The states that the cloud computer marks, such as an
+ * unavailable tree or a failed read, come from the real store of the Files
+ * screens over the fake API, as `realFiles` gives it.
+ */
 class FakeFiles {
   private snapshot: MentionFilesSnapshot
   private readonly listeners = new Set<() => void>()
@@ -62,21 +69,35 @@ class FakeFiles {
 
   getSnapshot = () => this.snapshot
 
-  set(next: MentionFilesSnapshot | readonly FileEntry[] | null) {
-    this.snapshot =
-      next === null || Array.isArray(next)
-        ? FakeFiles.of(next as readonly FileEntry[] | null)
-        : (next as MentionFilesSnapshot)
+  set(entries: readonly FileEntry[] | null) {
+    this.snapshot = FakeFiles.of(entries)
     this.listeners.forEach((listener) => listener())
   }
 }
 
+/**
+ * The real store of the Files screens, started over the fake API, after
+ * its routes answered. Serve the tree reply first, such as an unavailable
+ * tree or a failed read.
+ */
+export async function realFiles(server: FakeApiServer) {
+  const files = filesAfterHistory(server)
+  await startFiles(files)
+  return files
+}
+
 export async function mountMentionField(
-  options: { tree?: readonly FileEntry[] | null; value?: string } = {},
+  options: {
+    tree?: readonly FileEntry[] | null
+    value?: string
+    /** The real store of the files, in place of the two plain states. */
+    files?: ChatMentions['files']
+  } = {},
 ) {
-  const files = new FakeFiles(
+  const fake = new FakeFiles(
     options.tree === undefined ? sampleTree : options.tree,
   )
+  const files = options.files ?? fake
   const opened: string[] = []
   const shown: string[] = []
   const counts = { sends: 0 }
@@ -116,7 +137,8 @@ export async function mountMentionField(
   }
   const { container } = await mount(<Field />)
   const field = byRole('textbox', 'Message', container)
-  const list = () => container.querySelector('[role="listbox"]')
+  // The box of the list: its line, or the listbox of its rows.
+  const list = () => container.querySelector('#file-mention-list')
   return {
     field,
     files,
@@ -139,8 +161,8 @@ export async function mountMentionField(
       Array.from(field.querySelectorAll('[contenteditable="false"]'), (chip) =>
         accessibleName(chip),
       ),
-    setTree: async (next: Parameters<FakeFiles['set']>[0]) => {
-      await act(async () => files.set(next))
+    setTree: async (entries: readonly FileEntry[] | null) => {
+      await act(async () => fake.set(entries))
     },
   }
 }

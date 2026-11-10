@@ -33,6 +33,40 @@ function blockOf(element: Element): Element {
   return element.ownerDocument.documentElement
 }
 
+/** Whether a closed `<details>` hides the element: it is not in its summary. */
+function inClosedDetails(element: Element): boolean {
+  for (
+    let details = element.closest('details');
+    details;
+    details = details.parentElement?.closest('details') ?? null
+  ) {
+    if (details.open) continue
+    const summary = details.querySelector(':scope > summary')
+    if (!summary?.contains(element)) return true
+  }
+  return false
+}
+
+/** Whether the element or an ancestor takes no selection. */
+function unselectable(element: Element): boolean {
+  const view = element.ownerDocument.defaultView
+  for (let at: Element | null = element; at; at = at.parentElement) {
+    if (view?.getComputedStyle(at).userSelect === 'none') return true
+  }
+  return false
+}
+
+/**
+ * Whether the browser leaves the text of the element out of a copy: it is
+ * hidden, such as the steps of a closed work fold, or it takes no
+ * selection.
+ */
+function leftOut(element: Element): boolean {
+  if (inClosedDetails(element)) return true
+  if (element.checkVisibility?.() === false) return true
+  return unselectable(element)
+}
+
 /** The file chips that a range reaches, also the one that holds it. */
 function chipsIn(range: Range, scope: Element): Element[] {
   const around = scope.closest(`[${MENTION}]`)
@@ -46,8 +80,9 @@ function chipsIn(range: Range, scope: Element): Element[] {
  * The text of a selection in the chat, with the mention of each file chip
  * in it, such as `@src/app.ts`, or null when the selection holds no file
  * chip. A new line goes between the lines of two blocks, such as two
- * messages. The message field copies its own chips, so a selection there
- * gives null too.
+ * messages. Text that the browser leaves out of a copy stays out, such as
+ * the steps of a closed work fold. The message field copies its own chips,
+ * so a selection there gives null too.
  */
 function selectedText(selection: Selection): string | null {
   if (selection.rangeCount === 0 || selection.isCollapsed) return null
@@ -67,6 +102,7 @@ function selectedText(selection: Selection): string | null {
     const parent = node.parentElement
     if (!parent || !range.intersectsNode(node)) continue
     const chip = parent.closest(`[${MENTION}]`)
+    if (leftOut(chip ?? parent)) continue
     const block = blockOf(chip ?? parent)
     if (line && block !== line && text !== '' && !text.endsWith('\n')) {
       text += '\n'

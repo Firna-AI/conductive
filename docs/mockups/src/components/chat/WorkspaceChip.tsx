@@ -34,8 +34,7 @@ export type ChipOpener = {
 
 /**
  * The class of a chip: a chip of the composer starts with the cell of its
- * icon, and where no pointer hovers it ends with a × (decisions 215 and
- * 217).
+ * icon, and where no pointer hovers it ends with a ×.
  */
 export function useChipClass(removal: ChipRemoval | undefined): string {
   const noHover = useNoHover()

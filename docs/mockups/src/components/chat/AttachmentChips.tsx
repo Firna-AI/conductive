@@ -9,9 +9,9 @@ import styles from './AttachmentChips.module.css'
 /**
  * The files attached to the next message. Each file shows its icon in a
  * cell at its start, which a pointer or the keyboard focus turns into a ×
- * that removes the file (decision 215). Where no pointer hovers, the icon
+ * that removes the file. Where no pointer hovers, the icon
  * stays, and the × button of touch size follows the size, as before
- * (decision 217). A view has no pointer, so `pointer` names the file that
+ *. A view has no pointer, so `pointer` names the file that
  * it draws with the pointer over its icon.
  */
 export function AttachmentChips(props: {

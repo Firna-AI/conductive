@@ -14,13 +14,16 @@ export type MentionListRow = {
 }
 
 /**
- * The list of `@` above the message box, as wide as the box (decision
- * 214): the icon, the name, and the folder of each row, as in Conductor.
+ * The list of `@` above the message box, as wide as the box: the icon,
+ * the name, and the folder of each row, as in Conductor.
  * `highlighted` marks the row that Enter or Tab picks. `line` takes the
  * place of the rows, such as while the tree loads. It takes no fixtures,
  * so the app draws its list with it. `onPick` and `onHighlight` come from
  * the app, and `rowId` gives each row the id that the field names as its
  * active row. The highlighted row scrolls into view as the arrows move it.
+ * The box holds the line or the listbox of the rows, so the listbox owns
+ * only its options. Give each query its own list, through a key, so a new
+ * query starts at the top with its first row in view.
  */
 export function MentionList(props: {
   id: string
@@ -42,40 +45,43 @@ export function MentionList(props: {
     else rowsByIndex.current.delete(index)
   }
   return (
-    <div
-      aria-label="Files and folders"
-      className={styles.list}
-      id={props.id}
-      role="listbox"
-    >
+    <div className={styles.list} id={props.id}>
       {props.line ? (
         <p className={styles.line} role="status">
           {props.line}
         </p>
       ) : null}
-      {props.rows.map((row, index) => (
+      {props.rows.length > 0 ? (
         <div
-          aria-label={row.folder ? `${row.name}, ${row.folder}` : row.name}
-          aria-selected={index === props.highlighted}
-          className={classes(
-            styles.row,
-            index === props.highlighted && styles.highlighted,
-          )}
-          id={props.rowId?.(index)}
-          key={row.key}
-          onClick={() => props.onPick?.(index)}
-          onMouseDown={(event) => event.preventDefault()}
-          onMouseEnter={() => props.onHighlight?.(index)}
-          ref={keep(index)}
-          role="option"
+          aria-label="Files and folders"
+          className={styles.rows}
+          role="listbox"
         >
-          <span className={styles.icon}>{row.icon}</span>
-          <span className={styles.name}>{row.name}</span>
-          {row.folder ? (
-            <span className={styles.folder}>{row.folder}</span>
-          ) : null}
+          {props.rows.map((row, index) => (
+            <div
+              aria-label={row.folder ? `${row.name}, ${row.folder}` : row.name}
+              aria-selected={index === props.highlighted}
+              className={classes(
+                styles.row,
+                index === props.highlighted && styles.highlighted,
+              )}
+              id={props.rowId?.(index)}
+              key={row.key}
+              onClick={() => props.onPick?.(index)}
+              onMouseDown={(event) => event.preventDefault()}
+              onMouseEnter={() => props.onHighlight?.(index)}
+              ref={keep(index)}
+              role="option"
+            >
+              <span className={styles.icon}>{row.icon}</span>
+              <span className={styles.name}>{row.name}</span>
+              {row.folder ? (
+                <span className={styles.folder}>{row.folder}</span>
+              ) : null}
+            </div>
+          ))}
         </div>
-      ))}
+      ) : null}
     </div>
   )
 }

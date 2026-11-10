@@ -28,6 +28,13 @@
   overscroll-behavior: contain;
 }
 
+/* The listbox of the rows, inside the box. */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
 /* Each row: the icon, the name, and the folder of the entry. */
 .row {
   display: flex;

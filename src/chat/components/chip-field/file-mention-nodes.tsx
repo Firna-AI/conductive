@@ -29,11 +29,10 @@ const mentionStates = [{ flat: true, stateConfig: mentionState }] as const
 
 /**
  * The chip of a file or a folder in the field: the chip of the mockups,
- * with the icon and the label of the name (decision 213). A press on the
- * name opens the file, or shows the folder in All files. The × of its icon
- * removes it as one step of undo, while the field takes changes (decision
- * 215). Until the field turns a chip whose entry left the tree into text,
- * it shows the mention.
+ * with the icon and the label of the name. A press on the name opens the
+ * file, or shows the folder in All files. The × of its icon removes it as
+ * one step of undo, while the field takes changes. Until the field turns a
+ * chip whose entry left the tree into text, it shows the mention.
  */
 function FieldFileChip(props: { source: string; nodeKey: NodeKey }) {
   const [editor] = useLexicalComposerContext()

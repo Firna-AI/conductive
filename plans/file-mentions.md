@@ -346,7 +346,12 @@ that work:
   first change, such as a removal with the ×, is one step of undo, as in a
   plain text field. This came from review round 1.
 - A copy of chat text gives the mention of each file chip in it, also
-  across several messages. A copy without a file chip stays native.
+  across several messages, and leaves out text that the browser leaves
+  out, such as the steps of a closed work fold. A copy without a file chip
+  stays native. This came from review rounds 1 and 2.
+- Each query gets its own list, so a new query starts at the top with the
+  row that Enter picks in view. The listbox owns only its rows, and the
+  one line stands beside it. This came from review round 2.
 - A mention that waits for its entry becomes ordinary text when typing
   continues it, so a restored query keeps its list.
 - The list takes its keys before the send key, and Esc stops at the list.

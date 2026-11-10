@@ -89,7 +89,7 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
  * model picker names that login, so the box keeps its place.
  * A pasted workspace link shows as a chip, and the draft keeps the plain link.
  * `@` opens the list of the files and folders of the workspace above the
- * box, and a pick puts a file chip into the text (decision 213).
+ * box, and a pick puts a file chip into the text.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const steers = props.running && props.startsSession !== true

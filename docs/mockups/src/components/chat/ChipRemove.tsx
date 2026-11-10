@@ -5,7 +5,7 @@ import { useControlSizes } from '../common/touch'
 import styles from './ChipRemove.module.css'
 
 /**
- * How a chip of the composer can go (decision 215). `name` names the chip
+ * How a chip of the composer can go. `name` names the chip
  * in the button "Remove <name>". A view runs no script and has no pointer,
  * so `pointer` draws the chip with the pointer over its icon. The app gives
  * `onRemove`, which removes the chip.
@@ -61,7 +61,7 @@ function keepCaret(event: MouseEvent) {
  * press on it removes the chip. A keyboard can reach the cell only where
  * `focusable` says so, as for an attached file. In the text a keyboard
  * removes a chip with Backspace. Where no pointer hovers, the cell keeps
- * its icon, and the × follows the chip (decision 217).
+ * its icon, and the × follows the chip.
  */
 export function ChipIconCell(props: {
   icon: ReactNode
@@ -95,7 +95,7 @@ export function ChipIconCell(props: {
 
 /**
  * The × at the end of a chip in the text, where no pointer hovers, as on a
- * phone (decision 217). It shows at all times.
+ * phone. It shows at all times.
  */
 export function ChipEndRemove(props: { removal: ChipRemoval }) {
   if (!useNoHover()) return null

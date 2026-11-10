@@ -115,13 +115,12 @@ export const workspaceStateSchema = {
      * own messages. `workspace-link` holds a message with a pasted link to
      * another workspace of the org, which shows as a chip.
      *
-     * The `mention-` states open the list of `@` (decision 214): with a
-     * query, without one, with no match, while the tree loads, and with no
-     * tree. `file-chips` holds a file chip and a folder chip (decision
-     * 213). The `-pointer` states draw the pointer over the icon of the
-     * first chip or the first attached file, where a × takes the place of
-     * the icon (decision 215). A phone has no pointer, so it shows the ×
-     * at the end of each chip instead (decision 217).
+     * The `mention-` states open the list of `@`: with a query, without
+     * one, with no match, while the tree loads, and with no tree.
+     * `file-chips` holds a file chip and a folder chip. The `-pointer`
+     * states draw the pointer over the icon of the first chip or the first
+     * attached file, where a × takes the place of the icon. A phone has no
+     * pointer, so it shows the × at the end of each chip instead.
      */
     composer: {
       enum: [

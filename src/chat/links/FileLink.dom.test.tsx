@@ -104,6 +104,19 @@ describe('file chips in a sent message', () => {
     })
   })
 
+  test('a copy leaves out the text that the browser leaves out: the steps of a closed fold and text that takes no selection', async () => {
+    const view = await mountText('Move @README.md now', true)
+    const extra = document.createElement('div')
+    extra.innerHTML =
+      '<details><summary>1 tool call</summary><p>Hidden work</p></details>' +
+      '<p><span style="user-select: none">No selection</span>Visible</p>'
+    view.container.append(extra)
+    expect(copyAll(view.container)).toEqual({
+      kept: true,
+      text: 'Move @README.md now\n1 tool call\nVisible',
+    })
+  })
+
   test('an answer shows each mention as text', async () => {
     const view = await mountText('Moved @README.md', false)
     expect({

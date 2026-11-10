@@ -483,7 +483,9 @@ Enter then sends nothing. `components/chip-field/FileChips.dom.test.tsx`
 restores file chips from a draft, opens a file and a folder, removes a chip
 with its ×, pastes a mention, and follows the tree.
 `components/chip-field/mention-field-test-kit.tsx` mounts the field with the
-files of a chat. `components/AttachmentChips.dom.test.tsx` removes an
+files of a chat: a fake with two plain states, no tree and a tree of
+entries, or the real store of the Files screens over the fake API for the
+states that the cloud computer marks. `components/AttachmentChips.dom.test.tsx` removes an
 attached file with the cell of its icon, and on a phone with its × at the
 end. The DOM tests focus, type, paste, clear, and read the field through
 `src/test-support/message-field.ts`.
@@ -563,7 +565,8 @@ check in the Mac app.
   workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
   which draws the parts of a message or an answer, with its file chips,
   and `mention-copy.ts`, the copy of chat text that gives the mention of
-  each file chip in it.
+  each file chip in it, and leaves out text that the browser leaves out of
+  a copy.
 - `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
   the entries that the list offers and their order, and
   `MentionsContext.tsx`, the files that the chat gets and the tree that

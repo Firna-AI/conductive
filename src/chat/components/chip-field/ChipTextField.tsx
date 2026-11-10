@@ -72,7 +72,8 @@ export interface ChipTextFieldProps {
  * draft that comes back turn each workspace link into a chip, and typed
  * text stays text. Inside the files of a chat, `@` also opens the list of
  * the files and folders of the workspace, and a pick, a paste, or a draft
- * shows each mention of an entry as a file chip. The draft stays plain text, with the link of each chip.
+ * shows each mention of an entry as a file chip. The draft stays plain
+ * text, with the link of each chip and the mention of each file chip.
  * The field has the type and the line heights of the plain text field, and
  * it grows from `lines` to `maxLines`, then scrolls. On a phone its text is
  * larger. The chips find their workspaces through `LinksProvider`. The

@@ -13,6 +13,7 @@ import {
   SKIP_DOM_SELECTION_TAG,
   type LexicalEditor,
 } from 'lexical'
+import { allFilesUnavailable } from '../../../../docs/mockups/src/components/chat/lostCopy'
 import { MentionList } from '../../../../docs/mockups/src/components/chat/MentionList'
 import { useMenuLayer } from '../../../shell/ui/layers'
 import { useChatLinks } from '../../links/LinksContext'
@@ -76,8 +77,7 @@ function sameQuery(a: MentionQuery | null, b: MentionQuery | null): boolean {
 /** The one line of the list in place of its rows, or null. */
 function lineOf(tree: MentionTree, query: string, rows: number): string | null {
   if (tree.state === 'loading') return 'Loading files…'
-  if (tree.state === 'unavailable')
-    return 'The list of all files is unavailable'
+  if (tree.state === 'unavailable') return allFilesUnavailable.title
   return rows === 0 ? `Nothing matches “${query}”` : null
 }
 
@@ -85,7 +85,7 @@ const listId = 'file-mention-list'
 const rowId = (index: number) => `${listId}-${index}`
 
 /**
- * The list of `@` (decision 214). `@` at the start of the text, or after a
+ * The list of `@`. `@` at the start of the text, or after a
  * space or a line break, opens it in `host`, just above the message box.
  * The text from `@` to the caret filters it. The arrow keys move the
  * highlight, Enter or Tab picks the row, and Esc closes the list. While it
@@ -204,6 +204,7 @@ export function MentionPlugin(props: { host: HTMLElement | null }) {
     <MentionList
       highlighted={index}
       id={listId}
+      key={`${anchor}:${query.query}`}
       line={lineOf(tree, query.query, rows.length)}
       onHighlight={(at) =>
         setHighlight({ anchor: `${anchor}:${query.query}`, index: at })
