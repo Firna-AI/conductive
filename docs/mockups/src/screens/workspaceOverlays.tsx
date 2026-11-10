@@ -8,10 +8,14 @@ import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
 import { ImportedArchiveDialog } from '../components/conductor-import/ImportedArchiveDialog'
-import { ArchiveDialog } from '../components/workspace/ArchiveDialog'
+import {
+  ArchiveDialog,
+  headerArchiveLinks,
+} from '../components/workspace/ArchiveDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
+import { unpushedWork } from '../fixtures/archive'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -84,7 +88,12 @@ export function workspaceOverlay(
       }
       return (
         <ArchiveDialog
-          pushed={state.overlay === 'archive-pushed'}
+          links={headerArchiveLinks}
+          question={
+            state.overlay === 'archive-unpushed'
+              ? { kind: 'unpushed', work: unpushedWork }
+              : { kind: 'pushed' }
+          }
           viewport={viewport}
           workspace={workspace}
         />

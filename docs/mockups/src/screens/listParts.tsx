@@ -13,6 +13,7 @@ import {
   SuspendedOrgNotice,
   SuspendedOrgPanel,
 } from '../components/orgs/SuspendedOrgNotice'
+import type { RowFocus } from '../components/workspaces/rowControls'
 import type { MenuStyle } from '../components/workspaces/SectionList'
 import { SectionList } from '../components/workspaces/SectionList'
 import {
@@ -20,6 +21,7 @@ import {
   type ListDrag,
   type ListMenu,
   type SidebarSection,
+  type WorkspaceRow,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import {
@@ -90,8 +92,9 @@ export function ListHeader(props: {
  * command palette. Its key shows only in a desktop window. A list that did
  * not load shows its failure in place of the sections.
  * `newWorkspaceTo` is the New workspace page of the org, such as that
- * of a new org. `switcherTo` is the screen of the org switcher, as
- * `ListHeader` takes it.
+ * of a new org. `focus` names the row whose menu, field, or hover the view
+ * draws. `switcherTo` is the screen of the org switcher, as `ListHeader`
+ * takes it.
  */
 export function HomeList(props: {
   org: Org
@@ -106,6 +109,11 @@ export function HomeList(props: {
   keys?: boolean
   /** The workspace list of the org did not load. */
   failed?: boolean
+  focus?: RowFocus
+  /** The archived workspaces, in the Archived group at the end. */
+  archived?: readonly WorkspaceRow[]
+  /** The Archived group shows collapsed, with its count. */
+  archivedCollapsed?: boolean
   switcherTo?: string | null
 }) {
   const suspended = props.suspended ?? false
@@ -128,7 +136,10 @@ export function HomeList(props: {
           <LoadFailure title="The workspaces didn't load" />
         ) : (
           <SectionList
+            archived={props.archived}
+            archivedCollapsed={props.archivedCollapsed}
             drag={props.drag}
+            focus={props.focus}
             menu={props.menu}
             menuStyle={props.menuStyle}
             readOnly={suspended}
@@ -145,16 +156,22 @@ export function HomeList(props: {
 /**
  * The list of a suspended org on desktop. The main area shows the notice
  * of the org in place of New workspace. A narrow window shows the list as
- * a page, with the notice at its top.
+ * a page, with the notice at its top. Its rows have no menu. `focus` names
+ * the row whose hover the view draws.
  */
-export function SuspendedList(props: { viewer: Membership }) {
+export function SuspendedList(props: {
+  viewer: Membership
+  focus?: RowFocus
+  sections?: readonly SidebarSection[]
+}) {
   const org = orgs[suspendedOrg]
-  const sections = suspendedSections()
+  const sections = props.sections ?? suspendedSections()
   return (
     <AppFrame
       rail={{ ...acmeRail, suspended: suspendedOrg }}
       sidebar={
         <Sidebar
+          focus={props.focus}
           org={org}
           sections={sections}
           suspended
@@ -167,6 +184,7 @@ export function SuspendedList(props: { viewer: Membership }) {
       </div>
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
+          focus={props.focus}
           keys
           menuStyle="anchored"
           org={org}

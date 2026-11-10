@@ -2,6 +2,7 @@
   "order": [
     "first-build",
     "not-created",
+    "files",
     "dialog",
     "branch",
     "workspace-link",

@@ -17,5 +17,6 @@
 - **Left out:** A move of the existing sandboxes, because Boat gives no move between organizations, and a new start rebuilds each one.
 - **Wider fix:** B.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/launch-capacity-boat-limits.md`: its option E is option B of this item, with a Boat plan that fits the launch peak.
 - **Recommendation:** B.
 - **Action:** fix after merge, apply B, because the user chose A for now on 8 November 2026 (decision 137), and only the user can make the organization and the key.

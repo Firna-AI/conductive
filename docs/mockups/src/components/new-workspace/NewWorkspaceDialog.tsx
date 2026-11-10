@@ -150,7 +150,10 @@ export type NewWorkspaceDialogProps = {
    * create, a missing agent login, or an org without repositories.
    */
   notices: readonly ReactNode[]
-  /** The message can go, so Create is on. */
+  /**
+   * The message has text, and it waits for no agent login and no
+   * repository. Create is then on, once each file is uploaded.
+   */
   ready: boolean
 }
 
@@ -162,9 +165,11 @@ export type NewWorkspaceDialogProps = {
  * its files fill the middle, and a pasted link to a workspace of the org
  * shows as a chip, as in the composer. The model picker sits at the bottom
  * left, and the attach button and Create at the bottom right. A phone
- * always opens the page instead.
+ * always opens the page instead. The files show the chips of every
+ * composer, and Create waits for their uploads, as Send does.
  */
 export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
+  const uploads = props.attachments.some((file) => file.state !== undefined)
   return (
     <div className={dialog.layer}>
       <div aria-hidden className={dialog.scrim} />
@@ -205,7 +210,7 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
           <ModelPicker choice={props.choice} />
           <span className={styles.spacer} />
           <IconButton icon={Paperclip} label="Attach files" />
-          <CreateButton ready={props.ready} />
+          <CreateButton ready={props.ready && !uploads} />
         </div>
       </section>
     </div>

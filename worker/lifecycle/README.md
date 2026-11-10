@@ -5,8 +5,9 @@ life of each workspace. The org image is the saved snapshot that every new
 sandbox of an org starts from. A workspace is one task with its own branch
 and its own Boat sandbox. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
-with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
-says.
+with the client of the provider account that each record stores.
+[Provider accounts](provider-accounts.md) and the
+[sandbox area](../sandbox/README.md) say how.
 
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
@@ -40,7 +41,7 @@ of a create.
 
 [Input activity](routes.md#input-activity) gives how one
 `InputActivityOwner` in each workspace object takes the input of the
-browser, the terminal, and previews.
+browser and of previews. Terminal frames report no activity.
 
 ### Machine route
 
@@ -53,53 +54,43 @@ it.
 [Workspace Durable Object](workspace-object.md) describes the Durable
 Object of each workspace and of each image coordinator. It gives their
 names, the lifecycle steps, the alarm, the start logs, the event socket,
-and the publication of the events. It also gives the creates and resumes,
-the git credential sender, and the turn recovery.
+and the publication of the events. It also gives the creates and resumes
+and the git credential sender.
+[Turn recovery and the shown state](recovery-and-shown-state.md) gives the
+turn repair from the committed chat and the one writer of the shown state.
 
 ### Builds and refreshes
 
-- A build sandbox starts from the current org image, or as a new default
-  sandbox for the first build. Its env holds only the folder variables.
-- Risk: a program with root access that an earlier install left in that
-  image can read the clone token of a later copy. That token can only read
-  its own repository, which the image already holds. The Worker revokes it
-  when the copy ends, as
-  [GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens)
-  says.
-
-[Image builds](image-builds.md) gives the build entry points, the build steps, the provider retries,
-the log limits, the snapshot leases, and the refresh timers.
-
-The [operator backend](../operator/README.md#suspend-an-org) can suspend an org.
-Every start and build phase checks this with user suspension.
-Guarded admission, publication, token replacement, source grants, and refresh claims also check stored org state.
-Cleanup can still recover uncertain allocations and remove resources.
-A pending start, outcome publication, or failed-computer cleanup keeps suspension pending and its native alarm armed.
-Suspended orgs get no disk retention restart, including after an owner change.
+[Image builds](image-builds.md) describes build sandboxes, suspension, provider retries,
+logs, snapshot leases, and refresh timers.
 
 ## Settings
 
-The lifecycle code reads `LifecycleEnvironment` from
-[`runtime.ts`](runtime.ts). [Deployment inputs](../../docs/deployment.md)
-gives each binding, variable, and secret that it reads, such as
-`WORKSPACES`, `MACHINE_ORIGIN`, `BOAT_API_KEY`, `BOAT_ORG_ID`,
-`GITHUB_APP_PRIVATE_KEY`, and the runner archive variables.
+[Lifecycle settings](settings.md) gives the environment inputs and captured secret values.
 
-Each provider start captures the encrypted org env values and their secret
-marks. The start-log masker and the workspace object output filter use
-that capture. No private org-value list goes into the runner environment.
-A running sandbox keeps its capture after later org setting changes.
-Disk retention resumes also replace the saved capture.
+## Provider accounts
+
+[Provider accounts](provider-accounts.md) gives the provider account that
+each record and start job stores, the client that each call uses, and the
+[org image of each account](provider-accounts.md#org-images).
 
 ## Development
 
-Run the lifecycle tests with `npm run test -- worker/lifecycle`. They run in
-Node with local D1 and fakes. Node cannot load `worker/workspace.ts`,
-because it imports `cloudflare:workers`. So the logic of the class lives in
-this folder, where the tests can reach it.
+Run `npm run test -- worker/lifecycle` from the repository root with Node 24.
+The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarms, and focused checks.
 
 D1 holds the workspace, token, build, and log records. The storage of each
 object holds the lifecycle state, the turn records, and the events.
+The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs with their [provider accounts](provider-accounts.md#the-computer-ledger).
+It keeps deleted computer IDs until their org is purged.
+Assigned identity writes also retain older IDs, including imports and repairs.
+Workspace owner changes update each live ledger entry of that workspace.
+The retained owner survives removal of the workspace row.
+Allocation recovery keeps that retained owner when it merges an imported computer.
+Definite first create refusals stay as rejected allocation records.
+A refused replay keeps an earlier uncertain request live.
+Each failed computer has its own cleanup flag.
+The native cleanup pointer can therefore change without losing an older failed computer.
 
 ### Key Code
 
@@ -128,20 +119,34 @@ object holds the lifecycle state, the turn records, and the events.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):
   `WorkspaceStateProjection`, the one writer of the shown state and of the
   repaired name, as
-  [Workspace Durable Object](workspace-object.md#the-shown-state) says.
+  [The shown state](recovery-and-shown-state.md#the-shown-state) says.
 - [`workspace-controller.ts`](workspace-controller.ts):
   `createWorkspaceController`, the lifecycle methods of the workspace
   object. [`lifecycle-admission.ts`](lifecycle-admission.ts) checks a create
-  and calls the admission hook. It throws a refused admission only after
-  `blockConcurrencyWhile` ends, because a throw inside it resets the
-  object. The start then ends as a normal failed start.
+  and calls the admission hook inside `blockConcurrencyWhile` of the
+  platform. A refused admission ends the start as a normal failed start.
+- [`workspace-platform.ts`](workspace-platform.ts): `nativeWorkspacePlatform`,
+  the platform of the workspace object. A throw inside the runtime's
+  `blockConcurrencyWhile` resets the object. So the platform keeps the
+  error of each callback and throws it after the runtime call returns. Run
+  each blocking callback through the platform. A caller that needs the
+  reset calls the object state directly.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.
-- [`start-progress.ts`](start-progress.ts): the command steps and the move
-  into the saved runner readiness phase.
+- [`start-progress.ts`](start-progress.ts): the command steps, the
+  terminal setup and its password read, and the move into the saved runner
+  readiness phase.
+  [`start-command-execution.ts`](start-command-execution.ts) starts each
+  step command detached, also the setup command of the
+  [terminal backend](../terminal/README.md), and polls its saved process.
+  Its `prepareStartTerminal` checks the start time limit before and after
+  the password read.
 - [`start-completion.ts`](start-completion.ts): restores runner-step progress
   and prepares successful starts through the lifecycle writer.
+- [`creation-publication.ts`](creation-publication.ts): `publishCreationResult`
+  writes the stored result of a create to D1, with its own due time, as
+  [Creates and resumes](workspace-object.md#creates-and-resumes) says.
 - [`start-runner.ts`](start-runner.ts): readiness admission, the original
   deadline, and the active owner and requester checks for runner reports.
 - [`job-time-limit.ts`](job-time-limit.ts): the build and start time limits
@@ -168,9 +173,11 @@ object holds the lifecycle state, the turn records, and the events.
   initial starts, replacements, and resumes in the coordinator's serial task.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
-- [`durable-turns.ts`](durable-turns.ts): `recoverLifecycleTurns`, which
-  rebuilds the running sessions and the idle time from the committed chat.
-  The [turn recovery](workspace-object.md#turn-recovery) gives the rules.
+- [`durable-turns.ts`](durable-turns.ts): `applyLifecycleTurn`, the turn
+  update, and `recoverLifecycleTurns`, which rebuilds the running sessions.
+  Both take the turn part of the idle time only from the committed chat.
+  The [turn recovery](recovery-and-shown-state.md#turn-recovery) gives the
+  rules.
 - [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
   the one input owner of a workspace object, with its minute updates and
   retries. [`create-input-activity.ts`](create-input-activity.ts) connects
@@ -191,8 +198,10 @@ object holds the lifecycle state, the turn records, and the events.
   place of the Boat state read.
 - [`create-workspace-lifecycle.ts`](create-workspace-lifecycle.ts):
   `createWorkspaceLifecycle`, the lifecycle with its hooks and the shared
-  state writer. Its `recoverTurns` hook reads the committed chat through
-  `readChatRecovery` of [`workspace-platform.ts`](workspace-platform.ts).
+  state writer. Its `lastTurnEndedAt` and `recoverTurns` hooks read the
+  committed chat through `readChatRecovery` of
+  [`workspace-platform.ts`](workspace-platform.ts). Its `extendDeadline`
+  hook is the deadline hook of [Input activity](routes.md#input-activity).
 - [`confirmed-stop.ts`](confirmed-stop.ts): `isConfirmedStopped` shares the
   physical stop classification across lifecycle maintenance. A saved public
   error stays separate. `finishRetentionAttempt` clears an ended attempt
@@ -206,6 +215,15 @@ object holds the lifecycle state, the turn records, and the events.
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
   path to a Boat call that creates a sandbox or a snapshot. It stores the
   request first, so the lifecycle finds the resource after a lost reply.
+  It records a computer allocation before create and attaches the returned ID.
+- [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
+  confirmed deletions, and the live computers that still need cleanup.
+- [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.
+  The task saves the account and ID of each computer, and its alarm, before the first provider request.
+  Its native RPC and alarm share the lifecycle queue.
+- [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
+- [`cleanup.ts`](cleanup.ts): retries every failed computer of a workspace.
+  `deleteSandboxIfPresent` marks the ledger after Delete succeeds or returns not found.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`, the
   maintenance resume, startup, and stop phases. Its D1 progress retains a
   failure while stop cleanup retries.
@@ -226,7 +244,17 @@ object holds the lifecycle state, the turn records, and the events.
   an error. The lookup reuses the shared owner, org, and archive predicate.
   Confirmed stop finalization clears the D1 progress with the native attempt.
 - [`durable-scheduling.ts`](durable-scheduling.ts): `writeLifecycleState`,
-  the shared lifecycle state and alarm write.
+  the shared lifecycle state write. `scheduleLifecycleState` sets the due
+  time of the lifecycle state. `publishLifecycleState` runs the `changed`
+  hook with its stored retry, as
+  [The shown state](recovery-and-shown-state.md#the-shown-state) says.
+- [`workspace-alarm.ts`](workspace-alarm.ts): `runWorkspaceAlarm`, the
+  lifecycle part of each alarm run. It runs the lifecycle owners whose due
+  time has come.
+  [`workspace-task-alarms.ts`](workspace-task-alarms.ts):
+  `taskWorkspaceStorage` gives each lifecycle owner its own due time in
+  `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as the
+  [Workspace Durable Object](workspace-object.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
@@ -271,7 +299,7 @@ object holds the lifecycle state, the turn records, and the events.
   the org image, the start steps, and stop and resume.
 - [Access and security](../../docs/protocol/access-and-security.md): what a
   sandbox holds, the workspace token, and GitHub tokens.
-- [Architecture](../../docs/architecture.md): the Worker, the workspace
+- [Architecture](../../docs/architecture/components.md): the Worker, the workspace
   Durable Object, and Boat.
 - [Sandbox software](../../image/README.md): the software that each build
   installs.

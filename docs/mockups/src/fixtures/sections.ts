@@ -42,6 +42,14 @@ export const conductorSection: Section = {
   collapsed: false,
 }
 
+/**
+ * The section of a key, also the section that an import from Conductor
+ * creates, which `sections` does not hold.
+ */
+export function sectionOf(key: SectionKey): Section {
+  return key === importSection ? conductorSection : sections[key]
+}
+
 /** New workspaces join this section. The user can rename it. */
 export const defaultSection: ListSectionKey = 'general'
 

@@ -18,7 +18,7 @@ import { pageOrg, railOf, sidebarOf, Start } from './newWorkspacePageParts'
 import {
   formNotices,
   matchesBaseForm,
-  newWorkspaceDrafts,
+  newWorkspaceDraft,
   newWorkspaceFormProperties,
   taskPlaceholder,
   waits,
@@ -29,6 +29,7 @@ export const newWorkspaceSchema = {
   additionalProperties: false,
   required: [
     'draft',
+    'files',
     'login',
     'repositories',
     'branch',
@@ -56,6 +57,7 @@ export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
 /** The chat of a new workspace in an org in use, with the task written. */
 export const newWorkspaceForm: NewWorkspaceState = {
   draft: 'message',
+  files: 'none',
   login: 'connected',
   repositories: 'chosen',
   branch: 'new',
@@ -76,9 +78,24 @@ const createFlows: Readonly<
 }
 
 /**
- * The empty chat and its composer. A failed create keeps the message for
- * Try again. A suspended org shows the refused bar. Before the first good
- * build, the draft stays and Send is off.
+ * The screen that Send opens, where one is drawn: the create flow of the
+ * task of Saved carts on a new branch, the screen of its queued files, or
+ * its start on the chosen branch. The file screens draw a new branch, so a
+ * chosen branch with files has no screen. Neither has a chosen pull
+ * request, whose branch starts in the same way.
+ */
+function sendFlow(state: NewWorkspaceState): string | undefined {
+  if (state.files === 'ready') {
+    return state.branch === 'new' ? paths.attachmentsQueued : undefined
+  }
+  return createFlows[state.branch]
+}
+
+/**
+ * The empty chat and its composer. The files of the first message upload
+ * before the workspace exists, and Send waits for them. A failed create
+ * keeps the message for Try again. A suspended org shows the refused bar.
+ * Before the first good build, the draft stays and Send is off.
  */
 function NewChat(props: {
   state: NewWorkspaceState
@@ -90,13 +107,11 @@ function NewChat(props: {
   const suspended = state.org === 'suspended'
   const building = state.org === 'new' && state.firstBuild !== 'succeeded'
   const failed = !suspended && state.result === 'error'
-  const draft = newWorkspaceDrafts[state.draft]
-  // Send leads to the create flow, which draws the task of Saved carts on
-  // a new branch, or to its start on the chosen branch. The mockups draw no
-  // create flow for another draft, or for a chosen pull request, whose
-  // branch starts in the same way.
-  const flow = createFlows[state.branch]
-  const otherFlow = state.draft === 'workspace-link' || flow === undefined
+  const draft = newWorkspaceDraft(state)
+  // Send leads to the create flow, which draws the task of Saved carts, so
+  // the mockups draw no create flow for another draft.
+  const linked = state.draft === 'workspace-link'
+  const flow = sendFlow(state)
   const text =
     state.org === 'new' && state.draft !== 'empty' ? page.draft : draft.text
   const notices = formNotices(state, failed, !building)
@@ -111,17 +126,28 @@ function NewChat(props: {
       />,
     )
   }
+  // A first message with files leads to the screen of its queued files.
+  // The file screens draw the Saved carts task of Acme on a new branch, so
+  // the attach button of Firna, of a linked task, and of a chosen branch
+  // leads nowhere.
+  const attachable =
+    state.files === 'none' &&
+    state.branch === 'new' &&
+    !failed &&
+    !linked &&
+    state.org !== 'new'
   return (
     <ChatPane
       composer={{
-        attachments: draft.attachments,
+        attachments: draft.files,
+        attachTo: attachable ? paths.newWorkspaceFiles : undefined,
         blocked: building || waits(state),
         choice: page.choice,
         draft: text,
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
-          failed || otherFlow || state.org === 'new' || text === ''
+          failed || linked || state.org === 'new' || text === ''
             ? undefined
             : flow,
       }}

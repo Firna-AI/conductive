@@ -2,7 +2,8 @@ import { HttpError } from '../http'
 import { finishUnscheduledBuild } from './build-admission-data'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
-import { errorSummary, warnWorker } from '../warnings'
+import { warnWorker } from '../warnings'
+import { errorSummary, WarningId } from '../warning-values'
 import {
   failBuild,
   jobSoftware,
@@ -20,6 +21,7 @@ import {
   ProviderRetryExhausted,
   transientProviderError,
 } from './provider-retry'
+import { liveBuildComputers } from './computer-ledger'
 
 export async function failUnscheduledBuild(
   runtime: ImageRuntime,
@@ -87,15 +89,23 @@ export async function handleImageBuildFailure(
       error instanceof ProviderError &&
       !transientProviderError(error)
     )
-  warnWorker(
-    `Image build ${buildId} failed in phase ${job.phase}: ${errorSummary(failure)}`,
-  )
+  warnWorker({
+    kind: 'image_build_failed',
+    buildId: WarningId.checked(buildId),
+    phase: job.phase,
+    error: errorSummary(failure),
+  })
   await failBuild(env.DB, buildId, message, dependencies.now())
   if (!unresolvedAllocation) await updateBuildJob(env.DB, buildId, 'cleanup')
   if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
     return false
   if (!provider) {
-    if (job.sandboxId || unresolvedAllocation) return false
+    if (
+      job.sandboxId ||
+      unresolvedAllocation ||
+      (await liveBuildComputers(env.DB, job.orgId, job.buildId)).length > 0
+    )
+      return false
     await updateBuildJob(env.DB, buildId, 'done')
     await scheduleIdleImage(runtime, orgId, jobSoftware(job))
     return true

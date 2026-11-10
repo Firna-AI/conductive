@@ -19,7 +19,7 @@ it('limits each repair kind to fifty, logs its counts, and advances failed attem
   const sequence = `WITH RECURSIVE sequence(n) AS (VALUES(1) UNION ALL SELECT n + 1 FROM sequence WHERE n < 51)`
   await db.batch([
     db
-      .prepare('UPDATE settings SET next_image_refresh_at = ?')
+      .prepare('UPDATE org_images SET next_image_refresh_at = ?')
       .bind(TEST_TIME + 86_400_000),
     db
       .prepare(
@@ -35,10 +35,16 @@ it('limits each repair kind to fifty, logs its counts, and advances failed attem
       .bind('runtime-user', TEST_TIME),
     db
       .prepare(
-        `${sequence} INSERT INTO settings (org_id, org_image_name, next_image_refresh_at, updated_at)
-      SELECT 'repair-org-' || n, 'image', ?, ? FROM sequence`,
+        `${sequence} INSERT INTO settings (org_id, updated_at)
+      SELECT 'repair-org-' || n, ? FROM sequence`,
       )
-      .bind(deadline, TEST_TIME),
+      .bind(TEST_TIME),
+    db
+      .prepare(
+        `${sequence} INSERT INTO org_images (org_id, provider_account, image_name, next_image_refresh_at)
+      SELECT 'repair-org-' || n, 'boat', 'image', ? FROM sequence`,
+      )
+      .bind(deadline),
     db
       .prepare(
         `${sequence} INSERT INTO workspaces
@@ -66,9 +72,24 @@ it('limits each repair kind to fifty, logs its counts, and advances failed attem
   expect(report.firstWorkspaces).toHaveLength(50)
   expect(report.firstOrgs).toHaveLength(50)
   expect(report.firstWarnings).toEqual([
-    ['Lifecycle repair limited workspace checks to 50.'],
-    ['Lifecycle repair limited org checks to 50.'],
-    ['Lifecycle repair left 50 workspace checks and 50 org checks pending.'],
+    {
+      kind: 'lifecycle_repair_limited',
+      message: 'Lifecycle repair limited its checks.',
+      resource: 'workspace',
+      limit: 50,
+    },
+    {
+      kind: 'lifecycle_repair_limited',
+      message: 'Lifecycle repair limited its checks.',
+      resource: 'org',
+      limit: 50,
+    },
+    {
+      kind: 'lifecycle_repair_pending',
+      message: 'Lifecycle repair left checks pending.',
+      workspaces: 50,
+      orgs: 50,
+    },
   ])
   expect(report.movedWorkspaces).toBe(50)
   expect(report.movedOrgs).toBe(50)

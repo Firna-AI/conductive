@@ -26,8 +26,8 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     id: 'keyboard-shortcuts',
     area: 'navigation-and-appearance',
     name: 'Keyboard shortcuts',
-    status: 'planned',
-    note: 'Custom keyboard shortcuts are planned. The command palette shortcut works today.',
+    status: 'in-progress',
+    note: 'Custom keyboard shortcuts are in progress. The command palette shortcut works today.',
     due: null,
   },
   {

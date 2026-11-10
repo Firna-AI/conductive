@@ -107,7 +107,7 @@ it('refuses a trusted turn in a suspended org before changing its provider deadl
       sessionId: 'session-one',
       senderUserId: fixture.user.id,
     })
-    fixture.setTime(fixture.runtime.dependencies.now() + 1_000)
+    await fixture.setTime(fixture.runtime.dependencies.now() + 1_000)
     fixture.boat.stopReplyState = 'running'
     const suspended = await suspendOrg(
       fixture.runtime,
@@ -117,10 +117,10 @@ it('refuses a trusted turn in a suspended org before changing its provider deadl
     expect(suspended.pendingWorkspaceIds).toEqual([workspaceId])
     const before = await actor.readLifecycle()
     if (!before) throw new Error('Missing suspended lifecycle')
-    const alarm = platform.storage.alarmAt
+    const alarm = await platform.storage.getAlarm()
     const deadlines = [...fixture.boat.deadlineIds]
     const turn = await Promise.allSettled([
-      actor.reportRunnerLifecycle({
+      platform.expectedRunnerReport({
         type: 'turn.started',
         turnId: 'turn-one',
         sessionId: 'session-one',
@@ -140,7 +140,7 @@ it('refuses a trusted turn in a suspended org before changing its provider deadl
     expect((await actor.readLifecycle())?.lastActivityAt).toBe(
       before.lastActivityAt,
     )
-    expect(platform.storage.alarmAt).toBe(alarm)
+    expect(await platform.storage.getAlarm()).toBe(alarm)
   } finally {
     await fixture.dispose()
   }

@@ -15,7 +15,7 @@ export async function finishImageBuild(
       retryAt !== undefined &&
       retryAt > fixture.images.dependencies.now()
     )
-      fixture.setTime(retryAt)
+      await fixture.setTime(retryAt)
     if (await advanceImageBuild(fixture.images, fixture.org.id, id)) return
   }
   throw new Error('Build did not finish')

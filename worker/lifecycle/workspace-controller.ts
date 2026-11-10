@@ -26,6 +26,11 @@ import { WorkspaceAccessStop } from './workspace-suspension'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { WorkspacePlatform } from './workspace-platform'
 import type { WorkspaceController } from './workspace-controller-types'
+import {
+  taskWorkspaceStorage,
+  workspaceTaskAlarms,
+} from './workspace-task-alarms'
+import { ComputerStopTask } from './computer-stop-task'
 
 export function createWorkspaceController(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
@@ -39,7 +44,23 @@ export function createWorkspaceController(
       platform.storage.put('turns', 'lifecycle:turn-scopes', values),
   })
   const journal = new WorkspaceEventJournal(platform.storage, platform.publish)
-  const images = new ImageCoordinator(platform.storage, env, dependencies)
+  const alarms = workspaceTaskAlarms(platform.storage)
+  const startStorage = taskWorkspaceStorage(platform.storage, 'lifecycle:start')
+  const startJobs = durableStartStorage(platform.storage, dependencies.now, env)
+  const cleanupStorage = taskWorkspaceStorage(
+    platform.storage,
+    'lifecycle:cleanup',
+  )
+  const images = new ImageCoordinator(
+    taskWorkspaceStorage(platform.storage, 'lifecycle:image'),
+    env,
+    dependencies,
+  )
+  const computerStops = new ComputerStopTask(
+    taskWorkspaceStorage(platform.storage, 'lifecycle:computer-stops'),
+    env,
+    dependencies,
+  )
   const { lifecycle, projection } = createWorkspaceLifecycle(
     platform,
     env,
@@ -50,12 +71,14 @@ export function createWorkspaceController(
   const accessStop = new WorkspaceAccessStop(() => ({
     env,
     dependencies,
-    storage: platform.storage,
+    storage: taskWorkspaceStorage(platform.storage, 'lifecycle:access'),
     lifecycle,
     starts,
     turns,
+    alarms,
   }))
   const controller: WorkspaceController = {
+    queueComputerStops: (orgId, ids) => computerStops.enqueue(orgId, ids),
     extendLifecycleInput: (operation) => lifecycle.input.extend(operation),
     recordLifecycleInput: (at) => lifecycle.input.record(at),
     captureLifecycleActivity: () => lifecycle.input.capture(),
@@ -166,6 +189,10 @@ export function createWorkspaceController(
           (await platform.storage.get('text', 'lifecycle:cleanup')),
         ),
       )
+      await alarms.set('lifecycle:access', null)
+      if (!(await startJobs.job())) await startStorage.deleteAlarm()
+      if (!(await startJobs.publication()))
+        await alarms.set('lifecycle:publication', null)
       await journal.clearFailedCreate()
     },
     async acknowledgeLifecycleFirstMessage(publish): Promise<void> {
@@ -175,9 +202,9 @@ export function createWorkspaceController(
     async registerLifecycleTurn(turn, publish): Promise<void> {
       await registerTrustedTurn(env, lifecycle, turns, turn, publish)
     },
-    async finishLifecycleTurn(turnId, publish, occurredAt): Promise<void> {
+    async finishLifecycleTurn(turnId, publish): Promise<void> {
       const turn = await turns.remove(turnId)
-      if (turn) await lifecycle.turn(turn.sessionId, false, publish, occurredAt)
+      if (turn) await lifecycle.turn(turn.sessionId, false, publish)
     },
     async credentialSender(turnId: string): Promise<string | null> {
       const state = await lifecycle.read()
@@ -193,9 +220,8 @@ export function createWorkspaceController(
         ? job.admission.first.sender.id
         : null
     },
-    async reportRunnerLifecycle(event, publish, occurredAt): Promise<void> {
-      const apply = () =>
-        applyRunnerLifecycle(lifecycle, turns, event, publish, occurredAt)
+    async reportRunnerLifecycle(event, publish): Promise<void> {
+      const apply = () => applyRunnerLifecycle(lifecycle, turns, event, publish)
       if (event.type === 'runner.ready') await starts.reportRunnerReady(apply)
       else await apply()
     },
@@ -206,8 +232,10 @@ export function createWorkspaceController(
       await images.schedule(state)
     },
     async retryFailedCreateCleanup(workspaceId: string): Promise<void> {
-      await platform.storage.put('text', 'lifecycle:cleanup', workspaceId)
-      await platform.storage.setAlarm(dependencies.now() + 5_000)
+      await cleanupStorage.transaction(async (storage) => {
+        await storage.put('text', 'lifecycle:cleanup', workspaceId)
+        await storage.setAlarm(dependencies.now() + 5_000)
+      })
     },
     async finishDiskMaintenance(): Promise<void> {
       await finishDiskMaintenance(
@@ -223,8 +251,12 @@ export function createWorkspaceController(
         images: images,
         starts: starts,
         lifecycle: lifecycle,
-        turns,
         accessStop,
+        alarms,
+        startStorage,
+        startJobs,
+        cleanupStorage,
+        computerStops,
       })
     },
   }
@@ -232,7 +264,7 @@ export function createWorkspaceController(
     env,
     dependencies,
     controller,
-    durableStartStorage(platform.storage, dependencies.now, env),
+    startJobs,
     async (error, cancelled) => {
       await turns.clear()
       await lifecycle.stopFailedStart(error, cancelled)

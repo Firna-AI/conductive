@@ -7,7 +7,7 @@ import {
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
 import type { Workspace } from '../features/activity-entry.test-support'
 import { activityFixture } from '../features/activity.test-support'
-import { workspaceRuntime } from '../lifecycle/runtime'
+import { nativeSuspensionRuntime } from './native-runtime.test-support'
 import { suspendOrg } from './suspend-org'
 
 let bundle: string
@@ -31,7 +31,10 @@ it('keeps suspended input-owner records, captures and coalesced retries from cha
     const actor = fixture.actor()
     fixture.boat.stopReplyState = 'running'
     const suspended = await suspendOrg(
-      workspaceRuntime({ ...fixture.env, WORKSPACES }),
+      nativeSuspensionRuntime({
+        ...fixture,
+        env: { ...fixture.env, WORKSPACES },
+      }),
       OUTER_ORG,
       'owner',
     )

@@ -2,7 +2,8 @@ import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { chatHistoryPath } from '../../../src/shared/events'
 import { workspacePath, workspacePaths } from '../../../src/shared/workspaces'
-import { sandboxProvider } from '../../sandbox/client'
+import { providerForAccount } from '../../sandbox/client'
+import { readWorkspace } from '../../lifecycle/workspace-data'
 import type { WorkspaceStartResult } from '../../lifecycle/start-types'
 import { orgEnvironmentContext } from '../../lifecycle/settings-data'
 import { encrypt } from '../../security/crypto'
@@ -69,7 +70,17 @@ it('answers resume and retry with durable starting state while chat and startup 
     userMessageIds: ['first-message'],
   })
   await active.runner.inbox.next()
-  await sandboxProvider(active.env, active.boat.fetch).stop('bx_lifecycle')
+  const workspace = await readWorkspace(
+    active.env.DB,
+    OUTER_ORG,
+    OUTER_WORKSPACE,
+  )
+  if (!workspace.sandboxId) throw new Error('The sandbox ID is missing.')
+  await providerForAccount(
+    active.env,
+    active.boat.fetch,
+    workspace.providerAccount,
+  ).stop(workspace.sandboxId)
   await active.actor().lifecycleStopped()
   await active.runner.closed
   await active.browser()

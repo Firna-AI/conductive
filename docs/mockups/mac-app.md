@@ -134,4 +134,4 @@ during the upload and after it stopped, they stay static. Before any
 workspace exists, the tile of Acme opens the list of Acme as it is.
 
 The imported workspace itself shows in the web app and in the Mac app, as
-`app/imported` shows in [the catalogue](catalogue.md).
+`app/imported` shows in [the catalogue](catalogue-import.md).

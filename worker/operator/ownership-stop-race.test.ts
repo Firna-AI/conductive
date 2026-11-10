@@ -12,9 +12,9 @@ import {
   runtimeBundle,
 } from '../lifecycle/real-runtime-test-support'
 import { runningRuntimeWorkspace } from '../lifecycle/runtime-lifecycle-test-support'
-import { workspaceRuntime } from '../lifecycle/runtime'
 import { readWorkspaceToken } from '../lifecycle/tokens'
 import { suspendUser } from './suspend-user'
+import { nativeSuspensionRuntime } from './native-runtime.test-support'
 
 let bundle: string
 let fixture: Awaited<ReturnType<typeof realRuntimeFixture>>
@@ -32,7 +32,7 @@ it('keeps an operator stop pending when ownership changes before its native obje
   const { workspaceId, sandboxId } = await runningRuntimeWorkspace(fixture)
   await activeRuntimeOwner(fixture)
   fixture.boat.failStop = true
-  const runtime = workspaceRuntime(fixture.env)
+  const runtime = nativeSuspensionRuntime(fixture)
   const result = await suspendUser(
     {
       ...runtime,
@@ -71,10 +71,10 @@ it('leaves eligible pending starts intact and reports a skipped access stop as i
   await activeRuntimeOwner(fixture)
   expect(await actor.suspendLifecycle(workspaceId, 'runtime-user')).toBe(false)
   const oldToken = await readWorkspaceToken(fixture.env, workspaceId)
-  await suspendUser(workspaceRuntime(fixture.env), 11, 'active-admin')
+  await suspendUser(nativeSuspensionRuntime(fixture), 11, 'active-admin')
   await reassignRuntimeWorkspace(fixture, workspaceId)
   await queueRuntimeResume(fixture, workspaceId)
-  await workspaceOwnerChangedHook(workspaceRuntime(fixture.env))(workspaceId)
+  await workspaceOwnerChangedHook(nativeSuspensionRuntime(fixture))(workspaceId)
   expect(await finishRuntimeStart(fixture, workspaceId)).toEqual({ ok: true })
   await expect(readWorkspaceToken(fixture.env, workspaceId)).resolves.not.toBe(
     oldToken,

@@ -6,7 +6,7 @@ export const appsAndDevicesFeatures: readonly ParityFeature[] = [
     area: 'apps-and-devices',
     name: 'Mac app',
     status: 'available',
-    note: 'Mac downloads support Apple silicon and Intel. With version 0.2.0, use the web app to join the waitlist and preview ports.',
+    note: 'Mac downloads support Apple silicon and Intel. Join the waitlist and open private port previews in the Mac app.',
   },
   {
     id: 'app-updates',
@@ -42,6 +42,20 @@ export const appsAndDevicesFeatures: readonly ParityFeature[] = [
     name: 'Help and feedback',
     status: 'considering',
     note: 'An in app feedback form is under consideration. Contact details are on the Terms and Privacy pages.',
+  },
+  {
+    id: 'product-documentation',
+    area: 'apps-and-devices',
+    name: 'Product documentation',
+    status: 'available',
+    note: 'Public guides cover getting started, workspaces, chat, files, port previews, and the Mac app.',
+  },
+  {
+    id: 'product-changelog',
+    area: 'apps-and-devices',
+    name: 'Product changelog',
+    status: 'considering',
+    note: 'A public website changelog is under consideration. GitHub releases already list changes.',
   },
   {
     id: 'web-account-pages',

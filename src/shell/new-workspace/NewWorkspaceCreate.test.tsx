@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest'
 import type { FetchLike } from '../../app/api/client'
 import { routes } from '../../app/router'
 import { HeldRequests } from '../../app/test-kit'
+import { attachmentUploadPath } from '../../shared/messages'
 import { workspacesPath } from '../../shared/workspaces'
 import {
   byLabel,
@@ -17,7 +18,13 @@ import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { messageText } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { click, press, settle, typeText } from '../test-mount'
-import { away, bodiesOf, headerName, org } from '../workspace/kept-test-kit'
+import {
+  away,
+  bodiesOf,
+  headerName,
+  isOff,
+  org,
+} from '../workspace/kept-test-kit'
 import {
   createCount,
   dialogIn,
@@ -170,10 +177,11 @@ describe('the send key of New workspace', () => {
       },
     },
   ] as const)(
-    '$where, Enter creates the workspace, and Shift+Enter, Enter in an input method, and Enter with no message do not',
+    '$where, Enter waits for uploads and creates with their IDs. Shift+Enter, input method composition, and an empty message keep the draft.',
     async ({ form, open }) => {
       const server = serverWith(form)
-      const tab = await openTab(server)
+      const held = new HeldRequests(server)
+      const tab = await openTab(server, { fetch: held.fetch })
       const root = await open(tab)
       const field = messageIn(root)
       // The field adds the line of Shift+Enter itself, so it keeps the key
@@ -188,12 +196,62 @@ describe('the send key of New workspace', () => {
       typeText(field, task)
       const shift = await keys({ shiftKey: true })
       const composing = await keys({ isComposing: true })
+      const draft = tab.app.org(org).newWorkspace(null)
+      const uploadPath = attachmentUploadPath(org, {
+        type: 'new-workspace',
+        messageId: draft.draft.get().messageId,
+      })
+      server.json(
+        'POST',
+        uploadPath,
+        {
+          error: { code: 'upload_failed', message: 'The upload failed.' },
+        },
+        502,
+      )
+      held.holdAnswer('POST', uploadPath)
+      act(() => {
+        void draft.attach([
+          new File(['png'], 'postcode-overlap.png', { type: 'image/png' }),
+        ])
+      })
+      await settle()
+      const uploading = await keys({})
+      expect(uploading).toEqual({
+        kept: true,
+        creates: 0,
+        text: `${task}\n`,
+      })
+      const sendOff = isOff(
+        byRole('button', form === 'page' ? 'Send' : 'Create', root),
+      )
+      held.release('POST', uploadPath)
+      await settle()
+      const failed = await keys({})
+      expect(failed).toEqual({ kept: true, creates: 0, text: `${task}\n` })
+      server.json(
+        'POST',
+        uploadPath,
+        {
+          attachment: {
+            id: 'draft-attachment-1',
+            name: 'postcode-overlap.png',
+            kind: 'image',
+            mediaType: 'image/png',
+            sizeBytes: 3,
+          },
+        },
+        201,
+      )
+      click(byLabel('Upload postcode-overlap.png again', root))
+      await settle()
       const enter = await keys({})
       const [sent] = await bodiesOf(server, 'POST', workspacesPath(org), 0)
       expect({
         empty,
         shift,
         composing,
+        sendOff,
         enter,
         sent,
         address: tab.address(),
@@ -201,9 +259,13 @@ describe('the send key of New workspace', () => {
         empty: { kept: true, creates: 0, text: '' },
         shift: { kept: true, creates: 0, text: `${task}\n` },
         composing: { kept: false, creates: 0, text: `${task}\n` },
+        sendOff: true,
         enter: { kept: true, creates: 1, text: null },
         sent: expect.objectContaining({
-          firstMessage: expect.objectContaining({ text: `${task}\n` }),
+          firstMessage: expect.objectContaining({
+            text: `${task}\n`,
+            attachmentIds: ['draft-attachment-1'],
+          }),
         }),
         address: createdAt,
       })

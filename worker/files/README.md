@@ -144,8 +144,8 @@ It appends only a repository-relative file path.
 The runner must resolve and confine file paths to its own checkout, including symlinks.
 The Boat API applies its own canonical path checks.
 
-The fallback gets `SandboxProvider` through `orgSandboxProvider`, with the authorized user's ID.
-The provider owns the fixed routes, headers, organization pin, and the app's Boat key.
+The fallback gets `SandboxProvider` through `orgProviderForAccount`, with the authorized user's ID and the provider account of the workspace.
+The provider owns the fixed routes, headers, organization pin, and the key of that account, the app's Boat key in production.
 Its `readFile` requests base64 so a binary file keeps its bytes.
 The [sandbox response policy](../sandbox/README.md#response-byte-limits) defines the reply budgets and the metadata fallback.
 The handler reports the file size with `file_too_large`.
@@ -167,13 +167,13 @@ Chat history remains readable through its separate access path.
 Run `npm run test -- worker/files` from the repository root with Node 24.
 The tests that use `createFilesStorage` in `test-support/storage.ts` run SQLite Durable Object storage in Miniflare.
 Its `evict` evicts the object, so that a test can check a reload.
-`report-storage.test.ts` runs on the in-memory chat store.
+`report-storage.test.ts` uses the native SQLite storage of the production workspace object.
 It checks that a part stored as one value stays readable, and that each removal also removes the chunks.
 The API tests use local D1, the existing fake runner, and FakeBoat.
 The part joining and report repair tests run through the chat backend:
 `npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
 `runner-grown-reports.test.ts` checks tree and changes parts that masking makes larger than one storage value.
-It runs on the in-memory chat store with a stand-in for the storage value limit.
+It runs on the production workspace object with the native SQLite value limit.
 No migration is required.
 
 ### Key Code
@@ -189,10 +189,10 @@ No migration is required.
 - [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically.
 - [runner.ts](runner.ts) matches file and diff commands to their results.
 - [boat.ts](boat.ts) converts the provider's file read result for the browser.
-- [data.ts](data.ts) reads the workspace and repository relationship from D1.
+- [data.ts](data.ts) reads the workspace and repository relationship from D1, with the sandbox ID and its provider account.
 
 See the [shared contracts](../../src/shared/README.md),
 [backend fakes](../test-support/README.md),
 [runner event rules](../../docs/protocol/agent-runner.md#the-agent-runner),
 [lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates), and
-[file requirements](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).
+[file requirements](../../docs/protocol/workspace-tools.md#files-and-changes).

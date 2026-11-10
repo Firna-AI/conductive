@@ -46,15 +46,29 @@ full desktop layout.
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
-share.
+share. Its linked pages give the parts of [the chat](design-chat.md), of
+[the operator section](design-operator.md), and of
+[branches and the import from Conductor](design-import.md).
 
 ## The catalogue
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
-shows. It also gives the rules of the folder pages, the entries that moved,
-the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
-`app/chat`, `app/workspace-links`, `app/new-workspace/branch`, and
-`app/imported`, and the New workspace dialog.
+shows. It also gives the rules of the folder pages and the entries that
+moved. It gives the child pages of `marketing/docs`, `app/account`,
+`app/banner`, `app/chat`, `app/workspace-menu`, and `app/workspace-links`,
+and the New workspace dialog. Its linked page,
+[the waitlist, suspensions, and the operator](catalogue-operator.md), gives
+the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
+operator section. Its linked page,
+[branches and the import from Conductor](catalogue-import.md), gives the
+child pages of `app/new-workspace/branch` and `app/imported`.
+
+`app/attachments` shows uploads, failed uploads with Try again, files over
+25 MB, sent files, and the files of a queued first message. Its shared
+words live in [attachmentCopy.ts](src/components/chat/attachmentCopy.ts).
+`app/new-workspace/files` shows the same chips on the first message of a new
+workspace, before the workspace exists, and `app/new-workspace/dialog/files`
+shows them in the New workspace dialog.
 
 ## Folder layout
 
@@ -98,7 +112,8 @@ the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
 
 [Orgs and members](orgs-and-logins.md#orgs-and-members) gives what the
 screens show of orgs and members: the roles, the logins of the sessions,
-the owners of the workspaces, Archive, and Delete org.
+the owners of the workspaces, the menu of a workspace row, Archive, and
+Delete org.
 
 No screen shows the value of an env var. Each env var of an org has a
 Secret mark: an admin switches it in the row, and a new variable starts
@@ -136,7 +151,8 @@ import from Conductor.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the Terms, Privacy, and not-found pages, the comparison page,
+pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
+It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
 [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)

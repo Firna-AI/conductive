@@ -3,7 +3,7 @@ import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
 import { createApp } from './application'
 import { SOFTWARE } from './lifecycle/backend-test-support'
 import { readBuildHistory } from './lifecycle/build-data'
-import { heldOperation } from './lifecycle/platform-test-storage'
+import { heldOperation } from './test-support/held-operation'
 import {
   realRuntimeFixture,
   runtimeBundle,
@@ -11,6 +11,7 @@ import {
 import { workspaceRuntime } from './lifecycle/runtime'
 import { liftOrgSuspension } from './operator/lift'
 import { suspendOrg } from './operator/suspend-org'
+import { DEFAULT_PROVIDER_ACCOUNT } from './sandbox/account-identity'
 
 let bundle: string
 let fixture: Awaited<ReturnType<typeof realRuntimeFixture>>
@@ -35,9 +36,9 @@ it('starts a lifted org daily refresh at the next scheduled repair', async () =>
   const now = Date.now() - 1_000
   await suspendOrg(runtime, 'runtime-org', 'runtime-user')
   await fixture.env.DB.prepare(
-    'UPDATE settings SET next_image_refresh_at = ? WHERE org_id = ?',
+    'UPDATE org_images SET next_image_refresh_at = ? WHERE org_id = ? AND provider_account = ?',
   )
-    .bind(now - 15 * 60 * 1_000 - 1, 'runtime-org')
+    .bind(now - 15 * 60 * 1_000 - 1, 'runtime-org', DEFAULT_PROVIDER_ACCOUNT)
     .run()
   const coordinator = fixture.actor('org-image:runtime-org')
   await coordinator.scheduleImage({
@@ -70,9 +71,9 @@ it('starts a lifted org daily refresh at the next scheduled repair', async () =>
       .builds[0]
     expect(refresh).toMatchObject({ kind: 'refresh', state: 'running' })
     const next = await fixture.env.DB.prepare(
-      'SELECT next_image_refresh_at FROM settings WHERE org_id = ?',
+      'SELECT next_image_refresh_at FROM org_images WHERE org_id = ? AND provider_account = ?',
     )
-      .bind('runtime-org')
+      .bind('runtime-org', DEFAULT_PROVIDER_ACCOUNT)
       .first('next_image_refresh_at')
     const schedule = await coordinator.imageSchedule()
     if (!schedule) throw new Error('Missing repaired image schedule')
@@ -91,21 +92,21 @@ it('starts a lifted org daily refresh at the next scheduled repair', async () =>
 
 it('leaves stored deadlines and image state unchanged when no repair is overdue', async () => {
   await fixture.env.DB.prepare(
-    'UPDATE settings SET next_image_refresh_at = ? WHERE org_id = ?',
+    'UPDATE org_images SET next_image_refresh_at = ? WHERE org_id = ? AND provider_account = ?',
   )
-    .bind(Date.now() + 86_400_000, 'runtime-org')
+    .bind(Date.now() + 86_400_000, 'runtime-org', DEFAULT_PROVIDER_ACCOUNT)
     .run()
   const before = await fixture.env.DB.prepare(
-    'SELECT next_image_refresh_at FROM settings WHERE org_id = ?',
+    'SELECT next_image_refresh_at FROM org_images WHERE org_id = ? AND provider_account = ?',
   )
-    .bind('runtime-org')
+    .bind('runtime-org', DEFAULT_PROVIDER_ACCOUNT)
     .first('next_image_refresh_at')
   await createApp().scheduled(event, fixture.env)
   expect(
     await fixture.env.DB.prepare(
-      'SELECT next_image_refresh_at FROM settings WHERE org_id = ?',
+      'SELECT next_image_refresh_at FROM org_images WHERE org_id = ? AND provider_account = ?',
     )
-      .bind('runtime-org')
+      .bind('runtime-org', DEFAULT_PROVIDER_ACCOUNT)
       .first('next_image_refresh_at'),
   ).toBe(before)
   const coordinator = fixture.actor('org-image:runtime-org')
@@ -126,9 +127,9 @@ it('warns and finishes the scheduled repairs when the approval email retry fails
       }
     },
   })
-  const warnings: string[] = []
+  const warnings: unknown[] = []
   const warn = console.warn
-  console.warn = (message: string) => warnings.push(message)
+  console.warn = (message: unknown) => warnings.push(message)
   try {
     await expect(
       createApp().scheduled(event, { ...fixture.env, DB: failing }),
@@ -137,6 +138,10 @@ it('warns and finishes the scheduled repairs when the approval email retry fails
     console.warn = warn
   }
   expect(warnings).toEqual([
-    'The retry of approval emails failed. It runs again at the next timer.',
+    {
+      kind: 'approval_email_retry_failed',
+      message:
+        'The retry of approval emails failed. It runs again at the next timer.',
+    },
   ])
 })

@@ -1,10 +1,14 @@
 import type { AppDependencies, AppEnv } from '../env'
+import { providerForAccount } from '../sandbox/client'
 import {
   cleanupBusy,
   keepCleanupLease,
   withCleanupLease,
 } from './cleanup-lease'
-import { deletedOrgProvider, ignoreAlreadyRemoved } from './cleanup-provider'
+import {
+  ignoreAlreadyRemoved,
+  requireDeletedOrgCleanup,
+} from './cleanup-provider'
 import { stopDeletedOrg } from './deletion'
 import {
   cleanupResources,
@@ -21,12 +25,22 @@ import {
 } from './purge-data'
 import { finishPendingRestore } from './restore'
 import type { MembersHooks } from './route'
+import {
+  cleanupDraftAttachments,
+  purgeOrgAttachments,
+} from '../chat/attachment-cleanup'
+import { warnWorker } from '../warnings'
 
 export async function cleanupDeletedOrgs(
   env: AppEnv,
   dependencies: AppDependencies,
   hooks: Omit<MembersHooks, 'readWorkspace'>,
 ): Promise<{ purged: string[]; pending: string[] }> {
+  try {
+    await cleanupDraftAttachments(env, dependencies.now())
+  } catch {
+    warnWorker({ kind: 'attachment_cleanup_retry' })
+  }
   const result: { purged: string[]; pending: string[] } = {
     purged: [],
     pending: [],
@@ -59,15 +73,15 @@ export async function cleanupDeletedOrgs(
             (resource) => resource.removedAt === null,
           )
           if (resources.length > 0) {
-            const provider = await deletedOrgProvider(
-              env,
-              org.id,
-              token,
-              dependencies.fetch,
-            )
             // Snapshot names sort before sandbox IDs, so every snapshot is gone before any sandbox delete.
             for (const resource of resources) {
               await keepCleanupLease(env, org.id, token, dependencies)
+              await requireDeletedOrgCleanup(env, org.id, token)
+              const provider = providerForAccount(
+                env,
+                dependencies.fetch,
+                resource.providerAccount,
+              )
               await ignoreAlreadyRemoved(() =>
                 resource.kind === 'snapshot'
                   ? provider.deleteSnapshot(resource.id)
@@ -117,6 +131,9 @@ export async function cleanupDeletedOrgs(
               (ownership) => deleteOrgState(org.id, ownership),
             )
           }
+          await purgeOrgAttachments(env, org.id, () =>
+            keepCleanupLease(env, org.id, token, dependencies),
+          )
           if (!(await purgeOrgRecords(env.DB, org.id, token)))
             throw new Error('Org purge claim was lost')
           result.purged.push(org.id)

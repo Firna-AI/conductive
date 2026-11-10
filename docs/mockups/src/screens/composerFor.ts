@@ -1,5 +1,11 @@
 import type { ComposerState } from '../components/chat/Composer'
-import { attachmentDraft, draftAttachments } from '../fixtures/attachments'
+import {
+  attachmentDraft,
+  draftAttachments,
+  failedAttachments,
+  uploadingAttachments,
+  type Attachment,
+} from '../fixtures/attachments'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
@@ -16,7 +22,29 @@ const runningConversations = new Set([
   'first-turn',
   'output-left-out-running',
   'linked',
+  'sent-files',
   'link-sent',
+])
+
+/**
+ * The files of each composer state with files. A file over the size limit
+ * stays out of the message, so its state holds only the files that the
+ * composer attached, and a notice names the file.
+ */
+const composerFiles: Partial<
+  Record<WorkspaceState['composer'], readonly Attachment[]>
+> = {
+  attachments: draftAttachments,
+  uploading: uploadingAttachments,
+  'upload-failed': failedAttachments,
+  'too-large': draftAttachments,
+  picker: draftAttachments,
+}
+
+/** The composer states whose Send leads to the message with its files. */
+const sendsFiles = new Set<WorkspaceState['composer']>([
+  'attachments',
+  'too-large',
 ])
 
 /** An agent turn runs on a ready sandbox. */
@@ -32,6 +60,10 @@ export function isRunning(state: WorkspaceState): boolean {
  * asks for it. A new session starts empty. In a session with messages,
  * the picker marks the models of the other agent as opening a new session.
  * A message for an agent that is not connected waits, and Send is off.
+ *
+ * Send also waits while a file uploads, or while a failed upload waits for
+ * Try again or Remove. A file over the size limit stays out, and Send takes
+ * the message with the files that the composer attached.
  *
  * A session runs on the login of its starter. When the starter is another
  * member, a label in the bar names that login, and the own login of the
@@ -61,11 +93,10 @@ export function composerFor(
   const linkedState =
     state.composer === 'no-starter-login' || state.composer === 'not-shared'
   const opensLinked = !fresh && linkedState && starter !== undefined
-  const withFiles =
-    !fresh && (state.composer === 'attachments' || state.composer === 'picker')
+  const files = fresh ? undefined : composerFiles[state.composer]
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
-  else if (withFiles) draft = attachmentDraft
+  else if (files) draft = attachmentDraft
   else if (!fresh && (noLogin || linkedState)) draft = followUpDraft
   else if (!fresh && state.composer === 'workspace-link') {
     draft = workspaceLinkDraft
@@ -73,14 +104,21 @@ export function composerFor(
     draft = isNew(state) ? savedCartsDraft : followUpDraft
   }
   const choice = resumedChoiceOf(state) ?? workspace.choice
+  let sendTo: string | undefined
+  if (opensLinked) sendTo = paths.linkedSession
+  else if (files && sendsFiles.has(state.composer)) {
+    sendTo = paths.attachmentsSent
+  }
   return {
     choice,
     running: !fresh && isRunning(state),
     draft,
-    attachments: withFiles ? draftAttachments : [],
+    attachments: files ?? [],
+    attachTo:
+      files && state.composer === 'attachments' ? paths.attachments : undefined,
     picker: state.composer === 'picker',
     sessionAgent: fresh ? undefined : choice.agent,
-    sendTo: opensLinked ? paths.linkedSession : undefined,
+    sendTo,
     startsSession: opensLinked,
     blocked: needsLogin,
     sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),

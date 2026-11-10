@@ -6,7 +6,7 @@ import { readBuild } from './build-data'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { createWorkspace } from './workspaces'
 import { FIRST_MESSAGE } from './durable-test-support'
-import { readImageSettings } from './settings-data'
+import { readOrgImage } from './org-image-data'
 import { leasedImage } from './image-leases'
 import { finishImageBuild as finish } from './image-test-support'
 
@@ -23,7 +23,7 @@ it('keeps a leased image until its workspace starts across a replacement publica
       software: SOFTWARE,
     })
     await finish(fixture, initial)
-    const imageA = (await readImageSettings(runtime.env.DB, org.id)).imageName
+    const imageA = (await readOrgImage(runtime.env.DB, org.id))?.imageName
     fixture.pauseStarts()
     const queued = fixture.nextQueued()
     void createWorkspace(runtime, org.id, user, {
@@ -34,7 +34,10 @@ it('keeps a leased image until its workspace starts across a replacement publica
     const actor = fixture.starts.get(workspaceId)
     if (!actor || !imageA) throw new Error('Missing queued image start')
     await actor.advance()
-    expect(await leasedImage(runtime.env.DB, org.id, workspaceId)).toBe(imageA)
+    expect(await leasedImage(runtime.env.DB, org.id, workspaceId)).toEqual({
+      imageName: imageA,
+      providerAccount: 'boat',
+    })
     const replacement = await startImageBuild(images, {
       orgId: org.id,
       userId: user.id,

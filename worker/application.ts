@@ -162,7 +162,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         }
         if (isDeviceAppPath(path))
           return respond(await routeDevice(request, env))
-        const chatResponse = await routeChat(request, env, dependencies.now())
+        const chatResponse = await routeChat(
+          request,
+          env,
+          dependencies.now,
+          dependencies.randomToken,
+        )
         if (chatResponse) return respond(chatResponse)
         const featureResponse = await routeWorkspaceFeatures(
           request,
@@ -200,9 +205,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       try {
         await retryApprovalEmails(env, dependencies)
       } catch {
-        warnWorker(
-          'The retry of approval emails failed. It runs again at the next timer.',
-        )
+        warnWorker({ kind: 'approval_email_retry_failed' })
       }
     },
   }

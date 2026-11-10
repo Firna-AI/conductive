@@ -38,7 +38,7 @@ export async function advanceBuildStep(
   if (job.phase === 'allocating') {
     if (!recoveringAllocation && job.startedByUserId)
       await requireActiveUser(env.DB, job.startedByUserId)
-    await allocateImageBuild(env.DB, provider, job)
+    await allocateImageBuild(env.DB, provider, job, recoveringAllocation)
     return false
   }
   if (!job.sandboxId) throw new Error('Missing build sandbox')
@@ -56,10 +56,16 @@ export async function advanceBuildStep(
       await clearBuildCommands(provider, job.sandboxId, job.buildId)
     await requireActiveOrg(env.DB, orgId)
     const snapshot = await createResource(
+      runtime.env.DB,
       provider,
       buildSnapshotIntent(env.DB, job),
     )
-    await assignBuildSnapshot(env.DB, buildId, snapshot.name)
+    await assignBuildSnapshot(
+      env.DB,
+      buildId,
+      snapshot.name,
+      job.providerAccount,
+    )
     if (snapshot.status === 'failed') throw new Error('Image save failed')
     if (snapshot.status === 'ready')
       await completeBuildPhase(env.DB, buildId, 'publish')
@@ -77,6 +83,7 @@ export async function advanceBuildStep(
       orgId,
       buildId,
       sandboxId: job.sandboxId,
+      providerAccount: job.providerAccount,
       repositories: readRepositories(JSON.parse(job.repositoriesJson)),
       repositoryLocations: capturedRepositoryLocations(
         job.repositoryLocationsJson,

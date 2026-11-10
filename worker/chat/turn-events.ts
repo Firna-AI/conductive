@@ -66,6 +66,19 @@ export async function prepareAgentEvent(
   }
   return async () => {
     if (target.ended) {
+      if (
+        turn.state === 'failed' &&
+        turn.started === true &&
+        (event.type === 'turn.completed' || event.type === 'turn.failed')
+      )
+        for (const command of await transaction.pending()) {
+          if (
+            command.type === 'interrupt' &&
+            command.sessionId === session.id &&
+            command.turnId === turn.id
+          )
+            await transaction.removeCommand(command.commandId)
+        }
       await transaction.emit(event, occurredAt, true)
       return
     }
