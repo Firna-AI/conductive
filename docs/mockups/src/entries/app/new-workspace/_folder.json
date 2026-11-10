@@ -1,6 +1,7 @@
 {
   "order": [
     "first-build",
+    "waiting-repository",
     "not-created",
     "dialog",
     "workspace-link",

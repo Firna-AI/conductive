@@ -1,0 +1,31 @@
+# A removed repository can fail the next build
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, from Milestone 1 of the plan `plans/added-repository-builds.md`, branch `calummoore/new-repo-build-recreation`.
+- **Location:** `worker/lifecycle/image-sources/layout-command.ts`, `worker/lifecycle/image-builds.ts:119-122`, `src/shell/settings/RepositoryPicker.tsx`, `docs/mockups/src/fixtures/computer.ts:12`.
+- **Reason:** a build after a removal fails the same way on `origin/main`, and that plan does not change what a removal does.
+
+- **Source:** Implementation. **Category:** Product bug.
+- **Terms:**
+  - **Org image:** the saved snapshot that every new cloud computer of an org starts from.
+  - **Build:** a run of the install script of the org on a copy of the org image, with each chosen repository in its folder under `~/code/`. Only a build that succeeds replaces the org image.
+  - **Install script:** the Bash script that an admin saves on the Cloud computer tab of the org settings. Only a build runs it.
+- **Background:**
+  - An admin removes a repository on the Repositories tab of the org settings. The removal changes no install script.
+  - `startImageBuild` in `worker/lifecycle/image-builds.ts` gives a build only the chosen repositories.
+  - Before a build loads the repositories, `sourceLayoutCommand` in `worker/lifecycle/image-sources/layout-command.ts` deletes the folder of each repository that the build does not hold.
+  - Install scripts often enter each repository folder. The sample script of the mockups has `cd ~/code/marketing-site && bun install`.
+  - When the script enters a folder that the build deleted, `cd` fails. With `set -e`, the build fails. Without it, the next command runs in the wrong folder.
+- **Problem:** After an admin removes a repository, the next build fails when the install script still enters its folder. Nothing tells the admin at the removal.
+- **Impact if no action:** The admin gets a failed build, reads its log, edits the install script, and builds again.
+- **Root question:** How does an admin who removes a repository learn that the install script still uses it?
+- **Options:**
+  - **A.** No change. The log of the failed build shows the failed `cd`. Effort: Small.
+  - **B.** The notice of a removal on the Repositories tab and the Cloud computer tab adds one sentence, such as "Take it out of the install script if the script uses it." Effort: Small.
+  - **C.** The removal warns when the install script names the folder of that repository, with a link to the install script. Effort: Medium.
+- **Left out:** A build that skips the lines of missing folders. The install script belongs to the admin, so the app must not change what it runs.
+- **Wider fix:** C. It catches the case at the change, also for a script that the admin wrote before the removal.
+- **Previous examples:** None found.
+- **Recommendation:** C. The admin learns of the problem before a build fails.
+- **Action:** ask the user, because C adds a warning that no requirement covers.

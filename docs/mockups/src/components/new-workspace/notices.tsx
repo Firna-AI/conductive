@@ -1,8 +1,13 @@
-import { CircleAlert, FolderGit2 } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { CircleAlert, FolderGit2, Hammer } from 'lucide-react'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+import {
+  type RepositoryWait,
+  waitingFormText,
+} from '../settings/repositoryChangeCopy'
 
 /**
  * A create that failed, over the composer of the New workspace page or in
@@ -20,6 +25,36 @@ export function CreateFailedNotice(props: { ready?: boolean }) {
       icon={CircleAlert}
       title="The workspace wasn't created"
       tone="danger"
+    />
+  )
+}
+
+/**
+ * The notice of a New workspace page or dialog while the repository of the
+ * form waits for its build, such as in a kept draft, or while no chosen
+ * repository is ready. Send stays off, and the message stays. `names` holds
+ * the repository of the form, or every chosen one when none is ready, and
+ * `alternative` says that another chosen repository is ready. While the
+ * build runs, the notice shows a spinner. Else `action` takes the link of
+ * an admin to the Cloud computer tab, and a member reads who can act.
+ */
+export function WaitingRepositoryNotice(props: {
+  wait: RepositoryWait
+  names: readonly string[]
+  alternative: boolean
+  admin: boolean
+  action?: ReactNode
+}) {
+  const text = waitingFormText(props)
+  const failed = props.wait === 'failed'
+  return (
+    <Notice
+      action={props.action}
+      body={text.body}
+      busy={props.wait === 'building'}
+      icon={failed ? CircleAlert : Hammer}
+      title={text.title}
+      tone={failed ? 'danger' : 'neutral'}
     />
   )
 }

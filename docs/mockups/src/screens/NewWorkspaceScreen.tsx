@@ -1,5 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { ChatPane } from '../components/chat/ChatPane'
+import { Menu } from '../components/common/Menu'
+import { Sheet } from '../components/common/Sheet'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
@@ -8,7 +10,7 @@ import { firstBuildStates } from '../fixtures/computer'
 import { memberViewer, you } from '../fixtures/members'
 import { paths } from '../paths'
 import { FirstBuildNotice } from './firstBuildNotice'
-import { pageOrg, railOf, sidebarOf, Start } from './newWorkspacePageParts'
+import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
   newWorkspaceDrafts,
@@ -16,6 +18,12 @@ import {
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
+import {
+  formWait,
+  repositoryMenu,
+  waitingNotice,
+} from './newWorkspaceRepositories'
+import { Start } from './newWorkspaceStart'
 
 export const newWorkspaceSchema = {
   type: 'object',
@@ -24,6 +32,8 @@ export const newWorkspaceSchema = {
     'draft',
     'login',
     'repositories',
+    'repositoryMenu',
+    'waitingBuild',
     'result',
     'org',
     'firstBuild',
@@ -49,6 +59,8 @@ export const newWorkspaceForm: NewWorkspaceState = {
   draft: 'message',
   login: 'connected',
   repositories: 'chosen',
+  repositoryMenu: 'closed',
+  waitingBuild: 'building',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -58,51 +70,68 @@ export const newWorkspaceForm: NewWorkspaceState = {
 /**
  * The empty chat and its composer. A failed create keeps the message for
  * Try again. A suspended org shows the refused bar. Before the first good
- * build, the draft stays and Send is off.
+ * build, and while the repository of the form waits for its build, the
+ * draft stays and Send is off.
  */
 function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const { state } = props
   const page = pageOrg(state)
   const suspended = state.org === 'suspended'
   const building = state.org === 'new' && state.firstBuild !== 'succeeded'
+  const waiting = formWait(page) !== undefined
   const failed = !suspended && state.result === 'error'
   const draft = newWorkspaceDrafts[state.draft]
   // Send leads to the create flow, which draws the task of Saved carts.
   const linked = state.draft === 'workspace-link'
-  const text =
-    state.org === 'new' && state.draft !== 'empty' ? page.draft : draft.text
-  const notices = formNotices(state, failed, !building)
+  const ownDraft = state.org === 'new' || waiting
+  const text = ownDraft && state.draft !== 'empty' ? page.draft : draft.text
+  const notices = formNotices(state, failed, !building && !waiting)
+  const admin = state.viewer === 'admin'
+  // The repositories of Firna never wait, so the notice of the first build
+  // and the notice of a waiting repository never show together.
   if (state.org === 'new' && state.firstBuild !== 'succeeded') {
     notices.splice(
       failed ? 1 : 0,
       0,
       <FirstBuildNotice
-        admin={state.viewer === 'admin'}
+        admin={admin}
         build={state.firstBuild}
         key="first-build"
       />,
     )
   }
+  const repositoryWait = waitingNotice({
+    form: page,
+    wait: state.waitingBuild,
+    admin,
+  })
+  if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
+  const menuOpen = state.repositoryMenu === 'open'
   return (
     <ChatPane
       composer={{
         attachments: draft.attachments,
-        blocked: building || waits(state),
+        blocked: building || waiting || waits(state),
         choice: page.choice,
         draft: text,
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
-          failed || linked || state.org === 'new' || text === ''
+          failed || linked || waiting || state.org === 'new' || text === ''
             ? undefined
             : paths.creating,
       }}
       empty={
         suspended ? undefined : (
           <Start
+            admin={admin}
+            chosen={state.repositories !== 'none'}
+            menu={
+              menuOpen && props.viewport === 'desktop'
+                ? repositoryMenu(page, state.waitingBuild)
+                : undefined
+            }
             page={page}
-            chosen={state.repositories === 'chosen'}
-            admin={state.viewer === 'admin'}
           />
         )
       }
@@ -113,7 +142,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
           ? { problem: 'refused', reason: orgSuspendedReason }
           : undefined
       }
-      viewer={state.viewer === 'admin' ? you : memberViewer}
+      viewer={admin ? you : memberViewer}
       viewport={props.viewport}
     />
   )
@@ -139,7 +168,26 @@ export function NewWorkspaceScreen(props: {
       <NewChat state={state} viewport={props.viewport} />
     </Page>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (mobile) {
+    const sheet =
+      state.repositoryMenu === 'open' &&
+      state.repositories !== 'none' &&
+      state.org !== 'suspended' ? (
+        <Sheet title="Repository">
+          <Menu
+            entries={repositoryMenu(pageOrgData, state.waitingBuild)}
+            label="Repository"
+            placement="sheet"
+          />
+        </Sheet>
+      ) : null
+    return (
+      <MobileFrame>
+        {page}
+        {sheet}
+      </MobileFrame>
+    )
+  }
   return (
     <AppFrame rail={railOf(state)} sidebar={sidebarOf(state, mac?.needsInput)}>
       {page}

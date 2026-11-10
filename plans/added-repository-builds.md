@@ -257,6 +257,11 @@ My calls, 2026-11-10:
     repository that the org image does not hold.
   - `removedRepositories`: the ID and the full name of each repository
     that the org image holds and the org no longer chose.
+- Both repository lists are empty while the org has no image. So a
+  repository waits only once the org has an image, and the notices of the
+  first build cover the time before. Reason: the mockups of Milestone 1
+  showed that the plan did not say what waits before the first good
+  build.
 - The repository lists come from the same image data as the check of the
   create.
 - The repository save keeps its revision raise, because the added build
@@ -279,7 +284,9 @@ My calls, 2026-11-10. The mockups settle the words.
   is off and the form says when the repository is ready.
 - When the org has an image and no chosen repository is ready, Send is
   off and a notice says why. An admin gets a link to the Cloud computer
-  tab.
+  tab after a failed build, or while no build runs. While a build runs,
+  the notice shows its progress without a link, as the notice of the
+  first build does, because the admin has nothing to do on that tab.
 - The repository notice shows on the Repositories tab and on the Cloud
   computer tab, for admins and members. It shows while `changes` lists an
   added or a removed repository, and the org has an image. Before the
@@ -293,13 +300,41 @@ My calls, 2026-11-10. The mockups settle the words.
      start: the changes wait for a build. An admin gets Build computer.
   - A refresh never counts as a running build, because the build cards
     do not show it.
-  - A member gets no button.
+  - A member gets no button, and reads that an admin can act.
+  - On the Cloud computer tab, the notice has no button, because the
+    build card under it has the same action. The Repositories tab keeps
+    the button.
+  - The words say "after the build", not "after this build". Reason: an
+    add during a build waits for the one more build that follows it.
 - The install script notice shows only when `changes.installScript` is
   true. Its words stay.
-- The mockups decide whether the rows of the repository lists also mark
-  a waiting repository, as option F of decision 241 does.
 - After an add, the app reads the builds again, so that the new build
   shows at once.
+
+Calls of Milestone 1, 2026-11-10, from the mockups:
+
+- The rows of the repository lists get no mark, so option F of decision
+  241 is not taken. Reason: the notice names the repositories.
+- The repository notice sits at the top of the Repositories section, and
+  under the intro of the Cloud computer tab.
+- A failed build gives the notice the danger tone, a running build a
+  spinner, and a wait the hammer icon, as the existing notices do.
+- An off row of a menu fades only its label, so that its note stays
+  readable.
+- The description of the Repositories tab says that adding a repository
+  starts a build.
+- A kept draft keeps its waiting repository, and the hint under the
+  repository picker hides while the repository of the form waits.
+- The build history stays closed while a repository change waits, as it
+  does for a changed install script.
+- The waiting states of New workspace show on the page only. The dialog
+  uses the same menu and notices, and its page already shows six screens,
+  which [The New workspace dialog page shows six screens](follow-ups/new-workspace-dialog-page-six-screens.md)
+  records.
+- A removal that the install script still uses fails the next build, as
+  it does today.
+  [A removed repository can fail the next build](follow-ups/removed-repository-fails-install-script.md)
+  records it.
 
 ## Milestone 1: Mockups
 
@@ -311,26 +346,31 @@ Draw the new states of New workspace, the Repositories tab, and the Cloud
 computer tab, for an admin and for a member. Read the `mockups` and
 `product-ui` skills first.
 
-- [ ] `app/new-workspace` and `app/new-workspace/dialog`: a variant with a
+- [x] `app/new-workspace` and `app/new-workspace/dialog`: a variant with a
       waiting repository, off in the open repository menu, with its note.
-- [ ] `app/new-workspace`: a variant where the repository of a kept draft
+  - The dialog got no variant, as the calls of Milestone 1 say. The page
+    `app/new-workspace/waiting-repository` draws the states.
+- [x] `app/new-workspace`: a variant where the repository of a kept draft
       waits, and a variant where no chosen repository is ready. Send is
       off in both.
-- [ ] `app/org-settings/repositories`: a variant for each state of the
+- [x] `app/org-settings/repositories`: a variant for each state of the
       repository notice: a build runs after an add, the newest build
       failed, and a removal waits for a build.
-- [ ] The `member` variant of `app/org-settings/repositories`: the
+- [x] The `member` variant of `app/org-settings/repositories`: the
       repository notice of a member, without a button.
-- [ ] `app/org-settings/cloud-computer`: a `repositories-changed` variant
+- [x] `app/org-settings/cloud-computer`: a `repositories-changed` variant
       with the repository notice, and the same notice in
       `app/org-settings/cloud-computer/member`. `script-changed` keeps the
       install script notice for a script change only.
-- [ ] Update `docs/mockups/catalogue.md` for each new variant, with
+- [x] Update `docs/mockups/catalogue.md` for each new variant, with
       decisions 240 and 241.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/added-repository-builds/` holds the check logs
+(`m1r2-*.log`) and the screenshots.
 
 ## Milestone 2: Documentation and protocol
 
@@ -422,6 +462,13 @@ first.
       `src/members/` for a member. Each tab reads the builds.
 - [ ] Move the consumers of `needsBuild` to `changes.installScript`. The
       install script notice then shows only for a script change.
+- [ ] Use the shared parts of the mockups:
+      `docs/mockups/src/components/settings/RepositoryNotice.tsx` and the
+      words in `repositoryChangeCopy.ts`.
+- [ ] Fade only the label of an off menu row in `src/shell/ui/`, as the
+      mockup menu does.
+- [ ] Give the Repositories tab of an admin the new description, as the
+      mockups do.
 - [ ] Read the builds again after an add, in `src/app/settings-actions.ts`.
 - [ ] Add the screen tests of each state.
 - [ ] Update `src/app/README.md`, `src/app/screens.md`, and

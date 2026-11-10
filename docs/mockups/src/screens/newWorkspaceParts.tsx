@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
 import { CreateFailedNotice } from '../components/new-workspace/notices'
+import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
 import {
   newWorkspaceAttachments,
   type Attachment,
@@ -25,10 +26,26 @@ export const newWorkspaceFormProperties = {
    */
   login: { enum: ['connected', 'missing'] },
   /**
-   * The repositories of the org: chosen, or none yet. Then the form asks an
-   * admin to choose them first, and the message waits.
+   * The repositories of the org. `chosen` has the three that the cloud
+   * computer of Acme holds. `waiting` adds acme/admin-dashboard, which waits
+   * for its build, and the form holds the first ready repository.
+   * `draft-waits` is the same with a kept draft in acme/admin-dashboard.
+   * `none-ready` has acme/admin-dashboard alone, so no chosen repository is
+   * ready. A form whose repository waits keeps Send off. `none` has no
+   * repository chosen yet: the form asks an admin to choose them first, and
+   * the message waits. A repository waits only once the org has a cloud
+   * computer, so Firna before its first build shows its first build instead.
    */
-  repositories: { enum: ['chosen', 'none'] },
+  repositories: {
+    enum: ['chosen', 'waiting', 'draft-waits', 'none-ready', 'none'],
+  },
+  /** The repository menu, closed or drawn open. */
+  repositoryMenu: { enum: ['closed', 'open'] },
+  /**
+   * The build that a waiting repository waits for: the newest build failed,
+   * a build runs, or no build runs, such as after a start that failed.
+   */
+  waitingBuild: { enum: repositoryWaits },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties

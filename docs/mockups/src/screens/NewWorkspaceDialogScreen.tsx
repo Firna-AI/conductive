@@ -19,6 +19,11 @@ import {
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
+import {
+  formWait,
+  repositoryMenu,
+  waitingNotice,
+} from './newWorkspaceRepositories'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace } from './workspaceState'
 
@@ -29,6 +34,8 @@ export const newWorkspaceDialogSchema = {
     'draft',
     'login',
     'repositories',
+    'repositoryMenu',
+    'waitingBuild',
     'result',
     'org',
     'firstBuild',
@@ -57,6 +64,8 @@ export const emptyDialog: NewWorkspaceDialogState = {
   draft: 'empty',
   login: 'connected',
   repositories: 'chosen',
+  repositoryMenu: 'closed',
+  waitingBuild: 'building',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -81,10 +90,11 @@ export function NewWorkspaceDialogScreen(props: {
   if (props.viewport === 'mobile') {
     return <NewWorkspaceScreen state={pageState} viewport="mobile" />
   }
-  const chosen = state.repositories === 'chosen'
+  const chosen = state.repositories !== 'none'
+  const waiting = formWait(page) !== undefined
   const failed = state.result === 'error'
   const draft = newWorkspaceDrafts[state.draft]
-  const notices = formNotices(state, failed, !building)
+  const notices = formNotices(state, failed, !building && !waiting)
   if (state.org === 'new' && state.firstBuild !== 'succeeded') {
     notices.splice(
       failed ? 1 : 0,
@@ -96,6 +106,12 @@ export function NewWorkspaceDialogScreen(props: {
       />,
     )
   }
+  const repositoryWait = waitingNotice({
+    form: page,
+    wait: state.waitingBuild,
+    admin: state.viewer === 'admin',
+  })
+  if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
   if (!chosen) {
     notices.push(
       <ChooseRepositoriesNotice
@@ -112,10 +128,17 @@ export function NewWorkspaceDialogScreen(props: {
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}
       placeholder={taskPlaceholder}
-      ready={draft.text !== '' && !waits(state) && !building}
+      ready={draft.text !== '' && !waits(state) && !building && !waiting}
       repository={chosen ? page.repository : undefined}
+      repositoryMenu={
+        chosen && state.repositoryMenu === 'open'
+          ? repositoryMenu(page, state.waitingBuild)
+          : undefined
+      }
       text={
-        state.org === 'new' && state.draft !== 'empty' ? page.draft : draft.text
+        (state.org === 'new' || waiting) && state.draft !== 'empty'
+          ? page.draft
+          : draft.text
       }
     />
   )
