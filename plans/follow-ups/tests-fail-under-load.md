@@ -25,6 +25,9 @@
   It reported `Test timed out in 15000ms`. The full run had 1,968 passed tests and this one failure.
   All three tests in that file then passed in one unchanged isolated rerun.
   This additional case has one isolated rerun, not a ten-run result.
+  On 10 November 2026, `npm run test` on `calummoore/manage-access-redirect` failed the same case again with `Test timed out in 15000ms`.
+  That run had 2,006 passed tests and this one failure, on a machine with four CPUs. The branch did not touch the test or its fixture.
+  All three tests in that file then passed in one unchanged isolated rerun.
   No source, assertion, or timeout changed.
   The suspected source is the same admission and alarm readiness ordering as the provisioning case.
   The queued-job notification can precede the final alarm schedule.

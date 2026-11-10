@@ -57,9 +57,12 @@ On the app hostname, the Worker serves these API routes:
 - `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
 
-On the app hostname, the Worker also serves `/github/setup`, where GitHub sends the user after an install of the GitHub App.
-[`github-setup.ts`](github-setup.ts) serves it before the request gate, with no session.
-It sends an install from a browser back to the screen where it started.
+On the app hostname, the Worker also serves `/github/install` and `/github/setup`, before the request gate, with no session.
+[`github-setup.ts`](github-setup.ts) holds both.
+A browser starts each install or change of the GitHub App at `/github/install?from=<screen>`.
+The Worker keeps the screen in the return cookie, then sends the browser to the install page of the GitHub App.
+GitHub sends the user to `/github/setup` after an install or a change.
+That route sends a browser back to the screen of the return cookie, or to Home, and deletes the cookie.
 It answers an install from the Mac app with a page that sends the user back to the Mac app.
 [The GitHub App](../docs/protocol/github-banner.md#the-github-app) states the rules.
 

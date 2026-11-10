@@ -40,6 +40,8 @@ says.
   page lists the GitHub accounts of the person, personal and org. There
   the person changes the repositories that the app reaches on an account,
   or installs the app on another account.
+- After a save on GitHub, the return opens the screen of the list again,
+  as [The GitHub App](github-banner.md#the-github-app) says.
 - A link to the settings page of each installation was rejected, because
   it gives no link when no account has the app, and it cannot install the
   app on another account.
