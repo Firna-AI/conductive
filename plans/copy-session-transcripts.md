@@ -443,12 +443,12 @@ One fold and one set of words:
   the picker of a new workspace, `src/shell/new-workspace/notices.tsx`,
   and the mockup fixture import them too.
 
-The agent made this call on 10 November 2026:
+The comparison page:
 
-- The comparison page at `conductive.build/from-conductor` lists no
-  transcript copy, so this change changes no row of it. Reason: its rule
-  in `docs/protocol/conductor-cloud-comparison.md` covers only the features
-  that it lists.
+- The comparison page at `conductive.build/from-conductor` lists "Copy
+  session transcripts" as Planned since pull request #134 of 10 November
+  2026. The pull request of this change ships the feature, so Milestone 7
+  sets that row to Available, as the repository rule in `AGENTS.md` says.
 
 The text:
 
@@ -718,6 +718,11 @@ workspace.
 - [ ] Run each new DOM test 10 times. Save the pass counts under
       `.context/copy-session-transcripts/`.
 - [ ] Update `src/chat/tab-row.md` and `src/chat/README.md`.
+- [ ] Set the row `copy-session-transcripts` in
+      `src/marketing/from-conductor/areas/agents-and-chat.ts` to
+      Available. Give it a note that names the two copy items and the
+      archived workspace, under the claim rules of
+      `docs/protocol/conductor-cloud-comparison.md`.
 - [ ] Smoke-test in Chrome with the app or the chat development page. Copy
       each kind from a tab that never showed, paste it, and compare it with
       the chat. Do it again in an archived workspace and in the phone

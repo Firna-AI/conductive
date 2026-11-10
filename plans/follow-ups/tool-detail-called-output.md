@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-09, from branch `calummoore/session-transcript-copy`, a new problem of the options check of the plan `plans/copy-session-transcripts.md`.
-- **Location:** `runner/src/providers/tool.ts:27`, `src/shared/chat-events.ts:10`, `docs/protocol/chat-and-events.md:241`, and `docs/mockups/src/components/chat/lostCopy.ts:67` and `:72`.
+- **Location:** `runner/src/providers/tool.ts:27`, `src/shared/chat-events.ts:10`, `docs/protocol/chat-and-events.md:102`, and `docs/mockups/src/components/chat/lostCopy.ts:67` and `:72`.
 - **Reason:** The mismatch is already on `main`, and the transcript change does not change these lines.
 
 - **Source:** Review.

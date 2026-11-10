@@ -9,13 +9,14 @@
 - **Source:** Review.
 - **Category:** Product bug.
 - **Terms:**
-  - **Model list:** the JSON list of models in the Worker variable `CONDUCTIVE_MODELS`, as `docs/deployment.md` says. Each model lists its `efforts`, and the doc sets no order for them.
+  - **Model list:** the JSON list of models in the Worker variable `CONDUCTIVE_MODELS`, which the `vars` of `wrangler.jsonc` hold, as `docs/deployment.md` says. Each model lists its `efforts`, and the doc sets no order for them.
 - **Background:**
   - The app has two model pickers. The chat picker is built in `src/chat/components/model-menu.ts`. The picker of a new workspace is `src/shell/ui/ModelPicker.tsx`.
   - When a member picks another model, each picker keeps the effort when the new model has it. Else it picks another effort with its own `effortFor`.
   - The chat sorts the efforts of the model from the lowest, with `effortOrder` in `src/chat/state/format.ts`. It keeps the nearest lower effort, else the lowest effort. It also shows the effort rows in that sorted order.
   - The picker of a new workspace walks down from the wanted effort with `EFFORTS` of `src/app/api/read-core.ts`. When it finds no lower effort, it takes the first effort of the list as configured. It shows the effort rows in the configured order.
   - The test model list `TOOL_MODELS` in `worker/tools/list-test-support.ts` already lists `efforts: ['high', 'low']`.
+  - The deployed list in `wrangler.jsonc` lists the efforts of each model from the lowest today, so production does not show the problem yet.
 - **Problem:** With a model list whose efforts are not in order, such as `['high', 'low']`, the two pickers show the effort rows in a different order. After a change to a model without a lower effort, the picker of a new workspace keeps `high`, while the chat keeps `low`.
 - **Impact if no action:** A member who starts a workspace can get a higher effort than the chat would choose for the same change of model. The order of the rows differs between the two pickers.
 - **Root question:** How does every picker choose the effort of a new model and order the effort rows, for any order of the configured efforts?
