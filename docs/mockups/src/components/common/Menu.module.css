@@ -23,6 +23,15 @@
   overflow-y: auto;
 }
 
+/*
+ * A menu at a point, such as at the pointer of a right click, scrolls as a
+ * menu beside its trigger does. The screen places its box.
+ */
+.point {
+  max-height: 70dvh;
+  overflow-y: auto;
+}
+
 /* The rows keep their height in a menu that scrolls. */
 .menu > * {
   flex-shrink: 0;

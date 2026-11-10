@@ -17,7 +17,7 @@ export async function retentionCommandFixture(
   const id = created.workspace.id
   const platform = fixture.actors.get(id)
   if (!platform) throw new Error('Missing retention controller')
-  fixture.setTime(TEST_TIME)
+  await fixture.setTime(TEST_TIME)
   fixture.boat.states.set('bx_1', 'archived')
   await platform.endpoint().lifecycleStopped()
   await fixture.advanceTo(TEST_TIME + 1_123_260_000, id)

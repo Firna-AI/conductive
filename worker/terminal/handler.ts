@@ -2,7 +2,6 @@ import { terminalPaths, type TerminalResponse } from '../../src/shared/terminal'
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
 import {
-  recordActivity,
   requireRunning,
   toolError,
   toolRequest,
@@ -57,6 +56,7 @@ export function createTerminalHandler(
           env,
           target.workspaceId,
           target.sandboxId,
+          target.providerAccount,
         )
         if (tail === null) {
           const stopped = ['stopped', 'error'].includes(target.state)
@@ -104,6 +104,7 @@ export function createTerminalHandler(
           orgId: target.orgId,
           workspaceId: target.workspaceId,
           sandboxId: target.sandboxId,
+          providerAccount: target.providerAccount,
         })
         const auth = btoa(`conductive:${password}`)
         let upstream: Response
@@ -122,9 +123,7 @@ export function createTerminalHandler(
           }),
           authorize: registration.check,
           onClose: registration.dispose,
-          fromBrowser: terminalFrames(auth, () =>
-            recordActivity(dependencies, target.workspaceId),
-          ),
+          fromBrowser: terminalFrames(auth),
         })
         registration.attach(bridge.close)
         await registration.check()

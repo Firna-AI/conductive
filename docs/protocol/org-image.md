@@ -72,10 +72,10 @@ decision number names a dated record, as
 
 ### The first build
 
-- Create org starts the first build of the org by itself (decision 150).
+- Create org starts the first build of the org by itself (decision 150 of PR #92).
   Create org requires at least one repository, as
   [Orgs](orgs-and-members.md#orgs) says, so every new org starts its first
-  build at create (decision 151).
+  build at create (decision 151 of PR #92).
 - Reason: a new org then gets its org image with no manual step.
 - Create org starts the build before it answers. A build that the browser
   starts after the create was rejected, because a closed tab could then
@@ -95,7 +95,7 @@ decision number names a dated record, as
   that time.
 - The repositories or the install script can change during the first good
   build. In that case, the app starts one more build by itself, the added
-  build, when that build ends (decision 151).
+  build, when that build ends (decision 151 of PR #92).
 - Reason: a build holds the repositories and the install script that were
   saved when it began. The added build takes in each change from any
   screen during the first good build. So such a change needs no Build

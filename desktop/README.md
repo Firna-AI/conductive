@@ -19,6 +19,7 @@ The file flow adds no renderer bridge.
 
 The desktop entry supplies the configured Worker origin to the app's API and event services.
 API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
+File uploads go to the same origin as one raw `XMLHttpRequest` with credentials, so they send the same cookie and report their progress.
 Workspace sockets use the same Worker origin.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
@@ -110,7 +111,7 @@ Wake or a cookie change can connect it again.
 Background requests show a native notification.
 A click restores the window and opens the request's workspace.
 It does not approve the request.
-See the [Mac app protocol](../docs/protocol/desktop-app.md) for the device requirements.
+See the [Mac app protocol](../docs/protocol/desktop-commands.md) for the device requirements.
 
 Focused device checks use these commands:
 
@@ -263,7 +264,7 @@ The package includes only `dist/app/` and `dist/bundle/`.
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
 - [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
-- [Renderer services](renderer/services.ts) routes credentialed API calls and event sockets to the configured Worker.
+- [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
 - [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.

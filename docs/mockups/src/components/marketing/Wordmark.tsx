@@ -8,7 +8,7 @@ import styles from './Wordmark.module.css'
  * the site. `height` sets a smaller lockup, such as in a top bar.
  */
 export function Wordmark(props: { to?: string; height?: number }) {
-  const content = <Lockup height={props.height ?? 30} />
+  const content = <Lockup height={props.height} />
   if (!props.to) return <span className={styles.wordmark}>{content}</span>
   return (
     <ScreenLink className={styles.wordmark} to={props.to}>

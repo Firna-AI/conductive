@@ -1,11 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import type { AgentChatEvent, ChatEvent } from '../../src/shared/chat-events'
 import { sessionPaths } from '../../src/shared/sessions'
 import { recordedChatEvents } from '../../src/test-support/recorded-chat'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-
 describe('workspace chat recorded events', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -17,7 +15,6 @@ describe('workspace chat recorded events', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('stores provider-neutral partial text, tools, completion, stop, and failure', async () => {
     const fixture = await createChatFixture(harness)
     const read = {
@@ -26,12 +23,12 @@ describe('workspace chat recorded events', () => {
       path: 'README.md',
       maxBytes: 1024,
     }
-    expect(await fixture.chat.sendFileCommand(WORKSPACE_ID, read)).toBe(false)
+    expect(await fixture.sendFileCommand(WORKSPACE_ID, read)).toBe(false)
     const runner = await fixture.connect()
-    expect(await fixture.chat.sendFileCommand(WORKSPACE_ID, read)).toBe(false)
+    expect(await fixture.sendFileCommand(WORKSPACE_ID, read)).toBe(false)
     runner.emit({ type: 'runner.ready' })
     await fixture.drain()
-    expect(await fixture.chat.sendFileCommand(WORKSPACE_ID, read)).toBe(true)
+    expect(await fixture.sendFileCommand(WORKSPACE_ID, read)).toBe(true)
     expect(runner.commands).toEqual([read])
     runner.reply({
       type: 'file.read.result',
@@ -54,13 +51,12 @@ describe('workspace chat recorded events', () => {
     expect(
       await fixture.chat.store.read(WORKSPACE_ID, (view) => view.pending()),
     ).toEqual([])
-    fixture.transport.dropOutgoing = (message) => {
-      if (message.type === 'file.read')
-        throw new Error('Injected file transport failure')
-      return false
-    }
-    expect(await fixture.chat.sendFileCommand(WORKSPACE_ID, read)).toBe(false)
-    fixture.transport.dropOutgoing = () => false
+    await fixture.setSendRule({
+      type: 'file.read',
+      error: 'Injected file transport failure',
+    })
+    expect(await fixture.sendFileCommand(WORKSPACE_ID, read)).toBe(false)
+    await fixture.setSendRule(null)
     await fixture.connect(runner)
     expect(runner.commands).toEqual([read])
     expect(

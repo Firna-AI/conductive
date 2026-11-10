@@ -14,7 +14,7 @@ import { NewOrgEmpty } from './listParts'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
-  newWorkspaceDrafts,
+  newWorkspaceDraft,
   newWorkspaceFormProperties,
   taskPlaceholder,
   waits,
@@ -32,6 +32,7 @@ export const newWorkspaceDialogSchema = {
   additionalProperties: false,
   required: [
     'draft',
+    'files',
     'login',
     'repositories',
     'repositoryMenu',
@@ -62,6 +63,7 @@ export type NewWorkspaceDialogState = SchemaProps<
 /** The dialog as it opens: no message yet, in an org that is ready. */
 export const emptyDialog: NewWorkspaceDialogState = {
   draft: 'empty',
+  files: 'none',
   login: 'connected',
   repositories: 'chosen',
   repositoryMenu: 'closed',
@@ -93,7 +95,7 @@ export function NewWorkspaceDialogScreen(props: {
   const chosen = state.repositories !== 'none'
   const waiting = formWait(page) !== undefined
   const failed = state.result === 'error'
-  const draft = newWorkspaceDrafts[state.draft]
+  const draft = newWorkspaceDraft(state)
   const notices = formNotices(state, failed, !building && !waiting)
   if (state.org === 'new' && state.firstBuild !== 'succeeded') {
     notices.splice(
@@ -123,7 +125,7 @@ export function NewWorkspaceDialogScreen(props: {
   }
   const dialog = (
     <NewWorkspaceDialog
-      attachments={draft.attachments}
+      attachments={draft.files}
       choice={page.choice}
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}

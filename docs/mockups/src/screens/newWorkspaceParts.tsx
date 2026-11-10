@@ -2,10 +2,7 @@ import type { ReactNode } from 'react'
 import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
 import { CreateFailedNotice } from '../components/new-workspace/notices'
 import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
-import {
-  newWorkspaceAttachments,
-  type Attachment,
-} from '../fixtures/attachments'
+import { firstMessageDrafts, type Attachment } from '../fixtures/attachments'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
 import { followUpTask } from '../fixtures/workspaceLinkConversations'
 import { savedCarts } from '../fixtures/workspaces'
@@ -16,10 +13,17 @@ import { savedCarts } from '../fixtures/workspaces'
  */
 export const newWorkspaceFormProperties = {
   /**
-   * The message: none yet, the task, the task with an attached file, or a
-   * task with a pasted link to an earlier workspace, which shows as a chip.
+   * The text of the message: none yet, the task, or a task with a pasted
+   * link to an earlier workspace, which shows as a chip.
    */
-  draft: { enum: ['empty', 'message', 'file', 'workspace-link'] },
+  draft: { enum: ['empty', 'message', 'workspace-link'] },
+  /**
+   * The files of the message: none, a file that uploads beside one that
+   * waits for its turn, or all uploaded. The app stores each upload until
+   * the turn starts, so no cloud computer is needed yet. Send and Create
+   * wait while a file uploads.
+   */
+  files: { enum: ['none', 'uploading', 'ready'] },
   /**
    * The agent of the chosen model: connected, or not connected. Then a
    * notice leads to its Connect form, and the message waits.
@@ -50,7 +54,7 @@ export const newWorkspaceFormProperties = {
 
 type FormProperty = keyof typeof newWorkspaceFormProperties
 
-/** The values of the shared state, such as `draft: 'file'`. */
+/** The values of the shared state, such as `files: 'ready'`. */
 export type NewWorkspaceFormState = {
   [
     Key in FormProperty
@@ -60,17 +64,26 @@ export type NewWorkspaceFormState = {
 /** The text of an empty message, on the page and in the dialog. */
 export const taskPlaceholder = 'Describe the task'
 
-/** The text and the files of each draft. */
-export const newWorkspaceDrafts: Readonly<
-  Record<
-    NewWorkspaceFormState['draft'],
-    { text: string; attachments: readonly Attachment[] }
-  >
-> = {
-  empty: { text: '', attachments: [] },
-  message: { text: savedCartsMessage, attachments: [] },
-  file: { text: savedCartsMessage, attachments: newWorkspaceAttachments },
-  'workspace-link': { text: followUpTask, attachments: [] },
+/** The text of each draft. */
+const draftTexts: Readonly<Record<NewWorkspaceFormState['draft'], string>> = {
+  empty: '',
+  message: savedCartsMessage,
+  'workspace-link': followUpTask,
+}
+
+/**
+ * The text and the files of the message in a state. The files come from
+ * the first message of the New workspace page, so the page and the dialog
+ * draw the same chips.
+ */
+export function newWorkspaceDraft(state: NewWorkspaceFormState): {
+  text: string
+  files: readonly Attachment[]
+} {
+  return {
+    text: draftTexts[state.draft],
+    files: firstMessageDrafts[state.files],
+  }
 }
 
 /** The model and the effort of the first message. */

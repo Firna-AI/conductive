@@ -9,7 +9,7 @@ import { runningRuntimeWorkspace } from './runtime-lifecycle-test-support'
 import { workspaceRuntime } from './runtime'
 import { readWorkspace, workspaceView } from './workspace-data'
 import { authenticateWorkspaceToken, readWorkspaceToken } from './tokens'
-import { heldOperation } from './platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import {
   activeRuntimeOwner,
   finishRuntimeStart,

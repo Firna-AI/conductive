@@ -1,11 +1,4 @@
-import { execFile } from 'node:child_process'
-import { createHash } from 'node:crypto'
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, relative } from 'node:path'
-import process from 'node:process'
-import { promisify } from 'node:util'
-import { afterAll, beforeAll, expect, it } from 'vitest'
+import { beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
 import { parityAreas } from '../../src/marketing/from-conductor/areas'
@@ -15,12 +8,14 @@ import {
 } from '../../src/marketing/from-conductor/copy'
 import { parityFeatures } from '../../src/marketing/from-conductor/features'
 import { parityStatuses } from '../../src/marketing/from-conductor/statuses'
-import { pageHrefs, sitePaths } from '../../src/marketing/links'
+import { docsPath, pageHrefs, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
-import { isolatedProcessEnvironment } from '../test-support/process-environment'
-import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
+import type { SiteBinding } from '../test-support/site-binding'
+import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
+import { checkMacDownloads } from './built-site-downloads.test-support'
+import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
 import { termsConsentResponse } from './consent'
 import {
   decodeHtml,
@@ -34,46 +29,11 @@ import { siteResponse } from './site'
 const SITE = 'https://conductive.test'
 const APP_ORIGIN = 'https://app.conductive.test'
 const NOW = Date.UTC(2027, 0, 15)
-let folder: string | undefined
 let assets: SiteBinding
 
 beforeAll(async () => {
-  folder = await mkdtemp(join(tmpdir(), 'conductive-site-'))
-  await promisify(execFile)(
-    'node_modules/.bin/astro',
-    ['build', '--outDir', folder],
-    {
-      env: isolatedProcessEnvironment({ PATH: process.env.PATH, CI: 'true' }),
-    },
-  )
-  const files = new Map<string, SiteAssetFile>()
-  const types: Readonly<Record<string, string>> = {
-    html: 'text/html',
-    json: 'application/json',
-    webp: 'image/webp',
-    svg: 'image/svg+xml',
-    ico: 'image/x-icon',
-    png: 'image/png',
-    woff2: 'font/woff2',
-  }
-  for (const entry of await readdir(folder, {
-    recursive: true,
-    withFileTypes: true,
-  })) {
-    if (!entry.isFile()) continue
-    const path = join(entry.parentPath, entry.name)
-    files.set(`/${SITE_FOLDER}/${relative(folder, path)}`, {
-      body: new Uint8Array(await readFile(path)),
-      contentType:
-        types[entry.name.split('.').at(-1) ?? ''] ?? 'application/octet-stream',
-    })
-  }
-  assets = new SiteBinding(files)
+  assets = await buildSiteAssets()
 }, 30_000)
-
-afterAll(async () => {
-  if (folder) await rm(folder, { recursive: true, force: true })
-})
 
 const get = (path: string) =>
   siteResponse(
@@ -81,21 +41,6 @@ const get = (path: string) =>
     { appOrigin: APP_ORIGIN, assets },
     NOW,
   )
-
-function expectedPolicy(page: string) {
-  const hashes = inlineStyles(page).map(
-    (css) => `'sha256-${createHash('sha256').update(css).digest('base64')}'`,
-  )
-  return [
-    "default-src 'none'",
-    `style-src ${hashes.join(' ')}`,
-    "img-src 'self'",
-    "font-src 'self'",
-    "base-uri 'none'",
-    "form-action 'none'",
-    "frame-ancestors 'none'",
-  ].join('; ')
-}
 
 it('sends every sign-in to the app and shows the request year', async () => {
   const response = await get('/')
@@ -105,9 +50,9 @@ it('sends every sign-in to the app and shows the request year', async () => {
   expect(html).toContain('Give every coding task its own cloud computer.')
   expect(html).toContain('Give your next task its own cloud computer.')
   const signIns = links(html).filter((link) =>
-    ['Join the waitlist', 'Sign in'].includes(link.text),
+    ['Sign up', 'Sign in'].includes(link.text),
   )
-  expect(signIns).toHaveLength(8)
+  expect(signIns).toHaveLength(6)
   for (const link of signIns) expect(link.href).toBe(`${APP_ORIGIN}/`)
   expect(html).toContain(`© 2027 ${productName}`)
 })
@@ -131,11 +76,17 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
   }
 })
 
-it('names no sandbox provider on the home, legal, and comparison pages', async () => {
+it('leads the header, action, and footer links of the Mac app to both chip downloads', async () => {
+  await checkMacDownloads(get, SITE)
+})
+
+it('names no sandbox provider on home, legal, docs, and comparison pages', async () => {
   for (const path of [
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
+    docsPath,
+    `${docsPath}/get-started`,
     sitePaths.fromConductor,
   ]) {
     const response = await get(path)
@@ -151,6 +102,8 @@ it('allows exactly each page inline style hash and serves every file it names', 
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
+    docsPath,
+    `${docsPath}/get-started`,
     sitePaths.fromConductor,
     '/missing',
   ]) {
@@ -176,6 +129,14 @@ it('allows exactly each page inline style hash and serves every file it names', 
   expect(new Uint8Array(await icon.arrayBuffer())).toEqual(
     new Uint8Array(await expected.arrayBuffer()),
   )
+})
+
+it('serves guide bodies with matching contents and collection navigation', async () => {
+  await checkGuideRoutes(get)
+})
+
+it('renders class-coloured code and named keyboard scroll regions', async () => {
+  await checkScrollRegions(get)
 })
 
 it('serves the complete Cloud comparison with its public entry links', async () => {

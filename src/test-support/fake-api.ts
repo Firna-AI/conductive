@@ -46,6 +46,8 @@ function routeKey(method: string, path: string): string {
  * Fetch-compatible, in-memory server for development and tests.
  * Writes return recorded replies. They do not implement backend state changes.
  * Override a reply with json(), empty(), or response() for the next screen state.
+ * A file upload names its file in its query, so a reply for the path of an
+ * upload route answers each file sent there.
  * This module is opt-in. The production Worker never imports it.
  */
 export class FakeApiServer implements FakeRouteWriter {
@@ -116,7 +118,7 @@ export class FakeApiServer implements FakeRouteWriter {
     this.requests.push(request.clone())
     const url = new URL(request.url)
     const key = routeKey(request.method, request.url)
-    const response = this.replies.get(key)
+    const response = this.replies.get(key) ?? this.uploadReply(request)
     if (response) return response.clone()
     const historyPath = new URL(
       chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session),
@@ -136,5 +138,14 @@ export class FakeApiServer implements FakeRouteWriter {
       },
       { status: 404 },
     )
+  }
+
+  /** The reply for the path of a raw file upload, whatever file it names. */
+  private uploadReply(request: Request): Response | undefined {
+    if (request.headers.get('Content-Type') !== 'application/octet-stream') {
+      return undefined
+    }
+    const path = new URL(request.url).pathname
+    return this.replies.get(routeKey(request.method, path))
   }
 }

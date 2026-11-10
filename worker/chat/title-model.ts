@@ -1,5 +1,6 @@
 import type { AppEnv } from '../env'
-import { errorSummary, warnWorker } from '../warnings'
+import { warnWorker } from '../warnings'
+import { errorSummary } from '../warning-values'
 import { cleanTitle, TITLE_SYSTEM_PROMPT, titlePrompt } from './title-text'
 
 export type TitleModelCall = (
@@ -22,9 +23,7 @@ export async function requestWorkspaceTitle(
 ): Promise<string | null> {
   if (!text.trim()) return null
   if (!model?.trim() || !run) {
-    warnWorker(
-      'The workspace title request was skipped: Workers AI is not configured.',
-    )
+    warnWorker({ kind: 'workspace_title_unconfigured' })
     return null
   }
   const controller = new AbortController()
@@ -53,7 +52,10 @@ export async function requestWorkspaceTitle(
     if (!title) throw new Error('The title answer is empty.')
     return title
   } catch (error) {
-    warnWorker(`The workspace title request failed: ${errorSummary(error)}`)
+    warnWorker({
+      kind: 'workspace_title_request_failed',
+      error: errorSummary(error),
+    })
     return null
   } finally {
     clearTimeout(timer)

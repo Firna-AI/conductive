@@ -24,7 +24,7 @@ says.
   comes back to the page.
 - A return through the sign-in callback was rejected. Reason: the callback
   refuses a GitHub reply that the app's own sign-in did not start.
-- [The Mac app](desktop-app.md#github-app-install) has its own return.
+- [The Mac app](desktop-sign-in.md#github-app-install) has its own return.
 - The GitHub App sends pull request, check, status, and push webhooks to
   the Worker, at `https://api.conductive.build/v1/github/webhooks`.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.

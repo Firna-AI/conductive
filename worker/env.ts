@@ -1,8 +1,10 @@
 import type { InvitationMailer } from './invitation-mailer'
+import type { ProviderAccountConfigurations } from './sandbox/accounts'
 import type { Workspace } from './workspace'
 
 export interface AppEnv {
   DB: D1Database
+  CHAT_ATTACHMENTS?: R2Bucket
   APP_ORIGIN: string
   MARKETING_ORIGIN?: string
   MACHINE_ORIGIN?: string
@@ -24,6 +26,7 @@ export interface AppEnv {
   SESSION_SIGNING_KEY: string
   BOAT_API_KEY: string
   BOAT_ORG_ID: string
+  SANDBOX_PROVIDER_ACCOUNTS?: ProviderAccountConfigurations
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
   OPERATOR_GITHUB_IDS?: string

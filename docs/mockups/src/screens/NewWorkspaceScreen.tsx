@@ -13,7 +13,7 @@ import { FirstBuildNotice } from './firstBuildNotice'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
-  newWorkspaceDrafts,
+  newWorkspaceDraft,
   newWorkspaceFormProperties,
   taskPlaceholder,
   waits,
@@ -30,6 +30,7 @@ export const newWorkspaceSchema = {
   additionalProperties: false,
   required: [
     'draft',
+    'files',
     'login',
     'repositories',
     'repositoryMenu',
@@ -57,6 +58,7 @@ export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
 /** The chat of a new workspace in an org in use, with the task written. */
 export const newWorkspaceForm: NewWorkspaceState = {
   draft: 'message',
+  files: 'none',
   login: 'connected',
   repositories: 'chosen',
   repositoryMenu: 'closed',
@@ -68,10 +70,11 @@ export const newWorkspaceForm: NewWorkspaceState = {
 }
 
 /**
- * The empty chat and its composer. A failed create keeps the message for
- * Try again. A suspended org shows the refused bar. Before the first good
- * build, and while the repository of the form waits for its build, the
- * draft stays and Send is off.
+ * The empty chat and its composer. The files of the first message upload
+ * before the workspace exists, and Send waits for them. A failed create
+ * keeps the message for Try again. A suspended org shows the refused bar.
+ * Before the first good build, and while the repository of the form waits
+ * for its build, the draft stays and Send is off.
  */
 function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const { state } = props
@@ -80,7 +83,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const building = state.org === 'new' && state.firstBuild !== 'succeeded'
   const waiting = formWait(page) !== undefined
   const failed = !suspended && state.result === 'error'
-  const draft = newWorkspaceDrafts[state.draft]
+  const draft = newWorkspaceDraft(state)
   // Send leads to the create flow, which draws the task of Saved carts.
   const linked = state.draft === 'workspace-link'
   const ownDraft = state.org === 'new' || waiting
@@ -107,10 +110,19 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   })
   if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
   const menuOpen = state.repositoryMenu === 'open'
+  // A first message with files leads to the screen of its queued files.
+  // The file screens draw the Saved carts task of Acme, so the attach button
+  // of Firna and of a linked task leads nowhere.
+  const created =
+    state.files === 'ready' ? paths.attachmentsQueued : paths.creating
   return (
     <ChatPane
       composer={{
-        attachments: draft.attachments,
+        attachments: draft.files,
+        attachTo:
+          state.files === 'none' && !failed && !linked && state.org !== 'new'
+            ? paths.newWorkspaceFiles
+            : undefined,
         blocked: building || waiting || waits(state),
         choice: page.choice,
         draft: text,
@@ -119,7 +131,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
         sendTo:
           failed || linked || waiting || state.org === 'new' || text === ''
             ? undefined
-            : paths.creating,
+            : created,
       }}
       empty={
         suspended ? undefined : (

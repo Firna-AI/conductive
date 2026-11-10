@@ -33,7 +33,9 @@ streams, and the order of the runner commands.
   or less while a [report repair](report-repairs.md) waits for its first send.
 - The `turn_not_active` reason means that the turn never started.
 - Valid late events append to a started turn that ended. They change no
-  turn, session, message, or command state.
+  turn, session, or message state. A late `turn.completed` or
+  `turn.failed` of a started turn that failed removes only the pending
+  `interrupt` commands of that turn.
 - A refused `turn.completed` or `turn.failed` ends its started active turn as `failed`.
 - A message and its command commit together. The Durable Object sends the
   commands in order when the runner is ready.
@@ -43,6 +45,19 @@ streams, and the order of the runner commands.
   session is queued. An `interrupt` command needs a stopping turn.
 - Only a `turn` command starts a turn, in `DeliveryState.begin`. So a
   follow-up message or model change never overtakes a held turn.
+- `dispatchInOrder` in [`ordered-dispatch.ts`](ordered-dispatch.ts) checks
+  the pending commands in stored order. Each check returns send, wait, or
+  skip. `commandDispatchState` gives the result from the stored command,
+  session, and turn. The login check,
+  [the file copy](attachments.md#dispatch), and the `turnDispatching` hook
+  can also make a command wait.
+- `commandDispatchState` sends an `interrupt` of a started turn that has
+  failed. Only a failed file copy saves such an interrupt. It is the only
+  command that goes out after its turn has ended.
+- A `turn` or `message` command that waits holds each later `turn` and
+  `message` command of its turn. So a later message never overtakes an
+  earlier message of its turn. It holds no `interrupt` or `model` command,
+  and no command of another turn. A skipped command holds nothing.
 - After the login checks, delivery commits the turn state before sending.
   If sending a newly dispatched turn throws, delivery restores its queued
   state. `message.sent` follows a successful send.
@@ -57,6 +72,8 @@ streams, and the order of the runner commands.
 - A command stays pending until the Durable Object removes it. A new runner
   connection gets each pending command again, with the same command ID.
 - An active agent event that lists a message ID removes that message's
-  command. The first end of a turn removes each command of that turn.
+  command. The first end of a turn removes each command of that turn. When
+  a failed file copy ends a running turn, it then saves one `interrupt` for
+  that turn, as [Chat attachments](attachments.md#dispatch) says.
 - A new `model` command replaces the pending `model` command of its
   session.

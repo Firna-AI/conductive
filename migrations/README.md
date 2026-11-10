@@ -25,7 +25,7 @@ Chat history, sessions, runner event cursors, start steps, and banner state
 belong to workspace Durable Object storage. They have no D1 tables.
 Stored secrets use ciphertext columns. The browser reads only metadata.
 The git credential helper uses the GitHub user token of the turn's sender, as
-[GitHub tokens](../docs/protocol/access-and-security.md#github-tokens) says.
+[GitHub tokens](../docs/protocol/github-tokens.md) says.
 The older comment on `github_connections` in `202611060100_contracts.sql`
 stays, because a merged migration does not change.
 The `boat_keys` table of `202611060000_worker_core.sql` stays for the same
@@ -44,9 +44,15 @@ The migration keeps the encrypted secret and its timestamps.
 `202611081300_workspace_creation_name.sql` adds the nullable `workspace_creation_plans.name` column.
 The agent create tool stores its cleaned workspace name there for creation retries.
 Existing plans keep `NULL`.
-[Workspace and session names](../docs/protocol/chat-and-events.md#workspace-and-session-names)
+[Workspace and session names](../docs/protocol/agents-and-sessions.md#workspace-and-session-names)
 states how the app shows a missing name.
 The `city` column and branch keep their city value.
+
+`202611081849_chat_attachments.sql` adds attachment metadata, owner and target identities, claim revisions, and retryable deletion state.
+The private R2 bucket holds the bytes.
+The uploader ID is opaque, so retained files do not block account deletion.
+The org reference remains until external file purge succeeds.
+Chat attachment queries live in `worker/chat/attachment-data.ts` and `attachment-claim-data.ts`.
 
 `202611082300_new_workspace_view.sql` rebuilds `user_preferences` and keeps every existing row and value.
 The three default model columns can be all set or all unset.
@@ -73,6 +79,42 @@ and body for stable delivery retries. A missing verified email saves the
 `none` state with no message. The migration also adds the operator who
 disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
 owns email delivery and code management.
+
+`202611092100_provider_accounts.sql` adds `provider_account` to each table
+that holds a sandbox ID or a saved snapshot name: `workspaces`,
+`image_builds`, `image_build_jobs`, `lifecycle_sandbox_cleanup`,
+`image_leases`, `workspace_creation_plans`, `image_source_jobs`,
+`org_deletion_resources`, `terminal_credentials`, and `preview_hostnames`.
+The column defaults to `boat`, the one production account. The default
+fills the existing rows and the rows that the previous Worker writes during
+a deploy. Name the account in each new write, and do not rely on the default.
+In `image_build_jobs`, the column holds the account of `previous_image_name`.
+In `preview_hostnames`, it holds the account of `listener_sandbox_id`.
+`settings` gets no column. The next migration moves the org image out of
+`settings`.
+The migration rebuilds `workspaces`, so that a unique index on
+`(provider_account, sandbox_id)` replaces the unique `sandbox_id`.
+D1 keeps cascading deletes active while it defers foreign keys. So the
+migration copies each child table of `workspaces` aside and back. It keeps
+each workspace number and the org counters, and it recreates both triggers.
+It also rebuilds `org_deletion_resources` with the account in its primary
+key, and it adds the account to the `image_leases_snapshot` index.
+
+`202611092305_org_images.sql` adds `org_images`, one org image for each org
+and provider account, with the primary key `(org_id, provider_account)`.
+Each row holds `image_name`, `image_build_id`, `last_refresh_at`,
+`last_push_refresh_at`, `pending_push_refresh_at`, and
+`next_image_refresh_at`. `provider_account` has no default, so each writer
+names it. The non-unique index `org_images_account_name`, on
+`(provider_account, image_name)`, serves the check of whether a record still
+names an image. The migration copies these six fields of each `settings` row. The
+copy takes the account of the build that `image_build_id` names, or `boat`
+without such a build. Then the migration drops the six fields from
+`settings`. The scripts, the env vars, and the revision stay in `settings`.
+A Worker version from before this migration cannot run on the new schema, as
+[When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails) says.
+The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#org-images)
+page gives the readers and the rules of these records.
 
 ## Reserved ranges
 
@@ -107,6 +149,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 15o Org suspension | `202611080000`–`202611080059` |
 | Agent tool lists and names | `202611081300`–`202611081359` |
 | Workspace link chips | `202611091200`–`202611091259` |
+| Chat attachment metadata | `202611081800`–`202611081859` |
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |

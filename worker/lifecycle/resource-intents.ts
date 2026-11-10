@@ -91,7 +91,10 @@ export function buildSandboxIntent(
   return {
     kind: 'sandbox',
     input: {
-      snapshotName: job.previousImageName ?? undefined,
+      snapshotName:
+        job.previousProviderAccount === job.providerAccount
+          ? (job.previousImageName ?? undefined)
+          : undefined,
       name: `image-${job.buildId}`,
       env: repositoryEnvironment(
         capturedRepositoryLocations(
@@ -125,6 +128,7 @@ export function buildSnapshotIntent(
       sandboxId: job.sandboxId,
       name: job.snapshotName ?? savedImageName(job.buildId),
     },
-    persist: ({ name }) => assignBuildSnapshot(db, job.buildId, name),
+    persist: ({ name }) =>
+      assignBuildSnapshot(db, job.buildId, name, job.providerAccount),
   }
 }
