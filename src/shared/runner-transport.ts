@@ -1,8 +1,4 @@
-import type {
-  RunnerToWorkspace,
-  WorkspaceToRunner,
-  WorkspaceToRunnerV1,
-} from './runner'
+import type { RunnerToWorkspace, WorkspaceToRunner } from './runner'
 
 /** An adapter can use a native WebSocket, Node, or the in-memory test endpoint. */
 export interface RunnerConnection<
@@ -24,6 +20,3 @@ export type RunnerConnector<
 > = (
   request: RunnerConnectionRequest,
 ) => RunnerConnection<Message> | Promise<RunnerConnection<Message>>
-
-export type RunnerConnectionV1 = RunnerConnection<WorkspaceToRunnerV1>
-export type RunnerConnectorV1 = RunnerConnector<WorkspaceToRunnerV1>

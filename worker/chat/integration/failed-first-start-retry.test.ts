@@ -162,6 +162,7 @@ it('retries the same failed workspace with a fresh token and dispatches every st
     orgId: OUTER_ORG,
     buildId: 'repaired-image-build',
     imageName: 'repaired-image',
+    runnerProtocolVersion: 1,
     repositories: [
       {
         id: OUTER_REPOSITORY,

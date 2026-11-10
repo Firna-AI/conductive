@@ -6,7 +6,7 @@ import type { UserMessage } from './messages'
 import type { RunnerFileCommand, RunnerFileResponse } from './runner-files'
 import type { WorkspaceStart } from './workspaces'
 
-export const RUNNER_PROTOCOL_VERSION = 1 as const
+export const RUNNER_PROTOCOL_VERSION = 2 as const
 export type RunnerProtocolVersion = 1 | 2
 
 /**
@@ -103,7 +103,7 @@ export interface RunnerAttachment {
   path: string
 }
 
-export interface RunnerTurnV1 {
+interface RunnerTurnV1 {
   type: 'turn'
   commandId: string
   sessionId: string
@@ -115,7 +115,7 @@ export interface RunnerTurnV1 {
   credential?: never
 }
 
-export interface RunnerMessageDuringTurnV1 {
+interface RunnerMessageDuringTurnV1 {
   type: 'message'
   commandId: string
   sessionId: string

@@ -25,7 +25,7 @@ removes it. Each request sends `EmptyRequest` and returns the current list.
 confirmations, and resend rules. Its comments state the delivery contract.
 `RunnerProtocolVersion` is 1 or 2. The Worker accepts both versions.
 The `welcome` repeats the version of the runner's `hello`.
-`RUNNER_PROTOCOL_VERSION` is 1. The packaged runner still sends it, and
+`RUNNER_PROTOCOL_VERSION` is 2. The packaged runner sends it, and
 each full image build records it.
 The credential of a turn belongs to the session starter, whoever sent the
 message:
@@ -38,7 +38,7 @@ message:
 
 `RunnerTurn`, `RunnerMessageDuringTurn`, `RunnerCommand`, and
 `WorkspaceToRunner` cover both versions. Their `V1` and `V2` forms give the
-shapes of one version. The runner imports the `V1` forms until it can use
+shapes of one version. The runner imports the `V2` forms and uses
 a turn token.
 The [model gateway](../../worker/model-gateway/README.md#model-requests)
 gives the form of a turn token.
@@ -51,8 +51,7 @@ After a refused file tree, changes list, start steps, or workspace name,
 It carries no login and no turn token. A redelivery keeps its command ID.
 `runner-transport.ts` defines the injectable socket boundary.
 `RunnerConnection` and `RunnerConnector` take the type of the Worker's
-messages. `RunnerConnectionV1` and `RunnerConnectorV1` give the version 1
-boundary.
+messages.
 Browser response types carry no login and no turn token.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 

@@ -6,13 +6,13 @@ import type {
 } from '../chat/workspace-events'
 import {
   RUNNER_PROTOCOL_VERSION,
-  type RunnerCommandV1 as RunnerCommand,
+  type RunnerCommandV2 as RunnerCommand,
   type RunnerEventEnvelope,
   type RunnerHello,
   type RunnerToWorkspace,
-  type WorkspaceToRunnerV1,
+  type WorkspaceToRunnerV2,
 } from '../../src/shared/runner'
-import type { RunnerConnectorV1 as RunnerConnector } from '../../src/shared/runner-transport'
+import type { RunnerConnector } from '../../src/shared/runner-transport'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
 import { FakeRunnerFileReports } from './fake-runner-files'
 import { FakeRunnerConnection } from './runner-connection'
@@ -40,7 +40,7 @@ export class FakeDurableObjectEndpoint {
   private readonly cursors = new Map<string, number>()
   private readonly options: FakeDurableObjectOptions
   private readonly files = new FakeRunnerFileReports()
-  private connection: FakeRunnerConnection<WorkspaceToRunnerV1> | null = null
+  private connection: FakeRunnerConnection<WorkspaceToRunnerV2> | null = null
 
   constructor(options: FakeDurableObjectOptions) {
     this.options = options
@@ -50,7 +50,7 @@ export class FakeDurableObjectEndpoint {
     ).href
   }
 
-  connect: RunnerConnector = (request) => {
+  connect: RunnerConnector<WorkspaceToRunnerV2> = (request) => {
     if (
       request.url !== this.url ||
       request.workspaceToken !== this.options.workspaceToken
@@ -59,7 +59,7 @@ export class FakeDurableObjectEndpoint {
     }
     this.connection?.close()
     let hello: RunnerHello | null = null
-    const connection = new FakeRunnerConnection<WorkspaceToRunnerV1>(
+    const connection = new FakeRunnerConnection<WorkspaceToRunnerV2>(
       (message) => {
         this.received.push(structuredClone(message))
         if (message.type === 'hello') {
@@ -112,7 +112,7 @@ export class FakeDurableObjectEndpoint {
 
   private store(
     message: RunnerEventEnvelope,
-    connection: FakeRunnerConnection<WorkspaceToRunnerV1>,
+    connection: FakeRunnerConnection<WorkspaceToRunnerV2>,
   ): void {
     const through = this.cursors.get(message.streamId) ?? 0
     if (message.eventNumber > through + 1) {

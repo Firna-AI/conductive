@@ -84,6 +84,7 @@ export async function seedOuterRuntime(env: AppEnv) {
     orgId: OUTER_ORG,
     buildId: 'outer-image-build',
     imageName: 'outer-image',
+    runnerProtocolVersion: 1,
     repositories: [
       {
         id: OUTER_REPOSITORY,

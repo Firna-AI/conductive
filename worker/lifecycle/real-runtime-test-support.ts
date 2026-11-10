@@ -176,6 +176,7 @@ export async function realRuntimeFixture(bundle: string) {
     orgId: 'runtime-org',
     buildId: 'base-runtime-build',
     imageName: 'base-runtime-image',
+    runnerProtocolVersion: 1,
     repositories: [
       {
         id: 'runtime-repo',

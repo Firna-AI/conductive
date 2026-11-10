@@ -1,8 +1,10 @@
 import WebSocket from 'ws'
 
-import type { WorkspaceToRunnerV1 as WorkspaceToRunner } from '../../src/shared/runner'
-import type { RunnerConnectorV1 as RunnerConnector } from '../../src/shared/runner-transport'
+import type { WorkspaceToRunnerV2 as WorkspaceToRunner } from '../../src/shared/runner'
+import type { RunnerConnector as TransportRunnerConnector } from '../../src/shared/runner-transport'
 import { parseWorkspaceMessage } from './commands'
+
+type RunnerConnector = TransportRunnerConnector<WorkspaceToRunner>
 
 export const connectWebSocket: RunnerConnector = (request) =>
   new Promise((resolve, reject) => {
