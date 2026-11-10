@@ -30,6 +30,7 @@ import {
   taskWorkspaceStorage,
   workspaceTaskAlarms,
 } from './workspace-task-alarms'
+import { ComputerStopTask } from './computer-stop-task'
 
 export function createWorkspaceController(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
@@ -55,6 +56,11 @@ export function createWorkspaceController(
     env,
     dependencies,
   )
+  const computerStops = new ComputerStopTask(
+    taskWorkspaceStorage(platform.storage, 'lifecycle:computer-stops'),
+    env,
+    dependencies,
+  )
   const { lifecycle, projection } = createWorkspaceLifecycle(
     platform,
     env,
@@ -72,6 +78,7 @@ export function createWorkspaceController(
     alarms,
   }))
   const controller: WorkspaceController = {
+    queueComputerStops: (orgId, ids) => computerStops.enqueue(orgId, ids),
     extendLifecycleInput: (operation) => lifecycle.input.extend(operation),
     recordLifecycleInput: (at) => lifecycle.input.record(at),
     captureLifecycleActivity: () => lifecycle.input.capture(),
@@ -249,6 +256,7 @@ export function createWorkspaceController(
         startStorage,
         startJobs,
         cleanupStorage,
+        computerStops,
       })
     },
   }
