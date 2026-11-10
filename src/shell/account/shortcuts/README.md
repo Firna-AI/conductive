@@ -17,6 +17,9 @@ gives the rules. The mockups `app/account/shortcuts` and
   [shortcut layer](../../shortcuts/README.md). The fixed rows, with their
   labels, live in `fixed-rows.ts`. Each key of a fixed row is a fixed key
   of the model, so the recorder refuses each key that the tab marks fixed.
+  The model has more fixed keys than the rows list, such as Enter with any
+  modifier. So the line of a refused key names a fixed row only when one
+  row of the keyboard holds the key.
 - A browser leaves out the rows and the group that only the Mac app has.
 - The search keeps the rows whose label or words hold each word of the
   query, with the matcher of the palette, in the order of the tab.

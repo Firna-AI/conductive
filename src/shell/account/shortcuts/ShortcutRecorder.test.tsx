@@ -54,8 +54,13 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
   test('Replace moves a key that another command holds to the row in one save', async () => {
     const { server } = await openShortcutsTab()
     click(byRole('button', 'Change Option Command / for Keyboard shortcuts'))
-    pressShortcut('Meta+/')
     const row = rowOf('General', 'Keyboard shortcuts')
+    // The / of the keypad types /, so with ⌘ it is the ⌘/ of Model picker.
+    pressShortcut('Meta+/', undefined, { code: 'NumpadDivide' })
+    const keypad = linesOf(row)
+    click(byRole('button', 'Cancel', row))
+    click(byRole('button', 'Change Option Command / for Keyboard shortcuts'))
+    pressShortcut('Meta+/')
     const asked = { lines: linesOf(row), controls: controlsOf(row) }
     const before = (await savesOf(server)).length
     replyWith(server, [
@@ -70,12 +75,14 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
     )
     await settle()
     expect({
+      keypad,
       asked,
       before,
       saves: await savesOf(server),
       shortcuts: controlsOf(rowOf('General', 'Keyboard shortcuts')),
       model: controlsOf(rowOf('Chat', 'Model picker')),
     }).toEqual({
+      keypad: ['Model picker uses Command /.'],
       asked: {
         lines: ['Model picker uses Command /.'],
         controls: [
@@ -131,19 +138,29 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
     // Only the Mac app lists Reload, and the Mac keyboard keeps ⌘R for it.
     pressShortcut('Meta+R')
     const macApp = linesOf(row)
-    // Several fixed rows share Enter: Send, Run the item, and Save a rename.
+    // Several fixed rows share Enter, such as Send and Run the item.
     pressShortcut('Enter')
     const shared = linesOf(row)
+    // One fixed row holds Space, which presses a focused button.
+    pressShortcut('Space')
+    const space = linesOf(row)
+    // Enter is fixed with every modifier, also where no fixed row lists it.
+    pressShortcut('Shift+Meta+Enter')
+    const unlisted = linesOf(row)
     expect({
       named,
       macApp,
       shared,
+      space,
+      unlisted,
       waiting: accessibleName(document.activeElement ?? document.body),
       saves: await savesOf(server),
     }).toEqual({
       named: ['Undo always uses Command Z.'],
       macApp: ['Reload always uses Command R.'],
       shared: ['Enter is a fixed shortcut.'],
+      space: ['Press a focused button always uses Space.'],
+      unlisted: ['Shift Command Enter is a fixed shortcut.'],
       waiting: 'New shortcut for Command palette',
       saves: [],
     })

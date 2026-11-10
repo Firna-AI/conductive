@@ -144,8 +144,10 @@ npm run test -- src/shell/shortcuts src/shell/palette src/shell/list src/shell/l
 The tests mount the whole app in happy-dom with `openPaletteTab`, which
 hears the keys of the window as a browser gives them.
 `shortcut-test-kit.tsx` presses keys by their key text, by their command,
-or as the hints show them in the host of the app, with `pressHintKey`. It
-records the keys that reach an element, and offers a command from a test.
+or as the hints show them in the host of the app, with `pressHintKey`. A
+press can also come from another physical key, such as the / of the
+keypad. It records the keys that reach an element, and offers a command
+from a test.
 `PageKeys.test.tsx` and `../workspace/WorkspaceKeys.test.tsx` run a
 command of each owner from its key, also the org keys of the rail.
 `KeyHints.test.tsx` checks the hints in a browser tab and in the phone

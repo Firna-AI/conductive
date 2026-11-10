@@ -852,8 +852,8 @@ terminal or chat input". Agent calls of the same day apply it:
   with Ctrl or Alt" above. In a text field, Enter with any modifier and
   the keypad Enter stay with the field, because the message field sends on
   ⌘Enter, Ctrl+Enter, and Alt+Enter, and a rename saves on each Enter.
-  Making every Enter key a fixed key waits for the user, because it adds a
-  rejection: `plans/follow-ups/fixed-keys-of-focused-controls.md`.
+  Making every Enter key a fixed key waited for the user, because it adds
+  a rejection; the user answered it as review item 4 = B, above.
 
 
 ### The Keyboard shortcuts tab
@@ -1217,9 +1217,11 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Apply the user's answers to review items 4 and 10 in the tab: the
+- [x] Apply the user's answers to review items 4 and 10 in the tab: the
       fixed row, the refused line, and the name of a keypad digit, with
-      tests.
+      tests. Evidence: `.context/keyboard-shortcuts/reports/m8-ui.md`. A
+      keypad digit shows as "Num 8" everywhere a key shows, and
+      `aria-keyshortcuts` names it by the digit that the browser reports.
 - [ ] Run the checks, the tests, and the complete gate. Delete the two
       follow-up items that the answers settle.
 

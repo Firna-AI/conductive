@@ -146,8 +146,12 @@ test('records the matching identity and formats each keyboard and accessible hin
   ).toBeNull()
   expect(formatShortcut(key('Ctrl+Alt+Shift+Meta+N'), 'mac')).toBe('⌃⌥⇧⌘N')
   expect(formatShortcut(key('Ctrl+Shift+Tab'), 'other')).toBe('Ctrl+Shift+Tab')
+  // A keypad digit shows apart from the digit of the top row.
+  expect(formatShortcut(key('Meta+Numpad8'), 'mac')).toBe('⌘Num 8')
+  expect(formatShortcut(key('Ctrl+Numpad8'), 'other')).toBe('Ctrl+Num 8')
   expect(ariaShortcut(key('Ctrl+Shift+Tab'))).toBe('Control+Shift+Tab')
   expect(ariaShortcut(key('Meta++'))).toBe('Meta+Plus')
+  expect(ariaShortcut(key('Meta+Numpad8'))).toBe('Meta+8')
   expect(formatShortcut(key('Ctrl+Backspace'), 'other')).toBe('Ctrl+Backspace')
   expect(
     fixedShortcutKeys('mac').some((key) =>

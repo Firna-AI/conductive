@@ -23,6 +23,7 @@ commands.
 
 The account stores canonical modifier names, such as `Alt+Meta+N`.
 The key formatter gives Mac symbols or Windows and Linux key names.
+It shows a keypad digit as `Num 8`, so that it differs from the top-row 8.
 Each press has one canonical key text for recording and matching.
 A keypad key uses the key that it types, except a keypad digit, which keeps
 its keypad name. With Num Lock off, a keypad navigation key uses its typed

@@ -50,14 +50,26 @@ function fixed(
 const dividerWords = ['move', 'resize', 'panel', 'sidebar', 'right column']
 
 /**
- * The fixed rows that follow the commands of a group: Escape, the menu of
- * a focused tab, the keys of a focused workspace row and of a focused
- * divider (decision 193 D), and the send key (decision 143).
+ * The fixed rows that follow the commands of a group: Escape and the keys
+ * that press a focused button, the menu of a focused tab, the keys of a
+ * focused workspace row and of a focused divider, and the keys of the
+ * message field. Enter is fixed with every modifier, but only the rows of
+ * the message field list Enter with one: Send with ⌘Enter or Ctrl+Enter,
+ * and New line with Shift+Enter. So the recorder names another, such as
+ * ⇧⌘Enter, only as fixed.
  */
 export const commandGroupRows: Readonly<
   Partial<Record<ShortcutCommand['group'], readonly FixedRow[]>>
 > = {
-  General: [fixed('Close a dialog or a menu', ['Escape'])],
+  General: [
+    fixed('Close a dialog or a menu', ['Escape']),
+    fixed('Press a focused button', ['Enter', 'Space'], undefined, [
+      'click',
+      'toggle',
+      'checkbox',
+      'switch',
+    ]),
+  ],
   Navigation: [
     fixed(
       'Open the menu of a focused tab',
@@ -92,7 +104,10 @@ export const commandGroupRows: Readonly<
       dividerWords,
     ),
   ],
-  Chat: [fixed('Send', ['Enter']), fixed('New line', ['Shift+Enter'])],
+  Chat: [
+    fixed('Send', ['Enter', 'Meta+Enter'], ['Enter', 'Ctrl+Enter']),
+    fixed('New line', ['Shift+Enter']),
+  ],
 }
 
 /**

@@ -97,7 +97,13 @@ const names: Readonly<Record<string, string>> = {
   ContextMenu: 'Menu',
 }
 
-/** Visible key text, with Mac symbols or the names on the other keyboard. */
+/** The start of the name of a keypad digit, such as Numpad8. */
+const keypadDigit = /^Numpad(?=\d$)/
+
+/**
+ * Visible key text, with Mac symbols or the names on the other keyboard. A
+ * keypad digit shows as Num 8, so that it differs from the top-row 8.
+ */
 export function formatShortcut(
   key: ShortcutKeyText,
   keyboard: ShortcutKeyboard,
@@ -106,7 +112,7 @@ export function formatShortcut(
   const name =
     keyboard === 'other' && ['Backspace', 'Delete'].includes(chord.key)
       ? chord.key
-      : (names[chord.key] ?? chord.key)
+      : (names[chord.key] ?? chord.key.replace(keypadDigit, 'Num '))
   if (keyboard === 'mac')
     return `${chord.ctrlKey ? '⌃' : ''}${chord.altKey ? '⌥' : ''}${chord.shiftKey ? '⇧' : ''}${chord.metaKey ? '⌘' : ''}${name}`
   return [
@@ -133,8 +139,13 @@ export function ariaShortcut(key: ShortcutKeyText): string {
     chord.altKey ? 'Alt' : '',
     chord.shiftKey ? 'Shift' : '',
     chord.metaKey ? 'Meta' : '',
-    chord.key === '+' ? 'Plus' : chord.key,
+    chord.key === '+' ? 'Plus' : ariaKey(chord.key),
   ]
     .filter(Boolean)
     .join('+')
+}
+
+/** A keypad digit is the digit that the browser reports as its key. */
+function ariaKey(key: string): string {
+  return /^Numpad\d$/.test(key) ? key.slice('Numpad'.length) : key
 }

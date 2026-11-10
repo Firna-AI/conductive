@@ -12,7 +12,7 @@ export type Shortcut = string
 const modifiers: ReadonlySet<string> = new Set(['⌃', '⌥', '⇧', '⌘'])
 
 /** The modifiers that start a shortcut of a Windows keyboard. */
-const windowsShortcut = /^(Ctrl|Alt|Shift)\+./
+const windowsShortcut = /^(Ctrl|Alt|Shift|Meta)\+./
 
 /** The names that a screen reader says for the symbols and short words of a key. */
 const spokenNames: Readonly<Record<string, string>> = {

@@ -48,6 +48,7 @@ function keyAndCode(name: string, shift: boolean): KeyboardEventInit {
     return { key: shift ? name : name.toLowerCase(), code: `Key${name}` }
   }
   if (/^\d$/.test(name)) return { key: name, code: `Digit${name}` }
+  if (name === 'Space') return { key: ' ', code: 'Space' }
   if (namedKeys.has(name)) return { key: name, code: name }
   const mark = punctuation[name]
   if (mark) return { key: shift ? mark.shifted : name, code: mark.code }
@@ -58,19 +59,21 @@ function keyAndCode(name: string, shift: boolean): KeyboardEventInit {
  * Presses a key, such as `Alt+Shift+N` in the key text of the shortcuts,
  * on `target`, by default the focused element, as a US keyboard sends it.
  * `key` replaces the character of the press, such as `Dead` for ⌥N on a
- * Mac. `repeat` sends the press again of a key that the person holds. The
- * result is the event, whose `defaultPrevented` says whether the browser's
- * own action of the key was stopped.
+ * Mac, and `code` its physical key, such as `NumpadDivide` for the / of the
+ * keypad. `repeat` sends the press again of a key that the person holds.
+ * The result is the event, whose `defaultPrevented` says whether the
+ * browser's own action of the key was stopped.
  */
 export function pressShortcut(
   text: string,
   target: EventTarget = document.activeElement ?? document.body,
-  options: { key?: string; repeat?: boolean } = {},
+  options: { key?: string; code?: string; repeat?: boolean } = {},
 ): KeyboardEvent {
   const chord = shortcutChord(readShortcutKeyText(text))
   const event = new KeyboardEvent('keydown', {
     ...keyAndCode(chord.key, chord.shiftKey),
     ...(options.key === undefined ? {} : { key: options.key }),
+    ...(options.code === undefined ? {} : { code: options.code }),
     metaKey: chord.metaKey,
     ctrlKey: chord.ctrlKey,
     altKey: chord.altKey,

@@ -129,11 +129,12 @@ export function matchingGroups(
 }
 
 /**
- * The label of the one fixed row of the keyboard that holds the key, or
- * none when several rows share it, such as Enter, or when no row lists it,
- * such as ⌃T. The recorder names such a key only as fixed. A row that only
- * the Mac app lists names its key in a browser too, such as Hide
- * Conductive for ⌘H, because each keyboard has one list of fixed keys.
+ * The label of the one fixed row of the keyboard that holds the key, such
+ * as Press a focused button for Space, or none when several rows share it,
+ * such as Enter, or when no row lists it, such as ⇧⌘Enter. The recorder
+ * names such a key only as fixed. A row that only the Mac app lists names
+ * its key in a browser too, such as Hide Conductive for ⌘H, because each
+ * keyboard has one list of fixed keys.
  */
 export function fixedKeyLabel(
   key: ShortcutKeyText,
