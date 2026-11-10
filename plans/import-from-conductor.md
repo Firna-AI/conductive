@@ -305,6 +305,9 @@ and changed the recommendation from H to I.
   change. The plan first recommended H, then I.
 - **Action:** ask the user, because the user asked a question and has not
   chosen F yet.
+- **Chosen:** F, by the user on 10 November 2026. The user did not choose
+  J. If the checks before Milestone 1 find sessions without their agent
+  file, J comes back as a question.
 
 ### 8. What the data bucket holds
 
@@ -379,8 +382,14 @@ decision or the user.
   flag, its name, its branch, and no cloud computer, in the section
   "Import from Conductor" (decision 10). It creates that section when it
   does not exist.
-- The Mac app reads each session file, also a compressed one, and the
-  Worker stores its old part as decision 7 says.
+- The Mac app reads each session file, also a compressed one, and turns
+  it into one Markdown file: the messages, the agent's answers, and short
+  lines for its tool steps (decision 7). It uploads the file with the
+  bucket data.
+- The Markdown files stay under a prefix of their own in the bucket for
+  the life of the workspace. Activation does not delete them. Reason: a
+  file can pass the 8 MB row limit of a storage object, and the links must
+  work while no cloud computer runs.
 - The Mac app builds the bucket data of decision 8 with Git, and uploads
   it straight to the bucket with short-lived upload links. No Worker
   request carries the bytes.
@@ -390,7 +399,8 @@ decision or the user.
 
 ### Activation
 
-- Opening an imported workspace shows its old sessions and asks to
+- Opening an imported workspace shows the links to its old sessions and
+  asks to
   activate it (decision 4).
 - Activation starts a cloud computer from the newest good org image. Git
   fetches the branch from GitHub, or the default branch when GitHub lacks
@@ -448,8 +458,8 @@ Tags: mockup
 Depends on: none
 
 Draw every screen and flow of the change, at the Mac app's desktop size,
-and at phone size where a screen shows on a phone. The screens of the old
-sessions wait for decisions 5 and 7.
+and at phone size where a screen shows on a phone. The tab of a resumed
+session waits for decision 5.
 
 - [ ] Add the quiet branch link to the New workspace screen, and the
       branch picker with branches and open pull requests.
@@ -459,7 +469,8 @@ sessions wait for decisions 5 and 7.
       cannot import, and the already imported rows.
 - [ ] Add the import progress and the result, with the files that stayed
       behind.
-- [ ] Add an imported workspace: its flag, its old sessions, the Activate
+- [ ] Add an imported workspace: its flag, the links to its old sessions,
+      the Markdown view of one old session, the Activate
       question, activation progress, and a failed activation.
 - [ ] Add the user flow `import-from-conductor`, from the offer to an
       activated workspace.
@@ -508,8 +519,11 @@ Depends on: 2
       computer, with the "from Conductor" flag and the local Conductor ID,
       with its migration.
 - [ ] Add the import routes: create the imported workspaces in the section
-      "Import from Conductor", store the old sessions as decision 7 says,
-      and give short-lived upload links for the bucket data.
+      "Import from Conductor", record each old session with its title and
+      its Markdown file, and give short-lived upload links for the bucket
+      data.
+- [ ] Add the route that reads the Markdown file of an old session for a
+      member of the org.
 - [ ] Add the R2 bucket of decision 132 when Milestone 8p of the main plan
       has not merged it yet, and keep each workspace's data under its own
       prefix.
@@ -522,6 +536,7 @@ Depends on: 4
 
 - [ ] Add the activation start: a first start with no first message.
 - [ ] Let the runner apply the bundle, the changed files, and `.context`,
+      put the Markdown files of the old sessions in `.context/conductor/`,
       and add `.context/` to the local exclude file.
 - [ ] Put each session file in the agent data of the cloud computer, write
       each pair into the runner state, and give each imported session its
@@ -538,7 +553,8 @@ Depends on: 4
 - [ ] Detect `conductor.db`, and offer the import once.
 - [ ] Ask the user before the first read of Conductor data.
 - [ ] Read `conductor.db` in read-only mode, and tolerate a missing column.
-- [ ] Find each session file, also a compressed one.
+- [ ] Find each session file, also a compressed one, and turn each session
+      into one Markdown file, as decision 7 says.
 - [ ] Build the bucket data of decision 8 with Git, and upload it with the
       short-lived links.
 - [ ] Add the device operations of the scan and the upload.
@@ -563,8 +579,8 @@ Depends on: 1, 4, 5, 6
 
 - [ ] Build the entry, the offer, the list, the progress, and the result
       from the mockups.
-- [ ] Build the imported workspace: its flag, its old sessions, and the
-      Activate question.
+- [ ] Build the imported workspace: its flag, the links to its old
+      sessions, their Markdown view, and the Activate question.
 - [ ] Add the web app tests, as the `testing` skill says.
 - [ ] Update `src/app/README.md` and `src/shell/workspace/README.md`.
 
