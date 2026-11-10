@@ -14,7 +14,7 @@
   - The quote reader collects each line that starts with `>`, and each following line that is not blank and starts no block. Then it parses the collected lines as the content of the quote.
   - CommonMark adds such a line to the quote only while a paragraph of the quote is open.
   - The nested-list branch fixed the same rule for list items: `readList` now passes the lazy lines of an item to its parser, which stops at the first one that continues no paragraph.
-- **Problem:** In a quote that holds a closed code fence, the next line without `>` stays in the quote. CommonMark ends the quote before that line.
+- **Problem:** In a quote that holds a closed code fence, the next line without `>` stays in the quote. CommonMark ends the quote before that line. A comparison by a later review check also found the quote reader failing CommonMark examples 93, 236, 237, and 249, which are lazy quote lines of the same kind.
 - **Impact if no action:** The file preview shows such a line inside the quote, unlike GitHub.
 - **Root question:** How does a quote of the file preview end at a line that continues no paragraph of the quote?
 - **Options:**
@@ -23,5 +23,6 @@
 - **Left out:** A rule that drops all lazy lines of a quote, because CommonMark keeps lazy paragraph lines in a quote.
 - **Wider fix:** The item `plans/follow-ups/one-markdown-reader-for-chat-and-preview.md` covers one block reader by CommonMark.
 - **Previous examples:** Finding 1 of review round 2 of the nested-list branch, the same rule for list items.
+- **Related:** `plans/follow-ups/list-lazy-line-read-as-block.md`: with its option D, the quote reader can mark its own lazy lines with the same type, which also fixes this item.
 - **Recommendation:** A. It reuses the mechanism that list items already use.
 - **Action:** fix after merge, apply A, because the nested-list branch did not change the quote reader.
