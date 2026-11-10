@@ -25,6 +25,8 @@ import { workspaceToolRuntime } from './providers/workspace-tools'
 import { clearClaudeCredentials } from './providers/claude-profile'
 import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
+import { PortReporter, type PortReporterOptions } from './ports'
+import { privatePortReport } from './port-report-budget'
 
 type RunnerConnector = TransportRunnerConnector<WorkspaceToRunner>
 
@@ -39,12 +41,14 @@ export interface RunnerOptions extends WorkspaceContext {
   now: () => number
   warn: (message: string) => void
   disconnected: () => void
+  ports?: PortReporterOptions
 }
 
 export class Runner {
   readonly link: RunnerLink
   readonly files: FileReporter
   readonly engine: AgentEngine
+  readonly ports: PortReporter | null
   private readonly options: RunnerOptions
   private readonly sanitizer = new OutputSanitizer()
   private readonly emitted = new SerialQueue()
@@ -59,6 +63,13 @@ export class Runner {
     this.options = options
     this.refreshed = new Set(options.store.snapshot.reports.commands)
     this.sanitizer.add(options.request.workspaceToken)
+    this.ports = options.ports
+      ? new PortReporter(
+          options.ports,
+          (event, commandId) => this.emit(event, false, commandId),
+          options.warn,
+        )
+      : null
     const repository = new Repository(options.cwd, options.warn)
     this.files = new FileReporter(
       repository,
@@ -93,6 +104,7 @@ export class Runner {
           options.warn('The initial file reports could not be saved.')
           await this.emit({ type: 'files.unavailable' })
         }
+        await this.ports?.refresh(true)
         await this.emit({ type: 'runner.ready' })
       },
       disconnected: () => {
@@ -156,6 +168,7 @@ export class Runner {
     }
     if (this.watchFiles && !this.stopWatching)
       this.stopWatching = this.files.watch(this.options.warn)
+    this.ports?.watch()
     await this.link.connect()
   }
 
@@ -169,7 +182,9 @@ export class Runner {
   async close(): Promise<void> {
     this.stopped = true
     this.stopWatching?.()
+    const closingPorts = this.ports?.close()
     await this.engine.close()
+    await closingPorts
     await this.link.persist()
     this.link.close()
   }
@@ -183,7 +198,12 @@ export class Runner {
       const failures: unknown[] = []
       for (const safe of prepared ? [event] : this.sanitizer.accept(event)) {
         try {
-          await this.link.emit(boundChatEvent(safe), reportCommandId)
+          await this.link.emit(
+            safe.type === 'ports.updated'
+              ? privatePortReport(safe, this.options.warn)
+              : boundChatEvent(safe),
+            reportCommandId,
+          )
         } catch (error) {
           if (
             safe.type === 'turn.thinking' ||
@@ -217,6 +237,8 @@ export class Runner {
     const kind = command.kind
     if (kind === 'files.snapshot' || kind === 'changes.updated')
       await this.files.refresh(true, kind, command.commandId)
+    else if (kind === 'ports.updated')
+      await this.ports?.refresh(true, command.commandId)
     else
       await this.emitted.run(() =>
         this.link.refreshReport(kind, command.commandId, (report) =>
