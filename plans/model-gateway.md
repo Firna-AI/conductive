@@ -469,6 +469,7 @@ selected.
 - **Wider fix:** None. One setting.
 - **Previous examples:** None found.
 - **Related:** Decision 12. Its check sends one subscription request with the 1-hour cache in profile mode.
+- **Evidence:** a loopback probe on 10 November 2026 showed that the pinned client in profile mode with `CLAUDE_CODE_PROMPT_CACHE_TTL=1h` sends `extended-cache-ttl-2025-04-11` and `"ttl": "1h"` on its main requests: `.context/model-gateway/profile-probe/report.md`.
 - **Recommendation:** B. It keeps today's cache for subscription turns at almost no cost.
 - **Action:** ask the user, because it changes how fast subscription limits get used.
 
