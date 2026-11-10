@@ -1,11 +1,7 @@
-import { useRef } from 'react'
-import { ChevronDown, FolderGit2, Paperclip } from 'lucide-react'
-import type { ApiError } from '../../app/api/client'
-import type { NewWorkspaceModel } from '../../app/new-workspace-model'
+import { ChevronDown, FolderGit2 } from 'lucide-react'
 import type { Repository } from '../../shared/org-settings'
-import { ActionButton, IconButton, type ActionTone } from '../ui/actions'
+import { ActionButton, type ActionTone } from '../ui/actions'
 import { MenuButton } from '../ui/Menu'
-import ui from '../ui/ui.module.css'
 
 // The parts of a New workspace form that the page and the dialog share.
 
@@ -46,45 +42,5 @@ export function RepositoryMenu(props: {
         </ActionButton>
       )}
     />
-  )
-}
-
-/** The attach button with its file picker. It is off while the create runs. */
-export function AttachButton(props: {
-  model: NewWorkspaceModel
-  disabled: boolean
-}) {
-  const files = useRef<HTMLInputElement>(null)
-  return (
-    <>
-      <IconButton
-        disabled={props.disabled}
-        icon={Paperclip}
-        label="Attach files"
-        onPress={() => files.current?.click()}
-      />
-      <input
-        className={ui.hidden}
-        multiple
-        onChange={(event) => {
-          const chosen = Array.from(event.currentTarget.files ?? [])
-          event.currentTarget.value = ''
-          if (chosen.length > 0) void props.model.attach(chosen)
-        }}
-        ref={files}
-        tabIndex={-1}
-        type="file"
-      />
-    </>
-  )
-}
-
-/** The error of the last file that did not upload. */
-export function UploadError(props: { error: ApiError | null }) {
-  if (!props.error) return null
-  return (
-    <p className={ui.error} role="alert">
-      {`The file wasn't attached. ${props.error.message}`}
-    </p>
   )
 }

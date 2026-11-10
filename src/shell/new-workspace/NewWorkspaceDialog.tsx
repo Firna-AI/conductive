@@ -1,25 +1,29 @@
 import { useRef, useState } from 'react'
-import { CornerDownLeft } from 'lucide-react'
+import { CornerDownLeft, Paperclip } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import layer from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
 import styles from '../../../docs/mockups/src/components/new-workspace/NewWorkspaceDialog.module.css'
 import { useNavigation } from '../../app/navigation'
 import { defaultSection } from '../../app/sections'
 import { useStore, valueOf } from '../../app/store'
-import { DraftFiles } from '../../chat/components/AttachmentChips'
+import {
+  DraftFiles,
+  OversizeNotice,
+} from '../../chat/components/AttachmentChips'
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useSendKey } from '../../chat/components/send-key'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
-import { ActionButton } from '../ui/actions'
+import { ActionButton, IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { ModelPicker } from '../ui/ModelPicker'
 import { Overlay, useModalLayer } from '../ui/Overlay'
 import { trapTab } from '../ui/Sheet'
+import ui from '../ui/ui.module.css'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
 import { ChooseRepositoriesNotice } from './notices'
-import { AttachButton, RepositoryMenu, UploadError } from './parts'
+import { RepositoryMenu } from './parts'
 import local from './new-workspace.module.css'
 import { OrgLinks } from './OrgLinks'
 import { useNewWorkspaceForm } from './useNewWorkspaceForm'
@@ -69,7 +73,8 @@ function CreateButton(props: {
  * kept message. As it closes, the focus goes back to the control that
  * opened it. When another screen opened, the main area of that screen
  * takes the focus. In a suspended org, the refused bar takes the place of
- * the composer.
+ * the composer. The files upload before the workspace exists, with the
+ * chips and the notice of the workspace chat, as on the page.
  */
 function DialogCard(props: {
   org: OrgSummary
@@ -92,6 +97,10 @@ function DialogCard(props: {
   const sending = form.create.state === 'sending'
   const card = useRef<HTMLElement>(null)
   const message = useRef<FieldHandle>(null)
+  // The file picker opens from the attach button and from the notice of a
+  // file over the size limit.
+  const files = useRef<HTMLInputElement>(null)
+  const pick = () => files.current?.click()
   useModalLayer(
     card,
     () => {
@@ -101,10 +110,12 @@ function DialogCard(props: {
   )
   const sendKey = useSendKey(form.ready, form.send)
   const unchosen = form.repositories?.length === 0
+  const oversize = form.draft.refused.length > 0
   const notices =
     form.failure !== null ||
     form.buildNotice !== null ||
     form.notice !== null ||
+    oversize ||
     unchosen
   return (
     <section
@@ -136,10 +147,11 @@ function DialogCard(props: {
       ) : (
         <>
           <div className={styles.body}>
-            {form.draft.attachments.length > 0 ? (
+            {form.draft.files.length > 0 ? (
               <DraftFiles
-                attachments={form.draft.attachments}
-                onRemove={(id) => model.detach(id)}
+                files={form.draft.files}
+                onRemove={(id) => model.removeFile(id)}
+                onRetry={(id) => void model.retryFile(id)}
               />
             ) : null}
             <OrgLinks orgId={org.id}>
@@ -157,13 +169,13 @@ function DialogCard(props: {
                 value={form.draft.text}
               />
             </OrgLinks>
-            <UploadError error={form.draft.upload.error} />
           </div>
           {notices ? (
             <div className={styles.notices}>
               {form.failure}
               {form.buildNotice}
               {form.notice}
+              <OversizeNotice onAttach={pick} refused={form.draft.refused} />
               {unchosen ? (
                 <ChooseRepositoriesNotice open={leave} org={org} />
               ) : null}
@@ -178,7 +190,24 @@ function DialogCard(props: {
               />
             ) : null}
             <span className={styles.spacer} />
-            <AttachButton disabled={sending} model={model} />
+            <IconButton
+              disabled={sending}
+              icon={Paperclip}
+              label="Attach files"
+              onPress={pick}
+            />
+            <input
+              className={ui.hidden}
+              multiple
+              onChange={(event) => {
+                const chosen = Array.from(event.currentTarget.files ?? [])
+                event.currentTarget.value = ''
+                if (chosen.length > 0) void model.attach(chosen)
+              }}
+              ref={files}
+              tabIndex={-1}
+              type="file"
+            />
             <CreateButton
               busy={sending}
               create={form.send}

@@ -75,7 +75,7 @@ it('answers with the stored queued first message before starting a sandbox and p
   const actor = fixture.starts.get(id)
   if (!actor) throw new Error('Missing admitted actor')
   expect(await actor.job()).toMatchObject({ phase: 'machine' })
-  actor.restart()
+  await actor.restart()
   input.firstMessage.text =
     'A duplicate cannot replace the stored first message.'
   const repeated = await fixture.run(create)

@@ -36,7 +36,7 @@ mount the chat.
 - Each tab shows the `title` of its session record. The backend provides
   the titles that the mockups show. The title from the first message names
   the workspace and its first session, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says. Each
+  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says. Each
   other session takes the first line of its first message with text as its
   title, as [Sessions](../../docs/protocol/agents-and-sessions.md#sessions)
   says. A name that a member set never changes. The development page does

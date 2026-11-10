@@ -3,6 +3,7 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { tokenWorkspace } from './queries'
 import { sessionGate } from '../security/gate'
+import { attachmentRoute } from './attachment-routes'
 
 export async function routeRunner(
   request: Request,
@@ -25,13 +26,16 @@ export async function routeRunner(
 export async function routeChat(
   request: Request,
   env: AppEnv,
-  now = Date.now(),
+  now: () => number = Date.now,
+  newId?: () => string,
 ): Promise<Response | null> {
+  const attachment = await attachmentRoute(request, env, now, newId)
+  if (attachment) return attachment
   const match = new URL(request.url).pathname.match(
     /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:events|history|sessions(?:\/.*)?)$/,
   )
   if (!match) return null
-  await sessionGate(request, env, now)
+  await sessionGate(request, env, now())
   let workspaceId: string
   try {
     workspaceId = decodeURIComponent(match[1])

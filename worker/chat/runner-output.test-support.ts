@@ -7,8 +7,7 @@ import {
   WORKSPACE_ID,
   type ChatFixture,
 } from './harness.test-support'
-import type { ChatDependencies } from './types'
-
+import type { ChatFixtureOptions } from './harness.test-support'
 export async function captureEnvironment(fixture: ChatFixture, value: unknown) {
   const ciphertext = await encrypt(
     JSON.stringify(value),
@@ -25,11 +24,10 @@ export async function captureEnvironment(fixture: ChatFixture, value: unknown) {
     .bind(WORKSPACE_ID, fixture.org.id, fixture.owner.id, ciphertext)
     .run()
 }
-
 export async function outputFixture(
   harness: TestHarness,
   environment: unknown,
-  overrides: Partial<ChatDependencies> = {},
+  overrides: ChatFixtureOptions = {},
 ) {
   const fixture = await createChatFixture(harness, overrides)
   await captureEnvironment(fixture, environment)

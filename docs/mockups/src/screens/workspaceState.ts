@@ -3,7 +3,7 @@ import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
 import { toolKeys } from '../components/workspace/tools'
-import { conversationKeys } from '../fixtures/conversations'
+import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { startErrorKeys } from '../fixtures/starting'
@@ -112,8 +112,10 @@ export const workspaceStateSchema = {
      * attached files, with its picker open, or with a message for an agent
      * that is not connected. Or with a message in a session whose starter's
      * login is not available, or whose starter keeps that login for their
-     * own messages. `workspace-link` holds a message with a pasted link to
-     * another workspace of the org, which shows as a chip.
+     * own messages. With files, a file can still upload, its upload can fail,
+     * or a file over the size limit can stay out of the message.
+     * `workspace-link` holds a message with a pasted link to another
+     * workspace of the org, which shows as a chip.
      *
      * The `mention-` states open the list of `@`: with a query, without
      * one, with no match, while the tree loads, and with no tree.
@@ -127,6 +129,9 @@ export const workspaceStateSchema = {
         'empty',
         'draft',
         'attachments',
+        'uploading',
+        'upload-failed',
+        'too-large',
         'picker',
         'no-agent',
         'no-starter-login',

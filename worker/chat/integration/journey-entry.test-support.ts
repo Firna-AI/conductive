@@ -1,13 +1,11 @@
-import app, { Workspace as ProductionWorkspace } from '../../index'
+import { createApp } from '../../application'
+import { DEVICE_TEST_NOW } from '../../devices/clock.test-support'
+import { NativeAlarmWorkspace } from '../../lifecycle/native-alarm-workspace.test-support'
 
-export class Workspace extends ProductionWorkspace {
+export class Workspace extends NativeAlarmWorkspace {
   readScheduledAlarm(): Promise<number | null> {
     return this.ctx.storage.getAlarm()
   }
-
-  advanceStartAlarm(): Promise<void> {
-    return this.alarm()
-  }
 }
 
-export default app
+export default createApp({ now: () => DEVICE_TEST_NOW })

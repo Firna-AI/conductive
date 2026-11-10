@@ -1,7 +1,7 @@
 import { workspacePath } from '../../src/shared/workspaces'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
-import { gate, type RequestContext } from '../security/gate'
+import { gate, gateAccess, type RequestContext } from '../security/gate'
 import { findChatWorkspace } from './queries'
 import type { WorkspaceRecord } from './types'
 import { appOrigin } from '../security/app-origin'
@@ -18,8 +18,12 @@ export async function authorizeChatBrowser(
   request: Request,
   env: AppEnv,
   now: number,
+  parsedBody?: RequestContext['body'],
 ): Promise<BrowserAccess> {
-  const context = await gate(request, env, now)
+  const context =
+    parsedBody === undefined
+      ? await gate(request, env, now)
+      : { ...(await gateAccess(request, env, now)), body: parsedBody }
   const path = new URL(request.url).pathname
   const match = path.match(/^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)(?:\/|$)/)
   let workspaceId: string | undefined

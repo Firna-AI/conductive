@@ -35,7 +35,7 @@ decision number names a dated record, as
   app runs on. The footer links the section. In the desktop layout, the
   header links it too.
 - The DMGs come from GitHub, not from the Worker.
-  [Releases](../protocol/desktop-app.md#releases) states their addresses.
+  [Releases](../protocol/desktop-packages-and-updates.md#releases) states their addresses.
 
 ## The comparison page
 

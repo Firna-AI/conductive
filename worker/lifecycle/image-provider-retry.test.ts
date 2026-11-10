@@ -20,12 +20,12 @@ it('bounds lasting image status faults across alarm restarts while reads and dea
     0, 1_000, 3_000, 7_000, 15_000, 31_000, 63_000, 123_000, 183_000, 590_000,
   ]) {
     await image.tick(now + offset)
-    alarms.push(image.storage.alarmAt)
+    alarms.push(await image.storage.getAlarm())
     if (offset === 1_000) {
       beforeEarly = fixture.boat.statusRequests.length
-      image.restart()
+      await image.restart()
       await image.requeue(now + 2_000)
-      earlyAlarm = image.storage.alarmAt
+      earlyAlarm = await image.storage.getAlarm()
       await image.storage.setAlarm(now + 2_000)
       await image.tick(now + 2_000)
       afterEarly = fixture.boat.statusRequests.length
@@ -65,7 +65,7 @@ it('keeps the original failure age when healthy running polls continue beyond th
   fault.recover()
   fixture.boat.commandRunning = true
   await image.tick(now + 1_000)
-  image.restart()
+  await image.restart()
   await image.tick(now + 610_000)
   expect(await image.job()).toMatchObject({
     state: 'running',
@@ -84,18 +84,18 @@ it('honors Retry-After and healthy progress while resetting the window only afte
   const now = fixture.runtime.dependencies.now()
   fault.fail('4')
   await image.tick(now)
-  expect(image.storage.alarmAt).toBe(now + 4_000)
+  expect(await image.storage.getAlarm()).toBe(now + 4_000)
   const calls = fixture.boat.statusRequests.length
-  image.restart()
+  await image.restart()
   await image.tick(now + 1_000)
   expect(fixture.boat.statusRequests).toHaveLength(calls)
   fault.recover()
   fixture.boat.commandRunning = true
   await image.tick(now + 4_000)
-  expect(image.storage.alarmAt).toBe(now + 5_000)
+  expect(await image.storage.getAlarm()).toBe(now + 5_000)
   fault.fail()
   await image.tick(now + 5_000)
-  expect(image.storage.alarmAt).toBe(now + 7_000)
+  expect(await image.storage.getAlarm()).toBe(now + 7_000)
   fault.recover()
   await image.tick(now + 7_000)
   await image.tick(now + 607_003)
@@ -113,7 +113,7 @@ it('honors Retry-After and healthy progress while resetting the window only afte
     state: 'running',
     phase: 'install',
   })
-  expect(image.storage.alarmAt).toBe(now + 615_003)
+  expect(await image.storage.getAlarm()).toBe(now + 615_003)
   fault.fail('601')
   await image.tick(now + 615_003)
   expect(await image.job()).toMatchObject({ state: 'failed', phase: 'done' })

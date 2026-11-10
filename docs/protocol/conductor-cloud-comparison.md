@@ -34,7 +34,7 @@ shut-down day is 20 November 2026. The terms are those of the
   Conductor. Reason: the page compares another product.
 - The page names no sandbox provider, as
   [The provider](workspaces-and-sandboxes.md#the-provider) says. It names
-  the agents as [Names in the product](chat-and-events.md#names-in-the-product)
+  the agents as [Names in the product](agents-and-sessions.md#names-in-the-product)
   says.
 
 ## Entry points

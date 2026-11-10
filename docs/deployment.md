@@ -15,7 +15,7 @@ examples.
 ## How to set the inputs
 
 - Declare the bindings in `wrangler.jsonc`. It already holds `DB`,
-  `ASSETS`, `WORKSPACES`, and `AI`.
+  `ASSETS`, `WORKSPACES`, `CHAT_ATTACHMENTS`, and `AI`.
 - Set each public variable in the `vars` of `wrangler.jsonc`, or in the
   settings of the Worker in the Cloudflare dashboard.
 - `wrangler.jsonc` sets `keep_vars`. So each deploy keeps the variables
@@ -30,7 +30,7 @@ examples.
 - `wrangler.jsonc` turns on Workers Logs, which keeps each warning of the
   Worker and of its Durable Objects. It removes the query string of each
   request URL from the logs, because a query string can hold a sign-in
-  code or a preview credential.
+  code, a preview credential, or the name of an attached file.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
@@ -46,7 +46,8 @@ examples.
 | `DB` | D1 database | Every route that reads users, orgs, or workspaces | The production database. Apply the migrations with `npx wrangler d1 migrations apply DB --remote`. |
 | `ASSETS` | Static assets | The pages of the web app | The client build of `npm run build`. |
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
-| `AI` | Workers AI | The title of each new workspace | Workers AI on the Cloudflare account of the Worker, as [The title model](#the-title-model) says. |
+| `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion | The bucket `conductive-chat-attachments`, as [The attachment bucket](#the-attachment-bucket) says. |
+| `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](#the-title-model) says. |
 
 ## Public variables
 
@@ -61,7 +62,7 @@ examples.
 | `BOAT_ORG_ID` | Each call to Boat | The ID of the app's Boat organization, as [The app's Boat account](#the-apps-boat-account) says. It is not a secret. |
 | `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](#models) says. |
-| `CONDUCTIVE_TITLE_MODEL` | The title of each new workspace | Optional. The Workers AI model ID of the title model, as [The title model](#the-title-model) says. Without it, a new workspace keeps no name and shows "Untitled". It is not a secret. |
+| `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
@@ -92,6 +93,34 @@ examples.
   encrypts the start logs, the credentials of each image source copy, and
   the terminal and preview credentials. It encrypts no Boat key. A new key cannot read the values
   that the old key encrypted.
+
+## The attachment bucket
+
+`CHAT_ATTACHMENTS` holds the files that users attach to chat messages, as
+[Attachments](protocol/messages-and-attachments.md#attachments) says. One bucket
+serves every org.
+
+- Create the private bucket once, before the first deploy that declares
+  the binding:
+  `npx wrangler r2 bucket create conductive-chat-attachments --location weur`.
+  The primary orchestrator does this at the next deployment.
+- The location hint puts the bucket in Western Europe, near the production
+  database and the workspace objects. A bucket keeps the location of its
+  first creation.
+- Without the bucket, `wrangler deploy` creates it with no location hint.
+  So create it first.
+- Keep public access off. Add no custom domain, no `r2.dev` address, and
+  no CORS rule. Only the Worker reads and writes the bucket, as
+  [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
+  says.
+- Add no lifecycle rule that deletes files by age. Such a rule would also
+  delete the files of sent messages, which stay until the app deletes their
+  workspace.
+- The copy of each file into a sandbox also needs the `file.write` action
+  on the Boat key, as [The app's Boat account](#the-apps-boat-account)
+  says.
+- Local development and the Worker tests use local R2 storage. They need no
+  Cloudflare account and no bucket.
 
 ## The GitHub App
 
@@ -168,9 +197,9 @@ The shape of the two values, with placeholders in place of real values:
 
 ## The title model
 
-`CONDUCTIVE_TITLE_MODEL` names the model that writes the title of each new
-workspace, as [Messages](protocol/chat-and-events.md#messages) says. It is
-operator data. The Worker has no built-in title model.
+`CONDUCTIVE_TITLE_MODEL` names the model that writes a title for a workspace
+that has no name, as [Messages](protocol/messages-and-attachments.md#messages)
+says. It is operator data. The Worker has no built-in title model.
 
 - The value is the model ID of a text generation model of Workers AI, the
   model service of Cloudflare. The
@@ -179,12 +208,13 @@ operator data. The Worker has no built-in title model.
 - The Worker calls the model through the `AI` binding, on the Cloudflare
   account of the Worker. Each request counts toward the Workers AI use of
   that account.
-- Without the binding or the variable, a new workspace keeps no name and
-  shows "Untitled", and the Worker logs a warning. The Worker also logs a warning for
-  a failed request. No route fails for a missing title.
+- Without the binding or the variable, no automatic title is written.
+  The Worker logs a warning when it would request a title.
+  The Worker also logs a warning for a failed request.
+  No route fails for a missing title.
 - Workers AI runs only on the network of Cloudflare. `npm run dev` and
   `npm run preview` do not reach it. So they need no Cloudflare login, and
-  a new workspace keeps no name there.
+  no automatic title is written locally.
 
 ## The runner archive
 
@@ -321,7 +351,10 @@ No org has a Boat key, and the Worker stores no Boat key in D1.
   `MACHINE_ORIGIN`.
 - Both are settings of the Worker only. The key never goes to the browser,
   into a sandbox, into a log, or into a saved snapshot, as
-  [Access and security](protocol/access-and-security.md#the-apps-boat-key)
+  [Access and security](protocol/isolation.md#the-apps-boat-key)
   says.
 - [The app's Boat account](../worker/sandbox/README.md#the-apps-boat-account)
   says how to make the organization and the key.
+- The key must also allow the `file.write` action. The Worker uses it to
+  copy each attached file into a sandbox. The primary orchestrator
+  supplies that action at the next deployment.

@@ -20,7 +20,7 @@ how a screen is built, and links to the other pages.
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, the first build of a new org, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -28,6 +28,7 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
+| `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
@@ -40,7 +41,8 @@ how a screen is built, and links to the other pages.
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/command-palette`, `app/orgs`,
-`app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
+`app/orgs/suspended`, `app/account`, `app/new-workspace`,
+`app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, and `app/file-mentions` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
@@ -49,9 +51,10 @@ content comes from, and links to `marketing/from-conductor/one-table`,
 which links back to it. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
-`app/account`, `app/sign-in/waitlist`, `app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
-folders and kept their paths, so that each of those pages shows only its
-canonical screen. `app/sign-in/get-started` moved into its own folder and
+`app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
+`app/new-workspace/dialog`, and `app/org-settings/cloud-computer` moved
+into their own folders and kept their paths, so that each of those pages
+shows only its canonical screen. `app/sign-in/get-started` moved into its own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
 the page shows only its canonical screen. Get started is the only first
@@ -97,9 +100,9 @@ decision 151. The mockups draw it for Firna, the first org of the sign-up:
 
 `app/account` shows the General tab of the account. Its tabs are links, as
 the tabs of the org settings are. `app/account/preferences` shows the
-Preferences tab, from decision 142: the New workspaces section with Model
-and effort, and the choice of how New workspace opens on a computer, the
-page or a dialog. Its `not-saved` variant shows a save that failed, which
+Preferences tab, from decision 142 of PR #73: the New workspaces section
+with Model and effort, and the choice of how New workspace opens on a
+computer, the page or a dialog. Its `not-saved` variant shows a save that failed, which
 keeps the saved choice. `app/account/setup`, `app/account/connect-claude`,
 and `app/account/connect-codex` show General before the first connections,
 and with the Connect form of each agent open.
@@ -107,14 +110,16 @@ and with the Connect form of each agent open.
 failed to save, with its saved value and the cause beside the switch.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
-workspace of `app`, for a user who chose the dialog. Its variants show a
-draft with an attached file and the notice of a missing agent login, a
+workspace of `app`, for a user who chose the dialog. Its states are child
+pages. `first-build` shows Firna before its first good build, with the
+notice and Create off. The other child pages show files that upload, a
+draft with uploaded files and the notice of a missing agent login, a
 create request that failed, an org without chosen repositories, and a
-pasted workspace link as a chip. A phone
-always opens the page, so each phone view shows the New workspace page in
-the same state. `user-flows/create-workspace-dialog` goes from Preferences
-through the dialog to the new workspace. The `first-build` variant shows
-Firna before its first good build, with the notice and Create off.
+pasted workspace link as a chip. The dialog uses the file chips of
+`app/new-workspace/files`. A phone always opens the page, so each phone
+view shows the New workspace page in the same state.
+`user-flows/create-workspace-dialog` goes from Preferences through the
+dialog to the new workspace.
 
 The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
 an account without app access, and the person waits until an operator
@@ -325,7 +330,7 @@ with chips in Checkout address autocomplete, `W-395`. Its child pages:
 
 The message box of New workspace shows a pasted link as a chip in
 `app/new-workspace/workspace-link`, a child page of `app/new-workspace`,
-and in the `workspace-link` variant of `app/new-workspace/dialog`.
+and in the `workspace-link` child page of `app/new-workspace/dialog`.
 The flow `user-flows/link-a-workspace` goes from the copy to the answer,
 and ends with a press on the chip, which opens
 `app/new-workspace/first-turn`.

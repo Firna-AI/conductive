@@ -45,7 +45,7 @@ number names a dated record, as
 - Reason: the mark shows the live state, which matters when one workspace
   waits for another.
 - The marks mean what they mean in the workspace list, as
-  [Workspace states](workspaces-and-sandboxes.md#workspace-states) says. A
+  [Workspace states](workspace-life.md#workspace-states) says. A
   chip of an archived workspace shows that the workspace is archived.
 - A chip keeps the height of its line of text. A long name is cut short,
   and the chip gives the whole name as its title.
@@ -72,7 +72,7 @@ number names a dated record, as
   not see.
 - Reason: a person sees only the workspaces of the orgs where they are a
   member, as
-  [Orgs and workspaces](access-and-security.md#orgs-and-workspaces) says.
+  [Orgs and workspaces](isolation.md#orgs-and-workspaces) says.
 - A link of an earlier app domain stays plain text too. Reason: no change of
   the domain is planned, and a plain link still works where the old domain
   forwards to the new one.
@@ -116,7 +116,7 @@ number names a dated record, as
 - A chip that shows only after Send was rejected, because the person then
   sees a long address until Send.
 - A paste works also in the Mac app, which gives the page no clipboard
-  read, as [Permissions](desktop-app.md#permissions) says.
+  read, as [Permissions](desktop-commands.md#permissions) says.
 - The field holds plain text and chips. A paste of formatted text keeps
   only its text.
 - A chip in the field is one unit of the text. Backspace and Delete remove

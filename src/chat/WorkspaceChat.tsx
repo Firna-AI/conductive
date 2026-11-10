@@ -17,7 +17,11 @@ import { LinksProvider, type ChatLinks } from './links/LinksContext'
 import { useMentionCopy } from './links/mention-copy'
 import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
-import { sessionState, type ChatSnapshot } from './state/chat-snapshot'
+import {
+  sessionState,
+  type ChatSnapshot,
+  type Overlay,
+} from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
@@ -81,6 +85,16 @@ function useReport<T>(value: T | null, report?: (value: T) => void): void {
 }
 
 /**
+ * The overlay that the chat shows. A read-only chat sends no write, so it
+ * shows only the session history. An open rename or close question then
+ * counts as none, also one that opened before the chat turned read-only.
+ * The store keeps the edit.
+ */
+function permittedOverlay(overlay: Overlay, readOnly: boolean): Overlay {
+  return readOnly && overlay.kind !== 'history' ? { kind: 'none' } : overlay
+}
+
+/**
  * The workspaces that the chips of the chat find, as the list of the org has
  * them now, and the way that a chip opens its page.
  */
@@ -102,6 +116,7 @@ function ChatBody(
   const { controller, snapshot } = props
   const readOnly =
     snapshot.workspace?.state === 'archived' || (props.readOnly ?? false)
+  const overlay = permittedOverlay(snapshot.overlay, readOnly)
   const mobile = props.viewport === 'mobile'
   const content = props.content ?? null
   const active = snapshot.activeSessionId
@@ -109,7 +124,7 @@ function ChatBody(
   const ticking =
     running !== null ||
     snapshot.workspace?.state === 'starting' ||
-    snapshot.overlay.kind === 'history'
+    overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
   const links = useLinks(controller, props.onOpenPage)
   useMentionCopy()
@@ -125,7 +140,6 @@ function ChatBody(
     reopen,
     (item) => endedAt(snapshot, item),
   )
-  const { overlay } = snapshot
   const body = (
     <>
       <SessionTabs
