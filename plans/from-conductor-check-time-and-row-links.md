@@ -318,11 +318,11 @@ The page shows the check line and the row links of the mockup.
       sets `.mobile` for both phone rules. The site splits them: the
       touch area and the rounded fill follow the phone width, and the
       icon that always shows follows `(hover: none)`.
-- [ ] Keep `built-site.test.ts` under 300 lines. `main` already moved its
+- [x] Keep `built-site.test.ts` under 300 lines. `main` already moved its
       build setup to `built-site.test-support.ts`. Move the checks of the
       page to their own place when the file would pass the limit, with
       every assertion kept, and build the site once.
-- [ ] Add the tests of the design call. Move the scope check of the
+- [x] Add the tests of the design call. Move the scope check of the
       built-site test to the new words. See each new assertion fail
       first. Run each new test 10 times.
 - [x] Smoke-test in Chrome at 320, 390, 760, 1024, and 1440 px, in both
