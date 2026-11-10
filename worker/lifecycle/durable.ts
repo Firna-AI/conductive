@@ -14,9 +14,10 @@ import { reconciledLifecycle } from './durable-reconciliation'
 import { advanceDiskRetentionState } from './disk-retention-state'
 import {
   writeLifecycleState,
-  publishLifecycleState,
+  retryLifecyclePublication,
   scheduleLifecycleState,
 } from './durable-scheduling'
+import { ArchiveTransitions } from './durable-archive'
 import { failedStartStop } from './durable-start-stop'
 import { advanceLifecycleAlarm } from './durable-alarm'
 import { applyLifecycleTurn, recoverLifecycleTurns } from './durable-turns'
@@ -33,6 +34,7 @@ import {
 /** One instance lives inside each workspace Durable Object. */
 export class DurableLifecycle {
   private pending: Promise<unknown> = Promise.resolve()
+  private readonly archiveTransitions: ArchiveTransitions
   readonly input: LifecycleInputState
   private readonly storage: LifecycleStorage
   private readonly now: () => number
@@ -52,6 +54,13 @@ export class DurableLifecycle {
       serial: (operation) => this.serial(operation),
       write: (state) => this.write(state),
       extendDeadline: (request) => this.hooks.extendDeadline(request),
+    })
+    this.archiveTransitions = new ArchiveTransitions({
+      storage,
+      hooks,
+      now,
+      input: this.input,
+      serial: (operation) => this.serial(operation),
     })
   }
 
@@ -143,7 +152,25 @@ export class DurableLifecycle {
 
   stopped(): Promise<void> {
     return this.update((state) =>
-      reconciledLifecycle(state, 'stopped', this.now()),
+      state.state === 'archived'
+        ? state
+        : reconciledLifecycle(state, 'stopped', this.now()),
+    )
+  }
+
+  archive(): Promise<void> {
+    return this.archiveTransitions.archive()
+  }
+
+  restoreStopped(
+    stoppedAt: number | null,
+    nextDiskKeepaliveAt: number,
+    stopPending = false,
+  ): Promise<void> {
+    return this.archiveTransitions.restore(
+      stoppedAt,
+      nextDiskKeepaliveAt,
+      stopPending,
     )
   }
 
@@ -207,19 +234,9 @@ export class DurableLifecycle {
   }
 
   retryChanged(): Promise<void> {
-    return this.serial(async () => {
-      const state = await this.read()
-      if (state)
-        await publishLifecycleState(
-          this.storage,
-          this.hooks,
-          state,
-          this.now,
-          undefined,
-          false,
-        )
-      else await this.storage.changedAlarm(null)
-    })
+    return this.serial(() =>
+      retryLifecyclePublication(this.storage, this.hooks, this.now),
+    )
   }
 
   alarm(): Promise<void> {

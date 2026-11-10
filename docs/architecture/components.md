@@ -73,7 +73,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It gives each turn its turn token. For each model request, it tells the
   model gateway whether the token still works and which login the turn
   uses.
-- It also holds the start steps, the stop timer, and the banner state.
+- It also holds the start steps, the stop timer, the delete timer of an
+  archived workspace, and the banner state.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace

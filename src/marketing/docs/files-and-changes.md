@@ -19,7 +19,12 @@ On a phone, open the workspace's **Files** view.
 - **Changes** lists changes against its default branch.
 - **Checks** shows the pull request's GitHub checks.
 
-An archived workspace keeps its chat without the computer or file tools.
+An archived workspace keeps read-only chat, with no file lists or tools.
+Its computer and files can stay available for Restore for 14 days after Archive.
+Restore the workspace while **Restore** is available.
+Then select **Resume** before you use the file tools.
+
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 ## Read a file
 

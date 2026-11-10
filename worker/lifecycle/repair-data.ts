@@ -1,14 +1,18 @@
 import { activeAdminMemberPredicate } from '../data/active-admin'
 import { activeOrgPredicate } from '../data/org-access'
 import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 export const REPAIR_GRACE_MS = 15 * 60 * 1_000
 export const REPAIR_LIMIT = 50
 export type RepairKind = 'workspace' | 'org'
 
-const workspaceEligible = `w.sandbox_id IS NOT NULL
-  AND w.state IN ('stopped', 'error') AND ${workspaceTokenResourcePredicate}`
+const workspaceEligible = `w.sandbox_id IS NOT NULL AND (
+  (w.state IN ('stopped', 'error') AND ${workspaceTokenResourcePredicate})
+  OR (w.archived_at IS NOT NULL AND EXISTS (SELECT 1 FROM orgs archive_org
+    WHERE archive_org.id = w.org_id AND archive_org.deleted_at IS NULL)))`
+const workspaceDue = `COALESCE(w.next_disk_keepalive_at, w.archived_at + ${WORKSPACE_RESTORE_MS})`
 const orgEligible = `o.deleted_at IS NULL AND ${activeOrgPredicate('o')}
   AND EXISTS (SELECT 1 FROM org_members m WHERE m.org_id = o.id
     AND ${activeAdminMemberPredicate('m')})`
@@ -18,8 +22,8 @@ export async function overdueLifecycleRepairs(db: D1Database, cutoff: number) {
     db
       .prepare(
         `SELECT w.id FROM workspaces w WHERE ${workspaceEligible}
-         AND w.next_disk_keepalive_at <= ?
-         ORDER BY w.next_disk_keepalive_at, w.id LIMIT ?`,
+         AND ${workspaceDue} <= ?
+         ORDER BY ${workspaceDue}, w.id LIMIT ?`,
       )
       .bind(cutoff, REPAIR_LIMIT + 1),
     db
@@ -46,7 +50,7 @@ function repairDeferral(
     kind === 'workspace'
       ? db.prepare(
           `UPDATE workspaces AS w SET next_disk_keepalive_at = ?
-           WHERE w.id = ? AND ${workspaceEligible} AND w.next_disk_keepalive_at <= ?`,
+           WHERE w.id = ? AND ${workspaceEligible} AND ${workspaceDue} <= ?`,
         )
       : db.prepare(
           `UPDATE org_images SET next_image_refresh_at = ?
