@@ -34,7 +34,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Drag and drop attachments',
     status: 'planned',
-    note: 'Dropping files into chat and new workspace messages as inline attachments is planned. Use the attachment button today.',
+    note: 'Dropping files into the message box, each as a chip in the text, is planned. Use the attachment button today.',
     due: null,
   },
   {
