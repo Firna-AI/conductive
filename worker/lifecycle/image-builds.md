@@ -40,7 +40,12 @@ A write that passes that budget removes whole rows from the middle.
 The line `[N output bytes omitted]` takes their place in the event order.
 
 - A build loads the chosen repositories, installs the image software, runs
-  the install script with Bash, and saves a snapshot. A refresh only loads
+  the install script with Bash, and saves a snapshot. A first build that
+  pins a matching ready software image starts from it and skips the
+  software step. Admission records the pin in the job insert. The pin stays
+  until the job reaches `done`, including its cleanup. The
+  [software image backend](../software-image/README.md) owns these images.
+  A refresh only loads
   the repositories of the current image again, and saves a snapshot.
 - The org image changes only when the new snapshot is ready. Each job
   deletes its build sandbox at the end, and keeps its history and log.

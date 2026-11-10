@@ -116,6 +116,13 @@ A Worker version from before this migration cannot run on the new schema, as
 The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#org-images)
 page gives the readers and the rules of these records.
 
+`202611092306_software_images.sql` adds `software_images`, which owns each
+software image attempt and its provider account, version, artifact, phase,
+resources, output, and deploy token digest. A partial unique index allows
+one building attempt per account. `image_build_jobs.software_image_name`
+pins the ready software image that a first build uses.
+The [software image backend](../worker/software-image/README.md) owns these records.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

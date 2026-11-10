@@ -61,8 +61,11 @@ turn repair from the committed chat and the one writer of the shown state.
 
 ### Builds and refreshes
 
-- A build sandbox starts from the current org image, or as a new default
-  sandbox for the first build. Its env holds only the folder variables.
+- A build sandbox starts from the current org image. Without an org image
+  in its provider account, a build pins a ready software image of the app
+  software version. Without one, it starts from the provider's base image.
+  Its env holds only the folder variables. A build from the software image
+  skips the software step after it copies the repositories.
 - Risk: a program with root access that an earlier install left in that
   image can read the clone token of a later copy. That token can only read
   its own repository, which the image already holds. The Worker revokes it
@@ -280,6 +283,7 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
+- [Software images](../software-image/README.md): the shared software builds and their cleanup.
 - [`image-software.ts`](image-software.ts): the runner archive check and
   install/start commands.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text

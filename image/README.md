@@ -1,7 +1,10 @@
 # Sandbox software
 
 This folder holds the app's own sandbox software. Each image build installs
-it into the org image before it runs the org's install script. The org
+it before it runs the org's install script. A software image build installs
+it once for each app software version. A first org build from that image
+skips the software step. Without a matching ready software image, the first
+build installs it itself. Later builds still install the software. The org
 image is the saved snapshot that every new sandbox of an org starts from.
 In a workspace sandbox, this software starts the agent runner. It also
 gives git a fresh GitHub token for each operation. The agent tools are not
@@ -26,7 +29,7 @@ archive packager and the live check.
 The [terminal backend](../worker/terminal/README.md) owns ttyd, tmux, their
 services, the terminal launcher, and the local password. It also owns the
 shell server, which keeps the workspace shell in tmux. The software step of
-each image build runs that area's `terminalInstallCommand()` after
+each software image build and each org build that needs it runs that area's `terminalInstallCommand()` after
 `install.sh`. The build log shows the output of both. The terminal
 installer installs the `ttyd` and `tmux` packages with `apt-get`. It
 enables the terminal service and starts nothing.
@@ -82,7 +85,8 @@ paths, and its update steps.
 
 [Install in a build](install.md) describes the software step of each image
 build: the staged scripts, the private Node, and the steps of `install.sh`.
-A refresh skips that step.
+A refresh and a first build from a software image skip that step.
+The [software image backend](../worker/software-image/README.md) builds the shared image.
 
 ## Start in a workspace
 

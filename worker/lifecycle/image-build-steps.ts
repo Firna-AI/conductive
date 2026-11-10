@@ -100,7 +100,11 @@ export async function advanceBuildStep(
     await completeBuildPhase(
       env.DB,
       buildId,
-      job.kind === 'refresh' ? 'snapshot' : 'software',
+      job.kind === 'refresh'
+        ? 'snapshot'
+        : job.softwareImageName
+          ? 'install'
+          : 'software',
     )
     return false
   }

@@ -164,7 +164,11 @@ workspace #413.
     the change of the first build.
 15. **Docs.** My call: the requirements go into a new section of
     `docs/protocol/org-image.md`, which has 98 lines. The plan of #413
-    planned a new page, for its larger scope.
+    planned a new page, for its larger scope. My call: the protocol docs
+    give decisions 2, 3, 5, and 6 with their choices and rejected options,
+    but without their numbers. Reason: the docs already use those numbers
+    for older decisions, and the pull request description keeps the dated
+    records.
 
 ## Decisions
 
@@ -241,15 +245,18 @@ Depends on: none
 The first build of Firna, the new org of the sign-up, shows no software
 step on the Cloud computer tab.
 
-- [ ] In `docs/mockups/src/fixtures/terminal.ts`, make the first-build log
+- [x] In `docs/mockups/src/fixtures/terminal.ts`, make the first-build log
       of Firna go from the repository copy to "Running the install script",
       with no software step. Give the failed and the timed-out first builds
       a failure that a first build from the software image can meet, such
       as a failed repository copy. Update the comments of the fixtures.
-- [ ] Run `npm run mockups:check`. Smoke-test the building, failed, and
+- [x] Run `npm run mockups:check`. Smoke-test the building, failed, and
       time-limit states of the first build of Firna.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The mockups showed no problem. A failed copy gives
+      its own saved message, which the card does not show for Firna, so
+      the failed example fails at the save of the image instead. No page
+      shows the timed-out first build of Firna.
 
 ## Milestone 2: Documentation and protocol
 
@@ -258,36 +265,38 @@ Depends on: 1
 The docs state the software image, the new start of a first build, and the
 deploy step.
 
-- [ ] In `docs/protocol/org-image.md`, add the section "The software
+- [x] In `docs/protocol/org-image.md`, add the section "The software
       image": what it holds, when the deploy run builds it, one build at a
       time, the time limit, the cleanup, and the fallback. Give decisions 2,
       3, and 6 with their rejected options. In "The first build", state
       that a first build starts from the software image, copies the
       repositories, runs the install script, and skips the software step.
-- [ ] In `docs/protocol/access-and-security.md`, under "Hostnames and
+- [x] In `docs/protocol/access-and-security.md`, under "Hostnames and
       gates", add the gate of `/v1/deploy/software-image` (decision 6).
-- [ ] In `docs/protocol/isolation.md`, state that the software image holds
+- [x] In `docs/protocol/isolation.md`, state that the software image holds
       no org data and no secret, and that the deploy run never gets the
       Boat key.
-- [ ] In `docs/protocol/github-tokens.md`, limit the risk text to the later
+- [x] In `docs/protocol/github-tokens.md`, limit the risk text to the later
       build and the refresh, which start from the last org image. A first
       build starts where no org code has run.
-- [ ] In `docs/architecture.md`, add the term "Software image", and change
+- [x] In `docs/architecture.md`, add the term "Software image", and change
       the terms "Build" and "Start". In `docs/architecture/components.md`,
       under "Sandbox software", state that the Worker builds one software
       image for each app software version when the deploy run asks.
-- [ ] In `docs/automatic-deploys.md`, add the deploy token and the software
+- [x] In `docs/automatic-deploys.md`, add the deploy token and the software
       image step to "Steps of a run", with the outcome of decision 5. In
       "When it runs" and "When a deploy fails", state how a run can fail
       after the new Worker is live, and how a re-run retries the software
       image. In `docs/deployment.md`, add the `version_metadata` binding
       and the variable `CONDUCTIVE_DEPLOY_TOKEN_SHA256`.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+- [x] The legal pages and the public guides restate none of the changed
+      facts, so they do not change.
 
 ## Milestone 3: App software version and records
 
@@ -297,85 +306,87 @@ The code milestones follow the design items of this plan, which hold the
 same requirements as the docs of Milestone 2. So they run beside
 Milestones 1 and 2, in files that those milestones do not change.
 
-- [ ] Compute the app software version of design item 2. Make the agent
+- [x] Compute the app software version of design item 2. Make the agent
       tools command a pure function, so that the build and the version use
       the same text. Tests: the same inputs give the same version. A change
       of the runner archive and a change of the tool sources each give a
       new version.
-- [ ] Add a D1 migration: the table `software_images`, with at most one
+- [x] Add a D1 migration: the table `software_images`, with at most one
       unfinished build for each provider account, and the nullable column
       `image_build_jobs.software_image_name` for the pin.
-- [ ] Name each software image snapshot within the saved image name rule
+- [x] Name each software image snapshot within the saved image name rule
       of the provider, apart from the org image names.
 
 ## Milestone 4: The software image build
 
 Depends on: 3
 
-- [ ] Add `worker/software-image/` with the build steps of design items 4
+- [x] Add `worker/software-image/` with the build steps of design items 4
       to 7, and its README.
-- [ ] Add the cleanup of design item 12.
-- [ ] From the Cron Trigger, move each unfinished software image build,
+- [x] Add the cleanup of design item 12.
+- [x] From the Cron Trigger, move each unfinished software image build,
       fail it at its time limit, and retry the cleanup.
-- [ ] Tests with the fake provider:
-  - [ ] Repeated requests reach ready. The sandbox create has no env var
+- [x] Tests with the fake provider:
+  - [x] Repeated requests reach ready. The sandbox create has no env var
         and no snapshot. A second request for the same version starts no
         sandbox.
-  - [ ] A failed command fails the build, keeps the output, and deletes
+  - [x] A failed command fails the build, keeps the output, and deletes
         the sandbox. The next request starts a new build.
-  - [ ] A newer version ends an unfinished build of an older version.
-  - [ ] The Cron path fails a build at its time limit and deletes its
+  - [x] A newer version ends an unfinished build of an older version.
+  - [x] The Cron path fails a build at its time limit and deletes its
         sandbox.
-  - [ ] A transient provider error keeps the state.
-  - [ ] The cleanup deletes an older software image, and keeps one that an
+  - [x] A transient provider error keeps the state.
+  - [x] The cleanup deletes an older software image, and keeps one that an
         unfinished build pins until that build ends.
 
 ## Milestone 5: The deploy route
 
 Depends on: 4
 
-- [ ] Add the `version_metadata` binding to `wrangler.jsonc`. Add the
+- [x] Add the `version_metadata` binding to `wrangler.jsonc`. Add the
       binding and the variable `CONDUCTIVE_DEPLOY_TOKEN_SHA256` to
       `AppEnv`.
-- [ ] Add `POST /v1/deploy/software-image` on the machine host, with the
+- [x] Add `POST /v1/deploy/software-image` on the machine host, with the
       gate of design item 8.
-- [ ] Tests: a request without the token, with a wrong token, or 30
+- [x] Tests: a request without the token, with a wrong token, or 30
       minutes after the version was made gets 401. A request with another
       token digest gets 409. A request with a cookie or an `Origin` header
       gets 403. A Worker without the binding or the variable answers 404.
       A valid request moves the build and gives its state. A request of
       the deploy run of a failed build gets the failure, and a request of
       another deploy run starts a new build.
-- [ ] Update the machine routes in `worker/README.md`.
+- [x] Update the machine routes in `worker/README.md`.
 
 ## Milestone 6: The deploy step
 
 Depends on: 5
 
-- [ ] In the step "Deploy Worker" of `.github/workflows/deploy.yml`, make
+- [x] In the step "Deploy Worker" of `.github/workflows/deploy.yml`, make
       the token and set its digest, as design item 9 says.
-- [ ] Add the step of design item 10 after "Check health", with the outcome
+- [x] Add the step of design item 10 after "Check health", with the outcome
       of decision 5. Make the job `redeploy` also need the later job of
       design item 10.
-- [ ] Run each shell block of the new steps locally with stub commands.
+- [x] Run each shell block of the new steps locally with stub commands.
       Save the proof under `.context/first-build-software-image/`, and name
       the file here.
+
+Proof: `.context/first-build-software-image/deploy-step-proof.md`.
 
 ## Milestone 7: First builds from the software image
 
 Depends on: 3
 
-- [ ] At admission, pin the ready software image of a build without an org
+- [x] At admission, pin the ready software image of a build without an org
       image in its provider account, as design item 11 says. Start the
       build sandbox from it. Go from the repository copy to the install
       script.
-- [ ] Tests:
-  - [ ] A first build with a ready software image of its version starts
+- [x] Tests:
+  - [x] A first build with a ready software image of its version starts
         from it, runs no software command, and logs no software step.
-  - [ ] A first build without a ready software image, or with one of
+  - [x] A first build without a ready software image, or with one of
         another version, runs the full install.
-  - [ ] A later build and a refresh do not change.
-- [ ] Update `worker/lifecycle/README.md`, `worker/lifecycle/image-builds.md`,
+  - [x] A later build and a refresh do not change.
+- [x] Update `worker/lifecycle/README.md`, `worker/lifecycle/image-builds.md`,
       `image/README.md`, and `image/install.md`.
 
 ## Milestone 8: Verification, commit, review, and pull request

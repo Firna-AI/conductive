@@ -4,6 +4,7 @@ import { shellQuote } from './commands'
 
 type CommandOwner =
   | { kind: 'build'; id: string }
+  | { kind: 'software-image'; id: string }
   | { kind: 'workspace'; id: string; attempt: string }
 
 type CommandPhase =
@@ -31,9 +32,17 @@ export async function clearBuildCommands(
   sandboxId: string,
   buildId: string,
 ): Promise<void> {
+  return clearImageCommands(provider, sandboxId, { kind: 'build', id: buildId })
+}
+
+export async function clearImageCommands(
+  provider: SandboxProvider,
+  sandboxId: string,
+  owner: Extract<CommandOwner, { kind: 'build' | 'software-image' }>,
+): Promise<void> {
   const result = await provider.runCommand(
     sandboxId,
-    `rm -rf -- ${shellQuote(commandDirectory({ kind: 'build', id: buildId }))}`,
+    `rm -rf -- ${shellQuote(commandDirectory(owner))}`,
   )
   if (result.exitCode !== 0 || result.timedOut)
     throw new Error('Image command cleanup failed')
