@@ -10,7 +10,7 @@ import { withBrowserEntry } from './browser-entry.js'
 import { installWindowApi } from './window-shell.js'
 
 // The page of a small phone, without the frame of the window.
-const phone = { width: 375, height: 667, useContentSize: true }
+const phone = { width: 375, height: 667, useContentSize: true, frame: false }
 
 const lines = [
   'The Preview tab stays blank after a restart.',

@@ -14,6 +14,8 @@ export interface EntryWindow {
   height: number
   /** The size is that of the page, without the frame of the window. */
   useContentSize?: boolean
+  /** A phone fixture has no native window frame around its content. */
+  frame?: boolean
 }
 
 /**
