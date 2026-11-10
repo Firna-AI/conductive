@@ -161,7 +161,7 @@ These are agent calls of 10 November 2026.
 | **Accessible names.** The link is named "Link to" and the name of the feature, such as "Link to File tree". The row header keeps the name of the feature as its only accessible name. | A header cell names every cell of its row, so extra words there repeat for each cell. A link name must say where it leads. |
 | **The opened row.** Its cells get a quiet fill, except the merged Area cell. It keeps a small gap above it when the page scrolls to it. No coloured edge. | The visitor sees which row the link meant. The `product-ui` skill forbids an accent edge. |
 | **Shared content first.** Milestone 1 adds the check time, its words, the name of a row link, and the `link` icon to the shared modules. The site keeps the check day until Milestone 3. | The mockup reads the modules of the site and has no copy of its own content. Additions keep the site working. |
-| **Parallel work.** This change does not edit the row files or `statuses.ts`. | The "align from-conductor page #1" workspace edits them now. Only `features.ts` can conflict, on one line. |
+| **Parallel work.** This change does not edit `statuses.ts` or an existing row. Milestone 1a adds 26 rows to nine area files. A merge test found no new conflict with a current `align-from-conductor-page` branch. | Routine workspaces edit the rows often. Only additions and `features.ts` can conflict. |
 | **Tests.** One unit test for the words of a time. The built-site case of the page checks the check line, the id and the link of each row, the row headers, and unique ids. The build setup of `built-site.test.ts` moves to a test support module, so that the file stays under 300 lines and the site still builds once. A one-time check in Chrome covers hover, focus, the opened row, and the accessibility tree. | Each requirement gets one test at the lowest level. The test file has 294 lines. A second test file would build the site twice. The repository has no browser test harness for the site, and a new one is out of scope. |
 | **Delegation.** The milestones run one after the other in this workspace. Mockup and UI work runs as the `ui implementor`, docs as the `docs implementor`, and tests as the `non-ui implementor`. | The milestones depend on each other and touch few files. |
 
@@ -232,10 +232,10 @@ Depends on: 1
 The mockup lists the features of local Conductor workspaces too, says
 "Conductor" instead of "Conductor Cloud", and has no scope note.
 
-- [ ] Build the list of new rows, with a status and a note for each, from
+- [x] Build the list of new rows, with a status and a note for each, from
       the design call "The source of the new rows". Save it as
       `.context/conductor-local-features/proposal.md`.
-- [ ] Add the new rows to the area files, and a new area to `areas.ts`
+- [x] Add the new rows to the area files, and a new area to `areas.ts`
       and `features.ts` only when the design call "Areas" allows it.
 - [x] Set `parityCheckedAt` from the design call "The check time moves".
 - [x] Say "Conductor" instead of "Conductor Cloud" in the shared copy:
@@ -247,10 +247,17 @@ The mockup lists the features of local Conductor workspaces too, says
 - [x] Update the description and the rationale of the mockup entry, the
       From Conductor `index.md`, `docs/mockups/marketing-site.md`, and
       `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the page at both sizes, in
+- [x] Run `npm run mockups:check`. Smoke-test the page at both sizes, in
       both schemes.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/conductor-local-features/` and
+`.context/from-conductor-check-time-and-row-links/m1a/`. The rows added
+26 features: 1 Available, 12 Works differently, and 13 Under
+consideration. Six older notes have three sentences, which the row rules
+do not allow. The follow-up item
+`plans/follow-ups/comparison-notes-over-two-sentences.md` records them.
 
 ## Milestone 2: Documentation and protocol
 
@@ -329,6 +336,12 @@ The page shows the check line and the row links of the mockup.
 
 Depends on: 1, 1a, 2, 3
 
+- [ ] Check four open facts of the new rows before the pull request, and
+      fix a row when its fact fails: agents on a production cloud
+      computer have a browser (`claude-agent-in-chrome`), Conductor still
+      has Codex goals (`codex-goals-and-personalities`), the import of
+      local workspaces is still planned (`local-workspaces`), and the web
+      app follows the proxy of the browser (`proxy-support`).
 - [ ] Merge `origin/main` with the `git-merge` skill. When a full check
       of the rows merged first, use its time as the check time.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.

@@ -30,6 +30,13 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     note: 'Agents powered by Claude and Codex work today. Cursor support is under consideration.',
   },
   {
+    id: 'opencode',
+    area: 'models-and-providers',
+    name: 'OpenCode',
+    status: 'considering',
+    note: 'Agents powered by Claude and Codex work today. OpenCode support is under consideration.',
+  },
+  {
     id: 'api-key-mode',
     area: 'models-and-providers',
     name: 'API key mode',
@@ -43,6 +50,13 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     status: 'in-progress',
     note: 'Connecting agent logins to your own API endpoint is in progress.',
     due: null,
+  },
+  {
+    id: 'bedrock-vertex-ai-and-foundry',
+    area: 'models-and-providers',
+    name: 'Bedrock, Vertex AI, and Foundry',
+    status: 'considering',
+    note: 'Running Claude through Bedrock, Vertex AI, or Foundry is under consideration. Connecting your own API endpoint is in progress.',
   },
   {
     id: 'model-picker',
@@ -85,5 +99,19 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     name: 'Model catalogue',
     status: 'available',
     note: 'The model picker includes Fable 5.2 and the supported Claude and Codex models.',
+  },
+  {
+    id: 'custom-agent-executables',
+    area: 'models-and-providers',
+    name: 'Custom agent executables',
+    status: 'considering',
+    note: 'Each cloud computer includes the supported agents. Running your own agent program is under consideration.',
+  },
+  {
+    id: 'sync-agent-configs',
+    area: 'models-and-providers',
+    name: 'Sync agent configs',
+    status: 'considering',
+    note: 'Copying skills, commands, and MCP servers between Claude and Codex is under consideration. Keep shared instructions in the repository.',
   },
 ]
