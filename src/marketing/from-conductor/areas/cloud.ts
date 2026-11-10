@@ -96,8 +96,9 @@ export const cloudFeatures: readonly ParityFeature[] = [
     id: 'open-via-ssh',
     area: 'cloud',
     name: 'Open via SSH',
-    status: 'considering',
-    note: 'SSH access is under consideration. Use the workspace terminal in Conductive today.',
+    status: 'planned',
+    note: 'SSH access from the Mac app to cloud workspaces is planned for desktop editors and command-line clients.',
+    due: null,
   },
   {
     id: 'sync-to-a-local-directory',
@@ -121,6 +122,13 @@ export const cloudFeatures: readonly ParityFeature[] = [
     name: 'Port forwarding',
     status: 'different',
     note: 'Open a private port preview in Conductive. Forwarding ports to localhost on your Mac is under consideration.',
+  },
+  {
+    id: 'automatic-port-detection',
+    area: 'cloud',
+    name: 'Automatic port detection',
+    status: 'considering',
+    note: 'Automatic port suggestions are under consideration. Type a port to open its private preview today.',
   },
   {
     id: 'shared-preview-url',

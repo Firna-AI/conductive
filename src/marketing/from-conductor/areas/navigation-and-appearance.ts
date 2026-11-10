@@ -38,6 +38,13 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     note: 'Resize panels and hide the right column. Zen mode and split views are under consideration.',
   },
   {
+    id: 'tab-order',
+    area: 'navigation-and-appearance',
+    name: 'Tab order',
+    status: 'available',
+    note: 'Drag session, file, and diff tabs into order, or move them through the tab menu.',
+  },
+  {
     id: 'themes-fonts-and-zoom',
     area: 'navigation-and-appearance',
     name: 'Themes, fonts, and zoom',
