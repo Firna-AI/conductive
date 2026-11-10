@@ -111,7 +111,7 @@ That interrupt goes out although the turn has ended, so the runner stops the age
 Each new runner connection gets it again until the late end of that turn from the runner removes it.
 The interrupt changes no public turn or session state.
 So Try again needs no Worker wait, and the runner starts the retry after the old agent process exits.
-After that commit, the failure calls `runnerEventStored`, so the lifecycle and device cleanup see the end.
+After that commit, the common turn-end report gives the end to the lifecycle and to device cleanup, as for every other turn end.
 A failure fails no turn when the newest connection of its owner has closed, or when the workspace names another sandbox.
 The current connection and computer then get their own owner.
 

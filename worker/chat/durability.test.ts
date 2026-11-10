@@ -44,6 +44,7 @@ describe('workspace chat durability', () => {
     if (next?.type !== 'turn') throw new Error('Expected a continuation turn.')
     expect(next.turnId).not.toBe(initial.turnId)
     expect(next.message.id).toBe('waiting')
+    if (!next.login) throw new Error('The version 1 turn has no login.')
     expect(next.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
     expect(next.message.sender.id).toBe(fixture.member.id)
     runner.emit(terminalEvent(next, 'failed'))

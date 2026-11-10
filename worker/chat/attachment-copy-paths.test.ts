@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { FakeRunner } from '../test-support/fake-runner'
 import {
   createHarness,
   TEST_TIME,
@@ -65,7 +66,9 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   const unsafe = await upload('unsafe-file', 'Project plan.pdf/notes')
   const fileIds = [file.id, unsafe.id]
   const session = await fixture.createSession()
-  const runner = await fixture.connect()
+  const runner = await fixture.connect(
+    new FakeRunner({ workspaceId: WORKSPACE_ID, protocolVersion: 2 }),
+  )
   runner.emit({ type: 'runner.ready' })
   await fixture.drain()
   const sending = fixture.sendAttachment(session.id, longMessageId, fileIds)
@@ -102,6 +105,11 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   expect(messageCommands(runner, longMessageId)[0]?.attachments[0]?.path).toBe(
     provider.paths[1],
   )
+  expect(messageCommands(runner, longMessageId)[0]).toMatchObject({
+    type: 'turn',
+    credential: { agent: 'claude', kind: 'api-key', token: expect.any(String) },
+  })
+  expect(messageCommands(runner, longMessageId)[0]).not.toHaveProperty('login')
   runner.disconnect()
   await fixture.connect(runner)
   await fixture.drainAttachments()
@@ -140,5 +148,10 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     FILE_BYTES,
   ])
   expect(provider.paths[7]).not.toBe(provider.paths[1])
+  const message = messageCommands(runner, 'another-file-message')[0]
+  expect(message?.type).toBe('message')
+  expect(message?.attachments[0]?.path).toBe(provider.paths[7])
+  expect(message).not.toHaveProperty('login')
+  expect(message).not.toHaveProperty('credential')
   runner.disconnect()
 })

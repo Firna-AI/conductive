@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { turn } from '../../test-support/harness'
+import { duringTurn, turn } from '../../test-support/harness'
 import { instructionProviders } from '../../test-support/instructions'
 import { wireFixture } from '../../test-support/wire'
 import { configuration } from '../config'
@@ -154,7 +154,7 @@ it.each(['claude', 'codex'] as const)(
           },
     )
     const during = {
-      ...turn('during', 'bob', agent),
+      ...duringTurn(turn('during', 'bob', agent)),
       type: 'message' as const,
       turnId: first.turnId,
     }

@@ -22,6 +22,14 @@ This page belongs to the [chat backend integration](README.md) guide.
   not send it. So the later runner events of that turn stay valid.
 - When that turn finishes, an unanswered message moves to a new queued
   turn. That turn then fails with `agent_login_required`.
+- For a version 2 runner, the workspace reads the login again when it makes
+  the token. It gives no token when one of these is true:
+  - The login is missing.
+  - The login has another kind than the login check read.
+  - The login changed since the first token of the turn.
+- In each of these cases, `TurnLifecycle.fail` stops the running turn with
+  a durable Stop, as a failed gateway check does. The turn fails with
+  `agent_login_required`.
 - `resolveAttachments(userId, workspaceId, ids, messageId, usedIds)` checks the sender's files and target.
   The chat transaction supplies the IDs whose accepted-use evidence it already holds.
 - `prepareAttachments` copies through the provider outside the chat queue.

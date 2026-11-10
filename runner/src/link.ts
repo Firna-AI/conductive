@@ -1,18 +1,21 @@
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type {
-  RunnerCommand,
+  RunnerCommandV2 as RunnerCommand,
   RunnerEvent,
   RunnerEventEnvelope,
-  WorkspaceToRunner,
+  WorkspaceToRunnerV2 as WorkspaceToRunner,
 } from '../../src/shared/runner'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
 import type {
-  RunnerConnection,
+  RunnerConnection as TransportRunnerConnection,
   RunnerConnectionRequest,
-  RunnerConnector,
+  RunnerConnector as TransportRunnerConnector,
 } from '../../src/shared/runner-transport'
 import type { EventStore } from './state'
 import type { RetainedReport, RetainedReportKind } from './report-state'
+
+type RunnerConnection = TransportRunnerConnection<WorkspaceToRunner>
+type RunnerConnector = TransportRunnerConnector<WorkspaceToRunner>
 
 export interface LinkOptions {
   workspaceId: string

@@ -2,8 +2,9 @@ import type { AgentChoice } from '../../../src/shared/agents'
 import type { ToolCall } from '../../../src/shared/chat-events'
 import type {
   RunnerLogin,
-  RunnerMessageDuringTurn,
-  RunnerTurn,
+  RunnerTurnCredential,
+  RunnerMessageDuringTurnV2 as RunnerMessageDuringTurn,
+  RunnerTurnV2 as RunnerTurn,
 } from '../../../src/shared/runner'
 import type { ProviderLifetime } from './lifetime'
 import type { WorkspaceToolContext } from './workspace-tools'
@@ -40,7 +41,11 @@ export interface ProviderProcess {
 export interface ProviderOptions {
   cwd: string
   home: string
-  login: RunnerLogin
+  sessionId: string
+  endpoint: string
+  credential:
+    | ({ type: 'gateway' } & RunnerTurnCredential)
+    | { type: 'native'; login: RunnerLogin }
   choice: AgentChoice
   conversationId: string | null
   instructions: string

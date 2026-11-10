@@ -23,6 +23,8 @@ On an app API path, that response gets the same desktop CORS headers as other AP
 
 `requestBodyBudget` returns the default of 1,000,000 bytes, which is 1 MB in decimal units.
 It returns `GITHUB_WEBHOOK_BODY_BYTES`, 27,262,976 bytes, only for a `POST` to `MACHINE_PATHS.githubWebhook`, which is `/v1/github/webhooks`, on the machine origin.
+It returns 100,000,000 bytes for a `POST` under either model gateway base on the machine origin.
+The gateway bases come from `MACHINE_PATHS.claudeGateway` and `MACHINE_PATHS.codexGateway`.
 A route that a later change adds gets the default without code of its own.
 A route that needs a higher limit declares it in `requestBodyBudget`.
 A raw upload route declares its limit in the [raw upload registry](#raw-upload-routes) instead (decision 144).
@@ -48,6 +50,10 @@ For a `POST` to such a route on the app host, the entry uses that `maxBytes`, 25
   The response status is then already fixed.
 
 A `handle` function must finish its read of the request body before it returns a response.
+The [model gateway upload](../model-gateway/upload.ts) forwards the bounded stream without a clone.
+If the upstream answers early, the gateway drains the remaining upload through the same bounded reader before it returns the answer.
+An overflow aborts the upstream request and cancels its answer.
+The entry then returns the shared 413 error, including after an early upstream answer.
 
 | Input | HTTP status | Error code | Message |
 | --- | --- | --- | --- |
@@ -184,6 +190,7 @@ Run `npm run test -- worker/files worker/sandbox worker/http/bounded-body.test.t
 
 - [request-body.ts](request-body.ts) exports `requestBodyEntry` and keeps the budget selector and bounded stream helpers private.
 - [request-body.test.ts](request-body.test.ts) checks the default limit, the raised webhook budget, overflow answers, and WebSocket upgrades.
+- [../model-gateway/upload.test.ts](../model-gateway/upload.test.ts) checks the gateway budget and an overflow after an early upstream answer.
 - [request-body.test-support.ts](request-body.test-support.ts) builds streamed requests that count pulls, bytes, and cancellations.
 - [raw-upload-routes.ts](raw-upload-routes.ts) holds the registry of raw upload routes and exports `rawUploadRoute` and `rawUploadLength` (decision 144).
 - [fixed-upload-body.ts](fixed-upload-body.ts) exports `fixedUploadBody`, which gives R2 a stream of the declared length (decision 144).

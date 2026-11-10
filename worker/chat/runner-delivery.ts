@@ -1,5 +1,6 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
-import type { RunnerCommand, RunnerLogin } from '../../src/shared/runner'
+import type { RunnerCommandV1, RunnerLogin } from '../../src/shared/runner'
+import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { DeliveryState } from './delivery-state'
 import { RunnerAccessDenied, SenderAccessDenied } from './login-access'
 import { unavailableLoginMessage } from './session-login'
@@ -10,7 +11,8 @@ import {
   type DispatchResult,
   type DispatchState,
 } from './ordered-dispatch'
-import type { ChatStore, ChatTransaction } from './store'
+import { gatewayRunnerCommand } from './runner-gateway-command'
+import type { ChatStore } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type {
   ActiveRunner,
@@ -26,16 +28,19 @@ export class RunnerDelivery {
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
+  private readonly forRunningTurn: WorkspaceTurnTokens['forRunningTurn']
 
   constructor(
     store: ChatStore,
     dependencies: ChatDependencies,
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
     resume: () => Promise<void>,
+    forRunningTurn: WorkspaceTurnTokens['forRunningTurn'],
   ) {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
+    this.forRunningTurn = forRunningTurn
     this.dispatch = new DeliveryState(store, publish)
     this.preparations = new AttachmentPreparation(
       store,
@@ -67,7 +72,9 @@ export class RunnerDelivery {
       view.pending(),
     )
     await dispatchInOrder(pending, async (command) => {
-      const state = await this.send(active, command, isCurrent, detach)
+      const state = await this.send(active, command, isCurrent, detach, () => {
+        advanced = true
+      })
       if (
         state === 'skip' &&
         !(await this.store.read(active.workspace.id, (view) =>
@@ -85,6 +92,7 @@ export class RunnerDelivery {
     command: PendingCommand,
     isCurrent: () => boolean,
     detach: () => void,
+    advance: () => void,
   ): Promise<DispatchState> {
     if (!isCurrent() || active.delivered.has(command.commandId)) return 'skip'
     let prepared: DispatchResult<PreparedCommand>
@@ -101,7 +109,8 @@ export class RunnerDelivery {
       const state = await this.preparations.check(active, checked, isCurrent)
       if (state !== 'send') return state
     }
-    const outbound: RunnerCommand =
+    await this.store.reportTurnEnds()
+    const outbound: RunnerCommandV1 =
       checked.type === 'turn' || checked.type === 'message'
         ? {
             ...checked,
@@ -146,7 +155,19 @@ export class RunnerDelivery {
     }
     const beganTurn = await this.dispatch.begin(active.workspace.id, command)
     try {
-      await active.peer.send(outbound)
+      const outgoing =
+        active.protocolVersion === 2
+          ? await gatewayRunnerCommand(
+              outbound,
+              active.workspace.id,
+              this.forRunningTurn,
+            )
+          : outbound
+      if (!outgoing) {
+        advance()
+        return 'skip'
+      }
+      await active.peer.send(outgoing)
     } catch {
       detach()
       await this.dispatch.unsent(active.workspace.id, command, beganTurn)
@@ -230,26 +251,16 @@ export class RunnerDelivery {
   ): Promise<void> {
     await this.store.change(
       workspaceId,
-      async (transaction: ChatTransaction) => {
+      async (transaction) => {
         const turn = await transaction.turn(command.turnId)
         if (!turn || turn.state !== 'queued') return
         const session = await transaction.session(turn.sessionId)
         if (!session || session.activeTurnId !== turn.id) return
-        await transaction.emit({
-          type: 'turn.failed',
-          sessionId: session.id,
-          turnId: turn.id,
-          error: {
-            code: 'agent_login_required',
-            message: reason ?? unavailableLoginMessage(session),
-          },
-          retryMessageId: command.messageId,
-          durationMs: 0,
-        })
-        await new TurnLifecycle(transaction, session).finish(turn, {
-          state: 'failed',
-          retryMessageId: command.messageId,
-        })
+        await new TurnLifecycle(transaction, session).fail(
+          turn.id,
+          reason ?? unavailableLoginMessage(session),
+          this.dependencies.randomId,
+        )
       },
       this.publish,
     )

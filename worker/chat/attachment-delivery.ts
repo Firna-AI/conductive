@@ -3,7 +3,7 @@ import { HttpError } from '../http'
 import { attachmentCopyKey } from './attachment-record'
 import { commandDispatchState, type DispatchState } from './ordered-dispatch'
 import type { ChatStore } from './store'
-import { TurnLifecycle } from './turn-lifecycle'
+import { TurnCompletion } from './turn-completion'
 import type {
   ActiveRunner,
   ChatDependencies,
@@ -152,17 +152,17 @@ export class AttachmentPreparation {
     workspaceId: string,
     outbound: Extract<PendingCommand, { messageId: string }>,
     error: unknown,
-  ): Promise<boolean> {
-    const failed = await this.store.change(
+  ): Promise<void> {
+    await this.store.change(
       workspaceId,
       async (view) => {
         const turn = await view.turn(outbound.turnId)
         if (!turn || (turn.state !== 'queued' && turn.state !== 'running'))
-          return undefined
+          return
         const session = await view.session(outbound.sessionId)
-        if (!session || session.activeTurnId !== turn.id) return undefined
+        if (!session || session.activeTurnId !== turn.id) return
         const running = turn.state === 'running'
-        const failed = await view.emit({
+        await view.emit({
           type: 'turn.failed',
           sessionId: session.id,
           turnId: turn.id,
@@ -180,7 +180,7 @@ export class AttachmentPreparation {
               ? 0
               : Math.max(0, view.now - turn.startedAt),
         })
-        await new TurnLifecycle(view, session).finish(turn, {
+        await new TurnCompletion(view, session).finish(turn, {
           state: 'failed',
           retryMessageId: outbound.messageId,
         })
@@ -191,21 +191,8 @@ export class AttachmentPreparation {
             sessionId: session.id,
             turnId: turn.id,
           })
-        return failed
       },
       this.publish,
     )
-    if (!failed) return false
-    await this.dependencies.runnerEventStored(
-      failed,
-      async (event, occurredAt) => {
-        await this.store.change(
-          workspaceId,
-          (view) => view.emit(event, occurredAt),
-          this.publish,
-        )
-      },
-    )
-    return true
   }
 }

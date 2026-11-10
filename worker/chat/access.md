@@ -57,6 +57,10 @@ The Durable Object runs the gates itself.
   commands use it too.
 - The runner sends `hello` first, with `RUNNER_PROTOCOL_VERSION` and its
   workspace ID. A new runner connection closes the previous one.
+- The runner version must meet the workspace's stored minimum version.
+  A missing pin counts as version 1. A lower version closes the connection
+  before the welcome or any command. The Worker logs an operator warning.
+  It adds no app message.
 - `AuthenticatedRunner` keeps the token hash of its connection. It checks
   the token rule again before each message that it sends or receives, and
   every 15 seconds while the connection is idle, with no cached result. A

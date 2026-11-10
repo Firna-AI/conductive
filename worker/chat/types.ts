@@ -5,12 +5,13 @@ import type { Attachment, MessageDraft } from '../../src/shared/messages'
 import type {
   RunnerAttachment,
   RunnerChangeModel,
+  RunnerCommandV1,
   RunnerInterrupt,
   RunnerLogin,
-  RunnerMessageDuringTurn,
-  RunnerTurn,
-  WorkspaceToRunner,
+  WorkspaceToRunnerV1,
+  WorkspaceToRunnerV2,
   RunnerEventEnvelope,
+  RunnerProtocolVersion,
 } from '../../src/shared/runner'
 import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
@@ -25,6 +26,7 @@ import type {
 } from './login-availability'
 import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
+import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
 
 export interface ChatData {
@@ -67,6 +69,8 @@ export interface StoredTurn {
   closeAfterStop: boolean
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
+  gateway?: TurnTokenState
+  loginFailure?: string
 }
 
 export interface ModelSessionCreation {
@@ -83,7 +87,8 @@ export interface StoredAttachment {
 }
 
 export type PreparedMessageCommand = (
-  Omit<RunnerTurn, 'attachments'> | Omit<RunnerMessageDuringTurn, 'attachments'>
+  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments'>
+  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments'>
 ) & { attachments: readonly StoredAttachment[] }
 
 export type PreparedCommand =
@@ -103,7 +108,7 @@ export type PendingCommand =
   | RunnerChangeModel
 
 export interface RunnerPeer {
-  send(message: WorkspaceToRunner): void
+  send(message: WorkspaceToRunnerV1 | WorkspaceToRunnerV2): void
   close(): void
 }
 
@@ -111,6 +116,7 @@ export interface ActiveRunner {
   peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
+  protocolVersion: RunnerProtocolVersion | null
   ready: boolean
   delivered: Set<string>
 }
@@ -164,12 +170,19 @@ export interface ChatDependencies {
     turnId: string,
     publish: ChatCallbackPublisher,
   ): Promise<void>
+  turnEnded(
+    workspaceId: string,
+    turnId: string,
+    publish: ChatCallbackPublisher,
+    occurredAt: number,
+  ): Promise<void>
   browserOpened(workspaceId: string, tabId: string): Promise<void>
   browserClosed(workspaceId: string, tabId: string): Promise<void>
   now: () => number
   scheduleBrowserCheck: ConnectionScheduler
   scheduleRunnerCheck: ConnectionScheduler
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
+  readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   readConnectionAccess: (
     identities: readonly ConnectionIdentity[],
     now: number,
