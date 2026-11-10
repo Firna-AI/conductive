@@ -265,7 +265,9 @@ before the Worker serves them.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.
-- `terms.ts`, `privacy.ts`, `privacy-uses.ts`, `legal-text.ts`: legal pages
+- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`, and
+  `legal-text.ts`: legal pages, the "Working in an org" section of the
+  Terms, the "What Conductive uses, and why" section of the Privacy page,
   and the shared text model, titles, contact addresses, and sign-in
   agreement.
 - `request-values.ts`: built-page markers, local Astro preview values,

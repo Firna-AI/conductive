@@ -11,7 +11,7 @@
   - **Org image:** the saved snapshot of an org's cloud computer, with a copy of each repository that its newest good build loaded. Every new workspace starts from it.
   - **Repositories tab:** the tab of the org settings where an admin chooses the repositories of the org. It saves each repository at once.
 - **Background:**
-  - `docs/protocol/workspaces-and-sandboxes.md`, section "The org image", says that a change of the repositories takes effect at the next build.
+  - `docs/protocol/org-image.md`, section "The org image", says that a change of the repositories takes effect at the next build.
   - New workspace lists every chosen repository of the org. It reads them with `chosen = (repositories ?? []).filter((item) => item.selected)` at `src/shell/new-workspace/NewWorkspaceScreen.tsx:130`.
   - A create reads the repositories of the published org image. `readCreationImage` in `worker/lifecycle/published-image-data.ts` refuses a repository that the image lacks with HTTP 404, the code `repository_not_found`, and the words "The repository is not available."
   - The New workspace page shows that refusal as "The workspace wasn't created" with "The repository is not available. Your message is kept."

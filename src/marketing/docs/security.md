@@ -13,7 +13,7 @@ Their terminal access can reach credentials available on a workspace's cloud com
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 The agent login's share setting controls whose messages spend that login.
-It does not hide the credential from code or terminal users on the same computer.
+It does not stop code or terminal users from using credentials available on the same computer.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -61,10 +61,21 @@ They do not offer a call to read or message another workspace's chat.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
-The cloud computer receives the session's login when a turn needs it.
 
+A newer cloud computer starts from an org build that keeps agent logins outside the computer.
+Each turn gets its own credential for model requests through Conductive.
+A program or member with terminal access can read or copy that credential.
+
+The copy can use the session starter's login through Conductive while the turn runs, including from outside the computer.
+After **Stop**, it can start no new request.
+A request that still runs ends within 30 seconds after the turn ends.
+A program that keeps running can copy the credentials of later turns.
+
+An older cloud computer can still receive the session's login itself.
 A program or member with terminal access there can read or copy that login.
 A copied login can remain usable after the turn ends.
+Installing newer software in that computer does not remove this risk.
+A new build keeps agent logins outside each cloud computer created from it.
 Removing a login from Account does not revoke a copy held elsewhere.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.

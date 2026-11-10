@@ -12,6 +12,7 @@
     "archive-from-list",
     "create-org",
     "mac-command",
-    "link-a-workspace"
+    "link-a-workspace",
+    "mention-a-file"
   ]
 }

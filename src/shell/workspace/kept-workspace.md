@@ -42,10 +42,12 @@ the `AppModel` of the tab, for the signed-in user.
   They keep the revokes of previews, and give each tool the kept revokes
   first, then the live events.
 - The tab also keeps the `WorkspaceFiles` of each workspace whose Files
-  part showed. The Files part connects it while it shows, so a return
-  shows the lists at once, and its socket asks only for the events after
-  its last event number. A sign-out stops and forgets it with the other
-  kept parts.
+  part or chat showed. The Files part and the chat connect it while they
+  show, with one shared connection, so a return shows the lists at once,
+  and its socket asks only for the events after its last event number.
+  The chat needs it for the list of `@` and the file chips, also on a
+  phone before a visit to Files. A sign-out stops and forgets it with the
+  other kept parts.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
   and reads the stored history again.
 - The memory has no size limit. It keeps each workspace that the tab

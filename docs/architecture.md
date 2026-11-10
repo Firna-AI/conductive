@@ -80,7 +80,7 @@ its storage, Boat, the sandbox software, and the external services.
 | ----------------------- | ------------------------------------------------------------------------------------- |
 | `conductive.build`      | The marketing site, with the public docs and the Terms, Privacy, and comparison pages |
 | `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                              |
-| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper           |
+| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, the credential helper, and the model gateway |
 | `*.conductive.page`     | One random hostname for each open port preview, one level deep                        |
 
 `api.conductive.build` is the hostname for machines. Each of its routes has
@@ -102,7 +102,7 @@ where each kind of data lives.
 ## Trust boundaries
 
 The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
-separate the orgs, the Boat key, and the sandboxes.
+separate the orgs, the Boat key, the model gateway, and the sandboxes.
 
 ## Decision numbers
 
@@ -110,6 +110,9 @@ A decision number, such as decision 36, names the dated record of one
 decision. The plan of the change that wrote these docs keeps the records
 while the change is open. The pull request of that change keeps them after
 the merge.
+
+A decision of a later change carries the short name of that change, such
+as gateway decision 6. The doc that cites it defines the name.
 
 ## Protocol docs
 

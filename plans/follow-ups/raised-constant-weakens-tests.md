@@ -1,0 +1,37 @@
+# A raised constant can weaken a proved test
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, the blocked wider fix of finding 40 of round 3 of the final review of branch `conductor/model-gateway-worker-model-proxy-decision-120`, option E of its check.
+- **Location:** The section "Prove that each test can fail" of the `testing` skill, in the shared skills repository `futex-ai/skills`. The examples in this repository: `worker/lifecycle/image-runner-version.test.ts`, the version write in `worker/lifecycle/build-admission-data.ts:65-67`, and `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts:9`.
+- **Reason:** The fix adds a rule to the shared `testing` skill, which lives outside this repository and applies to every repository of the user.
+
+- **Terms:**
+  - **Break proof:** a deliberate break of the code under test, such as a flipped condition or a wrong value, that must make the new test fail. The `testing` skill asks for one for each test.
+  - **Runner protocol version:** the number that Conductive's runner sends when it connects to the Worker. `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts` holds the version of the current runner.
+  - **Org image:** a saved cloud computer image from which a new workspace starts. A refresh of an org image keeps its installed runner.
+- **Background:**
+  - The section "Prove that each test can fail" of the `testing` skill asks the author to break the code on purpose and see the test fail. The author makes this proof once, when the test is new.
+  - A later change can raise a constant that the code under test reads. When the test uses a value that is now equal to that constant, the right code and a wrong code give the same result. The test then passes for both.
+  - The example in this repository: a refresh of an org image must record the runner version of its source image. A full build records the Worker's `RUNNER_PROTOCOL_VERSION`.
+  - The refresh test came on 9 November 2026, when `RUNNER_PROTOCOL_VERSION` was 1. It set the source version to 2 and expected 2. So code that wrongly records the Worker's version for a refresh failed it.
+  - On 10 November 2026 the packaged runner moved to protocol version 2, and the constant became 2. After that, the same wrong code passed the test. A review found this on the same day.
+  - The fix changed `worker/lifecycle/image-runner-version.test.ts` to a table of literal cases. A refresh of a version 1 image records 1. A refresh of a version 2 image records 2. A full build from a version 1 image records `RUNNER_PROTOCOL_VERSION`.
+  - No rule of the `testing` skill asks for a new break proof when a constant changes.
+- **Problem:** A test that a break proof once protected can stop protecting its code when a later change raises a constant. No rule asks the author of that change to prove the test again.
+- **Impact if no action:** A regression can pass every test after a change of a version or a limit. In the example, a wrong version would make new workspaces refuse the runner that their image holds.
+- **Root question:** How does each test keep catching its break when a later change raises a constant that its code reads?
+- **Options:**
+  - **A.** Add a rule to the section "Prove that each test can fail" of the `testing` skill. When a change raises a constant, find each test of the code that reads it. Make the break proof of each such test again. Cost: each agent must find those tests with a search, and each such change takes more time. Effort: Small.
+  - **B.** Add a rule to the shared skills that code takes each version or limit constant as an input. Then each test sets its own current value, and a raised constant cannot change the test. Cost: each such constant needs a new input in its code. A test that reads the real constant still loses its proof. Effort: Medium.
+  - **C.** Run a mutation tool in the gate over the code that reads each changed constant. Such a tool, for example StrykerJS with its Vitest runner, changes one line at a time and runs the tests. Cost: a new dev dependency and a new gate step, which the user decides. Effort: Large.
+- **Left out:**
+  - A rule for distinct test values when a test is new, because the example test had distinct values when it was new. It lost them only when the constant rose.
+  - Test values computed from the constant, such as the constant minus 1, because the `testing` skill asks for literal expected values.
+- **Wider fix:** A. C is its mechanical form.
+- **Previous examples:**
+  - The refresh test in `worker/lifecycle/image-runner-version.test.ts`, which the background describes.
+  - When the packaged runner moved to version 2 on 10 November 2026, seven Worker test fixtures that stood for a version 1 runner or image still took their version from `RUNNER_PROTOCOL_VERSION`. Two of them are `worker/test-support/fake-runner.ts` and `worker/chat/integration/runner-socket.test-support.ts`. That change gave each fixture an explicit version 1.
+- **Related:** `plans/follow-ups/mutation-check-of-changed-lines.md` has a shared wider fix. Its option B, a mutation run in CI over the lines that each pull request changes, is a form of option C here. A run over the changed lines alone misses this class, because the change touches the constant, not the code that reads it.
+- **Recommendation:** A. It costs one rule, and it reaches each repository that uses the shared skills. C protects the codebase best, at a large cost.
+- **Action:** ask the user, because the rule changes the shared `testing` skill in `futex-ai/skills`, a rule in force for every repository of the user, and no user decision covers that change.

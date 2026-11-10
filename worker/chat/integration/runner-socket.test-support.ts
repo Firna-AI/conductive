@@ -1,11 +1,10 @@
 import { WebSocket } from 'miniflare'
 
 import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
-import {
-  RUNNER_PROTOCOL_VERSION,
-  type RunnerEvent,
-  type RunnerEventEnvelope,
-  type RunnerToWorkspace,
+import type {
+  RunnerEvent,
+  RunnerEventEnvelope,
+  RunnerToWorkspace,
 } from '../../../src/shared/runner'
 import { SocketInbox } from '../adapter-sockets.test-support'
 import {
@@ -66,7 +65,7 @@ export class OuterFakeRunner {
     socket.accept()
     this.send({
       type: 'hello',
-      protocolVersion: RUNNER_PROTOCOL_VERSION,
+      protocolVersion: 1,
       workspaceId,
       streamId: this.streamId,
     })
