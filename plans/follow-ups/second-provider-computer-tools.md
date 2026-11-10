@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-09, decision 216 of `plans/sandbox-provider-groundwork.md`, branch `calummoore/vercel-sandbox-provider`.
 - **Location:** "Computer tools" in `docs/protocol/agent-tools.md:230`, and `runner/src/providers/computer-mcp.ts:31`.
-- **Reason:** The question applies only after a second sandbox provider is chosen, and `plans/follow-ups/choose-second-sandbox-provider.md` makes that choice after the launch. Boat is the only provider until then.
+- **Reason:** On 10 November 2026, the user chose E2B as the second provider, with one provider account for each org (decision 218 G). So the question now applies to E2B, and the computer tools of the E2B template wait for the answer.
 
 - **Source:** Design. **Category:** Docs or spec.
 - **Terms:**
@@ -29,6 +29,6 @@
 - **Left out:** A browser outside the sandbox, because it needs a preview viewer that is not a user session, and the preview rules in `docs/protocol/access-and-security.md` do not allow one.
 - **Wider fix:** D. One set of tools then works on every provider, with no drift between two sets.
 - **Previous examples:** On 8 November 2026, the plan for an E2B backup provider chose to install the Cua Driver on E2B. That plan is `plans/e2b-backup-provider.md` on branch `calummoore/e2b-backup-sandbox-provider`.
-- **Related:** `plans/follow-ups/choose-second-sandbox-provider.md`. This decision waits for that choice, and it applies to the provider that it picks.
+- **Related:** `plans/follow-ups/desktop-stream-on-own-domain.md`: the Desktop tab shows the screen where the computer tools act.
 - **Recommendation:** B. It keeps the "Computer tools" rule with no protocol change, and users cannot see the provider, so a missing browser would have no visible reason. The first recommendation was A. D best protects the codebase.
-- **Action:** ask the user once a second provider is chosen, because the options trade the work of the first version against the same tools on every provider, and no option is clearly best. Do not ask while Boat is the only provider.
+- **Action:** ask the user, because the options trade the work of the first version against the same tools on every provider, and no option is clearly best.

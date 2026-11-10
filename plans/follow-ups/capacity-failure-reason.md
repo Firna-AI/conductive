@@ -29,11 +29,10 @@
   - **D.** Limit the running cloud computers of each user, so that one user cannot take every slot. It changes the rule that the product has no limits for each user. Effort: Medium.
   - **E.** A start that the provider refuses for capacity keeps retrying until its 20-minute limit. A start step says that it waits for a free cloud computer. Risk: the waiting starts have no order. Effort: Medium.
   - **F.** One typed capacity failure, with its wait when the provider gives one. Starts, resumes, builds, and refreshes show it in place of the generic text. The Boat adapter maps its 429 replies and its 503 `out_of_capacity` reply to it. Effort: Medium.
-- **Left out:** Overflow to a second provider, because the user chose on 9 November 2026 to choose that provider after the launch.
+- **Left out:** Overflow to a second provider, because on 10 November 2026 the user chose one provider account for each org, with no overflow by capacity (decision 218 G).
 - **Wider fix:** F. It shows the cause on every path that reaches the limit, and a later provider maps its own replies to the same failure.
 - **Previous examples:** A failed first start keeps the error state with Try again. An early choice set limits for each user, and a later choice removed them.
 - **Related:**
   - `plans/follow-ups/launch-capacity-boat-limits.md`: how many starts and running sandboxes the Boat plan allows.
-  - `plans/follow-ups/choose-second-sandbox-provider.md`: a later provider maps its own capacity replies.
 - **Recommendation:** F. It covers every path that reaches the limit, and a later provider needs no change there. The first recommendation was B. C best protects users, but it needs a new waiting state.
 - **Action:** ask the user, because the wait time and the texts for a resume, a build, and a refresh are new behaviour at a boundary that no requirement covers.
