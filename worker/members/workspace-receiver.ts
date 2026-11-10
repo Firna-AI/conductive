@@ -5,7 +5,10 @@ import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 import type { WorkspaceDisk } from './maintenance-contract'
 import type { StoredWorkspaceStartJob } from '../lifecycle/start-job-codec'
 import { CREATE_CHECKPOINT_KEY } from './creation-checkpoint'
-import { scheduleWorkspaceAlarm } from '../features/alarms'
+import {
+  scheduleWorkspaceAlarm,
+  suspendWorkspaceAlarms,
+} from '../features/alarms'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import {
   LIFECYCLE_FENCE_KEY,
@@ -46,13 +49,8 @@ export class WorkspaceMembersReceiver {
     ownership: ReceiverOwnership,
     workspaceId: string | null,
   ): Promise<void> {
-    await mutateReceiver(
-      this.storage,
-      ownership,
-      'suspended',
-      async (transaction) => {
-        await transaction.deleteAlarm()
-      },
+    await mutateReceiver(this.storage, ownership, 'suspended', (transaction) =>
+      suspendWorkspaceAlarms(transaction, 'draining'),
     )
     this.chat.closeConnections()
     await this.chat.runLifecycle(async () => {
@@ -66,9 +64,6 @@ export class WorkspaceMembersReceiver {
       ownership,
       'suspended',
       async (transaction) => {
-        await transaction.delete([
-          ...(await transaction.list({ prefix: 'alarm:' })).keys(),
-        ])
         const job = await transaction.get<StoredWorkspaceStartJob>(
           'lifecycle:start-job',
         )
@@ -102,7 +97,7 @@ export class WorkspaceMembersReceiver {
             runnerConnected: false,
             nextDiskKeepaliveAt: null,
           } satisfies DurableLifecycleState)
-        await transaction.deleteAlarm()
+        await suspendWorkspaceAlarms(transaction, 'drained')
       },
     )
   }

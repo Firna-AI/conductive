@@ -96,6 +96,23 @@ export class WorkspaceAlarms {
   }
 }
 
+/** Suspension releases regular ownership. Live security sources keep their deadlines. */
+export async function suspendWorkspaceAlarms(
+  transaction: DurableObjectTransaction,
+  stage: 'draining' | 'drained',
+): Promise<void> {
+  const alarms = await transaction.list({ prefix: 'alarm:' })
+  for (const key of alarms.keys()) {
+    if (!SECURITY_SOURCES.has(key.slice('alarm:'.length)))
+      await transaction.delete(key)
+  }
+  if (stage === 'drained') {
+    await transaction.delete(PENDING)
+    await transaction.delete(DEFERRED_UNTIL)
+  }
+  await scheduleWorkspaceAlarm(transaction)
+}
+
 export async function scheduleWorkspaceAlarm(
   transaction: DurableObjectTransaction,
   options: { resumeRegular?: boolean } = {},

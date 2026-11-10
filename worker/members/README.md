@@ -77,6 +77,11 @@ Payload deletion must preserve its rejection of stale calls while older calls ca
 Purge reads and deletes small batches. Each batch checks the same generation and preserves the fence.
 The normal storage adapter rejects chat, device, feature, and alarm writes after that fence is purged.
 Native socket records and the `browser`, `runner`, and `devices` alarm sources use raw storage instead. So a suspended or purged fence does not refuse their writes, and the alarm runs them before its fence checks, as [Alarms](../README.md#alarms) says.
+`WorkspaceMembersReceiver.suspend` runs `suspendWorkspaceAlarms` in both of its generation-checked transactions.
+The `draining` stage clears the regular alarm sources and keeps their pending claims and deferral. The `drained` stage also cancels those claims and that deferral.
+Both stages keep the `browser`, `runner`, and `devices` deadlines, then set the platform alarm from the sources that remain. So no regular retry loop stays after the suspension.
+Between the stages, the suspension closes the current tabs and the runner.
+A tab whose grant read ended before the suspension can still register after that close. It stays open until its kept `browser` deadline runs its next access check, which closes it when its access is gone.
 Late summary reads cannot recreate chat metadata. Suspended stop callbacks can still write their final events.
 The production receiver keeps a stopped create checkpoint after Delete, before or after allocation.
 Restore starts no sandbox. The normal resume route requeues that create when the workspace opens.
@@ -254,7 +259,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 ### Key Code
 
 - [composition.ts](composition.ts) supplies the production lifecycle hooks.
-- [workspace-receiver.ts](workspace-receiver.ts) preserves the receiver fence while it removes workspace payloads.
+- [workspace-receiver.ts](workspace-receiver.ts) preserves the receiver fence while it removes workspace payloads. Its `suspend` clears the regular alarm sources in two stages and keeps the security deadlines.
 - [receiver-fence.ts](receiver-fence.ts) checks generations in storage transactions.
 - [receiver-storage.ts](receiver-storage.ts) prevents normal data and alarm writes after purge.
 - [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access and token checks. A create without a sandbox also needs its image pin.

@@ -280,9 +280,10 @@ Depends on: 5
 - [x] Run typecheck, lint, format, file length, and export checks. Keep TypeScript files below the repository's line limit.
 - [x] Install the root, desktop, and runner check dependencies, then run the complete `npm run check` gate.
 - [x] Clear completed regular deferral and adapt lifecycle alarm fixtures without changing deadlines or weakening assertions.
+- [x] Preserve security deadlines through both real suspension stages and cancel drained regular claims, with a native admission-race regression.
 - [x] Verify every relative link of changed Markdown and record native smoke and test evidence under `.context/hibernation/`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push.
+- [x] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push.
       Fix the `fix now` findings, record deferred or open findings under `plans/follow-ups/`, re-review once, and report.
 - [x] Add permanent close-first wake regression coverage for browser, runner, and Mac cleanup, then verify finding 1.
 - [ ] Delete this plan under the `plans` skill when the implementation is complete.

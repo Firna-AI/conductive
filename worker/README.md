@@ -131,7 +131,9 @@ It runs the tab expiry at once. Runner, Mac, and regular work run as tracked tas
 So the handler returns before a slow access read or provider call ends.
 A due security source keeps a retry deadline until its owner replaces or clears it.
 The regular task then checks the member fence and the org lifecycle generation. A fence defers the regular sources and keeps their deadlines.
-A claimed regular source stays saved until its work completes. A Restore clears the deferral in its guarded transaction.
+A claimed regular source stays saved until its work completes, or until the final stage of a member suspension cancels it.
+A member suspension clears the regular sources in two guarded stages, and both stages keep each security deadline, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
+So a suspended object keeps no regular retry. A Restore clears the deferral in its guarded transaction.
 Provider and lifecycle writes stay fenced.
 
 Tab and runner access checks run every 15 seconds. Tab grants last at most 30 seconds. Mac session checks run at least every 10 seconds.
@@ -205,7 +207,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
 - [native-sockets.ts](native-sockets.ts): `WorkspaceSockets`, the trusted socket roles, the attachment check, the restore, and the dispatch of native socket events.
 - [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Messages use fixed safe text and numeric repair counts. They hold no token, raw error, request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
-- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the durable deadline of each security and regular alarm source, and `scheduleWorkspaceAlarm`, which sets the one platform alarm.
+- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the durable deadline of each security and regular alarm source. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage.
 - [features/workspace-alarm.ts](features/workspace-alarm.ts): `WorkspaceAlarmRunner`, the short native alarm handler, the security work before the fences, and the fenced regular work.
 - [features/alarm-tasks.ts](features/alarm-tasks.ts): `WorkspaceAlarmTasks`, the tracked background work of an alarm.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.

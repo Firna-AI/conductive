@@ -115,6 +115,20 @@ npm run typecheck
   member fences and a wake, expiry while access and lifecycle work wait,
   and expiry with failed lifecycle reads and writes. `closeBrowserPeers`
   waits until the object handled each tab close.
+- `browser-native-suspension.test.ts` holds the first grant of a second tab
+  after its real D1 read, then calls the real `suspendMemberLifecycle`
+  RPC. `BrowserSuspensionProbe` in `browser-suspension.test-support.ts`
+  records the committed first stage when the suspension closes the current
+  tab. The `hold`, `entered`, `release`, and `suspension-entered` controls
+  fix the order of these steps.
+- The case checks that the first stage cleared the regular alarm keys and
+  kept the regular claim, its deferral, and the `browser` deadline. The
+  platform alarm stays at that deadline. The held tab then registers after
+  the close, and the final stage leaves no regular claim or deferral.
+- After a sign-out, the late tab stays open until its stored 15-second
+  check. The `arm-due` control fires the platform alarm only when it is
+  due on the fixture clock. The check then closes the tab. No alarm stays
+  set, the fence stays, and no tab gets a frame after its history.
 - `runner-native-access.test.ts` checks the token deadline through a wake
   and the fences, the token check of a Mac ping, and a native alarm that
   returns while a token read waits. `runner-native-delivery.test.ts` checks

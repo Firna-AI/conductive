@@ -4,6 +4,7 @@ import { readConnectionAccess } from '../security/connection-access'
 import { record, string, number } from './inputs'
 import { readJsonObject } from '../http/json-body'
 import { NativeCloseProbe } from '../test-support/native-close.test-support'
+import { BrowserSuspensionProbe } from './browser-suspension.test-support'
 
 import { BROWSER_TEST_NOW } from './browser-clock.test-support'
 
@@ -37,6 +38,7 @@ export class Workspace extends ProductionWorkspace {
   private alarmsCompleted = 0
   private alarmObserved = signal()
   private readonly closeProbe: NativeCloseProbe
+  private readonly suspension: BrowserSuspensionProbe
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
     const closeProbe = new NativeCloseProbe(context)
@@ -85,6 +87,9 @@ export class Workspace extends ProductionWorkspace {
     this.clock = clock
     this.controls = controls
     this.closeProbe = closeProbe
+    this.suspension = new BrowserSuspensionProbe(context.storage)
+    const closeConnections = this.chat.closeConnections.bind(this.chat)
+    this.chat.closeConnections = () => this.suspension.close(closeConnections)
     const deviceAlarm = this.devices.alarm.bind(this.devices)
     this.devices.alarm = async () => {
       if (controls.deviceHeld) {
@@ -139,7 +144,14 @@ export class Workspace extends ProductionWorkspace {
     if (url.pathname !== '/__test/browser') return super.fetch(request)
     const input = record(await readJsonObject(request))
     const action = string(input.action)
-    if (action === 'prepare-close') {
+    if (action === 'suspension-entered') {
+      return Response.json(await this.suspension.wait())
+    } else if (action === 'arm-due') {
+      const scheduled = await this.ctx.storage.getAlarm()
+      const armed = scheduled !== null && scheduled <= this.clock.now
+      if (armed) await this.ctx.storage.setAlarm(1)
+      return Response.json({ scheduled, armed })
+    } else if (action === 'prepare-close') {
       await this.closeProbe.prepare()
     } else if (action === 'close-handled') {
       await this.closeProbe.wait()
