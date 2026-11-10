@@ -25,6 +25,9 @@
     - the palette key, in `docs/protocol/command-palette.md`
     - the masked file paths, in `docs/protocol/access-and-security.md` and `src/marketing/privacy.ts`
     - the lift of a suspension, in `docs/protocol/operator-actions.md` and `docs/protocol/operator-section.md`
+  - Decision 148 names two records:
+    - the rule that only an image build installs the terminal files, in `plans/boat-native-remote-workspaces.md`
+    - the Overview that lists no suspensions, in `docs/protocol/operator-section.md` and the operator mockup
   - Decisions 150 and 151 each name two records:
     - the fold of the work of an ended turn, in `docs/protocol/chat-and-events.md` and `docs/protocol/agent-tools.md`
     - the first build of a new org, in `docs/protocol/org-image.md`, `docs/protocol/orgs-and-members.md`, and `docs/protocol/create-a-workspace.md`
