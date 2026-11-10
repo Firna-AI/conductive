@@ -51,6 +51,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
         branch: workspace.branch,
         choice: workspace.choice,
         state: workspace.key === FAKE_IDS.workspace ? state : workspace.status,
+        github: workspace.github,
         createdAt: FAKE_TIME - (index + 1) * 86_400_000,
         // Archive raises the time of the record to its own time, as the
         // Worker does, so the archived record is newer than each record of
@@ -155,6 +156,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
     branch: 'calummoore/lisbon-7k2q',
     sectionId: 'general',
     state: 'starting',
+    github: null,
     createdAt: FAKE_TIME,
     updatedAt: FAKE_TIME,
   }

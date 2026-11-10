@@ -191,6 +191,9 @@ with the send key that every composer shares, and the waitlist.
 - A screen reads data only through a model and `useStore`. A model sends the
   request, parses the answer with the readers in `api/`, and keeps the
   result. An answer of an unknown shape is an `ApiError`, not a guess.
+  One field is the exception. A missing or unknown `github` summary of a
+  workspace reads as null, so an older reply still reads. The
+  [shared contracts](../shared/README.md) give that reader.
 - A screen never sets a value of an org. The stores of `OrgModel` are
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after

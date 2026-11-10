@@ -141,12 +141,29 @@ The documentation milestone added these calls on 10 November 2026:
     `docs/mockups/design-marks.md`, with their words unchanged. Reason:
     the merged design page passed 300 lines.
 
+The backend milestone added these calls on 10 November 2026:
+
+29. One shared reader maps an absent or unknown GitHub summary to null.
+    Older saved workspace records also present null. Reason: old replies
+    and saved records must still read after the field becomes required.
+30. The reader has no runtime import. The tool image includes it in its
+    source list. Reason: the standalone tools read the complete workspace
+    create record. Their smaller list reply keeps its existing fields.
+31. The shared README owns the reader facts. The GitHub backend README
+    owns the summary copy description. Other READMEs link to these homes.
+    Reason: one home prevents duplicate descriptions from drifting.
+32. The deployed check requires red, green, and purple row marks. Amber
+    and the other mark consumers are optional observations. Reason: this
+    keeps the original post-merge task and uses the repository's real CI.
+
 ## Contracts
 
 - `GitHubSummary` in `src/shared/github.ts`: `'checks-running'`,
   `'checks-failed'`, `'checks-passed'`, or `'merged'`. `githubSummary`
   gives it from a banner and its checks, or `null`.
 - `Workspace.github: GitHubSummary | null` in `src/shared/workspaces.ts`.
+- `readGitHubSummary` in `src/shared/github-read.ts`: the shared browser
+  and tool reader, with null for an absent or unknown value.
 - The D1 column `workspaces.github_summary`: nullable, and limited to the
   four values.
 - The mark takes the GitHub summary and the state of the workspace. It
@@ -257,32 +274,34 @@ Depends on: 2
 
 The Worker keeps the copy in D1 and gives it in each workspace record.
 
-- [ ] Add `GitHubSummary` and `githubSummary` to `src/shared/github.ts`.
+- [x] Add `GitHubSummary` and `githubSummary` to `src/shared/github.ts`.
       Make `pullBanner` use it for its check states, and delete
       `failedCheck` when no caller is left.
-- [ ] Make `GitHubSummary` of `docs/mockups/src/fixtures/pullRequests.ts`
+- [x] Make `GitHubSummary` of `docs/mockups/src/fixtures/pullRequests.ts`
       the shared type from `src/shared/github.ts`, so one union exists.
-- [ ] Add `Workspace.github`. Add the migration
+- [x] Add `Workspace.github`. Add the migration
       `migrations/<YYYYMMDDHHMM>_workspace_github_summary.sql`, and
       describe it in the migrations README.
-- [ ] Select and give the column in each Worker reader of the workspace
+- [x] Select and give the column in each Worker reader of the workspace
       record: `worker/lifecycle/workspace-data.ts`,
       `worker/app-api/shell-data.ts`, `worker/devices/state.ts`, and each
       place that the typecheck names.
-- [ ] Write the copy as design calls 11 and 12 say. `refreshWorkspace`
+- [x] Write the copy as design calls 11 and 12 say. `refreshWorkspace`
       gives `WorkspaceGitHubState` the D1 write, which changes only a
       different value.
-- [ ] Add tests, and see each fail first:
-  - [ ] `githubSummary`: a failure wins over a running check, a cancelled
+- [x] Add tests, and see each fail first:
+  - [x] `githubSummary`: a failure wins over a running check, a cancelled
         check fails, skipped and neutral checks pass, the merge wins, and a
         closed pull request or no check gives `null`.
-  - [ ] A webhook refresh with a failed check gives `checks-failed` in the
+  - [x] A webhook refresh with a failed check gives `checks-failed` in the
         list reply. A later read with passed checks gives `checks-passed`.
-  - [ ] A replay of an older delivery keeps the newer copy.
-  - [ ] An unchanged read writes a missing copy.
-- [ ] Update the GitHub banner backend README and the App API README.
-- [ ] Run `npm run test -- worker/github worker/app-api` and
+  - [x] A replay of an older delivery keeps the newer copy.
+  - [x] An unchanged read writes a missing copy.
+- [x] Update the GitHub banner backend README and the App API README.
+- [x] Run `npm run test -- worker/github worker/app-api` and
       `npm run typecheck`.
+- Evidence: `.context/workspace-marks-show-github-state/m3/` and
+  `.context/workspace-marks-show-github-state/m3-docs/`.
 
 ## Milestone 4: The new mark in the app
 
@@ -292,7 +311,7 @@ Depends on: 1, 3
 
 The app draws the new mark from the GitHub summary of each record.
 
-- [ ] Read `github` in the three readers of the workspace record:
+- [x] Read `github` in the three readers of the workspace record:
       `src/app/api/read-workspaces.ts`, `src/chat/api/read-workspace.ts`,
       and `src/members/api/parseCore.ts`.
 - [ ] Draw the list mark in `src/shell/list/WorkspaceRow.tsx`,

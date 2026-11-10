@@ -158,6 +158,7 @@ export async function toolFixture(harness: TestHarness) {
       branch: `${input.owner.githubLogin}/berlin-ij90`,
       choice: input.choice,
       state: 'starting' as const,
+      github: null,
       createdAt: TEST_TIME,
       updatedAt: TEST_TIME,
       archivedAt: null,

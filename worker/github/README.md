@@ -3,6 +3,7 @@
 This module reads GitHub branch state for the shared banner and checks API.
 It also verifies GitHub App webhooks and finds their workspace targets.
 It stores its state and events in the [chat store](../chat/README.md) of the workspace Durable Object.
+It also keeps a copy of the GitHub summary of each workspace in D1, as [The summary copy](#the-summary-copy) says.
 The production Worker mounts both browser reads and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
@@ -26,6 +27,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   It checks active org, installation, repository, branch, and optional user access before reading.
   It repeats the access check before storage and publication.
   The port checks access once more inside the chat queue, before each commit or replay.
+  It gives `WorkspaceGitHubState.refresh` the copy callback, which writes through [saveWorkspaceGitHubSummary](summary-data.ts).
 - [WorkspaceGitHubState](workspace-state.ts) serializes reads and commits within one workspace.
   Its port stores the snapshot, a common workspace stream event, and a delivery receipt in one transaction.
   The port publishes that event to every open tab after the commit.
@@ -34,6 +36,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   It republishes the event of a changed delivery with the same event number.
   A fresh read with unchanged banner and checks stores no snapshot and publishes no event.
   The comparison ignores `banner.updatedAt` and object-key order.
+  After each commit, unchanged read, or receipt replay, it copies the summary in the same queue.
 - [createGitHubStatePort](chat-store.ts) builds that port on the `WorkspaceChat` of the workspace Durable Object.
   Its `read` uses `readWorkspace`, and the receipt read writes nothing.
   Its `run` uses `authorizedWorkspaceOperation`.
@@ -187,9 +190,26 @@ Workspace state does not limit a GitHub read or webhook refresh.
 The workspace queries read repository and access bindings without selecting or filtering workspace state.
 This includes a workspace in `input` while its agent waits for the user.
 
+## The summary copy
+
+[The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states the four summary values and their order.
+`githubSummary` in the [shared contracts](../../src/shared/github.ts) gives the value from a banner and its checks.
+`pullBanner` uses it for `checks-failed` and `checks-running` after its draft, conflict, and review checks.
+So the bar and the copy count the checks with one rule.
+After a commit, an unchanged read, or a receipt replay, `WorkspaceGitHubState` reads the committed `github:state` again.
+It checks access once more and calls the copy callback with that snapshot, before the next refresh starts.
+So a replay of an older receipt copies the current state, not the snapshot of its receipt.
+The replay still publishes the original event of that receipt.
+An unchanged read stores no snapshot and publishes no event, but it still repairs a missing or old copy.
+A read that returns `null`, such as an unrelated push, copies nothing.
+`saveWorkspaceGitHubSummary` updates only `github_summary`, and only when the value differs.
+It changes no activity time, update time, or list position.
+A failed copy rejects the refresh, so the delivery stays retryable.
+The retry of a committed delivery replays its receipt and copies again, without a GitHub request or a fresh event.
+
 ## Verification
 
-Run `npm run test -- worker/github src/github/githubStore.test.ts` from the repository root with Node 24.
+Run `npm run test -- worker/github src/github/githubStore.test.ts src/shared/github.test.ts` from the repository root with Node 24.
 The app and webhook tests use the existing sign-in fake and real local D1 harness.
 [RepositoryGitHub](fake-repository.ts) adds a small repository model without changing that fake.
 Fixtures set `branches` by qualified ref and `comparisons` by base ref and head commit.
@@ -230,6 +250,13 @@ The queued operation then fails with `404 workspace_not_found`.
 The stored records, the history, and the open tabs stay unchanged.
 [queuedAccessRace](queued-access.test-support.ts) holds the queue after the receipt read and the outside access checks.
 
+[workspace-summary.test.ts](workspace-summary.test.ts) sends signed webhooks and protected banner reads, then reads the list reply from local D1.
+It covers a failed check and a later passed read, with an unchanged activity time and position.
+It also covers an older receipt replay, the repair of a missing copy, and a failed copy with its receipt retry.
+A D1 trigger makes the copy fail.
+[summary-queue.test.ts](summary-queue.test.ts) proves with `MemoryWorkspace` that each copy ends before the next refresh reads GitHub.
+[The shared summary tests](../../src/shared/github.test.ts) cover the order of the four values.
+
 [Recorded routing fields](recorded-webhooks.ts) come from the MIT-licensed
 [Octokit webhook examples](https://github.com/octokit/webhooks/tree/main/payload-examples/api.github.com).
 The fixtures retain the payload shapes and use one test installation.
@@ -255,7 +282,9 @@ API references:
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
 - [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
-- [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, and replays delivery receipts.
+- [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, replays delivery receipts, and runs the summary copy.
+- [summary-data.ts](summary-data.ts) writes a changed GitHub summary to the workspace record.
+- [Shared summary](../../src/shared/github.ts) gives `githubSummary`, which the bar and the copy share.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.

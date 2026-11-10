@@ -1,3 +1,4 @@
+import { githubSummary } from '../../src/shared/github'
 import { HttpError } from '../http'
 import { GitHubReader } from './client'
 import type {
@@ -7,6 +8,7 @@ import type {
   GitHubWorkspace,
 } from './contracts'
 import { activeWorkspace } from './data'
+import { saveWorkspaceGitHubSummary } from './summary-data'
 import type { WorkspaceGitHubState } from './workspace-state'
 
 // Three fresh reads, one second apart, bound GitHub's merge-state retry work.
@@ -91,5 +93,11 @@ export async function refreshWorkspace(
     },
     authorize,
     signal,
+    (snapshot) =>
+      saveWorkspaceGitHubSummary(
+        db,
+        workspace,
+        githubSummary(snapshot.banner, snapshot.checks.checks),
+      ),
   )
 }

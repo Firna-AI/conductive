@@ -66,8 +66,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   records of attached files. D1 also holds app access, codes and their uses,
   the sign-up pause, and the state of approval emails.
 - The record of each workspace holds a copy of its
-  [GitHub state](../protocol/github-banner.md#the-github-state). So a read
-  of the workspace list wakes no Durable Object and makes no GitHub call.
+  [GitHub state](../protocol/github-banner.md#the-github-state).
+  A list read takes this copy from D1. The GitHub summary adds no Durable
+  Object read or GitHub call.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 

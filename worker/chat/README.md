@@ -137,6 +137,7 @@ Each authorized tab socket keeps its app origin and immutable workspace number i
 Replay and live events get the same fields before they reach the browser.
 Older saved workspace updates can omit number and link.
 Presentation fills both fields while it keeps each saved name, state, time, and event number.
+An older saved update without a GitHub summary presents null.
 The HTTP history route uses the same presentation.
 No origin is saved in the chat records or the history.
 

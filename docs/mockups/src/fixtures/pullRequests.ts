@@ -1,3 +1,7 @@
+import type { GitHubSummary } from '../../../../src/shared/github'
+
+export type { GitHubSummary } from '../../../../src/shared/github'
+
 /**
  * The GitHub state of the open workspace branch: its pull request and the
  * checks that GitHub reports for it.
@@ -24,14 +28,6 @@ export const bannerStates = [
 ] as const
 
 export type BannerState = (typeof bannerStates)[number]
-
-/**
- * The GitHub state of the pull request of a workspace, which the mark of
- * the workspace list shows in one colour: its checks run, failed, or
- * passed, or it merged. A workspace without one has `null`.
- */
-export type GitHubSummary =
-  'checks-running' | 'checks-failed' | 'checks-passed' | 'merged'
 
 export type PullRequest = {
   number: number

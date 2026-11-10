@@ -20,6 +20,7 @@ export class WorkspaceGitHubState {
     read: () => Promise<GitHubSnapshot | null>,
     authorize: () => Promise<void>,
     signal: GitHubRefresh = {},
+    copy?: (snapshot: GitHubSnapshot) => Promise<void>,
   ): Promise<GitHubSnapshot | null> {
     const result = this.pending.then(async () => {
       await authorize()
@@ -40,6 +41,7 @@ export class WorkspaceGitHubState {
               event: githubUpdated(receipt.snapshot),
             })
         })
+        await this.copyCurrent(authorize, copy)
         return receipt.snapshot
       }
       const snapshot = await read()
@@ -66,10 +68,23 @@ export class WorkspaceGitHubState {
             } satisfies GitHubDeliveryReceipt)
         }),
       )
+      await this.copyCurrent(authorize, copy)
       return snapshot
     })
     this.pending = result.catch(() => undefined)
     return result
+  }
+
+  private async copyCurrent(
+    authorize: () => Promise<void>,
+    copy: ((snapshot: GitHubSnapshot) => Promise<void>) | undefined,
+  ): Promise<void> {
+    if (!copy) return
+    // An old receipt can replay a snapshot that D1 must not copy.
+    const committed = await this.port.read<GitHubSnapshot>('github:state')
+    if (!committed) return
+    await authorize()
+    await copy(committed)
   }
 
   scheduleRefresh(

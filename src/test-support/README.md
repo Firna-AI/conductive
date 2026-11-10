@@ -5,6 +5,8 @@ The production Worker does not import them.
 They use the same contracts as the real API.
 The fixtures reuse the mockup data and keep all dates deterministic.
 Workspace records include their number and canonical link on `FAKE_ORIGIN`.
+Each record also gives the GitHub summary of its mockup workspace.
+The created workspace of the fake API starts with no summary.
 A fixture that changes a workspace ID or org must rebuild its link.
 Use `FAKE_TIME` as the screen's clock when it shows relative times.
 

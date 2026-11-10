@@ -83,6 +83,15 @@ View writes cannot change this branch.
   reply read it with `readChatWorkspaceSummary`. A read or a Resume reply
   takes it from the same read as its record, as
   [Browser routes](../lifecycle/README.md#browser-routes) says.
+- Each full workspace record also gives `github`, the GitHub summary of
+  its pull request, or null. The list and lifecycle readers select it from
+  the D1 workspace row. So the summary adds no GitHub request and no
+  Durable Object read. The chat summary reads above stay as they are.
+- A change of the summary keeps the activity time and the order of the
+  row. The [GitHub banner backend](../github/README.md#the-summary-copy)
+  writes it, and
+  [The GitHub state](../../docs/protocol/github-banner.md#the-github-state)
+  states its values.
 - A workspace path decodes its workspace ID once.
 - An archived workspace keeps its view readable. A view write, a read mark,
   and a lifecycle action other than Restore get `409 workspace_archived`.

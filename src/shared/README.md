@@ -9,6 +9,12 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.number` is the immutable number in its org.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
+`Workspace.github` is the GitHub summary of its pull request, or null.
+`GitHubSummary` and `githubSummary` in `github.ts` give its four values from a banner and its checks.
+[The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
+`readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
+The browser readers and the sandbox tools use it, so an older reply still reads.
+It has no runtime import, so the tool image can embed it.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
@@ -231,6 +237,7 @@ The git credential payload is not defined yet.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
+- [GitHub contracts](github.ts) define the banner, the checks, and `githubSummary`. [The summary reader](github-read.ts) reads `Workspace.github`.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
   Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.

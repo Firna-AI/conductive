@@ -101,6 +101,7 @@ async function publishFallback(
     branch: row.branch,
     choice: session.choice,
     state: row.state,
+    github: row.github,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,

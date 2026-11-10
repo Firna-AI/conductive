@@ -37,6 +37,7 @@ The create answer holds the stored name.
 `workspaces list` returns every workspace in the org, including archived workspaces.
 Each list item gives its number and canonical web link.
 Create gives both fields in the complete workspace record.
+That record also gives `github`, the GitHub summary of the workspace, or null.
 A workspace link in a message names that workspace.
 A workspace link in an answer shows as a chip.
 The number is a display label. Links keep the workspace ID.
@@ -123,6 +124,9 @@ The Mac command route is mounted in the real Worker.
 The [Worker asset module](../worker/tools/image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
 Vite embeds the allowed sources as text through static `?raw` imports.
 The asset module uses the source contract in [image-manifest.ts](image-manifest.ts).
+A listed module can import types from any module, because Node removes type imports.
+Its runtime imports must name only listed modules.
+[The summary reader](../src/shared/github-read.ts) has no runtime import, so the tools can embed it.
 It needs no filesystem at runtime and reads no environment values or secret files.
 The image builder passes these assets to `installWorkspaceTools` from [the installer](../worker/tools/image.ts).
 
