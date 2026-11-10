@@ -18,7 +18,8 @@
   - Open the same workspace as a member without repository write access. Merge and agent actions must be absent. GitHub links must remain.
   - Run Continue as another org member. Check its local-work question, new branch from the updated default branch, unchanged workspace name and sessions, moved files, preserved old-branch commits, chat notes, and new GitHub state.
   - Check Continue while an agent turn runs. It must wait. Check Continue from a stopped cloud computer.
-  - Send messages in old and new sessions after Continue. Confirm that the agents use the new workspace branch and current target branch. Check Archive's warning for commits kept on an older local branch.
+  - Send messages in old and new sessions after Continue. Confirm that the agents use the new workspace branch and current target branch.
+  - Archive a workspace with work on an older local branch. It must archive at once without a work question and offer Restore. Restore must return it stopped with its files, old branches, and agent sessions retained.
   - Check desktop and phone layouts. Record the actual results and any failed GitHub permission or image prerequisite.
 - **Impact if no action:** Local tests cannot prove the live GitHub permissions, rebuilt-image rollout, or deployed routing.
 - **Needs:** The merged test deployment, permission to rebuild an org image, test repository access, agent logins, and members with and without GitHub write access.
