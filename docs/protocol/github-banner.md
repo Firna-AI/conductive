@@ -74,7 +74,8 @@ Rules for the bar:
 - The bar shows Blocked only when no other state applies. Its action
   opens the pull request on GitHub, where GitHub names the reason.
 - After the merge, the bar offers Archive (decision 16). Only the workspace
-  owner and the admins see it (decision 42).
+  owner and the admins see it (decision 42). It archives at once and asks
+  no question, as [Archive](workspace-life.md#archive) says.
 - Each state shows an icon and words, never only a colour.
 - A state tints the whole bar. No edge of the bar gets its own colour.
 

@@ -1,16 +1,22 @@
 import { workspacePath, type Workspace } from '../shared/workspaces'
 import { readWorkspaceResponse } from './api/read-workspaces'
-import { ArchiveModel } from './archive-model'
+import { ArchiveModel, type ArchiveAction } from './archive-model'
 import {
-  workspaceArchived,
+  workspaceLifecycle,
   workspaceReassigned,
   workspaceRenamed,
 } from './list-changes'
 import type { OrgModel } from './org-model'
 import { same } from './resource'
+import { Store } from './store'
 
 /** The writes of workspace rows, without opening their workspaces. */
 export class WorkspaceActions {
+  /**
+   * The Archive or the Restore that runs for each workspace of the org. Its
+   * controls show it busy, and another one waits for its end.
+   */
+  readonly running = new Store<ReadonlyMap<string, ArchiveAction>>(new Map())
   private readonly org: OrgModel
   private readonly archives = new Map<string, ArchiveModel>()
 
@@ -41,20 +47,31 @@ export class WorkspaceActions {
     )
   }
 
-  /** Confirms Archive state and advances activity without replacing newer fields. */
-  archived(workspace: Workspace): void {
+  /**
+   * Confirms the state of an Archive or a Restore reply, without replacing
+   * newer fields or a newer Archive or Restore.
+   */
+  lifecycleChanged(workspace: Workspace): void {
     this.org.resources.list.confirm(
-      workspaceArchived(workspace),
-      `workspace archive ${workspace.id}`,
+      workspaceLifecycle(workspace),
+      `workspace lifecycle ${workspace.id}`,
     )
   }
 
-  /** The Archive question of a row that has no kept workspace model. */
+  /** Marks the Archive or the Restore of a workspace that runs, or its end. */
+  setRunning(workspaceId: string, action: ArchiveAction | null): void {
+    const next = new Map(this.running.get())
+    if (action) next.set(workspaceId, action)
+    else next.delete(workspaceId)
+    this.running.set(next)
+  }
+
+  /** Archive and Restore of a row that has no kept workspace model. */
   archive(workspaceId: string): ArchiveModel {
     let archive = this.archives.get(workspaceId)
     if (!archive) {
       archive = new ArchiveModel(this.org, workspaceId, (detail) =>
-        this.archived(detail.workspace),
+        this.lifecycleChanged(detail.workspace),
       )
       this.archives.set(workspaceId, archive)
     }

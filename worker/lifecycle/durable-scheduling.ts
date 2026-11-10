@@ -29,7 +29,7 @@ export async function writeLifecycleState(
   await publishLifecycleState(storage, hooks, state, now, publish)
 }
 
-export async function publishLifecycleState(
+async function publishLifecycleState(
   storage: LifecycleStorage,
   hooks: LifecycleHooks,
   state: DurableLifecycleState,
@@ -46,6 +46,17 @@ export async function publishLifecycleState(
   )
   if ((await hooks.changed(state, publish)) !== false)
     await storage.changedAlarm(null)
+}
+
+export async function retryLifecyclePublication(
+  storage: LifecycleStorage,
+  hooks: LifecycleHooks,
+  now: () => number,
+): Promise<void> {
+  const state = await storage.get(LIFECYCLE_STATE_KEY)
+  if (state)
+    await publishLifecycleState(storage, hooks, state, now, undefined, false)
+  else await storage.changedAlarm(null)
 }
 
 export async function scheduleLifecycleState(
