@@ -10,6 +10,7 @@ import {
   LiftedFileTab,
 } from '../../../files/tabs/FileTabItem'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
+import { useShortcutOffer } from '../../shortcuts/shortcut-context'
 import type { WorkspaceContext } from '../features'
 import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
@@ -47,7 +48,8 @@ function useTabLabels(
  * A file or diff tab of the saved view, at the place in the tab row that
  * the chat gives it, with the label of its path. Close of the shown tab
  * shows the next file tab, else the one before, else the chat with its
- * session.
+ * session. While the tab shows, the key of Close tab closes it, as its
+ * Close does.
  */
 function FileTab(props: {
   context: WorkspaceContext
@@ -82,6 +84,7 @@ function FileTab(props: {
         : routes.workspace(context.org.id, context.workspace.id),
     )
   }
+  useShortcutOffer('close-tab', isShown(tab) ? close : null)
   return (
     <FileTabItem
       label={props.label}
@@ -139,6 +142,7 @@ export function useChatFiles(
             tab={tab}
           />
         ),
+      show: () => navigation.navigate(tab),
     }
   }
   return {

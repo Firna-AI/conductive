@@ -4,6 +4,7 @@ import { groupWorkspaces } from '../sections'
 import { valueOf } from '../store'
 import { offeredActionIds, type OfferedActionId } from './commands'
 import type { OfferedAction, PaletteOffer } from './page-actions'
+import { switchCommand } from './palette-org'
 import {
   accountLabel,
   accountRows,
@@ -16,7 +17,7 @@ import {
   type PaletteGroup,
   type PaletteRow,
 } from './palette-rows'
-import type { PaletteQuery, PaletteSource } from './palette-source'
+import type { PaletteBase, PaletteQuery, PaletteSource } from './palette-source'
 
 const recentLimit = 5
 
@@ -68,9 +69,10 @@ function offeredRows(offers: readonly PaletteOffer[]): PaletteRow[] {
  * The actions in their four parts: the open workspace, the org, the orgs,
  * and the window. New workspace shows wherever the org takes changes. Its
  * row links to the page, and it opens as the page or the dialog that the
- * user chose. A deleted org has no Switch to row.
+ * user chose. A deleted org has no Switch to row. A Switch to row takes
+ * the command of the place of its org in the rail, as `switchCommand` says.
  */
-function actionGroups(source: PaletteSource): PaletteGroup[] {
+export function actionGroups(source: PaletteBase): PaletteGroup[] {
   const { org, offers } = source
   const workspace = offers.find(
     (offer) =>
@@ -101,7 +103,9 @@ function actionGroups(source: PaletteSource): PaletteGroup[] {
       label: 'Orgs',
       rows: [
         linkRow('create-org', source.createOrgHref),
-        ...others.map(switchRow),
+        ...others.map((other) =>
+          switchRow(other, switchCommand(source.orgs, other, org)),
+        ),
       ],
     },
     { label: 'Window', rows: offeredRows(window) },
@@ -109,8 +113,8 @@ function actionGroups(source: PaletteSource): PaletteGroup[] {
 }
 
 /** The settings of the org, then the Account page, each in its group. */
-function settingGroups(
-  source: PaletteSource,
+export function settingGroups(
+  source: PaletteBase,
   withDetail: boolean,
 ): PaletteGroup[] {
   const account = {

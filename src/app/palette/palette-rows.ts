@@ -1,10 +1,12 @@
 import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
 import type { OrgSummary } from '../../shared/orgs'
+import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import type { Workspace } from '../../shared/workspaces'
 import { routes, type SettingsTab } from '../router'
 import {
   accountSettingIds,
   accountSettings,
+  actionCommands,
   actionTexts,
   orgSettings,
   type AccountSettingId,
@@ -51,6 +53,8 @@ export interface CommandRow {
   readonly detail?: string
   readonly href?: string
   readonly run?: () => void
+  /** The command of the keys that does what the row does, whose key it shows. */
+  readonly command?: ShortcutCommandId
 }
 
 export type PaletteRow = WorkspaceRow | CommandRow
@@ -108,6 +112,13 @@ export function workspaceRow(
   }
 }
 
+/** The command of a row, without the field when the row has none. */
+function commandOf(command: ShortcutCommandId | null): {
+  command?: ShortcutCommandId
+} {
+  return command === null ? {} : { command }
+}
+
 /** The row of an action that a part of the page offers. */
 export function offeredRow(action: OfferedAction): CommandRow {
   const text = actionTexts[action.id]
@@ -119,11 +130,15 @@ export function offeredRow(action: OfferedAction): CommandRow {
     words: text.words,
     href: action.href,
     run: action.run,
+    ...commandOf(actionCommands[action.id]),
   }
 }
 
 /** An action of the palette itself, which opens a page. */
-export function linkRow(id: OwnActionId, href: string): CommandRow {
+export function linkRow(
+  id: Exclude<OwnActionId, 'switch-org'>,
+  href: string,
+): CommandRow {
   const text = actionTexts[id]
   return {
     kind: 'command',
@@ -132,11 +147,18 @@ export function linkRow(id: OwnActionId, href: string): CommandRow {
     label: text.label,
     words: text.words,
     href,
+    ...commandOf(actionCommands[id]),
   }
 }
 
-/** Switch to another org of the person. It opens the list of the org. */
-export function switchRow(org: OrgSummary): CommandRow {
+/**
+ * Switch to another org of the person. It opens the list of the org.
+ * `command` is Switch to org 1 to 9 of the place of the org in the rail.
+ */
+export function switchRow(
+  org: OrgSummary,
+  command: ShortcutCommandId | null,
+): CommandRow {
   const text = actionTexts['switch-org']
   return {
     kind: 'command',
@@ -145,6 +167,7 @@ export function switchRow(org: OrgSummary): CommandRow {
     label: `${text.label} ${org.name}`,
     words: text.words,
     href: routes.org(org.id),
+    ...commandOf(command),
   }
 }
 
@@ -169,6 +192,9 @@ export function orgSettingRows(
     words: setting.words,
     detail: withDetail ? orgSettingsLabel(org) : undefined,
     href: routes.settings(org.id, setting.tab),
+    ...commandOf(
+      setting.tab === 'repositories' ? 'repositories-settings' : null,
+    ),
   }))
 }
 

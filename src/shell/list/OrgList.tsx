@@ -82,7 +82,7 @@ function useLocalCollapse(actions: SectionActions) {
  * page show them, with the field of a new section at the end. `readOnly`
  * shows them without changes, for a suspended org. `offerActions` says
  * that the page shows this list, so it offers New section to the command
- * palette.
+ * palette, and its rows take the keys of the workspaces.
  */
 export function OrgList(props: {
   orgId: string
@@ -139,6 +139,7 @@ export function OrgList(props: {
         groups={readOnly ? local.apply(groups.sections) : groups.sections}
         move={move}
         now={now}
+        offersKeys={props.offerActions ?? false}
         readOnly={readOnly}
         selectedId={props.selectedId}
         variant={props.variant}

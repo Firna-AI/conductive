@@ -123,11 +123,14 @@ tools.
   event source, so the Mac app reaches its own Worker.
 - The mount of the Desktop tool stays for its return. It mounts at each
   show, so it reads a new desktop URL.
-- The tools part marks the element of the terminal for the
-  [shortcut layer](../shortcuts/README.md). So the terminal keeps the keys
-  that its shell reads, such as Ctrl+K on Windows and Linux, as
+- The tools part marks the xterm.js screen of the terminal for the
+  [shortcut layer](../shortcuts/README.md), through the `screenRef` of
+  `TerminalTool`. So the screen keeps the keys that its shell reads, such
+  as Ctrl+K on Windows and Linux, as
   [Where a key goes](../../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
-  says.
+  says. The buttons of the tool, such as Reconnect, keep no key.
+- The tabs of the tools panel name the keys of Go to Terminal and Go to
+  Preview in their tooltips, as the palette's Go to rows run them.
 - Each tool reads its routes with the `fetch` of the org's `ApiClient`,
   and the events of the kept `ToolEvents`.
 

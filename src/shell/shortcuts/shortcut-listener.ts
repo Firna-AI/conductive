@@ -70,11 +70,18 @@ function offersOf(
     : { offered, modal: owner }
 }
 
+/** The press goes no further: no browser action and no element of the page. */
+function consume(press: KeyPress): void {
+  press.preventDefault()
+  press.stopPropagation()
+}
+
 /**
  * Decides one press with the shortcut model. Before a key runs a command,
  * every open menu closes, and a menu that refuses keeps the key. A key that
  * runs a command goes no further: the browser's own action does not run,
- * and no element of the page hears it. Every other press goes on untouched.
+ * and no element of the page hears it. A repeat of a held command key goes
+ * no further either, and runs nothing. Every other press goes on untouched.
  */
 export function handleShortcutPress(press: KeyPress, page: ShortcutPage): void {
   const decision = decideShortcut({
@@ -89,8 +96,11 @@ export function handleShortcutPress(press: KeyPress, page: ShortcutPage): void {
     menu: page.layers.menuOpen() ? 'closable' : 'closed',
   })
   if (decision.kind === 'pass') return
+  if (decision.kind === 'repeat') {
+    consume(press)
+    return
+  }
   if (decision.closeMenu && !page.layers.closeMenus()) return
-  press.preventDefault()
-  press.stopPropagation()
+  consume(press)
   page.offers.run(decision.command)
 }

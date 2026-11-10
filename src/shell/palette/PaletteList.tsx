@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
 import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
 import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
@@ -13,6 +14,7 @@ import type { PaletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'
 import type { PaletteRead } from '../../app/palette/palette-source'
 import { formatAgo } from '../../app/time'
+import { useShortcutHint, type ShortcutHint } from '../shortcuts/shortcut-hints'
 import ui from '../ui/ui.module.css'
 import local from './palette.module.css'
 import { PaletteEmpty } from './PaletteEmpty'
@@ -39,10 +41,16 @@ function opensElsewhere(event: MouseEvent): boolean {
 /**
  * What a row shows. A workspace shows its state mark, the label of its
  * number while the query matches that label, its name, its repository, and
- * the age of its latest activity.
+ * the age of its latest activity. A command row ends with the key of its
+ * command, as `useShortcutHint` gives it. The option names that key to a
+ * screen reader, so the chips are hidden from it.
  */
-function RowContent(props: { row: PaletteRow; now: number }) {
-  const { row } = props
+function RowContent(props: {
+  row: PaletteRow
+  now: number
+  hint: ShortcutHint | undefined
+}) {
+  const { row, hint } = props
   if (row.kind === 'command') {
     return (
       <>
@@ -52,6 +60,11 @@ function RowContent(props: { row: PaletteRow; now: number }) {
         <span className={styles.label}>{row.label}</span>
         {row.detail ? (
           <span className={styles.detail}>{row.detail}</span>
+        ) : null}
+        {hint ? (
+          <span aria-hidden className={styles.keys}>
+            <KeyChips shortcut={hint.text} />
+          </span>
         ) : null}
       </>
     )
@@ -90,6 +103,7 @@ function Row(props: {
   onRun: (row: PaletteRow) => void
 }) {
   const { row, highlighted } = props
+  const hint = useShortcutHint(row.kind === 'command' ? row.command : undefined)
   const option = useRef<HTMLElement | null>(null)
   const setOption = useCallback((element: HTMLElement | null) => {
     option.current = element
@@ -111,10 +125,11 @@ function Row(props: {
     event.preventDefault()
     props.onRun(row)
   }
-  const content = <RowContent now={props.now} row={row} />
+  const content = <RowContent hint={hint} now={props.now} row={row} />
   if (row.href !== undefined) {
     return (
       <a
+        aria-keyshortcuts={hint?.aria}
         aria-selected={highlighted}
         className={className}
         href={row.href}
@@ -130,6 +145,7 @@ function Row(props: {
   }
   return (
     <div
+      aria-keyshortcuts={hint?.aria}
       aria-selected={highlighted}
       className={classes(className, local.choice)}
       id={props.id}

@@ -65,6 +65,12 @@ change can move the shared parts to the app's shared components.
 - `workspace.fetch` is the app's fetch. `workspace.subscribe` is required.
   It delivers the events of the workspace in order. Keep both stable.
 - `touch` selects the phone layout: 44px controls and the key row.
+- `screenRef` is optional. It gets the element of the xterm.js screen,
+  without the key row and the buttons of the tool, such as Reconnect. The
+  workspace screen marks this element for the shortcut layer, so only the
+  screen keeps the keys that a shell reads, as
+  [Where a key goes](../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
+  says.
 - The tool needs the Graphite tokens as `--ui-*` variables and the Firna
   theme provider, as the mockup renderer gives them.
 - Keep the tool mounted while another tool shows, if the shell must keep the

@@ -24,7 +24,10 @@ export interface ShortcutContext {
   readonly menu: 'closed' | 'closable' | 'blocked'
 }
 
-/** The caller closes a menu first, then consumes the press before it runs. */
+/**
+ * The caller closes a menu first, then consumes the press before it runs.
+ * A repeat of a held command key is consumed too, and runs nothing.
+ */
 export type ShortcutDecision =
   | { readonly kind: 'pass' }
   | {
@@ -32,11 +35,23 @@ export type ShortcutDecision =
       readonly command: ShortcutCommandId
       readonly closeMenu: boolean
     }
+  | { readonly kind: 'repeat'; readonly command: ShortcutCommandId }
 
+/** A held key runs its command once, and no repeat reaches the page. */
 export function decideShortcut(context: ShortcutContext): ShortcutDecision {
+  if (!context.press.repeat) return decideFirstPress(context)
+  const first = decideFirstPress({
+    ...context,
+    press: { ...context.press, repeat: false },
+  })
+  return first.kind === 'command'
+    ? { kind: 'repeat', command: first.command }
+    : first
+}
+
+function decideFirstPress(context: ShortcutContext): ShortcutDecision {
   const { press, keyboard, host, focus } = context
   if (
-    press.repeat ||
     press.isComposing ||
     context.recording ||
     focus === 'frame' ||

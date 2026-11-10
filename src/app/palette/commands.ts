@@ -1,3 +1,7 @@
+import {
+  shortcutDigits,
+  type ShortcutCommandId,
+} from '../../shared/shortcut-commands'
 import type { SettingsTab } from '../router'
 
 /** A command of the palette: an action or a setting that a row runs. */
@@ -50,6 +54,43 @@ export const actionTexts: Readonly<
   'switch-org': { label: 'Switch to', words: ['org'] },
   'hide-sidebar': { label: 'Hide the sidebar', words: ['toggle'] },
   'show-sidebar': { label: 'Show the sidebar', words: ['toggle'] },
+}
+
+/**
+ * The command of the keys that runs each action, so that the key and the
+ * row do the same thing. Go to Desktop has no command while the app hides
+ * Desktop. A Switch to row takes the command of the place of its org, as
+ * `orgCommand` gives it.
+ */
+export const actionCommands: Readonly<
+  Record<
+    OfferedActionId | Exclude<OwnActionId, 'switch-org'>,
+    ShortcutCommandId | null
+  >
+> = {
+  'new-session': 'new-session',
+  'session-history': 'session-history',
+  'go-to-all-files': 'go-to-all-files',
+  'go-to-changes': 'go-to-changes',
+  'go-to-checks': 'go-to-checks',
+  'go-to-terminal': 'go-to-terminal',
+  'go-to-preview': 'go-to-preview',
+  'go-to-desktop': null,
+  'archive-workspace': 'archive-workspace',
+  'new-section': 'new-section',
+  'hide-sidebar': 'toggle-sidebar',
+  'show-sidebar': 'toggle-sidebar',
+  'new-workspace': 'new-workspace',
+  'create-org': 'create-org',
+}
+
+/**
+ * The command of Switch to org 1 to 9 for the org at this place of the org
+ * rail, counted from 0 at the top, or null after the ninth place.
+ */
+export function orgCommand(place: number): ShortcutCommandId | null {
+  const digit = shortcutDigits[place]
+  return digit === undefined ? null : `org-${digit}`
 }
 
 /** The tabs of the org settings, in their order, with their search words. */

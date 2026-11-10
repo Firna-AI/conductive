@@ -13,6 +13,9 @@ For a command decision, the caller closes a willing menu first.
 If the menu stays open, the caller leaves the key alone.
 Otherwise, it calls `preventDefault` and `stopPropagation` before running
 the command. A pass decision leaves the press alone.
+A repeat decision comes for each repeat of a held key whose first press
+would run a command now. The caller calls `preventDefault` and
+`stopPropagation`, and runs nothing, so a held key runs its command once.
 
 The [shortcut layer](../../shell/shortcuts/README.md) of the shell calls
 `decideShortcut` for each key of the page. The palette key is one of its
@@ -39,8 +42,9 @@ check unknown input before the app or Worker uses it.
 - [keymap.ts](keymap.ts): `buildShortcutKeymap` combines defaults with
   overrides. Conflict and replacement functions prepare one atomic save.
   `firstShortcutKey` selects a usable hint for the current host.
-- [decision.ts](decision.ts): `decideShortcut` returns a command or passes
-  the press. Its context identifies modal ownership, menus, recording, and focus.
+- [decision.ts](decision.ts): `decideShortcut` returns a command, a repeat
+  of a held command key, or a pass. Its context identifies modal ownership,
+  menus, recording, and focus.
 - [text-keys.ts](text-keys.ts): text field and terminal protection.
 - [navigation.ts](navigation.ts): list steps, numbered rows, and exact
   workspace row and divider keys.

@@ -935,6 +935,8 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
       from the user requirement of 2026-11-10.
 - [x] Draw Remove in the recorder and the conflict line of a Reset, from
       the agent calls of Milestone 2, in the Mac app and in a browser.
+- [ ] Draw the key of each org in the hover hint of its tile in the org
+      rail, from the questions of Milestone 5 part B.
       Evidence: `.context/keyboard-shortcuts/shots/round3/`.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark.
@@ -1038,27 +1040,40 @@ Depends on: 1, 3
       "Where a key goes". Move the palette key into it, and move each
       consumer of "Replaced ways". Delete `palette-keys.ts`. Evidence:
       `.context/keyboard-shortcuts/reports/m5a-ui.md`.
-- [ ] Offer each command from the part of the page that owns its control.
+- [x] Offer each command from the part of the page that owns its control.
       Add the key-only commands as offers that the palette does not list.
 - [ ] Apply decision 193 to the row move, the divider, and the keys of
       the workspaces and the tabs.
   - [x] The row move and the divider match their keys exactly.
-  - [ ] The keys of the workspaces and the tabs run their commands.
-- [ ] Fix the two findings of part A: a repeat of a command key reaches
+  - [x] The keys of the workspaces and the tabs run their commands.
+- [x] Fix the two findings of part A: a repeat of a command key reaches
       the browser (Medium, fix now: the model gives a repeat its own
       decision, and the listener stops it without running the command
       again), and the terminal mark covers the buttons of the Terminal
       tool (Low, fix now: mark only the screen of the terminal).
-- [ ] If PR #79 merged, offer its right column toggle with ⌘⌥B.
-- [ ] Show the keys in the palette rows, the Search row, the tooltips, and
+- [x] If PR #79 merged, offer its right column toggle with ⌘⌥B.
+- [x] Show the keys in the palette rows, the Search row, the tooltips, and
       `aria-keyshortcuts`. Hide the hints in the phone layout.
-- [ ] Happy-dom tests: one key runs its command, a dialog keeps the key,
+- [x] Happy-dom tests: one key runs its command, a dialog keeps the key,
       the terminal keeps a Ctrl key, and a browser tab skips a kept key.
       Also: the terminal keeps an Alt key on Windows and Linux, a key that
       runs a command does not reach the message field or the terminal,
       and a text key in the message field still edits the text.
-- [ ] Update `src/app/README.md`, `src/app/screens.md`, and the README of
-      each changed area.
+- [x] Update `src/app/README.md`, `src/app/screens.md`, and the README of
+      each changed area. Evidence:
+      `.context/keyboard-shortcuts/reports/m5a-ui.md` and `m5b-ui.md`.
+- Agent calls of 2026-11-10, from the questions of part B:
+  - Switch to org 1 to 9 runs on each page that shows the org rail, as
+    the tile of the org does. Reason: a number key that always opens the
+    same org is what people expect, and the tile is its control. This
+    replaces "where the palette offers it" for these commands.
+  - Next workspace that needs input starts from the top of the list when
+    no workspace is open. Reason: the key then also works from the list
+    page.
+  - A tooltip is the browser's own tooltip, "Label (key)". Reason: no
+    mockup draws a tooltip, and `@firna/ui` has none.
+  - A held key that opens a dialog can reach the browser after the dialog
+    opens. Follow-up item: `plans/follow-ups/held-key-after-dialog-opens.md`.
 
 ## Milestone 6: The Keyboard shortcuts tab
 
@@ -1073,6 +1088,12 @@ Depends on: 1, 4, 5
       the save errors. Save through the account model.
 - [ ] Add the search field of decision 195 with the palette's matcher,
       and the line of a search without a match.
+- [ ] From the questions of Milestone 5 part B: Switch to org 1 to 9 runs
+      on each page that shows the org rail; Next workspace that needs input
+      starts from the top of the list with no open workspace (a model
+      rule); the org tiles of the rail, the All files, Changes, and Checks
+      tabs, and the Archive button of the pull request bar show their keys
+      in their hints.
 - [ ] Apply the person's changes to the keymap from the account reply.
 - [ ] Add the Keyboard shortcuts row to the palette's Settings tab.
 - [ ] Happy-dom tests: a recorded key saves and runs, Replace moves a key,

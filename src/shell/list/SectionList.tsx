@@ -6,8 +6,9 @@ import { workspaceRowMove } from '../../app/shortcuts/navigation'
 import type { Workspace } from '../../shared/workspaces'
 import { nameLabel } from '../../shared/name-label'
 import ui from '../ui/ui.module.css'
-import { ArchivedGroup } from './ArchivedGroup'
+import { ArchivedGroup, archivedOpen } from './ArchivedGroup'
 import type { DropTarget } from './drop-target'
+import { useListKeys } from './list-keys'
 import { SectionHeader, type SectionActions } from './SectionHeader'
 import { useRowDrag, type RowDragState } from './useRowDrag'
 import { useRowFocus } from './useRowFocus'
@@ -62,7 +63,8 @@ function LiftedRow(props: {
  * section by drag and drop, by a long press on a phone, or by Alt with Up
  * or Down and no other modifier. A key with more modifiers, such as ⌥⌘↑,
  * stays free for its shortcut. A read-only list, as in a suspended org,
- * moves nothing and shows no section menu.
+ * moves nothing and shows no section menu. While the page shows the list,
+ * the keys of the workspaces open its rows, as `useListKeys` says.
  */
 export function SectionList(props: {
   groups: readonly SectionGroup[]
@@ -74,7 +76,21 @@ export function SectionList(props: {
   archiveAction?: (workspace: Workspace) => (() => void) | undefined
   move: (workspaceId: string, target: DropTarget) => void
   readOnly: boolean
+  /** The page shows this list, so it takes the keys of the workspaces. */
+  offersKeys?: boolean
 }) {
+  const [opened, setOpened] = useState<boolean | null>(null)
+  const archived = archivedOpen(props.archived, props.selectedId, opened)
+  useListKeys({
+    shown: [
+      ...props.groups.flatMap((group) =>
+        group.section.collapsed ? [] : group.workspaces,
+      ),
+      ...(archived ? props.archived : []),
+    ],
+    selectedId: props.selectedId,
+    offered: props.offersKeys ?? false,
+  })
   const { drag, bind, layout } = useRowDrag(props.move)
   /** A move by keys keeps the focus on its row. */
   const rows = useRowFocus()
@@ -175,6 +191,8 @@ export function SectionList(props: {
       {props.archived.length > 0 ? (
         <ArchivedGroup
           now={props.now}
+          onToggle={setOpened}
+          open={archived}
           rows={props.archived}
           selectedId={props.selectedId}
           variant={props.variant}

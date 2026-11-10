@@ -374,22 +374,32 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   ranks the matches. `rowTexts` includes the workspace number label, such
   as `W-395`, in the search texts. `withNumberLabel` adds that label when
   a query word matches it. `../shell/palette/PaletteList.tsx` draws it
-  before the name. `commands.ts` holds the labels and the search words.
+  before the name. `commands.ts` holds the labels, the search words, and
+  `actionCommands`, the command of the keys of each action. Each command
+  row names its command in `CommandRow.command`.
+  `listed-commands.ts` gives `listedCommands`, the commands that the
+  palette lists now with their rows, which the keys of the palette run.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
-  and `controller.ts` the open state and the offers of one tab, with
-  `show`, the one way to open the palette.
+  and gives `switchCommand`, the key of the Switch to row of an org by its
+  place in the rail. `controller.ts` gives the open state and the offers
+  of one tab, with `show`, the one way to open the palette.
 - `../shell/palette/`: the layer of the palette. `PaletteProvider.tsx`
   offers the palette key to the shortcut layer and closes the palette,
   `PaletteLayer.tsx` draws it in a frame, `palette-context.ts` gives
   `usePaletteOffer`, and `SearchRow.tsx` is the Search row of the list,
-  with the palette key of the keymap.
-  `use-palette-source.ts` gives the list and the repositories of the org
-  with their load states, and `PaletteStatus.tsx` draws the status part.
+  with the palette key of the keymap. `PaletteKeys.tsx` offers the
+  commands that the palette lists to the keys, with `useRowAction` of
+  `row-action.ts`, the action of a row. `PaletteList.tsx` ends each command
+  row with the key of its command.
+  `use-palette-source.ts` gives `usePaletteBase`, what the actions and the
+  settings read, and the list and the repositories of the org with their
+  load states. `PaletteStatus.tsx` draws the status part.
 - `../shell/shortcuts/`: the shortcut layer: the one key listener on
   `AppServices.onKey`, the commands that the parts of the page offer, the
-  terminals that keep their keys, and the open layers. Its
-  [README](../shell/shortcuts/README.md) says how a key goes.
+  terminals that keep their keys, the open layers, and the key hints. Its
+  [README](../shell/shortcuts/README.md) says how a key goes, and which
+  part of the page offers each command.
 - `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
   which say whether they closed, and the modal layers with their owners.
   The shortcut listener reads them before a key runs a command, and the

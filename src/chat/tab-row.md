@@ -16,6 +16,13 @@ the requirements.
   At the load, missing places go at the end, in the order of creation.
   These changes send no write of their own. The next view save carries
   them, and a read-only workspace keeps them in the browser only.
+- The keys of the row follow the row order, as `useTabKeys` in
+  `components/tab-keys.ts` gives them. Previous tab and Next tab show the
+  tab before or after the shown tab, with a wrap at each end, also a file
+  or diff tab, through its `show`. Close tab closes the shown session tab
+  as its Close does, and the host closes a shown file or diff tab. Reopen
+  closed session runs the first row of the session history. A key that
+  would do nothing, such as Next tab with one tab, goes on to the page.
 - `moveTab(tab, place)` puts a tab before or after its neighbour in the
   row. It saves through the shared view writer, then sorts the open
   sessions for Close. A new or reopened session opens at the end. A

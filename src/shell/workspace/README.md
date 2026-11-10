@@ -206,6 +206,8 @@ fake API, with its address options, its controls, and the test command.
   columns, the toggle of the right column, and the tab bar of a phone.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
+  `WorkspaceKeys.test.tsx` runs the keys of the tab row and of the
+  composer in the whole app.
 - `CopyLink.tsx`: the label of the number, such as `W-395`, as the Copy
   link button of the header, as
   [Copy link](../../../docs/protocol/workspace-links.md#copy-link) says.

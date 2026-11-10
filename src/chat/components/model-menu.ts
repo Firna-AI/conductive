@@ -11,6 +11,17 @@ const agentOrder: readonly Agent[] = ['claude', 'codex']
 const effortOrder = Object.keys(effortLabels)
 const divider: MenuEntry = { kind: 'divider' }
 
+/** The efforts of the chosen model, in the order of the menu. */
+export function effortsOf(
+  models: readonly AgentModel[],
+  choice: AgentChoice,
+): Effort[] {
+  const efforts = findModel(models, choice)?.efforts ?? [choice.effort]
+  return [...efforts].sort(
+    (left, right) => effortOrder.indexOf(left) - effortOrder.indexOf(right),
+  )
+}
+
 /**
  * The menu of the model picker: the models of each agent as a group, with
  * no brand name, then the effort levels of the chosen model. The menu marks
@@ -54,14 +65,9 @@ export function modelMenu(
       })
     }
   })
-  const efforts: readonly Effort[] = findModel(models, choice)?.efforts ?? [
-    choice.effort,
-  ]
   if (entries.length > 0) entries.push(divider)
   entries.push({ kind: 'label', label: 'Effort' })
-  for (const effort of [...efforts].sort(
-    (left, right) => effortOrder.indexOf(left) - effortOrder.indexOf(right),
-  )) {
+  for (const effort of effortsOf(models, choice)) {
     entries.push({
       kind: 'item',
       key: `effort:${effort}`,

@@ -85,9 +85,10 @@ what the palette does.
   and Home and End alone. A key with other modifiers, such as ⌥⌘←, goes to
   its shortcut.
 - On desktop, the toggle at the end of the workspace header hides the
-  right column and shows it again. The choice holds for every workspace
-  of the tab until the page closes. A hidden column stays mounted, so its
-  file lists keep their connection and the terminal keeps its session.
+  right column and shows it again, and so does the key of Hide or show the
+  right column. The choice holds for every workspace of the tab until the
+  page closes. A hidden column stays mounted, so its file lists keep their
+  connection and the terminal keeps its session.
 - A sheet or a dialog makes the rest of its frame inert through
   `OverlayHost`. It keeps Tab and Shift+Tab inside, also from the layer
   itself and from a text field. When it closes, the frame is active again
@@ -119,9 +120,24 @@ what the palette does.
   `../shell/ui/layers.ts`: the shell, the chat, and the members UI. A menu
   says whether it closed, and a menu whose change runs refuses. A modal
   layer has an owner: the dialog of the palette has the palette, which
-  offers the palette key with that owner. The owner of the terminal marks
-  its element with `useShortcutTerminal`, so the terminal keeps the keys
-  that its shell reads.
+  offers the palette key with that owner. The tools part marks the
+  xterm.js screen of the terminal with `useShortcutTerminal`, so the
+  screen keeps the keys that its shell reads, and the buttons of the
+  Terminal tool keep none.
+- Each other command runs from its key where the page offers it, as the
+  [shortcut layer](../shell/shortcuts/README.md#the-owners-of-the-commands)
+  lists the owners. `PaletteKeys` in each frame offers each command that
+  the palette lists, also while the palette is closed, with the action of
+  its row. So a key and its row do the same thing, also on a page without
+  an org, such as the Account page. A key that would do nothing, such as
+  Next tab with one tab, is not offered, so it goes on to the browser.
+- A held key runs its command once. Its repeats go no further.
+- The key hints show the first key of each command that works where the
+  page runs: at the end of a row of the palette, in the Search row, and
+  in the tooltip of a control that runs a command, as "New session (⌥⌘T)"
+  in a Chrome tab on a Mac. Each names its key in `aria-keyshortcuts`. The
+  phone layout shows no hint. The tooltip is the `title` of the control,
+  because the mockups draw no tooltip of their own.
 - `PaletteController.show` is the one way to open the palette, for the
   key and for the Search row. It opens only when no dialog or sheet of
   another owner holds the input, and when every open menu closed. The
@@ -132,7 +148,8 @@ what the palette does.
   that the page shows, and the sidebar toggle of the Mac app. A row
   closes the palette first. Its action runs once the palette has left
   the page, so a field that the action opens can take the focus, and a
-  question shows alone.
+  question shows alone. `useRowAction` gives the action of a row, for a
+  row and for the key of its command.
 - The palette reads the list and the repositories of its org through
   `OrgModel.watch` while it is open, and shares those reads with the list
   of the page. So the list and the palette show the same failure, and Try
@@ -145,6 +162,11 @@ what the palette does.
 - A workspace row moves on Alt with Up or Down and no other modifier,
   through `workspaceRowMove` of the shortcut model. A key with more
   modifiers, such as ⌥⌘↑, goes to its shortcut.
+- While the page shows the workspace list, the keys of Open workspace 1
+  to 9, Previous and Next workspace, and Next workspace that needs input
+  open its rows, as their links do. They count only the rows that the list
+  shows: a collapsed section and a closed Archived group add none. So the
+  list keeps whether the Archived group is open.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the

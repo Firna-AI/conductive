@@ -119,14 +119,25 @@ test('runs only offered commands and keeps Mac window commands in the Mac app', 
   ).toEqual({ kind: 'pass' })
 })
 
-test('runs the first press once and leaves repeats, composition, recording, and frames alone', () => {
+test('runs the first press once, consumes each repeat of a command key without a run, and leaves composition, recording, and frames alone', () => {
   expect(decideShortcut(context())).toEqual({
     kind: 'command',
     command: 'command-palette',
     closeMenu: false,
   })
-  expect(decideShortcut(context({ press: press({ repeat: true }) }))).toEqual({
-    kind: 'pass',
+  const held = press({ repeat: true })
+  expect({
+    held: decideShortcut(context({ press: held })),
+    overMenu: decideShortcut(context({ press: held, menu: 'closable' })),
+    otherKey: decideShortcut(
+      context({ press: press({ key: 'x', code: 'KeyX', repeat: true }) }),
+    ),
+    blockedMenu: decideShortcut(context({ press: held, menu: 'blocked' })),
+  }).toEqual({
+    held: { kind: 'repeat', command: 'command-palette' },
+    overMenu: { kind: 'repeat', command: 'command-palette' },
+    otherKey: { kind: 'pass' },
+    blockedMenu: { kind: 'pass' },
   })
   expect(
     decideShortcut(context({ press: press({ isComposing: true }) })),

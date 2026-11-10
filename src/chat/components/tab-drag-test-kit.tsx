@@ -110,6 +110,7 @@ export function fileTabs(navigation: FilesNavigation): RenderTab {
             tab={tab}
           />
         ),
+      show: () => navigation.navigate(tab),
     }
   }
 }

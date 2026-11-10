@@ -10,7 +10,7 @@ import {
   firstShortcutKey,
   type ShortcutKeymap,
 } from '../../app/shortcuts/keymap'
-import { useServices } from '../../app/services'
+import { ServicesContext } from '../../app/services'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import type { ShortcutKeyText } from '../../shared/shortcut-key'
 import type { LayerOwner } from '../ui/layers'
@@ -50,6 +50,36 @@ export function useShortcutOffer(
   }, [offers, command, layer, offered])
 }
 
+/** A command that a part of the page offers, with what its key does. */
+export interface CommandOffer {
+  readonly command: ShortcutCommandId
+  readonly run: () => void
+}
+
+/**
+ * Offers each command of the list to the keys while the part of the page
+ * shows, such as one command for each row of a list. A key runs the `run`
+ * of the latest render, so a new render offers again only when the list of
+ * commands changes.
+ */
+export function useShortcutOffers(list: readonly CommandOffer[]): void {
+  const offers = useContext(ShortcutContext)?.offers
+  const latest = useRef(list)
+  useEffect(() => {
+    latest.current = list
+  })
+  const commands = list.map((item) => item.command).join(' ')
+  useEffect(() => {
+    if (!offers) return undefined
+    const runOf = (command: ShortcutCommandId) => () =>
+      latest.current.find((item) => item.command === command)?.run()
+    const taken = latest.current.map(({ command }) =>
+      offers.offer({ command, run: runOf(command) }),
+    )
+    return () => taken.forEach((takeBack) => takeBack())
+  }, [offers, commands])
+}
+
 /**
  * The ref of the element of a terminal, which its owner gives. A key in
  * that element goes to the terminal when a program in it can read the key,
@@ -69,12 +99,21 @@ export function useShortcutTerminal(): RefCallback<HTMLElement> {
   )
 }
 
-/** The first key of the command that works where the page runs, or none. */
+/**
+ * The first key of the command that works where the page runs, or none. A
+ * part outside the app, such as the chat on its development page, has no
+ * keymap, so it gets no key.
+ */
 export function useShortcutKey(
-  command: ShortcutCommandId,
+  command: ShortcutCommandId | undefined,
 ): ShortcutKeyText | undefined {
   const shortcuts = useContext(ShortcutContext)
-  const { platform, host } = useServices()
-  if (!shortcuts) return undefined
-  return firstShortcutKey(command, shortcuts.keymap, platform, host)
+  const services = useContext(ServicesContext)
+  if (!shortcuts || !services || command === undefined) return undefined
+  return firstShortcutKey(
+    command,
+    shortcuts.keymap,
+    services.platform,
+    services.host,
+  )
 }

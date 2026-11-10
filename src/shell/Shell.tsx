@@ -19,7 +19,9 @@ import { GetStartedScreen } from './onboarding/GetStartedScreen'
 import { OperatorRoutes } from './operator/OperatorRoutes'
 import { CreateOrgScreen } from './orgs/CreateOrgScreen'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
+import { useShortcutOffer } from './shortcuts/shortcut-context'
 import { ActionButton } from './ui/actions'
+import { useOpenPage } from './ui/AppLink'
 import { useViewport } from './ui/viewport'
 import { Waiting } from './waitlist/Waiting'
 
@@ -101,9 +103,16 @@ function Account(props: { route: AccountRoute; user: User }) {
   )
 }
 
+/**
+ * The screen of the address in the signed-in app. Its key of the Account
+ * page works on each page, as the Account link of the rail and of the org
+ * switcher of a phone does.
+ */
 function Signed(props: { route: Route; user: User }) {
   const { route, user } = props
   const phone = useViewport() === 'phone'
+  const open = useOpenPage()
+  useShortcutOffer('account-page', () => open(routes.account()))
   const inRail = (page: ReactNode, current: 'account' | null) =>
     phone ? (
       <PhoneFrame>{page}</PhoneFrame>

@@ -1,6 +1,6 @@
 import '@xterm/xterm/css/xterm.css'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
-import type { MouseEvent } from 'react'
+import type { MouseEvent, Ref } from 'react'
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
 import { useSharedUiTheme } from '@firna/ui/theme'
@@ -51,6 +51,8 @@ export function TerminalScreen(props: {
   ended: boolean
   onClosed: () => void
   onInput?: () => void
+  /** The element of the xterm.js screen, without the key row. */
+  screenRef?: Ref<HTMLDivElement>
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<Terminal | null>(null)
@@ -58,7 +60,7 @@ export function TerminalScreen(props: {
   const [control, setControl] = useState(false)
   const touch = useTouch()
   const { scheme } = useSharedUiTheme()
-  const { terminal, connect, ended } = props
+  const { terminal, connect, ended, screenRef } = props
   const onClosed = useEffectEvent(() => props.onClosed())
   const onInput = useEffectEvent(() => props.onInput?.())
   const currentTheme = useEffectEvent((host: Element) =>
@@ -129,7 +131,7 @@ export function TerminalScreen(props: {
 
   return (
     <div className={styles.terminal}>
-      <div className={styles.screen}>
+      <div className={styles.screen} ref={screenRef}>
         <div className={styles.host} ref={hostRef} />
       </div>
       {touch && !ended ? (

@@ -11,6 +11,7 @@ import { useOrgAccess, useOrgModel } from '../context'
 import { useSidebarShown } from '../mac/mac-app'
 import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import { SearchRow } from '../palette/SearchRow'
+import { shortcutTip, useShortcutHint } from '../shortcuts/shortcut-hints'
 import { AppLink } from '../ui/AppLink'
 import ui from '../ui/ui.module.css'
 import { OrgList } from './OrgList'
@@ -49,7 +50,7 @@ export function SettingsLink(props: { orgId: string; current: boolean }) {
  * The row at the top of the list that starts a new workspace in General. It
  * links to the page. A plain click opens the dialog in its place when the
  * user chose the dialog, and a click with a modifier key opens the page in
- * a new tab.
+ * a new tab. Its tooltip names the key of New workspace.
  */
 export function NewWorkspaceLink(props: {
   orgId: string
@@ -57,9 +58,11 @@ export function NewWorkspaceLink(props: {
   variant: RowVariant
 }) {
   const newWorkspace = useNewWorkspace()
+  const hint = useShortcutHint('new-workspace')
   return (
     <AppLink
       aria-current={props.current ? 'page' : undefined}
+      aria-keyshortcuts={hint?.aria}
       className={classes(
         links.newWorkspace,
         props.variant === 'page' && links.page,
@@ -68,6 +71,7 @@ export function NewWorkspaceLink(props: {
       onClick={(event) =>
         newWorkspace.click(event, { orgId: props.orgId, sectionId: null })
       }
+      title={shortcutTip('New workspace', hint)}
       to={routes.newWorkspace(props.orgId)}
     >
       <Plus aria-hidden className={links.plus} size={14} />

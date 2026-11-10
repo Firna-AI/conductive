@@ -18,6 +18,8 @@ rules and the terms. A decision number names a dated record, as
     says.
   - **Workspace:** the page of an open workspace.
   - **Org page:** a page of an org.
+  - **Org rail:** each page that shows the org rail, as the tile of the
+    org does.
   - **Mac app:** only the Mac app has the command.
 - A dash means that the command has no default key.
 - Switch to org 1 to 9 and Open workspace 1 to 9 stand for nine commands
@@ -38,7 +40,7 @@ rules and the terms. A decision number names a dated record, as
 | Navigation | Next tab | ⌃Tab, ⇧⌘], ⌥⌘→, ⌥⌘] | Ctrl+Tab, Ctrl+Shift+], Alt+Shift+→, Alt+Shift+] | Workspace |
 | Navigation | Close tab | ⌘W, ⌥⌘W | Ctrl+W, Alt+Shift+W | Workspace |
 | Navigation | Reopen closed session | ⇧⌘T, ⌥⇧⌘T | Ctrl+Shift+T, Alt+Shift+Z | Workspace |
-| Navigation | Switch to org 1 to 9 | ⌃1 to ⌃9 | Alt+1 to Alt+9 | Palette |
+| Navigation | Switch to org 1 to 9 | ⌃1 to ⌃9 | Alt+1 to Alt+9 | Org rail |
 | Navigation | Repositories settings | ⌥⌘A | Alt+Shift+A | Palette |
 | Workspace | New workspace | ⌘N, ⌥⌘N | Ctrl+N, Alt+Shift+N | Palette |
 | Workspace | New section | – | – | Palette |

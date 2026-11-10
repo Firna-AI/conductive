@@ -2,6 +2,7 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
+import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import {
@@ -13,7 +14,12 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
-import { openPaletteTab, palette } from '../palette/palette-test-kit'
+import {
+  openPaletteTab,
+  palette,
+  searchField,
+} from '../palette/palette-test-kit'
+import { settle } from '../test-mount'
 import { messageField } from '../workspace/kept-test-kit'
 import { socketsOf } from '../workspace/wiring-test-kit'
 import {
@@ -68,6 +74,35 @@ describe('the shortcut listener', () => {
     }).toEqual({ draft: '', palette: false })
   })
 
+  test('a held key runs its command once, and its repeats go no further', async () => {
+    await openPaletteTab(routes.org(org))
+    const first = pressCommand('command-palette', 'other', document.body)
+    const field = searchField()
+    const heard = keysHeardBy(field)
+    const repeat = pressShortcut('Ctrl+K', field, { repeat: true })
+    expect({
+      first: first.defaultPrevented,
+      palette: palette() !== null,
+      repeat: repeat.defaultPrevented,
+      heard,
+    }).toEqual({ first: true, palette: true, repeat: true, heard: [] })
+  })
+
+  test('on Windows and Linux, only the screen of the terminal keeps the Ctrl keys, so Ctrl+K runs from Reconnect', async () => {
+    holdAnimationFrames()
+    // The events of the test open no terminal socket, so the terminal
+    // shows Disconnected with Reconnect.
+    const { view } = await openPaletteTab(routes.workspace(org, workspace))
+    await settle()
+    const reconnect = byRole('button', 'Reconnect', view)
+    reconnect.focus()
+    const key = pressCommand('command-palette', 'other', reconnect)
+    expect({
+      prevented: key.defaultPrevented,
+      palette: palette() !== null,
+    }).toEqual({ prevented: true, palette: true })
+  })
+
   test('a browser tab leaves a kept key to the browser, and the second key runs the command', async () => {
     let runs = 0
     await openPaletteTab(routes.org(org), {
@@ -78,7 +113,7 @@ describe('the shortcut listener', () => {
     const kept = pressShortcut('Meta+W', document.body)
     const keptRuns = runs
     // On a Mac, ⌥W types ∑, so the press matches by its physical key.
-    const second = pressShortcut('Alt+Meta+W', document.body, '∑')
+    const second = pressShortcut('Alt+Meta+W', document.body, { key: '∑' })
     expect({
       kept: { prevented: kept.defaultPrevented, runs: keptRuns },
       second: { prevented: second.defaultPrevented, runs },

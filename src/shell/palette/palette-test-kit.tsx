@@ -8,7 +8,7 @@ import {
   queryByRole,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { MacApp, type MacWindowState } from '../mac/mac-app'
+import { MacApp, type MacWindow, type MacWindowState } from '../mac/mac-app'
 import { Shell } from '../Shell'
 import { mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
@@ -30,9 +30,9 @@ const macWindow = {
 
 /**
  * The whole app in a tab at `href`, over the fake API, or in the Mac app
- * with `mac`. The app hears the keys of the window, as the browser gives
- * them. `beside` mounts a part of a test beside the app, inside its
- * providers.
+ * with `mac`, in the window `macWindow` of the test. The app hears the keys
+ * of the window, as the browser gives them. `beside` mounts a part of a
+ * test beside the app, inside its providers.
  */
 export async function openPaletteTab(
   href: string,
@@ -42,6 +42,7 @@ export async function openPaletteTab(
     server?: FakeApiServer
     events?: AppServices['events']
     mac?: boolean
+    macWindow?: MacWindow
     beside?: ReactNode
   } = {},
 ) {
@@ -60,7 +61,7 @@ export async function openPaletteTab(
   })
   const navigation = memoryNavigation(href)
   const shell = options.mac ? (
-    <MacApp window={macWindow}>
+    <MacApp window={options.macWindow ?? macWindow}>
       <Shell />
     </MacApp>
   ) : (

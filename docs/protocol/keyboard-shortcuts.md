@@ -93,7 +93,8 @@ app.
   - Previous workspace and Next workspace open the workspace above or
     below the open workspace, among the rows that the list shows.
   - Next workspace that needs input opens the next workspace of the list
-    that needs input.
+    that needs input. With no open workspace, it starts from the top of
+    the list.
   - Focus the message field moves the focus to the message field of the
     workspace.
   - Next effort level chooses the next effort of the model in the model
