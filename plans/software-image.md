@@ -21,8 +21,9 @@ software step in the build log is a separate question, outside this plan.
 
 Contract owners:
 
-- [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md),
-  with a new page `docs/protocol/software-image.md`.
+- [Org image](../docs/protocol/org-image.md), with a new page
+  `docs/protocol/software-image.md`.
+- [Isolation](../docs/protocol/isolation.md).
 - [Access and security](../docs/protocol/access-and-security.md).
 - [Automatic deploys](../docs/automatic-deploys.md).
 - The [lifecycle README](../worker/lifecycle/README.md) and the
@@ -84,7 +85,8 @@ on 9 November 2026.
    call: the Worker answers 409 while another version of the Worker serves
    the request, because an older version can still answer just after a
    deploy. The Worker reads its own tag from the `version_metadata`
-   binding. The gate follows decision 6.
+   binding. The gate checks a token for each deploy run, as decision 6
+   says.
 9. **Deploy step.** After "Check health", a new step of the job `deploy`
    calls `POST`, then calls `GET` every 10 seconds until the state is
    ready or failed, for at most 15 minutes. The run summary names the
@@ -189,7 +191,7 @@ Open. When the answer is A, C, or D, this plan gets a milestone for it.
     version. Effort: Medium.
 - **Left out:** Install the app software at each workspace start, because
   it breaks decision 2. Run the software step while the repositories
-  copy, because "GitHub tokens" in the access protocol allows no software
+  copy, because `docs/protocol/github-tokens.md` allows no software
   step before the Worker revokes the clone token. Pinned ttyd and tmux
   downloads alone, because the runner still installs again.
 - **Wider fix:** D. One rule on the version of the whole software step
@@ -259,7 +261,8 @@ Open.
 
 ### 6. How the deploy run proves itself to the Worker
 
-Open.
+**Chosen:** D, a token for each deploy run, by the user on 10 November
+2026. The recommendation was D.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -334,20 +337,19 @@ deploy run, and the gate of its route.
       holds, when the deploy run builds it, how a first build uses it, the
       fallback, the time limit, and the cleanup. Give decisions 2 and 3
       with their rejected options. Link it from "The org image" in
-      `docs/protocol/workspaces-and-sandboxes.md`, and from each list of
-      protocol docs.
+      `docs/protocol/org-image.md`, and from each list of protocol docs.
 - [ ] In `docs/protocol/access-and-security.md`, add the gate of
       `/v1/deploy/software-image` from decision 6 under "Hostnames and
-      gates". Under "The app's Boat key", state that the deploy run never
-      gets the key.
-- [ ] In `docs/architecture.md`, under "Sandbox software", state that the
+      gates". Under "The app's Boat key" in `docs/protocol/isolation.md`,
+      state that the deploy run never gets the key.
+- [ ] In `docs/architecture/components.md`, under "Sandbox software", state that the
       Worker builds one software image for each app software version when
       the deploy run asks.
 - [ ] In `docs/automatic-deploys.md`, add the software image step to
       "Steps of a run", and its failure from decision 5 to "When a deploy
       fails".
 - [ ] In `docs/deployment.md`, add the `version_metadata` binding and the
-      setting that decision 6 needs.
+      token digest variable that each deploy run sets, from decision 6.
 - [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
@@ -440,9 +442,6 @@ Depends on: 1, 2, 3, 4, 5, 6
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Set up the setting of decision 6, when it needs one, in the GitHub
-      environment `production` and in the Worker, after
-      `plans/follow-ups/deploy-settings-setup.md`.
 - [ ] Watch the first deploy run that builds a software image, and read
       its summary.
 - [ ] Start the first build of a new test org. Check that it starts from
