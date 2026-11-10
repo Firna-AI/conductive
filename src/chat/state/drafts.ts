@@ -1,3 +1,4 @@
+import type { DraftFile } from '../../app/draft-files'
 import type { MessageDraft, SendMessageRequest } from '../../shared/messages'
 import {
   blankDraft,
@@ -55,14 +56,24 @@ export function changeDraft(
  * added during the send stays for the next message.
  */
 export function afterSend(draft: Draft, request: SendMessageRequest): Draft {
-  const sent = new Set(request.attachmentIds)
   return {
     ...draft,
     text: draft.text === request.text ? '' : draft.text,
-    attachments: draft.attachments.filter((item) => !sent.has(item.id)),
+    files: withoutFiles(draft.files, request.attachmentIds),
     sendId: null,
     sending: false,
   }
+}
+
+/** The files without the ready ones whose attachment IDs are listed. */
+function withoutFiles(
+  files: readonly DraftFile[],
+  attachmentIds: readonly string[],
+): readonly DraftFile[] {
+  return files.filter(
+    (item) =>
+      item.state !== 'ready' || !attachmentIds.includes(item.attachment.id),
+  )
 }
 
 /**
@@ -95,11 +106,10 @@ export function keepFiles(
   sent: MessageDraft,
   kept: MessageDraft,
 ): Draft {
-  const attachments = draft.attachments.filter(
-    (item) =>
-      !sent.attachmentIds.includes(item.id) ||
-      kept.attachmentIds.includes(item.id),
+  const dropped = sent.attachmentIds.filter(
+    (id) => !kept.attachmentIds.includes(id),
   )
-  if (attachments.length === draft.attachments.length) return draft
-  return { ...draft, attachments, sendId: null }
+  const files = withoutFiles(draft.files, dropped)
+  if (files.length === draft.files.length) return draft
+  return { ...draft, files, sendId: null }
 }

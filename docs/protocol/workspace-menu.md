@@ -144,7 +144,7 @@ number names a dated record, as
   time. If the row already has a newer activity time, that newer time stays.
 - Archive asks the Archive question over the current page, with its check
   for work that is not pushed, as
-  [Archive](workspaces-and-sandboxes.md#archive) says.
+  [Archive](workspace-life.md#archive) says.
 - Archive in the menu and the Archive shortcut of the row ask the same
   question, with the same check. One action shows one question, also for
   the open workspace while it loads.
@@ -152,4 +152,4 @@ number names a dated record, as
   page stays, and the row moves to the Archived group.
 - The check does not start a stopped cloud computer. When the check does
   not finish, the question says so, as
-  [Archive](workspaces-and-sandboxes.md#archive) says.
+  [Archive](workspace-life.md#archive) says.

@@ -9,7 +9,14 @@ Each path is relative to `src/app/`, the folder of this page.
   `dev/settings-routes.ts` saves settings and repository choices.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
-  app and the Mac app keep their transport. `api/read-*.ts`: the readers.
+  app and the Mac app keep their transport. Its `sendFile` sends a raw file
+  through the file transport of the services: `api/xhr-files.ts` in the
+  browser and in the Mac app. `api/read-*.ts`: the readers.
+- `attachment-upload.ts`: `uploadAttachment`, the one upload of a file for
+  both composers. `draft-files.ts`: `DraftFile`, the upload state of each
+  file of a draft, and `runFileJob`. `new-workspace-files.ts`:
+  `DraftUploads`, the uploads of a first message before its workspace
+  exists, which a change of person ends.
 - `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
   store over the event source of the app, with the reconnect rules of
   [Data lifecycle](data-lifecycle.md).
@@ -200,7 +207,7 @@ Each path is relative to `src/app/`, the folder of this page.
   `NewWorkspaceDialog.tsx`: the dialog.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
   and the dialog share: the repository, the notices, the readiness, and
-  the send. `parts.tsx`: their repository menu and files.
+  the send. `parts.tsx`: their repository menu.
   The model of each form is the `owner` of its chip field. The shared chip
   field supplies their focus handle. `CaretAtEndPlugin`
   restores the saved caret position when keyboard focus enters. Without a

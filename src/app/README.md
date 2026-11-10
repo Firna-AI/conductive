@@ -20,7 +20,12 @@ pull request bar, and the owner picker. A host can give its own parts, as
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
   `?waiting=1`, `?paused=1`, or
-  `?paths=masked`. `dev/options.ts` lists them. Create org of the dev fake
+  `?paths=masked`. `dev/options.ts` lists them. `dev/attachment-routes.ts`
+  keeps the uploaded files of both composers. With `?upload=wait` each
+  upload keeps running, and with `?upload=fail` the first upload of the
+  page fails once, so Try again works. `?sent=<percent>` makes the dev
+  fixture `dev/progress-fixture.ts` report that share of each file as
+  sent, so `?upload=wait&sent=64` shows the measured state. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
   stay through rename, delete, and restore. Settings changes during the
@@ -78,7 +83,8 @@ pull request bar, and the owner picker. A host can give its own parts, as
   [chat development page](../chat/dev/README.md) has a fake with state for
   live events and writes.
 - The production build uses `live-services.ts`: the Worker on the origin of
-  the page, and its event socket.
+  the page, its event socket, and an `XMLHttpRequest` for each raw file
+  upload, which measures the bytes that the browser sent.
 
 The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
@@ -194,9 +200,10 @@ with the send key that every composer shares, and the waitlist.
 ## Tests
 
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
-fake API, requests or answers that wait for the test (also two at one
-path), a manual timer with the wait of each pending timer, a manual page
-focus, visibility, input, and keys, and a recording event source.
+fake API, with raw file uploads through its fetch, requests or answers that
+wait for the test (also two at one path), a manual timer with the wait of
+each pending timer, a manual page focus, visibility, input, and keys, and a
+recording event source.
 `../shell/test-render.tsx` draws a screen with every provider through
 server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
@@ -208,7 +215,7 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 ## Key code
 
 [Key code](key-code.md) names the files, the types, and the functions to
-open first. It covers the dev fake, the API client, the models, the
-waitlist and its codes, and the workspace list. It also covers the event
-streams, the drag, the operator section, the command palette, the layers,
-the frames, and New workspace.
+open first. It covers the dev fake, the API client, the file uploads, the
+models, the waitlist and its codes, and the workspace list. It also covers
+the event streams, the drag, the operator section, the command palette, the
+layers, the frames, and New workspace.

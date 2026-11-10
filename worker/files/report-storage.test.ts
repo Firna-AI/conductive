@@ -1,9 +1,9 @@
 import { expect, it } from 'vitest'
 
 import { chatFilesStorage } from '../chat/files-storage'
-import { MemoryChatStorage } from '../chat/memory-storage.test-support'
+import { nativeChatStore } from '../chat/native-store.test-support'
 import { grownEntries } from '../chat/runner-grown-reports.test-support'
-import { file, snapshot } from '../chat/runner-limits.test-support'
+import { file, snapshot } from '../chat/runner-fixtures.test-support'
 import {
   loadReportState,
   partKey,
@@ -22,7 +22,7 @@ async function expectRemoved(storage: FilesStorage, keys: readonly string[]) {
 }
 
 it('reads old report parts and removes obsolete chunks on replacement, refusal, and a new stream', async () => {
-  const storage = chatFilesStorage(new MemoryChatStorage())
+  const storage = chatFilesStorage((await nativeChatStore()).storage)
   const reports = new RunnerFileReports(storage)
   await reports.beginStream('old')
   const state = await loadReportState(storage)

@@ -16,7 +16,7 @@ import { navigationAndAppearanceFeatures } from './areas/navigation-and-appearan
 import { securityPrivacyAndAdminFeatures } from './areas/security-privacy-and-admin'
 import { plansAndPricingFeatures } from './areas/plans-and-pricing'
 
-export const parityCheckedOn = '2026-11-09'
+export const parityCheckedOn = '2026-11-10'
 
 export const parityFeatures: readonly ParityFeature[] = [
   ...workspacesAndBranchesFeatures,

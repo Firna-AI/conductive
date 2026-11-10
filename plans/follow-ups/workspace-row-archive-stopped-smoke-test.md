@@ -10,10 +10,10 @@
   - **Saved-work check:** the read that Archive sends before it deletes a cloud computer, `GET /api/orgs/<org ID>/workspaces/<workspace ID>/archive-check`. It lists the files that are not committed and counts the commits that are not pushed.
   - **Workspace row menu:** the menu of a row of the workspace list, with Move to section, Reassign to, Rename, and Archive. `docs/protocol/workspace-menu.md` states its requirements.
 - **Background:**
-  - Archive deletes the cloud computer of a workspace and keeps its chat read-only in the Archived group. The section "Archive" of `docs/protocol/workspaces-and-sandboxes.md` states the rules.
+  - Archive deletes the cloud computer of a workspace and keeps its chat read-only in the Archived group. The section "Archive" of `docs/protocol/workspace-life.md` states the rules.
   - Before it archives, the app runs the saved-work check, and the person confirms in the Archive question. When the check does not finish, the question says so and names the failure, with Try again and Cancel. The app archives nothing without a finished check.
   - The workspace row menu offers Archive also for a workspace that is not open. The section "Archive" of `docs/protocol/workspace-menu.md` says that the check does not start a stopped cloud computer.
-  - A cloud computer stops after 30 minutes without activity on its workspace, as "Stop and resume" in `docs/protocol/workspaces-and-sandboxes.md` says. So Archive from a row often meets a stopped cloud computer.
+  - A cloud computer stops after 30 minutes without activity on its workspace, as "Stop and resume" in `docs/protocol/workspace-life.md` says. So Archive from a row often meets a stopped cloud computer.
   - `readArchiveCheck` runs the check as one command in the cloud computer. When the command runs and fails or times out, the Worker answers HTTP 409 with the code `sandbox_unavailable`. Its message is "Open the workspace to check its saved work. Then try again."
   - The provider can also refuse the command itself, for example for a stopped cloud computer. No code maps that refusal to `sandbox_unavailable`. `checkWorkspaceArchive` passes on only `HttpError` failures, and the Worker answers any other error with HTTP 500, the code `internal_error`, and "The request failed. Try again."
   - Nobody has seen the provider's real reply for a stopped cloud computer. So the message that the question shows in that case is unknown.

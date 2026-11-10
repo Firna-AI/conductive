@@ -5,13 +5,34 @@ The marketing site is the public site at the root of the product domain,
 the Conductor Cloud comparison page, and a page for an unknown address.
 Visitors need no sign-in. The pages run
 no script and set no cookie. Every sign-in link leads to the app, on the
-`app.` host. The main action, Join the waitlist, and Sign in lead to the
-same sign-in. A new person waits there for app access, as the
-[waitlist protocol](../../docs/protocol/waitlist.md) says, so the words
-promise a place on the waitlist, not use at once.
+`app.` host. The main action, Sign up, and Sign in lead to the same
+sign-in. A new person waits there for app access, as the
+[waitlist protocol](../../docs/protocol/waitlist.md) says. No button names
+the waitlist. The sentence under the last call to action says that a new
+account waits for access, so the page promises no use at once. The second
+action of the hero and of the last call to action, Download for Mac, leads
+to the Mac app section of the home page, because a page runs no script to
+pick the chip of the visitor. The site and the mockups read the words of
+both actions from `siteActionCopy` in `access-copy.ts`.
 
 The shared header links to the public source repository on GitHub.
-The link appears on phones and desktops.
+The link appears on phones and desktops. On desktops, the header also has
+Features and Download, which lead to the features and to the Mac app
+section of the home page. The Product column of the footer links the same
+two sections, so a phone reaches the downloads from the footer. The header
+links never wrap.
+
+The Mac app section follows the features. It links the DMG for Apple
+silicon first, then the DMG for Intel, and names the oldest macOS version
+that the app runs on. Each download is the file with a fixed name in the
+latest release of the source repository on GitHub, as
+[Releases](../../docs/protocol/desktop-app.md#releases) states, so its
+address always gives the newest DMG. Like the GitHub link of the header,
+the downloads are plain links that leave the site.
+
+The hero sentence names the browser and the Mac app. It is also the
+description of the home page. The footer tagline names both too. The site
+and the mockups read both lines from `productSummary` in `features.ts`.
 
 The marketing mockups are the visual spec:
 [`MarketingScreen.tsx`](../../docs/mockups/src/screens/MarketingScreen.tsx),
@@ -160,7 +181,7 @@ the fact. A search for the old words is not enough, because a legal page
 can restate a fact in other words.
 
 The words of the legal pages, of the page for an unknown address, and of
-the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`,
+the sign-in agreement are text without markup. `terms.ts`, `privacy.ts` with `privacy-uses.ts`,
 and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
 `components/RunningText.astro` build their HTML for the site. The mockups and the sign-in screen of the app render the same text
 with React. So every surface shows the same words.
@@ -217,7 +238,7 @@ the status of each Conductor Cloud feature in Conductive.
 [Conductor Cloud comparison](../../docs/protocol/conductor-cloud-comparison.md)
 states its requirements. The link above the home headline and the "From
 Conductor Cloud" link in the Product column of the footer lead to it. Its
-last call to action keeps the waitlist promise of the site.
+last call to action has the sentence and the two actions of the home page.
 
 The modules in `from-conductor/` are the one source of the rows, the
 statuses, the dates, and the words of the page. The chosen mockup,
@@ -297,7 +318,9 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
   `ClosingCall.astro`: a status as its icon and word, a due day or "No date
   yet", a sentence of shared copy as markup, and the last call to action of
   a page.
-- `features.ts`: the home page's feature copy.
+- `features.ts`: the words that the site and the mockups share: the hero
+  sentence and the footer tagline, the features, the Mac app section with
+  its downloads, and the smaller features.
 - `from-conductor/`: the one source of the comparison page and its mockup.
   - `areas.ts` and `areas/`: the 15 areas in their order, and one file of
     rows for each area.
@@ -311,12 +334,14 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
     rule, and the words of a day.
   - `copy.ts`: the words of the page and of its two entry links, as text
     without markup.
-- `access-copy.ts`: the waitlist sentence under the last call to action.
-- `links.ts`: the source repository address, site paths, and `pageHrefs`
-  for links from another origin.
-- `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared
+- `access-copy.ts`: the words of the two actions of the site, and the
+  sentence under the last call to action.
+- `links.ts`: the source repository address, the Mac app download
+  addresses, site paths, and `pageHrefs` for links from another origin.
+- `terms.ts`, `privacy.ts`, `privacy-uses.ts`, `legal-text.ts`: legal pages and the shared
   text model, titles, contact addresses, and sign-in agreement.
-- `request-values.ts`: built-page markers and local Astro preview values.
+- `request-values.ts`: built-page markers, local Astro preview values,
+  the sign-in address, and the links to the sections of the home page.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
   CSS for the font, tokens and picture sizes, and the file list writer.
 - [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,

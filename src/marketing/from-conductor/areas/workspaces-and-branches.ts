@@ -20,7 +20,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Start from a branch, PR, or issue',
     status: 'planned',
-    note: 'Starting from an existing branch or pull request is planned. GitHub issue starts are under consideration.',
+    note: 'Starting from an existing GitHub branch, pull request, or issue is planned.',
     due: null,
   },
   {
@@ -34,8 +34,9 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'target-branch',
     area: 'workspaces-and-branches',
     name: 'Target branch',
-    status: 'considering',
-    note: 'Workspaces use the default branch. Choosing another target branch is under consideration.',
+    status: 'planned',
+    note: 'Target branches that follow a pull request’s base are planned. Agents will also be able to change the target branch.',
+    due: null,
   },
   {
     id: 'automatic-names',
@@ -69,8 +70,9 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'workspaces-page-and-restore',
     area: 'workspaces-and-branches',
     name: 'Workspaces page and restore',
-    status: 'considering',
-    note: 'Archived chats stay readable. Restoring an archived workspace is under consideration.',
+    status: 'planned',
+    note: 'Restore within 14 days of archive is planned, including workspace files and sessions. Archived chats already stay readable.',
+    due: null,
   },
   {
     id: 'archive-on-merge',
@@ -83,8 +85,8 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'continue-after-merge',
     area: 'workspaces-and-branches',
     name: 'Continue after merge',
-    status: 'planned',
-    note: 'Continue on a new branch in the same workspace is planned, with the existing files and chat sessions.',
+    status: 'in-progress',
+    note: 'Continue on a new branch in the same workspace is in progress, with the existing files and chat sessions.',
     due: null,
   },
   {

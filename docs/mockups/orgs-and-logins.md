@@ -195,4 +195,5 @@ code, an invite link, or an org invitation gives app access.
   and `src/components/settings/inviteCodeCopy.ts`.
 - The waitlist, the sign-in, and the sign-in of an invite link share one
   frame, as [the design](design.md) gives. The home page asks a visitor
-  to join the waitlist, as [the marketing site](marketing-site.md) gives.
+  to sign up, and the new account then waits on the waitlist, as
+  [the marketing site](marketing-site.md) gives.

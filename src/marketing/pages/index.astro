@@ -2,11 +2,18 @@
 import { productName } from '../../../docs/mockups/src/brand'
 import { waitlistText } from '../access-copy'
 import ClosingCall from '../components/ClosingCall.astro'
+import FeatureSection from '../components/FeatureSection.astro'
 import Icon from '../components/Icon.astro'
+import MacDownloads from '../components/MacDownloads.astro'
 import PictureFrame from '../components/PictureFrame.astro'
 import SectionIntro from '../components/SectionIntro.astro'
 import SiteActions from '../components/SiteActions.astro'
-import { features, smallerFeatures } from '../features'
+import {
+  features,
+  macAppSection,
+  productSummary,
+  smallerFeatures,
+} from '../features'
 import { parityLinkCopy } from '../from-conductor/copy'
 import SiteLayout from '../layouts/SiteLayout.astro'
 import { sitePaths } from '../links'
@@ -14,13 +21,14 @@ import { sitePaths } from '../links'
 /*
  * The home page: the hero with a short link to the page for people who
  * move from Conductor Cloud and the app, the features with real screens,
- * the smaller features, and a last call to action.
+ * the Mac app with its downloads, the smaller features, and a last call to
+ * action.
  */
 ---
 
 <SiteLayout
   title={`${productName} – Coding agents on cloud computers, in your browser`}
-  description="Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser."
+  description={productSummary.heroText}
 >
   <main class="main">
     <section class="hero">
@@ -32,11 +40,7 @@ import { sitePaths } from '../links'
         <h1 class="hero-title">
           Give every coding task its own cloud computer.
         </h1>
-        <p class="hero-text">
-          Agents powered by Claude and Codex work on their own branch, in a full
-          clone of your repository. You follow along and review the work from
-          any browser.
-        </p>
+        <p class="hero-text">{productSummary.heroText}</p>
         <SiteActions />
       </div>
       <div class="hero-picture">
@@ -45,17 +49,14 @@ import { sitePaths } from '../links'
     </section>
     <div class="sections" id="features">
       {features.map((feature) => (
-        <section class="feature">
-          <SectionIntro
-            label={feature.label}
-            title={feature.title}
-            text={feature.text}
-          />
-          <div class={feature.bleed ? 'stage stage-bleed' : 'stage'}>
-            <PictureFrame picture={feature.picture} loading="lazy" />
-          </div>
-        </section>
+        <FeatureSection feature={feature} />
       ))}
+      <FeatureSection feature={macAppSection} id="mac-app">
+        <MacDownloads
+          downloads={macAppSection.downloads}
+          requirement={macAppSection.requirement}
+        />
+      </FeatureSection>
       <section class="grid-section">
         <SectionIntro
           label="And more"

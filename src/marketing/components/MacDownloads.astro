@@ -1,0 +1,33 @@
+---
+import type { MacAppSection } from '../features'
+import { macDownloadHref } from '../links'
+import Icon from './Icon.astro'
+
+/**
+ * The downloads of the Mac app, the main one first, and the oldest macOS
+ * version under them. Each download is a link with the look of the large
+ * button, to its DMG on GitHub, as the header links GitHub. A phone puts the
+ * downloads under each other at full width.
+ */
+type Props = {
+  downloads: MacAppSection['downloads']
+  requirement: string
+}
+
+const { downloads, requirement } = Astro.props
+---
+
+<div class="downloads">
+  <div class="actions">
+    {downloads.map((download, index) => (
+      <a
+        class:list={['button', { 'button-primary': index === 0 }]}
+        href={macDownloadHref(download.chip)}
+      >
+        <Icon name="download" size={16} class="download-icon" />
+        <span>{download.label}</span>
+      </a>
+    ))}
+  </div>
+  <p class="downloads-requirement">{requirement}</p>
+</div>

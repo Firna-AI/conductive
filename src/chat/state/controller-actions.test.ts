@@ -197,7 +197,8 @@ describe('ChatController actions', () => {
     const chat = chatFor({
       conversation: 'history',
       hold: (request) =>
-        request.method === 'POST' && request.url.endsWith('/attachments'),
+        request.method === 'POST' &&
+        new URL(request.url).pathname === filePaths.attachments(org, ws),
     })
     await chat.controller.start()
     chat.controller.setDraft(id, 'The suggestions cover the postcode.')

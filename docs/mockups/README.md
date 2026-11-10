@@ -60,6 +60,13 @@ dialog. Its linked page,
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section.
 
+`app/attachments` shows uploads, failed uploads with Try again, files over
+25 MB, sent files, and the files of a queued first message. Its shared
+words live in [attachmentCopy.ts](src/components/chat/attachmentCopy.ts).
+`app/new-workspace/files` shows the same chips on the first message of a new
+workspace, before the workspace exists, and `app/new-workspace/dialog/files`
+shows them in the New workspace dialog.
+
 ## Folder layout
 
 | Folder or file            | Contents                                                            |
