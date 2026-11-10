@@ -4,6 +4,7 @@ import {
 } from '../../app/shortcuts/decision'
 import type { ShortcutHost } from '../../app/shortcuts/host'
 import type { ShortcutKeymap } from '../../app/shortcuts/keymap'
+import { restoreLayoutModifiers } from '../../app/shortcuts/keys'
 import type { ShortcutFocus } from '../../app/shortcuts/text-keys'
 import type { KeyPress } from '../../app/services'
 import type { ShortcutKeyboard } from '../../shared/shortcut-key'
@@ -83,7 +84,8 @@ function consume(press: KeyPress): void {
  * every open menu closes, and a menu that refuses keeps the key. A key that
  * runs a command goes no further: the browser's own action does not run,
  * and no element of the page hears it. A repeat of a held command key goes
- * no further either, and runs nothing. Every other press goes on untouched.
+ * no further either, and runs nothing. An unmatched restored shortcut
+ * also stops after willing menus close. A pass goes on untouched.
  */
 export function handleShortcutPress(press: KeyPress, page: ShortcutPage): void {
   const decision = decideShortcut({
@@ -99,10 +101,16 @@ export function handleShortcutPress(press: KeyPress, page: ShortcutPage): void {
   })
   if (decision.kind === 'pass') return
   if (decision.kind === 'repeat') {
+    if (
+      restoreLayoutModifiers(press).layoutModifiers != null &&
+      page.layers.menuOpen() &&
+      !page.layers.closeMenus()
+    )
+      return
     consume(press)
     return
   }
   if (decision.closeMenu && !page.layers.closeMenus()) return
   consume(press)
-  page.offers.run(decision.command)
+  if (decision.kind === 'command') page.offers.run(decision.command)
 }

@@ -79,7 +79,7 @@ export const actionCommands: Readonly<
   'go-to-preview': 'go-to-preview',
   'go-to-desktop': null,
   'archive-workspace': 'archive-workspace',
-  'restore-workspace': null,
+  'restore-workspace': 'restore-workspace',
   'new-section': 'new-section',
   'hide-sidebar': 'toggle-sidebar',
   'show-sidebar': 'toggle-sidebar',

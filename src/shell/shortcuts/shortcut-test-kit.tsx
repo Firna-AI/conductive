@@ -67,10 +67,16 @@ function keyAndCode(name: string, shift: boolean): KeyboardEventInit {
 export function pressShortcut(
   text: string,
   target: EventTarget = document.activeElement ?? document.body,
-  options: { key?: string; code?: string; repeat?: boolean } = {},
+  options: {
+    key?: string
+    code?: string
+    repeat?: boolean
+    isComposing?: boolean
+    type?: 'keydown' | 'keyup'
+  } = {},
 ): KeyboardEvent {
   const chord = shortcutChord(readShortcutKeyText(text))
-  const event = new KeyboardEvent('keydown', {
+  const event = new KeyboardEvent(options.type ?? 'keydown', {
     ...keyAndCode(chord.key, chord.shiftKey),
     ...(options.key === undefined ? {} : { key: options.key }),
     ...(options.code === undefined ? {} : { code: options.code }),
@@ -79,6 +85,7 @@ export function pressShortcut(
     altKey: chord.altKey,
     shiftKey: chord.shiftKey,
     repeat: options.repeat ?? false,
+    isComposing: options.isComposing ?? false,
     bubbles: true,
     cancelable: true,
   })

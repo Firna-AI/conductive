@@ -3,12 +3,30 @@ import {
   readShortcutKeyText,
   type ShortcutKeyboard,
   type ShortcutKeyText,
+  type ShortcutSystem,
 } from '../../shared/shortcut-key'
 import type { ShortcutBrowser, ShortcutHost } from './host'
 
-type BrowserTable = Readonly<Record<ShortcutKeyboard, readonly string[]>>
+type BrowserTable = Readonly<Record<ShortcutKeyboard, readonly string[]>> & {
+  readonly own: Readonly<
+    Record<Exclude<ShortcutSystem, 'unknown'>, readonly string[]>
+  >
+}
+
+function digitKeys(modifier: string): string[] {
+  return shortcutDigits.map((digit) => `${modifier}+${digit}`)
+}
+
+function tabAndAddressKeys(modifier: string): string[] {
+  return [...digitKeys(modifier), `${modifier}+L`]
+}
 
 const chromium: BrowserTable = {
+  own: {
+    mac: tabAndAddressKeys('Meta'),
+    windows: tabAndAddressKeys('Ctrl'),
+    linux: [...tabAndAddressKeys('Ctrl'), ...digitKeys('Alt')],
+  },
   mac: [
     'Meta+N',
     'Shift+Meta+N',
@@ -43,6 +61,11 @@ const chromium: BrowserTable = {
 }
 
 const firefox: BrowserTable = {
+  own: {
+    mac: tabAndAddressKeys('Meta'),
+    windows: tabAndAddressKeys('Ctrl'),
+    linux: [...digitKeys('Alt'), 'Ctrl+L'],
+  },
   mac: [
     'Meta+N',
     'Meta+T',
@@ -80,6 +103,7 @@ const firefox: BrowserTable = {
 }
 
 const safari: BrowserTable = {
+  own: { mac: [], windows: [], linux: [] },
   mac: [
     'Meta+N',
     'Shift+Meta+N',
@@ -114,10 +138,7 @@ function keptShortcutKeys(
   host: ShortcutHost,
 ): readonly ShortcutKeyText[] {
   if (host.kind !== 'browser-tab') return []
-  const browsers =
-    host.browser === 'unknown'
-      ? (['chromium', 'firefox', 'safari'] as const)
-      : [browserKeys(host.browser)]
+  const browsers = browserTables(host.browser)
   return [
     ...new Set(
       browsers.flatMap((browser) => {
@@ -132,10 +153,9 @@ function keptShortcutKeys(
   ]
 }
 
-function browserKeys(
-  browser: Exclude<ShortcutBrowser, 'unknown'>,
-): BrowserKeys {
-  return browser === 'chrome' || browser === 'edge' ? 'chromium' : browser
+function browserTables(browser: ShortcutBrowser): readonly BrowserKeys[] {
+  if (browser === 'unknown') return ['chromium', 'firefox', 'safari']
+  return [browser === 'chrome' || browser === 'edge' ? 'chromium' : browser]
 }
 
 /** These keys reach the page, but the app leaves their browser action intact. */
@@ -144,11 +164,17 @@ function browserOwnShortcutKeys(
   host: ShortcutHost,
 ): readonly ShortcutKeyText[] {
   if (host.kind !== 'browser-tab') return []
-  const modifier = keyboard === 'mac' ? 'Meta' : 'Ctrl'
-  return [
-    ...shortcutDigits.map((digit) => `${modifier}+${digit}`),
-    `${modifier}+L`,
-  ].map(readShortcutKeyText)
+  const systems =
+    keyboard === 'mac'
+      ? (['mac'] as const)
+      : host.system === 'windows' || host.system === 'linux'
+        ? [host.system]
+        : (['windows', 'linux'] as const)
+  return browserTables(host.browser).flatMap((browser) =>
+    systems.flatMap((system) =>
+      tables[browser].own[system].map(readShortcutKeyText),
+    ),
+  )
 }
 
 export function shortcutKeyAvailability(

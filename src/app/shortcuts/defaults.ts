@@ -54,6 +54,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   },
   'new-section': { mac: [], other: [] },
   'archive-workspace': { mac: ['Shift+Meta+A'], other: ['Ctrl+Shift+A'] },
+  'restore-workspace': { mac: [], other: [] },
   'previous-workspace': {
     mac: ['Alt+Meta+ArrowUp', 'Ctrl+Meta+ArrowUp'],
     other: ['Alt+Shift+ArrowUp', 'Alt+Shift+PageUp'],

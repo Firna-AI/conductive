@@ -74,8 +74,9 @@ terms. A decision number names a dated record, as
   has the focus never reaches the page.
 - The press of the layout switch key itself goes on to the page and to the
   browser.
-- The terminal still keeps its keys, a menu that does not close still
-  keeps the key, and text composition still gets its key, as
+- As for a key that runs a command, an open menu closes first. The
+  terminal still keeps its keys, a menu that does not close still keeps
+  the key, and text composition still gets its key, as
   [Where a key goes](keyboard-shortcuts.md#where-a-key-goes) says.
 - [The recorder](keyboard-shortcuts-tab.md#recording-a-key) records the
   restored key only when that key has Ctrl, Alt, or ⌘. Otherwise it records

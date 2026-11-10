@@ -110,4 +110,7 @@ test('finds commands through the palette words while keeping the registry in com
     { id: 'new-workspace', group: 'Workspace' },
   ])
   expect(find('agent chat')).toEqual([{ id: 'new-session', group: 'Chat' }])
+  expect(find('unarchive')).toEqual([
+    { id: 'restore-workspace', group: 'Workspace' },
+  ])
 })

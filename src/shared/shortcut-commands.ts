@@ -30,6 +30,7 @@ export const shortcutCommandIds = [
   'new-workspace',
   'new-section',
   'archive-workspace',
+  'restore-workspace',
   ...shortcutDigits.map((digit) => `workspace-${digit}` as const),
   'previous-workspace',
   'next-workspace',

@@ -104,6 +104,7 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
   palette('new-workspace', 'Workspace'),
   palette('new-section', 'Workspace'),
   palette('archive-workspace', 'Workspace'),
+  palette('restore-workspace', 'Workspace'),
   ...shortcutDigits.map((digit) =>
     command(
       `workspace-${digit}`,

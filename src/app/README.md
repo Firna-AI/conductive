@@ -241,6 +241,11 @@ command palette and of the keyboard shortcuts.
   or a browser tab with its browser and system. `KeyPress.code` identifies
   the physical key. `KeyPress.stopPropagation` can stop delivery to a
   field or terminal after a shortcut consumes the press.
+  `KeyPress.layoutModifiers` carries the modifiers taken by held layout
+  switch keys. `onKey.layoutModifiers()` gives a recorder the same state
+  for its own event. `windowKeys` shares this state per window and resets
+  it on key-up or blur. `windowLayoutModifiers(window)` reads the same
+  snapshot for callers with a window.
 - An address that people share, such as the invite link, starts with
   `AppServices.appOrigin`: the origin of the page in a browser. The Mac
   app loads the page from its own origin, so it names the app host of the

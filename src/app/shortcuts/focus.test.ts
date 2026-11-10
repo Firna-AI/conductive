@@ -248,28 +248,30 @@ test('runs unmodified keys and Mac Option typing only outside text fields', () =
   }
 })
 
-test('leaves Control U only to a Linux single-line field and keeps attachment elsewhere', () => {
+test('leaves Control U to Linux and unknown single-line fields and keeps attachment elsewhere', () => {
   const event = press({ key: 'u', code: 'KeyU', metaKey: false, ctrlKey: true })
-  expect(
-    decideShortcut(
-      context({
-        press: event,
-        keyboard: 'other',
-        host: tab('firefox', 'linux'),
-        focus: 'single-line-text',
-      }),
-    ),
-  ).toEqual({ kind: 'pass' })
-  expect(
-    decideShortcut(
-      context({
-        press: event,
-        keyboard: 'other',
-        host: tab('firefox', 'linux'),
-        focus: 'text',
-      }),
-    ),
-  ).toEqual({ kind: 'command', command: 'attach-files', closeMenu: false })
+  for (const system of ['linux', 'unknown'] as const) {
+    expect(
+      decideShortcut(
+        context({
+          press: event,
+          keyboard: 'other',
+          host: tab('firefox', system),
+          focus: 'single-line-text',
+        }),
+      ),
+    ).toEqual({ kind: 'pass' })
+    expect(
+      decideShortcut(
+        context({
+          press: event,
+          keyboard: 'other',
+          host: tab('firefox', system),
+          focus: 'text',
+        }),
+      ),
+    ).toEqual({ kind: 'command', command: 'attach-files', closeMenu: false })
+  }
   expect(
     decideShortcut(
       context({

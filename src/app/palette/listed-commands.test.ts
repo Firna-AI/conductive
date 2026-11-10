@@ -18,6 +18,7 @@ test('the palette lists the command of each row but Switch to org, which the rai
       scope: { kind: 'workspace', workspaceId: 'open', name: 'Open' },
       actions: [
         { id: 'new-session', run },
+        { id: 'restore-workspace', run },
         { id: 'go-to-desktop', run },
       ],
     },
@@ -43,6 +44,7 @@ test('the palette lists the command of each row but Switch to org, which the rai
   }).toEqual({
     page: [
       'new-session',
+      'restore-workspace',
       'new-workspace',
       'new-section',
       'create-org',

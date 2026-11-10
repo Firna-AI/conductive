@@ -1207,14 +1207,20 @@ the layout switch rule until the answers.
       catches. Cover the keys that the terminal keeps on each keyboard,
       and the text keys in a text field. Evidence:
       `.context/keyboard-shortcuts/reports/m3-non-ui.md`.
-- [ ] Add the Linux tab keys and the layout switch rule after decisions 196
-      and 197.
-  - [ ] Decision 196 B with D: the keys that each browser uses on each
+- [x] Add the Linux tab keys and the layout switch rule after decisions 196
+      and 197. Report:
+      `.context/keyboard-shortcuts/reports/answers-196-198-model.md`.
+  - [x] Decision 196 B with D: the keys that each browser uses on each
         system to select a tab or to open its address bar, with tests.
-  - [ ] Decision 197 D: the layout switch rule in the model, the key-up
+  - [x] Decision 197 D: the layout switch rule in the model, the key-up
         and the focus loss of a switch key in `windowKeys`, and the stop of
-        a press that runs no command, with tests.
-- [ ] Add the command Restore workspace without a default key, and run it
+        a press that runs no command, with tests. Agent calls, 2026-11-10:
+        one key source for each window keeps the held switch keys, also
+        between two listeners, and `onKey.layoutModifiers()` gives the
+        recorder the same state; a stopped press closes an open menu first,
+        as a key that runs a command does, and a menu that refuses keeps
+        the key.
+- [x] Add the command Restore workspace without a default key, and run it
       from the palette's Restore workspace action, with tests.
 - [x] Apply the user's answers to review items 4 and 10 in the model and
       the shared contracts, with tests: the fixed rule of the keys of a

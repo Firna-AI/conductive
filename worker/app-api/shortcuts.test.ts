@@ -34,7 +34,10 @@ async function expectAccountShortcuts(cookie: string, shortcuts: unknown) {
 it('saves ordered shortcut changes, keeps empty overrides, and resets only the chosen keyboard', async () => {
   const cookie = await harness.login()
   await expectAccountShortcuts(cookie, { mac: [], other: [] })
-  const other = [{ command: 'command-palette', keys: ['Ctrl+P'] }]
+  const other = [
+    { command: 'command-palette', keys: ['Ctrl+P'] },
+    { command: 'restore-workspace', keys: ['Alt+Shift+R'] },
+  ]
   const otherSaved = await save(cookie, { keyboard: 'other', changes: other })
   expect(otherSaved.status).toBe(200)
   expect(readSaveShortcutsResponse(await otherSaved.json())).toEqual({

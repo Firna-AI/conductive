@@ -1,5 +1,8 @@
 import { shortcutCommandIds } from '../../shared/shortcut-commands'
-import { readShortcutKeyText } from '../../shared/shortcut-key'
+import {
+  readShortcutKeyText,
+  type ShortcutSystem,
+} from '../../shared/shortcut-key'
 import type { ShortcutContext } from './decision'
 import type { ShortcutHost } from './host'
 import { buildShortcutKeymap } from './keymap'
@@ -10,7 +13,7 @@ export const macApp: ShortcutHost = { kind: 'mac-app', system: 'mac' }
 
 export function tab(
   browser: 'chrome' | 'edge' | 'firefox' | 'safari' | 'unknown',
-  system: 'mac' | 'windows' | 'linux' = 'mac',
+  system: ShortcutSystem = 'mac',
 ): ShortcutHost {
   return { kind: 'browser-tab', browser, system }
 }
@@ -25,6 +28,7 @@ export function press(overrides: Partial<ShortcutPress> = {}): ShortcutPress {
     shiftKey: false,
     repeat: false,
     isComposing: false,
+    layoutModifiers: null,
     ...overrides,
   }
 }

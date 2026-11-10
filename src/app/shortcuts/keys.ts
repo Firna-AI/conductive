@@ -19,7 +19,24 @@ export type ShortcutPress = Pick<
   | 'shiftKey'
   | 'repeat'
   | 'isComposing'
->
+> &
+  Partial<Pick<KeyPress, 'layoutModifiers'>>
+
+/** Restores shortcuts with Ctrl, Alt, or Meta. Ordinary typing keeps its original identity. */
+export function restoreLayoutModifiers(press: ShortcutPress): ShortcutPress {
+  const modifiers = press.layoutModifiers
+  if (modifiers == null) return press
+  const restored = {
+    ...press,
+    ctrlKey: press.ctrlKey || modifiers.includes('ctrlKey'),
+    altKey: press.altKey || modifiers.includes('altKey'),
+    shiftKey: press.shiftKey || modifiers.includes('shiftKey'),
+    metaKey: press.metaKey || modifiers.includes('metaKey'),
+  }
+  return restored.ctrlKey || restored.altKey || restored.metaKey
+    ? restored
+    : { ...press, layoutModifiers: null }
+}
 
 const physicalCharacters: Readonly<Record<string, string>> = {
   Backquote: '`',
@@ -62,11 +79,15 @@ export function matchesShortcut(
 
 /** The recorder stores the same key identity that the listener matches. */
 export function shortcutFromPress(
-  press: ShortcutPress,
+  input: ShortcutPress,
 ): ShortcutKeyText | null {
+  const press = restoreLayoutModifiers(input)
   const physical = physicalKey(press.code)
   const byCode =
-    press.altKey || /^Digit\d$/.test(press.code) || otherScript(press)
+    press.layoutModifiers != null ||
+    press.altKey ||
+    /^Digit\d$/.test(press.code) ||
+    otherScript(press)
   const key =
     /^Numpad\d$/.test(press.code) && /^\d$/.test(press.key)
       ? press.code

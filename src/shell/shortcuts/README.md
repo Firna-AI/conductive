@@ -36,10 +36,20 @@ gives the rules.
   repeat decision, and the listener stops it without a run.
 - A press that the model passes goes on to the page and the browser
   untouched.
+- A layout switch key passes untouched. While it stays down, the model
+  restores a press that then has Ctrl, Alt, or Meta and matches it physically.
+  A restored shortcut that runs no command goes no further, also in a text field.
+  Other presses follow their normal rules, including plain and Shift-only typing.
+  This stop closes willing menus first. A menu that refuses keeps the key.
+  Composition, protected terminal keys, frames, and recorders still keep
+  their original events.
 - While the recorder of the [Keyboard shortcuts tab](../account/shortcuts/README.md)
   shows, it waits for a key, so the listener tells the model that a
   recorder records, and no key runs a command. The recorder marks itself
   with `useShortcutRecorder`, and takes the keys that reach it.
+  Its own event can include `layoutModifiers: services.onKey.layoutModifiers()`
+  before the editor calls `shortcutFromPress`. This reads the same window
+  state that the listener uses.
 
 ## The keymap
 
@@ -69,14 +79,15 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
   each row of a list. It offers again only when the list of commands
   changes.
 - A part offers a command only while its control would do something. So
-  a key that would do nothing goes on to the page and the browser.
+  without a held layout switch, a key that would do nothing goes on to
+  the page and the browser.
 
 ### The owners of the commands
 
 | Commands | Owner |
 | --- | --- |
 | Command palette | `PaletteProvider.tsx` |
-| Each command that the palette lists: New workspace, New section, Archive workspace, the Go to rows, New session, Session history, Create org, Repositories settings, Keyboard shortcuts, and Hide or show the sidebar | `PaletteKeys.tsx` of the palette, from the rows of `listedCommands` |
+| Each command that the palette lists: New workspace, New section, Archive workspace, Restore workspace, the Go to rows, New session, Session history, Create org, Repositories settings, Keyboard shortcuts, and Hide or show the sidebar | `PaletteKeys.tsx` of the palette, from the rows of `listedCommands` |
 | Switch to org 1 to 9 | `OrgRail.tsx`, while the rail shows, for each org by its place, also the org of the page and a deleted org |
 | Account page | `Signed` in `Shell.tsx`, on each page of the signed-in app |
 | Workspace list | `OrgRoutes.tsx`, on each page of an org that is not deleted |
@@ -113,6 +124,8 @@ return <TerminalTool screenRef={terminal} {...props} />
 - `useShortcutKey(command)` gives the first key of the command that works
   where the page runs, or none. `useShortcutHint(command)` gives its text
   and its name for `aria-keyshortcuts`. The phone layout gets no hint.
+  A normal Linux browser tab has no working default org key, so its org
+  tiles show no key. An installed app on Linux keeps Alt+digit.
 - A row of the palette ends with the key of its command, in the key chips
   of the mockups. Its option names the key in `aria-keyshortcuts`.
 - The Search row shows the palette key, as ⌘K or Ctrl K.

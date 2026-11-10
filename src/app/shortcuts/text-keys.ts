@@ -37,7 +37,8 @@ export function isTextShortcut(
     return true
   if (
     focus === 'single-line-text' &&
-    host.system === 'linux' &&
+    (host.system === 'linux' ||
+      (keyboard === 'other' && host.system === 'unknown')) &&
     matchesControlKey('Ctrl+U', press)
   )
     return true

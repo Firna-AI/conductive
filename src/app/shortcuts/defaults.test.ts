@@ -1,6 +1,47 @@
 import { expect, test } from 'vitest'
+import { shortcutCommands } from './commands'
 import { decideShortcut } from './decision'
-import { context, press, tab } from './shortcut-test-support'
+import { defaultShortcutKeys } from './defaults'
+import { buildShortcutKeymap } from './keymap'
+import { context, key, press, tab } from './shortcut-test-support'
+
+test('Restore workspace follows Archive workspace and runs an assigned key only when offered', () => {
+  const archive = shortcutCommands.findIndex(
+    (command) => command.id === 'archive-workspace',
+  )
+  expect.soft(shortcutCommands[archive + 1]).toEqual({
+    id: 'restore-workspace',
+    group: 'Workspace',
+    scope: 'palette',
+    label: 'Restore workspace',
+    words: ['unarchive'],
+  })
+  for (const keyboard of ['mac', 'other'] as const) {
+    expect(defaultShortcutKeys('restore-workspace', keyboard)).toEqual([])
+    const keymap = buildShortcutKeymap(keyboard, [
+      { command: 'restore-workspace', keys: [key('Ctrl+Alt+P')] },
+    ])
+    const restored = context({
+      keyboard,
+      keymap,
+      press: press({
+        key: 'p',
+        code: 'KeyP',
+        metaKey: false,
+        ctrlKey: true,
+        altKey: true,
+      }),
+    })
+    expect.soft(decideShortcut(restored), keyboard).toEqual({
+      kind: 'command',
+      command: 'restore-workspace',
+      closeMenu: false,
+    })
+    expect(decideShortcut({ ...restored, offered: new Set() })).toEqual({
+      kind: 'pass',
+    })
+  }
+})
 
 test('runs the checked manual defaults without the old clashes or text editing keys', () => {
   const mac = [

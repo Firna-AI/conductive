@@ -4,7 +4,12 @@ import { shortcutKeyAvailability } from './browser-keys'
 import { commandInHost } from './defaults'
 import type { ShortcutHost } from './host'
 import type { ShortcutKeymap } from './keymap'
-import { matchesShortcut, type ShortcutPress } from './keys'
+import {
+  matchesShortcut,
+  restoreLayoutModifiers,
+  type ShortcutPress,
+} from './keys'
+import { isLayoutSwitchKey } from './layout-switch'
 import {
   isTextShortcut,
   terminalKeepsShortcut,
@@ -27,9 +32,11 @@ export interface ShortcutContext {
 /**
  * The caller closes a menu first, then consumes the press before it runs.
  * A repeat of a held command key is consumed too, and runs nothing.
+ * An unmatched restored press stops without a command, except protected input.
  */
 export type ShortcutDecision =
   | { readonly kind: 'pass' }
+  | { readonly kind: 'stop'; readonly closeMenu: boolean }
   | {
       readonly kind: 'command'
       readonly command: ShortcutCommandId
@@ -50,8 +57,14 @@ export function decideShortcut(context: ShortcutContext): ShortcutDecision {
 }
 
 function decideFirstPress(context: ShortcutContext): ShortcutDecision {
-  const { press, keyboard, host, focus } = context
+  const { keyboard, host, focus } = context
+  const press = restoreLayoutModifiers(context.press)
+  const unmatched: ShortcutDecision =
+    press.layoutModifiers != null
+      ? { kind: 'stop', closeMenu: context.menu === 'closable' }
+      : { kind: 'pass' }
   if (
+    isLayoutSwitchKey(press.key) ||
     press.isComposing ||
     context.recording ||
     focus === 'frame' ||
@@ -64,7 +77,7 @@ function decideFirstPress(context: ShortcutContext): ShortcutDecision {
     (focus === 'text' || focus === 'single-line-text') &&
     isTextShortcut(press, keyboard, host, focus)
   )
-    return { kind: 'pass' }
+    return unmatched
   for (const [command, keys] of context.keymap) {
     if (!context.offered.has(command) || !commandInHost(command, host)) continue
     if (context.modal !== null && context.modal !== command) continue
@@ -82,5 +95,5 @@ function decideFirstPress(context: ShortcutContext): ShortcutDecision {
       }
     }
   }
-  return { kind: 'pass' }
+  return unmatched
 }

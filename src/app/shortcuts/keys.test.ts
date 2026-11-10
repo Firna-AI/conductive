@@ -105,6 +105,77 @@ test('requires exact modifiers so a more specific key cannot run another command
   expect(matchesShortcut(key('Ctrl+K'), press())).toBe(false)
 })
 
+test('records and matches every restored key physically after the layout changes', () => {
+  for (const [text, event] of [
+    [
+      'Ctrl+Shift+Z',
+      press({
+        key: 'y',
+        code: 'KeyZ',
+        metaKey: false,
+        ctrlKey: true,
+        layoutModifiers: ['shiftKey'],
+      }),
+    ],
+    [
+      'Alt+Shift+1',
+      press({
+        key: '№',
+        code: 'Digit1',
+        metaKey: false,
+        shiftKey: true,
+        layoutModifiers: ['altKey'],
+      }),
+    ],
+    [
+      'Ctrl+Shift+/',
+      press({
+        key: 'é',
+        code: 'Slash',
+        metaKey: false,
+        ctrlKey: true,
+        layoutModifiers: ['shiftKey'],
+      }),
+    ],
+    [
+      'Ctrl+K',
+      press({
+        key: 'q',
+        code: 'KeyK',
+        metaKey: false,
+        ctrlKey: true,
+        layoutModifiers: [],
+      }),
+    ],
+    [
+      'Q',
+      press({ key: 'q', code: 'KeyK', metaKey: false, layoutModifiers: [] }),
+    ],
+    [
+      'Q',
+      press({
+        key: 'q',
+        code: 'KeyK',
+        metaKey: false,
+        layoutModifiers: ['shiftKey'],
+      }),
+    ],
+    [
+      'Shift+Q',
+      press({
+        key: 'Q',
+        code: 'KeyK',
+        metaKey: false,
+        shiftKey: true,
+        layoutModifiers: [],
+      }),
+    ],
+  ] as const) {
+    expect.soft(shortcutFromPress(event), text).toBe(text)
+    expect.soft(matchesShortcut(key(text), event), text).toBe(true)
+  }
+})
+
 test('records the matching identity and formats each keyboard and accessible hint', () => {
   const option = shortcutFromPress(
     press({ key: 'Dead', code: 'KeyN', altKey: true }),

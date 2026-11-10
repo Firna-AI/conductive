@@ -8,7 +8,8 @@ import type {
   StreamTarget,
   WorkspaceEventSource,
 } from './events'
-import type { AppServices, KeyPress, KeyValueStorage } from './services'
+import type { AppServices, KeyValueStorage } from './services'
+import { ManualKeys } from './shortcuts/manual-keys.test-support'
 import type { Readable } from './store'
 
 function requestKey(method: string, path: string): string {
@@ -147,23 +148,6 @@ export class ManualInput {
   }
 }
 
-/** The key presses of the page, which come only when the test says so. */
-class ManualKeys {
-  private readonly listeners = new Set<(press: KeyPress) => void>()
-
-  readonly onKey = (listener: (press: KeyPress) => void): (() => void) => {
-    this.listeners.add(listener)
-    return () => {
-      this.listeners.delete(listener)
-    }
-  }
-
-  /** The person presses a key. */
-  press(press: KeyPress): void {
-    for (const listener of [...this.listeners]) listener(press)
-  }
-}
-
 /** Whether the page shows. It starts visible and changes when the test says so. */
 export class ManualVisibility implements Readable<boolean> {
   private shown = true
@@ -237,6 +221,7 @@ export function testServices(
   overrides: Partial<AppServices> & { fetch?: FetchLike } = {},
 ): AppServices {
   let id = 0
+  const keys = new ManualKeys()
   const { fetch, ...rest } = overrides
   return {
     api: createApiClient(
@@ -256,7 +241,7 @@ export function testServices(
     delay: new ManualDelay().delay,
     onFocus: new ManualFocus().onFocus,
     onInput: new ManualInput().onInput,
-    onKey: new ManualKeys().onKey,
+    onKey: keys.onKey,
     platform: 'other',
     host: {
       kind: 'browser-tab',
