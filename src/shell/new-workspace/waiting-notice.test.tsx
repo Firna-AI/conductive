@@ -9,6 +9,7 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
+import { buildOf, changed, imageBuilds } from '../settings/test-builds'
 import { click } from '../test-mount'
 import {
   buildsOf,
@@ -32,7 +33,7 @@ describe('the notice of a waiting repository in New workspace', () => {
     })
     expect(shown(view)).toEqual({
       notices: [
-        "acme/admin-dashboard is ready after the build You can send when it's ready, or choose another repository.",
+        "acme/admin-dashboard is ready after the build You can send when it's ready, or choose another repository. Cloud computer settings",
       ],
       spinner: true,
       picker: 'Repository: acme/admin-dashboard',
@@ -41,7 +42,7 @@ describe('the notice of a waiting repository in New workspace', () => {
     })
   })
 
-  test('with no chosen repository ready, Send is off, an admin gets Cloud computer settings unless a build runs, and a member reads that an admin can act', async () => {
+  test('with no chosen repository ready, Send is off, an admin gets Cloud computer settings in each state, a refresh shows no build, and a member reads that an admin can act', async () => {
     holdAnimationFrames()
     const only = chosen(['admin-dashboard'])
     const page = async (wait: Wait, role: OrgRole = 'admin') => {
@@ -53,6 +54,14 @@ describe('the notice of a waiting repository in New workspace', () => {
       return { ...opened, page: shown(opened.view) }
     }
     const failed = await page('failed')
+    // A refresh never counts as a build that runs, so the notice shows no
+    // build for it, and asks for the next build.
+    const refreshing = await newWorkspace({
+      builds: imageBuilds([buildOf('refresh', 'running', 30_000, 'refresh')], {
+        addedRepositories: [changed('admin-dashboard')],
+      }),
+      repositories: only,
+    })
     const off = { send: false, note: false }
     const picker = 'Repository: acme/admin-dashboard'
     expect({
@@ -60,6 +69,7 @@ describe('the notice of a waiting repository in New workspace', () => {
       member: (await page('failed', 'member')).page,
       waiting: (await page('waiting')).page,
       building: (await page('building')).page,
+      refresh: shown(refreshing.view),
     }).toEqual({
       failed: {
         notices: [
@@ -87,9 +97,17 @@ describe('the notice of a waiting repository in New workspace', () => {
       },
       building: {
         notices: [
-          "acme/admin-dashboard is ready after the build You can send when it's ready.",
+          "acme/admin-dashboard is ready after the build You can send when it's ready. Cloud computer settings",
         ],
         spinner: true,
+        picker,
+        ...off,
+      },
+      refresh: {
+        notices: [
+          'acme/admin-dashboard is ready after the next build Build the computer to send your message. Cloud computer settings',
+        ],
+        spinner: false,
         picker,
         ...off,
       },

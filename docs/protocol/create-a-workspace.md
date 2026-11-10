@@ -178,10 +178,16 @@ decision number names a dated record, as
 - While the repository of the form waits, Send and Create stay off. A
   notice over the composer says when the repository is ready, and whether
   the person can choose another repository that is ready.
-- When no build runs, an admin gets a link in that notice to the Cloud
-  computer tab, which offers Try again or Build computer. While a build
-  runs, the notice shows that build with no link, because the admin has
-  nothing to do on that tab.
+- In each state, an admin gets a link in that notice to the Cloud computer
+  tab, as in the notice of the first build. When no build runs, the tab
+  offers Try again or Build computer.
+- While a build runs, the notice shows that build, and the admin can
+  follow it on that tab. Such a build adds a repository, or an admin
+  started it. A refresh never counts as a build that runs, as
+  [The repository notice](org-image.md#the-repository-notice) says. While
+  only a refresh runs, the notice follows its other states.
+- Reason: the link then follows one rule in both notices. A notice with no
+  link during a build was rejected for that reason.
 - A member who is not an admin gets no link. When an admin can act, the
   notice tells the member so. Reason: only an admin builds (decision 57).
 - When a build that holds the repository succeeds, the repository turns

@@ -138,6 +138,7 @@ export const paths = {
     'app/org-settings/cloud-computer/first-build/failed',
   firstBuildComputerNoBuild:
     'app/org-settings/cloud-computer/first-build/no-build',
+  repositoriesChanged: 'app/org-settings/cloud-computer/repositories-changed',
   repositoriesChangedFailed:
     'app/org-settings/cloud-computer/repositories-changed/build-failed',
   repositoriesChangedNoBuild:

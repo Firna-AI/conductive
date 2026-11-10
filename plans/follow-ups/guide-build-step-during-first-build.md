@@ -2,8 +2,8 @@
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-10, from branch `calummoore/bootstrap-v139`, a read of the public guides for the change that links New workspace to the Cloud computer tab while the first build runs.
-- **Location:** `src/marketing/docs/get-started.md:218` and `src/marketing/docs/cloud-computer.md:60`.
+- **Added:** 2026-11-10, from branch `calummoore/cloud-computer-configuration-link`, a read of the public guides for the change that links New workspace to the Cloud computer tab while the first build runs.
+- **Location:** `src/marketing/docs/get-started.md:218` and `src/marketing/docs/cloud-computer.md:66`.
 - **Reason:** The steps were imprecise before that branch, and the branch changes no guide sentence, so one docs branch fixes both guides.
 
 - **Terms:**
@@ -13,7 +13,7 @@
 - **Background:**
   - The public guides in `src/marketing/docs/` tell users how to change the install script of the cloud computer.
   - `get-started.md` gives five steps. Step 5 says "Select **Build computer** after any current build finishes."
-  - `cloud-computer.md` gives the same steps. Its step 4 says "Select **Build computer**." Its lines 133 to 135 say that changes during the first successful build get one extra build automatically.
+  - `cloud-computer.md` gives the same steps. Its step 4 says "Select **Build computer**." Its lines 141 to 143 say that changes during the first successful build get one extra build automatically.
   - The section "The first build" of `docs/protocol/org-image.md` says that a change of the install script during the first good build gets the added build. The Cloud computer tab then asks for no build.
   - `HeadAction` in `src/shell/settings/BuildCard.tsx` shows Try again after a failed build, and Build computer otherwise.
   - Since that branch, the notice over the New workspace composer links an admin to the Cloud computer tab while the first build runs. So more admins can save a script during that build.

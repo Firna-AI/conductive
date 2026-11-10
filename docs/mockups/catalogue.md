@@ -123,7 +123,8 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   acme/admin-dashboard keeps its place, off, with a note that says when it
   is ready, and the form holds the first ready repository. Its
   `kept-draft` variant has a kept draft in acme/admin-dashboard, with a
-  notice over the composer, and Send is off. Its `none-ready` variant has
+  notice over the composer and Cloud computer settings for an admin, and
+  Send is off. Its `none-ready` variant has
   no chosen repository ready after a failed build, with Cloud computer
   settings for an admin, and its `member` variant has the same notice
   without the link. The dialog shows the same repository menu and the

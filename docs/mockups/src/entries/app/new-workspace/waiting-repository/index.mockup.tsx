@@ -26,9 +26,9 @@ export const waitingRepository = defineScreen({
       slug: 'kept-draft',
       title: 'Kept draft in a waiting repository',
       description:
-        'A kept draft of Cal holds acme/admin-dashboard, which waits for the build that runs. The picker shows it, and the note of the cloud computer gives way. A notice over the composer says that acme/admin-dashboard is ready after the build, with a spinner, and that Cal can send then or choose another repository. Send is off, and the message stays.',
+        'A kept draft of Cal holds acme/admin-dashboard, which waits for the build that runs. The picker shows it, and the note of the cloud computer gives way. A notice over the composer says that acme/admin-dashboard is ready after the build, with a spinner, and that Cal can send then or choose another repository. Cloud computer settings leads Cal, an admin, to the build that runs. Send is off, and the message stays.',
       rationale:
-        'A draft keeps its repository, and a draft can name a repository that waits, such as after an admin removed it, a build ran without it, and the admin added it back. The form keeps the choice of the person, so it does not move the draft to another repository. The build runs by itself, so the notice has no action.',
+        'A draft keeps its repository, and a draft can name a repository that waits, such as after an admin removed it, a build ran without it, and the admin added it back. The form keeps the choice of the person, so it does not move the draft to another repository. The build runs by itself, so the notice asks for nothing. Cal still gets Cloud computer settings, as in the notice of a first build: the user chose on 10 November 2026 to show the link while a build of an added repository or of an admin runs. A refresh never counts as such a build.',
       props: { repositories: 'draft-waits', repositoryMenu: 'closed' },
     },
     {
@@ -37,7 +37,7 @@ export const waitingRepository = defineScreen({
       description:
         'Acme chose only acme/admin-dashboard, after an admin replaced the repositories of its cloud computer, and the build of the add failed. The picker shows acme/admin-dashboard. The notice over the composer says that it is ready after a build succeeds, and that the last build failed. Cloud computer settings leads Cal to the failed build with Try again. Send is off, and the Settings link in the sidebar shows a dot.',
       rationale:
-        'Only an admin builds the computer (decision 57), so only an admin gets the link. A failed build gets no automatic retry (decision 12). The link shows also when no build runs, and leads to Build computer. While a build runs, the notice has a spinner and no link, as kept-draft shows. The notice of a first build keeps its link during its build, because a change that an admin saves then needs no Build computer.',
+        'Only an admin builds the computer (decision 57), so only an admin gets the link. A failed build gets no automatic retry (decision 12). The link shows also when no build runs, and leads to Build computer. While a build runs, the link stays, as kept-draft shows.',
       props: {
         repositories: 'none-ready',
         repositoryMenu: 'closed',
