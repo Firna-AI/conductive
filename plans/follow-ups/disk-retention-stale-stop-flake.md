@@ -70,10 +70,10 @@
   - A new stress run or check in the gate: it adds a gate, which the user decides.
 - **Wider fix:** None yet. The class is not known until A names the source.
 - **Previous examples:**
-  - `plans/follow-ups/org-native-test-under-load.md`: another native object test that failed once in a complete gate, after a native alarm cancellation. Its cause is not confirmed either.
+  - `plans/follow-ups/tests-fail-under-load.md`: the consolidated observations include another native object test that failed after a native alarm cancellation. Its cause is not confirmed either.
   - `plans/follow-ups/tests-time-out-under-machine-load.md`: on 10 November 2026, on another branch, the other case of this file timed out at 15,000 ms under load. That case is "ends failed maintenance and refuses destructive resume of a normal errored workspace". It failed by time limit, not by a stop count.
 - **Related:**
-  - `plans/follow-ups/org-native-test-under-load.md`: a possible shared cause in native alarm delivery or cancellation. Neither cause is confirmed. An investigation of one item can check the other.
+  - `plans/follow-ups/tests-fail-under-load.md`: a possible shared cause in native alarm delivery or cancellation. Neither cause is confirmed. An investigation of one item can check the other.
   - `plans/follow-ups/tests-time-out-under-machine-load.md`: the same test file. This item does not cover that time limit failure.
 - **Recommendation:** A. It follows the flaky-test rule of the `testing` skill, and it tells a real stale stop apart from a test order. B costs less now, but it can leave a real stale stop unseen.
 - **Action:** fix after merge, apply A, because the branch does not change this test and has no reproduction of the failure.

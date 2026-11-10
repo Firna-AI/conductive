@@ -38,6 +38,7 @@ import {
   workspaceErrorReporting,
   type WorkspaceErrorReporting,
 } from './error-reporting/workspace'
+import type { ComputerIdentity } from './lifecycle/computer-ledger'
 
 export class WorkspaceLifecycle
   extends DurableObject<WorkspaceCompositionEnv>
@@ -99,6 +100,13 @@ export class WorkspaceLifecycle
         }),
       ),
     )
+  }
+
+  queueComputerStops(
+    orgId: string,
+    computers: readonly ComputerIdentity[],
+  ): Promise<ComputerIdentity[]> {
+    return this.run(() => this.controller.queueComputerStops(orgId, computers))
   }
 
   async queueLifecycleStart(

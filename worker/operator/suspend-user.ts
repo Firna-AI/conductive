@@ -4,6 +4,7 @@ import type { WorkspaceRuntime } from '../lifecycle/workspace-runtime'
 import { jobSoftware, readBuildJob } from '../lifecycle/build-data'
 import { imageRuntime } from '../lifecycle/runtime'
 import { ownedBuilds, ownedWorkspaces, recordUserSuspension } from './data'
+import { stopRecordedComputers } from './stop-computers'
 
 export async function suspendUser(
   runtime: WorkspaceRuntime,
@@ -48,6 +49,12 @@ export async function suspendUser(
       // The existing image alarm also checks the persistent suspension.
     }
   }
+  await stopRecordedComputers(
+    runtime,
+    { kind: 'user', userId: user.userId },
+    pendingWorkspaceIds,
+    pendingBuildIds,
+  )
   return {
     ...user,
     pendingWorkspaceIds,

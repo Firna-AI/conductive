@@ -71,6 +71,7 @@ export async function allocateWorkspace(
   job: WorkspaceStartJob,
   input: () => Promise<SandboxStart>,
 ): Promise<string | null> {
+  const mayHaveAllocated = Boolean(job.createPayloadCiphertext)
   let payload: SandboxStart
   if (job.createPayloadCiphertext)
     payload = await readWorkspaceAllocation(env, job)
@@ -84,8 +85,16 @@ export async function allocateWorkspace(
   }
   try {
     if (!job.allocatedSandboxId) {
-      const sandbox = await createResource(provider, {
+      const sandbox = await createResource(env.DB, provider, {
         kind: 'sandbox',
+        mayHaveAllocated,
+        ownership: {
+          orgId: job.orgId,
+          providerAccount: job.providerAccount,
+          ownerUserId: job.creation?.user.id ?? payload.labels?.user ?? null,
+          purpose: 'workspace',
+          purposeId: job.workspaceId,
+        },
         input: payload,
         persist: () => storage.update(job),
       })
