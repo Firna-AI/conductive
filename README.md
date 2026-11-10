@@ -234,9 +234,9 @@ features:
 - `worker/marketing/`: built marketing pages, the agreement page before
   GitHub, the file list, request markers, and the site's security headers.
 - `src/marketing/`: Astro pages, layouts, parts, styles, pictures, shared
-  legal text, and the shared rows and words of the Conductor Cloud
-  comparison page. Its [README](src/marketing/README.md) gives the build
-  and preview steps.
+  legal text, the public guides, and the shared rows and words of the
+  Conductor Cloud comparison page. Its [README](src/marketing/README.md)
+  gives the build and preview steps.
 - `src/shared/site-build.ts`: names and types shared by the Astro build
   and the Worker.
 - `worker/security/`: GitHub sign-in, signed sessions, the request gate,
@@ -272,8 +272,9 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   [marketing site](docs/architecture/marketing-site.md), the
   [data and trust boundaries](docs/architecture/data-and-trust.md), and the
   terms.
-- [Protocol docs](docs/architecture.md#protocol-docs), which state the
-  requirements. The architecture doc lists each one, with what it covers.
+- [Protocol docs](docs/architecture/protocol-docs.md), which state the
+  requirements. That page of the architecture docs lists each one, with
+  what it covers.
 - [Mockups](docs/mockups/README.md): the design and the catalogue.
 - [Third-party notices](THIRD_PARTY_NOTICES.md): licenses for copied icons
   and the bundled font.
