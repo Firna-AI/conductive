@@ -141,7 +141,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   link. Reason: Safari blocks the cookies of the previewed app inside a
   frame.
 - The port form lists the servers that listen in the sandbox, from the
-  report of the runner (decision 213). The form shows when no preview is
+  report of the runner (decision 218). The form shows when no preview is
   open, and after "+".
   [Listening ports](agent-runner.md#listening-ports) says which ports the
   list holds.
@@ -158,7 +158,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   breaks the rule that only a build installs the software of a sandbox,
   which decision 148 kept for the terminal programs.
 - Each server is a button with its port, its program name, and its folder,
-  when the report gives them (decision 214). A folder that does not fit
+  when the report gives them (decision 219). A folder that does not fit
   keeps its end, after "…".
 - Reason: the port alone does not say which server it is, and two servers
   of one program differ only by their folder. The full command line was

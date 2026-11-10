@@ -10,7 +10,13 @@
   - **Cloud computer:** The sandbox of one Conductive workspace.
   - **Org image:** The prepared software and repositories that new workspaces use.
   - **Port report:** The runner's complete list of eligible listening servers, sent through workspace events.
-- **Background:** Preview lists detected servers with a short program name and an optional repository folder. A click opens the same private preview path as manual port entry. An org image build installs a new runner. Existing workspaces keep the runner from their image. They must keep manual port entry when no report exists. The port list excludes the terminal, ascii-agent, and Sunshine services. The runner filters its own credentials before private reports. The workspace filters marked org values before stored or displayed label cuts.
+- **Background:**
+  - Preview lists detected servers with a short program name and an optional repository folder.
+  - A row opens the same private preview path as manual port entry.
+  - An org image build installs a new runner.
+  - Existing workspaces keep their older runner and must retain manual entry when no report exists.
+  - The list excludes the terminal, ascii-agent, and Sunshine services.
+  - The runner filters known credentials from complete labels. The workspace filters marked org values before stored or displayed cuts.
 - **Task:**
   1. After deployment, keep one test workspace created before a new image build.
   2. Select **Build computer** for a test org. Wait for success, then create a new workspace from that image.

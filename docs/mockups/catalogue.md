@@ -256,7 +256,7 @@ and ends with a press on the chip, which opens
 `app/new-workspace/first-turn`.
 
 `app/tools` shows the terminal. Its child pages show the Preview tool,
-from decisions 213 C and 214 D, its list after a failed repair, and the
+from decisions 218 C and 219 D, its list after a failed repair, and the
 hidden Desktop:
 
 - `app/tools/preview` has an open port preview. Each tab shows the port

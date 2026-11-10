@@ -55,7 +55,7 @@
 - **Previous examples:**
   - The two renumberings of `plans/automatic-first-build.md` on 9 November 2026.
   - The renumbering of the workspace link chips decisions from 150 and 151 to 211 and 212, on 9 November 2026.
-  - The live repeats of 142, 145, 148, 150, and 151 that **Evidence** lists. The repeat of 148 was found on 10 November 2026, by the options check of the plan `plans/preview-port-detection.md`.
+  - The live repeats of 142, 145, 148, 150, and 151 that **Evidence** lists. The repeat of 148 was found on 10 November 2026, by the options check of the [recorded port-detection plan](https://github.com/Firna-AI/remote-code/blob/346334f74113431993856bcfc4a4ed1523753932/plans/preview-port-detection.md).
 - **Recommendation:** B. It ends the collisions without a step before each merge.
 - **Action:** ask the user, because the numbering is a repository rule.
 
