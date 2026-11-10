@@ -48,8 +48,8 @@ create is in the
 
 ## Tests
 
-- `new-workspace-model.test.ts`: a failed create keeps the draft, and Try
-  again sends the same message ID.
+- `new-workspace-model.test.ts`: a failed create keeps the draft and its
+  files, and Try again sends the same message ID with the same files.
 - `app-model.test.ts`: a change of person ends a send that runs, and the
   form then works for that person.
 - `../shell/new-workspace/NewWorkspaceScreen.test.tsx`: the text of a
@@ -58,6 +58,11 @@ create is in the
   happy-dom. It checks a failed first start in the tab that sent the create
   and for another member after a reload, and Try again in the same
   workspace.
+- The browser harness has controls that fail a held create start, as
+  [Harness controls](../../worker/chat/integration/outer-worker-tests.md#harness-controls)
+  says. Its fake sandbox cannot get a file copy, so its check sends text.
+  The tests in this folder and `../shell/` cover the files of a kept draft,
+  with the fake upload of `../test-support/`.
 
 ## Key code
 

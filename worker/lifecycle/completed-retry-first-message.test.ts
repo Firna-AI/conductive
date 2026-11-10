@@ -72,7 +72,7 @@ it('retries a completed create with the admitted first message after initial cha
   expect(
     await runtime.workspace(first.workspaceId).waitCreationLifecycle(),
   ).toEqual({ ok: true })
-  actor.restart()
+  await actor.restart()
   input.firstMessage = {
     id: original.id,
     text: 'Changed retry instructions.',

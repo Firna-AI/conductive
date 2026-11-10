@@ -235,7 +235,7 @@ it('keeps push admission and daily refresh times separate for each account', asy
   )
   await failBuild(db, pushId, 'Refresh failed.', TEST_TIME)
   await finishUnscheduledBuild(db, pushId)
-  fixture.setTime(TEST_TIME + 1_000)
+  await fixture.setTime(TEST_TIME + 1_000)
   await runImageAlarm(images, {
     orgId: org.id,
     providerAccount: SECONDARY_IMAGE_ACCOUNT,

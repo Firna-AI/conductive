@@ -1,10 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { sessionPaths } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { startTurn, terminalEvent } from './turn-lifecycle.test-support'
-
 describe('authenticated Stop attribution', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -16,7 +14,6 @@ describe('authenticated Stop attribution', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('stores and publishes the authenticated Stop member before interrupt and retains it at completion', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -33,7 +30,7 @@ describe('authenticated Stop attribution', () => {
         trace.push('stop-event')
     })
     let storedAtInterrupt = Promise.resolve<unknown>(null)
-    fixture.transport.dropOutgoing = (message) => {
+    fixture.observeOutgoing((message) => {
       if (message.type === 'interrupt') {
         trace.push('interrupt')
         storedAtInterrupt = fixture.chat.store.read(WORKSPACE_ID, (view) =>
@@ -41,7 +38,7 @@ describe('authenticated Stop attribution', () => {
         )
       }
       return false
-    }
+    })
     const path = sessionPaths.interrupt(
       fixture.org.id,
       WORKSPACE_ID,
@@ -94,7 +91,7 @@ describe('authenticated Stop attribution', () => {
       type: 'event',
       streamId: 'fake-stream-1',
       eventNumber: 4,
-      occurredAt: 1_800_000_000_000,
+      occurredAt: 1800000000000,
       event: Object.assign(
         {
           type: 'turn.thinking' as const,
@@ -112,7 +109,7 @@ describe('authenticated Stop attribution', () => {
         {
           workspaceId: WORKSPACE_ID,
           eventNumber: history.throughEventNumber + 1,
-          occurredAt: 1_800_000_000_000,
+          occurredAt: 1800000000000,
           event: {
             type: 'runner.event-refused',
             streamId: 'fake-stream-1',
@@ -125,6 +122,6 @@ describe('authenticated Stop attribution', () => {
         },
       ],
     })
-    tab.close()
+    await tab.close()
   })
 })

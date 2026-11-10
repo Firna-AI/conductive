@@ -7,7 +7,7 @@ import { setupFirstBuildTests } from './first-build-test-support'
 import { startImageBuild } from './image-builds'
 import { ImageCoordinator } from './image-coordinator'
 import { finishImageBuild } from './image-test-support'
-import { MemoryWorkspaceStorage } from './platform-test-storage'
+import { nativeLifecycleStorage } from './native-storage.test-support'
 import { readOrgImage } from './org-image-data'
 
 const fixtureForTest = setupFirstBuildTests()
@@ -17,7 +17,7 @@ it('starts one added build after first-image cleanup and restores its coordinato
   const fixture = await fixtureForTest()
   const { images, org, user, boat } = fixture
   const db = images.env.DB
-  const storage = new MemoryWorkspaceStorage()
+  const { storage } = await nativeLifecycleStorage()
   const coordinator = () =>
     new ImageCoordinator(storage, images.env, images.dependencies)
   images.scheduler.schedule = (orgId, software, nextAt, buildId) =>
@@ -162,7 +162,12 @@ it('keeps the first good image and warns once when the added build cannot be sch
     'succeeded',
   ])
   expect(warning.mock.calls).toEqual([
-    ['Could not start the added cloud computer build.'],
+    [
+      {
+        kind: 'added_image_build_start_failed',
+        message: 'Could not start the added cloud computer build.',
+      },
+    ],
   ])
   expect(await runningBuild(db, org.id)).toBe(null)
 })

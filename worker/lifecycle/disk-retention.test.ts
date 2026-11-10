@@ -32,27 +32,27 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
     await actor.runnerLifecycleDisconnected()
     boat.states.set('bx_1', 'archived')
     expect(await reconcileWorkspaceSandbox(context)).toBe('stopped')
-    fixture.setTime(TEST_TIME)
+    await fixture.setTime(TEST_TIME)
     await actor.lifecycleStopped()
-    fixture.setTime(TEST_TIME + 1_123_200_000)
-    await actor.alarm()
+    await fixture.setTime(TEST_TIME + 1_123_200_000)
+    await actor.advance()
     expect(boat.resumeIds).toEqual(['bx_1'])
     expect(
       await readRetention(runtime.env.DB, created.workspace.id),
     ).toMatchObject({ phase: 'wait' })
     boat.states.set('bx_1', 'archived')
-    await actor.alarm()
+    await actor.advance()
     expect(
       await readRetention(runtime.env.DB, created.workspace.id),
     ).toMatchObject({ phase: 'resume' })
     expect((await actor.readLifecycle())?.nextDiskKeepaliveAt).toBe(
       TEST_TIME + 1_123_200_000,
     )
-    await actor.alarm()
-    await actor.alarm()
+    await actor.advance()
+    await actor.advance()
     boat.commandExitCode = 1
-    await actor.alarm()
-    await actor.alarm()
+    await actor.advance()
+    await actor.advance()
     expect(await readRetention(runtime.env.DB, created.workspace.id)).toEqual({
       phase: 'stop',
       error: 'The startup script failed during disk retention.',
@@ -61,7 +61,7 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
       '/run/conductive/retention-startup.sh',
     )
     boat.failStop = true
-    await actor.alarm()
+    await actor.advance()
     expect(
       await readRetention(runtime.env.DB, created.workspace.id),
     ).toMatchObject({ phase: 'stop' })
@@ -82,7 +82,7 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
       nextDiskKeepaliveAt: null,
     })
     const stops = boat.stopIds.length
-    await actor.alarm()
+    await actor.advance()
     expect(boat.stopIds).toHaveLength(stops)
     expect(boat.deletedIds).toEqual([])
   } finally {
@@ -103,11 +103,11 @@ it('ends failed maintenance and refuses destructive resume of a normal errored w
     const actor = fixture.actors.get(created.workspace.id)?.endpoint()
     if (!actor) throw new Error('Missing production controller')
     // A failed maintenance restart can be stopped safely, then resumed normally.
-    fixture.setTime(TEST_TIME)
+    await fixture.setTime(TEST_TIME)
     boat.states.set('bx_1', 'archived')
     await actor.lifecycleStopped()
-    fixture.setTime(TEST_TIME + 1_123_200_000)
-    await actor.alarm()
+    await fixture.setTime(TEST_TIME + 1_123_200_000)
+    await actor.advance()
     boat.states.set('bx_1', 'error')
     boat.failStop = true
     await expect(
@@ -123,7 +123,7 @@ it('ends failed maintenance and refuses destructive resume of a normal errored w
     })
     await actor.lifecycleActivity()
     boat.failStop = false
-    await actor.alarm()
+    await actor.advance()
     expect(await readRetention(runtime.env.DB, created.workspace.id)).toBe(null)
     await fixture.run(() =>
       resumeWorkspace(runtime, org.id, created.workspace.id, user.id),

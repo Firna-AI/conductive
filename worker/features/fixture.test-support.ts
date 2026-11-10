@@ -60,7 +60,7 @@ export async function seedFeatureBuild(
     previousRepositoryLocations: [],
     software: OUTER_SOFTWARE,
     previousImageName: 'outer-image',
-    now: Date.now(),
+    now: await fixture.actor(`org-image:${OUTER_ORG}`).testAlarmTime(),
   })
   await fixture.env.DB.batch([
     fixture.env.DB.prepare(

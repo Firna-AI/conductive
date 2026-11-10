@@ -10,7 +10,7 @@ import { prepareCreationRequest } from './create-request'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { leasedCreationImage } from './image-leases'
 import { insertSourceJob } from './image-sources/source-data'
-import { MemoryWorkspaceStorage } from './platform-test-storage'
+import { nativeLifecycleStorage } from './native-storage.test-support'
 import { seedPublishedImage } from './published-image-test-support'
 import { buildSnapshotIntent } from './resource-intents'
 import { readSavedScript } from './saved-script'
@@ -100,7 +100,7 @@ it('keeps the image account through a creation claim, workspace, and stored star
   const legacy = readStartJob(legacyStored)
   expect(legacy).toMatchObject({ providerAccount: 'boat' })
   expect(serializeStartJob(legacy)).toMatchObject({ providerAccount: 'boat' })
-  const native = new MemoryWorkspaceStorage()
+  const { storage: native } = await nativeLifecycleStorage()
   const starts = durableStartStorage(
     native,
     runtime.dependencies.now,

@@ -1,4 +1,5 @@
 import { warnWorker } from '../warnings'
+import { warningCode, WarningId } from '../warning-values'
 import type { AppDependencies, AppEnv } from '../env'
 import { providerForAccount } from '../sandbox/client'
 import { HttpError } from '../http'
@@ -72,9 +73,13 @@ export async function finishFailedStart(
     message: 'The cloud computer stopped.',
     status: 409,
   }
-  warnWorker(
-    `Workspace start ${job.workspaceId} ends as failed in phase ${job.phase}: ${failure.code}${job.cancelled ? ', cancelled' : ''}`,
-  )
+  warnWorker({
+    kind: 'workspace_start_ended',
+    workspaceId: WarningId.checked(job.workspaceId),
+    phase: job.phase,
+    code: warningCode(failure.code),
+    cancelled: Boolean(job.cancelled),
+  })
   if (job.kind === 'resume') {
     await finishResumeFailure(
       {

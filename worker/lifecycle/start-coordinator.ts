@@ -9,7 +9,8 @@ import type { AppDependencies, AppEnv } from '../env'
 import { advanceStartRecords } from './start-records'
 import { publishCreationResult } from './creation-publication'
 import { HttpError } from '../http'
-import { errorSummary, warnWorker } from '../warnings'
+import { warnWorker } from '../warnings'
+import { errorSummary, WarningId } from '../warning-values'
 import { orgProviderForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
@@ -98,9 +99,7 @@ export class WorkspaceStartCoordinator {
     return this.admissionWaiters.wait(() => this.storage.admission())
   }
   async pending(): Promise<boolean> {
-    return Boolean(
-      (await this.storage.job()) || (await this.storage.publication()),
-    )
+    return Boolean(await this.storage.job())
   }
 
   reportRunnerReady(apply: () => Promise<void>): Promise<void> {
@@ -237,9 +236,12 @@ export class WorkspaceStartCoordinator {
       return await this.finish({ ok: true })
     } catch (error) {
       const current = (await this.storage.job()) ?? job
-      warnWorker(
-        `Workspace start ${current.workspaceId} failed in phase ${current.phase}: ${errorSummary(error)}`,
-      )
+      warnWorker({
+        kind: 'workspace_start_failed',
+        workspaceId: WarningId.checked(current.workspaceId),
+        phase: current.phase,
+        error: errorSummary(error),
+      })
       if (await retryStartError(this.storage, error, this.dependencies.now()))
         return false
       const failedJob = failedStartJob(current, error, this.dependencies.now())

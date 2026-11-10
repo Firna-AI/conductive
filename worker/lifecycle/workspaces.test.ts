@@ -79,7 +79,9 @@ it('keeps a failed create and its first message while revoking its token and ret
         'SELECT workspace_id AS id FROM lifecycle_sandbox_cleanup',
       ).first('id'),
     ).toBe('lifecycle-1')
-    expect(fixture.actors.get('lifecycle-1')?.storage.alarmAt).not.toBe(null)
+    expect(
+      await fixture.actors.get('lifecycle-1')?.storage.getAlarm(),
+    ).not.toBe(null)
     expect(
       await retrySandboxCleanup(
         runtime.env,
@@ -180,7 +182,7 @@ it('resumes the same disk and retries a failed startup after stopping its old wo
         boat.beforeSandboxRead = undefined
       }
     }
-    fixture.setTime(TEST_TIME + 5_000_000)
+    await fixture.setTime(TEST_TIME + 5_000_000)
     boat.commands.length = 0
     boat.commandExitCode = 1
     boat.commandOutput = 'failed org-secret'
@@ -213,7 +215,7 @@ it('resumes the same disk and retries a failed startup after stopping its old wo
       )?.join(''),
     ).not.toContain('org-secret')
     boat.commandExitCode = 0
-    fixture.setTime(TEST_TIME + 5_000_000)
+    await fixture.setTime(TEST_TIME + 5_000_000)
     await fixture.run(() =>
       resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
     )

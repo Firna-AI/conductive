@@ -1,11 +1,8 @@
 import { expect, it } from 'vitest'
 
 import { SessionLog } from '../../src/chat/state/session-log'
-import {
-  choice,
-  context,
-  createRunnerLimitsFixture,
-} from './runner-limits.test-support'
+import { createRunnerLimitsFixture } from './runner-limits.test-support'
+import { choice, context } from './runner-fixtures.test-support'
 import {
   forgetPositionIndex,
   historyPages,

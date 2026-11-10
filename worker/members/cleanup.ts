@@ -25,12 +25,22 @@ import {
 } from './purge-data'
 import { finishPendingRestore } from './restore'
 import type { MembersHooks } from './route'
+import {
+  cleanupDraftAttachments,
+  purgeOrgAttachments,
+} from '../chat/attachment-cleanup'
+import { warnWorker } from '../warnings'
 
 export async function cleanupDeletedOrgs(
   env: AppEnv,
   dependencies: AppDependencies,
   hooks: Omit<MembersHooks, 'readWorkspace'>,
 ): Promise<{ purged: string[]; pending: string[] }> {
+  try {
+    await cleanupDraftAttachments(env, dependencies.now())
+  } catch {
+    warnWorker({ kind: 'attachment_cleanup_retry' })
+  }
   const result: { purged: string[]; pending: string[] } = {
     purged: [],
     pending: [],
@@ -121,6 +131,9 @@ export async function cleanupDeletedOrgs(
               (ownership) => deleteOrgState(org.id, ownership),
             )
           }
+          await purgeOrgAttachments(env, org.id, () =>
+            keepCleanupLease(env, org.id, token, dependencies),
+          )
           if (!(await purgeOrgRecords(env.DB, org.id, token)))
             throw new Error('Org purge claim was lost')
           result.purged.push(org.id)

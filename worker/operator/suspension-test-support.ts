@@ -3,6 +3,7 @@ import type { backendFixture } from '../lifecycle/backend-test-support'
 import { createWorkspace } from '../lifecycle/workspaces'
 import { API_PATHS, type User } from '../../src/shared/api'
 import { seedWorkspace } from '../members/members-test-support'
+import { seedBackendLogin } from '../lifecycle/backend-seed.test-support'
 import { orgProviderForAccount } from '../sandbox/client'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import {
@@ -23,6 +24,7 @@ export async function joinedMember(fixture: SuspensionFixture): Promise<User> {
   )
     .bind(fixture.org.id, user.id)
     .run()
+  await seedBackendLogin(fixture.harness, user.id)
   return user
 }
 

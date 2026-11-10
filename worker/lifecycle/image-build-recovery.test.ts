@@ -21,7 +21,7 @@ it('keeps the good image across build and provider failures and publishes a succ
       software: SOFTWARE,
     })
     await finish(fixture, replacement)
-    fixture.setTime(TEST_TIME + 50)
+    await fixture.setTime(TEST_TIME + 50)
     const failed = await startImageBuild(images, {
       orgId: org.id,
       userId: user.id,

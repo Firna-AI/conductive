@@ -13,13 +13,32 @@ The exact POST Leave route keeps its existing membership guards.
 Org reads and chat-tab grants remain available.
 `org-writes.ts` shares this rule with the members and Mac browser gates.
 
+## Access checks
+
+`gateAccess(request, env, now)` holds the access checks of `gate`, and reads no body.
+It calls `sessionGate` for the host, Origin, signed session, and app-access checks.
+It also checks the user, the org membership, and the org write rule of `org-writes.ts`.
+`gate` calls it first.
+Then `gate` reads the JSON body of a write, or the headers of a raw upload route.
+
+The chat Durable Object runs `gateAccess` again in its queue for each browser chat write, through `authorizeChatBrowser`.
+That call reuses the body that `gate` already parsed, because `gateAccess` takes no body argument.
+So a write that waited gets the refusal that a new request would get.
+The [chat backend](../chat/README.md#access) says which requests take this second check.
+
 ## JSON request bodies
 
-The gate calls `readJsonObject(request)` once for each write.
+The gate calls `readJsonObject(request)` once for each write, except a raw upload route.
 The call follows the session and org access checks.
 The [shared JSON request reader](../http/README.md#json-request-objects) owns content type normalization, parsing, and object checks.
 The [Worker entry](../http/README.md#request-body-limit) owns the byte limit and the HTTP 413 response.
 A body error prevents route dispatch.
+
+For a [raw upload route](../http/README.md#raw-upload-routes), the gate reads no JSON.
+After the session, org access, and org write checks, it calls `rawUploadLength(request, maxBytes)` from the route registry.
+That check needs the content type `application/octet-stream` and a valid `Content-Length` header.
+The gate puts the declared length in `RequestContext.rawUploadBytes`, and leaves the body unread for the route.
+It refuses a request with no content type, because such a request needs no preflight, so a page on another site could send it.
 
 ## Open connections
 
@@ -146,6 +165,7 @@ request, so its method, path, and Upgrade header govern app access.
 ## Development
 
 Run `npm run test -- worker/security/gate.test.ts worker/security/gate-body.test.ts worker/http/bounded-body.test.ts` from the repository root.
+Run `npm run test -- worker/security/raw-upload.test.ts worker/chat/write-access.test.ts` for raw uploads and queued write admission.
 Use Node 24.
 The body tests use streams with deterministic pull and cancellation counts.
 They send multibyte text to check byte counts.
@@ -161,7 +181,9 @@ Run `npm run test -- worker/security/waitlist-gate.test.ts worker/security/waitl
 
 ### Key Code
 
-- [gate.ts](gate.ts) checks the host, origin, session, membership, and JSON body.
+- [gate.ts](gate.ts) checks the host, origin, session, app access, membership, and JSON body, or raw upload headers.
+  Its body-free `gateAccess` repeats access checks for queued chat writes.
+- [raw-upload.test.ts](raw-upload.test.ts) checks admission before raw body reads and the required headers.
 - [app-access.ts](app-access.ts) checks the original request against the waiting-session allow list.
 - [waitlist-gate.test.ts](waitlist-gate.test.ts) checks waiting sessions, allowed requests, default refusals, and suspensions.
 - [connection-access.ts](connection-access.ts) exports `readConnectionAccess`, the identity and grant types, `CONNECTION_CHECK_MS`, and `scheduleConnectionCheck`.
@@ -177,6 +199,6 @@ Run `npm run test -- worker/security/waitlist-gate.test.ts worker/security/waitl
 ### Related Docs
 
 - [Access requirements](../../docs/protocol/access-and-security.md#hostnames-and-gates)
-- [Access of open tabs](../../docs/protocol/access-and-security.md#orgs-and-workspaces)
+- [Access of open tabs](../../docs/protocol/isolation.md#orgs-and-workspaces)
 - [Worker backend](../README.md)
 - [Operator actions](../operator/README.md)

@@ -169,6 +169,14 @@ Each journal resource holds its kind, its ID, and its provider account. So equal
 Each org image of `org_images` enters the journal with the provider account of its own record. The purge also deletes the `org_images` rows of the org.
 The result names purged orgs and orgs that need another attempt.
 D1 ownership records stay until every external cleanup succeeds.
+Attachment cleanup follows the same rule.
+Workspace purge removes its R2 files after the workspace receiver fence drains its work.
+Org purge also removes draft files and files of failed creation attempts.
+An R2 failure keeps the deletion record and leaves the org pending for retry.
+The scheduled handler sweeps expired unsent attachments before org work.
+Its claimed-file check runs in the workspace chat queue, beside message admission.
+An accepted file of a surviving workspace stays until purge.
+See [chat attachments](../chat/attachments.md) for the storage boundary and expiry proof.
 A cleanup lease separates Restore from cleanup calls.
 An expired lease permits a later attempt after a worker stops.
 

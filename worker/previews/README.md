@@ -232,7 +232,7 @@ routes, the account lookup, organization pin, parsers, transport, commands, and 
 After its access check, the feature adapter gets the `SandboxProvider` of the
 workspace's provider account from `providerForAccount`. It holds no plaintext key.
 
-See [access and security](../../docs/protocol/access-and-security.md#port-previews),
+See [access and security](../../docs/protocol/terminal-previews-and-desktop.md#port-previews),
 the [Mac app](../../docs/protocol/desktop-app.md#port-previews),
 and the official [port API](https://docs.boat.dev/api/reference/agent/expose-a-port)
 and [port cookie rules](https://docs.boat.dev/hosting#who-can-open-a-protected-url).

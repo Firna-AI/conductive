@@ -3,7 +3,7 @@ import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
 import { createApp } from './application'
 import { SOFTWARE } from './lifecycle/backend-test-support'
 import { readBuildHistory } from './lifecycle/build-data'
-import { heldOperation } from './lifecycle/platform-test-storage'
+import { heldOperation } from './test-support/held-operation'
 import {
   realRuntimeFixture,
   runtimeBundle,
@@ -127,9 +127,9 @@ it('warns and finishes the scheduled repairs when the approval email retry fails
       }
     },
   })
-  const warnings: string[] = []
+  const warnings: unknown[] = []
   const warn = console.warn
-  console.warn = (message: string) => warnings.push(message)
+  console.warn = (message: unknown) => warnings.push(message)
   try {
     await expect(
       createApp().scheduled(event, { ...fixture.env, DB: failing }),
@@ -138,6 +138,10 @@ it('warns and finishes the scheduled repairs when the approval email retry fails
     console.warn = warn
   }
   expect(warnings).toEqual([
-    'The retry of approval emails failed. It runs again at the next timer.',
+    {
+      kind: 'approval_email_retry_failed',
+      message:
+        'The retry of approval emails failed. It runs again at the next timer.',
+    },
   ])
 })

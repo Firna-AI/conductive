@@ -29,6 +29,6 @@ export async function startAddedImageBuild(
       job.providerAccount,
     )
   } catch {
-    warnWorker('Could not start the added cloud computer build.')
+    warnWorker({ kind: 'added_image_build_start_failed' })
   }
 }

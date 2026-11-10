@@ -1,9 +1,7 @@
 import { afterAll, beforeAll, expect, it } from 'vitest'
-
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { checkCommitBoundaries } from './commit-boundary.test-support'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -11,7 +9,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('keeps the agent event and cursor together across both commit boundaries', async () => {
   await checkCommitBoundaries(async () => {
     await harness.reset()
@@ -59,10 +56,11 @@ it('keeps the agent event and cursor together across both commit boundaries', as
             : [],
         ),
       ).toEqual(liveText)
-      resumed.close()
+      await resumed.close()
     }
     return {
-      storage: fixture.storage,
+      failNextCommit: fixture.failNextCommit,
+      clearFaults: fixture.clearFaults,
       action: async (error) => {
         runner.emit({ ...event, text: ' after failure' })
         await expect(fixture.drain()).rejects.toThrow(error)
@@ -70,10 +68,10 @@ it('keeps the agent event and cursor together across both commit boundaries', as
       read,
       before: { cursor: 2, started: true, text: ['Durable'] },
       after: { cursor: 3, started: true, text: ['Durable', ' after failure'] },
-      unpublished: () => {
+      unpublished: async () => {
         expect(tab.messages).toHaveLength(1)
         expect(runner.received).toEqual(received)
-        tab.close()
+        await tab.close()
       },
       restart: () => fixture.restart(),
       verify: {
