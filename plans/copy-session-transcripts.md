@@ -10,12 +10,14 @@ stored events of the session, and the browser copies the reply
 (decision 213). The concise copy is the chat as it shows by default, with
 each fold closed. The full copy is the chat with every fold open
 (decision 215). In a read-only workspace, the tab menu of a session tab
-opens with only the two copy items (decision 214). Decision 216, still
-open, asks how a member copies a closed session. Decision 217, still open,
-asks where the effort words live when this change merges.
+opens with only the two copy items (decision 214). A member copies a
+closed session after a reopen, as decision 216 chose, and a follow-up item
+records that gap. The picker of a new workspace and the mockups take the
+effort words from the shared copy that the chat and the Worker use
+(decision 217).
 
 This change adds no keyboard shortcut, no command palette row, no copy of
-one answer, and no download. It adds no thinking text and no tool output,
+one answer, no download, and no copy from the session history. It adds no thinking text and no tool output,
 because the runner sends neither. A tool call carries its kind, its
 target, and the description that the agent gave the call. The brainstorm
 notes and their sources are in `.context/copy-transcript/`. The options
@@ -57,7 +59,8 @@ decision 213, options C and D to decisions 214 and 215, and better root
 questions for decisions 213 and 215. It also corrected three effort grades.
 It kept each recommendation. A second check on the same day added option D
 to decisions 216 and 217, and a better root question for decision 217. It
-changed the recommendation of decision 217 from B to C.
+changed the recommendation of decision 217 from B to C. The user answered
+decisions 216 and 217 on 10 November 2026.
 
 ### 213. How the session transcript gets built
 
@@ -220,8 +223,6 @@ changed the recommendation of decision 217 from B to C.
 
 ### 216. Copy a closed session
 
-Open. It waits for the user.
-
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
@@ -286,10 +287,11 @@ Open. It waits for the user.
   change. The options check agrees.
 - **Action:** ask the user, because option B adds behaviour that no
   requirement covers.
+- **Outcome:** The user chose A on 10 November 2026. The follow-up item
+  `plans/follow-ups/copy-closed-session.md` keeps options B, C, and D for
+  later.
 
 ### 217. Remove the other copies of the effort words
-
-Open. It waits for the user.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -352,6 +354,8 @@ Open. It waits for the user.
   removes the last copy, and closes the follow-up item.
 - **Action:** ask the user, because the rules of the follow-up items start
   work on an item only when the user asks for it.
+- **Outcome:** The user chose C on 10 November 2026. Milestone 4 applies it
+  and deletes `plans/follow-ups/effort-words-copies.md`.
 
 ## Design
 
@@ -435,9 +439,16 @@ One fold and one set of words:
 - The rule that a run with a call that is not done shows open moves from
   `ToolGroup.tsx` to the shared module. Reason: the concise copy needs it.
 - The effort words and `modelLabel` of the chat move to
-  `src/shared/agents.ts`, because the Worker needs them. Decision 217 asks
-  whether the picker of a new workspace and the mockup fixture import them
-  too.
+  `src/shared/agents.ts`, because the Worker needs them. By decision 217,
+  the picker of a new workspace, `src/shell/new-workspace/notices.tsx`,
+  and the mockup fixture import them too.
+
+The agent made this call on 10 November 2026:
+
+- The comparison page at `conductive.build/from-conductor` lists no
+  transcript copy, so this change changes no row of it. Reason: its rule
+  in `docs/protocol/conductor-cloud-comparison.md` covers only the features
+  that it lists.
 
 The text:
 
@@ -522,12 +533,6 @@ read-only workspace. The Move tabs page keeps its five screens.
   - [ ] "Copy failed": the toast "The transcript didn't copy. Try again."
   - [ ] "Archived workspace": the menu of a session tab with only the two
         copy items. A phone shows it as a sheet.
-- [ ] Waits for decision 216: when the answer is B or D, add a screen with
-      the copy items of an entry of the session history, as the decision
-      says, on desktop and as a sheet on a phone.
-- [ ] Waits for decision 217: when the answer is D, move the effort words
-      of `docs/mockups/src/fixtures/agents.ts` into a pure word module of
-      the mockup components, as `lostCopy.ts` is.
 - [ ] Add the workspace state that the toast needs to
       `docs/mockups/src/screens/workspaceState.ts`. Use the toast of
       `@firna/ui`, as the copy toasts of the app do.
@@ -542,15 +547,13 @@ read-only workspace. The Move tabs page keeps its five screens.
 Depends on: 1
 
 The protocol docs state the copy items, the text of a copy, the route, and
-decisions 213 to 216.
+decisions 213, 214, and 215.
 
 - [ ] Add `docs/protocol/session-transcripts.md`. State the two copy
       items, what each copy holds, the rules of the text from "The text"
       above, the copy that keeps the shown tab, the toasts, and the access
       of the route. Give decisions 213, 214, and 215 next to their
       requirements, with the rejected options and the reasons.
-- [ ] Waits for decision 216: state how a member copies a closed session,
-      with the decision.
 - [ ] Update "The tab row" in `docs/protocol/agents-and-sessions.md`: the
       items of the menu of a session tab, the menu of a read-only
       workspace (decision 214), and a link to the new page.
@@ -593,24 +596,24 @@ chat does not change.
 
 ## Milestone 4: Share the words of the chat lines
 
-Depends on: 3. Also 1 when the answer to decision 217 is D.
+Depends on: 3
 
 Each word and format that the copy shares with the chat moves to a pure
 module that the Worker can import. The behaviour of the chat does not
 change.
 
 - [ ] Move the effort words and `modelLabel` from
-      `src/chat/state/format.ts` to `src/shared/agents.ts`. Update the
-      location in `plans/follow-ups/effort-words-copies.md`.
-- [ ] Waits for decision 217: when the answer is B, C, or D, make
-      `src/shell/ui/ModelPicker.tsx` and
-      `src/shell/new-workspace/notices.tsx` import the one copy of the
-      words and `modelLabel`. For B, narrow the follow-up item to the copy
-      of the mockup fixture. For C, also make
-      `docs/mockups/src/fixtures/agents.ts` import the shared words, run
-      `npm run mockups:check`, and delete the follow-up item. For D, import
-      the words from the module of Milestone 1, and delete the follow-up
-      item.
+      `src/chat/state/format.ts` to `src/shared/agents.ts`.
+- [ ] Apply decision 217, option C:
+  - [ ] Make `src/shell/ui/ModelPicker.tsx` and
+        `src/shell/new-workspace/notices.tsx` import the effort words and
+        `modelLabel` from `src/shared/agents.ts`. Remove the copies of the
+        picker.
+  - [ ] Make `docs/mockups/src/fixtures/agents.ts` import the shared
+        effort words. Run `npm run mockups:check`.
+  - [ ] Delete `plans/follow-ups/effort-words-copies.md`, and name it in the
+        commit message. Update the **Related** line of
+        `plans/follow-ups/new-workspace-effort-fallback.md`, which names it.
 - [ ] Move `formatDuration` to a pure shared module.
 - [ ] Move the words and rules that sit inside chat components to pure
       modules under `src/shared/transcript/`: the tool verbs of
@@ -653,8 +656,6 @@ The workspace object serves the Markdown of a session, concise or full.
   - [ ] A session of another workspace gets `404 session_not_found`.
   - [ ] An archived workspace gives the Markdown.
   - [ ] An unknown `detail` gets `400 invalid_input`.
-  - [ ] Waits for decision 216: when the answer is B, C, or D, a closed
-        session gives the Markdown.
 - [ ] Update the routes, the access, and the Key code in
       `worker/chat/README.md`.
 - [ ] Run `npm run typecheck`, `npm run lint`,
@@ -705,12 +706,6 @@ workspace.
       menu, and no tab drags.
 - [ ] Add the chat action that asks for the transcript, copies the reply,
       and shows the toast. The shown tab does not change.
-- [ ] Waits for decision 216: when the answer is B or D, add the copy
-      items to each entry of the session history, as the decision says.
-      For B, build the menu from the item list of the tab menu, with a mark
-      on each item that needs a tab. Add a DOM test: the copy items of an
-      entry copy the closed session, and a press on the entry still
-      reopens it.
 - [ ] Update the expected items of the tab menu tests in
       `TabMenu.dom.test.tsx`, `TabDrag.dom.test.tsx`, and
       `src/shell/workspace/files/FilesWiring.test.tsx`.
@@ -743,8 +738,9 @@ Depends on: 1, 2, 3, 4, 5, 6, 7
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
-      and the follow-up items that the change adds, such as
-      `plans/follow-ups/tool-detail-called-output.md`.
+      and the follow-up items that the change adds and deletes. It adds
+      `tool-detail-called-output.md`, `new-workspace-effort-fallback.md`,
+      and `copy-closed-session.md`. It deletes `effort-words-copies.md`.
 
 ## Post-merge follow-up (non-blocking)
 
