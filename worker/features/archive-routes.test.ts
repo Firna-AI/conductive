@@ -11,10 +11,8 @@ import {
   OUTER_ORG,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
-import { readWorkspace } from '../lifecycle/workspace-data'
 import { readWorkspaceResponse } from '../../src/app/api/read-workspaces'
 import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
-import { boatRoute } from '../sandbox/routes'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
 
 let bundle: string
@@ -68,7 +66,6 @@ it('archives without checking unpushed work and preserves read-only chat while r
   )
     .bind(OUTER_WORKSPACE)
     .run()
-  active.boat.synchronousOutput = ' M draft.txt\0\0' + '2\n'
   const sessionResponse = await active.request(
     sessionsPath(OUTER_ORG, OUTER_WORKSPACE),
     { method: 'POST', body: JSON.stringify({ choice: CLAUDE }) },
@@ -77,24 +74,16 @@ it('archives without checking unpushed work and preserves read-only chat while r
   const sessionId = string(
     record(record(await sessionResponse.json()).session).id,
   )
-  const check = await active.request(
-    workspacePaths.archiveCheck(OUTER_ORG, OUTER_WORKSPACE),
-  )
-  expect(check.status).toBe(200)
-  expect(await check.json()).toEqual({
-    uncommittedFiles: ['draft.txt'],
-    unpushedCommits: 2,
-  })
-  const archive = (discardUnpushedWork: boolean, headers = {}) =>
+  const archive = (headers = {}) =>
     active.request(workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE), {
       method: 'POST',
       headers,
-      body: JSON.stringify({ discardUnpushedWork }),
+      body: '{}',
     })
-  expect(
-    (await archive(true, { Cookie: active.cookies.memberCookie })).status,
-  ).toBe(403)
-  expect((await archive(false)).status).toBe(200)
+  expect((await archive({ Cookie: active.cookies.memberCookie })).status).toBe(
+    403,
+  )
+  expect((await archive()).status).toBe(200)
   expect(active.boat.deletedIds).toEqual([])
   expect(
     await active.env.DB.prepare(
@@ -103,7 +92,7 @@ it('archives without checking unpushed work and preserves read-only chat while r
       .bind('bx_archive')
       .first('deleted_at'),
   ).toBeNull()
-  const archived = await archive(true)
+  const archived = await archive()
   expect(archived.status).toBe(200)
   expect(await archived.json()).toMatchObject({
     workspace: { state: 'archived' },
@@ -130,76 +119,4 @@ it('archives without checking unpushed work and preserves read-only chat while r
   expect(
     (await active.request(filePaths.tree(OUTER_ORG, OUTER_WORKSPACE))).status,
   ).toBe(404)
-})
-
-it('keeps the temporary check endpoint while Archive ignores its failure', async () => {
-  let commandUnavailable = true
-  const sandboxId = 'bx_archive_stopped'
-  const commandRoute = boatRoute({ operation: 'command', sandboxId })
-  const active = (fixture = await featureFixture(bundle, {
-    outbound: async (request, fallback) => {
-      if (
-        commandUnavailable &&
-        request.method === commandRoute.method &&
-        new URL(request.url).pathname.endsWith(commandRoute.path)
-      )
-        return Response.json(
-          { ok: false, code: 'sandbox_not_running' },
-          { status: 409 },
-        )
-      return fallback(request)
-    },
-  }))
-  await active.env.DB.prepare(
-    "UPDATE workspaces SET sandbox_id = ?, state = 'stopped' WHERE id = ?",
-  )
-    .bind(sandboxId, OUTER_WORKSPACE)
-    .run()
-  const unavailable = {
-    error: {
-      code: 'sandbox_unavailable',
-      message: 'Open the workspace to check its saved work. Then try again.',
-    },
-  }
-  const check = await active.request(
-    workspacePaths.archiveCheck(OUTER_ORG, OUTER_WORKSPACE),
-  )
-  expect.soft(check.status).toBe(409)
-  expect.soft(await check.json()).toEqual(unavailable)
-  const blockedArchive = await active.request(
-    workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
-    { method: 'POST', body: JSON.stringify({ discardUnpushedWork: true }) },
-  )
-  expect.soft(blockedArchive.status).toBe(200)
-  expect
-    .soft(await blockedArchive.json())
-    .toMatchObject({ workspace: { state: 'archived' } })
-  expect(
-    await readWorkspace(active.env.DB, OUTER_ORG, OUTER_WORKSPACE),
-  ).toMatchObject({
-    state: 'archived',
-    sandboxId,
-  })
-  expect(active.boat.deletedIds).toEqual([])
-  expect(active.boat.resumeIds).toEqual([])
-
-  commandUnavailable = false
-  active.boat.synchronousOutput = '\0' + '0\n'
-  const retriedCheck = await active.request(
-    workspacePaths.archiveCheck(OUTER_ORG, OUTER_WORKSPACE),
-  )
-  expect(retriedCheck.status).toBe(200)
-  expect(await retriedCheck.json()).toEqual({
-    uncommittedFiles: [],
-    unpushedCommits: 0,
-  })
-  const archived = await active.request(
-    workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
-    { method: 'POST', body: JSON.stringify({ discardUnpushedWork: false }) },
-  )
-  expect(archived.status).toBe(200)
-  expect(await archived.json()).toMatchObject({
-    workspace: { state: 'archived' },
-  })
-  expect(active.boat.deletedIds).toEqual([])
 })

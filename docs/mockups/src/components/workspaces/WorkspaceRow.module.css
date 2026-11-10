@@ -87,6 +87,17 @@
   pointer-events: auto;
 }
 
+/* A row whose Archive or Restore runs keeps its busy action over its time. */
+.acting .time {
+  visibility: hidden;
+}
+
+.acting .archive {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
 /*
  * A view runs no script, so it draws a hover with `.hovered`, such as on
  * the row of a menu that a right click opened: the fill of a hover, and

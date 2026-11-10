@@ -64,6 +64,11 @@ Your chat history remains available while it starts or stays stopped.
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**.
 
+Archive stops the computer and keeps its files for 14 days.
+The chat stays read-only in **Archived**, with no tools.
+Use **Restore** during that window to return the workspace to its section.
+Restore leaves the computer stopped.
+
 - [Review files and changes](/docs/files-and-changes)
 - [Use Terminal and previews](/docs/terminal-and-previews)
 - [Follow a pull request](/docs/pull-requests)
@@ -71,7 +76,7 @@ If it stops while the workspace is open, select **Resume**.
 ## Work with your team
 
 Every member of an org can see its workspaces and chats.
-Every member can send messages in them.
+In an active org, every member can send messages in workspaces that are not archived.
 An admin manages the members, repositories, scripts, and environment variables.
 
 Members with terminal access can read credentials available on a workspace's cloud computer.

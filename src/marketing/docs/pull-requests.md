@@ -74,12 +74,21 @@ Ask the org admin to check the GitHub App's repository access when needed.
 ## Archive after a merge
 
 After a merge, the workspace owner and org admins can select **Archive** in the bar.
-Conductive checks for uncommitted files and unpushed commits first.
-Cancel if you still need that work.
+Archive stops its cloud computer at once, without checking the work or asking a question.
+It keeps the computer and its files for 14 days.
+The chat stays read-only in **Archived**, with no file lists or tools.
 
-Archive deletes the workspace's cloud computer and its files.
-It keeps the chat read-only in **Archived**.
+The notification after Archive offers **Restore**.
+Every member of an active org can restore the workspace while its computer and Restore window remain available.
+Restore returns it to its section and place in the list, stopped.
+Select **Resume** if the restored workspace is already open.
+The archived bar and the command palette also offer Restore during that window.
+On a computer, point to its row in **Archived** to find **Restore**.
+
+Restore ends after 14 days.
+Conductive then deletes the computer and its files.
 The merge alone does not archive the workspace.
 
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 - [Understand Terminal's GitHub identity](/docs/terminal-and-previews#know-which-github-account-a-command-uses)

@@ -24,8 +24,6 @@ export const workspacePaths = {
   activity: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/activity`,
   read: (orgId: string, id: string) => `${workspacePath(orgId, id)}/read`,
-  archiveCheck: (orgId: string, id: string) =>
-    `${workspacePath(orgId, id)}/archive-check`,
   archive: (orgId: string, id: string) => `${workspacePath(orgId, id)}/archive`,
   restore: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restore`,
 } as const
@@ -93,8 +91,4 @@ export interface CreateWorkspaceRequest {
 export interface CreateWorkspaceResponse extends WorkspaceResponse {
   sessionId: string
   firstMessage: UserMessage
-}
-export interface ArchiveCheckResponse {
-  uncommittedFiles: readonly string[]
-  unpushedCommits: number
 }

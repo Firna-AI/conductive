@@ -26,13 +26,11 @@ it('archives a stopped sandbox without a command or deletion and revokes its tok
   fixture.boat.states.set(sandboxId, 'archived')
   await actor.endpoint().lifecycleStopped()
   const commands = fixture.boat.commands.length
-  fixture.boat.synchronousOutput = '\0' + '0\n'
   const response = requireFeatureResult(
     await actor.native.api.lifecycleRpc.archiveWorkspace(
       fixture.org.id,
       id,
       fixture.user.id,
-      false,
       fixture.runtime.env.APP_ORIGIN,
     ),
   )
@@ -40,6 +38,7 @@ it('archives a stopped sandbox without a command or deletion and revokes its tok
   expect(response.workspace.restoreUntil).toBe(TEST_TIME + 1_209_600_000)
   expect(fixture.boat.commands).toHaveLength(commands)
   expect(fixture.boat.deletedIds).toEqual([])
+  expect(fixture.boat.resumeIds).toEqual([])
   expect(
     await readWorkspace(fixture.runtime.env.DB, fixture.org.id, id),
   ).toMatchObject({ sandboxId, state: 'archived' })

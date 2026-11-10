@@ -17,7 +17,6 @@ export async function archiveWorkspace(
   orgId: string,
   workspaceId: string,
   userId: string,
-  _discard: boolean,
   origin: string,
   operations: ArchiveOperations,
 ): Promise<WorkspaceResponse> {

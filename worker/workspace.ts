@@ -18,7 +18,6 @@ import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
 import { activeStoredTurn } from './devices/access'
 import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
-import { readArchiveCheck } from './app-api/archive'
 import { featureResult } from './features/result'
 import { archiveWorkspace } from './lifecycle/archive-workspace'
 import { orgLifecycleActive } from './members/composition-data'
@@ -209,25 +208,10 @@ export class Workspace extends AttachmentWorkspace {
     return this.fetchChat(request)
   }
 
-  checkWorkspaceArchive(orgId: string, workspaceId: string, userId: string) {
-    return featureResult(() =>
-      this.run(() =>
-        readArchiveCheck(
-          this.env,
-          { ...lifecycleDependencies(), now: this.now },
-          orgId,
-          workspaceId,
-          userId,
-        ),
-      ),
-    )
-  }
-
   archiveWorkspace(
     orgId: string,
     workspaceId: string,
     userId: string,
-    discard: boolean,
     origin: string,
   ) {
     return featureResult(() =>
@@ -238,7 +222,6 @@ export class Workspace extends AttachmentWorkspace {
           orgId,
           workspaceId,
           userId,
-          discard,
           origin,
           {
             archiveLifecycle: () =>

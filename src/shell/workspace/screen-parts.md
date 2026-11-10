@@ -140,8 +140,9 @@ the org, waits with the timer of the app, and takes the GitHub events of
 the ordered stream of the workspace.
 
 - On desktop, the bar tops the right column. After a merge, its Archive
-  opens the Archive question of the screen. It shows only when
-  `WorkspaceContext.archive` offers Archive, so a suspended org shows none.
+  archives the workspace at once, with one request, and stays busy while
+  that request runs. It shows only when `WorkspaceContext.archive` offers
+  Archive, so a suspended org shows none.
 - On a phone, the row sits under the header on every tab. A pull request
   opens the Checks tab at its address.
 - An archived workspace keeps the bar on desktop. On a phone it shows only

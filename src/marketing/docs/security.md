@@ -8,7 +8,7 @@ order: 40
 ## Choose people you trust
 
 Every member of an org can see its workspaces and chats.
-Members can use the files and tools of those workspaces.
+Members can use the files and tools of workspaces that are not archived.
 Their terminal access can reach credentials available on a workspace's cloud computer.
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
@@ -76,8 +76,9 @@ A copied credential from another member's workspace can still expose credentials
 
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
-Save the work you need before archiving an affected workspace.
-Archive deletes its cloud computer and ends that workspace's connection access.
+Archive stops its cloud computer and ends that workspace's connection access.
+Conductive keeps its files for 14 days.
+Those files can still hold copied credentials during that window.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
@@ -125,11 +126,19 @@ Keep the app open and retry if a permission change takes effect but cannot save.
 
 A normal computer stop keeps its files and sessions.
 The chat stays readable while the computer is stopped.
-Archive deletes the computer and keeps its chat read-only.
+
+Archive stops the computer and keeps it and its files for 14 days.
+Its chat stays read-only, with no file lists or tools.
+Every member of an active org can restore it during that window while its computer is kept.
+Restore returns the workspace stopped.
+
+Restore ends after 14 days.
+Conductive then deletes the computer and its files.
+Its chat remains read-only after deletion.
 
 Deleting an org stops its computers and starts a seven-day restore window.
 After that window, deletion removes its data and computers.
-Keep important work in GitHub before you archive or delete it.
+Keep important work in GitHub if you need it after a Restore window ends.
 
 The Terms and Privacy notice give the service's data and retention information.
 

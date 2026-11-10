@@ -17,7 +17,6 @@ export function archiveActions(
           fixture.org.id,
           id,
           fixture.user.id,
-          false,
           fixture.runtime.env.APP_ORIGIN,
         ),
       ),

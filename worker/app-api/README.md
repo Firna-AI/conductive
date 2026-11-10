@@ -13,7 +13,7 @@ Each handler returns `null` for a path that it does not own. The
 | `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
-| `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore`. The temporary `GET archive-check` serves the app until its Archive flow changes |
+| `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
 
 `featureShellRoute` in [feature-shell.ts](feature-shell.ts) serves account GitHub

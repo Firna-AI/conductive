@@ -82,9 +82,14 @@ An org has two roles: **Admin** and **Member**.
 | Manage members and org settings | Yes | Read-only |
 | Reassign a workspace | Yes | No |
 | Archive a workspace | Any workspace | Their own workspaces |
+| Restore a workspace within its 14 days | Any workspace | Any workspace |
 
 Use a person's role control in **Members** to change their role.
 An org can have several admins.
+Every member of an active org can restore another member's archived workspace while its computer is kept.
+Archived chats stay read-only until Restore.
+
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 To reassign a workspace, select its owner in the workspace header.
 Choose the member who will take responsibility for it.
@@ -131,9 +136,14 @@ Admins can restore it for seven days before deletion completes.
 Open the faded org in the org list to find its restore action.
 The action says **Restore** followed by the org name.
 Restoring brings back its workspaces, chats, and settings.
-Computers start again when their workspaces open.
+Archived workspaces stay archived after the org returns.
+Their existing Restore deadlines continue to apply.
+Deleting the org does not extend a workspace's 14 days of Restore.
+Other stopped workspaces start their computers when you open them.
 
-After the restore window, deletion removes the org's data and computers.
+After the org's restore window, deletion removes its remaining data and computers.
+An archived workspace's computer can be deleted earlier when its own Restore window ends.
+
 Keep important work in GitHub before you delete an org.
 
 - [Understand workspace archives](/docs/workspaces#archive-a-workspace)

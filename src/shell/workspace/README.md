@@ -15,10 +15,15 @@ states of the cloud computer are in `app/shell`, and the notices are in
 `app/chat/lost-updates`.
 
 The workspace list offers Archive over the time of each permitted row on
-hover only. Selection and keyboard focus alone keep the time visible.
-The header has no Archive button. The shortcut and the menu of a row, the
-command palette, and the pull request bar archive in the same way, as
-[Archive](../../../docs/protocol/workspace-life.md#archive) says.
+hover only, and Restore over the time of each row of the Archived group
+until its last day. Selection and keyboard focus alone keep the time
+visible. The header has no Archive button. The shortcut and the menu of a
+row, the command palette, and the pull request bar archive in the same
+way, at once and with one request, as
+[Archive](../../../docs/protocol/workspace-life.md#archive) says. A toast
+then offers Restore. The archived bar, the row of the Archived group, and
+the palette offer Restore to each member until the last day, as
+[Restore](../../../docs/protocol/workspace-life.md#restore) says.
 
 ## The kept workspace
 
@@ -176,7 +181,7 @@ fake API, with its address options, its controls, and the test command.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right
-  column, or Archive.
+  column, Archive, or Restore.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream, with the kept revokes of previews.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
@@ -217,15 +222,19 @@ fake API, with its address options, its controls, and the test command.
   and the repository fills the `.metas` group. On a phone
   it leads the line under the name. `CopyLink.test.tsx` mounts the whole
   app and presses the button for a copy and for a failed copy.
-- `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
-  states of the cloud computer, the start steps, and the Archive question.
-  Archive from the row of the open workspace, by its shortcut or its menu,
-  acts once, also during the first read, as
-  [Archive](../../../docs/protocol/workspace-menu.md#archive) says. The
-  list archives another row, for the shortcut and the menu alike.
+- `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
+  states of the cloud computer, their words, and the start steps. The bar
+  of an archived workspace offers Restore until its last day, then says
+  when Restore ended. `useArchiveActions.ts` runs Archive and Restore for
+  each control, with their toasts. Archive from the row of the open
+  workspace, by its shortcut or its menu, acts once, also during the first
+  read, as [Archive](../../../docs/protocol/workspace-menu.md#archive)
+  says. An Archive and a Restore during the first read resume nothing.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
   the refused notice. `sandbox-view.ts` chooses the bar and the panels,
-  also for a suspended org and for the saved message of a failed start.
+  also for a suspended org, for the saved message of a failed start, and
+  for the end of Restore. `ArchivedRestore.test.tsx` mounts the whole app
+  for Restore by a member and for its end at the last day.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
 

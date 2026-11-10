@@ -399,6 +399,18 @@ Agent calls from Milestone 3, on 10 November 2026:
   archive window ends. It keeps physical stop dates and uses no secrets.
   Reason: Org Restore must keep the files that a workspace can still Restore.
 
+Agent calls from Milestone 4, on 10 November 2026:
+
+- After an Archive or a Restore moves a row, the focus stays where the
+  action left it. When the row leaves the list, the focus falls to the
+  page, as after the old question. Reason: no requirement names a focus
+  target.
+- After a failed first read that an Archive or a Restore of the visit
+  made old, the visit follows the event stream from the last number that
+  it applied, with no new read. Reason: the replay ends with the newest
+  record, and the floor of the newest Archive or Restore keeps each older
+  record out.
+
 ## Milestone 1: Mockups (completed)
 
 Tags: mockup
@@ -588,22 +600,24 @@ check route stays until Milestone 5, because the app still calls it.
 
 Evidence: `.context/archive-with-restore/m3-evidence.md`.
 
-## Milestone 3a: Align the new public guides
+## Milestone 3a: Align the new public guides (completed)
 
 Depends on: 3
 
 Main added public Markdown guides during this work. Their Archive facts
 must match the approved feature when the pull request merges.
 
-- [ ] Read every guide in `src/marketing/docs/` in full, under the new
+- [x] Read every guide in `src/marketing/docs/` in full, under the new
       repository rule and the public-guide writing rules.
-- [ ] Update every sentence that restates Archive, its check or question,
+- [x] Update every sentence that restates Archive, its check or question,
       retention, Restore, or workspace permissions. Preserve unrelated
       instructions and stable guide addresses and anchors.
-- [ ] Check changed guide links and record the guide coverage under
+- [x] Check changed guide links and record the guide coverage under
       `.context/archive-with-restore/`. Add no prose tests.
 
-## Milestone 4: App: Archive at once, and Restore
+Evidence: `.context/archive-with-restore/m3a-guides-evidence.md`.
+
+## Milestone 4: App: Archive at once, and Restore (completed)
 
 Tags: ui
 
@@ -612,48 +626,84 @@ Depends on: 1, 2a, 2b, 3
 The app archives with one request and offers Restore, as the mockups of
 Milestone 1 show.
 
-- [ ] Archive sends one request, with no check and no question, from the
+- [x] Archive sends one request, with no check and no question, from the
       pull request bar, the row of the list, and the palette. A busy state
       shows while it runs. A failure shows a toast that names it.
-- [ ] After Archive, show the toast with Restore.
-- [ ] Show Restore on the archived bar, in the row of the Archived group,
+- [x] After Archive, show the toast with Restore.
+- [x] Show Restore on the archived bar, in the row of the Archived group,
       and in the palette, to every member of an org that is not
       suspended, until `restoreUntil`. Without `restoreUntil`, show the
       bar of today.
-- [ ] Delete `src/shell/workspace/ArchiveDialog.tsx`, the check steps of
+- [x] Delete `src/shell/workspace/ArchiveDialog.tsx`, the check steps of
       `ArchiveModel`, `readArchiveCheck` in `src/app/api/read-workspaces.ts`,
       and `docs/mockups/src/components/workspace/ArchiveDialog.module.css`.
-- [ ] Update the dev routes in `src/app/dev/workspace-routes.ts` and the
+- [x] Update the dev routes in `src/app/dev/workspace-routes.ts` and the
       fake routes in `src/test-support/fake-workspace-routes.ts`.
-- [ ] Add tests: the workspace model archives with one request and
+- [x] Add tests: the workspace model archives with one request and
       restores. The bar and the row show Restore to a member who is not
       the owner or an admin, and only before `restoreUntil`.
-- [ ] Smoke-test with `npm run dev`: archive a stopped workspace, restore
+- [x] Smoke-test with `npm run dev`: archive a stopped workspace, restore
       it from the toast, archive it again, and restore it from the Archived
       group. Save the screenshots under `.context/archive-with-restore/`.
 
-## Milestone 5: Worker: delete the archive check
+Evidence: `.context/archive-with-restore/m4-evidence.md`.
 
-Depends on: 4
+## Milestone 4a: Integrate the computer ledger from main (completed)
 
-- [ ] Delete the old way of the archive check, as "Replaced ways" lists
+Depends on: 3, 4
+
+Main now records every cloud computer in one ledger. Keep that record
+through Archive, retention restarts, Restore, expiry, and deleted-org
+cleanup. Preserve the approved Archive and Restore behaviour.
+
+- [x] Merge the new main work and resolve each conflict. Keep the ledger's
+      provider-account identity, allocation records, stop ownership, and
+      cleanup recovery alongside Archive's durable ownership and deadlines.
+- [x] Keep the ledger current through Archive stops, retained-disk bridge
+      restarts, confirmed missing computers, Restore, and final deletion.
+- [x] Preserve all incoming ledger tests and the existing Archive and
+      Restore assertions. Add focused regression coverage where their
+      interaction needs it, with failing proof and repeat evidence.
+- [x] Align affected code docs and retain the incoming marketing and
+      start-card changes. Audit the merge and run focused checks.
+
+Evidence: `.context/archive-with-restore/m4a-evidence.md`,
+`.context/archive-with-restore/m4a-docs-evidence.md`, and
+`.context/archive-with-restore/ledger-merge-audit-final.log`.
+
+## Milestone 5: Worker: delete the archive check (completed)
+
+Depends on: 4a
+
+- [x] Delete the old way of the archive check, as "Replaced ways" lists
       it: the route, `readArchiveCheck`, `checkUnavailable`,
       `checkWorkspaceArchive`, `ArchiveCheckResponse`,
       `workspacePaths.archiveCheck`, and `discardUnpushedWork`.
-- [ ] Remove each test that covers only the check, under the removal rule
+- [x] Remove each test that covers only the check, under the removal rule
       of the `testing` skill. This includes the regression test of commit
       `2148d5f`.
-- [ ] Update or close the follow-up items `dialog-content-outside-window.md`
+- [x] Update or close the follow-up items `dialog-content-outside-window.md`
       and `shell-dialog-busy-rule.md` where they name only the Archive
       question.
-- [ ] Search the repository for each removed name, and confirm that no
+- [x] Remove the Archive example from `dialog-under-busy-menu.md`, while
+      preserving its unrelated dialog problem.
+- [x] Merge the useful stopped-row smoke facts into
+      `archive-restore-deployed-smoke-test.md`, and delete the obsolete
+      `workspace-row-archive-stopped-smoke-test.md` item.
+- [x] Update the old Archive check claim in `src/marketing/features.ts`
+      and the removed-dialog example in `src/shell/operator/useQuestion.ts`.
+- [x] Search the repository for each removed name, and confirm that no
       consumer is left.
+
+Evidence: `.context/archive-with-restore/m5-evidence.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 5
+Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 4a, 5
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
+- [x] Integrate the latest main preview relay and audit preservation before
+      the final gate. Keep Archive preview revocation and unavailable tools.
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
       the targeted tests and the complete gate, `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
@@ -667,6 +717,10 @@ Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 5
       decision and the design calls of this plan with their dates, a
       permalink to this plan, and the follow-up items that the change
       adds.
+
+Evidence: `.context/archive-with-restore/final-check.log`,
+`.context/archive-with-restore/final-links.log`, and
+`.context/archive-with-restore/final-guide-links.log`.
 
 ## Post-merge follow-up (non-blocking)
 
