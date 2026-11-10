@@ -11,7 +11,7 @@ import {
 import { SOFTWARE } from '../backend-test-support'
 import { readBuild, readBuildJob } from '../build-data'
 import { runImageAlarm } from '../image-timers'
-import { heldOperation } from '../platform-test-storage'
+import { heldOperation } from '../../test-support/held-operation'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { readSourceJob } from './source-data'

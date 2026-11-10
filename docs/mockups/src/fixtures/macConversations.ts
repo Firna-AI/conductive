@@ -27,7 +27,7 @@ function onMac(
     {
       kind: 'agent',
       id: 'plan-safari',
-      paragraphs: [
+      blocks: [
         'The cloud computer has no Safari, so I asked to run it on your Mac.',
       ],
     },
@@ -42,7 +42,7 @@ const working: ChatItem = { kind: 'working', id: 'working', elapsed: '18s' }
 const withoutSafari: ChatItem = {
   kind: 'agent',
   id: 'without-safari',
-  paragraphs: [
+  blocks: [
     'I did not run it in Safari. The checkout tests pass in WebKit on the cloud computer, which is close to Safari.',
   ],
 }
@@ -62,7 +62,7 @@ function manyOnMac(history: readonly ChatItem[]): readonly ChatItem[] {
     {
       kind: 'agent',
       id: 'plan-hang',
-      paragraphs: [
+      blocks: [
         'I asked to run each checkout test file in Safari on your Mac, and to read the versions for the bug report.',
       ],
     },
@@ -94,7 +94,7 @@ export function macConversations(history: readonly ChatItem[]) {
       {
         kind: 'agent',
         id: 'safari-passed',
-        paragraphs: ['The checkout test passes in Safari on your Mac.'],
+        blocks: ['The checkout test passes in Safari on your Mac.'],
       },
     ]),
     'mac-unavailable': onMac(history, 'unavailable', [withoutSafari]),

@@ -1,12 +1,9 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { TOOL_DETAIL_MAX_BYTES } from '../../src/shared/chat-events'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { outputFixture } from './runner-output.test-support'
 import { WORKSPACE_ID } from './harness.test-support'
-import { ChatStore } from './store'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -17,7 +14,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('commits encrypted held text with the raw cursor and releases it once after live retry, restart, replay, and a gap', async () => {
   const hooks: WorkspaceEventEnvelope[] = []
   const f = await outputFixture(
@@ -35,13 +31,14 @@ it('commits encrypted held text with the raw cursor and releases it once after l
     messageId: 'answer',
     text: 'org-private-',
   }
-  f.storage.beforeCommit = async (staged) => {
-    const cursor = await new ChatStore(staged, () => 25).read(
-      WORKSPACE_ID,
-      (view) => view.cursor('fake-stream-1'),
-    )
-    if (cursor === 3) throw new Error('Injected output commit failure')
-  }
+  await f.setStorageHooks({
+    beforeCommit: async (staged) => {
+      const cursor = await staged.read(WORKSPACE_ID, (view) =>
+        view.cursor('fake-stream-1'),
+      )
+      if (cursor === 3) throw new Error('Injected output commit failure')
+    },
+  })
   f.runner.emit(delta)
   await expect(f.drain()).rejects.toThrow('Injected output commit failure')
   expect(f.runner.pendingEvents()).toHaveLength(1)
@@ -50,7 +47,7 @@ it('commits encrypted held text with the raw cursor and releases it once after l
       view.cursor('fake-stream-1'),
     ),
   ).toBe(2)
-  f.storage.beforeCommit = null
+  await f.clearFaults()
   await f.connect(f.runner)
   expect(f.runner.pendingEvents()).toEqual([])
   const before = await f.chat.store.read(WORKSPACE_ID, (view) =>
@@ -59,8 +56,10 @@ it('commits encrypted held text with the raw cursor and releases it once after l
   expect(
     before.events.filter(({ event }) => event.type === 'assistant.delta'),
   ).toEqual([])
-  expect(JSON.stringify([...f.storage.records])).not.toContain('org-private-')
-  f.restart()
+  expect(JSON.stringify([...(await f.snapshot()).records])).not.toContain(
+    'org-private-',
+  )
+  await f.restart()
   await f.connect(f.runner)
   expect(f.runner.received.at(-1)).toMatchObject({
     type: 'welcome',
@@ -112,7 +111,6 @@ it('commits encrypted held text with the raw cursor and releases it once after l
     ),
   ).toBe(6)
 })
-
 it('bounds expanded filtered tool detail and permanently refuses an expanded envelope once', async () => {
   const f = await outputFixture(harness, {
     SHORT: { value: 'a', secret: true },
@@ -146,7 +144,7 @@ it('bounds expanded filtered tool detail and permanently refuses an expanded env
   })
   const oversized = await f.emit({
     type: 'workspace.title',
-    name: 'a'.repeat(110_000),
+    name: 'a'.repeat(110000),
   })
   f.runner.sendEnvelope(oversized)
   await f.drain()

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
+import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionPaths } from '../../src/shared/sessions'
 import {
   completeCreationAttempt,
@@ -11,7 +11,6 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-
 describe('workspace chat queue', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -23,7 +22,6 @@ describe('workspace chat queue', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('keeps resumed queues across restart and retries opaque message IDs once', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -43,7 +41,8 @@ describe('workspace chat queue', () => {
         attachmentIds: [],
       },
     )
-    expect(waiting.status).toBe(409)
+    expect(waiting.status).toBe(202)
+    const first: SendMessageResponse = await waiting.json()
     await completeCreationAttempt(harness.env.DB, WORKSPACE_ID)
     await harness.env.DB.prepare(
       "UPDATE workspaces SET state = 'stopped' WHERE id = ?",
@@ -51,6 +50,7 @@ describe('workspace chat queue', () => {
       .bind(WORKSPACE_ID)
       .run()
     const accepted = await fixture.send(session.id, '__proto__')
+    expect(accepted).toEqual(first)
     expect(accepted.message.state).toBe('queued')
     expect(accepted.turnId).toBeNull()
     const beforeRetry = await fixture.history(session.id)
@@ -62,7 +62,7 @@ describe('workspace chat queue', () => {
       .bind(WORKSPACE_ID)
       .run()
     await fixture.send(session.id, 'constructor')
-    fixture.restart()
+    await fixture.restart()
     const runner = await fixture.connect()
     expect(runner.commands).toEqual([])
     runner.emit({ type: 'runner.ready' })
@@ -87,24 +87,23 @@ describe('workspace chat queue', () => {
     expect(
       sent.events.filter(({ event }) => event.type === 'message.sent'),
     ).toHaveLength(2)
-    expect(JSON.stringify([...fixture.storage.records.values()])).not.toContain(
-      `secret-${fixture.owner.id}`,
-    )
+    expect(
+      JSON.stringify([...(await fixture.snapshot()).records.values()]),
+    ).not.toContain(`secret-${fixture.owner.id}`)
     runner.emit({
       type: 'turn.started',
       sessionId: session.id,
       turnId: command.turnId,
       senderId: fixture.owner.id,
       choice: CLAUDE,
-      startedAt: 1_800_000_000_000,
+      startedAt: 1800000000000,
       messageIds: ['__proto__', 'constructor'],
     })
     await fixture.drain()
-    fixture.transport.dropOutgoing = (message) => {
-      if (message.type === 'message')
-        throw new Error('Injected socket send failure')
-      return false
-    }
+    await fixture.setSendRule({
+      type: 'message',
+      error: 'Injected socket send failure',
+    })
     const dropped = await fixture.fetch(
       sessionPaths.messages(fixture.org.id, WORKSPACE_ID, session.id),
       {
@@ -123,8 +122,8 @@ describe('workspace chat queue', () => {
         view.turn(command.turnId),
       ),
     ).toMatchObject({ state: 'running' })
-    fixture.transport.dropOutgoing = () => false
-    fixture.restart()
+    await fixture.setSendRule(null)
+    await fixture.restart()
     await fixture.connect(runner)
     expect(runner.commands.at(-1)).toMatchObject({
       type: 'message',
@@ -132,7 +131,6 @@ describe('workspace chat queue', () => {
       message: { id: 'socket-drop', state: 'sent' },
     })
   })
-
   it('uses the starter login during a shared turn and on the next turn', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -148,7 +146,7 @@ describe('workspace chat queue', () => {
       turnId: initial.turnId,
       senderId: fixture.owner.id,
       choice: CLAUDE,
-      startedAt: 1_800_000_000_000,
+      startedAt: 1800000000000,
       messageIds: ['message-1'],
     })
     await fixture.drain()

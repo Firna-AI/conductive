@@ -1,0 +1,32 @@
+---
+import { parityPageCopy } from '../from-conductor/copy'
+import { dueRule } from '../from-conductor/dates'
+import { parityStatuses, statusOrder } from '../from-conductor/statuses'
+import Icon from './Icon.astro'
+import StatusMark from './StatusMark.astro'
+
+/*
+ * What each status means, and the rule of the due days, so that a visitor
+ * can read a status and a date apart.
+ */
+---
+
+<section aria-labelledby="parity-legend-title" class="parity-legend">
+  <h2 class="parity-legend-title" id="parity-legend-title">
+    {parityPageCopy.legendTitle}
+  </h2>
+  <dl class="parity-legend-items">
+    {statusOrder.map((status) => (
+      <div class="parity-legend-item">
+        <dt>
+          <StatusMark status={status} />
+        </dt>
+        <dd class="parity-legend-meaning">{parityStatuses[status].meaning}</dd>
+      </div>
+    ))}
+  </dl>
+  <p class="parity-legend-rule">
+    <Icon name="calendar-check" size={15} class="parity-legend-rule-icon" />
+    {dueRule}
+  </p>
+</section>

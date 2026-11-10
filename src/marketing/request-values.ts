@@ -23,6 +23,9 @@ export const signInHref = `${requestValues.appOrigin}/`
 /** The section of the home page that lists the features. */
 export const featuresHref = `${sitePaths.home}#features`
 
+/** The section of the home page with the Mac app and its downloads. */
+export const macAppHref = `${sitePaths.home}#mac-app`
+
 /**
  * Each page of the site as a complete address on the site origin, for the
  * agreement page, which the app host serves.
@@ -31,4 +34,5 @@ export const siteOriginHrefs: Readonly<Record<SitePage, string>> = {
   home: `${requestValues.siteOrigin}${sitePaths.home}`,
   terms: `${requestValues.siteOrigin}${sitePaths.terms}`,
   privacy: `${requestValues.siteOrigin}${sitePaths.privacy}`,
+  fromConductor: `${requestValues.siteOrigin}${sitePaths.fromConductor}`,
 }

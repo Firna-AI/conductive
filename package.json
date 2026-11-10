@@ -1,7 +1,7 @@
 {
   "name": "remote-code",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "npm run site:build && vite",
@@ -32,8 +32,10 @@
   },
   "dependencies": {
     "@firna/ui": "4.0.0",
+    "@lexical/react": "0.53.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
+    "lexical": "0.53.0",
     "lucide-react": "^0.577.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

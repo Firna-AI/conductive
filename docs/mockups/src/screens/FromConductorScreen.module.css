@@ -1,0 +1,30 @@
+/*
+ * One column centred on the page. The table has four columns, so the
+ * column takes the width of the site header.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  width: 100%;
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 72px 32px 112px;
+  box-sizing: border-box;
+}
+
+.footnote {
+  margin: -24px 0 40px;
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.mobile {
+  gap: 44px;
+  padding: 40px 20px 72px;
+}
+
+.mobile .footnote {
+  margin: -16px 0 24px;
+}

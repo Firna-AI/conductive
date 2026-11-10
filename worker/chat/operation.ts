@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { SessionLogins } from './session-login'
 import type { ChatStore, ChatTransaction } from './store'
 import type { ChatDependencies } from './types'

@@ -44,9 +44,9 @@ async function isOrgRefusalReply(response: Response): Promise<boolean> {
 
 /**
  * The API client of one org. It calls `note` when the API refuses a request
- * because the org is suspended, then it gives the error to the caller. Its
- * fetch, which feature clients such as the files and the members send
- * through, does the same with each reply.
+ * because the org is suspended, also a file upload, then it gives the error
+ * to the caller. Its fetch, which feature clients such as the files and the
+ * members send through, does the same with each reply.
  */
 export function noteOrgRefusals(api: ApiClient, note: () => void): ApiClient {
   const watch = async <T>(request: Promise<T>): Promise<T> => {
@@ -66,5 +66,7 @@ export function noteOrgRefusals(api: ApiClient, note: () => void): ApiClient {
     get: (path, read) => watch(api.get(path, read)),
     send: (method, path, body, read) =>
       watch(api.send(method, path, body, read)),
+    sendFile: (path, file, read, hooks) =>
+      watch(api.sendFile(path, file, read, hooks)),
   }
 }

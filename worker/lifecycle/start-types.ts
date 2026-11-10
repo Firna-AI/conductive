@@ -1,10 +1,11 @@
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { MaskedStartLog } from './masked-start-log'
-import type { ProvisionedWorkspace } from './workspace-response'
+import type { SavedProvisionedWorkspace } from './workspace-response'
 import type { RepositoryLocation } from './repository-locations'
 import type { SavedScript } from './saved-script'
 import type { ProviderRetryState } from './provider-retry'
+import type { FirstWorkspaceMessage } from './workspace-runtime'
 
 interface WorkspaceStartData {
   workspaceId: string
@@ -18,7 +19,7 @@ interface WorkspaceStartData {
   attempt: string
   /** Restore changes only the command journal identity, not allocation. */
   commandAttempt?: string
-  /** A retained create continues this phase after shared sandbox readiness. */
+  /** A retained create rebuilds runtime files from this phase after readiness. */
   afterReadyPhase?: 'fetch' | 'branch' | 'startup'
   creation?: WorkspaceCreation
   processId: number | null
@@ -38,8 +39,19 @@ interface WorkspaceStartData {
   deadlineAt?: number
 }
 
+/** Admission intent is transient. Saved starts always continue their progress. */
+export type WorkspaceStartIntent =
+  { kind: 'continue' } | { kind: 'retry-failed-create' }
+
 export type WorkspaceMachinePhase =
-  'machine' | 'ready' | 'fetch' | 'branch' | 'startup' | 'runner'
+  | 'machine'
+  | 'ready'
+  | 'fetch'
+  | 'branch'
+  | 'startup'
+  | 'terminal'
+  | 'terminal-password'
+  | 'runner'
 
 export type WorkspaceRunningStartJob = WorkspaceStartData &
   (
@@ -47,7 +59,7 @@ export type WorkspaceRunningStartJob = WorkspaceStartData &
     | {
         kind: 'create'
         phase: WorkspaceMachinePhase
-        admission: ProvisionedWorkspace
+        admission: SavedProvisionedWorkspace
       }
   )
 
@@ -65,6 +77,7 @@ interface WorkspaceCreation {
   repositoryId: string
   sectionId?: string
   city: string
+  name?: string
   branch: string
   sessionId: string
   request: SendMessageRequest
@@ -76,7 +89,7 @@ export type WorkspaceStartResult<Log = MaskedStartLog> =
   | { ok: false; error: { code: string; message: string; log: Log | null } }
 
 export type WorkspaceCreationAdmission =
-  | { ok: true; created: ProvisionedWorkspace }
+  | { ok: true; created: SavedProvisionedWorkspace }
   | Extract<WorkspaceStartResult<null>, { ok: false }>
 
 export interface CompletedWorkspaceCreation {
@@ -92,7 +105,11 @@ export interface CreationPublication {
 export interface StartJobStorage {
   job(): Promise<WorkspaceStartJob | undefined>
   epoch(): Promise<number>
-  begin(job: WorkspaceStartJob, epoch: number): Promise<boolean>
+  begin(
+    job: WorkspaceStartJob,
+    epoch: number,
+    intent?: WorkspaceStartIntent,
+  ): Promise<boolean>
   stop(): Promise<boolean>
   update(job: WorkspaceStartJob): Promise<void>
   retry(
@@ -103,6 +120,7 @@ export interface StartJobStorage {
   result(): Promise<WorkspaceStartResult | undefined>
   creationResult(): Promise<WorkspaceStartResult | undefined>
   admission(): Promise<WorkspaceCreationAdmission | undefined>
+  firstMessage(): Promise<FirstWorkspaceMessage | undefined>
   publication(): Promise<CreationPublication | undefined>
   clearPublication(): Promise<void>
   complete(result: WorkspaceStartResult): Promise<void>
@@ -117,4 +135,5 @@ export interface StartJobStorage {
     },
   ): Promise<void>
   schedule(at?: number): Promise<void>
+  schedulePublication(at?: number): Promise<void>
 }

@@ -2,10 +2,12 @@ import {
   pictureCaptures,
   pictureFileName,
   pictureSchemes,
-  type MarketingPictureKey,
   type PictureCapture,
-  type PictureLayout,
   type PictureScheme,
+} from '../../docs/mockups/src/screens/marketingPictureCaptures'
+import type {
+  MarketingPictureKey,
+  PictureLayout,
 } from '../../docs/mockups/src/screens/marketingPictureList'
 
 /**

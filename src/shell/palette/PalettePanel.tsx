@@ -6,6 +6,7 @@ import { paletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'
 import type { PaletteQuery } from '../../app/palette/palette-source'
 import { useNow } from '../../app/time'
+import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import { ActionButton } from '../ui/actions'
 import { Overlay, useLayerFocus, usePressOutside } from '../ui/Overlay'
 import { trapTab } from '../ui/Sheet'
@@ -43,6 +44,7 @@ export function PalettePanel(props: { controller: PaletteController }) {
   const { controller } = props
   const phone = useViewport() === 'phone'
   const navigation = useNavigation()
+  const newWorkspace = useNewWorkspace().open
   const panel = useRef<HTMLElement>(null)
   const fieldRef = useRef<FieldHandle>(null)
   const [query, setQuery] = useState(firstQuery)
@@ -70,8 +72,17 @@ export function PalettePanel(props: { controller: PaletteController }) {
     setQuery((current) => ({ ...current, ...next }))
     setHighlight(0)
   }
-  const run = (row: PaletteRow) =>
-    controller.close(rowAction(row, (to) => navigation.push(to)))
+  const run = (row: PaletteRow) => {
+    const orgId = source.org?.id
+    const action =
+      row.kind === 'command' &&
+      row.lead.kind === 'action' &&
+      row.lead.id === 'new-workspace' &&
+      orgId !== undefined
+        ? () => newWorkspace({ orgId, sectionId: null })
+        : rowAction(row, (to) => navigation.push(to))
+    controller.close(action)
+  }
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const { target } = event
     // A sheet of a filter lies outside the panel, with its own keys.

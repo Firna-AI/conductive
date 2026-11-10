@@ -12,7 +12,7 @@ import { handleGitHubRead } from './app-handler'
 import type { GitHubRefresh, GitHubWorkspace } from './contracts'
 import { activeWorkspace } from './data'
 import { RepositoryGitHub } from './fake-repository'
-import { handleGitHubWebhook } from './webhook'
+import { handleGitHubWebhook, type GitHubWebhookDependencies } from './webhook'
 import { refreshWorkspace } from './refresh'
 import { MemoryWorkspace } from './memory-workspace'
 
@@ -25,6 +25,7 @@ export class GitHubTestHarness {
   api: RepositoryGitHub
   states = new Map<string, MemoryWorkspace>()
   tokens: GitHubWorkspace[] = []
+  pushed?: GitHubWebhookDependencies['pushed']
 
   constructor(base: TestHarness) {
     this.base = base
@@ -37,6 +38,7 @@ export class GitHubTestHarness {
     this.api = new RepositoryGitHub(this.base.github)
     this.states = new Map()
     this.tokens = []
+    this.pushed = undefined
   }
 
   async seed(branch = 'changes', workspaceId = 'workspace-1', orgId?: string) {
@@ -138,7 +140,7 @@ export class GitHubTestHarness {
         MACHINE_ORIGIN,
         GITHUB_WEBHOOK_SECRET: WEBHOOK_SECRET,
       },
-      { now: () => TEST_TIME, refresh: this.refresh },
+      { now: () => TEST_TIME, refresh: this.refresh, pushed: this.pushed },
     )
   }
 }

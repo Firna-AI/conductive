@@ -5,6 +5,7 @@ import {
   connectionFixture,
 } from '../../tests/device-connection-support.js'
 import { command } from '../../tests/device-support.js'
+import { deviceAccount } from './credentials.js'
 
 it('connects from a saved cookie, pairs once, and sends heartbeats until the lease is missed', async () => {
   const test = connectionFixture()
@@ -27,6 +28,35 @@ it('connects from a saved cookie, pairs once, and sends heartbeats until the lea
   test.advance(1000)
   await Promise.resolve()
   expect(test.connect).toHaveBeenCalledTimes(1)
+})
+
+it('opens its device socket after app access arrives with the same cookie and no wake', async () => {
+  const test = connectionFixture()
+  let appAccess = false
+  test.authenticate.mockImplementation((credential, signal) =>
+    deviceAccount('https://app.conductive.test', credential, signal, async () =>
+      Response.json({ user: { id: 'user-one' }, appAccess }),
+    ),
+  )
+  await test.connection.start()
+  expect(test.connect).not.toHaveBeenCalled()
+  expect(test.session).not.toHaveBeenCalled()
+  appAccess = true
+  test.advance(999)
+  expect(test.connect).not.toHaveBeenCalled()
+  const opened = test.nextSocket()
+  test.advance(1)
+  expect(await opened).toBe(0)
+  expect(test.connect).toHaveBeenCalledExactlyOnceWith(
+    'first.signature',
+    test.events[0],
+  )
+  test.events[0].message(connected)
+  expect(test.session.mock.calls[0].slice(0, 2)).toEqual([
+    'user-one',
+    { deviceId: 'local-device', connectionId: 'connection-one' },
+  ])
+  test.connection.stop()
 })
 
 it('invalidates a live socket immediately on a cookie change and rejects stale callbacks', async () => {
@@ -128,12 +158,12 @@ it('retries temporary handshake loss with backoff and rereads the current creden
 
 it('abandons an in-flight authentication when another cookie replaces it', async () => {
   const test = connectionFixture()
-  let resolve: (value: string) => void = () => {
+  let resolve: (value: { userId: string; appAccess: boolean }) => void = () => {
     throw new Error('No pending authentication')
   }
   test.authenticate.mockImplementationOnce(
     () =>
-      new Promise<string>((done) => {
+      new Promise<{ userId: string; appAccess: boolean }>((done) => {
         resolve = done
       }),
   )
@@ -146,7 +176,7 @@ it('abandons an in-flight authentication when another cookie replaces it', async
   })
   const replacement = test.connection.cookieChanged()
   expect(test.authenticate.mock.calls[0][1].aborted).toBe(true)
-  resolve('user-one')
+  resolve({ userId: 'user-one', appAccess: true })
   await first
   await replacement
   expect(test.connect.mock.calls.map((call) => call[0])).toEqual([

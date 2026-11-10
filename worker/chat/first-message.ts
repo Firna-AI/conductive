@@ -26,7 +26,8 @@ export function firstMessageIdentity(
   return env.DB.prepare(
     `SELECT u.id, u.github_id AS githubId, u.github_login AS githubLogin,
     u.display_name AS displayName, u.avatar_url AS avatarUrl,
-    w.archived_at AS archivedAt, r.org_id AS orgId, r.session_id AS sessionId, r.first_turn_id AS turnId,
+    w.archived_at AS archivedAt,
+    r.org_id AS orgId, r.session_id AS sessionId, r.first_turn_id AS turnId,
     r.first_message_id AS messageId, r.agent, r.model, r.effort
     FROM workspace_runtime r JOIN workspaces w ON w.id = r.workspace_id
     JOIN orgs o ON o.id = w.org_id
@@ -117,7 +118,13 @@ export async function admitFirstMessage(
     sender.id,
     first.workspaceId,
     first.request.attachmentIds,
+    first.request.id,
+    await transaction.usedAttachments(first.request.attachmentIds, sender.id),
   )
+  await transaction.saveFirstSession({
+    id: first.sessionId,
+    messageId: first.request.id,
+  })
   await createSession(
     transaction,
     first.request.choice,
@@ -138,6 +145,7 @@ export async function admitFirstMessage(
       turnId = ''
       return result
     },
+    dependencies.readAutomaticTitleWorkspace,
   )
   return accepted.message
 }

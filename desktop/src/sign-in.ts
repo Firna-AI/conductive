@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 
+import { INVITE_CODE_PARAMETER, joinPath } from '../../src/shared/waitlist.ts'
 import {
   DESKTOP_CALLBACK,
   DESKTOP_EXCHANGE_PATH,
@@ -30,7 +31,7 @@ export interface SignInDependencies {
   exchange(request: Request): Promise<Response>
   saveCookie(cookie: DesktopCookie): Promise<void>
   flushCookies(): Promise<void>
-  signedIn(): Promise<unknown>
+  signedIn(path: string): Promise<unknown>
   random?(): string
   now?(): number
 }
@@ -38,10 +39,12 @@ export interface SignInDependencies {
 /** The verifier and the session cookie stay in the main process. */
 export function createSignIn(dependencies: SignInDependencies) {
   let verifier: string | undefined
+  let inviteCode: string | undefined
   let exchanging = false
   return {
-    async start(): Promise<void> {
+    async start(code?: string): Promise<void> {
       if (exchanging) return
+      inviteCode = code
       verifier =
         dependencies.random?.() ?? randomBytes(32).toString('base64url')
       const challenge = createHash('sha256')
@@ -49,6 +52,7 @@ export function createSignIn(dependencies: SignInDependencies) {
         .digest('base64url')
       const url = new URL('/api/auth/github', dependencies.appOrigin)
       url.searchParams.set('desktop_challenge', challenge)
+      if (code !== undefined) url.searchParams.set(INVITE_CODE_PARAMETER, code)
       await dependencies.openExternal(url.href)
     },
     async receive(address: string): Promise<boolean> {
@@ -100,7 +104,9 @@ export function createSignIn(dependencies: SignInDependencies) {
         })
         await dependencies.flushCookies()
         verifier = undefined
-        await dependencies.signedIn()
+        const path = inviteCode === undefined ? '/' : joinPath(inviteCode)
+        inviteCode = undefined
+        await dependencies.signedIn(path)
         return true
       } finally {
         exchanging = false

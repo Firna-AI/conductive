@@ -11,17 +11,25 @@ import { START_JOB_KEY } from './start-storage'
 import { DISK_KEEPALIVE_MS, IDLE_MS } from './durable-types'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
 import type { UserMessage } from '../../src/shared/messages'
-import { holdMachineCheckpoint } from './runtime-checkpoint-test-support'
+import {
+  failAfterFirstMessageAdmission,
+  holdMachineCheckpoint,
+  holdResumeCompletionCheckpoint,
+  readCompletionCheckpoint,
+} from './runtime-checkpoint-test-support'
 import type { ImageCoordinatorState } from './image-timers'
 import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { CONNECTION_CHECK_MS } from '../security/connection-access'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { authenticateWorkspaceToken } from './tokens'
 import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
+import { exerciseRepairBudget } from './repair-budget-native-test-support'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
   private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
+  private heldCompletion:
+    ReturnType<typeof holdResumeCompletionCheckpoint> | undefined
   private readonly clock: ManualChatClock
   private readonly chatIds: string[]
 
@@ -45,6 +53,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
           path: `/attachments/${id}.txt`,
         })),
       }),
+      prepareAttachments: async () => null,
     })
     this.clock = clock
     this.chatIds = chatIds
@@ -60,9 +69,25 @@ export class WorkspaceRuntimeFixture extends Workspace {
   holdMachineCheckpoint(): void {
     this.heldMachine = holdMachineCheckpoint(this.ctx.storage)
   }
+  failAfterFirstMessageAdmission(afterLifecycleWrite = false): void {
+    failAfterFirstMessageAdmission(this.ctx.storage, afterLifecycleWrite)
+  }
   async machineCheckpointReached(): Promise<void> {
     if (!this.heldMachine) throw new Error('No held machine checkpoint')
     await this.heldMachine.entered
+  }
+  holdResumeCompletion(attempt: string): void {
+    this.heldCompletion = holdResumeCompletionCheckpoint(
+      this.ctx.storage,
+      attempt,
+    )
+  }
+  async resumeCompletionReached(): Promise<void> {
+    if (!this.heldCompletion) throw new Error('No held resume completion')
+    await this.heldCompletion.entered
+  }
+  completionCheckpoint() {
+    return readCompletionCheckpoint(this.ctx.storage, this.clock.now())
   }
   async acceptFirstFixtureMessage(
     first: FirstWorkspaceMessage,
@@ -113,6 +138,9 @@ export class WorkspaceRuntimeFixture extends Workspace {
   }
   imageSchedule(): Promise<ImageCoordinatorState | undefined> {
     return this.ctx.storage.get('org-image:coordinator')
+  }
+  repairBudget(now: number) {
+    return exerciseRepairBudget(this.env, now)
   }
   checkpoint(): Promise<StoredWorkspaceStartJob | undefined> {
     return this.ctx.storage.get(START_JOB_KEY)
@@ -168,19 +196,32 @@ export default {
               publicExponent: new Uint8Array([1, 0, 1]),
               hash: 'SHA-256',
             },
-            false,
+            true,
             ['sign', 'verify'],
           )
           if (!('privateKey' in keys))
             throw new Error('RSA key pair unavailable')
-          await installationToken(send, env.GITHUB_CLIENT_ID, keys.privateKey, {
-            id: 'source',
-            orgId: 'org',
-            fullName: 'example/source',
-            defaultBranch: 'main',
-            githubRepositoryId: 1,
-            installationId: 91,
-          })
+          const encoded = await crypto.subtle.exportKey(
+            'pkcs8',
+            keys.privateKey,
+          )
+          if (!(encoded instanceof ArrayBuffer))
+            throw new Error('PKCS#8 key unavailable')
+          const privateKey = `-----BEGIN PRIVATE KEY-----\n${btoa(String.fromCharCode(...new Uint8Array(encoded)))}\n-----END PRIVATE KEY-----`
+          await installationToken(
+            send,
+            env.GITHUB_CLIENT_ID,
+            privateKey,
+            {
+              id: 'source',
+              orgId: 'org',
+              fullName: 'example/source',
+              defaultBranch: 'main',
+              githubRepositoryId: 1,
+              installationId: 91,
+            },
+            Date.now,
+          )
           break
         }
       }

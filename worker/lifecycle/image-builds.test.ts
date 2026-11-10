@@ -3,12 +3,55 @@ import { expect, it } from 'vitest'
 import { TEST_TIME } from '../test-support/harness'
 import { SOFTWARE } from './backend-test-support'
 import { setupBackendTests } from './backend-test-hooks'
-import { readBuild, readBuildHistory } from './build-data'
+import { readBuild, readBuildHistory, readBuildJob } from './build-data'
 import { buildEventsResponse } from './build-stream'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { finishImageBuild as finish } from './image-test-support'
+import { readImageSchedule } from './image-schedule'
 
 const backendFixture = setupBackendTests()
+
+it.each(['allocating', 'sources'] as const)(
+  'keeps %s cleanup owned after the first schedule loses its reply',
+  async (phase) => {
+    const fixture = backendFixture()
+    const { images, org, user, boat } = fixture
+    const schedule = images.scheduler.schedule
+    boat.lostCreateReplies = phase === 'allocating' ? 1 : 0
+    images.scheduler.schedule = async (orgId, _software, _nextAt, buildId) => {
+      if (buildId === null) throw new Error('Missing build ID')
+      await advanceImageBuild(images, orgId, buildId)
+      throw new Error('schedule reply lost')
+    }
+    await expect(
+      startImageBuild(images, {
+        orgId: org.id,
+        userId: user.id,
+        kind: 'build',
+        software: SOFTWARE,
+      }),
+    ).rejects.toThrow('schedule reply lost')
+    const failed = (await readBuildHistory(images.env.DB, org.id)).builds[0]
+    expect(await readBuildJob(images.env.DB, org.id, failed.id)).toMatchObject({
+      state: 'failed',
+      phase: phase === 'allocating' ? 'allocating' : 'cleanup',
+      sandboxId: phase === 'allocating' ? null : 'bx_1',
+    })
+    expect(
+      await readImageSchedule(images.env.DB, org.id, TEST_TIME, {
+        buildId: failed.id,
+        nextAt: TEST_TIME,
+      }),
+    ).toMatchObject({ buildId: failed.id })
+    images.scheduler.schedule = schedule
+    await finish(fixture, failed.id)
+    expect((await readBuildJob(images.env.DB, org.id, failed.id)).phase).toBe(
+      'done',
+    )
+    expect(boat.starts).toHaveLength(phase === 'allocating' ? 2 : 1)
+    expect(boat.deletedIds).toEqual(['bx_1'])
+  },
+)
 
 it('recovers scheduling and allocation replies while streaming a successful image build', async () => {
   const fixture = await backendFixture()
@@ -31,12 +74,51 @@ it('recovers scheduling and allocation replies while streaming a successful imag
         software: SOFTWARE,
       }),
     ).rejects.toThrow('scheduler unavailable')
+    const failed = (await readBuildHistory(runtime.env.DB, org.id)).builds[0]
+    expect(failed).toMatchObject({
+      state: 'failed',
+      completedAt: TEST_TIME,
+      error: 'The cloud computer build could not start. Try again.',
+    })
+    expect((await readBuildJob(runtime.env.DB, org.id, failed.id)).phase).toBe(
+      'done',
+    )
+    expect((await readBuild(runtime.env.DB, org.id, failed.id)).log).toEqual([
+      {
+        eventNumber: 1,
+        occurredAt: TEST_TIME,
+        text: 'The cloud computer build could not start. Try again.',
+      },
+    ])
     const id = await startImageBuild(images, {
       orgId: org.id,
       userId: user.id,
       kind: 'build',
-      software: { ...SOFTWARE, sha256: 'b'.repeat(64) },
+      software: SOFTWARE,
     })
+    images.scheduler.schedule = async () => {
+      throw new Error('rescheduling unavailable')
+    }
+    await expect(
+      startImageBuild(images, {
+        orgId: org.id,
+        userId: user.id,
+        kind: 'build',
+        software: SOFTWARE,
+      }),
+    ).rejects.toThrow('rescheduling unavailable')
+    expect((await readBuild(runtime.env.DB, org.id, id)).build.state).toBe(
+      'running',
+    )
+    images.scheduler.schedule = schedule
+    expect(
+      await startImageBuild(images, {
+        orgId: org.id,
+        userId: user.id,
+        kind: 'build',
+        software: { ...SOFTWARE, sha256: 'b'.repeat(64) },
+      }),
+    ).toBe(id)
     expect(fixture.scheduled[0]).toEqual({
       orgId: org.id,
       software: SOFTWARE,
@@ -45,7 +127,7 @@ it('recovers scheduling and allocation replies while streaming a successful imag
     })
     boat.lostCreateReplies = 1
     await advanceImageBuild(images, org.id, id)
-    fixture.setTime(TEST_TIME + 1_000)
+    await fixture.setTime(TEST_TIME + 1_000)
     await advanceImageBuild(images, org.id, id)
     expect(boat.starts[1]).toEqual(boat.starts[0])
     expect(boat.states.size).toBe(1)

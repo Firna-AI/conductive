@@ -1,27 +1,9 @@
 import type { Viewport } from '@mokly/mokly'
-import {
-  Archive,
-  Cloud,
-  ListTree,
-  PanelsTopLeft,
-  SquarePlus,
-  Users,
-  type LucideIcon,
-} from 'lucide-react'
 import type { FeatureItem } from '../../../../../src/marketing/features'
 import { classes } from '../common/classes'
 import { SectionIntro } from './SectionIntro'
+import { siteIcons } from './siteIcons'
 import styles from './FeatureGrid.module.css'
-
-/** The lucide component of each icon that a smaller feature names. */
-const icons: Readonly<Record<FeatureItem['icon'], LucideIcon>> = {
-  cloud: Cloud,
-  users: Users,
-  'list-tree': ListTree,
-  'square-plus': SquarePlus,
-  'panels-top-left': PanelsTopLeft,
-  archive: Archive,
-}
 
 /** A section of smaller features in a grid, under one headline. */
 export function FeatureGrid(props: {
@@ -42,7 +24,7 @@ export function FeatureGrid(props: {
       />
       <ul className={styles.grid}>
         {props.items.map((item) => {
-          const Icon = icons[item.icon]
+          const Icon = siteIcons[item.icon]
           return (
             <li className={styles.item} key={item.title}>
               <Icon aria-hidden className={styles.icon} size={16} />

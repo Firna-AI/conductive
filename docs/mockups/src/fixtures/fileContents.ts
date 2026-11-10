@@ -2,10 +2,13 @@
  * The contents of the files that the previews show.
  */
 
+import type { TableCells } from '../../../../src/markdown/table-rows'
+
 export type MarkdownBlock =
   | { kind: 'h1' | 'h2' | 'p'; text: string }
   | { kind: 'ol' | 'ul'; items: readonly string[] }
   | { kind: 'code'; text: string }
+  | ({ kind: 'table' } & TableCells<string>)
 
 /** `README.md`, already split into blocks. Backticks mark inline code. */
 export const readme: readonly MarkdownBlock[] = [
@@ -18,6 +21,16 @@ export const readme: readonly MarkdownBlock[] = [
       'Copy `.env.example` to `.env.local`.',
       'Run `npm ci`, then `npm run dev`.',
       'Open `http://localhost:3000`.',
+    ],
+  },
+  { kind: 'h2', text: 'Environment' },
+  {
+    kind: 'table',
+    align: [null, null, 'center'],
+    head: ['Variable', 'Used for', 'Required'],
+    rows: [
+      ['`DATABASE_URL`', 'Orders, carts, and sessions', 'Yes'],
+      ['`PLACES_API_KEY`', 'Address suggestions at checkout', 'No'],
     ],
   },
   { kind: 'h2', text: 'Checkout' },

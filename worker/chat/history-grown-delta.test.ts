@@ -1,16 +1,9 @@
 import { expect, it } from 'vitest'
-
 import type { FileEvent } from '../../src/shared/files'
-import { MemoryChatStorage } from './memory-storage.test-support'
-import {
-  capStorageValues,
-  grownEntries,
-} from './runner-grown-reports.test-support'
-import { ChatStore } from './store'
-
+import { nativeChatStore } from './native-store.test-support'
+import { grownEntries } from './runner-grown-reports.test-support'
 it('stores and reloads a grown tree delta that exceeds one SQLite value', async () => {
-  const storage = new MemoryChatStorage()
-  capStorageValues(storage)
+  const { actor } = await nativeChatStore()
   const event: FileEvent = {
     type: 'files.changed',
     delta: {
@@ -22,21 +15,14 @@ it('stores and reloads a grown tree delta that exceeds one SQLite value', async 
     },
   }
   await expect(
-    new ChatStore(storage, () => 25).change(
-      'workspace',
-      (transaction) => transaction.emit(event),
-      () => undefined,
-    ),
+    actor.api.controls.emitEvent('workspace', event),
   ).resolves.toEqual({
     workspaceId: 'workspace',
     eventNumber: 1,
     occurredAt: 25,
     event,
   })
-  const history = await new ChatStore(storage, () => 25).read(
-    'workspace',
-    (view) => view.history(0),
-  )
+  const history = await actor.api.controls.history('workspace')
   expect(history).toEqual({
     events: [
       { workspaceId: 'workspace', eventNumber: 1, occurredAt: 25, event },

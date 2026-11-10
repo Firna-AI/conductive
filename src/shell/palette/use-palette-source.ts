@@ -3,14 +3,16 @@ import { inFirstRun } from '../../app/get-started'
 import type { ListData } from '../../app/list-changes'
 import { useRoute } from '../../app/navigation'
 import { paletteOrg } from '../../app/palette/palette-org'
-import type { PaletteSource } from '../../app/palette/palette-source'
+import type {
+  PaletteRead,
+  PaletteSource,
+} from '../../app/palette/palette-source'
 import { isSuspended } from '../../app/permissions'
 import { routes } from '../../app/router'
 import {
   loading,
   ready,
   useStore,
-  valueOf,
   type Loadable,
   type Readable,
 } from '../../app/store'
@@ -41,12 +43,12 @@ function listOf(
 /**
  * What the palette reads from the app: the org of the palette with its
  * list and its repositories, which it reads while it is open, the orgs of
- * the person, and what the parts of the page offer. `retry` reads the list
- * again after a failure.
+ * the person, and what the parts of the page offer. `retry` reads the
+ * given parts of the org again, such as the reads that failed.
  */
 export function usePaletteSource(): {
   source: PaletteSource
-  retry: () => Promise<void>
+  retry: (reads: readonly PaletteRead[]) => Promise<void>
 } {
   const app = useApp()
   const route = useRoute()
@@ -72,7 +74,7 @@ export function usePaletteSource(): {
       org,
       suspended: org !== null && isSuspended(org, refused),
       list: listOf(sections, workspaces),
-      repositories: valueOf(repositories) ?? [],
+      repositories,
       openWorkspaceId: open,
       createOrgHref: inFirstRun(getStarted)
         ? routes.getStarted()
@@ -80,6 +82,9 @@ export function usePaletteSource(): {
       offers,
       mac,
     },
-    retry: () => model?.reload('list') ?? Promise.resolve(),
+    retry: async (reads) => {
+      if (model === null) return
+      await Promise.all(reads.map((read) => model.reload(read)))
+    },
   }
 }

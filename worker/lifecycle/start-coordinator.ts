@@ -1,5 +1,6 @@
 import type {
   WorkspaceStartJob,
+  WorkspaceStartIntent,
   WorkspaceStartResult,
   StartJobStorage,
   WorkspaceCreationAdmission,
@@ -8,7 +9,8 @@ import type { AppDependencies, AppEnv } from '../env'
 import { advanceStartRecords } from './start-records'
 import { publishCreationResult } from './creation-publication'
 import { HttpError } from '../http'
-import { errorSummary, warnWorker } from '../warnings'
+import { warnWorker } from '../warnings'
+import { errorSummary, WarningId } from '../warning-values'
 import { orgSandboxProvider } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { readWorkspace } from './workspace-data'
@@ -32,12 +34,12 @@ import {
 import {
   readStartForAdvance,
   retryStartError,
-  startDeadlineAt,
   startTimeLimitReached,
 } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { applyStartRunnerReady } from './start-runner'
 import { prepareStartSuccess, runnerStartConnected } from './start-completion'
+import { enqueueWorkspaceStart } from './start-admission'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -66,36 +68,20 @@ export class WorkspaceStartCoordinator {
     this.finishResumeFailure = finishResumeFailure
   }
 
-  enqueue(job: WorkspaceStartJob): Promise<boolean> {
-    const accepted = this.accepting.then(async () => {
-      if (job.kind === 'create' && (await this.storage.creationResult()))
-        return false
-      if (await this.storage.job()) return false
-      await requireActiveStartUsers(this.env.DB, job)
-      const epoch = await this.storage.epoch()
-      const state = await this.endpoint.readLifecycle()
-      if (state?.startStop === 'pending') return false
-      if (
-        job.kind === 'resume' &&
-        state?.state !== 'stopped' &&
-        state?.state !== 'error'
-      )
-        return false
-      if (job.kind === 'resume') await this.endpoint.finishDiskMaintenance()
-      if (
-        !(await this.storage.begin(
-          {
-            ...job,
-            deadlineAt: startDeadlineAt(job, this.dependencies.now()),
-          },
-          epoch,
-        ))
-      )
-        return false
-      await this.endpoint.beginLifecycleStart(job.kind)
-      await this.storage.schedule()
-      return true
-    })
+  enqueue(
+    job: WorkspaceStartJob,
+    intent: WorkspaceStartIntent = { kind: 'continue' },
+  ): Promise<boolean> {
+    const accepted = this.accepting.then(() =>
+      enqueueWorkspaceStart(
+        this.env,
+        this.dependencies,
+        this.endpoint,
+        this.storage,
+        job,
+        intent,
+      ),
+    )
     this.accepting = accepted.catch(() => undefined)
     return accepted
   }
@@ -113,9 +99,7 @@ export class WorkspaceStartCoordinator {
     return this.admissionWaiters.wait(() => this.storage.admission())
   }
   async pending(): Promise<boolean> {
-    return Boolean(
-      (await this.storage.job()) || (await this.storage.publication()),
-    )
+    return Boolean(await this.storage.job())
   }
 
   reportRunnerReady(apply: () => Promise<void>): Promise<void> {
@@ -243,9 +227,12 @@ export class WorkspaceStartCoordinator {
       return await this.finish({ ok: true })
     } catch (error) {
       const current = (await this.storage.job()) ?? job
-      warnWorker(
-        `Workspace start ${current.workspaceId} failed in phase ${current.phase}: ${errorSummary(error)}`,
-      )
+      warnWorker({
+        kind: 'workspace_start_failed',
+        workspaceId: WarningId.checked(current.workspaceId),
+        phase: current.phase,
+        error: errorSummary(error),
+      })
       if (await retryStartError(this.storage, error, this.dependencies.now()))
         return false
       const failedJob = failedStartJob(current, error, this.dependencies.now())

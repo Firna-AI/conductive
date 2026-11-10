@@ -35,6 +35,9 @@ afterAll(async () => {
 })
 
 it('serves MCP discovery, create, and list over JSON lines with the calling turn and negotiated version', async () => {
+  await fixture.db
+    .prepare("UPDATE workspaces SET name = '' WHERE id = 'teammate-workspace'")
+    .run()
   const output = toolOutput()
   const status = await runToolProcess(
     ['mcp'],
@@ -54,6 +57,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
         model: { agent: 'claude', model: 'mcp-model' },
         effort: 'max',
         sectionId: 'chosen-a',
+        name: 'MCP workspace',
       }),
       call(3, 'list_workspaces'),
     ]),
@@ -82,6 +86,9 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
             inputSchema: { required: ['repositoryId', 'firstMessage'] },
           },
           { name: 'list_workspaces' },
+          { name: 'list_repositories' },
+          { name: 'list_sections' },
+          { name: 'list_models' },
         ],
       },
     },
@@ -106,11 +113,16 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
         structuredContent: {
           workspaces: [
             { id: 'calling-workspace' },
-            { id: 'teammate-workspace' },
+            { id: 'teammate-workspace', name: null },
             { id: 'archived-workspace' },
           ],
         },
       },
+    },
+  })
+  expect(mcpRepliesById(output.stdout)[3]).toMatchObject({
+    result: {
+      content: [{ type: 'text', text: expect.stringContaining('"name":null') }],
     },
   })
   expect(fixture.requests).toHaveLength(2)
@@ -121,6 +133,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
   expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
     expect.objectContaining({
       firstMessage: 'Delegate this task.',
+      name: 'MCP workspace',
       sender: expect.objectContaining({ id: 'teammate' }),
     }),
   )

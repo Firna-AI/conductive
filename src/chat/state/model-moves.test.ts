@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readyIds } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
 import { filePaths } from '../../shared/files'
 import { sessionPaths } from '../../shared/sessions'
-import type { WorkspaceTab } from '../../shared/workspace-view'
+import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { chatFor, newSessionRecord, opensSession } from './test-kit'
 
@@ -16,6 +17,17 @@ const codex: AgentChoice = {
 }
 /** The ID of the new session: the first client ID that the chat takes. */
 const created = 'client-1'
+
+/**
+ * The view that the user chose, with the place of the new session at the
+ * end of the saved order, as every open session gets one. The selection
+ * stays.
+ */
+const withCreatedPlace = (view: WorkspaceView | null) =>
+  view && {
+    ...view,
+    tabs: [...view.tabs, { kind: 'session', sessionId: created }],
+  }
 const shortly = { timeout: 10_000 }
 const isModel = (request: Request) =>
   request.method === 'PUT' && request.url.endsWith('/model')
@@ -51,7 +63,7 @@ function type(chat: Chat, sessionId: string, words: string) {
 }
 
 const files = (chat: Chat, sessionId: string) =>
-  chat.draftOf(sessionId)?.attachments.map((item) => item.id)
+  readyIds(chat.draftOf(sessionId)?.files ?? [])
 
 /**
  * A chat whose draft has a file that the backend keeps and one that it drops.
@@ -102,7 +114,7 @@ describe('a model change that opens a session', () => {
     const selectedView = chat.controller.getSnapshot().view
     await reply()
     const snapshot = chat.controller.getSnapshot()
-    expect(snapshot.view).toEqual(selectedView)
+    expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
     expect(snapshot.activeSessionId).toBe(id)
     expect(chat.draftOf(created)?.text).toBe('Check the postcode rules.')
     expect(chat.draftOf(id)?.text).toBe('')
@@ -132,7 +144,7 @@ describe('a model change that opens a session', () => {
       else showRecord()
       const snapshot = chat.controller.getSnapshot()
       expect(snapshot.activeSessionId).toBe('debounce')
-      expect(snapshot.view).toEqual(selectedView)
+      expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
       expect(chat.draftOf('debounce')?.text).toBe('Finish the lookup tests.')
       expect(chat.draftOf(created)).toMatchObject({
         id: draftId,

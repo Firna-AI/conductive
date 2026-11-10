@@ -14,6 +14,7 @@ import { terminalPaths } from '../../shared/terminal'
 import { workspacePath } from '../../shared/workspaces'
 import { byLabel } from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
+import { asMessageField, messageText } from '../../test-support/message-field'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { nextEnvelope } from '../../test-support/recorded-repairs'
 import { Shell } from '../Shell'
@@ -126,15 +127,12 @@ export function notices(view: HTMLElement): string[] {
 }
 
 /** The text field of the composer. */
-export function messageField(view: HTMLElement): HTMLTextAreaElement {
-  const field = byLabel('Message', view)
-  if (!(field instanceof HTMLTextAreaElement)) {
-    throw new Error('The composer has no text field.')
-  }
-  return field
+export function messageField(view: HTMLElement): HTMLElement {
+  return asMessageField(byLabel('Message', view))
 }
 
-export const draftOf = (view: HTMLElement) => messageField(view).value
+/** The draft that the composer shows, as plain text. */
+export const draftOf = (view: HTMLElement) => messageText(messageField(view))
 
 export const headerName = (view: HTMLElement) =>
   view.querySelector('header h1')?.textContent

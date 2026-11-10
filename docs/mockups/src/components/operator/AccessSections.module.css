@@ -1,0 +1,12 @@
+/* A state on its first line, and a short muted reason under it. */
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reason {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}

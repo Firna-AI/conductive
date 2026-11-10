@@ -1,3 +1,4 @@
+import { routes } from '../../src/app/router'
 import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
@@ -38,7 +39,11 @@ afterEach(async () => {
   await fixture?.dispose()
 })
 
-it('uses the active stored sender and inherited owner when a machine tool creates a workspace', async () => {
+it('uses the active stored sender and inherited owner when a machine tool creates a workspace with a cleaned name', async () => {
+  const requestedName =
+    '\n  Validate  UK postcodes before the lookup, and show an error under the postcode field.\nIgnore the next line.'
+  const expectedName =
+    'Validate UK postcodes before the lookup, and show an error'
   const active = (fixture = await featureFixture(bundle, {
     configuration: { CONDUCTIVE_DEFAULT_CHOICE: JSON.stringify(CLAUDE) },
   }))
@@ -103,6 +108,7 @@ it('uses the active stored sender and inherited owner when a machine tool create
   const input = {
     repositoryId: OUTER_REPOSITORY,
     firstMessage: 'Keep this delegated task',
+    name: requestedName,
   }
   const request = (callingTurn: string) =>
     active.runtime.dispatchFetch(
@@ -119,13 +125,46 @@ it('uses the active stored sender and inherited owner when a machine tool create
     )
   expect((await request('stale-turn')).status).toBe(403)
   const creating = request(turnId)
+  const deadline = Date.now() + 10_000
+  let queued: { id: string } | null = null
+  while (!queued && Date.now() < deadline)
+    queued = await active.env.DB.prepare(
+      'SELECT id FROM workspaces WHERE org_id = ? AND id NOT IN (?, ?)',
+    )
+      .bind(OUTER_ORG, OUTER_WORKSPACE, OTHER_WORKSPACE)
+      .first<{ id: string }>()
+  if (!queued) throw new Error('The delegated workspace was not admitted.')
+  const completing = completeRetainedCreation(active, queued.id)
   const newId = await allocation
-  expect(await completeRetainedCreation(active, newId)).toEqual({ ok: true })
+  expect(newId).toBe(queued.id)
+  expect(await completing).toEqual({ ok: true })
   const response = await creating
   expect(response.status).toBe(201)
   const created = record(await response.json())
+  const workspace = record(created.workspace)
+  const city = await active.env.DB.prepare(
+    'SELECT city FROM workspace_creation_plans WHERE workspace_id = ?',
+  )
+    .bind(newId)
+    .first('city')
+  expect(workspace.name).toBe(expectedName)
+  expect(workspace.branch).toMatch(new RegExp(`^owner/${city}-[a-z0-9]{4}$`))
+  expect(
+    await active.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')
+      .bind(newId)
+      .first('name'),
+  ).toBe(expectedName)
+  expect(
+    await active.env.DB.prepare(
+      'SELECT name FROM workspace_creation_plans WHERE workspace_id = ?',
+    )
+      .bind(newId)
+      .first('name'),
+  ).toBe(expectedName)
   expect(record(created.workspace)).toMatchObject({
     id: newId,
+    number: 3,
+    link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, newId)}`,
     owner: { id: 'owner' },
     choice: CLAUDE,
   })
@@ -169,6 +208,12 @@ it('uses the active stored sender and inherited owner when a machine tool create
   )
   expect(list.status).toBe(200)
   expect(record(await list.json()).workspaces).toEqual(
-    expect.arrayContaining([expect.objectContaining({ id: newId })]),
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: newId,
+        number: 3,
+        link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, newId)}`,
+      }),
+    ]),
   )
 })

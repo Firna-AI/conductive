@@ -54,7 +54,7 @@ it('marks the GitHub installation step complete before the first org exists', as
   const created = await active.request(API_PATHS.orgs, {
     method: 'POST',
     headers: { Cookie: cookie },
-    body: JSON.stringify({ name: 'First empty org', repositoryIds: [] }),
+    body: JSON.stringify({ name: 'First org', repositoryIds: [202] }),
   })
   expect(created.status).toBe(201)
   const org = nested(record(await created.json()), 'org', readOrg)
@@ -201,12 +201,12 @@ it('keeps boot routes available during a GitHub failure and reports the installa
       { step: 'agent-login', complete: false },
     ],
   })
-  expect(await warning).toBe(
-    'Could not read GitHub installation status for Get started.',
-  )
-  expect(warnings).toEqual([
-    'Could not read GitHub installation status for Get started.',
-  ])
+  const expectedWarning = `{
+  kind: 'github_installation_status_failed',
+  message: 'Could not read GitHub installation status for Get started.'
+}`
+  expect(await warning).toBe(expectedWarning)
+  expect(warnings).toEqual([expectedWarning])
   const installations = await active.request(
     ACCOUNT_PATHS.githubInstallations,
     {

@@ -1,0 +1,27 @@
+---
+import type { Feature } from '../features'
+import PictureFrame from './PictureFrame.astro'
+import SectionIntro from './SectionIntro.astro'
+
+/**
+ * A section of the home page for one feature: the label, the headline, one
+ * sentence, and the picture on a quiet stage. The slot, such as the
+ * downloads of the Mac app, goes between the sentence and the picture. `id`
+ * names the section for a link from the header or the footer.
+ */
+type Props = { feature: Feature; id?: string }
+
+const { feature, id } = Astro.props
+---
+
+<section class="feature" id={id}>
+  <SectionIntro
+    label={feature.label}
+    title={feature.title}
+    text={feature.text}
+  />
+  <slot />
+  <div class={feature.bleed ? 'stage stage-bleed' : 'stage'}>
+    <PictureFrame picture={feature.picture} loading="lazy" />
+  </div>
+</section>

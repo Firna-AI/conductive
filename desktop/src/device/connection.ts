@@ -14,11 +14,18 @@ export interface DeviceCredential {
   value: string
   expiresAt: number
 }
+export interface DeviceAccount {
+  userId: string
+  appAccess: boolean
+}
 interface ConnectionDependencies {
   deviceId: string
   clock: DeviceClock
   readCredential(): Promise<DeviceCredential | undefined>
-  authenticate(value: string, signal: AbortSignal): Promise<string | undefined>
+  authenticate(
+    value: string,
+    signal: AbortSignal,
+  ): Promise<DeviceAccount | undefined>
   connect(value: string, events: SocketEvents): DeviceSocket
   session(
     userId: string,
@@ -89,14 +96,18 @@ export function createDeviceConnection(dependencies: ConnectionDependencies) {
       const authentication = new AbortController()
       abort = authentication
       cancelBeat = dependencies.clock.after(DEVICE_LEASE_MS, () => ended())
-      const userId = await dependencies.authenticate(
+      const account = await dependencies.authenticate(
         credential.value,
         authentication.signal,
       )
       if (!live()) return
       cancelBeat?.()
-      if (!userId) {
+      if (!account) {
         ended(true)
+        return
+      }
+      if (!account.appAccess) {
+        ended()
         return
       }
       let lastPong = dependencies.clock.now()
@@ -117,8 +128,11 @@ export function createDeviceConnection(dependencies: ConnectionDependencies) {
             }
             lastPong = dependencies.clock.now()
             retryMs = 1000
-            session = dependencies.session(userId, message.device, send, () =>
-              ended(true),
+            session = dependencies.session(
+              account.userId,
+              message.device,
+              send,
+              () => ended(true),
             )
           } else if (message.type === 'device.pong') {
             if (session) lastPong = dependencies.clock.now()

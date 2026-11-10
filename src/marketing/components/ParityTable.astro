@@ -1,0 +1,67 @@
+---
+import { parityAreas } from '../from-conductor/areas'
+import { parityPageCopy } from '../from-conductor/copy'
+import { featuresOf } from '../from-conductor/features'
+import { isComing } from '../from-conductor/model'
+import DueDay from './DueDay.astro'
+import StatusMark from './StatusMark.astro'
+
+/*
+ * The comparison as one table: one header, then a row group for each area,
+ * with a row for each Conductor Cloud feature. The first row of a group
+ * holds the area as one header cell that spans the rows of the group. Each
+ * row also holds the area in a row header of its own. On a computer, CSS shows
+ * the merged cell, and on a phone the cell of each row, so one table serves
+ * both layouts with no script. A hidden cell is out of the accessibility
+ * tree too.
+ */
+const columns = parityPageCopy.columns
+---
+
+<table class="parity-table">
+  <thead class="parity-head">
+    <tr>
+      <th scope="col">{columns.area}</th>
+      <th scope="col">{columns.feature}</th>
+      <th scope="col">{columns.status}</th>
+      <th scope="col">{columns.note}</th>
+    </tr>
+  </thead>
+  {parityAreas.map((area) => {
+    const features = featuresOf(area.key)
+    return (
+      <tbody>
+        {features.map((feature, index) => (
+          <tr
+            class:list={[
+              'parity-row',
+              { 'parity-group-start': index === 0 },
+              { 'parity-group-end': index === features.length - 1 },
+            ]}
+          >
+            {index === 0 && (
+              <th
+                class="parity-area parity-group-area"
+                rowspan={features.length}
+                scope="rowgroup"
+              >
+                {area.title}
+              </th>
+            )}
+            <th class="parity-area parity-row-area" scope="row">
+              {area.title}
+            </th>
+            <th class="parity-name" scope="row">
+              {feature.name}
+            </th>
+            <td class="parity-status">
+              <StatusMark status={feature.status} />
+              {isComing(feature) && <DueDay feature={feature} />}
+            </td>
+            <td class="parity-note">{feature.note}</td>
+          </tr>
+        ))}
+      </tbody>
+    )
+  })}
+</table>

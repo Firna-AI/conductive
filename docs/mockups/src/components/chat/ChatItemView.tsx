@@ -5,13 +5,15 @@ import type { ChatItem } from '../../fixtures/conversations'
 import { people, type PersonKey } from '../../fixtures/members'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
-import { InlineText } from '../common/InlineText'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+import { AgentBlocks } from './AgentBlocks'
+import { AttachmentChips } from './AttachmentChips'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
+import { MessageText } from './MessageText'
 import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
 import styles from './ChatItemView.module.css'
@@ -39,8 +41,11 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
       return (
         <div className={styles.user}>
           <div className={styles.bubble}>
-            <InlineText text={item.text} />
+            <MessageText text={item.text} />
           </div>
+          {item.attachments ? (
+            <AttachmentChips attachments={item.attachments} sent />
+          ) : null}
           {item.queued ? (
             <span className={styles.queued}>
               <Clock size={12} />
@@ -52,20 +57,7 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
     case 'agent':
       return (
         <div className={styles.agent}>
-          {item.paragraphs.map((paragraph) => (
-            <p key={paragraph}>
-              <InlineText text={paragraph} />
-            </p>
-          ))}
-          {item.bullets ? (
-            <ul>
-              {item.bullets.map((bullet) => (
-                <li key={bullet}>
-                  <InlineText text={bullet} />
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <AgentBlocks blocks={item.blocks} bullets={item.bullets} />
         </div>
       )
     case 'tool':

@@ -25,7 +25,7 @@ Chat history, sessions, runner event cursors, start steps, and banner state
 belong to workspace Durable Object storage. They have no D1 tables.
 Stored secrets use ciphertext columns. The browser reads only metadata.
 The git credential helper uses the GitHub user token of the turn's sender, as
-[GitHub tokens](../docs/protocol/access-and-security.md#github-tokens) says.
+[GitHub tokens](../docs/protocol/github-tokens.md) says.
 The older comment on `github_connections` in `202611060100_contracts.sql`
 stays, because a merged migration does not change.
 The `boat_keys` table of `202611060000_worker_core.sql` stays for the same
@@ -40,6 +40,45 @@ Members receive only the suspension time.
 Existing Claude subscription tokens refuse re-use by default.
 Existing API keys allow re-use by default.
 The migration keeps the encrypted secret and its timestamps.
+
+`202611081300_workspace_creation_name.sql` adds the nullable `workspace_creation_plans.name` column.
+The agent create tool stores its cleaned workspace name there for creation retries.
+Existing plans keep `NULL`.
+[Workspace and session names](../docs/protocol/agents-and-sessions.md#workspace-and-session-names)
+states how the app shows a missing name.
+The `city` column and branch keep their city value.
+
+`202611081849_chat_attachments.sql` adds attachment metadata, owner and target identities, claim revisions, and retryable deletion state.
+The private R2 bucket holds the bytes.
+The uploader ID is opaque, so retained files do not block account deletion.
+The org reference remains until external file purge succeeds.
+Chat attachment queries live in `worker/chat/attachment-data.ts` and `attachment-claim-data.ts`.
+
+`202611082300_new_workspace_view.sql` rebuilds `user_preferences` and keeps every existing row and value.
+The three default model columns can be all set or all unset.
+The nullable `new_workspace_view` column holds `page` or `dialog`.
+An unset view uses the page. An unset model uses the configured app default.
+
+`202611091200_waitlist.sql` adds app access, invite and referral codes, code
+uses, and the sign-up pause. Each existing account gets app access from
+its join time and one referral code with five uses. The user record also
+gets the primary verified email and the GitHub account creation time.
+[The waitlist backend](../worker/waitlist/README.md) owns these records.
+
+`202611091200_workspace_numbers.sql` gives each workspace its number in its org.
+It backfills by creation time, then workspace ID, before it installs the allocation trigger.
+The `workspaces_allocate_number` trigger owns allocation.
+It increments `orgs.workspace_number_count` and assigns that number inside the workspace insert transaction.
+A unique index protects each org and number pair.
+Cleanup never lowers the counter. Restore keeps the same org row and counter.
+Read the inserted row again to get its number. SQLite `RETURNING` runs before the AFTER trigger.
+
+`202611091300_approval_emails.sql` adds the approval email state and its
+approval and state times. Pending messages keep their recipient, subject,
+and body for stable delivery retries. A missing verified email saves the
+`none` state with no message. The migration also adds the operator who
+disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
+owns email delivery and code management.
 
 ## Reserved ranges
 
@@ -72,6 +111,10 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | 15e Mac app | `202611072000`–`202611072059` |
 | 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
 | 15o Org suspension | `202611080000`–`202611080059` |
+| Agent tool lists and names | `202611081300`–`202611081359` |
+| Workspace link chips | `202611091200`–`202611091259` |
+| Chat attachment metadata | `202611081800`–`202611081859` |
+| Preferences and New workspace dialog | `202611082300`–`202611082359` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 

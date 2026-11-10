@@ -76,6 +76,7 @@ it('completes a verifier-bound GitHub desktop session and signs out without chan
   expect(current.headers.get('Access-Control-Allow-Credentials')).toBe('true')
   expect(await current.json()).toMatchObject({
     user: { githubLogin: 'octocat' },
+    appAccess: false,
   })
   const replay = await exchangeHandoff(harness, callback, verifier)
   expect(replay.status).toBe(400)

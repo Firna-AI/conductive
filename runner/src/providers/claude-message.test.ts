@@ -101,6 +101,7 @@ it('uses explicit Claude boundaries and fallbacks while retaining identities and
       ['two', 'message-two'],
     ]),
     (event) => events.push(event),
+    (uuid) => uuid === 'one' || uuid === 'two',
   )
   const frame = (id: string, text: string, uuid = 'one') =>
     mapper.accept({

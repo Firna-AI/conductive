@@ -1,12 +1,16 @@
+import {
+  failSent,
+  filesWait,
+  isMissingFile,
+  readyIds,
+} from '../../app/draft-files'
 import type { SendMessageRequest } from '../../shared/messages'
 import { sendBlock } from './blockers'
 import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
-import { waitsForFirstStart } from './first-start'
 import { showTarget, takeReply } from './linked-replies'
 import { confirmWorkspace } from './workspace-records'
-import { toUpload } from './uploads'
 
 function change(
   context: ChatContext,
@@ -29,67 +33,17 @@ export function setDraftText(
 }
 
 /**
- * Uploads files to the workspace and attaches them to the draft. Send waits
- * while a file uploads, so a message never leaves without its files. Each
- * file finishes on its draft, also after the draft moved to another session.
- */
-export async function attachFiles(
-  context: ChatContext,
-  sessionId: string,
-  files: readonly File[],
-): Promise<void> {
-  if (files.length === 0) return
-  const draftId = draftIdOf(context, sessionId)
-  changeDraft(context, draftId, (draft) => ({
-    ...draft,
-    uploads: draft.uploads + files.length,
-  }))
-  for (const file of files) {
-    try {
-      const attachment = await context.api.attach(await toUpload(file))
-      changeDraft(context, draftId, (draft) => ({
-        ...draft,
-        attachments: [...draft.attachments, attachment],
-        sendId: null,
-        uploads: Math.max(0, draft.uploads - 1),
-      }))
-    } catch (error) {
-      changeDraft(context, draftId, (draft) => ({
-        ...draft,
-        uploads: Math.max(0, draft.uploads - 1),
-      }))
-      const holder = holderOf(context.store.get(), draftId) ?? sessionId
-      showNotice(context, holder, "The file didn't attach", error)
-    }
-  }
-}
-
-export function removeAttachment(
-  context: ChatContext,
-  sessionId: string,
-  attachmentId: string,
-): void {
-  change(context, sessionId, (state) => ({
-    ...state,
-    draft: {
-      ...state.draft,
-      attachments: state.draft.attachments.filter(
-        (item) => item.id !== attachmentId,
-      ),
-      sendId: null,
-    },
-  }))
-}
-
-/**
- * Sends the draft of a session. During a resume the workspace queues it
- * until the sandbox is ready, and during a turn it steers the turn. Until
- * the first start of the workspace succeeds, nothing sends, and the draft
- * stays, as `first-start.ts` says. A failed send keeps the draft and its
- * client ID, so that Send again is the same message. The send finishes on
- * its draft, also after the draft moved to another session. When the reply
- * names a linked session, the message shows there, and the tab that sent
- * shows that session, as `linked-replies.ts` says.
+ * Sends the draft of a session. The workspace queues messages during its
+ * first start, after a failed first start, and during Resume. During a turn,
+ * a message steers the agent. Send waits while a file uploads or has failed.
+ * It sends only the IDs of ready files. A failed send keeps the draft and
+ * its client ID, so Send again is the same message.
+ *
+ * When the server no longer has a file, that file turns failed. Try again
+ * uploads its kept File. The send finishes on its draft, also after a move
+ * to another session. A linked-session reply shows its message in that
+ * session, and the sending tab shows that session, as `linked-replies.ts`
+ * says.
  */
 export async function sendDraft(
   context: ChatContext,
@@ -98,19 +52,19 @@ export async function sendDraft(
   const snapshot = context.store.get()
   const session = snapshot.sessions.find((item) => item.id === sessionId)
   const { draft } = sessionState(snapshot, sessionId)
-  const empty = draft.text.trim() === '' && draft.attachments.length === 0
-  const busy = draft.sending || draft.uploads > 0
+  const empty = draft.text.trim() === '' && draft.files.length === 0
+  const busy = draft.sending || filesWait(draft.files)
   if (!session || busy || empty || sendBlock(snapshot, sessionId)) return
-  if (waitsForFirstStart(snapshot)) return
   const request: SendMessageRequest = {
     id: draft.sendId ?? context.newId(),
     text: draft.text,
-    attachmentIds: draft.attachments.map((attachment) => attachment.id),
+    attachmentIds: readyIds(draft.files),
     choice: session.choice,
   }
   const draftId = draftIdOf(context, sessionId)
   changeDraft(context, draftId, (current) => ({
     ...current,
+    refused: [],
     sendId: request.id,
     sending: true,
   }))
@@ -124,7 +78,13 @@ export async function sendDraft(
       context.store.update((current) => ({ ...current, notice: null }))
     }
   } catch (error) {
-    changeDraft(context, draftId, (current) => ({ ...current, sending: false }))
+    changeDraft(context, draftId, (current) => ({
+      ...current,
+      files: isMissingFile(error)
+        ? failSent(current.files, request.attachmentIds, error)
+        : current.files,
+      sending: false,
+    }))
     const holder = holderOf(context.store.get(), draftId) ?? sessionId
     showNotice(context, holder, "Your message didn't send", error)
   }

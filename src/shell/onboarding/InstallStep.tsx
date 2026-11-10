@@ -10,6 +10,7 @@ import type { StepState } from '../../app/get-started'
 import { useStore, valueOf } from '../../app/store'
 import type { GitHubInstallation } from '../../shared/account'
 import { LoadFailure } from '../ui/LoadFailure'
+import { useGitHubInstall } from '../account/githubInstall'
 import { repositoryCount } from '../account/labels'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
@@ -59,17 +60,17 @@ function InstalledText(props: {
 /**
  * The GitHub App, which gives the app the repositories of the accounts
  * where the user installs it. The installations give the address of the
- * install page, so the buttons wait for them.
+ * install page, so the buttons wait for them. They read again when the
+ * user comes back from GitHub in another window, as from the Mac app.
  */
 export function InstallStep(props: { state: StepState }) {
   const app = useApp()
   const installations = useStore(app.account.installations)
-  useEffect(() => {
-    void app.account.loadInstallations()
-  }, [app])
+  const openInstall = useGitHubInstall('get-started')
+  useEffect(() => app.account.watchInstallations(), [app])
   const response = valueOf(installations)
   const install = () => {
-    if (response) app.services.leave(response.installUrl)
+    if (response) openInstall(response.installUrl)
   }
   const failed =
     installations.state === 'failed' ? (

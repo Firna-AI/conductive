@@ -8,7 +8,8 @@ import { OrgTile } from '../orgs/OrgTile'
 import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import type { CommandLead } from './paletteCommands'
-import type { PaletteGroup, PaletteRow } from './paletteContent'
+import type { PaletteContent, PaletteRow } from './paletteContent'
+import { PaletteStatusPart } from './PaletteStatus'
 import styles from './CommandPalette.module.css'
 
 function Lead(props: { lead: CommandLead }) {
@@ -41,8 +42,10 @@ function RowLink(props: {
 
 /**
  * One result. A workspace shows its state mark, its name, its repository,
- * and the age of its last activity, as the list does. A command shows its
- * icon, its label, and the page of a setting in a mixed list.
+ * and the age of its last activity, as the list does. When the query
+ * matches the label of its number, the label leads the name, as in a chip.
+ * A command shows its icon, its label, and the page of a setting in a
+ * mixed list.
  */
 function Row(props: { row: PaletteRow; highlighted: boolean }) {
   const { row, highlighted } = props
@@ -61,6 +64,9 @@ function Row(props: { row: PaletteRow; highlighted: boolean }) {
         <span className={styles.lead}>
           <StatusGlyph status={status} />
         </span>
+        {row.number ? (
+          <span className={styles.number}>{row.number}</span>
+        ) : null}
         <span className={styles.label}>{workspace.name}</span>
         <span className={styles.repository}>
           {repositories[workspace.repository].name}
@@ -108,25 +114,21 @@ function EmptyTab(props: { line: string }) {
 
 /**
  * The results in their groups. The first row is highlighted, so Enter runs
- * it. The list scrolls under the search field and the tabs. `empty` is the
- * line of a tab without rows while the field is empty.
+ * it. The list scrolls under the search field and the tabs. The status
+ * part of data that did not load stands first, and alone when the tab has
+ * no row. A tab without rows and without a status part shows its empty
+ * line while the field is empty, and "Nothing matches" for a query.
  */
-export function PaletteResults(props: {
-  groups: readonly PaletteGroup[]
-  query: string
-  empty?: string
-}) {
-  if (props.groups.length === 0) {
-    return props.empty ? (
-      <EmptyTab line={props.empty} />
-    ) : (
-      <NoResults query={props.query} />
-    )
+export function PaletteResults(props: { content: PaletteContent }) {
+  const { groups, query, empty, status } = props.content
+  if (groups.length === 0 && !status) {
+    return empty ? <EmptyTab line={empty} /> : <NoResults query={query} />
   }
-  const first = props.groups[0]?.rows[0]
+  const first = groups[0]?.rows[0]
   return (
     <div className={styles.results} data-mokly-scroll="palette-results">
-      {props.groups.map((group) => (
+      <PaletteStatusPart content={props.content} />
+      {groups.map((group) => (
         <section
           aria-label={group.label}
           className={styles.group}

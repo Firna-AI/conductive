@@ -21,8 +21,20 @@ says.
   then need the GitHub App on another GitHub account.
 - The org rail lists the orgs of the user, and the user can create orgs.
 - Create org accepts a name, custom initials, and chosen repositories.
+- Create org requires at least one repository (decision 151 of PR #92). The create
+  screen says so, and Create org stays off until the person chooses one.
+  The app refuses a create of an org with no repository.
+- Reason: every new org then starts its first build at create, with the
+  whole choice of repositories, as
+  [The first build](org-image.md#the-first-build) says. A
+  first build at the first save on the Repositories tab was rejected,
+  because that tab saves each repository on its own. That build could
+  start with only part of the choice.
 - Before the org exists, the create screen lists repositories that the
   signed-in user and the shared GitHub App can both reach.
+- When that list has no repository, Create org stays off. The list then
+  asks the person to give the GitHub App access, with its Manage access
+  link.
 - Each list of the repositories that the GitHub App reaches has a Manage
   access link. The link opens the page of the GitHub App on GitHub. That
   page lists the GitHub accounts of the person, personal and org. There
@@ -35,26 +47,61 @@ says.
 - The product is free, with no limits (decisions 45 and 81). It has no
   plans, no billing, and no limits of its own on workspaces, minutes, or
   members.
-- Limits for each user, billing, and an invite-only sign-up were rejected
-  for now. Billing can come later (decision 81).
+- Limits for each user and billing were rejected for now. Billing can come
+  later (decision 81).
+- A waitlist stands in front of the app (decision 160). A new account
+  waits for app access, as [Waitlist](waitlist.md) says.
 
 ## Get started
 
 - Get started is the only first run.
+- Get started opens only after app access. A person who waits sees the
+  [waitlist screen](waitlist.md#the-waitlist-screen) instead. Reason: the
+  steps of Get started need app access.
 - It has three steps, in this order (decisions 33 and 80):
   1. Install the GitHub App.
   2. Create the first org.
   3. Connect Claude or Codex.
 - Get started asks for no Boat account and no Boat key.
-- [Chat and events](chat-and-events.md#messages) states the notice for a
+- [Chat and events](messages-and-attachments.md#messages) states the notice for a
   missing agent login.
+- The second step, the org step, shows the cloud computer of the org once
+  the org exists (decision 150 of PR #92). Create org starts its first build, as
+  [The first build](org-image.md#the-first-build) says.
+- While the org has no good image, the org step shows the state of the
+  newest build of the org:
+  - While a build runs, the step says that the cloud computer is being
+    prepared, with the time since the build began.
+  - After a failed build, the step shows the failure with the message
+    that the app saved for the build. An admin gets Try again and a link
+    to the log of the build on the Cloud computer tab.
+  - With no build, such as after a first build that could not start, the
+    step says that the org has no build yet. An admin gets Build computer.
+- Once the org has a good image, the step says that the cloud computer is
+  ready. A later build does not change that, also when it fails
+  (decision 9).
+- A member who is not an admin sees each state with no action. Reason:
+  only an admin builds (decision 57).
+- The person can connect an agent while the build runs.
+- When every step is done, Get started shows its finish: a line about the
+  org, and an Open button for the org, such as "Open Acme".
+- The Open button stays on in every state of the build (decision 150 of PR #92).
+  New workspace also shows the state of the build, as
+  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  says.
+- The finish says that the org is ready for a new workspace only once the
+  org has a good image. Before that, it says that the cloud computer of the
+  org is still being prepared, did not build, or needs a build.
+- Reason: the person sees the build where it starts. The person never
+  waits in Get started for the build, which can run for up to 60 minutes.
+  A fourth step for the build was rejected for that reason.
 
 ## Sections
 
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
-- Each section collapses, and has a menu with Rename, New workspace, New
-  section, and Delete section.
+- Each section collapses, and has a menu with New workspace, Rename section,
+  New section, and Delete section, in that order.
 - New workspace at the top of the list puts the workspace in General, the
   default section. New workspace in the menu of a section puts it in that
   section.
@@ -64,6 +111,10 @@ says.
   gets lost.
 - The app keeps the archived workspaces in the Archived group at the end
   of the list. The users do not edit that group.
+- A workspace row offers Archive only to its owner and the org's admins.
+  Only hover reveals its archive icon over the time without moving the row
+  content. Selection and keyboard focus alone keep the time visible.
+  The workspace header has no archive control.
 
 ## Members and roles
 
@@ -80,6 +131,9 @@ says.
   person accepts each matching invitation.
 - Reason: a GitHub login can be renamed and taken by another account. A
   verified email proves the inbox.
+- An accepted invitation also gives app access to a person who waits, with
+  no count (decision 163).
+  [Org invitations](waitlist.md#org-invitations) states the rule.
 - Only an admin invites and removes members, changes a role, reassigns a
   workspace, and deletes the org.
 - Only an admin changes the repositories, the install script, the startup
@@ -92,7 +146,7 @@ says.
 - Every member of the org sees all of its workspaces (decision 39).
 - Every member can send messages in every workspace of the org. Each
   session runs on the agent login of its starter, as
-  [Chat and events](chat-and-events.md#agents) says.
+  [Chat and events](agents-and-sessions.md#agents) says.
 - A member who is not an admin sees the Members tab and the owner of each
   workspace, without the actions of an admin.
 - Only the workspace owner and the admins can archive a workspace
@@ -150,6 +204,6 @@ says.
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - An unfinished create continues when its workspace opens after Restore.
   It then gets a new start limit of 20 minutes, the limit of each start in
-  [Time limits of builds and starts](workspaces-and-sandboxes.md#time-limits-of-builds-and-starts).
+  [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts).
   The workspace keeps its original creation date.
 - Reason: the create makes no progress while its org is deleted.

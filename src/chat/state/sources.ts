@@ -3,6 +3,7 @@ import type { AccountResponse } from '../../shared/account'
 import type { AgentModel } from '../../shared/agents'
 import type { MembersResponse } from '../../shared/members'
 import type { OrgSummary } from '../../shared/orgs'
+import type { Workspace } from '../../shared/workspaces'
 import type { ChatSnapshot, ChatStore } from './chat-snapshot'
 
 /**
@@ -11,7 +12,8 @@ import type { ChatSnapshot, ChatStore } from './chat-snapshot'
  * and writes no value of its own for them. It shows the current value of
  * each source, and a change of a source, such as a login that the account
  * screen saves, shows at once, also while the chat is hidden. A chat
- * without sources reads each of these inputs at its load.
+ * without sources reads each of these inputs at its load, and reads the
+ * workspace list itself while it shows.
  */
 export interface ChatSources {
   /** The signed-in user, the agent logins, and the default model. */
@@ -21,6 +23,16 @@ export interface ChatSources {
   models: Readable<readonly AgentModel[]>
   /** The members of the org, or null until they load. */
   members: Readable<MembersResponse | null>
+  /**
+   * The workspaces of the org that the reader may see, with the archived
+   * ones, or null until they load. The chips of the chat find them.
+   */
+  workspaces: Readable<readonly Workspace[] | null>
+  /**
+   * Keeps `workspaces` current while the chat shows, also on a phone, where
+   * no list is on the screen. The result ends the watch.
+   */
+  watchWorkspaces: () => () => void
 }
 
 /** The snapshot with the current value of each source. */

@@ -55,7 +55,7 @@ export async function pageResponse(
 }
 
 export function siteUnavailable(): Response {
-  warnWorker('The built marketing site is not available.')
+  warnWorker({ kind: 'marketing_site_unavailable' })
   return new Response(null, {
     status: 503,
     headers: { 'Cache-Control': 'no-store' },

@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 
+import { githubSetupCopy } from '../../docs/mockups/src/screens/githubSetupCopy'
 import {
+  GITHUB_SETUP_PAGES,
   SITE_FILE_LIST,
   SITE_FOLDER,
   SITE_MARKERS,
@@ -50,6 +52,16 @@ export function fakeSite(styles: readonly string[] = [css]) {
     ),
     'text/html',
   )
+  for (const outcome of ['installed', 'requested'] as const) {
+    const copy = githubSetupCopy[outcome]
+    add(
+      GITHUB_SETUP_PAGES[outcome],
+      document(
+        `<a href="${SITE_MARKERS.siteOrigin}/">Conductive</a><h1 class="text-title">${copy.title}</h1><p>${copy.text}</p>`,
+      ),
+      'text/html',
+    )
+  }
   add('_astro/picture.webp', 'picture', 'image/webp')
   add('favicon.ico', 'icon', 'image/x-icon')
   files.set(FILE_LIST_PATH, {

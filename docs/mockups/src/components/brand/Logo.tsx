@@ -31,9 +31,10 @@ export function MacAppIcon(props: { size: number }) {
 
 /**
  * The lockup: the tile and the name, in the version of the colour scheme.
- * It is the name of the product for assistive technology.
+ * It is the name of the product for assistive technology. `height` sets a
+ * height in px other than the lockup token, such as in a top bar.
  */
-export function Lockup(props: { height: number }) {
+export function Lockup(props: { height?: number }) {
   return (
     <span
       aria-label={productName}

@@ -1,0 +1,12 @@
+{
+  "order": [
+    "menu",
+    "orgs",
+    "org",
+    "users",
+    "user",
+    "waitlist",
+    "codes",
+    "error"
+  ]
+}

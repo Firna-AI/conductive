@@ -167,13 +167,13 @@ Chat history remains readable through its separate access path.
 Run `npm run test -- worker/files` from the repository root with Node 24.
 The tests that use `createFilesStorage` in `test-support/storage.ts` run SQLite Durable Object storage in Miniflare.
 Its `evict` evicts the object, so that a test can check a reload.
-`report-storage.test.ts` runs on the in-memory chat store.
+`report-storage.test.ts` uses the native SQLite storage of the production workspace object.
 It checks that a part stored as one value stays readable, and that each removal also removes the chunks.
 The API tests use local D1, the existing fake runner, and FakeBoat.
 The part joining and report repair tests run through the chat backend:
 `npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
 `runner-grown-reports.test.ts` checks tree and changes parts that masking makes larger than one storage value.
-It runs on the in-memory chat store with a stand-in for the storage value limit.
+It runs on the production workspace object with the native SQLite value limit.
 No migration is required.
 
 ### Key Code
@@ -193,6 +193,6 @@ No migration is required.
 
 See the [shared contracts](../../src/shared/README.md),
 [backend fakes](../test-support/README.md),
-[runner event rules](../../docs/protocol/chat-and-events.md#the-agent-runner),
-[lost workspace updates](../../docs/protocol/chat-and-events.md#lost-workspace-updates), and
-[file requirements](../../docs/protocol/workspaces-and-sandboxes.md#files-and-changes).
+[runner event rules](../../docs/protocol/agent-runner.md#the-agent-runner),
+[lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates), and
+[file requirements](../../docs/protocol/workspace-tools.md#files-and-changes).

@@ -19,6 +19,7 @@ The file flow adds no renderer bridge.
 
 The desktop entry supplies the configured Worker origin to the app's API and event services.
 API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
+File uploads go to the same origin as one raw `XMLHttpRequest` with credentials, so they send the same cookie and report their progress.
 Workspace sockets use the same Worker origin.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
@@ -39,6 +40,7 @@ Local development can use an HTTP localhost origin.
 `CONDUCTIVE_FRAME_SOURCES` lists space-separated HTTPS frame origins.
 Set the same frame sources in the web policy.
 Include the preview domain, `https://*.conductive.page`, and the desktop stream hosts, `https://*.on.boat.dev`, as [Frame sources](../docs/deployment.md#frame-sources) says.
+The Mac check and signing workflows set both origins when they build the app.
 Packaged apps use their bundled configuration.
 They ignore runtime environment overrides.
 
@@ -48,6 +50,10 @@ The main process holds its verifier and installs a separate desktop session cook
 The renderer never receives that cookie or verifier.
 The browser keeps its existing session cookie.
 The Worker accepts desktop exchanges and credentials from the desktop origin.
+Sign-in from an invite link keeps its `invite_code` in the browser sign-in.
+After the handoff, the window loads that code's join address.
+A working code opens the app. A failed code shows its reason on the waitlist.
+The handoff and exchange carry only their existing code and verifier.
 
 Other web addresses open in the browser.
 The bundled main page opens its app popups in the same window.
@@ -69,6 +75,12 @@ The Dock can reopen the window.
 
 The main process connects the signed-in, awake Mac to the Worker.
 It reads the desktop cookie from the Chromium session.
+Its authenticated session read checks app access before opening the device socket.
+While the user waits, it repeats that read with the existing backoff:
+1, 2, 4, 8, 16, then at most 30 seconds between attempts.
+It connects after access arrives with the same cookie and no new launch.
+Sleep, sign-out, cookie expiry, and app exit cancel the pending attempt.
+Unauthorized and replaced sockets keep their existing stop behavior.
 The renderer sends approval and settings choices through the Worker relay.
 It receives no cookie or local command bridge.
 
@@ -99,7 +111,7 @@ Wake or a cookie change can connect it again.
 Background requests show a native notification.
 A click restores the window and opens the request's workspace.
 It does not approve the request.
-See the [Mac app protocol](../docs/protocol/desktop-app.md) for the device requirements.
+See the [Mac app protocol](../docs/protocol/desktop-commands.md) for the device requirements.
 
 Focused device checks use these commands:
 
@@ -132,7 +144,8 @@ Back and Forward use the browser history.
 The [web entry](../src/main.tsx) renders no `MacApp`.
 In a browser, the app shows no window controls and no drag regions.
 
-The app shell draws one 34px `Window controls` bar on each page of the Mac app.
+The app shell draws one 34px `Window controls` bar on the usual pages of the Mac app.
+The waitlist page uses its own header with space for the window buttons and has no controls strip.
 In a normal window, the bar keeps 64px free for the window buttons.
 In full screen, it gives that space back.
 The sidebar toggle sits beside that space.
@@ -147,7 +160,8 @@ Then the bar keeps its own width at the top left of the window.
 The top bar of the main area starts after the bar.
 
 The app disables the toggle in a window narrower than 900px and on a page without a sidebar.
-A page without the org rail, such as sign-in, shows the bar without the toggle in a 34px strip.
+Other pages without the org rail, such as sign-in, show the bar in a 34px strip.
+That strip has no sidebar toggle.
 On the account page, the Mac app shows the sidebar of the last org that the user opened.
 The app does not save the toggle state or that org.
 
@@ -186,7 +200,7 @@ At each step, it also checks the bar and the place of the sidebar toggle.
 Other hosts skip this test.
 
 The [window controls test](tests/window-controls.spec.ts) checks the bar, the left panel, and the drag regions in a workspace.
-It also checks the sidebar toggle, Back and Forward, and the layout after a sidebar resize and a window resize.
+It also checks the sidebar toggle, the toggle of the right column, Back and Forward, and the layout after a sidebar resize and a window resize.
 The [browser window test](tests/browser-window.spec.ts) opens a fresh web build in a plain Electron window.
 There, the workspace shows no window controls.
 
@@ -206,8 +220,8 @@ It calls the production browser download module and checks the saved response by
 It also checks a refused response, child and preview frames, another window, and a data address.
 Run it after the desktop build with `npm --prefix desktop run test:electron -- tests/downloads.spec.ts`.
 
-Mac CI runs the source and packaged tests on an Apple silicon runner for each pull request.
-Pushes to `main` and to the primary branch of the plan, and release tags that start with `v`, also run them on an Intel runner.
+Mac CI runs the source and packaged tests on an Apple silicon runner and on an Intel runner.
+It runs them for each pull request, and for each push to `main` and to the primary branch of the plan.
 It builds DMG and ZIP files with publishing disabled.
 Mac jobs run only when changed files match these paths:
 
@@ -215,8 +229,8 @@ Mac jobs run only when changed files match these paths:
 - `worker/security/desktop-*`
 - `src/**`
 - `.github/workflows/desktop-ci.yml`
+- `.github/workflows/desktop-mac-checks.yml`
 
-The orchestrator chose these filters because private Mac runner minutes cost about ten times Linux minutes.
 The Linux gate installs desktop dependencies without downloading the Electron binary.
 
 On a Mac, run these commands after the build:
@@ -242,75 +256,15 @@ Packages live in `dist/release/`.
 Playwright output lives in `dist/test-results/`.
 The package includes only `dist/app/` and `dist/bundle/`.
 
-### Signed release packages
+### Releases and updates
 
-The `package:release` command signs both architectures with a Developer ID
-Application identity. It enables Hardened Runtime with only the JIT entitlement
-that Electron needs. It notarizes and staples the app before ZIP packaging.
-It also signs, notarizes, and staples each DMG.
-It fails when a credential is missing or an app has the wrong Apple team.
-It checks each app with `codesign --verify --deep --strict`, `stapler validate`,
-and Gatekeeper. It checks each finished DMG as well.
-
-```sh
-npm --prefix desktop run build
-npm --prefix desktop run package:release
-npm --prefix desktop run test:packaged
-```
-
-The release command needs these environment values:
-
-| Name | Value |
-| --- | --- |
-| `CSC_LINK` | The Developer ID Application identity, with its private key, exported as an encrypted `.p12` and encoded as one base64 line. |
-| `CSC_KEY_PASSWORD` | The password of that `.p12` export. |
-| `APPLE_API_KEY` | The downloaded Apple API `.p8` private key, encoded as one base64 line. |
-| `APPLE_API_KEY_ID` | The ID of that API key. |
-| `APPLE_API_ISSUER` | The issuer ID from App Store Connect. |
-| `CONDUCTIVE_APPLE_TEAM_ID` | The ten-character Apple team ID that the signing certificate must match. |
-
-The command imports the identity into a temporary Keychain.
-It writes the API key in the same private temporary folder with mode `0600`.
-The build process receives the Keychain path and API key path.
-It receives no `.p12` value or export password.
-The command restores the prior Keychain search list and removes temporary
-credentials when it ends.
-Ctrl+C and SIGTERM cancel the active tool before credential cleanup.
-
-The Desktop workflow starts the signed release job on a tag that starts with
-`v`, or from **Run workflow**. The job waits for the normal Mac checks.
-It uses the `desktop-release` GitHub environment of `Firna-AI/remote-code`.
-That environment permits only the `main` branch and `v*` tags.
-Its five secrets have the names in the table above, except that the public
-`CONDUCTIVE_APPLE_TEAM_ID` is an environment variable.
-The current GitHub plan does not support an environment reviewer rule.
-The environment uses branch and tag restrictions instead.
-
-Use `gh secret set --repo Firna-AI/remote-code --env desktop-release NAME`
-to enter a secret without printing it.
-For a key file, pipe `openssl base64 -A -in FILE` into that command.
-Use `gh variable set` for the Apple team ID.
-Never commit keys, export passwords, or decoded credentials.
-
-The release job uploads `desktop-signed-packages` and
-`desktop-release-evidence` as Actions artifacts for 14 days.
-An `always()` step also removes temporary signing credentials after a failure
-or cancellation. The job does not publish a GitHub Release.
-DMG block maps are not release artifacts, because stapling changes the DMG
-after electron-builder creates its block map.
-
-electron-updater uses the public `Firna-AI/conductive-desktop` GitHub feed.
-The feed is unpublished and off by default.
-Development builds always keep it off.
-A published build can enable it with `CONDUCTIVE_DESKTOP_UPDATES=enabled`.
-It downloads updates automatically and installs them when the app quits.
-It offers Restart now or Later once for each downloaded version.
+[RELEASES.md](RELEASES.md) gives the signed release packages and their secrets, the release steps, and the updater.
 
 ### Key code
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
 - [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
-- [Renderer services](renderer/services.ts) routes credentialed API calls and event sockets to the configured Worker.
+- [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
 - [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.

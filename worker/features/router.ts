@@ -2,13 +2,18 @@ import type { AppDependencies, AppEnv } from '../env'
 import { forwardWorkspaceRequest } from '../chat/router'
 import { HttpError } from '../http'
 import { createPreviewHandler } from '../previews/handler'
-import { featureWorkspaceId } from './paths'
+import { featureWorkspaceId, isFeatureWorkspacePath } from './paths'
+import { sessionGate } from '../security/gate'
 
 export async function routeWorkspaceFeatures(
   request: Request,
   env: AppEnv,
+  now = Date.now(),
 ): Promise<Response | null> {
-  const id = featureWorkspaceId(new URL(request.url).pathname)
+  const path = new URL(request.url).pathname
+  if (!isFeatureWorkspacePath(path)) return null
+  await sessionGate(request, env, now)
+  const id = featureWorkspaceId(path)
   return id === null ? null : forwardWorkspaceRequest(request, env, id)
 }
 

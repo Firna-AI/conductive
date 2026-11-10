@@ -2,7 +2,7 @@ import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import { desktopPath } from '../shared/desktop'
 import { filePaths } from '../shared/files'
 import { githubPaths, type BannerState } from '../shared/github'
-import { DRAFT_ATTACHMENTS_PATH } from '../shared/messages'
+import { attachmentUploadPath } from '../shared/messages'
 import { previewPath, previewsPath } from '../shared/previews'
 import { terminalPaths } from '../shared/terminal'
 import type { FakeRouteWriter } from './fake-api-routes'
@@ -14,6 +14,24 @@ import {
   maskedSeedFile,
 } from './fixtures/masked-paths'
 import { FAKE_FILE_PATH, toolFixtures } from './fixtures/tools'
+
+/**
+ * The GitHub bar and the checks of one workspace, in a state of the bar.
+ * `branch` names the branch of another workspace than the default one.
+ */
+export function fakeGitHub(
+  routes: FakeRouteWriter,
+  workspaceId: string,
+  banner: BannerState,
+  branch?: string,
+): void {
+  const data = toolFixtures(banner)
+  const bar = branch
+    ? { ...data.banner, banner: { ...data.banner.banner, branch } }
+    : data.banner
+  routes.json('GET', githubPaths.banner(FAKE_IDS.org, workspaceId), bar)
+  routes.json('GET', githubPaths.checks(FAKE_IDS.org, workspaceId), data.checks)
+}
 
 export function fakeToolRoutes(
   routes: FakeRouteWriter,
@@ -48,9 +66,11 @@ export function fakeToolRoutes(
   )
   routes.json('GET', filePaths.changes(org, id), data.changes)
   routes.json('GET', filePaths.diff(org, id, FAKE_FILE_PATH), data.diff)
+  // The raw file upload of the app's upload operation, at the route of each
+  // target: a workspace, and the first message of a new workspace.
   routes.json(
     'POST',
-    filePaths.attachments(org, id),
+    attachmentUploadPath(org, { type: 'workspace', workspaceId: id }),
     {
       attachment: {
         id: 'attachment-1',
@@ -64,7 +84,7 @@ export function fakeToolRoutes(
   )
   routes.json(
     'POST',
-    DRAFT_ATTACHMENTS_PATH,
+    attachmentUploadPath(org, { type: 'new-workspace', messageId: '' }),
     {
       attachment: {
         id: 'draft-attachment-1',
@@ -81,6 +101,5 @@ export function fakeToolRoutes(
   routes.json('POST', previewsPath(org, id), data.preview, 201)
   routes.empty('DELETE', previewPath(org, id, FAKE_IDS.preview))
   routes.json('GET', desktopPath(org, id), data.desktop)
-  routes.json('GET', githubPaths.banner(org, id), data.banner)
-  routes.json('GET', githubPaths.checks(org, id), data.checks)
+  fakeGitHub(routes, id, banner)
 }
