@@ -47,9 +47,15 @@ export const appsAndDevicesFeatures: readonly ParityFeature[] = [
     id: 'product-documentation',
     area: 'apps-and-devices',
     name: 'Product documentation',
-    status: 'in-progress',
-    note: 'Public guides to getting started, workspaces, chat, and port previews are in progress.',
-    due: null,
+    status: 'available',
+    note: 'Public guides cover getting started, workspaces, chat, files, port previews, and the Mac app.',
+  },
+  {
+    id: 'product-changelog',
+    area: 'apps-and-devices',
+    name: 'Product changelog',
+    status: 'considering',
+    note: 'A public website changelog is under consideration. GitHub releases already list changes.',
   },
   {
     id: 'web-account-pages',
