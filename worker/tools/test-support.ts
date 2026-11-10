@@ -9,7 +9,11 @@ import { requestBodyEntry } from '../http/request-body'
 import { hash } from '../security/crypto'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import { createAgentToolsHandler } from './handler'
-import type { CallingTurn, ToolWorkspaceCreation } from './services'
+import type {
+  AgentToolServices,
+  CallingTurn,
+  ToolWorkspaceCreation,
+} from './services'
 
 export const TOOL_TEST_ORIGIN = 'https://machine.conductive.test'
 export const TOOL_TEST_TOKEN = 'workspace-token-for-tools-tests'
@@ -165,7 +169,14 @@ export async function toolFixture(harness: TestHarness) {
     },
     sessionId: 'created-session',
   }))
-  const services = { callingTurn, ownerDefaultChoice, createWorkspace, models }
+  const services = {
+    callingTurn,
+    ownerDefaultChoice,
+    createWorkspace,
+    models,
+    listSessions: vi.fn<AgentToolServices['listSessions']>(),
+    readSession: vi.fn<AgentToolServices['readSession']>(),
+  }
   const env = { ...harness.env, MACHINE_ORIGIN: TOOL_TEST_ORIGIN }
   const entry = requestBodyEntry(createAgentToolsHandler(env, services))
   const handler = (request: Request) => entry(request, env)

@@ -1,6 +1,6 @@
 # Agent workspace tools
 
-This area handles create and list calls from agents inside a Conductive workspace.
+This area handles workspace create and list calls, and session list and transcript reads, from agents inside a Conductive workspace.
 It implements the [agent-tool requirements](../../docs/protocol/agent-tools.md).
 It uses the existing [shared contracts](../../src/shared/README.md) and D1 tables.
 The [workspace name migration](../../migrations/202611081300_workspace_creation_name.sql) keeps an agent's chosen name through creation retries.
@@ -21,6 +21,7 @@ Direct handler tests also use the shared entry policy before dispatch.
 `createAgentToolsHandler` takes the database, the machine origin, the app origin, and `AgentToolServices`.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
+It accepts the two session GET routes under `/v1/tools/workspaces/<workspaceId>/sessions`.
 It uses workspace bearer authentication instead of browser sessions.
 It returns private responses with caching disabled.
 
@@ -42,6 +43,37 @@ The model list reads the configured models in their configured order.
 `defaultChoice` holds the owner's saved choice, else the app default, else `null`.
 An unavailable model list returns HTTP 503 `models_unavailable`.
 All four lists need only the workspace token. They need no active turn.
+
+## Session reads
+
+The [session call contract](../../docs/protocol/session-calls.md) gives the access and replies.
+`agentSessionsPath` and `agentSessionTranscriptPath` in the shared contracts build the machine paths.
+The reserved workspace path value `current` resolves to the calling workspace from its token.
+No new sandbox credential supplies that ID.
+The handler and the real target object both check the target's org and the org's active state.
+The object also checks its exact workspace identity before it reads chat storage.
+An archived target remains readable. The caller's own token still needs its normal live-workspace access.
+
+The session list includes closed sessions, in creation order with ID as the tie breaker.
+It gives the choice, starter, title, closed mark, state, and session link.
+Queued, running, and stopping work counts as `running`.
+Without active work, a newest failed turn gives `failed`, and other cases give `idle`.
+The reply also gives the target workspace summary and state.
+
+The transcript route defaults to `detail=concise` and also accepts `detail=full`.
+It uses the [chat copy builder](../chat/README.md#session-transcripts) without a browser session.
+The serialized JSON reply stays within `AGENT_TRANSCRIPT_MAX_BYTES`, 32,000 UTF-8 bytes.
+That leaves space below the published 10,000-token guidance for ordinary text and for the MCP wrapper.
+A byte count does not promise a token count for every language or agent setting.
+
+The default window contains the newest whole lines that fit.
+`startLine` reads forward from a one-based line. `startOffset` counts UTF-16 code units in that line.
+Offsets and fragments never divide a surrogate pair.
+The reply gives `startLine`, `endLine`, `totalLines`, `startOffset`, and the exclusive `endOffset` within the last line.
+Line offsets include a line's newline character. A final newline adds no empty line to `totalLines`.
+`next` gives the next `{ line, offset }`, or null at the end.
+A line larger than the budget returns a bounded fragment. Its continuation recovers the rest.
+An out-of-range line or offset clamps to the last available content, so the reply remains useful.
 
 POST binds the repository and section to the calling org.
 It inherits the calling workspace's current owner.
@@ -144,6 +176,9 @@ The real-object route tests live in [worker/features](../features/).
 - [lists.ts](lists.ts) reads the four lists and resolves the listed default choice.
 - [store.ts](store.ts) queries scoped D1 records and builds list links from the app origin.
 - [services.ts](services.ts) defines the lifecycle and active-turn integration boundary.
+- [session-routes.ts](session-routes.ts) parses the two machine read routes and their query options.
+- [workspace.ts](workspace.ts) exposes the trusted session read RPCs through the real workspace object.
+- [session-access.ts](session-access.ts) reads a target workspace inside the calling org, including archives.
 - [image.ts](image.ts) installs the CLI and MCP source into the image.
 - [image-assets.ts](image-assets.ts) embeds the allowed sources as Worker-safe text assets.
 - [Sandbox tools](../../tools/README.md) describe the commands and runtime environment.

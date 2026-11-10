@@ -1,4 +1,9 @@
-import type { AgentCreateWorkspaceResponse } from '../../src/shared/agent-tools'
+import type {
+  AgentCreateWorkspaceResponse,
+  AgentListSessionsResponse,
+  AgentReadSessionRequest,
+  AgentReadSessionResponse,
+} from '../../src/shared/agent-tools'
 import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
 
@@ -23,6 +28,16 @@ export interface CallingTurn {
 /** The composition root supplies the lifecycle and the workspace's turn store. */
 export interface AgentToolServices {
   models(): Promise<readonly AgentModel[]>
+  listSessions(
+    orgId: string,
+    workspaceId: string,
+  ): Promise<AgentListSessionsResponse>
+  readSession(
+    orgId: string,
+    workspaceId: string,
+    sessionId: string,
+    input: AgentReadSessionRequest,
+  ): Promise<AgentReadSessionResponse>
   /** Return only an active turn belonging to this exact workspace and turn ID. */
   callingTurn(workspaceId: string, turnId: string): Promise<CallingTurn | null>
   /** Account policy supplies the default when no saved preference exists. */

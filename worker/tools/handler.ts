@@ -11,6 +11,7 @@ import { createFromTool } from './create'
 import { isAgentToolPath, listFromTool } from './lists'
 import type { AgentToolServices } from './services'
 import { callingWorkspace } from './store'
+import { readSessionsFromTool } from './session-routes'
 
 export interface AgentToolsEnvironment {
   DB: D1Database
@@ -56,6 +57,14 @@ export function createAgentToolsHandler(
         )
       }
       if (request.method === 'GET') {
+        const sessions = await readSessionsFromTool(
+          url,
+          env.DB,
+          caller,
+          env.APP_ORIGIN,
+          services,
+        )
+        if (sessions !== null) return privateResponse(Response.json(sessions))
         return privateResponse(
           Response.json(
             await listFromTool(

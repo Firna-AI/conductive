@@ -442,6 +442,42 @@ Agent calls of 10 November 2026, checked by the orchestrator:
   `plans/follow-ups/full-image-build-for-agent-tools.md` gets the new
   commands. Reason: a refresh keeps the tools of its image.
 
+### Session read implementation
+
+These are agent calls of 10 November 2026 within the approved read contract.
+
+- The omitted workspace uses the reserved machine path value `current`.
+  The server resolves it from the caller's token. Reason: the installed
+  tools have no calling workspace ID and need no new credential.
+- The shared `sessionAddressPath` and `sessionLink` helpers build the app
+  address and absolute link. The machine paths stay in `agent-tools.ts`.
+  Reason: an app address and a browser API path name different surfaces.
+- The list orders all sessions by creation time, then by ID. It gives a
+  `closed` boolean and the existing `choice` and `startedBy` fields.
+  Reason: those fields preserve the shared model and sender contracts.
+- The serialized transcript reply has a 32,000-byte UTF-8 budget, including
+  JSON escapes and metadata. Reason: it leaves room below the 10,000-token
+  guidance of Codex and the warning threshold of Claude for ordinary text,
+  including the MCP wrapper. Bytes do not promise tokens for every text.
+  The [Codex prompting guide](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide)
+  gives that guidance. The [Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference)
+  makes the stored output budget configurable. The [Claude MCP guide](https://code.claude.com/docs/en/mcp#MCP-output-limits-and-warnings)
+  gives the warning and its configurable 25,000-token default limit.
+- Replies use `startLine`, `endLine`, and `totalLines`, with one-based line
+  numbers. The final newline adds no empty line. Reason: the text keeps its
+  original newline characters while the range names the returned lines.
+- A long line uses `startOffset` and exclusive `endOffset`, in UTF-16 code
+  units within their lines. `next` gives the next `{ line, offset }`, or
+  null at the end. The next read takes `startLine` and `startOffset`.
+  Fragments never divide a surrogate pair. Reason: every fragment stays
+  valid Unicode and the positions recover every character.
+- A line or offset beyond the text clamps to the last available content.
+  Reason: an older position after a changed transcript still gives a
+  useful reply without a new refusal.
+- The browser copy and machine read share `buildSessionTranscript` and its
+  fixed event cutoff. The builder yields the queue between history pages.
+  Reason: both texts stay the same and a long read keeps chat available.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -533,26 +569,30 @@ Depends on: 2
 Add the list and the read of sessions to the Worker. Read the
 `typescript` and `testing` skills first.
 
-- [ ] Add the routes and the request and reply types to
+- [x] Add the routes and the request and reply types to
       `src/shared/agent-tools.ts`. Add one helper for the session address
       that the Worker and the app share.
-- [ ] Let `worker/tools/handler.ts` accept the two GET routes. Check that
+- [x] Let `worker/tools/handler.ts` accept the two GET routes. Check that
       the target workspace belongs to the org of the caller and that the
       org is active.
-- [ ] Add a read method to the workspace Durable Object for the session
+- [x] Add a read method to the workspace Durable Object for the session
       list and the transcript. Reuse the builder of
       `worker/chat/session-transcript.ts` with a machine access in place
       of the browser access.
-- [ ] Return the newest part of a long transcript within the size limit,
+- [x] Return the newest part of a long transcript within the size limit,
       with its line range and the start line. Set the limit from the
       documented tool result limits of both agents.
-- [ ] Give each session its link, and the reply the workspace state, in the
+- [x] Give each session its link, and the reply the workspace state, in the
       list reply.
-- [ ] Add tests beside the code: a workspace of another org is refused, an
+- [x] Add tests beside the code: a workspace of another org is refused, an
       archived workspace reads, an unknown session gives
       `session_not_found`, the text equals the copy route, and the window
       keeps whole lines at its edges.
-- [ ] Update `worker/tools/README.md` and `worker/chat/README.md`.
+- [x] Update `worker/tools/README.md` and `worker/chat/README.md`.
+
+Evidence: `.context/agent-session-tools/reports/m3-session-reads.md` and
+the focused checks, ten-run results, failure proofs, and copy comparison
+under `.context/agent-session-tools/evidence/m3-*`.
 
 ## Milestone 4: Session writes for agents
 

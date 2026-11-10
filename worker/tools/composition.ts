@@ -7,6 +7,7 @@ import { workspaceStartFailure } from '../lifecycle/workspace-start'
 import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
 import { createAgentToolsHandler } from './handler'
 import { saveWorkspaceToolParent, toolUser } from './composition-data'
+import { requireFeatureResult } from '../features/result'
 
 export function productionAgentTools(
   request: Request,
@@ -21,6 +22,24 @@ export function productionAgentTools(
     },
     {
       models: async () => configuredModels(env),
+      listSessions: async (orgId, workspaceId) =>
+        requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(workspaceId)
+            .listAgentSessions(orgId, workspaceId, env.APP_ORIGIN),
+        ),
+      readSession: async (orgId, workspaceId, sessionId, input) =>
+        requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(workspaceId)
+            .readAgentSession(
+              orgId,
+              workspaceId,
+              sessionId,
+              input,
+              env.APP_ORIGIN,
+            ),
+        ),
       callingTurn: (id, turnId) =>
         workspaceBinding(env).getByName(id).callingToolTurn(id, turnId),
       ownerDefaultChoice: async () => configuredDefaultChoice(env),

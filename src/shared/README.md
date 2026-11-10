@@ -194,6 +194,7 @@ The git credential payload is not defined yet.
 
 ## Key code
 
+- [Session addresses](session-link.ts) builds app session paths and absolute session links for the Worker and the app.
 - [Session Markdown](transcript/session-markdown.ts) folds session pages and
   builds concise or full transcripts. [Markdown items](transcript/markdown-items.ts)
   format the shared chat words, paths, and commands. [Markdown code](transcript/markdown-code.ts)

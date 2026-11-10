@@ -79,6 +79,13 @@ The shared `SessionMarkdown` folds pages and renders both kinds of copy.
 It uses the same grouping, command placement, and words as browser chat.
 The route keeps no generated transcript in storage.
 
+`buildSessionTranscript` also serves the workspace tools through trusted workspace RPCs.
+Its `TranscriptAccess` input carries workspace identity and presentation without a browser context.
+The machine handler and the target object check access before the build.
+The [tools README](../tools/README.md#session-reads) gives the machine paths, query options, reply fields, and size budget.
+`transcript-window.ts` selects whole lines or recoverable fragments after the shared build.
+The browser copy still returns the complete text with its existing detail query and response shape.
+
 ## Session names
 
 [Workspace and session names](workspace-titles.md) gives the background
