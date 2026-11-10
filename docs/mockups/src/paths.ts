@@ -52,6 +52,9 @@ export const paths = {
   paletteSettings: 'app/command-palette/settings',
   paletteSearch: 'app/command-palette/search',
   paletteNoResults: 'app/command-palette/search/no-results',
+  feedback: 'app/feedback',
+  feedbackEmpty: 'app/feedback/states',
+  feedbackSending: 'app/feedback/states/sending',
   account: 'app/account',
   accountPreferences: 'app/account/preferences',
   accountSetup: 'app/account/setup',
@@ -138,6 +141,7 @@ export const paths = {
     'app/org-settings/cloud-computer/first-build/failed',
   firstBuildComputerNoBuild:
     'app/org-settings/cloud-computer/first-build/no-build',
+  repositoriesChanged: 'app/org-settings/cloud-computer/repositories-changed',
   repositoriesChangedFailed:
     'app/org-settings/cloud-computer/repositories-changed/build-failed',
   repositoriesChangedNoBuild:

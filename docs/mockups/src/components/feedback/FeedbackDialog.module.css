@@ -1,0 +1,72 @@
+/*
+ * The message box of the Feedback dialog, in the dialog of
+ * `ConfirmDialog.module.css`: its screenshots above the text, as in every
+ * composer, and Add screenshots under the text. The box keeps the hairline
+ * outline of every field, and its fill sets it apart from the card.
+ */
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px 6px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+}
+
+/* The icon of Add screenshots lines up with the start of the text. */
+.bar {
+  display: flex;
+  align-items: center;
+  margin-left: -10px;
+}
+
+/* What the message also carries, and where the team replies. */
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* A phone gives the lines the size of the text of a sheet. */
+.phone .fact {
+  font-size: var(--ui-text-md);
+}
+
+.factIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* While the reply address loads, a spinner keeps the 14 px box of an icon. */
+.factSpinner {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+/* The key of Send, in the colour of its label. */
+.key {
+  flex-shrink: 0;
+  color: var(--ui-ink);
+}
+
+.keyOnSolid {
+  color: var(--ui-on-solid);
+}

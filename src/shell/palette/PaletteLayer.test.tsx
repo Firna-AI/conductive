@@ -180,7 +180,7 @@ describe('the command palette', () => {
     })
   })
 
-  test('in the Mac app, the Window group hides the sidebar, then offers to show it again', async () => {
+  test('in the Mac app, the Window group hides the sidebar, then offers to show it again, and Help follows it', async () => {
     const { view } = await openPaletteTab(routes.org(org), {
       mac: true,
       platform: 'mac',
@@ -199,7 +199,7 @@ describe('the command palette', () => {
       hidden,
       offered: queryByRole('option', 'Show the sidebar') !== null,
     }).toEqual({
-      before: { groups: ['Acme', 'Orgs', 'Window'], shown: true },
+      before: { groups: ['Acme', 'Orgs', 'Window', 'Help'], shown: true },
       hidden: { open: false, shown: false },
       offered: true,
     })

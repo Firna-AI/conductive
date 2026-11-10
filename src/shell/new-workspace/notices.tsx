@@ -21,8 +21,11 @@ import { ActionButton } from '../ui/actions'
 
 const agentNames = { claude: 'Claude', codex: 'Codex' } as const
 
-/** The notice of the build that runs, with its time, which moves on. */
-function RunningBuild(props: { build: ImageBuild }) {
+/**
+ * The notice of the build that runs, with its time, which moves on. Its
+ * `action` is the link of an admin to the Cloud computer tab.
+ */
+function RunningBuild(props: { build: ImageBuild; action?: ReactNode }) {
   const now = useNow(1_000)
   // A narrow phone keeps the time on one line.
   const elapsed = formatElapsed(now - props.build.startedAt).replaceAll(
@@ -31,6 +34,7 @@ function RunningBuild(props: { build: ImageBuild }) {
   )
   return (
     <Notice
+      action={props.action}
       body={buildCopy.running.body}
       busy
       icon={Hammer}
@@ -42,10 +46,11 @@ function RunningBuild(props: { build: ImageBuild }) {
 /**
  * The notice over the composer while the org has no good image: its first
  * build runs, failed, or never started. A notice turns Send off, so no
- * create fails for want of an image. Only an admin builds the computer, so
- * only an admin gets the link to the Cloud computer tab, and a member reads
- * who can act. Once a build succeeded, no notice shows, also during a
- * later build. None shows while the builds load.
+ * create fails for want of an image. Only an admin builds and sets up the
+ * computer, so only an admin gets the link to the Cloud computer tab, in
+ * each state, and a member reads who can act. Once a build succeeded, no
+ * notice shows, also during a later build. None shows while the builds
+ * load.
  */
 export function useFirstBuildNotice(
   org: OrgSummary,
@@ -60,14 +65,14 @@ export function useFirstBuildNotice(
       icon={ArrowRight}
       onPress={() => openPage(routes.settings(org.id, 'cloud-computer'))}
     >
-      {buildCopy.open}
+      {buildCopy.settings}
     </ActionButton>
   ) : undefined
   switch (first.state) {
     case 'succeeded':
       return null
     case 'running':
-      return <RunningBuild build={first.build} />
+      return <RunningBuild action={open} build={first.build} />
     case 'failed':
       return (
         <Notice

@@ -1,3 +1,4 @@
+import { ExternalLink } from 'lucide-react'
 import {
   effortLabels,
   findModel,
@@ -18,7 +19,9 @@ const divider: MenuEntry = { kind: 'divider' }
  * no brand name, then the effort levels of the chosen model. The menu marks
  * the current model and effort. When the session has messages, each model of
  * the other agent opens a new session, and the draft moves there
- * (decision 51). A model of the session's own agent stays in it.
+ * (decision 51). The external link icon marks each of those models, and a
+ * screen reader says "New session" for it. A model of the session's own
+ * agent stays in it.
  */
 export function modelMenu(
   models: readonly AgentModel[],
@@ -39,7 +42,8 @@ export function modelMenu(
         kind: 'item',
         key: `${agent}:${model.model}`,
         label: model.label,
-        detail: opensSession ? 'New session' : undefined,
+        trailingIcon: opensSession ? ExternalLink : undefined,
+        trailingLabel: opensSession ? 'New session' : undefined,
         checked: agent === choice.agent && model.model === choice.model,
         onSelect: () =>
           choose({
@@ -47,12 +51,6 @@ export function modelMenu(
             model: model.model,
             effort: effortFor(model, choice.effort),
           }),
-      })
-    }
-    if (opensSession) {
-      entries.push({
-        kind: 'note',
-        text: 'Your draft moves to the new session.',
       })
     }
   })
