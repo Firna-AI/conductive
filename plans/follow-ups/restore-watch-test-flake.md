@@ -23,7 +23,28 @@
   No source, assertion, retry, timeout, or runner configuration changed between those runs.
   The test file matched the incoming primary version.
 
-  Reproduce the failure with the full suite and capture its exact assertion before changing code.
+  The complete gate of 10 November 2026 also failed on this case at commit
+  `0ba4dc759fbd59fc34639b3e6308bb7455eba562`. The test and its restore code
+  were unchanged by that branch. The run passed 2,017 tests and failed this one.
+  Its complete assertion is:
+
+  ```text
+  FAIL worker/lifecycle/restore-watch.test.ts
+  writes the restore marker when hydrated is absent after create and resume
+  AssertionError: expected markerCommands(fixture) to have a length of 1 but got 2
+  worker/lifecycle/restore-watch.test.ts:82:35
+  ```
+
+  The assertion runs after `resumeCompletedWorkspace` returns, before the
+  explicit advance to `resumedAt + 5_000`. Two marker commands already exist.
+  The run is https://github.com/Firna-AI/remote-code/actions/runs/42777891130.
+  No assertion, timeout, retry, or lifecycle implementation changed for this incident.
+  The next branch check includes a newer main commit with public product docs.
+  That commit changes no restore-watch code. Its result does not establish the cause.
+  The local targeted check after that merge passed all 11 tests in the file,
+  including this case, without changing its source. The cause remains unconfirmed.
+
+  Use the captured full-suite assertion to reproduce the ordering before changing code.
   Inspect asynchronous ordering between `resumeCompletedWorkspace`, its completed-response read, and fake-clock alarm advancement.
   This ordering is a suspected source. It has not been confirmed. Shared fixture state is another possible source.
   Make the test deterministic after the cause is known.

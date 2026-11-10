@@ -28,15 +28,27 @@ both actions for the header, the hero, the last call to action, and the
 footer, and the site reads the same words. The parts live in
 `src/components/marketing/`.
 
-The header links to the public source repository on GitHub in both layouts,
-and it has Sign in. On desktop, it also has the main action, and Features
-and Download, which lead to the features and to the Mac app section of the
-home page. The Product column of the footer has Features and Mac app,
-which lead to the same sections. Its Account column has Sign up and Sign
-in.
+The header of a desktop has Features, Download, Docs, GitHub, Sign in, and
+the main action, Sign up. Features and Download lead to the features and
+to the Mac app section of the home page. A phone keeps the wordmark, Docs,
+GitHub, and Sign in. Each link of the phone header is a 44 px target.
+There GitHub shows only its mark, in a square named "GitHub", so that the
+links fit on a 360 px phone. The header links to the public source
+repository on GitHub in both layouts.
+The wordmark is the lockup of the brand, 25 px high, from the
+`lockupHeight` token. Its tile fills that height. It keeps the clear
+space of the [brand rules](../brand/README.md#rules): at least 12.5 px,
+half its tile. So each header is at least twice as high as the lockup.
+The phone header is 56 px high, and the desktop header 64 px. The gap
+after the wordmark is 16 px, and the footer keeps half the lockup height,
+12.5 px, under it. The Product column of the footer lists Docs after
+Features, and it has Mac app. Features and Mac app lead to the same
+sections as in the header. The Account column of the footer has Sign up
+and Sign in. The Docs links of the header and the footer lead to the docs
+overview, `marketing/docs`. [The docs](#the-docs) gives its layout.
 
 The site keeps still captures of the workspace screen, the org settings cloud computer tab, the phone workspace list, and the Mac app.
-Changes to those screens require recapture with the [capture steps](../../src/marketing/pictures/README.md#capture-the-pictures).
+Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
 
 - Every picture is a real screen of the catalogue, not a drawing of one.
   `ScreenFrame` lays the screen out at its own size, 1440 × 900 for a
@@ -53,7 +65,7 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   `PictureCapture` in `src/screens/marketingPictures.tsx` draws the part of
   the screen of one layout at its own size, at scale 1 and without a frame,
   from the top left corner of the page. The
-  [capture command](../../src/marketing/pictures/README.md#capture-the-pictures) opens each page
+  [capture command](../../src/marketing/README.md#pictures) opens each page
   at the size of the screen, and saves that part as the file of the
   picture.
 - A picture is `inert`, so a visitor cannot focus or press anything in it.
@@ -131,3 +143,61 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   header and no footer.
   Astro builds the agreement page with the same layouts and styles as the
   site. The Worker fills its Continue address and its links to the site.
+
+## The docs
+
+The docs pages draw the layout of the public guides of the site, at
+`/docs` and `/docs/<page>`. The mockups draw two pages: the overview and
+the Get started guide. Their words are an example, not the final guides.
+The site builds each guide from its own Markdown file, not from these
+pages, as [Public docs](../../src/marketing/README.md#public-docs) says.
+[The catalogue](catalogue.md) gives their paths and their views.
+[Website docs](../protocol/website-docs.md) states the requirements of the
+guides.
+
+- `DocsScreen` in `src/screens/DocsScreen.tsx` draws a page of the docs in
+  `SitePage`, with the header and the footer of the site. It sets the
+  `current` prop of `SitePage`, so the header fills its Docs link and
+  marks it as the current section.
+- The parts live in `src/components/marketing/docs/`. `docsGuides.ts` is
+  the one list of the twelve guides, in the groups Start, Work, and Manage.
+  The sidebar, the phone menu, and the previous and next links use its
+  order.
+- A guide has a `to` only when the mockups draw its page. Each other guide
+  keeps its place and its look, without a link.
+- `docsOverview.tsx` and `docsGetStarted.tsx` in `src/screens/` hold the
+  bodies of the two pages as TSX. Each `DocsPage`, from `docsPage.ts`, also
+  gives the lead and the level-two headings that the contents link.
+- A desktop shows three columns at the width of the site: the guides, the
+  page, and "On this page". The guides and the contents stay in view while
+  the page scrolls. Below 1120 px, the contents move into a box under the
+  lead.
+- The top of a page shows the group, the title, and the lead.
+- A phone shows a "Docs menu" bar under the header. It opens the guides in
+  place and pushes the page down. "On this page" is a box under the lead,
+  closed at first. Both are native disclosures, so they open without a
+  script.
+- The contents link each level-two heading. A heading has no link of its
+  own, so a reader copies the address of a section from the contents.
+- The current guide has the fill of a selected row. Cards at the foot link
+  the previous and the next guide. The next card stays on the right
+  without a previous card, and a phone stacks the cards.
+- `DocsProse.module.css` styles the plain elements of a body, because
+  Markdown gives them no classes. A table first wraps its words, then
+  scrolls by itself. Code in a table cell keeps one line. A long code block
+  scrolls inside itself, so the page never scrolls sideways.
+- The long install script of Get started takes keyboard focus, as a region
+  named "Example install script". A keyboard can then scroll it. On the
+  site, every code block and every table takes keyboard focus and has a
+  name, as [Public docs](../../src/marketing/README.md#public-docs) says.
+- The same CSS gives each colour of code a class with the name of a Prism
+  token class, such as `comment` or `operator`. The code of the pages uses
+  fixed spans with these classes.
+- A list item that holds only a link is a guide action, such as a page to
+  open next. On a phone, its link is a 44 px target that covers no other
+  text. The two guide actions of Get started use this pattern. A class
+  marks each one, as the Markdown build of the site marks its guide
+  actions. A link beside other words stays an ordinary link of the text.
+- Each link and each disclosure bar shows a 2 px focus ring, as the links
+  of the site do. The menu rows and the phone bars draw the ring inside
+  the item.

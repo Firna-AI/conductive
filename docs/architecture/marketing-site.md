@@ -7,9 +7,9 @@ decision number names a dated record, as
 
 ## Responsibilities
 
-- A few static pages at the root of `conductive.build`: the home page, the
-  Terms and Privacy pages, and the Conductor Cloud comparison page.
-  Visitors see them without a sign-in.
+- Static pages at the root of `conductive.build`: the home page, the public
+  docs, the Terms and Privacy pages, and the Conductor Cloud comparison
+  page. Visitors see them without a sign-in.
 - Astro builds these pages ahead of time. The Worker serves the built files
   on `conductive.build`. It fills in the values of each request, such as
   the app address in the sign-in links and the year in the footer.
@@ -40,6 +40,12 @@ decision number names a dated record, as
   header links it too.
 - The DMGs come from GitHub, not from the Worker.
   [Releases](../protocol/desktop-packages-and-updates.md#releases) states their addresses.
+
+## The public docs
+
+- The public docs are guides to the product, at `/docs`. The team writes
+  them in Markdown, and the site builds them with a docs layout of its own.
+  [Website docs](../protocol/website-docs.md) states their requirements.
 
 ## The comparison page
 

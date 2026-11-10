@@ -14,7 +14,7 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
 - The Mac app section of [the marketing site](marketing-site.md) shows a
   picture of `mac-app/commands`. A change to that screen needs a new
   capture, with the
-  [capture steps](../../src/marketing/pictures/README.md#capture-the-pictures).
+  [capture steps](../../src/marketing/README.md#pictures).
 - The window has no title bar. The red, yellow, and green window buttons
   sit inset at the top left of the left panel, above every layer of the
   app, as macOS draws them. `WindowControls` keeps their space, then shows
