@@ -24,7 +24,7 @@ skip the our own internal tools step [...] we can leave the other stuff,
 this still helps making the first org build faster". The change takes
 decisions 2, 3, and 6 of `plans/software-image.md` on branch
 `calummoore/build-image-install-order` (workspace #413), with their
-numbers, and its open decision 5.
+numbers, and its decision 5, which was open there.
 
 Not covered. That plan keeps these parts:
 
@@ -127,9 +127,9 @@ workspace #413.
     the new output, and it writes the result to the run summary. It tries
     again after a 409, a 429, a 5xx answer, the 501 answer of an older
     Worker without the route, and a network error. It stops at a 400, 401,
-    403, or 404 answer. Decision 5 says what the run does when the step
-    does not end with a ready software image. My call, from #413: when the
-    run must fail, the step sets an output, and a later job with no
+    403, or 404 answer. The run fails unless the step ends with a ready
+    software image (decision 5). My call, from #413: when the run must
+    fail, the step sets an output, and a later job with no
     environment fails the run. So GitHub never records a live deploy as a
     failed deployment of `production`. My call: the job `redeploy` also
     needs that later job, and that later job does nothing in a re-run of
@@ -170,7 +170,9 @@ workspace #413.
 
 The options check of the `implementation-review` skill ran over decision 5
 for this scope on 10 November 2026. Its report is in
-`.context/first-build-software-image/`.
+`.context/first-build-software-image/`. On 10 November 2026, the user
+answered decision 5 and raised no objection to the plan. The orchestrator
+took that answer as the approval of the plan.
 
 ### 2. A software image for first builds
 
@@ -199,78 +201,23 @@ for this scope on 10 November 2026. Its report is in
 
 ### 5. Deploy run: when the software image build fails
 
-Open.
-
-- **Severity:** Low. **Effort:** Small.
-- **Source:** Design.
-- **Category:** Process.
-- **Location:** `.github/workflows/deploy.yml`, the new last step of the
-  job `deploy`.
-- **Background:**
-  - The new last step asks the Worker for the software image and waits up
-    to 15 minutes. The new Worker is already live at that time.
-  - The build moves on while the step waits, and after that only at each
-    15-minute Cron run.
-  - The step can end in four ways: a ready image, a failed build, a wait
-    that ends first, or a stop at a 400, 401, 403, or 404 answer.
-  - Without a software image, a first build does the full install, so no
-    org build fails.
-- **Problem:** No rule says what the deploy run does when its step ends
-  without a ready software image.
-- **Impact if no action:** A quiet failure keeps first builds slow, and
-  nobody sees why.
-- **Root question:** How does the person who started a deploy run learn
-  that the run ended without a ready software image, whatever the cause?
-  The options check replaced "How does the person who merged learn that a
-  deploy run made no software image?", because no option covered a stop
-  at a refused answer.
-- **Options:**
-  - **A.** Fail the deploy run when the build fails or the wait ends
-    first. GitHub alerts the person who started the run. The live Worker
-    stays. Effort: Small.
-  - **B.** Pass the run with a warning in its summary. Effort: Small.
-  - **C.** Fail the run when the build fails. Pass with a warning when only
-    the wait ends first. Effort: Small.
-  - **D.** As A, and give the build a time limit below the wait, such as
-    12 minutes. A slow but healthy build then fails. Effort: Small.
-  - **E.** As A, but after a failed build, the step asks once for a new
-    one within the same wait. A real failure then costs a second sandbox.
-    The request needs a retry mark, because a failed build starts again
-    only for another deploy run. Effort: Small.
-  - **F.** Fail the deploy run unless the step ends with a ready software
-    image. One rule then covers a failed build, a wait that ends first,
-    and a stop at a 400, 401, 403, or 404 answer. The summary names the
-    cause. A failure that persists fails each later deploy run until
-    someone fixes it. Effort: Small.
-- **Left out:**
-  - A Worker cron that starts a build when its version has none, because
-    it reopens decision 3. A cron that only retries a failed build also
-    fails the goal, because a build that only the Cron moves often passes
-    its time limit.
-  - A Worker warning only, because nobody reads the Worker logs without an
-    alert.
-  - A warning at the first failed build, and a failed run only when a
-    later run fails the same version again. The person who started the
-    first run then gets no alert.
-  - The state of the software image in the app, such as in the operator
-    section, because nobody opens it without an alert.
-  - A scheduled workflow that checks the live software image, because it
-    must read the state without the token of a deploy run. That breaks
-    decision 6.
-- **Wider fix:** F. It does not need to know the cause, so a new cause of a
-  missing software image still fails the run. The alert for each failed
-  run, whoever started it, is option C of
-  `plans/follow-ups/deploy-alerts-for-started-runs.md`.
-- **Previous examples:** A failed health check already fails the deploy
-  run.
-- **Related:** `plans/follow-ups/deploy-alerts-for-started-runs.md`: a run
-  that the workflow starts by itself alerts nobody.
-- **Recommendation:** F. The first recommendation was A. F keeps the rule
-  of A, and it also fails a run that stopped for a cause that A does not
-  name.
-- **Action:** ask the user, because a failed build becomes a new failure of
-  the deploy run, and the repository rules leave each new failure to the
-  user.
+- **Chosen:** F, by the user on 10 November 2026, in workspace #513. The
+  first recommendation was A. The options check added F and recommended
+  it.
+- **Options:** **A.** Fail the deploy run when the build fails or the wait
+  ends first. **B.** Pass the run with a warning in its summary. **C.**
+  Fail the run when the build fails, and pass with a warning when only the
+  wait ends first. **D.** As A, with a build time limit below the wait.
+  **E.** As A, and ask once for a new build after a failed build. **F.**
+  Fail the deploy run unless the step ends with a ready software image.
+- **Left out:** A Worker cron that starts or retries a build, because it
+  reopens decision 3 or passes its time limit. A Worker warning only, a
+  warning that fails only a repeat, and a state in the app, because
+  nobody sees them without an alert. A scheduled check workflow, because
+  it breaks decision 6.
+- **Reason:** one rule covers a failed build, a wait that ends first, and a
+  refused request, so a new cause of a missing software image still fails
+  the run.
 
 ### 6. Deploy run: how the Worker trusts its request
 
@@ -344,7 +291,11 @@ deploy step.
 
 ## Milestone 3: App software version and records
 
-Depends on: 2
+Depends on: none
+
+The code milestones follow the design items of this plan, which hold the
+same requirements as the docs of Milestone 2. So they run beside
+Milestones 1 and 2, in files that those milestones do not change.
 
 - [ ] Compute the app software version of design item 2. Make the agent
       tools command a pure function, so that the build and the version use
