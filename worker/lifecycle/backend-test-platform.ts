@@ -68,6 +68,7 @@ export function backendActor(
   const native = harness.native.actor(id, options)
   const settled = async () => {
     await native.ready
+    // The admission notification can precede the final alarm write.
     await native.api.controls.settled()
   }
   const advance = async (at?: number) => {
