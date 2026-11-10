@@ -1,0 +1,65 @@
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: max(40px, var(--ui-touch-min));
+  padding: 7px 6px 7px 12px;
+  box-sizing: border-box;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-border);
+}
+
+/* The icon sits on the middle of the first line of the row. */
+.icon {
+  flex-shrink: 0;
+  margin-top: max(6px, calc(var(--ui-touch-min) / 2 - 7px));
+  color: var(--ui-muted);
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* The name and the controls, which wrap below the name on a phone. */
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  min-height: max(26px, var(--ui-touch-min));
+}
+
+.name {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: -6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.end {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+}
+
+.chevron {
+  color: var(--ui-muted);
+}

@@ -17,7 +17,9 @@ the message field of each composer, and Stop.
 - The chat loads the session list and the view, then the full history of the
   shown session, then the workspace and the session list again. The stream
   starts after the history's `throughEventNumber`, so no change between the
-  reads and the stream gets lost.
+  reads and the stream gets lost. The view also gives the routine of a run
+  workspace, with the pull request of a pull request run. The snapshot keeps
+  it as `routine` for the workspace header.
 - The chat writes no browser storage. The drafts stay in memory, and the
   server keeps the open tabs through the view route. A kept controller
   lives only in the memory of its tab, so a reload or a new tab starts

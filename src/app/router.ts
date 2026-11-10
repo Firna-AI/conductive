@@ -10,6 +10,8 @@ export const SETTINGS_TABS = [
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
+/** The tabs of a saved routine on a phone: its form, and its runs. */
+export type RoutineTab = 'routine' | 'runs'
 export const ACCOUNT_TABS = ['general', 'preferences'] as const
 
 export type AccountTab = (typeof ACCOUNT_TABS)[number]
@@ -50,6 +52,15 @@ export type Route =
       view: readonly string[]
     }
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
+  | { screen: 'routines'; orgId: string }
+  | { screen: 'new-routine'; orgId: string }
+  /** A phone shows the form of a saved routine and its runs in two tabs. */
+  | {
+      screen: 'routine'
+      orgId: string
+      routineId: string
+      tab: RoutineTab
+    }
   /** The operator section. The shell shows it only to an operator. */
   | { screen: 'operator'; view: OperatorView }
   /**
@@ -91,6 +102,12 @@ export const routes = {
     tab === 'general'
       ? `/orgs/${encode(orgId)}/settings`
       : `/orgs/${encode(orgId)}/settings/${tab}`,
+  routines: (orgId: string) => `/orgs/${encode(orgId)}/routines`,
+  newRoutine: (orgId: string) => `/orgs/${encode(orgId)}/routines/new`,
+  routine: (orgId: string, routineId: string, tab: RoutineTab = 'routine') =>
+    tab === 'routine'
+      ? `/orgs/${encode(orgId)}/routines/${encode(routineId)}`
+      : `/orgs/${encode(orgId)}/routines/${encode(routineId)}/runs`,
   operator: () => '/operator',
   operatorOrgs: (search = '') => operatorList('orgs', search),
   operatorUsers: (search = '') => operatorList('users', search),
@@ -204,6 +221,18 @@ export function parseRoute(pathname: string, search: string): Route {
   if (area === 'settings' && rest.length === 0) {
     const tab = tabOf(SETTINGS_TABS, id)
     if (tab) return { screen: 'settings', orgId, tab }
+  }
+  if (area === 'routines') {
+    if (id === undefined) return { screen: 'routines', orgId }
+    if (id === 'new' && rest.length === 0) {
+      return { screen: 'new-routine', orgId }
+    }
+    if (id !== 'new' && rest.length === 0) {
+      return { screen: 'routine', orgId, routineId: id, tab: 'routine' }
+    }
+    if (id !== 'new' && rest.length === 1 && rest[0] === 'runs') {
+      return { screen: 'routine', orgId, routineId: id, tab: 'runs' }
+    }
   }
   return { screen: 'not-found' }
 }

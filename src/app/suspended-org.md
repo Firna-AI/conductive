@@ -38,6 +38,16 @@ screens show.
 - The list shows the notice of the org: at the top of the list page, and
   in the main area of a wide desktop. It has no New workspace, no section
   menu, and no drag. A section collapses in this view only.
+- The Routines link stays in the sidebar and in the list. The Routines page
+  shows the notice of the org above the routines, and no New routine.
+- Every view of the routine page shows the notice of the org: the routine,
+  the page of a new routine, a routine that the org no longer has, and a
+  failed read. On desktop the notice is at the top of the form column. On a
+  phone it is above the content of either tab, so the Runs tab shows it
+  too. The frame of the page draws it, not the content of a tab.
+- The routine shows without fields, with no action, no note about a
+  turn-off, and no line about the logins of runs. The page of a new routine
+  shows only the notice.
 - The rail names the org as suspended.
 - The settings show the notice above each tab. Each tab is read-only, also
   for an admin, and General has no Delete org. Repositories, Cloud

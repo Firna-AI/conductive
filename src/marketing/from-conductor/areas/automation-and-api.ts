@@ -40,9 +40,8 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     id: 'routines',
     area: 'automation-and-api',
     name: 'Routines',
-    status: 'in-progress',
-    note: 'Scheduled and pull request routines are in progress. Each run gets a new workspace, with run history and manual runs.',
-    due: null,
+    status: 'available',
+    note: 'Routines run on a schedule or on pull request events. Each run gets a new workspace, with run history and manual runs. Pull request triggers filter by author.',
   },
   {
     id: 'hosted-mcp-server',

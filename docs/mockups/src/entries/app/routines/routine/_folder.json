@@ -1,0 +1,13 @@
+{
+  "order": [
+    "new",
+    "member",
+    "admin",
+    "owner-left",
+    "turned-off",
+    "repository-removed",
+    "delete",
+    "unavailable",
+    "not-loaded"
+  ]
+}

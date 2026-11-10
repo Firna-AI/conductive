@@ -1,3 +1,4 @@
+import type { ApiError } from './api/client'
 import { asApiError, loading, ready, Store } from './store'
 import type { Loadable, Readable } from './store'
 
@@ -14,6 +15,17 @@ interface Layer<T> {
   /** The count when the change arrived, or `null` while its write waits. */
   at: number | null
   key?: string
+}
+
+export interface ResourceOptions {
+  /**
+   * Whether the error of a failed read proves that the value no longer
+   * exists, such as the refusal of a deleted record. Such a read shows its
+   * error also in place of a value that shows, unless a newer answer shows.
+   * Every other failed read keeps that value. Without it, each failed read
+   * keeps the value.
+   */
+  missing?: (error: ApiError) => boolean
 }
 
 /**
@@ -34,7 +46,9 @@ interface Layer<T> {
  *   answer carries no order of its own. A failed save does not stop the
  *   next one.
  * - A failed read keeps a value that already shows. Only a read that fails
- *   before any answer shows its error.
+ *   before any answer shows its error. A value can name the errors that
+ *   prove that it no longer exists, through `missing`: such a read shows its
+ *   error also over a value, and an older answer no longer shows.
  */
 export class Resource<T> {
   private readonly shown = new Store<Loadable<T>>(loading)
@@ -47,9 +61,11 @@ export class Resource<T> {
   /** The last save in the queue. It never fails, so the next save can go. */
   private saving: Promise<unknown> = Promise.resolve()
   private readonly fetch: () => Promise<T>
+  private readonly missing: (error: ApiError) => boolean
 
-  constructor(fetch: () => Promise<T>) {
+  constructor(fetch: () => Promise<T>, options: ResourceOptions = {}) {
     this.fetch = fetch
+    this.missing = options.missing ?? (() => false)
   }
 
   /** Reads the value. `current` returns false when its answer is obsolete. */
@@ -59,9 +75,7 @@ export class Resource<T> {
     try {
       value = await this.fetch()
     } catch (error) {
-      if (!current() || this.answer.state === 'ready') return
-      this.answer = { state: 'failed', error: asApiError(error) }
-      this.show()
+      if (current()) this.failed(asApiError(error), startedAt)
       return
     }
     if (current()) this.answered(value, startedAt)
@@ -118,6 +132,20 @@ export class Resource<T> {
     } finally {
       this.show()
     }
+  }
+
+  /**
+   * A read that started at the count `at` failed. It keeps a value that
+   * shows, unless its error proves that the value no longer exists. Then it
+   * counts as the newest answer, unless a newer answer shows.
+   */
+  private failed(error: ApiError, at: number): void {
+    if (this.missing(error)) {
+      if (at < this.answerAt) return
+      this.answerAt = at
+    } else if (this.answer.state === 'ready') return
+    this.answer = { state: 'failed', error }
+    this.show()
   }
 
   /** The server had `value` at the count `at`, and every change before. */
