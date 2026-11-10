@@ -27,8 +27,8 @@ Contract owners:
 ## Decisions
 
 Decisions 250 to 252 are the answered items of the brainstorm. The user
-answered decision 253 on 10 November 2026. Decision 254 is open. The numbers start at 250, because other open
-branches use numbers up to 241.
+answered decisions 253 and 254 on 10 November 2026. The numbers start at
+250, because other open branches use numbers up to 241.
 
 ### 250. Choose what an org pays for
 
@@ -94,6 +94,7 @@ branches use numbers up to 241.
 - **Recommendation:** A. Single developers are a main group of buyers.
 - **Action:** ask the user, because the options trade tax and legal work against who can buy.
 - **Chosen:** A, by the user on 10 November 2026. The user said that Firna is VAT registered in the UK. "Tax" under "Design" gives the VAT rules.
+- **Changed by decision 254 on 10 November 2026:** Firna uses no Stripe Tax. The operator works out the tax by hand, from the country of each customer in Stripe.
 
 ### 253. Agree the plans and prices
 
@@ -165,6 +166,11 @@ branches use numbers up to 241.
 - **Related:** Decision 253 sets the prices.
 - **Recommendation:** B. It keeps the dollar prices that buyers compare across tools, and it gives UK consumers the total that the UK rule needs. F can follow for EU consumers. A lawyer should confirm the words, because the display of prices is consumer law.
 - **Action:** ask the user, because it trades a simple page against the consumer rules and Firna's income.
+- **Chosen:** A, with the user's change on 10 November 2026: "lets not charge tax automatically - I will do it manually looking at the country of the user from stripe data - let not include tax in the prices".
+  - The page shows prices without tax, and the line "Prices exclude VAT and sales tax." It does not say that checkout adds the tax, because nothing adds it by itself.
+  - Firna uses no Stripe Tax. The operator works out and files the tax by hand, from the country of each customer in Stripe.
+  - Agent reading: tax can still come on top of a price, so the page says that the prices exclude it.
+  - The agent recommended B. The user accepted the risk that UK and EU consumer rules ask for consumer prices with VAT.
 
 ## Design
 
@@ -191,19 +197,22 @@ An accountant should confirm them before the first sale.
   reclaims it. The VAT goes on Firna's UK VAT return.
 - An EU business with a valid VAT number pays no VAT on the invoice. The
   invoice says "reverse charge", and the buyer accounts for the VAT.
-  Stripe Checkout collects and checks the number.
+  Stripe Checkout can collect the number.
 - An EU consumer pays the VAT of their own country from the first sale.
   A UK seller has no threshold for these sales. Firna registers for the
   EU non-Union OSS scheme in one EU country, and files one EU return each
-  quarter. Stripe Tax finds the rate and keeps two pieces of location
-  evidence.
+  quarter. The operator finds the rate by hand. The billing country and
+  the card country in Stripe give the two pieces of location evidence.
 - A buyer in another country pays no UK VAT, because the sale happens
   where the buyer is. Most places tax a foreign seller only after a
   threshold, such as $100,000 of sales in one US state. Some start
   sooner. Switzerland taxes the first Swiss sale once the seller's sales
-  in the whole world pass CHF 100,000. Stripe Tax tracks the thresholds.
+  in the whole world pass CHF 100,000. The operator tracks the
+  thresholds by hand.
 - Services that Firna buys from abroad, such as Boat, fall under the
   reverse charge on Firna's own UK VAT return.
+- VAT that Firna does not add on top of a price is still due. Firna then
+  pays it from the price, as UK VAT is one sixth of a price with VAT.
 
 ### Design calls
 
@@ -213,8 +222,8 @@ one.
 - The org pays for its members and its compute, as the user chose for
   decision 27 B. Reason: decision 80 removed the only reason that
   superseded it.
-- Stripe Billing with Stripe Tax takes the payments, as the user chose
-  for decisions 26 A and 252 A.
+- Stripe Billing takes the payments, as the user chose for decisions
+  26 A and 252 A. Decision 254 dropped Stripe Tax.
 - Prices are in US dollars. Reason: every competitor and the provider's
   costs use them. Option E of decision 254 would add pound prices for UK
   buyers.
@@ -244,7 +253,8 @@ Each needs its own plan:
 
 - Billing: Stripe Checkout, the Customer Portal, signed Stripe events, the
   plan of each org, a billing tab, and the consumer pages of decision
-  35 D.
+  35 D. Checkout collects the billing address, so that the operator sees
+  the country of each customer.
 - Usage: one record of every cloud computer, as
   `plans/follow-ups/computer-ledger.md` says, the hours of each org, and
   the charge for extra hours.
