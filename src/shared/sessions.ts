@@ -13,6 +13,21 @@ export function sessionPath(
 ): string {
   return `${sessionsPath(orgId, workspaceId)}/${encodeURIComponent(sessionId)}`
 }
+
+export type TranscriptDetail = 'concise' | 'full'
+
+export interface SessionTranscriptResponse {
+  markdown: string
+}
+
+export function sessionTranscriptPath(
+  orgId: string,
+  workspaceId: string,
+  sessionId: string,
+  detail: TranscriptDetail,
+): string {
+  return `${sessionPath(orgId, workspaceId, sessionId)}/transcript?${new URLSearchParams({ detail })}`
+}
 export const sessionPaths = {
   messages: (orgId: string, workspaceId: string, sessionId: string) =>
     `${sessionPath(orgId, workspaceId, sessionId)}/messages`,

@@ -1,4 +1,4 @@
-import type { RunnerEventRefused } from '../../shared/chat-events'
+import type { RunnerEventRefused } from '../chat-events'
 import { endsTurn, isRunning } from './known-turns'
 import type { Transcript, TranscriptItem } from './transcript'
 import { replaceAt } from './turn-events'

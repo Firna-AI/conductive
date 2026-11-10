@@ -28,6 +28,8 @@ them, and this page lists each protocol doc and what it covers.
     of lost workspace updates.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
+  - [Session transcripts](../protocol/session-transcripts.md): copying a
+    session as concise or full Markdown, and its route.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)

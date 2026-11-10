@@ -7,6 +7,7 @@ import type {
   InterruptResponse,
   SessionResponse,
   SessionsResponse,
+  SessionTranscriptResponse,
 } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { count, flag, list, nullable, oneOf, record, text } from './json'
@@ -146,4 +147,9 @@ export function readView(value: unknown): WorkspaceView {
     fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
     tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
   }
+}
+
+/** The Markdown of a session, for its pending clipboard write. */
+export function readTranscript(value: unknown): SessionTranscriptResponse {
+  return { markdown: text(record(value, 'session transcript').markdown) }
 }
