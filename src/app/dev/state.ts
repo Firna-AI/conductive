@@ -58,6 +58,23 @@ export interface DevWaitlist {
   invitations: { invite: PendingOrgInvite; org: OrgState }[]
 }
 
+/**
+ * The provider accounts of the dev fake: the configured IDs in ID order,
+ * the weight of each for new orgs, and the last change of the weights. A
+ * read or a save can fail on purpose, from the options. `made` keeps the
+ * account and the time of each org that Create org made in the page, so
+ * the operator section lists it, as the Worker does.
+ */
+export interface DevProviders {
+  accounts: readonly string[]
+  weights: Readonly<Record<string, number>>
+  updatedAt: number | null
+  operator: { githubId: number; login: string } | null
+  readFails: boolean
+  saveFails: boolean
+  made: Map<string, { providerAccount: string; createdAt: number }>
+}
+
 /** Everything that the writes of the dev fake change. */
 export interface DevState {
   account: AccountResponse
@@ -81,6 +98,7 @@ export interface DevState {
   /** Each change of a share setting fails, from `shareSave=fail`. */
   shareSaveFails: boolean
   waitlist: DevWaitlist
+  providers: DevProviders
 }
 
 /**

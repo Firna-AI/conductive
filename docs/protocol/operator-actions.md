@@ -3,12 +3,13 @@
 This doc holds the requirements and the decisions in force for the
 operator. It covers the suspension of a user or an org, the owners and
 admins that a suspension leaves, and the lift of a suspension. It also
-covers abuse reports. [Operator section](operator-section.md) states the
-pages of the operator in the web app. All users share the app's Boat
-account, so misuse by one user puts the sandboxes of every user at risk,
-as [Sign-in](access-and-security.md#sign-in) says. The terms are
-those of the [architecture doc](../architecture.md#terms). A decision
-number names a dated record, as
+covers abuse reports. [Org suspension](operator-org-suspension.md) holds
+the suspension of an org. [Operator section](operator-section.md) states
+the pages of the operator in the web app. All orgs on one provider account
+share that account, so misuse by one user puts the sandboxes of every org
+on it at risk, as [Sign-in](access-and-security.md#sign-in) says. The
+terms are those of the [architecture doc](../architecture.md#terms). A
+decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
 ## The operator
@@ -96,9 +97,12 @@ These rules hold for each workspace that the suspended user owns.
   whoever owns it, and the stop runs again every 30 seconds until it is
   confirmed. Only a start that waits keeps it running, because that
   start gives the workspace a new token.
-- After such a stop, a workspace keeps its restart near day 14 while
-  neither its owner nor its org is suspended. Each owner change makes the
-  workspace check its stop and its restart at once.
+- The restart near day 14 of a stop exists only on Boat, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says. So each rule
+  on that restart covers only a workspace on Boat.
+- After such a stop, a workspace on Boat keeps its restart near day 14
+  while neither its owner nor its org is suspended. Each owner change
+  makes the workspace check its stop and its restart at once.
 - No member can start a workspace whose owner is suspended. This covers a
   create and a resume.
 - The refusal of a resume has the code `user_suspended`. It says that
@@ -109,10 +113,10 @@ These rules hold for each workspace that the suspended user owns.
   the workspace gets another owner.
 - A start of such a workspace that waits or runs stops before its next
   step.
-- A stopped workspace whose owner is suspended gets no restart near day 14
-  of its stop (decision 125). So Boat can delete its disk, with any
-  unpushed work of the members. An admin can assign the workspace to
-  another member, as the refusal above says.
+- A stopped workspace on Boat whose owner is suspended gets no restart
+  near day 14 of its stop (decision 125). So Boat can delete its disk,
+  with any unpushed work of the members. An admin can assign the
+  workspace to another member, as the refusal above says.
 - A suspended user can create no workspace and start no build.
 - Each unfinished build that the user started stops and fails. The app
   removes its build sandbox.
@@ -126,8 +130,8 @@ These rules hold for each member, for each workspace whose owner or org
 is suspended.
 
 - No member can open a new preview, launch a preview, open a terminal, or
-  get a desktop address. The Worker refuses each before any call to Boat,
-  with the same reply as the refusal of a resume.
+  get a desktop address. The Worker refuses each before any call to the
+  provider, with the same reply as the refusal of a resume.
 - Each request to a preview of the workspace gets the answer of an unknown
   preview, and the data of an open preview stops.
 - An open terminal socket closes within 30 seconds.
@@ -186,60 +190,13 @@ of a deleted org takes effect.
 
 ## Suspend an org
 
-An org suspension covers each workspace and each build of the org,
-whoever owns or started it (decision 129).
-
-- The request names the org by its ID. An ID without an org gets HTTP 404
-  with the code `org_not_found`.
-- The operator can also suspend an org that an admin deleted, while the
-  org still exists. No admin can restore it while it is suspended.
-- The other rules of [Suspend a user](#suspend-a-user) hold for an org
-  too. They cover the record of the time and the operator, a repeat, and
-  the reply with its pending stops.
-- The org suspension stops the sandbox of each workspace and each build of
-  the org. A stop that fails runs again until it completes.
-- It revokes the workspace token of each workspace of the org. The rule of
-  [Workspace tokens and runners](#workspace-tokens-and-runners) then
-  refuses each such token, and each runner connection closes.
-- [Sandbox access](#sandbox-access) states how the previews, the
-  terminals, and the desktops of the org end.
-- Nobody can create, resume, or start a workspace of the org. No build and
-  no image refresh of the org runs, by hand or automatically.
-- A start of a workspace of the org that waits or runs stops before its
-  next step.
-- Each unfinished build of the org stops and fails. The app removes its
-  build sandbox.
-- A stopped workspace of the org gets no restart near day 14 of its stop,
-  also after an owner change (decision 125). So Boat can delete its disk,
-  with any unpushed work of the members.
-- A signed-in member who is not suspended gets each refusal with HTTP 403
-  and the code `org_suspended`. It says that the org is suspended, and it
-  gives the address for abuse reports.
-- This also holds when the owner of the workspace, or the new owner that a
-  request names, is suspended.
+[Suspend an org](operator-org-suspension.md#suspend-an-org) holds these
+requirements.
 
 ## What members of a suspended org keep
 
-- An org suspension suspends no user. Each member can still sign in, and
-  keeps their sign-in sessions in the browser and in the Mac app.
-- Each member keeps their account and their other orgs. The org
-  suspension changes nothing in another org.
-- The org suspension takes away no access to read. Members can still open
-  the org and its workspaces, also archived ones, and read the chat
-  history of each workspace.
-- The org and each of its workspaces show a notice. It says that the org
-  is suspended, and it gives the address for abuse reports.
-- While the org is suspended, no member can change anything in it, and
-  nobody can join it. The only exception is a leave, when a member leaves
-  the org alone.
-- Each other change that a member asks for gets the `org_suspended`
-  refusal.
-- The rules of a leave in [Owners and admins](#owners-and-admins) still
-  hold (decision 123). No member can become an admin while the org is
-  suspended. So the only active admin cannot leave it until an operator
-  lifts the suspension.
-- Reason: the org keeps someone who can manage it, as decision 55
-  requires.
+[What members of a suspended org keep](operator-org-suspension.md#what-members-of-a-suspended-org-keep)
+holds these requirements.
 
 ## Lift a suspension
 
@@ -266,9 +223,9 @@ A lift ends the suspension of a user or of an org (decision 145).
   [Workspace tokens and runners](#workspace-tokens-and-runners) says.
 - No preview that the suspension revoked comes back. No build that the
   suspension failed comes back.
-- A lift gives back the restart near day 14 of the stop. It covers each
-  stopped workspace that the user owns, or each stopped workspace of the
-  org.
+- On Boat, a lift gives back the restart near day 14 of the stop. It
+  covers each stopped workspace on Boat that the user owns, or each
+  stopped workspace of the org when the org runs on Boat.
 - A restart whose day 14 has already passed runs at once after the lift.
   Reason: lifts are rare, and the disk may still exist.
 - A workspace whose owner or org is still suspended gets no restart, as

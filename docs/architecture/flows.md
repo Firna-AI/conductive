@@ -4,13 +4,22 @@ Each flow uses the components and the terms of the
 [architecture doc](../architecture.md). A decision number names a dated
 record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
+## Create an org
+
+1. A person creates an org with its repositories. An operator can also
+   choose its provider account.
+2. The Worker sets the account of the org once: the choice of the
+   operator, or a draw from the weights. The org keeps that account for
+   its whole life.
+3. The Worker starts the first build of the org image in that account.
+
 ## Create a workspace
 
 1. The user sends the first message of a new workspace. The Worker records
    the workspace, and its Durable Object keeps the message.
-2. With the Boat key, the Worker asks Boat for a sandbox from the newest
-   good org image of the org. The sandbox gets the workspace token and the
-   org's env vars, but no agent login.
+2. With the key of the account of the org, the Worker asks its provider
+   for a sandbox from the newest good org image of the org. The sandbox
+   gets the workspace token and the org's env vars, but no agent login.
 3. The Durable Object pushes each start step to the open tabs.
 4. The agent runner starts and connects to the Durable Object. The Durable
    Object sends it the waiting message.
@@ -41,22 +50,25 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   `app.conductive.build`. The Worker connects it to the private terminal
   port.
 - A preview frame loads its preview hostname. The Worker proxies the
-  request to the private preview relay of the sandbox. The relay forwards
-  it to the previewed server with its local address as `Host`.
-- The Worker asks Boat for a short-lived desktop URL, and the browser
-  shows Boat's desktop stream.
+  request to the private preview relay of the sandbox, with the port
+  credential of its provider. The relay forwards it to the previewed
+  server with its local address as `Host`.
+- For a sandbox on Boat, the Worker asks Boat for a short-lived desktop
+  URL, and the browser shows Boat's desktop stream. A sandbox on E2B has
+  no desktop stream. The app hides the Desktop tool for now.
 
 ## GitHub events
 
 - GitHub sends pull request, check, status, and push webhooks. The Worker
   routes each event to the workspace of its branch.
 - A push to the default branch of a chosen repository can also start a
-  refresh of the org image.
+  refresh of the org image, in the account of the org.
 
 ## Stops
 
 - The Durable Object stops a sandbox when the stop rule of
   [Workspaces and sandboxes](../protocol/workspace-life.md#stop-and-resume)
   says so.
-- Near day 14 of a stop, the app starts the sandbox briefly and stops it
-  again, so that Boat keeps its disk (decision 43).
+- On Boat, near day 14 of a stop, the app starts the sandbox briefly and
+  stops it again, so that Boat keeps its disk (decision 43). E2B keeps a
+  stopped sandbox with no time limit, so it gets no such restart.

@@ -4,7 +4,9 @@ This doc holds the requirements and the decisions in force for the tools
 that the app gives the agents in each sandbox. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. An e2b decision number names a decision of the change that adds E2B as
+the second [sandbox provider](workspaces-and-sandboxes.md#the-provider), as
+that doc says.
 
 ## Workspace tools
 
@@ -30,8 +32,8 @@ says.
   gives the routes of the other three lists. Mac command requests use
   `/v1/tools/mac-command` and the addresses under it.
 - The app sets no limit of its own on the workspaces that agents create
-  (decision 8). The plan limits of the app's Boat account apply, as
-  [The provider](workspaces-and-sandboxes.md#the-provider) says.
+  (decision 8). The plan limits of the provider account of the org apply,
+  as [The provider](workspaces-and-sandboxes.md#the-provider) says.
 - A workspace that an agent creates starts with no approval step in the
   app.
 
@@ -229,9 +231,13 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 
 ## Computer tools
 
-- The agents keep Boat's computer tools: the MCP server `computer` that
-  every sandbox has (decision 36).
-- The agent runner gives these tools to the agents.
+- On Boat, the agents keep Boat's computer tools: the MCP server
+  `computer` that every Boat sandbox has (decision 36).
+- On E2B, the agents get no computer tools for now (e2b decision 216). They
+  keep the workspace tools. The Cua Driver in the E2B template was left
+  for later.
+- The agent runner gives the computer tools to the agents when the
+  sandbox has them.
 - The agents use the computer tools for browser work on the desktop of the
   sandbox.
 - The Desktop tool can show the same desktop, so the user can watch the

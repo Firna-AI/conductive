@@ -15,6 +15,10 @@ import {
   type OperatorCodesResponse,
   type OperatorWaitlistResponse,
 } from '../shared/operator-waitlist'
+import {
+  operatorProvidersPath,
+  type OperatorProvidersResponse,
+} from '../shared/operator-providers'
 import type { FakeApiServer } from './fake-api'
 import { coreFixtures, FAKE_TIME } from './fixtures/core'
 import { operatorFixtures, orgRow, userRow } from './fixtures/operator'
@@ -54,6 +58,15 @@ export function serveOperator(server: FakeApiServer, now = FAKE_TIME) {
     nextCursor: null,
   } satisfies OperatorCodesResponse)
   server.json('GET', operatorSignupPausePath(), fixtures.pause)
+  server.json('GET', operatorProvidersPath(), {
+    accounts: ['boat', 'e2b'].map((id) => ({
+      id,
+      weight: id === 'boat' ? 100 : 0,
+      orgs: fixtures.orgs.filter((org) => org.providerAccount === id).length,
+    })),
+    updatedAt: null,
+    operator: null,
+  } satisfies OperatorProvidersResponse)
   for (const org of fixtures.orgs) {
     server.json('GET', operatorOrgPath(org.id), org)
   }

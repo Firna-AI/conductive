@@ -39,7 +39,9 @@ export interface ProviderContractFixture {
   readonly provider: SandboxProvider
   readonly secret: string
   readonly expectedPort: PrivatePort
-  given(reply: ContractReply): void
+  readonly defaultProviderCode?: string
+  readonly providerCodeFor?: (code: string) => string | null
+  given(reply: ContractReply): void | Promise<void>
   createIdentities(): readonly (string | null)[]
 }
 

@@ -172,3 +172,26 @@ without such an admin gets neither refresh. Its push uses no part of the
 coordinator sets no new alarm.
 [Operator actions](../../docs/protocol/operator-actions.md#starts-stops-and-builds)
 states the rule.
+
+## Key Code
+
+- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
+- [`image-builds.ts`](image-builds.ts): `startImageBuild` and
+  `advanceImageBuild`, which removes the command journals before a snapshot.
+- [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
+  which starts changed settings after the first good build finishes cleanup.
+- [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
+- [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
+  replays a saved allocation request and saves the recovered sandbox ID.
+  Failed image jobs retain their unresolved allocation phase until cleanup
+  recovers and deletes the sandbox.
+- [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
+  which splits output into rows and adds the budget statements of
+  [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.
+- [`build-log-reader.ts`](build-log-reader.ts): `readBuildSnapshot`, which
+  reads the build state and its log in one D1 batch.
+- [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
+  `runImageAlarm`.
+- [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
+- [`image-software.ts`](image-software.ts): the runner archive check and
+  install/start commands.

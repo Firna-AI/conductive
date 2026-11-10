@@ -19,6 +19,10 @@
   - On the same day, the 295 Markdown files outside the top-level plan files held 2,073 relative links, and each one resolved. Five code files held a doc path, and each one resolved.
   - `docs/protocol/workspace-links.md` shows a Markdown link to a workspace inside inline code, with the target `<link>`. A simple link pattern reads it as a link to a missing file.
   - A section name in plain text is not a link, for example a Location line that names a section. A link check does not see it.
+  - On 10 November 2026, an integration check found a broken link already present at `df93a191`.
+    `docs/protocol/file-mentions.md:24` links to `access-and-security.md#secrets-that-users-enter`.
+    The heading lives in `tokens-and-secrets.md`.
+    The baseline repair must change the target to `tokens-and-secrets.md#secrets-that-users-enter`.
 - **Problem:** No command finds a relative link to a missing page or heading, or a doc path in code that names a missing page. Agents check links by hand, and a merge can miss a citation on a line that it does not change.
 - **Impact if no action:** A reader follows a link or a citation to a page or a heading that does not exist, and cannot find the requirement.
 - **Root question:** How does the repository find each reference to a doc page or a heading that no longer exists?

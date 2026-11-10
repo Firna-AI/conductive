@@ -139,25 +139,27 @@ The handler gets the default branch from the workspace's repository record in D1
 It does not use a browser-supplied base branch.
 
 The repository root is required because lifecycle and runner code own the checkout folder.
-The Boat read adapter accepts roots under `/home/user/`.
+The provider fallback accepts roots under `/home/user/`.
 It appends only a repository-relative file path.
 The runner must resolve and confine file paths to its own checkout, including symlinks.
 The Boat API applies its own canonical path checks.
 
 The fallback gets `SandboxProvider` through `orgProviderForAccount`, with the authorized user's ID and the provider account of the workspace.
-The provider owns the fixed routes, headers, organization pin, and the key of that account, the app's Boat key in production.
-Its `readFile` requests base64 so a binary file keeps its bytes.
+The provider owns the fixed routes, the headers, and the key of that account, such as the app's Boat key or E2B key. On Boat, it also owns the organization pin.
+Its `readFile` returns base64 so a binary file keeps its bytes.
+Boat requests base64 from its API. E2B reads raw bytes through envd and encodes them on the server.
 The [sandbox response policy](../sandbox/README.md#response-byte-limits) defines the reply budgets and the metadata fallback.
 The handler reports the file size with `file_too_large`.
-The provider checks that both replies name the requested absolute path.
-The Boat read adapter converts valid UTF-8 to text and preserves a leading byte order mark.
+The provider validates the requested absolute path in its file metadata.
+Boat also validates the content reply path. E2B raw replies have no path field.
+The fallback in `boat.ts` converts valid UTF-8 to text and preserves a leading byte order mark.
 It checks the returned size and decoded byte length against the configured limit.
 Provider error messages never reach the browser.
 The [Boat read-file reference](https://docs.boat.dev/api/reference/agent/read-sandbox-file) defines that route.
 
-A disconnected diff returns `file_unavailable` and makes no Boat call.
-The Boat fallback does not resume a stopped sandbox.
-Boat may therefore refuse a file read until the cloud computer is ready.
+A disconnected diff returns `file_unavailable` and makes no provider call.
+Neither provider fallback resumes a stopped sandbox.
+A disconnected read can therefore fail until the cloud computer is ready.
 
 Org suspension refuses file resources with 403 `org_suspended` before any runner or provider call.
 Chat history remains readable through its separate access path.

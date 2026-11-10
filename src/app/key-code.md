@@ -7,6 +7,9 @@ Each path is relative to `src/app/`, the folder of this page.
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.
   `dev/settings-routes.ts` saves settings and repository choices.
+  `dev/provider-routes.ts` keeps the provider accounts and their weights,
+  and gives a new org its account. `dev/operator-orgs.ts` lists the samples
+  and the orgs that Create org made for the operator section.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
@@ -154,10 +157,12 @@ Each path is relative to `src/app/`, the folder of this page.
 - `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
   the Overview and the pages of the operator section, its searches, and
   Suspend and Lift. `operator-pause.ts` and `operator-access.ts`: the
-  pause of sign-ups, Approve, New code, and Disable. A refusal with
-  `operator_required` marks the account as not an operator.
-  `api/read-operator.ts`, `api/read-operator-pages.ts`, and
-  `api/read-operator-waitlist.ts`: their readers. The
+  pause of sign-ups, Approve, New code, and Disable.
+  `operator-providers.ts`: the provider accounts, their weights for new
+  orgs, and the save of the weights. A refusal with `operator_required`
+  marks the account as not an operator. `api/read-operator.ts`,
+  `api/read-operator-pages.ts`, `api/read-operator-waitlist.ts`, and
+  `api/read-operator-providers.ts`: their readers. The
   [operator section](../shell/operator/README.md) gives the screens.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that

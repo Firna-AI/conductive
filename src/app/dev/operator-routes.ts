@@ -13,17 +13,15 @@ import type { OrgSummary } from '../../shared/orgs'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   operatorOverview,
-  sampleOrgDetail,
   sampleUserDetail,
 } from '../../test-support/fixtures/operator'
 import { sampleWaitlist } from '../../test-support/fixtures/operator-access'
-import {
-  sampleOrgs,
-  sampleUsers,
-} from '../../test-support/fixtures/operator-samples'
+import { sampleUsers } from '../../test-support/fixtures/operator-samples'
 import type { DevBackend } from './backend'
+import { operatorOrgDetails } from './operator-orgs'
 import { searchOrgs, searchUsers } from './operator-search'
 import { operatorWaitlistRoutes } from './operator-waitlist-routes'
+import { providerRoutes } from './provider-routes'
 import { ID, json, RouteError, type Route } from './router'
 
 /** The samples count their days back from the first time of the dev clock. */
@@ -35,8 +33,9 @@ function ids(count: number, prefix: string): string[] {
 
 /**
  * The operator section of the dev fake: the sample orgs and users of the
- * mockups, which Suspend and Lift change, and the waitlist, the codes, and
- * the pause of `operatorWaitlistRoutes`. Only an operator, from
+ * mockups, and the orgs that Create org made in the page, which Suspend and
+ * Lift change, the waitlist, the codes, and the pause of
+ * `operatorWaitlistRoutes`, and the provider accounts of `providerRoutes`. Only an operator, from
  * `operator=1`, gets an answer, as the Worker says. A suspension of an org
  * of the user also suspends it in the state of the fake, so the fake
  * refuses each write of that org with `org_suspended`. The open app does
@@ -57,7 +56,7 @@ export function operatorRoutes(backend: DevBackend): Route[] {
   }
   const orgOf = (id: string) => {
     guard()
-    const org = sampleOrgs.find((item) => item.id === id)
+    const org = operatorOrgDetails(backend).find((item) => item.id === id)
     if (org) return org
     throw new RouteError(404, 'org_not_found', 'The org is not available.')
   }
@@ -92,9 +91,7 @@ export function operatorRoutes(backend: DevBackend): Route[] {
       path: operatorOverviewPath(),
       answer: () => {
         guard()
-        const orgs = sampleOrgs.map((org) =>
-          sampleOrgDetail(org, records(), BASE),
-        )
+        const orgs = operatorOrgDetails(backend)
         const { userSuspensions } = records()
         const waiting = sampleWaitlist(records(), userSuspensions, BASE)
         return json(operatorOverview(orgs, backend.now(), waiting.length))
@@ -105,7 +102,7 @@ export function operatorRoutes(backend: DevBackend): Route[] {
       path: operatorOrgsPath(),
       answer: ({ query }) => {
         guard()
-        return json(searchOrgs(records(), BASE, query))
+        return json(searchOrgs(operatorOrgDetails(backend), query))
       },
     },
     {
@@ -119,8 +116,7 @@ export function operatorRoutes(backend: DevBackend): Route[] {
     {
       method: 'GET',
       path: operatorOrgPath(ID.org),
-      answer: ({ params }) =>
-        json(sampleOrgDetail(orgOf(params.org), records(), BASE)),
+      answer: ({ params }) => json(orgOf(params.org)),
     },
     {
       method: 'GET',
@@ -143,10 +139,13 @@ export function operatorRoutes(backend: DevBackend): Route[] {
         const reply: OrgSuspensionResponse = {
           orgId: org.id,
           suspendedAt: suspension.suspendedAt,
-          pendingWorkspaceIds: ids(org.states.running, `${org.id}-workspace`),
-          pendingBuildIds: ids(org.builds, `${org.id}-build`),
+          pendingWorkspaceIds: ids(
+            org.running.workspaces,
+            `${org.id}-workspace`,
+          ),
+          pendingBuildIds: ids(org.running.builds, `${org.id}-build`),
         }
-        const pending = org.states.running + org.builds > 0
+        const pending = org.running.workspaces + org.running.builds > 0
         return json(reply, pending ? 202 : 200)
       },
     },
@@ -198,5 +197,6 @@ export function operatorRoutes(backend: DevBackend): Route[] {
       },
     },
     ...operatorWaitlistRoutes({ backend, base: BASE, guard, userOf, operator }),
+    ...providerRoutes(backend, guard, operator),
   ]
 }

@@ -8,6 +8,7 @@ import type {
   SuspensionNote,
   TargetStatus,
 } from './operatorDirectory'
+import type { AccountId } from './operatorProviders'
 import { account } from './orgs'
 
 /** The page of an org: its details, workspaces, and members. */
@@ -15,6 +16,8 @@ export type OrgPage = {
   id: string
   name: string
   initials: string
+  /** The provider account of the org, which it keeps for its whole life. */
+  account: AccountId
   created: string
   repositories: number
   states: StateCounts
@@ -42,6 +45,7 @@ const hexwave = {
   id: 'org_h3xw4v8q',
   name: 'Hexwave',
   initials: 'HW',
+  account: 'boat',
   created: '28 Oct 2026',
   repositories: 2,
   builds: 0,
@@ -63,6 +67,7 @@ export const orgPages: Readonly<Record<TargetStatus, OrgPage>> = {
     id: 'org_p1n3cr7t',
     name: 'Pinecrest',
     initials: 'PC',
+    account: 'boat',
     created: '3 Nov 2026',
     repositories: 1,
     builds: 0,

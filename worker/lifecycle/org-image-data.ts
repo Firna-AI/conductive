@@ -1,5 +1,3 @@
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
-
 export interface OrgImage {
   orgId: string
   providerAccount: string
@@ -14,7 +12,7 @@ export interface OrgImage {
 export function readOrgImage(
   db: D1Database,
   orgId: string,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
+  providerAccount: string,
 ): Promise<OrgImage | null> {
   return db
     .prepare(

@@ -27,7 +27,7 @@ decision number names a dated record, as
 - The second action of the hero and of the last call to action is
   "Download for Mac". It leads to the Mac app section of the home page,
   because the site runs no script to pick the chip of the visitor.
-- The site does not name Boat, and users need no Boat account
+- The site names no sandbox provider, and users need no provider account
   (decision 80).
 - The home page has a Mac app section. It links the DMG for Apple silicon
   first, then the DMG for Intel, from the latest release of the public

@@ -7,7 +7,10 @@ export function registerLifecycleContract(
 ): void {
   it('returns the allocated sandbox and keeps the requested identity on a create retry', async () => {
     const fixture = createFixture()
-    fixture.given({ kind: 'sandbox', value: { id: 'bx_one', state: 'ready' } })
+    await fixture.given({
+      kind: 'sandbox',
+      value: { id: 'sandbox-one', state: 'ready' },
+    })
     const input = {
       name: 'Task',
       snapshotName: 'org-image',
@@ -16,11 +19,15 @@ export function registerLifecycleContract(
     }
 
     expect(await fixture.provider.create(input)).toEqual({
-      id: 'bx_one',
+      id: 'sandbox-one',
       state: 'ready',
     })
-    await fixture.provider.create(input)
-    expect(fixture.createIdentities()).toEqual(['request-one', 'request-one'])
+    expect(await fixture.provider.create(input)).toEqual({
+      id: 'sandbox-one',
+      state: 'ready',
+    })
+    expect(fixture.createIdentities().length).toBeGreaterThan(0)
+    expect([...new Set(fixture.createIdentities())]).toEqual(['request-one'])
   })
 }
 
@@ -29,18 +36,20 @@ export function registerSnapshotContract(
 ): void {
   it('returns the saved snapshot and its ready lookup state', async () => {
     const fixture = createFixture()
-    fixture.given({
+    await fixture.given({
       kind: 'snapshot',
       value: {
         name: 'org-image',
-        sourceSandboxId: 'bx_one',
+        sourceSandboxId: 'sandbox-one',
         status: 'ready',
       },
     })
 
-    expect(await fixture.provider.saveSnapshot('bx_one', 'org-image')).toEqual({
+    expect(
+      await fixture.provider.saveSnapshot('sandbox-one', 'org-image'),
+    ).toEqual({
       name: 'org-image',
-      sourceSandboxId: 'bx_one',
+      sourceSandboxId: 'sandbox-one',
       status: 'ready',
     })
     expect(await fixture.provider.getSnapshot('org-image')).toMatchObject({

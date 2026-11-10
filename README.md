@@ -14,7 +14,7 @@ Today the repository holds:
   state the requirements
 - the [mockup catalogue](docs/mockups/README.md), which draws every screen
   at phone and desktop sizes
-- the app package, with tests against fake GitHub and Boat servers and
+- the app package, with tests against fake GitHub, Boat, and E2B servers and
   local D1 storage, and the complete gate, which GitHub Actions runs
 - the Mac app in `desktop/`, with signed packages and update support, as
   [Mac app](#mac-app) says
@@ -32,8 +32,9 @@ feature that is not complete yet says so.
 - Sign in with GitHub. The product is free.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
-- Every cloud computer runs in the app's own Boat account, so users need no
-  Boat account.
+- Every cloud computer runs in an account of the app with a sandbox
+  provider, Boat or E2B, so users need no provider account. Each org keeps
+  one provider account for its whole life.
 - A new workspace starts as an empty chat. The first message creates it,
   with its own cloud computer and branch.
 - Chat with agents powered by Claude and Codex. A workspace holds several
@@ -132,9 +133,10 @@ gives each setting of the GitHub App, with the address where GitHub returns
 the user after an install.
 Automated tests use fakes and need no credentials.
 
-Every cloud computer of every org runs in the app's own Boat organization.
-That organization holds only the app's sandboxes and saved snapshots, and
-no other Boat work. The Worker needs two values to start cloud computers:
+Every cloud computer runs in a provider account of the app. The `boat`
+account is the app's own Boat organization. That organization holds only
+the app's sandboxes and saved snapshots, and no other Boat work. The
+Worker needs two values to start cloud computers on Boat:
 
 | Name | Value |
 | --- | --- |
@@ -147,8 +149,13 @@ computers in local development. In a deployment, `BOAT_API_KEY` is a
 Worker secret, and `BOAT_ORG_ID` is a variable in the settings of the
 Worker, as [Deployment inputs](docs/deployment.md#how-to-set-the-inputs)
 says.
-[Access and security](docs/protocol/isolation.md#the-apps-boat-key)
-states how the Worker keeps them away from the browser and the sandboxes.
+
+Local development needs no E2B account. Without one, every new org gets
+`boat`. A deployment can add the `e2b` account, as
+[The app's E2B account](docs/sandbox-provider-accounts.md#the-apps-e2b-account)
+says. [The app's Boat key](docs/protocol/isolation.md#the-apps-boat-key)
+and [the app's E2B key](docs/protocol/isolation.md#the-apps-e2b-key) state
+how the Worker keeps each key away from the browser and the sandboxes.
 
 `wrangler.jsonc` also sets the production values: `MACHINE_ORIGIN` is
 `https://api.conductive.build`, and `PREVIEW_DOMAIN` is `conductive.page`.
@@ -245,8 +252,9 @@ features:
   app.
 - `worker/data/`: D1 queries for users, orgs, and sessions.
 - `worker/sandbox/`: the provider accounts, the lookup of the client of each
-  account, and the typed Boat adapter. Production has one account, which
-  uses the app's one Boat key.
+  account, and the typed client of each provider kind. The `boat` account
+  uses the app's Boat key. Each other account, such as `e2b`, comes from
+  `SANDBOX_PROVIDER_ACCOUNTS`.
 - `src/app/`: the data of the web app, such as the typed API client, the
   models that the screens read, the router, and the event stream. Its
   [README](src/app/README.md) gives the rules and the key code of the
@@ -257,7 +265,7 @@ features:
   key code.
 - `src/shared/`: the browser API contracts, route paths, and runner message types.
 - `src/test-support/`: the fake API, recorded chat and file events, and terminal fake.
-- `worker/test-support/`: local D1, fake GitHub and Boat servers, and runner fakes.
+- `worker/test-support/`: local D1, fake GitHub, Boat, and E2B servers, and runner fakes.
 - `migrations/`: the D1 schema migrations.
 - `desktop/`: the Mac app, an Electron package of its own. Its
   [README](desktop/README.md) gives its key code.

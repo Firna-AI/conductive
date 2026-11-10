@@ -1,7 +1,7 @@
 import { BASE_IMAGE } from '../../src/shared/base-image'
 import type { OrgSettings } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import { activeAdminPredicate } from '../members/org-data'
 import type { OrgEnvironment } from '../lifecycle/org-environment'
 
@@ -17,8 +17,8 @@ export interface ShellSettingsRow {
 export async function readShellSettings(
   db: D1Database,
   orgId: string,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<ShellSettingsRow> {
+  const providerAccount = await readOrgProviderAccount(db, orgId)
   const row = await db
     .prepare(
       `SELECT s.install_script AS installScript, s.startup_script AS startupScript,

@@ -97,6 +97,7 @@ it('reads org state buckets, builds, named and unnamed members, suspension, and 
   const active = await orgPage(harness, cookie, 'org/with%id')
   expect(active).toEqual({
     id: 'org/with%id',
+    providerAccount: 'boat',
     name: 'Hexwave',
     initials: 'HW',
     createdAt: TEST_TIME,

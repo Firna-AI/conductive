@@ -178,7 +178,7 @@ it('uses an active admin for automatic refreshes and leaves timers unchanged whe
   if (!pending) throw new Error('Missing idle image schedule')
   await expect(runImageAlarm(images, pending)).resolves.toBeUndefined()
   expect(fixture.scheduled).toHaveLength(before)
-  expect(await readOrgImage(runtime.env.DB, org.id)).toMatchObject({
+  expect(await readOrgImage(runtime.env.DB, org.id, 'boat')).toMatchObject({
     lastPushRefreshAt: TEST_TIME,
     pendingPushRefreshAt: noAdminAt,
   })

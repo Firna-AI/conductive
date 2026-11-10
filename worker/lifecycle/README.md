@@ -3,7 +3,7 @@
 This folder holds the Worker code that prepares the org image and runs the
 life of each workspace. The org image is the saved snapshot that every new
 sandbox of an org starts from. A workspace is one task with its own branch
-and its own Boat sandbox. The code reaches Boat only through the
+and its own sandbox. The code reaches its provider only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
 with the client of the provider account that each record stores.
 [Provider accounts](provider-accounts.md) and the
@@ -21,7 +21,8 @@ gives the create, read, resume, and activity routes of a workspace to
 - Create a workspace from the newest good org image.
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
-  starts a stopped sandbox briefly, so that Boat keeps its disk.
+  starts a stopped Boat sandbox briefly, so that Boat keeps its disk.
+  Other provider kinds get no disk retention restart.
 - Repair overdue disk alarms and image refreshes from the 15-minute Cron Trigger.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
@@ -79,18 +80,8 @@ each record and start job stores, the client that each call uses, and the
 Run `npm run test -- worker/lifecycle` from the repository root with Node 24.
 The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarms, and focused checks.
 
-D1 holds the workspace, token, build, and log records. The storage of each
-object holds the lifecycle state, the turn records, and the events.
-The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs with their [provider accounts](provider-accounts.md#the-computer-ledger).
-It keeps deleted computer IDs until their org is purged.
-Assigned identity writes also retain older IDs, including imports and repairs.
-Workspace owner changes update each live ledger entry of that workspace.
-The retained owner survives removal of the workspace row.
-Allocation recovery keeps that retained owner when it merges an imported computer.
-Definite first create refusals stay as rejected allocation records.
-A refused replay keeps an earlier uncertain request live.
-Each failed computer has its own cleanup flag.
-The native cleanup pointer can therefore change without losing an older failed computer.
+The [provider accounts page](provider-accounts.md#the-computer-ledger) describes
+the persisted resource records and the retained computer ledger.
 
 ### Key Code
 
@@ -98,7 +89,7 @@ The native cleanup pointer can therefore change without losing an older failed c
 - [`machine.ts`](machine.ts): `handleGitCredential`, the git credential
   route.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
-  workspace and queues its start.
+  workspace on its fixed org account and queues its start.
 - [`creation-claims.ts`](creation-claims.ts): `claimCreation`, which records
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
@@ -199,7 +190,7 @@ The native cleanup pointer can therefore change without losing an older failed c
   lifecycle step of the alarm. It advances stop cleanup before normal
   lifecycle work. It runs the turn repair before its deadline and idle
   decisions. When the restore watch is due, it runs the restore check in
-  place of the Boat state read.
+  place of the provider state read.
 - [`create-workspace-lifecycle.ts`](create-workspace-lifecycle.ts):
   `createWorkspaceLifecycle`, the lifecycle with its hooks and the shared
   state writer. Its `lastTurnEndedAt` and `recoverTurns` hooks read the
@@ -217,7 +208,7 @@ The native cleanup pointer can therefore change without losing an older failed c
   ends, as the [restore watch](workspace-object.md#creates-and-resumes)
   says.
 - [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
-  path to a Boat call that creates a sandbox or a snapshot. It stores the
+  path to a provider call that creates a sandbox or a snapshot. It stores the
   request first, so the lifecycle finds the resource after a lost reply.
   It records a computer allocation before create and attaches the returned ID.
 - [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
@@ -260,26 +251,9 @@ The native cleanup pointer can therefore change without losing an older failed c
   `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as the
   [Workspace Durable Object](workspace-object.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
-- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
-- [`image-builds.ts`](image-builds.ts): `startImageBuild` and
-  `advanceImageBuild`, which removes the command journals before a snapshot.
-- [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
-  which starts changed settings after the first good build finishes cleanup.
-- [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
-- [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
-  replays a saved allocation request and saves the recovered sandbox ID.
-  Failed image jobs retain their unresolved allocation phase until cleanup
-  recovers and deletes the sandbox.
-- [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
-  which splits output into rows and adds the budget statements of
-  [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.
-- [`build-log-reader.ts`](build-log-reader.ts): `readBuildSnapshot`, which
-  reads the build state and its log in one D1 batch.
-- [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
-  `runImageAlarm`.
-- [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
-- [`image-software.ts`](image-software.ts): the runner archive check and
-  install/start commands.
+- [Image builds](image-builds.md#key-code): the entries of build admission,
+  build jobs, failures and allocation recovery, build logs, refresh timers,
+  the image coordinator, and the runner software.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
   into a Bash command. [`lifecycleCommand`](command-intents.ts) runs each step once.
@@ -304,7 +278,7 @@ The native cleanup pointer can therefore change without losing an older failed c
 - [Access and security](../../docs/protocol/access-and-security.md): what a
   sandbox holds, the workspace token, and GitHub tokens.
 - [Architecture](../../docs/architecture/components.md): the Worker, the workspace
-  Durable Object, and Boat.
+  Durable Object, and the sandbox providers.
 - [Sandbox software](../../image/README.md): the software that each build
   installs.
 - [Shared contracts](../../src/shared/README.md): the browser and runner

@@ -5,6 +5,7 @@ import { routes } from '../../app/router'
 import {
   operatorOrgPath,
   orgSuspensionPath,
+  type OperatorOrgDetail,
   type OrgSuspensionLiftResponse,
   type OrgSuspensionResponse,
 } from '../../shared/operator'
@@ -36,19 +37,30 @@ function pageText(view: HTMLElement) {
   }
 }
 
-/** The page of an org whose detail the API gives, with its first read. */
-async function openOrg(orgId: string) {
+/**
+ * The page of an org whose detail the API gives, or the change that
+ * `change` makes to it, with its first read.
+ */
+async function openOrg(
+  orgId: string,
+  change?: (org: OperatorOrgDetail) => OperatorOrgDetail,
+) {
   const server = new FakeApiServer()
   const fixtures = serveOperator(server)
-  const org = fixtures.orgs.find((item) => item.id === orgId)
-  if (!org) throw new Error(`The samples have no org ${orgId}.`)
+  const sample = fixtures.orgs.find((item) => item.id === orgId)
+  if (!sample) throw new Error(`The samples have no org ${orgId}.`)
+  const org = change ? change(sample) : sample
+  server.json('GET', operatorOrgPath(orgId), org)
   const shell = await mountShell(server, routes.operatorOrg(orgId))
   return { server, org, ...shell }
 }
 
 describe('the page of an org for the operator', () => {
-  test('shows its details, its workspaces by state with its running builds, and its members with names and roles, which open their pages', async () => {
-    const { view } = await openOrg(SAMPLE_IDS.activeOrg)
+  test('shows its details with its account, its workspaces by state with its running builds, and its members with names and roles, which open their pages', async () => {
+    const { view } = await openOrg(SAMPLE_IDS.activeOrg, (org) => ({
+      ...org,
+      providerAccount: 'e2b',
+    }))
     const shown = pageText(view)
     click(byText('@li-wei'))
     await settle()
@@ -58,7 +70,7 @@ describe('the page of an org for the operator', () => {
     }).toEqual({
       header: 'Orgs Northwind Org Suspend org',
       body: [
-        'Details Org ID org_n0rthw1nd Created 30 Sept 2026 Repositories 5',
+        'Details Org ID org_n0rthw1nd Account e2b Created 30 Sept 2026 Repositories 5',
         'Workspaces Running 4 2% Stopped 130 79% Failed 2 1% Archived 28 17% 2 cloud computer builds also run now.',
         'Members 2 members LW @li-wei Li Wei Admin TR @tomas-r Tomás Ruiz Member',
       ],
@@ -137,7 +149,7 @@ describe('the page of an org for the operator', () => {
       requests: await operatorRequests(server),
     }).toEqual({
       question:
-        'Suspend Northwind? Every cloud computer and build of Northwind stops now. Members can still open and read it, but they cannot change it or start a workspace. Each unfinished build of Northwind fails, and a lift does not bring it back. A stopped workspace gets no restart near day 14, so its files can be deleted. Lift gives the access back. Cancel Suspend org',
+        'Suspend Northwind? Every cloud computer and build of Northwind stops now. Members can still open and read it, but they cannot change it or start a workspace. Each unfinished build of Northwind fails, and a lift does not bring it back. A stopped workspace on the boat account gets no restart near day 14, so its files can be deleted. Lift gives the access back. Cancel Suspend org',
       open: null,
       header: 'Orgs Northwind Org Lift suspension',
       notice,
@@ -193,7 +205,7 @@ describe('the page of an org for the operator', () => {
       requests: await operatorRequests(server),
     }).toEqual({
       question:
-        'Lift the suspension of Hexwave? Members can change Hexwave again, and its workspaces can start again. A workspace that stopped 14 days ago or more may have lost its files. Cancel Lift suspension',
+        'Lift the suspension of Hexwave? Members can change Hexwave again, and its workspaces can start again. A workspace on the boat account that stopped 14 days ago or more may have lost its files. Cancel Lift suspension',
       header: 'Orgs Hexwave Org Suspend org',
       requests: [
         `GET ${operatorOrgPath(org.id)}`,

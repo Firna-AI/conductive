@@ -2,8 +2,8 @@
 
 This repository builds Conductive, a coding tool at
 `conductive.build`. Each workspace is one task with its own branch and its own
-cloud computer, a Boat sandbox, where agents powered by Claude and Codex
-work. The requirements live in
+cloud computer, a sandbox on Boat or E2B, where agents powered by Claude and
+Codex work. The requirements live in
 `docs/architecture.md` and `docs/protocol/`, and the Mokly mockup catalogue
 lives in `docs/mockups/`, in TypeScript and React with `@firna/ui`. The root
 npm package holds the React and Vite web app under `src/` and the Cloudflare
@@ -64,7 +64,7 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
 - Build preview: `npm run preview`. It serves the built app and the local
   Worker at `http://127.0.0.1:5174`. The mockup preview uses port 4173.
 - Targeted tests: `npm run test -- worker/app.test.ts`. Vitest runs the
-  Worker tests in Node, with local D1 and fake GitHub and Boat servers.
+  Worker tests in Node, with local D1 and fake GitHub, Boat, and E2B servers.
   Tests live beside the code as `*.test.ts`.
 - Typecheck: `npm run typecheck`. It generates the Worker binding and
   runtime types under `.wrangler/`, then checks the app, Worker, and tools.
@@ -123,11 +123,13 @@ deployment at `conductive.build`. It does not wait for CI, as
   Write "agents powered by Claude and Codex", as
   [Names in the product](docs/protocol/agents-and-sessions.md#names-in-the-product)
   says.
-- Never name Boat in user-facing text: the app, the Mac app, the marketing
-  site, Get started, and the legal pages. Write "cloud computer" or
-  "sandbox", as [The provider](docs/protocol/workspaces-and-sandboxes.md#the-provider)
-  says. Identifiers, comments, developer docs, and the deployment setup can
-  name Boat.
+- Never name a sandbox provider, such as Boat or E2B, in user-facing text:
+  the app, the Mac app, the marketing site, Get started, and the legal
+  pages. Write "cloud computer" or "sandbox", as
+  [The provider](docs/protocol/workspaces-and-sandboxes.md#the-provider)
+  says. Operator screens are the one exception: they name each provider
+  account by its ID, such as `boat` or `e2b`. Identifiers, comments,
+  developer docs, and the deployment setup can name the providers.
 - When you change a fact in the architecture doc or in a protocol doc,
   read both legal pages in full. The legal pages are the Terms page in
   `src/marketing/terms.ts` and the Privacy page in
@@ -164,7 +166,7 @@ deployment at `conductive.build`. It does not wait for CI, as
 
 - Isolation: a request reaches only the orgs, the workspaces, and the
   sandboxes that the signed-in user may reach. The Worker calls only a
-  fixed list of the sandbox provider's routes.
+  fixed list of routes of each sandbox provider.
 - Secrets: a stored secret never goes back to the browser, and no secret
   goes into a saved snapshot.
 - Untrusted sandbox code: port previews stay on the preview domain, and the

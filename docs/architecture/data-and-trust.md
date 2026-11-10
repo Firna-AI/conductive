@@ -13,13 +13,14 @@ decision number names a dated record, as
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
 | App access, the codes and their uses, the pause, and approval email states   | D1                                       |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
-| Env var values and agent logins                                              | The Worker's storage, encrypted          |
-| The Boat key and the other keys of the Worker                                | Worker secrets                           |
+| The provider account of each org, and the weights of new orgs with each change | D1 |
+| Env var values, agent logins, and the traffic token of each E2B sandbox | The Worker's storage, encrypted |
+| The Boat key, the E2B key, and the other keys of the Worker | Worker secrets |
 | Chat history and banner state                                                | The workspace Durable Object             |
 | Files attached to chat messages | The attachment storage, an R2 bucket |
 | The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
-| The prepared repositories and the installed software                         | The org image, in the app's Boat account |
+| The prepared repositories and the installed software | The org image, in the provider account of the org |
 | Panel widths                                                                 | The browser, or the Mac app              |
 
 ## Trust boundaries
@@ -28,15 +29,18 @@ decision number names a dated record, as
   for a member of that org. An operator is the one exception, as
   [Orgs and workspaces](../protocol/isolation.md#orgs-and-workspaces)
   says.
-- The one Boat key reaches the sandboxes and the saved snapshots of every
-  org (decision 80). So the Worker's own records keep the orgs apart, as
+- The key of each provider account reaches the sandboxes and the saved
+  snapshots of every org on that account (decision 80). So the Worker's own
+  records keep the orgs apart, as
   [Access and security](../protocol/isolation.md#orgs-and-workspaces)
   says.
-- The Boat key never goes to the browser, into a sandbox, into a log, or
-  into a saved snapshot.
+- No provider key goes to the browser, into a sandbox, into a log, or into
+  a saved snapshot.
+- The port credential of a sandbox, such as its E2B traffic token, stays
+  on the server. The proxies add it, and the browser never gets it.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
-- A sandbox gets none of the secrets of the app's Boat account. At a
+- A sandbox gets none of the secrets of the app's provider accounts. At a
   start, it gets only the secrets of its workspace and its org.
 - For a sandbox with a version pin of 2 or later, the model gateway is the
   boundary between the sandbox and the model providers. The version pin of

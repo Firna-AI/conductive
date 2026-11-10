@@ -7,7 +7,7 @@ Boat runs every sandbox and every org image of Conductive (decisions 2 and
 213 C, stores the provider account of each sandbox and saved snapshot,
 routes each call by that account, keeps one org image for each org and
 account, and runs one contract suite for every provider. This change adds
-E2B as the second provider kind (decision 218). Each org runs on one
+E2B as the second provider kind (e2b decision 222). Each org runs on one
 provider account for its whole life. A new org gets its account by chance,
 from weights that the operator sets with a slider in the operator section.
 When an operator creates an org, the operator can choose its account
@@ -72,17 +72,33 @@ Replaced ways:
   `worker/sandbox/client.ts`, `worker/env.ts`, and
   `worker/sandbox/accounts.test.ts`. Moved in Milestone 4.
 
+- Allocation cleanup uses an active provider client to recover identity
+  through create → identity-only E2B cleanup, with proved no-resource
+  outcomes and tombstones. Consumers: `worker/lifecycle/start-allocation-cleanup.ts`,
+  `worker/lifecycle/image-allocation.ts`, `worker/lifecycle/build-execution.ts`,
+  and `image/e2b/live-resources.ts`. Moved in Milestone 5, with the live
+  check updated in Milestone 6. Boat keeps its existing behavior.
+
 ## Decisions
 
 The user answered every decision of this plan on 10 November 2026. The
-numbers continue after decision 217, the highest number on main. The
+original answer numbers followed decision 217, then the highest on main. The
 operator section on main uses the numbers 142 to 147, so the earlier
 decisions of this plan keep no number, as "Earlier decisions" below says.
 The full text of decisions 218 to 221, with every option and each options
 check, is in this plan at
 [commit 237fb84](https://github.com/Firna-AI/remote-code/blob/237fb8485d3e2d4a5819611730a6aa3e7d514c24/plans/e2b-backup-provider.md).
 
-### 218. A Boat outage still stops every start
+The prefix `e2b` names this provider change, under main's current rule for
+later changes. Its live provider-choice record is e2b decision 222. The
+user answered it as 218.
+Main's preview change uses 218 and 219 for other choices. The branch-local
+renumber keeps the original answer and leaves the global numbering rule
+unchanged. Historical answer numbers below keep their original form.
+
+### e2b decision 222. A Boat outage still stops every start
+
+Original answer number: 218. The choice and its date are unchanged.
 
 - **Root question:** How does Conductive keep starts, builds, and refreshes
   working for users when Boat cannot run them?
@@ -114,7 +130,7 @@ operator chooses the account of an org when the operator creates it.
 
 Does not apply, for the same reason as decision 219.
 
-### 221. The operator section names the providers
+### e2b decision 221. The operator section names the providers
 
 - **Root question:** How does an operator know which provider runs each
   account, while users still never learn the provider?
@@ -126,7 +142,7 @@ Does not apply, for the same reason as decision 219.
   operators see when they create an org. User-facing text for every other
   person still names no provider (decision 80).
 
-### 216. Agents on E2B get no computer tools
+### e2b decision 216. Agents on E2B get no computer tools
 
 - **Chosen:** A, by the user on 10 November 2026: E2B starts with no
   computer tools, and B, the Cua Driver in the E2B template, comes later.
@@ -154,7 +170,7 @@ These are agent calls of 10 November 2026. The user can change each one.
 
 ### Accounts and records
 
-- E2B is the second provider kind, `e2b`, as decision 218 says.
+- E2B is the second provider kind, `e2b`, as e2b decision 222 says.
 - The E2B client is TypeScript in the Worker, behind `SandboxProvider`, with
   a fixed route list, as the Boat client has. It uses no E2B SDK. Reason:
   the isolation rules allow only a fixed list of provider routes, and the
@@ -233,7 +249,7 @@ These are agent calls of 10 November 2026. The user can change each one.
   slider between `boat` and `e2b`, with the number of orgs on each account.
   The Orgs tab and the page of an org show the account of each org. The
   mockups can move the slider to another place.
-- Operator screens name the accounts by their IDs, as decision 221 A says.
+- Operator screens name the accounts by their IDs, as e2b decision 221 A says.
   No screen for other people names a provider.
 - Each change of the weights records the operator and the time, as the
   pause and the suspensions do.
@@ -246,6 +262,65 @@ These are agent calls of 10 November 2026. The user can change each one.
   third-party applications that interact with the service without consent.
   The user asks E2B for that consent now, not after the merge.
 
+### Implementation calls of 10 November 2026
+
+These are agent calls within the approved requirements.
+
+- The mockups share the slider, account choice, and account counts with the
+  app. These parts import no fixture. This keeps the visual spec and the
+  app aligned.
+- A single configured account shows its full share without a slider.
+  Create org still offers By weights and that account.
+- The org-create catalogue keeps one main screen and puts its other
+  states on linked child pages. This preserves every state and the
+  catalogue's limit of five screens on a page.
+- The operator reads and changes weights at `/api/operator/providers`.
+  An omitted `providerAccount` in Create org means By weights.
+- `SANDBOX_PROVIDER_ACCOUNTS` is JSON text in a Worker secret. The shared
+  reader parses it into account configurations. This supports real secret
+  bindings and local `.dev.vars` files without publishing account keys.
+- Effective weights exclude accounts removed from configuration. They
+  normalize the remaining shares. With none left, new orgs use the default
+  `boat` share and the Worker logs a safe warning. Existing orgs and saved
+  resources keep their accounts. This follows the configured-account and
+  graceful-handling rules.
+- A stale or unconfigured operator account choice uses By weights and a
+  safe warning. This keeps new assignments on configured accounts without
+  a new refusal.
+- A draw uses 48 bits from the hash of a fresh random token. Effective
+  shares use largest remainder rounding, with account ID as the tie break.
+- A weight save compares effective shares. An equal distribution keeps
+  its raw setting, operator, and time. A concurrent write retries against
+  the current setting before it records one atomic change.
+- The Providers page uses the slider for two accounts. With more accounts,
+  it shows one percentage field for each ID and the total. This preserves
+  every configured account without a configuration refusal.
+- An operator's optional account-list read never blocks Create org. By
+  weights stays usable while that read loads or fails.
+- Operator suspension and lift warnings name `boat` when they describe
+  day-14 disk loss. This applies the approved retention rule and the
+  operator naming exception without another account read.
+- The retention check covers active workspaces and deleted orgs. Both
+  paths must skip accounts whose kind is not `boat`.
+- E2B stores durable create claims and snapshot mappings beside encrypted
+  traffic tokens. A lost response must not cause a second create or
+  snapshot request.
+- A temporary command supervisor records output bytes and the timeout
+  result under `/run`. E2B does not return the timeout result that the
+  existing command contract needs.
+- A private TCP relay handles E2B previews of localhost listeners. E2B's
+  ingress reaches the sandbox network address. The relay accepts only a
+  port and forwards to loopback. It keeps no token.
+- The shared preview relay reads E2B's sandbox ID and configured domain
+  from a small root-owned file under `/run`. This preserves its host
+  checks for E2B's outer port. It strips provider headers before the app.
+- Allocation cleanup gets an identity-only E2B client. It never creates,
+  connects, or bootstraps a sandbox. A proved no-resource result becomes a
+  tombstone before cleanup finishes. An ambiguous result stays pending.
+- Only a source-certified no-resource refusal permits another create or
+  snapshot attempt. The existing lifecycle retry sets its time. Unknown
+  outcomes never repeat a mutation.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -255,17 +330,19 @@ Depends on: none
 The operator section shows the weights and the account of each org, and
 the create screen shows the account choice to operators.
 
-- [ ] Add the Providers tab to the operator mockups: the slider between
+- [x] Add the Providers tab to the operator mockups: the slider between
       `boat` and `e2b`, and the number of orgs on each account.
-- [ ] Add the account of each org to `OperatorOrgsScreen` and
+- [x] Add the account of each org to `OperatorOrgsScreen` and
       `OperatorOrgScreen` in `docs/mockups/src/screens/`.
-- [ ] Add the account choice to `CreateOrgScreen`, and to each other screen
+- [x] Add the account choice to `CreateOrgScreen`, and to each other screen
       that creates an org, in a state that only an operator sees: "By
       weights", `boat`, and `e2b`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
+
+Evidence: `.context/e2b-backup-provider/milestone-1-report.md` and `m1/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -274,39 +351,42 @@ Depends on: 1
 The protocol docs, the architecture docs, and the deployment guide state
 the second provider, the weights, and the operator's choice.
 
-- [ ] Update "The provider" in `docs/protocol/workspaces-and-sandboxes.md`:
+- [x] Update "The provider" in `docs/protocol/workspaces-and-sandboxes.md`:
       two providers, one account for each org for its whole life, the
       weights of new orgs, the operator's choice, one machine size, and the
       account IDs on operator screens (decision 221 A).
-- [ ] Update `docs/protocol/orgs-and-members.md`: the account choice that
+- [x] Update `docs/protocol/orgs-and-members.md`: the account choice that
       only operators see when they create an org.
-- [ ] Update `docs/protocol/org-image.md`: the org image of the account of
+- [x] Update `docs/protocol/org-image.md`: the org image of the account of
       each org, and its builds and refreshes there.
-- [ ] Update `docs/protocol/workspace-life.md`: the day-14 restart applies
+- [x] Update `docs/protocol/workspace-life.md`: the day-14 restart applies
       only to Boat.
-- [ ] Update `docs/protocol/isolation.md`: the E2B key, the E2B project, the
+- [x] Update `docs/protocol/isolation.md`: the E2B key, the E2B project, the
       fixed routes and reply budgets of each provider, private traffic, and
       the stored traffic token.
-- [ ] Update `docs/protocol/terminal-previews-and-desktop.md`: the port
+- [x] Update `docs/protocol/terminal-previews-and-desktop.md`: the port
       credential of each provider, in place of Boat's port cookie.
-- [ ] Update `docs/protocol/operator-section.md`: the Providers tab, the
+- [x] Update `docs/protocol/operator-section.md`: the Providers tab, the
       account of each org, and the weights as a third setting, beside the
       codes and the pause of decision 160. This changes the rule of
       decision 143 that the section changes no other setting.
-- [ ] Update "Computer tools" in `docs/protocol/agent-tools.md`: agents on
+- [x] Update "Computer tools" in `docs/protocol/agent-tools.md`: agents on
       E2B have no computer tools for now (decision 216 A).
-- [ ] Give the rule on Boat in `AGENTS.md`, which `CLAUDE.md` links to, the
+- [x] Give the rule on Boat in `AGENTS.md`, which `CLAUDE.md` links to, the
       exception for operator screens of decision 221 A.
-- [ ] Update the architecture docs: components, data and trust, and flows.
-- [ ] Update `docs/deployment.md`: the E2B account in
+- [x] Update the architecture docs: components, data and trust, and flows.
+- [x] Update `docs/deployment.md`: the E2B account in
       `SANDBOX_PROVIDER_ACCOUNTS`, the three requests to E2B support, E2B
       Pro before a real org, and E2B's written consent.
-- [ ] External docs: read `src/marketing/privacy.ts` and
+- [x] External docs: read `src/marketing/privacy.ts` and
       `src/marketing/terms.ts` in full, and give the facts of a second
       provider: the account, the country of E2B, its region, and the
       transfer safeguards. Delegate this TODO to the
       `external docs implementor`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: `.context/e2b-backup-provider/milestone-2-internal-report.md`
+and `milestone-2-external-report.md`.
 
 ## Milestone 3: The account of each org
 
@@ -316,49 +396,61 @@ Each org has one provider account, and new orgs get it from the weights or
 from the operator's choice. Boat stays the only configured account, so the
 behaviour stays the same.
 
-- [ ] Add a D1 migration with the account of each org, `boat` for each
+- [x] Add the shared account lookup and JSON-secret reader. Preserve the
+      pinned `boat` account and safe recovery of malformed configuration.
+      Its four account tests pass.
+- [x] Add a D1 migration with the account of each org, `boat` for each
       existing org, and the weights setting. Read the `databases` skill
       first.
-- [ ] Set the account of a new org once, when the org is created, before
+- [x] Set the account of a new org once, when the org is created, before
       Create org starts its first build in `worker/app-api/feature-org.ts`:
       the operator's choice from an operator, otherwise a draw from the
       weights.
-- [ ] Move each consumer of the default account under "Replaced ways" to the
+- [x] Move each consumer of the default account under "Replaced ways" to the
       account of the org. Keep the default only for older saved state.
-- [ ] Make the Cron repair and the push refresh use the record of each
+- [x] Make the Cron repair and the push refresh use the record of each
       org's account.
-- [ ] Run the day-14 restart only for accounts of the kind `boat`.
-- [ ] Test the draw, the operator's choice, an ignored choice from a person
+- [x] Run the day-14 restart only for accounts of the kind `boat`.
+- [x] Test the draw, the operator's choice, an ignored choice from a person
       who is not an operator, the account of each create, build, and
       refresh, the repair, and the restart rule.
-- [ ] Update the provider accounts page and the lifecycle README.
+- [x] Update the provider accounts page and the lifecycle README.
+
+Evidence: `.context/e2b-backup-provider/milestone-3-report.md`.
 
 ## Milestone 4: E2B client for lifecycle and snapshots
 
-Depends on: 3
+Depends on: 2 and the shared account lookup of 3. Final integration and
+combined checks also depend on the rest of 3.
 
 An E2B client implements the lifecycle and snapshot methods of
 `SandboxProvider`. No org uses it yet.
 
-- [ ] Add the kind `e2b` and its account configuration. Handle each
+The account lookup is complete. The adapter can now run beside the
+remaining org routing work. The agents own different files and share one
+test lane.
+
+- [x] Add the kind `e2b` and its account configuration. Handle each
       exhaustive switch over the kind.
-- [ ] Add `worker/sandbox/e2b/` with a fixed list of E2B control routes:
+- [x] Add `worker/sandbox/e2b/` with a fixed list of E2B control routes:
       create, read, delete, pause, resume, timeout, the list by metadata,
       and snapshot create, read, and delete. Use the shared bounded JSON
       reader and safe typed errors with no provider text.
-- [ ] Each create sets private traffic, a filesystem-only pause at its
+- [x] Each create sets private traffic, a filesystem-only pause at its
       timeout, its template or snapshot, and metadata with its idempotency
       key. Recover an ambiguous create through the metadata list, and never
       send a second create.
-- [ ] Map the E2B states to `SandboxState`. Map `stop` to a filesystem-only
+- [x] Map the E2B states to `SandboxState`. Map `stop` to a filesystem-only
       pause, `resume` to a resume that boots from the disk, and
       `setAutoStop` to the timeout.
-- [ ] Map the app's snapshot names to E2B snapshot IDs, so that
+- [x] Map the app's snapshot names to E2B snapshot IDs, so that
       `getSnapshot` and `deleteSnapshot` find each snapshot.
-- [ ] Add the table of the traffic tokens, encrypted.
-- [ ] Add a fake E2B server to `worker/test-support/` and an E2B contract
+- [x] Add the table of the traffic tokens, encrypted.
+- [x] Add a fake E2B server to `worker/test-support/` and an E2B contract
       driver. Run the lifecycle, snapshot, and error contracts with it.
-- [ ] Add "The app's E2B account" to `worker/sandbox/README.md`.
+- [x] Add "The app's E2B account" to `worker/sandbox/README.md`.
+
+Evidence: `.context/e2b-backup-provider/milestone-4-report.md`.
 
 ## Milestone 5: E2B client for commands, files, and ports
 
@@ -366,29 +458,48 @@ Depends on: 4
 
 The E2B client implements the rest of `SandboxProvider`.
 
-- [ ] Add the fixed envd routes: process start, file read, file write, and
+- [x] Add the fixed envd routes: process start, file read, file write, and
       file info, with the envd token from a read of the sandbox.
-- [ ] `runCommand` waits up to 600 seconds, as on Boat.
-- [ ] `startCommand` writes the output and the exit code of a detached
+- [x] `runCommand` waits up to 600 seconds, as on Boat.
+- [x] `startCommand` writes the output and the exit code of a detached
       command to files in a private folder. `getCommandStatus` reads them
       from the saved byte offsets, within the 18 MiB budget.
-- [ ] `readFile` keeps the 5 MiB limit and the size result. `writeFile`
+- [x] `readFile` keeps the 5 MiB limit and the size result. `writeFile`
       uses the envd upload.
-- [ ] Write the env file at each create and resume, with mode 600.
-- [ ] `privatePort` gives the E2B port origin and the traffic token as a
+- [x] Write the env file at each create and resume, with mode 600.
+- [x] `privatePort` gives the E2B port origin and the traffic token as a
       header credential. `desktop` and `fork` give typed errors.
-- [ ] Run the command, file, and port contracts with the E2B driver.
+- [x] Support E2B's validated ingress identity in the shared preview
+      relay. Preserve Boat's host checks. Strip provider headers before
+      forwarding HTTP and WebSocket requests to the app.
+- [x] Make E2B allocation cleanup recover only identity, without create,
+      connect, or bootstrap. Handle proved absence and retry races.
+- [x] Retry only certified no-resource create and snapshot refusals.
+      Preserve ambiguous-operation protection. Test the actual lifecycle
+      retry and cleanup callers.
+- [x] Run the command, file, and port contracts with the E2B driver.
+
+Evidence: `.context/e2b-backup-provider/milestone-5-report.md`.
 
 ## Milestone 6: E2B template and org image builds
 
-Depends on: 5
+Depends on: 2 and the agreed private-port interface for the template and
+relay. Live-check code also needs the stable client interface of 4.
+Real image builds and runtime checks depend on 5.
 
 Org images build on E2B, and an E2B sandbox runs the workspace software.
 
-- [ ] Add the E2B template under `image/e2b/`: Ubuntu 24.04, the software
+The template, relay, and live-check code use agreed interfaces and can run
+beside the client work. Real provider checks wait for the complete client.
+
+- [x] Add the E2B template under `image/e2b/`: Ubuntu 24.04, the software
       of `BASE_IMAGE`, Docker, 4 vCPU, and 8 GiB, with no computer tools.
       Add a developer script that builds the template and prints its ID.
-- [ ] Add an E2B mode to the live check in `image/`, beside the Boat mode.
+- [x] Add an E2B mode to the live check in `image/`, beside the Boat mode.
+- [x] Use identity-only allocation recovery in the live-check cleanup
+      journal. Preserve pending unknown operations and tombstone proved
+      no-resource outcomes. Verify provisioned disk size from provider
+      metadata and report filesystem capacity separately.
 - [ ] In a live E2B sandbox, confirm that systemd starts the enabled
       services at boot, and that `/run` is not on the saved disk. Needs:
       an E2B key, and filesystem-only snapshots turned on by E2B support.
@@ -396,25 +507,35 @@ Org images build on E2B, and an E2B sandbox runs the workspace software.
       and a later one from the E2B org image. `install.sh` and the terminal
       install run unchanged. Save the output under
       `.context/e2b-backup-provider/`. Needs: an E2B key.
-- [ ] Update `image/README.md`.
+- [x] Update `image/README.md`.
+
+Template and relay evidence:
+`.context/e2b-backup-provider/milestone-6-template-report.md`.
+Live-check code evidence: `.context/e2b-backup-provider/milestone-6-report.md`.
+Real template builds and runtime checks remain unverified.
 
 ## Milestone 7: Weights and the operator's choice in the Worker
 
-Depends on: 3, 5
+Depends on: 3 and the account configuration of 4.
 
 The operator section can read and set the weights, and the create of an
 org takes the operator's choice.
 
-- [ ] Add the operator routes of the weights, with the gate and the
+These routes use saved assignment data and configured account IDs. They
+can run beside the command, file, and port client work of 5.
+
+- [x] Add the operator routes of the weights, with the gate and the
       `operator_required` answer of the other operator routes. A weight can
       name only a configured account.
-- [ ] Record the operator and the time of each weight change.
-- [ ] Add the account of each org and the number of orgs on each account to
+- [x] Record the operator and the time of each weight change.
+- [x] Add the account of each org and the number of orgs on each account to
       the operator replies.
-- [ ] Give operators the list of configured accounts for the create screen.
+- [x] Give operators the list of configured accounts for the create screen.
       Take the account choice of Create org only from an operator.
-- [ ] Test the routes, the record of each change, and the account choice.
-- [ ] Update the operator README and the provider accounts page.
+- [x] Test the routes, the record of each change, and the account choice.
+- [x] Update the operator README and the provider accounts page.
+
+Evidence: `.context/e2b-backup-provider/milestone-7-report.md`.
 
 ## Milestone 8: Weights and the operator's choice in the app
 
@@ -424,12 +545,14 @@ Depends on: 1, 7
 
 The operator section and the create screen show what the mockups show.
 
-- [ ] Add the Providers tab with the slider and the counts.
-- [ ] Add the account of each org to the Orgs tab and the page of an org.
-- [ ] Add the account choice to each screen that creates an org, only for
+- [x] Add the Providers tab with the slider and the counts.
+- [x] Add the account of each org to the Orgs tab and the page of an org.
+- [x] Add the account choice to each screen that creates an org, only for
       operators.
-- [ ] Test each state, also that a person who is not an operator sees no
+- [x] Test each state, also that a person who is not an operator sees no
       choice. Update the operator section README.
+
+Evidence: `.context/e2b-backup-provider/milestone-8-report.md` and `m8/`.
 
 ## Milestone 9: Live check through the app
 
@@ -449,7 +572,10 @@ Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 9
 
 The complete change passes the gate and the review.
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Preserve latest main's gateway, runner-version, preview, file-mention,
+      terminal, and model changes. Match a runner-version lookup with the
+      saved provider account as well as the org and image name.
+- [x] Run the targeted tests and the complete gate, `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -461,6 +587,9 @@ The complete change passes the gate and the review.
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Evidence: `.context/e2b-backup-provider/complete-gate-1.log` and
+`combined-smoke/result.json`. Real E2B checks above remain blocked.
 
 ## Post-merge follow-up (non-blocking)
 

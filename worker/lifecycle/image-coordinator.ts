@@ -51,7 +51,7 @@ export class ImageCoordinator {
       state.orgId,
       this.dependencies.now(),
       state,
-      state.providerAccount,
+      state.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT,
     )
     if (next.buildId === null) {
       try {

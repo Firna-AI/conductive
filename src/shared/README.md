@@ -141,7 +141,10 @@ It can differ from the session of the request.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.
 [Terms consent](../../worker/security/README.md#terms-consent) gives the rules of sign-in.
 `operator.ts` defines the operator overview, directories, and user and org
-suspensions. Its user records include `OperatorUserAccess` from
+suspensions. Operator org rows and pages include `providerAccount`.
+`operator-providers.ts` defines the operator-only account list, integer
+weights, org counts, last operator change, and the GET and PUT path.
+The user records in `operator.ts` include `OperatorUserAccess` from
 `operator-waitlist.ts`. That module also defines waitlist, approval, code,
 and pause paths and replies. The operator sees email states and verified
 email flags, never email addresses. GitHub creation times let the app show
@@ -172,9 +175,15 @@ a revoked ID again (decision 86). The Preview tool hides revoked previews by the
 The git credential payload is not defined yet.
 [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens) states its rule.
 
+`preview-ingress.ts` owns the private relay metadata path and identity.
+This file transport stays on sandbox tmpfs between the Worker and runner.
+It carries the exact per-target outer alias and no credential.
+
 ## Key code
 
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
+  `CreateOrgRequest.providerAccount` carries an operator's account choice.
+  Omission means By weights. The Worker ignores the field from other users.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.

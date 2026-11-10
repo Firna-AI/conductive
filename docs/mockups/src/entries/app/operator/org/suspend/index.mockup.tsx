@@ -7,7 +7,7 @@ import {
 export const operatorOrgSuspend = defineScreen({
   title: 'Suspend an org',
   description:
-    'Suspend org asks first. Every cloud computer and build of the org stops, and its members can still read it but not change it. Each unfinished build of the org fails, and a lift does not bring it back. A stopped workspace gets no restart near day 14, so its files can be deleted.',
+    'Suspend org asks first. Every cloud computer and build of the org stops, and its members can still read it but not change it. Each unfinished build of the org fails, and a lift does not bring it back. A stopped workspace on the boat account gets no restart near day 14, so its files can be deleted.',
   relatedDocs: [],
   propSchema: operatorOrgSchema,
   props: { status: 'active', dialog: 'suspend' },

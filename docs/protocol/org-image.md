@@ -1,17 +1,23 @@
 # Org image
 
-This doc holds the requirements and the decisions in force for the org
-image that every sandbox of an org starts from. It covers the builds and
-the refreshes of the org image, and the first build of a new org. It
-belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md). The
-terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+This doc holds the requirements and the decisions in force for the org image
+that every sandbox of an org starts from. It covers the builds and the
+refreshes of the org image, and the first build of a new org. It belongs to
+[Workspaces and sandboxes](workspaces-and-sandboxes.md). The terms are those
+of the [architecture doc](../architecture.md#terms). A decision number names
+a dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. An e2b decision number names a decision of the change that adds E2B as
+the second [sandbox provider](workspaces-and-sandboxes.md#the-provider), as
+that doc says.
 
 ## The org image
 
 - Each org has one org image that holds a prepared copy of every
   repository that the org chose (decision 13).
+- The org image lives in the provider account of the org, as
+  [The account of an org](workspaces-and-sandboxes.md#the-account-of-an-org)
+  says. Every build and every refresh of the org runs in that account
+  (e2b decision 222).
 - One image for each repository was rejected, because each image costs
   its own saved snapshot and starts.
 - The Repositories tab of the org settings chooses the repositories
@@ -22,6 +28,9 @@ decision number names a dated record, as
 - Bash runs the install script.
 - The Cloud computer tab lists the operating system and software that the
   base image includes before the install script runs.
+- The base image holds the same operating system and software on each
+  provider. Reason: the Cloud computer tab lists one base image for every
+  org.
 - "Build computer" starts a build. A build runs the install script on a
   copy of the image, with every chosen repository cloned (decision 12).
 - The app also starts some builds of a new org by itself, as

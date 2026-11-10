@@ -17,19 +17,19 @@ const failures: readonly [
   [503, 'unavailable'],
 ]
 
-export function registerErrorContract(
+function registerControlErrorContract(
   createFixture: ProviderContractFactory,
 ): void {
   describe('errors', () => {
     it('returns typed provider failures without copying upstream messages', async () => {
       const fixture = createFixture()
       for (const [status, kind] of failures) {
-        fixture.given({ kind: 'failure', errorKind: kind })
+        await fixture.given({ kind: 'failure', errorKind: kind })
         await expect(fixture.provider.get('sandbox-one')).rejects.toMatchObject(
           {
             kind,
             status,
-            providerCode: 'provider_code',
+            providerCode: fixture.defaultProviderCode ?? 'provider_code',
             retryAfterSeconds: 3,
           },
         )
@@ -41,21 +41,27 @@ export function registerErrorContract(
 
     it('handles network failures and malformed provider success without returning untrusted data', async () => {
       const fixture = createFixture()
-      fixture.given({ kind: 'network_failure' })
+      await fixture.given({ kind: 'network_failure' })
       await expect(fixture.provider.get('sandbox-one')).rejects.toMatchObject({
         kind: 'unavailable',
         status: 503,
       })
-      fixture.given({ kind: 'invalid', target: 'sandbox' })
+      await fixture.given({ kind: 'invalid', target: 'sandbox' })
       await expect(fixture.provider.get('sandbox-one')).rejects.toMatchObject({
         kind: 'invalid_response',
         status: 502,
       })
     })
+  })
+}
 
+function registerCommandErrorContract(
+  createFixture: ProviderContractFactory,
+): void {
+  describe('errors', () => {
     it('rejects malformed detached command results without exposing provider fields', async () => {
       const fixture = createFixture()
-      fixture.given({ kind: 'invalid', target: 'started_command' })
+      await fixture.given({ kind: 'invalid', target: 'started_command' })
       await expect(
         fixture.provider.startCommand('sandbox-one', 'build'),
       ).rejects.toMatchObject({
@@ -63,7 +69,7 @@ export function registerErrorContract(
         status: 502,
         message: 'The sandbox provider request failed: invalid_response',
       })
-      fixture.given({ kind: 'invalid', target: 'command_status' })
+      await fixture.given({ kind: 'invalid', target: 'command_status' })
       await expect(
         fixture.provider.getCommandStatus('sandbox-one', 1234, {
           stdoutOffset: 0,
@@ -78,7 +84,7 @@ export function registerErrorContract(
 
     it('keeps detached start and status errors typed and redacted', async () => {
       const fixture = createFixture()
-      fixture.given({
+      await fixture.given({
         kind: 'failure',
         errorKind: 'conflict',
         providerCode: 'agent_outdated',
@@ -91,11 +97,13 @@ export function registerErrorContract(
       ).rejects.toMatchObject({
         kind: 'conflict',
         status: 409,
-        providerCode: 'agent_outdated',
+        providerCode: fixture.providerCodeFor
+          ? fixture.providerCodeFor('agent_outdated')
+          : 'agent_outdated',
         retryAfterSeconds: 3,
         message: 'The sandbox provider request failed: conflict',
       })
-      fixture.given({
+      await fixture.given({
         kind: 'failure',
         errorKind: 'unavailable',
         providerCode: 'boat_direct_failed',
@@ -105,9 +113,18 @@ export function registerErrorContract(
       ).rejects.toMatchObject({
         kind: 'unavailable',
         status: 503,
-        providerCode: 'boat_direct_failed',
+        providerCode: fixture.providerCodeFor
+          ? fixture.providerCodeFor('boat_direct_failed')
+          : 'boat_direct_failed',
         message: 'The sandbox provider request failed: unavailable',
       })
     })
   })
+}
+
+export function registerErrorContract(
+  createFixture: ProviderContractFactory,
+): void {
+  registerControlErrorContract(createFixture)
+  registerCommandErrorContract(createFixture)
 }

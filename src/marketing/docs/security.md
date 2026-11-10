@@ -61,26 +61,43 @@ They do not offer a call to read or message another workspace's chat.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
-The cloud computer receives the session's login when a turn needs it.
+New workspaces from a current computer build keep agent logins outside their cloud computers.
+Each running turn gets a temporary credential that can use its session starter's login through Conductive.
 
-A program or member with terminal access there can read or copy that login.
+A program or member with terminal access can read or copy that credential.
+A copy can spend the login while the turn runs, including from outside the computer.
+A program that keeps running can read credentials of later turns, including turns in other members' sessions.
+
+Older cloud computers can still receive the agent login itself while a turn runs.
+Programs and members with terminal access can read or copy that login.
 A copied login can remain usable after the turn ends.
+If a login is exposed, revoke it with its provider.
 Removing a login from Account does not revoke a copy held elsewhere.
+
+Ask an org admin to select **Build computer** in **Settings**, under **Cloud computer**.
+After the build succeeds, create a new workspace to get the current protection.
+Stopping or resuming an older computer does not remove its login exposure risk.
+Installing newer software in that computer does not remove that risk either.
+A new workspace does not revoke logins already copied from an older computer.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
 
+The workspace token keeps its cloud computer connected to Conductive.
+Programs and members with terminal access can read or copy it.
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-A copied credential from another member's workspace can still expose credentials of later turns.
+A workspace token copied from another member's workspace can still expose credentials of later turns and GitHub tokens.
+This remains possible after removal or suspension.
 
 If you suspect exposure, stop the agent's turn.
-Use the provider's controls to revoke exposed logins or tokens.
+Revoke exposed GitHub tokens with GitHub.
 Save the work you need before archiving an affected workspace.
 Archive deletes its cloud computer and ends that workspace's connection access.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
+- [Build the current computer setup](/docs/cloud-computer#apply-setup-changes)
 
 ## Understand environment values
 

@@ -18,9 +18,9 @@ how a screen is built, and links to the other pages.
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
-| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
+| `app/orgs`          | The org switcher of a phone, Create org with the account choice of an operator, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
-| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
+| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, Invite codes, and Providers tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
@@ -43,9 +43,9 @@ how a screen is built, and links to the other pages.
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
-`app/orgs/suspended`, `app/account`, `app/new-workspace`,
+`app/orgs/new`, `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, and `app/file-mentions` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/chat`, `app/workspace-links`, and `app/file-mentions` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -66,8 +66,20 @@ step opens `app/orgs/new/first`, whose Create org and Cancel return to Get
 started. The entries
 of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
 own folders and kept their paths, so `app/orgs` shows only its canonical
-screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
+screen. The saved states `first`, `no-repository`, and `no-access` of
+`app/orgs/new` moved into their own folders and kept their paths, so that
+`app/orgs/new` shows only its canonical screen beside its child page
+`operator`. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
+
+`app/orgs/new/operator` has Create org of an operator, from e2b decision 222.
+An e2b decision is a decision of the change that adds E2B as the second sandbox provider.
+Provider account under the repositories offers By weights, the default,
+`boat`, and `e2b`, and its hint says that only operators see it. Its `e2b`
+variant has `e2b` chosen for Acme Labs, a test org, and its `first`
+variant has the first org of an operator in Get started. Create org in the
+rail and in the org switcher of an operator opens it. `app/orgs/new` and
+its other child pages show no choice, because nobody else sees it.
 
 `marketing/docs` shows the overview of the public docs, at `/docs`. Its
 child page `marketing/docs/get-started` shows the Get started guide, with
@@ -82,9 +94,9 @@ Create org starts it, and Create org needs at least one repository, from
 decision 151. The mockups draw it for Firna, the first org of the sign-up:
 
 - `app/orgs/new` draws the rule on Create org. The hint under Repositories
-  says to add at least one, in each state. Its `no-repository` variant has
-  the first org with a name and no repository chosen, and Create org is
-  off. Its `no-access` variant has a GitHub App that reaches no
+  says to add at least one, in each state. Its child page `no-repository`
+  has the first org with a name and no repository chosen, and Create org
+  is off. Its child page `no-access` has a GitHub App that reaches no
   repository: the list asks for access with Manage access, and Create org
   is off.
 - Get started shows it in the org step. `app/sign-in/get-started/org-created`

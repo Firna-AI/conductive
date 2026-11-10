@@ -10,7 +10,7 @@ export const archive = defineScreen({
   description:
     'Archive from the row of a workspace whose turn the user stopped. The check found work that is not on GitHub: two changed files that are not committed, and a commit that is not pushed. The dialog lists them, and Archive anyway deletes them with the cloud computer. Cancel keeps the workspace, so the user can push first. On a phone the question is a sheet.',
   rationale:
-    'The user chose option D of decision 16: Archive deletes the cloud computer and keeps the chat read-only in an Archived group, the pull request bar offers Archive after a merge, and Archive first checks for work that is not committed or not pushed. No workspace shows as expiring, because near day 14 the app starts each stopped cloud computer briefly and stops it again, as the user chose in decision 43. Only the owner of the workspace and the admins of the org see Archive, as the user chose in decision 42.',
+    'The user chose option D of decision 16: Archive deletes the cloud computer and keeps the chat read-only in an Archived group, the pull request bar offers Archive after a merge, and Archive first checks for work that is not committed or not pushed. No workspace shows as expiring, because near day 14 the app starts each stopped cloud computer on the boat account briefly and stops it again, as the user chose in decision 43. The e2b account keeps a stopped cloud computer with no time limit. Only the owner of the workspace and the admins of the org see Archive, as the user chose in decision 42.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {

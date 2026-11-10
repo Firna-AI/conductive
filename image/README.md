@@ -6,9 +6,9 @@ image is the saved snapshot that every new sandbox of an org starts from.
 In a workspace sandbox, this software starts the agent runner and the
 preview relay. It also
 gives git a fresh GitHub token for each operation. The agent tools are not
-in this folder yet. The folder also holds two
+in this folder yet. The folder also holds
 [developer scripts](developer-scripts.md) that no build installs: the
-archive packager and the live check.
+archive packager, the live check, and the E2B template builder.
 
 ## Responsibilities
 
@@ -85,6 +85,16 @@ two variables.
 [The private Node runtime](runtime.md) gives the pinned Node release, its
 paths, and its update steps.
 
+## E2B base template
+
+The [E2B template](e2b/README.md) supplies Ubuntu 24.04 and the software of
+`BASE_IMAGE`, with 4 vCPU and 8192 MiB. Its developer builder uploads only
+public image inputs and prints the actual template ID.
+It installs a private TCP relay for web servers that listen on loopback.
+An enabled systemd service seeds that relay under `/run` at boot.
+The relay holds no credential and supplies no computer tools.
+Each org image still installs the shared runner and terminal software.
+
 ## Install
 
 [Install in a build](install.md) describes the software step of each image
@@ -96,97 +106,8 @@ Start a new workspace from the new image to get the relay.
 
 ## Start in a workspace
 
-The Worker gives each workspace sandbox these variables at create and at
-each resume, together with the org's env vars:
-
-| Name | Value |
-| --- | --- |
-| `WORKSPACE_TOKEN` | The workspace token. |
-| `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
-| `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
-| `CONDUCTIVE_DEFAULT_BRANCH` | The default branch of the workspace's repository. |
-| `CONDUCTIVE_WORKSPACE_BRANCH` | The workspace branch that the app tracks, from the Worker's record of the workspace. |
-| `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
-| `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
-| `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |
-| `CONDUCTIVE_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |
-
-[Repository folders](../docs/protocol/repository-folders.md) gives the
-folder names and the variable names. The
-[repository layout](../worker/lifecycle/repository-layout.md) says how the
-Worker makes and keeps the folder map.
-
-The runner, the terminal launcher, and the terminal's shell server read the
-variables from `/run/ascii-secrets/env.sh`, where Boat puts them. A systemd
-service does not get them in another way. A Boat command process does not
-get them either. So the install command of a build loads the same file,
-with automatic export, before Bash runs the org's install script. The
-install script then gets the folder variables.
-
-At a create, the Worker first fetches the default branch and creates the
-workspace branch. When the GitHub repository has no refs, the fetch step
-first pushes an empty first commit to the default branch. That push gets
-its token from the [git credential helper](#git-credentials), as every
-other git operation does. At each create and each resume, the Worker then
-runs the command of `workspaceStartupCommand`:
-
-1. It writes the org's startup script to `/run/conductive/startup.sh`, with
-   mode 600.
-2. It runs the script with Bash in the repository folder, with the
-   variables.
-3. When the script succeeds, it writes the marker
-   `/run/conductive/workspace-ready`, and restarts the runner service.
-
-After that command succeeds, the Worker calls the terminal backend's start
-hook. That hook starts the terminal service and its shell server. It caches
-the locally generated password in encrypted form before the workspace
-becomes ready.
-
-The runner start script exits with success, and starts nothing, in these
-cases:
-
-- `CONDUCTIVE_DISK_KEEPALIVE` is `1`.
-- `WORKSPACE_TOKEN` or `CONDUCTIVE_WORKSPACE_ID` is empty.
-- The marker `/run/conductive/workspace-ready` does not exist.
-
-So a build sandbox and a disk retention restart start no runner. The
-terminal backend needs its own marker under `/run`, which only its
-workspace start hook creates. Builds and disk retention restarts do not
-call that hook, so they start no terminal and no terminal shell. A disk
-retention restart runs `workspaceStartupCommand` in its `retention` mode.
-That mode runs the startup script, but it writes no ready marker and does
-not restart the runner service.
-
-Otherwise, `runner-start.sh` runs `runner/main.mjs` with the private
-Node, in the repository folder. The runner unit restarts its service after
-a failure. The terminal backend describes its launcher, its shell server,
-its password, and its automatic restart in its
-[README](../worker/terminal/README.md). That README also says how the
-workspace shell keeps running when a terminal connection drops.
-
-The preview relay runs in `conductive-preview-relay.service` as `user`.
-Boat starts its enabled socket and service after each resume and fork.
-The service requires `conductive-preview-relay.socket` to start first.
-The socket holds `127.0.0.1:7682` while the service restarts.
-Both units stay enabled, so the relay starts without waiting for a preview request.
-Its start script runs `runner/relay.mjs` with the private Node.
-It reads no workspace variable or workspace marker.
-Its service restarts it after each exit.
-A restart of the runner service does not restart the relay service.
-
-Before it runs the runner, `runner-start.sh` sets three variables of the
-runner's [configuration](../runner/README.md#configuration) from the table.
-Each value replaces a saved variable of the same name.
-
-| Runner variable | Value |
-| --- | --- |
-| `CONDUCTIVE_WORKSPACE_TOKEN` | `WORKSPACE_TOKEN` |
-| `CONDUCTIVE_REPOSITORY` | `CONDUCTIVE_REPOSITORY_DIR` |
-| `CONDUCTIVE_RUNNER_URL` | `CONDUCTIVE_MACHINE_ORIGIN` without a trailing slash, then the path of `MACHINE_PATHS.runner` |
-
-The Worker gives no setting for the computer tools. Boat writes the entry
-of the `computer` server into each sandbox at its start, and the runner
-reads it, as [What it does](../runner/README.md#what-it-does) says.
+[Workspace startup](workspace-start.md) gives the variables, startup steps,
+service gates, and preview relay behavior for the installed software.
 
 ## Git credentials
 

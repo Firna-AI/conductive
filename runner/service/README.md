@@ -30,8 +30,10 @@ The install script does these steps:
 - It reloads systemd and enables the service. It does not start the
   service.
 
-Boat restarts the enabled services after each resume and fork. So the
-runner starts in each sandbox that starts from the org image.
+Boat restarts the enabled services after each resume and fork. On E2B,
+each create and each resume boots the sandbox from its disk, and systemd
+starts the enabled services. So the runner starts in each sandbox that
+starts from the org image.
 
 [`conductive-runner.service`](conductive-runner.service) is the template of
 the unit. The unit has these settings:
@@ -50,7 +52,8 @@ the unit. The unit has these settings:
   process.
 
 [`start.sh`](start.sh) exports each variable of `/run/ascii-secrets/env.sh`,
-the file where Boat writes the variables of the sandbox. Then it starts
+the file of the variables of the sandbox. Boat writes it on Boat, and the
+Worker writes it on E2B at each create and resume. Then it starts
 `runner.mjs` from the folder with the full Node path in its service
 argument. The image builder owns that path and its download. When the
 secrets file is missing, the start fails, and systemd tries again.

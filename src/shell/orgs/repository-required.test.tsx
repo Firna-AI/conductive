@@ -3,7 +3,8 @@
 import { describe, expect, test, vi } from 'vitest'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { API_PATHS } from '../../shared/api'
-import { byRole } from '../../test-support/dom-queries'
+import { operatorProvidersPath } from '../../shared/operator-providers'
+import { byRole, queryByText } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { click, mountScreen, settle, typeText } from '../test-mount'
@@ -23,7 +24,7 @@ async function namedForm(server: FakeApiServer) {
 }
 
 describe('the repositories of Create org', () => {
-  test('Create org stays off until the person chooses a repository, and sends the chosen one', async () => {
+  test('Create org stays off until the person chooses a repository, and sends the chosen one, with no provider account from a person who is not an operator', async () => {
     const server = new FakeApiServer()
     const { view, create } = await namedForm(server)
     const named = create()
@@ -39,15 +40,22 @@ describe('the repositories of Create org', () => {
         request.method === 'POST' &&
         new URL(request.url).pathname === API_PATHS.orgs,
     )
+    const readsAccounts = server.requests.some(
+      (request) => new URL(request.url).pathname === operatorProvidersPath(),
+    )
     expect({
       named,
       chosen,
       removed,
+      field: queryByText('Provider account', view),
+      readsAccounts,
       body: sent ? await sent.json() : null,
     }).toEqual({
       named: false,
       chosen: true,
       removed: false,
+      field: null,
+      readsAccounts: false,
       body: { name: 'Firna', repositoryIds: [8] },
     })
   })

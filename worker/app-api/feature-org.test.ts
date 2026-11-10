@@ -49,14 +49,18 @@ async function setup() {
     now: () => 3_000_000_000_000,
     randomToken: () => `first-build-${++sequence}`,
   }
-  const create = (repositoryIds: number[], suppliedEnv: AppEnv = env) =>
+  const create = (
+    repositoryIds: number[],
+    suppliedEnv: AppEnv = env,
+    providerAccount?: unknown,
+  ) =>
     createShellOrg(
       suppliedEnv,
       {
         user,
         sessionId: 'owner-session',
         org: null,
-        body: { name: 'New org', repositoryIds },
+        body: { name: 'New org', repositoryIds, providerAccount },
       },
       dependencies,
     )
@@ -78,14 +82,28 @@ it('refuses Create org without a repository before it writes the org', async () 
 })
 
 it('records the creator and chosen repositories in a running build before Create org answers', async () => {
-  const { active, user, create } = await setup()
-  const response = await create([202])
+  const { active, env, user, create } = await setup()
+  env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
+    secondary: { kind: 'boat', apiKey: 'second-key', orgId: 'second-org' },
+  })
+  await active.env.DB.prepare(
+    `UPDATE provider_assignment_settings SET weights_json = '{"secondary":100}' WHERE id = 1`,
+  ).run()
+  const response = await create([202], env, 'boat')
   expect(response.status).toBe(201)
   const org = nested(record(await response.json()), 'org', readOrg)
   const history = await readBuildHistory(active.env.DB, org.id)
   expect(history.builds).toHaveLength(1)
   expect(history.builds[0]).toMatchObject({ kind: 'build', state: 'running' })
   const job = await readBuildJob(active.env.DB, org.id, history.builds[0].id)
+  expect(
+    await active.env.DB.prepare(
+      'SELECT provider_account FROM orgs WHERE id = ?',
+    )
+      .bind(org.id)
+      .first('provider_account'),
+  ).toBe('secondary')
+  expect(job.providerAccount).toBe('secondary')
   expect(job.startedByUserId).toBe(user.id)
   expect(JSON.parse(job.repositoriesJson)).toEqual([
     {
@@ -95,6 +113,33 @@ it('records the creator and chosen repositories in a running build before Create
       defaultBranch: 'trunk',
     },
   ])
+})
+
+it('saves an operator account choice before starting the first org image build', async () => {
+  const { active, env, user, create } = await setup()
+  env.OPERATOR_GITHUB_IDS = String(user.githubId)
+  env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
+    secondary: { kind: 'boat', apiKey: 'second-key', orgId: 'second-org' },
+  })
+  const response = await create([202], env, 'secondary')
+  expect(response.status).toBe(201)
+  const org = nested(record(await response.json()), 'org', readOrg)
+  const history = await readBuildHistory(active.env.DB, org.id)
+  expect(
+    await active.env.DB.prepare(
+      'SELECT provider_account FROM orgs WHERE id = ?',
+    )
+      .bind(org.id)
+      .first('provider_account'),
+  ).toBe('secondary')
+  expect(
+    await readBuildJob(active.env.DB, org.id, history.builds[0].id),
+  ).toMatchObject({
+    providerAccount: 'secondary',
+  })
+  expect(record(await (await active.request(orgPath(org.id))).json())).toEqual({
+    org,
+  })
 })
 
 it('keeps a created org and answers 201 when its first build cannot start', async () => {

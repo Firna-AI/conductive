@@ -1,7 +1,7 @@
 # Agent runner
 
 The agent runner is the program of Conductive in each cloud computer, a
-Boat sandbox. It runs the agents powered by Claude and Codex for one
+sandbox on Boat or E2B. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
 repository.
 
@@ -30,9 +30,9 @@ These facts belong to this implementation, not to the protocol docs.
   `@openai/codex-sdk` installs.
 - Both agents run without approval prompts, with the rights of the service
   user.
-- Both agents get the sandbox's `computer` MCP server and the `conductive`
-  workspace MCP server. The [agent tools guide](agent-tools.md) gives
-  their settings, runtime context, and process lifetime.
+- Both agents get the `conductive` workspace MCP server, and the sandbox's
+  `computer` MCP server when it exists. The [agent tools guide](agent-tools.md)
+  gives their settings, runtime context, and process lifetime.
 - No command carries an agent login or a GitHub token. Each `turn` command
   carries a turn token for the model gateway, as [Agent logins](agent-logins.md)
   says. [GitHub tokens](../docs/protocol/github-tokens.md)
@@ -185,58 +185,14 @@ states the requirements.
 
 ## Preview relay
 
-The preview relay connects preview requests to servers in the sandbox.
-It gives each server `Host: localhost:<port>`.
-It streams HTTP bodies and WebSocket traffic.
-It adds `X-Conductive-Relay: 1` to every response, including errors and upgrade handshakes.
-It replaces any value for this header that the previewed server sends.
-The Worker uses the mark to distinguish relay answers from provider answers.
-The Worker removes the mark before it sends the answer to the browser.
-The [preview requirements](../docs/protocol/terminal-previews-and-desktop.md#port-previews)
-state its access rules.
-
-[`src/relay/main.ts`](src/relay/main.ts) starts the relay.
-With one systemd descriptor for its own process ID, the relay listens on descriptor 3.
-Without those activation variables, it listens on `127.0.0.1:7682`.
-[`startPreviewRelay`](src/relay/server.ts) takes a listen port and target
-addresses for tests.
-The build writes its bundle to `dist/runner/relay.mjs`.
-The archive stores that bundle as `runner/relay.mjs`.
-It uses only built-in Node modules.
-
-The [image installer](../image/install.md) installs a separate relay service.
-It also installs and enables `conductive-preview-relay.socket`.
-The socket holds port 7682 while the relay service restarts.
-Both units stay enabled, so the service starts without waiting for a preview request.
-A runner restart does not restart the relay.
-A workspace gets the relay only from a new image build.
-A refresh installs no software.
-An existing workspace keeps the software of its image, also after a resume.
-Start a new workspace from the new image to get the relay.
+The [preview relay guide](preview-relay.md) gives its private ingress checks,
+HTTP and WebSocket forwarding, activation, and tests.
+The relay preserves `Host: localhost:<port>` for the previewed app.
 
 ## Commands
 
-Run these commands from the repository root, with Node 24 from `.nvmrc`.
-
-| Command                                  | What it does                                                 |
-| ---------------------------------------- | ------------------------------------------------------------ |
-| `npm ci --prefix runner`                  | Install the runner packages into `runner/node_modules`        |
-| `npm --prefix runner run build`           | Bundle the runner, relay, and two measurement tools           |
-| `npm --prefix runner run typecheck`       | Check the runner, its fakes, and the shared contracts it uses  |
-| `npm --prefix runner test`                | Run the runner tests with Vitest                             |
-| `npm --prefix runner test -- src/relay`    | Run the relay tests against local servers                     |
-| `npm --prefix runner start`               | Run the runner bundle with the variables of the current shell |
-| `node dist/runner/relay.mjs`               | Run the relay bundle                                         |
-
-The build writes `runner.mjs`, `relay.mjs`, `measure.mjs`, and `compare.mjs`
-into `dist/runner/`. The runner and measurement bundles load npm packages
-at run time. The build links `dist/runner/node_modules` to
-`runner/node_modules`, so that the bundles find them.
-
-The complete gate, the root `npm run check`, runs the runner typecheck and
-the runner tests. Run `npm ci --prefix runner` once before the gate, as CI
-does. The root lint, format, and file-length checks also cover the runner
-files.
+Run the commands in [Runner development](development.md#commands) from the
+repository root with Node 24 from `.nvmrc`.
 
 ## Service
 

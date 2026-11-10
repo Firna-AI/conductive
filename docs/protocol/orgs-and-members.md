@@ -1,11 +1,13 @@
 # Orgs and members
 
 This doc holds the requirements and the decisions in force for orgs, their
-sections, and their members. It also covers the first run and the end of
-an org. The terms are those of the
+sections, and their members. It also covers the first run and the end of an
+org. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. An e2b decision number names a decision of the change that adds E2B as
+the second [sandbox provider](workspaces-and-sandboxes.md#the-provider), as
+that doc says.
 
 ## Orgs
 
@@ -14,13 +16,28 @@ says.
 - An org also has members.
 - All orgs share the app's GitHub App. The agent logins of a user serve all
   of that user's orgs (decision 21).
-- All orgs share the app's Boat account and its plan limits, as
+- Each org runs in one provider account of the app for its whole life,
+  and shares its plan limits with the other orgs of that account, as
   [The provider](workspaces-and-sandboxes.md#the-provider) says
-  (decision 80). No org has a Boat key.
+  (decision 80, and e2b decision 222). No org has a provider key.
 - Orgs that mirror GitHub accounts were rejected, because a new org would
   then need the GitHub App on another GitHub account.
 - The org rail lists the orgs of the user, and the user can create orgs.
 - Create org accepts a name, custom initials, and chosen repositories.
+- For an operator, Create org also shows the provider account of the new
+  org: "By weights", or one configured account by its ID, such as `boat`
+  or `e2b` (e2b decisions 221 and 222). "By weights" is the default. It draws
+  the account from the weights, as
+  [The account of an org](workspaces-and-sandboxes.md#the-account-of-an-org)
+  says.
+- Reason: an operator can then put a test org on each provider. The
+  choice lists only configured accounts.
+- The create of the first org of an operator, from Get started, shows the
+  choice too. Nobody else sees the choice.
+- The Worker reads the choice only from an operator. From anyone else, it
+  ignores the choice and draws the account from the weights. Reason: a
+  person who is not an operator must not pick a provider, and an ignored
+  choice adds no new refusal.
 - Create org requires at least one repository (decision 151 of PR #92). The create
   screen says so, and Create org stays off until the person chooses one.
   The app refuses a create of an org with no repository.
@@ -62,7 +79,7 @@ says.
   1. Install the GitHub App.
   2. Create the first org.
   3. Connect Claude or Codex.
-- Get started asks for no Boat account and no Boat key.
+- Get started requires no personal provider account or provider key.
 - [Chat and events](messages-and-attachments.md#messages) states the notice for a
   missing agent login.
 - The second step, the org step, shows the cloud computer of the org once

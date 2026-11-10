@@ -40,7 +40,7 @@ function SheetRow(props: {
 /**
  * The org switcher of a phone, which has no rail: every org, a way to
  * create one, and the account. An operator also gets Operator under the
- * account.
+ * account, and the account choice on Create org.
  */
 export function OrgSwitcherSheet(props: {
   current: OrgKey
@@ -66,7 +66,9 @@ export function OrgSwitcherSheet(props: {
             </li>
           ))}
           <li>
-            <SheetRow to={paths.createOrg}>
+            <SheetRow
+              to={props.operator ? paths.createOrgOperator : paths.createOrg}
+            >
               <span className={styles.createTile}>
                 <Plus aria-hidden size={15} />
               </span>

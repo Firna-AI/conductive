@@ -4,7 +4,7 @@ import type {
   ImageBuild,
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import { readOrgImage } from './org-image-data'
 import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
@@ -187,8 +187,8 @@ export async function failBuild(
 export async function readBuildHistory(
   db: D1Database,
   orgId: string,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<BuildsResponse> {
+  const providerAccount = await readOrgProviderAccount(db, orgId)
   const { results } = await db
     .prepare(
       `SELECT ${buildColumns} FROM image_builds WHERE org_id = ? ORDER BY started_at DESC, id DESC`,

@@ -18,9 +18,7 @@ cleanup records, and image pins.
 - A create takes the account of the published org image that it starts
   from, as [Org images](#org-images) says.
 - A resume takes the account of the workspace record.
-- A new build takes the account that trusted code names, by default
-  `DEFAULT_PROVIDER_ACCOUNT`, `boat`, from
-  [`account-identity.ts`](../sandbox/account-identity.ts). Its job row keeps
+- A new build takes the fixed account of its org. Its job row keeps
   the account of the previous org image, which `BuildJob` reads as
   `previousProviderAccount`. A new build starts from the image of its own
   account, so the two can differ only in an older saved job.
@@ -74,6 +72,19 @@ accounts stay two entries.
   not configure stays pending. `ProviderAccountError` stops the call before
   any provider request. The ledger entry gets no deletion mark.
 
+D1 holds the workspace, token, build, and log records. The storage of each
+object holds the lifecycle state, the turn records, and the events.
+The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs with their [provider accounts](provider-accounts.md#the-computer-ledger).
+It keeps deleted computer IDs until their org is purged.
+Assigned identity writes also retain older IDs, including imports and repairs.
+Workspace owner changes update each live ledger entry of that workspace.
+The retained owner survives removal of the workspace row.
+Allocation recovery keeps that retained owner when it merges an imported computer.
+Definite first create refusals stay as rejected allocation records.
+A refused replay keeps an earlier uncertain request live.
+Each failed computer has its own cleanup flag.
+The native cleanup pointer can therefore change without losing an older failed computer.
+
 ## Org images
 
 `org_images` holds one org image for each org and provider account: the
@@ -84,18 +95,37 @@ vars, and the revision, which all accounts of the org share.
 - [`org-image-data.ts`](org-image-data.ts) gives `OrgImage`, `readOrgImage`,
   and `imageIsPublished`.
   [`org-image-refresh-data.ts`](org-image-refresh-data.ts) holds the push
-  refresh queries of one account.
-- Trusted internal code names the account. The image readers, and the
-  starts of creates, builds, and refreshes, take an account argument that
-  defaults to `DEFAULT_PROVIDER_ACCOUNT`. No code picks the newest image
-  across accounts. No HTTP reply or browser screen names an account.
+  refresh queries for the account of each org.
+- [`org-provider-account.ts`](../data/org-provider-account.ts) reads the fixed
+  account from `orgs.provider_account`. New creates, builds, refreshes,
+  settings reads, and repository lists use that account. Low-level image
+  readers require an explicit account. No code picks the newest image
+  across accounts. Normal member replies name no account.
 - An image is published when its record names a succeeded build of the
   same account with the same snapshot name. `publishBuild` writes only the
   record of the account of its build.
 - The push refresh limit, the pending push refresh, and the daily deadline
   belong to the record of one account. The Cron repair advances the record
-  of the default account.
+  of the fixed org account. A push refresh finds each matching org through
+  that account, including orgs on different accounts.
 - Build cleanup keeps an old snapshot while any `org_images` record names
   the same account and name, and while a lease holds it.
 - One org still runs one build at a time, with one image coordinator. The
   coordinator reads an older saved state without an account as `boat`.
+
+## Org assignment
+
+The [assignment service](../provider-assignment/README.md) selects an account
+before Create org writes its records and starts its first build.
+Existing orgs receive `boat`. An org keeps its account through Delete and
+Restore. No route changes that account.
+
+The [operator provider API](../operator/providers.md) reads and changes the
+weights for future orgs. Its account list contains only configured IDs.
+It gives org counts and each org's account only through operator replies.
+
+Only accounts whose configured kind is `boat` receive disk retention
+restarts. The active lifecycle checks the kind before a provider read or
+resume. Deleted-org maintenance filters both disk lists with the same rule.
+Restore keeps every workspace receiver and gives other provider kinds no
+retention alarm. Unknown accounts remain pending without another provider call.

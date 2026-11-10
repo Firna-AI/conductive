@@ -55,6 +55,14 @@ export function NameCell(props: {
   )
 }
 
+/**
+ * The provider account of an org by its ID, in the monospace font, in a
+ * cell or in the line under a name. It takes the colour of its place.
+ */
+export function AccountId(props: { id: string }) {
+  return <span className={styles.account}>{props.id}</span>
+}
+
 /** The search field at the top of the Orgs, Users, Waitlist, and Invite codes tabs. */
 export function DirectorySearch(props: {
   label: string

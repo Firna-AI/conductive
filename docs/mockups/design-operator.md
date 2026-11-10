@@ -4,13 +4,15 @@ This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 tabs, the tables, the Waitlist tab, the codes, and the approval email of
 the operator section. It also gives Suspend, Lift, and Approve, the daily
-chart, and the notice of a pause.
+chart, the notice of a pause, the Providers tab, the account of each org,
+and the account choice of an operator on Create org.
 
-- The operator section has the tabs Overview, Orgs, Users, Waitlist, and
-  Invite codes, from `OperatorPage` in `src/components/operator/`. On a
-  phone the five tabs keep one line while they fit, with the `flow` mode
-  of `LinkTabs`. On a narrower phone the last tabs move to a second line,
-  so that every tab shows. The overview uses
+- The operator section has the tabs Overview, Orgs, Users, Waitlist,
+  Invite codes, and Providers, from `OperatorPage` in
+  `src/components/operator/`. On a phone the six tabs keep one line while
+  they fit, with the `flow` mode of `LinkTabs`. When they do not fit, the
+  last tabs move to a second line, so that every tab shows. A phone of
+  390 px puts Providers on the second line. The overview uses
   the stat tiles, the line chart, the table, and the skeletons of
   `@firna/ui`. A view runs no script, so the chart keeps the width that the
   page column gives it. The workspaces by state reuse `StatusGlyph`. A line
@@ -58,3 +60,43 @@ chart, and the notice of a pause.
 - While sign-ups are paused, `PauseNotice` tops each tab of the section,
   with Resume sign-ups. On the Invite codes tab it takes the place of the
   Sign-ups box, which holds Pause sign-ups while sign-ups are open.
+- The Providers tab holds the weights of new orgs in its New orgs box: one
+  slider between `boat` and `e2b`, from `WeightSlider`. `@firna/ui` has no
+  slider, so it draws the range control of the browser in the accent
+  colour, as `CheckOption` draws the checkbox. The first account fills the
+  track from the left up to the thumb, and the second account gets the
+  rest. Each end names its account by its ID in the monospace font, with
+  its share in large tabular figures. Save weights sits at the bottom of
+  the box. It is on only while the slider holds weights that are not
+  saved, and it asks no question. A line under the slider gives the last
+  change, with its time and its operator, as the notice of a pause does.
+  A failed save keeps the moved weights and shows its error under the
+  slider, as a login share does. With one account only, a line in place of
+  the slider says that it gets every new org.
+- With three or more accounts, one slider does not fit, so each account
+  gets a whole-percent field in a row with its ID, from `WeightFields`. A
+  line under the fields gives the total. While the total is not 100%, the
+  line says that Save weights needs 100%, in the deep amber of a warning,
+  and Save weights stays off. `WeightSlider`, `WeightFields`, and
+  `AccountChoice` take `disabled`, so the app can turn them off while a
+  save or a create runs. The options of `AccountChoice` wrap onto more
+  lines when many accounts do not fit.
+- Orgs by account, under the weights, lists each account by its ID with
+  its count of orgs, in rows as the workspaces by state have, from
+  `AccountCounts`.
+- The Orgs tab gives the account of each org by its ID, in an Account
+  column on desktop. A phone leaves out the column, so a second line under
+  the name says "Runs on" and the ID. The Details of the page of an org
+  give it as Account. `AccountId` in `directory.tsx` draws an ID in the
+  monospace font.
+- Create org of an operator has Provider account under the repositories:
+  a segmented control of By weights, the default, and each configured
+  account by its ID, from `AccountChoice`. Its hint says that only
+  operators see it, and that the org keeps its account for its whole life.
+  Create org in the rail and in the org switcher of an operator opens this
+  form. Nobody else sees the choice.
+- Operator screens name an account only by its ID, such as `boat`, from
+  e2b decision 221. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The words of the tab, the account of an org, and the
+  choice live in `providerCopy.ts`. It imports no fixture, so the app uses
+  it too, as it can use `WeightSlider`, `WeightFields`, `AccountCounts`,
+  and `AccountChoice`.

@@ -4,6 +4,12 @@ import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
 
 export const SIMPLE_WARNINGS = {
+  provider_accounts_invalid:
+    'Some sandbox provider accounts are not configured correctly.',
+  provider_assignment_weights_recovered:
+    'Sandbox provider assignment uses the configured account weights.',
+  provider_assignment_choice_ignored:
+    'The selected sandbox provider account is unavailable. Assignment uses the account weights.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   github_app_slug_invalid:
     'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',

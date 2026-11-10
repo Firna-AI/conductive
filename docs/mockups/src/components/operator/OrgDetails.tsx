@@ -11,6 +11,7 @@ import {
   suspendedOrgBody,
   suspendedTitle,
 } from './operatorCopy'
+import { orgAccountWords } from './providerCopy'
 import { TargetList, TargetRow } from './targets'
 import { WorkspaceStates } from './WorkspaceStates'
 
@@ -88,9 +89,10 @@ function MemberRow(props: { member: OrgMember }) {
 }
 
 /**
- * The page of an org for the operator: its state, its details, its
- * workspaces in each state, and its members with their names and roles.
- * Each member opens the page of that user.
+ * The page of an org for the operator: its state, its details with its
+ * provider account by its ID, its workspaces in each state, and its
+ * members with their names and roles. Each member opens the page of that
+ * user.
  */
 export function OrgDetails(props: { org: OrgPage }) {
   const { org } = props
@@ -102,6 +104,7 @@ export function OrgDetails(props: { org: OrgPage }) {
         <DetailList
           rows={[
             { term: 'Org ID', value: org.id, mono: true },
+            { term: orgAccountWords.term, value: org.account, mono: true },
             { term: 'Created', value: org.created },
             { term: 'Repositories', value: String(org.repositories) },
           ]}

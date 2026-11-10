@@ -59,6 +59,41 @@ Sources for the review:
 - [Boat's privacy policy](https://boat.dev/privacy) reports its EU hosting
   locations and says that an Article 28 agreement is available on request.
   Its public policy does not prove that Firna has that agreement.
+- [E2B's terms](https://e2b.dev/terms) identify its contracting company as
+  FoundryLabs, Inc., a Delaware corporation. They require written consent
+  to give others access to its service and to build an application that
+  interacts with it. The operator requests authorization for Conductive's
+  hosted use before any real org runs there.
+- [E2B's privacy policy](https://e2b.dev/privacy) identifies the same US
+  company and describes possible processing in the United States. It
+  does not establish that all account, support, or other operations stay
+  in the EU.
+- [E2B's region table](https://docs.e2b.dev/faq/egress-ip-ranges) places
+  its EU region in Google Cloud `europe-west1`.
+  [Google's location list](https://docs.cloud.google.com/workstations/docs/locations)
+  identifies that region as St. Ghislain, Belgium.
+  [E2B's regional resource guide](https://docs.e2b.dev/faq/migrate-between-regions)
+  says that sandboxes, snapshots, and templates stay in their selected
+  region. Conductive selects the EU region for its E2B project.
+- [E2B's security page](https://e2b.dev/security) offers a data processing
+  addendum through its Trust Center and a signed copy through
+  `trust@e2b.dev`. The subprocessor list is also available on request.
+  These public statements do not prove that Firna has signed terms or
+  establish which international transfer safeguards apply to it.
+- [The ICO's EEA guidance](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/receiving-personal-information-from-the-eea/)
+  confirms UK adequacy regulations for EEA countries. A selected EU
+  sandbox region does not establish safeguards for other processing
+  outside the EEA. Verify the provider's signed processing and transfer
+  terms before describing a specific safeguard as applicable to Firna.
+
+The Privacy page describes both cloud computer providers as companies
+registered in the United States. It gives their selected EU sandbox and
+snapshot locations without naming them. It does not promise that every
+provider operation stays in the EU. It makes no claim that Firna has
+signed E2B's data processing addendum, standard contractual clauses, or UK
+transfer terms. The [deployment guide](../../docs/deployment.md) gives the
+operator's setup steps. Keep the E2B weight at zero until its required
+authorization and processing terms are confirmed.
 
 Each sign-in accepts the current revision of the Terms. The agreement sits
 beside Continue with GitHub, as

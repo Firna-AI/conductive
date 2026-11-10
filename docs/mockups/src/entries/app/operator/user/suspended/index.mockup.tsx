@@ -21,7 +21,7 @@ export const operatorUserSuspended = defineScreen({
       slug: 'lift',
       title: 'Lift a user',
       description:
-        'Lift suspension asks first. The user can sign in again, and their workspaces can start again. A workspace that stopped 14 days ago or more may have lost its files. A lift gives no disabled referral code back.',
+        'Lift suspension asks first. The user can sign in again, and their workspaces can start again. A workspace on the boat account that stopped 14 days ago or more may have lost its files. A lift gives no disabled referral code back.',
       rationale:
         'Decision 145 B chose a Lift action with a confirm step. Decision 147 puts it on the page of the user.',
       movedFrom: 'app/operator/user/lift',

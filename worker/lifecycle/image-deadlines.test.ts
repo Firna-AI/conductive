@@ -21,7 +21,7 @@ it('preserves the saved daily refresh deadline after a build fails at hour 23', 
     software: SOFTWARE,
   })
   await finishImageBuild(fixture, good)
-  const image = (await readOrgImage(runtime.env.DB, org.id))?.imageName
+  const image = (await readOrgImage(runtime.env.DB, org.id, 'boat'))?.imageName
   await fixture.setTime(TEST_TIME + 82_800_000)
   images.prepareSources = async () => {
     throw new Error('Source transfer failed')
@@ -37,7 +37,7 @@ it('preserves the saved daily refresh deadline after a build fails at hour 23', 
   expect((await readBuild(runtime.env.DB, org.id, failed)).build.state).toBe(
     'failed',
   )
-  expect(await readOrgImage(runtime.env.DB, org.id)).toMatchObject({
+  expect(await readOrgImage(runtime.env.DB, org.id, 'boat')).toMatchObject({
     imageName: image,
     nextImageRefreshAt: TEST_TIME + 86_400_000,
   })
@@ -68,7 +68,7 @@ it('advances an admitted daily refresh before failure and waits until the next d
   await runImageAlarm(images, daily)
   const refresh = fixture.scheduled.at(-1)?.buildId
   if (!refresh) throw new Error('Missing admitted daily refresh')
-  expect(await readOrgImage(runtime.env.DB, org.id)).toMatchObject({
+  expect(await readOrgImage(runtime.env.DB, org.id, 'boat')).toMatchObject({
     nextImageRefreshAt: TEST_TIME + 172_800_000,
     pendingPushRefreshAt: null,
     lastPushRefreshAt: TEST_TIME + 86_400_000,
@@ -80,7 +80,7 @@ it('advances an admitted daily refresh before failure and waits until the next d
   expect((await readBuild(runtime.env.DB, org.id, refresh)).build.state).toBe(
     'failed',
   )
-  expect(await readOrgImage(runtime.env.DB, org.id)).toMatchObject({
+  expect(await readOrgImage(runtime.env.DB, org.id, 'boat')).toMatchObject({
     imageBuildId: good,
     nextImageRefreshAt: TEST_TIME + 172_800_000,
   })

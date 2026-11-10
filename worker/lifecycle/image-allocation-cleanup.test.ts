@@ -101,7 +101,7 @@ it.each([
     expect(fixture.boat.deletedIds).toEqual(['bx_1'])
     expect(fixture.boat.states.size).toBe(0)
     expect(
-      await readOrgImage(fixture.runtime.env.DB, fixture.org.id),
+      await readOrgImage(fixture.runtime.env.DB, fixture.org.id, 'boat'),
     ).toMatchObject({ imageName: 'last-good-image' })
   },
 )

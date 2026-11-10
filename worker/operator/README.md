@@ -52,7 +52,7 @@ It also matches an exact numeric GitHub ID.
 Both searches treat `%`, `_`, and backslash as literal name text.
 Each D1 query binds its input values.
 
-Org entries give `id`, `name`, `initials`, `createdAt`, `members`, `workspaces`, `running`, `status`, and `match`.
+Org entries give `id`, `providerAccount`, `name`, `initials`, `createdAt`, `members`, `workspaces`, `running`, `status`, and `match`.
 The workspace count includes archived workspaces.
 Running counts only workspaces, not builds.
 Status is `deleted`, `suspended`, or `active`, in that priority.
@@ -100,6 +100,11 @@ All times use Unix milliseconds.
 An unknown org gets 404 `org_not_found`.
 An unknown or non-numeric GitHub ID gets 404 `user_not_found`.
 These reads return no chat, file, env value, agent login, or email address.
+
+## Provider weights
+
+The [provider weights guide](providers.md) gives the GET and PUT routes,
+configured accounts, org counts, and atomic change records.
 
 ## Waitlist, codes, and sign-ups
 

@@ -1,0 +1,14 @@
+/* The error of a save that failed, under the slider that keeps its weights. */
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--ui-rose);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}

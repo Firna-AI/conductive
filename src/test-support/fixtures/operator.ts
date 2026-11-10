@@ -94,6 +94,7 @@ export function sampleOrgDetail(
 ): OperatorOrgDetail {
   return {
     id: org.id,
+    providerAccount: 'boat',
     name: org.name,
     initials: org.initials,
     createdAt: daysBefore(now, org.createdDaysAgo),
@@ -150,6 +151,7 @@ export function orgRow(
       : 'active'
   return {
     id: org.id,
+    providerAccount: org.providerAccount,
     name: org.name,
     initials: org.initials,
     createdAt: org.createdAt,

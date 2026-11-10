@@ -3,9 +3,11 @@
 This page describes each component of Conductive, its responsibilities, and
 its boundaries. It uses the terms of the
 [architecture doc](../architecture.md#terms). The [flows page](flows.md)
-describes how the components work together. A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+describes how the components work together. A decision number names a dated
+record, as [Decision numbers](../architecture.md#decision-numbers) says. An
+e2b decision number names a decision of the change that adds E2B as the second
+[sandbox provider](../protocol/workspaces-and-sandboxes.md#the-provider), as that
+doc says.
 
 ## Marketing site
 
@@ -21,7 +23,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
   suspends or lifts it. It also approves people who wait, makes and
-  disables codes, and pauses sign-ups.
+  disables codes, pauses sign-ups, and sets the weights of new orgs.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
@@ -38,19 +40,21 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - One Cloudflare Worker serves the web app, the marketing site, the API,
   the proxies to sandboxes, and the GitHub webhook endpoint.
-- It holds the GitHub App key, the Boat key, the key that signs the session
-  cookies, and the key that encrypts the stored secrets. The browser never
-  holds them.
+- It holds the GitHub App key, the Boat key, the E2B key, the key that
+  signs the session cookies, and the key that encrypts the stored secrets.
+  The browser never holds them.
 - It runs the model gateway. The gateway takes the model requests of the
   agent programs in a sandbox, with the
   [turn token](../protocol/model-gateway.md#terms) of their turn. It adds the
   agent login of the turn, and forwards each request to Anthropic or
   OpenAI. [Model gateway](../protocol/model-gateway.md) states its rules.
-- It reaches Boat through one provider adapter, so that a later change can
-  add another provider. It calls only a fixed list of Boat routes.
+- It reaches each provider through its own provider client, for Boat and
+  for E2B. It calls only a fixed list of routes of each provider.
 - It calls each sandbox and each saved snapshot through the client of its
   provider account. It takes that account from its own records, as it
   takes the sandbox or the saved snapshot.
+- It sets the provider account of each new org once, from the choice of an
+  operator or from a draw by the weights.
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
@@ -61,13 +65,15 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   repositories, workspaces, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
   the sign-up pause, and the state of approval emails.
+- D1 also holds the provider account of each org, and the weights of new
+  orgs with the record of each change.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
 ## Workspace Durable Object
 
 - One Durable Object for each workspace. It runs in Western Europe, near
-  Boat's machines.
+  Boat's machines and E2B's EU cluster.
 - It holds the open tabs, the connection of the agent runner, and the
   messages that wait for the sandbox.
 - It gives each turn its turn token. For each model request, it tells the
@@ -91,28 +97,38 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   as raw bytes in one request, and the Worker streams it into the bucket
   (decision 144).
 - Before the agent runner gets a message, the Worker copies the files of
-  the message into the sandbox, through an upload address that Boat gives
-  for each file.
+  the message into the sandbox. On Boat, it uses an upload address that
+  Boat gives for each file. On E2B, it uses a fixed file route of the
+  sandbox.
 - [Chat and events](../protocol/messages-and-attachments.md#attachments) states how
   long a file stays.
 
-## Boat
+## Sandbox providers
 
-- Boat runs the sandboxes and keeps the saved snapshots (decision 2).
-  Sprites on Fly.io was the other option. Boat costs less, and it already
-  has forks, saved snapshots, port URLs, desktop streams, and environments.
-- Every org runs in the app's Boat account (decision 80). That account
-  holds every org image and every sandbox of every org. Its plan limits
-  apply to all orgs together.
-- Boat is the only provider for now, and the app's Boat account is the
-  only provider account (decision 213). The records still name the account
-  of each sandbox and saved snapshot. So a second provider can come later,
-  and each existing one keeps working in its own account.
-- The app does not depend on Boat webhooks. The agent runner reports when
-  a sandbox is ready. The Worker reads the state of a sandbox from Boat's
-  API when it needs it.
-- A stop ends every process. Boat keeps the disk and the enabled system
-  services, and restarts those services after each resume and fork.
+- Boat and E2B run the sandboxes and keep the saved snapshots
+  (decision 2, and e2b decision 222). The app has one account with each.
+- Boat was the first choice (decision 2). Sprites on Fly.io was the other
+  option. Boat costs less, and it already has forks, saved snapshots, port
+  URLs, desktop streams, and environments.
+- E2B is the second provider, so that a Boat outage does not stop every
+  org (e2b decision 222).
+- Each org runs in one provider account for its whole life (decision 80,
+  and e2b decision 222). That account holds the org image and every sandbox
+  of the org.
+  Its plan limits apply to its orgs together.
+- A new org gets its account from the choice of an operator or from the
+  weights. No org moves to another account.
+- The records name the account of each org, each sandbox, and each saved
+  snapshot.
+- The app does not depend on provider webhooks. The agent runner reports
+  when a sandbox is ready. The Worker reads the state of a sandbox from the
+  API of its provider when it needs it.
+- A stop ends every process. Each provider keeps the disk and the enabled
+  system services, and starts those services again after each resume.
+- E2B runs in its EU cluster, in an E2B project that holds only the app's
+  work. Each E2B sandbox has private traffic.
+- On E2B, the agents get no computer tools for now (e2b decision 216), and a
+  sandbox has no desktop stream.
 
 ## Sandbox software
 
@@ -162,5 +178,5 @@ states the rules of the relay.
 - **Workers AI:** the Cloudflare model service writes a title for a
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
-- **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. The app is free, with no limits (decision 81).
+- **Boat and E2B:** the app's accounts with them pay for every sandbox and
+  every saved snapshot. The app is free, with no limits (decision 81).

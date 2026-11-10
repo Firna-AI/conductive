@@ -1,6 +1,5 @@
 import { activeOrgIdPredicate } from '../data/org-access'
 import { HttpError } from '../http'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { runningBuild } from './build-data'
 import { readSavedScript, type SavedScript } from './saved-script'
 import { readRepositories, type SelectedRepository } from './settings-data'
@@ -45,7 +44,7 @@ export async function imageAdmissionError(
 export async function readImageRepositories(
   db: D1Database,
   orgId: string,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
+  providerAccount: string,
 ): Promise<SelectedRepository[]> {
   const image = await db
     .prepare(
@@ -64,7 +63,7 @@ export async function readCreationImage(
   db: D1Database,
   orgId: string,
   repositoryId: string,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
+  providerAccount: string,
 ): Promise<{
   imageName: string
   providerAccount: string

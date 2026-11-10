@@ -8,7 +8,7 @@ export function registerCommandContract(
   describe('commands', () => {
     it('returns waiting command results', async () => {
       const fixture = createFixture()
-      fixture.given({
+      await fixture.given({
         kind: 'command',
         value: { exitCode: 0, stdout: 'done\n', stderr: '', timedOut: false },
       })
@@ -19,11 +19,14 @@ export function registerCommandContract(
 
     it('starts a detached build and continues logs from provider byte offsets', async () => {
       const fixture = createFixture()
-      fixture.given({ kind: 'started_command', value: { processId: 1234 } })
+      await fixture.given({
+        kind: 'started_command',
+        value: { processId: 1234 },
+      })
       expect(
         await fixture.provider.startCommand('sandbox-one', 'npm run build'),
       ).toEqual({ processId: 1234 })
-      fixture.given({
+      await fixture.given({
         kind: 'command_status',
         value: {
           processId: 1234,
@@ -59,7 +62,7 @@ export function registerCommandContract(
         stderrNextOffset: 8,
         more: true,
       })
-      fixture.given({
+      await fixture.given({
         kind: 'command_status',
         value: {
           processId: 1234,
@@ -99,7 +102,7 @@ export function registerCommandContract(
 
     it('preserves a lost process and reset offsets after an agent restart', async () => {
       const fixture = createFixture()
-      fixture.given({
+      await fixture.given({
         kind: 'command_status',
         value: {
           processId: 1234,

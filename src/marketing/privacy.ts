@@ -58,10 +58,11 @@ export const privacyDocument: LegalDocument = {
           text`Resend sends the emails of ${productName}: the invitations of
             an org, and the email when an operator approves your account. It
             gets the address and the text of each email.`,
-          text`A cloud computer provider runs the cloud computers of every org
-            for ${productName}, in the account of ${productName}. Your code,
-            your files, and your agent sessions are in them. ${productName}
-            sends the provider the requests that start, stop, and use them.`,
+          text`A cloud computer provider runs each org's cloud computers in
+            an account that ${productName} owns. The org keeps that account
+            for its life. Your code, your files, and your agent sessions
+            are in those computers. ${productName} sends their provider
+            requests to start, stop, and use them.`,
           text`Anthropic and OpenAI get your messages, your files, and your
             code when an agent works on them. Each Mac command request and its
             result also go to the agent and to Anthropic or OpenAI.
@@ -138,11 +139,13 @@ export const privacyDocument: LegalDocument = {
             certification under the UK Extension and its use of standard
             contractual clauses. UK regulations approve transfers covered
             by the UK Extension certification.`,
-          text`The cloud computer provider is based in the United States.
-            It reports that its cloud computers and saved snapshots run in
-            Germany, Finland, and France. UK adequacy regulations approve
-            transfers to countries in the European Economic Area. Other
-            provider operations can involve processing outside that area.`,
+          text`The cloud computer providers are companies registered in the
+            United States. ${productName} uses their European Union regions
+            for cloud computers and saved snapshots. These locations include
+            Belgium, Germany, Finland, and France. UK adequacy regulations
+            approve transfers to countries in the European Economic Area.
+            Other provider operations can involve processing outside that
+            area.`,
           text`Anthropic and OpenAI process agent requests under the
             agreement for the connected account that the session uses.
             Their published privacy and data processing terms describe
@@ -184,7 +187,7 @@ export const privacyDocument: LegalDocument = {
         list(
           text`${productName} stores each env var value and agent login
             encrypted.`,
-          text`It does not send the key of its cloud computer provider to
+          text`It does not send the keys of its cloud computer providers to
             your browser or into a cloud computer.`,
           text`The settings never return a stored env var value or agent login
             to your browser.`,

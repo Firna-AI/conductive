@@ -153,7 +153,7 @@ it('keeps the first good image and warns once when the added build cannot be sch
   }
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
   await finishImageBuild(fixture, id)
-  expect(await readOrgImage(db, org.id)).toMatchObject({
+  expect(await readOrgImage(db, org.id, 'boat')).toMatchObject({
     imageBuildId: id,
   })
   const history = await readBuildHistory(db, org.id)

@@ -1,5 +1,4 @@
 import type { InvitationMailer } from './invitation-mailer'
-import type { ProviderAccountConfigurations } from './sandbox/accounts'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { Workspace } from './workspace'
 
@@ -27,7 +26,7 @@ export interface AppEnv {
   SESSION_SIGNING_KEY: string
   BOAT_API_KEY: string
   BOAT_ORG_ID: string
-  SANDBOX_PROVIDER_ACCOUNTS?: ProviderAccountConfigurations
+  SANDBOX_PROVIDER_ACCOUNTS?: string
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
   OPERATOR_GITHUB_IDS?: string

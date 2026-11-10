@@ -1,4 +1,5 @@
 import type { AppDependencies, AppEnv } from '../env'
+import { configuredProviderAccount } from '../sandbox/accounts'
 import { cleanupBusy } from './cleanup-lease'
 import { runLifecycleHook } from './lifecycle-runner'
 import type { OrgMaintenanceHooks } from './maintenance-contract'
@@ -15,7 +16,7 @@ export async function maintainDeletedOrg(
 ) {
   const dates = await deletedOrgDates(env.DB, orgId)
   if (!dates) throw cleanupBusy()
-  const workspaces = await workspaceDisks(env.DB, orgId)
+  const workspaces = await retentionDisks(env, orgId)
   await runLifecycleHook(env, orgId, token, dependencies, (ownership) =>
     hooks.maintainDeletedOrg({
       ownership,
@@ -35,7 +36,7 @@ export async function maintainDeletedOrg(
       ),
     }),
   )
-  const current = await workspaceDisks(env.DB, orgId)
+  const current = await retentionDisks(env, orgId)
   if (
     current.length !== workspaces.length ||
     current.some(
@@ -48,4 +49,11 @@ export async function maintainDeletedOrg(
       'The lifecycle left a disk without its next retention deadline',
     )
   }
+}
+
+async function retentionDisks(env: AppEnv, orgId: string) {
+  return (await workspaceDisks(env.DB, orgId)).filter(
+    (disk) =>
+      configuredProviderAccount(env, disk.providerAccount).kind === 'boat',
+  )
 }

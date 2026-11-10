@@ -13,43 +13,16 @@ import {
   operatorSignupPausePath,
   operatorWaitlistPath,
 } from '../../shared/operator-waitlist'
-import { FakeApiServer } from '../../test-support/fake-api'
-import { FakeWorkspaceEvents } from '../../test-support/fake-events'
+import { operatorProvidersPath } from '../../shared/operator-providers'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { SAMPLE_IDS } from '../../test-support/fixtures/operator-samples'
 import { readAccessCode, readWaitlistPage } from '../api/read-operator-waitlist'
-import { createBackend, guardScope } from './backend'
-import { operatorRoutes } from './operator-routes'
-import { readDevOptions } from './options'
-import { routeFetch } from './router'
-import { seedState } from './seed'
-
-/** The fetch of the dev fake with the options of a query string. */
-function devFetch(search: string) {
-  const backend = createBackend(
-    seedState(readDevOptions(search)),
-    new FakeWorkspaceEvents([]),
-    () => FAKE_TIME + 60_000,
-    () => 'unused',
-  )
-  const fetch = routeFetch(
-    operatorRoutes(backend),
-    (path, method) => guardScope(backend.state, path, method),
-    new FakeApiServer().fetch,
-  )
-  const send = async (method: string, path: string, fields: object = {}) => {
-    const request = method === 'GET' ? undefined : JSON.stringify(fields)
-    const response = await fetch(path, { method, body: request })
-    const body: unknown = await response.json()
-    return { status: response.status, body }
-  }
-  return { backend, send }
-}
+import { devFetch } from './dev-test-kit'
 
 describe('the operator routes of the dev fake', () => {
   test('answer only an operator, as the Worker does', async () => {
     const { send } = devFetch('')
-    expect(await send('GET', operatorOverviewPath())).toEqual({
+    const refused = {
       status: 403,
       body: {
         error: {
@@ -57,7 +30,11 @@ describe('the operator routes of the dev fake', () => {
           message: 'Operator access is required.',
         },
       },
-    })
+    }
+    expect({
+      overview: await send('GET', operatorOverviewPath()),
+      providers: await send('GET', operatorProvidersPath()),
+    }).toEqual({ overview: refused, providers: refused })
   })
 
   test('find an org by a preview address, and suspend and lift it with the time and the operator', async () => {

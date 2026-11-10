@@ -9,9 +9,10 @@ The Durable Object runs the complete request gate.
 Durable Objects hold workspace state, and D1 holds shared records.
 The [security area](security/README.md) owns the app request gate.
 The [HTTP area](http/README.md) owns the request body limit at the Worker entry.
-The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the app's one Boat key.
-The Worker reads that key from the Worker secret `BOAT_API_KEY`.
+The [sandbox area](sandbox/README.md) owns the provider accounts and the client of each provider kind.
+The `boat` account uses the app's Boat key, from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
+Each other account, such as `e2b`, comes from the Worker secret `SANDBOX_PROVIDER_ACCOUNTS`, as [Sandbox provider accounts](../docs/sandbox-provider-accounts.md) says.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
 The [lifecycle](lifecycle/README.md) records each image's runner version and copies it before each new computer allocation.
 The chat backend refuses a runner below that pin before the welcome or any command.
@@ -50,6 +51,8 @@ On the app hostname, the Worker serves these API routes:
 - The view and the read mark of a workspace.
 - The Mac device routes.
 - `GET /api/operator/overview`, the app-wide numbers for operators.
+- `GET` and `PUT /api/operator/providers`, configured accounts, org counts,
+  and the assignment weights of new orgs.
 - `GET /api/operator/orgs`, the org search and cursor pages for operators.
 - `GET /api/operator/users`, the user search and cursor pages for operators.
 - `GET /api/operator/orgs/<orgId>`, the org page for operators.

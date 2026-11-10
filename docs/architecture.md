@@ -1,8 +1,8 @@
 # Architecture
 
 Conductive is a coding tool at `conductive.build`. Each workspace is one
-task with its own branch and its own cloud computer, a Boat sandbox.
-Agents powered by Claude and Codex work only in the sandbox. The user
+task with its own branch and its own cloud computer, a sandbox on Boat or
+E2B. Agents powered by Claude and Codex work only in the sandbox. The user
 follows them in the browser or in the Mac app, which shows the web app.
 This doc describes the components, their responsibilities, and the
 boundaries between them. The [protocol docs](architecture/protocol-docs.md)
@@ -38,12 +38,17 @@ hold the requirements of each feature.
 - **Sender:** the person who sent the message of a turn. The GitHub token
   and the Mac requests of the turn belong to its sender. The agent login
   belongs to the starter of the session, the member who started it.
-- **Boat key:** the one key of the app's own Boat account, where every
-  sandbox and every org image of every org runs. It is a Worker secret.
-- **Provider account:** an account with a sandbox provider. The Worker
-  holds its credentials, and reaches it through its own client.
-- **Sandbox:** the Boat sandbox of one workspace. The product calls it a
-  cloud computer or a sandbox.
+- **Provider account:** an account of the app with a sandbox provider:
+  `boat` with Boat, or `e2b` with E2B. Each org runs in one provider
+  account for its whole life. The Worker holds the credentials of each
+  account, and reaches it through its own client.
+- **Boat key** and **E2B key:** the one key of the app's account with Boat
+  or with E2B. Each key reaches every sandbox and every org image of the
+  orgs on its account. Each is a Worker secret.
+- **Weights:** the chance, in percent, that a new org gets each provider
+  account. An operator sets them.
+- **Sandbox:** the cloud computer of one workspace, on Boat or on E2B. The
+  product calls it a cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
   from. It holds a prepared copy of each repository that the org chose.
 - **Build:** a run of the install script on a copy of the org image. It
@@ -61,13 +66,15 @@ hold the requirements of each feature.
 - **Preview hostname:** a random hostname on the preview domain. It shows
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
-  build or a refresh. The app's Boat account limits the starts of all orgs.
+  build or a refresh. The plan of each provider account limits the starts
+  of its orgs.
 
 ## Components
 
 The [components page](architecture/components.md) describes each
 component and its responsibilities. It covers the apps, the Worker and
-its storage, Boat, the sandbox software, and the external services.
+its storage, the sandbox providers, the sandbox software, and the external
+services.
 
 ## Hostnames
 
@@ -86,8 +93,8 @@ the app (decision 6).
 ## Flows
 
 The [flows page](architecture/flows.md) describes how the components work
-together for a new workspace, chat, the terminal, previews, the desktop,
-GitHub events, and stops.
+together for a new org, a new workspace, chat, the terminal, previews, the
+desktop, GitHub events, and stops.
 
 ## Where data lives
 
@@ -97,7 +104,7 @@ where each kind of data lives.
 ## Trust boundaries
 
 The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
-separate the orgs, the Boat key, the model gateway, and the sandboxes.
+separate the orgs, the provider keys, the model gateway, and the sandboxes.
 
 ## Decision numbers
 

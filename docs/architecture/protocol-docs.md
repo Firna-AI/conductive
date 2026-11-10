@@ -4,8 +4,9 @@ The protocol docs hold the requirements of each feature. The
 [architecture doc](../architecture.md) describes the components that meet
 them, and this page lists each protocol doc and what it covers.
 
-- [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
-  image and the life of a workspace.
+- [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the
+  providers, the account of each org, the org image, and the life of a
+  workspace.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
@@ -44,8 +45,13 @@ them, and this page lists each protocol doc and what it covers.
 - [Operator actions](../protocol/operator-actions.md): the operator, the
   suspension of a user or an org, the lift of a suspension, and abuse
   reports.
+  - [Org suspension](../protocol/operator-org-suspension.md): the
+    suspension of an org, and what its members keep.
 - [Operator section](../protocol/operator-section.md): the pages of the
-  operator in the web app, their counts, and their searches.
+  operator in the web app, their counts, their searches, and the weights
+  of new orgs.
+  - [Waitlist tabs of the operator section](../protocol/operator-waitlist-tabs.md):
+    the Waitlist tab, Approve, the Invite codes tab, and the pause.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
