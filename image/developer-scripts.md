@@ -198,8 +198,8 @@ More facts:
 
 - `npm run typecheck` does not check these TypeScript files. Check them
   with `npx tsc -p image/tsconfig.json`.
-- The lint, format, and file-length checks of `npm run check` include these
-  files.
+- The lint and format checks of `npm run check` include these files. The
+  lint also checks their 300-line limit.
 - No test runs these scripts.
 
 ## Key code
