@@ -90,7 +90,7 @@ each feature.
 - **Routine owner:** the member whose logins the runs of a routine use. It
   is the member who created the routine, until that member leaves the org.
 - **Base branch:** the branch that the work of a workspace targets. Changes
-  compares with it, and "Create pull request" opens into it.
+  compares with it, and "Create PR" opens into it.
 
 ## Components
 

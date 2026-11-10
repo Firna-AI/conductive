@@ -35,8 +35,8 @@ export type BarAction =
   /** `busy`: the Archive runs. Archive asks no question. */
   | { kind: 'archive'; busy: boolean; disabled: boolean }
 
-/** The link to GitHub: the pull request, or the page that creates one. */
-export type GitHubLinkKind = 'open' | 'create'
+/** The link to the pull request on GitHub. */
+export type GitHubLinkKind = 'open'
 
 /** What the bar, and the top of the Checks tab of a phone, show. */
 export type BarModel = {
@@ -101,8 +101,7 @@ function isOpen(banner: BannerState): boolean {
 }
 
 function linkOf(banner: BannerState): GitHubLinkKind | undefined {
-  if (banner === 'none') return 'create'
-  return banner === 'no-commits' ? undefined : 'open'
+  return banner === 'none' || banner === 'no-commits' ? undefined : 'open'
 }
 
 /**

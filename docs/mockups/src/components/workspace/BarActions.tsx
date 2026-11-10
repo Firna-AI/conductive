@@ -12,6 +12,7 @@ import { barPaths, paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
+import { TintedTheme, type ButtonTint } from '../common/tint'
 import {
   agentActionLabels,
   barLabels,
@@ -19,51 +20,76 @@ import {
   mergeLabels,
   type BarMessageKind,
 } from './barCopy'
-import { agentIcons } from './barIcons'
+import { agentIcons, agentTones } from './barIcons'
 import type { BarAction, BarModel } from './barModel'
 import { BarGitHubLink, GitHubLink } from './barParts'
+import { barTint } from './prStatus'
 import styles from './BarActions.module.css'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
  * merges as the viewer, Continue moves the workspace to a new branch, and
  * Archive archives the workspace at once. Each one leads to the screen that
- * follows.
+ * follows. The main action takes the tint of the bar, outside its link,
+ * because the link of the mockups needs the button as its own child.
  */
-function BarButton(props: { action: BarAction; localWork: boolean }) {
-  const { action } = props
+function BarButton(props: {
+  action: BarAction
+  localWork: boolean
+  tint: ButtonTint | undefined
+}) {
+  const { action, tint } = props
   switch (action.kind) {
     case 'agent':
       return (
-        <ScreenLink asChild to={barPaths.sent[action.action]}>
-          <ActionButton icon={agentIcons[action.action]} tone="primary">
-            {agentActionLabels[action.action]}
-          </ActionButton>
-        </ScreenLink>
+        <TintedTheme tint={tint}>
+          <ScreenLink asChild to={barPaths.sent[action.action]}>
+            <ActionButton
+              icon={agentIcons[action.action]}
+              tone={agentTones[action.action]}
+            >
+              {agentActionLabels[action.action]}
+            </ActionButton>
+          </ScreenLink>
+        </TintedTheme>
       )
     case 'merge':
       return (
-        <ScreenLink asChild to={barPaths.merging}>
-          <ActionButton busy={action.busy} icon={GitMerge} tone="primary">
-            {action.busy ? barLabels.merging : mergeLabels[action.method]}
-          </ActionButton>
-        </ScreenLink>
+        <TintedTheme tint={tint}>
+          <ScreenLink asChild to={barPaths.merging}>
+            <ActionButton busy={action.busy} icon={GitMerge} tone="primary">
+              {action.busy ? barLabels.merging : mergeLabels[action.method]}
+            </ActionButton>
+          </ScreenLink>
+        </TintedTheme>
       )
     case 'continue':
       // While a turn runs, Continue is not available.
-      return action.waiting ? (
-        <ActionButton disabled icon={GitBranchPlus} tone="primary">
-          {barLabels.continue}
-        </ActionButton>
-      ) : (
-        <ScreenLink
-          asChild
-          to={props.localWork ? barPaths.continueQuestion : barPaths.continuing}
-        >
-          <ActionButton busy={action.busy} icon={GitBranchPlus} tone="primary">
-            {action.busy ? barLabels.continuing : barLabels.continue}
-          </ActionButton>
-        </ScreenLink>
+      return (
+        <TintedTheme tint={tint}>
+          {action.waiting ? (
+            <ActionButton disabled icon={GitBranchPlus} tone="primary">
+              {barLabels.continue}
+            </ActionButton>
+          ) : (
+            <ScreenLink
+              asChild
+              to={
+                props.localWork
+                  ? barPaths.continueQuestion
+                  : barPaths.continuing
+              }
+            >
+              <ActionButton
+                busy={action.busy}
+                icon={GitBranchPlus}
+                tone="primary"
+              >
+                {action.busy ? barLabels.continuing : barLabels.continue}
+              </ActionButton>
+            </ScreenLink>
+          )}
+        </TintedTheme>
       )
     case 'archive':
       return action.disabled ? (
@@ -82,11 +108,13 @@ function BarButton(props: { action: BarAction; localWork: boolean }) {
 
 /** The buttons of the bar, in order: the main action first. */
 export function BarButtons(props: { bar: BarModel }) {
+  const tint = barTint(props.bar.banner)
   return props.bar.actions.map((action) => (
     <BarButton
       action={action}
       key={action.kind}
       localWork={props.bar.localWork}
+      tint={tint}
     />
   ))
 }
@@ -138,9 +166,7 @@ export function ChecksActions(props: { bar: BarModel; workspace: Workspace }) {
       ) : null}
       <div className={styles.buttons}>
         <BarButtons bar={bar} />
-        {bar.link ? (
-          <BarGitHubLink kind={bar.link} workspace={props.workspace} />
-        ) : null}
+        {bar.link ? <BarGitHubLink /> : null}
       </div>
     </div>
   )

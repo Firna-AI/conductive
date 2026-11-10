@@ -31,7 +31,7 @@ says.
   merge base of the two.
 - Reason: the base branch can move while a workspace works. A plain
   comparison would show the newer commits of the base branch as reverted.
-- The pull request bar names the base branch, and "Create pull request"
+- The pull request bar names the base branch, and "Create PR"
   opens a pull request into it, as
   [Banner states](github-banner.md#banner-states) says.
 - A pull request that the agent opens with the GitHub CLI, `gh`, targets the
@@ -40,7 +40,7 @@ says.
   pull request that started it.
 - A comparison with the default branch for every workspace was rejected. A
   pull request run would then show the commits of its pull request as its
-  own work. "Create pull request" would offer them in a second pull
+  own work. "Create PR" would offer them in a second pull
   request.
 - A base that also stores the commit where the branch starts was rejected.
   The merge base already keeps the newer commits of the base branch out of

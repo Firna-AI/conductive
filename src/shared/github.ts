@@ -52,7 +52,6 @@ export type GitHubBanner = {
   | {
       state: 'none' | 'no-commits'
       pullRequest: null
-      createPullRequestUrl: string | null
     }
   | {
       state: Exclude<BannerState, 'none' | 'no-commits'>

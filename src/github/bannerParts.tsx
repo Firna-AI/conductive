@@ -52,6 +52,30 @@ export function GitHubLink(props: {
   )
 }
 
+/**
+ * The number of the pull request, which opens it on GitHub in a new tab. An
+ * arrow after the number marks the link, so the bar needs no other link to
+ * the pull request.
+ */
+export function PullRequestNumber(props: { number: number; href: string }) {
+  const label = `Open pull request #${props.number} on GitHub`
+  return (
+    <a
+      aria-label={label}
+      className={classes(styles.number, styles.numberLink)}
+      href={props.href}
+      rel="noreferrer"
+      target="_blank"
+      title={label}
+    >
+      <span className={styles.numberText}>{`#${props.number}`}</span>
+      <span className={styles.numberArrow}>
+        <ArrowUpRight aria-hidden size={12} />
+      </span>
+    </a>
+  )
+}
+
 /** The branch and the branch that it merges into. */
 export function Branches(props: { banner: GitHubBanner }) {
   return (

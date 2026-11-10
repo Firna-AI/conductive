@@ -106,13 +106,7 @@ function readBanner(value: unknown): GitHubBanner | null {
   const state = value.state
   if (state === 'none' || state === 'no-commits') {
     if (value.pullRequest !== null) return null
-    if (!isStringOrNull(value.createPullRequestUrl)) return null
-    return {
-      ...branch,
-      state,
-      pullRequest: null,
-      createPullRequestUrl: value.createPullRequestUrl,
-    }
+    return { ...branch, state, pullRequest: null }
   }
   const pullRequest = readPullRequest(value.pullRequest)
   if (

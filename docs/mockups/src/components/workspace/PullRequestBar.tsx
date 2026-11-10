@@ -1,5 +1,5 @@
 import { ChevronRight, GitBranch, GitPullRequest } from 'lucide-react'
-import { pullRequest, type BannerState } from '../../fixtures/pullRequests'
+import { pullRequest } from '../../fixtures/pullRequests'
 import type { Workspace } from '../../fixtures/workspaces'
 import { barPaths, checksPaths } from '../../paths'
 import { classes } from '../common/classes'
@@ -7,36 +7,28 @@ import { ScreenLink } from '../common/ScreenLink'
 import { BarButtons, BarMessage } from './BarActions'
 import { agentActionLabels, barLabels } from './barCopy'
 import type { BarModel } from './barModel'
-import { BarGitHubLink, Branches, StateLabel } from './barParts'
-import { prStatus, type PullRequestState } from './prStatus'
+import { Branches, PullRequestNumber, StateLabel } from './barParts'
+import { hasPullRequest, prStatus } from './prStatus'
 import styles from './PullRequestBar.module.css'
 
-/** The buttons and the link of the bar, which keep their size at its end. */
-function Actions(props: { bar: BarModel; workspace: Workspace }) {
-  const { bar } = props
+/**
+ * The buttons of the bar, which keep their size at its end. The bar has no
+ * link to GitHub here: the number of a pull request opens it on GitHub.
+ */
+function Actions(props: { bar: BarModel }) {
   return (
     <span className={styles.actions}>
-      <BarButtons bar={bar} />
-      {bar.link ? (
-        <BarGitHubLink kind={bar.link} workspace={props.workspace} />
-      ) : null}
+      <BarButtons bar={props.bar} />
     </span>
   )
 }
 
-/** A branch with a pull request, in any state of that pull request. */
-function hasPullRequest(banner: BannerState): banner is PullRequestState {
-  return banner !== 'none' && banner !== 'no-commits'
-}
-
 /**
  * The pull request of the workspace branch, at the top of the right column:
- * its number, its checks and merge state, its main action, and a link to
- * GitHub. A branch without a pull request shows its target, Create pull
- * request, and a link that creates it on GitHub once GitHub has a commit.
- * A message, such as a refusal of GitHub, shows under the bar. Beside an
- * action, a narrow bar drops its detail and keeps only the GitHub mark of
- * its link.
+ * its number, which opens it on GitHub, its checks and merge state, and its
+ * main action. A branch without a pull request shows its target and Create
+ * pull request. A message, such as a refusal of GitHub, shows under the bar.
+ * Beside an action, a narrow bar drops its detail.
  */
 export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
   const { bar, workspace } = props
@@ -46,15 +38,16 @@ export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
     <BarMessage kind={bar.message} workspace={workspace} />
   ) : null
   if (!hasPullRequest(banner)) {
-    const empty = bar.actions.length === 0 && !bar.link
+    const note =
+      banner === 'none' ? barLabels.noPullRequest : barLabels.noCommits
     return (
       <>
         <div className={classes(styles.bar, withActions)}>
           <Branches workspace={workspace} />
-          {empty ? (
-            <span className={styles.note}>{barLabels.noCommits}</span>
+          {bar.actions.length === 0 ? (
+            <span className={styles.note}>{note}</span>
           ) : (
-            <Actions bar={bar} workspace={workspace} />
+            <Actions bar={bar} />
           )}
         </div>
         {message}
@@ -65,12 +58,12 @@ export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
   return (
     <>
       <div className={classes(styles.bar, styles[status.tone], withActions)}>
-        <span className={styles.number}>#{pullRequest.number}</span>
+        <PullRequestNumber href={pullRequest.url} number={pullRequest.number} />
         <StateLabel status={status} />
         {status.detail ? (
           <span className={styles.detail}>{status.detail}</span>
         ) : null}
-        <Actions bar={bar} workspace={workspace} />
+        <Actions bar={bar} />
       </div>
       {message}
     </>
@@ -80,17 +73,19 @@ export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
 /**
  * The compact pull request row at the top of a workspace on a phone. It
  * opens the Checks tab, whose top holds the actions of the bar. A branch
- * without a commit and without local work is not a link.
+ * without a pull request and without an action is not a link.
  */
 export function PullRequestRow(props: { bar: BarModel }) {
   const { bar } = props
   const { banner } = bar
   if (!hasPullRequest(banner)) {
-    if (banner === 'no-commits' && bar.actions.length === 0) {
+    if (bar.actions.length === 0) {
       return (
         <div className={styles.row}>
           <GitBranch className={styles.muted} size={14} />
-          <span className={styles.rowText}>{barLabels.noCommits}</span>
+          <span className={styles.rowText}>
+            {banner === 'none' ? barLabels.noPullRequest : barLabels.noCommits}
+          </span>
         </div>
       )
     }

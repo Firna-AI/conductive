@@ -64,8 +64,8 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   The bar itself archives nothing.
 - `checksHref` is the app address of the Checks tab, because tabs are links.
   `onOpenChecks` lets the app's router open the tab in place. A branch
-  without a pull request opens the tab too, when the bar has an action or a
-  link, so Create pull request and Create on GitHub stay one tap away.
+  without a pull request opens the tab too, when the bar has an action, so
+  Create PR stays one tap away.
 - A failed load shows one Try again on each screen: in the bar on desktop,
   and in the row on a phone. The Checks tab names the error without its own
   button, so keep the bar or the row on the screen with the Checks tab.
@@ -176,8 +176,7 @@ mounts it, and the production build leaves it out.
   shows the actions in the whole screen.
 - `sample` changes the fake data to other valid data: `every-check` gives
   one check in each of the nine states, `no-checks` a pull request without
-  checks, `no-create-link` a branch without a create link, and `long-base` a
-  long target branch. `fake`, the default, keeps the data of the fake API.
+  checks, and `long-base` a long target branch. `fake`, the default, keeps the data of the fake API.
   The live events of a sample carry the same data as its replies.
 - Send gives a live `github.updated` event. With `github=error`, "Let GitHub
   answer" makes the next Try again succeed.
@@ -214,7 +213,11 @@ mounts it, and the production build leaves it out.
 - `PullRequestBar.tsx`, `PullRequestRow.tsx`, `BarButtons.tsx`, and
   `ChecksList.tsx`: the views.
 - `bannerStatus.ts` and `checkStatus.ts`: the words, the icons, and the tints
-  of each state.
+  of each state. The `tint` of `barView.ts` gives the main action the tint
+  of its bar.
+- `bannerParts.tsx`: the parts of the bar. `PullRequestNumber` links the
+  number of a pull request to GitHub, so the desktop bar of a pull request
+  shows no other link to it.
 - `dev/`: the development page.
 
 See [the shared contracts](../shared/README.md).

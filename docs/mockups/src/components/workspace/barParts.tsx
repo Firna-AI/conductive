@@ -2,21 +2,13 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { ArrowRight, ArrowUpRight, GitBranch } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
-import { repositories } from '../../fixtures/repositories'
 import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
 import { GitHubMark } from '../common/GitHubMark'
 import { useOutsideHref } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { barLabels } from './barCopy'
-import type { GitHubLinkKind } from './barModel'
 import type { PrStatus } from './prStatus'
 import styles from './PullRequestBar.module.css'
-
-/** The page of GitHub that opens a pull request into the base branch. */
-function compareUrl(workspace: Workspace): string {
-  const repository = repositories[workspace.repository]
-  return `https://github.com/${repository.name}/compare/${baseBranchOf(workspace)}...${workspace.branch}`
-}
 
 /**
  * A link to GitHub. When the bar has no room for its words, such as beside
@@ -44,19 +36,34 @@ export function GitHubLink(props: { href: string; label: string }) {
   )
 }
 
-/** The link of the bar: the pull request, or the page that creates it. */
-export function BarGitHubLink(props: {
-  kind: GitHubLinkKind
-  workspace: Workspace
-}) {
-  return props.kind === 'open' ? (
-    <GitHubLink href={pullRequest.url} label={barLabels.openOnGitHub} />
-  ) : (
-    <GitHubLink
-      href={compareUrl(props.workspace)}
-      label={barLabels.createOnGitHub}
-    />
+/**
+ * The number of the pull request, which opens it on GitHub. An arrow after
+ * the number marks the link, so the bar needs no other link to the pull
+ * request.
+ */
+export function PullRequestNumber(props: { number: number; href: string }) {
+  const href = useOutsideHref(props.href)
+  const label = `Open pull request #${props.number} on GitHub`
+  return (
+    <a
+      aria-label={label}
+      className={`${styles.number} ${styles.numberLink}`}
+      href={href}
+      rel="noreferrer"
+      target="_blank"
+      title={label}
+    >
+      <span className={styles.numberText}>#{props.number}</span>
+      <span className={styles.numberArrow}>
+        <ArrowUpRight aria-hidden size={12} />
+      </span>
+    </a>
   )
+}
+
+/** The link of the bar to the pull request on GitHub. */
+export function BarGitHubLink() {
+  return <GitHubLink href={pullRequest.url} label={barLabels.openOnGitHub} />
 }
 
 /**

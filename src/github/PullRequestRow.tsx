@@ -67,7 +67,7 @@ export function PullRequestRow(props: PullRequestRowProps) {
   const { banner, checks } = state.snapshot
   if (banner.pullRequest === null) {
     const view = props.controls?.view
-    if (view && (view.actions.length > 0 || view.link !== null)) {
+    if (view && view.actions.length > 0) {
       return (
         <a
           className={styles.row}
@@ -87,7 +87,7 @@ export function PullRequestRow(props: PullRequestRowProps) {
         <GitBranch aria-hidden className={styles.muted} size={14} />
         <span className={styles.rowText}>
           {banner.state === 'none'
-            ? 'No pull request yet'
+            ? barLabels.noPullRequest
             : barLabels.noCommits}
         </span>
       </div>

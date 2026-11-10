@@ -88,7 +88,7 @@ it('sums up the failed checks and the review under the pull request title', () =
 })
 
 it('waits for a pull request while the branch has none', () => {
-  const html = render(<ChecksList github={branchFeed('none', null)} />)
+  const html = render(<ChecksList github={branchFeed('none')} />)
 
   expect({ text: textOf(html), items: itemsIn(html) }).toEqual({
     text: 'GitHub checks show here They appear when the branch has a pull request.',

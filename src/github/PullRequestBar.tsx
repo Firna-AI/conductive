@@ -7,6 +7,7 @@ import {
   loadFailedText,
   loadingText,
   MutedSpinner,
+  PullRequestNumber,
   StateLabel,
 } from './bannerParts'
 import { bannerDetail, bannerStatus } from './bannerStatus'
@@ -39,12 +40,10 @@ function Pending() {
 
 /**
  * The pull request bar at the top of the right column. It shows the GitHub
- * state of the workspace branch, its main action, and a link to GitHub. A
- * branch without a pull request shows its target, Create pull request, and
- * a link that creates the pull request on GitHub once GitHub has a commit.
- * A message, such as a refusal of GitHub, shows under the bar. Beside an
- * action, a narrow bar drops its detail and keeps only the GitHub mark of
- * its link.
+ * state of the workspace branch and its main action. The number of a pull
+ * request opens it on GitHub. A branch without a pull request shows its
+ * target and Create PR. A message, such as a refusal of GitHub, shows under
+ * the bar. Beside an action, a narrow bar drops its detail.
  */
 export function PullRequestBar(props: PullRequestBarProps) {
   const { state, retry } = props.github
@@ -69,9 +68,10 @@ export function PullRequestBar(props: PullRequestBarProps) {
   const message = view.message ? (
     <BarMessageLine message={view.message} />
   ) : null
+  // The number of a pull request links to it, so the bar shows no other link.
   const actions = (
     <span className={styles.actions}>
-      <BarButtons controls={controls} />
+      <BarButtons controls={controls} link={false} />
     </span>
   )
   if (banner.pullRequest === null) {
@@ -94,7 +94,10 @@ export function PullRequestBar(props: PullRequestBarProps) {
   return (
     <>
       <div className={classes(styles.bar, styles[status.tone], withActions)}>
-        <span className={styles.number}>{`#${banner.pullRequest.number}`}</span>
+        <PullRequestNumber
+          href={banner.pullRequest.url}
+          number={banner.pullRequest.number}
+        />
         <StateLabel status={status} />
         {detail ? (
           <span className={styles.detail} title={detail}>

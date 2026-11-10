@@ -121,7 +121,7 @@ describe('the actions of the bar', () => {
       member: buttons(view('merged', { archivable: false })),
     }).toEqual({
       readOnly: [
-        [[], 'Create on GitHub'],
+        [[], null],
         [[], 'Open on GitHub'],
         [[], 'Open on GitHub'],
       ],
@@ -238,6 +238,31 @@ describe('the actions of the bar', () => {
     expect([named([]), named(['passed', 'cancelled'])]).toEqual([
       [],
       ['fix-checks'],
+    ])
+  })
+})
+
+describe('the tint of the main action', () => {
+  it('takes the tone of the bar, and no tint on a bar without one', () => {
+    const states = [
+      'ready-to-merge',
+      'checks-failed',
+      'conflict',
+      'changes-requested',
+      'blocked',
+      'draft',
+      'merged',
+      'none',
+    ] as const
+    expect(states.map((state) => [state, view(state).tint])).toEqual([
+      ['ready-to-merge', 'success'],
+      ['checks-failed', 'danger'],
+      ['conflict', 'warning'],
+      ['changes-requested', 'warning'],
+      ['blocked', 'warning'],
+      ['draft', null],
+      ['merged', null],
+      ['none', null],
     ])
   })
 })

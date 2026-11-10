@@ -44,7 +44,7 @@ export const merge = defineScreen({
       slug: 'read-access',
       title: 'Ready to merge, without the right',
       description:
-        'Priya, a member with read access on GitHub, sees the same Ready to merge without Merge, because GitHub gives her no right to merge. The agent actions of the other states are hidden from her too. Open on GitHub stays.',
+        'Priya, a member with read access on GitHub, sees the same Ready to merge without Merge, because GitHub gives her no right to merge. The agent actions of the other states are hidden from her too. The number still opens the pull request on GitHub.',
       rationale:
         "Decision 221 chose GitHub's own answer: the Worker reads each member's access with that member's token, and shows Merge only for write access or more. When the Worker cannot read the access, Merge is hidden, and the agent actions still show.",
       props: { viewer: 'member', access: 'read' },

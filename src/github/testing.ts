@@ -74,10 +74,7 @@ export function readyFeed(snapshot: GitHubSnapshot): GitHubFeed {
 }
 
 /** A banner and checks for a branch without a pull request. */
-export function branchFeed(
-  state: 'none' | 'no-commits',
-  createPullRequestUrl: string | null,
-): GitHubFeed {
+export function branchFeed(state: 'none' | 'no-commits'): GitHubFeed {
   return readyFeed({
     banner: {
       branch: 'calummoore/checkout-autocomplete',
@@ -85,7 +82,6 @@ export function branchFeed(
       updatedAt: 1_800_000_000_000,
       state,
       pullRequest: null,
-      createPullRequestUrl,
     },
     checks: { state: 'waiting-for-pull-request', checks: [] },
   })

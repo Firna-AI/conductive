@@ -1,3 +1,4 @@
+import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import {
   barLabels,
   barMessageText,
@@ -11,6 +12,7 @@ import {
 } from '../../docs/mockups/src/components/workspace/barModel'
 import type { ChangesResponse } from '../shared/files'
 import type { GitHubBanner, GitHubCapabilities } from '../shared/github'
+import { bannerStatus } from './bannerStatus'
 import { failingChecks } from './barPrompts'
 import type { GitHubSnapshot } from './githubClient'
 
@@ -71,6 +73,11 @@ export interface BarView {
   message: BarMessage | null
   /** The words of a branch without a pull request, with no action or link. */
   note: string | null
+  /**
+   * The tint of the main action: the tone of a tinted bar, so the button
+   * matches the bar. Null on a bar without a tint.
+   */
+  tint: ButtonTint | null
 }
 
 /**
@@ -82,8 +89,6 @@ export interface BarControls {
   view: BarView
   onAction: (action: BarAction) => void
 }
-
-const noPullRequest = 'No pull request yet'
 
 /** The report sends this count, and the count is above zero. */
 function positive(count: number | undefined): boolean {
@@ -146,10 +151,6 @@ function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
 function linkOf(model: BarModel, banner: GitHubBanner): BarLink | null {
   if (model.link === 'open' && banner.pullRequest !== null) {
     return { label: barLabels.openOnGitHub, href: banner.pullRequest.url }
-  }
-  if (model.link === 'create' && banner.state === 'none') {
-    const href = banner.createPullRequestUrl
-    return href ? { label: barLabels.createOnGitHub, href } : null
   }
   return null
 }
@@ -227,14 +228,19 @@ export function barViewOf(input: BarInput): BarView {
   )
   const link = linkOf(model, banner)
   const empty = actions.length === 0 && link === null
+  const tone =
+    banner.pullRequest === null
+      ? 'neutral'
+      : bannerStatus(banner, snapshot.checks.checks).tone
   return {
+    tint: tone === 'neutral' ? null : tone,
     actions,
     link,
     message: input.readOnly ? null : messageOf(model, outcome, banner),
     note: !empty
       ? null
       : banner.state === 'none'
-        ? noPullRequest
+        ? barLabels.noPullRequest
         : banner.state === 'no-commits'
           ? barLabels.noCommits
           : null,

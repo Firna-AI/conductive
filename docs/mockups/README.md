@@ -38,9 +38,9 @@ The catalogue shows the desktop view beside the phone, in a frame narrower
 than a laptop screen. The desktop layout narrows with its app frame, which
 fills the window: below 1280 px the sidebar and the right column get
 narrower, and below 900 px the sidebar hides. The org rail stays, and the current org opens its list as its
-own page. A narrow right column hides the detail of the pull request bar and
-the label of its GitHub link. When the bar shows an action, a column
-narrower than 520 px does the same, and the link keeps only the GitHub mark.
+own page. The number of a pull request in the bar opens it on GitHub, with
+an arrow. A narrow right column hides the detail of the pull request bar.
+When the bar shows an action, a column narrower than 520 px does the same.
 Use the expand control of the frame to see the full desktop layout.
 
 ## The design

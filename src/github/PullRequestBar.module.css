@@ -59,6 +59,33 @@
   color: var(--ui-amber-deep);
 }
 
+/*
+ * The number of a pull request links to it on GitHub. An arrow cell after a
+ * divider marks the link, which takes the colours of the state.
+ */
+.numberLink {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 0;
+  text-decoration: none;
+}
+
+.numberLink:hover {
+  border-color: currentcolor;
+}
+
+.numberText {
+  padding: 1px 6px;
+}
+
+.numberArrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  border-left: 1px solid;
+  border-left-color: inherit;
+}
+
 /* The words of a state shrink with an ellipsis. Its icon keeps its size. */
 .state {
   display: inline-flex;
@@ -232,8 +259,8 @@
 
 /*
  * The right column is a size container: a narrow column drops detail. Beside
- * an action, the bar drops its detail, and the GitHub link keeps only its
- * mark, so the words of the state keep their room.
+ * an action, the bar drops its detail, so the words of the state keep their
+ * room. In a very narrow container, a GitHub link keeps only its mark.
  */
 @container (max-width: 420px) {
   .detail {
@@ -242,14 +269,8 @@
 }
 
 @container (max-width: 520px) {
-  .withActions .detail,
-  .withActions .actionLabel,
-  .withActions .arrow {
+  .withActions .detail {
     display: none;
-  }
-
-  .withActions .mark {
-    display: block;
   }
 }
 

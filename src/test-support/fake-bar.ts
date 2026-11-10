@@ -256,7 +256,6 @@ export function continuedEvents(
         updatedAt: FAKE_TIME,
         state: 'no-commits',
         pullRequest: null,
-        createPullRequestUrl: null,
       },
       checks: { state: 'waiting-for-pull-request', checks: [] },
     },

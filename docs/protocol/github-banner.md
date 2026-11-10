@@ -74,18 +74,17 @@ Rules for the bar:
   cuts each name with an ellipsis, and the full name shows as a tooltip.
 - Reason: one layout of the bar serves every workspace, also a pull request
   run whose base branch is not the default branch.
-- The bar offers "Create pull request" for commits of the branch that its
+- The bar offers "Create PR" for commits of the branch that its
   base branch does not have, and for local work, as [Actions](#actions)
-  says. Create pull request and "Create on GitHub" open a pull request
-  into the base branch.
+  says. Create PR opens a pull request into the base branch.
 - The bar of a pull request run shows the state of its own branch, not the
   pull request that started it (decision 505 A).
 - A bar that shows that pull request was rejected. The run's own work would
-  then get no "Create pull request", and the header of the run already
+  then get no "Create PR", and the header of the run already
   links to that pull request.
 - The bar shows each state that blocks a merge, also to a member without
   GitHub write access.
-- The bar shows Blocked only when no other state applies. Its link opens
+- The bar shows Blocked only when no other state applies. Its number opens
   the pull request on GitHub, where GitHub names the reason.
 - Each state shows an icon and words, never only a colour.
 - A state tints the whole bar. No edge of the bar gets its own colour.
@@ -98,7 +97,7 @@ continues, and archives.
 
 | Bar state | Main action | Done by |
 | --- | --- | --- |
-| No pull request, with commits on GitHub or local work | Create pull request | The agent |
+| No pull request, with commits on GitHub or local work | Create PR | The agent |
 | Checks failed | Fix checks | The agent |
 | Merge conflict | Resolve conflicts | The agent |
 | Changes requested | Address review | The agent |
@@ -114,11 +113,15 @@ continues, and archives.
   local work, Commit and push takes the place of Merge and of the fixes. A
   merged or a closed pull request is not open.
 - Reason: no merge leaves work behind in the sandbox.
-- "Open on GitHub" stays in each state that has a pull request.
-- A branch without a pull request keeps the link that creates the pull
-  request on GitHub, "Create on GitHub", beside Create pull request. The
-  link shows only while GitHub has a commit of the branch, because GitHub
-  opens no pull request without one.
+- In each state that has a pull request, the number of the pull request
+  opens it on GitHub. An arrow after the number marks the link. The bar has
+  no other link to the pull request. The user chose this on 10 November
+  2026.
+- On a phone, the row is one link to the Checks tab, so its number stays
+  plain. "Open on GitHub" stays at the top of that tab.
+- A branch without a pull request has no link to GitHub. Create pull
+  request asks the agent to open the pull request. The user chose this on
+  10 November 2026.
 - An archived workspace and a workspace of a suspended org show no action,
   only the links to GitHub.
 - Reason: the agent changes the code, and the app merges at once under

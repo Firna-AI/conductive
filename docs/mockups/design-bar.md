@@ -12,12 +12,28 @@ the actions on top of the Checks tab of a phone, and Continue.
   that runs, and Merge needs a merge method. `barCopy.ts` beside it holds
   the labels, the messages under the bar, and the fixed prompts of the agent
   actions. Address review names "A reviewer" when GitHub names no login of
-  a reviewer. `barIcons.ts` holds the icon of each agent action. They import
+  a reviewer. `barIcons.ts` holds the icon and the tone of each agent
+  action. They import
   no fixture, so the app uses them too.
-  - The main action takes the primary tone. An agent action sends its fixed
-    prompt, so the chat shows it as a message of the member who clicked.
-    Merge names its method, such as "Squash and merge", and a spinner shows
-    while the merge or Continue runs.
+  - The main action takes the primary tone. On a tinted bar it takes the
+    tint of the bar, so the button matches it: green, amber, or red. The
+    same button keeps that tint at the top of the Checks tab of a phone. A
+    bar without a tint keeps the primary fill. Create PR, on a bar without
+    a pull request, takes the outline tone of Archive instead, as
+    `agentTones` in `barIcons.ts` gives it. `TintedTheme` in
+    `src/components/common/tint.tsx` gives the primary tone of Firna the
+    fill of the tint, a deeper fill on hover, and a white label, from the
+    `successFill`, `warningFill`, `dangerFill`, and `onFill` tokens.
+    `barTint` in `prStatus.ts` gives the tint of each state.
+  - An agent action sends its fixed prompt, so the chat shows it as a
+    message of the member who clicked. Merge names its method, such as
+    "Squash and merge", and a spinner shows while the merge or Continue
+    runs.
+  - The number of a pull request opens it on GitHub, with an arrow after a
+    divider. `PullRequestNumber` in `barParts.tsx` draws it, so the bar of a
+    pull request has no other link to it. The row of a phone is one link to
+    the Checks tab, so its number stays plain, and the top of that tab keeps
+    Open on GitHub.
   - A refusal of GitHub, a Continue that stopped, and the wait of Continue
     for a turn show as one line under the bar. The line takes the tint of
     its state, and its bottom border stays neutral.

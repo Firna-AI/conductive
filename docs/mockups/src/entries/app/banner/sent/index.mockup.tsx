@@ -25,9 +25,9 @@ export const sent = defineScreen({
   variants: [
     {
       slug: 'create-pull-request',
-      title: 'Create pull request',
+      title: 'Create PR',
       description:
-        'After a stopped turn left commits without a pull request, Cal pressed Create pull request. The prompt asks the agent to commit, push, and open the pull request into main with `gh`, or to push and say so when `gh` fails.',
+        'After a stopped turn left commits without a pull request, Cal pressed Create PR. The prompt asks the agent to commit, push, and open the pull request into main with `gh`, or to push and say so when `gh` fails.',
       props: { banner: 'none', conversation: 'sent-create-pull-request' },
     },
     {

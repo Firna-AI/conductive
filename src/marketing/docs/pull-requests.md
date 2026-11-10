@@ -20,7 +20,7 @@ The bar can ask the agent to create a pull request with files not committed or c
 
 1. Open **Changes** to review the branch's edits.
 2. Open the chat session you want the agent to use.
-3. Select **Create pull request** in the pull request bar.
+3. Select **Create PR** in the pull request bar.
 4. Read the agent's result in that session.
 
 The action asks the agent to commit the changes, push this branch, and open a pull request.
@@ -38,14 +38,15 @@ An archived workspace or suspended org keeps only its GitHub links.
 
 ## Open the pull request on GitHub
 
-You can also create the pull request on GitHub:
+Select the number of the pull request in the bar to open it on GitHub.
+On a phone, use **Open on GitHub** at the top of **Checks**.
+
+You can also create the pull request on GitHub yourself:
 
 1. Review the edits in **Changes**.
 2. Ask the agent to commit and push the work you want to include.
-3. Select **Create on GitHub** in the pull request bar.
-4. Complete the pull request on GitHub.
+3. Open the branch on GitHub and complete the pull request there.
 
-This link appears when the branch has commits on GitHub that its base branch does not have, and no pull request.
 You can also ask the agent to create a pull request with the GitHub CLI.
 The CLI is authenticated on computers with the current software.
 
@@ -63,12 +64,13 @@ GitHub links the commit to their account without showing their private email.
 ## Read the pull request state
 
 On a computer, the bar sits above the file lists.
+Select the pull request number in the bar to open the pull request on GitHub.
 On a phone, the compact pull request row opens **Checks**.
 The actions and GitHub links sit at the top of that view.
 
 | State | Useful next action |
 | --- | --- |
-| No pull request, with local work or commits on GitHub that its base branch does not have | **Create pull request** asks the agent to prepare it. |
+| No pull request, with local work or commits on GitHub that its base branch does not have | **Create PR** asks the agent to prepare it. |
 | Checks running | Wait for the checks to finish. |
 | Checks failed | **Fix checks** asks the agent to investigate, fix, commit, and push. |
 | Merge conflict | **Resolve conflicts** asks the agent to merge the latest target branch, fix conflicts, test, commit, and push. |
@@ -88,8 +90,9 @@ It uses that session's model, effort, and normal send rules.
 It preserves your draft and uploads.
 
 **Address review** asks the agent to change code without replying on GitHub.
-Use **Open on GitHub** to read, reply to, or resolve review comment threads.
-It also opens GitHub's other pull request controls.
+Select the pull request number to read, reply to, or resolve review comment threads on GitHub.
+On a phone, use **Open on GitHub** at the top of **Checks**.
+GitHub also has the other pull request controls.
 
 - [Use actions in a chat session](/docs/sessions-and-chat#use-pull-request-actions-in-chat)
 
@@ -135,8 +138,8 @@ Open a session or connect its required login before trying again.
 The action follows the same login and sharing rules as a message you write.
 
 A computer with older software can lack the GitHub CLI.
-If it is missing or fails, Create pull request still asks the agent to push the branch.
-Use **Create on GitHub** after that push.
+If it is missing or fails, Create PR still asks the agent to push the branch.
+After that push, create the pull request on GitHub.
 Fix checks asks the agent to run the checks locally instead.
 Address review asks the agent to stop and report the GitHub CLI failure.
 

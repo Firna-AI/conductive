@@ -10,7 +10,7 @@ const mergeFlow = ['user-flows/merge-and-continue'] as const
 export const checks = defineScreen({
   title: 'Checks and merge',
   description:
-    'The pull request is open, and its checks still run. The bar offers no action of its own, only Open on GitHub.',
+    'The pull request is open, and its checks still run. The bar offers no action of its own. Its number opens the pull request on GitHub.',
   rationale:
     'These states lead to a merge: the checks run, fail, or pass, and the pull request merges. Decision 220 gives them their actions: Fix checks for the agent, Merge for the app, and Continue and Archive after the merge. Moved here from the banner page, which now shows only its canonical screen beside its child pages.',
   relatedDocs: [],

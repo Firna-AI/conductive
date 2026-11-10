@@ -29,7 +29,7 @@ export const continued = defineScreen({
       slug: 'moved-files',
       title: 'With the changed files',
       description:
-        'The changed files moved to the new branch, so the sandbox has local work. The bar offers Create pull request, and a phone shows it at the top of the Checks tab.',
+        'The changed files moved to the new branch, so the sandbox has local work. The bar offers Create PR, and a phone shows it at the top of the Checks tab.',
       props: { localWork: 'changes', focus: 'files' },
     },
     {

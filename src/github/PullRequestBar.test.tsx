@@ -14,8 +14,6 @@ import {
   textOf,
 } from './testing'
 
-const compareUrl =
-  'https://github.com/acme/storefront/compare/main...calummoore:checkout-autocomplete?expand=1'
 const pullUrl = 'https://github.com/acme/storefront/pull/482'
 
 function renderBar(
@@ -31,12 +29,18 @@ function renderBar(
   )
 }
 
-it('offers Create pull request for a branch with commits or local work, and Create on GitHub only beside a create URL', () => {
+it('offers Create PR for a branch with commits or local work, and no link to GitHub without a pull request', () => {
+  const noWrite = {
+    capabilities: {
+      status: 'ready',
+      capabilities: { canWrite: false, mergeMethod: null },
+    },
+  } satisfies Partial<BarInput>
   const bars = [
-    renderBar(branchFeed('none', compareUrl)),
-    renderBar(branchFeed('none', null)),
-    renderBar(branchFeed('no-commits', null)),
-    renderBar(branchFeed('no-commits', null), { localWork: 'yes' }),
+    renderBar(branchFeed('none')),
+    renderBar(branchFeed('none'), noWrite),
+    renderBar(branchFeed('no-commits')),
+    renderBar(branchFeed('no-commits'), { localWork: 'yes' }),
   ]
 
   expect(
@@ -47,14 +51,14 @@ it('offers Create pull request for a branch with commits or local work, and Crea
     })),
   ).toEqual([
     {
-      text: 'calummoore/checkout-autocomplete main Create pull request Create on GitHub',
-      links: [{ text: 'Create on GitHub', href: compareUrl }],
-      buttons: ['Create pull request'],
+      text: 'calummoore/checkout-autocomplete main Create PR',
+      links: [],
+      buttons: ['Create PR'],
     },
     {
-      text: 'calummoore/checkout-autocomplete main Create pull request',
+      text: 'calummoore/checkout-autocomplete main No pull request yet',
       links: [],
-      buttons: ['Create pull request'],
+      buttons: [],
     },
     {
       text: 'calummoore/checkout-autocomplete main No commits yet',
@@ -62,14 +66,14 @@ it('offers Create pull request for a branch with commits or local work, and Crea
       buttons: [],
     },
     {
-      text: 'calummoore/checkout-autocomplete main Create pull request',
+      text: 'calummoore/checkout-autocomplete main Create PR',
       links: [],
-      buttons: ['Create pull request'],
+      buttons: ['Create PR'],
     },
   ])
 })
 
-it('keeps Open on GitHub in each pull request state, beside the main action of a member with write access', () => {
+it('links the number of the pull request to GitHub in each state, in place of a separate link, beside the main action of a member with write access', () => {
   const states = [
     'checks-running',
     'checks-failed',
@@ -81,8 +85,13 @@ it('keeps Open on GitHub in each pull request state, beside the main action of a
     'closed',
     'blocked',
   ] as const
-  const github = [{ text: 'Open on GitHub', href: pullUrl }]
+  const github = [{ text: '#482', href: pullUrl }]
 
+  expect(
+    renderBar(readyFeed(snapshotOf('ready-to-merge'))).match(
+      /aria-label="Open pull request #482 on GitHub"/g,
+    ),
+  ).toHaveLength(1)
   expect(
     states.map((state) => {
       const html = renderBar(readyFeed(snapshotOf(state)))
@@ -130,7 +139,7 @@ it('shows Merging on the running merge, and a refusal as one alert line under th
     refused: {
       alert: true,
       links: [
-        { text: 'Open on GitHub', href: pullUrl },
+        { text: '#482', href: pullUrl },
         { text: 'Open on GitHub', href: pullUrl },
       ],
     },

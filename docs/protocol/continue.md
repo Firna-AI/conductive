@@ -34,7 +34,7 @@ says.
     sandbox, and the new agent starts without the earlier context.
   - More work on the merged branch. After a squash merge, a new pull
     request from that branch shows the earlier commits again. The bar also
-    finds the merged pull request of that branch, so Create pull request
+    finds the merged pull request of that branch, so Create PR
     never shows.
 
 ## Who may continue

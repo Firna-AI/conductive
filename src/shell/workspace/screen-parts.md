@@ -184,7 +184,8 @@ the ordered stream of the workspace.
   state just after Continue, shows as loading. The store then reads the
   state of the branch once.
 - On desktop, the bar tops the right column, with its main action and the
-  line of a refusal or a stop under it. After a merge, its Archive archives
+  line of a refusal or a stop under it. The number of a pull request links
+  to it on GitHub. After a merge, its Archive archives
   the workspace at once, with one request, and stays busy while that
   request runs. It shows only when `WorkspaceContext.archive` offers
   Archive, so a suspended org shows none.

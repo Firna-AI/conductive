@@ -39,7 +39,7 @@ describe('the kept files of the workspace screen', () => {
     )
     const rows = () =>
       linksTo(view, checksHref).filter(
-        (link) => link.textContent === 'Create pull request',
+        (link) => link.textContent === 'Create PR',
       )
     // The files connect on the chat tab, so the row knows the local work.
     expect({ rows: rows().length, sockets: socket.connected() }).toEqual({
@@ -57,13 +57,7 @@ describe('the kept files of the workspace screen', () => {
 
     click(rows()[0])
     await settle()
-    click(
-      byRole(
-        'button',
-        'Create pull request',
-        byLabel('Pull request actions', view),
-      ),
-    )
+    click(byRole('button', 'Create PR', byLabel('Pull request actions', view)))
     await settle()
 
     const sent = await bodiesOf(

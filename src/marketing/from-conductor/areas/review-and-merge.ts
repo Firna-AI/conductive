@@ -90,7 +90,7 @@ export const reviewAndMergeFeatures: readonly ParityFeature[] = [
     area: 'review-and-merge',
     name: 'Create PR',
     status: 'available',
-    note: 'Create pull request asks the agent to commit changes, push the branch, and open a pull request. Create on GitHub stays available.',
+    note: 'Create PR asks the agent to commit changes, push the branch, and open a pull request.',
   },
   {
     id: 'commit-and-push',

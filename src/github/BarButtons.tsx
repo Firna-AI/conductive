@@ -11,8 +11,12 @@ import {
   barLabels,
   mergeLabels,
 } from '../../docs/mockups/src/components/workspace/barCopy'
-import { agentIcons } from '../../docs/mockups/src/components/workspace/barIcons'
+import {
+  agentIcons,
+  agentTones,
+} from '../../docs/mockups/src/components/workspace/barIcons'
 import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
+import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import { ActionButton } from './ActionButton'
 import { classes, GitHubLink } from './bannerParts'
 import type { BarControls, BarMessage } from './barView'
@@ -20,14 +24,16 @@ import type { BarControls, BarMessage } from './barView'
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
  * merges as the member, Continue moves the workspace to a new branch, and
- * Archive opens its question. The main action takes the primary tone.
+ * Archive opens its question. The main action takes the primary tone, in
+ * the tint of a tinted bar. Create PR takes the outline tone.
  */
 function BarButton(props: {
   action: BarAction
   onPress: (action: BarAction) => void
   touch: boolean
+  tint: ButtonTint | null
 }) {
-  const { action, touch } = props
+  const { action, touch, tint } = props
   const press = () => props.onPress(action)
   switch (action.kind) {
     case 'agent':
@@ -35,7 +41,8 @@ function BarButton(props: {
         <ActionButton
           icon={agentIcons[action.action]}
           onPress={press}
-          tone="primary"
+          tint={tint}
+          tone={agentTones[action.action]}
           touch={touch}
         >
           {agentActionLabels[action.action]}
@@ -47,6 +54,7 @@ function BarButton(props: {
           busy={action.busy}
           icon={GitMerge}
           onPress={press}
+          tint={tint}
           tone="primary"
           touch={touch}
         >
@@ -61,6 +69,7 @@ function BarButton(props: {
           disabled={action.waiting}
           icon={GitBranchPlus}
           onPress={press}
+          tint={tint}
           tone="primary"
           touch={touch}
         >
@@ -84,9 +93,14 @@ function BarButton(props: {
 
 /**
  * The buttons and the link of the bar, in order: the main action first, and
- * the link to GitHub last.
+ * the link to GitHub last. Without `link`, it shows no link: the desktop bar
+ * of a pull request links its number instead.
  */
-export function BarButtons(props: { controls: BarControls; touch?: boolean }) {
+export function BarButtons(props: {
+  controls: BarControls
+  touch?: boolean
+  link?: boolean
+}) {
   const { view, onAction } = props.controls
   const touch = props.touch ?? false
   return (
@@ -96,10 +110,11 @@ export function BarButtons(props: { controls: BarControls; touch?: boolean }) {
           action={action}
           key={action.kind}
           onPress={onAction}
+          tint={view.tint}
           touch={touch}
         />
       ))}
-      {view.link ? (
+      {view.link && props.link !== false ? (
         <GitHubLink
           href={view.link.href}
           label={view.link.label}

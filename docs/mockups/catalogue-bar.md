@@ -7,12 +7,12 @@ with its actions and its child pages, and the flow that merges and
 continues.
 
 `app/banner` shows a branch with commits and no pull request. Its bar
-offers Create pull request, which asks the agent to open the pull request,
-and Create on GitHub. Each state shows one main action, from decisions 220
-to 228, and keeps its links to GitHub. The agent gets a fixed prompt for
-each step that changes code, and the app merges, continues, and archives.
-On a phone the row opens the Checks tab, whose top holds the actions and
-the link to GitHub. The `localWork`, `access`, `appAction`, and `branch`
+offers Create PR, which asks the agent to open the pull request.
+Each state shows one main action, from decisions 220 to 228. The number of
+a pull request opens it on GitHub. The agent gets a fixed prompt for each
+step that changes code, and the app merges, continues, and archives. On a
+phone the row opens the Checks tab, whose top holds the actions, and the
+link to GitHub of a pull request. The `localWork`, `access`, `appAction`, and `branch`
 states of the workspace screen draw them. The child pages:
 
 - `app/banner/checks` has the running, failed, and passed checks and the
@@ -26,9 +26,9 @@ states of the workspace screen draw them. The child pages:
   without a merge, and Blocked. A conflict, requested changes, and Blocked
   tint the bar amber.
 - `app/banner/no-commits` has a branch without commits, whose bar offers no
-  Create pull request, as in `app/new-workspace/creating` and `first-turn`.
+  Create PR, as in `app/new-workspace/creating` and `first-turn`.
   Its `local-work` variant has changed files that are not committed, so
-  the bar offers Create pull request, without a link to GitHub.
+  the bar offers Create PR.
 - `app/banner/merge` has the merge that runs, a refusal for new commits, a
   refusal for a missing right, another refusal with Open on GitHub, and
   Ready to merge for a member with read access, without Merge.

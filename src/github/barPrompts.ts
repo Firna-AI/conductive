@@ -28,7 +28,7 @@ export function failingChecks(snapshot: GitHubSnapshot): string[] {
 function factsOf(snapshot: GitHubSnapshot): PromptFacts {
   const { banner } = snapshot
   if (banner.pullRequest === null) {
-    // A branch without a pull request offers only Create pull request, whose
+    // A branch without a pull request offers only Create PR, whose
     // prompt names the target branch alone.
     return {
       number: 0,

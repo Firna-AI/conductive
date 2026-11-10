@@ -101,10 +101,6 @@ export function toolFixtures(
         ? {
             state: bannerState,
             pullRequest: null,
-            createPullRequestUrl:
-              bannerState === 'none'
-                ? 'https://github.com/acme/storefront/compare/main...calummoore:checkout-autocomplete?expand=1'
-                : null,
           }
         : {
             state: bannerState,

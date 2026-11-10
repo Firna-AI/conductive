@@ -17,7 +17,7 @@ export type AgentAction =
 export type MergeMethod = 'merge' | 'squash' | 'rebase'
 
 export const agentActionLabels: Readonly<Record<AgentAction, string>> = {
-  'create-pull-request': 'Create pull request',
+  'create-pull-request': 'Create PR',
   'commit-and-push': 'Commit and push',
   'fix-checks': 'Fix checks',
   'resolve-conflicts': 'Resolve conflicts',
@@ -37,7 +37,7 @@ export const barLabels = {
   continuing: 'Continuing',
   archive: 'Archive',
   openOnGitHub: 'Open on GitHub',
-  createOnGitHub: 'Create on GitHub',
+  noPullRequest: 'No pull request yet',
   noCommits: 'No commits yet',
 } as const
 
