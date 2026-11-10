@@ -11,7 +11,13 @@ Cal asked for "a date/time last updated" on the page, and for a subtle way
 
 This change shows the date and the time of the last full check on its own
 line. It gives each row an address and a quiet link icon. The page still
-runs no script. The change does not change a row, a status, or a note.
+runs no script.
+
+On 10 November 2026, Cal also asked to list the features of local Conductor
+workspaces, to remove the note that the list covers Conductor Cloud only,
+and to say "Conductor" instead of "Conductor Cloud". So this change also
+adds rows, and it renames the page and its links. It does not change the
+status or the note of an existing row.
 
 Contract owners:
 
@@ -27,6 +33,10 @@ Replaced ways:
   in UTC as `YYYY-MM-DDTHH:MMZ`, in the shared line `lastCheck`.
   Consumers: the mockup intro, moved in Milestone 1. The README rule and
   the protocol requirement, moved in Milestone 2. The site intro, moved in
+  Milestone 3. Deleted in Milestone 3.
+- The scope note `parityPageCopy.scope` → no note. Consumers: the mockup
+  intro, moved in Milestone 1a. The protocol requirement, moved in
+  Milestone 2. The site intro and the built-site test, moved in
   Milestone 3. Deleted in Milestone 3.
 
 ## Decisions
@@ -88,6 +98,55 @@ Replaced ways:
 The options check of both decisions ran on 10 November 2026. Its report is
 `.context/from-conductor-check-time-and-row-links/options-check.md`.
 
+### 3. The list leaves out local Conductor features
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `src/marketing/from-conductor/`, `docs/protocol/conductor-cloud-comparison.md` under "Scope".
+- **Background:** The page lists Conductor Cloud features only, and a note at its top says so. The protocol doc records that scope, because Conductive replaces Conductor Cloud.
+- **Problem:** A visitor who uses local Conductor workspaces on a Mac finds none of their features in the list.
+- **Impact if no action:** That visitor cannot compare Conductor with Conductive.
+- **Root question:** Which Conductor features does the list cover?
+- **Options:**
+  - **A.** Every Conductor feature, local and cloud, in one list, with no scope note. Effort: Medium.
+  - **B.** Conductor Cloud features only, with the note. This was the decision in force. Effort: Small.
+  - **C.** Two lists, one for each kind of Conductor user. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** None. This is a change of scope, not a class of defect.
+- **Previous examples:** Pull request #129 chose B on 9 November 2026.
+- **Recommendation:** A, as Cal asked.
+- **Action:** ask the user, because A reverses a decision in force.
+- **Decision:** A. Cal chose it on 10 November 2026: "instead lets just add those non-cloud items to the list of feature comparison". Cal gave no other reason. No options check ran, because Cal chose the approach directly.
+
+### 4. The page names Conductor Cloud
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** UX wording.
+- **Location:** `src/marketing/from-conductor/copy.ts`.
+- **Background:** The title, the label, the lead, a column, the last call to action, and the two entry links of the page say "Conductor Cloud".
+- **Problem:** With local features in the list, the page covers all of Conductor, not only its cloud.
+- **Impact if no action:** The words of the page contradict its rows.
+- **Root question:** Which name does the page give to the product that visitors come from?
+- **Options:**
+  - **A.** "Conductor" in each place. Effort: Small.
+  - **B.** "Conductor Cloud", as before. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Previous examples:** None found.
+- **Recommendation:** A, as Cal asked.
+- **Action:** ask the user, because it changes the words of a public page.
+- **Decision:** A. Cal chose it on 10 November 2026: "remove 'cloud' reference everywhere - just say 'Conductor' instead of 'Cloud Conductor'". Cal gave no other reason. No options check ran, because Cal chose the approach directly.
+
+### 5. The page shows no progress at a glance
+
+Asked as item 1 on 10 November 2026. It is open. Its options are in
+`.context/from-conductor-progress-bar/notes.md`: A, a bar of how far the
+visitor has scrolled. B, a progress bar of the features that work today,
+which is the recommendation. C, a bar split into the six statuses in the
+legend. D, a bar for each area. Until Cal answers, no milestone builds it.
+
 ## Design
 
 These are agent calls of 10 November 2026.
@@ -118,6 +177,19 @@ Milestone 1.
 | **The hidden link.** At rest, the icon has no opacity and no fade. It keeps the 2 px focus ring of the other links of the site, 3 px from the name. Under the pointer, it takes the ink colour. | The keyboard and screen readers still reach a link with no opacity. The ring touched the last letter of the name without the gap. |
 | **The words of a time.** `timeWords` formats only a value of the form `YYYY-MM-DDTHH:MMZ`. Any other value shows as it is. | A time without `Z` would read as local time and show a wrong time labelled UTC. Showing the value as it is fails no build. |
 | **No area name for a lower opened row.** When the opened row is not the first of its area, the name of the area stays above the window on a computer. The page does not change for this. | The opened row names the feature, and the feature is what the link points at. A sticky area name or a second label would change the page for every visitor. |
+
+These are agent calls of 10 November 2026, for decisions 3 and 4.
+
+| Call | Reason |
+| --- | --- |
+| **The check time moves.** `parityCheckedAt` becomes `2026-11-10T02:07Z`, the time of commit `552222e9`, which set the check day to 10 November 2026 on `main`. | It is the newest full check on `main`, as the design call "The first check time" says. |
+| **The days of the shutdown.** The sentence becomes "Conductor's announcement gives the days of its cloud workspaces: read-only from 13 November 2026, and shut down from 20 November 2026." | The days belong to Conductor's cloud workspaces only. "The days of Conductor" would be false. |
+| **Where "Conductor Cloud" stays.** The page, its entry links, and the docs of the page say "Conductor". Developer text that is about the cloud product itself keeps its name, such as the root README, which says that Conductive replaces Conductor Cloud. | Each kept sentence stays true. The page never names Conductor Cloud. |
+| **The protocol doc.** It moves to `docs/protocol/conductor-comparison.md`, titled "Conductor comparison". Every link moves with it. | Its name must match its scope. |
+| **The source of the new rows.** The local features that the audit of pull request #129 left out, and the public docs and release notes of Conductor, checked against the code of Conductive. The evidence stays under `.context/conductor-local-features/`. | The audit already sorted each release note into local and cloud. The public docs fill the gaps. |
+| **Areas.** Each new row joins the area of its job. A new area comes only when no area fits. | One table with the same areas keeps the page easy to scan. |
+| **Statuses.** No new row gets Not planned without a decision of Cal. A local feature that Conductive does on a cloud computer gets Works differently. | The claim rules give Not planned only for a standing product decision, and Cal decides those. |
+| **The scope note.** The mockup drops it in Milestone 1a. The site keeps it until Milestone 3, which deletes the shared copy. | The mockup reads the shared copy of the site, so the copy can go only when the site stops using it. |
 
 ## Milestone 1: Mockups
 
@@ -151,14 +223,50 @@ schemes.
 Evidence: `.context/from-conductor-check-time-and-row-links/m1/` and
 `.context/from-conductor-check-time-and-row-links/m1-verify/`.
 
-## Milestone 2: Documentation and protocol
+## Milestone 1a: Mockups for all Conductor features
+
+Tags: mockup
 
 Depends on: 1
+
+The mockup lists the features of local Conductor workspaces too, says
+"Conductor" instead of "Conductor Cloud", and has no scope note.
+
+- [ ] Build the list of new rows, with a status and a note for each, from
+      the design call "The source of the new rows". Save it as
+      `.context/conductor-local-features/proposal.md`.
+- [ ] Add the new rows to the area files, and a new area to `areas.ts`
+      and `features.ts` only when the design call "Areas" allows it.
+- [ ] Set `parityCheckedAt` from the design call "The check time moves".
+- [ ] Say "Conductor" instead of "Conductor Cloud" in the shared copy:
+      the document title, the description, the label, the title, the
+      lead, the feature column, the last call to action, and the two
+      entry links. Change the sentence of the shutdown days as the design
+      call says. Keep `scope` until Milestone 3.
+- [ ] Remove the scope note from the mockup intro.
+- [ ] Update the description and the rationale of the mockup entry, the
+      From Conductor `index.md`, `docs/mockups/marketing-site.md`, and
+      `docs/mockups/catalogue.md`.
+- [ ] Run `npm run mockups:check`. Smoke-test the page at both sizes, in
+      both schemes.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1a
 
 The protocol doc and the README state the requirements and the decisions
 of this change.
 
-- [ ] Update `docs/protocol/conductor-cloud-comparison.md`:
+- [ ] Move `docs/protocol/conductor-cloud-comparison.md` to
+      `docs/protocol/conductor-comparison.md`, titled "Conductor
+      comparison". Update every link to it, in `AGENTS.md`, the
+      READMEs, the architecture docs, the mockup notes, and this plan.
+- [ ] Update the protocol doc:
+  - [ ] The scope: every Conductor feature, local and cloud, with no
+        scope note, with decision 3 and its reason. The page says
+        "Conductor", with decision 4.
   - [ ] The check time: its date and time in UTC, on its own line at the
         top, with decision 1 and its reason.
   - [ ] Row links: the address of each row, the lasting id, when the
@@ -166,9 +274,12 @@ of this change.
         and an unknown id, with decision 2 and its reason.
   - [ ] Accessibility: the name of each row link, and the row header
         that reads only the name of its feature.
-- [ ] Update `src/marketing/README.md`: the rule for the check time, the
-      id as the address of a row, and the key code of `features.ts`,
-      `dates.ts`, and `copy.ts`.
+- [ ] Update `src/marketing/README.md`: the scope of the rows, the rule
+      for the check time, the id as the address of a row, and the key
+      code of `features.ts`, `dates.ts`, and `copy.ts`.
+- [ ] Say "Conductor" for the page in `AGENTS.md`, `README.md`,
+      `docs/architecture.md`, and `docs/architecture/marketing-site.md`,
+      as the design call "Where Conductor Cloud stays" says.
 - [ ] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact.
 
@@ -181,8 +292,11 @@ Depends on: 2
 The page shows the check line and the row links of the mockup.
 
 - [ ] Show the check line on its own line in `ParityIntro.astro`. The
-      facts paragraph keeps only the days of Conductor Cloud.
-- [ ] Delete `parityCheckedOn` and the shared sentence `checked`.
+      facts paragraph keeps only the days of the shutdown. Remove the
+      scope note.
+- [ ] Delete `parityCheckedOn`, the shared sentence `checked`, and the
+      shared copy `scope`.
+- [ ] Say "Conductor" in the comments of the site files of the page.
 - [ ] Give each row of `ParityTable.astro` its id, its link icon, the
       name of the link, and the name of the row header. Keep the icon in
       a `nowrap` span with a no-break space, as `FeatureCells.tsx` does.
@@ -192,9 +306,12 @@ The page shows the check line and the row links of the mockup.
       sets `.mobile` for both phone rules. The site splits them: the
       touch area and the rounded fill follow the phone width, and the
       icon that always shows follows `(hover: none)`.
-- [ ] Move the build setup of `built-site.test.ts` to a test support
-      module, with every assertion kept.
-- [ ] Add the tests of the design call. See each new assertion fail
+- [ ] Keep `built-site.test.ts` under 300 lines. `main` already moved its
+      build setup to `built-site.test-support.ts`. Move the checks of the
+      page to their own place when the file would pass the limit, with
+      every assertion kept, and build the site once.
+- [ ] Add the tests of the design call. Move the scope check of the
+      built-site test to the new words. See each new assertion fail
       first. Run each new test 10 times.
 - [ ] Smoke-test in Chrome at 320, 390, 760, 1024, and 1440 px, in both
       schemes: hover, keyboard focus, a row address, an unknown id, and
@@ -205,7 +322,7 @@ The page shows the check line and the row links of the mockup.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3
+Depends on: 1, 1a, 2, 3
 
 - [ ] Merge `origin/main` with the `git-merge` skill. When a full check
       of the rows merged first, use its time as the check time.
