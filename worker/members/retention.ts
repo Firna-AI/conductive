@@ -1,7 +1,11 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { requireActiveUser, readWorkspaceAccessStop } from '../data/user-access'
+import { providerForAccount } from '../sandbox/client'
 import { cleanupBusy } from './cleanup-lease'
-import { deletedOrgProvider, ignoreAlreadyRemoved } from './cleanup-provider'
+import {
+  ignoreAlreadyRemoved,
+  requireDeletedOrgCleanup,
+} from './cleanup-provider'
 import { markResourceStopped } from './deletion-data'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import type {
@@ -28,14 +32,17 @@ export function deletedOrgRetention(
   return {
     async schedule(workspaceId, nextKeepaliveAt) {
       await ownership.renew()
+      const disk = workspaces.find((item) => item.workspaceId === workspaceId)
       if (
         !Number.isFinite(nextKeepaliveAt) ||
-        !workspaces.some((disk) => disk.workspaceId === workspaceId) ||
+        !disk ||
         !(await scheduleDisk(
           env.DB,
           orgId,
           token,
           workspaceId,
+          disk.sandboxId,
+          disk.providerAccount,
           nextKeepaliveAt,
           ownership.generation,
           dependencies.now(),
@@ -54,15 +61,20 @@ export function deletedOrgRetention(
         !disk ||
         disk.nextKeepaliveAt === null ||
         disk.nextKeepaliveAt > dependencies.now() ||
-        !workspaces.some((item) => item.workspaceId === workspaceId)
+        !workspaces.some(
+          (item) =>
+            item.workspaceId === workspaceId &&
+            item.sandboxId === disk.sandboxId &&
+            item.providerAccount === disk.providerAccount,
+        )
       ) {
         throw new Error('The disk is not due for controlled retention')
       }
-      const provider = await deletedOrgProvider(
+      await requireDeletedOrgCleanup(env, orgId, token)
+      const provider = providerForAccount(
         env,
-        orgId,
-        token,
         dependencies.fetch,
+        disk.providerAccount,
       )
       if (
         !(await beginDiskRestart(
@@ -70,6 +82,7 @@ export function deletedOrgRetention(
           orgId,
           token,
           disk.sandboxId,
+          disk.providerAccount,
           ownership.generation,
           dependencies.now(),
         ))
@@ -86,6 +99,8 @@ export function deletedOrgRetention(
             env.DB,
             orgId,
             workspaceId,
+            disk.sandboxId,
+            disk.providerAccount,
             token,
             ownership.generation,
             dependencies.now(),
@@ -103,6 +118,7 @@ export function deletedOrgRetention(
           env.DB,
           orgId,
           disk.sandboxId,
+          disk.providerAccount,
           dependencies.now(),
           { token, generation: ownership.generation },
         ))

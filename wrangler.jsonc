@@ -7,8 +7,7 @@
   // The deployment serves only its own hostnames.
   "workers_dev": false,
   "preview_urls": false,
-  // The other public variables of docs/deployment.md are set on the Worker
-  // itself, so that each deploy keeps them.
+  // Keep deployment-specific public variables that this file does not set.
   "keep_vars": true,
   "ai": { "binding": "AI" },
   // Workers Logs keeps each log line, also of the workspace objects.
@@ -28,6 +27,9 @@
     "MACHINE_ORIGIN": "https://api.conductive.build",
     "PREVIEW_DOMAIN": "conductive.page",
     "CONDUCTIVE_TITLE_MODEL": "@cf/ibm-granite/granite-4.0-h-micro",
+    // The model readers expect JSON encoded as text, not JSON bindings.
+    "CONDUCTIVE_MODELS": "[{\"agent\":\"claude\",\"model\":\"claude-opus-5-5\",\"label\":\"Opus 5.5\",\"efforts\":[\"low\",\"medium\",\"high\",\"max\"]},{\"agent\":\"claude\",\"model\":\"claude-sonnet-5-5\",\"label\":\"Sonnet 5.5\",\"efforts\":[\"low\",\"medium\",\"high\",\"max\"]},{\"agent\":\"claude\",\"model\":\"claude-haiku-5-5\",\"label\":\"Haiku 5.5\",\"efforts\":[\"low\",\"medium\",\"high\",\"max\"]},{\"agent\":\"claude\",\"model\":\"claude-fable-5-2\",\"label\":\"Fable 5.2\",\"efforts\":[\"low\",\"medium\",\"high\",\"xhigh\",\"max\"]},{\"agent\":\"codex\",\"model\":\"gpt-6.1-sol\",\"label\":\"GPT-6.1 Sol\",\"efforts\":[\"low\",\"medium\",\"high\",\"xhigh\"]}]",
+    "CONDUCTIVE_DEFAULT_CHOICE": "{\"agent\":\"claude\",\"model\":\"claude-opus-5-5\",\"effort\":\"high\"}",
   },
   "assets": {
     "binding": "ASSETS",
@@ -45,6 +47,12 @@
       // The production database, created in Western Europe.
       "database_id": "50e387ff-2b37-4221-a0dc-fe999703e559",
       "migrations_dir": "migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "CHAT_ATTACHMENTS",
+      "bucket_name": "conductive-chat-attachments",
     },
   ],
 }

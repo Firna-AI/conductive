@@ -127,7 +127,7 @@ it('recovers scheduling and allocation replies while streaming a successful imag
     })
     boat.lostCreateReplies = 1
     await advanceImageBuild(images, org.id, id)
-    fixture.setTime(TEST_TIME + 1_000)
+    await fixture.setTime(TEST_TIME + 1_000)
     await advanceImageBuild(images, org.id, id)
     expect(boat.starts[1]).toEqual(boat.starts[0])
     expect(boat.states.size).toBe(1)

@@ -11,8 +11,13 @@ import type {
   LifecycleReconciliation,
 } from './durable-types'
 import type { LifecycleActivitySnapshot } from './input-activity-state'
+import type { ComputerIdentity } from './computer-ledger'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  queueComputerStops(
+    orgId: string,
+    computers: readonly ComputerIdentity[],
+  ): Promise<ComputerIdentity[]>
   lifecycleActivity(checkOnly?: true): Promise<LifecycleActivityResult>
   extendLifecycleInput(
     operation: () => Promise<LifecycleReconciliation>,
@@ -43,12 +48,10 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
   finishLifecycleTurn(
     turnId: string,
     publish?: LifecyclePublisher,
-    occurredAt?: number,
   ): Promise<void>
   reportRunnerLifecycle(
     event: RunnerEvent,
     publish?: LifecyclePublisher,
-    occurredAt?: number,
   ): Promise<void>
   runnerLifecycleDisconnected(publish?: LifecyclePublisher): Promise<void>
   scheduleImage(state: ImageCoordinatorState): Promise<void>

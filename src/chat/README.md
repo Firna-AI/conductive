@@ -12,6 +12,9 @@ of the app shell mounts it by default, as
 says. It builds against the fake API and the recorded chat events of
 `src/test-support/`.
 
+The history button follows the available closed sessions, as
+[Sessions](../../docs/protocol/agents-and-sessions.md#sessions) says.
+
 ## Use it in the app
 
 The tab keeps one `ChatController` for each workspace that it showed. The
@@ -112,6 +115,7 @@ check in the Mac app.
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
   state and its actions, with `show` and `hide` for a kept chat.
+- `state/controller-context.ts`: the context, upload identities, devices, and event stream of one controller run.
 - `state/tab-order.ts`: the pure row order, the places of the open
   sessions, and the move before or after a neighbour.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
@@ -133,7 +137,7 @@ check in the Mac app.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `components/Composer.tsx`: the message box and its controls, with the
-  steering prompt that [Messages](../../docs/protocol/chat-and-events.md#messages)
+  steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states.
 - `components/chip-field/`: `ChipTextField`, the message field of every
   composer. [The message field](loads-and-sends.md#the-message-field)
@@ -161,6 +165,12 @@ check in the Mac app.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+- `state/attachment-actions.ts`: attach, Try again, and Remove for the files
+  of a draft. Each upload goes through the app's `uploadAttachment`, ends
+  on its draft after a move, and stops with Remove and with the chat.
+- `components/AttachmentChips.tsx`: the file chips of both composers, with
+  the measured share of an upload, the sent files, and the notice for files
+  over the size limit, from the mockups' `attachmentCopy.ts`.
 - `state/archive-view.ts`: the tabs and the session history of a
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot

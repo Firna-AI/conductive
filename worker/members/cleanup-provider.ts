@@ -1,21 +1,17 @@
-import type { AppEnv, HttpFetch } from '../env'
+import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
-import { sandboxProvider } from '../sandbox/client'
-import type { SandboxProvider } from '../sandbox/provider'
 import { authorizedCleanup } from './deletion-data'
 
-/** Only deletion workers use this boundary. Active-org sandbox calls use sandbox/client. */
-export async function deletedOrgProvider(
+/** Authorize deletion work before selecting a stored resource account. */
+export async function requireDeletedOrgCleanup(
   env: AppEnv,
   orgId: string,
   leaseToken: string,
-  fetch: HttpFetch,
-): Promise<SandboxProvider> {
+): Promise<void> {
   const authorized = await authorizedCleanup(env.DB, orgId, leaseToken)
   if (!authorized)
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
-  return sandboxProvider(env, fetch)
 }
 
 export async function ignoreAlreadyRemoved(action: () => Promise<unknown>) {

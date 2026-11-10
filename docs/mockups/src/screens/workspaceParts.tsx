@@ -22,6 +22,7 @@ import {
   type StartingLog,
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
+import type { Membership } from '../fixtures/members'
 import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -149,13 +150,21 @@ export function workspaceSidebar(
   workspace: Workspace,
   status: ActivityStatus,
   suspended: boolean,
+  viewer: Membership,
   created: readonly OpenWorkspace[] = [],
 ): ReactNode {
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
       : workspaceSections({ workspace, status }, undefined, created)
-    return <Sidebar org={orgs.acme} sections={sections} suspended={suspended} />
+    return (
+      <Sidebar
+        org={orgs.acme}
+        sections={sections}
+        suspended={suspended}
+        viewer={viewer}
+      />
+    )
   }
   const list = archivedSections(workspace, suspended)
   return (
@@ -164,6 +173,7 @@ export function workspaceSidebar(
       org={orgs.acme}
       sections={list.sections}
       suspended={suspended}
+      viewer={viewer}
     />
   )
 }

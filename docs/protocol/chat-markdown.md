@@ -29,7 +29,7 @@ at `app/chat/tables`, and in the open work of a turn at
   and table cells. A code block shows its text with no formatting.
 - HTML in an agent message shows as text, also in a table.
 - Reason: sandbox code is untrusted, as
-  [Trust boundaries](../architecture.md#trust-boundaries) says, and it can
+  [Trust boundaries](../architecture/data-and-trust.md#trust-boundaries) says, and it can
   shape the text of an agent message.
 - The chat keeps this small set of Markdown. The full Markdown of the file
   preview was rejected for the chat, because it also changes the headings,
@@ -43,7 +43,7 @@ at `app/chat/tables`, and in the open work of a turn at
 - A screen reader reads each table as a table, by its rows and its
   columns.
 - Tables look the same in agent messages and in the file preview. The
-  [mockups](../mockups/design.md) give the look.
+  [mockups](../mockups/design-chat.md) give the look.
 
 ### Table text
 

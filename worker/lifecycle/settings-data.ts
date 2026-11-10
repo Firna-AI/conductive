@@ -11,13 +11,7 @@ export interface ImageSettings {
   installScript: SavedScript
   startupScript: SavedScript
   envVarsCiphertext: string | null
-  imageName: string | null
-  imageBuildId: string | null
   revision: number
-  lastRefreshAt: number | null
-  lastPushRefreshAt: number | null
-  pendingPushRefreshAt: number | null
-  nextImageRefreshAt: number | null
 }
 
 export interface SelectedRepository {
@@ -54,10 +48,7 @@ export async function readImageSettings(
   const row = await db
     .prepare(
       `SELECT org_id AS orgId, install_script AS installScript,
-       startup_script AS startupScript, env_vars_ciphertext AS envVarsCiphertext,
-       org_image_name AS imageName, image_build_id AS imageBuildId, revision,
-       last_refresh_at AS lastRefreshAt, last_push_refresh_at AS lastPushRefreshAt,
-       next_image_refresh_at AS nextImageRefreshAt, pending_push_refresh_at AS pendingPushRefreshAt
+       startup_script AS startupScript, env_vars_ciphertext AS envVarsCiphertext, revision
      FROM settings WHERE org_id = ?`,
     )
     .bind(orgId)

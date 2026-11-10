@@ -1,7 +1,7 @@
 import type { AgentLoginStatus } from '../../shared/account'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import type { Org, User } from '../../shared/api'
-import type { Attachment, SendMessageResponse } from '../../shared/messages'
+import type { SendMessageResponse } from '../../shared/messages'
 import type {
   ChangeModelResponse,
   InterruptResponse,
@@ -12,7 +12,6 @@ import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { count, flag, list, nullable, oneOf, record, text } from './json'
 import {
   readAgent,
-  readAttachment,
   readChoice,
   readDraft,
   readEffort,
@@ -147,8 +146,4 @@ export function readView(value: unknown): WorkspaceView {
     fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
     tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
   }
-}
-
-export function readAttachmentResponse(value: unknown): Attachment {
-  return readAttachment(record(value, 'attachment response').attachment)
 }

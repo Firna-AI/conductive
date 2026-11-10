@@ -3,6 +3,7 @@ import type { WorkspaceStorage } from './platform-storage'
 import type { AppEnv } from '../env'
 import type { AppDependencies } from '../env'
 import { HttpError } from '../http'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { createGitHubImageSourceMaterializer } from './image-sources/materialize'
 import { readImageSoftware } from './image-software'
 import { runImageAlarm, type ImageCoordinatorState } from './image-timers'
@@ -50,6 +51,7 @@ export class ImageCoordinator {
       state.orgId,
       this.dependencies.now(),
       state,
+      state.providerAccount,
     )
     if (next.buildId === null) {
       try {
@@ -72,6 +74,7 @@ export class ImageCoordinator {
   async alarm(): Promise<void> {
     const state = await this.read()
     if (!state) return
+    let scheduled = false
     const runtime: ImageRuntime = {
       env: this.env,
       dependencies: this.dependencies,
@@ -80,12 +83,23 @@ export class ImageCoordinator {
         this.dependencies,
       ),
       scheduler: {
-        schedule: (orgId, software, nextAt, buildId) =>
-          this.schedule({ orgId, software, nextAt, buildId }),
+        schedule: async (orgId, software, nextAt, buildId, providerAccount) => {
+          await this.schedule({
+            orgId,
+            software,
+            nextAt,
+            buildId,
+            ...(providerAccount && providerAccount !== DEFAULT_PROVIDER_ACCOUNT
+              ? { providerAccount }
+              : {}),
+          })
+          scheduled = true
+        },
       },
     }
     try {
       await runImageAlarm(runtime, state)
+      if (!scheduled) await this.storage.deleteAlarm()
     } catch {
       await this.storage.setAlarm(this.dependencies.now() + 30_000)
     }

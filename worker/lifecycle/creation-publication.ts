@@ -11,7 +11,10 @@ export async function publishCreationResult(
   storage: StartJobStorage,
 ): Promise<boolean> {
   const record = await storage.publication()
-  if (!record) return true
+  if (!record) {
+    await storage.clearPublication()
+    return true
+  }
   try {
     if (record.state === 'succeeded')
       await completeCreationAttempt(env.DB, record.workspaceId)
@@ -19,7 +22,7 @@ export async function publishCreationResult(
     await storage.clearPublication()
     return true
   } catch {
-    await storage.schedule()
+    await storage.schedulePublication()
     return false
   }
 }

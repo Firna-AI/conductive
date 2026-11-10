@@ -6,7 +6,7 @@ import { authenticateWorkspaceToken, readWorkspaceToken } from './tokens'
 import { recordSandboxCleanup, retrySandboxCleanup } from './cleanup'
 import { resumeWorkspace } from './workspace-resume'
 import { createWorkspace } from './workspaces'
-import { heldOperation } from './platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 
 const fixtureForTest = setupBackendTests()
 
@@ -20,7 +20,31 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
   const id = created.workspace.id
   const oldToken = await readWorkspaceToken(runtime.env, id)
   const start = fixture.starts.get(id)
-  if (!start) throw new Error('Missing start actor')
+  const platform = fixture.actors.get(id)
+  if (!start || !platform) throw new Error('Missing start actor')
+  let observed:
+    { claim: unknown; publicRows: unknown; cleanupRows: unknown } | undefined
+  platform.observePublication(async ({ event }) => {
+    if (event.type !== 'workspace.updated' || event.workspace.state !== 'error')
+      return
+    observed = {
+      claim: await runtime.env.DB.prepare(
+        'SELECT state FROM workspace_creation_attempts WHERE workspace_id = ?',
+      )
+        .bind(id)
+        .first('state'),
+      publicRows: await runtime.env.DB.prepare(
+        'SELECT COUNT(*) AS count FROM workspaces WHERE id = ?',
+      )
+        .bind(id)
+        .first('count'),
+      cleanupRows: await runtime.env.DB.prepare(
+        'SELECT COUNT(*) AS count FROM lifecycle_sandbox_cleanup WHERE workspace_id = ?',
+      )
+        .bind(id)
+        .first('count'),
+    }
+  })
   boat.commandExitCode = 1
   boat.deleteFailures = 2
   for (let step = 0; step < 16 && (await start.job()); step++)
@@ -29,6 +53,7 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
     ok: false,
     error: { code: 'workspace_start_failed' },
   })
+  expect(observed).toEqual({ claim: 'failed', publicRows: 1, cleanupRows: 1 })
   expect(
     (await createWorkspace(runtime, org.id, user, input)).workspace,
   ).toMatchObject({ id, state: 'error' })
@@ -37,7 +62,7 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
     authenticateWorkspaceToken(runtime.env, oldToken),
   ).rejects.toMatchObject({ code: 'workspace_token_refused' })
 
-  start.restart()
+  await start.restart()
   const paused = heldOperation()
   const workspace = runtime.workspace
   let reads = 0
@@ -84,7 +109,7 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
   expect(joined.workspace.id).toBe(id)
 
   boat.commandExitCode = 0
-  start.restart()
+  await start.restart()
   for (let step = 0; step < 16 && (await start.job()); step++) {
     if ((await start.job())?.phase === 'runner')
       await fixture.actors
@@ -137,6 +162,7 @@ it('keeps a later cleanup owner when an old delete completes for the same worksp
     workspaceId: id,
     orgId: org.id,
     sandboxId: 'bx_old',
+    providerAccount: 'boat',
   })
   const pending = retrySandboxCleanup(runtime.env, runtime.dependencies, id)
   await deletion.entered
@@ -146,6 +172,7 @@ it('keeps a later cleanup owner when an old delete completes for the same worksp
       workspaceId: id,
       orgId: org.id,
       sandboxId: 'bx_later',
+      providerAccount: 'boat',
     })
   } finally {
     deletion.release()

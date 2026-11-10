@@ -14,6 +14,11 @@ say. A host can give its own parts instead, as
 states of the cloud computer are in `app/shell`, and the notices are in
 `app/chat/lost-updates`.
 
+The workspace list offers Archive over the time of each permitted row on
+hover only. Selection and keyboard focus alone keep the time visible.
+The header has no Archive button. The list uses the same Archive question
+as the command palette and the pull request bar.
+
 ## The kept workspace
 
 [The kept workspace](kept-workspace.md) gives the parts that the tab keeps
@@ -213,6 +218,11 @@ fake API, with its address options, its controls, and the test command.
   app and presses the button for a copy and for a failed copy.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
+  The screen draws its Archive question in each of its states, also during
+  the first read, with the name from the list. So Archive from the row of
+  the open workspace, by its shortcut or its menu, shows one question. The
+  list draws the question of another row, for the shortcut and the menu
+  alike.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
   the refused notice. `sandbox-view.ts` chooses the bar and the panels,
   also for a suspended org and for the saved message of a failed start.
@@ -223,14 +233,17 @@ fake API, with its address options, its controls, and the test command.
 
 - [Lost workspace updates](../../../docs/protocol/agent-runner.md#lost-workspace-updates):
   the repair, and the notice of a failed repair.
-- [Start steps](../../../docs/protocol/workspaces-and-sandboxes.md#start-steps)
-  and [Workspace states](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-states).
+- [Start steps](../../../docs/protocol/workspace-life.md#start-steps)
+  and [Workspace states](../../../docs/protocol/workspace-life.md#workspace-states).
 - [Workspace numbers and links](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-numbers-and-links)
   and [Workspace links](../../../docs/protocol/workspace-links.md): the
   number, the link, and Copy link.
+- [Workspace menu](../../../docs/protocol/workspace-menu.md): the menu of
+  a workspace row, which can also rename, reassign, or archive the open
+  workspace.
 - [Web app: data and composition](../../app/README.md): the models, the
   event stream, and the features.
 - [The chat](../../chat/README.md): the chat that fills the centre.
 - [The Files screens](../../files/README.md) and
   [the browser fakes](../../test-support/README.md).
-- [The web app in the architecture](../../../docs/architecture.md#web-app).
+- [The web app in the architecture](../../../docs/architecture/components.md#web-app).

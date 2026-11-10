@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { sessionPaths } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
@@ -8,7 +7,6 @@ import {
   startTurn,
   terminalEvent,
 } from './turn-lifecycle.test-support'
-
 describe('messages after Stop', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -20,7 +18,6 @@ describe('messages after Stop', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('keeps post-Stop messages queued until stopped, failed, and finished turns end', async () => {
     const fixture = await createChatFixture(harness)
     const runner = await fixture.connect()
@@ -74,7 +71,7 @@ describe('messages after Stop', () => {
         state,
       ).toMatchObject({ type: 'turn', sessionId: independent.id })
       runner.disconnect()
-      fixture.restart()
+      await fixture.restart()
       await fixture.connect(runner)
       expect(
         await fixture.send(session.id, afterId, fixture.memberCookie),
@@ -140,7 +137,6 @@ describe('messages after Stop', () => {
       expect(runner.pendingEvents(), state).toEqual([])
     }
   })
-
   it('advances waiting work when an earlier queued continuation cannot start', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()

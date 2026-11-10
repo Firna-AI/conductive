@@ -111,6 +111,11 @@ it('keeps a created org and answers 201 when its first build cannot start', asyn
     currentImageBuildId: null,
   })
   expect(warning.mock.calls).toEqual([
-    ['Could not start the first cloud computer build.'],
+    [
+      {
+        kind: 'first_image_build_start_failed',
+        message: 'Could not start the first cloud computer build.',
+      },
+    ],
   ])
 })

@@ -107,7 +107,8 @@ Each run takes these steps, in this order:
 5. It applies the D1 migrations with
    `npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc`.
 6. It deploys the Worker with `npx wrangler deploy`. Two `--var` options
-   set the runner variables to the archive.
+   set the runner variables to the archive. The deploy also publishes the
+   model list and app default from `wrangler.jsonc`.
 7. It checks that `https://app.conductive.build/api/health` answers
    `{"status":"ok"}`. When that answer does not come within about a
    minute, the run fails.
@@ -116,9 +117,12 @@ A failed step stops the run. So a build error stops the run before it
 changes anything live.
 
 - The `--var` options set only `CONDUCTIVE_RUNNER_ARCHIVE_URL` and
-  `CONDUCTIVE_RUNNER_ARCHIVE_SHA256`. Every other variable stays on the
-  Worker, because `wrangler.jsonc` sets `keep_vars`. The deploy changes no
-  secret.
+  `CONDUCTIVE_RUNNER_ARCHIVE_SHA256`. The values in `wrangler.jsonc`
+  replace the corresponding Worker variables. This includes
+  `CONDUCTIVE_MODELS` and `CONDUCTIVE_DEFAULT_CHOICE`, as
+  [Models](deployment.md#models) says. Other dashboard variables stay on
+  the Worker, because `wrangler.jsonc` sets `keep_vars`. The deploy changes
+  no secret.
 - The deploy tags the new Worker version with the short commit hash. So
   the Cloudflare dashboard shows which commit is live.
 - The summary of each run names the commit, the archive URL, and whether
@@ -139,6 +143,15 @@ A failed run does not roll back.
   restores the version before the newest one.
 - A rollback does not undo a D1 migration. It cannot go back across a
   Durable Object migration.
+- `migrations/202611092305_org_images.sql` is for the time before the
+  launch only, while no real user depends on the app. It copies the six org
+  image fields of `settings` to `org_images`, then drops them, with no
+  bridge for an older Worker. A Worker version from before it reads those
+  fields, so that version cannot use the new schema, after a failed upload
+  or after a rollback to it. To recover, deploy a fix forward. Or restore
+  D1 with Time Travel to a minute before the migration, together with a
+  Worker rollback to a version from before it. That restore loses each D1
+  write after that minute.
 - [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
   restores the database to an earlier minute. Run
   `npx wrangler d1 time-travel restore DB --timestamp=<time>`, with a Unix

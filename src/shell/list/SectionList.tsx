@@ -7,6 +7,7 @@ import { nameLabel } from '../../shared/name-label'
 import ui from '../ui/ui.module.css'
 import { ArchivedGroup } from './ArchivedGroup'
 import type { DropTarget } from './drop-target'
+import type { RowMenus } from './row-menu'
 import { SectionHeader, type SectionActions } from './SectionHeader'
 import { useRowDrag, type RowDragState } from './useRowDrag'
 import { useRowFocus } from './useRowFocus'
@@ -59,8 +60,9 @@ function LiftedRow(props: {
  * The sections of the org, each a group of workspaces that the people of
  * the org made, then the Archived group. A workspace moves to another
  * section by drag and drop, by a long press on a phone, or by Alt and an
- * arrow key. A read-only list, as in a suspended org, moves nothing and
- * shows no section menu.
+ * arrow key. `menus` gives each row its menu, and `archiveAction` its
+ * Archive shortcut. A read-only list, as in a suspended org, moves nothing
+ * and shows no section menu.
  */
 export function SectionList(props: {
   groups: readonly SectionGroup[]
@@ -69,8 +71,10 @@ export function SectionList(props: {
   selectedId: string | null
   now: number
   actions: SectionActions
+  archiveAction?: (workspace: Workspace) => (() => void) | undefined
   move: (workspaceId: string, target: DropTarget) => void
   readOnly: boolean
+  menus?: RowMenus
 }) {
   const { drag, bind, layout } = useRowDrag(props.move)
   /** A move by keys keeps the focus on its row. */
@@ -140,15 +144,18 @@ export function SectionList(props: {
                             ? 'placeholder'
                             : undefined
                         }
+                        focusRow={() => rows.focusLink(workspace.id)}
                         linkRef={rows.linkRef(workspace.id)}
+                        menu={props.menus?.(workspace)}
                         now={props.now}
+                        onArchive={props.archiveAction?.(workspace)}
                         onKeyDown={
                           props.readOnly
                             ? undefined
                             : (event) => onKeyDown(workspace, event)
                         }
-                        onLinkBlur={rows.blur}
-                        onLinkFocus={(event) => rows.focus(workspace.id, event)}
+                        onBlur={rows.blur}
+                        onFocus={(event) => rows.focus(workspace.id, event)}
                         rowRef={layout.row(workspace.id, section.id)}
                         selected={workspace.id === props.selectedId}
                         variant={props.variant}
@@ -168,6 +175,7 @@ export function SectionList(props: {
       })}
       {props.archived.length > 0 ? (
         <ArchivedGroup
+          menus={props.menus}
           now={props.now}
           rows={props.archived}
           selectedId={props.selectedId}

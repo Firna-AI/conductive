@@ -1,5 +1,38 @@
 # Chat backend tests
 
+The `attachment-*.test.ts` files use local R2 and D1 through the internal storage boundary.
+They cover exact bytes, ownership, expiry races, the shared copy owner and proof, path extensions, and Stop during a held transfer.
+`attachment-first-message.test.ts` admits a first-message file before a computer exists.
+It also covers the first-message file of a removed workspace: a new attempt can claim it, and it expires at its upload deadline.
+`attachment.test-support.ts` supplies the shared fixture and explicit fake preparation seams.
+`delivery-order.test.ts` holds a copy during a running turn.
+It checks that the later messages of that turn keep their order, and that Stop and another session do not wait.
+It also checks that a failed copy fails only its own turn.
+`attachmentOwnerCopy` in `attachment-owner.test-support.ts` runs the real copy helper against a fake provider.
+The fake counts the writers of each computer and path at one time, and the writes after delivery.
+So a test finds a second writer, and a late write over an agent edit.
+`attachmentOwnerFixture` adds a workspace on one computer, an upload, a session, and a ready runner.
+`attachment-continuation.test.ts` ends a running turn while the copy of a joined message waits, and also after that message went out.
+It checks that the continuation gets a new command ID but shares the copy owner and the proof of its message, also after a reconnect and a restart.
+It also checks that a failed shared copy fails the turn of the continuation, and that the earlier turn stays finished.
+`attachment-destination.test.ts` moves the workspace to a new computer while the copy for the old computer waits.
+The held owner writes to neither computer, the new computer gets its own copy, and the agent edit there stays.
+After a restart on the old computer, which has no proof, the files copy there.
+`attachment-proof-recovery.test.ts` fails or interrupts the save of the shared proof after a continuation.
+It checks that the connection closes, and that the redelivery after a restart copies again only when no proof committed.
+`attachment-cancellation.test.ts` connects the real runner `AgentEngine` through `attachment-engine.test-support.ts`.
+It checks that a failed copy stops the running agent, and that Try again starts after the old agent process exits, with no Worker wait.
+It also checks that a restart sends the stored interrupts again, and that each late end removes only the interrupt of its turn.
+`integration/attachment-raw.test.ts` checks native fixed-length R2 writes, raw metadata and ownership, interrupted transfers, and desktop admission.
+`integration/attachment-cleanup.test.ts` runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
+An expired claim without an accepted message loses its record and its object. An accepted file keeps both.
+`integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace.
+Try again copies its exact bytes once, as [Outer Worker tests](integration/outer-worker-tests.md) says.
+The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
+The 25 MB boundary case creates its unknown-length stream inside the native runtime.
+It reads the stored byte count and exact byte samples from real R2 there.
+This keeps large byte arrays out of the test bridge while retaining the exact maximum and first excess byte.
+
 This guide belongs to the [chat backend](README.md). Run the tests from
 the repository root:
 
@@ -8,48 +41,60 @@ npm run test -- worker/chat
 npm run typecheck
 ```
 
-- `createChatFixture` in `harness.test-support.ts` builds on
-  `createHarness`. It adds an owner, a member, a workspace with a token,
-  and a stored login for each agent.
-- Its helpers send messages, open tabs, connect a `FakeRunner`, and
-  restart `WorkspaceChat` on the same storage.
-- `createFirstMessageFixture` in `first-message.test-support.ts` assigns
-  the first session and message of an untitled workspace.
-  `first-message.test.ts`, `workspace-session-title.test.ts`, and
-  `session-titles.test.ts` share this fixture.
-- `createTitleFixture` in `workspace-title.test-support.ts` supplies a fake
-  title model and drains background work. `workspace-titles.test.ts` and
-  `workspace-title-configuration.test.ts` use it.
-- `MemoryChatStorage` keeps the records in memory. Set `beforeCommit` to
-  delay a commit and test a late commit.
-- A memory restart does not rebuild the workspace object. Use the native
-  fixture to check that new stored state survives a workspace object restart.
-- To test that a failed commit rolls back the whole receipt of an action,
-  use `checkCommitBoundaries` in
-  [`commit-boundary.test-support.ts`](commit-boundary.test-support.ts).
-- Its key order and `startAfter` comparison use UTF-8 bytes, like real storage.
-- Set `crashAfterCommit` to commit the next transaction, then throw once.
-  The restart tests cover retry permission, report repairs, turn cleanup,
-  and file assembly after a commit crash.
-- Send and Retry can commit a changed login observation before acceptance.
-  So an acceptance crash test first makes the stored `loginAvailable` current,
-  then sets `crashAfterCommit`. The fault then hits the acceptance commit.
-- `createRunnerLimitsFixture` in `runner-limits.test-support.ts` runs one
-  `RunnerChannel` for the refusal, cap, and file part tests. It takes
-  optional `ChatDependencies` overrides.
-- `createGrownReportsFixture` in `runner-grown-reports.test-support.ts`
-  gives that fixture a `filterRunnerOutput` that runs the shared filter
-  with the secret `a`. So the display labels of valid report parts grow.
-  Its `capStorageValues` sets `beforeCommit` to refuse a stored value over
-  2,097,152 JSON bytes. That check stands in for the native value limit.
-- `runner-grown-reports.test.ts` uses both helpers for tree and changes
-  parts. `history-grown-delta.test.ts` uses `capStorageValues` for a grown
-  tree delta in the history.
-- `outputFixture` in `runner-output.test-support.ts` seeds an encrypted env
-  capture in D1 and starts a turn for the output filter tests.
-  `runner-output-durability.test.ts` fails the commit of held text on
-  `MemoryChatStorage`. It retries that receipt on the same live chat, then
-  checks a restart, a replay, and a gap.
+- `createChatFixture` in `harness.test-support.ts` uses the production workspace object in Miniflare with native SQLite.
+  It batches the owner, member, workspace, signed sessions, and agent logins into the shared local D1.
+- Its helpers send HTTP requests, open native browser peers, and connect a `FakeRunner` to native runner peers.
+  Its `restart` evicts the real object and reconstructs it from native storage.
+- `createFirstMessageFixture` in `first-message.test-support.ts` assigns the first session and message of an untitled workspace.
+  `first-message.test.ts`, `workspace-session-title.test.ts`, and `session-titles.test.ts` share this native fixture.
+- `createTitleFixture` in `workspace-title.test-support.ts` supplies a fake title model and drains native background work.
+  `workspace-titles.test.ts` and `workspace-title-configuration.test.ts` use it.
+  The optional model callback is present or absent before the production constructor runs.
+  Its warning checks observe actual native console calls.
+  `setEnvironment` changes native model configuration through the test controls.
+- `snapshot` reads committed product records, write keys, and the stored alarm.
+  Test clock metadata is separate from these records and write keys.
+- `setStorageHooks` observes the native transaction before or after its commit.
+  A before-commit hook can read the live transaction through its `read` method, hold it, or throw to roll it back.
+  An after-commit fault keeps the native records.
+- `failNextCommit` injects one error before or after the next native commit.
+  `clearFaults` removes these hooks.
+  `checkCommitBoundaries` in [commit-boundary.test-support.ts](commit-boundary.test-support.ts) checks both boundaries and a real eviction.
+- `agent-receipt-boundaries.test.ts` checks that a rejected commit or a crash after commit sends no confirm or browser event.
+  It checks the stored event and cursor together, then checks replay after eviction.
+- `events.test.ts` holds one native history-page list while a concurrent write enters the chat queue.
+  It releases the page after the queue signal and checks history before live events.
+- Send and Retry can commit a login observation before acceptance.
+  An acceptance crash test first makes `loginAvailable` current, then injects its commit fault.
+- `createRunnerLimitsFixture` in `runner-limits.test-support.ts` uses the same production object and native runner channel.
+  It seeds the session and turn without adding browser events.
+  Its `connect` can evict the object before reconnecting the same stream.
+  Its publication list and stored-callback list have separate sources.
+  The callback list records actual `runnerEventStored` calls at production callback composition.
+- `runner-fixtures.test-support.ts` holds the runner report samples and shared session and turn IDs.
+- `createGrownReportsFixture` in `runner-grown-reports.test-support.ts` seeds an encrypted environment capture with the secret `a`.
+  The production output filter reads that capture inside the native object.
+  The native SQLite value limit checks the enlarged display labels.
+  Native record readers load history and file projections inside the object after eviction.
+  Each reader returns fresh stored data once through the bridge.
+  `runner-grown-reports.test.ts` checks tree and changes parts.
+  `history-grown-delta.test.ts` checks an enlarged tree delta.
+- `native-store.test-support.ts` gives direct storage tests the native records of a production object.
+  Pure storage owners can run locally over that native storage.
+- `outputFixture` in `runner-output.test-support.ts` seeds an encrypted environment capture in D1 and starts a turn.
+  `runner-output-durability.test.ts` fails the native commit of held text.
+  It retries on the live object, then checks eviction, replay, and a gap.
+- Native peers keep synchronous send faults inside the runtime.
+  `setSendRule` drops or throws for matching native sends.
+  `observeOutgoing` observes copied sends in their native order.
+  `drain` delivers those messages to the fake runner and browser observers.
+- Native request controls hold the real JSON reader and expose `bodyUsed`.
+  The queue observer signals after the production chat queue accepts its next task.
+- `workspace-callbacks.ts` preserves each real callback and its result before it awaits a native test observer.
+  Native observers record stored events, ready, disconnect, dispatch, and file-result calls at that composition point.
+  They do not infer callbacks from saved events or lifecycle-controller methods.
+- `login-queries.test-support.ts` captures login queries inside the native object.
+  The metadata tests also observe actual native decrypt calls in explicit capture windows.
 - `runner-output-context.test.ts` refuses a completion and ends the turn.
   After a restart, a new runner stream sends later text of that answer,
   split by a second restart. The filter masks only the part that completes
@@ -106,9 +151,6 @@ npm run typecheck
 - Read stored records through a fetch path before an eviction, as the
   GitHub store tests do. A direct RPC read of the records can keep the
   eviction waiting.
-- No native test fails or interrupts the commit of held text. Only the
-  fast `runner-output-durability.test.ts` fails that commit, on
-  `MemoryChatStorage`.
 - Most tests in `integration/` run the production Worker entry in
   Miniflare. They check the forwarding, the runner socket, the workspace
   lifecycle, and the app API. `integration/run-browser-harness.mjs` serves

@@ -4,7 +4,7 @@ This file holds the release part of the [Mac app README](README.md).
 [Signed release packages](#signed-release-packages) gives the signing command and its secrets.
 [Releases](#releases) gives the release steps, the release files, and the versions.
 [Updates](#updates) says which builds have the updater on.
-[Packages and updates](../docs/protocol/desktop-app.md#packages-and-updates) in the Mac app protocol states the requirements.
+[Packages and updates](../docs/protocol/desktop-packages-and-updates.md) in the Mac app protocol states the requirements.
 
 ## Signed release packages
 
@@ -15,6 +15,13 @@ It also signs, notarizes, and staples each DMG.
 It fails when a credential is missing or an app has the wrong Apple team.
 It checks each app with `codesign --verify --deep --strict`, `stapler validate`,
 and Gatekeeper. It checks each finished DMG as well.
+
+After each Electron upgrade, read `LSMinimumSystemVersion` from `Contents/Info.plist` of a packaged app.
+Electron 44 sets the current value to `13.0` because `electron-builder.yml` sets no `minimumSystemVersion`.
+If the value changes, update the oldest macOS version in both places:
+
+- [Packages](../docs/protocol/desktop-packages-and-updates.md#packages) in the Mac app protocol.
+- `macAppSection.requirement` in [the marketing feature text](../src/marketing/features.ts).
 
 ```sh
 npm --prefix desktop run build
@@ -72,7 +79,7 @@ or cancellation.
 
 Each GitHub release of `Firna-AI/remote-code` carries the signed Mac app.
 Installed copies update themselves from these releases.
-[Releases](../docs/protocol/desktop-app.md#releases) in the Mac app protocol states the requirements.
+[Releases](../docs/protocol/desktop-packages-and-updates.md#releases) in the Mac app protocol states the requirements.
 
 `.github/workflows/release.yml` holds the whole release.
 The reusable workflow `desktop-mac-checks.yml` holds the Mac checks, and `desktop-sign.yml` holds the signing steps.
@@ -96,6 +103,11 @@ A release happens in these steps:
    It publishes the draft only after GitHub lists every file with its full size.
 
 The publish job uploads the two ZIP files, their block maps, the two DMG files, and `latest-mac.yml`.
+Each signed release names its DMGs `Conductive-mac-arm64.dmg` and `Conductive-mac-x64.dmg`, without the version.
+`desktop/scripts/release.ts` builds a DMG-only electron-builder override from `macDmgNames` in [the shared brand module](../docs/mockups/src/brand.ts).
+The ZIP files and their block maps keep the versioned names from `artifactName` in `electron-builder.yml`.
+`latest-mac.yml` keeps its name.
+Ad-hoc packages also keep the names from `artifactName`.
 electron-builder writes the packages, their block maps, and `latest-mac.yml`.
 The signing job then staples each DMG.
 Stapling changes the DMG after electron-builder records its size and hash.
@@ -179,4 +191,4 @@ Only the signing job of a release sets it.
 Manual signing runs, pull request builds, and local builds keep the updater off.
 An unpackaged app never starts the updater.
 In a build with the updater off, Help → Check for updates is disabled.
-[Updates in the app](../docs/protocol/desktop-app.md#updates-in-the-app) states when the app checks and what it shows.
+[Updates in the app](../docs/protocol/desktop-packages-and-updates.md#updates-in-the-app) states when the app checks and what it shows.

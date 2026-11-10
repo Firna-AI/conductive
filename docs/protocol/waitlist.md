@@ -11,7 +11,7 @@ states the tabs where an operator runs the waitlist. The terms are those
 of the [architecture doc](../architecture.md#terms). A decision number
 names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. The
-[mockup catalogue](../mockups/catalogue.md) draws each screen of the
+[mockup catalogue](../mockups/catalogue-operator.md) draws each screen of the
 waitlist, on desktop and on a phone.
 
 ## Who waits
@@ -96,7 +96,7 @@ waitlist, on desktop and on a phone.
 - While the user waits, the device connection of the Mac app gets the
   `access_required` refusal. When app access arrives, the Mac app connects
   it again, with no new launch. Reason: the Mac is then available for
-  [Mac commands](desktop-app.md#mac-commands) without a wake or a new
+  [Mac commands](desktop-commands.md#mac-commands) without a wake or a new
   launch.
 
 ## Ways in

@@ -11,15 +11,17 @@ export async function authorizeImageBuilder(
   orgId: string,
   buildId: string,
   sandboxId: string,
+  providerAccount: string,
 ): Promise<SelectedRepository[]> {
   const build = await db
     .prepare(
       `SELECT j.repositories_json AS repositoriesJson FROM image_builds b
        JOIN image_build_jobs j ON j.build_id = b.id JOIN orgs o ON o.id = b.org_id
        WHERE b.id = ? AND b.org_id = ? AND b.sandbox_id = ? AND b.state = 'running'
+       AND b.provider_account = ?
        AND j.phase = 'sources' AND o.deleted_at IS NULL`,
     )
-    .bind(buildId, orgId, sandboxId)
+    .bind(buildId, orgId, sandboxId, providerAccount)
     .first<{ repositoriesJson: string }>()
   if (!build) throw new Error('Image builder is not available')
   return readRepositories(JSON.parse(build.repositoriesJson))

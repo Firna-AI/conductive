@@ -1,0 +1,18 @@
+---
+import type { ParityStatus } from '../from-conductor/model'
+import { parityStatuses } from '../from-conductor/statuses'
+import Icon from './Icon.astro'
+
+/**
+ * A status of the comparison as its icon and its word, so that the status
+ * never depends on colour alone. Only the icon takes the colour.
+ */
+type Props = { status: ParityStatus }
+
+const status = parityStatuses[Astro.props.status]
+---
+
+<span class:list={['status-mark', `status-${status.tone}`]}>
+  <Icon name={status.icon} size={15} class="status-icon" />
+  {status.label}
+</span>

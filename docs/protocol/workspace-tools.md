@@ -1,9 +1,10 @@
-# Workspace tools
+# Tools of a workspace
 
-This doc holds the requirements and the decisions in force for the tools
-of a workspace: its files and changes, its terminal, its port previews,
-and its desktop. [Workspaces and sandboxes](workspaces-and-sandboxes.md)
-holds the life of a workspace and its sandbox. The terms are those of the
+This doc holds the requirements and the decisions in force for the tools of
+a workspace. It covers the files and changes, the terminal, the port
+previews, and the desktop. It belongs to
+[Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
+provider, the org image, and the startup script. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
@@ -143,7 +144,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - When the user ends the shell, such as with `exit`, the next connection
   opens a new shell.
 - A stop of the sandbox ends the shell and its commands, as
-  [Stop and resume](workspaces-and-sandboxes.md#stop-and-resume) says. The first connection after the
+  [Stop and resume](workspace-life.md#stop-and-resume) says. The first connection after the
   resume opens a new shell.
 - On a phone, a row of keys adds the keys that a phone keyboard lacks.
 
@@ -174,7 +175,7 @@ for its return.
   older saved choice stays valid, and Desktop can return without a change
   of the stored data.
 - The server keeps the desktop URL route and its access rules, as
-  [Desktop](access-and-security.md#desktop) says. The pause adds no
+  [Desktop](terminal-previews-and-desktop.md#desktop) says. The pause adds no
   refusal at the server.
 - A Mac app build from before the pause keeps its Desktop tab until it
   updates.
@@ -198,5 +199,5 @@ before the pause:
   of the page blocks the stream, the Desktop tab says that the desktop
   couldn't open, with Try again. It never shows a blocked stream as live.
 
-[Access and security](access-and-security.md) states how the terminal, the
+[Access and security](terminal-previews-and-desktop.md) states how the terminal, the
 previews, and the desktop stay safe.

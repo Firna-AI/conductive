@@ -3,7 +3,11 @@ import { access } from 'node:fs/promises'
 
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { createHarness, type TestHarness } from '../../test-support/harness'
+import {
+  createHarness,
+  TEST_TIME,
+  type TestHarness,
+} from '../../test-support/harness'
 import { ProviderError } from '../../sandbox/errors'
 import { localSourceFixture } from './local-source-test-support'
 import { createGitHubImageSourceMaterializer } from './materialize'
@@ -67,6 +71,7 @@ it('refuses wrong orgs, stale captured metadata, and a different build before an
   try {
     const materialize = createGitHubImageSourceMaterializer(fixture.env, {
       fetch: fixture.access.fetch,
+      now: () => TEST_TIME,
     })
     for (const input of [
       { ...fixture.input, orgId: 'another-org' },
@@ -85,7 +90,7 @@ it('refuses wrong orgs, stale captured metadata, and a different build before an
     await expect(
       createGitHubImageSourceMaterializer(
         { ...fixture.env, GITHUB_APP_PRIVATE_KEY: undefined },
-        { fetch: fixture.access.fetch },
+        { fetch: fixture.access.fetch, now: () => TEST_TIME },
       )(fixture.input),
     ).rejects.toMatchObject({
       status: 503,

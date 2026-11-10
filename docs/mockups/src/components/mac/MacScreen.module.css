@@ -1,53 +1,56 @@
 /*
- * The view holds the screen of the Mac, which lays out at 1440 × 900.
- * `--mac-scale` fits it into the width of the view, in steps.
+ * The view holds the screen of the Mac, which lays out at 1440 × 900. The
+ * view is a size container, so `--mac-scale` fits the screen into the width
+ * of the view, not of the window, in steps. In a picture of the marketing
+ * site, the view is 1440 px wide, so the screen keeps its own size.
  */
 .viewport {
-  --mac-scale: 1;
-
   display: flex;
   align-items: center;
   justify-content: center;
   height: var(--ui-screen-height);
   overflow: hidden;
   background: var(--ui-bg);
-}
-
-@media (max-width: 1439px) {
-  .viewport {
-    --mac-scale: 0.88;
-  }
-}
-
-@media (max-width: 1267px) {
-  .viewport {
-    --mac-scale: 0.7;
-  }
-}
-
-@media (max-width: 1007px) {
-  .viewport {
-    --mac-scale: 0.52;
-  }
-}
-
-@media (max-width: 748px) {
-  .viewport {
-    --mac-scale: 0.33;
-  }
-}
-
-@media (max-width: 474px) {
-  .viewport {
-    --mac-scale: 0.27;
-  }
+  container: mac-screen / inline-size;
 }
 
 .stage {
+  --mac-scale: 1;
+
   position: relative;
   flex-shrink: 0;
   width: calc(1440px * var(--mac-scale));
   height: calc(900px * var(--mac-scale));
+}
+
+@container mac-screen (max-width: 1439px) {
+  .stage {
+    --mac-scale: 0.88;
+  }
+}
+
+@container mac-screen (max-width: 1267px) {
+  .stage {
+    --mac-scale: 0.7;
+  }
+}
+
+@container mac-screen (max-width: 1007px) {
+  .stage {
+    --mac-scale: 0.52;
+  }
+}
+
+@container mac-screen (max-width: 748px) {
+  .stage {
+    --mac-scale: 0.33;
+  }
+}
+
+@container mac-screen (max-width: 474px) {
+  .stage {
+    --mac-scale: 0.27;
+  }
 }
 
 .screen {

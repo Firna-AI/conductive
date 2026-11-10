@@ -1,11 +1,7 @@
 import { expect, it } from 'vitest'
-
 import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
-import {
-  context,
-  createRunnerLimitsFixture,
-} from './runner-limits.test-support'
-
+import { createRunnerLimitsFixture } from './runner-limits.test-support'
+import { context } from './runner-fixtures.test-support'
 it('stores one permanent marker per refusal and advances through duplicate, gap, and restart', async () => {
   const fixture = await createRunnerLimitsFixture()
   const invalid = { type: 'sdk.raw', ...context, secret: 'never store this' }
@@ -48,12 +44,11 @@ it('stores one permanent marker per refusal and advances through duplicate, gap,
     },
     { type: 'workspace.title', name: 'Later' },
   ])
-  expect(JSON.stringify([...fixture.storage.records.values()])).not.toContain(
-    'never store this',
-  )
+  expect(
+    JSON.stringify([...(await fixture.snapshot()).records.values()]),
+  ).not.toContain('never store this')
   expect(fixture.closed).toBe(0)
 })
-
 it('measures raw compact UTF-8 envelopes including escaped and discarded fields', async () => {
   const fixture = await createRunnerLimitsFixture()
   const event = { type: 'turn.thinking', ...context }
@@ -94,7 +89,6 @@ it('measures raw compact UTF-8 envelopes including escaped and discarded fields'
     },
   ])
 })
-
 it('commits refusal and verified terminal cleanup together and retries storage or network failure', async () => {
   for (const type of ['turn.completed', 'turn.failed']) {
     const fixture = await createRunnerLimitsFixture()
@@ -106,7 +100,7 @@ it('commits refusal and verified terminal cleanup together and retries storage o
         ...context,
       }),
     )
-    fixture.failCursorCommit(1)
+    await fixture.failCursorCommit(1)
     await expect(fixture.receive(1, terminal)).rejects.toThrow(
       'Injected storage failure',
     )
@@ -116,9 +110,9 @@ it('commits refusal and verified terminal cleanup together and retries storage o
     expect(
       (await fixture.read((view) => view.turn(context.turnId)))?.state,
     ).toBe('running')
-    fixture.storage.beforeCommit = null
+    await fixture.clearFaults()
     await fixture.connect('stream', true)
-    fixture.failSend = true
+    await fixture.setFailSend(true)
     await expect(fixture.receive(1, terminal)).rejects.toThrow(
       'Injected network failure',
     )
@@ -128,7 +122,7 @@ it('commits refusal and verified terminal cleanup together and retries storage o
         ?.activeTurnId,
     ).toBeNull()
     expect(await fixture.read((view) => view.pending())).toEqual([])
-    fixture.failSend = false
+    await fixture.setFailSend(false)
     await fixture.connect('stream', true)
     await fixture.receive(1, terminal)
     expect(
@@ -141,7 +135,6 @@ it('commits refusal and verified terminal cleanup together and retries storage o
     })
   }
 })
-
 it('refuses late invalid message acknowledgements without partial writes', async () => {
   const fixture = await createRunnerLimitsFixture()
   await fixture.read(async (view) => {
@@ -197,7 +190,6 @@ it('refuses late invalid message acknowledgements without partial writes', async
     (await fixture.history()).events.map(({ event }) => event.type),
   ).toEqual(['runner.event-refused'])
 })
-
 it('keeps workspace refusal context null when extra fields name an active turn', async () => {
   const fixture = await createRunnerLimitsFixture()
   await fixture.receive(1, { type: 'workspace.title', ...context, name: null })

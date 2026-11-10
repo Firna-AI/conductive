@@ -1,7 +1,7 @@
 {
   "name": "remote-code",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "npm run site:build && vite",
@@ -42,6 +42,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
+    "@astrojs/markdown-satteri": "0.4.7",
     "@cloudflare/vite-plugin": "^1.67.0",
     "@emnapi/runtime": "^1.11.3",
     "@eslint/js": "^10.0.1",

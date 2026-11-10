@@ -23,6 +23,7 @@ const workspaceId = FAKE_IDS.workspace
 const resumePath = workspacePaths.resume(orgId, workspaceId)
 const readPath = workspacePaths.read(orgId, workspaceId)
 const starting = workspaceFixtures('starting').detail
+const archived = workspaceFixtures('archived').detail.workspace
 
 const output: WorkspaceEvent = {
   type: 'assistant.delta',
@@ -95,15 +96,140 @@ describe('the order of the open workspace', () => {
   })
 
   test('keeps an Archive that came while Resume waited over the newer reply of the Resume', async () => {
-    const { server, held, workspace, state } = await opened('stopped')
+    const { server, held, org, workspace, live, state } =
+      await opened('stopped')
     server.json('POST', resumePath, { ...starting, eventNumber: 1 })
     const resuming = workspace.resume()
+    const newer = {
+      ...starting.workspace,
+      name: 'A newer workspace name',
+      owner: {
+        id: 'new-owner',
+        githubLogin: 'calummoore',
+        displayName: 'Cal',
+        avatarUrl: null,
+      },
+      updatedAt: FAKE_TIME + 1_000,
+    }
+    live(1, { type: 'workspace.updated', workspace: newer })
+    const listed = { ...newer, name: 'The latest listed name' }
+    org.putWorkspace(listed)
     await workspace.archive.start()
     await workspace.archive.confirm()
+    expect(valueOf(workspace.detail.get())?.workspace).toEqual({
+      ...newer,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
+    expect(org.workspace(workspaceId)).toEqual({
+      ...listed,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
     expect(state()).toBe('archived')
     held.release('POST', resumePath)
     await resuming
     expect(state()).toBe('archived')
+    expect(valueOf(workspace.detail.get())?.workspace).toEqual({
+      ...newer,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
+    expect(org.workspace(workspaceId)).toEqual({
+      ...listed,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
+    live(2, { type: 'workspace.updated', workspace: starting.workspace })
+    expect(valueOf(workspace.detail.get())?.workspace).toEqual({
+      ...newer,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
+    expect(org.workspace(workspaceId)).toEqual({
+      ...listed,
+      state: 'archived',
+      archivedAt: workspaceFixtures('stopped').detail.workspace.updatedAt,
+    })
+    workspace.close()
+  })
+
+  test('shows a list Archive without an event and keeps it over a pending Resume', async () => {
+    const { server, held, org, workspace, live, events, page } =
+      await opened('error')
+    server.json('POST', resumePath, { ...starting, eventNumber: 1 })
+    const resuming = workspace.resume()
+    await flushMicrotasks()
+    org.putWorkspace(archived)
+    const expected = {
+      state: 'ready',
+      value: { workspace: archived, start: null, error: null },
+    }
+    expect(workspace.detail.get()).toEqual(expected)
+    held.release('POST', resumePath)
+    await resuming
+    expect(workspace.detail.get()).toEqual(expected)
+    expect(org.workspace(workspaceId)?.state).toBe('archived')
+    events.send(page([], 1))
+    workspace.reassigned({
+      ...archived,
+      owner: { ...archived.owner, id: 'new-owner' },
+    })
+    const reassigned = workspace.detail.get()
+    const listed = org.workspace(workspaceId)
+    live(2, {
+      type: 'workspace.updated',
+      workspace: starting.workspace,
+    })
+    expect(workspace.detail.get()).toEqual(reassigned)
+    expect(org.workspace(workspaceId)).toEqual(listed)
+    if (!starting.start) throw new Error('The starting fixture has no steps.')
+    live(3, { type: 'start.updated', start: starting.start })
+    expect(workspace.detail.get()).toEqual(reassigned)
+    expect(org.workspace(workspaceId)).toEqual(listed)
+    live(4, { type: 'workspace.title', name: 'An older workspace title' })
+    expect(workspace.detail.get()).toEqual(reassigned)
+    expect(org.workspace(workspaceId)).toEqual(listed)
+    workspace.close()
+  })
+
+  test('shows a list Archive before an older open answers and never resumes it', async () => {
+    const server = new FakeApiServer({ workspaceState: 'stopped' })
+    const held = new HeldRequests(server)
+    const org = new OrgModel(testServices(server, { fetch: held.fetch }), orgId)
+    await org.reload('list')
+    const workspace = new WorkspaceModel(org, workspaceId)
+    const path = workspacePath(orgId, workspaceId)
+    held.holdAnswer('GET', path)
+    const opening = workspace.open()
+    await flushMicrotasks()
+    org.putWorkspace(archived)
+    const expected = {
+      state: 'ready',
+      value: { workspace: archived, start: null, error: null },
+    }
+    expect(workspace.detail.get()).toEqual(expected)
+    held.release('GET', path)
+    await opening
+    expect(workspace.detail.get()).toEqual(expected)
+    expect(org.workspace(workspaceId)?.state).toBe('archived')
+    expect(
+      server.requests.filter(
+        (request) =>
+          request.method === 'POST' &&
+          new URL(request.url).pathname === resumePath,
+      ),
+    ).toHaveLength(0)
+    server.json(
+      'GET',
+      path,
+      {
+        error: { code: 'network_failure', message: 'The detail did not load.' },
+      },
+      503,
+    )
+    await workspace.open()
+    expect(workspace.detail.get()).toEqual(expected)
     workspace.close()
   })
 

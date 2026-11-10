@@ -7,7 +7,7 @@ import { workspaceChildId } from './workspace-path'
 import type { RequestContext } from '../security/gate'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { orgSandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount } from '../sandbox/client'
 import { repositoryLocation } from '../lifecycle/repository-locations'
 import { workspaceRepositoryLocations } from '../lifecycle/repository-location-data'
 import { shellQuote } from '../lifecycle/commands'
@@ -29,11 +29,12 @@ export async function readArchiveCheck(
     await workspaceRepositoryLocations(env.DB, id),
     row.repositoryId,
   )
-  const provider = await orgSandboxProvider(
+  const provider = await orgProviderForAccount(
     env,
     userId,
     orgId,
     dependencies.fetch,
+    row.providerAccount,
   )
   const result = await provider.runCommand(
     row.sandboxId,

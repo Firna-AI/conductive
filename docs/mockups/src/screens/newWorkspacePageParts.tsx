@@ -15,7 +15,7 @@ import { Sidebar } from '../components/workspaces/Sidebar'
 import { type AgentChoice, defaultChoice } from '../fixtures/agents'
 import { firstGoodBuild, lastBuild } from '../fixtures/computer'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
-import { memberViewer, people } from '../fixtures/members'
+import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { type Org, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
 import { newOrg, newOrgDraft, repositories } from '../fixtures/repositories'
 import { savedCarts } from '../fixtures/workspaces'
@@ -135,11 +135,17 @@ export function sidebarOf(
   state: NewWorkspaceState,
   needsInput?: string,
 ): ReactNode {
+  const viewer = viewerMembership(state.viewer)
   switch (state.org) {
     case 'suspended':
       // The sidebar of a suspended org has no New workspace to select.
       return (
-        <Sidebar org={orgs.acme} sections={suspendedSections()} suspended />
+        <Sidebar
+          org={orgs.acme}
+          sections={suspendedSections()}
+          suspended
+          viewer={viewer}
+        />
       )
     case 'new':
       return (
@@ -149,6 +155,7 @@ export function sidebarOf(
           org={orgs.firna}
           sections={newOrgSections()}
           settingsAlert={state.firstBuild === 'failed'}
+          viewer={viewer}
         />
       )
     case 'active':
@@ -157,6 +164,7 @@ export function sidebarOf(
           current="new-workspace"
           org={orgs.acme}
           sections={workspaceSections(undefined, needsInput)}
+          viewer={viewer}
         />
       )
   }

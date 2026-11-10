@@ -23,7 +23,9 @@ beforeAll(async () => {
 beforeEach(async () => {
   await harness.reset()
   fixture = await backendFixture(harness)
-  await harness.env.DB.prepare('UPDATE settings SET next_image_refresh_at = ?')
+  await harness.env.DB.prepare(
+    'UPDATE org_images SET next_image_refresh_at = ?',
+  )
     .bind(TEST_TIME + 30 * 86_400_000)
     .run()
 })
@@ -63,7 +65,7 @@ it('repairs the missing disk alarm after a lifted workspace RPC fails and defers
       .first('next_disk_keepalive_at'),
   ).toBe(stopped.nextDiskKeepaliveAt)
   const now = stopped.nextDiskKeepaliveAt + 15 * 60 * 1_000
-  fixture.setTime(now - 1)
+  await fixture.setTime(now - 1)
   expect(
     await repairLifecycleAlarms(
       fixture.runtime,
@@ -71,7 +73,7 @@ it('repairs the missing disk alarm after a lifted workspace RPC fails and defers
       () => SOFTWARE,
     ),
   ).toEqual({ workspaces: 0, orgs: 0, pendingWorkspaces: 0, pendingOrgs: 0 })
-  fixture.setTime(now)
+  await fixture.setTime(now)
   expect(
     await repairLifecycleAlarms(
       fixture.runtime,
@@ -109,7 +111,7 @@ it('keeps a lifted owner disk blocked while the org is still suspended', async (
     .readLifecycle()
   if (!state || state.nextDiskKeepaliveAt === null)
     throw new Error('Missing blocked deadline')
-  fixture.setTime(state.nextDiskKeepaliveAt + 15 * 60 * 1_000)
+  await fixture.setTime(state.nextDiskKeepaliveAt + 15 * 60 * 1_000)
   expect(
     await repairLifecycleAlarms(
       fixture.runtime,

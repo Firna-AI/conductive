@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { recordUserSuspension } from '../operator/data'
 import {
   createHarness,
@@ -7,7 +6,6 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -18,18 +16,16 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('closes an idle runner after owner suspension without a queued message', async () => {
   const fixture = await createChatFixture(harness)
   const runner = await fixture.connect()
   runner.emit({ type: 'runner.ready' })
   await fixture.drain()
   await recordUserSuspension(harness.env.DB, 7, fixture.member.id, TEST_TIME)
-  await fixture.clock.advance(15_000)
+  await fixture.clock.advance(15000)
   expect(fixture.transport.closedConnections).toBe(1)
   expect(runner.commands).toEqual([])
 })
-
 it.each(['archived', 'deleted', 'suspended'] as const)(
   'refuses runner titles and file results after the workspace is %s',
   async (change) => {

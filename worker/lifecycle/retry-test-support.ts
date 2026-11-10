@@ -2,10 +2,7 @@ import { SOFTWARE, type backendFixture } from './backend-test-support'
 import { readBuildJob } from './build-data'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { advanceImageBuild, startImageBuild } from './image-builds'
-import { ImageCoordinator } from './image-coordinator'
-import { MemoryWorkspaceStorage } from './platform-test-storage'
 import { createWorkspace } from './workspaces'
-import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 
 type Fixture = Awaited<ReturnType<typeof backendFixture>>
 
@@ -57,36 +54,26 @@ export async function imageRetryFixture(
   })
   for (let step = 0; step < steps; step++)
     await advanceImageBuild(images, org.id, id)
-  const storage = new MemoryWorkspaceStorage()
-  const create = () =>
-    new ImageCoordinator(storage, runtime.env, runtime.dependencies)
-  let actor = create()
-  await actor.schedule({
-    orgId: org.id,
-    software: SOFTWARE,
-    buildId: id,
-    nextAt: runtime.dependencies.now(),
-  })
+  const name = `org-image:${org.id}`
+  runtime.workspace(name)
+  const actor = fixture.actors.get(name)
+  if (!actor) throw new Error('The native image coordinator is missing.')
+  const schedule = (at: number) =>
+    actor.endpoint().scheduleImage({
+      orgId: org.id,
+      software: SOFTWARE,
+      buildId: id,
+      nextAt: at,
+    })
+  await schedule(runtime.dependencies.now())
   return {
     id,
-    storage,
+    storage: actor.storage,
     job: () => readBuildJob(runtime.env.DB, org.id, id),
-    restart: () => {
-      actor = create()
-    },
-    requeue: (at: number) =>
-      actor.schedule({
-        orgId: org.id,
-        software: SOFTWARE,
-        buildId: id,
-        nextAt: at,
-      }),
+    restart: actor.restart,
+    requeue: schedule,
     tick: async (at: number) => {
-      await advanceScheduledAlarms(
-        { now: runtime.dependencies.now, setTime: fixture.setTime },
-        at,
-        () => [{ storage, fire: () => actor.alarm() }],
-      )
+      await fixture.advanceTo(at, name)
     },
   }
 }

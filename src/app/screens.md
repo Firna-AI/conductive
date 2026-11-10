@@ -137,10 +137,11 @@ what the palette does.
   without an org read it through `keptOrg`.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
-  focused row link out of the page and the focus falls to the page, the
+  focused row out of the page and the focus falls to the page, the
   new link of the same workspace takes it, also after a failed move puts
   the row back. When the user moves the focus away, a later read of the
-  list leaves the focus there.
+  list leaves the focus there. Focus on any row control counts, including
+  Archive. A replacement row takes the focus on its workspace link.
 - An editor of a saved value, such as a script or the org name, stays
   mounted through its saves (`useSavedDraft`). When the saved value
   changes, a draft that the user did not change takes the new value, and

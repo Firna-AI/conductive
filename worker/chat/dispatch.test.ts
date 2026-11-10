@@ -1,9 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { sessionPaths } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-
 describe('durable runner dispatch', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -15,7 +13,6 @@ describe('durable runner dispatch', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('sends no command when dispatch storage fails and stops the queued turn immediately', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -23,9 +20,11 @@ describe('durable runner dispatch', () => {
     runner.emit({ type: 'runner.ready' })
     await fixture.drain()
     let commits = 0
-    fixture.storage.beforeCommit = async () => {
-      if (++commits === 2) throw new Error('Injected dispatch commit failure')
-    }
+    await fixture.setStorageHooks({
+      beforeCommit: async () => {
+        if (++commits === 2) throw new Error('Injected dispatch commit failure')
+      },
+    })
     const response = await fixture.fetch(
       sessionPaths.messages(fixture.org.id, WORKSPACE_ID, session.id),
       {
@@ -37,7 +36,7 @@ describe('durable runner dispatch', () => {
     )
     expect(response.status).toBe(500)
     expect(runner.commands).toEqual([])
-    fixture.storage.beforeCommit = null
+    await fixture.clearFaults()
     const turnId = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
       view.messageTurn('must-wait'),
     )
@@ -59,10 +58,10 @@ describe('durable runner dispatch', () => {
         ({ event }) => event.type === 'message.sent',
       ),
     ).toEqual([])
-    fixture.transport.dropOutgoing = (message) => {
-      if (message.type === 'turn') throw new Error('Injected turn send failure')
-      return false
-    }
+    await fixture.setSendRule({
+      type: 'turn',
+      error: 'Injected turn send failure',
+    })
     expect((await fixture.send(session.id, 'unsent-turn')).message.state).toBe(
       'queued',
     )
@@ -84,7 +83,7 @@ describe('durable runner dispatch', () => {
       state: 'stopped',
     })
     expect(runner.commands).toEqual([])
-    fixture.transport.dropOutgoing = () => false
+    await fixture.setSendRule(null)
     await fixture.connect(runner)
     if (!unsent) throw new Error('The unsent turn is missing.')
     runner.emit({

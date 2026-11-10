@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import type { WorkspaceValues } from './platform-storage'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { startRetryFixture, statusFault } from './retry-test-support'
@@ -16,8 +17,8 @@ it('ends a startup script that never exits at the original start deadline and pu
   fixture.boat.commandOutput = 'unfinished startup output\n'
   await start.tick(TEST_TIME + 1_199_999)
   const before = await start.job()
-  const alarm = start.storage.alarmAt
-  start.restart()
+  const alarm = await start.storage.getAlarm()
+  await start.restart()
   await start.tick(TEST_TIME + 1_200_000)
 
   expect(await start.job()).toBeUndefined()
@@ -69,10 +70,10 @@ it('gives each resume its own deadline and restores an old saved start when its 
     .get(base.workspaceId)
     ?.endpoint()
     .reportRunnerLifecycle({ type: 'runner.ready' })
-  await start.tick(fixture.runtime.dependencies.now())
+  expect(await fixture.run(() => start.wait())).toEqual({ ok: true })
   await start.endpoint.lifecycleStopped()
   fixture.boat.states.set('bx_1', 'archived')
-  fixture.setTime(TEST_TIME + 300_000)
+  await fixture.setTime(TEST_TIME + 300_000)
   const endpoint = fixture.runtime.workspace(base.workspaceId)
   expect(
     await endpoint.queueLifecycleStart({
@@ -90,12 +91,12 @@ it('gives each resume its own deadline and restores an old saved start when its 
   fixture.boat.states.set('bx_1', 'provisioning')
   await start.tick(TEST_TIME + 1_499_999)
   const before = await start.job()
-  const alarm = start.storage.alarmAt
-  const legacy = await start.storage.get('job', START_JOB_KEY)
+  const alarm = await start.storage.getAlarm()
+  const legacy = await start.storage.get<WorkspaceValues['job']>(START_JOB_KEY)
   if (!legacy) throw new Error('Missing saved resume')
   delete legacy.deadlineAt
-  await start.storage.put('job', START_JOB_KEY, legacy)
-  start.restart()
+  await start.storage.put<WorkspaceValues['job']>(START_JOB_KEY, legacy)
+  await start.restart()
   await start.tick(TEST_TIME + 1_500_000)
 
   expect(await start.job()).toBeUndefined()
@@ -124,9 +125,9 @@ it('enforces the start deadline before a later provider retry after reconstructi
   const fault = statusFault(fixture)
   fault.fail('60')
   await start.tick(TEST_TIME + 1_199_000)
-  const alarm = start.storage.alarmAt
+  const alarm = await start.storage.getAlarm()
   const polls = fixture.boat.statusRequests.length
-  start.restart()
+  await start.restart()
   await start.tick(TEST_TIME + 1_200_000)
 
   expect(await start.job()).toBeUndefined()
@@ -142,8 +143,42 @@ it('enforces the start deadline before a later provider retry after reconstructi
 it('fails a start when terminal preparation completes at the deadline before publishing success', async () => {
   const fixture = await backendFixture()
   const start = await startRetryFixture(fixture)
-  fixture.boat.beforeCommand = async (_command, detached) => {
-    if (!detached) fixture.setTime(TEST_TIME + 1_200_000)
+  await start.advance()
+  await start.advance()
+  const terminal = await start.job()
+  expect(terminal).toMatchObject({
+    phase: 'terminal',
+    processId: expect.any(Number),
+  })
+  fixture.boat.beforeStatus = async () => {
+    fixture.boat.beforeStatus = undefined
+    await fixture.setTime(TEST_TIME + 1_200_000)
+  }
+  await start.tick(TEST_TIME + 1_199_999)
+
+  expect(fixture.boat.statusRequests.at(-1)?.processId).toBe(
+    terminal?.processId,
+  )
+  expect(await start.wait()).toMatchObject({
+    ok: false,
+    error: { code: 'workspace_start_failed', message: FAILURE },
+  })
+  expect(await start.job()).toBeUndefined()
+  expect(fixture.boat.deletedIds).toEqual(['bx_1'])
+  expect(fixture.boat.fileReads).toEqual([])
+})
+
+it('fails a start when its terminal password read completes at the deadline before publishing success', async () => {
+  const fixture = await backendFixture()
+  const start = await startRetryFixture(fixture)
+  for (let step = 0; step < 3; step++) await start.advance()
+  expect(await start.job()).toMatchObject({ phase: 'terminal-password' })
+  const fetch = fixture.runtime.dependencies.fetch
+  fixture.runtime.dependencies.fetch = async (request) => {
+    const response = await fetch(request)
+    if (new URL(request.url).pathname.endsWith('/files'))
+      await fixture.setTime(TEST_TIME + 1_200_000)
+    return response
   }
   await start.tick(TEST_TIME + 1_199_999)
 

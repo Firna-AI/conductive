@@ -12,7 +12,7 @@ draft moves, the login of each session, and the linked sessions.
   the user types in keeps its text. The reply then removes the sent files
   that the backend did not keep from the draft that moved, wherever it is.
 - Each session runs on the agent login of its starter, the member who
-  started it, as [Messages](../../docs/protocol/chat-and-events.md#messages)
+  started it, as [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   says. When a message spends the login of another member, a label in the
   bar of the composer names that login, such as "Cal's login". The name
   comes from the session record, so a starter who left the org keeps a

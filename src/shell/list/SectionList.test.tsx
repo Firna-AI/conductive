@@ -5,8 +5,9 @@ import { describe, expect, test } from 'vitest'
 import { routes } from '../../app/router'
 import { HeldRequests } from '../../app/test-kit'
 import { workspacePath } from '../../shared/workspaces'
+import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { click, mountScreen, press, settle } from '../test-mount'
 import { startedApp } from '../test-render'
@@ -36,7 +37,7 @@ function focusPlace(): string {
 }
 
 describe('the workspace list', () => {
-  test('a move by keys keeps the focus on its row, also after a failed move, and a read after the user moved the focus away leaves it there', async () => {
+  test('moves keep row focus from the link or Archive and respect later focus changes', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
     const app = await startedApp(server, { fetch: held.fetch })
@@ -45,7 +46,12 @@ describe('the workspace list', () => {
       app,
       <>
         <input aria-label="Search" />
-        <OrgList orgId={org} selectedId={null} variant="sidebar" />
+        <OrgList
+          orgId={org}
+          selectedId={null}
+          variant="sidebar"
+          viewer={fakeUser}
+        />
       </>,
     )
     await settle()
@@ -64,6 +70,14 @@ describe('the workspace list', () => {
     // The last row of General moves to the next section.
     const pricingPath = workspacePath(org, 'pricing-copy')
     server.json('PATCH', pricingPath, movedTo('pricing-copy', 'checkout'))
+    const row = link('pricing-copy').closest('li')
+    if (!row) throw new Error('The workspace has no row.')
+    const archive = byRole('button', 'Archive workspace', row)
+    act(() => archive.focus())
+    press(archive, 'ArrowDown', { alt: true })
+    await settle()
+    const archiveShortcut = focusPlace()
+    await act(() => app.org(org).reload('list'))
     act(() => link('pricing-copy').focus())
     const nextSection = await move('pricing-copy')
     // The user moves the focus to another field. A read of the list puts
@@ -92,12 +106,14 @@ describe('the workspace list', () => {
     held.release('PATCH', pricingPath)
     await settle()
     expect({
+      archiveShortcut,
       nextSection,
       afterRead,
       afterPage,
       moving,
       failedMove: focusPlace(),
     }).toEqual({
+      archiveShortcut: 'pricing-copy in Checkout',
       nextSection: 'pricing-copy in Checkout',
       afterRead: 'Search',
       afterPage: 'BODY',

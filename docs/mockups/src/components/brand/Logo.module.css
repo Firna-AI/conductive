@@ -24,10 +24,14 @@
     no-repeat;
 }
 
-/* The tile and the name: dark text in the light scheme, light text in the dark. */
+/*
+ * The tile and the name: dark text in the light scheme, light text in the
+ * dark. It has the height of the lockup token, unless its caller sets one.
+ */
 .lockup {
   display: inline-block;
   flex-shrink: 0;
+  height: var(--ui-lockup-height);
   aspect-ratio: 681.86 / 127.32;
   background: url('../../../../brand/conductive-lockup-light.svg') center /
     contain no-repeat;

@@ -21,21 +21,25 @@ export type Params = Readonly<Record<string, string>>
 
 interface RouteRequest {
   params: Params
-  /** The query of the address, such as the search of a list. */
+  /** The query of the address, such as the search of a list or the name of an uploaded file. */
   query: URLSearchParams
-  /** The JSON body, or `null` when the request has none. */
+  /**
+   * The JSON body, or `null` when the request has none. The raw body of a
+   * file upload is its bytes.
+   */
   body: unknown
 }
 
 /**
  * One route of the dev fake. Its path comes from a shared path helper,
  * with an `ID` part in place of each ID. An answer of `null` sends the
- * request on to the recorded server.
+ * request on to the recorded server. A promise answers later, such as an
+ * upload that waits.
  */
 export interface Route {
   method: Method
   path: string
-  answer: (request: RouteRequest) => Response | null
+  answer: (request: RouteRequest) => Response | Promise<Response> | null
 }
 
 /** A refused request. The fetch sends it as the error body of the API. */
@@ -115,6 +119,9 @@ export function match(
 }
 
 async function readBody(request: Request): Promise<unknown> {
+  if (request.headers.get('Content-Type') === 'application/octet-stream') {
+    return request.arrayBuffer()
+  }
   const body = await request.text()
   if (body === '') return null
   try {
@@ -156,15 +163,14 @@ export function routeFetch(
     init?: RequestInit,
   ): Promise<Response | null> {
     const request = new Request(new URL(input, FAKE_ORIGIN), init)
-    const url = new URL(request.url)
-    const path = url.pathname
+    const { pathname: path, searchParams: query } = new URL(request.url)
     guard(path, request.method)
     for (const route of routes) {
       if (route.method !== request.method) continue
       const params = match(route.path, path)
-      if (!params) continue
-      const body = await readBody(request)
-      return route.answer({ params, query: url.searchParams, body })
+      if (params) {
+        return route.answer({ params, query, body: await readBody(request) })
+      }
     }
     return null
   }

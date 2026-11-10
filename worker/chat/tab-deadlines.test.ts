@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import {
   workspaceEventsPath,
   type WorkspaceSocketMessage,
@@ -13,8 +12,6 @@ import {
 } from '../test-support/harness'
 import { readConnectionAccess } from '../security/connection-access'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
-import type { ChatStorage } from './types'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -25,7 +22,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('expires an idle tab while its access read waits and ignores the late result', async () => {
   const entered = barrier<void>()
   const release = barrier<void>()
@@ -40,49 +36,45 @@ it('expires an idle tab while its access read waits and ignores the late result'
     },
   })
   const tab = await fixture.tab()
-  const pending = fixture.clock.advance(30_000)
+  const pending = fixture.clock.advance(30000)
   await entered.promise
-  await fixture.clock.advance(TEST_TIME + 29_999 - fixture.clock.now())
+  await fixture.clock.advance(TEST_TIME + 29999 - fixture.clock.now())
   const beforeDeadline = tab.closed
   await fixture.clock.advance(1)
   const atDeadline = tab.closed
   release.resolve()
   await pending
   const count = tab.messages.length
-  await fixture.chat.appendWorkspaceEvent(WORKSPACE_ID, {
+  await fixture.appendWorkspaceEvent(WORKSPACE_ID, {
     type: 'workspace.title',
     name: 'After the expired grant',
   })
   expect(beforeDeadline).toBe(0)
   expect(atDeadline).toBe(1)
   expect(tab.messages).toHaveLength(count)
-  expect(fixture.clock.scheduledCount).toBe(0)
-  tab.close()
+  expect(await fixture.clock.scheduledCount()).toBe(0)
+  await tab.close()
 })
-
 it('sends no history when the session expires while history is read', async () => {
   const fixture = await createChatFixture(harness)
-  await fixture.chat.appendWorkspaceEvent(WORKSPACE_ID, {
+  await fixture.appendWorkspaceEvent(WORKSPACE_ID, {
     type: 'workspace.title',
     name: 'Private history',
   })
   await harness.env.DB.prepare('UPDATE sessions SET expires_at = ?')
-    .bind(TEST_TIME + 10_000)
+    .bind(TEST_TIME + 10000)
     .run()
   const entered = barrier<void>()
   const release = barrier<void>()
-  const list = fixture.storage.list.bind(fixture.storage)
-  fixture.storage.list = async <T>(
-    options: Parameters<ChatStorage['list']>[0],
-  ) => {
-    const result = await list<T>(options)
-    entered.resolve()
-    await release.promise
-    return result
-  }
+  await fixture.setStorageHooks({
+    afterList: async () => {
+      entered.resolve()
+      await release.promise
+    },
+  })
   const messages: WorkspaceSocketMessage[] = []
   let closed = 0
-  const pending = fixture.chat
+  const pending = fixture
     .openBrowser(
       fixture.request(workspaceEventsPath(fixture.org.id, WORKSPACE_ID)),
       {
@@ -97,26 +89,25 @@ it('sends no history when the session expires while history is read', async () =
       (error: unknown) => error,
     )
   await entered.promise
-  await fixture.clock.advance(10_000)
+  await fixture.clock.advance(10000)
   release.resolve()
   const error = await pending
   expect(messages).toEqual([])
   expect(closed).toBe(1)
   expect(error).toBeInstanceOf(HttpError)
   expect(error).toMatchObject({ status: 404, code: 'workspace_not_found' })
-  expect(fixture.clock.scheduledCount).toBe(0)
+  expect(await fixture.clock.scheduledCount()).toBe(0)
 })
-
 it('sends no history when the initial access read outlasts its grant', async () => {
   const fixture = await createChatFixture(harness, {
     readConnectionAccess: async (identities, now) => {
       const result = await readConnectionAccess(harness.env.DB, identities, now)
-      await fixture.clock.advance(30_000)
+      await fixture.clock.advance(30000)
       return result
     },
   })
   const messages: WorkspaceSocketMessage[] = []
-  const error = await fixture.chat
+  const error = await fixture
     .openBrowser(
       fixture.request(workspaceEventsPath(fixture.org.id, WORKSPACE_ID)),
       {
@@ -131,5 +122,5 @@ it('sends no history when the initial access read outlasts its grant', async () 
   expect(messages).toEqual([])
   expect(error).toBeInstanceOf(HttpError)
   expect(error).toMatchObject({ status: 404, code: 'workspace_not_found' })
-  expect(fixture.clock.scheduledCount).toBe(0)
+  expect(await fixture.clock.scheduledCount()).toBe(0)
 })
