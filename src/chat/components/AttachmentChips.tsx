@@ -16,6 +16,10 @@ import {
 } from '../../../docs/mockups/src/components/chat/attachmentCopy'
 import styles from '../../../docs/mockups/src/components/chat/AttachmentChips.module.css'
 import states from '../../../docs/mockups/src/components/chat/AttachmentStates.module.css'
+import {
+  ChipIconCell,
+  useNoHover,
+} from '../../../docs/mockups/src/components/chat/ChipRemove'
 import { formatSize } from '../../../docs/mockups/src/components/chat/sizes'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
@@ -70,12 +74,19 @@ function Glyph(props: { item: DraftFile }) {
   )
 }
 
+/**
+ * A file of a draft. Its glyph sits in a cell at its start, which a pointer
+ * or the keyboard focus turns into a × that removes the file. Where no
+ * pointer hovers, the glyph stays, and a × button of touch size ends the
+ * file.
+ */
 function DraftChip(props: {
   item: DraftFile
   onRetry: (id: string) => void
   onRemove: (id: string) => void
 }) {
   const { item } = props
+  const noHover = useNoHover()
   const failed = item.state === 'failed'
   const name = item.state === 'ready' ? item.attachment.name : item.file.name
   const sent = sentBytesOf(item)
@@ -83,9 +94,21 @@ function DraftChip(props: {
   if (sent !== null) label = sentLabel(sent, item.file.size)
   if (item.state === 'ready') label = formatSize(item.attachment.sizeBytes)
   if (failed) label = failedLabel
+  const remove = () => props.onRemove(item.id)
   return (
-    <li className={classes(styles.chip, failed && states.failed)}>
-      <Glyph item={item} />
+    <li
+      className={classes(
+        styles.chip,
+        styles.removable,
+        noHover && styles.withEnd,
+        failed && states.failed,
+      )}
+    >
+      <ChipIconCell
+        focusable
+        icon={<Glyph item={item} />}
+        removal={{ name, onRemove: remove }}
+      />
       <span className={styles.name}>{name}</span>
       <span className={classes(styles.size, failed && states.failedLabel)}>
         {label}
@@ -99,12 +122,9 @@ function DraftChip(props: {
           {tryAgainLabel}
         </ActionButton>
       ) : null}
-      <IconButton
-        icon={X}
-        label={`Remove ${name}`}
-        onPress={() => props.onRemove(item.id)}
-        quiet
-      />
+      {noHover ? (
+        <IconButton icon={X} label={`Remove ${name}`} onPress={remove} quiet />
+      ) : null}
     </li>
   )
 }
@@ -113,7 +133,8 @@ function DraftChip(props: {
  * The files of a draft above the text. Each one shows its upload: a ring and
  * the measured percent, or a spinner and "Uploading" before the browser
  * measures it, Try again on a failed upload, or its size when it is ready.
- * Remove takes it off the draft. Both composers draw these chips.
+ * Its × takes it off the draft. The chat and both New workspace forms draw
+ * these chips.
  */
 export function DraftFiles(props: {
   files: readonly DraftFile[]

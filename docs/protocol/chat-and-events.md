@@ -48,6 +48,12 @@ says.
 - [Workspace links](workspace-links.md) says how chat text and the message
   field of each composer show a link to a workspace of the org, as a chip.
 
+## File mentions
+
+- [File mentions](file-mentions.md) says how the composer of a workspace
+  chat lists the files and folders of the workspace after `@`, and how a
+  message shows them as chips.
+
 ## What the chat shows
 
 - The chat history shows also while the sandbox is stopped or starting.

@@ -41,6 +41,7 @@ function KeptChat(props: {
       controller={props.chat}
       copy={services}
       host={props.host}
+      mentions={files.mentions}
       onConnectAgent={(agent) => go(routes.account(agent))}
       onOpenDiff={files.onOpenDiff}
       onOpenPage={go}

@@ -1,6 +1,10 @@
 import type { WorkspaceRow } from '../workspaces/sections'
+import { mentionParts, type MentionPart } from './fileMentions'
 
-/** A part of a text: plain text, code in backticks, or a link. */
+/**
+ * A part of a text: plain text, code in backticks, a link, or a mention of
+ * a file or a folder.
+ */
 export type TextPart =
   | { kind: 'text'; text: string }
   | { kind: 'code'; text: string }
@@ -10,6 +14,7 @@ export type TextPart =
       /** The link as the text has it, such as a Markdown link. */
       source: string
     }
+  | MentionPart
 
 /**
  * A Markdown link to a web address, or a bare web address. A bare address
@@ -32,17 +37,33 @@ function linkParts(text: string): TextPart[] {
   return parts
 }
 
+/** Plain text with its links, and with its mentions when `mentions` asks. */
+function plainParts(text: string, mentions: boolean): TextPart[] {
+  if (!mentions) return linkParts(text)
+  return mentionParts(text).flatMap((part): TextPart[] =>
+    part.kind === 'text' ? linkParts(part.text) : [part],
+  )
+}
+
 /**
- * Splits a text into plain text, code, and links. In a sent message or an
- * answer, `code` is true: each part in backticks is code, and a link in it
- * stays code. A message box keeps plain text, so it reads no code.
+ * Splits a text into plain text, code, links, and mentions. In a sent
+ * message or an answer, `code` is true: each part in backticks is code,
+ * and a link or a mention in it stays code. A message box keeps plain
+ * text, so it reads no code. Only the text of a member, in a message box
+ * or a sent message, reads mentions, so `mentions` is false in an answer.
  */
-export function textParts(text: string, code: boolean): TextPart[] {
-  if (!code) return linkParts(text)
+export function textParts(
+  text: string,
+  code: boolean,
+  mentions = false,
+): TextPart[] {
+  if (!code) return plainParts(text, mentions)
   return text
     .split('`')
     .flatMap((part, index): TextPart[] =>
-      index % 2 === 1 ? [{ kind: 'code', text: part }] : linkParts(part),
+      index % 2 === 1
+        ? [{ kind: 'code', text: part }]
+        : plainParts(part, mentions),
     )
 }
 

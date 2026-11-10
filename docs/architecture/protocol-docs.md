@@ -17,6 +17,9 @@ them, and this page lists each protocol doc and what it covers.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
+  - [File mentions](../protocol/file-mentions.md): the list of `@` in the
+    composer, the chips of files and folders, and the removal of each chip
+    of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, and the repair of lost workspace
     updates.

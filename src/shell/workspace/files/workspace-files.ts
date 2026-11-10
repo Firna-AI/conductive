@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
@@ -29,7 +29,7 @@ function useKeptLookup(context: WorkspaceContext) {
  * The files of the open workspace, and their connection. The tab keeps one
  * store for each shown workspace, so a return shows the lists at once and
  * reads only the events after the last one. The hook connects the store
- * after the render and stops it at unmount. Only the Files part calls it.
+ * after the render and stops it at unmount. The Files part calls it.
  */
 export function useWorkspaceFiles(context: WorkspaceContext): WorkspaceFiles {
   const create = useKeptLookup(context)
@@ -68,6 +68,20 @@ export function useKeptFilesWhile(
     () => (shows ? lookup({ orgId: org.id, workspaceId: workspace.id }) : null),
     [shows, lookup, org.id, workspace.id],
   )
+}
+
+/**
+ * The kept store while `shows` is true, connected for as long, or null. The
+ * chat calls it, so the list of `@` and the file chips work also on a phone
+ * before a visit to Files. It shares the connection of the Files part.
+ */
+export function useConnectedFilesWhile(
+  context: WorkspaceContext,
+  shows: boolean,
+): WorkspaceFiles | null {
+  const files = useKeptFilesWhile(context, shows)
+  useEffect(() => (files ? startFiles(files) : undefined), [files])
+  return files
 }
 
 /**
