@@ -206,3 +206,69 @@
 .sheet .status {
   padding: 8px 12px;
 }
+
+/*
+ * A choice that is off, with its reason under it and its action beside
+ * it. The label keeps the muted colour of a choice that is off, and the
+ * reason and the action keep their full colours, so both stay readable.
+ */
+.unavailable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--ui-row-height);
+  padding: 4px 8px;
+  border-radius: var(--ui-radius-md);
+  box-sizing: border-box;
+}
+
+.sheet .unavailable {
+  min-height: 44px;
+  padding: 6px 12px;
+}
+
+.unavailableItem {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  cursor: default;
+}
+
+.unavailableItem .icon {
+  margin-top: 2px;
+}
+
+.unavailableText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.unavailableLabel {
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet .unavailableLabel {
+  font-size: var(--ui-text-lg);
+}
+
+.reason {
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.unavailableAction {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}

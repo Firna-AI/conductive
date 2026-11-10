@@ -1,8 +1,9 @@
 /**
  * The workspaces that Cal imports from Conductor into Acme, in the Mac app.
- * The import creates each one at once in the section Import from
- * Conductor, with its name, its branch, and its old sessions, and with no
- * cloud computer. So each one is inactive until a member activates it.
+ * The import creates each one in the section Import from Conductor when
+ * its own upload ends, with its name, its branch, and its old sessions,
+ * and with no cloud computer. So each one is inactive until a member
+ * activates it.
  */
 
 import { defaultChoice } from './agents'

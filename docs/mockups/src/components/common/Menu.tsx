@@ -30,8 +30,22 @@ type MenuItem = {
   to?: string
 }
 
+/**
+ * A choice that the menu shows but cannot take, such as a pull request
+ * whose branch is in another repository: greyed, with its reason under it,
+ * and one action beside it, such as a link to a page outside the app.
+ */
+type UnavailableItem = {
+  kind: 'unavailable'
+  label: string
+  icon?: LucideIcon
+  reason: string
+  action?: ReactNode
+}
+
 export type MenuEntry =
   | MenuItem
+  | UnavailableItem
   | { kind: 'label'; label: string }
   /** A short line that explains the choices, under them. */
   | { kind: 'note'; text: string }
@@ -94,11 +108,37 @@ function Item(props: { entry: MenuItem }) {
   )
 }
 
+/**
+ * A choice that is off, with its reason. The choice is an item that is
+ * off, and its action stands beside it, outside the item, so that one
+ * press has one target.
+ */
+function Unavailable(props: { entry: UnavailableItem }) {
+  const { entry } = props
+  const Icon = entry.icon
+  return (
+    <div className={styles.unavailable} role="none">
+      <div aria-disabled className={styles.unavailableItem} role="menuitem">
+        {Icon ? <Icon aria-hidden className={styles.icon} size={14} /> : null}
+        <span className={styles.unavailableText}>
+          <span className={styles.unavailableLabel}>{entry.label}</span>
+          <span className={styles.reason}>{entry.reason}</span>
+        </span>
+      </div>
+      {entry.action ? (
+        <span className={styles.unavailableAction}>{entry.action}</span>
+      ) : null}
+    </div>
+  )
+}
+
 function Entry(props: { entry: MenuEntry; index: number }) {
   const { entry } = props
   switch (entry.kind) {
     case 'item':
       return <Item entry={entry} />
+    case 'unavailable':
+      return <Unavailable entry={entry} />
     case 'label':
       return (
         <div className={styles.group} role="none">
@@ -120,6 +160,7 @@ function Entry(props: { entry: MenuEntry; index: number }) {
 function entryKey(entry: MenuEntry, index: number): string {
   switch (entry.kind) {
     case 'item':
+    case 'unavailable':
     case 'label':
       return entry.label
     case 'note':

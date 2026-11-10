@@ -41,6 +41,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     'copyLink',
+    'resume',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -74,8 +75,9 @@ export const workspaceStateSchema = {
     },
     /**
      * The message that the app saved for a start that failed, which the
-     * error state shows: a failure, the 20-minute limit of a start, or a
-     * chosen branch that is gone from GitHub.
+     * error state shows: a failure, the 20-minute limit of a start, a
+     * chosen branch that is gone from GitHub, or work from Conductor that
+     * does not fit the free disk of the cloud computer.
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
@@ -209,6 +211,15 @@ export const workspaceStateSchema = {
      * shows for a moment that the copy worked or failed.
      */
     copyLink: { enum: ['none', 'copied', 'failed'] },
+    /**
+     * A session from Conductor after the activation of its workspace,
+     * which the `session` tab shows, or which opened the Markdown of its
+     * old session on the `old-session` tab: none, Apply coupons before
+     * tax, which resumed with the agent's memory, or Coupon edge cases in
+     * tests, which could not resume and started fresh from its old chat.
+     * A workspace that did not come from Conductor has none.
+     */
+    resume: { enum: ['none', 'memory', 'fallback'] },
   },
 } as const
 
@@ -240,6 +251,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   copyLink: 'none',
+  resume: 'none',
 }
 
 /**

@@ -144,31 +144,52 @@ function openRow(
 }
 
 /**
+ * Where the row of the drawn imported workspace leads, where it differs
+ * from its default.
+ */
+type ImportRowLinks = Readonly<{
+  /**
+   * False keeps the row and its Archive static, where the list differs
+   * from the drawn list after the import. Without it, the row is live.
+   */
+  live?: boolean
+  /**
+   * The question of Archive of the open row, from the state of its screen.
+   * Without it, the question follows the status of the row.
+   */
+  archiveTo?: string | null
+}>
+
+/**
  * The sections after an import from Conductor: Import from Conductor at
  * the top, with the workspaces of the import and their states, then the
  * other sections. A row opens its workspace, when the mockups draw it.
  * `open` is the workspace that the main area shows, and `openTo` the
  * screen of its current state, which its selected row keeps. Null keeps
- * that row static, for a state that no entry draws.
+ * that row static, for a state that no entry draws. `links` can keep the
+ * rows static, or give the open row its own Archive question.
  */
 export function sectionsWithImport(
   imported: readonly Workspace[],
   open?: OpenWorkspace,
   openTo?: string | null,
+  links: ImportRowLinks = {},
 ): SidebarSection[] {
   const rows = imported.map((workspace): WorkspaceRow => {
     const isOpen = workspace.key === open?.workspace.key
-    const to = workspace.key === 'coupon-totals' ? paths.imported : undefined
+    const drawn = workspace.key === 'coupon-totals' && (links.live ?? true)
+    const to = drawn ? paths.imported : undefined
     const status = isOpen ? open.status : workspace.status
+    const archiveTo =
+      isOpen && links.archiveTo !== undefined
+        ? links.archiveTo
+        : (importedArchive(status) ?? null)
     return {
       workspace,
       status,
       selected: isOpen,
       to: isOpen ? openRow(openTo, to) : to,
-      archiveTo:
-        workspace.key === 'coupon-totals'
-          ? (importedArchive(status) ?? null)
-          : null,
+      archiveTo: drawn ? archiveTo : null,
     }
   })
   return [{ section: conductorSection, rows }, ...workspaceSections(open)]

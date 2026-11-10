@@ -8,7 +8,7 @@ import {
 export const branchDialog = defineScreen({
   title: 'In the dialog',
   description:
-    'The New workspace dialog has a quiet branch picker beside the repository picker, which says New branch by default. Here Cal opened it, and the same picker hangs below it, with its search, New branch, the open pull requests, and the branches. A choice keeps the dialog open, and New branch goes back to the dialog as it opens. The phone view is the New workspace page with the picker in a sheet, because a phone always opens the page.',
+    'The New workspace dialog has a quiet branch picker beside the repository picker, which says New branch by default. Here Cal opened it, and the same picker hangs below it, with its search, New branch, the open pull requests, and the branches. The pull request #477 from the fork lena-ko/storefront is off there too, with its reason and Open on GitHub. A choice keeps the dialog open, and New branch goes back to the dialog as it opens. The phone view is the New workspace page with the picker in a sheet, because a phone always opens the page.',
   rationale:
     'The dialog has no line under its repository picker, so the branch takes a quiet picker beside it, in the same plain style. New branch stays the default, as on the page.',
   relatedDocs: [],

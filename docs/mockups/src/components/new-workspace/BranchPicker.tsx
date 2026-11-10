@@ -6,12 +6,15 @@ import {
   branchSearches,
   chosenBranch,
   chosenPullRequest,
+  continuable,
   openPullRequests,
   otherBranches,
+  pullRequestHref,
   type PullRequestChoice,
 } from '../../fixtures/branches'
 import { repositories } from '../../fixtures/repositories'
 import { noop } from '../../noop'
+import { ExternalLink } from '../common/ExternalLink'
 import { LoadFailure } from '../common/LoadFailure'
 import { Menu, type MenuEntry, type MenuPlacement } from '../common/Menu'
 import { useControlSizes } from '../common/touch'
@@ -23,11 +26,11 @@ export type BranchChoice = 'new' | 'existing' | 'pull-request'
 
 /**
  * The branch picker: closed, open, open with a search that finds a pull
- * request or finds nothing, or open while its list loads or after the list
- * did not load.
+ * request, finds nothing, or finds the pull request from a fork, or open
+ * while its list loads or after the list did not load.
  */
 export type PickerState =
-  'closed' | 'open' | 'search' | 'no-match' | 'loading' | 'failed'
+  'closed' | 'open' | 'search' | 'no-match' | 'fork' | 'loading' | 'failed'
 
 /** The default branch of the repository, which the picker never offers. */
 const defaultBranch = repositories.storefront.defaultBranch
@@ -40,14 +43,25 @@ export function pullRequestText(pullRequest: PullRequestChoice): string {
 function search(state: PickerState): string {
   if (state === 'search') return branchSearches.found
   if (state === 'no-match') return branchSearches.none
+  if (state === 'fork') return branchSearches.fork
   return ''
+}
+
+/**
+ * The text that a search reads in a pull request: its number, its title,
+ * and its branch. A pull request from another repository shows no branch
+ * of the repository, so a search reads only its number and its title.
+ */
+function searchText(item: PullRequestChoice): string {
+  const text = pullRequestText(item)
+  return continuable(item) ? `${text} ${item.branch}` : text
 }
 
 /** The pull requests and the branches that the search of a state finds. */
 function found(state: PickerState) {
   const query = search(state).toLowerCase()
   const pullRequests = openPullRequests.filter((item) =>
-    `${pullRequestText(item)} ${item.branch}`.toLowerCase().includes(query),
+    searchText(item).toLowerCase().includes(query),
   )
   const branches = otherBranches.filter((item) =>
     item.name.toLowerCase().includes(query),
@@ -56,9 +70,29 @@ function found(state: PickerState) {
 }
 
 /**
+ * The row of a pull request whose branch is in another repository, such
+ * as a fork. A new workspace cannot continue it, so the row is off, says
+ * where its branch is, and opens the pull request on GitHub.
+ */
+function forkRow(item: PullRequestChoice): MenuEntry {
+  return {
+    kind: 'unavailable',
+    label: pullRequestText(item),
+    icon: GitPullRequest,
+    reason: `Its branch is in another repository, ${item.head.name}.`,
+    action: (
+      <ExternalLink className={styles.gitHub} href={pullRequestHref(item)}>
+        Open on GitHub
+      </ExternalLink>
+    ),
+  }
+}
+
+/**
  * The rows of the picker. New branch comes first and stays the default.
  * Then the open pull requests, and the branches without one. A branch with
- * an open pull request shows only as that pull request. New branch, the
+ * an open pull request shows only as that pull request. A pull request
+ * from another repository shows as a row that is off. New branch, the
  * chosen branch, and the chosen pull request lead to the form with that
  * choice, where `links` names a screen.
  */
@@ -93,6 +127,10 @@ function entries(
   if (pullRequests.length > 0) {
     rows.push({ kind: 'label', label: 'Open pull requests' })
     for (const item of pullRequests) {
+      if (!continuable(item)) {
+        rows.push(forkRow(item))
+        continue
+      }
       const sample = item === chosenPullRequest
       rows.push({
         kind: 'item',
@@ -148,7 +186,8 @@ function Status(props: {
 /**
  * The branch picker of New workspace: a search field, New branch, the open
  * pull requests, and the other branches of the repository on GitHub,
- * without its default branch. It opens below its control on a computer,
+ * without its default branch. A pull request from another repository
+ * stays in the list as a row that is off, with Open on GitHub. It opens below its control on a computer,
  * and in a sheet on a phone. The menu marks the current choice. `links`
  * are the branch links of the form that owns the picker.
  */

@@ -1,3 +1,11 @@
 {
-  "order": ["offer", "settings", "palette", "consent", "list", "progress"]
+  "order": [
+    "offer",
+    "settings",
+    "palette",
+    "consent",
+    "list",
+    "progress",
+    "unfinished"
+  ]
 }

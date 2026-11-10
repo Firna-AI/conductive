@@ -1,12 +1,14 @@
-import type { ConductorRow } from '../../fixtures/conductorImport'
+import { CirclePause, TimerOff } from 'lucide-react'
+import type { ConductorRow, Reservation } from '../../fixtures/conductorImport'
 import type { Workspace } from '../../fixtures/workspaces'
+import { formatSize } from '../chat/sizes'
 import { WorkspaceChip } from '../chat/WorkspaceChip'
 import { ScreenLink } from '../common/ScreenLink'
 import { workspaceLabel } from '../workspaces/label'
 import styles from './ImportRows.module.css'
 
 /** The sessions of a row in words, such as "3 sessions". */
-function sessionCount(count: number): string {
+export function sessionCount(count: number): string {
   return count === 1 ? '1 session' : `${count} sessions`
 }
 
@@ -20,6 +22,36 @@ export function RowFacts(props: { row: ConductorRow }) {
       <code className={styles.branch}>{row.branch}</code>
       <span aria-hidden>·</span>
       <span>{sessionCount(row.sessions)}</span>
+    </span>
+  )
+}
+
+/**
+ * The state of an upload of the row that stopped before its end. An
+ * unfinished one says how far it got and how long its parts stay, which
+ * Try again uses. An expired one says that its parts are gone, so Import
+ * sends all of it again from this Mac.
+ */
+export function ReservationLine(props: {
+  row: ConductorRow
+  reservation: Reservation
+}) {
+  const { reservation } = props
+  if (reservation.kind === 'unfinished') {
+    return (
+      <span className={styles.reservation}>
+        <CirclePause aria-hidden className={styles.reservationIcon} size={13} />
+        Unfinished: {formatSize(reservation.stored)} of{' '}
+        {formatSize(props.row.upload)} uploaded, kept until{' '}
+        {reservation.keptUntil}
+      </span>
+    )
+  }
+  return (
+    <span className={styles.reservation}>
+      <TimerOff aria-hidden className={styles.reservationIcon} size={13} />
+      The unfinished upload expired on {reservation.expiredOn}. Import sends all
+      of it again.
     </span>
   )
 }

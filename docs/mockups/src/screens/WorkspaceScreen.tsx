@@ -29,6 +29,7 @@ import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { importedScreensOf } from './importedScreens'
+import { importedItems } from './importedSessions'
 import { importedChat, isImported } from './importedWorkspace'
 import { placeLostUpdate } from './lostUpdates'
 import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
@@ -36,7 +37,7 @@ import { viewerOf } from './sessionStarter'
 import {
   FilesContent,
   openFile,
-  openRowPath,
+  openRowLinks,
   PhoneFilePage,
   startingLogFor,
   ToolContent,
@@ -116,9 +117,11 @@ export function WorkspaceScreen(props: {
         }
         fold={state.fold}
         items={
-          fresh || imported
-            ? []
-            : chatItemsFor(conversations[state.conversation], state.paths)
+          imported
+            ? importedItems(state)
+            : fresh
+              ? []
+              : chatItemsFor(conversations[state.conversation], state.paths)
         }
         notice={
           imported?.notice ??
@@ -262,7 +265,7 @@ export function WorkspaceScreen(props: {
         suspended,
         membership,
         createdWorkspaces(state),
-        openRowPath(state),
+        openRowLinks(state),
       )}
     >
       <WorkspaceBody

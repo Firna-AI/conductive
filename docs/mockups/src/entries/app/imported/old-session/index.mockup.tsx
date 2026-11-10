@@ -25,7 +25,7 @@ export const importedOldSession = defineScreen({
       slug: 'active',
       title: 'After activation',
       description:
-        'The activated workspace is ready, and Cal opened the same old session. The file opens beside the tab of the new session, and the header shows Ready.',
+        'The activated workspace is ready, and Cal opened the same old session from the empty chat of the new session. The file opens in a tab at the end of the row, after the tabs of the sessions from Conductor and of the new session, and the header shows Ready. The way back of a phone returns to the new session. The same file opened from the tab of the resumed session is a state of app/imported/resumed.',
       props: { sandbox: 'ready', tab: 'old-session' },
     },
     {
@@ -39,7 +39,7 @@ export const importedOldSession = defineScreen({
       slug: 'stopped',
       title: 'While stopped',
       description:
-        'Later, the activated workspace stopped, and Cal opened the same old session. The file opens as before the activation, beside the tab of its new session. The header shows Stopped, and the right column keeps the lists that the workspace saved.',
+        'Later, the activated workspace stopped, and Cal opened the same old session. The file opens as before the activation, after the tabs of the sessions. The header shows Stopped, and the right column keeps the lists that the workspace saved.',
       props: {
         sandbox: 'stopped',
         tab: 'old-session',

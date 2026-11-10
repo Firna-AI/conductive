@@ -1,3 +1,4 @@
+import type { StartError } from '../fixtures/starting'
 import { paths } from '../paths'
 import { importedWorkspace, type WorkspaceState } from './workspaceState'
 
@@ -22,6 +23,8 @@ type ImportedScreens = Readonly<
     activation: string | null
     /** The archived workspace, which Archive of its question opens. */
     afterArchive: string | null
+    /** The question of Archive, which Archive of the selected row opens. */
+    archive: string | null
   } & (
     { chat: string; document: string } | { chat: string | null; document: null }
   )
@@ -39,18 +42,69 @@ const noScreens: ImportedScreens = {
   owner: null,
   activation: null,
   afterArchive: null,
+  archive: null,
+}
+
+/** The session from Conductor that a chat shows, or that opened a document. */
+type Origin = WorkspaceState['resume']
+
+/**
+ * The screens of the activated workspace, by the session that its chat
+ * shows or that opened the document. The new session has the screens of
+ * every tab. A session from Conductor names only its own chat, and the
+ * one that resumed also its document, so a document opened from that
+ * session returns to it, and no control leaves for the new session.
+ */
+const readyScreens: Readonly<Record<Origin, ImportedScreens>> = {
+  none: {
+    ...noScreens,
+    chat: paths.importedReady,
+    document: paths.importedOldSessionActive,
+    files: paths.importedReadyFiles,
+    terminal: paths.importedReadyTerminal,
+    preview: paths.importedReadyPreview,
+    history: paths.importedHistory,
+  },
+  memory: {
+    ...noScreens,
+    chat: paths.importedResumed,
+    document: paths.importedResumedDocument,
+  },
+  fallback: { ...noScreens, chat: paths.importedFallback },
 }
 
 /**
- * Every state of the cloud computer of an imported workspace, with its
- * screens. The record names each state, with no fallback, so a new state
- * fails the typecheck until it names its screens. No imported entry draws
- * a refused start, an archive after the activation, or the menu of the
- * owner. Only the list after the import, with both workspaces Not active,
- * matches a state: the state before the activation.
+ * The screens of a failed activation, by the message that the app saved.
+ * The mockups draw a general failure and a package that does not fit the
+ * disk. The disk example draws no document, no panel, and no Archive.
  */
-const importedScreens: Readonly<
-  Record<WorkspaceState['sandbox'], ImportedScreens>
+const errorScreens: Readonly<Record<StartError, ImportedScreens>> = {
+  failed: {
+    ...noScreens,
+    chat: paths.importedFailed,
+    document: paths.importedOldSessionFailed,
+    files: paths.importedFailedFiles,
+    activation: paths.importedActivating,
+    afterArchive: paths.importedArchived,
+    archive: paths.importedArchiveFailed,
+  },
+  'disk-space': {
+    ...noScreens,
+    chat: paths.importedDiskSpace,
+    activation: paths.importedActivating,
+  },
+  'time-limit': noScreens,
+  'branch-gone': noScreens,
+}
+
+/**
+ * Every other state of the cloud computer, with its screens. No imported
+ * entry draws a refused start, an archive after the activation, or the
+ * menu of the owner. Only the list after the import, with both workspaces
+ * Not active, matches a state: the state before the activation.
+ */
+const sandboxScreens: Readonly<
+  Record<Exclude<WorkspaceState['sandbox'], 'ready' | 'error'>, ImportedScreens>
 > = {
   inactive: {
     chat: paths.imported,
@@ -63,25 +117,9 @@ const importedScreens: Readonly<
     owner: null,
     activation: paths.importedActivating,
     afterArchive: paths.importedArchived,
+    archive: paths.importedArchive,
   },
   starting: { ...noScreens, chat: paths.importedActivating },
-  error: {
-    ...noScreens,
-    chat: paths.importedFailed,
-    document: paths.importedOldSessionFailed,
-    files: paths.importedFailedFiles,
-    activation: paths.importedActivating,
-    afterArchive: paths.importedArchived,
-  },
-  ready: {
-    ...noScreens,
-    chat: paths.importedReady,
-    document: paths.importedOldSessionActive,
-    files: paths.importedReadyFiles,
-    terminal: paths.importedReadyTerminal,
-    preview: paths.importedReadyPreview,
-    history: paths.importedHistory,
-  },
   stopped: {
     ...noScreens,
     chat: paths.importedStopped,
@@ -99,6 +137,33 @@ const importedScreens: Readonly<
 }
 
 /**
+ * The session from Conductor of a state. Only the session tab and the
+ * document tab come from one. Every other tab belongs to the new session.
+ */
+function originOf(state: WorkspaceState): Origin {
+  const fromSession = state.tab === 'session' || state.tab === 'old-session'
+  return fromSession ? state.resume : 'none'
+}
+
+/**
+ * The screens of a state. The records name each state, with no fallback,
+ * so a new state or a new saved message fails the typecheck until it
+ * names its screens. A session from Conductor continues only in the
+ * activated workspace, so another state with one has no drawn screen.
+ */
+function screensOf(state: WorkspaceState): ImportedScreens {
+  const origin = originOf(state)
+  switch (state.sandbox) {
+    case 'ready':
+      return readyScreens[origin]
+    case 'error':
+      return origin === 'none' ? errorScreens[state.startError] : noScreens
+    default:
+      return origin === 'none' ? sandboxScreens[state.sandbox] : noScreens
+  }
+}
+
+/**
  * The screens of an imported workspace in its state. Every imported entry
  * draws the viewer and the org of `app/imported`: an admin, while Acme is
  * active. Another viewer or org, such as a member in the serve controls,
@@ -109,5 +174,5 @@ export function importedScreensOf(state: WorkspaceState): ImportedScreens {
   const drawn =
     state.viewer === importedWorkspace.viewer &&
     state.org === importedWorkspace.org
-  return drawn ? importedScreens[state.sandbox] : noScreens
+  return drawn ? screensOf(state) : noScreens
 }

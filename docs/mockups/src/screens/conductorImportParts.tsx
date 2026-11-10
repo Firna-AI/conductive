@@ -21,8 +21,14 @@ import {
   uploadProgress,
   type ConductorRow,
 } from '../fixtures/conductorImport'
+import {
+  importReport,
+  rowsWithExpired,
+  rowsWithUnfinished,
+} from '../fixtures/conductorUploads'
 import { importedWorkspaces } from '../fixtures/importedWorkspaces'
-import type { ConductorImportState, ImportLinks } from './ConductorImportScreen'
+import type { ImportLinks } from './conductorImportLinks'
+import type { ConductorImportState } from './conductorImportState'
 import styles from './conductorImportParts.module.css'
 
 /** The rows that the list finds in a state. */
@@ -32,6 +38,10 @@ export function rowsOf(state: ConductorImportState): readonly ConductorRow[] {
       return conductorRows
     case 'after-import':
       return rowsAfterImport
+    case 'unfinished':
+      return rowsWithUnfinished
+    case 'expired':
+      return rowsWithExpired
     case 'none':
       return []
   }
@@ -55,16 +65,35 @@ export function selectedOf(
   }
 }
 
+/** The steps of the upload of the first import, and Try again of it. */
+type UploadStep = 'uploading' | 'progress' | 'done' | 'retry'
+
 /**
- * The workspaces of the first import with their uploads: the first one is
- * up, and the second one goes up. At the end both are up.
+ * The bytes of each workspace of the first import that went up by a step.
+ * The Mac app uploads them in turn. At the start the first one goes up,
+ * then the second one, and at the end both are up. Try again sends only
+ * the second one, from the parts that its stopped upload stored.
  */
-function importItems(done: boolean): ImportItem[] {
-  return importedWorkspaces.map((workspace, index) => {
+function sentIn(step: UploadStep, row: ConductorRow, index: number): number {
+  switch (step) {
+    case 'uploading':
+      return index === 0 ? uploadProgress.first : 0
+    case 'progress':
+      return index === 0 ? row.upload : uploadProgress.sent
+    case 'done':
+      return row.upload
+    case 'retry':
+      return uploadProgress.retry
+  }
+}
+
+/** The workspaces of an upload step, each with the row it came from. */
+function importItems(step: UploadStep): ImportItem[] {
+  const items = importedWorkspaces.map((workspace, index) => {
     const row = conductorRows[index]
-    const sent = done || index === 0 ? row.upload : uploadProgress.sent
-    return { workspace, row, sent }
+    return { workspace, row, sent: sentIn(step, row, index) }
   })
+  return step === 'retry' ? items.slice(1) : items
 }
 
 /** A wait of the page, with a spinner while the Mac app reads. */
@@ -79,10 +108,7 @@ function Waiting(props: { text: string; busy: boolean }) {
 }
 
 /** The list, with what the import does above it, or no workspace to list. */
-function ListBody(props: {
-  state: ConductorImportState
-  chipTo: string | null
-}) {
+function ListBody(props: { state: ConductorImportState; links: ImportLinks }) {
   const rows = rowsOf(props.state)
   if (rows.length === 0) {
     return (
@@ -96,12 +122,13 @@ function ListBody(props: {
   return (
     <>
       <p className={styles.intro}>
-        Each workspace comes with its chats, and joins Import from Conductor.
-        Its cloud computer starts when you activate it.
+        Each workspace joins Import from Conductor with its chats when its
+        upload ends. Its cloud computer starts when you activate it.
       </p>
       <ImportList
         admin={props.state.viewer === 'admin'}
-        chipTo={props.chipTo}
+        chipTo={props.links.workspace}
+        retryTo={props.links.retry}
         rows={rows}
         selected={selectedOf(props.state, rows)}
       />
@@ -143,13 +170,32 @@ export function ImportPageBody(props: {
           title="Allow access to list your workspaces"
         />
       )
+    case 'uploading':
     case 'progress':
       return (
-        <ImportProgress chipTo={links.workspace} items={importItems(false)} />
+        <ImportProgress
+          chipTo={links.workspace}
+          items={importItems(props.step)}
+          note="Each workspace joins Import from Conductor when its upload ends."
+        />
+      )
+    case 'retry':
+      return (
+        <ImportProgress
+          chipTo={links.workspace}
+          items={importItems('retry')}
+          note="Try again sends only the parts that are missing."
+        />
       )
     case 'done':
-      return <ImportResult chipTo={links.workspace} items={importItems(true)} />
+      return (
+        <ImportResult
+          chipTo={links.workspace}
+          items={importItems('done')}
+          report={importReport}
+        />
+      )
     case 'list':
-      return <ListBody chipTo={links.workspace} state={props.state} />
+      return <ListBody links={links} state={props.state} />
   }
 }

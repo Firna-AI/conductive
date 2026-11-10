@@ -8,9 +8,9 @@ import {
 export const importedReady = defineScreen({
   title: 'Activated',
   description:
-    'The activation is done, and the workspace is ready. It is a workspace like the others: the header keeps the flag From Conductor, the right column shows the files of the branch with the work from Conductor, and the terminal and the previews work. The old sessions stay links in place of the empty chat, and the composer starts the first new session, whose tab says Untitled until its first message.',
+    'The activation is done, and the workspace is ready. It is a workspace like the others: the header keeps the flag From Conductor, the right column shows the files of the branch with the work from Conductor, and the terminal and the previews work. Each session from Conductor now has its own session tab, oldest first, and continues with the memory of its agent. The tab of Apply coupons before tax opens that session, and the tab of Coupon edge cases in tests opens a session that could not resume. The new session that the activation opened comes last. Its tab says Untitled until its first message, and its empty chat keeps the links to the old documents.',
   rationale:
-    'This screen shows no tab of a resumed old session. How the agent of an activated workspace continues its old work is still open, so the mockups draw only a new session.',
+    'The user chose on 10 November 2026 that activation restores the memory file and the identity of each session, so each old session continues as an ordinary session tab that links back to its old document. The mockups draw no outcome for Explain the basket totals, so its tab stays static.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...importedWorkspace, sandbox: 'ready', tab: 'new-session' },

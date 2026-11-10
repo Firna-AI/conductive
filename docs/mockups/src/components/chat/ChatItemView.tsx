@@ -7,6 +7,7 @@ import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+import { ResumedLine } from '../conductor-import/ResumedLine'
 import { AgentBlocks } from './AgentBlocks'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
@@ -78,6 +79,10 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
         <LinkedLine
           link={<ScreenLink to={paths.noStarterLogin}>{item.from}</ScreenLink>}
         />
+      )
+    case 'resumed':
+      return (
+        <ResumedLine outcome={item.outcome} title={item.title} to={item.to} />
       )
     case 'stopped':
       return (

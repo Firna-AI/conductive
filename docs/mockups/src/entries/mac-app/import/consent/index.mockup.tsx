@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { ConductorImportScreen } from '../../../../screens/ConductorImportScreen'
 import {
-  ConductorImportScreen,
   conductorImportSchema,
   firstImport,
-} from '../../../../screens/ConductorImportScreen'
+} from '../../../../screens/conductorImportState'
 
 const flow = ['user-flows/import-from-conductor']
 

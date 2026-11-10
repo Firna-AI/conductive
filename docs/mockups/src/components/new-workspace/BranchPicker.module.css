@@ -8,3 +8,8 @@
   color: var(--ui-muted);
   font-size: var(--ui-text-sm);
 }
+
+/* Open on GitHub of a pull request from a fork, as tall as a touch target. */
+.gitHub {
+  min-height: var(--ui-touch-min);
+}

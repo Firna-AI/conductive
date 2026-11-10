@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { ConductorImportScreen } from '../../../screens/ConductorImportScreen'
 import {
-  ConductorImportScreen,
   conductorImportSchema,
   firstImport,
-} from '../../../screens/ConductorImportScreen'
+} from '../../../screens/conductorImportState'
 
 export const macImport = defineScreen({
   title: 'Import from Conductor',

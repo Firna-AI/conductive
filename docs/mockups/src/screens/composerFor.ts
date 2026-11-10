@@ -5,6 +5,7 @@ import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { resumedChoiceOf } from './importedSessions'
 import { otherStarter, sessionLoginFor } from './sessionStarter'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -45,7 +46,8 @@ export function isRunning(state: WorkspaceState): boolean {
  * a new workspace. The message waits for the sandbox.
  *
  * A message with a pasted link to another workspace shows the link as a
- * chip, and the draft keeps the plain link.
+ * chip, and the draft keeps the plain link. A session from Conductor keeps
+ * the agent and the model of its old session.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -70,13 +72,14 @@ export function composerFor(
   } else if (!fresh && state.composer === 'draft') {
     draft = isNew(state) ? savedCartsDraft : followUpDraft
   }
+  const choice = resumedChoiceOf(state) ?? workspace.choice
   return {
-    choice: workspace.choice,
+    choice,
     running: !fresh && isRunning(state),
     draft,
     attachments: withFiles ? draftAttachments : [],
     picker: state.composer === 'picker',
-    sessionAgent: fresh ? undefined : workspace.choice.agent,
+    sessionAgent: fresh ? undefined : choice.agent,
     sendTo: opensLinked ? paths.linkedSession : undefined,
     startsSession: opensLinked,
     blocked: needsLogin,

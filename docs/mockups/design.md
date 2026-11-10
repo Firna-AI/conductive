@@ -66,9 +66,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `src/components/common/` beside its button or its tab, or in a `Sheet` on
   a phone. Firna's own menu rows are taller than the dense design. A row can
   lead with a mark, such as an avatar, and end with a muted detail and an
-  icon. An item that is off keeps its place, greyed. A picker can add a
-  search field above its rows and a status part under them, such as a
-  spinner or `LoadFailure`, as the branch picker of New workspace does. A
+  icon. An item that is off keeps its place, greyed. A choice that the
+  menu shows but cannot take is a row that is off, with its reason under
+  it and one action beside it, outside the item, such as Open on GitHub.
+  A picker can add a search field above its rows and a status part under
+  them, such as a spinner or `LoadFailure`, as the branch picker of New
+  workspace does. A
   row can lead to the screen that its choice shows. It is then a link with
   the look of a row, and hidden words name the checked choice, because a
   link of the catalogue takes no menu role.
@@ -134,7 +137,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A chosen branch or pull request shows on the line, with Change.
   `BranchPicker` beside it is the picker, with a search field, New branch,
   the open pull requests, and the branches without one. It leaves out the
-  default branch. The New workspace dialog shows the same choice as a
+  default branch. A pull request whose branch is in another repository,
+  such as a fork, is a row that is off, with its reason and Open on
+  GitHub. The picker finds such a pull request by the ID of its head
+  repository, never by its branch name, and a search reads only its
+  number and its title. The New workspace dialog shows the same choice as a
   quiet picker beside its repository picker. The screen of each form, the
   page or the dialog, derives its branch links from its full state, and
   the phone view of the dialog keeps the links of the dialog. A state that
@@ -149,7 +156,13 @@ sessions as tabs above the chat, and four tabs at the bottom.
   activation is its first start, so the chat shows the steps of a start,
   and a failed activation keeps the composer, as a failed first start does.
   The Markdown of an old session opens in `FilePage`, the Markdown view of
-  every file, and a phone opens it in the Chat tab. The shared sandbox
+  every file, and a phone opens it in the Chat tab. After the activation,
+  each session from Conductor has an ordinary session tab. Its chat shows
+  only its new turns, under `ResumedLine`, a first line in the look of the
+  line of a linked session, which opens its old document. A session that
+  could not resume starts fresh, and its first message names its old chat
+  in `.context/conductor/`. An activation whose work does not fit the free
+  disk names both sizes in the notice of a failed activation. The shared sandbox
   notices of `sandboxNoticeState.ts` stay as they are, because the app
   draws them too. Before an activation, or after a failed one, the
   workspace has no cloud computer to check, so `ImportedArchiveDialog`
@@ -180,10 +193,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   button, a link to a screen, or keeps it static where the screen is null.
 - The import flow of the Mac app derives the links of its own controls
   from its full state. A control opens a step only from a state that
-  equals the first import in every field apart from the step, as every
-  saved step does. The chip of the drawn imported workspace opens it only
-  for the viewer of that entry. Every other state keeps the control
-  static.
+  equals the example of its flow in every field apart from the step, as
+  every saved step does: the first import, or the list after an upload
+  that stopped. The chip, the sidebar row, and the tile of Acme open the
+  drawn imported workspace and its list only where the sidebar shows both
+  imported workspaces, for the viewer of those entries. Every other state
+  keeps the control static.
 - The terminal of a workspace belongs to it. `terminalProcesses` in
   `src/fixtures/terminal.ts` holds the process of each workspace that runs
   one, today the dev server of Checkout address autocomplete. Every other
@@ -288,7 +303,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and says to restore it before Try again, as
   `app/new-workspace/branch/gone` shows. A first start on a chosen branch
   that is there fetches it and checks it out with tracking, as
-  `app/new-workspace/branch/start` shows.
+  `app/new-workspace/branch/start` shows. An activation of a workspace from
+  Conductor first checks that its work fits the free disk, with room to
+  unpack it. When it does not fit, the activation stops before it changes
+  the checkout, and its saved message names both sizes, as
+  `app/imported/failed/disk-space` shows.
 - A new org has no image until its first build succeeds. Until then New
   workspace keeps Send off under a notice with the state of that build, as
   `app/new-workspace/first-build` shows. A notice of work that runs, such

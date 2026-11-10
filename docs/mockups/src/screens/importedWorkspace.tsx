@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { nameLabel } from '../../../../src/shared/name-label'
 import {
   ArchivedImportBar,
   ArchivedImportPanel,
@@ -10,10 +9,8 @@ import {
   ImportedPanel,
   OldSessionLinks,
 } from '../components/conductor-import/ImportedParts'
-import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { oldSessions, openOldSession } from '../fixtures/conductorImport'
 import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
-import { newSession } from '../fixtures/sessions'
 import { startErrors } from '../fixtures/starting'
 import { importedScreensOf } from './importedScreens'
 import type { WorkspaceState } from './workspaceState'
@@ -53,39 +50,6 @@ export function oldSessionLinks(
 ): Readonly<Record<string, string>> {
   const { document } = importedScreensOf(state)
   return document === null ? {} : { [openOldSession.key]: document }
-}
-
-/**
- * The tabs of an imported workspace. Before its activation it has no
- * session, so only the Markdown of an old session opens a tab. From its
- * activation on, the composer starts a new session, which shows Untitled
- * until its first message.
- */
-export function importedTabs(state: WorkspaceState): WorkspaceTab[] {
-  const old = state.tab === 'old-session'
-  const screens = importedScreensOf(state)
-  const tabs: WorkspaceTab[] = []
-  // Before an activation, and after an archive before it, nothing starts a
-  // session.
-  if (state.sandbox !== 'inactive' && state.sandbox !== 'archived-inactive') {
-    tabs.push({
-      key: newSession.key,
-      kind: 'session',
-      title: nameLabel(newSession.title),
-      to: screens.chat ?? undefined,
-      selected: !old,
-    })
-  }
-  if (old) {
-    tabs.push({
-      key: 'old-session',
-      kind: 'markdown',
-      title: openOldSession.title,
-      to: screens.document ?? undefined,
-      selected: true,
-    })
-  }
-  return tabs
 }
 
 /** What the chat of an imported workspace shows around its composer. */

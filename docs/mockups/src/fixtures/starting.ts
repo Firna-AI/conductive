@@ -4,7 +4,9 @@
  * when a start fails.
  */
 
+import { formatSize } from '../components/chat/sizes'
 import { savedCartsOnBranch } from './branches'
+import { activationDisk } from './conductorUploads'
 import { couponTotals } from './importedWorkspaces'
 import { savedCarts } from './workspaces'
 
@@ -55,8 +57,9 @@ export const firstSecondLog: StartingLog = {
 
 /**
  * A workspace from Conductor activates: its first sandbox starts from the
- * newest good build, fetches its branch, and copies in the work that
- * GitHub does not hold.
+ * newest good build, fetches its branch, copies in the work that GitHub
+ * does not hold, and restores the agent memory of each session, so that
+ * each one can continue.
  */
 export const activationLog: StartingLog = {
   title: 'Activating the workspace',
@@ -64,6 +67,7 @@ export const activationLog: StartingLog = {
     'Starting from the cloud computer of Acme',
     `Fetching ${couponTotals.branch} of acme/storefront`,
     'Copying your work from Conductor',
+    'Restoring your sessions from Conductor',
   ],
   elapsed: '41s',
 }
@@ -82,10 +86,16 @@ export const resumingLog: StartingLog = {
 export const startLimit = 'Each start has a 20-minute limit.'
 
 /**
- * Why a start failed: a failure, the 20-minute limit, or a chosen branch
- * that is gone from GitHub.
+ * Why a start failed: a failure, the 20-minute limit, a chosen branch that
+ * is gone from GitHub, or work from Conductor that does not fit the free
+ * disk of the cloud computer, which an activation checks first.
  */
-export const startErrorKeys = ['failed', 'time-limit', 'branch-gone'] as const
+export const startErrorKeys = [
+  'failed',
+  'time-limit',
+  'branch-gone',
+  'disk-space',
+] as const
 
 export type StartError = (typeof startErrorKeys)[number]
 
@@ -98,4 +108,5 @@ export const startErrors: Readonly<Record<StartError, string>> = {
   'time-limit':
     'The cloud computer did not start within the 20-minute limit. Try again.',
   'branch-gone': `The branch ${savedCartsOnBranch.branch} is no longer on GitHub. Restore the branch on GitHub, then try again.`,
+  'disk-space': `It needs ${formatSize(activationDisk.needed)} of disk space to unpack your work, and the cloud computer has ${formatSize(activationDisk.free)} free.`,
 }

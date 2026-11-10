@@ -10,6 +10,22 @@ import type { MarkdownBlock } from './fileContents'
 import { couponTotals, webhookSignatures } from './importedWorkspaces'
 import type { Workspace } from './workspaces'
 
+/**
+ * The upload of a row that stopped before its end. The import keeps it as
+ * an unfinished reservation with its stored parts, so Try again sends only
+ * the missing parts. After 7 days the reservation and its parts expire,
+ * and the row can import again in full. No workspace exists for either.
+ */
+export type Reservation =
+  | {
+      kind: 'unfinished'
+      /** The bytes that the stopped upload stored. */
+      stored: number
+      /** The last day of the reservation. */
+      keptUntil: string
+    }
+  | { kind: 'expired'; expiredOn: string }
+
 /** One local workspace of Conductor, as a row of the import list. */
 export type ConductorRow = {
   /** The local ID in Conductor. Folder names repeat, so only it names a row. */
@@ -28,6 +44,8 @@ export type ConductorRow = {
   chosen: boolean
   /** The workspace that an earlier import made from it. */
   imported?: Workspace
+  /** An earlier upload of it that stopped before its end. */
+  reservation?: Reservation
 }
 
 const megabyte = 1024 * 1024
@@ -85,10 +103,17 @@ export const rowsAfterImport: readonly ConductorRow[] = conductorRows.map(
   },
 )
 
-/** The upload of the import while it runs: one done, one in progress. */
+/**
+ * The upload of the first import while it runs. The Mac app uploads the
+ * workspaces in turn, so the second one waits while the first one goes up.
+ */
 export const uploadProgress = {
+  /** The bytes of the first workspace that went up at the start. */
+  first: Math.round(9.7 * megabyte),
   /** The bytes of the second workspace that went up so far. */
   sent: Math.round(2.1 * megabyte),
+  /** The bytes of the second workspace during Try again of its upload. */
+  retry: Math.round(4.4 * megabyte),
 } as const
 
 /** A session of a workspace in Conductor, which the import keeps. */

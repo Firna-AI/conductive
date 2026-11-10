@@ -36,11 +36,12 @@ export const newWorkspaceFormProperties = {
   branch: { enum: ['new', 'existing', 'pull-request'] },
   /**
    * The branch picker: closed, open, open with a search that finds a pull
-   * request or finds nothing, or open while its list loads or after the
-   * list did not load. A phone opens it in a sheet.
+   * request, finds nothing, or finds the pull request from a fork, or open
+   * while its list loads or after the list did not load. A phone opens it
+   * in a sheet.
    */
   picker: {
-    enum: ['closed', 'open', 'search', 'no-match', 'loading', 'failed'],
+    enum: ['closed', 'open', 'search', 'no-match', 'fork', 'loading', 'failed'],
   },
 } as const
 

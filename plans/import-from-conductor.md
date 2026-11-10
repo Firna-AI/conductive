@@ -603,6 +603,16 @@ These are agent calls from Milestone 1, within the decisions in force.
   repository link. Imported rows link to their workspace. Select all
   shows a mixed mark for a partial selection. Counts and upload sizes
   come from the selected rows. Reason: the user must see what can import.
+- Upload progress distinguishes completed workspaces from unfinished
+  reservations. Only completed workspaces have workspace links or appear
+  in the org list. Try again on an unfinished row resumes its missing
+  parts. After seven days, the reservation expires and its parts cannot
+  be reused. The source work stays on the Mac. Reason: decisions 13 C
+  and 14 D keep incomplete work out of the org.
+- The result names each changed or untracked file over 100 MiB that stayed
+  on the Mac. It also names each session that did not import because its
+  memory file is gone. These are separate lists with their own reasons.
+  Reason: the user must know which files and sessions did not transfer.
 - The section "Import from Conductor" stands at the top of the list.
   An imported workspace shows "Not active" with its own mark until its
   first start. The header keeps "From Conductor" after activation.
@@ -616,8 +626,20 @@ These are agent calls from Milestone 1, within the decisions in force.
   count. The activation question takes the place of the composer.
   Activation uses the existing start card, queued composer, general
   failure, and Try again. The existing whole-start limit stays in force.
-  The mockups show only a fresh session after activation. They do not
-  choose the resumed-session tab of decision 5.
+- A resumed session uses a normal session tab and links back to its old
+  document. Only its new turns appear in the live chat. A session that
+  cannot resume opens a fresh session whose first message names its old
+  document in `.context/conductor/`. Reason: decision 5 E restores memory
+  where possible and keeps the approved document fallback.
+- The session examples show the resumed Claude session and the Codex
+  fallback, with the old sessions before the new-session tab. A document
+  opened from the resumed session returns to that session on a phone.
+  Reason: the two examples show memory continuation and document fallback
+  without replaying the old chat into the live log.
+- The disk-space failure names the space needed for the package and
+  unpacking, and the space available. It says that the stored work is
+  kept. It offers the existing Try again action. Reason: decision 11 E
+  stops activation before changing the checkout when the work cannot fit.
 - New workspace has the quiet branch line on the page and a quiet picker
   beside the repository in the desktop dialog. The picker has search,
   loading, failure, and no-match states. A phone uses a sheet. Opening
@@ -627,6 +649,10 @@ These are agent calls from Milestone 1, within the decisions in force.
   notices, and viewer. An example without a matching drawn destination
   keeps that control static. Reason: a catalogue link must not replace
   the user's draft or org with another example.
+- A pull request from another repository stays visible as unavailable,
+  with its reason and Open on GitHub. It cannot select that branch.
+  The page, dialog, and phone sheet share this row. Reason: decision 15 A
+  explains the restriction before the user creates a workspace.
 - The imported header and org rail use matching list and owner destinations,
   or keep an undrawn control static. Only the inactive admin example has
   the drawn import list. The import flow's own controls also keep their
@@ -833,10 +859,9 @@ Tags: mockup
 Depends on: none
 
 Draw every screen and flow of the change, at the Mac app's desktop size,
-and at phone size where a screen shows on a phone. The tab of a resumed
-session waits for decision 5. The list below separates each blocked part
-from the normal path. The progress example follows the current appearance
-timing. It opens only a workspace whose own upload is complete.
+and at phone size where a screen shows on a phone. Decisions 5, 11, 13,
+14, and 15 were chosen on 10 November 2026. The screens below draw those
+choices. A workspace appears only when its own upload ends.
 
 - [x] Add the quiet branch link to the New workspace screen, and the
       branch picker with branches and open pull requests.
@@ -846,7 +871,7 @@ timing. It opens only a workspace whose own upload is complete.
 - [x] Add the consent dialog, the list with Select all, the rows that
       cannot import, and the already imported rows.
 - [x] Add the normal import progress and result.
-- [ ] Add the result list of the files over 100 MiB that stay on the Mac,
+- [x] Add the result list of the files over 100 MiB that stay on the Mac,
       and of the sessions whose memory file is gone (decision 11).
 - [x] Add an imported workspace: its flag, the links to its old sessions,
       the Markdown view of one old session, the Activate
@@ -856,16 +881,16 @@ timing. It opens only a workspace whose own upload is complete.
 - [x] Add Archive of a never-activated import and its archived workspace.
       Keep the old session documents readable. Show no false statement
       about pushed work or a deleted cloud computer.
-- [ ] Add the resumed-session tab: a session tab that links to its old
+- [x] Add the resumed-session tab: a session tab that links to its old
       document and continues with the agent's memory, and the fallback
       when a session does not resume (decision 5).
-- [ ] Add the activation that stops because the package does not fit the
+- [x] Add the activation that stops because the package does not fit the
       disk, with both sizes (decision 11).
-- [ ] Show each workspace appearing only when its own upload ends, and
+- [x] Show each workspace appearing only when its own upload ends, and
       revise the progress and the user flow to match (decision 13).
-- [ ] Add the unfinished row with Try again in the Mac list, and its expiry
+- [x] Add the unfinished row with Try again in the Mac list, and its expiry
       after 7 days (decision 14).
-- [ ] Add pull requests from forks as unavailable rows, with the reason and
+- [x] Add pull requests from forks as unavailable rows, with the reason and
       Open on GitHub, on the page, in the dialog, and on a phone
       (decision 15).
 - [x] Add the user flow `import-from-conductor`, from the offer to an

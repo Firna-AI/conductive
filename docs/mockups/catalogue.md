@@ -21,7 +21,7 @@ how a screen is built, and links to the other pages.
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat with the line of its branch, the first build of a new org, its error, the dialog, an existing branch or pull request, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
-| `app/imported`      | A workspace from Conductor: the list after the import, its flag and old sessions, the Markdown of an old session, its files, its activation, a failed activation, and the activated workspace |
+| `app/imported`      | A workspace from Conductor: the list after the import, its flag and old sessions, the Markdown of an old session, its files, its activation, a failed activation, a disk that is too small, the activated workspace, and its resumed sessions |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -336,8 +336,13 @@ that the workspace starts on a new branch from main, with the quiet link
 Use an existing branch. The canonical screen has the branch picker open: a
 search field, New branch, the open pull requests, and the branches without
 a pull request. The picker leaves out the default branch, and it shows the
-pull request of a workspace that is still open with no warning. A phone
-opens it in a sheet. In each picker, New branch leads back to the default
+pull request of a workspace that is still open with no warning. The pull
+request #477 has its branch in the fork lena-ko/storefront, so its row is
+off: it says that its branch is in another repository, and Open on GitHub
+opens that pull request in a new tab. The picker compares the ID of the
+head repository with the ID of acme/storefront, not the branch name, which
+is main here. Every open picker, on the page, in the dialog, and in the
+sheet of a phone, shows that row. A phone opens the picker in a sheet. In each picker, New branch leads back to the default
 form, and the sample branch and pull request lead to their chosen states,
 in the dialog when the picker is in the dialog. Its child pages:
 
@@ -352,8 +357,10 @@ in the dialog when the picker is in the dialog. Its child pages:
   a chosen pull request, and its `change` and `pull-request-change`
   variants have the picker open again with that choice checked.
 - `app/new-workspace/branch/search` has a search that finds a pull
-  request. Its variants have a search with no match, the list while it
-  loads, and the list that did not load.
+  request. Its variants have a search with no match, a search that finds
+  the pull request from the fork by its title, the list while it loads,
+  and the list that did not load. A search reads the number and the title
+  of a pull request from another repository, not its branch.
 - `app/new-workspace/branch/start` has the first start of the workspace
   that Send makes on the chosen branch: it fetches that branch and checks
   it out with tracking. Send of `app/new-workspace/branch/chosen` opens it.
@@ -385,13 +392,30 @@ child pages:
   activation, and its `stopped` and `stopped-terminal` variants have the
   Files and Terminal tabs while the activated workspace is stopped.
 - `app/imported/activating` has the activation: the first start of the
-  workspace, which copies in the work from Conductor.
+  workspace, which copies in the work from Conductor and restores the
+  memory of each session from Conductor.
 - `app/imported/failed` has a failed activation with Try again. Its `files`
-  variant has the Files tab of a phone.
-- `app/imported/ready` has the activated workspace, with no tab of a
-  resumed old session. Its `files`, `terminal`, and `preview` variants have
-  the tabs of a phone after the activation, and its `stopped` variant has
-  the same workspace after its cloud computer stopped.
+  variant has the Files tab of a phone. Its `disk-space` variant has an
+  activation that stopped before it changed the checkout, because the work
+  needs 41.3 MB of disk space to unpack and the cloud computer has 23.6 MB
+  free. The notice names both sizes, says that the work is kept, and keeps
+  Try again.
+- `app/imported/ready` has the activated workspace. Each session from
+  Conductor has its own ordinary session tab, oldest first, before the
+  tab of the new session that the activation opened. Its `files`,
+  `terminal`, and `preview` variants have the tabs of a phone after the
+  activation, and its `stopped` variant has the same workspace after its
+  cloud computer stopped.
+- `app/imported/resumed` has the tab of Apply coupons before tax after its
+  first new turn. The session continues with the memory of its agent, so
+  the chat shows only the new turn, under a first line that opens its old
+  document. Its `document` variant has that document, opened from the
+  session: the tab of the session stays, and the way back of a phone
+  returns to it. Its `fallback` variant has Coupon edge cases in tests,
+  whose memory file came along but could not resume. Its tab holds a fresh
+  session, and its first message names its old chat in
+  `.context/conductor/`. A session whose memory file was gone on the Mac
+  never imported, so no tab shows it.
 - `app/imported/archive` has the question of Archive before the
   activation: the workspace can no longer be activated after Archive, and
   its old sessions stay readable. Its `failed` variant has the same
@@ -410,7 +434,11 @@ history, its old documents, its selected row, Activate and Try again, the
 Archive question, the way back of a phone, the owner, and the tile of Acme
 in the rail. One record in `src/screens/importedScreens.ts` names the
 screens of every state, with no fallback, and a state that no entry draws,
-such as a refused start, keeps each control static. Only the state before
+such as a refused start, keeps each control static. It names the activated
+workspace by the session that its chat shows or that opened its document,
+the `resume` state, and a failed activation by its saved message. So a
+document opened from a session from Conductor returns to that session, and
+no control of that session opens the new session in its place. Only the state before
 the activation matches a drawn list, `app/imported/list`, so the way back
 and the tile of Acme open it there and stay static in the other states. No
 entry draws the menu of the owner for an imported workspace, so the owner
@@ -421,5 +449,6 @@ workspace waits at a prompt on its own branch.
 
 [The Mac app](mac-app.md#the-import-from-conductor) gives the pages of the
 import itself, under `mac-app/import`. The flow
-`user-flows/import-from-conductor` goes from the offer of the Mac app to the
-activated workspace.
+`user-flows/import-from-conductor` goes from the offer of the Mac app,
+through the upload and its result, to the activated workspace, a resumed
+session, and its old document.

@@ -26,3 +26,19 @@
   min-width: 0;
   line-height: 22px;
 }
+
+/* The state of an upload that stopped, under the facts of its row. */
+.reservation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.reservationIcon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
