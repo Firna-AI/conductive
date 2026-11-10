@@ -1,6 +1,6 @@
 # Pull request bar actions
 
-Status: Active. [PR #176](https://github.com/Firna-AI/remote-code/pull/176) is open on `calummoore/github-status-bar-actions`. The original milestones are complete. CI base integration continues below.
+Status: Active. [PR #176](https://github.com/Firna-AI/remote-code/pull/176) is open on `calummoore/github-status-bar-actions`. All source milestones and review fix rounds are complete. The final plan record, deletion and exact-head CI watch remain below.
 
 The pull request bar at the top of the right column shows the GitHub state
 of the workspace branch. Today each action in the bar links to GitHub, and
@@ -1553,20 +1553,24 @@ Depends on: 10e
       ownership, all actions, and current Archive/Restore behavior.
 - [x] Resolve and audit all current source and document combinations.
       Keep current public, legal, protocol, and mockup facts aligned.
-- [ ] Run bounded affected checks and any necessary regression proof and
+- [x] Run bounded affected checks and any necessary regression proof and
       ten runs. Audit the two-parent merge, commit, and push the final
       source with the completed plan record and deletion.
 
 The prior pushed merge has no CI because the transcript change creates
 confirmed base conflicts before CI can start.
 
+Evidence: `.context/pull-request-bar-actions/transcript-base-integration/`.
+
+Current source delivery: merge `a629b288` is pushed. All bounded checks, preservation audits, source hashes and final owner reports are complete. PR #176 records all nine choices, 166 dated calls, test costs and current follow-ups. The final work commit deletes this plan; its CI watch remains the last task below.
+
 ## Milestone 11: Final record and pull request completion
 
 Depends on: 10, 10a, 10b, 10c, 10d, 10e, and 10f
 
-- [ ] Record all checked outcomes and follow-ups. Preserve each dated
+- [x] Record all checked outcomes and follow-ups. Preserve each dated
       design call and the current test-cost record in the PR description.
-- [ ] Commit and push all required work. Verify the final source and local
+- [x] Commit and push all required work. Verify the final source and local
       checks before the plan record is removed.
 - [ ] Delete this restored plan in the last work commit when every other
       required task is complete. Preserve a new snapshot permalink.
