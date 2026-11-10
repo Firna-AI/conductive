@@ -31,6 +31,13 @@ Equal creation times sort by ID descending.
 The run state comes from its stored outcome, its workspace, and its creation attempt.
 A removed failed-start workspace has no public workspace link.
 A failed first turn keeps its workspace link and its failure cause.
+For an author or sender skip, the pull request trigger includes `skipLogin`.
+It is the account login from the event that caused the skip.
+Older runs and skips without an account omit this field.
+
+The workspace view's `routine` includes `pullRequest` with the run's number and URL.
+Scheduled and Run now workspaces return null for `pullRequest`.
+View writes cannot change these saved run facts.
 
 `recordRoutineRun` stores a unique run key and a stable first-message ID.
 It checks the current owner membership, the owner and org suspension, and org deletion inside SQL.
@@ -124,7 +131,7 @@ The schedule tests use fixed dates around changes of summer time.
 - [run-list-data.ts](run-list-data.ts) reads the latest 50 runs and older pages.
 - [run-projection.ts](run-projection.ts) shares state projection between run history, Run now, and routine lists.
 - [stored-run.ts](stored-run.ts) parses saved trigger facts.
-- [workspace-routine-data.ts](workspace-routine-data.ts) joins a workspace to its routine name.
+- [workspace-routine-data.ts](workspace-routine-data.ts) joins a workspace to its routine name and saved pull request.
 
 ### Related docs
 

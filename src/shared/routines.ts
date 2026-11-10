@@ -108,6 +108,7 @@ export type RoutineRunTrigger =
       headBranch: string
       headSha: string
       baseBranch: string
+      skipLogin?: string
     }
 
 export interface RoutineRun {

@@ -243,7 +243,7 @@ API references:
 - [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background routine starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
-- [webhook-routing.ts](webhook-routing.ts) reads pull request facts and GitHub account IDs after signature verification.
+- [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
 - [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, and replays delivery receipts.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.

@@ -1771,12 +1771,17 @@ protocol and the mockups need. `docs/protocol/routine-runs.md` asks for
 the pull request link in the run line, and the mockups name the account
 of a skip, so that the owner knows which account to add to "Author is".
 
-- [ ] Add the number and the address of the pull request of a run to the
+- [x] Add the number and the address of the pull request of a run to the
       routine of the workspace view.
-- [ ] Store the login of the author or the sender that a skip names, and
+- [x] Store the login of the author or the sender that a skip names, and
       return it with the skipped run.
-  - [ ] Test both fields.
-- [ ] Update the READMEs of the areas that change.
+  - [x] Test both fields.
+- [x] Update the READMEs of the areas that change.
+
+Milestone completed on 10 November 2026. A Codex non-ui implementor
+session added the fields. The orchestrator re-ran 93 tests of
+`worker/routines` and `worker/github` and the static checks. The handoff
+is in `.context/routines/reports/m9a-worker.md`.
 
 ## Milestone 9b: The pull request link and the skip words
 

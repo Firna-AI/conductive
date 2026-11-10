@@ -49,7 +49,7 @@ export async function dispatchPullRequestRuns(
           filterPasses(trigger.authors, event.authorId, members),
       )
       if (!triggers.length) return
-      let skip: { code: string; message: string } | undefined
+      let skip: { code: string; message: string; login?: string } | undefined
       for (const trigger of triggers) {
         if (trigger.kind !== 'pull-request') continue
         if (!trusted(trigger.authors, event.authorId, members)) {
@@ -57,12 +57,14 @@ export async function dispatchPullRequestRuns(
             code: 'author_not_allowed',
             message:
               'The pull request author is outside the org and is not in Author is.',
+            login: event.authorLogin,
           }
         } else if (!trusted(trigger.authors, event.senderId, members)) {
           skip = {
             code: 'sender_not_allowed',
             message:
               'The event sender is outside the org and is not in Author is.',
+            login: event.senderLogin,
           }
         } else {
           skip = undefined
@@ -78,7 +80,10 @@ export async function dispatchPullRequestRuns(
           triggersJson: routine.triggersJson,
           senderGitHubId: event.senderId,
           runKey: `github:${routine.id}:${deliveryId}`,
-          trigger: event.trigger,
+          trigger:
+            skip?.login === undefined
+              ? event.trigger
+              : { ...event.trigger, skipLogin: skip.login },
           skip,
         },
         runtime.dependencies,

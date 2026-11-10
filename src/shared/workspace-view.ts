@@ -19,6 +19,10 @@ export interface WorkspaceView {
 export interface WorkspaceViewResponse {
   view: WorkspaceView
   baseBranch?: string
-  routine?: { id: string; name: string } | null
+  routine?: {
+    id: string
+    name: string
+    pullRequest?: { number: number; url: string } | null
+  } | null
 }
 export type UpdateWorkspaceViewRequest = WorkspaceView

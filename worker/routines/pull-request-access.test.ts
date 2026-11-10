@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { routinePaths } from '../../src/shared/routines'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { pullRequestFixture } from './pull-request.test-support'
 
@@ -41,6 +42,25 @@ it('records untrusted authors and senders as skipped and admits a named bot by a
       message: 'The event sender is outside the org and is not in Author is.',
     },
   ])
+  const skipped = await harness.request(
+    routinePaths.runs(h.org.id, 'routine-one'),
+    h.session,
+  )
+  expect(skipped.status).toBe(200)
+  expect(await skipped.json()).toMatchObject({
+    runs: [
+      {
+        state: 'skipped',
+        trigger: { kind: 'pull-request', skipLogin: 'event-sender' },
+        error: { code: 'sender_not_allowed' },
+      },
+      {
+        state: 'skipped',
+        trigger: { kind: 'pull-request', skipLogin: 'pull-author' },
+        error: { code: 'author_not_allowed' },
+      },
+    ],
+  })
   expect(h.background).toEqual([])
   await h.configure([
     {

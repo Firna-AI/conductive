@@ -8,6 +8,8 @@ export interface GitHubPullRequestEvent {
   merged: boolean
   authorId: number
   senderId: number
+  authorLogin?: string
+  senderLogin?: string
   trigger: Extract<RoutineRunTrigger, { kind: 'pull-request' }>
 }
 
@@ -41,6 +43,12 @@ function id(value: unknown): number {
 function string(value: unknown): string {
   if (typeof value !== 'string' || !value) return invalid()
   return value
+}
+
+function login(value: unknown): string | undefined {
+  return isRecord(value) && typeof value.login === 'string'
+    ? value.login
+    : undefined
 }
 
 export function webhookRoute(
@@ -108,6 +116,8 @@ export function webhookRoute(
         merged,
         authorId: id(value.pull_request.user),
         senderId: id(value.sender),
+        authorLogin: login(value.pull_request.user),
+        senderLogin: login(value.sender),
         trigger: {
           kind: 'pull-request',
           event: kind,

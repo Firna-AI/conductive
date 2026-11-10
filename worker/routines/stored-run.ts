@@ -38,6 +38,9 @@ export function readRunTrigger(json: string): RoutineRunTrigger {
         headBranch: value.headBranch,
         headSha: value.headSha,
         baseBranch: value.baseBranch,
+        ...(typeof value.skipLogin === 'string'
+          ? { skipLogin: value.skipLogin }
+          : {}),
       }
   }
   throw invalidRoutineInput()
