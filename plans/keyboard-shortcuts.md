@@ -15,7 +15,10 @@ On 2026-11-10 the user answered the last open decisions: 192 = B, 193 =
 D, 194 = A, and 195 = E. With the answers the user also set a
 requirement: the shortcuts must not take the keys of the terminal or of
 the message field. "Where a key goes" applies it. The key research of
-Milestone 1 raised decisions 196 and 197 about Linux, which are open.
+Milestone 1 raised decisions 196 and 197 about Linux, and the
+implementation raised decision 198 about the palette. On 2026-11-10 the
+user chose the recommendation of each: 196 = B with D, 197 = D, and 198 =
+C. Milestones 1, 2, 3, and 9 apply them.
 
 On 2026-11-09 this plan's decisions moved from 180 to 184 to 190 to 194,
 because `main` uses 181, 182, 184, and 185 for the workspace titles of PR
@@ -482,6 +485,8 @@ Replaced ways:
   protects the codebase.
 - **Action:** ask the user, because decisions 192 and 194 conflict on
   Linux, and no rule settles which one wins.
+- **Answer:** B with D, the recommendation, chosen by the user on
+  2026-11-10.
 
 ### Decision 197: The Linux layout switch on Alt+Shift
 
@@ -550,6 +555,7 @@ Replaced ways:
   work for these people.
 - **Action:** ask the user, because B adds behaviour at the key boundary
   that no requirement covers.
+- **Answer:** D, the recommendation, chosen by the user on 2026-11-10.
 
 ### Decision 198: The place of This Mac in the palette's Account group
 
@@ -608,6 +614,10 @@ Replaced ways:
   F best protects the codebase.
 - **Action:** ask the user, because the choice decides which side of a
   mismatch between the mockup and the product is right.
+- **Answer:** C, the recommendation, chosen by the user on 2026-11-10.
+  Agent call of the same day: the mockup wins also for the search words,
+  so the app gives This Mac the search word "always allow". Reason: C
+  makes the mockup the side that is right.
 
 ## Design
 
@@ -738,6 +748,29 @@ bracket keys of the tabs cannot be pressed there, and the arrow keys stay.
 Decisions 196 and 197 hold the two Linux questions that the research
 found.
 
+User answer of 2026-11-10 to decision 196, B with D: in a normal tab,
+decision 192 B leaves to each browser the keys that it uses on its system
+to select a tab or to open its address bar. The table of each browser
+holds this list:
+
+- Chrome and Edge: ⌘1 to ⌘9 and ⌘L on a Mac, Ctrl+1 to Ctrl+9 and Ctrl+L
+  on Windows, and Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, and Ctrl+L on Linux
+  and Android.
+- Firefox: the same keys, except Ctrl+1 to Ctrl+9 on Linux and Android,
+  which Firefox does not use there.
+- Safari already keeps ⌘1 to ⌘9 and ⌘L.
+
+So in a normal tab on Linux, Switch to org 1 to 9 has no default key that
+works, and the tab dims Alt+1 to Alt+9. In Firefox on Linux, Open
+workspace 1 to 9 keep Ctrl+1 to Ctrl+9. An installed app takes Alt+1 to
+Alt+9. The palette's Switch to rows still reach each org.
+
+Agent call, 2026-11-10: an unknown browser leaves to the browser the keys
+of each supported browser on its system, and an unknown system on the
+Windows and Linux keyboard counts as Windows and as Linux. Reason: an
+unknown browser already counts the kept keys of each supported browser,
+and a missed tab key would take a key of the browser from the person.
+
 ### Where a key goes
 
 Agent calls, 2026-11-08, from the palette rules:
@@ -855,6 +888,31 @@ terminal or chat input". Agent calls of the same day apply it:
   Making every Enter key a fixed key waited for the user, because it adds
   a rejection; the user answered it as review item 4 = B, above.
 
+User answer of 2026-11-10 to decision 197, D: while a layout switch key is
+down, the app adds back the modifier that the switch key took, and it
+matches the press by its physical key. A press that then runs no command
+goes no further. Agent calls of the same day apply it:
+
+- A layout switch key is a press that the browser reports as GroupNext,
+  GroupPrevious, GroupFirst, or GroupLast. Its physical key names the
+  modifier that it took: Shift, Alt, Ctrl, or ⌘. Another physical key,
+  such as Caps Lock, takes no modifier. Reason: the wider fix of the
+  decision, which also covers the Ctrl+Shift and Ctrl+Alt switches.
+- The switch key stays down until the key-up of its physical key, or
+  until the window loses the focus. Reason: a key-up while another window
+  has the focus never reaches the page.
+- While a switch key is down, each key matches by its physical key, also
+  a letter, a digit, or a punctuation key. Reason: the character comes
+  from the other layout.
+- The press of the switch key itself goes on untouched.
+- The terminal still keeps its keys, the recorder still gets the press,
+  and text composition still gets its key. Reason: the user requirement
+  of 2026-11-10; on Windows and Linux the terminal keeps every key.
+- In a text field, a press that runs no command goes no further, also a
+  text key. Reason: the switch turns one text key into another, such as
+  Ctrl+Shift+Z into Ctrl+Z, which undoes in place of redoing.
+- The recorder records the key with the modifier added back. Reason: the
+  person pressed that key, and the listener matches it the same way.
 
 ### The Keyboard shortcuts tab
 
@@ -915,6 +973,11 @@ Agent calls, 2026-11-08 and 2026-11-09:
 - A failed save shows its error on the row. The row keeps the saved keys.
 - The palette's Settings tab gets a Keyboard shortcuts row, and ⌘⌥/ opens
   the tab.
+- User answer of 2026-11-10 to decision 198, C: the Account group of the
+  palette's Settings tab lists its rows in the order of the Account page,
+  tab by tab, and in each tab in the order of its sections. So in the Mac
+  app, This Mac follows Sign-in, and Keyboard shortcuts still ends the
+  group.
 - Agent calls, 2026-11-10, from the questions of Milestone 2:
   - While the recorder replaces a key, it offers Remove beside Cancel.
     Remove takes that key off the command and saves at once. Reason: the
@@ -979,7 +1042,7 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
 - [x] Choose the Mac second keys of Previous workspace, Next workspace,
       and Focus the message field, and check them. Evidence:
       `.context/keyboard-shortcuts/key-checks.md`.
-- [ ] After decisions 192 and 194: fix the rest of the key table, the
+- [x] After decisions 192 and 194: fix the rest of the key table, the
       Windows and Linux keys and the keys of decision 192. Check each key
       against the kept keys and the menu keys of Chrome, Edge, Firefox,
       and Safari, and against the keys that macOS takes first, from their
@@ -993,8 +1056,9 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
         on each system and the keys that a shell reads, from the user
         requirement of 2026-11-10. Choose another key where a default
         clashes.
-  - [ ] Fix the Linux keys after decisions 196 and 197. Evidence so far:
-        `.context/keyboard-shortcuts/key-table.md`.
+  - [x] Fix the Linux keys after decisions 196 and 197. Evidence:
+        `.context/keyboard-shortcuts/key-table.md`, sections 14.1 and 14.2.
+        The answers add no default key.
 - [x] Draw the Keyboard shortcuts tab of the Account page in the Mac app,
       with its fixed menu keys, and its states: recording, a conflict with
       Replace, a changed row with Reset, and a failed save. No open
@@ -1039,6 +1103,15 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
   - [x] The browser and phone pages: the stale list of fixed shortcuts,
         and the Orca keys in the evidence. Reports:
         `.context/keyboard-shortcuts/reports/`.
+- [ ] Draw the answer to decision 196 on the browser pages of the tab:
+      Chrome and Firefox in a normal tab on Linux. Both dim Alt+1 to Alt+9
+      and Ctrl+L, and only Chrome dims Ctrl+1 to Ctrl+9. Update each note
+      of the mockups that calls decisions 196 and 197 open. Decision 197 D
+      changes nothing that a page draws.
+- [ ] Run `npm run mockups:check`. Smoke-test the new pages in light and
+      dark, desktop and phone.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the new pages show.
 
 ## Milestone 2: Documentation and protocol
 
@@ -1071,6 +1144,12 @@ block only the Linux rules, which follow the answers.
 - [x] State the user's answers to review items 4 and 10 under "Fixed
       keys" and "How a key matches". The guides and the legal pages were
       read in full; none restates a changed fact.
+- [ ] State decision 198 C in the Settings section of
+      `docs/protocol/command-palette.md`: the Account group follows the
+      order of the Account page, tab by tab.
+- [ ] For the answers to decisions 196 to 198: read both legal pages and
+      each public guide in full, and update each sentence that restates a
+      changed fact. Check each relative link of each changed Markdown file.
 
 ## Milestone 3: The key model
 
@@ -1094,6 +1173,11 @@ the layout switch rule until the answers.
       `.context/keyboard-shortcuts/reports/m3-non-ui.md`.
 - [ ] Add the Linux tab keys and the layout switch rule after decisions 196
       and 197.
+  - [ ] Decision 196 B with D: the keys that each browser uses on each
+        system to select a tab or to open its address bar, with tests.
+  - [ ] Decision 197 D: the layout switch rule in the model, the key-up
+        and the focus loss of a switch key in `windowKeys`, and the stop of
+        a press that runs no command, with tests.
 - [x] Apply the user's answers to review items 4 and 10 in the model and
       the shared contracts, with tests: the fixed rule of the keys of a
       focused control, and one key text for each press. Evidence:
@@ -1226,6 +1310,24 @@ Depends on: 1, 3
       follow-up items that the answers settle. Evidence:
       `.context/keyboard-shortcuts/m7/gate-3.log`.
 
+## Milestone 9: The answers to decisions 196 to 198 in the app
+
+Tags: ui
+
+Depends on: 1, 3
+
+- [ ] Decision 198 C: list This Mac after Sign-in in the palette's Account
+      group, with the search word "always allow", and update its test.
+- [ ] Happy-dom tests where the page shows the answers to decisions 196
+      and 197: in a normal Chrome tab on Linux, Alt+1 switches no org and
+      the tab dims Alt+1 to Alt+9; while the layout switch takes Shift, the
+      recorder records Alt+Shift+K. Add each case to the existing test of
+      its requirement.
+- [ ] Smoke-test the tab in Chrome on Linux, desktop and phone, in light
+      and dark. Where the machine allows it, also press Alt+Shift+1 with
+      the Alt+Shift layout switch on, in Chrome under a real X server.
+- [ ] Update the README of each changed area.
+
 ## Milestone 7: Verification, commit, review, and pull request
 
 Depends on: every other milestone
@@ -1241,6 +1343,15 @@ Depends on: every other milestone
       removed); round 2 found 5 (1 fixed, 1 removed, 3 open with the user
       as items 4 and 10). Findings file:
       `.context/reviews/calummoore/keyboard-shortcuts-settings/findings.md`.
+- [ ] Merge `origin/main` before the work on the answers to decisions 196
+      to 198, and again before the pull request. Merge justifications:
+      `.context/keyboard-shortcuts/merge/justifications.md`.
+- [ ] Run the targeted tests and `npm run check` on the tree with
+      Milestones 1, 2, 3, and 9 and the last merge of `main`.
+- [ ] Review the complete local diff against `origin/main` again with the
+      `implementation-review` skill after the push, with a focus on the
+      commits since review round 2: the answers to review items 4 and 10
+      and to decisions 196 to 198. Then apply the fix rule.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
@@ -1253,3 +1364,6 @@ Depends on: every other milestone
       and that ⌘R still reloads.
 - [ ] Check an installed app window in Chrome, and a browser tab in
       Chrome, Firefox, and Safari, on the deployed app.
+- [ ] On Linux with the Alt+Shift layout switch, check in Chrome and in
+      Firefox that Alt+Shift+1 opens workspace 1, in either order of the
+      modifiers, and that Firefox reports the switch key as GroupNext.
