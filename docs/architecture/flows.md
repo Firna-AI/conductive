@@ -33,7 +33,8 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   `app.conductive.build`. The Worker connects it to the private terminal
   port.
 - A preview frame loads its preview hostname. The Worker proxies the
-  request to the private port of the sandbox.
+  request to the private preview relay of the sandbox. The relay forwards
+  it to the previewed server with its local address as `Host`.
 - The Worker asks Boat for a short-lived desktop URL, and the browser
   shows Boat's desktop stream.
 

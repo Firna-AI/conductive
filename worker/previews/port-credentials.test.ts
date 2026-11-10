@@ -11,6 +11,7 @@ import {
 import type { PrivatePort } from '../sandbox/provider'
 import { PrivatePorts } from './ports'
 import { PreviewProxy } from './proxy'
+import { relayResponse } from './relay.test-support'
 import { openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
@@ -61,11 +62,11 @@ it('uses client credential metadata for request headers, cookies, queries, and p
     const headers = new Headers({
       ETag: 'private-credential',
       'X-Cloud-Key': 'private-credential',
-      Location: 'https://cloud-port.test/next?keep=2&cloud_token=secret',
+      Location: 'http://localhost:3000/next?keep=2&cloud_token=secret',
     })
     headers.append('Set-Cookie', 'CLOUD_AUTH=private-cookie; Path=/')
     headers.append('Set-Cookie', 'shop=green; Domain=cloud-port.test; Path=/')
-    return new Response(null, { status: 302, headers })
+    return relayResponse(null, { status: 302, headers })
   }
   const response = await proxy.fetch(
     setup.previewRequest(`${setup.previewUrl}/path?keep=1&cloud_token=forged`, {
