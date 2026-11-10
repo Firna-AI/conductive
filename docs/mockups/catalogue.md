@@ -218,7 +218,8 @@ columns, a wide table that scrolls sideways inside the reply, and the
 reply while the agent writes it, before its separator row arrives and
 after its table appears. `app/chat/lists` draws a reply with a numbered
 list of choices, each with its options in a list under its text, as the
-user chose on 10 November 2026. `app/chat/lost-data` draws the data that the
+user chose on 10 November 2026, and an open message line in the work of a
+turn with a plan whose steps sit under each item. `app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the
 runner left out, and the lines of runner events that the workspace
 refused.

@@ -61,15 +61,14 @@ function LineList(props: { list: TextList; open: boolean }) {
       className={classes(
         styles.bullets,
         local.lineBlock,
-        local.list,
-        numbered && local.numbered,
+        numbered && styles.numbered,
       )}
     >
       {list.items.map((item, index) => (
-        <span className={classes(styles.bullet, local.item)} key={index}>
+        <span className={styles.bullet} key={index}>
           {list.kind === 'ol' ? (
             <>
-              <span className={local.number}>{list.start + index}.</span>{' '}
+              <span className={styles.number}>{list.start + index}.</span>{' '}
             </>
           ) : null}
           <LineItem item={item} open={props.open} />
