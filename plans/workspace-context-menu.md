@@ -679,8 +679,8 @@ Action: `default orchestrator`.
 - [x] Run `npm run check` again on that combined tree before the review.
 - [x] Review the final diff for scope, preserved functionality, protocol
       alignment, legal text, file length, and real data in product screens.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings.
       Apply its fix rule, record follow-up items for the remaining findings,
       and re-review once. Keep reports under `.context/`.
@@ -690,6 +690,12 @@ Action: `default orchestrator`.
       follow-up item that this change adds. Wait for CI before the final report.
 
 Evidence: `.context/workspace-context-menu/final-integration/`.
+
+The full review and independent check found one Medium, Rare issue in
+menu state after an action disappears. Its Small fix is recorded in
+`plans/follow-ups/workspace-menu-state-after-actions-change.md` under the
+review's fix-after-merge rule. No fix round changed the source.
+Review evidence: `.context/reviews/calummoore/workspace-context-menu/`.
 
 ## Post-merge follow-up (non-blocking)
 
