@@ -110,10 +110,13 @@ commits name as their author.
   the command fails. The build goes on only after GitHub confirms the
   revocation. The build starts no checkout, software step, install script,
   snapshot, or other repository code before that.
-- Risk: a build sandbox starts from the last org image. A program with root
-  access that an earlier install left in that image can read the clone
-  token of a later copy. That token can only read its own repository, which
-  the image already holds. The Worker revokes it when the copy ends.
+- Risk: a later build and a refresh start from the last org image. A
+  program with root access that an earlier install left in that image can
+  read the clone token of a later copy. That token can only read its own
+  repository, which the image already holds. The Worker revokes it when
+  the copy ends.
+- A build of an org without an org image starts from the software image or
+  from the base image, where no org code has run.
 - Reason: Git in the build sandbox copies a repository of any size, and the
   Git data does not pass through the Worker. Larger uploads and stored
   progress were rejected, because one repository or one Git response must

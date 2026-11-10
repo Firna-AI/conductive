@@ -11,6 +11,7 @@
   // Keep deployment-specific public variables that this file does not set.
   "keep_vars": true,
   "ai": { "binding": "AI" },
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
   // Workers Logs keeps each log line, also of the workspace objects.
   "observability": {
     "enabled": true,

@@ -38,8 +38,16 @@ function idBytes(id: string): Uint8Array | null {
  * letters, digits, and dashes, so the name encodes the bytes of the build ID.
  */
 export function savedImageName(buildId: string): string {
+  return resourceImageName('image', buildId)
+}
+
+export function softwareImageName(attemptId: string): string {
+  return resourceImageName('software', attemptId)
+}
+
+function resourceImageName(prefix: string, buildId: string): string {
   const bytes = idBytes(buildId) ?? new TextEncoder().encode(buildId)
-  const name = `image-${base32(bytes)}`
+  const name = `${prefix}-${base32(bytes)}`
   if (!SAVED_IMAGE_NAME.test(name))
     throw new Error('The build ID is too long for a saved image name')
   return name
