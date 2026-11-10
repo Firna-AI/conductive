@@ -1,0 +1,23 @@
+---
+import { pricingPageCopy } from '../pricing'
+import Icon from './Icon.astro'
+
+/*
+ * The top of the pricing page: the label, the title, one sentence, and the
+ * note that the product stays free until billing starts, with no date.
+ */
+const copy = pricingPageCopy
+---
+
+<header class="pricing-intro">
+  <span class="pricing-label">{copy.label}</span>
+  <h1 class="pricing-title">{copy.title}</h1>
+  <p class="pricing-lead">{copy.lead}</p>
+  <div class="pricing-note" role="note">
+    <Icon name="calendar-check" size={16} class="pricing-note-icon" />
+    <p class="pricing-note-text">
+      <strong class="pricing-note-title">{copy.free.title}</strong>{' '}
+      {copy.free.text}
+    </p>
+  </div>
+</header>

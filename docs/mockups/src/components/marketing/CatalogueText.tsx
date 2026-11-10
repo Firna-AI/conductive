@@ -7,6 +7,7 @@ import { RunningText, type TextLinkRenderer } from './RunningText'
 /** The catalogue page of each page of the site. */
 const sitePages: Readonly<Record<SitePage, string>> = {
   home: paths.marketing,
+  pricing: paths.pricing,
   terms: paths.terms,
   privacy: paths.privacy,
   fromConductor: paths.fromConductor,

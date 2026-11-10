@@ -48,8 +48,8 @@ export const termsDocument: LegalDocument = {
         paragraph`${productName} is a coding tool in the browser and in the
           Mac app. Each workspace is one task with its own branch and its
           own cloud computer, where agents powered by Claude and Codex work.`,
-        paragraph`${productName} is free for now. It has no plans and no
-          billing.`,
+        paragraph`${productName} is free until billing starts. Nobody pays
+          until they choose a plan.`,
       ],
     },
     {

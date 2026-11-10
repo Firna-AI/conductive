@@ -25,21 +25,25 @@ both actions for the header, the hero, the last call to action, and the
 footer, and the site reads the same words. The parts live in
 `src/components/marketing/`.
 
-The header of a desktop has Features, Download, Docs, GitHub, Sign in, and
-the main action, Sign up. Features and Download lead to the features and
-to the Mac app section of the home page. A phone keeps the wordmark, Docs,
-GitHub, and Sign in. Each link of the phone header is a 44 px target.
+The header of a desktop has Features, Download, Pricing, Docs, GitHub,
+Sign in, and the main action, Sign up. Features and Download lead to the
+features and to the Mac app section of the home page. Pricing leads to
+[the pricing page](#the-pricing-page). A phone keeps the wordmark, Docs,
+GitHub, and Sign in, and it reaches the pricing page from the footer. Each
+link of the phone header is a 44 px target.
 There GitHub shows only its mark, in a square named "GitHub", so that the
 links fit on a 360 px phone. The header links to the public source
-repository on GitHub in both layouts.
+repository on GitHub in both layouts. Below 900 px, a desktop header
+tightens the space around its links, so that they stay inside its padding
+from 760 px.
 The wordmark is the lockup of the brand, 25 px high, from the
 `lockupHeight` token. Its tile fills that height. It keeps the clear
 space of the [brand rules](../brand/README.md#rules): at least 12.5 px,
 half its tile. So each header is at least twice as high as the lockup.
 The phone header is 56 px high, and the desktop header 64 px. The gap
 after the wordmark is 16 px, and the footer keeps half the lockup height,
-12.5 px, under it. The Product column of the footer lists Docs after
-Features, and it has Mac app. Features and Mac app lead to the same
+12.5 px, under it. The Product column of the footer lists Pricing and
+Docs after Features, and it has Mac app. Features and Mac app lead to the same
 sections as in the header. The Account column of the footer has Sign up
 and Sign in. The Docs links of the header and the footer lead to the docs
 overview, `marketing/docs`. [The docs](#the-docs) gives its layout.
@@ -91,9 +95,9 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
 - The hero sentence and the footer tagline name the Mac app beside the
   browser. The description of the home page, which a search result can
   show, is the hero sentence.
-- The page shows no plans, because the product is free for now. It asks
-  for no other account, because the app runs every cloud computer in its
-  own account.
+- The home page shows no plans, because the pricing page shows them. It
+  asks for no other account, because the app runs every cloud computer in
+  its own account.
 - The product is "Conductive", on `conductive.build`.
   `src/brand.ts` holds the name and the domains, so that one change renames
   the product.
@@ -198,3 +202,36 @@ guides.
 - Each link and each disclosure bar shows a 2 px focus ring, as the links
   of the site do. The menu rows and the phone bars draw the ring inside
   the item.
+
+## The pricing page
+
+`marketing/pricing` draws the pricing page, at `/pricing` on the product
+domain. Its plans, prices, hours, and words come from
+[`pricing.ts`](../../src/marketing/pricing.ts), the module that the site
+also reads. The desktop header and the Product column of the footer link
+the page.
+
+- `PricingScreen` in `src/screens/PricingScreen.tsx` draws the page in
+  `SitePage`. It sets the `current` prop of `SitePage`, so the header fills
+  its Pricing link and marks it as the current page. The parts live in
+  `src/components/pricing/`.
+- The top has the label, the title, and one sentence. A quiet box under
+  them says that the product stays free until billing starts, and that
+  nobody pays until they choose a plan. It gives no date.
+- Each plan is a quiet box with a full outline: its name, its price, what
+  the price covers, and what it includes, under a hairline. No plan is
+  marked above the others. No box has a button, because nobody chooses a
+  plan before billing starts.
+- A desktop shows the four plans side by side. Below 1000 px they take two
+  columns, so that each box keeps room for its price and its facts. A
+  phone stacks them.
+- One line under the plans says that the prices are monthly, in US
+  dollars. It ends with the tax line, "Prices exclude VAT and sales tax.",
+  and it does not say that checkout adds the tax.
+- How cloud hours count follows, with `SectionIntro`: the size of each
+  cloud computer, then four rules under neutral hairlines, in two columns
+  on a desktop. The rules give one pool for the org, every minute of every
+  cloud computer, the stop after 30 minutes without activity, and the
+  extra hours.
+- The last call to action has the sentence and the two actions of the
+  home page, through `ClosingCall`.

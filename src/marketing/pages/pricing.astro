@@ -1,0 +1,36 @@
+---
+import ClosingCall from '../components/ClosingCall.astro'
+import HoursRules from '../components/HoursRules.astro'
+import PlanCards from '../components/PlanCards.astro'
+import PricingIntro from '../components/PricingIntro.astro'
+import SiteLayout from '../layouts/SiteLayout.astro'
+import { pricingPageCopy } from '../pricing'
+import '../styles/pricing.css'
+
+/*
+ * The pricing page: the note that the product stays free until billing
+ * starts, the plans with their prices and cloud hours, the currency and tax
+ * line, how cloud hours count, and the last call to action. The header
+ * marks Pricing as the current page. The mockup marketing/pricing is its
+ * visual spec, and both read pricing.ts. Its stylesheet joins the other
+ * styles of the page, which carries them inline.
+ */
+const copy = pricingPageCopy
+---
+
+<SiteLayout
+  title={copy.documentTitle}
+  description={copy.description}
+  current="pricing"
+>
+  <main class="main">
+    <div class="pricing-page">
+      <div class="pricing-top">
+        <PricingIntro />
+        <PlanCards />
+      </div>
+      <HoursRules />
+      <ClosingCall title={copy.closing.title} text={copy.closing.text} />
+    </div>
+  </main>
+</SiteLayout>

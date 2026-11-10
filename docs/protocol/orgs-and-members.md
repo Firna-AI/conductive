@@ -44,11 +44,14 @@ says.
   it gives no link when no account has the app, and it cannot install the
   app on another account.
 - The org rail and General settings show the saved initials.
-- The product is free, with no limits (decisions 45 and 81). It has no
-  plans, no billing, and no limits of its own on workspaces, minutes, or
-  members.
-- Limits for each user and billing were rejected for now. Billing can come
-  later (decision 81).
+- Use of the product is free until billing starts, as
+  [Before billing starts](pricing.md#before-billing-starts) says. Until
+  then, the app has no billing, and no limits of its own on workspaces,
+  hours, or members.
+- When billing starts, each org has a plan, and the org pays for its
+  members and its cloud hours (decision 250).
+  [The plans](pricing.md#the-plans) give the price, the hours, and the
+  limits of each plan.
 - A waitlist stands in front of the app (decision 160). A new account
   waits for app access, as [Waitlist](waitlist.md) says.
 

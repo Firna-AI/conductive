@@ -182,7 +182,7 @@ answered decisions 253 and 254 on 10 November 2026. The numbers start at
 - It says when hours count: while any cloud computer of the org runs.
   This includes image builds, image refreshes, and the short restarts
   near day 14 that keep a stopped disk. A cloud computer stops after 30
-  minutes without activity.
+  minutes without activity, unless an agent turn runs.
 - It says that Conductive stays free until billing starts, and that
   nobody pays until they choose a plan. It gives no date.
 - Its actions are the actions of the site: Sign up and Download for Mac,
@@ -247,6 +247,52 @@ one.
   user decision that includes them. The row No fee for cloud compute stays
   Available while use is free, and its note names the coming plans.
 
+The implementor made these calls on 10 November 2026, during Milestone 1:
+
+- Pricing follows Download in the desktop header, and Features in the
+  Product footer column. Reason: the page links stay together beside Docs.
+- Pricing marks its current page with `aria-current="page"`. Docs keeps
+  `aria-current="true"`, because it is a section with several pages.
+- Below 900 px, desktop header links use 8 px side padding and no gap.
+  Reason: the new link then fits inside the header padding at 760 px.
+  The phone rules keep their existing spacing.
+- Four equal plan cards use the site's neutral borders and no plan
+  actions. Reason: billing has not started, and no decision ranks a plan.
+  They use four columns from 1000 px, two below it, and one on phones.
+- The shared module stores prices as integer US cents and formats the
+  words once. Reason: the site and mockup must show the same amounts.
+- The page reuses the existing calendar and check icons, section intro,
+  site layout, and closing call. Reason: the site already has these parts.
+- Free's hours are monthly. Reason: this is a monthly plan, not a trial.
+  The stop rule keeps the running-turn exception of the workspace protocol.
+  The pool example shows three Plus members sharing 825 hours.
+- The existing 320 px mockup header overflow stays with
+  `plans/follow-ups/marketing-header-overflows-small-phones.md`.
+  Reason: that item's layout choice remains open outside this change.
+
+The docs implementor made these calls on 10 November 2026, during Milestone 2:
+
+- The architecture defines Plan and Cloud hour, because several docs use
+  them. Pricing owns the requirements and the terms used only there.
+- The approved tax rules stay in Pricing under Planned tax rules.
+  Reason: no operator runbook exists, and these rules apply when billing starts.
+- The marketing README links `src/marketing/pricing-page.md` for pricing
+  entry points. Reason: the README already has 300 lines.
+- The Terms revision and effective date stay. Reason: the changed sentence
+  records the free-until-billing promise and adds no user obligation.
+
+The UI implementor made these calls on 10 November 2026, during Milestone 3:
+
+- The pricing page imports its own stylesheet, as the docs layout does.
+  Reason: other pages then carry no pricing styles.
+- The Astro parts use the mockup part names. Reason: the two renderers
+  are easy to compare.
+- Pricing joins the existing site-page path helpers and the mockup's
+  matching page map. Reason: every consumer keeps the same list of pages.
+- The comparison keeps the statuses from the new main commit, and changes
+  only the two notes that the shipped page affects. Reason: the other notes
+  remain true. The last full comparison-check date stays unchanged.
+
 ### Later changes
 
 Each needs its own plan:
@@ -255,9 +301,8 @@ Each needs its own plan:
   plan of each org, a billing tab, and the consumer pages of decision
   35 D. Checkout collects the billing address, so that the operator sees
   the country of each customer.
-- Usage: one record of every cloud computer, as
-  `plans/follow-ups/computer-ledger.md` says, the hours of each org, and
-  the charge for extra hours.
+- Usage: use the existing computer ledger for the hours of each org and
+  the charge for extra hours. The ledger merged to main during this work.
 - Plan limits in the app: the 3 workspaces and the 20 hours of the free plan.
 
 Questions for those plans: what an unpaid or cancelled org keeps (closed
@@ -273,38 +318,51 @@ Tags: mockup
 
 Depends on: none
 
+Status: Complete.
+
 Draw the pricing page at desktop and phone sizes, and add Pricing to the
 header and the footer of the marketing mockups.
 
-- [ ] Add one module under `src/marketing/` with the plans of
+- [x] Add one module under `src/marketing/` with the plans of
       decision 253, the price of extra hours, and the tax line of
       decision 254.
-- [ ] Draw the pricing page in `docs/mockups/`, with its plans, the
+- [x] Draw the pricing page in `docs/mockups/`, with its plans, the
       hours rules, the tax line, the free-until-billing sentence, and the
       site actions.
-- [ ] Add Pricing to the desktop header and to the Product column of the
+- [x] Add Pricing to the desktop header and to the Product column of the
       footer in the marketing mockups.
-- [ ] Run `npm run mockups:check`. Smoke-test the page at 320 px and at
+- [x] Run `npm run mockups:check`. Smoke-test the page at 320 px and at
       desktop width in both colour schemes.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/pricing-page/reports/milestone-1.md` and
+`.context/pricing-page/screenshots/`.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
+Status: Complete.
+
 State the plans and the page as requirements.
 
-- [ ] Add `docs/protocol/pricing.md` with the plans, the extra hours, the
+- [x] Add `docs/protocol/pricing.md` with the plans, the extra hours, the
       tax line, the free-until-billing rule, and the decisions in force.
-- [ ] Link it from `docs/architecture.md` and from `README.md`.
-- [ ] Update the free-product lines of
+- [x] Link it from `docs/architecture.md` and from `README.md`.
+- [x] Update the free-product lines of
       `docs/protocol/orgs-and-members.md`.
-- [ ] Update `docs/architecture/marketing-site.md` and
+- [x] Update `docs/architecture/marketing-site.md` and
       `src/marketing/README.md` with the new page and links.
-- [ ] Read the Terms and Privacy pages in full. Update each sentence that
+- [x] Read the Terms and Privacy pages in full. Update each sentence that
       restates a changed fact, such as "It has no plans and no billing."
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Read every public guide in full, as the updated repository rules
+      require. Update each sentence that restates a changed fact.
+- [x] Extend the existing marketing-site deployment follow-up with the
+      pricing page and its header and footer links.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: `.context/pricing-page/reports/milestone-2.md`.
 
 ## Milestone 3: Pricing page
 
@@ -312,29 +370,39 @@ Tags: ui
 
 Depends on: 2
 
+Status: Complete.
+
 Build the page and its links on the marketing site.
 
-- [ ] Add the Astro page for `/pricing`, which reads the module of
+- [x] Add the Astro page for `/pricing`, which reads the module of
       Milestone 1.
-- [ ] Add Pricing to the desktop header and to the Product column of the
-      footer.
-- [ ] Check that the Worker serves the page with the security headers of
+- [x] Add Pricing to the desktop header and to the Product column of the
+      footer. Copy the mockup's tighter desktop link spacing below 900 px.
+- [x] Check that the Worker serves the page with the security headers of
       the site, and add or extend the tests of the served pages.
-- [ ] Run `npm run site:build`, and check the page at 320 px and at
+- [x] Run `npm run site:build`, and check the page at 320 px and at
       desktop width in both colour schemes.
+
+Evidence: `.context/pricing-page/reports/milestone-3.md` and
+`.context/pricing-page/screenshots/root-site-*`. Worker evidence:
+`.context/pricing-page/reports/worker-tests.md`.
 
 ## Milestone 4: Comparison rows
 
 Depends on: 2
 
-- [ ] Update the rows of `src/marketing/from-conductor/areas/plans-and-pricing.ts`
+Status: Complete.
+
+- [x] Update the rows of `src/marketing/from-conductor/areas/plans-and-pricing.ts`
       as the design calls say.
+
+Evidence: `.context/pricing-page/reports/milestone-3.md`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: 1, 2, 3, and 4
 
-- [ ] Run the targeted tests and `npm run check`.
+- [x] Run the targeted tests and `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -346,6 +414,9 @@ Depends on: 1, 2, 3, and 4
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this
       plan, and the follow-up items that the change adds.
+
+Evidence: `.context/pricing-page/complete-gate.log` and
+`.context/pricing-page/reports/worker-tests.md`.
 
 ## Post-merge follow-up (non-blocking)
 
