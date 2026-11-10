@@ -463,29 +463,29 @@ Depends on: 1
 
 The public text says who a commit names.
 
-- [ ] In `src/marketing/docs/pull-requests.md`, after the sentences about
+- [x] In `src/marketing/docs/pull-requests.md`, after the sentences about
       GitHub operations, say that commits name the same person with their
       private GitHub address.
-- [ ] In the GitHub account section of
+- [x] In the GitHub account section of
       `src/marketing/docs/terminal-and-previews.md`, say that commits name
       the same person as the table, with their private GitHub address.
-- [ ] Give the rule of decision 233 A in
+- [x] Give the rule of decision 233 A in
       `src/marketing/docs/cloud-computer.md` and
       `src/marketing/docs/security.md`, where they say that each workspace
       gets every org value. An org variable or a script cannot change the
       commit author.
-- [ ] Read the Privacy page in `src/marketing/privacy.ts` and
+- [x] Read the Privacy page in `src/marketing/privacy.ts` and
       `src/marketing/privacy-uses.ts` in full. Say that commits carry the
       member's GitHub name and no-reply address, and that each reader of
       the repository sees them. Add this use of the GitHub ID and the login
       to the purposes. Set the effective date to the date of the change.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and every public
+- [x] Read the Terms page in `src/marketing/terms.ts` and every public
       guide in full. Update each sentence that restates a changed fact.
       Follow the marketing README when the Terms change.
-- [ ] Add the commit author to the note of the `managed-git-identity` row
+- [x] Add the commit author to the note of the `managed-git-identity` row
       in `src/marketing/from-conductor/areas/cloud.ts`. Keep its status
       Available.
-- [ ] Follow [Website docs](../docs/protocol/website-docs.md) and the copy
+- [x] Follow [Website docs](../docs/protocol/website-docs.md) and the copy
       rules of the `product-ui` skill. Run `npm run site:build` and
       `npm run typecheck`.
 
