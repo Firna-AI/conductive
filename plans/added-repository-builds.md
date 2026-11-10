@@ -328,9 +328,9 @@ Calls of Milestone 1, 2026-11-10, from the mockups:
 - The build history stays closed while a repository change waits, as it
   does for a changed install script.
 - The waiting states of New workspace show on the page only. The dialog
-  uses the same menu and notices, and its page already shows six screens,
-  which [The New workspace dialog page shows six screens](follow-ups/new-workspace-dialog-page-six-screens.md)
-  records.
+  uses the same menu and notices. Its page showed six screens when
+  Milestone 1 ran. The merge of `origin/main` moved its states into child
+  pages, which fixed that page, so its follow-up item is gone.
 - A removal that the install script still uses fails the next build, as
   it does today, and the log of that build shows the failed `cd`. On
   2026-11-10 the user chose A, no change, over a sentence in the notice
@@ -353,6 +353,10 @@ Calls of Milestone 2, 2026-11-10, from the protocol docs:
 - The public guides of the marketing site restate the rules of the org
   image. They came with `origin/main`, so the merge of `origin/main`
   updates them.
+- Two problems outside the scope wait for the user, as follow-up items:
+  [The push refresh trigger disagrees with the code](follow-ups/push-refresh-trigger-mismatch.md)
+  and
+  [The clone token risk misses a new repository](follow-ups/clone-token-risk-new-repository.md).
 
 ## Milestone 1: Mockups
 
@@ -416,6 +420,23 @@ above in the protocol docs.
 - [x] Check the rows in `src/marketing/from-conductor/` for a listed
       feature that this change ships, starts, or drops.
 - [x] Check each relative link of each changed Markdown file.
+
+## Milestone 2b: Public guides
+
+Depends on: 2
+
+The merge of `origin/main` brought the public guides of the marketing
+site, and a rule that a changed protocol fact updates each guide sentence
+that restates it.
+
+- [x] Merge `origin/main` into the branch with the `git-merge` skill.
+- [x] Read each guide under `src/marketing/docs/` in full. Update each
+      sentence that restates a fact of decisions 240 and 241, or of the
+      refresh rule of Milestone 2.
+- [x] Run the guide tests and `npm run site:build`, and check each
+      relative link of each changed guide.
+
+Evidence: `.context/added-repository-builds/m2b-*.log`.
 
 ## Milestone 3: Worker and API contract
 

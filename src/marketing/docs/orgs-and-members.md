@@ -36,6 +36,7 @@ The list needs access from both your GitHub account and the app.
 
 Admins can later change the selection in **Settings**, under **Repositories**.
 A build applies that changed selection to new workspaces.
+Adding a repository starts a build automatically.
 
 - [Manage the shared cloud computer setup](/docs/cloud-computer)
 
