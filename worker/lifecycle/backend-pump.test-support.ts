@@ -51,9 +51,11 @@ export function backendPump(
           }),
         )
         if (finished) break
+        // A completed start can still have its response in transit.
         const next = checkpoints
           .filter(
             (state) =>
+              state.job !== undefined &&
               state.alarmAt !== null &&
               (state.alarmAt <= now() ||
                 state.instanceId !== existing.get(state.id)?.instanceId ||
