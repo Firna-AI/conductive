@@ -1,8 +1,10 @@
 import {
   Archive,
+  ArrowLeft,
   ArrowRight,
   ArrowRightLeft,
   CalendarCheck,
+  ChevronDown,
   CircleCheck,
   CircleDashed,
   CircleEllipsis,
@@ -12,6 +14,7 @@ import {
   Download,
   Link,
   ListTree,
+  Menu,
   PanelsTopLeft,
   SquarePlus,
   Users,
@@ -40,4 +43,7 @@ export const siteIcons: Readonly<Record<IconName, LucideIcon>> = {
   'arrow-right': ArrowRight,
   download: Download,
   link: Link,
+  menu: Menu,
+  'chevron-down': ChevronDown,
+  'arrow-left': ArrowLeft,
 }

@@ -1,0 +1,37 @@
+---
+import type { Guide } from '../docs-guides'
+import Icon from './Icon.astro'
+
+/*
+ * The previous and the next guide in the order of the menu, at the foot of
+ * a guide. The first guide has no previous card, and the last guide no next
+ * card. The next card stays on the right without a previous card, and a
+ * phone puts the cards under each other.
+ */
+type Props = { previous?: Guide; next?: Guide }
+
+const { previous, next } = Astro.props
+---
+
+{previous || next ? (
+  <nav aria-label="Previous and next guides" class="docs-pager">
+    {previous ? (
+      <a class="docs-card" href={previous.href}>
+        <span class="docs-card-direction">
+          <Icon name="arrow-left" size={13} />
+          Previous
+        </span>
+        <span class="docs-card-title">{previous.title}</span>
+      </a>
+    ) : null}
+    {next ? (
+      <a class="docs-card docs-card-next" href={next.href}>
+        <span class="docs-card-direction">
+          Next
+          <Icon name="arrow-right" size={13} />
+        </span>
+        <span class="docs-card-title">{next.title}</span>
+      </a>
+    ) : null}
+  </nav>
+) : null}

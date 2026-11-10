@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
-- **Added:** 2026-11-08, from the branch `calummoore/astro-marketing-site-switch`, the post-merge task of its plan. Extended on 2026-11-09 from `calummoore/conductor-feature-parity-list` with the Conductor Cloud comparison page.
+- **Added:** 2026-11-08, from the branch `calummoore/astro-marketing-site-switch`, the post-merge task of its plan. Extended on 2026-11-09 from `calummoore/conductor-feature-parity-list` with the Conductor Cloud comparison page. Extended on 2026-11-09 from `calummoore/docs-section-brainstorm` with the public Markdown guides.
 - **Location:** None.
 - **Reason:** The check needs the change deployed to `conductive.build`, which happens only after the merge.
 
@@ -11,6 +11,7 @@
   - The Worker serves the built pages on `conductive.build`, fills in the app origin and the year of each request, and answers a missing build with `503` and a warning.
   - The agreement page before GitHub comes from the same build. The app host shows it when a sign-in starts without the current Terms revision, such as the browser sign-in of the Mac app.
   - The site also has the Conductor Cloud comparison page at `/from-conductor`. Its rows, statuses, dates, and words come from `src/marketing/from-conductor/`. The link "From Conductor Cloud? Compare the features" above the home headline and the link "From Conductor Cloud" in the Product column of the footer lead to it. `docs/protocol/conductor-cloud-comparison.md` states its requirements.
+  - The site also builds twelve public Markdown guides at `/docs` and `/docs/<id>`. They use the same file list and security headers, with native phone menus and an "On this page" link to each section. The header and the footer link to `/docs`. `docs/protocol/website-docs.md` states their requirements.
   - Each push to `main` deploys `conductive.build` through the `Deploy` workflow, as `docs/automatic-deploys.md` says.
   - The branches checked all of this with `npm run build` and `npm run preview`, but not on Cloudflare.
 - **Task:**
@@ -29,6 +30,16 @@
      - At a phone width, each row stacks its cells with its area on top, and the table does not scroll sideways.
   7. Start the browser sign-in of the Mac app, or open `https://app.conductive.build/api/auth/github` without the Terms version, and check that the agreement page shows with its styles and that Continue with GitHub works.
   8. Check the Worker logs for the warning "The built marketing site is not available."
-- **Impact if no action:** A deployment that leaves out the site files would show visitors an empty `503` on `conductive.build`, and nobody would notice until a visitor reports it. A broken comparison page or entry link would leave Conductor Cloud users without the list while they move.
-- **Needs:** The merged change, deployed to the production Worker.
+  9. Open `https://conductive.build/docs` and `/docs/get-started`.
+     Check their titles, guide bodies, font, and code colours in both colour schemes.
+     Check their response headers as in the header check above. Neither response sets a cookie.
+  10. With page scripts off, use the desktop sidebar and the phone Docs menu.
+      Open and close "On this page" by keyboard, then follow one of its links to a section.
+      Check the current guide, previous and next links, and the header and footer Docs links.
+  11. Check that `/docs/overview` and `/docs/unknown-page` return 404.
+      A HEAD request to `/docs/get-started` returns 200 with no body.
+- **Impact if no action:** A deployment that leaves out the site files would show visitors an empty `503` on `conductive.build`, and nobody would notice until a visitor reports it. A broken comparison page or entry link would leave Conductor Cloud users without the list while they move. A broken guide or Docs link would leave visitors without the public guides.
+- **Needs:** The merged change, including the public Markdown guides, deployed to the production Worker.
 - **Done when:** Each page, the comparison page with both entry links, and the agreement page show on the deployed site with today's headers, and the logs show no site warning.
+  The public guides show there with the same headers.
+  The docs navigation and keyboard controls work with page scripts off.

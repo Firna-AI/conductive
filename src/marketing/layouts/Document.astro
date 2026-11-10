@@ -20,8 +20,11 @@ import 'virtual:site-pictures.css'
 import interFont from '../../../docs/mockups/src/fonts/InterVariable.woff2?url'
 import { SITE_ICONS } from '../../shared/site-build'
 
-/** What the head of a page says about it. */
-type Props = { title: string; description: string }
+/**
+ * What the head of a page says about it. A page without a description,
+ * such as a guide without one, has no description in its head.
+ */
+type Props = { title: string; description?: string }
 
 const { title, description } = Astro.props
 ---
@@ -33,7 +36,7 @@ const { title, description } = Astro.props
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
     <title>{title}</title>
-    <meta name="description" content={description} />
+    {description ? <meta name="description" content={description} /> : null}
     <link rel="icon" href={SITE_ICONS.faviconIco} sizes="32x32" />
     <link rel="icon" href={SITE_ICONS.faviconSvg} type="image/svg+xml" />
     <link rel="apple-touch-icon" href={SITE_ICONS.appleTouchIcon} />

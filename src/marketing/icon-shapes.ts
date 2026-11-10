@@ -121,6 +121,17 @@ const actionIcons = {
 } as const satisfies IconShapes
 
 /**
+ * The icons of the docs: the docs menu, the chevron of each disclosure, and
+ * the previous and next guides.
+ */
+const docsIcons = {
+  menu: [path('M4 5h16'), path('M4 12h16'), path('M4 19h16')],
+  'chevron-down': [path('m6 9 6 6 6-6')],
+  'arrow-left': [path('m12 19-7-7 7-7'), path('M19 12H5')],
+  'arrow-right': [path('M5 12h14'), path('m12 5 7 7-7 7')],
+} as const satisfies IconShapes
+
+/**
  * Every lucide icon of the site, as lucide-react 0.577.0 draws it, under the
  * ISC licence. The site runs no script, so it writes the SVG itself.
  */
@@ -128,6 +139,7 @@ export const lucideIcons = {
   ...featureIcons,
   ...actionIcons,
   ...comparisonIcons,
+  ...docsIcons,
 }
 
 /** An icon that a smaller feature can name. */

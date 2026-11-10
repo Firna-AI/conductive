@@ -1,0 +1,26 @@
+---
+import type { MenuGroup } from '../docs-guides'
+import DocsNav from './DocsNav.astro'
+import Icon from './Icon.astro'
+
+/*
+ * The docs menu of a phone: a bar under the header of the site that opens
+ * the guides in place and pushes the page down. It is a native disclosure,
+ * closed at first, so it opens and closes without a script. A desktop
+ * hides it and shows the guides in the sidebar.
+ */
+type Props = { groups: readonly MenuGroup[]; current: string }
+
+const { groups, current } = Astro.props
+---
+
+<details class="docs-menu">
+  <summary class="docs-menu-bar">
+    <Icon name="menu" size={16} class="docs-menu-icon" />
+    Docs menu
+    <Icon name="chevron-down" size={16} class="docs-chevron" />
+  </summary>
+  <div class="docs-menu-panel">
+    <DocsNav groups={groups} current={current} />
+  </div>
+</details>
