@@ -35,6 +35,8 @@ export const paths = {
   suspendedLeave: 'app/orgs/suspended/leave',
   suspendedLeaveConfirm: 'app/orgs/suspended/leave/confirm',
   sections: 'app/sections',
+  workspaceMenu: 'app/workspace-menu',
+  workspaceMenuArchive: 'app/workspace-menu/archive',
   palette: 'app/command-palette',
   paletteWorkspaces: 'app/command-palette/workspaces',
   paletteRepository: 'app/command-palette/workspaces/repository',

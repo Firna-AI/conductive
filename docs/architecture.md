@@ -113,6 +113,8 @@ the merge.
   - [Repository folders](protocol/repository-folders.md): the folder and the
     shell variable of each repository in a sandbox.
   - [Life of a workspace](protocol/workspace-life.md)
+  - [Workspace menu](protocol/workspace-menu.md): the menu of a workspace
+    row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](protocol/workspace-tools.md)
 - [Chat and events](protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
@@ -172,4 +174,5 @@ the merge.
   the waitlist, the join link, and the use of a code.
 
 - [Conductor Cloud comparison](protocol/conductor-cloud-comparison.md): the
-  public page with the status of each Conductor Cloud feature.
+  public page for people who move from Conductor Cloud, with the status of
+  each Conductor Cloud feature.

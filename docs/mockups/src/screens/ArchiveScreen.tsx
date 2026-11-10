@@ -12,10 +12,19 @@ export const archiveSchema = {
      * The archived workspace with Restore on its bar, the same workspace
      * just after Archive with its toast, the list with its Archived group
      * open, the archived workspace after the app deleted its cloud
-     * computer, or the workspace back in its section after Restore.
+     * computer, the workspace back in its section after Restore, or the
+     * archived workspace after its last day of Restore, while the delete
+     * of its cloud computer tries again.
      */
     view: {
-      enum: ['archived', 'just-archived', 'group', 'deleted', 'restored'],
+      enum: [
+        'archived',
+        'just-archived',
+        'group',
+        'deleted',
+        'restored',
+        'restore-ended',
+      ],
     },
   },
 } as const
@@ -37,6 +46,7 @@ const workspaceStates: Readonly<Record<WorkspaceView, WorkspaceState>> = {
   'just-archived': { ...archived, toast: 'archived' },
   deleted: { ...archived, archive: 'deleted' },
   restored: { ...archived, sandbox: 'stopped' },
+  'restore-ended': { ...archived, archive: 'ended' },
 }
 
 /**

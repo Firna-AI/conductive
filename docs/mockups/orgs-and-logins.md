@@ -64,12 +64,22 @@ plan limits.
   phone shows only its chat.
 - Restore puts an archived workspace back in its section, stopped, with its
   files and sessions. The toast after Archive offers it, and the archived
-  bar and the row in the Archived group offer it until the app deletes the
-  cloud computer, 14 days after the Archive. The bar gives that last day.
-  Every member of an org that is not suspended sees Restore, from decision
-  2 of PR #138, as `app/command-palette/actions/archived` shows. After the
-  delete, the bar says that the cloud computer is deleted, and nothing
-  offers Restore, as `app/archive/deleted` shows.
+  bar and the row in the Archived group offer it until its last day, 14
+  days after the Archive. The bar gives that last day. Every member of an
+  org that is not suspended sees Restore, from decision 2 of PR #138, as
+  `app/command-palette/actions/archived` shows. After the last day, nothing
+  offers Restore. The bar gives the day when Restore ended while a failed
+  delete of the cloud computer tries again, as `app/archive/restore-ended`
+  shows. After the delete, the bar says that the cloud computer is deleted,
+  as `app/archive/deleted` shows.
+- The menu of a workspace row follows the same roles, as
+  `app/workspace-menu/roles` shows. Every member moves and renames a
+  workspace that is not archived. Only an admin sees Reassign to, and only
+  the owner and the admins see Archive, which archives at once. The
+  archived row of an admin offers only Reassign to. An archived row of a
+  member and every row of a suspended org have no menu. The menu has no
+  Restore: the row keeps it, for every member of an org that is not
+  suspended.
 - No stopped workspace shows as expiring. Near day 14 of a stop, the app
   starts the cloud computer briefly and stops it again, from decision 43.
 - Any user creates orgs. Create org of the first run returns to Get started.

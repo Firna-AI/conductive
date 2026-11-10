@@ -171,7 +171,7 @@ export function WorkspaceScreen(props: {
     files: <FilesContent state={state} viewport={viewport} />,
   })
   const tool = <ToolContent state={state} viewport={viewport} />
-  const toast = workspaceToast(state, workspace)
+  const toast = workspaceToast(state, workspace, viewport)
   if (viewport === 'mobile') {
     if (state.palette !== 'closed') {
       // A phone opens the palette from the list, so it offers no actions
@@ -252,7 +252,7 @@ export function WorkspaceScreen(props: {
         suspended,
         viewer: membership,
         created: createdWorkspaces(state),
-        kept: state.archive === 'kept',
+        restoreOpen: state.archive === 'kept',
       })}
     >
       <WorkspaceBody

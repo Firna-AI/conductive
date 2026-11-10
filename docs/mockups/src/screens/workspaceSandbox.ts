@@ -36,18 +36,24 @@ export function drawnState(state: WorkspaceState): WorkspaceState {
 }
 
 /**
- * What an archived workspace can get back: Restore while the app keeps its
- * cloud computer, for every member, except in a suspended org, which
- * refuses it. A workspace that is not archived, or whose cloud computer the
- * app deleted, has none.
+ * What an archived workspace can get back: Restore until its last day, for
+ * every member, except in a suspended org, which refuses it. After that
+ * day, Restore ended, also while the delete of the cloud computer tries
+ * again. A workspace that is not archived, or whose cloud computer the app
+ * deleted, has none.
  */
 export function archiveRestore(
   state: WorkspaceState,
 ): ArchiveRestore | undefined {
-  if (state.sandbox !== 'archived' || state.archive === 'deleted') {
-    return undefined
+  if (state.sandbox !== 'archived') return undefined
+  switch (state.archive) {
+    case 'deleted':
+      return undefined
+    case 'ended':
+      return 'ended'
+    case 'kept':
+      return state.org === 'suspended' ? 'refused' : 'available'
   }
-  return state.org === 'suspended' ? 'refused' : 'available'
 }
 
 /**

@@ -152,8 +152,8 @@ export function workspaceSidebar(props: {
   viewer: Membership
   /** The workspaces that the create flow made by then. */
   created: readonly OpenWorkspace[]
-  /** The app still keeps the cloud computer of the archived workspace. */
-  kept: boolean
+  /** The last day of Restore of the archived workspace has not passed. */
+  restoreOpen: boolean
 }): ReactNode {
   const { workspace, status, suspended, viewer, created } = props
   if (status !== 'archived') {
@@ -169,7 +169,7 @@ export function workspaceSidebar(props: {
       />
     )
   }
-  const list = archivedSections(workspace, suspended, props.kept)
+  const list = archivedSections(workspace, suspended, props.restoreOpen)
   return (
     <Sidebar
       archived={list.archived}

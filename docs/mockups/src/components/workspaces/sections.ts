@@ -24,12 +24,10 @@ export type WorkspaceRow = {
   /** The screen that opening this workspace shows, when the mockups draw it. */
   to?: string
   /**
-   * An archived workspace whose cloud computer the app still keeps, so that
+   * An archived workspace whose last day of Restore has not passed, so that
    * its row offers Restore, except in a suspended org.
    */
-  kept?: boolean
-  /** The pointer is over the row, so its action covers its time. */
-  hovered?: boolean
+  restoreOpen?: boolean
 }
 
 export type SidebarSection = {
@@ -179,19 +177,19 @@ function sectionsWithout(key: string, suspended: boolean): SidebarSection[] {
 
 /**
  * The sections after the open workspace was archived. It leaves its section
- * for the open Archived group. `kept` says whether the app still keeps its
- * cloud computer.
+ * for the open Archived group. `restoreOpen` says whether its last day of
+ * Restore has not passed.
  */
 export function archivedSections(
   open: Workspace,
   suspended = false,
-  kept = true,
+  restoreOpen = true,
 ): ArchivedList {
   const archived: WorkspaceRow = {
     workspace: open,
     status: 'archived',
     selected: true,
-    kept,
+    restoreOpen,
   }
   return {
     sections: sectionsWithout(open.key, suspended),
@@ -202,23 +200,21 @@ export function archivedSections(
 /**
  * The list of Acme after the archive of Checkout address autocomplete, with
  * the Archived group open and no workspace open. The last archived workspace
- * comes first and opens its archived screen. `pointer` puts the pointer over
- * its row, which a phone has not.
+ * comes first and opens its archived screen.
  */
-export function archivedGroup(pointer: boolean): ArchivedList {
+export function archivedGroup(): ArchivedList {
   const last: WorkspaceRow = {
     workspace: checkoutAutocomplete,
     status: 'archived',
     selected: false,
     to: paths.archive,
-    kept: true,
-    hovered: pointer,
+    restoreOpen: true,
   }
   const older = archivedWorkspaceList.map((workspace): WorkspaceRow => ({
     workspace,
     status: 'archived',
     selected: false,
-    kept: keptArchives.has(workspace.key),
+    restoreOpen: keptArchives.has(workspace.key),
   }))
   return {
     sections: sectionsWithout(checkoutAutocomplete.key, false),

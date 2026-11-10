@@ -16,8 +16,8 @@ states of the cloud computer are in `app/shell`, and the notices are in
 
 The workspace list offers Archive over the time of each permitted row on
 hover only. Selection and keyboard focus alone keep the time visible.
-The header has no Archive button. The list, the command palette, and the
-pull request bar archive in the same way, as
+The header has no Archive button. The shortcut and the menu of a row, the
+command palette, and the pull request bar archive in the same way, as
 [Archive](../../../docs/protocol/workspace-life.md#archive) says.
 
 ## The kept workspace
@@ -219,6 +219,10 @@ fake API, with its address options, its controls, and the test command.
   app and presses the button for a copy and for a failed copy.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
+  Archive from the row of the open workspace, by its shortcut or its menu,
+  acts once, also during the first read, as
+  [Archive](../../../docs/protocol/workspace-menu.md#archive) says. The
+  list archives another row, for the shortcut and the menu alike.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
   the refused notice. `sandbox-view.ts` chooses the bar and the panels,
   also for a suspended org and for the saved message of a failed start.
@@ -236,6 +240,9 @@ fake API, with its address options, its controls, and the test command.
 - [Workspace numbers and links](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-numbers-and-links)
   and [Workspace links](../../../docs/protocol/workspace-links.md): the
   number, the link, and Copy link.
+- [Workspace menu](../../../docs/protocol/workspace-menu.md): the menu of
+  a workspace row, which can also rename, reassign, or archive the open
+  workspace.
 - [Web app: data and composition](../../app/README.md): the models, the
   event stream, and the features.
 - [The chat](../../chat/README.md): the chat that fills the centre.

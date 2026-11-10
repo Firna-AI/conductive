@@ -14,10 +14,12 @@ export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
 /**
  * What an archived workspace can get back. `available`: the app keeps its
  * stopped cloud computer, and every member may restore the workspace until
- * the app deletes it. `refused`: the app keeps it, but a suspended org
- * refuses Restore, so the notice promises no files.
+ * the last day of Restore. `refused`: the app keeps it, but a suspended org
+ * refuses Restore, so the notice promises no files. `ended`: the last day
+ * of Restore passed. The app can still keep the cloud computer while its
+ * delete tries again, so the notice says nothing of the cloud computer.
  */
-export type ArchiveRestore = 'available' | 'refused'
+export type ArchiveRestore = 'available' | 'refused' | 'ended'
 
 /**
  * What the bar of a sandbox that is not running shows. A refused start

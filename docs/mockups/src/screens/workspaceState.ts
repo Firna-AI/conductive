@@ -152,11 +152,12 @@ export const workspaceStateSchema = {
     },
     /**
      * The cloud computer of an archived workspace: kept, until the app
-     * deletes it 14 days after the Archive, or deleted. While the app keeps
-     * it, every member of an org that is not suspended may restore the
+     * deletes it 14 days after the Archive, kept past the last day of
+     * Restore while its delete tries again, or deleted. Until that last day,
+     * every member of an org that is not suspended may restore the
      * workspace.
      */
-    archive: { enum: ['kept', 'deleted'] },
+    archive: { enum: ['kept', 'ended', 'deleted'] },
     /**
      * A toast at the bottom of the screen: none, or the toast just after
      * Archive, which names the workspace and offers Restore.

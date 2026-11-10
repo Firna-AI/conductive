@@ -462,7 +462,7 @@ requirements, before the code changes.
 
 Evidence: `.context/archive-with-restore/m2-evidence.md`.
 
-## Milestone 2a: Restore window ended mockup
+## Milestone 2a: Restore window ended mockup (completed)
 
 Tags: mockup
 
@@ -473,16 +473,19 @@ failed delete retries. The computer still exists, so the bar must not say
 it is deleted. This implements the chosen 14-day window without adding a
 new action or extending retention.
 
-- [ ] Add the ended Restore state to the shared sandbox notice and a child
+- [x] Add the ended Restore state to the shared sandbox notice and a child
       entry below `app/archive`, because its parent already has five views.
-- [ ] Show the date when Restore ended, keep the chat read-only, and offer
+- [x] Show the date when Restore ended, keep the chat read-only, and offer
       no Restore. Keep the deleted state for a confirmed deletion.
-- [ ] Check desktop and phone layouts in light and dark. Save captures
+- [x] Check desktop and phone layouts in light and dark. Save captures
       under `.context/archive-with-restore/` and run mockup checks.
-- [ ] Record this routine design call and the evidence. Keep Milestone 1
+- [x] Record this routine design call and the evidence. Keep Milestone 1
       completed.
 
-## Milestone 2b: Integrate the workspace row menu
+Evidence: `.context/archive-with-restore/m2a-m2b/evidence.md` and
+`.context/archive-with-restore/m2b-docs-evidence.md`.
+
+## Milestone 2b: Integrate the workspace row menu (completed)
 
 Depends on: 2a
 
@@ -490,14 +493,17 @@ Main added workspace row menus while this plan was in progress. Preserve
 Rename, Move, Reassign, their permissions, focus, and unrelated tests. Only
 the Archive question changes under the user's approved decision.
 
-- [ ] Integrate main and resolve each conflict while preserving the row
+- [x] Integrate main and resolve each conflict while preserving the row
       menu and the completed Archive/Restore mockups and protocol.
-- [ ] Update `docs/protocol/workspace-menu.md` and the new menu mockup flow
+- [x] Update `docs/protocol/workspace-menu.md` and the new menu mockup flow
       so Archive runs at once. Keep the menu's existing set of actions.
       Restore stays on the row shortcut, bar, toast, and palette.
-- [ ] Update implementation briefs for main's new `useRowMenus`,
+- [x] Update implementation briefs for main's new `useRowMenus`,
       `WorkspaceActions`, workspace detail, and moved README owners.
-- [ ] Run focused mockup, type, and link checks on the integrated tree.
+- [x] Run focused mockup, type, and link checks on the integrated tree.
+
+Evidence: `.context/archive-with-restore/m2a-m2b/evidence.md` and
+`.context/archive-with-restore/m2b-docs-evidence.md`.
 
 ## Milestone 3: Worker: Archive keeps the cloud computer, and Restore
 

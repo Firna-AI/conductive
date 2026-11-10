@@ -7,13 +7,12 @@ import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
-import { ToastLayer } from '../components/common/ToastLayer'
+import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
-import { noop } from '../noop'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
@@ -100,19 +99,14 @@ export function workspaceOverlay(
 export function workspaceToast(
   state: WorkspaceState,
   workspace: Workspace,
+  viewport: Viewport,
 ): ReactNode {
   switch (state.toast) {
     case 'none':
       return null
     case 'archived':
       return (
-        <ToastLayer
-          toast={{
-            title: `${workspace.name} is archived.`,
-            tone: 'success',
-            action: { label: 'Restore', onPress: noop },
-          }}
-        />
+        <ArchivedToast name={workspace.name} phone={viewport === 'mobile'} />
       )
   }
 }

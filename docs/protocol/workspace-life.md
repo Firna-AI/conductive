@@ -154,7 +154,9 @@ says.
   The push shows as a push of the owner, and it can start the CI of the
   repository. It can also put files with secret values on GitHub.
 - The pull request bar offers Archive after the merge, as
-  [GitHub banner](github-banner.md#banner-states) says.
+  [GitHub banner](github-banner.md#banner-states) says. The menu of a
+  workspace row offers it too, as [Archive](workspace-menu.md#archive)
+  says.
 - An archived workspace has no file lists and no tools. A phone shows only
   its chat.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may

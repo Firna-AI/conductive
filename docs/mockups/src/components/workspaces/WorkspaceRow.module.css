@@ -17,9 +17,7 @@
   box-sizing: border-box;
 }
 
-/* `.hovered` draws the pointer over the row in a picture of the screen. */
-.container:hover .row,
-.hovered .row {
+.container:hover .row {
   background: var(--ui-soft);
 }
 
@@ -31,8 +29,7 @@
 }
 
 .selected,
-.container:hover .selected,
-.hovered .selected {
+.container:hover .selected {
   background: var(--ui-selected);
 }
 
@@ -80,12 +77,36 @@
   transform: translateY(-50%);
 }
 
-.archivable:hover .time,
+.archivable:hover .time {
+  visibility: hidden;
+}
+
+.archivable:hover .archive {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/*
+ * A view runs no script, so it draws a hover with `.hovered`, such as on
+ * the row of a menu that a right click opened: the fill of a hover, and
+ * the action of the row over its time, Archive or Restore. `.held` keeps
+ * the row of a menu in a sheet marked with the same fill.
+ */
+.hovered .row,
+.held .row {
+  background: var(--ui-soft);
+}
+
+.hovered .selected,
+.held .selected {
+  background: var(--ui-selected);
+}
+
 .archivable.hovered .time {
   visibility: hidden;
 }
 
-.archivable:hover .archive,
 .archivable.hovered .archive {
   opacity: 1;
   visibility: visible;

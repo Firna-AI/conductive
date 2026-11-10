@@ -73,9 +73,10 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
 const archivedTitle = `Archived on ${archivedOn}`
 
 /**
- * An archived workspace: Restore until the app deletes its cloud computer,
- * no Restore in a suspended org, which promises no files, or the words of
- * a cloud computer that the app deleted.
+ * An archived workspace: Restore until its last day, no Restore in a
+ * suspended org, which promises no files, the day when Restore ended,
+ * while a failed delete of the cloud computer can still try again, or the
+ * words of a cloud computer that the app deleted.
  */
 const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
   available: {
@@ -90,6 +91,13 @@ const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
     icon: Archive,
     title: archivedTitle,
     body: history,
+    panelBody: history,
+    tone: 'neutral',
+  },
+  ended: {
+    icon: Archive,
+    title: archivedTitle,
+    body: `Restore ended on ${restoreUntil}, and the chat is read-only.`,
     panelBody: history,
     tone: 'neutral',
   },

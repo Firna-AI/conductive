@@ -8,5 +8,8 @@
 /** The day the open workspace was archived. */
 export const archivedOn = '5 November'
 
-/** The last day of Restore: the app deletes the cloud computer then. */
+/**
+ * The last day of Restore. The app deletes the cloud computer then, and a
+ * delete that fails tries again after it, while Restore stays ended.
+ */
 export const restoreUntil = '19 November'

@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { WorkspaceRowView } from './WorkspaceRow'
 import styles from './SectionList.module.css'
@@ -9,12 +10,15 @@ import styles from './SectionList.module.css'
  * until the user opens it. An archived workspace opens with its chat
  * read-only. While the app keeps its cloud computer, its row offers Restore
  * on hover to every member, except in a suspended org (`readOnly`).
+ * `controlsOf` draws the menu that a right click opened on a row, which
+ * only an admin has on an archived row.
  */
 export function ArchivedGroup(props: {
   rows: readonly WorkspaceRow[]
   open: boolean
   variant: 'sidebar' | 'page'
   readOnly: boolean
+  controlsOf?: (row: WorkspaceRow) => RowControls | undefined
 }) {
   const Chevron = props.open ? ChevronDown : ChevronRight
   return (
@@ -39,7 +43,8 @@ export function ArchivedGroup(props: {
           {props.rows.map((row) => (
             <li key={row.workspace.key}>
               <WorkspaceRowView
-                restorable={!props.readOnly && row.kept === true}
+                controls={props.controlsOf?.(row)}
+                restorable={!props.readOnly && row.restoreOpen === true}
                 row={row}
                 variant={props.variant}
               />
