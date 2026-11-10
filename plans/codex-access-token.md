@@ -1,6 +1,6 @@
 # Codex access tokens
 
-Status: Active. On branch `calummoore/openai-subscription-token-support`, stacked on `conductor/model-gateway-worker-model-proxy-decision-120`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #177](https://github.com/Firna-AI/remote-code/pull/177) is open, as a draft stacked on `conductor/model-gateway-worker-model-proxy-decision-120`. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Members who pay for ChatGPT cannot run Codex on their plan in Conductive.
 Codex takes only an OpenAI API key today. This change adds a Codex access
