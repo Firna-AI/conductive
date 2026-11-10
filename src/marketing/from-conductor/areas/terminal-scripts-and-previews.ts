@@ -13,7 +13,7 @@ export const terminalScriptsAndPreviewsFeatures: readonly ParityFeature[] = [
     area: 'terminal-scripts-and-previews',
     name: 'Terminal tabs',
     status: 'planned',
-    note: 'Shared terminal tabs with separate shells are planned, with up to 10 terminals per workspace.',
+    note: 'Shared terminal tabs with separate shells are planned.',
     due: null,
   },
   {
