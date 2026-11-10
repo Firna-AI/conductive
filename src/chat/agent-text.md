@@ -17,6 +17,12 @@ requirements.
   `MarkdownTable`. A paragraph, a list item, and a table cell draw their
   text through `LinkedText`, with bold, so a workspace link in a cell shows
   as a chip.
+- A numbered list counts up from the number of its first item, as
+  Markdown numbers it. So a list that starts at 2, such as the rest of a
+  list after a bulleted list, shows 2. `AgentText` gives that number to
+  the `start` of the `ol`. A message line writes each number from it. As
+  in Markdown, a number has one to nine digits, so a longer number starts
+  no list.
 - `AgentText`, `LinkedText`, and `MessageLine` draw React text and
   elements only. So HTML in a message shows as text.
 - A `<summary>` holds only phrasing content. So `MessageLine` draws each

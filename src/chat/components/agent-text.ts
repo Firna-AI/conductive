@@ -8,16 +8,40 @@ import {
 /** A table of an answer. Each body row keeps its own cells. */
 export type TextTable = { kind: 'table' } & TableCells<string>
 
-/** A block of an agent's answer, from the Markdown that the agent writes. */
+/**
+ * A block of an agent's answer, from the Markdown that the agent writes. A
+ * numbered list counts up from `start`, the number of its first item, as
+ * Markdown numbers it.
+ */
 export type TextBlock =
   | { kind: 'p'; text: string }
-  | { kind: 'ul' | 'ol'; items: readonly string[] }
+  | { kind: 'ul'; items: readonly string[] }
+  | { kind: 'ol'; start: number; items: readonly string[] }
   | { kind: 'code'; text: string }
   | TextTable
 
+/** A list of an answer while the parse adds its items. */
+type OpenList =
+  | { kind: 'ul'; items: string[] }
+  | { kind: 'ol'; start: number; items: string[] }
+
 const bullet = /^\s*[-*+]\s+(.*)$/
-const numbered = /^\s*\d+[.)]\s+(.*)$/
+/** A number of one to nine digits, as Markdown allows in a list marker. */
+const numbered = /^\s*(\d{1,9})[.)]\s+(.*)$/
 const heading = /^#{1,6}\s+(.*)$/
+
+/**
+ * The item that a line starts, with its text, or null for another line. A
+ * new list takes its kind and, for a numbered list, its start from it.
+ */
+function listItem(line: string): { list: OpenList; text: string } | null {
+  const point = bullet.exec(line)
+  if (point) return { list: { kind: 'ul', items: [] }, text: point[1] }
+  const step = numbered.exec(line)
+  if (!step) return null
+  const start = Number(step[1])
+  return { list: { kind: 'ol', start, items: [] }, text: step[2] }
+}
 
 /**
  * Reads the table whose header row is at `index`, up to the first blank
@@ -51,7 +75,7 @@ function readTable(
 export function textBlocks(text: string): TextBlock[] {
   const blocks: TextBlock[] = []
   let paragraph: string[] = []
-  let list: { kind: 'ul' | 'ol'; items: string[] } | null = null
+  let list: OpenList | null = null
   let code: string[] | null = null
   const flush = () => {
     if (paragraph.length > 0)
@@ -82,12 +106,13 @@ export function textBlocks(text: string): TextBlock[] {
       index = last
       continue
     }
-    const item = bullet.exec(line) ?? numbered.exec(line)
+    const item = listItem(line)
     if (item) {
-      const kind = bullet.test(line) ? 'ul' : 'ol'
-      if (paragraph.length > 0 || (list && list.kind !== kind)) flush()
-      list ??= { kind, items: [] }
-      list.items.push(item[1])
+      if (paragraph.length > 0 || (list && list.kind !== item.list.kind)) {
+        flush()
+      }
+      list ??= item.list
+      list.items.push(item.text)
       continue
     }
     if (line.trim() === '') {

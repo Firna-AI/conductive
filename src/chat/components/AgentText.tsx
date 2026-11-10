@@ -9,6 +9,15 @@ function tableCell(text: string) {
   return <LinkedText strong text={text} />
 }
 
+/** The items of a list, with the formatting of a paragraph. */
+function ListItems(props: { items: readonly string[] }) {
+  return props.items.map((item, index) => (
+    <li key={index}>
+      <LinkedText strong text={item} />
+    </li>
+  ))
+}
+
 function Block(props: { block: TextBlock }) {
   const { block } = props
   switch (block.kind) {
@@ -19,18 +28,17 @@ function Block(props: { block: TextBlock }) {
         </p>
       )
     case 'ul':
-    case 'ol': {
-      const List = block.kind
       return (
-        <List>
-          {block.items.map((item, index) => (
-            <li key={index}>
-              <LinkedText strong text={item} />
-            </li>
-          ))}
-        </List>
+        <ul>
+          <ListItems items={block.items} />
+        </ul>
       )
-    }
+    case 'ol':
+      return (
+        <ol start={block.start}>
+          <ListItems items={block.items} />
+        </ol>
+      )
     case 'code':
       return <pre className={markdownStyles.block}>{block.text}</pre>
     case 'table':

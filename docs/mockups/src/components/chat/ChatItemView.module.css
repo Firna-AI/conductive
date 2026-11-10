@@ -48,6 +48,8 @@
   margin: 0;
 }
 
+/* A numbered list takes the place and the indent of a bulleted list. */
+.agent ol,
 .agent ul {
   margin: 0;
   padding-left: 20px;

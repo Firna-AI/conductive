@@ -31,9 +31,9 @@ function TableText(props: { table: TextTable }) {
  * block is a span, which CSS shows as a block while the line is open. A
  * code block takes the look of an answer's code block only then, so the
  * closed line shows its text in the line. Each item of a numbered list
- * writes its number, because a browser numbers a list item of spans by the
- * items of the list of the fold. A table shows as its cells, so the closed
- * line stays one line.
+ * writes its number, from the start of its list, because a browser numbers
+ * a list item of spans by the items of the list of the fold. A table shows
+ * as its cells, so the closed line stays one line.
  */
 function LineBlock(props: { block: TextBlock; open: boolean }) {
   const { block } = props
@@ -61,7 +61,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
         >
           {block.items.map((item, index) => (
             <span className={styles.bullet} key={index}>
-              <span className={local.number}>{index + 1}.</span>{' '}
+              <span className={local.number}>{block.start + index}.</span>{' '}
               <LinkedText strong text={item} />{' '}
             </span>
           ))}
