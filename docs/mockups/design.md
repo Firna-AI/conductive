@@ -226,7 +226,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   marketing site or Get started.
 - A build of the cloud computer runs for at most 60 minutes, and a start of
   a sandbox for at most 20 minutes. A build that runs names its limit under
-  its log, and the start card names the limit under its steps. A failed
+  its log. The start card does not name the limit of a start. A failed
   build or start shows the message that the app saved for it, so a job that
   passed its limit names that limit, as
   `app/org-settings/cloud-computer/build-failed/time-limit`,

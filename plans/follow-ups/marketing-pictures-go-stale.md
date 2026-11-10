@@ -11,12 +11,13 @@
   - **Capture page:** the built mockup page that the capture command opens in Chrome to take one picture.
 - **Background:**
   - `src/marketing/README.md`, `docs/mockups/marketing-site.md`, and `docs/mockups/README.md` say to run `npm run marketing:pictures` and commit the pictures when a screen that they show changes. A person checks each picture before it goes public.
-  - These doc rules did not stop five stale sets:
+  - These doc rules did not stop six stale sets:
     - commit `9ad3d12` after a header change
     - commit `e9827da` after a merge
     - the branch `calummoore/tab-drag-and-drop`, which removed the Rename button of a session tab and left ten pictures with the button
     - commit `073f71b5` (#130), whose Mac pictures show the header Archive button that commit `c02744f0` (#124) removed, as `plans/follow-ups/mac-pictures-show-header-archive.md` says
     - the branch `calummoore/sandbox-ready-notice-removal`, which removed the chat label "Sends when the sandbox is ready" and left it in the four `starting` pictures until its review on 10 November 2026 found them
+    - the branch `calummoore/sandbox-time-limit-removal`, which removed the start-limit note and left it in the four start pictures until its review on 10 November 2026 found them
   - Two builds of the same tree give byte-identical capture pages and style sheets.
 - **Problem:** Nothing tells a branch that a picture of the public site no longer matches its screen.
 - **Impact if no action:** The public site can show controls that the app no longer has, until someone notices.
@@ -28,7 +29,7 @@
   - **D.** The site build captures the pictures from the current mockups, and Git keeps no picture. Each build then needs Chrome, and no person checks a picture before it goes public. Effort: Large.
 - **Left out:** Draw the screens live on the site, because the content security policy of the site allows only hashed style elements. One more doc rule, because three doc rules did not stop the class.
 - **Wider fix:** B, the cheapest check that catches a stale picture from any cause, with no browser in the gate.
-- **Previous examples:** Commits `9ad3d12` and `e9827da`, the removed session Rename button that remained in ten marketing pictures, the header Archive button in the Mac pictures, and the removed chat label in the four `starting` pictures.
+- **Previous examples:** Commits `9ad3d12` and `e9827da`, the removed session Rename button that remained in ten marketing pictures, the header Archive button in the Mac pictures, the removed chat label in the four `starting` pictures, and the removed start-limit note in the four start pictures.
 - **Related:**
   - `plans/follow-ups/marketing-pictures-unstable-capture.md` records capture noise. A comparison of captures needs stable pixels.
   - `plans/follow-ups/mac-pictures-show-header-archive.md` records the stale Mac pictures, one case of this class.
