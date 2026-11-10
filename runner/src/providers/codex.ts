@@ -95,7 +95,11 @@ export function createCodexFactory(
         command: process.execPath,
         args,
         cwd: options.cwd,
-        env: providerEnvironment(options.home, options.tools),
+        env: providerEnvironment(
+          options.home,
+          options.tools,
+          options.commitAuthor,
+        ),
         signal: options.signal,
         lifetime,
       }),

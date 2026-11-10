@@ -12,12 +12,11 @@ export const WORKSPACE_TOOLS_DIRECTORY = '/opt/conductive/agent-tools'
 export const WORKSPACE_TOOLS_COMMAND = WORKSPACE_TOOLS_MCP.command
 export const WORKSPACE_TOOLS_SECRETS_FILE = '/run/ascii-secrets/env.sh'
 
-/** Bind run to an authorized image-build sandbox, before its snapshot is saved. */
-export async function installWorkspaceTools(
+/** Build the same install text for execution and software versioning. */
+export function workspaceToolsCommand(
   sources: readonly WorkspaceToolSource[],
-  run: (command: string) => Promise<CommandResult>,
   root = '/',
-): Promise<void> {
+): string {
   const prefix = root.replace(/\/+$/, '')
   const directory = `${prefix}${WORKSPACE_TOOLS_DIRECTORY}`
   const executable = `${prefix}${WORKSPACE_TOOLS_COMMAND}`
@@ -59,14 +58,22 @@ exit 1
       throw new Error('The workspace tool sources are incomplete.')
     return write(`${directory}/${path}`, source, '0644')
   })
-  const command = [
+  return [
     'set -eu',
     `install -d ${quote(`${directory}/tools`)} ${quote(`${directory}/src/shared`)} ${quote(`${prefix}/usr/local/bin`)}`,
     ...writes,
     write(`${directory}/package.json`, '{"type":"module"}\n', '0644'),
     write(executable, launcher, '0755'),
   ].join('\n')
-  const result = await run(command)
+}
+
+/** Bind run to an authorized image-build sandbox before its snapshot is saved. */
+export async function installWorkspaceTools(
+  sources: readonly WorkspaceToolSource[],
+  run: (command: string) => Promise<CommandResult>,
+  root = '/',
+): Promise<void> {
+  const result = await run(workspaceToolsCommand(sources, root))
   if (result.exitCode !== 0 || result.timedOut) {
     throw new Error('The workspace tools could not be installed.')
   }

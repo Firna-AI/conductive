@@ -1,4 +1,5 @@
 import type { Agent, AgentChoice } from '../../src/shared/agents'
+import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { PendingTurn } from '../lifecycle/workspace-runtime'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
 import type { Attachment, MessageDraft } from '../../src/shared/messages'
@@ -138,6 +139,7 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,
   ) => Promise<{ name: string | null } | null>

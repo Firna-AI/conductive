@@ -61,7 +61,11 @@ export function createClaudeFactory(
       ),
     )
     const credentials = await preparation
-    const env = providerEnvironment(options.home, options.tools)
+    const env = providerEnvironment(
+      options.home,
+      options.tools,
+      options.commitAuthor,
+    )
     if (
       options.credential.type === 'gateway' &&
       options.credential.kind === 'token'

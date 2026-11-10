@@ -2,6 +2,16 @@
 
 This guide belongs to the [sandbox software](README.md).
 
+## Commit author
+
+At each create and resume, the Worker gives the sandbox the workspace
+owner's commit author. This includes a disk retention restart.
+It sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and
+`GIT_COMMITTER_EMAIL`. These variables take precedence over Git settings
+and org variables with the same names.
+[Commit author](../docs/protocol/github-tokens.md#commit-author) states the
+name and email rules.
+
 ## Git credential helper
 
 `install.sh` installs `git-credential-helper.sh` as

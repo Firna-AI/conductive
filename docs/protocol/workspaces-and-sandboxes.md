@@ -72,6 +72,9 @@ These docs belong to this doc:
   read-only.
 - Each sandbox gets the org's env vars at create and at each resume
   (decision 17). A changed value applies at the next start.
+- The app's own variables, such as the four Git author variables of
+  [Commit author](github-tokens.md#commit-author), replace an org env var
+  with the same name (decision 233).
 - Builds and refreshes get none of the env vars, and no saved snapshot
   holds them. Reason: a saved snapshot keeps every file.
 - The app gives each sandbox its values itself, because every sandbox
