@@ -103,6 +103,8 @@ export function foldEvent(
   late = false,
 ): Transcript {
   switch (event.type) {
+    case 'workspace.continued':
+      return transcript
     case 'session.updated':
       return foldRecord(transcript, event.session)
     case 'runner.event-refused':

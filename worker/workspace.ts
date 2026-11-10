@@ -4,7 +4,7 @@ import type {
   WorkspaceChatResolvers,
 } from './chat/workspace-integration'
 import { WorkspaceLifecycle } from './workspace-lifecycle'
-import { lifecycleDependencies } from './lifecycle/runtime'
+import { lifecycleDependencies, workspaceRuntime } from './lifecycle/runtime'
 import { WorkspaceFeatures } from './features/workspace'
 import { WorkspaceGitHub } from './features/github'
 import {
@@ -16,11 +16,15 @@ import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type { GitHubRefresh, GitHubWorkspace } from './github/contracts'
 import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
-import { activeStoredTurn } from './devices/access'
 import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
-import { readArchiveCheck } from './app-api/archive'
 import { featureResult } from './features/result'
-import { archiveWorkspace } from './lifecycle/archive-workspace'
+import { WorkspaceArchive } from './features/archive'
+import { WorkspaceContinue } from './lifecycle/continue'
+import { pendingContinue } from './lifecycle/continue-types'
+import { resumeWorkspace } from './lifecycle/workspace-resume'
+import type { User } from '../src/shared/api'
+import type { ContinueWorkspaceRequest } from '../src/shared/workspaces'
+import { assertReceiverActive } from './members/receiver-fence'
 import { orgLifecycleActive } from './members/composition-data'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
@@ -29,6 +33,8 @@ export class Workspace extends WorkspaceLifecycle {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver
+  private readonly archives: WorkspaceArchive
+  private readonly continuation: WorkspaceContinue
   private readonly now: () => number
 
   constructor(
@@ -79,14 +85,35 @@ export class Workspace extends WorkspaceLifecycle {
       this.features,
       now,
     )
-  }
-
-  async callingToolTurn(workspaceId: string, turnId: string) {
-    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
-      return null
-    return this.chat.runLifecycle(async () => {
-      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
-      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
+    this.archives = new WorkspaceArchive(env, dependencies, {
+      ...this.integration,
+      run: (operation) => this.run(operation),
+      revoke: (id) => this.features.revokeWorkspace(id, true),
+    })
+    this.continuation = new WorkspaceContinue({
+      matches,
+      assertActive: () => assertReceiverActive(this.integration.storage),
+      activity: async () => {
+        await this.controller.lifecycleActivity()
+      },
+      env,
+      dependencies,
+      storage: this.integration.storage,
+      chat: this.chat,
+      run: (operation) => this.run(operation),
+      schedule: (at) => this.integration.alarms.set('continue', at),
+      refresh: (workspace, signal) => this.github.refresh(workspace, signal),
+      defaultBranch: (workspace, userId) =>
+        this.github.defaultBranch(workspace, userId),
+      scheduleRefresh: (workspace) => this.github.scheduleFresh(workspace),
+      resume: async (orgId, id, userId) => {
+        await resumeWorkspace(
+          workspaceRuntime(env, dependencies),
+          orgId,
+          id,
+          userId,
+        )
+      },
     })
   }
 
@@ -99,6 +126,7 @@ export class Workspace extends WorkspaceLifecycle {
     workspaceId: string | null,
   ) {
     return featureResult(async () => {
+      await this.continuation.cancel()
       await this.members.suspend(ownership, workspaceId)
       this.controller.cancelLifecycleWaiters()
       await this.integration.reconcileStopped()
@@ -176,7 +204,14 @@ export class Workspace extends WorkspaceLifecycle {
       return
     }
     const due = await this.integration.alarms.take(this.now())
-    if (!due.size || due.has('lifecycle')) await this.alarmLifecycle()
+    if (await pendingContinue(this.integration.storage))
+      await this.continuation.advance()
+    if (
+      (!due.size || due.has('lifecycle')) &&
+      (!(await pendingContinue(this.integration.storage)) ||
+        (await this.integration.storage.get('lifecycle:start-job')))
+    )
+      await this.alarmLifecycle()
     if (due.has('github')) await this.github.alarm()
     if (due.has('previews')) {
       await this.features.previews.expire()
@@ -213,17 +248,7 @@ export class Workspace extends WorkspaceLifecycle {
   }
 
   checkWorkspaceArchive(orgId: string, workspaceId: string, userId: string) {
-    return featureResult(() =>
-      this.run(() =>
-        readArchiveCheck(
-          this.env,
-          { ...lifecycleDependencies(), now: this.now },
-          orgId,
-          workspaceId,
-          userId,
-        ),
-      ),
-    )
+    return this.archives.check(orgId, workspaceId, userId)
   }
 
   archiveWorkspace(
@@ -233,36 +258,40 @@ export class Workspace extends WorkspaceLifecycle {
     discard: boolean,
     origin: string,
   ) {
+    return this.archives.archive(orgId, workspaceId, userId, discard, origin)
+  }
+
+  continueWorkspace(
+    orgId: string,
+    id: string,
+    user: User,
+    request: ContinueWorkspaceRequest,
+    origin: string,
+  ) {
     return featureResult(() =>
-      this.run(() =>
-        archiveWorkspace(
-          this.env,
-          { ...lifecycleDependencies(), now: this.now },
-          orgId,
-          workspaceId,
-          userId,
-          discard,
-          origin,
-          {
-            revokePreviews: () =>
-              this.features.revokeWorkspace(workspaceId, true),
-            stopChat: () => this.chat.stopWorkspace(workspaceId),
-            clearLifecycle: async () => {
-              await this.integration.storage.delete([
-                'lifecycle:start-job',
-                'lifecycle:create-publication',
-              ])
-              this.controller.cancelLifecycleWaiters()
-              await this.controller.clearLifecycle()
-            },
-            publish: (workspace) =>
-              this.chat.commitWorkspaceEvent(workspaceId, {
-                type: 'workspace.updated',
-                workspace,
-              }),
-          },
-        ),
-      ),
+      this.continuation.start(orgId, id, user, request, origin),
     )
+  }
+
+  readWorkspaceContinue(
+    orgId: string,
+    id: string,
+    userId: string,
+    continueId: string,
+    origin: string,
+  ) {
+    return featureResult(() =>
+      this.continuation.result(orgId, id, userId, continueId, origin),
+    )
+  }
+
+  async credentialSender(turnId: string): Promise<string | null> {
+    const continued = await this.continuation.credentialSender(turnId)
+    return continued === undefined ? super.credentialSender(turnId) : continued
+  }
+
+  async lifecycleStopped(): Promise<void> {
+    await this.continuation.cancel()
+    return super.lifecycleStopped()
   }
 }

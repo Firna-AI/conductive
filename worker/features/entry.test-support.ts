@@ -33,6 +33,16 @@ export class Workspace extends ProductionWorkspace {
   advanceStartAlarm(): Promise<void> {
     return this.alarm()
   }
+  async fetch(request: Request): Promise<Response> {
+    if (
+      new URL(request.url).pathname === '/__test/continue-restart' &&
+      request.method === 'POST'
+    )
+      this.ctx.abort(
+        'Restart the Continue fixture with durable work still pending.',
+      )
+    return super.fetch(request)
+  }
   async inspectFeatureState() {
     return [...(await this.ctx.storage.list()).entries()]
   }
@@ -58,6 +68,12 @@ export class Workspace extends ProductionWorkspace {
 export default {
   ...app,
   async fetch(request: Request, env: AppEnv, execution: ExecutionContext) {
+    const url = new URL(request.url)
+    if (url.pathname === '/__test/continue-restart') {
+      const id = url.searchParams.get('workspace')
+      if (!id || !env.WORKSPACES) return new Response(null, { status: 400 })
+      return env.WORKSPACES.getByName(id).fetch(request)
+    }
     if (new URL(request.url).pathname === '/__test/scheduled') {
       await app.scheduled(
         { cron: '*/15 * * * *', scheduledTime: Date.now(), noRetry() {} },

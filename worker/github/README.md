@@ -117,6 +117,11 @@ A `github_pending` read schedules another attempt while that bound permits it.
 A known scheduled result ends the retry chain.
 An exhausted chain keeps the last stored state and returns `github_pending`.
 
+After [Continue](../lifecycle/continue.md#publication) stores a new branch, the workspace object schedules one fresh read of the new binding.
+That read has no user ID, and it uses the same retry alarm.
+A read or a retry that captured the old branch fails its binding check, so it stores and publishes nothing.
+Webhook routing follows the new branch, because the candidate query reads the current branch of the D1 row.
+
 ## Body budgets
 
 Raw webhook bodies and GitHub API JSON responses each have a 26 MiB budget: 27,262,976 bytes.
@@ -246,7 +251,7 @@ API references:
 
 ### Key Code
 
-- [Production composition](../features/github.ts) owns the state adapter and retry alarm.
+- [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue asks for.
 - [composition.ts](composition.ts) mounts verified webhooks and image refresh.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries and starts workspace refreshes.
@@ -255,7 +260,7 @@ API references:
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
-- [client.ts](client.ts) reads current GitHub state and follows pagination.
+- [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue.
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
 - [merge-handler.ts](merge-handler.ts) gates and parses the member merge routes.
 - [merge.ts](merge.ts) selects the capability, starts and polls merges, and diagnoses refusals.

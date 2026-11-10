@@ -15,6 +15,7 @@ import { readAutomaticTitleWorkspace } from './queries'
 import { titleModelBinding } from './title-model'
 import type { ChatDependencies } from './types'
 import { filterRunnerOutput } from './runner-output'
+import { readRunnerBranches } from './branch-data'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -27,6 +28,7 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    readBranches: (id) => readRunnerBranches(env.DB, id),
     readAutomaticTitleWorkspace: (id) =>
       readAutomaticTitleWorkspace(env.DB, id),
     runTitleModel: titleModelBinding(env),

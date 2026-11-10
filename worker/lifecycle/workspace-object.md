@@ -54,6 +54,9 @@ command start. For a workspace object, it:
 - retries the sandbox delete of a failed create
 - recovers and deletes an unresolved allocation after a start reaches its limit
 - keeps failed or cancelled resume stop cleanup after the start result ends
+- advances a running Continue by one phase. While it runs, the lifecycle
+  steps run only to advance a queued start, as
+  [Continue](continue.md#the-reservation) says
 
 The deadline and stop actions use the sandbox state in each Boat reply.
 When Boat refuses an action, they read the sandbox state once. The
@@ -180,24 +183,10 @@ create and resume. The workspace object runs that start:
 
 ## The git credential sender
 
+[The git credential sender](git-credentials.md) gives how
 `Workspace.credentialSender` maps the turn ID of a git credential request
-to a sender, in the chat queue. The [machine route](README.md#machine-route)
-gives the handler, which reads that turn ID from a request header.
-
-- A create that prepares its repository has its own grant. The start job
-  is a create in the `fetch` or `branch` phase, not cancelled or failed,
-  and its `turnId` matches. The grant gives the sender of the admitted
-  first message.
-- Otherwise the turn must be the running stored chat turn: the active
-  turn of an open session. `activeStoredTurn` in
-  [`access.ts`](../devices/access.ts) reads it. So access ends with the
-  turn, also after a queued Stop, a session close, or a login failure.
-- A stopped or archived workspace gives no sender. The lifecycle admission
-  keeps no turn record for the queued first message.
-
-`machine.test.ts` runs the route with `machineCredentialFixture` in
-[`machine-test-support.ts`](machine-test-support.ts), over the production
-chat and runner boundaries.
+to a sender: the grant of a create, the grant of a Continue fetch, and the
+running chat turn. It also names the tests of the route.
 
 ## Turn recovery
 

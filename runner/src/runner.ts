@@ -64,7 +64,25 @@ export class Runner {
     )
     this.engine = new AgentEngine({
       ...options,
-      instructions: agentInstructions(options),
+      instructions: (branches) => ({
+        text: agentInstructions({
+          ...options,
+          ...(branches
+            ? {
+                workspaceBranch: branches.workspaceBranch,
+                defaultBranch: branches.targetBranch,
+              }
+            : {}),
+        }),
+        branches:
+          branches ??
+          (options.workspaceBranch
+            ? {
+                workspaceBranch: options.workspaceBranch,
+                targetBranch: options.defaultBranch,
+              }
+            : null),
+      }),
       tools: workspaceToolRuntime(options.request),
       checkpoint: (signal) =>
         checkpoint(new Repository(options.cwd, options.warn, signal)),

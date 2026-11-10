@@ -25,6 +25,33 @@ export class BoatTransport {
     body?: Record<string, unknown>,
     idempotencyKey?: string,
   ): Promise<Record<string, unknown>> {
+    const controller = new AbortController()
+    const deadline = setTimeout(
+      () => controller.abort(),
+      route.operation === 'command'
+        ? 610_000
+        : route.operation === 'readFile'
+          ? 65_000
+          : 30_000,
+    )
+    try {
+      return await this.requestWithinDeadline(
+        route,
+        controller.signal,
+        body,
+        idempotencyKey,
+      )
+    } finally {
+      clearTimeout(deadline)
+    }
+  }
+
+  private async requestWithinDeadline(
+    route: BoatRoute,
+    signal: AbortSignal,
+    body?: Record<string, unknown>,
+    idempotencyKey?: string,
+  ): Promise<Record<string, unknown>> {
     const { method, path } = boatRoute(route)
     const command =
       route.operation === 'command' ||
@@ -47,13 +74,7 @@ export class BoatTransport {
           headers,
           body: body === undefined ? undefined : JSON.stringify(body),
           redirect: 'manual',
-          signal: AbortSignal.timeout(
-            route.operation === 'command'
-              ? 610_000
-              : route.operation === 'readFile'
-                ? 65_000
-                : 30_000,
-          ),
+          signal,
         }),
       )
     } catch {

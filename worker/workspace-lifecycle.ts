@@ -84,6 +84,15 @@ export class WorkspaceLifecycle
     )
   }
 
+  async callingToolTurn(workspaceId: string, turnId: string) {
+    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
+      return null
+    return this.chat.runLifecycle(async () => {
+      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
+      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
+    })
+  }
+
   async queueLifecycleStart(
     job: StoredWorkspaceStartJob,
     intent?: WorkspaceStartIntent,

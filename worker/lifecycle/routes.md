@@ -134,6 +134,9 @@ says, with its tests.
 For the GitHub CLI outside an agent turn, the helper omits the turn header.
 The handler then selects the workspace owner in its authorized D1 read.
 A present but invalid turn header still fails, without an owner fallback.
+The fetch of a Continue job sends the fetch ID of the job in the same
+header, so the handler gives the token of the member who pressed Continue,
+as [Continue](git-credentials.md#continue) says.
 
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).

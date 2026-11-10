@@ -46,6 +46,18 @@ export class GitHubReader {
     return repository
   }
 
+  async defaultBranch(): Promise<string> {
+    const repository = await this.repository(LOOKUP, {
+      head: this.workspace.branch,
+      ref: `refs/heads/${this.workspace.branch}`,
+      states: ['OPEN'],
+      after: null,
+    })
+    return repository.defaultBranchRef === null
+      ? this.workspace.defaultBranch
+      : text(object(repository.defaultBranchRef).name)
+  }
+
   async read(branches?: GitHubBranchDependencies): Promise<GitHubSnapshot> {
     const lookup = branches ?? (await this.dependenciesForBranch())
     if (lookup.pullNumber === null) {

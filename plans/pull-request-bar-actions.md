@@ -806,10 +806,36 @@ has a pull request. The mockups settled the labels, as
   line in each message, after the line that names its sender. The line
   names the current workspace branch and the current target branch. A new
   session gets the current branches in its fixed text.
-- Design call: the Worker records the branches of each session when the
-  session starts, and adds the branch line while they differ from the
-  current branches. Reason: the fixed text of a session, from pull
-  request #112, keeps the branches of its start.
+- Design call on 10 November 2026: the runner saves the original branches
+  beside each session's fixed text. Each command supplies the current
+  branches. Reason: the runner owns the exact saved text and its cache.
+- Design call on 10 November 2026: Continue returns an opaque job ID and
+  exposes a result read. A local-work question ends that preliminary job.
+  Continue anyway starts a new request for the same expected branch.
+  Reason: resume and Git waits must release the chat queue, and the work
+  must survive a closed tab.
+- Design call on 10 November 2026: a completed request replays its stored
+  result for the same old branch and member. Reason: a repeated click or
+  lost reply must not create another branch.
+- Design call on 10 November 2026: a Continue credential scope is local to
+  the active object and fetch. Recovery expires it and reconciles the
+  saved native command without granting it again. Reason: a saved job ID
+  alone must not keep GitHub access active.
+- Design call on 10 November 2026: the new branch has no upstream tracking
+  setting. Reason: Continue must not configure a push to the default
+  branch or change the repository's existing Git settings.
+- Design call on 10 November 2026: checkout preserves ignored files too.
+  It refuses a new-base file that would overwrite ignored installed
+  content. Reason: Continue keeps the installed software and the files.
+- Design call on 10 November 2026: a lost move result causes a read of the
+  actual HEAD before publication or failure. A confirmed new branch
+  completes publication without another checkout. An unknown branch keeps
+  the reservation. Reason: Git and the saved result cannot commit in one
+  transaction, and releasing the reservation too soon can mix tasks.
+- Design call on 10 November 2026: an older saved instruction string keeps
+  its bytes. The runner reads its known branch lines once. Unreadable
+  branch identity stays unknown and gets a current branch line.
+  Reason: legacy sessions must keep their context without guessed facts.
 
 ### Labels and messages
 
@@ -1041,27 +1067,29 @@ Depends on: 2
 Continue moves the workspace to a new branch, under decisions 224, 226,
 and 227.
 
-- [ ] Add the Continue route. It accepts only a merged pull request, and
+- [x] Add the Continue route. It accepts only a merged pull request, and
       refuses an archived workspace, a suspended org, and a workspace
       where a turn runs. Allow every member of the org (decision 224).
-- [ ] Make the check for local work count the unpushed commits of every
+- [x] Make the check for local work count the unpushed commits of every
       local branch. Use it for the question of Archive and of Continue.
-- [ ] Run the branch change in the sandbox. Start a stopped sandbox
+- [x] Run the branch change in the sandbox. Start a stopped sandbox
       first. Fetch the default branch in a trusted Continue job, with the
       token of the member who pressed Continue (decision 226), through a
       staging repository with a clean Git config. Create the new branch
       with the changed files. Keep the old branch when Git refuses.
-- [ ] Store the new branch in D1 and in the workspace object. Read the
+- [x] Store the new branch in D1 and in the workspace object. Read the
       GitHub state of the new branch, and publish the change to each tab.
-- [ ] Add the note of Continue to the chat events. Send the current
+- [x] Add the note of Continue to the chat events. Send the current
       workspace branch with each message, and add the branch line of
       decision 227 in the runner, after the sender line of pull request
       #112.
-- [ ] Test the route rules, the count of every local branch, the branch
+- [x] Test the route rules, the count of every local branch, the branch
       change, a refused move, the routing of GitHub events to the new
       branch, and the note.
-- [ ] Update `worker/github/README.md`, the lifecycle README, and the
+- [x] Update `worker/github/README.md`, the lifecycle README, and the
       runner README.
+
+Evidence: `.context/pull-request-bar-actions/milestone-7/report.md`.
 
 ## Milestone 8: Continue in the bar
 

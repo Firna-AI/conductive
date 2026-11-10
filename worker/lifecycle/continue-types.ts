@@ -1,0 +1,76 @@
+import type {
+  ContinueWorkspaceRequest,
+  ContinueWorkspaceResponse,
+  Workspace,
+} from '../../src/shared/workspaces'
+import type { MessageSender } from '../../src/shared/messages'
+import type { WorkspaceChat } from '../chat/backend'
+import type { ChatData } from '../chat/types'
+import type { AppDependencies, AppEnv } from '../env'
+import type { FeatureResult } from '../features/result'
+import type {
+  GitHubRefreshWorkspace,
+  GitHubWorkspace,
+} from '../github/contracts'
+
+export const CONTINUE_JOB_KEY = 'lifecycle:continue'
+export const continueJobKey = (id: string) => `continue:job:${id}`
+export const continuedBranchKey = (branch: string) =>
+  `continue:branch:${branch}`
+
+type StoredReply =
+  | Exclude<
+      ContinueWorkspaceResponse,
+      { state: 'continued' } | { state: 'pending' }
+    >
+  | {
+      state: 'continued'
+      workspace: Omit<Workspace, 'link'>
+      eventNumber: number
+    }
+
+export interface ContinueJob {
+  id: string
+  binding: GitHubWorkspace
+  repositoryId: string
+  sandboxId: string
+  member: MessageSender
+  request: ContinueWorkspaceRequest
+  branch: string
+  baseBranch: string
+  directory: string
+  phase: 'verify' | 'resume' | 'check' | 'fetch' | 'move' | 'publish'
+  processId: number | null
+  commandStarted: boolean
+  resumeQueued: boolean
+  fetchId: string
+  stdoutOffset: number
+  stderrOffset: number
+  publication?: { after: number; through: number }
+  failure?: { status: number; code: string; message: string }
+  cancelled?: true
+  outcome?: FeatureResult<StoredReply>
+}
+
+export interface ContinueOptions {
+  env: AppEnv
+  dependencies: AppDependencies
+  storage: Pick<ChatData, 'get' | 'put'>
+  chat: WorkspaceChat
+  run<T>(operation: () => Promise<T>): Promise<T>
+  schedule(at: number | null): Promise<void>
+  refresh: GitHubRefreshWorkspace
+  defaultBranch(binding: GitHubWorkspace, userId: string): Promise<string>
+  scheduleRefresh(binding: GitHubWorkspace): Promise<void>
+  resume(orgId: string, workspaceId: string, userId: string): Promise<void>
+  matches(workspaceId: string): boolean
+  assertActive(): Promise<void>
+  activity(): Promise<void>
+}
+
+export async function pendingContinue(
+  storage: ContinueOptions['storage'],
+): Promise<boolean> {
+  const job = await storage.get<ContinueJob | null>(CONTINUE_JOB_KEY)
+  return Boolean(job)
+}

@@ -16,6 +16,10 @@ export const workspacePaths = {
   archiveCheck: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/archive-check`,
   archive: (orgId: string, id: string) => `${workspacePath(orgId, id)}/archive`,
+  continue: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/continue`,
+  continueResult: (orgId: string, id: string, continueId: string) =>
+    `${workspacePath(orgId, id)}/continue/${encodeURIComponent(continueId)}`,
 } as const
 
 /** `input`: the agent waits for the user, such as for a command approval. */
@@ -85,3 +89,18 @@ export interface ArchiveCheckResponse {
   uncommittedFiles: readonly string[]
   unpushedCommits: number
 }
+
+export interface ContinueWorkspaceRequest {
+  expectedBranch: string
+  allowLocalWork?: boolean
+}
+
+export type ContinueWorkspaceResponse =
+  | { state: 'pending'; continueId: string }
+  | {
+      state: 'confirmation-required'
+      branch: string
+      baseBranch: string
+      localWork: ArchiveCheckResponse
+    }
+  | { state: 'continued'; workspace: Workspace; eventNumber: number }

@@ -139,7 +139,12 @@ export function createClaudeFactory(
           parent_tool_use_id: null,
           message: {
             role: 'user',
-            content: providerMessage(command.message) + attached,
+            content:
+              providerMessage(
+                command.message,
+                command.branches,
+                options.instructionBranches,
+              ) + attached,
           },
           priority: 'next',
         })

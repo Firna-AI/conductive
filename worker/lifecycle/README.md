@@ -2,8 +2,9 @@
 
 This folder holds the Worker code that prepares the org image and runs the
 life of each workspace. The org image is the saved snapshot that every new
-sandbox of an org starts from. A workspace is one task with its own branch
-and its own Boat sandbox. The code reaches Boat only through the
+sandbox of an org starts from. A workspace has its own Boat sandbox and one
+branch at a time. [Continue](continue.md) moves it to a new branch after
+its merge. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
 with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
 says.
@@ -25,7 +26,9 @@ gives the create, read, resume, and activity routes of a workspace to
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
-  the current turn.
+  the current turn, or of the member who pressed Continue during its fetch.
+- Continue a workspace on a new branch after its merge, with the same
+  sandbox and sessions.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
@@ -55,6 +58,14 @@ Object of each workspace and of each image coordinator. It gives their
 names, the lifecycle steps, the alarm, the start logs, the event socket,
 and the publication of the events. It also gives the creates and resumes,
 the git credential sender, and the turn recovery.
+
+### Continue
+
+[Continue](continue.md) gives the routes of Continue, its admission and
+reservation, its phases, the staged fetch and the branch move, the
+publication, and the recovery.
+[The git credential sender](git-credentials.md#continue) gives the grant
+of its fetch.
 
 ### Builds and refreshes
 
@@ -256,6 +267,8 @@ object holds the lifecycle state, the turn records, and the events.
   [runtime guide](../../image/runtime.md#update-the-node-release) says how to
   update it.
 - [Repository layout](repository-layout.md#key-code): the repository entries.
+- [Continue](continue.md#key-code): the Continue entries, the shared
+  local-work check, and the branch name of a create and of Continue.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and
   `authenticateWorkspaceToken`.
 - [`runtime.ts`](runtime.ts): `LifecycleEnvironment`, `workspaceRuntime`,

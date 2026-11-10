@@ -1,6 +1,6 @@
 import type { ReceiverStorage } from '../members/receiver-storage'
 
-type AlarmSource = 'lifecycle' | 'devices' | 'previews' | 'github'
+type AlarmSource = 'lifecycle' | 'devices' | 'previews' | 'github' | 'continue'
 
 export class WorkspaceAlarms {
   private readonly storage: ReceiverStorage

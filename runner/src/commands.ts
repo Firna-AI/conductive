@@ -3,6 +3,7 @@ import type { Attachment, UserMessage } from '../../src/shared/messages'
 import type { RunnerLogin, WorkspaceToRunner } from '../../src/shared/runner'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { array, integer, nullable, object, oneOf, string } from './parse'
+import { parseBranches } from './instruction-state'
 
 export function parseChoice(value: unknown): AgentChoice {
   const input = object(value)
@@ -146,7 +147,18 @@ export function parseWorkspaceMessage(value: unknown): WorkspaceToRunner {
         path: string(attachment.path),
       }
     })
-    return { type, commandId, sessionId, turnId, message, login, attachments }
+    return {
+      type,
+      commandId,
+      sessionId,
+      turnId,
+      message,
+      login,
+      attachments,
+      ...(input.branches === undefined
+        ? {}
+        : { branches: parseBranches(input.branches) }),
+    }
   }
   throw new Error('The runner command is not supported.')
 }

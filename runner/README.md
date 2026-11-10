@@ -34,17 +34,9 @@ These facts belong to this implementation, not to the protocol docs.
   their settings, runtime context, and process lifetime.
 - Each agent program gets the login of its turn through a route that its
   tool processes do not inherit, as [Agent logins](agent-logins.md) says.
-- `agentInstructions` builds the agent instructions of each agent from the
-  configuration. Claude gets its seven base rules and that text as
-  `systemPrompt`. Codex keeps its default base instructions and gets the
-  text as `developerInstructions` on `thread/start` and `thread/resume`.
-- The runner saves the text of a session before its first agent start. Later
-  starts reuse it exactly, also after a restart or a change of configuration
-  or wording. A saved session without text takes the current text once.
-- Each message to an agent starts with a sender line, then an empty line:
-  `Sender: <display name> (@<login>)`, or `Sender: @<login>` without a
-  display name. No adapter maps a user message to an event, so the chat
-  never shows the sender line.
+- The [agent instructions guide](agent-instructions.md) gives the saved
+  instructions of each session, the sender line, and the branch line of
+  each message.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
   process then takes the waiting input on the same conversation and login.
@@ -94,7 +86,7 @@ These facts belong to this implementation, not to the protocol docs.
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, and
   `turns` records of accepted turns. It holds the conversation reference and
-  the agent instructions of each session. It also
+  the agent instructions of each session, with their branches. It also
   holds the last `start.updated` and `workspace.title` events, and the ID of
   each answered [report request](#report-requests). It holds no other
   command data and no login. The runner saves a turn record before the
@@ -255,7 +247,7 @@ tools that time the first agent start after a resume.
   and their defaults, the state file, and the reconnect after each drop.
 - `src/runner.ts`: `Runner` joins the connection, agents, file reports,
   and report requests.
-- `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
+- `src/instructions.ts`: `agentInstructions`, as [its guide](agent-instructions.md#key-code) says.
 - [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
   [output field policy](../src/shared/output-fields.ts): the one filter
   shared with the Worker. The runner supplies tokens and logins.

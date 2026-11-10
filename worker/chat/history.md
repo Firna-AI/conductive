@@ -46,6 +46,16 @@ streams, and the order of the runner commands.
 - After the login checks, delivery commits the turn state before sending.
   If sending a newly dispatched turn throws, delivery restores its queued
   state. `message.sent` follows a successful send.
+- Each `turn` and `message` command carries the current workspace branch
+  and target branch in `branches`. Delivery reads them from D1 each time
+  that it builds the command, also for a retry, a queued send, and a resend
+  after a reconnect. No connection or pending command keeps an older pair.
+- While a Continue of the workspace runs, `turnDispatching` holds each turn
+  in the queue, and its commands wait. When Continue ends, the waiting
+  commands go out with the new branches, as
+  [Continue](../lifecycle/continue.md#the-reservation) says.
+- A `workspace.continued` note names its session, so the history of that
+  session holds it, also after the session closes and reopens.
 - The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
 - The interrupt route stores and pushes `turn.stop-requested` with the
   authenticated member's ID before it interrupts the runner. Runner events

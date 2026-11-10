@@ -32,6 +32,8 @@ After a refused file tree, changes list, start steps, or workspace name,
 It carries no login. A redelivery keeps its command ID.
 `runner-transport.ts` defines the injectable socket boundary.
 Runner commands carry the agent login of the session starter, whoever sent the message. Browser response types do not.
+`RunnerTurn` and `RunnerMessageDuringTurn` carry the current `branches`: the workspace branch and the target branch.
+The current Worker always sends them. A command of an older producer can omit them.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 
 `files.ts` defines full trees, tree updates, and branch changes.
@@ -87,6 +89,11 @@ Its `repairFailed: true` flag marks a refused replacement of a lost workspace up
 Only the workspace sets that flag.
 [Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the rules of the request and of a failed repair.
+`workspace.continued` is the note of Continue in one session. It belongs to
+`ChatEvent`, so it reaches the browser stream, but not to `AgentChatEvent`
+or to the runner events. Only the Worker writes it. It names its
+`sessionId`, the `member` who pressed Continue, the new `branch`, and its
+`baseBranch`.
 
 `events.ts` defines the browser stream. Its event numbers span all sessions
 and runner connections of one workspace. A reconnect uses the last stored number.
@@ -156,6 +163,7 @@ The git credential payload is not defined yet.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
+- [Workspace contracts](workspaces.ts) give `workspacePaths.continue` and `workspacePaths.continueResult`. `ContinueWorkspaceRequest` sends the `expectedBranch` that the caller shows, and an optional `allowLocalWork`. `ContinueWorkspaceResponse` is a pending job with its `continueId`, a `confirmation-required` reply with the `branch`, the `baseBranch`, and the `localWork` of the Archive check, or a `continued` reply with the `workspace` and its `eventNumber`. [Continue](../../worker/lifecycle/continue.md) gives the routes and the errors.
 - [GitHub contracts](github.ts) give the five `githubPaths` routes of a workspace: the banner and checks reads, the member capability, the merge start, and the merge result. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.

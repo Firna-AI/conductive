@@ -22,6 +22,7 @@ import { WorkspaceChat } from './backend'
 import { firstMessageIdentity } from './first-message'
 import { projectWorkspaceTitle } from './workspace-title'
 import type { ChatCallbackPublisher, ChatDependencies } from './types'
+import { pendingContinue } from '../lifecycle/continue-types'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
@@ -106,6 +107,7 @@ export function createWorkspaceIntegration(
     runnerDisconnected: async (_id, publish) =>
       controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
     turnDispatching: async (_id, turn, publish) => {
+      if (await pendingContinue(storage)) return false
       const state = await controller.readLifecycle()
       if (!state) return true
       if (!['ready', 'working', 'unread', 'input'].includes(state.state))

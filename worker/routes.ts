@@ -13,6 +13,7 @@ import { invitationsRoute } from './app-api/invitations'
 import { membersRoute } from './members/route'
 import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
+import { continueRoute } from './app-api/continue'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
 
@@ -58,6 +59,8 @@ export async function route(
   if (featureShell) return featureShell
   const archive = await archiveRoute(request, env, context)
   if (archive) return archive
+  const continued = await continueRoute(request, env, context)
+  if (continued) return continued
   const boot = await bootRoute(request, env, context, dependencies)
   if (boot) return boot
   const shell = await shellRoute(request, env, context, dependencies)
