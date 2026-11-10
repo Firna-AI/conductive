@@ -28,7 +28,7 @@ the user chose B on 10 November 2026: Codex runs its own token mode
 through new gateway routes, with a turn token. On the same day, the user
 chose A for decision 175: the Codex login is a device code sign-in to the
 member's ChatGPT plan, which the Worker runs and renews. It replaces the
-access token. Decision 174 is open.
+access token. Decision 174 is D.
 
 Related work: the plan `plans/own-endpoint-logins.md` on branch
 `calummoore/cli-proxy-setup` adds an own endpoint login to the same connect
@@ -269,6 +269,7 @@ changed the recommendation from A to D.
 - **Previous examples:** The design call of 9 November 2026 in `plans/follow-ups/own-endpoints-through-model-gateway.md` gives the own endpoint login the path for an unusable login before dispatch on version 1. The secret-value filter sits in the Durable Object because an older runner has none.
 - **Recommendation:** D. It gives the result of A for the Codex token, and it also covers the `message` command, the earlier version 2 runners, and the own endpoint login, at a small extra cost in code that this branch already changes. The plan first recommended A, which stays the direct fix.
 - **Action:** ask the user, because it adds a new rejection of a turn.
+- **Chosen by the user on 10 November 2026:** D. After decision 175, the login kind that most runners cannot run is the ChatGPT sign-in of Codex, which holds a refresh token.
 
 ### 175. Which login connects a ChatGPT plan to Codex
 
@@ -564,7 +565,7 @@ requests of the token mode. The runner holds no change. The evidence is in
 `.context/codex-access-token/runner/report.md`. The user chose the gateway
 on 10 November 2026 (decision 172 D), the token mode route (decision
 173 B), and the device code sign-in (decision 175 A). The TODOs below build
-that route. Decision 174 stays open and changes no TODO here.
+that route, and the typed rule of decision 174 D.
 
 - [x] Find the model provider settings that the pinned Codex needs for an
       access token. Read its protocol schema with
@@ -591,6 +592,18 @@ that route. Decision 174 stays open and changes no TODO here.
       place of the access token and a placeholder refresh token. Point the
       ChatGPT base address of Codex at the gateway. Remove the file at the
       end of the turn. Keep the API key route as it is.
+- [ ] Decision 174 D: add one typed rule of the login kinds that each
+      runner can run. The Worker checks it before each command that carries
+      a login, the `turn` and the `message`, sends no command that the
+      runner cannot run, and ends that turn with a cause that names the way
+      out: a new org image build and a new workspace, or an OpenAI API key.
+      A runner without the change of this milestone, also a version 2
+      runner in an older image, counts as unable. A new login kind fails
+      the typecheck until the rule states it.
+- [ ] Change the Milestone 3 test that expects the real Codex login in a
+      version 1 `turn` command, and state the rule of decision 174 D in
+      `docs/protocol/isolation.md` and in the protocol doc that says what a
+      member sees when a turn cannot run.
 - [ ] Remove the parts that serve only an access token: the `whoami`
       route, the `at-` turn token, and the `CODEX_ACCESS_TOKEN` start.
 - [ ] Tests: the device code flow and its failures, the renewal and its
