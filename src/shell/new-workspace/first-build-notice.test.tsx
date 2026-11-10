@@ -88,11 +88,14 @@ const firstBuilds: Readonly<Record<string, BuildsResponse>> = {
 }
 
 /**
- * The notice of the build that runs. A non-breaking space keeps its time
- * on one line on a narrow phone.
+ * The notice of the build that runs, as a member sees it. A non-breaking
+ * space keeps its time on one line on a narrow phone.
  */
 const running =
   "Preparing the cloud computer · 2m&nbsp;14s You can send when it's ready."
+
+/** The notice of the build that runs, with the link of an admin. */
+const runningAdmin = `${running} Cloud computer settings`
 
 /** The org of the page, as a person with `role` reaches it. */
 const acme = (role: OrgRole) => ({ id: FAKE_IDS.org, name: 'Acme', role })
@@ -158,6 +161,7 @@ describe('the notice of the first build in New workspace', () => {
     holdAnimationFrames()
     const shown = {
       running: await newWorkspace('admin', firstBuilds.running),
+      runningMember: await newWorkspace('member', firstBuilds.running),
       failed: await newWorkspace('admin', firstBuilds.failed),
       failedMember: await newWorkspace('member', firstBuilds.failed),
       none: await newWorkspace('admin', firstBuilds.none),
@@ -167,13 +171,18 @@ describe('the notice of the first build in New workspace', () => {
     const off = { spinner: false, send: false, tryAgain: false }
     expect(shown).toEqual({
       running: {
+        notices: [runningAdmin],
+        ...off,
+        spinner: true,
+      },
+      runningMember: {
         notices: [running],
         ...off,
         spinner: true,
       },
       failed: {
         notices: [
-          "The cloud computer didn't build Try the build again to send your message. Open Cloud computer",
+          "The cloud computer didn't build Try the build again to send your message. Cloud computer settings",
         ],
         ...off,
       },
@@ -185,7 +194,7 @@ describe('the notice of the first build in New workspace', () => {
       },
       none: {
         notices: [
-          'The cloud computer needs a build Build it to send your message. Open Cloud computer',
+          'The cloud computer needs a build Build it to send your message. Cloud computer settings',
         ],
         ...off,
       },
@@ -207,7 +216,7 @@ describe('the notice of the first build in New workspace', () => {
     expect(refused).toEqual({
       notices: [
         "The workspace wasn't created The cloud computer is still being prepared. Your message is kept. Try again",
-        running,
+        runningAdmin,
       ],
       spinner: true,
       send: false,
@@ -215,7 +224,7 @@ describe('the notice of the first build in New workspace', () => {
     })
   })
 
-  test('Open Cloud computer leads an admin to the Cloud computer tab of the org', async () => {
+  test('Cloud computer settings leads an admin to the Cloud computer tab of the org', async () => {
     const server = new FakeApiServer()
     server.json(
       'GET',
@@ -230,7 +239,7 @@ describe('the notice of the first build in New workspace', () => {
       { navigation },
     )
     await settle()
-    click(byRole('button', 'Open Cloud computer', view))
+    click(byRole('button', 'Cloud computer settings', view))
     expect(navigation.history.at(-1)).toBe(
       routes.settings(FAKE_IDS.org, 'cloud-computer'),
     )

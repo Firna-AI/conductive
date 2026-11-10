@@ -62,9 +62,10 @@ export function formWait(
  * `alternative` come from `formWait`. While the build runs, the notice
  * shows a spinner. After a failed build it has the danger tone, and else
  * the hammer. Only an admin builds the computer, so only an admin gets the
- * link of `action` to the Cloud computer tab, and only while no build
- * runs: during the build that tab offers nothing to do. A member reads who
- * can act.
+ * link of `action` to the Cloud computer tab, in each state, as in the
+ * notice of the first build. While the build runs, the admin can follow it
+ * there. A refresh never counts as a build that runs, so the notice never
+ * shows a refresh as its build. A member reads who can act.
  */
 export function WaitingRepositoryNotice(props: {
   wait: RepositoryWait
@@ -73,18 +74,16 @@ export function WaitingRepositoryNotice(props: {
   admin: boolean
   /**
    * The link to the Cloud computer tab, which gets the state of the build:
-   * the newest build failed, or the changes wait for a build.
+   * a build runs, the newest build failed, or the changes wait for a build.
    */
-  action: (wait: Exclude<RepositoryWait, 'building'>) => ReactNode
+  action: (wait: RepositoryWait) => ReactNode
 }) {
   const { wait } = props
   const text = waitingFormText(props)
   const failed = wait === 'failed'
   return (
     <Notice
-      action={
-        props.admin && wait !== 'building' ? props.action(wait) : undefined
-      }
+      action={props.admin ? props.action(wait) : undefined}
       body={text.body}
       busy={wait === 'building'}
       icon={failed ? CircleAlert : Hammer}
